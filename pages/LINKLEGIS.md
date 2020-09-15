@@ -6,11 +6,11 @@ Essa funcionalidade adiciona ao editor de texto do SEI a inclusão de link de le
 
 As citações acompanham o hiperlink para a norma publicada no site do Planalto.
 
-Ao inserir mais de um link para a mesma legislação, a ferramenta encurta a remissão aos atos normativos das seguintes formas:
+Ao inserir mais de um link para a mesma legislação, a ferramenta encurta a remissão aos atos normativos da seguinte forma:
 
-1. “Lei nº 8.112, de 11 de dezembro de 1990”, na ementa, no preâmbulo e na primeira remissão no corpo da norma; e
+1. **“Lei nº 8.112, de 11 de dezembro de 1990”**, na ementa, no preâmbulo e na primeira remissão no corpo da norma; e
 
-2. “Lei nº 8.112, de 1990”, nos demais casos; ([art. 14, II, "k" do Decreto 9.191, de  1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_Ato2015-2018/2017/Decreto/D9191.htm))
+2. **“Lei nº 8.112, de 1990”**, nos demais casos; ([art. 14, II, "k" do Decreto 9.191, de  1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_Ato2015-2018/2017/Decreto/D9191.htm))
 
 Atualmente estão disponíveis as seguintes legislações: 
 
