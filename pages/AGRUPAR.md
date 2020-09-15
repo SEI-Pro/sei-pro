@@ -2,4 +2,4 @@
 
 Essa funcionalidade adiciona à página inicial do SEI agrupamento de processos por marcadores, tipo de processo, responsável ou ponto de controle.
 
-> ![Tela 1](./images/tela-acompanhamento.gif) 
+> ![Tela 1](./img/tela-acompanhamento.gif) 
