@@ -25,11 +25,11 @@ Atualmente estão disponíveis os seguintes normativos infralegais:
 
 |  Norma Infralegal  |
 | ------------------- | 
-|  [Resolução Normativa ANTAQ](http://sophia.antaq.gov.br/terminal/) |
-|  [Resolução ANTAQ](http://sophia.antaq.gov.br/terminal/) |
-|  [Súmula Administrativa ANTAQ](http://sophia.antaq.gov.br/terminal/) |
-|  [Portaria ANTAQ](http://sophia.antaq.gov.br/terminal/) |
-|  [Instrução Normativa ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Resoluções Normativas da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Resoluções da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Súmulas Administrativas da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Portarias da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Instruções Normativa da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
 
 Deseja adicionar as normas infralegais de outros órgãos? Colabore conosco ([pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com))
 
