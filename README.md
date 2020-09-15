@@ -1,18 +1,18 @@
 # Bem vindo ao SEI Pro ![SEI Pro](/img/icon-32.png)
 
-**SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) funções avançadas na página inicial e no editor de textos:
+**SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
 - [Gerenciar projetos](./pages/PROJETOS.md)
-- [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](./pages/PROJETOS.md)
-- [Inserir documento externo (HTML)](./pages/PROJETOS.md)
-- [Adicionar estilo a tabela (21 estilos)](./pages/PROJETOS.md)
-- [Adicionar link de legislação](./pages/PROJETOS.md)
-- [Primeira letra maiúscula (exceto artigos e preposições)](./pages/PROJETOS.md)
-- [Inserir referência de documento do processo](./pages/PROJETOS.md)
-- [Inserir nota de rodapé](./pages/PROJETOS.md)
-- [Inserir sumário](./pages/PROJETOS.md)
-- [Gerar link curto do TinyUrl](./pages/PROJETOS.md)
-- [Gerar Código QR (QRCode)](./pages/PROJETOS.md)
+- [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
+- [Inserir documento externo (HTML)](./pages/INSERIRHTML.md)
+- [Adicionar estilo a tabela (21 estilos)](./pages/ESTILOTABELA.md)
+- [Adicionar link de legislação](./pages/LINKLEGIS.md)
+- [Primeira letra maiúscula (exceto artigos e preposições)](./pages/LETRAMAIUSC.md)
+- [Inserir referência de documento do processo](./pages/REFDOCUMENTOS.md)
+- [Inserir nota de rodapé](./pages/NOTARODAPE.md)
+- [Inserir sumário](./pages/SUMARIO.md)
+- [Gerar link curto do TinyUrl](./pages/LINKCURTO.md)
+- [Gerar Código QR (QRCode)](./pages/QRCODE.md)
 
 ## Como começar?
 
