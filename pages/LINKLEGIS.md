@@ -10,7 +10,7 @@ Ao inserir mais de um link para a mesma legislação, a ferramenta encurta a rem
 
 1. **“Lei nº 8.112, de 11 de dezembro de 1990”**, na primeira remissão no corpo do texto; e
 
-2. **“Lei nº 8.112, de 1990”**, nos demais casos; ([art. 14, II, "k" do Decreto 9.191, de  1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_Ato2015-2018/2017/Decreto/D9191.htm))
+2. **“Lei nº 8.112, de 1990”**, nos demais casos; ([art. 14, II, "k" do Decreto 9.191, de  1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_Ato2015-2018/2017/Decreto/D9191.htm#art14iik))
 
 Atualmente estão disponíveis as seguintes legislações: 
 
