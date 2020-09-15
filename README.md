@@ -5,7 +5,7 @@
 - [Gerenciar projetos](./pages/PROJETOS.md)
 - [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
 - [Inserir documento externo (HTML)](./pages/INSERIRHTML.md)
-- [Adicionar estilo a tabela (21 estilos)](./pages/ESTILOTABELA.md)
+- [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](./pages/LINKLEGIS.md)
 - [Primeira letra maiúscula (exceto artigos e preposições)](./pages/LETRAMAIUSC.md)
 - [Inserir referência de documento do processo](./pages/REFDOCUMENTOS.md)
