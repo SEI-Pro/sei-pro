@@ -8,7 +8,7 @@
 - [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](./pages/LINKLEGIS.md)
 - [Primeira letra maiúscula (exceto artigos e preposições)](./pages/LETRAMAIUSC.md)
-- [Inserir referência de documento do processo](./pages/REFDOCUMENTOS.md)
+- [Inserir referência de documentos do processo](./pages/REFDOCUMENTOS.md)
 - [Inserir nota de rodapé](./pages/NOTARODAPE.md)
 - [Inserir sumário](./pages/SUMARIO.md)
 - [Gerar link curto do TinyUrl](./pages/LINKCURTO.md)
