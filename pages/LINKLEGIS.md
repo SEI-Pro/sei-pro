@@ -2,4 +2,4 @@
 
 Essa funcionalidade adiciona ao editor de texto do SEI a inclusão de link de legislação federal
 
-> ![Tela Estilo de Tabelas](../img/tela-estilotabela.gif) 
+> ![Tela Estilo de Tabelas](../img/tela-linklegis.gif) 
