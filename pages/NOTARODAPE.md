@@ -10,8 +10,4 @@ A nota é inserida ao final do corpo do texto principal, enumerada automaticamen
 
 Dificuldades para formatar no padrão ABNT? Tente usar nossa aba especial...
 
-> ![](../img/tela-notarodape3.png | width=300) 
-
 <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-notarodape3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-notarodape3.png" width="400"/>
-
-> ![](../img/tela-notarodape3.png) 
