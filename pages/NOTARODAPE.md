@@ -8,6 +8,6 @@ A nota é inserida ao final do corpo do texto principal, enumerada automaticamen
 
 > ![Tela Nota Rodapé](../img/tela-notarodape2.gif) 
 
-Para facilitar a formatação ao padrão ABNT...
+Dificuldades para formatar no padrão ABNT? Tente usar nossa aba especial...
 
 > ![Tela Nota Rodapé](../img/tela-notarodape3.png) 
