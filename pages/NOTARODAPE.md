@@ -10,4 +10,4 @@ A nota é inserida ao final do corpo do texto principal, enumerada automaticamen
 
 Dificuldades para formatar no padrão ABNT? Tente usar nossa aba especial...
 
-> ![Tela Nota Rodapé](../img/tela-notarodape3.png  | width=300) 
+> ![](../img/tela-notarodape3.png | width=300) 
