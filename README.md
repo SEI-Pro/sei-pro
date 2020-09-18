@@ -13,6 +13,7 @@
 - [Inserir sumário](./pages/SUMARIO.md)
 - [Gerar link curto do TinyUrl](./pages/LINKCURTO.md)
 - [Gerar código QR (QRCode)](./pages/QRCODE.md)
+- [Redimensionar imagens](./pages/REDIMENSIONAIMG.md)
 - [Inserir quebra de página](./pages/QUEBRAPAGINA.md)
 
 ## Como começar?
