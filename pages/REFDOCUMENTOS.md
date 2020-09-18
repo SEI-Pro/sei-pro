@@ -4,4 +4,4 @@ Essa funcionalidade adiciona ao editor de texto do SEI a referência de document
 
 > ![Tela Referência Documentos](../img/tela-refdocumentos.gif) 
 
-A lista de citação é gerada a partir da árvore de documentos do processo.
+A lista de referiencia é gerada a partir da árvore de documentos do processo.
