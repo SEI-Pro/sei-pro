@@ -6,4 +6,4 @@ TinyURL é um serviço web que transforma links longos em links curtos, tornando
 
 > ![Tela Link Curto](../img/tela-linkcurto.gif) 
 
-Você ainda pode adicionar um nome personalisado para o link (pode conter apenas letras, números ou travessões)
+Você ainda pode adicionar um nome personalizado para o link (pode conter apenas letras, números ou travessões)
