@@ -1,4 +1,4 @@
-[Inserir referência de documentos do processo](./pages/REFDOCUMENTOS.md)
+# [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
 ## ![SEI Pro Letras Maiúsculas](/img/icon-letramaiusc.png) Primeira letra maiúscula (exceto artigos e preposições)
 
@@ -12,4 +12,4 @@ Atualmente são excetuados os seguintes artigos e preposições:
 
 ## Próximo passo
 
-> [Inserir nota de rodapé](./pages/NOTARODAPE.md)
+> [Inserir referência de documentos do processo](./pages/REFDOCUMENTOS.md)
