@@ -10,6 +10,6 @@ Informe apenas os estilos de bloco utilizados no seu documento para os títulos 
 
 > ![Tela Sumário](../img/tela-sumario2.gif) 
 
-## Próximo passo
+## Próximo item
 
 > [Inserir dados do processo](./DADOSPROCESSO.md)
