@@ -6,6 +6,6 @@ Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processo
 
 > ![Tela 1](../img/tela-agrupamento.gif) 
 
-## Próximo passo
+## Próximo item
 
 > [Inserir documento externo (HTML)](./INSERIRHTML.md)
