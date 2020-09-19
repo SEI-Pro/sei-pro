@@ -10,6 +10,6 @@ Converta seus documentos Word em formato HTML...
 
 > ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml2.gif) 
 
-## Próximo passo
+## Próximo item
 
 > [Adicionar estilo a tabela](./ESTILOTABELA.md)
