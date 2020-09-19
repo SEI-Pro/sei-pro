@@ -16,4 +16,4 @@ Dificuldades para formatar no padrão ABNT? Tente usar nossa aba especial...
 
 ## Próximo passo
 
-> [Inserir sumário](./pages/SUMARIO.md)
+> [Inserir sumário](./SUMARIO.md)
