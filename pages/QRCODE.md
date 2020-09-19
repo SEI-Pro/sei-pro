@@ -12,4 +12,4 @@ Controle e personalize seu QRCode com as opções avançadas:
 
 ## Próximo passo
 
-> [Redimensionar imagens](./pages/REDIMENSIONAIMG.md)
+> [Redimensionar imagens](./REDIMENSIONAIMG.md)
