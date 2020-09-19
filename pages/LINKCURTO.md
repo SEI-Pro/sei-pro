@@ -12,4 +12,4 @@ Você ainda pode adicionar um nome personalizado para o link (pode conter apenas
 
 ## Próximo passo
 
-> [Gerar código QR (QRCode)](./pages/QRCODE.md)
+> [Gerar código QR (QRCode)](./QRCODE.md)
