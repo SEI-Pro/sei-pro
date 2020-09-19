@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Link de Legislação](/img/icon-linklegis.png) Adicionar link de legislação federal
+## ![SEI Pro Link de Legislação](./img/icon-linklegis.png) Adicionar link de legislação federal
 
 Essa funcionalidade adiciona ao editor de texto do SEI a inclusão de link de legislação federal
 
