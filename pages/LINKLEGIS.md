@@ -84,6 +84,6 @@ Estão disponíveis as seguintes referências nominais:
 |  [Código de Processo Civil](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105.htm) |
 |  [Estatuto da Pessoa com Deficiência](http://www.planalto.gov.br/CCIVIL_03/_Ato2015-2018/2015/Lei/L13146.htm) |
 
-## Próximo passo
+## Próximo item
 
 > [Primeira letra maiúscula (exceto artigos e preposições)](./LETRAMAIUSC.md)
