@@ -12,4 +12,4 @@ Informe apenas os estilos de bloco utilizados no seu documento para os títulos 
 
 ## Próximo passo
 
-> [Inserir dados do processo](./pages/DADOSPROCESSO.md)
+> [Inserir dados do processo](./DADOSPROCESSO.md)
