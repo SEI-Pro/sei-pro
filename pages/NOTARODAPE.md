@@ -1,3 +1,5 @@
+# [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
+
 ## ![SEI Pro Nota Rodapé](/img/icon-notarodape.png) Inserir nota de rodapé
 
 Essa funcionalidade adiciona ao editor de texto do SEI a inclusão de notas ao rodapé do documento.
@@ -11,3 +13,7 @@ A nota é inserida ao final do corpo do texto principal, enumerada automaticamen
 Dificuldades para formatar no padrão ABNT? Tente usar nossa aba especial...
 
 <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-notarodape3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-notarodape3.png" width="550"/>
+
+## Próximo passo
+
+> [Inserir sumário](./pages/SUMARIO.md)
