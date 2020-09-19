@@ -3,3 +3,7 @@
 Essa funcionalidade adiciona ao editor de texto do SEI a inserção de documento externo, em formato HTML (linguagem de marcação utilizada na construção de páginas na Web).
 
 > ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml.gif) 
+
+Converta seus documentos Word em formato HTML...
+
+> ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml2.gif) 
