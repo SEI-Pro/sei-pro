@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Link Curto](/img/icon-linkcurto.png) Adicionar Link Curto
+## ![SEI Pro Link Curto](../img/icon-linkcurto.png) Adicionar Link Curto
 
 Essa funcionalidade adiciona ao editor de texto do SEI a geração de link curto através do serviço [TinyURL](https://tinyurl.com/)
 
