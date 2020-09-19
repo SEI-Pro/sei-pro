@@ -12,4 +12,4 @@ Converta seus documentos Word em formato HTML...
 
 ## Próximo passo
 
-> [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
+> [Adicionar estilo a tabela](./ESTILOTABELA.md)
