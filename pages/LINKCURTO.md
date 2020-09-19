@@ -10,6 +10,6 @@ TinyURL é um serviço web que transforma links longos em links curtos, tornando
 
 Você ainda pode adicionar um nome personalizado para o link (pode conter apenas letras, números ou travessões).
 
-## Próximo passo
+## Próximo item
 
 > [Gerar código QR (QRCode)](./QRCODE.md)
