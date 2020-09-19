@@ -19,4 +19,4 @@ Atualmente estão disponíveis os seguintes parâmetros:
 
 ## Próximo passo
 
-> [Gerar link curto do TinyUrl](./pages/LINKCURTO.md)
+> [Gerar link curto do TinyUrl](./LINKCURTO.md)
