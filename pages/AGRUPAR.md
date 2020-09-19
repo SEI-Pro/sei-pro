@@ -1,4 +1,4 @@
-# [![Home](../images/home.png)](../) | ![Icone](../images/icon-32.png) SEI Pro
+# [![Home](../img/home.png)](../) | ![Icone](../img/icon-32.png) SEI Pro
 
 ## Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle
 
