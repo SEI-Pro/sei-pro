@@ -10,4 +10,4 @@ A lista de referiencia é gerada a partir da árvore de documentos do processo.
 
 ## Próximo passo
 
-> [Inserir nota de rodapé](./pages/NOTARODAPE.md)
+> [Inserir nota de rodapé](./NOTARODAPE.md)
