@@ -86,4 +86,4 @@ Estão disponíveis as seguintes referências nominais:
 
 ## Próximo passo
 
-> [Primeira letra maiúscula (exceto artigos e preposições)](./pages/LETRAMAIUSC.md)
+> [Primeira letra maiúscula (exceto artigos e preposições)](./LETRAMAIUSC.md)
