@@ -10,6 +10,6 @@ Controle e personalize seu QRCode com as opções avançadas:
 
 > ![Tela Código QR (QRCode)](../img/tela-qrcode2.gif) 
 
-## Próximo passo
+## Próximo item
 
 > [Redimensionar imagens](./REDIMENSIONAIMG.md)
