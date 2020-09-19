@@ -8,4 +8,4 @@ Essa funcionalidade adiciona ao editor de texto do SEI o redimensionamento de im
 
 ## Próximo passo
 
-> [Inserir quebra de página](./pages/QUEBRAPAGINA.md)
+> [Inserir quebra de página](./QUEBRAPAGINA.md)
