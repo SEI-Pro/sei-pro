@@ -6,6 +6,6 @@ Essa funcionalidade adiciona ao editor de texto do SEI o redimensionamento de im
 
 > ![Tela Estilo de Tabelas](../img/tela-redimensionaimg.gif) 
 
-## Próximo passo
+## Próximo item
 
 > [Inserir quebra de página](./QUEBRAPAGINA.md)
