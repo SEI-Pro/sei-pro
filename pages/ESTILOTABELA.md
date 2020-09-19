@@ -6,6 +6,6 @@ Essa funcionalidade adiciona ao editor de texto do SEI a edição de estilo a ta
 
 > ![Tela Estilo de Tabelas](../img/tela-estilotabela.gif) 
 
-## Próximo passo
+## Próximo item
 
 > [Adicionar link de legislação](./LINKLEGIS.md)
