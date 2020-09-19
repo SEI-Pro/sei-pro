@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Quebra de Página](/img/icon-quebrapagina.png) Adicionar Quebra de Página
+## ![SEI Pro Quebra de Página](../img/icon-quebrapagina.png) Adicionar Quebra de Página
 
 Essa funcionalidade adiciona ao editor de texto do SEI a inserção de quebra de página no documento.
 
