@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Sumário](/img/icon-sumario.png) Adicionar sumário
+## ![SEI Pro Sumário](../img/icon-sumario.png) Adicionar sumário
 
 Essa funcionalidade adiciona ao editor de texto do SEI a criação de sumário ao seu documento.
 
