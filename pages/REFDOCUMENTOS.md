@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Referência Documentos](/img/icon-refdocumentos.png) Inserir referência de documentos do processo
+## ![SEI Pro Referência Documentos](../img/icon-refdocumentos.png) Inserir referência de documentos do processo
 
 Essa funcionalidade adiciona ao editor de texto do SEI a referência de documentos do processo, com a respectiva citação do link SEI.
 
