@@ -8,6 +8,6 @@ Essa funcionalidade adiciona ao editor de texto do SEI a referência de document
 
 A lista de referiencia é gerada a partir da árvore de documentos do processo.
 
-## Próximo passo
+## Próximo item
 
 > [Inserir nota de rodapé](./NOTARODAPE.md)
