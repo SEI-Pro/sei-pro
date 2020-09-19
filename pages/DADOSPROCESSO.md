@@ -17,6 +17,6 @@ Atualmente estão disponíveis os seguintes parâmetros:
 |  Assuntos |
 |  Data de hoje |
 
-## Próximo passo
+## Próximo item
 
 > [Gerar link curto do TinyUrl](./LINKCURTO.md)
