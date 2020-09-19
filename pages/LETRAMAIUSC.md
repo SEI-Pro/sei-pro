@@ -12,4 +12,4 @@ Atualmente são excetuados os seguintes artigos e preposições:
 
 ## Próximo passo
 
-> [Inserir referência de documentos do processo](./pages/REFDOCUMENTOS.md)
+> [Inserir referência de documentos do processo](./REFDOCUMENTOS.md)
