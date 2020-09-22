@@ -6,9 +6,17 @@ Essa funcionalidade adiciona ao editor de texto do SEI a importação de documen
 
 > ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml.gif) 
 
-Converta seus documentos Word em formato HTML...
+Converta seus documentos Word em formato HTML. Importe sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
 
 > ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml2.gif) 
+
+
+## Importando do Google Docs
+
+Importe documentos diretamente do Google Docs, sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
+
+(...)
+
 
 ## Próximo item
 
