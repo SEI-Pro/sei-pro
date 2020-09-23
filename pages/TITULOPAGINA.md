@@ -6,6 +6,8 @@ Essa funcionalidade altera o título da página do SEI, personalizando com o ass
 
 > ![Tela Estilo de Tabelas](../img/tela-titulopagina.gif) 
 
+Nenhuma ação de configuração é requerida. Ao instalar a extensão o título da página é alterado no seguinte padrão: 
+
 |  Página do SEI  |  Formato |
 | ------------------- |  ------------------- | 
 |  Árvore de Processo |  `(Assunto do Processo)`  `SEI Processo (Número do Processo)`  |
