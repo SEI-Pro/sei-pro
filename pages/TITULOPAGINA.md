@@ -2,10 +2,7 @@
 
 ## ![SEI Pro Título da página](../img/icon-titulopagina.png) Alterar título da página
 
-Essa funcionalidade alterar o título da página 
+Essa funcionalidade altera o título da página do SEI, personalizando com o assunto e número do processo.
 
 > ![Tela Estilo de Tabelas](../img/tela-titulopagina.gif) 
 
-## Próximo item
-
-> [Alterar título da página](./pages/TITULOPAGINA.md)
