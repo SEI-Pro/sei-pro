@@ -16,6 +16,7 @@
 - [Gerar código QR (QRCode)](./pages/QRCODE.md)
 - [Redimensionar imagens](./pages/REDIMENSIONAIMG.md)
 - [Inserir quebra de página](./pages/QUEBRAPAGINA.md)
+- [Alterar título da página](./pages/TITULOPAGINA.md)
 
 ## Como começar?
 
