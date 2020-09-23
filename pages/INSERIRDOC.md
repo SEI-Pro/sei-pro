@@ -17,6 +17,10 @@ Importe documentos diretamente do Google Docs, sem perder a formatação origina
 
 > ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml3.gif)
 
+Função em fase experimental (Beta), algumas formatações do documento podem não refletir fielmente ao documento original no Google Docs.
+
+Caso tenha identificado alguma consistência, envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com).
+
 
 ## Próximo item
 
