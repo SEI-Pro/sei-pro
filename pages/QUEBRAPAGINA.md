@@ -11,3 +11,7 @@ O elemento de quebra de página é invisível ao leitor do documento, sendo iden
 > ![Tela Estilo de Tabelas](../img/tela-quebrapagina2.gif) 
 
 > ![Tela Estilo de Tabelas](../img/tela-quebrapagina3.png) 
+
+## Próximo item
+
+> [Alterar título da página](./pages/TITULOPAGINA.md)
