@@ -9,4 +9,4 @@ Essa funcionalidade altera o título da página do SEI, personalizando com o ass
 |  Página do SEI  |  Formato |
 | ------------------- |  ------------------- | 
 |  Árvore de Processo |  `(Assunto do Processo)` `SEI Processo (Número do Processo)`  |
-|  Edição de Documento |  `Editor: (Tipo de Documento) (Número SEI do Documento) - (Assunto do Processo)  SEI Processo (Número do Processo)`  |
+|  Edição de Documento |  `Editor:` `(Tipo de Documento)` `(Número SEI do Documento)` - `(Assunto do Processo)`  `SEI Processo` `(Número do Processo)`  |
