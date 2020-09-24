@@ -15,4 +15,4 @@ Nenhuma ação é requerida. Ao instalar a extensão o título da página é alt
 
 ## Próximo item
 
-- [Abrir, editar e remover links](./pages/ABRIRLINKS.md)
+- [Abrir, editar e remover hiperlinks](./pages/ABRIRLINKS.md)
