@@ -11,7 +11,7 @@ Nenhuma ação é requerida. Ao instalar a extensão o título da página é alt
 |  Página do SEI  |  Formato |
 | ------------------- |  ------------------- | 
 |  Árvore de Processo |  `(Assunto do Processo)`  `SEI Processo (Número do Processo)`  |
-|  Edição de Documento |  `Editor:` `(Tipo de Documento)` `(Número SEI do Documento)` - `(Assunto do Processo)` `|` `SEI Processo` `(Número do Processo)`  |
+|  Edição de Documento |  `Editor:` `(Tipo de Documento)` `(Número SEI do Documento)` - `(Assunto do Processo)` `SEI Processo` `(Número do Processo)`  |
 
 ## Próximo item
 
