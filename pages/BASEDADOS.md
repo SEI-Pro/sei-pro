@@ -31,7 +31,7 @@ Clique em **"Fazer uma cópia"**
 
 Anote o ID da sua planilha, você precisará dele para [Conectar o SEI Pro ao Google Spreadsheets](./pages/SEISHEETS.md)
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="650"/>
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="927"/>
 
 ### Configurando o Google Sheets API
 
