@@ -26,3 +26,9 @@ Depois de logado em sua nova conta Google, crie uma cópia do nosso banco de dad
 Clique em **"Fazer uma cópia"**
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados2.png" width="450"/>
+
+### ID da planilha
+
+Anote o ID da sua planilha, você precisará dele para [Conectar o SEI Pro ao Google Spreadsheets](./pages/SEISHEETS.md)
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="550"/>
