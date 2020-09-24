@@ -73,7 +73,7 @@ Selecione a modalidade **Externo**
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados10.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados10.png" width="536"/>
 
-No campo **"Nome do Aplicativo"** insira **"SEI Controle de Atividades"**
+No campo **"Nome do Aplicativo"** insira **"SEI Pro"**
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados11.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados11.png" width="477"/>
 
