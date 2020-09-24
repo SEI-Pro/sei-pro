@@ -21,7 +21,7 @@ Dessa forma seu banco de dados ficará separada de sua conta pessoal do Gmail.
 ## Criando o banco de dados
 Depois de logado em sua nova conta Google, crie uma cópia do nosso banco de dados clicando no modelo de planilha abaixo:
 
-> [https://docs.google.com/spreadsheets/d/1N3SFN80rc0Lgwvg8iKoH6KLk3VdMADUSaFsAkIeoRIo/copy)](https://docs.google.com/spreadsheets/d/1N3SFN80rc0Lgwvg8iKoH6KLk3VdMADUSaFsAkIeoRIo/copy)
+> [https://docs.google.com/spreadsheets/d/1N3SFN80rc0Lgwvg8iKoH6KLk3VdMADUSaFsAkIeoRIo/copy](https://docs.google.com/spreadsheets/d/1N3SFN80rc0Lgwvg8iKoH6KLk3VdMADUSaFsAkIeoRIo/copy)
 
 Clique em **"Fazer uma cópia"**
 
