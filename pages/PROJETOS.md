@@ -6,6 +6,12 @@ Essa funcionalidade adiciona à página inicial do SEI um mini gestor de projeto
 
 > ![Tela Estilo de Tabelas](../img/tela-projetos.gif) 
 
+Para que você possa compartilhar seus projetos com sua equipe, utilizando uma planilha online no Google Spreadsheets.
+
+## Criando Base de Dados
+
+Siga o passo a passo ...
+
 ## Próximo item
 
 > [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
