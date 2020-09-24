@@ -5,7 +5,7 @@
 Nesta etapa você precisará das chaves anotadas na etapa [Configurando o Google Spreadsheets como uma base de dados](./pages/BASEDADOS.md):
 
 1. **"ID da sua planilha"**
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="650"/>
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="927"/>
 
 2. **"Seu ID de Cliente"**
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" width="494"/>
