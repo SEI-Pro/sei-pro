@@ -25,4 +25,4 @@ Depois de logado em sua nova conta Google, crie uma cópia do nosso banco de dad
 
 Clique em **"Fazer uma cópia"**
 
-> ![Tela 2](../img/tela-basedados2.png) 
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados2.png" width="450"/>
