@@ -17,6 +17,8 @@
 - [Redimensionar imagens](./pages/REDIMENSIONAIMG.md)
 - [Inserir quebra de página](./pages/QUEBRAPAGINA.md)
 - [Alterar título da página](./pages/TITULOPAGINA.md)
+- [Abrir, editar e remover links](./pages/ABRIRLINKS.md)
+
 
 ## Como começar?
 
