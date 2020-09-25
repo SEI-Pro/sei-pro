@@ -13,6 +13,8 @@ Nesta etapa você precisará das chaves anotadas na etapa [Configurando o Google
 3. **"Sua Chave de API"**
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados17.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados17.png" width="515"/>
 
+## Abrindo as configurações do SEI Pro
+
 Acesse as opções da extensão, clicando com o botão direito sobre o ícone do **SEI Pro** na barra de extensões do Google Chrome:
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" width="490"/>
@@ -21,4 +23,10 @@ Caso o ícone não esteja visível, fixe a extensão na barra.
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" width="473"/>
 
-Ou acesse o link <a href="chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html">chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html</a>
+Ou cole o link na barra de endereços do navegador:
+
+> `chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html`
+
+## Salvando as chaves de acesso
+
+
