@@ -129,3 +129,7 @@ Nas **"Restrições do aplicativo"**, selecione **"Referenciadores de HTTP (site
 Em **"Restrições de sites"**, clique em **"Adicionar um item"** e insira o URL do **SEI!** do seu órgão ou entidade.
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados19.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados19.png" width="520"/>
+
+## Próximo item
+
+[Conectar o SEI Pro ao Google Spreadsheets](../pages/SEISHEETS.md)
