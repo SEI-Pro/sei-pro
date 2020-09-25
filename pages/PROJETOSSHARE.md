@@ -49,4 +49,4 @@ Compartilhe o arquivo **"config.json"** com a pessoa desejada e solicite a execu
 
 ## Próximo item
 
-[Carregando chaves de acesso de outro usuário](./pages/PROJETOSIMPORT.md)
+[Carregando chaves de acesso de outro usuário](../pages/PROJETOSIMPORT.md)
