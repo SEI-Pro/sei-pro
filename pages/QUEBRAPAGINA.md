@@ -14,4 +14,4 @@ O elemento de quebra de página é invisível ao leitor do documento, sendo iden
 
 ## Próximo item
 
-> [Alterar título da página](./pages/TITULOPAGINA.md)
+> [Alterar título da página](../pages/TITULOPAGINA.md)
