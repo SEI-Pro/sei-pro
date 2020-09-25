@@ -2,7 +2,7 @@
 
 ## Conectando o SEI Pro ao Google Spreadsheets
 
-Nesta etapa você precisará das chaves anotadas na etapa [Configurando o Google Spreadsheets como uma base de dados](./pages/BASEDADOS.md):
+Nesta etapa você precisará das chaves anotadas na etapa [Configurando o Google Spreadsheets como uma base de dados](../pages/BASEDADOS.md):
 
 1. **"Seu ID de Cliente"**
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" width="494"/>
