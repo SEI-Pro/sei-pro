@@ -18,7 +18,9 @@ Ou cole o link na barra de endereços do navegador:
 
 ### Baixando configurações da base de dados
 
-Clique no botão **"Baixar configurações"**. Será iniciado o download do arquivo chamado **"config.json"**, ele contém as informações de acesso à sua base de dados do SEI Pro (ID de Cliente, Chave de acesso e ID da planilha)
+Clique no botão **"Baixar configurações"**. 
+
+Será iniciado o download do arquivo chamado **"config.json"**, ele contém as informações de acesso à sua base de dados do SEI Pro (ID de Cliente, Chave de acesso e ID da planilha)
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets11.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets11.png" width="742"/>
 
