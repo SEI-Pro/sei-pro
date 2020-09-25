@@ -4,7 +4,7 @@
 
 Caso ainda não possua o **SEI Pro**, instale a extensão para o Google Chrome em:
 
-[https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj](https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj)
+> [https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj](https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj)
 
 Acesse as configurações da extensão clicando no ícone do **SEI Pro** na barra de extensões do Google Chrome:
 
