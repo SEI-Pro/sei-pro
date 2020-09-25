@@ -4,14 +4,14 @@
 
 Nesta etapa você precisará das chaves anotadas na etapa [Configurando o Google Spreadsheets como uma base de dados](./pages/BASEDADOS.md):
 
-1. **"ID da sua planilha"**
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="927"/>
-
-2. **"Seu ID de Cliente"**
+1. **"Seu ID de Cliente"**
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" width="494"/>
 
-3. **"Sua Chave de API"**
+2. **"Sua Chave de API"**
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados17.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados17.png" width="515"/>
+
+3. **"ID da sua planilha"**
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="927"/>
 
 ## Abrindo as configurações do SEI Pro
 
@@ -29,4 +29,8 @@ Ou cole o link na barra de endereços do navegador:
 
 ## Salvando as chaves de acesso
 
+Digite **"Seu ID de Cliente"**,  **"Sua Chave de API"** e o **"ID da sua planilha"**. 
 
+Dê um **Nome da Base** para o conjunto de configurações para acesso a base de dados do Google Spreadsheets.
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets3.png" width="729"/>
