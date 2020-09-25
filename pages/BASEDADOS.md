@@ -29,7 +29,7 @@ Clique em **"Fazer uma cópia"**
 
 ### ID da planilha
 
-Anote o ID da sua planilha, você precisará dele para [Conectar o SEI Pro ao Google Spreadsheets](./pages/SEISHEETS.md)
+Anote o ID da sua planilha, você precisará dele para [Conectar o SEI Pro ao Google Spreadsheets](../pages/SEISHEETS.md)
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados3.png" width="927"/>
 
@@ -106,7 +106,7 @@ No campo **"Origens JavaScript autorizadas"**, insira o URL do **SEI!** do seu �
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados14.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados14.png" width="500"/>
 
-Anote **"Seu ID de Cliente"**, você precisará dela no passo a passo [Conectar o SEI Pro ao Google Spreadsheets](./pages/SEISHEETS.md)
+Anote **"Seu ID de Cliente"**, você precisará dela no passo a passo [Conectar o SEI Pro ao Google Spreadsheets](../pages/SEISHEETS.md)
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados15.png" width="494"/>
 
@@ -116,7 +116,7 @@ Clique no botão **"Criar credenciais"** > **"Chave de API"**
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados16.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados16.png" width="628"/>
 
-Anote **"Sua Chave de API"**, você precisará dela no passo a passo [Conectar o SEI Pro ao Google Spreadsheets](./pages/SEISHEETS.md)
+Anote **"Sua Chave de API"**, você precisará dela no passo a passo [Conectar o SEI Pro ao Google Spreadsheets](../pages/SEISHEETS.md)
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados17.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados17.png" width="515"/>
 
