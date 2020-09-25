@@ -21,4 +21,4 @@ Caso o ícone não esteja visível, fixe a extensão na barra.
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" width="473"/>
 
-Ou acesse o link [chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html](chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html)
+Ou acesse o link <a href="chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html">chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html</a>
