@@ -30,7 +30,7 @@ A mensagem **"Configurações carregadas com sucesso!"** será mostrada na tela.
 
 ## Autorizando sua conta Google
 
-Para gerenciarmos as informações armazenadas na planilha do Google Spreadsheets utilizamos o [Sheets API v4](https://developers.google.com/sheets/api). Esse serviço permite que scripts possam manipular arquivos específicos da sua conta Google remotamente.
+Para gerenciarmos as informações armazenadas na planilha do Google Spreadsheets utilizamos o [Sheets API v4](https://developers.google.com/sheets/api). Esse serviço permite que scripts possam manipular arquivos específicos da sua conta do Google.
 
 Para que o **SEI Pro** possa utilizar o Google Spreadsheets como uma base de dados, clique no botão de conexão que aparecerá no canto superior direito do SEI
 
