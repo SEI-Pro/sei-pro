@@ -20,6 +20,7 @@ Siga o passo a passo para [Conectar o SEI Pro ao Google Spreadsheets](./pages/SE
 
 - [Criando e editando projetos](./pages/PROJETOSEDIT.md)
 - [Compartilhando seus projetos com outros usuários](./pages/PROJETOSSHARE.md)
+- [Carregando chaves de acesso de outro usuário](./pages/PROJETOSIMPORT.md)
 
 ## Próximo item
 
