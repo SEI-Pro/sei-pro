@@ -55,3 +55,16 @@ Siga o passo a passo a seguir para autorizar a sua **"Chave de API"**
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets8.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets8.png" width="398"/>
 
+Retorne ao SEI. Passe o mouse sobre o botão de conexão à base e verifique o seu status. 
+
+Caso apareça a mensagem **"Perfil não autorizado. Solicite acesso à planilha"**, provavelmente você logou em uma conta Google diferente da conta com acesso à planilha.
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets10.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets10.png" width="460"/>
+
+Caso apareça a mensagem **"Conectado! Clique para desconectar Base de Dados (SeiPro)"** você configurou corretamente o acesso à base de dados e estará pronto para utilizar a ferramenta.
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets9.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets9.png" width="452"/>
+
+## Próximo item
+
+[Criando e Editando projetos](./pages/PROJETOSEDIT.md)
