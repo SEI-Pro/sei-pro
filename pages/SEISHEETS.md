@@ -19,7 +19,7 @@ Acesse as opções da extensão, clicando com o botão direito sobre o ícone do
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" width="490"/>
 
-Caso o ícone não esteja visível, fixe a extensão na barra.
+Caso o ícone não esteja visível, fixe-a na barra de extensões.
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" width="473"/>
 
@@ -31,8 +31,27 @@ Ou cole o link na barra de endereços do navegador:
 
 Digite **"Seu ID de Cliente"**,  **"Sua Chave de API"** e o **"ID da sua planilha"**. 
 
-Dê um **"Nome da Base"** para o conjunto de configurações para acesso a base de dados do Google Spreadsheets.
+Dê um **"Nome da Base"** para o conjunto de configurações para acesso à base de dados via Google Spreadsheets.
 
 Clique em **Salvar**
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets3.png" width="729"/>
+
+## Autorizando sua conta Google
+
+Para gerenciarmos as informações armazenadas na planilha do Google Spreadsheets utilizamos o [Sheets API v4](https://developers.google.com/sheets/api). Esse serviço permite que scripts possam manipular arquivos específicos da sua conta Google remotamente.
+
+Para que o **SEI Pro** possa utilizar o Google Spreadsheets como uma base de dados, clique no botão de conexão que aparecerá no canto superior direito do SEI
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets4.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets4.png" width="470"/>
+
+Siga o passo a passo a seguir para autorizar a sua **"Chave de API"**
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets5.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets5.png" width="482"/>
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets6.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets6.png" width="650"/>
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets7.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets7.png" width="477"/>
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets8.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets8.png" width="398"/>
+
