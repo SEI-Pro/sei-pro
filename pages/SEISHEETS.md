@@ -31,6 +31,8 @@ Ou cole o link na barra de endereços do navegador:
 
 Digite **"Seu ID de Cliente"**,  **"Sua Chave de API"** e o **"ID da sua planilha"**. 
 
-Dê um **Nome da Base** para o conjunto de configurações para acesso a base de dados do Google Spreadsheets.
+Dê um **"Nome da Base"** para o conjunto de configurações para acesso a base de dados do Google Spreadsheets.
+
+Clique em **Salvar**
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets3.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets3.png" width="729"/>
