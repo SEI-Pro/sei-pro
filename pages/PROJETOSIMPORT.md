@@ -24,7 +24,7 @@ Clique no botão **"Carregar configurações"**.
 
 Selecione o arquivo **"config.json"** compartilhado contigo. 
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets12.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets12.png" width="1002"/>
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets16.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets16.png" width="1002"/>
 
 A mensagem **"Configurações carregadas com sucesso!"** será mostrada na tela.
 
