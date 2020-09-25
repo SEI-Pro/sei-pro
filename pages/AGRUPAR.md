@@ -8,4 +8,4 @@ Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processo
 
 ## Próximo item
 
-> [Inserir documento externo (HTML)](./INSERIRHTML.md)
+> [Inserir documento externo (HTML e Google Docs)](./INSERIRDOC.md)
