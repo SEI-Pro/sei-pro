@@ -18,9 +18,10 @@ Siga o passo a passo para [Conectar o SEI Pro ao Google Spreadsheets](./pages/SE
 
 ## Gerenciando seus projetos
 
-- Criando um novo projeto
-- Editando um projeto existente
+- [Criando e editando projetos](./pages/PROJETOSEDIT.md)
+- [Compartilhando seus projetos com outros usuários](./pages/PROJETOSSHARE.md)
 
 ## Próximo item
 
 > [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
+
