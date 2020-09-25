@@ -10,19 +10,19 @@ Para que você possa compartilhar seus projetos com sua equipe, utilizando uma p
 
 ## Criando Base de Dados
 
-Siga o passo a passo para [Configurar o Google Spreadsheets como uma base de dados](./pages/BASEDADOS.md)
+Siga o passo a passo para [Configurar o Google Spreadsheets como uma base de dados](../pages/BASEDADOS.md)
 
 ## Conectando ao SEI Pro
 
-Siga o passo a passo para [Conectar o SEI Pro ao Google Spreadsheets](./pages/SEISHEETS.md)
+Siga o passo a passo para [Conectar o SEI Pro ao Google Spreadsheets](../pages/SEISHEETS.md)
 
 ## Gerenciando seus projetos
 
-- [Criando e editando projetos](./pages/PROJETOSEDIT.md)
-- [Compartilhando seus projetos com outros usuários](./pages/PROJETOSSHARE.md)
-- [Carregando chaves de acesso de outro usuário](./pages/PROJETOSIMPORT.md)
+- [Criando e editando projetos](../pages/PROJETOSEDIT.md)
+- [Compartilhando seus projetos com outros usuários](../pages/PROJETOSSHARE.md)
+- [Carregando chaves de acesso de outro usuário](../pages/PROJETOSIMPORT.md)
 
 ## Próximo item
 
-> [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
+> [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
 
