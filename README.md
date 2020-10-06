@@ -36,3 +36,7 @@ Ou para o Mozilla Firefox em:
 Caso deseja reportar um erro ou solicitar um recurso, acesse [Issue](https://github.com/pedrohsoaresadv/sei-pro/issues) no [Projeto GitHub](https://github.com/pedrohsoaresadv/sei-pro/) e adicione sua requisição.
 
 Ou envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com)
+
+## Histórico de versões
+
+Confira nosso [Histórico de versões](./pages/HISTORICO.md)
