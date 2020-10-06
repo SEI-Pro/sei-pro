@@ -8,4 +8,4 @@ Essa funcionalidade adiciona ao editor de texto do SEI a abertura, edição e re
 
 ## Próximo item
 
-- [Inserir equações (fórmulas matemáticas)](../pages/EQUACOES.md)
+> [Inserir equações (fórmulas matemáticas)](../pages/EQUACOES.md)
