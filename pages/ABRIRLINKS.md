@@ -5,3 +5,7 @@
 Essa funcionalidade adiciona ao editor de texto do SEI a abertura, edição e remoção de hiperlinks do documento
 
 > ![Tela Estilo de Tabelas](../img/tela-abrirlinks.gif) 
+
+## Próximo item
+
+- [Inserir equações (fórmulas matemáticas)](../pages/EQUACOES.md)
