@@ -67,4 +67,4 @@ Caso apareça a mensagem **"Conectado! Clique para desconectar Base de Dados (Se
 
 ## Próximo item
 
-[Criando e Editando projetos](../pages/PROJETOSEDIT.md)
+[Criando e Editando projetos](../pages/PROJETOSIMPORT.md)
