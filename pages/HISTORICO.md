@@ -7,7 +7,7 @@
 - Correções e melhorias
 - Adicionada funcionalidade de [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md) (Sugestão de Samuel Kaiser)
 
-# Bem vindo ao SEI Pro ![SEI Pro](/img/icon-32.png)
+# Bem vindo ao SEI Pro ![SEI Pro](../img/icon-32.png)
 
 **SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
