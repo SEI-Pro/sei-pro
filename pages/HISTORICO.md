@@ -7,9 +7,7 @@
 - Correções e melhorias
 - Adicionada funcionalidade de [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md) (Sugestão de Samuel Kaiser)
 
-# SEI Pro ![SEI Pro](../img/icon-32.png)
-
-**SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
+# Lista de funções do SEI Pro ![SEI Pro](../img/icon-32.png)
 
 - [Gerenciar projetos](../pages/PROJETOS.md)
 - [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
