@@ -18,6 +18,7 @@
 - [Inserir quebra de página](./pages/QUEBRAPAGINA.md)
 - [Alterar título da página](./pages/TITULOPAGINA.md)
 - [Abrir, editar e remover hiperlinks](./pages/ABRIRLINKS.md)
+- [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md)
 
 
 ## Como começar?
