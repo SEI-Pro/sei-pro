@@ -25,7 +25,7 @@ Caso o ícone não esteja visível, fixe-a na barra de extensões.
 
 Ou cole o link na barra de endereços do navegador:
 
-> `chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html`
+> `chrome://extensions/?options=cnkocjlifhcemdapiomhehhmjmlmmgem`
 
 ## Salvando as chaves de acesso
 
