@@ -19,6 +19,7 @@
 - [Alterar título da página](./pages/TITULOPAGINA.md)
 - [Abrir, editar e remover hiperlinks](./pages/ABRIRLINKS.md)
 - [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md)
+- [Copiar número e nome do documento ou processo](./pages/COPIARDOC.md)
 
 
 ## Como começar?
