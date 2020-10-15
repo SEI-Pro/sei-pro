@@ -4,3 +4,4 @@
 
 Essa funcionalidade adiciona ao editor do SEI a funcionalidade de copiar número e nome do documento ou processo.
 
+> ![Tela Copiar Documentos](../img/tela-copiardoc.gif) 
