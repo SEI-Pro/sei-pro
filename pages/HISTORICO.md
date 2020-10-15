@@ -2,10 +2,15 @@
 
 ## ![SEI Pro Inserir Equações](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.12
+
+- Correções e melhorias
+- Adicionada função de [Copiar número e nome do documento ou processo](../pages/COPIARDOC.md)
+
 ### Versão 0.1.11
 
 - Correções e melhorias
-- Adicionada funcionalidade de [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md) (Sugestão de Samuel Kaiser)
+- Adicionada funcionalidade de [Inserir equações (fórmulas matemáticas)](../pages/EQUACOES.md) (Sugestão de Samuel Kaiser)
 
 # Lista de funções do SEI Pro ![SEI Pro](../img/icon-32.png)
 
