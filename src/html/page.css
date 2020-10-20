@@ -1,0 +1,115 @@
+html, body { height: 100%; }
+
+body { font-family: arial, helvetica, sans-serif; font-size: 14px; margin: 0; }
+body {  background: #f8f9fa; }
+h1 { font-size: 22px; margin: 10px 0 10px 52px; }
+.panel {
+    background: #fff;
+    border: 1px solid #ddd;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    -webkit-box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    color: #333;
+    width: 690px;
+    margin: 10px auto;
+ }
+.panel .importExport {
+    position: absolute;
+    right: 5%;
+    width: auto;
+    display: inline-flex;
+    margin-top: 10px;
+}
+.panel.heading {
+    padding: 4px 20px;
+    background: #3367d6;
+    color: #fff;
+    width: 100%;
+    margin: 0;
+    position: fixed;
+    top: 0;
+    border: none;
+}
+
+input[type=text], select {
+    width: 97%;
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    font-size: 9pt;
+    color: #666;
+}
+.panel.heading .icon { 
+    font-size: 20pt;
+    margin-right: 10px;
+    color: #fff;
+    vertical-align: text-top;
+}
+
+.options-panel { 
+    line-height: 2em;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.options-panel th,
+.options-panel td { vertical-align: top; white-space: nowrap; }
+.options-panel th { text-align: right; width: 1%; padding: 8px 15px 10px 10px; }
+.options-panel td { width: 99%; padding: 10px; }
+.options-panel label.indent { margin-left: 24px; }
+.options-panel .disabled { color: #999; }
+
+.importExport { 
+    margin: 80px auto 0;
+    width: 740px;
+    padding: 0 30px;
+}
+
+#footer { margin: 10px 15px; }
+
+i.fa,
+i.fas {
+    margin-right: 5px;
+}
+
+.removeProfile {
+    float: right;
+    cursor: pointer;
+    color: #666;
+}
+.inputError {
+    background: #fff1f1;
+    border: 1px solid #deb0ac !important;
+}
+
+hr {
+    height: 0px;
+    border: 1px solid #ccc;
+}
+table { width: 100%; }
+button { 
+    font-size: 11pt;
+    padding: 5px 15px;
+    border-radius: 5px;
+    /*min-width: 100px;*/
+    background-color: #eaeaea;
+    border: none;
+    cursor: pointer;
+}
+.button-light { 
+    font-weight: normal !important;
+    background-color: #fff !important;
+    color: #3367d6 !important;
+	border-bottom: 3px solid #afbede !important;
+}
+.button-flat {
+    font-weight: bold;
+	background-color: #3367d6;
+	color: #fff;
+	margin-right: 10px;
+	border-bottom: 3px solid #7aa4ff;
+}
+#status { margin-left: 5px; color: #02893D; font-weight: bold; }
+
+h2 { font-size: 15pt; padding:0; margin: 5px 0; }
