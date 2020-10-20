@@ -107,7 +107,7 @@ function loadSheetsProStorage(items) {
 
         var dataValues = JSON.parse(items.dataValues);
             loadScriptDataBaseProjetosPro(dataValues);
-            loadScriptDataBaseAtividadesPro(dataValues);
+            //loadScriptDataBaseAtividadesPro(dataValues);
     }
 }
 function loadFontIcons(elementTo) {
