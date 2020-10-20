@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="pt-br">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Configura&ccedil;&otilde;es Gerais | SEI Pro</title>
+    <script src="../js/lib/jquery-3.4.1.min.js"></script>
+    <script src="../js/lib/jquery-ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="page.css">
+    <link rel="stylesheet" type="text/css" href="../css/fontawesome.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/jquery-ui.css">
+</head>
+<body>
+    <div class="panel heading">
+        <h1><i class="fas fa-cog icon"></i> Configura&ccedil;&otilde;es Gerais | SEI Pro</h1>
+    </div>
+        <div class="importExport">
+			<button id="export" class="button-flat button-light"><i class="fa fa-download"></i> Baixar Configura&ccedil;&otilde;es </button>
+			<span class="importBtn">
+				<input type="file" id="selectFiles" value="Import" style="display: none" />
+				<button id="import" class="button-flat button-light"><i class="fa fa-file-upload"></i> Carregar Configura&ccedil;&otilde;es</button>
+			</span>
+			<button class="save button-flat button-light" style="float:right" style="width: 100px"><i class="fas fa-save"></i> Salvar</button>
+            <div id="alertaBoxPro" style="display: none;"></div>
+        </div>
+    <div class="panel options-panel options-profile">
+        <div id="options-profile">
+            <table id="options-table-0" class="options-table">
+                <tr>
+                    <td colspan="2">
+                        <i id="sca-removeProfile-0" class="option-ref removeProfile fas fa-trash-alt"></i>
+                        <h2>Base de Dados (Google Spreadsheets)</h2>
+                    </td>
+                </tr>
+                 <tr>
+                    <th>
+                        <label class="option-ref" id="sca-label-baseName-0" for="sca-baseName-0">Nome da Base *</label>
+                    </th>
+                    <td>
+                        <input style="width: 30%" id="sca-baseName-0" class="sca-baseName option-ref input-config-pro" type="text" placeholder="Nome da Base" data-name-input="baseName" value=""/>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label class="option-ref" id="sca-label-CLIENT_ID-0" for="sca-CLIENT_ID-0">ID de Cliente *</label>
+                    </th>
+                    <td>
+                        <input id="sca-CLIENT_ID-0" class="sca-CLIENT_ID option-ref input-config-pro" type="text" placeholder="CLIENT_ID" data-name-input="CLIENT_ID" value=""/>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label class="option-ref" id="sca-label-API_KEY-0" for="sca-API_KEY-0">Chave de API *</label>
+                    </th>
+                    <td>
+                        <input id="sca-API_KEY-0" class="sca-API_KEY option-ref input-config-pro" type="text" placeholder="API_KEY" data-name-input="API_KEY" value=""/>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label class="option-ref" id="sca-label-spreadsheetId-0" for="sca-spreadsheetId-0">ID da Planilha *</label>
+                    </th>
+                    <td>
+                        <input id="sca-spreadsheetId-0" class="sca-spreadsheetId option-ref input-config-pro" type="text" placeholder="spreadsheetId" data-name-input="spreadsheetId" value=""/>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <label class="option-ref" id="sca-label-baseTipo-0" for="sca-baseTipo-0">Tipo da Base de Dados *</label>
+                    </th>
+                    <td>
+                        <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;">
+                            <option value="projetos">Projetos</option>
+                            <option value="atividades">Atividades</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <hr>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <table>
+            <tr id="footer">
+                <td>
+                    <button id="new"><i class="fas fa-database"></i> Adicionar nova base</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="importExport" style="margin: 10px auto; padding-bottom: 50px;">
+        <button class="save button-flat button-light" style="float:right" style="width: 100px"><i class="fas fa-save"></i> Salvar</button>
+    </div>
+    <script src="options.js"></script>
+</body>
+</html>
