@@ -4,7 +4,7 @@ function loadEtapasSheet() {
     var ranges = [
                     rangeEtapasPro,
                     rangeProjetosPro,
-					rangeFeriadosNacionaisPro,
+		    rangeFeriadosNacionaisPro,
                     rangeConfigGeral
                 ];
     gapi.client.sheets.spreadsheets.values.batchGet({
@@ -26,31 +26,97 @@ function loadEtapasSheetAction(result) {
     configGeralObj = arraySheetToJSON(result.valueRanges[3].values);
     setProjetosGantt('insert');
 }
+function deletReportProjetosGantt(this_) {
+    var id = $(this_).closest('li').attr('aria-controls');
+    var id_ = id.replace('svgtab_report','gantt_report');
+        $(this_).closest('li').remove();
+        $('#'+id).remove();
+        $('#projetosGanttTabs').tabs('refresh');
+	for (i = 0; i < ganttProject.length; i++) {
+		if ( typeof ganttProject[i] !== 'undefined' && ganttProject[i].$svg.id.indexOf(id_) !== -1 ) {   
+            		ganttProject.splice(i,1);
+            		i--;
+		}
+	}
+}
+function openFilterProjetoGantt() {
+    var macroetapaList = uniqPro(jmespath.search(ganttProjectSelect, "[*].Macroetapa | []"));
+    var grupoList = uniqPro(jmespath.search(ganttProjectSelect, "[*].Grupo | []"));
+    var responsavelList = uniqPro(jmespath.search(ganttProjectSelect, "[*].Responsavel | []"));
+    var optionSelectMacroetapa = ( macroetapaList.length > 0 ) ? $.map(macroetapaList, function(v,k){ return '<option data-name="macroetapa" value="'+v+'">Macroetapa: '+v+'</option>' }).join('') : '';
+    var optionSelectGrupo = ( grupoList.length > 0 ) ? $.map(grupoList, function(v,k){ return '<option data-name="grupo" value="'+v+'">Grupo: '+v+'</option>' }).join('') : '';
+    var optionSelectResponsavel = ( responsavelList.length > 0 ) ? $.map(responsavelList, function(v,k){ return '<option data-name="responsavel" value="'+v+'">Respons\u00E1vel: '+v+'</option>' }).join('') : '';
+    var selectFilter = '<select style="width: 100%; height: 30px; margin: 0 !important; padding: 0 5px !important;" class="required infraText txtsheetsSelect" id="selectBoxFilter">'+
+                        '<option data-name="em_execucao" value="">Etapas em execu\u00E7\u00E3o</option>'+
+                        '<option data-name="concluidas" value="">Etapas conclu\u00EDdas</option>'+
+                        '<option data-name="atrasadas" value="">Etapas atrasadas</option>'+
+                        optionSelectMacroetapa+
+                        optionSelectGrupo+
+                        optionSelectResponsavel+
+                        '</select>';
+    var textBox =  '<div class="details-container sheetsForm GanttFormInsertProjeto">'+
+                   '   <table class="tableInfo popup-wrapper">'+
+                   '      <tr><td><p><i class="iconPopup fas fa-filter cinzaColor"></i> Filtro do Relat\u00F3rio *</p></td><td><p>'+selectFilter+'</p></td></tr>'+
+                   '   </table>'+
+                   '</div>';
+
+    $('#dialogBoxPro')
+        .html('<div class="alertaBoxPro"> '+textBox+'</span>')
+        .dialog({
+            title: "Gerar Relat\u00F3rio Filtrado",
+        	width: 600,
+        	buttons: [{
+                text: "Ok",
+                click: function() {
+                    var nameFilter = $('#selectBoxFilter option:selected').attr('data-name');
+                    var valueFilter = $('#selectBoxFilter option:selected').val();
+                    var filter = {name: nameFilter, value: valueFilter};
+                    filterProjetosGantt(filter);
+                    $(this).dialog('close');
+                }
+            }]
+    });
+}
 function filterProjetosGantt(filter) {
-    if ( filter == 'em_execucao' ) {
+    if ( filter.name == 'em_execucao' ) {
         // Etapas em execucao
         var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?Data_Conclusao==''] | [?Progresso_Execucao!='0']");
         var nameReport = '(Etapas em execu\u00E7\u00E3o)';
-    } else if ( filter == 'concluidas' ) {
+    } else if ( filter.name == 'concluidas' ) {
         // Etapas concluidas
         var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?Data_Conclusao!=''] | [?Progresso_Execucao=='100']");
-        var nameReport = '(Etapas Conclu\u00EDdas)';
-    } else if ( filter == 'atrasadas' ) {
+        var nameReport = '(Etapas conclu\u00EDdas)';
+    } else if ( filter.name == 'atrasadas' ) {
         // Etapas atrasadas
         var dadosEtapasReport = [];
         var t = jmespath.search(dadosEtapasObj, "[?Data_Conclusao==''] | [?Progresso_Execucao!='100']");
             $.map(t, function(v,k){ return ( moment(v['Data_Fim'],'DD/MM/YYYY') < moment() ) ? dadosEtapasReport.push(v) : '' });
         var nameReport = '(Etapas atrasadas)';
+    } else if ( filter.name == 'grupo' ) {
+        // Etapas por Grupo
+        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?Grupo=='"+filter.value+"']");
+        var valueAssunto = ( filter.value.length > 50 ) ? filter.value.substring(0,50)+'...' : filter.value;
+        var nameReport = '(Grupo: '+valueAssunto+')';
+    } else if ( filter.name == 'macroetapa' ) {
+        // Etapas por Macroetapa
+        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?Macroetapa=='"+filter.value+"']");
+        var valueAssunto = ( filter.value.length > 50 ) ? filter.value.substring(0,50)+'...' : filter.value;
+        var nameReport = '(Macroetapa: '+valueAssunto+')';
+    } else if ( filter.name == 'responsavel' ) {
+        // Etapas por Responsavel
+        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?Responsavel=='"+filter.value+"']");
+        var valueAssunto = ( filter.value.length > 50 ) ? filter.value.substring(0,50)+'...' : filter.value;
+        var nameReport = '(Respons\u00E1vel: '+valueAssunto+')';
     }
     var dadosProjetosReport = uniqPro(jmespath.search(dadosEtapasReport, "[*].ID_Projeto"));
-    console.log(dadosProjetosReport, dadosEtapasReport);
     
 if ( typeof dadosProjetosReport !== 'undefined' && dadosProjetosReport.length > 0 ) {
         var divGantt = '';
         var idReport = randomString(8);
         var width = $('#projetosGanttDiv').width();
-            $('#projetosGanttTabs ul').append('<li><a href="#svgtab_report_'+idReport+'">Relat\u00F3rio '+nameReport+' </a></li>');
-            $('#projetosGanttTabs').append('<div id="svgtab_report_'+idReport+'"></div>');
+        var iconCloseTab = '<i class="fas fa-times-circle closeReport" onclick="deletReportProjetosGantt(this)"></i>';
+            $('#projetosGanttTabs ul').append('<li><a href="#svgtab_report_'+idReport+'">Relat\u00F3rio '+nameReport+' '+iconCloseTab+'</a></li>');
+            $('#projetosGanttTabs').append('<div id="svgtab_report_'+idReport+'" class="ganttReport"></div>');
     
         $.each(dadosProjetosReport, function (index, value) {
             var nameID = value;
@@ -106,7 +172,6 @@ if ( typeof dadosProjetosReport !== 'undefined' && dadosProjetosReport.length > 
                     protocoloSEI = dTask.Protocolo_SEI;
                 });
 
-                /**/
                 var gantt = new Gantt("#gantt_report_"+idReport+"_"+nameID, task,{
                     header_height: 50,
                     column_width: 10,
@@ -152,14 +217,15 @@ if ( typeof dadosProjetosReport !== 'undefined' && dadosProjetosReport.length > 
                         return html;
                     }
                 });
-                /**/
-                //ganttProject.push(gantt);
+                ganttProject.push(gantt);
                 //ganttProjectSelect.push({ID_Projeto: nameID, Processo_SEI: processoSEI, Protocolo_SEI: protocoloSEI, Nome_Projeto: nameDisplay, Macroetapa: taskMacroetapa, Responsavel: taskResponsavel, Dependencias: taskDependencies, Grupo: taskGrupo});
             }
         });
     }
     $('#projetosGanttTabs').tabs('refresh');
     $('.gantt-container').css('max-width',(width-20));
+    var activeTab = $('#projetosGanttTabs .ui-tabs-nav li').length-1;
+    $('#projetosGanttTabs').tabs( "option", "active",  activeTab);
 }
 function setProjetosGantt(mode) {
     //if ( typeof dadosEtapasObj !== 'undefined' && dadosEtapasObj.length > 0 ) {
@@ -377,7 +443,10 @@ function setProjetosGantt(mode) {
     
     setTimeout(function(){ 
         if ($().tabs ) { 
-            var toolbarProjetosGantt = '<div class="Gantt_Toolbar" style="display: contents;position: absolute;z-index: 9;float: right;"><a class="newLink boxConfig" onclick="adicionarProjetoGantt(0)" onmouseover="return infraTooltipMostrar(\'Adicionar Novo Projeto\');" onmouseout="return infraTooltipOcultar();" style="margin: 0; font-size: 14pt;float: right;"><i class="fas fa-plus"></i></a></div>';
+            var toolbarProjetosGantt =  '<div class="Gantt_Toolbar" style="display: contents;position: absolute;z-index: 9;float: right;">'+
+                                        '   <a class="newLink boxConfig" onclick="adicionarProjetoGantt(0)" onmouseover="return infraTooltipMostrar(\'Adicionar Novo Projeto\');" onmouseout="return infraTooltipOcultar();" style="margin: 0; font-size: 14pt;float: right;"><i class="fas fa-plus"></i></a>'+
+                                        '   <a class="newLink boxConfig" onclick="openFilterProjetoGantt()" onmouseover="return infraTooltipMostrar(\'Gerar Relat\u00F3rio Filtrado\');" onmouseout="return infraTooltipOcultar();" style="margin: 2px 0; font-size: 12pt;float: right;"><i class="fas fa-filter"></i></a>'+
+                                        '</div>';
             $('#projetosGanttTabs').tabs({
                 activate: function (event, ui) {
                     var active = $(this).tabs( "option", "active" );
@@ -905,7 +974,7 @@ function openConfigGantt() {
     var stateArquivadosGantt = ( localStorageRestorePro('stateArquivadosGantt') != null && localStorageRestorePro('stateArquivadosGantt') == true ) ? 'checked' : '';
     var configBaseSelected = ( localStorageRestorePro('configBaseSelectedPro') != null ) ? localStorageRestorePro('configBaseSelectedPro') : '';
     var configBasePro = ( localStorageRestorePro('configBasePro') != null ) ? localStorageRestorePro('configBasePro') : '';
-        configBasePro = ( jmespath.search(configBasePro, "[?baseTipo=='projetos'] | length(@)") > 0 ) ? jmespath.search(configBasePro, "[?baseTipo=='projetos']") : configBasePro;
+        configBasePro = ( configBasePro != '' && jmespath.search(configBasePro, "[?baseTipo=='projetos'] | length(@)") > 0 ) ? jmespath.search(configBasePro, "[?baseTipo=='projetos']") : configBasePro;
     var configBaseName = ( configBasePro != '' ) ? jmespath.search(configBasePro, "[*].baseName") : [];
     var configBaseLinkSelected = ( configBaseSelected == '' ) ? jmespath.search(configBasePro, "[0].spreadsheetId") : jmespath.search(configBasePro, "[?baseName=='"+configBaseSelected+"'].spreadsheetId | [0]");
     var configBaseLink = ( configBasePro != '' ) ? configBaseLinkSelected : '';
