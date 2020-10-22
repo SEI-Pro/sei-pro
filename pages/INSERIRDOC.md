@@ -12,7 +12,7 @@ Converta seus documentos Word em formato HTML. Importe sem perder a formatação
 
 Erros com caracteres não indentificados? Antes do envio, marque a opção corrigir erros de codificação de documentos Word:
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-inserirhtml5.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-inserirhtml5.png" width="361"/>
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-inserirhtml5.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-inserirhtml5.png" width="722"/>
 
 
 ## Importando do Google Docs
