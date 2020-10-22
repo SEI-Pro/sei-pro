@@ -3,7 +3,7 @@
   "name": "SEI Pro",
   "short_name": "SEI Pro",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "0.1.12.1",
+  "version": "0.1.14",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://pedrohsoaresadv.github.io/sei-pro/",
   "icons": { "16": "icons/icon-16.png",
