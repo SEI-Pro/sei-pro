@@ -1,6 +1,16 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Inserir Equações](../img/icon-historico.png) Histórico de versões
+## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
+
+### Versão 0.1.14
+
+- Correções e melhorias
+- Inserida opção que corrige erros de codificação de documentos Word ao [Inserir documento externo](../pages/INSERIRDOC.md)
+
+### Versão 0.1.13
+
+- Correções e melhorias
+- Adicionado relatório filtrado no [Gerenciador de projetos](../pages/PROJETOS.md)
 
 ### Versão 0.1.12
 
