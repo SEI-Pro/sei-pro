@@ -2,6 +2,11 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.15
+
+- Correções e melhorias
+- Adicionada função [Menu rápido na árvore de documentos](../pages/MENURAPIDO.md)
+
 ### Versão 0.1.14
 
 - Correções e melhorias
