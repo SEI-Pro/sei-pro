@@ -12,4 +12,4 @@ Adicione novos botões e escolha a sua ordem com a opção de **Personalizar Men
 
 Além do menu do processo, os documentos também contam com um menu rápido para **Copiar número do documento SEI**, **Nome do Documento** ou o **Link do documento** (sem chave de acesso "hash")
 
-> ![Tela Menu rápido](../img/tela-menurapido2.gif) 
+> ![Tela Menu rápido](../img/tela-menurapido3.gif) 
