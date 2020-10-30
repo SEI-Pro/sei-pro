@@ -12,5 +12,5 @@ Caso não tenha familiaridade com a codificação LaTex, utilize o editor visual
 
 ## Próximo item
 
-> [Copiar número e nome do documento ou processo](../pages/COPIARDOC.md)
+> [Menu rápido na árvore de documentos](../pages/MENURAPIDO.md)
 
