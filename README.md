@@ -20,6 +20,7 @@
 - [Abrir, editar e remover hiperlinks](./pages/ABRIRLINKS.md)
 - [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md)
 - [Menu rápido na árvore de documentos](./pages/MENURAPIDO.md)
+- [Tabela rápida](./pages/TABELARAPIDO.md)
 
 
 ## Como começar?
