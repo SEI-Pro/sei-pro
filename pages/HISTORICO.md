@@ -6,6 +6,7 @@
 
 - Correções e melhorias
 - Adicionada função [Copiar formatação de texto](../pages/COPIARFORMATACAO.md)
+- Adicionada função [Aumentar ou reduzir o tamanho da fonte](../pages/AUMENTARFONTE.md)
 - Adicionada aba na página de opção para [Desativar funções da extensão](../pages/DESATIVARFUNCOES.md)
 
 ### Versão 0.1.16
@@ -59,3 +60,5 @@
 - [Inserir equações (fórmulas matemáticas)](../pages/EQUACOES.md)
 - [Menu rápido na árvore de documentos](../pages/MENURAPIDO.md)
 - [Tabela rápida](../pages/TABELARAPIDA.md)
+- [Copiar formatação do texto](../pages/COPIARFORMATACAO.md)
+- [Aumentar ou reduzir o tamanho da fonte](../pages/AUMENTARFONTE.md)
