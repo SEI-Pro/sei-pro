@@ -2,10 +2,16 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.17
+
+- Correções e melhorias
+- Adicionada função [Copiar formatação de texto](../pages/COPIARFORMATACAO.md)
+- Adicionada aba na página de opção para [Desativar funções da extensão](../pages/DESATIVARFUNCOES.md)
+
 ### Versão 0.1.16
 
 - Correções e melhorias
-- Adicionada função [Tabela rápida](../pagesTABELARAPIDA.md)
+- Adicionada função [Tabela rápida](../pages/TABELARAPIDA.md)
 
 ### Versão 0.1.15
 
