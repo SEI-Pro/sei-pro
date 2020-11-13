@@ -21,6 +21,8 @@
 - [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md)
 - [Menu rápido na árvore de documentos](./pages/MENURAPIDO.md)
 - [Tabela rápida](./pages/TABELARAPIDA.md)
+- [Copiar formatação do texto](./pages/COPIARFORMATACAO.md)
+- [Aumentar ou reduzir o tamanho da fonte](./pages/AUMENTARFONTE.md)
 
 
 ## Como começar?
