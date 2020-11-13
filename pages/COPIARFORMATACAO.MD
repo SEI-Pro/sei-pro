@@ -10,7 +10,9 @@ Selecione o texto que deseja copiar a formatação, clique no ícone ![Copiar fo
 
 Selecione o texto de destino que você deseja formatar.
 
-Dica: Mantenha o botão `[alt]` do teclado para (`[option]` do Mac) para selecionar vários trechos do texto 
+Dica: Mantenha o botão `[alt]` do teclado para (`[option]` do Mac) para selecionar vários trechos do texto.
+
+> ![Copiar formatação de texto](../img/tela-copiarformatacao2.gif) 
 
 ## Próximo item
 
