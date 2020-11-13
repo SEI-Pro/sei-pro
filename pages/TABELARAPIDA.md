@@ -5,3 +5,7 @@
 Essa funcionalidade adiciona ao editor de documentos do SEI um menu de tabela rápida
 
 > ![Tela Menu rápido](../img/tela-tabelarapida.gif) 
+
+## Próximo item
+
+> [Copiar formatação de texto](../pages/COPIARFORMATACAO.md)
