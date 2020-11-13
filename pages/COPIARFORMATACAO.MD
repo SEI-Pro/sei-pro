@@ -16,4 +16,4 @@ Mantenha o botão `[alt]` do teclado para (`[option]` do Mac) para selecionar v�
 
 ## Próximo item
 
-> [Aumentar ou reduzir o tamanho da fonte](../pages/AUMENTARFONTE.md)
+> [Aumentar ou reduzir o tamanho da fonte](./AUMENTARFONTE.md)
