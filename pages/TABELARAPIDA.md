@@ -8,4 +8,4 @@ Essa funcionalidade adiciona ao editor de documentos do SEI um menu de tabela r�
 
 ## Próximo item
 
-> [Copiar formatação de texto](../pages/COPIARFORMATACAO.md)
+> [Copiar formatação de texto](./pages/COPIARFORMATACAO.md)
