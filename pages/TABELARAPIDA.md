@@ -4,7 +4,7 @@
 
 Essa funcionalidade adiciona ao editor de documentos do SEI um menu de tabela rápida
 
-> ![Tela Menu rápido](../img/tela-tabelarapida.gif) 
+> ![Tabela Rápida](../img/tela-tabelarapida.gif) 
 
 ## Próximo item
 
