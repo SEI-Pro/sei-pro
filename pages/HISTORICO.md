@@ -5,8 +5,8 @@
 ### Versão 0.1.17
 
 - Correções e melhorias
-- Adicionada função [Copiar formatação de texto](../pages/COPIARFORMATACAO.md)
-- Adicionada função [Aumentar ou reduzir o tamanho da fonte](../pages/AUMENTARFONTE.md)
+- Adicionada função [Copiar formatação de texto](../pages/COPIARFORMATACAO.md) (Sugestão de Lucas Campos)
+- Adicionada função [Aumentar ou reduzir o tamanho da fonte](../pages/AUMENTARFONTE.md) (Sugestão de Samuel Kaiser)
 - Adicionada aba na página de opção para [Desativar funções da extensão](../pages/DESATIVARFUNCOES.md)
 
 ### Versão 0.1.16
