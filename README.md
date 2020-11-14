@@ -25,6 +25,9 @@
 - [Aumentar ou reduzir o tamanho da fonte](./pages/AUMENTARFONTE.md)
 
 
+Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
+
+
 ## Como começar?
 
 Instale a extensão para o Google Chrome em:
