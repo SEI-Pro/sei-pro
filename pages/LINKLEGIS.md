@@ -14,6 +14,14 @@ Ao inserir mais de um link para a mesma legislação, a ferramenta encurta a rem
 
 2. **“Lei nº 8.112, de 1990”**, nos demais casos; ([art. 14, II, "k" do Decreto 9.191, de  1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_Ato2015-2018/2017/Decreto/D9191.htm#art14iik))
 
+Atualização: Agora é possível pesquisar a legislação federal publicadas por tipo, pelo ano de publicação (no ano, até o ano ou após o ano informado) ou por palavras-chaves.
+
+> ![Tela Estilo de Tabelas](../img/tela-linklegis.gif) 
+
+Digite mais de uma palavra-chave (separadas por espaço simples). Combine filtros por data ou tipo de ato.
+
+> Dica: Deixe todos os campos em branco e clique em **Pesquisar** para listar a legislação mais recente publicada pelo site do Planalto.
+
 Atualmente estão disponíveis as seguintes legislações: 
 
 |  Legislação Federal  |
@@ -38,6 +46,8 @@ Atualmente estão disponíveis os seguintes normativos infralegais:
 |  [Súmulas Administrativas da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
 |  [Portarias da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
 |  [Instruções Normativa da ANTAQ](http://sophia.antaq.gov.br/terminal/) |
+|  [Resoluções do Cade](http://www.cade.gov.br/assuntos/assuntos/normas-e-legislacao/normas_legislacao/resolucao) |
+|  [Portarias do Cade](http://www.cade.gov.br/assuntos/assuntos/normas-e-legislacao/normas_legislacao/portarias) |
 
 Deseja adicionar as normas infralegais de outros órgãos? Colabore conosco ([pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com))
 
