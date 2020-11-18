@@ -7,3 +7,7 @@ Essa funcionalidade adiciona ao editor de documentos do SEI a função de aument
 > ![Aumentar fonte](../img/tela-aumentarfonte.gif) 
 
 O intervalo de alteração da fonte é entre `7px` e `70px`
+
+## Próximo item
+
+> [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
