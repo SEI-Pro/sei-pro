@@ -16,7 +16,7 @@ Ao inserir mais de um link para a mesma legislação, a ferramenta encurta a rem
 
 Atualização: Agora é possível pesquisar a legislação federal publicadas por tipo, pelo ano de publicação (no ano, até o ano ou após o ano informado) ou por palavras-chaves.
 
-> ![Tela Estilo de Tabelas](../img/tela-linklegis.gif) 
+> ![Tela Estilo de Tabelas](../img/tela-linklegis2.gif) 
 
 Digite mais de uma palavra-chave (separadas por espaço simples). Combine filtros por data ou tipo de ato.
 
