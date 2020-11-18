@@ -8,11 +8,15 @@ Essa funcionalidade adiciona ao editor de texto do SEI a inclusão de link de le
 
 As citações acompanham o hiperlink para a norma publicada no site do Planalto.
 
+### Remissão aos atos normativos
+
 Ao inserir mais de um link para a mesma legislação, a ferramenta encurta a remissão aos atos normativos da seguinte forma:
 
 1. **“Lei nº 8.112, de 11 de dezembro de 1990”**, na primeira remissão no corpo do texto; e
 
 2. **“Lei nº 8.112, de 1990”**, nos demais casos; ([art. 14, II, "k" do Decreto 9.191, de  1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_Ato2015-2018/2017/Decreto/D9191.htm#art14iik))
+
+### Pesquisa semântica
 
 Atualização: Agora é possível pesquisar a legislação federal publicadas por tipo, pelo ano de publicação (no ano, até o ano ou após o ano informado) ou por palavras-chaves.
 
@@ -21,6 +25,8 @@ Digite mais de uma palavra-chave (separadas por espaço simples). Combine filtro
 > ![Tela Estilo de Tabelas](../img/tela-linklegis2.gif) 
 
 > Dica: Deixe todos os campos em branco e clique em **Pesquisar** para listar a legislação mais recente publicada pelo site do Planalto.
+
+### Legislação Federal
 
 Atualmente estão disponíveis as seguintes legislações: 
 
