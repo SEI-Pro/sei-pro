@@ -2,6 +2,13 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.19
+
+- Correções e melhorias
+- Adicionada função [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
+- Atualizada função [Adicionar link de legislação](../pages/LINKLEGIS.md) para inserir recurso de pesquisa legislação por conteúdo
+- Adicionado recurso de desfazer (Control + Z) nas modificações feitas pelo SEI Pro no editor de texto do SEI
+
 ### Versão 0.1.17
 
 - Correções e melhorias
