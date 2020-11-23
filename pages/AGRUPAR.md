@@ -6,7 +6,7 @@ Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processo
 
 > ![Tela Agrupar lista de processos](../img/tela-agrupamento.gif) 
 
-Ainda, é possível agrupar os processos pela data de recebimento na unidade e a data do último acesso feito por você. 
+Ainda, é possível agrupar os processos pela **data de recebimento na unidade** e a **data do último acesso** feito por você. 
 
 > ![Tela Agrupar lista de processos](../img/tela-agrupamento2.gif) 
 
