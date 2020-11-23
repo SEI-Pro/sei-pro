@@ -5,6 +5,11 @@
 ### Versão 0.1.19
 
 - Correções e melhorias
+- Adicionada função [Agrupamento de lista de processos por data de recebimento e último acesso](../pages/AGRUPAR.md)
+
+### Versão 0.1.18
+
+- Correções e melhorias
 - Adicionada função [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md) (Sugestão de Geraldo Nogueira)
 - Atualizada função [Adicionar link de legislação](../pages/LINKLEGIS.md) para inserir recurso de pesquisa legislação por conteúdo
 - Adicionado recurso de desfazer (Ctrl + Z) as modificações feitas pelo SEI Pro no editor de texto do SEI
@@ -49,7 +54,7 @@
 # Lista de funções do SEI Pro ![SEI Pro](../img/icon-32.png)
 
 - [Gerenciar projetos](../pages/PROJETOS.md)
-- [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
+- [Agrupar lista de processos por data de recebimento, último acesso, marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
 - [Inserir documento externo (HTML e Google Docs)](../pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](../pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](../pages/LINKLEGIS.md)
