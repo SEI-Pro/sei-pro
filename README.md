@@ -3,7 +3,7 @@
 **SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
 - [Gerenciar projetos](./pages/PROJETOS.md)
-- [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
+- [Agrupar lista de processos por data de recebimento, último acesso, marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
 - [Inserir documento externo (HTML e Google Docs)](./pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](./pages/LINKLEGIS.md)
