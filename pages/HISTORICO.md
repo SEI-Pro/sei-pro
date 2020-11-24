@@ -5,7 +5,7 @@
 ### Versão 0.1.19
 
 - Correções e melhorias
-- Adicionada função [Agrupamento de lista de processos por data de recebimento e último acesso](../pages/AGRUPAR.md)
+- Adicionada função [Agrupamento de lista de processos por data de recebimento e último acesso](../pages/AGRUPAR.md) (Sugestão de Dárcio Gomes)
 
 ### Versão 0.1.18
 
