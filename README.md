@@ -50,6 +50,7 @@ Ou envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gma
 Receba em primeira mão sobre novidades e atualizações do SEI Pro. 
 
 Inscreva-se na nossa [Lista de e-mail](http://eepurl.com/hjHh45) ou
+
 Siga-me no Instagram [@phsoares_adv](https://www.instagram.com/phsoares_adv/)
 
 ## Histórico de versões
