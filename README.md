@@ -49,6 +49,8 @@ Ou envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gma
 
 Siga as novidades da extensão e dicas de produtividade em [@phsoares_adv](https://www.instagram.com/phsoares_adv/)
 
+Receba em primeira mão sobre notícias e atualizações do SEI Pro. Inscreva-se na nossa [Lista de e-mail](http://eepurl.com/hjHh45).
+
 ## Histórico de versões
 
 Confira nosso [Histórico de versões](./pages/HISTORICO.md)
