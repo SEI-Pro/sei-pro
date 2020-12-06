@@ -3,7 +3,7 @@
 **SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
 - [Gerenciar projetos](./pages/PROJETOS.md)
-- [Agrupar lista de processos por data de recebimento, último acesso, marcadores, tipo, responsável ou ponto de controle](./pages/AGRUPAR.md)
+- [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](./pages/AGRUPAR.md)
 - [Inserir documento externo (HTML e Google Docs)](./pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](./pages/LINKLEGIS.md)
@@ -24,6 +24,7 @@
 - [Copiar formatação do texto](./pages/COPIARFORMATACAO.md)
 - [Aumentar ou reduzir o tamanho da fonte](./pages/AUMENTARFONTE.md)
 - [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](./pages/ALINHARTEXTO.md)
+- [Verificar código de integridade (Hashcode)](./pages/HASHCODE.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
