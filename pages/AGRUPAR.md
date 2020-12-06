@@ -10,7 +10,7 @@ Ainda, é possível agrupar os processos pela **data de recebimento na unidade**
 
 > ![Tela Agrupar lista de processos](../img/tela-agrupamento2.gif) 
 
-Para a função **Data de recebimento** a extensão buscará a última data no **Histórico do Processo** que contém a descrição `Processo recebido na unidade`, `Reabertura do processo na unidade` ou `Processo público gerado` e que corresponda a sua unidade.
+Para a função **Data de recebimento**, **Data de envio** e **Unidade de envio**,a extensão buscará a última data no **Histórico do Processo** que contém a descrição `Processo recebido na unidade`, `Reabertura do processo na unidade` ou `Processo público gerado` e que corresponda a sua unidade.
 
 ## Próximo item
 
