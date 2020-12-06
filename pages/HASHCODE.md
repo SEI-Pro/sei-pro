@@ -18,10 +18,6 @@ Mas pra que serve o **HASHCODE**?
 > 
 > Qualquer alteração no arquivo faz com que o hashcode  também mude. Se o hashcode  não bater com o arquivo público, significa que essa cópia é adulterada!
 
-Dica: Confira postagem sobre [Como verificar a autenticidade de documentos digitais](https://www.instagram.com/p/CIZ-8DjnEyv/).
-
-> <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" width="300"/>
-
 Precisa verificar se uma cópia do documento é idêntica ao arquivo anexado ao processo? 
 
 Acesse a opção **Comparar documento**
@@ -31,6 +27,12 @@ Acesse a opção **Comparar documento**
 Dica: Quando divulgar documentos  públicos, também publique os seus hashcodes! 
 
 Os padrões mais utilizados são **MD5** e **SHA256**.
+
+Confira ainda nossa postagem sobre: 
+
+[Como verificar a autenticidade de documentos digitais](https://www.instagram.com/p/CIZ-8DjnEyv/).
+
+> <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" width="300"/>
 
 Quer saber mais sobre autenticidade de documentos, começe com esse artigo: [Autenticidade e integridade de documentos públicos
 ](https://medium.com/@peterkrauss/autenticidade-e-integridade-de-documentos-p%C3%BAblicos-aabea5389f4b)
