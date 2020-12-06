@@ -10,4 +10,4 @@ O intervalo de alteração da fonte é entre `7px` e `70px`
 
 ## Próximo item
 
-> [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
+> [Verificar código de integridade (Hashcode)](../pages/HASHCODE.md)
