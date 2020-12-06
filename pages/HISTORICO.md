@@ -60,7 +60,7 @@
 # Lista de funções do SEI Pro ![SEI Pro](../img/icon-32.png)
 
 - [Gerenciar projetos](../pages/PROJETOS.md)
-- [Agrupar lista de processos por data de recebimento, último acesso, marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
+- [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](../pages/AGRUPAR.md)
 - [Inserir documento externo (HTML e Google Docs)](../pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](../pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](../pages/LINKLEGIS.md)
