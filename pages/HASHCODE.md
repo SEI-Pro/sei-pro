@@ -4,7 +4,9 @@
 
 Essa funcionalidade adiciona ao visualizador de documentos do SEI a verificação de código de integridade (Hashcode).
 
-Para que serve o hashcode?
+> ![Tela Verificar Integridade Hashcode](../img/tela-hashcode.gif) 
+
+Para que serve o **HASHCODE**?
 
 > Se você obteve uma cópia de um documento e não tem certeza se é o documento original, saiba que é possível gerar um certificado para a sua cópia digital e conferir se bate com o certificado original.
 >
@@ -14,4 +16,3 @@ Para que serve o hashcode?
 > 
 > Qualquer alteração no arquivo faz com que o hashcode  também mude. Se o hashcode  não bater com o arquivo público, significa que essa cópia é adulterada!
 
-> ![Tela Verificar Integridade Hashcode](../img/tela-hashcode.gif) 
