@@ -1,8 +1,8 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## Agrupar lista de processos por data de recebimento, último acesso, marcadores, tipo, responsável ou ponto de controle
+## Agrupar lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio
 
-Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processos por data de recebimento, último acesso, marcadores, tipo de processo, responsável ou ponto de controle.
+Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle ou unidade de envio.
 
 > ![Tela Agrupar lista de processos](../img/tela-agrupamento.gif) 
 
