@@ -20,7 +20,7 @@ Mas pra que serve o **HASHCODE**?
 
 Dica: Confira postagem sobre [Como verificar a autenticidade de documentos digitais](https://www.instagram.com/p/CIZ-8DjnEyv/).
 
-> ![Tela Verificar Integridade Hashcode](../img/post8-1.png) 
+> <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" width="400"/>
 
 Precisa verificar se uma cópia do documento é idêntica ao arquivo anexado ao processo? Acesse a opção **Comparar documento**
 
