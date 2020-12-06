@@ -16,3 +16,4 @@ Para que serve o **HASHCODE**?
 > 
 > Qualquer alteração no arquivo faz com que o hashcode  também mude. Se o hashcode  não bater com o arquivo público, significa que essa cópia é adulterada!
 
+.
