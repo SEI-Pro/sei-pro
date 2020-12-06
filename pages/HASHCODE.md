@@ -20,6 +20,8 @@ Mas pra que serve o **HASHCODE**?
 
 Dica: Confira postagem sobre [Como verificar a autenticidade de documentos digitais](https://www.instagram.com/p/CIZ-8DjnEyv/).
 
+> ![Tela Verificar Integridade Hashcode](../img/post8-1.png) 
+
 Precisa verificar se uma cópia do documento é idêntica ao arquivo anexado ao processo? Acesse a opção **Comparar documento**
 
 > ![Tela Verificar Integridade Hashcode](../img/tela-hashcode2.gif) 
