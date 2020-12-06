@@ -2,6 +2,12 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.20
+
+- Correções e melhorias
+- Adicionada função [Verificar código de integridade (Hashcode)](../pages/HASHCODE.md)
+- Adicionada função [Agrupamento de lista de processos por unidade de envio e data de envio](../pages/AGRUPAR.md) (Sugestão de Dárcio Gomes)
+
 ### Versão 0.1.19
 
 - Correções e melhorias
