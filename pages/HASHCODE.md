@@ -22,11 +22,15 @@ Dica: Confira postagem sobre [Como verificar a autenticidade de documentos digit
 
 > <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" width="300"/>
 
-Precisa verificar se uma cópia do documento é idêntica ao arquivo anexado ao processo? Acesse a opção **Comparar documento**
+Precisa verificar se uma cópia do documento é idêntica ao arquivo anexado ao processo? 
+
+Acesse a opção **Comparar documento**
 
 > ![Tela Verificar Integridade Hashcode](../img/tela-hashcode2.gif) 
 
-Dica: Quando divulgar documentos  públicos, também publique os seus hashcodes! Os padrões mais utilizados são **MD5** e **SHA256**.
+Dica: Quando divulgar documentos  públicos, também publique os seus hashcodes! 
+
+Os padrões mais utilizados são **MD5** e **SHA256**.
 
 Quer saber mais sobre autenticidade de documentos, começe com esse artigo: [Autenticidade e integridade de documentos públicos
 ](https://medium.com/@peterkrauss/autenticidade-e-integridade-de-documentos-p%C3%BAblicos-aabea5389f4b)
