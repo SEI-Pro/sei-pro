@@ -6,7 +6,45 @@ var feriadosNacionaisProArray = [];
 var configGeralObj = [];
 var ganttProject = [];
 var ganttProjectSelect = [];
-
+var arrayIDProcedimentos = [];
+var statusPesquisaDadosProcedimentos = true;
+var dialogBoxPro = false;
+var iHistory = 0;
+var iHistoryCurrent = 0;
+var iHistoryArray = [];
+var iconsFlashMenu = [
+                    {name: 'Copiar n\u00FAmero do processo', icon: 'fas fa-copyright', alt: ''},
+                    {name: 'Copiar link do processo', icon: 'fas fa-link', alt: ''},
+                    {name: 'Incluir Documento', icon: 'fas fa-file-alt', alt: 'Incluir Novo Documento'},
+                    {name: 'Registrar Documento Externo', icon: 'fa-file-import', alt: 'Registrar Doc. Externo'},
+                    {name: 'Consultar/Alterar Processo', icon: 'fa-file-signature', alt: ''},
+                    {name: 'Iniciar Processo Relacionado', icon: 'fa-sync-alt', alt: 'Iniciar Proc. Relacionado'},
+                    {name: 'Acompanhamento Especial', icon: 'fas fa-eye', alt: ''},
+                    {name: 'Enviar Processo', icon: 'fas fa-share-square', alt: ''},
+                    {name: 'Atualizar Andamento', icon: 'fas fa-globe-americas', alt: ''},
+                    {name: 'Atribuir Processo', icon: 'fa-user-friends', alt: ''},
+                    {name: 'Duplicar Processo', icon: 'fa-copy', alt: ''},
+                    {name: 'Relacionamentos do Processo', icon: 'fa-user-friends', alt: ''},
+                    {name: 'Gerenciar Disponibiliza\u00E7\u00F5es de Acesso Externo', icon: 'fa-users-cog', alt: 'Gerenciar Acesso Externo'},
+                    {name: 'Anota\u00E7\u00F5es', icon: 'fas fa-sticky-note', alt: ''},
+                    {name: 'Sobrestar Processo', icon: 'fa-pause-circle', alt: ''},
+                    {name: 'Anexar Processo', icon: 'fa-paperclip', alt: ''},
+                    {name: 'Gerar Arquivo PDF do Processo', icon: 'fa-file-pdf', alt: 'Gerar Arquivo PDF'},
+                    {name: 'Gerar Arquivo ZIP do Processo', icon: 'fa-file-archive', alt: 'Gerar Arquivo ZIP'},
+                    {name: 'Gerenciar Ponto de Controle', icon: 'fa-flag', alt: 'Gerenciar Ponto de Controle'},
+                    {name: 'Gerenciar Marcador', icon: 'fa-tags', alt: ''},
+                    {name: 'Concluir Processo', icon: 'fa-folder-open', alt: 'Concluir/Reabrir Processo'},
+                    {name: 'Ci\u00EAncia', icon: 'fa-thumbs-up', alt: ''},
+                    {name: 'Enviar Correspond\u00EAncia Eletr\u00F4nica', icon: 'fa-envelope-open-text', alt: 'Enviar Correspond\u00EAncia'},
+                    {name: 'Incluir em Bloco', icon: 'fa-layer-group', alt: ''},
+                    {name: 'Reabrir Processo', icon: 'fa-folder-open', alt: 'Concluir/Reabrir Processo'}
+                ];
+var iconsFlashDocMenu = [
+                    {name: 'Copiar n\u00FAmero SEI', icon: 'fas fa-copyright', alt: ''},
+                    {name: 'Copiar nome do documento', icon: 'fas fa-file-alt', alt: ''},
+                    {name: 'Copiar link do documento', icon: 'fas fa-link', alt: ''},
+                    {name: 'Copiar nome com link', icon: 'fa-external-link-alt', alt: ''}
+                ];
 var rangeProjetosPro = "Projetos";
 var rangeEtapasPro = "Etapas";
 var rangeFeriadosNacionaisPro = "FeriadosNacionais";
@@ -16,6 +54,7 @@ var iconSeiPro = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABc
 
 var html_initContentPro = '<div class="sheetsUpdate sheetsForm" id="sheetsCompleteEtapaForm" style="display:none"></div>';
 if ( $('#sheetsCompleteEtapaForm').length == 0 ) { $('#divInfraBarraSistema').append(html_initContentPro) }
+
 function insertFontIcon(iframeDoc) {
     if ( iframeDoc.find('link[datastyle="seipro-fonticon"]').length == 0 ) {
         $("<link/>", {
@@ -55,12 +94,206 @@ function execArvorePro(func) {
     });
   });
 }
+function getDadosProcedimentosControlar() {
+    var storeRecebimento = ( typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
+    $('#frmProcedimentoControlar').find('a.processoVisualizado').not('.processoNaoVisualizado, .processoNaoVisualizadoSigiloso, .processoVisualizadoSigiloso, .processoCredencialAssinaturaSigiloso').each(function(){
+        var id_procedimento = String(getParamsUrlPro($(this).attr('href')).id_procedimento);
+        if (  jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") == 0  ) {
+            arrayIDProcedimentos.push(id_procedimento);
+        }
+    });
+    if (arrayIDProcedimentos.length) {
+        var progressoBar =  '<div id="newFiltroProgress" style="display: inline-block;position: absolute;margin: 30px 0 0 0; width: '+($('#selectGroupTablePro').width()-35)+'px">'+
+                            '    <i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: -4px 8px 0 0;"></i>'+
+                            '    <i onclick="breakDadosProcedimentosControlar()" class="fas fa-times-circle cinzaColor" style="float: right;margin: -4px;padding-left: 10px;cursor: pointer;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Cancelar pesquisa\')"></i>'+
+                            '    <div onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Encontrando datas dos processos da unidade...\')" class="selectProgressoBar" id="selectProgressoBar_GroupTable"></div>'+
+                            '</div>';
+        if ($('#newFiltroProgress').length == 0) { 
+            $('#selectGroupTablePro').before(progressoBar);
+            setTimeout(function(){ 
+                $('#selectProgressoBar_GroupTable').progressbar({value: 0, max: arrayIDProcedimentos.length });
+            }, 800);
+            loopIDProcedimentos();
+        }
+    }
+}
+function cancelDadosProcedimentosControlar() {
+    statusPesquisaDadosProcedimentos = false;
+    $('#newFiltroProgress').remove();
+}
+function breakDadosProcedimentosControlar() {
+    cancelDadosProcedimentosControlar();
+    infraTooltipOcultar();
+    localStorageStorePro('selectGroupTablePro', '');
+}
+function loopIDProcedimentos() {
+    if(arrayIDProcedimentos.length && statusPesquisaDadosProcedimentos == true) {
+        var i = arrayIDProcedimentos[0];
+        arrayIDProcedimentos.splice(0,1);
+        getDadosIframeProcessoPro(String(i), 'dados');
+        if ($('#selectProgressoBar_GroupTable .ui-progressbar-value').length) {
+            var valueProgress = parseFloat($('#selectProgressoBar_GroupTable').attr('aria-valuemax'))-arrayIDProcedimentos.length;
+            $('#selectProgressoBar_GroupTable').progressbar({ value: valueProgress });
+            initTableTag($('#selectGroupTablePro').val());
+        }
+    } else {
+        $('#newFiltroProgress').remove();
+    }
+}
+function configFlashMenuTrPro(value, color, state, mode) { 
+    var index = randomString(4);
+    return  '        <tr>'+
+            '           <td>'+
+            '               <p><i class="iconPopup fa '+value.icon+' '+color+'"></i><span class="info">'+value.name+'</span></p>'+
+            '           </td>'+
+            '           <td>'+
+            '               <div class="onoffswitch">'+
+            '                   <input type="checkbox" data-name="'+value.name+'" onchange="changeFlashMenuPro(this, \''+mode+'\')" name="onoffswitch" class="onoffswitch-checkbox" id="itemFlashMenu_'+index+'" tabindex="0" '+state+'>'+
+            '                   <label class="onoffswitch-label" for="itemFlashMenu_'+index+'"></label>'+
+            '               </div>'+
+            '           </td>'+
+            '        </tr>';
+}
+function configFlashMenuPro(arrayLinksArvore) { 
+    var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? localStorageRestorePro('configViewFlashMenuPro') : [['Incluir Documento'],['Consultar/Alterar Processo'],['Atribuir Processo']];
+    var selectedItensDocMenu = ( typeof localStorageRestorePro('configViewFlashDocMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocMenuPro')) ) ? localStorageRestorePro('configViewFlashDocMenuPro') : [['Copiar n\u00FAmero SEI'],['Copiar nome do documento'],['Copiar link do documento']];
+
+    var textBox =   '<h3 style="font-weight: bold; color: #666;"><i class="iconPopup fa fa-scroll cinzaColor"></i> Menu r\u00E1pido do processo</h3>'+
+                    '<div class="details-container" style="height: 200px; overflow-y: scroll;">'+
+                    '   <table class="tableInfo popup-wrapper tableZebra tableFlashMenu" style="font-size: 10pt;width: 100%;">';
+    
+        $.each(selectedItensMenu,function(index, value){
+            if ( jmespath.search(iconsFlashMenu, "[?name=='"+value+"'] | length(@)") > 0 ) {
+                var data = jmespath.search(iconsFlashMenu, "[?name=='"+value+"'] | [0]");
+                    textBox += configFlashMenuTrPro(data, 'azulColor', 'checked', 'proc');
+            }         
+        });
+        $.each(iconsFlashMenu,function(index, value){
+            if ( jmespath.search(selectedItensMenu, "[?[0]=='"+value.name+"'] | length(@)") == 0 ) {
+                textBox += configFlashMenuTrPro(value, 'cinzaColor', '', 'proc');
+            }            
+        });
+        textBox +=  '   </table>'+
+                    '</div>';
+    
+        textBox +=   '<h3 style="font-weight: bold;border-top: 2px solid #d6d6d6;color: #666;padding-top: 10px;"><i class="iconPopup fa fa-file cinzaColor"></i> Menu r\u00E1pido dos documentos</h3>'+
+                    '<div class="details-container" style="height: 100px; overflow-y: scroll;">'+
+                    '   <table class="tableInfo popup-wrapper tableZebra tableFlashDocMenu" style="font-size: 10pt;width: 100%;">';
+    
+        $.each(selectedItensDocMenu,function(index, value){
+            if ( jmespath.search(iconsFlashDocMenu, "[?name=='"+value+"'] | length(@)") > 0 ) {
+                var data = jmespath.search(iconsFlashDocMenu, "[?name=='"+value+"'] | [0]");
+                    textBox += configFlashMenuTrPro(data, 'azulColor', 'checked', 'doc');
+            }         
+        });
+        $.each(iconsFlashDocMenu,function(index, value){
+            if ( jmespath.search(selectedItensDocMenu, "[?[0]=='"+value.name+"'] | length(@)") == 0 ) {
+                textBox += configFlashMenuTrPro(value, 'cinzaColor', '', 'doc');
+            }            
+        });
+        textBox +=  '   </table>'+
+                    '</div>';
+
+    $('#dialogBoxPro')
+        .html('<div class="alertaBoxPro"> '+textBox+'</div>')
+        .dialog({
+            title: "Personalizar Menu R\u00E1pido",
+        	width: 600,
+        	buttons: [{
+                text: "Ok",
+                click: function() { 
+                    document.getElementById('ifrArvore').contentWindow.location.reload();
+                    $(this).dialog('close');
+                }
+            }]
+    }).on('dialogclose', function(event) {
+         document.getElementById('ifrArvore').contentWindow.location.reload();
+     });
+    $(".tableFlashMenu").sortable({
+        items: 'tr',
+        cursor: 'pointer',
+        axis: 'y',
+        dropOnEmpty: false,
+        start: function (e, ui) {
+            ui.item.addClass("selected");
+        },
+        stop: function (e, ui) {
+            ui.item.removeClass("selected");
+            changeFlashMenuPro(ui.item, 'proc');
+        }
+    });
+    $(".tableFlashDocMenu").sortable({
+        items: 'tr',
+        cursor: 'pointer',
+        axis: 'y',
+        dropOnEmpty: false,
+        start: function (e, ui) {
+            ui.item.addClass("selected");
+        },
+        stop: function (e, ui) {
+            ui.item.removeClass("selected");
+            changeFlashMenuPro(ui.item, 'doc');
+        }
+    });
+}
+function changeFlashMenuPro(this_, mode) {
+    var configView = (mode == 'proc') ? 'configViewFlashMenuPro' : 'configViewFlashDocMenuPro';
+    var arrayShowItensMenu = []
+    $(this_).closest('table').find('input').each(function(){
+        if ($(this).is(':checked')) {
+            arrayShowItensMenu.push([$(this).attr('data-name')]);
+            $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+        } else {
+            $(this).closest('tr').find('.iconPopup').removeClass('azulColor').addClass('cinzaColor');
+        }
+    });
+    localStorageStorePro(configView, arrayShowItensMenu);
+}
+function checkConfigValue(name) {
+    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
+    var dataValuesConfig = jmespath.search(configBasePro, "[*].configGeral | [0]");
+        dataValuesConfig = jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]");
+    
+    if (dataValuesConfig == false ) {
+        return false;
+    } else {
+        return true;
+    }
+}
 function copyToClipboard(text) {
     var $temp = $("<input>");
     $("body").append($temp);
     $temp.val(text).select();
     document.execCommand("copy");
     $temp.remove();
+}
+function copyToClipboardHTML(str) {
+  function listener(e) {
+    e.clipboardData.setData("text/html", str);
+    e.clipboardData.setData("text/plain", str);
+    e.preventDefault();
+  }
+  document.addEventListener("copy", listener);
+  document.execCommand("copy");
+  document.removeEventListener("copy", listener);
+};
+function targetIfrVisualizacaoPro(url) { 
+    if ( typeof url !== 'undefined' && url != '' && url !== null ) {
+        $("#ifrVisualizacao").attr("src", url);
+    }
+}
+function execIncluirEmBlocoPro() { 
+    $('#ifrVisualizacao')[0].contentWindow.incluirEmBloco();
+}
+function execConcluirReabrirProcessoPro(url) { 
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    if ( ifrVisualizacao.find('img[title="Reabrir Processo"]').length > 0 ) {
+        $('#ifrVisualizacao')[0].contentWindow.reabrirProcesso();    
+    } else if ( ifrVisualizacao.find('img[title="Concluir Processo"]').length > 0 ) {
+        $('#ifrVisualizacao')[0].contentWindow.concluirProcesso();    
+    } else {
+        targetIfrVisualizacaoPro(url);
+    }
 }
 //Initializes the API client library and sets up sign-in state listeners.
 function initClientPro() {
@@ -118,6 +351,7 @@ function handleSignoutClickPro(event) {
 function logoutSheetPro() {
     $('#projetosGantt').remove();
     localStorageRemovePro('loadEtapasSheet');
+    localStorageRemovePro('loadAtividadesSheet');
     localStorageRemovePro('configBasePro');
     localStorageRemovePro('configBaseSelectedPro');
     localStorageRemovePro('projetosGanttActiveTabs');
@@ -509,7 +743,7 @@ function eraseCookiePro(name) {
     createCookiePro(name, "", -1);
 }
 function removeAcentos(str) {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return (typeof str !== 'undefined') ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
 }
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -540,9 +774,12 @@ function getDadosIframeProcessoPro(idProcedimento, mode) {
 }
 function checkDadosIframeProcessoPro(mode) {
     var ifrVisualizacao = $('#frmCheckerProcessoPro').contents().find('#ifrVisualizacao').contents();
+    var ifrArvore = $('#frmCheckerProcessoPro').contents().find('#ifrArvore').contents();   
     setTimeout(function () { 
         if ( ifrVisualizacao.find('.botaoSEI').length > 0 ) {
             getDadosProcessoPro(ifrVisualizacao, mode);
+            getLinksProcessoPro(ifrVisualizacao);
+            getLinksArvorePro(ifrArvore);
         } else {
             checkDadosIframeProcessoPro(mode);
         }
@@ -556,6 +793,123 @@ function getDadosProcessoPro(ifrVisualizacao, mode) {
             ajaxDadosProcessoPro(href, mode);
         }
     });
+}
+function getLinksArvorePro(ifrArvore) {
+    ifrArvore.find('script').each(function(i){
+        if (typeof $(this).attr('src') === 'undefined' && $(this).html().indexOf('consultarAndamento') !== -1) { 
+            var text = $(this).html();
+            var link = $.map(text.split("'"), function(substr, i) {
+               return (i % 2 && substr.indexOf('controlador.php?acao=') !== -1) ? substr : null;
+            });
+            if ( link.length > 0 ) {
+                $.each(link,function(index, value){
+                    var name = '';
+                    if ( value.indexOf('?acao=procedimento_consultar_historico') !== -1 ) { 
+                        getDadosAndamentoPro(value);
+                    }
+                });
+            }
+        }
+    });
+}
+function getDadosAndamentoPro(href) {
+    var andamento = [];
+    $.ajax({ url: href }).done(function (html) {
+        let $html = $(html);
+            $html.find("#tblHistorico").find('tr').each(function(){
+                var datahora = $(this).find('td').eq(0).text().trim();
+                    datahora = moment(datahora,'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                var unidade = $(this).find('td').eq(1).text();
+                var usuario = $(this).find('td').eq(2).text();
+                var descricao = $(this).find('td').eq(3).text();
+                var descricao_alt = $(this).find('td').eq(3).find('a').attr('alt');
+                if ( unidade != '' ) { andamento.push({datahora: datahora, unidade: unidade, usuario: usuario, descricao: descricao, descricao_alt: descricao_alt}) }
+            });
+        var processo = $html.find('#divInfraBarraLocalizacao').text().trim().split(' ');
+            processo = processo[processo.length-1];
+        var id_procedimento = $html.find('#frmProcedimentoHistorico').attr('action'); 
+            id_procedimento = (typeof id_procedimento !== 'undefined' && id_procedimento != '') ? getParamsUrlPro(id_procedimento).id_procedimento : '';
+            
+        var listAndamento = {processo: processo, id_procedimento: id_procedimento, andamento: andamento};
+            dadosProcessoPro.listAndamento = listAndamento;
+            getDataRecebimentoPro(listAndamento);
+    });
+}
+function randomDate(start, end, startHour, endHour) {
+  var date = new Date(+start + Math.random() * (end - start));
+  var hour = startHour + Math.random() * (endHour - startHour) | 0;
+  date.setHours(hour);
+  return moment(date).format('YYYY-MM-DD HH:mm:ss');
+}
+function getDataRecebimentoPro(listAndamento) {
+    var dataRecebimento = [];
+    var datesend = '',
+        descricaosend = '',
+        unidadesend = '';
+        unidadesendfull = '';
+    var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
+    
+    $.each(listAndamento.andamento,function(j, e){
+        if (unidade == e.unidade && e.descricao.indexOf('Processo remetido pela unidade') !== -1) {
+            datesend = e.datahora;
+            descricaosend = e.descricao;
+            unidadesend = e.descricao.replace('Processo remetido pela unidade','').trim();
+            unidadesendfull = (e.descricao_alt != '') ? e.descricao_alt+' - '+unidadesend : '';
+            return false;
+        }
+    });
+    $.each(listAndamento.andamento,function(i, v){
+        //var datevisit = randomDate(new Date(2020, 0, 1), new Date(), 0, 24);
+        var datevisit = moment().format('YYYY-MM-DD HH:mm:ss');
+        if (unidade == v.unidade && (v.descricao == 'Processo recebido na unidade' || v.descricao == 'Reabertura do processo na unidade')) {
+            dataRecebimento.push({id_procedimento: listAndamento.id_procedimento, processo: listAndamento.processo, datahora: v.datahora, unidade: v.unidade, descricao: v.descricao, datetime: datevisit, datesend: datesend, descricaosend: descricaosend, unidadesend: unidadesend, unidadesendfull: unidadesendfull});
+            return false;
+        } else if (unidade == v.unidade && v.descricao == 'Processo p\u00FAblico gerado') {
+            dataRecebimento.push({id_procedimento: listAndamento.id_procedimento, processo: listAndamento.processo, datahora: v.datahora, unidade: v.unidade, descricao: v.descricao, datetime: datevisit, datesend: datesend, descricaosend: descricaosend, unidadesend: unidadesend, unidadesendfull: unidadesendfull});
+            return false;
+        }
+    });
+    if (dataRecebimento.length) { 
+        var storeRecebimento = ( typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
+        var objIndex = -1;
+            $.each(storeRecebimento, function(i, v) {
+                if (v.id_procedimento == listAndamento.id_procedimento) { objIndex = i; return false; }
+            });
+            if (objIndex == -1) {
+                storeRecebimento.push(dataRecebimento[0]);
+            } else {
+                storeRecebimento[objIndex] = dataRecebimento[0];
+            }
+            localStorageStorePro('configDataRecebimentoPro', storeRecebimento);
+    }
+}
+function getLinksProcessoPro(ifrVisualizacao) {
+    var linksArvore = [];
+    ifrVisualizacao.find('script').each(function(i){
+        if (typeof $(this).attr('src') === 'undefined' && $(this).html().indexOf('objAjaxVerificacaoAssinatura') !== -1) { 
+            var text = $(this).html();
+            var link = $.map(text.split("'"), function(substr, i) {
+               return (i % 2 && substr.indexOf('controlador.php?acao=') !== -1) ? substr : null;
+            });
+            if ( link.length > 0 ) {
+                $.each(link,function(index, value){
+                        var name = '';
+                        //var icon = '';
+                        //var alt = '';
+                               if ( value.indexOf('?acao=procedimento_concluir') !== -1 && ifrVisualizacao.find('img[title="Concluir Processo"]').length > 0 ) { name = 'Concluir Processo'; 
+                        } else if ( value.indexOf('?acao=procedimento_ciencia') !== -1 && ifrVisualizacao.find('img[title="Ci\u00EAncia"]').length > 0 ) { name = 'Ci\u00EAncia'; 
+                        } else if ( value.indexOf('?acao=procedimento_enviar_email') !== -1 && ifrVisualizacao.find('img[title="Enviar Correspond\u00EAncia Eletr\u00F4nica"]').length > 0 ) { name = 'Enviar Correspond\u00EAncia Eletr\u00F4nica';
+                        } else if ( value.indexOf('?acao=bloco_selecionar_processo') !== -1 && ifrVisualizacao.find('img[title="Incluir em Bloco"]').length > 0 ) { name = 'Incluir em Bloco';
+                        } else if ( value.indexOf('?acao=procedimento_reabrir') !== -1 && ifrVisualizacao.find('img[title="Reabrir Processo"]').length > 0 ) { name = 'Reabrir Processo';
+                        } 
+                        var data = jmespath.search(parent.iconsFlashMenu, "[?name=='"+name+"'] | [0]");
+                        if ( name != '' ) { linksArvore.push({ url: value, name: data.name, icon: data.icon, alt: data.alt}); }
+                });
+            }
+        }
+    });
+    dadosProcessoPro.listLinks = linksArvore;
+    if ( $('#ifrArvore').length > 0 ) { $('#ifrArvore')[0].contentWindow.initSeiProArvore(); }
 }
 function ajaxDadosProcessoPro(href, mode) {
     var processo = {};
@@ -586,7 +940,7 @@ function ajaxDadosProcessoPro(href, mode) {
         processo.txaObservacoes = $html.find("#txaObservacoes").val();
         dadosProcessoPro.propProcesso = processo;
         setTimeout(function(){ updateTitlePage(mode) }, 500);
-        if (mode == 'editor' || mode == 'gantt') { checkDadosIframeDocumentosPro(mode) }
+        if (mode == 'editor' || mode == 'gantt' || mode == 'dados') { checkDadosIframeDocumentosPro(mode) }
     });
 }
 function checkDadosIframeDocumentosPro(mode) {
@@ -622,6 +976,8 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
         getDialogDadosEditor();
     } else if (mode == 'gantt') { 
         updateSelectConcluirEtapa();
+    } else if (mode == 'dados') {
+        loopIDProcedimentos();
     }
 }
 function updateTitlePage(mode) {
@@ -1322,7 +1678,7 @@ function updateDialogDefinitionPro() {
                 dialogDefinition.onShow = function () {
                     var idEditor = this.getParentEditor().name;
                     $('#idEditor').val(idEditor);
-                    inserTextTotLink(idEditor);
+                    insertTextTotLink(idEditor);
                 };
                 dialogDefinition.onOk = function () {
                     var a = this.getParentEditor(),
@@ -1348,4 +1704,167 @@ function updateDialogDefinitionPro() {
                 };
             }
     });
+}
+function centralizeDialogBox(el) {
+    $(document).ready(function() {
+        if (el) {
+            el.dialog({ position: { my: "center", at: "center", of: window } });
+        }
+    });
+}
+function selectTextPro(el) {
+    var sel, range;
+    if (window.getSelection && document.createRange) { //Browser compatibility
+      sel = window.getSelection();
+      if(sel.toString() == ''){ //no text selection
+         window.setTimeout(function(){
+            range = document.createRange(); //range object
+            range.selectNodeContents(el); //sets Range
+            sel.removeAllRanges(); //remove all ranges from selection
+            sel.addRange(range);//add Range to a Selection.
+        },1);
+      }
+    }
+}
+function hashCompareDocToggle(this_) {
+    if ($(this_).find('i').hasClass('fa-chevron-circle-down')) {
+        $(this_).closest('#hashIntegrityPro').find('.hashCompareDoc').show();
+        $(this_).find('i').addClass('fa-chevron-circle-up').removeClass('fa-chevron-circle-down');
+    } else {
+        $(this_).closest('#hashIntegrityPro').find('.hashCompareDoc').hide();
+        $(this_).find('i').addClass('fa-chevron-circle-down').removeClass('fa-chevron-circle-up');
+    }
+}
+function updateChecksumPro(hash) {
+    var nameDoc = $('#ifrArvore').contents().find('.infraArvoreNoSelecionado').text();
+    var droppableDoc =   '  <div class="input">'+
+                         '      <div id="droppable-zone">'+
+                         '          <div id="droppable-zone-wrapper">'+
+                         '              <div id="droppable-zone-text"><i class="fa fa-upload cinzaColor" style="font-size: 16pt;"></i> Clique ou arraste para carregar um documento</div>'+
+                         '          </div>'+
+                         '          <input id="inputCompareDoc" type="file" placeholder="Clique ou arraste para carregar um documento" class="droppable-file">'+
+                         '      </div>'+
+                         '  </div>';
+    var tableIntegrity = '<table>'+
+                         '  <tr>'+
+                         '    <td colspan="2"><h3><i class="iconPopup fa fa-file azulColor" style="margin: 3px 3px 0 0;"></i>'+nameDoc+'</h3></td>'+
+                         '  </tr>'+
+                         '  <tr>'+
+                         '    <td><label>MD5:</label></td>'+
+                         '    <td><label class="hash hashMD5">'+hash.hashMD5+'</label></td>'+
+                         '  </tr>'+
+                         '  <tr>'+
+                         '    <td><label>SHA256:</label></td>'+
+                         '    <td><label class="hash hashSHA256">'+hash.hashSHA256+'</label></td>'+
+                         '  </tr>'+
+                         '</table>'+
+                         '<div><a onclick="hashCompareDocToggle(this)" class="newLink link_line" style="cursor:pointer"><i class="fa fa-chevron-circle-down cinzaColor" style="margin: 3px 3px 0 0;"></i> Comparar documento</a></div>'+
+                         '<div class="hashCompareDoc" style="display:none;">'+
+                         '          <input id="inputCompareDoc" style="font-size: 10pt; padding: 15px 10px;" type="file" placeholder="Clique ou arraste para carregar um documento">'+
+                         '  <div id="outputompareDoc" style="border-radius: 10px; padding: 0 10px;"></div>'+
+                         '</div>';
+    $('#hashIntegrityPro').html(tableIntegrity).find('label.hash').on('mouseup', function() { 
+        selectTextPro($(this)[0]);
+    });
+    $('#inputCompareDoc').on('change', function() {
+        var input = $('#inputCompareDoc')[0];
+        if (input.files && input.files[0]) {
+            centralizeDialogBox(dialogBoxPro);
+            $('#outputompareDoc').html('<i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: 0 8px 0 0;"></i> Carregando dados...').css('background', '#fff');
+            var global = global || window;
+            const reader = new global.FileReader();
+            reader.onload = event => {
+                var result = event.target.result;
+                var wordArray = CryptoJS.lib.WordArray.create(result),
+                    hashMD5 = CryptoJS.MD5(wordArray).toString(),
+                    hashSHA256 = CryptoJS.SHA256(wordArray).toString();
+                    compareChecksumPro({hashMD5: hashMD5, hashSHA256: hashSHA256});
+            };
+            reader.readAsArrayBuffer(input.files[0]);
+        }
+    });
+}
+function compareChecksumPro(hash) {
+    var hashMD5 = $('#hashIntegrityPro').find('.hashMD5').text();
+    var hashSHA256 = $('#hashIntegrityPro').find('.hashSHA256').text();
+    var statusCompare = (hashMD5 == hash.hashMD5 && hashSHA256 == hash.hashSHA256) ? {background: '#f8fdf7', icon: 'check-circle', color: 'verdeColor', text: 'Os c\u00F3digos de integridade s\u00E3o id\u00EAnticos'} : {background: '#fdf7f7', icon: 'times-circle', color: 'vermelhoColor', text: 'Os c\u00F3digos de integridade N\u00C3O s\u00E3o id\u00EAnticos'};
+    var tableIntegrityCompare =  '<table>'+
+                                 '  <tr>'+
+                                 '    <td colspan="2"><h3><i class="iconPopup fa fa-'+statusCompare.icon+' '+statusCompare.color+'" style="font-size: 18pt;"></i>'+statusCompare.text+'</h3></td>'+
+                                 '  </tr>'+
+                                 '  <tr>'+
+                                 '    <td><label>MD5:</label></td>'+
+                                 '    <td><label class="hash hashMD5_compare">'+hash.hashMD5+'</label></td>'+
+                                 '  </tr>'+
+                                 '  <tr>'+
+                                 '    <td><label>SHA256:</label></td>'+
+                                 '    <td><label class="hash hashSHA256_compare">'+hash.hashSHA256+'</label></td>'+
+                                 '  </tr>'+
+                                 '</table>';
+    $('#outputompareDoc')
+        .html(tableIntegrityCompare)
+        .css('background',statusCompare.background)
+        .find('label.hash').on('mouseup', function() { 
+            selectTextPro($(this)[0]);
+    });
+    centralizeDialogBox(dialogBoxPro);
+}
+function openChecksumPro() {
+    var htmlBox = '<div id="hashIntegrityPro"><i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: 0 8px 0 0;"></i> Carregando dados...</div>';
+        dialogBoxPro = $('#dialogBoxPro')
+            .html('<div class="alertaBoxPro">'+htmlBox+'</div>')
+            .dialog({
+                title: "Visualizar C\u00F3digo de Integridade",
+                width: 650
+        });
+}
+function calculateHashPro(blob) {
+    var reader = new FileReader();
+    reader.readAsArrayBuffer(blob);
+    reader.onloadend = function () {
+      var wordArray = CryptoJS.lib.WordArray.create(reader.result),
+          hashMD5 = CryptoJS.MD5(wordArray).toString(),
+          hashSHA256 = CryptoJS.SHA256(wordArray).toString();
+          updateChecksumPro({hashMD5: hashMD5, hashSHA256: hashSHA256});
+          centralizeDialogBox(dialogBoxPro);
+    };
+}
+function sendChecksumPro(url) {
+  var xhr = new XMLHttpRequest();
+  xhr.responseType = 'blob';
+
+  xhr.onreadystatechange = function (event) {
+    if (event.target.readyState == 4) {
+      if (event.target.status == 200 || event.target.status == 0) {
+        //Status 0 is setup when protocol is "file:///" or "ftp://"
+        var blob = this.response;
+        calculateHashPro(blob);
+      } else {
+      }
+    }
+  };
+  xhr.open('GET', url, true);
+  xhr.send();
+}
+function getChecksumPro() {
+    var linkAnexo = $('#ifrVisualizacao').contents().find('#divInformacao a');
+    var url = (linkAnexo.length > 0 && linkAnexo.attr('href').indexOf('acao=documento_download_anexo') !== -1) ? linkAnexo.attr('href') : false;
+    if (url) { 
+        openChecksumPro();
+        sendChecksumPro(url);
+    }
+}
+function insertIconIntegrity(TimeOut = 9000) {
+    waitLoadPro($('#ifrVisualizacao').contents(), '#divInformacao', "a.ancoraArvoreDownload", appendIconIntegrity);
+}
+function appendIconIntegrity() {
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    var linkAnexo = ifrVisualizacao.find('#divInformacao').find('a').eq(0).attr('href');
+    if (ifrVisualizacao.find('#iconIntegrityPro').length == 0 ) {
+        var base65IconIntegrity = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDgxQ0NGRjUyNkNEMTFFQkFCOUJEQUI3RTE0QTRDODQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MDgxQ0NGRjYyNkNEMTFFQkFCOUJEQUI3RTE0QTRDODQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDowODFDQ0ZGMzI2Q0QxMUVCQUI5QkRBQjdFMTRBNEM4NCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDowODFDQ0ZGNDI2Q0QxMUVCQUI5QkRBQjdFMTRBNEM4NCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pm2LucYAAAbsSURBVHja7FhZ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';
+        var htmlIconIntegrity =  '<a href="#" id="iconIntegrityPro" onclick="parent.getChecksumPro();" tabindex="452" class="botaoSEI">'+
+                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+base65IconIntegrity+'" alt="Visualizar C\u00F3digo de Integridade (Hashcode)" title="Visualizar C\u00F3digo de Integridade (Hashcode)">'+
+                                 '</a>';
+            ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconIntegrity);
+    }
 }
