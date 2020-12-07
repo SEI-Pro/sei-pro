@@ -461,6 +461,22 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 .tableZebra tr:nth-child(even) {
     background-color: #f5f5f5;  
 }
+.tableFlashMenu p,
+.tableFlashDocMenu p {
+    padding-top: 10px;
+}
+.tableFlashMenu td,
+.tableFlashDocMenu td {
+    vertical-align: middle;
+}
+.tableFlashMenu tr td:first-child,
+.tableFlashDocMenu tr td:first-child {
+    cursor: grab;
+}
+.tableFlashMenu .selected,
+.tableFlashDocMenu .selected {
+    background: rgba(66, 133, 244, 0.2) !important;
+}
 .tabelaControle a.iconAtividade {
     margin: 0px;
     padding: 2px;
@@ -487,9 +503,11 @@ td.celStatusAtividade a.iconAtividade:first-child {
 #atividadesStatusTablePro h3 {
     font-size: 11pt;
     padding-left: 25px;
+    border: none !important;
 }
 #atividadesStatusTablePro .ui-accordion-content {
-    padding: 0 !important;
+    border: none !important;
+    padding: 0 0 20px 0 !important;
 }
 #atividadesStatusTablePro th {
     padding: 10px;
@@ -539,9 +557,79 @@ td.celStatusAtividade a.iconAtividade:first-child {
     background: #4285F4 !important;
     border: 1px solid #365ea0 !important;
 }
+div.selectProgressoBar {
+    height: 4px !important;
+    border: none !important;
+    margin: 0 0 10px 0;
+    background: #ccc;
+}
+.selectProgressoBar .ui-progressbar-value {
+    background: #4285F4 !important;
+    border: 1px solid #365ea0 !important;
+}
 div.atividadesProgressoBar {
     height: 4px !important;
     border: none !important;
     margin: 0 0 10px 0;
     background: #ccc;
+}
+.ui-tabs-tab .closeReport {
+    margin: 2px 0 0 5px;
+    color: #929292;
+    cursor: pointer;
+}
+.ui-tabs-active .closeReport {
+    color: #fff !important;
+}
+#projetosGanttDiv .ganttReport .handle-group {
+    display: none;
+}
+.atividadesPanelHome th.tituloControle {
+    background-color: #f1f1f1;
+}
+#hashIntegrityPro label {
+    font-size: 10pt;
+}
+#hashIntegrityPro label.hash {
+    font-size: 10pt;
+    background: #f1f1f1;
+    padding: 5px 8px;
+    border-radius: 5px;
+    display: inline-block;
+    margin: 8px 0;
+}
+#hashIntegrityPro h3 {
+    font-weight: bold;
+    color: #666;
+    margin: 10px 0;
+}
+#droppable-zone {
+    border: 4px dashed #ccc;
+    height: 80px;
+    position: relative;
+    overflow: hidden;
+    margin: 15px 0;
+}
+#droppable-zone-wrapper {
+    display: table;
+    height: 100%;
+    width: 100%;
+}
+.droppable-file {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
+}
+#droppable-zone-text {
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 12pt;
+    overflow: hidden;
+    color: #8e8e8e;
+    font-weight: bold;
 }
