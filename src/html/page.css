@@ -31,6 +31,7 @@ h1 { font-size: 22px; margin: 10px 0 10px 52px; }
     position: fixed;
     top: 0;
     border: none;
+    z-index: 999;
 }
 
 input[type=text], select {
@@ -113,3 +114,81 @@ button {
 #status { margin-left: 5px; color: #02893D; font-weight: bold; }
 
 h2 { font-size: 15pt; padding:0; margin: 5px 0; }
+
+.onoffswitch {
+    position: relative; width: 40px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.onoffswitch-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.onoffswitch-label {
+    display: block; overflow: hidden; cursor: pointer;
+    height: 21px; padding: 0; line-height: 21px;
+    border: 2px solid #E3E3E3; border-radius: 21px;
+    background-color: #E8E8E8;
+    transition: background-color 0.3s ease-in;
+}
+.onoffswitch-label:before {
+    content: "";
+    display: block; width: 21px; margin: 0px;
+    background: #FFFFFF;
+    position: absolute; top: 0; bottom: 0;
+    right: 17px;
+    border: 2px solid #E3E3E3; border-radius: 21px;
+    transition: all 0.3s ease-in 0s; 
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label {
+    background-color: #007FFF;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label, .onoffswitch-checkbox:checked + .onoffswitch-label:before {
+   border-color: #007FFF;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label:before {
+    right: 0px; 
+}
+.tableZebra p {
+    margin: 0 !important;
+}
+.tableZebra tr:nth-child(even) {
+    background-color: #f5f5f5;  
+}
+.iconPopup {
+    font-size: 16px; 
+    margin-right: 8px !important;
+}
+i.pretoColor {
+	color: #000000 !important;
+}
+i.brancoColor {
+	color: #FFFFFF !important;
+}
+i.cinzaColor {
+	color: #C0C0C0 !important;
+}
+i.vermelhoColor {
+	color: #E46E64 !important;
+}
+i.amareloColor {
+	color: #F7E157 !important;
+}
+i.verdeColor {
+	color: #9CB639 !important;
+}
+i.azulColor {
+	color: #4285F4 !important;
+}
+i.rosaColor {
+	color: #ea48cc !important;
+}
+i.roxoColor {
+	color: #7562D8 !important;
+}
+i.cianoColor {
+	color: #34caef !important;
+}
+i.laranjaColor {
+	color: #E3B044 !important;
+}
