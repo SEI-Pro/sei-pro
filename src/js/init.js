@@ -1,6 +1,7 @@
 $.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"));
 $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
 $.getScript(getUrlExtension("js/lib/moment.min.js"));
+$.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function loadAPIGooglePro() {
@@ -18,6 +19,11 @@ function divIconsLoginPro() {
                             +'</div>';
     $('#divInfraBarraSistemaD').append(html_initLogin);
 }
+function divDialogsPro() {
+    var html_Dialog = '  <div id="alertaBoxPro" style="display: none;"></div>'
+                        +'  <div id="dialogBoxPro" style="display: none;"></div>';
+    $('#divInfraBarraSistemaD').append(html_Dialog);
+}
 function getUrlExtension(url) {
     if (typeof browser === "undefined") {
         return chrome.extension.getURL(url);
@@ -25,18 +31,20 @@ function getUrlExtension(url) {
         return browser.runtime.getURL(url);
     }
 }
-function loadSheetsPro() {
+function loadConfigPro() {
     if (typeof browser === "undefined") {
         chrome.storage.sync.get({
             dataValues: ''
         }, function(items) {  
-            loadSheetsProStorage(items)
+            localStorage.setItem('configBasePro', items.dataValues);
+            loadSheetsProStorage(items);
         });
     } else {
         browser.storage.sync.get({
             dataValues: ''
         }, function(items) {  
-            loadSheetsProStorage(items)
+            localStorage.setItem('configBasePro', items.dataValues);
+            loadSheetsProStorage(items);
         });
     }
 }
@@ -77,7 +85,6 @@ function loadScriptDataBaseProjetosPro(dataValues) {
         for (var i = 0; i < dataValues.length; i++) {
             if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
         }
-        //console.log('dataValuesProjetos',dataValues);
 
         var CLIENT_ID_PRO = dataPerfil.CLIENT_ID;
         var API_KEY_PRO = dataPerfil.API_KEY;
@@ -95,18 +102,20 @@ function loadScriptDataBaseProjetosPro(dataValues) {
         } else {
             console.log('loadScriptDataBaseProjetosPro','ERROR!!!');
             localStorage.removeItem('loadEtapasSheet');
-            //localStorage.removeItem('configBasePro');
             localStorage.removeItem('configBaseSelectedPro');
-            $('#signoutButtonPro').show().attr('onmouseover', 'return infraTooltipMostrar(\'Base n\u00E3o cadastrada\')').find('i').attr('class','fas fa-database brancoColor');
+            //localStorage.removeItem('configBasePro');
+            //$('#signoutButtonPro').show().attr('onmouseover', 'return infraTooltipMostrar(\'Base n\u00E3o cadastrada\')').find('i').attr('class','fas fa-database brancoColor');
         }
 }
 function loadSheetsProStorage(items) { 
     if ( typeof items.dataValues !== 'undefined' && items.dataValues != '' ) {
         divIconsLoginPro();
-        localStorage.setItem('configBasePro', items.dataValues);
+        //localStorage.setItem('configBasePro', items.dataValues);
 
         var dataValues = JSON.parse(items.dataValues);
+        if (checkConfigValue('gerenciarprojetos')) {
             loadScriptDataBaseProjetosPro(dataValues);
+        }
             //loadScriptDataBaseAtividadesPro(dataValues);
     }
 }
@@ -133,10 +142,10 @@ function loadScriptArvorePro() {
     if ( $('#ifrArvore').length ) {
         $('#ifrArvore').on("load", function() {
             var iframeObjArvore = $('#ifrArvore').contents().find('head');
-            var scriptArvore =  "<script>"+
-                                "   parent.execArvorePro(getToolbarPro);\n"+
+            var scriptArvore =  "<script data-config='config-seipro-arvore'>"+
+                                "   parent.execArvorePro(initSeiProArvore);\n"+
                                 "</script>";
-            $(scriptArvore).appendTo(iframeObjArvore);
+            $(scriptArvore).prependTo(iframeObjArvore);
         });
     }
 }
@@ -157,10 +166,11 @@ function loadScriptPro() {
                 $.getScript(getUrlExtension("js/lib/jquery-qrcode-0.18.0.min.js"));
                 $.getScript(getUrlExtension("js/sei-pro-editor.js"));
                 console.log('loadScriptPro-Editor');
+                loadConfigPro();
         	});
 	    },500);
 	} else {
-        loadSheetsPro();
+        divDialogsPro();
         loadFilesUI();
         loadFontIcons('head');
         $.getScript(getUrlExtension("js/sei-pro.js"));
@@ -169,6 +179,7 @@ function loadScriptPro() {
             $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             $.getScript(getUrlExtension("js/lib/frappe-gantt.js"));
             console.log('loadScriptPro');
+            loadConfigPro();
         });
     }
 }
