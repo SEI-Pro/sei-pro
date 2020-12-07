@@ -3,7 +3,7 @@
   "name": "SEI Pro",
   "short_name": "SEI Pro",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "0.1.14",
+  "version": "0.1.20",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://pedrohsoaresadv.github.io/sei-pro/",
   "icons": { "16": "icons/icon-16.png",
@@ -27,15 +27,16 @@
       "strict_min_version": "53.0"
     }
   },
-  "content_scripts": [ {
+  "content_scripts": [ 
+  {
     "js": [
         "js/lib/jquery-3.4.1.min.js",
         "js/lib/jquery-ui.min.js",
-		"js/lib/jmespath.min.js",
+	"js/lib/jmespath.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
         "js/lib/frappe-gantt.js",
-		"js/sei-functions-pro.js"
+	"js/sei-functions-pro.js"
     ],
     "css": ["css/sei-pro.css", "css/fontawesome.min.css", "css/frappe-gantt.css", "css/jquery-ui.css"],
     "matches": ["*://*.br/sei/*", "*://*.br/sip/*"]
@@ -44,11 +45,11 @@
     "js": [
         "js/lib/jquery-3.4.1.min.js",
         "js/lib/jquery-ui.min.js",
-		"js/lib/jmespath.min.js",
+	"js/lib/jmespath.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
         "js/lib/frappe-gantt.js",
-		"js/sei-functions-pro.js",
+	"js/sei-functions-pro.js",
         "js/init.js"
     ],
     "css": ["css/sei-pro.css", "css/fontawesome.min.css", "css/frappe-gantt.css", "css/jquery-ui.css"],
@@ -63,44 +64,55 @@
     "all_frames": true,
     "matches": ["*://*.br/*controlador.php?acao=procedimento_visualizar*"]
   },
+  {
+    "js": [
+        "js/lib/jquery-3.4.1.min.js",
+        "js/init_visualizacao.js"
+    ],
+    "all_frames": true,
+    "matches": ["*://*.br/*controlador.php?acao=arvore_visualizar*"]
+  },
    {
     "js": [
         "js/lib/jquery-3.4.1.min.js",
-		"js/lib/jmespath.min.js",
+	"js/lib/jmespath.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
         "js/lib/jquery-qrcode-0.18.0.min.js",
         "js/init.js"
     ],
     "css": ["css/sei-pro.css"],
-	"run_at": "document_end",
+    "run_at": "document_end",
     "matches": ["*://*.br/*controlador.php?acao=editor_montar*"]
-  }],
+  }
+  ],
   "web_accessible_resources": [
         "js/lib/jquery-3.4.1.min.js",
         "js/lib/jquery-ui.min.js",
-		"js/lib/jmespath.min.js",
+	"js/lib/jmespath.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
         "js/lib/jquery-qrcode-0.18.0.min.js",
+        "js/lib/crypto-js.min.js",
         "js/sei-functions-pro.js",
         "js/sei-gantt.js",
         "js/sei-atividades.js",
         "js/sei-pro.js",
         "js/sei-pro-editor.js",
         "js/sei-pro-arvore.js",
+        "js/sei-pro-visualizacao.js",
         "css/sei-pro.css",
         "js/lib/frappe-gantt.js",
         "js/lib/jquery.toolbar.min.js",
         "https://apis.google.com/js/api.js",
         "css/frappe-gantt.css",
         "css/jquery-ui.css",
-		"css/images/ui-icons_444444_256x240.png",
-		"css/images/ui-icons_777777_256x240.png",
-		"css/images/ui-icons_555555_256x240.png",
-		"css/images/ui-icons_ffffff_256x240.png",
-		"css/images/ui-icons_cc0000_256x240.png",
-		"css/images/ui-icons_777620_256x240.png",
+	"css/images/ui-icons_444444_256x240.png",
+	"css/images/ui-icons_777777_256x240.png",
+	"css/images/ui-icons_555555_256x240.png",
+	"css/images/ui-icons_ffffff_256x240.png",
+	"css/images/ui-icons_cc0000_256x240.png",
+	"css/images/ui-icons_777620_256x240.png",
         "css/fontawesome.min.css",
         "css/jquery.toolbar.css",
         "webfonts/fa-brands-400.woff2",
@@ -111,6 +123,8 @@
         "webfonts/fa-regular-400.ttf",
         "webfonts/fa-solid-900.woff2",
         "webfonts/fa-solid-900.woff",
-        "webfonts/fa-solid-900.ttf"
+        "webfonts/fa-solid-900.ttf",
+        "icons/addestilotabela.png",
+        "icons/copiarformatacao.png"
   ]
 }
