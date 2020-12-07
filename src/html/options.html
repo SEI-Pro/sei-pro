@@ -5,6 +5,7 @@
     <title>Configura&ccedil;&otilde;es Gerais | SEI Pro</title>
     <script src="../js/lib/jquery-3.4.1.min.js"></script>
     <script src="../js/lib/jquery-ui.min.js"></script>
+    <script src="../js/lib/jmespath.min.js"></script>
     <link rel="stylesheet" type="text/css" href="page.css">
     <link rel="stylesheet" type="text/css" href="../css/fontawesome.min.css">
     <link rel="stylesheet" type="text/css" href="../css/jquery-ui.css">
@@ -22,72 +23,118 @@
 			<button class="save button-flat button-light" style="float:right" style="width: 100px"><i class="fas fa-save"></i> Salvar</button>
             <div id="alertaBoxPro" style="display: none;"></div>
         </div>
-    <div class="panel options-panel options-profile">
-        <div id="options-profile">
-            <table id="options-table-0" class="options-table">
-                <tr>
-                    <td colspan="2">
-                        <i id="sca-removeProfile-0" class="option-ref removeProfile fas fa-trash-alt"></i>
-                        <h2>Base de Dados (Google Spreadsheets)</h2>
-                    </td>
-                </tr>
-                 <tr>
-                    <th>
-                        <label class="option-ref" id="sca-label-baseName-0" for="sca-baseName-0">Nome da Base *</label>
-                    </th>
+    <div class="panel options-panel options-profile" id="options-tabs">
+        <ul>
+            <li><a href="#options-database">Base de Dados</a></li>
+            <li><a href="#options-functions">Geral</a></li>
+        </ul>
+        <div id="options-database">
+            <div id="options-profile">
+                <table id="options-table-0" class="options-table">
+                    <tr>
+                        <td colspan="2">
+                            <i id="sca-removeProfile-0" class="option-ref removeProfile fas fa-trash-alt"></i>
+                            <h2>Base de Dados (Google Spreadsheets)</h2>
+                        </td>
+                    </tr>
+                     <tr>
+                        <th>
+                            <label class="option-ref" id="sca-label-baseName-0" for="sca-baseName-0">Nome da Base *</label>
+                        </th>
+                        <td>
+                            <input style="width: 30%" id="sca-baseName-0" class="sca-baseName option-ref input-config-pro" type="text" placeholder="Nome da Base" data-name-input="baseName" value=""/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <label class="option-ref" id="sca-label-CLIENT_ID-0" for="sca-CLIENT_ID-0">ID de Cliente *</label>
+                        </th>
+                        <td>
+                            <input id="sca-CLIENT_ID-0" class="sca-CLIENT_ID option-ref input-config-pro" type="text" placeholder="CLIENT_ID" data-name-input="CLIENT_ID" value=""/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <label class="option-ref" id="sca-label-API_KEY-0" for="sca-API_KEY-0">Chave de API *</label>
+                        </th>
+                        <td>
+                            <input id="sca-API_KEY-0" class="sca-API_KEY option-ref input-config-pro" type="text" placeholder="API_KEY" data-name-input="API_KEY" value=""/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <label class="option-ref" id="sca-label-spreadsheetId-0" for="sca-spreadsheetId-0">ID da Planilha *</label>
+                        </th>
+                        <td>
+                            <input id="sca-spreadsheetId-0" class="sca-spreadsheetId option-ref input-config-pro" type="text" placeholder="spreadsheetId" data-name-input="spreadsheetId" value=""/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <label class="option-ref" id="sca-label-baseTipo-0" for="sca-baseTipo-0">Tipo da Base de Dados *</label>
+                        </th>
+                        <td>
+                            <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;">
+                                <option value="projetos">Projetos</option>
+                                <option value="atividades">Atividades</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <hr>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <table>
+                <tr id="footer">
                     <td>
-                        <input style="width: 30%" id="sca-baseName-0" class="sca-baseName option-ref input-config-pro" type="text" placeholder="Nome da Base" data-name-input="baseName" value=""/>
-                    </td>
-                </tr>
-                <tr>
-                    <th>
-                        <label class="option-ref" id="sca-label-CLIENT_ID-0" for="sca-CLIENT_ID-0">ID de Cliente *</label>
-                    </th>
-                    <td>
-                        <input id="sca-CLIENT_ID-0" class="sca-CLIENT_ID option-ref input-config-pro" type="text" placeholder="CLIENT_ID" data-name-input="CLIENT_ID" value=""/>
-                    </td>
-                </tr>
-                <tr>
-                    <th>
-                        <label class="option-ref" id="sca-label-API_KEY-0" for="sca-API_KEY-0">Chave de API *</label>
-                    </th>
-                    <td>
-                        <input id="sca-API_KEY-0" class="sca-API_KEY option-ref input-config-pro" type="text" placeholder="API_KEY" data-name-input="API_KEY" value=""/>
-                    </td>
-                </tr>
-                <tr>
-                    <th>
-                        <label class="option-ref" id="sca-label-spreadsheetId-0" for="sca-spreadsheetId-0">ID da Planilha *</label>
-                    </th>
-                    <td>
-                        <input id="sca-spreadsheetId-0" class="sca-spreadsheetId option-ref input-config-pro" type="text" placeholder="spreadsheetId" data-name-input="spreadsheetId" value=""/>
-                    </td>
-                </tr>
-                <tr>
-                    <th>
-                        <label class="option-ref" id="sca-label-baseTipo-0" for="sca-baseTipo-0">Tipo da Base de Dados *</label>
-                    </th>
-                    <td>
-                        <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;">
-                            <option value="projetos">Projetos</option>
-                            <option value="atividades">Atividades</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <hr>
+                        <button id="new"><i class="fas fa-database"></i> Adicionar nova base</button>
                     </td>
                 </tr>
             </table>
         </div>
-        <table>
-            <tr id="footer">
-                <td>
-                    <button id="new"><i class="fas fa-database"></i> Adicionar nova base</button>
-                </td>
-            </tr>
-        </table>
+        <div id="options-functions">
+            <table class="tableZebra">
+                <tr>
+                    <td><p><i class="iconPopup fa fa-tasks azulColor"></i><span class="info">Gerenciar Projetos</span></p></td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="gerenciarprojetos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciarprojetos" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciarprojetos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><p><i class="iconPopup fa fa-layer-group azulColor"></i><span class="info">Agrupar lista de processos por marcadores, tipo, respons&aacute;vel ou ponto de controle</span></p></td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="agruparlista" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_agruparlista" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_agruparlista"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><p><i class="iconPopup fa fa-caret-square-down azulColor"></i><span class="info">Menu r&aacute;pido na &aacute;rvore de documentos</span></p></td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="menurapido" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_menurapido" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_menurapido"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><p><i class="iconPopup fa fa-link azulColor"></i><span class="info">Abrir, editar e remover hiperlinks no editor de documentos</span></p></td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="editarlinks" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_editarlinks" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_editarlinks"></label>
+                           </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
     <div class="importExport" style="margin: 10px auto; padding-bottom: 50px;">
         <button class="save button-flat button-light" style="float:right" style="width: 100px"><i class="fas fa-save"></i> Salvar</button>
