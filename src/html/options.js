@@ -40,7 +40,6 @@ function loadFile() {
             dataValues: JSON.stringify(result)
         }, function() {
             // Update status to let user know options were saved.
-            //alert('Configura\u00e7\u00f5es carregadas com sucesso!');
             alertaBoxPro('Sucess', 'check-circle', 'Configura\u00e7\u00f5es carregadas com sucesso!');
             //location.reload(true);
         });
@@ -79,7 +78,6 @@ function remove_options() {
             dataValues: ''
         }, function() {
             // Update status to let user know options were saved.
-            //alert('Configura\u00e7\u00f5es removidas com sucesso!');
             alertaBoxPro('Sucess', 'check-circle', 'Configura\u00e7\u00f5es removidas com sucesso!');
             //location.reload(true); 
         });
@@ -94,28 +92,28 @@ function save_options(reload) {
             $(this).removeClass('inputError');
 			var value = $(this).val();
 			var inputName = $(this).attr('data-name-input');
-			input[inputName] = value;
-            if ( value == '' ) { $(this).addClass('inputError'); checkInput++; }
-		});
-		dataValues.push(input);
-    });
-    if ( checkInput == 0 ) {
-        chrome.storage.sync.set({
-            dataValues: JSON.stringify(dataValues)
-        }, function() {
-            // Update status to let user know options were saved.
-            if ( reload == true ) { 
-                //alert('Configura\u00e7\u00f5es salvas com sucesso!');
-                alertaBoxPro('Sucess', 'check-circle', 'Configura\u00e7\u00f5es salvas com sucesso!');
-                //location.reload(true); 
-            } else { 
-                downloadFile(); 
+            if ( value == '' ) { 
+                $(this).addClass('inputError'); 
+                checkInput++; 
+            } else {
+                input[inputName] = value;
             }
-        });
-    } else {
-        //alert('Preencha todos os campos obrigat\u00F3rios!');
-        alertaBoxPro('Error', 'exclamation-triangle', 'Preencha todos os campos obrigat\u00F3rios!');
-    }
+		});
+		if ( checkInput == 0  ) { dataValues.push(input); }
+    });
+    dataValues.push({configGeral: changeConfigGeral()});
+        
+    chrome.storage.sync.set({
+        dataValues: JSON.stringify(dataValues)
+    }, function() {
+        // Update status to let user know options were saved.
+        if ( reload == true ) { 
+            alertaBoxPro('Sucess', 'check-circle', 'Configura\u00e7\u00f5es salvas com sucesso!');
+            //location.reload(true); 
+        } else { 
+            downloadFile(); 
+        }
+    });
 }
 
 // Restores input text state using the preferences
@@ -125,7 +123,9 @@ function restore_options() {
         dataValues: ''
     }, function(items) {
 
-        var dataValues = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];        
+        var dataValues = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];    
+            dataValues = jmespath.search(dataValues, "[?baseName]");
+        
         for (i = 0; i < dataValues.length; i++) {
             if ( i > 0 ) { addProfile(); } else { actionRemoveProfile(i); }
         }
@@ -137,6 +137,16 @@ function restore_options() {
                 });
             });
         });
+        
+        var dataValuesConfig = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];
+            dataValuesConfig = jmespath.search(dataValuesConfig, "[*].configGeral | [0]");
+            $.each(dataValuesConfig, function (indexB, value) {
+                if (value.value === false) { 
+                    $('#itemConfigGeral_'+value.name).prop('checked', false); 
+                    $('#itemConfigGeral_'+value.name).closest('tr').find('.iconPopup').removeClass('azulColor').addClass('cinzaColor');
+                }
+            });
+        
     });
 }
 function actionRemoveProfile(idTable) {
@@ -166,10 +176,28 @@ function addProfile() {
     });
     actionRemoveProfile(idTable);
 }
+function changeConfigGeral() {
+    var arrayShowItensMenu = []
+    $('#options-functions').find('input[name="onoffswitch"]').each(function(){
+        if ($(this).is(':checked')) {
+            var value = true;
+            $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+        } else {
+            var value = false;
+            $(this).closest('tr').find('.iconPopup').removeClass('azulColor').addClass('cinzaColor');
+        }
+        arrayShowItensMenu.push({name: $(this).attr('data-name'), value: value});
+    });
+    return arrayShowItensMenu;
+}
 
+$('input[name="onoffswitch"]').on("change", function () {
+    changeConfigGeral();
+});
 $('.save').click(function() { save_options(true) });
 $('#new').click(function() { addProfile() });
 
 $(function(){
     restore_options();
+    $('#options-tabs').tabs();
 });
