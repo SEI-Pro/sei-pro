@@ -34,8 +34,8 @@ function deletReportProjetosGantt(this_) {
         $('#projetosGanttTabs').tabs('refresh');
 	for (i = 0; i < ganttProject.length; i++) {
 		if ( typeof ganttProject[i] !== 'undefined' && ganttProject[i].$svg.id.indexOf(id_) !== -1 ) {   
-            		ganttProject.splice(i,1);
-            		i--;
+            ganttProject.splice(i,1);
+            i--;
 		}
 	}
 }
@@ -226,6 +226,7 @@ if ( typeof dadosProjetosReport !== 'undefined' && dadosProjetosReport.length > 
     $('.gantt-container').css('max-width',(width-20));
     var activeTab = $('#projetosGanttTabs .ui-tabs-nav li').length-1;
     $('#projetosGanttTabs').tabs( "option", "active",  activeTab);
+    scrollGanttToFirstBar();
 }
 function setProjetosGantt(mode) {
     //if ( typeof dadosEtapasObj !== 'undefined' && dadosEtapasObj.length > 0 ) {
@@ -451,6 +452,7 @@ function setProjetosGantt(mode) {
                 activate: function (event, ui) {
                     var active = $(this).tabs( "option", "active" );
                     localStorageStorePro('projetosGanttActiveTabs', active);
+                    scrollGanttToFirstBar();
                 }
             }).prepend(toolbarProjetosGantt); 
             var activeTab = ( localStorageRestorePro('projetosGanttActiveTabs') != null && parseInt(localStorageRestorePro('projetosGanttActiveTabs')) >= 0 ) ? parseInt(localStorageRestorePro('projetosGanttActiveTabs')) : 0;
@@ -461,6 +463,7 @@ function setProjetosGantt(mode) {
                 localStorageStorePro('tipoProjetoSelected', value);
                 setProjetosGantt('refresh');
         });
+        scrollGanttToFirstBar();
     }, 300);
 }
 function showDetalheGantt(_this) {
@@ -1668,4 +1671,11 @@ function moveProgressProjetosGantt(rowTask, progress) {
 	var widthMax = $('.gantt-container').find('g.bar-wrapper[data-id="'+idBar+'"]').find('.bar').attr('width');
 	var widthProgress = Math.round(parseFloat(widthMax)*(progress/100));
 		$('.gantt-container').find('g.bar-wrapper[data-id="'+idBar+'"]').find('.bar-progress').attr('width', widthProgress);
+}
+function scrollGanttToFirstBar() {
+    for (i = 0; i < ganttProject.length; i++) {
+        var scrollLeft = ganttProject[i].bars[0].x-20;
+        var windowDiv = $('#'+ganttProject[i].$svg.id).closest('.gantt-container');
+            windowDiv.animate({scrollLeft: scrollLeft}, 500);
+    }
 }
