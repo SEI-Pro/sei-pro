@@ -6,7 +6,7 @@ Essa funcionalidade adiciona ao visualizador de documentos do SEI a verificaçã
 
 > ![Tela Verificar Integridade Hashcode](../img/tela-hashcode.gif) 
 
-O botão de **Verificar código de integridade (Hashcode)** somente aparece nos documentos do tipo **Anexo**
+O botão de **Verificar código de integridade (Hashcode)** somente aparece nos documentos do tipo **Externo**
 
 Mas pra que serve o **HASHCODE**?
 
