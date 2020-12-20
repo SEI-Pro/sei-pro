@@ -25,6 +25,7 @@
 - [Aumentar ou reduzir o tamanho da fonte](./pages/AUMENTARFONTE.md)
 - [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](./pages/ALINHARTEXTO.md)
 - [Verificar código de integridade (Hashcode)](./pages/HASHCODE.md)
+- [Adicionar link de documento público](./pages/DOCPUBLICO.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
