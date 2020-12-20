@@ -2,6 +2,11 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.21
+
+- Correções e melhorias
+- Adicionada função [Adicionar link de documento público](../pages/DOCPUBLICO.md) (Sugestão de Renata Rocha)
+
 ### Versão 0.1.20
 
 - Correções e melhorias
@@ -81,3 +86,5 @@
 - [Copiar formatação do texto](../pages/COPIARFORMATACAO.md)
 - [Aumentar ou reduzir o tamanho da fonte](../pages/AUMENTARFONTE.md)
 - [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
+- [Verificar código de integridade (Hashcode)](../pages/HASHCODE.md)
+- [Adicionar link de documento público](../pages/DOCPUBLICO.md)
