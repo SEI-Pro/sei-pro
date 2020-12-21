@@ -17,3 +17,5 @@ Processos sigilogos não são listados, portanto, não serão encontrados pela f
 
 Ao final da lista de documentos é possível adicionar o link público do processo, 
 com a listagem de todos os seus documentos.
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-2.png" width="640"/>
