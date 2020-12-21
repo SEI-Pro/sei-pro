@@ -13,7 +13,7 @@ A lista de documentos vem da pesquisa pública de seu órgão.
 Documentos restritos são listados, mas o link público não estará disponível. 
 Mesmo assim, é possível adicionar o nome do documento, sem o seu respectivo link.
 
-Processos sigilogos não são listados, portanto, não serão encontrados pela ferramenta.
+Processos sigilosos não são listados, portanto, não serão encontrados pela ferramenta.
 
 Ao final da lista de documentos é possível adicionar o link público do processo, 
 com a listagem de todos os seus documentos.
