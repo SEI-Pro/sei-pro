@@ -2,6 +2,12 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.22
+
+- Correções e melhorias
+- Adicionada função de [Valores padronizados ao inserir novo documento](../pages/VALDEFAULT.md) (Sugestão Roberto Balata)
+- Adicionada função de [Inserir documento externo (Google Planilhas)](../pages/INSERIRDOC.md) (Sugestão James Wallace)
+
 ### Versão 0.1.21
 
 - Correções e melhorias
@@ -88,3 +94,4 @@
 - [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
 - [Verificar código de integridade (Hashcode)](../pages/HASHCODE.md)
 - [Adicionar link de documento público](../pages/DOCPUBLICO.md)
+- [Adicionar valores padronizados ao inserir novo documento](../pages/VALDEFAULT.md)
