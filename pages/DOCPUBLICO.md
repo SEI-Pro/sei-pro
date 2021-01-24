@@ -19,3 +19,8 @@ Ao final da lista de documentos é possível adicionar o link público do proces
 com a listagem de todos os seus documentos.
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-2.png" width="640"/>
+
+
+## Próximo item
+
+> [Adicionar valores padronizados ao inserir novo documento](./VALDEFAULT.md)
