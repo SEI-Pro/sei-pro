@@ -48,6 +48,14 @@ Caso deseja reportar um erro ou solicitar um recurso, acesse [Issue](https://git
 
 Ou envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com)
 
+## Grupo SEI Lab
+
+Participe do laboratorio de ideias sobre inovações para o SEI, automações e boas práticas.
+
+> [http://bit.ly/SEI_Lab](http://bit.ly/SEI_Lab)
+
+
+
 ## Novidades e dicas
 
 Receba em primeira mão sobre novidades e atualizações do SEI Pro. 
