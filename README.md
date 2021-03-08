@@ -26,7 +26,12 @@
 - [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](./pages/ALINHARTEXTO.md)
 - [Verificar código de integridade (Hashcode)](./pages/HASHCODE.md)
 - [Adicionar link de documento público](./pages/DOCPUBLICO.md)
-- [Adicionar valores padronizados ao inserir novo documento](./pages/VALDEFAULT.md)
+- [Adicionar valores padronizados ao criar um novo documento](./pages/VALDEFAULT.md)
+- [Pesquisar link permanente](./pages/LINKPERMANENTE.md)
+- [Reproduzir vídeo na visualização de documentos](./pages/PLAYVIDEO.md)
+- [Exportar informações de processos em planilha CSV](./pages/LISTAPROCESSOS.md)
+- [Adicionar marca d'água de minuta no documento](./pages/MARCAMINUTA.md)
+- [Adicionar marca de sigilo e tarjas pretas de confidencialidade](./pages/SIGILODOC.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
