@@ -30,7 +30,7 @@
 - [Pesquisar link permanente](./pages/LINKPERMANENTE.md)
 - [Reproduzir vídeo na visualização de documentos](./pages/PLAYVIDEO.md)
 - [Exportar informações de processos em planilha CSV](./pages/LISTAPROCESSOS.md)
-- [Adicionar marca d'água de minuta no documento](./pages/MARCAMINUTA.md)
+- [Adicionar marca d'água de minuta ao documento](./pages/MARCAMINUTA.md)
 - [Adicionar marca de sigilo e tarjas pretas de confidencialidade](./pages/SIGILODOC.md)
 
 
