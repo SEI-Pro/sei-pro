@@ -70,6 +70,19 @@ Funções Avançadas. Adicione um numerador ao final do campo dinâmico para ret
 | `#hoje-5`  |  Data à 5 dias atrás _(em formato [dia] de [mês] de [ano])_ |
 
 
+### Campos dinâmicos personalizados
+
+É possível personalizar os campos dinâmicos com informações específicas do processo.
+Para isso, adicione um nome de campo personalizado e seu valor correspondente.
+
+> ![Tela Dados do Processo](../img/tela-dadosprocesso2.gif) 
+
+Os campos dinâmicos personalizados podem ser utilizados em qualquer documento do processo. Para tanto, as informações dessa ferramenta são salvas nas observações da unidade para este processo.
+
+> ![Tela Dados do Processo](../img/tela-dadosprocesso3.gif) 
+
+Os campos dinâmicos personalizados poderão ser utilizados por outras unidades, apesar de não disponíveis para edição.
+
 ## Próximo item
 
 > [Gerar link curto do TinyUrl](./LINKCURTO.md)
