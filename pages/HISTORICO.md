@@ -2,7 +2,7 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
-### Versão 0.1.22
+### Versão 0.1.23
 
 - Correções e melhorias
 - Adicionada função de [Pesquisar link permanente](../pages/LINKPERMANENTE.md) (Sugestão Hélio Oliveira)
