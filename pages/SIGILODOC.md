@@ -9,7 +9,7 @@ Essa funcionalidade adiciona ao editor de texto do SEI a possibilidade de adicio
 É possível adicionar marcas de sigilo manualmente ou localizando um texto por todo o documento.
 Caso deseje, é possível ainda remover todas as marcas de sigilo na aba **"Remover marcas"**
 
-> ![Tela Sigilo Documento](../img/tela-sigilodoc1.gif)  
+> ![Tela Sigilo Documento](../img/tela-sigilodoc1-1.gif)  
 
 ### Marcas de sigilo e tarjas pretas
 
