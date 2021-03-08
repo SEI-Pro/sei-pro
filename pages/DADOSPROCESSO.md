@@ -14,6 +14,7 @@ Atualmente estão disponíveis os seguintes parâmetros:
 |  Data de Autuação |
 |  Tipo de Processo |
 |  Especificação |
+|  Nível de Acesso |
 |  Interessados |
 |  Assuntos |
 |  Observações |
