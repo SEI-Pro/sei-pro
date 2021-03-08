@@ -5,6 +5,16 @@
 ### Versão 0.1.22
 
 - Correções e melhorias
+- Adicionada função de [Pesquisar link permanente](../pages/LINKPERMANENTE.md) (Sugestão Hélio Oliveira)
+- Adicionada função de [Reproduzir vídeo na visualização de documentos](../pages/PLAYVIDEO.md) (Sugestão Roberto Balata)
+- Adicionada função de [Exportar informações de processos em planilha CSV](../pages/LISTAPROCESSOS.md) (Sugestão Hélio Oliveira)
+- Adicionada função de [Adicionar marca d'água de minuta ao documento](../pages/MARCAMINUTA.md) (Sugestão Hélio Oliveira)
+- Adicionada função de [Adicionar marca de sigilo e tarjas pretas de confidencialidade](../pages/SIGILODOC.md)
+- Aperfeiçoada as funções de [Inserir dados do processo](../pages/DADOSPROCESSO.md) (Sugestão de Renata Rocha)
+
+### Versão 0.1.22
+
+- Correções e melhorias
 - Adicionada função de [Valores padronizados ao inserir novo documento](../pages/VALDEFAULT.md) (Sugestão Roberto Balata)
 - Adicionada função de [Inserir documento externo (Google Planilhas)](../pages/INSERIRDOC.md) (Sugestão James Wallace)
 
@@ -94,4 +104,9 @@
 - [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
 - [Verificar código de integridade (Hashcode)](../pages/HASHCODE.md)
 - [Adicionar link de documento público](../pages/DOCPUBLICO.md)
-- [Adicionar valores padronizados ao inserir novo documento](../pages/VALDEFAULT.md)
+- [Adicionar valores padronizados ao criar um novo documento](../pages/VALDEFAULT.md)
+- [Pesquisar link permanente](../pages/LINKPERMANENTE.md)
+- [Reproduzir vídeo na visualização de documentos](../pages/PLAYVIDEO.md)
+- [Exportar informações de processos em planilha CSV](../pages/LISTAPROCESSOS.md)
+- [Adicionar marca d'água de minuta ao documento](../pages/MARCAMINUTA.md)
+- [Adicionar marca de sigilo e tarjas pretas de confidencialidade](../pages/SIGILODOC.md)
