@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Alinhar texto](../img/icon-sigilodoc.png) Adicionar marca de sigilo e tarjas pretas de confidencialidade
+## ![SEI Pro Sigilo Documento](../img/icon-sigilodoc.png) Adicionar marca de sigilo e tarjas pretas de confidencialidade
 
 Essa funcionalidade adiciona ao editor de texto do SEI a possibilidade de adicionar marca de sigilo e tarjas pretas de confidencialidade ao documento.
 
@@ -31,4 +31,4 @@ Enquanto aberto do editor, o botão **"Desfazer"** (Control+Z) poderá reverter 
 
 ## Próximo item
 
-> [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
+> [Desativar funções da extensão](../pages/DESATIVARFUNCOES.md)
