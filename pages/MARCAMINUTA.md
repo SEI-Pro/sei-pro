@@ -2,7 +2,7 @@
 
 ## ![SEI Pro Alinhar texto](../img/icon-marcaminuta.png) Adicionar marca d'água de minuta no documento
 
-Essa funcionalidade adiciona ao editor de texto do SEI a possibilidade de adicionar marca d'água de minuta ao documento
+Essa funcionalidade adiciona ao editor de texto do SEI a possibilidade de adicionar marca d'água de minuta ao documento.
 
 > ![Tela Marca Minuta](../img/tela-marcaminuta.gif)  
 
@@ -21,7 +21,6 @@ Remova o texto **"MINUTA DE DOCUMENTO"** no início do documento.
 A marca d'água é visualizada por todos, independentemente da utilização do SEI Pro, 
 tanto pelo acesso externo, tanto pela consulta pública.
 
-
 ## Próximo item
 
-> [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md)
+> [Adicionar marca de sigilo e tarjas pretas de confidencialidade](../pages/SIGILODOC.md)
