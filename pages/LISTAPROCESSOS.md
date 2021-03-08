@@ -8,4 +8,4 @@ Essa funcionalidade adiciona à página inicial do SEI a possibilidade de export
 
 ## Próximo item
 
-> [Adicionar marca d'água de minuta no documento](../pages/MARCAMINUTA.md)
+> [Adicionar marca d'água de minuta ao documento](../pages/MARCAMINUTA.md)
