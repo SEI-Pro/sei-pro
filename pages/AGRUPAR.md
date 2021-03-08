@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## Agrupar lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio
+## Agrupar lista de processos por data de recebimento, autuação, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio
 
 Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle ou unidade de envio.
 
@@ -10,7 +10,7 @@ Ainda, é possível agrupar os processos pela **data de recebimento na unidade**
 
 > ![Tela Agrupar lista de processos](../img/tela-agrupamento2.gif) 
 
-Para a função **Data de recebimento**, **Data de envio** e **Unidade de envio**,a extensão buscará a última data no **Histórico do Processo** que contém a descrição `Processo recebido na unidade`, `Reabertura do processo na unidade` ou `Processo público gerado` e que corresponda a sua unidade.
+Para a função **Data de recebimento, envio, autuação** e **Unidade de envio**,a extensão buscará a última data no **Histórico do Processo** que contém a descrição `Processo recebido na unidade`, `Reabertura do processo na unidade` ou `Processo público gerado` e que corresponda a sua unidade.
 
 ## Próximo item
 
