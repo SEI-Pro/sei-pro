@@ -78,7 +78,7 @@ Para isso, adicione um nome de campo personalizado e seu valor correspondente.
 
 > ![Tela Dados do Processo](../img/tela-dadosprocesso2.gif) 
 
-Os campos dinâmicos personalizados podem ser utilizados em qualquer documento do processo. Para tanto, as informações dessa ferramenta são salvas nas observações da unidade para este processo.
+Os campos dinâmicos personalizados podem ser utilizados em qualquer documento do processo. Para isso, essas informações são salvas nas observações da unidade para este processo.
 
 > ![Tela Dados do Processo](../img/tela-dadosprocesso3.gif) 
 
