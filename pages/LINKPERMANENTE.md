@@ -4,7 +4,7 @@
 
 Essa funcionalidade adiciona à página inicial do SEI a possibilidade de pesquisar o link permanente de uma lista de processos.
 
-Links permanentes são endereços estáticos do processo, sem a assinatura hash em seu link.
+Links permanentes são endereços estáticos do processo, sem a assinatura hash em seu link, ideais para compartilhamento.
 
 > ![Tela Alinhar texto](../img/tela-linkpermanente.gif) 
  
