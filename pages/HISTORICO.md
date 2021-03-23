@@ -14,29 +14,29 @@
 
 ### Versão 0.1.22
 
-- Correções e melhorias
+- Correções e melhorias (colaboração de Leonardo Rafaele)
 - Adicionada função de [Valores padronizados ao inserir novo documento](../pages/VALDEFAULT.md) (Sugestão Roberto Balata)
 - Adicionada função de [Inserir documento externo (Google Planilhas)](../pages/INSERIRDOC.md) (Sugestão James Wallace)
 
 ### Versão 0.1.21
 
-- Correções e melhorias
+- Correções e melhorias (colaboração de Leonardo Rafaele)
 - Adicionada função [Adicionar link de documento público](../pages/DOCPUBLICO.md) (Sugestão de Renata Rocha)
 
 ### Versão 0.1.20
 
-- Correções e melhorias
+- Correções e melhorias (colaboração de Leonardo Rafaele)
 - Adicionada função [Verificar código de integridade (Hashcode)](../pages/HASHCODE.md)
 - Adicionada função [Agrupamento de lista de processos por unidade de envio e data de envio](../pages/AGRUPAR.md) (Sugestão de Dárcio Gomes)
 
 ### Versão 0.1.19
 
-- Correções e melhorias
+- Correções e melhorias 
 - Adicionada função [Agrupamento de lista de processos por data de recebimento e último acesso](../pages/AGRUPAR.md) (Sugestão de Dárcio Gomes)
 
 ### Versão 0.1.18
 
-- Correções e melhorias
+- Correções e melhorias 
 - Adicionada função [Alinhar o texto à esquerda, ao centro, à direita ou justificadamente](../pages/ALINHARTEXTO.md) (Sugestão de Geraldo Nogueira)
 - Atualizada função [Adicionar link de legislação](../pages/LINKLEGIS.md) para inserir recurso de pesquisa legislação por conteúdo
 - Adicionado recurso de desfazer (Ctrl + Z) as modificações feitas pelo SEI Pro no editor de texto do SEI
