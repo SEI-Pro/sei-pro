@@ -19,7 +19,7 @@
 - [Alterar título da página](./pages/TITULOPAGINA.md)
 - [Abrir, editar e remover hiperlinks](./pages/ABRIRLINKS.md)
 - [Inserir equações (fórmulas matemáticas)](./pages/EQUACOES.md)
-- [Menu rápido na árvore de documentos](./pages/MENURAPIDO.md)
+- [Menu e ícones rápidos na árvore de documentos](./pages/MENURAPIDO.md)
 - [Tabela rápida](./pages/TABELARAPIDA.md)
 - [Copiar formatação do texto](./pages/COPIARFORMATACAO.md)
 - [Aumentar ou reduzir o tamanho da fonte](./pages/AUMENTARFONTE.md)
@@ -32,6 +32,8 @@
 - [Exportar informações de processos em planilha CSV](./pages/LISTAPROCESSOS.md)
 - [Adicionar marca d'água de minuta ao documento](./pages/MARCAMINUTA.md)
 - [Adicionar marca de sigilo e tarjas pretas de confidencialidade](./pages/SIGILODOC.md)
+- [Duplicar documentos com 1 click](./pages/DUPLICARDOC.md)
+- [Enviar múltiplos documentos externos](./pages/UPLOADDOCS.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
