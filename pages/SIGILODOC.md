@@ -31,4 +31,4 @@ Enquanto aberto do editor, o botão **"Desfazer"** (Control+Z) poderá reverter 
 
 ## Próximo item
 
-> [Desativar funções da extensão](../pages/DESATIVARFUNCOES.md)
+> [Duplicar documentos com 1 click](../pages/DUPLICARDOC.md)
