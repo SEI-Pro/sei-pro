@@ -6,7 +6,15 @@ Essa funcionalidade adiciona à árvore de processos do SEI a possibilidade de d
 
 > ![Tela Duplicar Documento](../img/tela-duplicardoc.gif)  
 
+Caso disponíveis, as seguintes informações do documento de referências são automaticamente replicadas no documento clonado:
 
+|  Informações do Documento  |
+| ------------------- | 
+|  Descrição |
+|  Interessados |
+|  Classificação por Assuntos |
+|  Observações desta unidade |
+|  Nível de Acesso |
 
 ## Próximo item
 
