@@ -4,7 +4,7 @@
 
 
 ### Versão 0.1.24
-22/03/2021
+07/04/2021
 
 - Correções e melhorias
 - Adicionada função de [Duplicar documentos com 1 click](../pages/DUPLICARDOC.md)
