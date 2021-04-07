@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Duplicar Documento](../img/icon-uploaddocs.png) Enviar múltiplos documentos externos
+## ![SEI Pro Enviar documentos](../img/icon-uploaddocs.png) Enviar múltiplos documentos externos
 
 Essa funcionalidade adiciona à árvore de processos do SEI a possibilidade de enviar múltiplos documentos externos.
 
