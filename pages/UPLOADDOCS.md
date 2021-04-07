@@ -8,9 +8,7 @@ Essa funcionalidade adiciona à árvore de processos do SEI a possibilidade de e
 
 Arrastar um ou vários arquivos para a árvore de processos para adicioná-los automaticamente ao SEI.
 
-Caso o nome do arquivo contenha um dos tipos de documento aceitos pelo SEI, ele será selecionado automaticamente.
-
-Caso um tipo de documento não seja encontrado, será selecionado o tipo **Anexo**
+Caso o nome do arquivo contenha um dos tipos de documento aceitos pelo SEI, ele será selecionado automaticamente. Caso contrário, será selecionado o tipo **Anexo**
 
 |  Nome do Arquivo         |  Tipo de Documento   |  Número / Nome na Árvore  |
 | -----------------------  |  ------------------- |  ------------------------ | 
