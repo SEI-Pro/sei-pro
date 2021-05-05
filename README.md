@@ -75,15 +75,5 @@ Siga-me no Instagram [@phsoares_adv](https://www.instagram.com/phsoares_adv/)
 
 Confira nosso [Histórico de versões](./pages/HISTORICO.md)
 
-## Apoio
-
-Se este projeto te ajudou a reduzir seu tempo de trabalho, ajude a mantê-lo ativo (e a recompensar os cafés das madrugadas também :blush: )
-
-> <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/pix.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/pix.png" width="100"/> 
-> 
-> [https://nubank.com.br/pagar/51rsy/WvLCXRpOQy](https://nubank.com.br/pagar/51rsy/WvLCXRpOQy)
-
-
-
 
 
