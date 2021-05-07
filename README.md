@@ -59,6 +59,7 @@ Ou envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gma
 ## Deseja contribuir?
 
 Envie sua sugestão de nova funcionalidade em [https://seipro.changecrab.com/suggestions](https://seipro.changecrab.com/suggestions)
+Vote nas sugestões que mais queria ver no SEI Pro!
 
 ## Grupo SEI Lab
 
