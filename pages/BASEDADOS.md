@@ -142,11 +142,11 @@ No menu lateral, acesse **"Tela de consentimento OAuth"** > **"Status da publica
 
 Para verificar qual protocolo utilizado pelo SEI do seu órgão, clique sobre o cadeado na barra de endereços do navegador.
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados20.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados21.png" width="266"/>
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados21.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados21.png" width="266"/>
   
 Em ambiente de testes todos os utilizadores da base de dados precisam ser cadastrados no console de API do Google. Para isso, ainda na tela de **"Tela de consentimento OAuth"** vá para a seção **"Usuários de teste"** e adicione os emails dos usuários que utilização o Gestor de Projetos.
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados20.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados21.png" width="814"/>
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados22.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados22.png" width="814"/>
 
 ## Próximo item
 
