@@ -129,6 +129,24 @@ Nas **"Restrições do aplicativo"**, selecione **"Referenciadores de HTTP (site
 Em **"Restrições de sites"**, clique em **"Adicionar um item"** e insira o URL do **SEI!** do seu órgão ou entidade.
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados19.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados19.png" width="520"/>
+  
+### Publicando o aplicativo
+
+Antes de utilizar a API do Google, é necessário publicar a **Tela de consentimento OAuth**.
+
+No menu lateral, acesse **"Tela de consentimento OAuth"** > **"Status da publicação"** e clique em **"Publicar Aplicativo"**
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados20.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados20.png" width="520"/>
+  
+**ATENÇÃO!** Caso o acesso ao SEI do seu órgão não utilize o protocolo seguro HTTPS, API do Google não funcionará em ambiente de produção. Nesse caso, ignore o passo anterior e utilize o aplicativo em ambiente de teste. 
+
+Para verificar qual protocolo utilizado pelo SEI do seu órgão, clique sobre o cadeado na barra de endereços do navegador.
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados20.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados21.png" width="266"/>
+  
+Em ambiente de testes todos os utilizadores da base de dados precisam ser cadastrados no console de API do Google. Para isso, ainda na tela de **"Tela de consentimento OAuth"** vá para a seção **"Usuários de teste"** e adicione os emails dos usuários que utilização o Gestor de Projetos.
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados20.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-basedados21.png" width="814"/>
 
 ## Próximo item
 
