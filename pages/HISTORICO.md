@@ -6,7 +6,7 @@
 28/05/2021
 
 - Correções e melhorias
-- Adicionada 0 [Menus Suspenso](../pages/MENUSUSPENSO.md)
+- Adicionada o [Menu Suspenso](../pages/MENUSUSPENSO.md)
 - Adicionada função de [Ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
 - Adicionada função [Histórico de processos visitados](../pages/HISTORICOPROC.md) (Sugestão Leonardo Rafaele)
 - Adicionada função [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
@@ -141,7 +141,7 @@
 - [Adicionar marca de sigilo e tarjas pretas de confidencialidade](../pages/SIGILODOC.md)
 - [Duplicar documentos com 1 click](../pages/DUPLICARDOC.md)
 - [Enviar múltiplos documentos externos](../pages/UPLOADDOCS.md)
-- [Menus Suspenso](../pages/MENUSUSPENSO.md)
+- [Menu Suspenso](../pages/MENUSUSPENSO.md)
 - [Ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
 - [Histórico de processos visitados](../pages/HISTORICOPROC.md)
 - [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
