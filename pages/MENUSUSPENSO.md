@@ -2,7 +2,7 @@
 
 ## ![SEI Pro Menu Suspenso](../img/icon-menususpenso.png) Menu Suspenso
 
-Essa funcionalidade torna o menu lateral do SEI suspenso na tela, otimizando o espaço útil da tela de processos.
+Essa funcionalidade torna o menu lateral do SEI suspenso na tela, otimizando o espaço útil da sua área de trabalho.
 
 > ![Menu Suspenso](../img/tela-menususpenso.gif)  
 
