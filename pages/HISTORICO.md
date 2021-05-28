@@ -7,7 +7,7 @@
 
 - Correções e melhorias
 - Adicionado o [Menu Suspenso](../pages/MENUSUSPENSO.md)
-- Adicionada função de [Filtrar e ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
+- Adicionada função de [Filtrar e ordenar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
 - Adicionada função [Histórico de processos visitados](../pages/HISTORICOPROC.md) (Sugestão Leonardo Rafaele)
 - Adicionada função [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
 - Adicionada função de [Anotação diretamente pela árvore do processo](../pages/NOTAARVORE.md)
@@ -143,7 +143,7 @@
 - [Duplicar documentos com 1 click](../pages/DUPLICARDOC.md)
 - [Enviar múltiplos documentos externos](../pages/UPLOADDOCS.md)
 - [Menu Suspenso](../pages/MENUSUSPENSO.md)
-- [Filtrar e ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
+- [Filtrar e ordenar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
 - [Histórico de processos visitados](../pages/HISTORICOPROC.md)
 - [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
 - [Anotação diretamente pela árvore do processo](../pages/NOTAARVORE.md)
