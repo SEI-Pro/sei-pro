@@ -38,6 +38,7 @@
 - [Ordernar tabelas ao clicar no seu cabeçalho](./pages/ORDERNARTABELA.md)
 - [Histórico de processos visitados](./pages/HISTORICOPROC.md)
 - [Informações adicionais na árvore do processo](./pages/INFOARVORE.md)
+- [Anotação diretamente pela árvore do processo](./pages/NOTAARVORE.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
