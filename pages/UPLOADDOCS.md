@@ -21,4 +21,4 @@ Caso disponível, a data de última modificação do arquivo é adicionada ao ca
 
 ## Próximo item
 
-> [Desativar funções da extensão](../pages/DESATIVARFUNCOES.md)
+> [Menu Suspenso](../pages/MENUSUSPENSO.md)
