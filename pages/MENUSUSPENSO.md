@@ -22,4 +22,4 @@ Ou cole o link na barra de endereços do navegador:
 
 ## Próximo item
 
-> [Filtrar e Ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
+> [Filtrar e ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
