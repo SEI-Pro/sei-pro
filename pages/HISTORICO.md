@@ -6,7 +6,7 @@
 28/05/2021
 
 - Correções e melhorias
-- Adicionada o [Menu Suspenso](../pages/MENUSUSPENSO.md)
+- Adicionado o [Menu Suspenso](../pages/MENUSUSPENSO.md)
 - Adicionada função de [Filtrar e ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
 - Adicionada função [Histórico de processos visitados](../pages/HISTORICOPROC.md) (Sugestão Leonardo Rafaele)
 - Adicionada função [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
