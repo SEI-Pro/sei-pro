@@ -14,6 +14,10 @@ As seguintes informações estão disponíveis:
 - Assuntos
 - Observações
 
+É possível selecionar quais informações deseja mostrar na opção **Personalizar Menu**
+
+> ![Tela Informações na árvore](../img/tela-infoarvore1.gif) 
+
 ## Próximo item
 
 > [Anotação diretamente pela árvore do processo](../pages/NOTAARVORE.md)
