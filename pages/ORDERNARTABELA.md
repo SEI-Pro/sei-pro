@@ -1,8 +1,8 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Ordenar Tabelas](../img/icon-ordernartabela.png) Filtrar e ordernar tabelas ao clicar no seu cabeçalho
+## ![SEI Pro Ordenar Tabelas](../img/icon-ordernartabela.png) Filtrar e ordenar tabelas ao clicar no seu cabeçalho
 
-Essa funcionalidade adiciona ao SEI a possibilidade de ordernar as tabelas de dados ao clicar no seu cabeçalho, bem como filtrar o seu conteúdo.
+Essa funcionalidade adiciona ao SEI a possibilidade de ordenar as tabelas de dados ao clicar no seu cabeçalho, bem como filtrar o seu conteúdo.
 
 > ![Ordenar Tabelas](../img/tela-ordernartabela.gif)  
 
