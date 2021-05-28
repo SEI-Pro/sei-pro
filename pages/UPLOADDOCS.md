@@ -4,7 +4,7 @@
 
 Essa funcionalidade adiciona à árvore de processos do SEI a possibilidade de enviar múltiplos documentos externos.
 
-> ![Tela Sigilo Documento](../img/tela-uploaddocs.gif)  
+> ![Tela Enviar documentos](../img/tela-uploaddocs.gif)  
 
 Arrastar um ou vários arquivos para a árvore de processos para adicioná-los automaticamente ao SEI.
 
@@ -18,6 +18,27 @@ Caso o nome do arquivo contenha um dos tipos de documento aceitos pelo SEI, ele 
 Todos os documentos são adicionados com o nível de acesso **Público** e formato **Nato-digital**. 
 
 Caso disponível, a data de última modificação do arquivo é adicionada ao campo **Data do Documento**. Caso contrário, a data atual é adicionada.
+
+### Ordernando documentos
+
+
+É possível rdernar os documentos antes do envio ao SEI.
+
+> ![Tela Enviar documentos](../img/tela-uploaddocs2.gif) 
+
+Ative a opção **Ordernar documentos na árvore antes de enviar (Não enviar automaticamente)** nas configurações do SEI Pro.
+
+Clique no ícone do **SEI Pro** na barra de extensões do Google Chrome:
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" width="490"/>
+
+Caso o ícone não esteja visível, fixe-o na barra de extensões.
+
+>  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" width="473"/>
+
+Ou cole o link na barra de endereços do navegador:
+
+> `chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html`
 
 ## Próximo item
 
