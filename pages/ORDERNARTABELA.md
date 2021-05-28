@@ -2,13 +2,13 @@
 
 ## ![SEI Pro Ordenar Tabelas](../img/icon-ordernartabela.png) Filtrar e ordernar tabelas ao clicar no seu cabeçalho
 
-Essa funcionalidade adiciona ao SEI a possibilidade de ordernar as tabelas de dados ao clicar no seu cabeçalho.
+Essa funcionalidade adiciona ao SEI a possibilidade de ordernar as tabelas de dados ao clicar no seu cabeçalho, bem como filtrar o seu conteúdo.
 
 > ![Ordenar Tabelas](../img/tela-ordernartabela.gif)  
 
-A pesquisa dos filtros buscam dentro das anotações e marcadores dos processos. O resultado do filtro permanece gravado caso a página seja recarregada.
+A pesquisa dos filtros buscam dentro das anotações e marcadores dos processos também. O resultado do filtro permanece gravado caso a página seja recarregada.
 
-A funcionalidade de filtrar e ordenar está disponível em todas as tabelas de dados do sistema.
+A funcionalidade de **filtrar e ordenar** está disponível em todas as tabelas de dados do sistema.
 
 ## Próximo item
 
