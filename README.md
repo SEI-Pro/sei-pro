@@ -35,7 +35,7 @@
 - [Duplicar documentos com 1 click](./pages/DUPLICARDOC.md)
 - [Enviar múltiplos documentos externos](./pages/UPLOADDOCS.md)
 - [Menu Suspenso](./pages/MENUSUSPENSO.md)
-- [Ordernar tabelas ao clicar no seu cabeçalho](./pages/ORDERNARTABELA.md)
+- [Ordenar tabelas ao clicar no seu cabeçalho](./pages/ORDERNARTABELA.md)
 - [Histórico de processos visitados](./pages/HISTORICOPROC.md)
 - [Informações adicionais na árvore do processo](./pages/INFOARVORE.md)
 - [Anotação diretamente pela árvore do processo](./pages/NOTAARVORE.md)
