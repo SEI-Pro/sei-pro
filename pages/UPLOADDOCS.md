@@ -22,11 +22,11 @@ Caso disponível, a data de última modificação do arquivo é adicionada ao ca
 ### Ordernando documentos
 
 
-É possível rdernar os documentos antes do envio ao SEI.
+É possível ordernar os documentos antes do envio ao SEI.
 
 > ![Tela Enviar documentos](../img/tela-uploaddocs2.gif) 
 
-Ative a opção **Ordernar documentos na árvore antes de enviar (Não enviar automaticamente)** nas configurações do SEI Pro.
+Para isso, ative a opção **Ordernar documentos na árvore antes de enviar (Não enviar automaticamente)** nas configurações do SEI Pro.
 
 Clique no ícone do **SEI Pro** na barra de extensões do Google Chrome:
 
