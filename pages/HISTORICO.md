@@ -2,6 +2,14 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.25
+28/05/2021
+
+- Correções e melhorias
+- Adicionada 0 [Menus Suspenso](../pages/MENUSUSPENSO.md)
+- Adicionada função de [Ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
+- Adicionada função [Histórico de processos visitados](../pages/HISTORICOPROC.md) (Sugestão Leonardo Rafaele)
+- Adicionada função [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
 
 ### Versão 0.1.24
 07/04/2021
@@ -14,10 +22,10 @@
 08/03/2021
 
 - Correções e melhorias
-- Adicionada função de [Pesquisar link permanente](../pages/LINKPERMANENTE.md) (Sugestão Hélio Oliveira)
-- Adicionada função de [Reproduzir vídeo na visualização de documentos](../pages/PLAYVIDEO.md) (Sugestão Roberto Balata)
-- Adicionada função de [Exportar informações de processos em planilha CSV](../pages/LISTAPROCESSOS.md) (Sugestão Hélio Oliveira)
-- Adicionada função de [Adicionar marca d'água de minuta ao documento](../pages/MARCAMINUTA.md) (Sugestão Hélio Oliveira)
+- Adicionada função de [Pesquisar link permanente](../pages/LINKPERMANENTE.md) (Sugestão de Hélio Oliveira)
+- Adicionada função de [Reproduzir vídeo na visualização de documentos](../pages/PLAYVIDEO.md) (Sugestão de Roberto Balata)
+- Adicionada função de [Exportar informações de processos em planilha CSV](../pages/LISTAPROCESSOS.md) (Sugestão de Hélio Oliveira)
+- Adicionada função de [Adicionar marca d'água de minuta ao documento](../pages/MARCAMINUTA.md) (Sugestão de Hélio Oliveira)
 - Adicionada função de [Adicionar marca de sigilo e tarjas pretas de confidencialidade](../pages/SIGILODOC.md)
 - Aperfeiçoada as funções de [Inserir dados do processo](../pages/DADOSPROCESSO.md) (Sugestão de Renata Rocha)
 
@@ -25,8 +33,8 @@
 24/01/2021
 
 - Correções e melhorias (colaboração de Leonardo Rafaele)
-- Adicionada função de [Valores padronizados ao inserir novo documento](../pages/VALDEFAULT.md) (Sugestão Roberto Balata)
-- Adicionada função de [Inserir documento externo (Google Planilhas)](../pages/INSERIRDOC.md) (Sugestão James Wallace)
+- Adicionada função de [Valores padronizados ao inserir novo documento](../pages/VALDEFAULT.md) (Sugestão de Roberto Balata)
+- Adicionada função de [Inserir documento externo (Google Planilhas)](../pages/INSERIRDOC.md) (Sugestão de James Wallace)
 
 ### Versão 0.1.21
 20/12/2020
