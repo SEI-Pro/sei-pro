@@ -34,6 +34,10 @@
 - [Adicionar marca de sigilo e tarjas pretas de confidencialidade](./pages/SIGILODOC.md)
 - [Duplicar documentos com 1 click](./pages/DUPLICARDOC.md)
 - [Enviar múltiplos documentos externos](./pages/UPLOADDOCS.md)
+- [Menus Suspenso](./pages/MENUSUSPENSO.md)
+- [Ordernar tabelas ao clicar no seu cabeçalho](./pages/ORDERNARTABELA.md)
+- [Histórico de processos visitados](./pages/HISTORICOPROC.md)
+- [Informações adicionais na árvore do processo](./pages/INFOARVORE.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
