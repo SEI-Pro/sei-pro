@@ -3,7 +3,7 @@
 **SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
 - [Gerenciar projetos](./pages/PROJETOS.md)
-- [Gerenciar favoritos](./pages/FAVORITOS.md)
+- [Gerenciar processos favoritos](./pages/FAVORITOS.md)
 - [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](./pages/AGRUPAR.md)
 - [Inserir documento externo (HTML, Google Docs e Google Planilhas)](./pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
