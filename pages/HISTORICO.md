@@ -2,6 +2,12 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 0.1.26
+08/09/2021
+
+- Correções e melhorias
+- Adicionado o [Gerenciador de processos favoritos](../pages/FAVORITOS.md)
+
 ### Versão 0.1.25
 28/05/2021
 
