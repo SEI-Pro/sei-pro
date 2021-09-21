@@ -92,7 +92,7 @@ function save_options(reload) {
             $(this).removeClass('inputError');
 			var value = $(this).val();
 			var inputName = $(this).attr('data-name-input');
-            if ( value == '' ) { 
+            if ($(this).prop('required') && value == '' ) { 
                 $(this).addClass('inputError'); 
                 checkInput++; 
             } else {
@@ -135,8 +135,23 @@ function restore_options() {
                 $.each(value, function (i, v) {
                     nProfile.find('.input-config-pro[data-name-input="'+i+'"]').val(v);
                 });
+                if (nProfile.find('.input-config-pro[data-name-input="spreadsheetId"]').val() != '') {
+                    var conexaoTipo = nProfile.find('.sca-conexaoTipo')
+                        conexaoTipo.val('sheets')
+                        changeConexaoTipo(conexaoTipo);
+                } else {
+                    var conexaoTipo = nProfile.find('.sca-conexaoTipo')
+                        conexaoTipo.val('api')
+                        changeConexaoTipo(conexaoTipo);
+                }
             });
         });
+        if (dataValues == null || dataValues.length == 0) {
+            setTimeout(function(){ 
+                console.log('dataValues**',dataValues);
+                $('.sca-conexaoTipo').trigger('change');
+            }, 500);
+        }
         
         var dataValuesConfig = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];
             dataValuesConfig = jmespath.search(dataValuesConfig, "[*].configGeral | [0]");
@@ -144,9 +159,40 @@ function restore_options() {
                 if (value.value === false) { 
                     $('#itemConfigGeral_'+value.name).prop('checked', false); 
                     $('#itemConfigGeral_'+value.name).closest('tr').find('.iconPopup').removeClass('azulColor').addClass('cinzaColor');
+                } else if (value.value === true) {
+                    $('#itemConfigGeral_'+value.name).prop('checked', true); 
+                    $('#itemConfigGeral_'+value.name).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
                 }
             });
-        
+        if(jmespath.search(dataValuesConfig, "[?name=='newdocdefault'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='newdocdefault'].value | [0]") === null) {
+            $('#newdocDefault_table').show();
+        } else {
+            $('#newdocDefault_table').hide();
+        }
+        if(jmespath.search(dataValuesConfig, "[?name=='uploaddocsexternos'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='uploaddocsexternos'].value | [0]") === null) {
+            $('#uploadDoc_sortBefore').show();
+        } else {
+            $('#uploadDoc_sortBefore').hide();
+        }
+        if (jmespath.search(dataValuesConfig, "[?name=='newdocname'].value | [0]") !== null) { 
+            $('#itemConfigGeral_newdocname')
+                .val(jmespath.search(dataValuesConfig, "[?name=='newdocname'].value | [0]"))
+                .closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+        }
+        if (jmespath.search(dataValuesConfig, "[?name=='newdocobs'].value | [0]") !== null) { 
+            $('#itemConfigGeral_newdocobs')
+                .val(jmespath.search(dataValuesConfig, "[?name=='newdocobs'].value | [0]"))
+                .closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+        }
+        if (jmespath.search(dataValuesConfig, "[?name=='newdocformat'].value | [0]") !== null) { 
+            $('#itemConfigGeral_newdocformat')
+                .val(jmespath.search(dataValuesConfig, "[?name=='newdocformat'].value | [0]"))
+                .closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+        }
+        if (jmespath.search(dataValuesConfig, "[?name=='citacaodoc'].value | [0]") !== null) { 
+            $('#itemConfigGeral_citacaodoc').val(jmespath.search(dataValuesConfig, "[?name=='citacaodoc'].value | [0]"));
+        }
+        addActionsProfile();
     });
 }
 function actionRemoveProfile(idTable) {
@@ -155,7 +201,7 @@ function actionRemoveProfile(idTable) {
         if ( $('.removeProfile').length > 1 ) {
             $('#options-table-'+idTable).fadeOut('slow', function() {
                 $(this).remove();
-                 $('.save').removeClass('button-light');
+                //  $('.save').removeClass('button-light');
             });
         } else {
             $('#options-table-'+idTable).find('.input-config-pro').val('');
@@ -163,7 +209,7 @@ function actionRemoveProfile(idTable) {
         }
     });
     $('.options-table').find('.input-config-pro').on('change', function() {
-        $('.save').removeClass('button-light');
+        // $('.save').removeClass('button-light');
     });
 }
 function addProfile() {
@@ -175,9 +221,33 @@ function addProfile() {
         $(this).attr('id', idElement);
     });
     actionRemoveProfile(idTable);
+    addActionsProfile();
+}
+function addActionsProfile() {
+    $('.sca-conexaoTipo').unbind().on("change", function () {
+        changeConexaoTipo(this);
+    });
+    $('.passRevealBtn').unbind().on("click", function () {
+        passReveal(this);
+    })
+    $('.passReveal').unbind().on("input", function () {
+        passUpdate(this);
+    });
+}
+function passUpdate(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest('td');
+    var show = _parent.find('input[type="text"].passReveal');
+    var pass = _parent.find('input[type="password"].passReveal');
+    var type = _this.attr('type');
+    if (type == 'text') {
+        pass.val(show.val());
+    } else if (type == 'password') {
+        show.val(pass.val());
+    }
 }
 function changeConfigGeral() {
-    var arrayShowItensMenu = []
+    var arrayShowItensMenu = [];
     $('#options-functions').find('input[name="onoffswitch"]').each(function(){
         if ($(this).is(':checked')) {
             var value = true;
@@ -188,9 +258,66 @@ function changeConfigGeral() {
         }
         arrayShowItensMenu.push({name: $(this).attr('data-name'), value: value});
     });
+    $('#options-complements').find('input[name="onoffswitch"]').each(function(){
+        if ($(this).is(':checked')) {
+            var value = true;
+            $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+        } else {
+            var value = false;
+            $(this).closest('tr').find('.iconPopup').removeClass('azulColor').addClass('cinzaColor');
+        }
+        arrayShowItensMenu.push({name: $(this).attr('data-name'), value: value});
+    });
+    $('#options-functions').find('input[type="text"]').each(function(){
+        if ($(this).val() != '') {
+            arrayShowItensMenu.push({name: $(this).attr('data-name'), value: $(this).val()});
+        }
+    });
+    $('#options-functions').find('select').each(function(){
+        if ($(this).val() != '') {
+            arrayShowItensMenu.push({name: $(this).attr('data-name'), value: $(this).val()});
+        }
+    });
+    if ($('#itemConfigGeral_newdocdefault').is(':checked')) { $('#newdocDefault_table').show(); } else { $('#newdocDefault_table').hide(); }
+    if ($('#itemConfigGeral_uploaddocsexternos').is(':checked')) { 
+        $('#uploadDoc_sortBefore').show(); 
+    } else { 
+        $('#uploadDoc_sortBefore').hide(); 
+        $('#itemConfigGeral_sortbeforeupload').prop('checked',false); 
+    }
     return arrayShowItensMenu;
 }
-
+function changeConexaoTipo(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest('table');
+    var mode = _this.val();
+    if (mode == 'sheets') {
+        _parent.find('tr.sheets').show();
+        _parent.find('tr.api').hide().find('input').val('');
+    } else if (mode == 'api') {
+        _parent.find('tr.sheets').hide().find('input').val('');
+        _parent.find('tr.api').show();
+    }
+}
+function passReveal(this_){
+    var _this = $(this_);
+    var _parent = _this.closest('td');
+    var show = _parent.find('input[type="text"].passReveal'),
+        pass = _parent.find('input[type="password"].passReveal'),
+        showing = show.is(":visible"),
+        from = showing ? show : pass,
+        to = showing ? pass : show;
+    from.hide();
+    to.val(from.val()).show();
+    _this.attr('class', showing ? 'option-ref passRevealBtn fas fa-eye' : 'option-ref passRevealBtn fas fa-eye-slash');
+}
+$('#options-functions').find('input[type="text"]').on("keyup", function () {
+    if ($(this).val() != '') {
+        $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+    } else {
+        $(this).closest('tr').find('.iconPopup').removeClass('azulColor').addClass('cinzaColor');
+    }
+});
 $('input[name="onoffswitch"]').on("change", function () {
     changeConfigGeral();
 });

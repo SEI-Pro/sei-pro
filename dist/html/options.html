@@ -10,23 +10,24 @@
     <link rel="stylesheet" type="text/css" href="../css/fontawesome.min.css">
     <link rel="stylesheet" type="text/css" href="../css/jquery-ui.css">
 </head>
-<body>
+<body class="SEIPro">
     <div class="panel heading">
-        <h1><i class="fas fa-cog icon"></i> Configura&ccedil;&otilde;es Gerais | SEI Pro</h1>
-    </div>
         <div class="importExport">
-			<button id="export" class="button-flat button-light"><i class="fa fa-download"></i> Baixar Configura&ccedil;&otilde;es </button>
+            <button id="export" class="button-flat"><i class="fa fa-download"></i> Baixar <span class="btn_text">Configura&ccedil;&otilde;es</span> </button>
 			<span class="importBtn">
-				<input type="file" id="selectFiles" value="Import" style="display: none" />
-				<button id="import" class="button-flat button-light"><i class="fa fa-file-upload"></i> Carregar Configura&ccedil;&otilde;es</button>
+                <input type="file" id="selectFiles" value="Import" style="display: none" />
+				<button id="import" class="button-flat"><i class="fa fa-file-upload"></i> Carregar <span class="btn_text">Configura&ccedil;&otilde;es</span></button>
 			</span>
 			<button class="save button-flat button-light" style="float:right" style="width: 100px"><i class="fas fa-save"></i> Salvar</button>
             <div id="alertaBoxPro" style="display: none;"></div>
         </div>
+        <h1><i class="fas fa-cog icon"></i> Configura&ccedil;&otilde;es Gerais | SEI Pro</h1>
+    </div>
     <div class="panel options-panel options-profile" id="options-tabs">
         <ul>
-            <li><a href="#options-database">Base de Dados</a></li>
             <li><a href="#options-functions">Geral</a></li>
+            <li><a href="#options-database">Base de Dados</a></li>
+            <li><a href="#options-complements">Complementos</a></li>
         </ul>
         <div id="options-database">
             <div id="options-profile">
@@ -34,7 +35,7 @@
                     <tr>
                         <td colspan="2">
                             <i id="sca-removeProfile-0" class="option-ref removeProfile fas fa-trash-alt"></i>
-                            <h2>Base de Dados (Google Spreadsheets)</h2>
+                            <h2>Base de Dados</h2>
                         </td>
                     </tr>
                      <tr>
@@ -42,31 +43,7 @@
                             <label class="option-ref" id="sca-label-baseName-0" for="sca-baseName-0">Nome da Base *</label>
                         </th>
                         <td>
-                            <input style="width: 30%" id="sca-baseName-0" class="sca-baseName option-ref input-config-pro" type="text" placeholder="Nome da Base" data-name-input="baseName" value=""/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            <label class="option-ref" id="sca-label-CLIENT_ID-0" for="sca-CLIENT_ID-0">ID de Cliente *</label>
-                        </th>
-                        <td>
-                            <input id="sca-CLIENT_ID-0" class="sca-CLIENT_ID option-ref input-config-pro" type="text" placeholder="CLIENT_ID" data-name-input="CLIENT_ID" value=""/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            <label class="option-ref" id="sca-label-API_KEY-0" for="sca-API_KEY-0">Chave de API *</label>
-                        </th>
-                        <td>
-                            <input id="sca-API_KEY-0" class="sca-API_KEY option-ref input-config-pro" type="text" placeholder="API_KEY" data-name-input="API_KEY" value=""/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            <label class="option-ref" id="sca-label-spreadsheetId-0" for="sca-spreadsheetId-0">ID da Planilha *</label>
-                        </th>
-                        <td>
-                            <input id="sca-spreadsheetId-0" class="sca-spreadsheetId option-ref input-config-pro" type="text" placeholder="spreadsheetId" data-name-input="spreadsheetId" value=""/>
+                            <input id="sca-baseName-0" class="sca-baseName option-ref input-config-pro" type="text" placeholder="Nome da Base" data-name-input="baseName" style="width: 50%;" value="" required/>
                         </td>
                     </tr>
                     <tr>
@@ -74,10 +51,65 @@
                             <label class="option-ref" id="sca-label-baseTipo-0" for="sca-baseTipo-0">Tipo da Base de Dados *</label>
                         </th>
                         <td>
-                            <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;">
+                            <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;" required>
                                 <option value="projetos">Projetos</option>
                                 <option value="atividades">Atividades</option>
                             </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <label class="option-ref" id="sca-label-conexaoTipo-0" for="sca-conexaoTipo-0">Tipo da Conex&atilde;o *</label>
+                        </th>
+                        <td>
+                            <select id="sca-conexaoTipo-0" class="sca-conexaoTipo option-ref input-config-pro" data-name-input="conexaoTipo" style="width: 100%;" required>
+                                <option value="sheets" selected>Google Planilhas</option>
+                                <option value="api">Servidor Web (API)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr class="sheets">
+                        <th>
+                            <label class="option-ref" id="sca-label-CLIENT_ID-0" for="sca-CLIENT_ID-0">ID de Cliente *</label>
+                        </th>
+                        <td>
+                            <input id="sca-CLIENT_ID-0" class="sca-CLIENT_ID option-ref input-config-pro" type="text" placeholder="Insira o ID de Cliente gerado no Google Cloud Plataform" data-name-input="CLIENT_ID" value=""/>
+                        </td>
+                    </tr>
+                    <tr class="sheets">
+                        <th>
+                            <label class="option-ref" id="sca-label-API_KEY-0" for="sca-API_KEY-0">Chave de API *</label>
+                        </th>
+                        <td>
+                            <input id="sca-API_KEY-0" class="sca-API_KEY option-ref input-config-pro passReveal" type="password" placeholder="Insira a Chave de API gerada no Google Cloud Plataform" data-name-input="API_KEY" value="" style="width: calc(100% - 45px);"/>
+                            <input id="sca-API_KEY-0" class="sca-API_KEY option-ref input-config-pro passReveal" type="text" placeholder="Insira a Chave de API gerada no Google Cloud Plataform" data-name-input="API_KEY" value="" style="display: none; width: calc(100% - 45px);"/>
+                            <i id="sca-passRevealBtn-0" class="option-ref passRevealBtn fas fa-eye" style="margin-top: 8px;"></i>
+                        </td>
+                    </tr>
+                    <tr class="sheets">
+                        <th>
+                            <label class="option-ref" id="sca-label-spreadsheetId-0" for="sca-spreadsheetId-0">ID da Planilha *</label>
+                        </th>
+                        <td>
+                            <input id="sca-spreadsheetId-0" class="sca-spreadsheetId option-ref input-config-pro" type="text" placeholder="Insira o ID da Planilha Google usada como base de dados" data-name-input="spreadsheetId" value=""/>
+                        </td>
+                    </tr>
+                    <tr class="api">
+                        <th>
+                            <label class="option-ref" id="sca-label-URL_API-0" for="sca-URL_API-0">URL do Servidor *</label>
+                        </th>
+                        <td>
+                            <input id="sca-URL_API-0" class="sca-URL_API option-ref input-config-pro" type="text" placeholder="Insira o caminho para o servidor de API" data-name-input="URL_API" value=""/>
+                        </td>
+                    </tr>
+                    <tr class="api">
+                        <th>
+                            <label class="option-ref" id="sca-label-KEY_USER-0" for="sca-KEY_USER-0">Chave de Acesso *</label>
+                        </th>
+                        <td>
+                            <input id="sca-KEY_USER-0" class="sca-KEY_USER option-ref input-config-pro passReveal" type="password" placeholder="Insira a chave de acesso fornecida pelo administrador" data-name-input="KEY_USER" value="" style="width: calc(100% - 45px);"/>
+                            <input id="sca-KEY_USER-0" class="sca-KEY_USER option-ref input-config-pro passReveal" type="text" placeholder="Insira a chave de acesso fornecida pelo administrador" data-name-input="KEY_USER" value="" style="display: none; width: calc(100% - 45px);"/>
+                            <i id="sca-passRevealBtn-0" class="option-ref passRevealBtn fas fa-eye" style="margin-top: 8px;"></i>
                         </td>
                     </tr>
                     <tr>
@@ -95,10 +127,33 @@
                 </tr>
             </table>
         </div>
+        <div id="options-complements">
+            <table class="tableZebra">
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-stethoscope cinzaColor"></i><span class="info">Pesquisa NatJus</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/NAJUS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="natjus" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_natjus" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_natjus"></label>
+                           </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
         <div id="options-functions">
             <table class="tableZebra">
                 <tr>
-                    <td><p><i class="iconPopup fa fa-tasks azulColor"></i><span class="info">Gerenciar Projetos</span></p></td>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-tasks azulColor"></i><span class="info">Gerenciar Projetos</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/PROJETOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
                     <td>
                            <div class="onoffswitch">
                                <input type="checkbox" data-name="gerenciarprojetos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciarprojetos" tabindex="0" checked>
@@ -107,7 +162,40 @@
                     </td>
                 </tr>
                 <tr>
-                    <td><p><i class="iconPopup fa fa-layer-group azulColor"></i><span class="info">Agrupar lista de processos por marcadores, tipo, respons&aacute;vel ou ponto de controle</span></p></td>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-check-circle azulColor"></i><span class="info">Gerenciar Atividades</span>
+                            <a href="https://bit.ly/Guia-SEI-Pro-Atividades" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="gerenciaratividades" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciaratividades" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciaratividades"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-star cinzaColor"></i><span class="info">Gerenciar Processos Favoritos</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/FAVORITOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="gerenciarfavoritos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciarfavoritos" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciarfavoritos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-layer-group azulColor"></i><span class="info">Agrupar lista de processos por marcadores, tipo, respons&aacute;vel ou ponto de controle</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/AGRUPAR.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
                     <td>
                            <div class="onoffswitch">
                                <input type="checkbox" data-name="agruparlista" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_agruparlista" tabindex="0" checked>
@@ -116,7 +204,12 @@
                     </td>
                 </tr>
                 <tr>
-                    <td><p><i class="iconPopup fa fa-caret-square-down azulColor"></i><span class="info">Menu r&aacute;pido na &aacute;rvore de documentos</span></p></td>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-caret-square-down azulColor"></i><span class="info">Menu r&aacute;pido na &aacute;rvore de documentos</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/MENURAPIDO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
                     <td>
                            <div class="onoffswitch">
                                <input type="checkbox" data-name="menurapido" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_menurapido" tabindex="0" checked>
@@ -125,13 +218,258 @@
                     </td>
                 </tr>
                 <tr>
-                    <td><p><i class="iconPopup fa fa-link azulColor"></i><span class="info">Abrir, editar e remover hiperlinks no editor de documentos</span></p></td>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-link azulColor"></i><span class="info">Abrir, editar e remover hiperlinks no editor de documentos</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/ABRIRLINKS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
                     <td>
                            <div class="onoffswitch">
                                <input type="checkbox" data-name="editarlinks" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_editarlinks" tabindex="0" checked>
                                <label class="onoffswitch-label" for="itemConfigGeral_editarlinks"></label>
                            </div>
                     </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-angle-double-right azulColor"></i><span class="info">Remover pagina&ccedil;&atilde;o de processos</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/REMOVEPAGINACAO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="removepaginacao" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_removepaginacao" tabindex="0" >
+                               <label class="onoffswitch-label" for="itemConfigGeral_removepaginacao"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-upload azulColor"></i><span class="info">Enviar M&uacute;ltiplos Documentos Externos</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/UPLOADDOCS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="uploaddocsexternos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_uploaddocsexternos" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_uploaddocsexternos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr id="uploadDoc_sortBefore">
+                    <td>
+                        <p>
+                            <i class="iconPopup far fa-hand-rock cinzaColor"></i><span class="info">Ordernar documentos na &aacute;rvore antes de enviar (N&atilde;o enviar automaticamente)</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/UPLOADDOCS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="sortbeforeupload" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_sortbeforeupload" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_sortbeforeupload"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-bars cinzaColor"></i><span class="info">Menu Suspenso</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/MENUSUSPENSO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="menususpenso" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_menususpenso" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_menususpenso"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-sort-alpha-down azulColor"></i><span class="info">Ordernar tabelas ao clicar no seu cabe&ccedil;alho</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/ORDERNARTABELA.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="ordernartabela" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_ordernartabela" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_ordernartabela"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-history azulColor"></i><span class="info">Hist&oacute;rico de processos visitados</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/HISTORICOPROC.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="historicoproc" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_historicoproc" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_historicoproc"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-info azulColor"></i><span class="info">Informa&ccedil;&otilde;es adicionais na &aacute;rvore do processo</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/INFOARVORE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="infoarvore" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_infoarvore" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_infoarvore"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-arrows-alt-h azulColor"></i><span class="info">Redimensionar automaticamente a &aacute;rvore do processo pela sua largura total</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/RESIZEARVORE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="resizearvore" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_resizearvore" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_resizearvore"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-grip-lines azulColor"></i><span class="info">Dividir as informa&ccedil;&otilde;es do documento na &aacute;rvore do processo em duas linhas</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/DIVIDIRLINHASARVORE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="duaslinhas" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_duaslinhas" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_duaslinhas"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup far fa-hand-point-up cinzaColor"></i><span class="info">Utilizar caixas de sele&ccedil;&atilde;o inteligentes</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/SUBSTITUIRSELECAO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="substituiselecao" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_substituiselecao" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_substituiselecao"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding: 0;">
+                        <table>
+                            <tr>
+                                <td style="width: 60%;">
+                                    <span>
+                                        <i class="iconPopup fa fa-quote-right azulColor"></i><span class="info">Formato da cita&ccedil;&atilde;o de documento</span>
+                                    </span>
+                                </td>
+                                <td style="width: 40%; text-align: right;">
+                                    <select id="itemConfigGeral_citacaodoc" data-name="citacaodoc">
+                                        <option value="citacaodoc_1">Documento (SEI n&ordm; 0000)</option>
+                                        <option value="citacaodoc_2">Documento (SEI 0000)</option>
+                                        <option value="citacaodoc_3">Documento (0000)</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-mouse-pointer azulColor"></i><span class="info">Selecionar valores padronizados ao inserir um novo documento</span>
+                            <a href="https://pedrohsoaresadv.github.io/sei-pro/pages/VALDEFAULT.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="newdocdefault" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_newdocdefault" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_newdocdefault"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <table id="newdocDefault_table">
+                        <tr>
+                            <td style="width: 60%;">
+                                <span style="margin-left: 40px; display: block;">
+                                    <i class="iconPopup fa fa-pen cinzaColor"></i><span class="info">Nome padr&atilde;o do documento externo na &aacute;rvore</span>
+                                </span>
+                            </td>
+                            <td style="width: 40%;">
+                                   <input type="text" id="itemConfigGeral_newdocname" maxlength="50" data-name="newdocname">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 60%;">
+                                <span style="padding-left: 40px;">
+                                    <i class="iconPopup fa fa-comment-alt cinzaColor"></i><span class="info">Observa&ccedil;&otilde;es padronizadas</span>
+                                </span>
+                            </td>
+                            <td style="width: 40%;">
+                                   <input type="text" id="itemConfigGeral_newdocobs" maxlength="1000" data-name="newdocobs">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 60%;">
+                                <span style="padding-left: 40px;">
+                                    <i class="iconPopup fa fa-scroll cinzaColor"></i><span class="info">Formato do documento externo</span>
+                                </span>
+                            </td>
+                            <td style="width: 40%;">
+                                   <select id="itemConfigGeral_newdocformat" data-name="newdocformat">
+                                       <option value="nato">Nato-digital</option>
+                                       <option value="digitalizado_3">Digitalizado nesta Unidade: C&oacute;pia Autenticada Administrativamente</option>
+                                       <option value="digitalizado_2">Digitalizado nesta Unidade: C&oacute;pia Autenticada em Cart&oacute;rio</option>
+                                       <option value="digitalizado_4">Digitalizado nesta Unidade: C&oacute;pia Simples</option>
+                                       <option value="digitalizado_1">Digitalizado nesta Unidade: Documento Original</option>
+                                   </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 60%;">
+                                <span style="padding-left: 40px;">
+                                    <i class="iconPopup fa fa-calendar-alt azulColor"></i><span class="info">Inserir a data de hoje no campo data do documento</span>
+                                </span>
+                            </td>
+                            <td style="width: 40%;">
+                                   <div class="onoffswitch">
+                                       <input type="checkbox" data-name="newdoctoday" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_newdoctoday" tabindex="0" checked>
+                                       <label class="onoffswitch-label" for="itemConfigGeral_newdoctoday"></label>
+                                   </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 60%;">
+                                <span style="padding-left: 40px;">
+                                    <i class="iconPopup fa fa-user-shield azulColor"></i><span class="info">Marcar n&iacute;vel do processo como p&uacute;blico</span>
+                                </span>
+                            </td>
+                            <td style="width: 40%;">
+                                   <div class="onoffswitch">
+                                       <input type="checkbox" data-name="newdocnivel" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_newdocnivel" tabindex="0" checked>
+                                       <label class="onoffswitch-label" for="itemConfigGeral_newdocnivel"></label>
+                                   </div>
+                            </td>
+                        </tr>
+                    </table>
                 </tr>
             </table>
         </div>

@@ -128,6 +128,18 @@
 .tool-container.tool-bottom.toolbar-default .arrow {
     left: 15px !important;
 }
+.tool-container.toolbar-menu,
+.tool-container.toolbar-menu-right {
+    width: 185px !important;
+    min-width: 175px !important;
+}
+.tool-container.tool-top.toolbar-menu-right .arrow {
+    display: none;
+}
+.tool-container.tool-top.toolbar-menu-right {
+    margin-left: 105px;
+    margin-top: -16px;
+}
 .tool-container {
     background-color: #f5f5f5;
     background-size: 100% 100%;
@@ -168,9 +180,11 @@
 .tool-item:hover {
     background: #007fff;
     color: #fff;
+    text-decoration: none !important;
 }
 .tool-item .info {
     color: #555;
+    font-size: 9pt;
 }
 .tool-item.selected .info,
 .tool-item:hover .info {
@@ -185,6 +199,21 @@
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
 }
+.tool-bottom.toolbar-menu .tool-item:first-child:hover,
+.tool-bottom.toolbar-menu-right .tool-item:first-child:hover {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+.tool-bottom.toolbar-menu .tool-item:last-child:hover,
+.tool-bottom.toolbar-menu-right .tool-item:last-child:hover {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
+}
+
 .tool-top .tool-item:last-child:hover,
 .tool-bottom .tool-item:last-child:hover {
   border-top-right-radius: 6px;
@@ -430,6 +459,20 @@
   background: #5e696d;
   color: white;
 }
+.tool-item-gray {
+    background: #dedede;
+}
+.tool-item-gray i,
+.tool-item-gray span {
+    color: #666;
+}
+.tool-item-gray:hover {
+    background: #666 !important;
+}
+.tool-item-gray:hover i,
+.tool-item-gray:hover span {
+    color: #dedede !important;
+}
 .animate-standard {
   -webkit-animation: standardAnimate 0.3s 1 ease;
 }
@@ -517,4 +560,13 @@
 }
 .hidden {
   display: none;
+}
+.highlight {
+    background-color: #fbf5d7;
+}
+.highlight-black {
+    background-color: #bdbdbd !important;
+}
+.highlight-black i {
+    color: #fff !important;
 }

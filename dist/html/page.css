@@ -1,7 +1,11 @@
-html, body { height: 100%; }
+html, body { 
+    height: 100%; 
+}
 
 body { font-family: arial, helvetica, sans-serif; font-size: 14px; margin: 0; }
-body {  background: #f8f9fa; }
+body {  
+    background: #f8f9fa; 
+}
 h1 { font-size: 22px; margin: 10px 0 10px 52px; }
 .panel {
     background: #fff;
@@ -17,10 +21,10 @@ h1 { font-size: 22px; margin: 10px 0 10px 52px; }
  }
 .panel .importExport {
     position: absolute;
-    right: 5%;
-    width: auto;
-    display: inline-flex;
-    margin-top: 10px;
+    width: 800px;
+    display: block;
+    margin: 10px calc(50vw - 440px);
+    text-align: right;
 }
 .panel.heading {
     padding: 4px 20px;
@@ -34,13 +38,19 @@ h1 { font-size: 22px; margin: 10px 0 10px 52px; }
     z-index: 999;
 }
 
-input[type=text], select {
+input[type=text], 
+input[type=password], 
+select {
     width: 97%;
     padding: 5px;
     border-radius: 3px;
     border: 1px solid #ccc;
     font-size: 9pt;
     color: #666;
+}
+input[type=text]::placeholder, 
+input[type=password]::placeholder {
+    color: #B5B5B4;
 }
 .panel.heading .icon { 
     font-size: 20pt;
@@ -51,7 +61,7 @@ input[type=text], select {
 
 .options-panel { 
     line-height: 2em;
-    margin-top: 20px;
+    margin-top: 70px;
     margin-bottom: 20px;
 }
 .options-panel th,
@@ -74,6 +84,7 @@ i.fas {
     margin-right: 5px;
 }
 
+.passRevealBtn,
 .removeProfile {
     float: right;
     cursor: pointer;
@@ -116,8 +127,12 @@ button {
 h2 { font-size: 15pt; padding:0; margin: 5px 0; }
 
 .onoffswitch {
-    position: relative; width: 40px;
-    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+    position: relative; 
+    width: 40px;
+    user-select: none; 
+    -webkit-user-select: none; 
+    -moz-user-select: none; 
+    -ms-user-select: none;
 }
 .onoffswitch-checkbox {
     position: absolute;
@@ -191,4 +206,15 @@ i.cianoColor {
 }
 i.laranjaColor {
 	color: #E3B044 !important;
+}
+.SEIPro tr.lab {
+    display: none;
+}
+.SEIPro_lab tr.lab {
+    display: table-row;;
+}
+@media only screen and (max-width: 1115px) {
+    .button-flat .btn_text {
+        display: none;
+    }
 }
