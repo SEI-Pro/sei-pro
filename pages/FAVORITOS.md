@@ -45,8 +45,14 @@ Essa funcionalidade adiciona uma categoria ao processo favorito
 
 ## 7. Configurações: exportar e importar
 
-- [Exportar ](../pages/FAVORITOS-EXPORTAR.md)
-- [Importar ](../pages/FAVORITOS-IMPORTAR.md)
+- [Exportar ] Essa funcionalidade exporta os processos favoritos selecionados pelo usuário.
+
+> ![Tela Baixando](../img/tela-favorito-baixando.gif) 
+
+- [Importar ] Essa funcionalidade importa os processos favoritos selecionados pelo usuário.
+
+> ![Tela Importando](../img/tela-favorito-importando.gif) 
+ 
 
 
 ## Próximo item
