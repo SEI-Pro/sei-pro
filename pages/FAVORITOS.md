@@ -10,13 +10,16 @@ Para que você possa favoritar seus processos.
 
 ## 1. Adicionando Etiquetas
 
-Essa funcionalidade adiciona ao processo favorito uma etiqueta
+Essa funcionalidade adiciona ao processo favorito uma etiqueta.
 
-> ![Tela Favoritos](../img/tela-etiqueta.gif) 
+> ![Tela Etiqueta](../img/tela-etiqueta.gif) 
 
 ## 2. Adicionando Mapas
 
-Siga o passo a passo para [Adicionar Mapas](../pages/FAVORITOS-MAPAS.md)
+Essa funcionalidade adiciona uma localização no mapa do processo.
+
+> ![Tela Etiqueta](../img/tela-etiqueta.gif) 
+
 
 ## 3. Editando uma Descrição
 
