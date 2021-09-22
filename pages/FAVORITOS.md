@@ -18,7 +18,7 @@ Essa funcionalidade adiciona ao processo favorito uma etiqueta.
 
 Essa funcionalidade adiciona uma localização no mapa do processo.
 
-> ![Tela Etiqueta](../img/tela-etiqueta.gif) 
+> ![Tela Etiqueta](../img/tela-mapa.gif) 
 
 
 ## 3. Editando uma Descrição
