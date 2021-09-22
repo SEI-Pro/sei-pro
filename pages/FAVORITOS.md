@@ -31,7 +31,7 @@ Essa funcionalidade adiciona e ou altera uma especificação.
 
 Essas duas funcionalidade uma delas altera a ordem do processo favorito e a outra classificando a Tabela
 
-> ![Tela Categoria](../img/tela-ordem-favoritos.gif) 
+> ![Tela Categoria](../img/tela-classificacao-ordem.gif) 
 
 ## 5. Adicionando Prazo ao Processo
 
