@@ -27,7 +27,9 @@ Siga o passo a passo para [Editar uma descrição de um processo favorito](../pa
 
 ## 4. Movendo a Ordem dos Favoritos
 
-Siga o passo a passo para [Movendo a ordem dos favoritos](../pages/FAVORITOS-ORDEM.md)
+Essa funcionalidade altera a ordem do processo favorito
+
+> ![Tela Categoria](../img/tela-ordem-favorito.gif) 
 
 ## 5. Classificando a Tabela
 
