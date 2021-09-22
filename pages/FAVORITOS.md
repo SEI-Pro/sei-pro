@@ -29,7 +29,7 @@ Siga o passo a passo para [Editar uma descrição de um processo favorito](../pa
 
 Essa funcionalidade altera a ordem do processo favorito
 
-> ![Tela Categoria](../img/tela-ordem-favorito.gif) 
+> ![Tela Categoria](../img/tela-ordem-favoritos.gif) 
 
 ## 5. Classificando a Tabela
 
