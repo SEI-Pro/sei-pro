@@ -29,13 +29,13 @@ Essa funcionalidade adiciona e ou altera uma especificação.
 
 ## 4. Classificando a Tabela e Movendo a Ordem dos Favoritos
 
-Essa funcionalidade altera a ordem do processo favorito
+Essas duas funcionalidade uma delas altera a ordem do processo favorito e a outra classificando a Tabela
 
 > ![Tela Categoria](../img/tela-ordem-favoritos.gif) 
 
 ## 5. Adicionando Prazo ao Processo
 
-Essa funcionalidade um prazo ao processo.
+Essa funcionalidade adiciona um prazo ao processo.
 
 > ![Tela Prazo](../img/tela-prazo.gif) 
  
