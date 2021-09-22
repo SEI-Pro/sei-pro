@@ -18,7 +18,7 @@ Essa funcionalidade adiciona ao processo favorito uma etiqueta.
 
 Essa funcionalidade adiciona uma localização no mapa do processo.
 
-> ![Tela Etiqueta](../img/tela-mapa.gif) 
+> ![Tela Mapa](../img/tela-mapa.gif) 
 
 
 ## 3. Editando uma Descrição
@@ -35,7 +35,9 @@ Siga o passo a passo para [Classificar uma Tabela](../pages/FAVORITOS-TABELA.md)
  
 ## 6. Criando Categorias
 
-Siga o passo a passo para [Criar uma Categoria](../pages/FAVORITOS-CATEGORIA.md)
+Essa funcionalidade adiciona uma categoria ao processo favorito
+
+> ![Tela Categoria](../img/tela-categoria.gif) 
 
 ## 7. Configurações: exportar e importar
 
