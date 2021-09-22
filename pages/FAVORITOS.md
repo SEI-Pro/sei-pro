@@ -21,9 +21,11 @@ Essa funcionalidade adiciona uma localização no mapa do processo.
 > ![Tela Mapa](../img/tela-mapa.gif) 
 
 
-## 3. Editando uma Descrição
+## 3. Editando uma Especificação
 
-Siga o passo a passo para [Editar uma descrição de um processo favorito](../pages/FAVORITOS-DESCRICAO.md)
+Essa funcionalidade adiciona e ou altera uma especificação.  
+
+> ![Tela Especificacao](../img/tela-especificacao.gif) 
 
 ## 4. Movendo a Ordem dos Favoritos
 
