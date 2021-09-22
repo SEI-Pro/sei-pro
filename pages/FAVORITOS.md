@@ -29,29 +29,29 @@ Essa funcionalidade adiciona e ou altera uma especificação.
 
 ## 4. Classificando a Tabela e Movendo a Ordem dos Favoritos
 
-Essas duas funcionalidade uma delas altera a ordem do processo favorito e a outra classificando a Tabela
+São duas funcionalidades uma delas altera a ordem do processo favorito e a outra classificando a Tabela.
 
 > ![Tela Categoria](../img/tela-classificacao-ordem.gif) 
 
 ## 5. Adicionando Prazo ao Processo
 
-Essa funcionalidade adiciona um prazo ao processo.
+Essa funcionalidade adiciona um prazo com uma data especifica ao processo.
 
 > ![Tela Prazo](../img/tela-prazo.gif) 
  
 ## 6. Criando Categorias
 
-Essa funcionalidade adiciona uma categoria ao processo favorito
+Essa funcionalidade adiciona uma categoria ao processo favorito.
 
 > ![Tela Categoria](../img/tela-categoria.gif) 
 
 ## 7. Configurações: exportar e importar
 
-- [Exportar ] Essa funcionalidade exporta os processos favoritos selecionados pelo usuário.
+- [Exportar] Essa funcionalidade exporta os processos favoritos selecionados pelo usuário.
 
 > ![Tela Baixando](../img/tela-favorito-baixando.gif) 
 
-- [Importar ] Essa funcionalidade importa os processos favoritos selecionados pelo usuário.
+- [Importar] Essa funcionalidade importa os processos favoritos selecionados pelo usuário.
 
 > ![Tela Importando](../img/tela-favorito-importando.gif) 
  
