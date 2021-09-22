@@ -6,7 +6,7 @@ Essa funcionalidade adiciona à página inicial do SEI um gestor de processos fa
 
 > ![Tela Estilo de Tabelas](../img/tela-favoritos.gif) 
 
-Para que você possa compartilhar seus projetos com sua equipe, utilizamos uma planilha online no Google Spreadsheets como base de dados.
+Para que você possa favoritar seus processos.
 
 ## Próximo item
 
