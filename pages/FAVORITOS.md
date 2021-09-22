@@ -4,13 +4,15 @@
 
 Essa funcionalidade adiciona à página inicial do SEI um gestor de processos favoritos, exclusivo do usuário.
 
-> ![Tela Estilo de Tabelas](../img/tela-favoritos.gif) 
+> ![Tela Favoritos](../img/tela-favoritos.gif) 
 
 Para que você possa favoritar seus processos.
 
 ## 1. Adicionando Etiquetas
 
-Siga o passo a passo para [Adicionar etiquetas](../pages/FAVORITOS-ETIQUETAS.md)
+Essa funcionalidade adiciona ao processo favorito uma etiqueta
+
+> ![Tela Favoritos](../img/tela-etiqueta.gif) 
 
 ## 2. Adicionando Mapas
 
