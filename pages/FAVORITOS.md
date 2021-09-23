@@ -14,6 +14,12 @@ Essa funcionalidade adiciona ao processo favorito uma etiqueta.
 
 > ![Tela Etiqueta](../img/tela-etiqueta.gif) 
 
+## 1.1 Adicionando Cores e Icones em Etiquetas
+
+Essa funcionalidade adiciona cores e ícones em Etiquetas de um processo favorito.
+
+> ![Tela Etiqueta](../img/tela-etiqueta-cores-icones.gif ) 
+
 ## 2. Adicionando Mapas
 
 Essa funcionalidade adiciona uma localização no mapa do processo.
