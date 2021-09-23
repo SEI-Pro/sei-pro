@@ -140,8 +140,9 @@ function restore_options() {
                         conexaoTipo.val('sheets')
                         changeConexaoTipo(conexaoTipo);
                 } else {
+                    var typeApi = (nProfile.find('.input-config-pro[data-name-input="KEY_USER"]').val() == '') ? 'googleapi' : 'api';
                     var conexaoTipo = nProfile.find('.sca-conexaoTipo')
-                        conexaoTipo.val('api')
+                        conexaoTipo.val(typeApi)
                         changeConexaoTipo(conexaoTipo);
                 }
             });
@@ -297,6 +298,10 @@ function changeConexaoTipo(this_) {
     } else if (mode == 'api') {
         _parent.find('tr.sheets').hide().find('input').val('');
         _parent.find('tr.api').show();
+    } else if (mode == 'googleapi') {
+        _parent.find('tr.sheets').hide().find('input').val('');
+        _parent.find('tr.api').show();
+        _parent.find('tr.api.keyuser').hide();
     }
 }
 function passReveal(this_){

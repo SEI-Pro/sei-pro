@@ -1,6 +1,5 @@
 // ADICIONA ACOMPANHAMENTO DE ATIVIDADES
-var perfilLoginAtiv = localStorageRestorePro('configBasePro_atividades');
-    perfilLoginAtiv = (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null && checkConfigValue('gerenciaratividades')) ? perfilLoginAtiv : false;
+var perfilLoginAtiv = false;
 var urlServerAtiv = false;
 var userHashAtiv = false;
 var delayServerAtiv = 0;
@@ -168,8 +167,15 @@ function getServerAtividades(param, mode) {
         param.perfil = (getOptionsPro('perfilAtividadesSelected')) ? getOptionsPro('perfilAtividadesSelected') : '';
         delayServerAtiv = 1; setTimeout(function(){ delayServerAtiv = 0; }, 1000);
         if (typeof loadingButtonConfirm !== 'undefined') { loadingButtonConfirm(true); }
+        var authToken = (typeof window.tokenID !== 'undefined') 
+            ? function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer '+window.tokenID);
+            }
+            : undefined;
+
         $.ajax({
             type: "POST",
+            beforeSend: authToken,
             url: urlServerAtiv,
             dataType: "json",
             data: param,
@@ -1333,8 +1339,8 @@ function changeBaseDadosAtiv(this_){
     var _this = $(this_);
     var perfilSelected = parseInt(_this.val());
     var configBasePro = localStorageRestorePro('configBasePro');
-    var dataAPI = jmespath.search(configBasePro, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
-    var perfilLoginAtiv = (dataAPI && dataAPI !== null && dataAPI.length > 0 && typeof dataAPI[perfilSelected].KEY_USER !== 'undefined' && dataAPI[perfilSelected].KEY_USER != '') 
+    var dataAPI = jmespath.search(configBasePro, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']");
+    var perfilLoginAtiv = (dataAPI && dataAPI !== null && dataAPI.length > 0 && typeof dataAPI[perfilSelected].KEY_USER !== 'undefined') 
                     ? dataAPI[perfilSelected] 
                     : false;
     if (perfilLoginAtiv) {
@@ -1343,8 +1349,12 @@ function changeBaseDadosAtiv(this_){
         removeOptionsPro('perfilAtividadesSelected');
         setOptionsPro('configBaseSelectedPro_atividades',perfilSelected);
         localStorageStorePro('configBasePro_atividades', {URL_API: perfilLoginAtiv.URL_API, KEY_USER: perfilLoginAtiv.KEY_USER});
-        getAtividades();
-        _this.closest('td').addClass('editCellLoading');
+        if (userHashAtiv == '' && perfilLoginAtiv.conexaoTipo == 'googleapi') {
+            setPerfilLoginGoogle(_this);
+        } else {
+            getAtividades();
+            _this.closest('td').addClass('editCellLoading');
+        }
     }
 }
 function updateAtividade_(this_){
@@ -1418,7 +1428,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     var viewModePanel = (getOptionsPro('panelAtividadesView')) ? getOptionsPro('panelAtividadesView') : 'Tabela';
     var countAtividade = (storeAtividades.length == 1) ? storeAtividades.length+' registro:' : storeAtividades.length+' registros:';
     var countUnidades = (storeAtividades.length > 0) ? uniqPro(jmespath.search(storeAtividades, "[?sigla_unidade].sigla_unidade")).length : 0;
-    var htmlTableAtividades =    '<div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div>';
+    var htmlTableAtividades = (userHashAtiv == '') ? '<div class="g-signin2" data-onsuccess="onSignIn"></div>' : '<div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div>';
         updateTableProcessos();
     if (storeAtividades.length > 0 && (!getOptionsPro('panelHomeView') || getOptionsPro('panelHomeView') == 'Atividade')) {
         htmlTableAtividades =    '<table class="tableInfo tableZebra tableFollow tableAtividades" data-tabletype="atividades">'+
@@ -5899,7 +5909,7 @@ function configPessoal() {
     var statePanelSortPro = ( getOptionsPro('panelSortPro') ) ? 'checked' : '';
     var configBaseSelected = ( getOptionsPro('configBaseSelectedPro_atividades') ) ? getOptionsPro('configBaseSelectedPro_atividades') : 0;
     var configBaseProAtiv = ( localStorageRestorePro('configBasePro') != null ) ? localStorageRestorePro('configBasePro') : false;
-        configBaseProAtiv = (configBaseProAtiv) ? jmespath.search(configBaseProAtiv, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'] | [?KEY_USER!='']") : configBaseProAtiv;
+        configBaseProAtiv = (configBaseProAtiv) ? jmespath.search(configBaseProAtiv, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']") : configBaseProAtiv;
         configBaseProAtiv = (configBaseProAtiv !== null && configBaseProAtiv.length > 0 ) ? configBaseProAtiv : false;
     var optionSelectConfigBasePro = ( configBaseProAtiv && configBaseProAtiv.length > 0 ) ? $.map(configBaseProAtiv, function(v,k){ return ( configBaseSelected == k ) ? '<option value="'+k+'" selected>'+v.baseName+'</option>' : '<option value="'+k+'">'+v.baseName+'</option>' }).join('') : '';
     var configUser = (typeof arrayConfigAtividades.perfil !== 'undefined' && arrayConfigAtividades.perfil.hasOwnProperty('config') && typeof arrayConfigAtividades.perfil.config !== 'undefined' && arrayConfigAtividades.perfil.config !== null) ? arrayConfigAtividades.perfil.config : false;
@@ -12061,7 +12071,9 @@ function getBoxConfigDadosUnidade(_parent) {
 	var unidade = (_parent.find('#ativ_id_atividade').length > 0 && checkValue(_parent.find('#ativ_id_atividade'))) 
                     ? (_parent.find('#ativ_id_atividade').is('select'))
                         ? _parent.find('#ativ_id_atividade').find('option:selected').data('config').sigla_unidade 
-                        : _parent.find('#ativ_id_atividade').data('config').sigla_unidade 
+                        : (typeof _parent.find('#ativ_id_atividade').data('config') !== 'undefined') 
+                            ? _parent.find('#ativ_id_atividade').data('config').sigla_unidade 
+                            : _parent.find('#ativ_id_user').find('option:selected').data('config').sigla_unidade 
                     : arrayConfigAtivUnidade.sigla_unidade;
     return getConfigDadosUnidade(unidade);
 }
@@ -12772,6 +12784,8 @@ function updateAtivTempoPactuado(this_) {
     var tempo_pactuado = _parent.find('#ativ_tempo_pactuado');
     var config_unidade = getBoxConfigDadosUnidade(_parent);
     var htmlInfoChart = '';
+
+    if (typeof ativ_config === 'undefined') return false;
 
     if (!checkValue(user)) {
         inputUnidade.val(ativ_config ? ativ_config.id_unidade : '');
@@ -13519,9 +13533,13 @@ function initAtividades(TimeOut = 9000) {
     if (typeof localStorageRestorePro !== 'undefined' && typeof checkLoadingButtonConfirm !== 'undefined' ) { 
         urlServerAtiv = perfilLoginAtiv.URL_API;
         userHashAtiv = perfilLoginAtiv.KEY_USER;
-        initEmptyAtividades();
-        getAtividades();
         initPanelFavorites();
+        initEmptyAtividades();
+        if (userHashAtiv == '') {
+            setPerfilLoginGoogle();
+        } else {
+            getAtividades();
+        }
         if (typeof $.mask === 'undefined') {
             $.getScript(URL_SEIPRO+"js/lib/jquery.maskedinput.min.js"); 
         }
@@ -13535,10 +13553,93 @@ function initAtividades(TimeOut = 9000) {
         }, 500);
     }
 }
-if (perfilLoginAtiv) {
-    initAtividades();
-} else {
-    localStorageRemovePro('configBasePro_atividades');
-    localStorageRemovePro('configDataAtividadesPro');
-    localStorageRemovePro('configDataAtividadesProcPro');
+
+function initPerfilLoginAtiv(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof checkConfigValue !== 'undefined' && typeof localStorageRestorePro !== 'undefined' ) { 
+        setTimeout(function(){ 
+            perfilLoginAtiv = localStorageRestorePro('configBasePro_atividades');
+            perfilLoginAtiv = (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null && checkConfigValue('gerenciaratividades')) ? perfilLoginAtiv : false;
+            // console.log('initPerfilLoginAtiv', perfilLoginAtiv, localStorage.getItem('configBasePro_atividades'), checkConfigValue('gerenciaratividades'), localStorageRestorePro('configBasePro_atividades'));
+            if (perfilLoginAtiv) {
+                initAtividades();
+            } else {
+                getServersPro();
+            }
+        }, 1500);
+    } else {
+        setTimeout(function(){ 
+            initPerfilLogin(TimeOut - 100); 
+            console.log('Reload initPerfilLogin', typeof localStorageRestorePro,  typeof localStorageRestorePro('configBasePro_atividades')); 
+        }, 500);
+    }
+}
+initPerfilLoginAtiv();
+
+// Login Google
+function getServersPro() {
+    $.ajax({
+        url: 'https://seipro.app/servers/',
+        type: 'GET',
+        dataType: 'json',
+        success: function(result) {
+            var host = jmespath.search(result, "[?domain=='"+window.location.host+"'] | [0]");
+                host = (host !== null) ? host : false;
+            var hostConfig = url_host.replace('controlador.php','');
+            var urlConfigAtiv = (host) 
+                ? hostConfig+'?#&acao_pro=set_database&mode=insert&base=atividades&token=&url='+encodeURIComponent(host.remote_host)
+                : hostConfig+'?#&acao_pro=set_option&option_key=gerenciaratividades&option_value=false';
+            if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
+            $('#frmCheckerProcessoPro').attr('src', urlConfigAtiv).unbind().on('load', function(){
+                console.log('getServersPro', host);
+                if (host) {
+                    perfilLoginAtiv = {URL_API: host.remote_host, KEY_USER: ''};
+                    urlServerAtiv = perfilLoginAtiv.URL_API;
+                    userHashAtiv = perfilLoginAtiv.KEY_USER;
+                    localStorageStorePro('configBasePro_atividades', perfilLoginAtiv);
+                    initAtividades();
+                    console.log('INITI');
+                } else {
+                    localStorageRemovePro('configBasePro_atividades');
+                    localStorageRemovePro('configDataAtividadesPro');
+                    localStorageRemovePro('configDataAtividadesProcPro');
+                }
+            });
+        }
+    });
+}
+function setPerfilLoginGoogle() {
+    var token = (typeof gapi !== 'undefined') ? gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token : false;
+    if (token) {
+        window.tokenID = token;
+        getAtividades();
+    } else {
+        setScriptGoogleProfile();
+    }
+}
+function setScriptGoogleProfile() {
+    var tagScript = '<script src="https://apis.google.com/js/platform.js" async defer></script>';
+    var metaLogin = '<meta name="google-signin-client_id" content="648601411036-7hm2pvgpc9e0r4l8fpd8o1al571hruac.apps.googleusercontent.com">';
+    $(tagScript+metaLogin).appendTo('head');
+    $('#atividadesProActions').find('.iconAtividade_update i').removeClass('fa-spin');
+}
+function onSignIn(googleUser) {
+    var token = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token;
+    var profile = googleUser.getBasicProfile();
+    console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+    console.log('Name: ' + profile.getName());
+    console.log('Image URL: ' + profile.getImageUrl());
+    console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+    console.log({Token: token});
+    window.tokenID = token;
+    getAtividades();
+}
+function signOutProfile() {
+    var auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then(function () {
+      console.log('User signed out.');
+      localStorageRemovePro('configBasePro_atividades');
+      localStorageRemovePro('configDataAtividadesPro');
+      localStorageRemovePro('configDataAtividadesProcPro');
+    });
 }

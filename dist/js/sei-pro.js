@@ -317,15 +317,18 @@ function updateGroupTablePro(valueSelect, mode) {
             console.log('NOT',{unidade: unidade, selected: valueSelect});
         }
     }
+    /*
     setTimeout(function(){
         checkGroupTableRender();
-        console.log('checkGroupTableRender');
     }, 500);
+    */
 }
 function checkGroupTableRender() {
+    var selectGroup = $('#selectGroupTablePro');
     var elemRef = $('#tblProcessosRecebidos').find('tbody tr').eq(1).find('th').eq(1);
-    if (elemRef.length > 0 && elemRef.text().trim() == '') {
-        $('#selectGroupTablePro').trigger('change');
+    if (elemRef.length > 0 && elemRef.text().trim() == '' && selectGroup.val() != '') {
+        selectGroup.trigger('change');
+        console.log('checkGroupTableRender');
     }
 }
 function storeGroupTablePro() {

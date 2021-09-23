@@ -71,7 +71,7 @@ function loadConfigPro() {
 function loadScriptDataBasePro(dataValues) { 
     var dataValues = localStorageRestorePro('configBasePro');
     var dataValues_ProjetosSheets = jmespath.search(dataValues, "[?baseTipo=='projetos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
-    var dataValues_AtividadesAPI = jmespath.search(dataValues, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
+    var dataValues_AtividadesAPI = jmespath.search(dataValues, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']");
     if (dataValues_ProjetosSheets.length > 0 && checkConfigValue('gerenciarprojetos')) {
         loadDataBaseSheetsProjetosPro(dataValues_ProjetosSheets);
     } else {
@@ -91,7 +91,7 @@ function removeLocalStorageAtividades() {
 }
 function loadDataBaseApiAtividadesPro(dataValues) { 
     var perfilSelected = (getOptionsPro('configBaseSelectedPro_atividades') && getOptionsPro('configBaseSelectedPro_atividades') <= dataValues.length) ? getOptionsPro('configBaseSelectedPro_atividades') : 0;
-    var perfil = (dataValues && dataValues !== null && dataValues.length > 0 && typeof dataValues[perfilSelected] !== 'undefined' &&  typeof dataValues[perfilSelected].hasOwnProperty('KEY_USER') && dataValues[perfilSelected].KEY_USER != '') 
+    var perfil = (dataValues && dataValues !== null && dataValues.length > 0 && typeof dataValues[perfilSelected] !== 'undefined' &&  typeof dataValues[perfilSelected].hasOwnProperty('KEY_USER')) 
                     ? dataValues[perfilSelected] 
                     : false;
     // console.log(perfil, perfilSelected, dataValues);
