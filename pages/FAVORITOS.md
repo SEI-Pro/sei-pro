@@ -16,7 +16,7 @@ Essa funcionalidade adiciona ao processo favorito uma etiqueta, podendo ser pers
 
 ## 2. Adicionando Mapas
 
-Essa funcionalidade adiciona uma localização no mapa atravez do ponteiro do cursor ou fazendo uma busca por um lugar especifico.  
+Essa funcionalidade adicionar e editar uma localização no mapa atravez do marcador ou fazendo uma busca por um lugar consolidade especifico.  
 
 > ![Tela Mapa](../img/tela-mapa.gif) 
 
