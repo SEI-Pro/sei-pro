@@ -10,15 +10,9 @@ Para que você possa favoritar seus processos.
 
 ## 1. Adicionando Etiquetas
 
-Essa funcionalidade adiciona ao processo favorito uma etiqueta.
+Essa funcionalidade adiciona ao processo favorito uma etiqueta, podendo ser personalizada com cores e ícones.
 
 > ![Tela Etiqueta](../img/tela-etiqueta.gif) 
-
-## 1.1 Adicionando Cores e Icones em Etiquetas
-
-Essa funcionalidade adiciona cores e ícones em Etiquetas de um processo favorito.
-
-> ![Tela Etiqueta](../img/tela-etiqueta-cores-icones.gif ) 
 
 ## 2. Adicionando Mapas
 
