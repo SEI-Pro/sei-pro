@@ -38,6 +38,10 @@ São duas funcionalidades uma delas altera a ordem do processo favorito e a outr
 Essa funcionalidade adiciona um prazo com uma data especifica ao processo.
 
 > ![Tela Prazo](../img/tela-prazo.gif) 
+
+- [Edição Avançada] Essa funcionalidade permite uma edição avançada com várias funções tais como: Contar o tempo decorrido do processo a partir: Da data de assinatura de um documento, De uma data específica,Data referencial; Visualizar o resultado: Em tempo relativo, Em número de dias. Sinalizar a partir: Da assinatura de um novo documento. 
+
+> ![Tela Baixando](../img/tela-edicao-avancada-prazo.gif) 
  
 ## 6. Criando Categorias
 
