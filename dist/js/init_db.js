@@ -9,6 +9,32 @@ function getParamsUrlPro(url) {
         return params;
     } else { return false; }
 }
+function setOptionsSEIPro(option_key, option_value) {
+    chrome.storage.sync.get({
+        dataValues: ''
+    }, function(items) {
+        var dataValues = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];  
+        for (i = 0; i < dataValues.length; i++) {
+            if (typeof dataValues[i]['configGeral'] !== 'undefined') {
+                var configGeral = dataValues[i]['configGeral'];
+                for (j = 0; j < configGeral.length; j++) {
+                    if (configGeral[j]['name'] == option_key) {
+                        option_value = (option_value == 'true') ? true : option_value;
+                        option_value = (option_value == 'false') ? false : option_value;
+                        dataValues[i]['configGeral'][j]['value'] = option_value;
+                    }
+                }
+            }
+        }
+        if (dataValues.length > 0) {
+            chrome.storage.sync.set({
+                dataValues: JSON.stringify(dataValues)
+            }, function() {
+                console.log('dataValues', dataValues);
+            });
+        }
+    });
+}
 function getOptionsSEIPro(data) {
     if (data.type && (data.type == "NEW_BASE")) {
         var newItem = data.newItem;
@@ -85,15 +111,17 @@ function observeAcaoPro() {
     if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_database' && typeof param.token !== 'undefined' && typeof param.url !== 'undefined') {
         if (param.base == 'atividades') {
             var baseName = 'SEI Pro Atividades';
+            var typeconnect = (param.token == '') ? 'googleapi' : 'api';
+            var alert = (param.token == '') ? false : true;
             var data = { 
                 type: "NEW_BASE", 
                 mode: param.mode, 
                 base: param.base, 
-                alert: true, 
+                alert: alert, 
                 newItem: {
                     "baseName": baseName,
                     "baseTipo": param.base,
-                    "conexaoTipo": "api",
+                    "conexaoTipo": typeconnect,
                     "CLIENT_ID": "",
                     "API_KEY": "",
                     "spreadsheetId": "",
@@ -104,6 +132,8 @@ function observeAcaoPro() {
             // console.log(data);
             getOptionsSEIPro(data);
         }
+    } else if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_option' && typeof param.option_key !== 'undefined' && typeof param.option_value !== 'undefined') {
+        setOptionsSEIPro(param.option_key, param.option_value);
     }
 }
 observeAcaoPro();

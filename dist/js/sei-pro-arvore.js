@@ -1692,12 +1692,18 @@ function stylePanelArvore() {
 }
 function initStylePanelArvore(TimeOut = 9000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }
-    if (typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && selectedItensPanelArvore.length > 0 && (!parent.userHashAtiv || (parent.userHashAtiv && parent.checkLoadAtividadesProcPro))) {
+    if (
+            typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
+            selectedItensPanelArvore.length > 0 && 
+            (!parent.userHashAtiv || (parent.userHashAtiv && parent.checkLoadAtividadesProcPro)) &&
+            typeof parent.__ !== 'undefined'
+        ) {
         if (!getOptionsPro('optionsFlashMenu_panelinfo') || getOptionsPro('optionsFlashMenu_panelinfo') == 'enabled') { 
             stylePanelArvore();
         }
     } else {
         setTimeout(function(){ 
+            parent.initNameConst();
             initStylePanelArvore(TimeOut - 100); 
             console.log('Reload initStylePanelArvore', TimeOut); 
         }, 500);
@@ -1755,7 +1761,8 @@ function initSeiProArvore() {
     // }
     if (
         (typeof parent.setAtividadesProcesso === 'function' || typeof parent.setAtividadesProcesso !== 'undefined') && 
-        parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null
+        parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null &&
+        typeof parent.__ !== 'undefined'
         ) {
         parent.setAtividadesProcesso();
     }

@@ -20,7 +20,7 @@ function initRangerSelectShift(TimeOut = 9000) {
 }
 function initHideMenuSistemaView(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof getOptionsPro !== 'undefined' && typeof hideMenuSistemaView !== 'undefined' && typeof verifyConfigValue !== 'undefined') { 
+    if (typeof getOptionsPro !== 'undefined' && typeof hideMenuSistemaView !== 'undefined' && typeof verifyConfigValue !== 'undefined' && typeof jmespath !== 'undefined') { 
         if (verifyConfigValue('menususpenso')) {
             hideMenuSistemaView();
         }
@@ -61,7 +61,7 @@ function initTableSorter(TimeOut = 9000) {
 }
 function initInsertNewLinksMenu(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof checkConfigValue !== 'undefined') { 
+    if (typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined') { 
         insertNewLinksMenu();
     } else {
         setTimeout(function(){ 
@@ -284,8 +284,9 @@ function initTablePesquisaDownload() {
         setTablePesquisaDownload();
     }
 }
-function initAppendIconFavorites(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+function initAppendIconFavoerites(TimeOut = 9000) {
+    var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
+    if (TimeOut <= 0 || parent.window.name != '' ||  table.length == 0) { return; }
     if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconFavorites !== 'undefined') {
         if (checkConfigValue('gerenciarfavoritos')) {
             setAppendIconFavorites();
@@ -293,7 +294,7 @@ function initAppendIconFavorites(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initAppendIconFavorites(TimeOut - 100); 
-            console.log('Reload initAppendIconFavorites', TimeOut); 
+            console.log('Reload initAppendIcsonFavorites', TimeOut, table.length); 
         }, 500);
     }
 }
