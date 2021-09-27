@@ -13727,7 +13727,7 @@ function onSignIn(googleUser) {
         getAtividades();
         $('#tabelaAtivPanel').html('<div class="dataFallback dataLoading" data-text="Nenhum dado dispon\u00EDvel"></div>');
     }
-    // $('#ssoLoginConfig').show();
+    // $('#ssoLoginConfig').show(); 
 }
 function cleanAtivParams(initAtiv = true) {
     localStorageRemovePro('configDataAtividadesPro');
