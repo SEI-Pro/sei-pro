@@ -154,22 +154,27 @@ function getNameGenre(ref_nomenclatura, string_male, string_female) {
     return (masc ? string_male : string_female);
 }
 function getServerAtividades(param, mode) {
-    if (    mode == 'panel' || 
-            (mode == 'chart_demandas' && checkCapacidade(mode)) || 
-            (mode.indexOf('config_') !== -1 && checkCapacidade(mode)) || 
-            (mode.indexOf('_favoritos') !== -1 && checkCapacidade(mode)) || 
-            (mode == 'update_checklist' && checkCapacidade(mode)) || 
-            (mode.indexOf('report_') !== -1 && checkCapacidade(mode)) || 
-            (delayServerAtiv == 0 && !checkLoadingButtonConfirm() && checkCapacidade(mode)) 
+    if (    urlServerAtiv && (typeof window.tokenID !== 'undefined' || userHashAtiv != '') &&
+            (
+                mode == 'panel' || 
+                (mode == 'chart_demandas' && checkCapacidade(mode)) || 
+                (mode.indexOf('config_') !== -1 && checkCapacidade(mode)) || 
+                (mode.indexOf('_favoritos') !== -1 && checkCapacidade(mode)) || 
+                (mode == 'update_checklist' && checkCapacidade(mode)) || 
+                (mode.indexOf('report_') !== -1 && checkCapacidade(mode)) || 
+                (delayServerAtiv == 0 && !checkLoadingButtonConfirm() && checkCapacidade(mode)) 
+            )
         ) {
         param.hash = userHashAtiv;
         param.version = VERSION_SEIPRO;
         param.perfil = (getOptionsPro('perfilAtividadesSelected')) ? getOptionsPro('perfilAtividadesSelected') : '';
         delayServerAtiv = 1; setTimeout(function(){ delayServerAtiv = 0; }, 1000);
         if (typeof loadingButtonConfirm !== 'undefined') { loadingButtonConfirm(true); }
+
         var authToken = (typeof window.tokenID !== 'undefined') 
             ? function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer '+window.tokenID);
+                xhr.withCredentials = true;
             }
             : undefined;
 
@@ -194,13 +199,15 @@ function getServerAtividades(param, mode) {
                         if (mode == 'update_prioridades') {
                             updatePriorityKanbanItens(ativData['board'], 'error');
                         }
+                    } else if (typeof ativData.status_acess !== 'undefined' && ativData.status_acess == 0) {
+                        alertaBoxPro('Error', 'exclamation-triangle', (typeof ativData.status_txt != 'undefined' ? ativData.status_txt : 'Erro ao acessar o sistema. Acesso Negado.'));
+                        if (typeof perfilLoginAtiv.CLIENT_ID !== 'undefined' && perfilLoginAtiv.CLIENT_ID != '') {
+                            signOutProfile();
+                        } else {
+                            cleanAtivParams();
+                        }
                     } else {
-                        localStorageRemovePro('configDataAtividadesPro');
-                        arrayAtividadesPro = [];
                         initPanelAtividades(arrayAtividadesPro);
-                    }
-                    if (typeof ativData.status_acess !== 'undefined' && ativData.status_acess == 0) {
-                        removeOptionsPro('perfilAtividadesSelected');
                     }
 
                 } else {
@@ -434,6 +441,8 @@ function getServerAtividades(param, mode) {
             if (typeof param.type !== 'undefined') { resetButtonTabConfig('.actionsConfig_'+param.type) }
             failureScreen(data, textStatus);
         });
+    } else {
+        $('#atividadesProActions').find('.iconAtividade_update i').removeClass('fa-spin');
     }
 }
 function failureScreen(data, textStatus) {
@@ -2180,8 +2189,9 @@ function addConfigItem(this_) {
 function changeSwitchConfigItem(this_) {
     var _this = $(this_);
     var tr = _this.closest('tr');
+    var data_type = tr.data('key');
     var table = _this.closest('table');
-    table.find('.switch_complexidadeDefault').not('.switch_complexidadeDefault_'+tr.data('index')).prop('checked',false);
+    table.find('.switch_'+data_type+'Default').not('.switch_'+data_type+'Default_'+tr.data('index')).prop('checked',false);
     // _this.prop('checked',true);
 
 }
@@ -3315,6 +3325,7 @@ function newConfig(this_) {
     var _this = $(this_);
     var data_this = _this.data();
     var type = data_this.type;
+    var carga_horaria = 8;
     var action = (checkCapacidade('config_new_'+type)) ? 'config_new_'+type: 'config_update_'+type;
     var dates_inicio = (type == 'planos' || type == 'programas') ? moment().startOf('month').format('YYYY-MM-DD HH:mm:ss') : false;
     var dates_fim = (type == 'planos' || type == 'programas') ? moment().endOf('month').format('YYYY-MM-DD HH:mm:ss') : false;
@@ -3352,8 +3363,8 @@ function newConfig(this_) {
                 id_user: parseInt(arrayConfigAtividades.perfil.id_user),
                 id_unidade: parseInt(arrayConfigAtivUnidade.id_unidade),
                 id_tipo_modalidade: 4,
-                carga_horaria: 8,
-                tempo_total: datesKey.dias,
+                carga_horaria: carga_horaria,
+                tempo_total: datesKey.dias*carga_horaria,
                 data_inicio_vigencia: dates_inicio,
                 data_fim_vigencia: dates_fim,
                 config: {
@@ -4352,16 +4363,23 @@ function editConfigOptions(this_, id) {
                             '                    <thead>'+
                             '                        <tr class="tableHeader">'+
                             '                            <th class="tituloControle">Unidade</th>'+
+                            '                            <th class="tituloControle" style="width: 50px;">Principal</th>'+
                             '                            <th class="tituloControle" style="width: 50px;"></th>'+
                             '                        </tr>'+
                             '                    </thead>'+
                             '                    <tbody>';
             var lotacao = (value.lotacao !== null && typeof value.lotacao !== 'undefined') ? value.lotacao : false;
             var lotacao_len = (lotacao) ? lotacao.length : 0;
-            if (lotacao){
+            if (lotacao) {
                 $.each(lotacao, function(i, v){
                     htmlBox +=  '                        <tr data-index="'+i+'" data-id="'+v.id_lotacao+'" data-value="'+v.id_unidade+'" data-key="lotacao" style="text-align: left;">'+
-                                '                            <td class="editCellSelect" data-type="num" data-key="unidade" style="padding: 0 10px;">'+unicodeToChar(v.nome_unidade+' ('+v.sigla_unidade+')')+'</td>'+
+                                '                            <td class="editCellSelect" data-type="num_switch" data-key="unidade" style="padding: 0 10px;">'+unicodeToChar(v.nome_unidade+' ('+v.sigla_unidade+')')+'</td>'+
+                                '                            <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
+                                '                               <div class="onoffswitch" style="transform: scale(0.8);">'+
+                                '                                   <input data-key="principal" type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch_lotacaoDefault switch_lotacaoDefault_'+i+'" onchange="changeSwitchConfigItem(this)" id="changeItemConfig_'+data.type+'_'+i+'" tabindex="0" '+(v.default  ? 'checked' : '')+'>'+
+                                '                                   <label class="onoffswitch-label" for="changeItemConfig_'+data.type+'_'+i+'"></label>'+
+                                '                               </div>'+
+                                '                            </td>'+
                                 '                            <td style="width: 50px; text-align: center;">'+
                                 '                                 <i class="fas fa-trash-alt cinzaColor removeTrConfig" style="cursor: pointer;float: right;margin-right: 10px;" onclick="removeConfigRowByID(this)"></i>'+
                                 '                            </td>'+ 
@@ -4370,6 +4388,12 @@ function editConfigOptions(this_, id) {
             }
             htmlBox +=      '                        <tr data-index="'+lotacao_len+'" data-id="new" data-value="" data-key="lotacao" style="text-align: left;">'+
                             '                            <td class="editCellSelect" data-type="num" data-key="unidade" style="padding: 0 10px;"></td>'+
+                            '                            <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
+                            '                               <div class="onoffswitch" style="transform: scale(0.8);">'+
+                            '                                   <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch_lotacaoDefault switch_lotacaoDefault_'+lotacao_len+'" onchange="changeSwitchConfigItem(this)" id="changeItemConfig_'+data.type+'_'+lotacao_len+'" tabindex="0">'+
+                            '                                   <label class="onoffswitch-label" for="changeItemConfig_'+data.type+'_'+lotacao_len+'"></label>'+
+                            '                               </div>'+
+                            '                            </td>'+
                             '                            <td style="width: 50px; text-align: center;">'+
                             '                                 <i class="fas fa-trash-alt cinzaColor removeTrConfig" style="cursor: pointer;float: right;margin-right: 10px;" onclick="removeConfigRowByID(this)"></i>'+
                             '                            </td>'+ 
@@ -5101,6 +5125,30 @@ function editConfigOptions(this_, id) {
                         '      </tr>'+
                         '      <tr>'+
                         '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                        '               <label><i class="iconPopup iconSwitch fas fa-shield-alt cinzaColor"></i>Seguran\u00E7a</label>'+
+                        '           </td>'+
+                        '           <td>'+
+                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-link cinzaColor"></i> URL do SEI</td>'+
+                        '                      <td>'+
+                        '                          <input type="text" class="singleOptionConfig" data-key="sei_entidade" id="sei_entidade" value="'+(config && typeof config.sei_entidade !== 'undefined' && config.sei_entidade != ''  ? config.sei_entidade : url_host.replace('controlador.php','') )+'">'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-key cinzaColor"></i> M\u00E9todo de autentica\u00E7\u00E3o</td>'+
+                        '                      <td>'+
+                        '                          <select class="singleOptionConfig" data-key="metodo_autenticacao" id="metodo_autenticacao">'+
+                        '                              <option value="apikey" '+(config && (typeof config.metodo_autenticacao === 'undefined' || config.metodo_autenticacao == 'apikey')  ? 'selected' : '')+'>Chave de acesso do sistema</option>'+
+                        '                              <option value="google" '+(config && typeof config.metodo_autenticacao !== 'undefined' && config.metodo_autenticacao == 'google'  ? 'selected' : '')+'>Login com o Google</option>'+
+                        '                          </select>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '               </table>'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '      <tr>'+
+                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
                         '               <label><i class="iconPopup iconSwitch fas fa-file-signature cinzaColor"></i>Modelos</label>'+
                         '           </td>'+
                         '           <td>'+
@@ -5764,6 +5812,11 @@ function extractOptionConfigItem(this_) {
         var _this_s = $(this);
         if (_this_s.attr('type') == 'checkbox' && typeof _this_s.data('key') !== 'undefined' ) {
             param[_this_s.data('key')] = _this_s.is(':checked');
+        } else if (
+                (_this_s.attr('type') == 'text' && typeof _this_s.data('key') !== 'undefined') ||
+                (_this_s.is('select') && typeof _this_s.data('key') !== 'undefined')
+            ) {
+            param[_this_s.data('key')] = _this_s.val();
         } else if (_this_s.attr('type') == 'number' && typeof _this_s.data('key') !== 'undefined' ) {
             param[_this_s.data('key')] = parseFloat(_this_s.val());
         }
@@ -5796,10 +5849,11 @@ function extractOptionConfigItem(this_) {
         }
         $(this).find('tbody tr').each(function(index){
             var data_tr = $(this).data();
+            var this_td = $(this).find('td');
             var obj_tr = {};
             var array_tr = [];
-            if ($(this).find('td').eq(0).text() != '' || data_table.format == 'obj_mult') {
-                $(this).find('td').each(function(i){
+            if (this_td.eq(0).text() != '' || data_table.format == 'obj_mult') {
+                this_td.each(function(i){
                     var data_td = $(this).data();
                     var value = (data_td.type == 'switch') 
                                 ? $(this).find('input[type="checkbox"]').is(':checked') ? true : false
@@ -5807,13 +5861,16 @@ function extractOptionConfigItem(this_) {
                         value = (data_td.type == 'num' && data_table.format == 'obj_mult') 
                                 ? {id: data_tr.id, value: data_tr.value}
                                 : value;
+                        value = (data_td.type == 'num_switch' && data_table.format == 'obj_mult') 
+                                ? {id: data_tr.id, value: data_tr.value, config: {[this_td.find('input[type="checkbox"]').data('key')]: this_td.find('input[type="checkbox"]').is(':checked')}}
+                                : value;
                         value = (data_td.type == 'value' && data_table.format == 'obj_mult') 
                                 ? {id: data_tr.id.toString(), value: data_tr.value.toString()}
                                 : value;
-                        value = (data_td.type == 'num') 
+                        value = (data_td.type == 'num' && data_table.format != 'obj_mult') 
                                 ? parseFloat($(this).text())
                                 : value;
-                        value = (data_td.type == 'value') 
+                        value = (data_td.type == 'value' && data_table.format != 'obj_mult') 
                                 ? $(this).text().trim()
                                 : value;
 
@@ -5821,7 +5878,7 @@ function extractOptionConfigItem(this_) {
                         value = (data_td.type == 'text') ? value.replace(/["']/g, "") : value;
                         value = (data_td.type == 'num') ? parseFloat(value) : value;
                         obj_tr[data_td.key] = value;
-                    } else if (data_table.format == 'obj_mult' && typeof data_td.key !== 'undefined' && data_tr.value != '' && (data_td.type == 'value' || data_td.type == 'num') && (data_tr.id != 'new' || (data_tr.id == 'new' && data_tr.value != '' && data_tr.value != 'remove'))) { 
+                    } else if (data_table.format == 'obj_mult' && typeof data_td.key !== 'undefined' && data_tr.value != '' && (data_td.type == 'value' || data_td.type == 'num' || data_td.type == 'num_switch') && (data_tr.id != 'new' || (data_tr.id == 'new' && data_tr.value != '' && data_tr.value != 'remove'))) { 
                         obj_tr = value;
                     } else if (data_table.format == 'array' && value != '') {
                         array_tr.push(value);
@@ -5974,7 +6031,13 @@ function configPessoal() {
                     '   </tr>'+
                     */
                     '   <tr style="height: 40px;">'+
-                    '       <td style="vertical-align: bottom;"><i class="iconPopup fas fa-sync-alt cinzaColor"></i> Alternar base de dados</td>'+
+                    '       <td style="vertical-align: bottom;position:relative;">'+
+                    '           <a class="newLink" onclick="signOutProfile()" id="ssoLoginConfig" style="position: absolute;right: 0;top: 5px;'+(typeof window.tokenID === 'undefined' ? 'display:none;' : '')+'" onmouseover="return infraTooltipMostrar(\'Desconectar\');" onmouseout="return infraTooltipOcultar();">'+
+                    '               <i class="iconPopup fas fa-sign-out-alt cinzaColor" style="height: auto;"></i>'+
+                    '           </a>'+
+                    '           Alternar base de dados'+
+                    '           <i class="iconPopup fas fa-sync-alt cinzaColor"></i>'+
+                    '       </td>'+
                     '       <td>'+
                     htmlSelectConfigBase+
                     '       </td>'+
@@ -9288,7 +9351,7 @@ function saveAtividadeFull(id_demanda = 0) {
                         selectAtividadeBox('edit');
                     }
                 });
-                if (typeof arrayConfigAtividades.entidades[0].config.cadastro_simplificado !== 'undefined' && arrayConfigAtividades.entidades[0].config.cadastro_simplificado) {
+                if (typeof arrayConfigAtividades.entidades[0].config !== 'undefined' && arrayConfigAtividades.entidades[0].config !== null && typeof arrayConfigAtividades.entidades[0].config.cadastro_simplificado !== 'undefined' && arrayConfigAtividades.entidades[0].config.cadastro_simplificado) {
                     btnDialogBoxPro.unshift({
                         text: 'Cadastro Simplificado',
                         icon: 'ui-icon-check',
@@ -13557,16 +13620,17 @@ function initAtividades(TimeOut = 9000) {
 function initPerfilLoginAtiv(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined' && typeof localStorageRestorePro !== 'undefined' ) { 
-        setTimeout(function(){ 
-            perfilLoginAtiv = localStorageRestorePro('configBasePro_atividades');
-            perfilLoginAtiv = (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null && checkConfigValue('gerenciaratividades')) ? perfilLoginAtiv : false;
-            // console.log('initPerfilLoginAtiv', perfilLoginAtiv, localStorage.getItem('configBasePro_atividades'), checkConfigValue('gerenciaratividades'), localStorageRestorePro('configBasePro_atividades'));
-            if (perfilLoginAtiv) {
-                initAtividades();
-            } else {
-                getServersPro();
-            }
-        }, 1500);
+        if (checkConfigValue('gerenciaratividades')) {
+            setTimeout(function(){ 
+                perfilLoginAtiv = localStorageRestorePro('configBasePro_atividades');
+                perfilLoginAtiv = (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null) ? perfilLoginAtiv : false;
+                if (perfilLoginAtiv) {
+                    initAtividades();
+                } else {
+                    getServersPro();
+                }
+            }, 500);
+        }
     } else {
         setTimeout(function(){ 
             initPerfilLogin(TimeOut - 100); 
@@ -13574,7 +13638,6 @@ function initPerfilLoginAtiv(TimeOut = 9000) {
         }, 500);
     }
 }
-initPerfilLoginAtiv();
 
 // Login Google
 function getServersPro() {
@@ -13584,32 +13647,31 @@ function getServersPro() {
         dataType: 'json',
         success: function(result) {
             var host = jmespath.search(result, "[?domain=='"+window.location.host+"'] | [0]");
-                host = (host !== null) ? host : false;
+                host = (host !== null && host.enabled) ? host : false;
             var hostConfig = url_host.replace('controlador.php','');
             var urlConfigAtiv = (host) 
-                ? hostConfig+'?#&acao_pro=set_database&mode=insert&base=atividades&token=&url='+encodeURIComponent(host.remote_host)
+                ? hostConfig+'?#&acao_pro=set_database&mode=insert&base=atividades&token=&client_id='+encodeURIComponent(host.client_id)+'&url='+encodeURIComponent(host.remote_host)
                 : hostConfig+'?#&acao_pro=set_option&option_key=gerenciaratividades&option_value=false';
             if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
             $('#frmCheckerProcessoPro').attr('src', urlConfigAtiv).unbind().on('load', function(){
                 console.log('getServersPro', host);
                 if (host) {
-                    perfilLoginAtiv = {URL_API: host.remote_host, KEY_USER: ''};
+                    perfilLoginAtiv = {URL_API: host.remote_host, KEY_USER: '', CLIENT_ID: host.client_id};
                     urlServerAtiv = perfilLoginAtiv.URL_API;
                     userHashAtiv = perfilLoginAtiv.KEY_USER;
                     localStorageStorePro('configBasePro_atividades', perfilLoginAtiv);
                     initAtividades();
                     console.log('INITI');
                 } else {
-                    localStorageRemovePro('configBasePro_atividades');
-                    localStorageRemovePro('configDataAtividadesPro');
-                    localStorageRemovePro('configDataAtividadesProcPro');
+                    // cleanAtivParams(false);
                 }
             });
         }
     });
 }
 function setPerfilLoginGoogle() {
-    var token = (typeof gapi !== 'undefined') ? gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token : false;
+    var token = (typeof gapi !== 'undefined' && typeof gapi.auth2 !== 'undefined') ? gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token : false;
+        token = (typeof token !== 'undefined') ? token : false;
     if (token) {
         window.tokenID = token;
         getAtividades();
@@ -13618,28 +13680,78 @@ function setPerfilLoginGoogle() {
     }
 }
 function setScriptGoogleProfile() {
-    var tagScript = '<script src="https://apis.google.com/js/platform.js" async defer></script>';
-    var metaLogin = '<meta name="google-signin-client_id" content="648601411036-7hm2pvgpc9e0r4l8fpd8o1al571hruac.apps.googleusercontent.com">';
+    $('[data-script-name="googleapi"]').remove();
+    var client_id = perfilLoginAtiv.CLIENT_ID;
+    var tagScript = '<script data-script-name="googleapi" src="https://apis.google.com/js/platform.js" async defer></script>';
+    var metaLogin = '<meta data-script-name="googleapi" name="google-signin-client_id" content="'+client_id+'">';
     $(tagScript+metaLogin).appendTo('head');
-    $('#atividadesProActions').find('.iconAtividade_update i').removeClass('fa-spin');
+    if ($('#ifrArvore').length > 0) {
+        onLoad();
+    } else {
+        $('#atividadesProActions').find('.iconAtividade_update i').removeClass('fa-spin');
+        $('#tabelaAtivPanel').css('height', 'auto');
+        if (getOptionsPro('panelAtividadesView') && getOptionsPro('panelAtividadesView') !== 'Tabela') {
+            $('#atividadesProActions').find('button[data-value="Tabela"]').trigger('click');
+        }
+    }
+}
+function onLoad(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof gapi !== 'undefined') {
+        gapi.load('auth2', function() {
+            gapi.auth2.init();
+            setTimeout(function () {
+                onSignIn();
+            },500);
+        });
+    } else {
+        setTimeout(function(){ 
+            onLoad(TimeOut - 100); 
+            console.log('Reload onLoad', TimeOut, typeof gapi); 
+        }, 500);
+    }
 }
 function onSignIn(googleUser) {
     var token = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token;
+    /*
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
     console.log('Name: ' + profile.getName());
     console.log('Image URL: ' + profile.getImageUrl());
     console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
     console.log({Token: token});
-    window.tokenID = token;
-    getAtividades();
+    */
+    token = (typeof token !== 'undefined') ? token : false;
+    if (token) {
+        window.tokenID = token;
+        getAtividades();
+        $('#tabelaAtivPanel').html('<div class="dataFallback dataLoading" data-text="Nenhum dado dispon\u00EDvel"></div>');
+    }
+    // $('#ssoLoginConfig').show();
+}
+function cleanAtivParams(initAtiv = true) {
+    localStorageRemovePro('configDataAtividadesPro');
+    localStorageRemovePro('configDataAtividadesProcPro');
+    removeOptionsPro('panelHomeView');
+    removeOptionsPro('panelAtividadesView');
+    window.tokenID = undefined;
+    perfilLoginAtiv = false;
+    urlServerAtiv = false;
+    userHashAtiv = false;
+    arrayAtividadesPro = [];
+    arrayAtividadesProcPro = [];
+    infraTooltipOcultar();
+    $('#atividadesPro').remove();
+    if (initAtiv) {
+        initEmptyAtividades();
+    }
 }
 function signOutProfile() {
+    cleanAtivParams();
     var auth2 = gapi.auth2.getAuthInstance();
     auth2.signOut().then(function () {
-      console.log('User signed out.');
-      localStorageRemovePro('configBasePro_atividades');
-      localStorageRemovePro('configDataAtividadesPro');
-      localStorageRemovePro('configDataAtividadesProcPro');
+        console.log('User signed out.');
+        initPerfilLoginAtiv();
     });
 }
+initPerfilLoginAtiv();

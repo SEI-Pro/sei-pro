@@ -2833,7 +2833,7 @@ div.infraTooltipTexto i.far {
     min-width: 200px;
 }
 .chosen-container-single {
-    min-width: 65px;
+    min-width: 110px;
 }
 .atividadeWork .chosen-container-single {
     width: 100% !important;
@@ -2921,4 +2921,8 @@ div#divInfraTooltip {
     background: #f9efad;
     border-radius: 5px;
     text-align: left;
+}
+.g-signin2 {
+    transform: scale(1.3) !important;
+    margin-top: 20px !important;
 }

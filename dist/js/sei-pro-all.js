@@ -285,7 +285,8 @@ function initTablePesquisaDownload() {
     }
 }
 function initAppendIconFavorites(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
+    if (TimeOut <= 0 || parent.window.name != '' || table.length == 0) { return; }
     if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconFavorites !== 'undefined') {
         if (checkConfigValue('gerenciarfavoritos')) {
             setAppendIconFavorites();

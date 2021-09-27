@@ -134,6 +134,7 @@ function restore_options() {
                 var nProfile = $(this);
                 $.each(value, function (i, v) {
                     nProfile.find('.input-config-pro[data-name-input="'+i+'"]').val(v);
+                    console.log(i,v);
                 });
                 if (nProfile.find('.input-config-pro[data-name-input="spreadsheetId"]').val() != '') {
                     var conexaoTipo = nProfile.find('.sca-conexaoTipo')
@@ -299,8 +300,9 @@ function changeConexaoTipo(this_) {
         _parent.find('tr.sheets').hide().find('input').val('');
         _parent.find('tr.api').show();
     } else if (mode == 'googleapi') {
-        _parent.find('tr.sheets').hide().find('input').val('');
+        _parent.find('tr.sheets').not('.clientid').hide().find('input').val('');
         _parent.find('tr.api').show();
+        _parent.find('tr.clientid').show();
         _parent.find('tr.api.keyuser').hide();
     }
 }

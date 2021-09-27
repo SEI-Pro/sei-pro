@@ -376,7 +376,9 @@ function insertGroupTable(TimeOut = 9000) {
 
             if ( $('#selectGroupTablePro').length == 0 && $('#tblProcessosDetalhado').length == 0) { 
                 $('#divFiltro').after(htmlControl); 
-                updateGroupTable($('#selectGroupTablePro')); 
+                setTimeout(function(){ 
+                    updateGroupTable($('#selectGroupTablePro')); 
+                }, 500);
             }
             if ( $('#idSelectTipoBloco').length != 0 ) { 
                 $("#idSelectTipoBloco").appendTo("#newFiltro");

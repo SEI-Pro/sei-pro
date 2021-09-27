@@ -96,7 +96,7 @@ function loadDataBaseApiAtividadesPro(dataValues) {
                     : false;
     // console.log(perfil, perfilSelected, dataValues);
     if (perfil && checkConfigValue('gerenciaratividades')) {
-        localStorage.setItem('configBasePro_atividades', JSON.stringify({URL_API: perfil.URL_API, KEY_USER: perfil.KEY_USER}));
+        localStorage.setItem('configBasePro_atividades', JSON.stringify({URL_API: perfil.URL_API, KEY_USER: perfil.KEY_USER, CLIENT_ID: perfil.CLIENT_ID}));
     } else {
         removeLocalStorageAtividades();
     }

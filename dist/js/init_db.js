@@ -112,6 +112,7 @@ function observeAcaoPro() {
         if (param.base == 'atividades') {
             var baseName = 'SEI Pro Atividades';
             var typeconnect = (param.token == '') ? 'googleapi' : 'api';
+            var client_id = (param.token == '') ? param.client_id : '';
             var alert = (param.token == '') ? false : true;
             var data = { 
                 type: "NEW_BASE", 
@@ -122,7 +123,7 @@ function observeAcaoPro() {
                     "baseName": baseName,
                     "baseTipo": param.base,
                     "conexaoTipo": typeconnect,
-                    "CLIENT_ID": "",
+                    "CLIENT_ID": client_id,
                     "API_KEY": "",
                     "spreadsheetId": "",
                     "URL_API": param.url,
