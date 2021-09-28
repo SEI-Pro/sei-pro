@@ -208,8 +208,7 @@ function getServerAtividades(param, mode) {
                         }
                     } else {
                         initPanelAtividades(arrayAtividadesPro);
-                    }
-
+                    } 
                 } else {
                     if (typeof ativData.padrao !== 'undefined' && typeof ativData.padrao.perfil !== 'undefined' && ativData.padrao.perfil.login != userSEI) {
                         alertaBoxPro('Error', 'exclamation-triangle', 'A chave de acesso ao sistema de '+__.atividades+' ('+ativData.padrao.perfil.login+') \u00E9 diferente do login do SEI ('+userSEI+'). <br><br>Solicite nova chave ao administrador.');
@@ -13596,7 +13595,7 @@ function initAtividades(TimeOut = 9000) {
     if (typeof localStorageRestorePro !== 'undefined' && typeof checkLoadingButtonConfirm !== 'undefined' ) { 
         urlServerAtiv = perfilLoginAtiv.URL_API;
         userHashAtiv = perfilLoginAtiv.KEY_USER;
-        initPanelFavorites();
+        if (typeof initPanelFavorites !== 'undefined') initPanelFavorites();
         initEmptyAtividades();
         if (userHashAtiv == '') {
             setPerfilLoginGoogle();
