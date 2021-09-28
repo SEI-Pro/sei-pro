@@ -266,6 +266,9 @@ $.fn.moveTo = function(selector){
         $(this).remove();
     });
 };
+function userTyped(this_) {
+    $(this_).data('user-typed', ($(this_).val().trim() == '' ? false : true));
+}
 function dragColumnTable(elemTable) {
     var local = {};
         local.containment = 'parent';

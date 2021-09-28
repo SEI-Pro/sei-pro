@@ -366,7 +366,7 @@ function getServerAtividades(param, mode) {
                                     txtAlert = (mode == 'sign_documento') ? 'Documento assinado' : txtAlert;
                                     txtAlert = (mode == 'sign_cancel_documento') ? 'Assinatura do documento cancelada' : txtAlert;
                                     txtAlert = (mode == 'edit_atividade') ? __.Demanda+' '+getNameGenre('demanda', 'editado', 'editada') : txtAlert;
-                                    txtAlert = (mode == 'delete_atividade') ? (typeof ativData['delete_demandas'] !== 'undefined' && ativData['delete_demandas'].length > 1 ? __.Demandas+' '+getNameGenre('demanda', 'deletados', 'deletadas') : __.Demanda+' deletada'+getNameGenre('demanda', 'deletado', 'deletada')) : txtAlert;
+                                    txtAlert = (mode == 'delete_atividade') ? (typeof ativData['delete_demandas'] !== 'undefined' && ativData['delete_demandas'].length > 1 ? __.Demandas+' '+getNameGenre('demanda', 'deletados', 'deletadas') : __.Demanda+' '+getNameGenre('demanda', 'deletado', 'deletada')) : txtAlert;
                                     txtAlert = (mode == 'start_atividade') ? __.Demanda+' '+getNameGenre('demanda', 'iniciado', 'iniciada') : txtAlert;
                                     txtAlert = (mode == 'extend_atividade') ? __.Demanda+' '+getNameGenre('demanda', 'prorrogado', 'prorrogada') : txtAlert;
                                     txtAlert = (mode == 'variation_atividade') ? __.Complexidade+' '+getNameGenre('complexidade', 'alterado', 'alterada') : txtAlert;
@@ -380,7 +380,7 @@ function getServerAtividades(param, mode) {
                                     txtAlert = (mode == 'rate_atividade') ? 'Avalia\u00E7\u00E3o cadastrada' : txtAlert;
                                     txtAlert = (mode == 'rate_edit_atividade') ? 'Avalia\u00E7\u00E3o editada' : txtAlert;
                                     txtAlert = (mode == 'rate_cancel_atividade') ? 'Avalia\u00E7\u00E3o cancelada' : txtAlert;
-                                    txtAlert = (mode == 'send_atividade') ? (ativData['update_demandas'].length == 1 ? __.Demanda+' '+__.arquivada+'' : __.Demandas+' '+__.arquivadas) : txtAlert;
+                                    txtAlert = (mode == 'send_atividade') ? (ativData['update_demandas'].length == 1 ? __.Demanda+' '+__.arquivada : __.Demandas+' '+__.arquivadas) : txtAlert;
                                     txtAlert = (mode == 'send_cancel_atividade') ? __.Arquivamento+' de '+__.demanda+' '+getNameGenre('arquivamento', 'cancelado', 'cancelado') : txtAlert;
                                     txtAlert = (mode == 'save_afastamento') ? 'Afastamento salvo' : txtAlert;
                                     txtAlert = (mode == 'edit_afastamento') ? 'Afastamento editado' : txtAlert;
@@ -2592,8 +2592,9 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                 var classNew = (value.nome_completo.indexOf('(Novo)') !== -1) ? {name: 'new', text: 'NOVO' } : false;
                 var lotacao = (value.lotacao !== null) ? $.map(value.lotacao, function(v){ 
                                                             var tagName = removeAcentos(v.sigla_unidade).replace(/\ /g, '').toLowerCase();
-                                                            return  '<span data-tagname="'+tagName+'" data-textcolor="black" data-icontag="briefcase" data-type="lotacao" style="background-color: #bfd5e8;" class="tag_text tagTableText_'+tagName+'" onclick="filterTagView(this)" data-colortag="#bfd5e8">'+
-                                                                    '   <i class="tagicon fas fa-briefcase" style="font-size: 90%;margin: 0 2px; color: #406987"></i>'+
+                                                            var tagColor = typeof v.config !== 'undefined' && v.config !== null && v.config.principal  ? {color: '#bfd5e8', background: '#406987', textcolor: 'white'} : {color: '#406987', background: '#bfd5e8', textcolor: 'black'};
+                                                            return  '<span data-tagname="'+tagName+'" data-textcolor="'+tagColor.textcolor+'" data-icontag="briefcase" data-type="lotacao" style="background-color: '+tagColor.background+'; color: '+tagColor.color+';" class="tag_text tagTableText_'+tagName+'" onclick="filterTagView(this)" data-colortag="'+tagColor.color+'">'+
+                                                                    '   <i class="tagicon fas fa-briefcase" style="font-size: 90%;margin: 0 2px; color: '+tagColor.color+'"></i>'+
                                                                     '   '+v.sigla_unidade+
                                                                     '</span>';
                                                         }).join('') : false;
@@ -3324,7 +3325,10 @@ function newConfig(this_) {
     var _this = $(this_);
     var data_this = _this.data();
     var type = data_this.type;
-    var carga_horaria = 8;
+    var carga_horaria_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.carga_horaria_padrao");
+        carga_horaria_padrao = (carga_horaria_padrao == null) ? 8 : carga_horaria_padrao;
+    var tipo_modalidade_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.tipo_modalidade_padrao");
+        tipo_modalidade_padrao = (tipo_modalidade_padrao == null) ? 4 : tipo_modalidade_padrao;
     var action = (checkCapacidade('config_new_'+type)) ? 'config_new_'+type: 'config_update_'+type;
     var dates_inicio = (type == 'planos' || type == 'programas') ? moment().startOf('month').format('YYYY-MM-DD HH:mm:ss') : false;
     var dates_fim = (type == 'planos' || type == 'programas') ? moment().endOf('month').format('YYYY-MM-DD HH:mm:ss') : false;
@@ -3361,9 +3365,9 @@ function newConfig(this_) {
             ? {
                 id_user: parseInt(arrayConfigAtividades.perfil.id_user),
                 id_unidade: parseInt(arrayConfigAtivUnidade.id_unidade),
-                id_tipo_modalidade: 4,
-                carga_horaria: carga_horaria,
-                tempo_total: datesKey.dias*carga_horaria,
+                id_tipo_modalidade: tipo_modalidade_padrao,
+                carga_horaria: carga_horaria_padrao,
+                tempo_total: datesKey.dias*carga_horaria_padrao,
                 data_inicio_vigencia: dates_inicio,
                 data_fim_vigencia: dates_fim,
                 config: {
@@ -3509,6 +3513,14 @@ function newConfigUser(this_) {
                     var user_login = _parent.find('input#user_login');
                     var apelido = _parent.find('input#user_apelido');
                     var email = _parent.find('input#user_email');
+                    var carga_horaria_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.carga_horaria_padrao");
+                        carga_horaria_padrao = (carga_horaria_padrao == null) ? 8 : carga_horaria_padrao;
+                    var tipo_modalidade_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.tipo_modalidade_padrao");
+                        tipo_modalidade_padrao = (tipo_modalidade_padrao == null) ? 4 : tipo_modalidade_padrao;
+                    var dates_inicio = moment().startOf('month').format('YYYY-MM-DD HH:mm:ss');
+                    var dates_fim = moment().endOf('month').format('YYYY-MM-DD HH:mm:ss');
+                    var datesKey = getWorkDaysBetweenDates(dates_inicio, dates_fim, arrayConfigAtivUnidade.sigla_unidade);
+                
                     if (checkAtivRequiredFields(nome_completo[0], 'mark')) {
                         var key = {
                                 id_unidade: arrayConfigAtivUnidade.id_unidade,
@@ -3518,6 +3530,16 @@ function newConfigUser(this_) {
                                 matricula: 0,
                                 host: url_host.replace('controlador.php',''),
                                 email: email.val(),
+                                plano: {
+                                    id_tipo_modalidade: tipo_modalidade_padrao,
+                                    carga_horaria: carga_horaria_padrao,
+                                    tempo_total: datesKey.dias*carga_horaria_padrao,
+                                    data_inicio_vigencia: dates_inicio,
+                                    data_fim_vigencia: dates_fim,
+                                    config: {
+                                        atividades_lista_integral: true
+                                    }
+                                },
                                 config: []
                             };
                         var action = 'config_update_users';
@@ -3837,7 +3859,7 @@ function editConfigOptions(this_, id) {
                             '   <div id="tabs_'+idConfigBox+'_predefinidas">'+
                             '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine">'+
                             '      <tr>'+
-                            '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                            '          <td style="vertical-align: middle; text-align: left; width: 170px;" class="label">'+
                             '               <label><i class="iconPopup iconSwitch fas fa-folder-open cinzaColor"></i>Tipos de Processos:</label>'+
                             '           </td>'+
                             '           <td style="position:relative">'+
@@ -3987,6 +4009,14 @@ function editConfigOptions(this_, id) {
                             '                    </tfoot>'+
                             '                </table>'+
                             '                </div>'+
+                            '           </td>'+
+                            '      </tr>'+
+                            '      <tr>'+
+                            '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                            '               <label><i class="iconPopup iconSwitch fas fa-comment-alt cinzaColor"></i>'+__.Observacao+' '+__.Gerencial+' Pr\u00E9-'+(getNameGenre('observacao', 'definido', 'definida'))+':</label>'+
+                            '           </td>'+
+                            '           <td style="position:relative">'+
+                            '                <textarea id="observacao_gerencial" data-key="observacao_gerencial" class="singleOptionInput">'+(value.config !== null && typeof value.config.observacao_gerencial !== 'undefined' && value.config.observacao_gerencial !== null && value.config.observacao_gerencial != '' ? value.config.observacao_gerencial : '')+'</textarea>'+
                             '           </td>'+
                             '      </tr>'+
                             '   </table>'+
@@ -4375,7 +4405,7 @@ function editConfigOptions(this_, id) {
                                 '                            <td class="editCellSelect" data-type="num_switch" data-key="unidade" style="padding: 0 10px;">'+unicodeToChar(v.nome_unidade+' ('+v.sigla_unidade+')')+'</td>'+
                                 '                            <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
                                 '                               <div class="onoffswitch" style="transform: scale(0.8);">'+
-                                '                                   <input data-key="principal" type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch_lotacaoDefault switch_lotacaoDefault_'+i+'" onchange="changeSwitchConfigItem(this)" id="changeItemConfig_'+data.type+'_'+i+'" tabindex="0" '+(v.default  ? 'checked' : '')+'>'+
+                                '                                   <input data-key="principal" type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch_lotacaoDefault switch_lotacaoDefault_'+i+'" onchange="changeSwitchConfigItem(this)" id="changeItemConfig_'+data.type+'_'+i+'" tabindex="0" '+(typeof v.config !== 'undefined' && v.config !== null && v.config.principal  ? 'checked' : '')+'>'+
                                 '                                   <label class="onoffswitch-label" for="changeItemConfig_'+data.type+'_'+i+'"></label>'+
                                 '                               </div>'+
                                 '                            </td>'+
@@ -5012,6 +5042,11 @@ function editConfigOptions(this_, id) {
         var idConfigBox = 'boxConfiguracoes_'+data.type;
         var nameBox = 'Entidades';
         var titleBox = 'Op\u00E7\u00F5es de '+nameBox+': '+value.nome_entidade;
+        var tipo_modalidade_padrao = (config && typeof config.tipo_modalidade_padrao !== 'undefined' && config.tipo_modalidade_padrao != '')  ? config.tipo_modalidade_padrao : 4;
+        var selectModalidadesOptions = $.map(arrayConfigAtividades.tipos_modalidades, function(v){
+                                            var selected = (v.id_tipo_modalidade == tipo_modalidade_padrao) ? 'selected' : '';
+                                                return '<option value="'+v.id_tipo_modalidade+'" '+selected+'>'+v.nome_modalidade+'</option>';
+                                        }).join('');
 
             htmlBox =   '<div id="'+idConfigBox+'" class="atividadeWork" data-entidade="'+(value && value.id_entidade ? value.id_entidade : 0)+'">'+
                         '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine">'+
@@ -5117,6 +5152,29 @@ function editConfigOptions(this_, id) {
                         '                              <input type="checkbox" name="onoffswitch" data-key="gravar_historico_processo" class="onoffswitch-checkbox singleOptionConfig" id="gravar_historico_processo" tabindex="0" '+(config && typeof config.gravar_historico_processo !== 'undefined' && config.gravar_historico_processo  ? 'checked' : '')+'>'+
                         '                              <label class="onoffswitch-label" for="gravar_historico_processo"></label>'+
                         '                          </div>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '               </table>'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '      <tr>'+
+                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                        '               <label><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Planos de Trabalho</label>'+
+                        '           </td>'+
+                        '           <td>'+
+                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-user-clock cinzaColor"></i> Carga hor\u00E1ria padr\u00E3o</td>'+
+                        '                      <td>'+
+                        '                          <input type="number" class="singleOptionConfig" data-key="carga_horaria_padrao" id="carga_horaria_padrao" value="'+(config && typeof config.carga_horaria_padrao !== 'undefined' && config.carga_horaria_padrao != ''  ? config.carga_horaria_padrao : 8 )+'">'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-wrench cinzaColor"></i> Tipo de modalidade padr\u00E3o</td>'+
+                        '                      <td>'+
+                        '                          <select class="singleOptionConfig" data-key="tipo_modalidade_padrao" data-type="number" id="tipo_modalidade_padrao">'+
+                        '                          '+selectModalidadesOptions+
+                        '                          </select>'+
                         '                      </td>'+
                         '                  </tr>'+
                         '               </table>'+
@@ -5805,6 +5863,8 @@ function extractOptionConfigItem(this_) {
         } else if (_this_s.attr('type') == 'number' && typeof _this_s.data('key') !== 'undefined' ) {
             var value = _this_s.val().trim();
             param[_this_s.data('key')] = parseFloat(value);
+        } else if (_this_s.is('textarea') && typeof _this_s.data('key') !== 'undefined' ) {
+            param[_this_s.data('key')] = _this_s.val().trim();
         }
     });
     _parent.find('.singleOptionConfig').each(function(ind){
@@ -5815,8 +5875,8 @@ function extractOptionConfigItem(this_) {
                 (_this_s.attr('type') == 'text' && typeof _this_s.data('key') !== 'undefined') ||
                 (_this_s.is('select') && typeof _this_s.data('key') !== 'undefined')
             ) {
-            param[_this_s.data('key')] = _this_s.val();
-        } else if (_this_s.attr('type') == 'number' && typeof _this_s.data('key') !== 'undefined' ) {
+            param[_this_s.data('key')] = (_this_s.data('type') == 'number' ? parseFloat(_this_s.val()) : _this_s.val());
+        } else if (!_this_s.is('select') && _this_s.attr('type') == 'number' && typeof _this_s.data('key') !== 'undefined' ) {
             param[_this_s.data('key')] = parseFloat(_this_s.val());
         }
     });
@@ -7289,6 +7349,7 @@ function getKanbanAtividades(this_) {
             // responsivePercentage: true,
             itemHandleOptions:{
               enabled: true,
+            //   handleClass : 'kanban_cointainer'
             },
             dropEl: function(el, target, source, sibling){
                 var targetEl = target.parentElement.getAttribute('data-id');
@@ -7505,8 +7566,8 @@ function getKanbanItem(value) {
     var checkConfigAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`] | [0].config.desativa_produtividade");
 
     var btnPause = (!checkConfigAtiv && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('pause_atividade') && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) )
-                ?   '<span class="info_dates_pause info_noclick" style="display:block; padding: 0;opacity: 1;">'+
-                    '   <a class="newLink datePausado" onclick="parent.pauseAtividade('+value.id_demanda+')">'+
+                ?   '<span class="info_dates_pause" style="display:block; padding: 0;opacity: 1;">'+
+                    '   <a class="newLink datePausado info_noclick" onclick="parent.pauseAtividade('+value.id_demanda+')">'+
                     '       <i class="fas fa-'+(check_ispaused ? 'play' : 'pause')+'-circle '+(check_ispaused ? 'azulColor' : 'laranjaColor')+'" style="padding-right: 3px;"></i>'+
                     '       '+(check_ispaused ? __.Retomar+' '+__.demanda : 'Inserir '+__.paralisacao)+
                     '   </a> '+
@@ -7521,8 +7582,8 @@ function getKanbanItem(value) {
 
     var iconAtivEditHtml = actionsAtividade(value.id_demanda, 'icon');
     var btnActionAtiv = (iconAtivEditHtml && iconAtivEditHtml.hasOwnProperty('icon')) 
-                ?   '<span class="info_dates_extend info_noclick" style="display:block; padding: 0;opacity: 1;">'+
-                    '   <a class="newLink" style="font-size: 9pt;" onclick="parent.actionsAtividade('+value.id_demanda+')">'+
+                ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
+                    '   <a class="newLink info_noclick" style="font-size: 9pt;" onclick="parent.actionsAtividade('+value.id_demanda+')">'+
                     '       <i class="'+actionsAtividade(value.id_demanda, 'icon').icon+'" style="padding-right: 3px;"></i>'+
                     '       '+actionsAtividade(value.id_demanda, 'icon').name+
                     '   </a>'+
@@ -7531,8 +7592,8 @@ function getKanbanItem(value) {
             
 
     var btnExtend = (value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('extend_atividade') && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) )
-                ?   '<span class="info_dates_extend info_noclick" style="display:block; padding: 0;opacity: 1;">'+
-                    '   <a class="newLink dateExtend" onclick="parent.extendAtividade('+value.id_demanda+')">'+
+                ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
+                    '   <a class="newLink dateExtend info_noclick" onclick="parent.extendAtividade('+value.id_demanda+')">'+
                     '      <i class="fas fa-retweet azulColor" style="padding-right: 3px;"></i>'+
                     '      '+__.Prorrogar+' '+__.demanda+
                     '   </a>'+
@@ -7540,8 +7601,8 @@ function getKanbanItem(value) {
                 : '';
 
     var btnVariation = (value.data_inicio != '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && (checkCapacidade('variation_atividade') || checkCapacidade('type_atividade')) && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) )
-                ?   '<span class="info_dates_extend info_noclick" style="display:block; padding: 0;opacity: 1;">'+
-                    '   <a class="newLink dateExtend" onclick="parent.variationAtividade('+value.id_demanda+')">'+
+                ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
+                    '   <a class="newLink dateExtend info_noclick" onclick="parent.variationAtividade('+value.id_demanda+')">'+
                     '      <i class="fas fa-'+(value.tempo_pactuado == 0 ? 'clipboard-list' : 'graduation-cap')+' azulColor" style="padding-right: 3px;"></i>'+
                     '      '+(value.tempo_pactuado == 0 ? 'Atribuir atividade' : 'Alterar '+__.complexidade)+
                     '   </a>'+
@@ -7556,8 +7617,8 @@ function getKanbanItem(value) {
                     '   </span>'+
                     '</span>';
 
-    var infoAtiv =  '<span class="info_ativ info_noclick" style="display:block; padding: 0;opacity: 1;">'+
-                    '   <a class="newLink" onclick="parent.infoAtividade('+value.id_demanda+')">'+
+    var infoAtiv =  '<span class="info_ativ" style="display:block; padding: 0;opacity: 1;">'+
+                    '   <a class="newLink info_noclick" onclick="parent.infoAtividade('+value.id_demanda+')">'+
                     '      <i class="fas fa-info-circle azulColor" style="padding-right: 3px;"></i>'+
                     '      Informa\u00E7\u00F5es '+__.da_demanda+''+
                     '   </a>'+
@@ -7578,26 +7639,28 @@ function getKanbanItem(value) {
     var item = {
         id: "_id_"+value.id_demanda,
         title:  pinBoard+
-                '<div>'+(value.assunto.length > 50 ? value.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : value.assunto)+'</div>'+
-                '<sub title="'+getTitleDialogBox(value, true)+'">'+
-                '<div style="margin: 0 0 8px 0;" class="info_noclick">'+getHtmlLinkRequisicao(value, true)+'</div>'+
-                getTitleDialogBox(value)+
-                '</sub>'+
-                obsGerencial+
-                obsTecnica+
-                (value.etiquetas !== null && value.etiquetas.length > 0 ? '<span class="info_tags_follow" style="float: right;">'+$.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i, 'ativ'))[0].outerHTML }).join('')+'</span>' : '')+
-                '<span class="info_tags_follow">'+getHtmlEtiquetaUnidade(value)+tagPacto+'</span>'+
-                '<span class="info_dates_fav" style="display: block; margin: 10px 0;">'+timerAtiv+tagDate+'</span>'+
-                btnActionAtiv+
-                btnPause+
-                btnExtend+
-                btnVariation+
-                infoAtiv+
-                checklist,
+                '<div class="kanban_cointainer">'+
+                '   <div>'+(value.assunto.length > 50 ? value.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : value.assunto)+'</div>'+
+                '   <sub title="'+getTitleDialogBox(value, true)+'">'+
+                '   <div style="margin: 0 0 8px 0;" class="info_noclick">'+getHtmlLinkRequisicao(value, true)+'</div>'+
+                '   '+getTitleDialogBox(value)+
+                '   </sub>'+
+                '   '+obsGerencial+
+                '   '+obsTecnica+
+                '   '+(value.etiquetas !== null && value.etiquetas.length > 0 ? '<span class="info_tags_follow" style="float: right;">'+$.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i, 'ativ'))[0].outerHTML }).join('')+'</span>' : '')+
+                '   <span class="info_tags_follow">'+getHtmlEtiquetaUnidade(value)+tagPacto+'</span>'+
+                '   <span class="info_dates_fav" style="display: block; margin: 10px 0;">'+timerAtiv+tagDate+'</span>'+
+                '   '+btnActionAtiv+
+                '   '+btnPause+
+                '   '+btnExtend+
+                '   '+btnVariation+
+                '   '+infoAtiv+
+                '   '+checklist+
+                '</div>',
         click: function(el) {
             var checkOver = ($(el).find('.info_noclick:hover').length > 0) ? $(el).find('.info_noclick:hover') : false;
             if (!dialogBoxPro && !checkOver) {
-                // infoAtividade(value.id_demanda);
+                infoAtividade(value.id_demanda);
             }
         },
         class: classes
@@ -8432,7 +8495,7 @@ function saveAtividadeSimple(id_demanda = 0) {
                         '               <label for="ativ_observacao_gerencial"><i class="iconPopup iconSwitch fas fa-comment-alt cinzaColor"></i>'+__.Observacao+' '+__.Gerencial+':</label>'+
                         '           </td>'+
                         '           <td colspan="3" style="text-align: left;">'+
-                        '               <textarea type="text" id="ativ_observacao_gerencial" '+(value ? '' : 'oninput="checkboxAnotacoesProcessoAtiv(this)"')+' style="width: 97%;" data-key="observacao_gerencial" value="'+((value && value.observacao_gerencial !== null && value.observacao_gerencial != '') ? value.observacao_gerencial : '')+'"></textarea>'+
+                        '               <textarea type="text" id="ativ_observacao_gerencial" '+(value ? '' : 'oninput="checkboxAnotacoesProcessoAtiv(this);"')+' style="width: 97%;" data-key="observacao_gerencial" value="'+((value && value.observacao_gerencial !== null && value.observacao_gerencial != '') ? value.observacao_gerencial : '')+'"></textarea>'+
                         ''+($('#ifrArvore').length > 0 ? 
                         '               <table style="width: 100%;font-size: 10pt; display:none" id="tableAnotacoesProcessoAtiv">'+
                         '                   <tbody>'+
@@ -9249,7 +9312,7 @@ function saveAtividadeFull(id_demanda = 0) {
                         '                            <label for="ativ_observacao_gerencial"><i class="iconPopup iconSwitch fas fa-comment-alt cinzaColor"></i>'+__.Observacao+' '+__.Gerencial+':</label>'+
                         '                        </td>'+
                         '                        <td colspan="3" style="text-align: left;">'+
-                        '                            <textarea type="text" id="ativ_observacao_gerencial" '+(value ? '' : 'oninput="checkboxAnotacoesProcessoAtiv(this)"')+' style="width: 97%;" data-key="observacao_gerencial" value="'+((value && value.observacao_gerencial !== null && value.observacao_gerencial != '') ? value.observacao_gerencial : '')+'"></textarea>'+
+                        '                            <textarea type="text" id="ativ_observacao_gerencial" '+(value ? 'oninput="userTyped(this);"' : 'oninput="checkboxAnotacoesProcessoAtiv(this);userTyped(this);"')+' style="width: 97%;" data-key="observacao_gerencial" value="'+((value && value.observacao_gerencial !== null && value.observacao_gerencial != '') ? value.observacao_gerencial : '')+'"></textarea>'+
                         ''+($('#ifrArvore').length > 0 ? 
                         '                               <table style="width: 100%;font-size: 10pt; display:none" id="tableAnotacoesProcessoAtiv">'+
                         '                                   <tbody>'+
@@ -9873,7 +9936,7 @@ function completeAtividade(id_demanda, confirmeBox = false) {
                                     : moment().format(config_unidade.hora_format);
                                     // console.log(value.data_entrega, dadosIfrArvore, dadosIfrArvore.data_document);
                 var dataDistribuicao = moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
-                var inputAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`].{sigla_unidade: sigla_unidade, id_unidade: id_unidade, dias_planejado: dias_planejado, tempo_pactuado: tempo_pactuado, complexidade: config.complexidade, etiqueta: config.etiqueta.lista, tipo_processo: config.tipo_processo, desativa_produtividade: config.desativa_produtividade} | [0]");
+                var inputAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`].{sigla_unidade: sigla_unidade, id_unidade: id_unidade, dias_planejado: dias_planejado, tempo_pactuado: tempo_pactuado, complexidade: config.complexidade, etiqueta: config.etiqueta.lista, tipo_processo: config.tipo_processo, desativa_produtividade: config.desativa_produtividade, observacao_gerencial: config.observacao_gerencial} | [0]");
                     inputAtiv = (inputAtiv !== null) ? "<input type='hidden' id='ativ_id_atividade' data-key='id_atividade' data-param='id_atividade' data-config='"+JSON.stringify(inputAtiv)+"' value='"+value.id_atividade+"'>" : '';
                 var inputUser = jmespath.search(arrayConfigAtividades.planos, "[?id_user==`"+value.id_user+"`].{id_plano: id_plano, sigla_unidade: sigla_unidade, nome_modalidade: nome_modalidade, carga_horaria: carga_horaria} | [0]");
                     inputUser = (inputUser !== null) ? "<input type='hidden' id='ativ_id_user' data-key='id_user' data-param='id_user' data-config='"+JSON.stringify(inputUser)+"' value='"+value.id_user+"'>" : '';
@@ -10161,8 +10224,10 @@ function getPausasAtividadeCalc(pause_lista) {
     var data_fim = _parent.find('#ativ_data_entrega');
     var tempo_despendido = _parent.find('#ativ_tempo_despendido');
     var tempo_pausado = _parent.find('#ativ_tempo_pausado');
+    var carga_horaria_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.carga_horaria_padrao");
+        carga_horaria_padrao = (carga_horaria_padrao == null) ? 8 : carga_horaria_padrao;
     var config_user = (user.is('select')) ? user.find('option:selected').data('config') : user.data('config');
-        config_user = (typeof config_user !== 'undefined') ? config_user : {carga_horaria: 8};
+        config_user = (typeof config_user !== 'undefined') ? config_user : {carga_horaria: carga_horaria_padrao};
     var config_unidade = getBoxConfigDadosUnidade(_parent);
 
     var config_user_perfil = (arrayConfigAtividades.perfil.hasOwnProperty('config') && arrayConfigAtividades.perfil.config !== null) ? arrayConfigAtividades.perfil.config : false;
@@ -12414,13 +12479,15 @@ function updateTempoTrabalhoAtiv(this_) {
     var fim = _parent.find('input[data-type="fim"]');
     var atividade = _parent.find('#ativ_id_atividade');
     var config_atividade = (typeof atividade.data('config') !== 'undefined') ? atividade.data('config') : false;
+    var carga_horaria_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.carga_horaria_padrao");
+        carga_horaria_padrao = (carga_horaria_padrao == null) ? 8 : carga_horaria_padrao;
 
     if (config_atividade && typeof config_atividade.desativa_produtividade !== 'undefined' && config_atividade.hasOwnProperty('desativa_produtividade') && config_atividade.desativa_produtividade) {
         var ativ_tempo_pactuado = config_atividade.tempo_pactuado;
         tempo.val(ativ_tempo_pactuado).data('tempo-decimal',ativ_tempo_pactuado).data('tempo-geral',ativ_tempo_pactuado);
     } else {
         var config_user = (user.is('select')) ? user.find('option:selected').data('config') : user.data('config');
-            config_user = (typeof config_user !== 'undefined') ? config_user : {carga_horaria: 8};
+            config_user = (typeof config_user !== 'undefined') ? config_user : {carga_horaria: carga_horaria_padrao};
         var config_unidade = getBoxConfigDadosUnidade(_parent);
 
         var config_user_perfil = (arrayConfigAtividades.perfil.hasOwnProperty('config') && arrayConfigAtividades.perfil.config !== null) ? arrayConfigAtividades.perfil.config : false;
@@ -12589,6 +12656,7 @@ function getOptionsSelectAtiv(arrayAtiv, value, tab) {
                             recalcula_prazo: recalcula_prazo,
                             desativa_produtividade: desativa_produtividade,
                             modalidades_atividade: modalidades_atividade,
+                            observacao_gerencial: v.config.observacao_gerencial,
                             homologado: v.homologado,
                             etiqueta: (v.config != null && typeof v.config.etiquetas !== 'undefined' ? $.map(v.config.etiquetas,function(v){ return v[0] }) : []),
                             checklist: (v.config != null && typeof v.config.checklist !== 'undefined' ? $.map(v.config.checklist,function(v){ return v[0] }) : []),
@@ -12648,6 +12716,17 @@ function changeAtivSelect(this_) {
     if (_parent.find('#ativ_id_user').find('optgroup').length > 0) {
         disableOptGroupUser(this_);
     }
+
+    var ativ_observacao_gerencial = _parent.find('#ativ_observacao_gerencial');
+    if (typeof config !== 'undefined' && typeof config.observacao_gerencial !== 'undefined' && config.observacao_gerencial !== null && (typeof ativ_observacao_gerencial.data('user-typed') !== 'undefined' || !ativ_observacao_gerencial.data('user-typed'))) {
+        ativ_observacao_gerencial.val(config.observacao_gerencial);
+        if (ativ_observacao_gerencial.is(':hidden')) {
+            _parent.find('.moreInfoBoxAtiv').trigger('click');
+        }
+    } else if (ativ_observacao_gerencial.data('user-typed') !== true) {
+        ativ_observacao_gerencial.val('');
+    }
+    console.log(config.observacao_gerencial, ativ_observacao_gerencial.data('user-typed'));
 
     if (typeof config !== 'undefined' && typeof config.recalcula_prazo !== 'undefined' && config.recalcula_prazo && !inputRecalcPrazo.is(':checked') && inputRecalcPrazo.data('mode-insert') == 'auto') {
         _parent.find('#ativ_recalcula_prazo').trigger('click');
@@ -12978,6 +13057,14 @@ function rateAtividade(id_demanda = 0, alertAtividade = false) {
                         '                           '+getInfoAtividadeProdutividade(value)+
                         '                           <div style="margin: 15px 0 0 0;">'+getTagTempoPactuadoAtiv(value)+'</div>'+
                         '                           <div style="margin: 5px 0 0 5px;">'+getTagTempoDespendidoAtiv(value, false)+'</div>'+
+                        (checkCapacidade('variation_atividade') ? 
+                        '                           <span class="info_dates_extend" style="margin-top: 10px;display: block;">'+
+                        '                               <a class="newLink dateExtend" onclick="variationAtividade('+value.id_demanda+')" style="font-size: 9pt;cursor: pointer;">'+
+                        '                                  <i class="fas fa-'+(value.tempo_pactuado == 0 ? 'clipboard-list' : 'graduation-cap')+' azulColor" style="padding-right: 3px;"></i>'+
+                        '                                  Alterar '+__.complexidade+
+                        '                               </a>'+
+                        '                           </span>'+
+                        '' : '')+
                         '                       </td>'+
                         '                   <tr>'+
                         '                       <td colspan="2">'+
@@ -13660,8 +13747,8 @@ function getServersPro() {
                     userHashAtiv = perfilLoginAtiv.KEY_USER;
                     localStorageStorePro('configBasePro_atividades', perfilLoginAtiv);
                     initAtividades();
-                    console.log('INITI');
-                } else {
+                    // console.log('INITI');
+                // } else {
                     // cleanAtivParams(false);
                 }
             });
