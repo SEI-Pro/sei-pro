@@ -491,6 +491,15 @@ function loadLocalFilePro() {
             fr.readAsText(files.item(0));
     });
 }
+function htmlIconFavorites(id_procedimento, float = false) {
+    var storeFavorites = getStoreFavoritePro()['favorites'];
+    var dataFavorites = (jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
+    var floatStyle = (float) ? 'float: '+float+';' : '';
+    var iconStar = (dataFavorites == '') 
+                    ? '<i title="Adicionar Processo aos Favoritos" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'add\')" class="far fa-star iconFavoritePro" style="font-size: 12pt; margin: 0 5px; color: #666; cursor: pointer; '+floatStyle+'"></i>'
+                    : '<i title="Remover Processo dos Favoritos" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'remove\')" class="fas fa-star starGold iconFavoritePro" style="font-size: 12pt; margin: 0 5px; cursor: pointer; -webkit-text-fill-color: #FED35B; -webkit-text-stroke-color: rgb(216 162 22); -webkit-text-stroke-width: 2px; '+floatStyle+'"></i>';
+    return iconStar;
+}
 function resizeWinArvore(widthArvore) {
     var indent = 10; // reduz 10 pixel a largura do visualizador para compensar a barra divisoria existente entre a arvore e o visualizador
     var widthConteudo = $('#divConteudo').width(); // capta o tamanho total da janela do SEI (janela interna)
@@ -1824,7 +1833,7 @@ function calculeDatesDuration(date, dateTo, countdays) {
     var day_formated = (diff_d).toLocaleString('pt-BR');
     var diff_ = (diff < 0) ? diff*-1 : moment(date).diff(moment(dateTo).add(-1,'d'), 'milliseconds');
     var duration = moment.duration(diff_, 'milliseconds');
-        duration = (typeof duration !== 'undefined' && duration !== null) ? duration.format(calculeDatesDurationTemplate) : '';
+        duration = (typeof duration !== 'undefined' && duration !== null && typeof duration.format !== 'undefined') ? duration.format(calculeDatesDurationTemplate) : '';
     var day_txt = (diff_d >= -1 && diff_d <= 1) ? 'dia' : 'dias';
     var duration_ = (diff == 0) ? 'hoje' : (diff < 0) ? (duration.trim() == 'hoje') ? moment(date).fromNow() : duration.trim()+' atr\u00E1s' : 'em '+duration;
         duration_ = (countdays && diff_d >= 1) ? day_formated+' '+day_txt+' atr\u00E1s' : duration_;

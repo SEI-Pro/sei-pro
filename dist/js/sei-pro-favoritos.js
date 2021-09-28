@@ -576,15 +576,6 @@ function appendIconFavorites() {
     ifrArvore.find('.iconFavoritePro').remove();
     ifrArvore.find('#topmenu a[target="ifrVisualizacao"]').eq(0).after(iconStar);    
 }
-function htmlIconFavorites(id_procedimento, float = false) {
-    var storeFavorites = getStoreFavoritePro()['favorites'];
-    var dataFavorites = (jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
-    var floatStyle = (float) ? 'float: '+float+';' : '';
-    var iconStar = (dataFavorites == '') 
-                    ? '<i title="Adicionar Processo aos Favoritos" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'add\')" class="far fa-star iconFavoritePro" style="font-size: 12pt; margin: 0 5px; color: #666; cursor: pointer; '+floatStyle+'"></i>'
-                    : '<i title="Remover Processo dos Favoritos" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'remove\')" class="fas fa-star starGold iconFavoritePro" style="font-size: 12pt; margin: 0 5px; cursor: pointer; -webkit-text-fill-color: #FED35B; -webkit-text-stroke-color: rgb(216 162 22); -webkit-text-stroke-width: 2px; '+floatStyle+'"></i>';
-    return iconStar;
-}
 function actFavoritePro(this_, mode) {
     if (this_) {
         var _this = $(this_);

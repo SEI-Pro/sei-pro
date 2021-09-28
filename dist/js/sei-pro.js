@@ -681,7 +681,7 @@ function insertDivPanel() {
 }
 function initSortDivPanel(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof $('#panelHomePro').sortable !== 'undefined' && typeof getOptionsPro !== 'undefined' && typeof setSortDivPanel !== 'undefined') { 
+    if (typeof $('#panelHomePro').sortable !== 'undefined' && typeof getOptionsPro !== 'undefined' && typeof setSortDivPanel !== 'undefined' && typeof $().moveTo !== 'undefined') { 
         insertDivPanelControleProc();
         setSortDivPanel();
     } else {

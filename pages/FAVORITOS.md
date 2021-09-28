@@ -10,19 +10,13 @@ Para que você possa favoritar seus processos.
 
 ## 1. Adicionando Etiquetas
 
-Essa funcionalidade adiciona ao processo favorito uma etiqueta.
+Essa funcionalidade adiciona ao processo favorito uma etiqueta, podendo ser personalizada com cores e ícones.
 
 > ![Tela Etiqueta](../img/tela-etiqueta.gif) 
 
-## 1.1 Adicionando Cores e Icones em Etiquetas
-
-Essa funcionalidade adiciona cores e ícones em Etiquetas de um processo favorito.
-
-> ![Tela Etiqueta](../img/tela-etiqueta-cores-icones.gif ) 
-
 ## 2. Adicionando Mapas
 
-Essa funcionalidade adiciona uma localização no mapa do processo.
+Essa funcionalidade adicionar e editar uma localização no mapa atravez do marcador ou fazendo uma busca por um lugar consolidade especifico.  
 
 > ![Tela Mapa](../img/tela-mapa.gif) 
 
@@ -44,6 +38,10 @@ São duas funcionalidades uma delas altera a ordem do processo favorito e a outr
 Essa funcionalidade adiciona um prazo com uma data especifica ao processo.
 
 > ![Tela Prazo](../img/tela-prazo.gif) 
+
+- [Edição Avançada] Essa funcionalidade permite uma edição avançada com várias funções tais como: Contar o tempo decorrido do processo a partir: Da data de assinatura de um documento, De uma data específica,Data referencial; Visualizar o resultado: Em tempo relativo, Em número de dias. Sinalizar a partir: Da assinatura de um novo documento. 
+
+> ![Tela Baixando](../img/tela-edicao-avancada-prazo.gif) 
  
 ## 6. Criando Categorias
 
