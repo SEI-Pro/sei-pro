@@ -326,6 +326,7 @@ function initReplaceSelectAll(TimeOut = 12000) {
                 placeholder_text_single: ' ',
                 no_results_text: 'Nenhum resultado encontrado'
             });
+            chosenReparePosition();
         }
     } else {
         if (typeof $().chosen === 'undefined') { 

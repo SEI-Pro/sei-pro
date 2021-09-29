@@ -1324,6 +1324,9 @@ i.iconSwitch {
 .tableAtividades th[data-filter-type="action"] {
     width: 180px;
 }
+.tableAtividades th[data-filter-type="proc"] {
+    min-width: 210px;
+}
 #tabelaAtivPanel .tableAtividades.tablesorter-default thead tr th.ui-draggable-dragging {
     z-index: 999;
     background-color: #6f6f6f !important;
@@ -1567,6 +1570,9 @@ table.moreInfoBox td:first-child,
     position: relative;
     box-shadow: rgb(0 0 0 / 10%) 0px 4px 6px;
 }
+.kanban-container .kanban-item:hover {
+    box-shadow: rgb(0 0 0 / 20%) 0px 4px 6px 5px;
+}
 .kanban-container .kanban-drag {
     background: #f4f5f5;
     border-radius: 10px;
@@ -1682,7 +1688,18 @@ table.moreInfoBox td:first-child,
     color: #717171;
     padding: 5px 0;
 }
-
+.kanban-item:hover .kanban-actions {
+    display: block;
+}
+.kanban-item .kanban-actions {
+    display: none;
+}
+.kanban-item .kanban-title-card {
+    font-size: 12pt;
+    margin: -6px 0 5px 0;
+    font-family: Calibri;
+    font-weight: 100;
+}
 .filterGanttTag {
     text-align: right;
     margin-bottom: 10px;
@@ -2855,6 +2872,7 @@ div.infraTooltipTexto i.far {
     min-height: 50px;
     overflow: inherit;
 }
+/*
 #frmEstatisticas .chosen-container-single {
     left: 7%;
 }
@@ -2875,6 +2893,7 @@ div.infraTooltipTexto i.far {
 #frmAcompanhamentoUnidade .chosen-container-single {
     left: 15%;
 }
+*/
 div#chartAtivActions .chosen-container {
     float: right;
     margin-left: 20px;

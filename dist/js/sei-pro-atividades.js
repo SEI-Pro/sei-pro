@@ -1439,17 +1439,44 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     var htmlTableAtividades = (userHashAtiv == '') ? '<div class="g-signin2" data-onsuccess="onSignIn"></div>' : '<div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div>';
         updateTableProcessos();
     if (storeAtividades.length > 0 && (!getOptionsPro('panelHomeView') || getOptionsPro('panelHomeView') == 'Atividade')) {
+
+        function getTdRow(type) {
+            var html = '';
+            if (type == 'proc') {
+                html =  '           <th class="tituloControle" data-column-order="0" data-filter-type="proc">Processo / Requisi\u00E7\u00E3o</th>';
+            } else if (type == 'date') {
+                html =  '           <th class="tituloControle tituloFilter" data-column-order="1" data-filter-type="date">Status</th>';
+            } else if (type == 'action') {
+                html =  '           <th class="tituloControle tituloFilter" data-column-order="2" data-filter-type="action">A\u00E7\u00E3o</th>';
+            } else if (type == 'user') {
+                html =  '           <th class="tituloControle tituloFilter" data-column-order="3" data-filter-type="user">Respons\u00E1vel e Tempo Pactuado</th>';
+            } else if (type == 'etiqueta') {
+                html =  '           <th class="tituloControle tituloFilter" data-column-order="4" data-column-order="0" data-filter-type="etiqueta">Etiqueta</th>';
+            } else if (type == 'desc') {
+                html =  '           <th class="tituloControle" data-column-order="5" style="width: 30%;" data-filter-type="desc">'+__.Demanda+' e Assunto</th>';
+            }
+            return html;
+        }
+        var arrayColumnSort = (getOptionsPro('panelAtividadesViewTableSort')) 
+            ? getOptionsPro('panelAtividadesViewTableSort') 
+            : [
+                "proc",
+                "date",
+                "action",
+                "user",
+                "etiqueta",
+                "desc"
+            ];
+        var htmlColumnsAtividades = $.map(arrayColumnSort, function(v){
+                                        return getTdRow(v);
+                                    }).join('');
+
         htmlTableAtividades =    '<table class="tableInfo tableZebra tableFollow tableAtividades" data-tabletype="atividades">'+
                                 '   <caption class="infraCaption" style="text-align: left; margin-top: 10px;">'+countAtividade+'</caption>'+
                                 '   <thead>'+
                                 '       <tr class="tableHeader">'+
                                 '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck"></a></th>'+
-                                '           <th class="tituloControle" data-column-order="0" data-filter-type="proc" style="min-width: 210px;">Processo / Requisi\u00E7\u00E3o</th>'+
-                                '           <th class="tituloControle tituloFilter" data-column-order="1" data-filter-type="date">Status</th>'+
-                                '           <th class="tituloControle tituloFilter" data-column-order="2" data-filter-type="action" style="width: 150px;">A\u00E7\u00E3o</th>'+
-                                '           <th class="tituloControle tituloFilter" data-column-order="3" data-filter-type="user">Respons\u00E1vel e Tempo Pactuado</th>'+
-                                '           <th class="tituloControle tituloFilter" data-column-order="4" data-column-order="0" data-filter-type="etiqueta">Etiqueta</th>'+
-                                '           <th class="tituloControle" data-column-order="5" style="width: 30%;" data-filter-type="desc">'+__.Demanda+' e Assunto</th>'+
+                                '           '+htmlColumnsAtividades+
                                 '       </tr>'+
                                 '   </thead>'+
                                 '   <tbody>';
@@ -1698,44 +1725,72 @@ function getRowsPanelAtividades(storeAtividades, target) {
         var ativEditHtml = (iconAtivEditHtml && iconAtivEditHtml.hasOwnProperty('icon')) ? '<a class="newLink" style="font-size: 9pt;" onclick="actionsAtividade('+value.id_demanda+')"><i class="'+actionsAtividade(value.id_demanda, 'icon').icon+'" style="font-size: 100%;"></i> '+actionsAtividade(value.id_demanda, 'icon').name+'</a>' : '';
         var checklistHtml = (value.checklist && value.checklist.length > 0) ? getInfoAtividadeChecklist(value, 'icon') : '';
 
+        function getTdRow(type) {
+            var html = '';
+            if (type == 'proc') {
+                html =  '           <td align="left">'+
+                        '               '+getHtmlLinkRequisicao(value)+
+                        '           </td>';
+            } else if (type == 'date') {
+                html =  '           <td align="left">'+
+                        '               <span class="info_dates_fav">'+datesAtivHtml+'</span>'+
+                        '           </td>';
+            } else if (type == 'action') {
+                html =  '           <td align="left">'+
+                        '               '+ativEditHtml+
+                        '           </td>';
+            } else if (type == 'user') {
+                html =  '           <td align="left">'+
+                        '               <span class="info_tags_follow info_tags_user">'+getHtmlEtiquetaUnidade(value)+'</span>'+tagPacto+timerAtiv+
+                        '               '+checklistHtml+
+                        '           </td>';
+            } else if (type == 'etiqueta') {
+                html =  '           <td align="left" class="tdfav_tags '+((tagsAtivHtml.trim() == '' && checkCapacidade('edit_etiqueta') ) ? 'info_tags_follow_empty' : '')+'" data-etiqueta-mode="ativ">'+
+                        '               <span class="info_tags_follow">'+tagsAtivHtml+
+                        '               </span>'+(!checkCapacidade('edit_etiqueta') ? '' : 
+                        '               <span class="info_tags_follow_txt" style="display:none">'+
+                        '                   <input value="'+tagsAtiv+'" class="atividadeTagsPro">'+
+                        '               </span>'+
+                        '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                        '               <a class="newLink followLink followLinkTags followLinkTagsAdd" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\'Adicionar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i></a>')+
+                        '           </td>';
+            } else if (type == 'desc') {
+                html =  '           <td class="tdfav_desc">'+
+                        '               <div style="color: #666;">'+(value.nome_atividade ? value.nome_atividade : '')+'</div>'+
+                        '               <div>'+
+                        '                   '+(!checkCapacidade('edit_assunto') ? '' : '<span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'ativ\')" onkeypress="keyFollowDesc(event, \'ativ\')" value="'+value.assunto+'"></span>')+
+                        '                   <span class="info" style="font-weight: bold; display: inline-block; padding-top: 5px;">'+value.assunto+'</span>'+
+                        '                   '+(!checkCapacidade('edit_assunto') ? '' : '<a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'ativ\')" onmouseover="return infraTooltipMostrar(\'Editar '+__.assunto+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>')+
+                        '               </div>'+
+                        (value && value.observacao_gerencial !== null && value.observacao_gerencial != '' ? 
+                        '               <div class="inlineAlert"><i class="fas fa-comment-alt" style="color: #7baaf7;"></i> '+value.observacao_gerencial+'</div>'+
+                        '' : '')+
+                        (value && value.observacao_tecnica !== null && value.observacao_tecnica != '' ? 
+                        '               <div class="inlineAlert"><i class="fas fa-reply-all" style="color: #7baaf7;"></i> '+value.observacao_tecnica+'</div>'+
+                        '' : '')+
+                        '           </td>';
+            }
+            return html;
+        }
+        var arrayColumnSort = (getOptionsPro('panelAtividadesViewTableSort')) 
+            ? getOptionsPro('panelAtividadesViewTableSort') 
+            : [
+                "proc",
+                "date",
+                "action",
+                "user",
+                "etiqueta",
+                "desc"
+            ];
+        var htmlColumnsAtividades = $.map(arrayColumnSort, function(v){
+                                        return getTdRow(v);
+                                    }).join('');
+                                    
         var htmlTableAtividades =   '       <tr data-tagname="SemGrupo" data-index="'+value.id_demanda+'" class="tagTableName_'+tagName_user+' '+tagName_unidade+' '+tagsAtivClass+' '+tagDatesAtivClass+'" style="'+tagsAtivPriority+'">'+
                                     '           <td align="center">'+
-                                    '               <input type="checkbox" onclick="followSelecionarItens(this)" id="atividadePro_'+value.id_demanda+'" name="atividadePro" value="'+value.id_procedimento+'"></td>'+
-                                    '           <td align="left">'+getHtmlLinkRequisicao(value)+
+                                    '               <input type="checkbox" onclick="followSelecionarItens(this)" id="atividadePro_'+value.id_demanda+'" name="atividadePro" value="'+value.id_procedimento+'">'+
                                     '           </td>'+
-                                    '           <td align="left">'+
-                                    '               <span class="info_dates_fav">'+datesAtivHtml+'</span>'+
-                                    '           </td>'+
-                                    '           <td align="left">'+
-                                    '               '+ativEditHtml+
-                                    '           </td>'+
-                                    '           <td align="left">'+
-                                    '               <span class="info_tags_follow info_tags_user">'+getHtmlEtiquetaUnidade(value)+'</span>'+tagPacto+timerAtiv+
-                                    '               '+checklistHtml+
-                                    '           </td>'+
-                                    '           <td align="left" class="tdfav_tags '+((tagsAtivHtml.trim() == '' && checkCapacidade('edit_etiqueta') ) ? 'info_tags_follow_empty' : '')+'" data-etiqueta-mode="ativ">'+
-                                    '               <span class="info_tags_follow">'+tagsAtivHtml+
-                                    '               </span>'+(!checkCapacidade('edit_etiqueta') ? '' : 
-                                    '               <span class="info_tags_follow_txt" style="display:none">'+
-                                    '                   <input value="'+tagsAtiv+'" class="atividadeTagsPro">'+
-                                    '               </span>'+
-                                    '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
-                                    '               <a class="newLink followLink followLinkTags followLinkTagsAdd" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\'Adicionar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i></a>')+
-                                    '           </td>'+
-                                    '           <td class="tdfav_desc">'+
-                                    '               <div style="color: #666;">'+(value.nome_atividade ? value.nome_atividade : '')+'</div>'+
-                                    '               <div>'+
-                                    '                   '+(!checkCapacidade('edit_assunto') ? '' : '<span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'ativ\')" onkeypress="keyFollowDesc(event, \'ativ\')" value="'+value.assunto+'"></span>')+
-                                    '                   <span class="info" style="font-weight: bold; display: inline-block; padding-top: 5px;">'+value.assunto+'</span>'+
-                                    '                   '+(!checkCapacidade('edit_assunto') ? '' : '<a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'ativ\')" onmouseover="return infraTooltipMostrar(\'Editar '+__.assunto+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>')+
-                                    '               </div>'+
-                                    (value && value.observacao_gerencial !== null && value.observacao_gerencial != '' ? 
-                                    '               <div class="inlineAlert"><i class="fas fa-comment-alt" style="color: #7baaf7;"></i> '+value.observacao_gerencial+'</div>'+
-                                    '' : '')+
-                                    (value && value.observacao_tecnica !== null && value.observacao_tecnica != '' ? 
-                                    '               <div class="inlineAlert"><i class="fas fa-reply-all" style="color: #7baaf7;"></i> '+value.observacao_tecnica+'</div>'+
-                                    '' : '')+
-                                    '           </td>'+
+                                    '           '+htmlColumnsAtividades+
                                     '       </tr>';
         if (datesAtivHtml != '') {
             var iconDateAtiv = ($(datesAtivHtml).find('.dateBoxIcon').length > 0) ? $(datesAtivHtml).find('.dateBoxIcon').attr('onclick', 'actionsAtividade('+value.id_demanda+')')[0].outerHTML : '';
@@ -6023,6 +6078,7 @@ function configPessoal() {
     var stateAtivDataSub = ( !verifyOptionsPro('panelAtividadesViewSubordinada') || getOptionsPro('panelAtividadesViewSubordinada') ) ? 'checked' : '';
     // var stateAtivDataSyncUnidade = ( getOptionsPro('panelAtividadesViewSyncUnidade') ) ? 'checked' : '';
     var statePanelSortPro = ( getOptionsPro('panelSortPro') ) ? 'checked' : '';
+    var statePanelSortColumnsPro = ( getOptionsPro('panelSortColumnsPro') ) ? 'checked' : '';
     var configBaseSelected = ( getOptionsPro('configBaseSelectedPro_atividades') ) ? getOptionsPro('configBaseSelectedPro_atividades') : 0;
     var configBaseProAtiv = ( localStorageRestorePro('configBasePro') != null ) ? localStorageRestorePro('configBasePro') : false;
         configBaseProAtiv = (configBaseProAtiv) ? jmespath.search(configBaseProAtiv, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']") : configBaseProAtiv;
@@ -6040,6 +6096,15 @@ function configPessoal() {
                     '           <div class="onoffswitch" style="float: right;">'+
                     '               <input type="checkbox" onchange="changePanelSortPro(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelSortPro" tabindex="0" '+statePanelSortPro+'>'+
                     '               <label class="onoffswitch-label" for="panelSortPro"></label>'+
+                    '           </div>'+
+                    '       </td>'+
+                    '   </tr>'+
+                    '   <tr style="height: 40px;">'+
+                    '       <td><i class="iconPopup fas fa-arrows-alt-h cinzaColor"></i> Ordenar colunas do painel de '+__.demandas+' arrastando e soltando</td>'+
+                    '       <td>'+
+                    '           <div class="onoffswitch" style="float: right;">'+
+                    '               <input type="checkbox" onchange="changePanelSortColumnsPro(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelSortColumnsPro" tabindex="0" '+statePanelSortColumnsPro+'>'+
+                    '               <label class="onoffswitch-label" for="panelSortColumnsPro"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
@@ -6115,6 +6180,7 @@ function saveConfigPersonalUser(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.ui-tabs-panel');
     var ordenar_paineis = _parent.find('#panelSortPro').is(':checked');
+    var ordenar_colunas = _parent.find('#panelSortColumnsPro').is(':checked');
     var visualiza_enviadas = _parent.find('#panelAtividadesViewSend').is(':checked');
     var visualiza_somente_suas = _parent.find('#panelAtividadesViewSelf').is(':checked');
     var visualiza_subordinadas = _parent.find('#panelAtividadesViewSub').is(':checked');
@@ -6122,6 +6188,7 @@ function saveConfigPersonalUser(this_) {
     var horario_fim = _parent.find('#distribuicao_horario_util_fim').val();
     var config = {
         ordenar_paineis: ordenar_paineis,
+        ordenar_colunas: ordenar_colunas,
         visualiza_enviadas: visualiza_enviadas,
         visualiza_somente_suas: visualiza_somente_suas,
         visualiza_subordinadas: visualiza_subordinadas,
@@ -7631,7 +7698,7 @@ function getKanbanItem(value) {
                     ? '<span class="inlineAlert"><i class="fas fa-reply-all" style="color: #7baaf7;"></i> '+value.observacao_tecnica+'</span>'
                     : '';
 
-    var pinBoard = '<span style="float: right;margin: -5px -10px 0 0;" class="kanban-pinboard"><a class="newLink info_noclick '+(getPinKanbanItem(value.id_demanda) ? 'newLink_active' : '')+'" onclick="pinKanbanItens(this, '+value.id_demanda+')" onmouseover="return infraTooltipMostrar(\''+(getPinKanbanItem(value.id_demanda) ? 'Remover do topo' : 'Fixar no topo')+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-thumbtack cinzaColor"></i></a></span>';
+    var pinBoard = '<span style="float: right;margin: -5px -10px 0 0;" class="kanban-pinboard info_noclick"><a class="newLink info_noclick '+(getPinKanbanItem(value.id_demanda) ? 'newLink_active' : '')+'" onclick="pinKanbanItens(this, '+value.id_demanda+')" onmouseover="return infraTooltipMostrar(\''+(getPinKanbanItem(value.id_demanda) ? 'Remover do topo' : 'Fixar no topo')+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-thumbtack cinzaColor"></i></a></span>';
                     
     var checklist = getInfoAtividadeChecklist(value, 'actions');
 
@@ -7639,8 +7706,8 @@ function getKanbanItem(value) {
     var item = {
         id: "_id_"+value.id_demanda,
         title:  pinBoard+
-                '<div class="kanban_cointainer">'+
-                '   <div>'+(value.assunto.length > 50 ? value.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : value.assunto)+'</div>'+
+                '<div class="kanban-content">'+
+                '   <div class="kanban-title-card">'+(value.assunto.length > 50 ? value.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : value.assunto)+'</div>'+
                 '   <sub title="'+getTitleDialogBox(value, true)+'">'+
                 '   <div style="margin: 0 0 8px 0;" class="info_noclick">'+getHtmlLinkRequisicao(value, true)+'</div>'+
                 '   '+getTitleDialogBox(value)+
@@ -7650,11 +7717,13 @@ function getKanbanItem(value) {
                 '   '+(value.etiquetas !== null && value.etiquetas.length > 0 ? '<span class="info_tags_follow" style="float: right;">'+$.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i, 'ativ'))[0].outerHTML }).join('')+'</span>' : '')+
                 '   <span class="info_tags_follow">'+getHtmlEtiquetaUnidade(value)+tagPacto+'</span>'+
                 '   <span class="info_dates_fav" style="display: block; margin: 10px 0;">'+timerAtiv+tagDate+'</span>'+
-                '   '+btnActionAtiv+
-                '   '+btnPause+
-                '   '+btnExtend+
-                '   '+btnVariation+
-                '   '+infoAtiv+
+                '   <div class="kanban-actions">'+
+                '       '+btnActionAtiv+
+                '       '+btnPause+
+                '       '+btnExtend+
+                '       '+btnVariation+
+                '       '+infoAtiv+
+                '   </div>'+
                 '   '+checklist+
                 '</div>',
         click: function(el) {
@@ -8219,6 +8288,7 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
             }
         }).on("sortEnd", function (event, data) {
             checkboxRangerSelectShift();
+            repareStickColumnsSortable(tabelaAtiv, true);
         }).on("filterEnd", function (event, data) {
             var caption = $(this).find("caption").eq(0);
             var tx = caption.text();
@@ -8357,7 +8427,9 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
                 checkboxRangerSelectShift();
             }
             forcePlaceHoldChosen();
-            // dragColumnTable(tabelaAtiv);
+            if (getOptionsPro('panelSortColumnsPro')) {
+                dragColumnTable(tabelaAtiv);
+            }
         }, 500);
 
         initPanelResize('#atividadesProDiv .tabelaPanelScroll', 'atividadesPro');

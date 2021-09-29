@@ -1031,7 +1031,7 @@ function checkFileRemoteFav(mode, data = false) {
                 setTimeout(function(){
                     statusLoadRemoteFile = true;
                 }, 5000);
-                console.log('getRemoteFileFav');
+                console.log('getRemoteFileFav', datetime_server, datetime_local.add(1,'minutes'), datetime_server > datetime_local.add(1,'minutes'));
             }
         }
     }

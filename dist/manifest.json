@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "0.1.26.23",
+  "version": "0.1.26.24",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro/",
   "icons": { "16": "icons/lab/icon-16.png",

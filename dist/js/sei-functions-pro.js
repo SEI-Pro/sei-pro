@@ -288,7 +288,6 @@ function dragColumnTable(elemTable) {
 
         function processTableHeaderRows(index, element) {
             var row = {}
-
             row.tr = $(element);
             row.drag = row.tr.find('th:eq(' + head.dragIndex + ')');
             row.drop = row.tr.find('th:eq(' + head.dropIndex + ')');
@@ -302,7 +301,6 @@ function dragColumnTable(elemTable) {
         $(this).closest('table').find('tbody > tr').each(processRows);
         function processRows(index, element) {
             var row = {};
-
             row.tr = $(element);
             row.drag = row.tr.find('td:eq(' + head.dragIndex + ')');
             row.drop = row.tr.find('td:eq(' + head.dropIndex + ')');
@@ -312,7 +310,56 @@ function dragColumnTable(elemTable) {
                 row.drag.detach().insertBefore(row.drop);
             }
         }
+        setOptionsPro('panelAtividadesViewTableSort', getColumnsSortable(elemTable));
+        setTimeout(function(){ 
+            repareStickColumnsSortable(elemTable, true);
+        }, 500);
     }
+    repareStickColumnsSortable(elemTable);
+    setTimeout(function(){ 
+        if (elemTable.find('thead tr').is(':hidden')) {
+            repareStickColumnsSortable(elemTable, true);
+        }
+    }, 500);
+}
+function repareStickColumnsSortable(elemTable, refresh = false) {
+    elemTable.find('thead tr.headerStick').remove();
+    var headerStick = elemTable.find('thead tr.tableHeader').clone(true, true).addClass('headerStick').hide();
+    elemTable.find('thead').prepend(headerStick);
+    elemTable.find('thead tr.headerStick th').not('.sorter-false').removeAttr('style').removeClass('ui-draggable-dragging').find('.fa-arrows-alt-h').remove();
+
+
+    var tableHeader = elemTable.find('thead tr.tableHeader').not('.headerStick');
+        tableHeader.show().find('.fa-arrows-alt-h').remove();
+        tableHeader.find('th.tablesorter-header').not('.sorter-false').find('.tablesorter-header-inner').append('<i class="fas fa-arrows-alt-h" style="float: right;right: 20px;position: absolute;"></i>');
+    var headerStick = elemTable.find('thead tr.headerStick');
+
+    $('#tabelaAtivPanel').unbind('scroll').scroll(function() {
+        if (typeof $(this).offset() !== 'undefined' && $(this).offset() !== null && typeof headerStick.offset() !== 'undefined' && headerStick.offset() !== null) {
+            var wrapperTop = $(this).offset().top-25;
+            var headerTop = headerStick.offset().top;
+            setTimeout(function(){ 
+                if ( headerTop < wrapperTop || headerTop == 0) {
+                    tableHeader.hide();
+                    headerStick.show();
+                } else {
+                    headerStick.hide();
+                    tableHeader.show();
+                }
+            }, 100);
+        }
+    });
+    if (refresh) {
+        setTimeout(function(){ 
+            // $('#tabelaAtivPanel').trigger('scroll');
+        }, 100);
+    }
+}
+function getColumnsSortable(elemTable) {
+    var arrayColumns = elemTable.find('thead tr.tableHeader').not('.headerStick').find('th.tituloControle').not('.sorter-false').map(function(v){
+        return $(this).data('filter-type');
+    }).get();
+    return arrayColumns;
 }
 function initFileSystem() {
     // Allow for vendor prefixes.
@@ -705,6 +752,14 @@ function changePanelSortPro(this_) {
         $('#panelHomePro').sortable('disable');
     }
 }
+function changePanelSortColumnsPro(this_) {
+    var _this = $(this_);
+    if (_this.is(':checked')) {
+        setOptionsPro('panelSortColumnsPro', true);
+    } else {
+        removeOptionsPro('panelSortColumnsPro');
+    }
+}
 function setSortDivPanel() {
     if (getOptionsPro('panelSortPro')) {
         if ($('#panelHomePro').hasClass('ui-sortable')) {
@@ -779,12 +834,30 @@ function initChosenReplace(mode, this_ = false, TimeOut = 9000) {
                 no_results_text: 'Nenhum resultado encontrado'
             });
         }
+        chosenReparePosition();
     } else {
         setTimeout(function(){ 
             initChosenReplace(mode, this_, TimeOut - 100); 
             console.log('Reload initChosenReplace'); 
         }, 500);
     }
+}
+function chosenReparePosition() {
+    // setTimeout(function(){ 
+        $('.chosen-container').each(function(){
+            var id = $(this).attr('id');
+                id = (typeof id !== 'undefined') ? id.replace('_chosen', '') : false;
+            if (id && $('#'+id).css('position') == 'absolute') {
+                var cssElem = {
+                    'position': 'absolute',
+                    'left': $('#'+id).css('left'),
+                    'top': $('#'+id).css('top')
+                }
+                console.log(cssElem);
+                $(this).css(cssElem);
+            }
+        });
+    // }, 500);
 }
 function hideMenuSistemaView() {
     if ($('#divInfraAreaTelaE').length > 0) {
@@ -907,25 +980,26 @@ function updateDadosProcesso(idElement, value) {
         return false;
     }
 }
-function updateDadosArvore(nameLink, idElement, value, idProcedimento) {
+function updateDadosArvore(nameLink, idElement, value, idProcedimento, callback = false) {
     if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && idProcedimento !== null && idProcedimento != 0 ) {
         if ($('#ifrArvore').length == 0) {
             if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
             var url = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento;
             $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
                 var ifrArvore = $('#frmCheckerProcessoPro').contents().find('#ifrArvore');
-                updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore);
+                updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback);
             });
         } else {
             var ifrArvore = $('#ifrArvore');
-            updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore);
+            updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback);
         }
     } else {
         return false;
     }
 }
-function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore) {
+function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback) {
     var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
+        arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
     if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
     var url = jmespath.search(arrayLinksArvore, "[?name=='"+nameLink+"'].url");
     if (typeof url !== 'undefined' && url != '') {
@@ -936,16 +1010,71 @@ function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore) {
             } else {
                 iframe.find('#'+idElement).find('option:contains("'+value+'")').prop('selected',true);
             }
-
-
             $(this).unbind();
-            iframe.find('#btnSalvar, #sbmSalvar').trigger('click');
+            iframe.find('button[type="submit"]').trigger('click');
             // console.log(arrayLinksArvore, url,  nameLink, idElement, value);
+            if (typeof callback === 'function') callback();
         });
     } else {
         return false;
     }
-    
+}
+function automaticActions(type, mode, callback = false) {
+    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
+    if (type == 'anotacao' && mode == 'remove') {
+        updateDadosArvore('Anota\u00E7\u00F5es', 'txaDescricao', '', id_procedimento, callback);
+    } else if (type == 'atribuicao' && mode == 'remove') {
+        updateDadosArvore('Atribuir Processo', 'selAtribuicao', 'null', id_procedimento, callback);
+    } else if (type == 'marcador' && mode == 'remove') {
+        updateDadosArvore('Gerenciar Marcador', 'hdnIdMarcador', '', id_procedimento, callback);
+    }
+}
+function getActionsOnSendProcess() {
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    ifrVisualizacao.find('#frmAtividadeListar').on('submit', function() {
+        var _this = $(this);
+        var _parent = _this.closest('body');
+        var checkMarcador = _parent.find('#chkSinRemoverMarcadores').is(':checked');
+        var checkAtribuicao = _parent.find('#chkSinRemoverAtribuicao').is(':checked');
+
+        var sendAutomaticActions = [];
+            sendAutomaticActions[0] = {name: 'marcador', send: checkMarcador, run: false, index: 0};
+            sendAutomaticActions[1] = {name: 'atribuicao', send: checkAtribuicao, run: false, index: 1};
+            parent.window.sendAutomaticActions = sendAutomaticActions;
+            getAutomaticActions();
+    });
+    htmlBoxActions =    '<span id="divSinRemoveAttributes" style="margin: 0 10px;display: inline-block;">'+
+                        '   <span style="margin: 0 10px;display: inline-block;">'+
+                        '      <input type="checkbox" id="chkSinRemoverMarcadores" name="chkSinRemoverMarcadores" class="infraCheckbox" tabindex="0">'+
+                        '     <label id="lblSinRemoverMarcadores" for="chkSinRemoverMarcadores" accesskey="" class="infraLabelCheckbox">Remover marcadores</label>'+
+                        '   </span>'+
+                        '   <span style="margin: 0 10px;display: inline-block;">'+
+                        '      <input type="checkbox" id="chkSinRemoverAtribuicao" name="chkSinRemoverAtribuicao" class="infraCheckbox" tabindex="0">'+
+                        '     <label id="lblSinRemoverAtribuicao" for="chkSinRemoverAtribuicao" accesskey="" class="infraLabelCheckbox">Remover atribui\u00E7\u00E3o</label>'+
+                        '   </span>'
+                        '</span>';
+    ifrVisualizacao.find('#divSinRemoveAttributes').remove();
+    ifrVisualizacao.find('#divSinRemoverAnotacoes').append(htmlBoxActions);
+}
+function getAutomaticActions() {
+    var arrayAutomatic = parent.window.sendAutomaticActions;
+    if (typeof arrayAutomatic !== 'undefined' && arrayAutomatic !== null && arrayAutomatic.length > 0) {
+        var nextRun = jmespath.search(arrayAutomatic, "[?run==`false`] | [0]");
+            nextRun = (nextRun !== null) ? nextRun : false;
+            if (nextRun) {
+                if (nextRun.send) {
+                    automaticActions(nextRun.name, 'remove', function(){
+                        parent.window.sendAutomaticActions[nextRun.index].run = true;
+                        setTimeout(function(){ 
+                            // console.log(nextRun);
+                            getAutomaticActions();
+                        }, 1000);
+                    });
+                }
+            } else {
+                parent.window.sendAutomaticActions === undefined;
+            }
+    }
 }
 // INICIA O REDIMENSIONAMENTO AUTOMATICO DE IMAGENS NO VISUALIZADOR DE DOCUMENTOS
 function initDocImagemPro() {
@@ -3311,7 +3440,7 @@ function ajaxDadosProcessoPro(href, mode) {
                                         return (tagsObsTd !== null) ? {unidade: $(this).find('td').eq(0).text(), tags: tagsObsTd} : null
                                     } 
                                 }).get();
-                if (arrayTagsList.length > 0) { Array.prototype.push.apply(arrayTags,arrayTagsList) }
+                if (typeof arrayTags !== 'undefined' && arrayTags !== null && typeof arrayTagsList !== 'undefined' && arrayTagsList !== null && arrayTagsList.length > 0) { Array.prototype.push.apply(arrayTags,arrayTagsList) }
         }
         processo.txaTagsObservacoes = arrayTags;
         
@@ -5175,7 +5304,7 @@ function noNotifyPro(this_) {
 function checkPageVisualizacao() {
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmDocumentoCadastro', "label#lblPublico", setNewDocDefault);
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmProcedimentoCadastro', "#divInfraBarraComandosSuperior", setHtmlProtocoloAlterar);
-
+    waitLoadPro($('#ifrVisualizacao').contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', ".infraBarraComandos", getActionsOnSendProcess);
 }
 function setNewDocDefault() {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
