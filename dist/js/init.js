@@ -17,6 +17,7 @@ function divIconsLoginPro() {
                             +'  <a id="signoutButtonPro" href="#" data-tippy-content="Desconectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectado! Clique para desconectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-on brancoColor"></i></a>'
                             +'  <div id="alertaBoxPro" style="display: none;"></div>'
                             +'  <div id="dialogBoxPro" style="display: none;"></div>'
+                            +'  <div id="configBoxPro" style="display: none;"></div>'
                             +'  <div id="iframeBoxPro" style="display: none;"></div>'
                             +'  <div id="editorBoxPro" style="display: none;"></div>'
                             +'</div>';

@@ -154,7 +154,7 @@ function getNameGenre(ref_nomenclatura, string_male, string_female) {
     return (masc ? string_male : string_female);
 }
 function getServerAtividades(param, mode) {
-    if (    urlServerAtiv && (typeof window.tokenID !== 'undefined' || userHashAtiv != '') &&
+    if (    urlServerAtiv && (getTokenGoogle() || userHashAtiv != '') &&
             (
                 mode == 'panel' || 
                 (mode == 'chart_demandas' && checkCapacidade(mode)) || 
@@ -171,9 +171,9 @@ function getServerAtividades(param, mode) {
         delayServerAtiv = 1; setTimeout(function(){ delayServerAtiv = 0; }, 1000);
         if (typeof loadingButtonConfirm !== 'undefined') { loadingButtonConfirm(true); }
 
-        var authToken = (typeof window.tokenID !== 'undefined') 
+        var authToken = (getTokenGoogle()) 
             ? function (xhr) {
-                xhr.setRequestHeader('Authorization', 'Bearer '+window.tokenID);
+                xhr.setRequestHeader('Authorization', 'Bearer '+getTokenGoogle());
                 xhr.withCredentials = true;
             }
             : undefined;
@@ -1513,6 +1513,8 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     var optionSelectsPerfil = (typeof arrayConfigAtividades.perfil !== 'undefined' && typeof arrayConfigAtividades.perfil.lotacoes_obj !== 'undefined') ? getOptionSelectPerfil(arrayConfigAtividades.perfil.lotacoes_obj, getOptionsPro('perfilAtividadesSelected')) : '';
     var selectListPerfilLotacao = (optionSelectsPerfil == '') ? '' : '<select data-type="perfil" onchange="changePerfilAtiv(this)" data-placeholder="Filtrar por usu\u00E1rio" style="max-width: 160px; float: right;" class="selectPro">'+optionSelectsPerfil+'</select>';
 
+    var config_entidade = (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('entidades') && arrayConfigAtividades.entidades != 0) ? jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config") : null;
+
     var htmlPanelAtividades = '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="atividadesPro" data-order="'+idOrder+'">'+
                             '   <div class="infraBarraLocalizacao titlePanelHome">'+
                             '       <span class="titlePanel panelHome panelHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+'">'+
@@ -1575,11 +1577,12 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                             '           </a>'+
                             '' : '')+
                             '           <span class="modulesActions">'+
-                            '               <a class="newLink iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                            '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                            '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
                             '                  <i class="fas fa-check-circle cinzaColor"></i>'+
                             '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
                             '               </a>'+
-                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Configuracao">'+
+                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(config_entidade && config_entidade !== null && typeof config_entidade.modal_configuracoes !== 'undefined' && config_entidade.modal_configuracoes  ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
                             '                  <i class="fas fa-cog cinzaColor"></i>'+
                             '               </a>'+
                             (checkCapacidade('view_relatorio') ? 
@@ -1605,7 +1608,8 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                             (checkCapacidade('config_nomenclaturas') ? getHtmlActionsConfig('nomenclaturas') : '')+
                             (checkCapacidade('config_entidades') ? getHtmlActionsConfig('entidades') : '')+
                             '           <span class="modulesActions">'+
-                            '               <a class="newLink iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                            '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                            '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
                             '                  <i class="fas fa-check-circle cinzaColor"></i>'+
                             '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
                             '               </a>'+
@@ -1629,7 +1633,8 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                             '               <i class="fas fa-sync-alt"></i>'+
                             '           </a>'+
                             '           <span class="modulesActions">'+
-                            '               <a class="newLink iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                            '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                            '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
                             '                  <i class="fas fa-check-circle cinzaColor"></i>'+
                             '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
                             '               </a>'+
@@ -1637,7 +1642,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                             '               <a class="newLink iconBoxModules iconAfastamento_view" onmouseover="return infraTooltipMostrar(\'Afastamentos\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Afastamento">'+
                             '                  <i class="fas fa-luggage-cart cinzaColor"></i>'+
                             '               </a>' : '')+
-                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Configuracao">'+
+                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(config_entidade && config_entidade !== null && typeof config_entidade.modal_configuracoes !== 'undefined' && config_entidade.modal_configuracoes  ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
                             '                  <i class="fas fa-cog cinzaColor"></i>'+
                             '               </a>'+
                             '           </span>'+
@@ -2088,9 +2093,35 @@ function updateServerTabReport(data, param) {
     loadingButtonConfirm(false);
     getTableRelatorioPanel(data.demandas);
 }
-function getTabsConfigPanel(this_) {
-    var _this = $(this_);
-    var panel = 'panelInfoHomeConfiguracao';
+function openModalConfigPanel(){
+    openConfigBoxPro('', 
+        function(){ 
+            getTabsConfigPanel('configBoxProDiv');
+            var htmlBox =     '   	<div id="configuracoesProActions" class="panelHome panelHomeConfiguracao">'+
+                            '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                            '               <i class="fas fa-sync-alt"></i>'+
+                            '           </a>'+
+                            (checkCapacidade('config_atividades') ? getHtmlActionsConfig('atividades') : '')+
+                            (checkCapacidade('config_planos') || checkCapacidade('config_self_planos') ? getHtmlActionsConfig('planos') : '')+
+                            (checkCapacidade('config_programas') ? getHtmlActionsConfig('programas') : '')+
+                            (checkCapacidade('config_users') ? getHtmlActionsConfig('users') : '')+
+                            (checkCapacidade('config_unidades') ? getHtmlActionsConfig('unidades') : '')+
+                            (checkCapacidade('config_tipos_documentos') ? getHtmlActionsConfig('tipos_documentos') : '')+
+                            (checkCapacidade('config_tipos_justificativas') ? getHtmlActionsConfig('tipos_justificativas') : '')+
+                            (checkCapacidade('config_tipos_modalidades') ? getHtmlActionsConfig('tipos_modalidades') : '')+
+                            (checkCapacidade('config_tipos_requisicoes') ? getHtmlActionsConfig('tipos_requisicoes') : '')+
+                            (checkCapacidade('config_nomenclaturas') ? getHtmlActionsConfig('nomenclaturas') : '')+
+                            (checkCapacidade('config_entidades') ? getHtmlActionsConfig('entidades') : '')+
+                            '   	</div>';
+    
+            $('#configBoxProDiv').prepend(htmlBox);
+        }, 
+        function() {
+            updateAtividade($('.panelHome').find('.iconAtividade_update')[0]);
+        }
+    );
+}
+function getTabsConfigPanel(panel = 'panelInfoHomeConfiguracao') {
     var tabs = 'tabsPanelConfig';
     var htmlToolbar =   '<div id="'+tabs+'" style="border: none; min-height: 300px;">'+
                         '    <ul>'+
@@ -2185,6 +2216,7 @@ function getTabsConfigPanel(this_) {
         $('#'+tabs).tabs( "option", "active", tabActive);
     }
     getListTypesSEI();
+    console.log()
 }
 function getTabConfig(type, mode, data = false) {
     if ((checkCapacidade('config_'+type) || checkCapacidade('config_self_'+type)) && mode == 'get') {
@@ -3236,6 +3268,7 @@ function getTableTabConfig(type, listConfig) {
                 });
             });
             checkboxRangerSelectShift();
+            if (configBoxPro) centralizeDialogBox(configBoxPro);
         }, 500);
         if (type == 'planos') {
             initClassicEditor();
@@ -5214,6 +5247,24 @@ function editConfigOptions(this_, id) {
                         '      </tr>'+
                         '      <tr>'+
                         '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                        '               <label><i class="iconPopup iconSwitch fas fa-magic cinzaColor"></i>Visualiza\u00E7\u00E3o</label>'+
+                        '           </td>'+
+                        '           <td>'+
+                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-window-restore cinzaColor"></i> Abrir as configura\u00E7\u00F5es do sistema em janela apartada (modal)</td>'+
+                        '                      <td>'+
+                        '                          <div class="onoffswitch" style="float: right;">'+
+                        '                              <input type="checkbox" name="onoffswitch" data-key="modal_configuracoes" class="onoffswitch-checkbox singleOptionConfig" id="modal_configuracoes" tabindex="0" '+(config && typeof config.modal_configuracoes !== 'undefined' && config.modal_configuracoes ? 'checked' : '')+'>'+
+                        '                              <label class="onoffswitch-label" for="modal_configuracoes"></label>'+
+                        '                          </div>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '               </table>'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '      <tr>'+
+                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
                         '               <label><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Planos de Trabalho</label>'+
                         '           </td>'+
                         '           <td>'+
@@ -6156,7 +6207,7 @@ function configPessoal() {
                     */
                     '   <tr style="height: 40px;">'+
                     '       <td style="vertical-align: bottom;position:relative;">'+
-                    '           <a class="newLink" onclick="signOutProfile()" id="ssoLoginConfig" style="position: absolute;right: 0;top: 5px;'+(typeof window.tokenID === 'undefined' ? 'display:none;' : '')+'" onmouseover="return infraTooltipMostrar(\'Desconectar\');" onmouseout="return infraTooltipOcultar();">'+
+                    '           <a class="newLink" onclick="signOutProfile()" id="ssoLoginConfig" style="position: absolute;right: 0;top: 5px;'+(getTokenGoogle() ? 'display:none;' : '')+'" onmouseover="return infraTooltipMostrar(\'Desconectar\');" onmouseout="return infraTooltipOcultar();">'+
                     '               <i class="iconPopup fas fa-sign-out-alt cinzaColor" style="height: auto;"></i>'+
                     '           </a>'+
                     '           Alternar base de dados'+
@@ -13665,6 +13716,8 @@ function getInsertIconAtividade() {
 }
 function appendModulesIcons() {
     var elementActions = $('#atividadesProActions');
+    var config_entidade = (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('entidades') && arrayConfigAtividades.entidades != 0) ? jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config") : null;
+
     if ($('#ifrVisualizacao').length == 0 && elementActions.length > 0) {
         var i = 0;
         var htmlModules =   '<span class="modulesActions">';
@@ -13681,7 +13734,7 @@ function appendModulesIcons() {
                 i = i+1;
             }
 
-            htmlModules +=  '<a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Configuracao">'+
+            htmlModules +=  '<a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(config_entidade && config_entidade !== null && typeof config_entidade.modal_configuracoes !== 'undefined' && config_entidade.modal_configuracoes  ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
                             '   <i class="fas fa-cog cinzaColor"></i>'+
                             '</a>'+
                             '</span>';
@@ -13827,11 +13880,13 @@ function getServersPro() {
         }
     });
 }
-function setPerfilLoginGoogle() {
+function getTokenGoogle() {
     var token = (typeof gapi !== 'undefined' && typeof gapi.auth2 !== 'undefined') ? gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token : false;
         token = (typeof token !== 'undefined') ? token : false;
-    if (token) {
-        window.tokenID = token;
+    return token;
+}
+function setPerfilLoginGoogle() {
+    if (getTokenGoogle()) {
         getAtividades();
     } else {
         setScriptGoogleProfile();
@@ -13870,7 +13925,7 @@ function onLoad(TimeOut = 9000) {
     }
 }
 function onSignIn(googleUser) {
-    var token = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token;
+    // var token = getTokenGoogle();
     /*
     var profile = googleUser.getBasicProfile();
     console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
@@ -13879,9 +13934,9 @@ function onSignIn(googleUser) {
     console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
     console.log({Token: token});
     */
-    token = (typeof token !== 'undefined') ? token : false;
-    if (token) {
-        window.tokenID = token;
+    // token = (typeof token !== 'undefined') ? token : false;
+    if (getTokenGoogle()) {
+        // window.tokenID = token;
         getAtividades();
         $('#tabelaAtivPanel').html('<div class="dataFallback dataLoading" data-text="Nenhum dado dispon\u00EDvel"></div>');
     }
@@ -13892,7 +13947,7 @@ function cleanAtivParams(initAtiv = true) {
     localStorageRemovePro('configDataAtividadesProcPro');
     removeOptionsPro('panelHomeView');
     removeOptionsPro('panelAtividadesView');
-    window.tokenID = undefined;
+    // window.tokenID = undefined;
     perfilLoginAtiv = false;
     urlServerAtiv = false;
     userHashAtiv = false;

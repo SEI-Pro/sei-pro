@@ -1778,7 +1778,7 @@ function initSeiProArvore() {
     if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined'  && parent.checkConfigValue('uploaddocsexternos')) {
         initUploadArvore();
     }
-    if (typeof localStorageRestorePro === "function" && typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('menususpenso')) {
+    if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined'  && parent.checkConfigValue('menususpenso')) {
         parent.hideMenuSistemaView();
     }
 }

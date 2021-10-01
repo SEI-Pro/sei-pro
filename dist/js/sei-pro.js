@@ -500,6 +500,7 @@ function getProcessosPaginacao(this_, index, tipo) {
                 var ItensHash_ = $('#hdn'+tipo+'ItensHash');
                     //ItensHash_.val(ItensHash);
                 getProcessosPaginacao(this_, index+1, tipo);
+                if (checkConfigValue('gerenciarfavoritos')) appendStarOnProcess();
             } else {
                 param['hdn'+tipo+'PaginaAtual'] = 0;
                 $.ajax({  method: 'POST', data: param, url: href });

@@ -20,8 +20,8 @@ function initRangerSelectShift(TimeOut = 9000) {
 }
 function initHideMenuSistemaView(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof getOptionsPro !== 'undefined' && typeof hideMenuSistemaView !== 'undefined' && typeof verifyConfigValue !== 'undefined') { 
-        if (verifyConfigValue('menususpenso')) {
+    if (typeof getOptionsPro !== 'undefined' && typeof hideMenuSistemaView !== 'undefined' && typeof checkConfigValue !== 'undefined') { 
+        if (checkConfigValue('menususpenso')) {
             hideMenuSistemaView();
         }
     } else {

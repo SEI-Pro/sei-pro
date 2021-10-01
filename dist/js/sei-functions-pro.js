@@ -9,6 +9,7 @@ var ganttProjectSelect = [];
 var url_host = window.location.href.split('?')[0];
 var statusPesquisaDadosProcedimentos = true;
 var dialogBoxPro = false;
+var configBoxPro = false;
 var alertBoxPro = false;
 var iframeBoxPro = false;
 var editorBoxPro = false;
@@ -817,19 +818,19 @@ function initChosenReplace(mode, this_ = false, TimeOut = 9000) {
         var _this = $(this_);
         var _parent = (_this.closest('.popup-wrapper').length > 0) ? _this.closest('.popup-wrapper') : _this.closest('.ui-dialog');
         if  (mode == 'panel') {
-            $('.panelHome select').chosen({
+            $('.panelHome select').not('[multiple]').chosen({
                 placeholder_text_single: ' ',
                 no_results_text: 'Nenhum resultado encontrado'
             });
         } else if (mode == 'box_init') {
-            _parent.find('select').chosen({
+            _parent.find('select').not('[multiple]').chosen({
                 placeholder_text_single: ' ',
                 no_results_text: 'Nenhum resultado encontrado'
             });
         } else if (mode == 'box_refresh') {
-            _parent.find('select').trigger('chosen:updated');
+            _parent.find('select').not('[multiple]').trigger('chosen:updated');
         } else if (mode == 'box_reload') {
-            _parent.find('select').chosen("destroy").chosen({
+            _parent.find('select').not('[multiple]').chosen("destroy").chosen({
                 placeholder_text_single: ' ',
                 no_results_text: 'Nenhum resultado encontrado'
             });
@@ -955,6 +956,10 @@ function resetDialogBoxPro(elementBox) {
         dialogBoxPro.dialog('destroy');
         dialogBoxPro = false;
         $('.dialogBoxDiv').remove();
+    } else if (elementBox == 'configBoxPro' && configBoxPro) { 
+        configBoxPro.dialog('destroy');
+        configBoxPro = false;
+        $('.configBoxProDiv').remove();
     } else if (elementBox == 'iframeBoxPro' && iframeBoxPro) { 
         iframeBoxPro.dialog('destroy');
         iframeBoxPro = false;
@@ -2665,6 +2670,31 @@ function alertaBoxPro(status, icon, text) {
                 alertBoxPro = false;
                 $('.alerta'+status+'Pro').html('');
              },
+        	buttons: [{
+                text: "OK",
+                class: "confirm",
+                click: function() {
+                    $(this).dialog('close');
+                }
+            }]
+        });
+}
+function openConfigBoxPro(html = '', func_open = false, func_close = false) {
+    resetDialogBoxPro('configBoxPro');
+    configBoxPro = $('#configBoxPro')
+        .html('<div id="configBoxProDiv" class="configBoxProDiv">'+html+'</div>')
+        .dialog({
+            title: 'SEI Pro: Configura\u00E7\u00F5es',
+        	width: '95%',
+        	height: 'auto',
+            modal: true,
+        	open: function() { 
+                if (typeof func_open === 'function') func_open();
+            },
+        	close: function() { 
+                configBoxPro = false;
+                if (typeof func_close === 'function') func_close();
+            },
         	buttons: [{
                 text: "OK",
                 class: "confirm",
