@@ -53,7 +53,7 @@ Essa funcionalidade adiciona uma categoria ao processo favorito.
 
 - [Exportar] Essa funcionalidade exporta os processos favoritos selecionados pelo usuário.
 
-> ![Tela Baixando](../img/tela-favorito-baixando.gif) 
+> ![Tela Baixando](../img/Exportar-e-importar-_1_.gif) 
 
 - [Importar] Essa funcionalidade importa os processos favoritos selecionados pelo usuário.
 
