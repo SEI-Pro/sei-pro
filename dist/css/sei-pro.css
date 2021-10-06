@@ -322,6 +322,7 @@ a.newLink.iconStarAtiv {
 }
 .seiProForm input[type="text"],
 .seiProForm input[type="date"],
+.seiProForm input[type="dates"],
 .seiProForm input[type="time"],
 .seiProForm input[type="email"],
 .seiProForm input[type="datetime"],
@@ -337,6 +338,7 @@ a.newLink.iconStarAtiv {
 .seiProForm select, 
 .seiProForm input[type="text"],
 .seiProForm input[type="date"],
+.seiProForm input[type="dates"],
 .seiProForm input[type="time"],
 .seiProForm input[type="email"],
 .seiProForm input[type="datetime"],
@@ -1658,6 +1660,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-item.tagKanName_date_pausado {
     background: linear-gradient(rgb(226 228 230 / 41%), rgb(226 228 230 / 78%));
+    overflow: hidden;
 }
 .kanban-container .kanban-item.tagKanName_date_pausado > div > sub,
 .kanban-container .kanban-item.tagKanName_date_pausado > div > span {
@@ -1693,6 +1696,18 @@ table.moreInfoBox td:first-child,
 }
 .kanban-item .kanban-actions {
     display: none;
+}
+.kanban-container.view_min .kanban-item:hover .kanban-description {
+    display: block;
+}
+.kanban-container.view_min .kanban-item .kanban-description {
+    display: none;
+}
+.kanban-container.view_full .kanban-item:hover .kanban-actions,
+.kanban-container.view_full .kanban-item:hover .kanban-description,
+.kanban-container.view_full .kanban-item .kanban-description,
+.kanban-container.view_full .kanban-item .kanban-actions {
+    display: block !important;
 }
 .kanban-item .kanban-title-card {
     font-size: 12pt;
@@ -2117,7 +2132,7 @@ table.tabelaControle.tablesorter-default thead .tablesorter-headerAsc,
 #tabelaAtivPanel .tableAtividades.tablesorter-default thead .tablesorter-headerAsc {
     background-color: #ccc !important;
 }
-#tableRelatorioDemanda tbody td {
+.tableRelatorioView tbody td {
     max-width: 500px !important;
 }
 #frmProcedimentoControlar div.infraAreaTabela {
@@ -2231,6 +2246,15 @@ td.tdfav_desc {
 .editTableToggle .onoffswitch {
     transform: scale(0.8);
     float: right;
+}
+.viewTableToggle {
+    width: 170px;
+    top: 50px;
+}
+.dateRangeTable {
+    width: 300px;
+    top: 50px;
+    right: 500px;
 }
 td.editCellLoading:after {
     content: "\f2f1" !important;

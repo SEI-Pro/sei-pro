@@ -20,7 +20,7 @@ function initRangerSelectShift(TimeOut = 9000) {
 }
 function initHideMenuSistemaView(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof getOptionsPro !== 'undefined' && typeof hideMenuSistemaView !== 'undefined' && typeof checkConfigValue !== 'undefined') { 
+    if (typeof getOptionsPro !== 'undefined' && typeof hideMenuSistemaView !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined') { 
         if (checkConfigValue('menususpenso')) {
             hideMenuSistemaView();
         }
@@ -47,7 +47,7 @@ function initSetMomentPtBr(TimeOut = 9000) {
 }
 function initTableSorter(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof corrigeTableSEI !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof $().tablesorter !== 'undefined') { 
+    if (typeof corrigeTableSEI !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined' && typeof $().tablesorter !== 'undefined') { 
         if (checkConfigValue('ordernartabela') && $('#frmPesquisaProtocolo').length == 0) {
             setTableSorter();
             console.log('initTableSorter'); 

@@ -1513,8 +1513,6 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     var optionSelectsPerfil = (typeof arrayConfigAtividades.perfil !== 'undefined' && typeof arrayConfigAtividades.perfil.lotacoes_obj !== 'undefined') ? getOptionSelectPerfil(arrayConfigAtividades.perfil.lotacoes_obj, getOptionsPro('perfilAtividadesSelected')) : '';
     var selectListPerfilLotacao = (optionSelectsPerfil == '') ? '' : '<select data-type="perfil" onchange="changePerfilAtiv(this)" data-placeholder="Filtrar por usu\u00E1rio" style="max-width: 160px; float: right;" class="selectPro">'+optionSelectsPerfil+'</select>';
 
-    var config_entidade = (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('entidades') && arrayConfigAtividades.entidades != 0) ? jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config") : null;
-
     var htmlPanelAtividades = '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="atividadesPro" data-order="'+idOrder+'">'+
                             '   <div class="infraBarraLocalizacao titlePanelHome">'+
                             '       <span class="titlePanel panelHome panelHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+'">'+
@@ -1582,7 +1580,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                             '                  <i class="fas fa-check-circle cinzaColor"></i>'+
                             '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
                             '               </a>'+
-                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(config_entidade && config_entidade !== null && typeof config_entidade.modal_configuracoes !== 'undefined' && config_entidade.modal_configuracoes  ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
+                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(checkOptionEntidade('modal_configuracoes') ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
                             '                  <i class="fas fa-cog cinzaColor"></i>'+
                             '               </a>'+
                             (checkCapacidade('view_relatorio') ? 
@@ -1642,7 +1640,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                             '               <a class="newLink iconBoxModules iconAfastamento_view" onmouseover="return infraTooltipMostrar(\'Afastamentos\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Afastamento">'+
                             '                  <i class="fas fa-luggage-cart cinzaColor"></i>'+
                             '               </a>' : '')+
-                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(config_entidade && config_entidade !== null && typeof config_entidade.modal_configuracoes !== 'undefined' && config_entidade.modal_configuracoes  ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
+                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(checkOptionEntidade('modal_configuracoes') ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
                             '                  <i class="fas fa-cog cinzaColor"></i>'+
                             '               </a>'+
                             '           </span>'+
@@ -1652,7 +1650,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                             '               '+htmlTableAtividades+
                             '   	    </div>'+
                             '   	    <div id="ganttAtivPanel" class="ganttAtividade" style="max-width: 800px; display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	    <div id="kanbanAtivPanel" class="kanbanAtividade" style="display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                            '   	    <div id="kanbanAtivPanel" class="kanbanAtividade" style="display:none; padding-top: 50px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
                             '   	    <div id="chartAtivPanel" class="chartAtividade" style="display:none; padding-top: 20px; position: relative;">'+
                             '   	        <div id="chartAtivActions" class="chartAtivPanelDiv" style="width: 100%;">'+
                             '   	            '+selectListUsers+selectListUnidades+
@@ -2074,12 +2072,61 @@ function getTabsRelatorio(this_) {
     } else {
         getTabReport('demandas', 'get');
     }
+    initDaterangePicker();
+}
+function initDaterangePicker(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof $().daterangepicker === 'function') { 
+        $('input[name="dates"]').daterangepicker({
+            "locale": {
+              "format": "DD/MM/YYYY",
+              "separator": " - ",
+              "applyLabel": "Aplicar",
+              "cancelLabel": "Cancelar",
+              "daysOfWeek": [
+                "Dom",
+                "Seg",
+                "Ter",
+                "Qua",
+                "Qui",
+                "Sex",
+                "Sab"
+              ],
+              "monthNames": [
+                "Janeiro",	
+                "Fevereiro",
+                "Mar\u00E7o",
+                "Abril",
+                "Maio",
+                "Junho",
+                "Julho",
+                "Agosto",
+                "Setembro",
+                "Outubro",
+                "Novembro",
+                "Dezembro"
+              ],
+              "firstDay": 1
+            }
+          });
+    } else {
+        setTimeout(function(){ 
+            if (TimeOut == 9000) {
+                $.getScript((URL_SEIPRO+"js/lib/daterangepicker.js"));
+                loadStylePro(URL_SEIPRO+"css/daterangepicker.css");
+            }
+            initDaterangePicker(TimeOut - 100); 
+            console.log('Reload initDaterangePicker'); 
+        }, 500);
+    }
 }
 function getTabReport(type, mode, data = false) {
     if (checkCapacidade('report_'+type) && mode == 'get') {
+        var all_data = $('#changeViewTableRelatorio_'+type).is(':checked');
         var action = 'report_'+type;
         var param = {
-            action: action
+            action: action,
+            all_data: all_data
         };
         getServerAtividades(param, action);
         $('#tabs_report-'+type).css('width',$('#tabsPanelRelatorio').width()).find('.dataFallback').addClass('dataLoading');
@@ -3314,6 +3361,22 @@ function changeViewTableConfig(this_) {
         table.find('.checkboxSelectConfiguracoes:checked').trigger('click');
         table.addClass('editDisabled').find('.checkboxSelectConfiguracoes').prop('disabled', true);
         icon.addClass('cinzaColor').removeClass('azulColor');
+    }
+}
+function changeViewTableReport(this_) {
+    var _this = $(this_);
+    var type = _this.data('type');
+    var checkbox = _this.is(':checked');
+    var table = $('#tableRelatorio_'+type);
+    var icon = _this.closest('.viewTableToggle').find('.label i');
+        icon.toggleClass('fa-university fa-sync-alt').addClass('fa-spin');
+    getTabReport(type, 'get');
+    if (checkbox) {
+        icon.addClass('azulColor').removeClass('cinzaColor');
+        setOptionsPro('changeViewTableReport_'+type,'show');
+    } else {
+        icon.addClass('cinzaColor').removeClass('azulColor');
+        setOptionsPro('changeViewTableReport_'+type,'hide');
     }
 }
 function getWorkDaysBetweenDates(inicio, fim, sigla_unidade) {
@@ -5214,17 +5277,6 @@ function editConfigOptions(this_, id) {
                         '                      </td>'+
                         '                  </tr>'+
                         '               </table>'+
-                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-tasks cinzaColor"></i> Utilizar o cadastro simplificado de demandas como padr\u00E3o</td>'+
-                        '                      <td>'+
-                        '                          <div class="onoffswitch" style="float: right;">'+
-                        '                              <input type="checkbox" name="onoffswitch" data-key="cadastro_simplificado" class="onoffswitch-checkbox singleOptionConfig" id="cadastro_simplificado" tabindex="0" '+(config && typeof config.cadastro_simplificado !== 'undefined' && config.cadastro_simplificado  ? 'checked' : '')+'>'+
-                        '                              <label class="onoffswitch-label" for="cadastro_simplificado"></label>'+
-                        '                          </div>'+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '               </table>'+
                         '           </td>'+
                         '      </tr>'+
                         '      <tr>'+
@@ -5257,6 +5309,24 @@ function editConfigOptions(this_, id) {
                         '                          <div class="onoffswitch" style="float: right;">'+
                         '                              <input type="checkbox" name="onoffswitch" data-key="modal_configuracoes" class="onoffswitch-checkbox singleOptionConfig" id="modal_configuracoes" tabindex="0" '+(config && typeof config.modal_configuracoes !== 'undefined' && config.modal_configuracoes ? 'checked' : '')+'>'+
                         '                              <label class="onoffswitch-label" for="modal_configuracoes"></label>'+
+                        '                          </div>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-tasks cinzaColor"></i> Utilizar o cadastro simplificado de demandas como padr\u00E3o</td>'+
+                        '                      <td>'+
+                        '                          <div class="onoffswitch" style="float: right;">'+
+                        '                              <input type="checkbox" name="onoffswitch" data-key="cadastro_simplificado" class="onoffswitch-checkbox singleOptionConfig" id="cadastro_simplificado" tabindex="0" '+(config && typeof config.cadastro_simplificado !== 'undefined' && config.cadastro_simplificado  ? 'checked' : '')+'>'+
+                        '                              <label class="onoffswitch-label" for="cadastro_simplificado"></label>'+
+                        '                          </div>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-file-alt cinzaColor"></i> Dispensar os campos de Tipo de Requisi\u00E7\u00E3o e Tipos de Documentos<br>nos formul\u00E1rios de '+__.demanda+'</td>'+
+                        '                      <td>'+
+                        '                          <div class="onoffswitch" style="float: right;">'+
+                        '                              <input type="checkbox" name="onoffswitch" data-key="dispensa_tipos_requisicao" class="onoffswitch-checkbox singleOptionConfig" id="dispensa_tipos_requisicao" tabindex="0" '+(config && typeof config.dispensa_tipos_requisicao !== 'undefined' && config.dispensa_tipos_requisicao  ? 'checked' : '')+'>'+
+                        '                              <label class="onoffswitch-label" for="dispensa_tipos_requisicao"></label>'+
                         '                          </div>'+
                         '                      </td>'+
                         '                  </tr>'+
@@ -6207,7 +6277,7 @@ function configPessoal() {
                     */
                     '   <tr style="height: 40px;">'+
                     '       <td style="vertical-align: bottom;position:relative;">'+
-                    '           <a class="newLink" onclick="signOutProfile()" id="ssoLoginConfig" style="position: absolute;right: 0;top: 5px;'+(getTokenGoogle() ? 'display:none;' : '')+'" onmouseover="return infraTooltipMostrar(\'Desconectar\');" onmouseout="return infraTooltipOcultar();">'+
+                    '           <a class="newLink" onclick="signOutProfile()" id="ssoLoginConfig" style="position: absolute;right: 0;top: 5px;'+(getTokenGoogle() ? '' : 'display:none;')+'" onmouseover="return infraTooltipMostrar(\'Desconectar\');" onmouseout="return infraTooltipOcultar();">'+
                     '               <i class="iconPopup fas fa-sign-out-alt cinzaColor" style="height: auto;"></i>'+
                     '           </a>'+
                     '           Alternar base de dados'+
@@ -6220,7 +6290,8 @@ function configPessoal() {
                     '   <tr style="height: 40px;">'+
                     '       <td colspan="2">'+
                     '           <span style="color:#ccc;font-size: 8pt;font-family: monospace;">'+
-                    '               Vers\u00E3o '+VERSION_SEIPRO+
+                    '               Vers\u00E3o: '+VERSION_SEIPRO+'<br>'+
+                    '               Server: '+urlServerAtiv+
                     '           </span>'+
                     '       </td>'+
                     '   </tr>'+
@@ -6259,14 +6330,13 @@ function saveConfigPersonalUser(this_) {
     _this.closest('tr').find('td').eq(0).addClass('editCellLoading');
 }
 function getTableRelatorioPanel(listRelatorios) {
-    // var _this = $(this_);
-    var relatorioID = '#tabs_report-demandas';
+    var type = 'demandas';
+    var relatorioID = '#tabs_report-'+type;
     var tabelaRelatorio = $(relatorioID);
         tabelaRelatorio.show();
-    // var arrayProcessosUnidade = getProcessoUnidadePro();
     var countRelatorios = (listRelatorios.length == 1) ? listRelatorios.length+' registro:' : listRelatorios.length+' registros:';
     if (typeof listRelatorios !== 'undefined' && listRelatorios.length > 0 && listRelatorios != 0) {
-        htmlTableRelatorios =    '<table id="tableRelatorioDemanda" data-name-table="RelatorioDemanda" style="width: max-content !important; margin-top: 0;" class="tableInfo tableZebra tableFollow tableAtividades" data-tabletype="relatorios">'+
+        htmlTableRelatorios =    '<table id="tableRelatorio_'+type+'" data-name-table="Relatorio_'+type+'" style="width: max-content !important; margin-top: 20px;" class="tableInfo tableZebra tableFollow tableAtividades tableRelatorioView" data-tabletype="relatorios">'+
                                 '   <caption class="infraCaption" style="text-align: left; margin-top: 20px;">'+countRelatorios+'</caption>'+
                                 '   <thead>'+
                                 '       <tr class="tableHeader" style="height: 30px;">'+  
@@ -6403,7 +6473,7 @@ function getTableRelatorioPanel(listRelatorios) {
         tabelaRelatorio.html(htmlTableRelatorios);
         initPanelResize(relatorioID+'.tabelaPanelScroll', 'relatorioTabelaPro');
         
-        var relatorioTabela = $('#tableRelatorioDemanda');
+        var relatorioTabela = $('#tableRelatorio_'+type);
             relatorioTabela.tablesorter({
                 textExtraction: {
                     3: function (elem, table, cellIndex) {
@@ -6446,7 +6516,22 @@ function getTableRelatorioPanel(listRelatorios) {
                 }
             });
             setTimeout(function(){ 
-                var htmlFilterRelatorio =   '<div class="btn-group filterTablePro notCopy" role="group" style="right: 8px;top: 38px;z-index: 99;position: absolute;">'+
+                var btnAllData =    (typeof arrayConfigAtividades.perfil.nivel !== 'undefined' && arrayConfigAtividades.perfil.nivel !== null && arrayConfigAtividades.perfil.nivel == 1 ? 
+                                    '   <div class="viewTableToggle editTableToggle">'+
+                                    '           <label class="label" for="changeViewTableRelatorio_'+type+'"><i class="fas fa-university cinzaColor" style="margin: 0px 6px 0 4px;"></i> Toda entidade</label>'+
+                                    '           <div class="onoffswitch">'+
+                                    '               <input type="checkbox" name="onoffswitch" data-type="'+type+'" onchange="changeViewTableReport(this)" class="onoffswitch-checkbox" id="changeViewTableRelatorio_'+type+'" tabindex="0" '+(getOptionsPro('changeViewTableReport_'+type) ? 'checked' : false )+'>'+
+                                    '               <label class="onoffswitch-label" for="changeViewTableRelatorio_'+type+'"></label>'+
+                                    '           </div>'+
+                                    '   </div>'
+                                    : '');
+
+                var dateRanger =    '   <div class="dateRangeTable editTableToggle seiProForm">'+
+                                    '           <label class="label" for="changeDatesTableRelatorio_'+type+'"><i class="fas fa-calendar-alt cinzaColor" style="margin: 0px 6px 0 4px;"></i></label>'+
+                                    '           <input type="dates" data-type="'+type+'" onchange="changeViewTableReport(this)" id="changeDatesTableRelatorio_'+type+'" tabindex="0" value="'+(getOptionsPro('changeDatesTableReport_'+type) ? getOptionsPro('changeDatesTableReport_'+type) : '' )+'">'+
+                                    '   </div>';
+
+                var htmlFilterRelatorio =   '<div class="btn-group filterTablePro notCopy" role="group" style="right: 8px;top: 50px;z-index: 99;position: absolute;">'+
                                             '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                             '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                             '       <span class="text">Baixar</span>'+
@@ -6461,7 +6546,7 @@ function getTableRelatorioPanel(listRelatorios) {
                                             '   </button>'+
                                             '</div>';
                     relatorioTabela.find('thead .filterTablePro').remove();
-                    relatorioTabela.find('thead').prepend(htmlFilterRelatorio);
+                    relatorioTabela.find('thead').prepend(btnAllData+htmlFilterRelatorio);
                     observerFilterRelatorio.observe(filterRelatorio, {
                         attributes: true
                     });
@@ -7393,7 +7478,9 @@ function removeAfastamento(this_, id_afastamento = 0) {
     );
 }
 function getKanbanAtividades(this_) {
-    $('#kanbanAtivPanel').html('').show();
+    var kanbanElem = '#kanbanAtivPanel';
+    var kanbanDiv = $(kanbanElem);
+    kanbanDiv.html('').show();
     var listAtividadesNIniciadas = jmespath.search(arrayAtividadesPro, "[?data_inicio=='0000-00-00 00:00:00']");
         listAtividadesNIniciadas = getSortKanbanItens(listAtividadesNIniciadas, '_niniciadas');
     var listAtividadesIniciadas = jmespath.search(arrayAtividadesPro, "[?data_inicio!='0000-00-00 00:00:00'] | [?data_entrega=='0000-00-00 00:00:00']");
@@ -7461,8 +7548,8 @@ function getKanbanAtividades(this_) {
     }
 
     var kanban = new jKanban({
-            element: "#kanbanAtivPanel",
-            gutter: "10px",
+            element: kanbanElem,
+            gutter: '10px',
             widthBoard: (listAtividadesArquivadas ? "calc(20% - 20px)" : "calc(25% - 20px)"),
             // responsivePercentage: true,
             itemHandleOptions:{
@@ -7503,14 +7590,14 @@ function getKanbanAtividades(this_) {
     kanbanAtividades = kanban;
 
     // adiciona altura maxima ao painel e redimenssionamento dinamico
-    if (!getOptionsPro('panelHeight_atividadesKanbanPro') && $('#kanbanAtivPanel').height() > 800) { setOptionsPro('panelHeight_atividadesKanbanPro', 800) }
+    if (!getOptionsPro('panelHeight_atividadesKanbanPro') && kanbanDiv.height() > 800) { setOptionsPro('panelHeight_atividadesKanbanPro', 800) }
     $('.kanban-container').addClass('tabelaPanelScroll');
     initPanelResize('.kanban-container', 'atividadesKanbanPro');
 
     // corrige a altura de todos os quadros pelo maior deles
-    var maxHeightBoard = Math.max.apply(null, $('#kanbanAtivPanel .kanban-board').map(function(){ return $(this).height() }).get());
-    $('#kanbanAtivPanel .kanban-board').css('height', maxHeightBoard+'px');
-    $('#kanbanAtivPanel .kanban-board .kanban-drag').css('height', (maxHeightBoard-48)+'px');
+    var maxHeightBoard = Math.max.apply(null, kanbanDiv.find('.kanban-board').map(function(){ return $(this).height() }).get());
+    kanbanDiv.find('.kanban-board').css('height', maxHeightBoard+'px');
+    kanbanDiv.find('.kanban-board .kanban-drag').css('height', (maxHeightBoard-48)+'px');
 
     var tagName = getOptionsPro('filterTag_kanban');
     if (typeof tagName !== 'undefined' && tagName != '') {
@@ -7526,6 +7613,7 @@ function getKanbanAtividades(this_) {
 
     var target = ($('#ifrArvore').length > 0) ? $('#ifrArvore').contents() : $('body');
     var progress = target.find('.kanban-item .checklist_progress');
+    if (typeof $().progressbar !== 'undefined') {
         progress.each(function(){
             $(this).progressbar({
                 value: $(this).data('valuenow'),
@@ -7533,8 +7621,44 @@ function getKanbanAtividades(this_) {
             });
             if ($(this).find('.ui-progressbar-value').length > 1) { $(this).find('.ui-progressbar-value').eq(0).remove() }
         });
-        
+    }
+    var htmlViewControl =   '<div class="btn-group viewControlPro" role="group" style="right: 10px;top: 10px;z-index: 99;position: absolute;">'+
+                            '   <button type="button" onclick="changeViewControl(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="compacto" class="btn btn-sm btn-light '+(getOptionsPro('panelKanbanView') == 'compacto' ? 'active' : '')+'">'+
+                            '       <i class="fas fa-minus" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                            '       Compacto'+
+                            '   </button>'+
+                            '   <button type="button" onclick="changeViewControl(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="padrao" class="btn btn-sm btn-light '+(!getOptionsPro('panelKanbanView') || getOptionsPro('panelKanbanView') == 'padrao' ? 'active' : '')+'">'+
+                            '       <i class="far fa-minus-square" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                            '       Padr\u00E3o'+
+                            '   </button>'+
+                            '   <button type="button" onclick="changeViewControl(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="expandido" class="btn btn-sm btn-light '+(getOptionsPro('panelKanbanView') == 'expandido' ? 'active' : '')+'">'+
+                            '       <i class="far fa-plus-square" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                            '       Expandido'+
+                            '   </button>'+
+                            '</div>';
+    kanbanDiv.find('.viewControlPro').remove();
+    kanbanDiv.prepend(htmlViewControl);
+    if (getOptionsPro('panelKanbanView')) {
+        kanbanDiv.find('.viewControlPro button[data-value="'+getOptionsPro('panelKanbanView')+'"]').trigger('click');
+    }
+
     updateCountKanbanBoard();
+}
+function changeViewControl(this_) {
+    var _this = $(this_);
+    var value = _this.data('value');
+    var container = _this.closest('.kanbanAtividade').find('.kanban-container');
+    if (value == 'expandido') {
+        container.addClass('view_full').removeClass('view_min');
+    } else if (value == 'padrao') {
+        container.removeClass('view_full').removeClass('view_min');
+    } else if (value == 'compacto') {
+        container.removeClass('view_full').addClass('view_min');
+    }
+
+    _this.parent().find('button').removeClass('active');
+    _this.addClass('active'); 
+    setOptionsPro('panelKanbanView', value);
 }
 function updateCountKanbanBoard() {
     $.each(kanbanAtividades.options.boards, function(i, v){
@@ -7759,15 +7883,17 @@ function getKanbanItem(value) {
         title:  pinBoard+
                 '<div class="kanban-content">'+
                 '   <div class="kanban-title-card">'+(value.assunto.length > 50 ? value.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : value.assunto)+'</div>'+
-                '   <sub title="'+getTitleDialogBox(value, true)+'">'+
-                '   <div style="margin: 0 0 8px 0;" class="info_noclick">'+getHtmlLinkRequisicao(value, true)+'</div>'+
-                '   '+getTitleDialogBox(value)+
-                '   </sub>'+
-                '   '+obsGerencial+
-                '   '+obsTecnica+
-                '   '+(value.etiquetas !== null && value.etiquetas.length > 0 ? '<span class="info_tags_follow" style="float: right;">'+$.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i, 'ativ'))[0].outerHTML }).join('')+'</span>' : '')+
-                '   <span class="info_tags_follow">'+getHtmlEtiquetaUnidade(value)+tagPacto+'</span>'+
-                '   <span class="info_dates_fav" style="display: block; margin: 10px 0;">'+timerAtiv+tagDate+'</span>'+
+                '   <div class="kanban-description">'+
+                '       <sub title="'+getTitleDialogBox(value, true)+'">'+
+                '       <div style="margin: 0 0 8px 0;" class="info_noclick">'+getHtmlLinkRequisicao(value, true)+'</div>'+
+                '       '+getTitleDialogBox(value)+
+                '       </sub>'+
+                '       '+obsGerencial+
+                '       '+obsTecnica+
+                '       '+(value.etiquetas !== null && value.etiquetas.length > 0 ? '<span class="info_tags_follow" style="float: right;">'+$.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i, 'ativ'))[0].outerHTML }).join('')+'</span>' : '')+
+                '       <span class="info_tags_follow">'+getHtmlEtiquetaUnidade(value)+tagPacto+'</span>'+
+                '       <span class="info_dates_fav" style="display: block; margin: 10px 0;">'+timerAtiv+tagDate+'</span>'+
+                '   </div>'+
                 '   <div class="kanban-actions">'+
                 '       '+btnActionAtiv+
                 '       '+btnPause+
@@ -8279,9 +8405,10 @@ function initGetChartDemandas(TimeOut = 9000) {
 // INICIA FUNCOES DO PAINEL DE GESTAO DE ATIVIDADES
 function initFunctionsPanelAtiv(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof $('.atividadeTagsPro').tagsInput !== 'undefined' && 
-        typeof $('.tabelaPanelScroll').resizable !== 'undefined' && 
-        typeof $('.ui-autocomplete-input').autocomplete !== 'undefined') {
+    if (typeof $().tagsInput !== 'undefined' && 
+        typeof $().resizable !== 'undefined' && 
+        typeof $().tablesorter !== 'undefined' && 
+        typeof $().autocomplete !== 'undefined') {
 
         initChosenReplace('panel');
 
@@ -8401,7 +8528,7 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
                                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                         '       <span class="text">Baixar</span>'+
                                         '   </button>'+
-                                        '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
+                                        '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light '+(getOptionsPro('panelKanbanView') === false )+'">'+
                                         '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                         '       <span class="text">Copiar</span>'+
                                         '   </button>'+
@@ -8970,7 +9097,7 @@ function changeSaveAtividade(type) {
 function saveAtividade(id_demanda = 0) {
     if (
             id_demanda == 0 &&
-            (getOptionsPro('formSaveAtividade') == 'simple' || (!getOptionsPro('formSaveAtividade') && typeof arrayConfigAtividades.entidades[0].config.cadastro_simplificado !== 'undefined' && arrayConfigAtividades.entidades[0].config.cadastro_simplificado)) 
+            (getOptionsPro('formSaveAtividade') == 'simple' || (!getOptionsPro('formSaveAtividade') && checkOptionEntidade('cadastro_simplificado'))) 
         ){
         saveAtividadeSimple(id_demanda);
     } else {
@@ -9019,7 +9146,8 @@ function saveAtividadeFull(id_demanda = 0) {
 
         var optionSelectRequisicoes = ( arrayConfigAtividades.tipos_requisicoes.length > 0 ) ? $.map(arrayConfigAtividades.tipos_requisicoes, function(v,k){ return ( (value && v.id_tipo_requisicao == value.id_tipo_requisicao) || (dadosIfrArvore && dadosIfrArvore.nome_documento.indexOf(v.nome_requisicao) !== -1) ) ? '<option value="'+v.id_tipo_requisicao+'" selected>'+v.nome_requisicao+'</option>' : '<option value="'+v.id_tipo_requisicao+'">'+v.nome_requisicao+'</option>' }).join('') : '';
         var selectRequisicoes = '<select id="ativ_id_tipo_requisicao" onchange="checkThisAtivRequiredFields(this)" data-key="id_tipo_requisicao" required><option>&nbsp;</option>'+optionSelectRequisicoes+'</select>';
-        
+            selectRequisicoes = (checkOptionEntidade('dispensa_tipos_requisicao')) ? '<input type="hidden" id="ativ_id_tipo_requisicao" data-key="id_tipo_requisicao" data-param="id_tipo_requisicao" value="0">' : selectRequisicoes;
+
         var optionSelectAtividades = '';
         // var arrayTabelaAtividades = jmespath.search(arrayConfigAtividades.atividades,"[?homologado==`true`]");
             // arrayTabelaAtividades = (arrayTabelaAtividades !== null) ? arrayTabelaAtividades : [];
@@ -9109,15 +9237,15 @@ function saveAtividadeFull(id_demanda = 0) {
                         '               '+htmlMultProcessos+
                         '           </td>'+
                         '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                        '      <tr '+(checkOptionEntidade('dispensa_tipos_requisicao') && !dadosIfrArvore && !value ? 'style="display:none;"' : '')+'>'+
+                        '          <td style="vertical-align: bottom; text-align: left; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'" class="label">'+
                         '               <label for="ativ_id_tipo_requisicao"><i class="iconPopup iconSwitch fas fa-inbox cinzaColor"></i>Requisi\u00E7\u00E3o:</label>'+
                         '           </td>'+
-                        '           <td class="required" style="width: 210px;max-width: 210px;">'+
+                        '           <td class="required" style="width: 210px;max-width: 210px; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'">'+
                         '               '+selectRequisicoes+
                         '           </td>'+
                         '           <td style="vertical-align: bottom; '+(dadosIfrArvore || value ? '' : 'display:none;')+'" class="label">'+
-                        '               <label class="last" for="ativ_requisicao_sei"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>SEI n\u00BA:</label>'+
+                        '               <label class="'+(checkOptionEntidade('dispensa_tipos_requisicao') ? '' : 'last')+'" for="ativ_requisicao_sei"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>SEI n\u00BA:</label>'+
                         '           </td>'+
                         '           <td '+(dadosIfrArvore || value ? '' : 'style="display:none;"')+'>'+
                         '               <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')" id="ativ_requisicao_sei" onchange="changeProtocoloBoxAtiv(this)" data-key="requisicao_sei" value="'+(value && value.requisicao_sei ? value.requisicao_sei : (dadosIfrArvore ? dadosIfrArvore.nr_sei : '') )+'">'+
@@ -9536,7 +9664,7 @@ function saveAtividadeFull(id_demanda = 0) {
                         selectAtividadeBox('edit');
                     }
                 });
-                if (typeof arrayConfigAtividades.entidades[0].config !== 'undefined' && arrayConfigAtividades.entidades[0].config !== null && typeof arrayConfigAtividades.entidades[0].config.cadastro_simplificado !== 'undefined' && arrayConfigAtividades.entidades[0].config.cadastro_simplificado) {
+                if (checkOptionEntidade('cadastro_simplificado')) {
                     btnDialogBoxPro.unshift({
                         text: 'Cadastro Simplificado',
                         icon: 'ui-icon-check',
@@ -10049,8 +10177,11 @@ function completeAtividade(id_demanda, confirmeBox = false) {
             } else {
                 var check_isresumed = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada != '0000-00-00 00:00:00') ? true : false;
                 var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
+
                 var optionSelectDocumentos = ( arrayConfigAtividades.tipos_documentos.length > 0 ) ? $.map(arrayConfigAtividades.tipos_documentos, function(v,k){ return ( (value && v.id_tipo_documento == value.id_tipo_documento) || (dadosIfrArvore && dadosIfrArvore.nome_documento.indexOf(v.nome_documento) !== -1) ) ? '<option value="'+v.id_tipo_documento+'" selected>'+v.nome_documento+'</option>' : '<option value="'+v.id_tipo_documento+'">'+v.nome_documento+'</option>' }).join('') : '';
                 var selectDocumentos = '<select id="ativ_id_tipo_documento" onchange="checkThisAtivRequiredFields(this)" data-key="id_tipo_documento" required><option>&nbsp;</option>'+optionSelectDocumentos+'</select>';
+                    selectDocumentos = (checkOptionEntidade('dispensa_tipos_requisicao')) ? '<input type="hidden" id="ativ_id_tipo_documento" data-key="id_tipo_documento" data-param="id_tipo_documento" value="0">' : selectDocumentos;
+
                 var dataInicio = moment(value.data_inicio, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
                 var dataEntrega = (value.data_entrega != '0000-00-00 00:00:00') 
                                 ? moment(value.data_entrega, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format)
@@ -10069,16 +10200,16 @@ function completeAtividade(id_demanda, confirmeBox = false) {
                 var htmlBox =   '<div id="boxAtividade" class="atividadeWork" data-demanda="'+(value && value.id_demanda ? value.id_demanda : 0)+'">'+
                                 '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
                                 '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                '          <td style="vertical-align: bottom; text-align: left; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'" class="label">'+
                                 '               <label for="ativ_id_tipo_documento"><i class="iconPopup iconSwitch fas fa-file-signature cinzaColor"></i>Documento:</label>'+
                                 '               '+inputAtiv+
                                 '               '+inputUser+
                                 '           </td>'+
-                                '           <td class="required" style="width: 230px;">'+
+                                '           <td class="required" style="width: 230px; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'">'+
                                 '               '+selectDocumentos+
                                 '           </td>'+
                                 '           <td style="vertical-align: bottom;" class="label">'+
-                                '               <label class="last" for="ativ_documento_sei"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>SEI n\u00BA:</label>'+
+                                '               <label class="'+(checkOptionEntidade('dispensa_tipos_requisicao') ? '' : 'last')+'" for="ativ_documento_sei"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>SEI n\u00BA:</label>'+
                                 '           </td>'+
                                 '           <td>'+
                                 '               <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')" id="ativ_documento_sei" onchange="changeProtocoloBoxAtiv(this)" maxlength="11" data-key="documento_sei" value="'+(value && value.documento_sei !== null && parseInt(value.documento_sei) != 0  ? value.documento_sei : (dadosIfrArvore && dadosIfrArvore.nr_sei ? dadosIfrArvore.nr_sei : '') )+'">'+
@@ -10717,7 +10848,7 @@ function startAtividade(id_demanda = 0) {
                         '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
                         '                  <tr style="height: 40px;">'+
                         '                      <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '                           <label for="init_others"><i class="iconPopup fas fa-play-circle cinzaColor"></i> '+(listAtividadesVinculadas.length_check > 1 ? 'Iniciar '+getNameGenre('demanda', 'os outros', 'as outras')+' '+listAtividadesVinculadas.length_check+' '+__.demandas+' '+getNameGenre('demanda', 'vinculados', 'vinculadas') : 'Iniciar '+__a_outra_demanda_vinculada)+'?</label>'+
+                        '                           <label for="init_others"><i class="iconPopup fas fa-play-circle cinzaColor"></i> '+(listAtividadesVinculadas.length_check > 1 ? 'Iniciar '+getNameGenre('demanda', 'os outros', 'as outras')+' '+listAtividadesVinculadas.length_check+' '+__.demandas+' '+getNameGenre('demanda', 'vinculados', 'vinculadas') : 'Iniciar '+__.a_outra_demanda_vinculada)+'?</label>'+
                         '                      </td>'+
                         '                      <td style="width: 50px;">'+
                         '                          <div class="onoffswitch" style="float: right;">'+
@@ -11327,7 +11458,7 @@ function archiveAtividade(id_demanda = 0) {
                             action: action
                         };
             getServerAtividades(param, action);
-        }, __Arquivar);
+        }, __.Arquivar);
     }
 }
 function sendAtividade(id_demanda = 0) {
@@ -11709,7 +11840,7 @@ function getInfoAtividadeProdutividade(value, show = false) {
 }
 function getInfoAtividade(value) {
     var requisicao = (typeof value.requisicao_sei !== 'undefined' && value.requisicao_sei !== null && parseInt(value.requisicao_sei) != 0) ? value.nome_requisicao+' ('+value.requisicao_sei+')' : value.nome_requisicao;
-        // requisicao = (value.processo_sei !== null && value.processo_sei != '') ? value.processo_sei+' / '+requisicao : requisicao;
+        requisicao = (requisicao === null) ? '-' : requisicao;
     var linkProc = (value.id_procedimento !== null && value.processo_sei !== null && value.processo_sei != '') ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento : 'javascript:return false';
     var processoHtml = (value.processo_sei !== null && value.processo_sei != '')
                         ? '               <a '+(linkProc == '' ? 'style="cursor: auto;"' : 'style="font-size: 10pt;text-decoration: underline; color: #00c;" href="'+linkProc+'" target="_blank"')+'>'+
@@ -11722,6 +11853,7 @@ function getInfoAtividade(value) {
                         : '-';
     var entrega = (typeof value.documento_sei !== 'undefined' && value.documento_sei !== null && parseInt(value.documento_sei) != 0) ? value.nome_documento+' ('+value.documento_sei+')' : value.nome_documento;
         entrega = (value.processo_sei !== null && value.processo_sei != '') ? value.processo_sei+' / '+entrega : entrega;
+        entrega = (entrega === null) ? '-' : entrega;
     var tempo_planejado = (value.tempo_planejado == 1) ? value.tempo_planejado+' hora' : value.tempo_planejado+' horas';
     var dias_planejado = (value.dias_planejado == 1) ? value.dias_planejado+' dia' : value.dias_planejado+' dias';
     var tempo_despendido = (value.tempo_despendido == 1) ? value.tempo_despendido+' hora' : value.tempo_despendido+' horas';
@@ -12293,19 +12425,22 @@ function changeAtivEtiqueta() {
             }
     });
 }
+function getConfigDadosEntidade() {
+    return (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('entidades') && arrayConfigAtividades.entidades != 0) ? jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config") : null;
+}
+function checkOptionEntidade(option) {
+    var config_entidade = getConfigDadosEntidade();
+    return (config_entidade !== null && typeof config_entidade[option] !== 'undefined' && config_entidade[option] !== null && config_entidade[option]) ? true : false;
+}
 function getConfigDadosUnidade(sigla_unidade) {
+    var config_entidade = getConfigDadosEntidade();
     var unidade = (typeof sigla_unidade === 'undefined' || sigla_unidade === null) ? arrayConfigAtivUnidade.sigla_unidade : sigla_unidade;
     var _return = jmespath.search(arrayConfigAtividades.unidades, "[?sigla_unidade=='"+unidade+"'] | [0].{sigla_unidade: sigla_unidade, nome_unidade: nome_unidade, count_dias_uteis: config.distribuicao.count_dias_uteis, count_horas: config.distribuicao.count_horas, h_util_inicio: config.distribuicao.horario_util.inicio, h_util_fim: config.distribuicao.horario_util.fim, feriados: config.feriados, modalidades: config.modalidades}");
     if (_return != null) {
         _return['hora_format'] = (_return.count_horas) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
-        if (typeof arrayConfigAtividades.entidades[0] !== 'undefined' && 
-            typeof arrayConfigAtividades.entidades[0].config !== 'undefined' && 
-            arrayConfigAtividades.entidades[0].config !== null && 
-            typeof arrayConfigAtividades.entidades[0].config.feriados !== 'undefined' &&
-            arrayConfigAtividades.entidades[0].config.feriados.length > 0
-            ) {
+        if (typeof config_entidade.feriados !== 'undefined' && config_entidade.feriados.length > 0) {
             var feriados = (_return['feriados'] !== null) ? _return['feriados'] : [];
-            $.each(arrayConfigAtividades.entidades[0].config.feriados, function(i,v){
+            $.each(config_entidade.feriados, function(i,v){
                 if (jmespath.search(feriados,"[?feriado_data=='"+v.feriado_data+"']").length == 0) {
                     feriados.push(v);
                 }
@@ -13133,6 +13268,7 @@ function rateAtividade(id_demanda = 0, alertAtividade = false) {
         variationAtividade(id_demanda, true);
     } else {
         var documento = (typeof value.documento_sei !== 'undefined' && value.documento_sei !== null && parseInt(value.documento_sei) != 0) ? value.nome_documento+' ('+value.documento_sei+')' : value.nome_documento;
+            documento = (documento === null) ? false : documento;
         var linkDocumento = (value.processo_sei !== null && value.processo_sei != '') ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento+'&id_documento='+value.id_documento_entregue : 'javascript:return false';
         var obs_tecnica = (value.observacao_tecnica !== null && value.observacao_tecnica != '') 
                         ? '<div class="fa-border" style="padding: 10px; margin: 15px; font-style: italic; color: #505050;"><i class="fas fa-quote-left fa-2x fa-pull-left cinzaColor" style="margin-right: 10px;"></i> '+value.observacao_tecnica+'</div>' 
@@ -13152,7 +13288,7 @@ function rateAtividade(id_demanda = 0, alertAtividade = false) {
             });
         }
 
-        var modalDocEntrega = "openDialogDoc({title: '"+documento+"', id_procedimento: '"+value.id_procedimento+"', id_documento: '"+value.id_documento_entregue+"'})";
+        var modalDocEntrega = (documento) ? "openDialogDoc({title: '"+documento+"', id_procedimento: '"+value.id_procedimento+"', id_documento: '"+value.id_documento_entregue+"'})" : '';
 
         var listAtividadesVinculadas = getAtividadesVinculadas(value, 'avaliadas');
 
@@ -13168,10 +13304,10 @@ function rateAtividade(id_demanda = 0, alertAtividade = false) {
                         '                       <td style="text-align: center;">'+
                         (value.id_procedimento == 0 || value.id_documento == 0 ?
                         '                           <a class="newLink" style="color: #00c; text-decoration: none;">'+
-                        '                               <i class="fas fa-file-signature azulColor" style="padding-right: 5px;"></i>'+documento+
+                        '                               <i class="fas fa-file-signature azulColor" style="padding-right: 5px;"></i>'+(documento ? documento : '-')+
                         '                           </a>' : 
                         '                           <a class="newLink" style="color: #00c; text-decoration: underline; cursor: pointer;" onclick="'+modalDocEntrega+'" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();">'+
-                        '                               <i class="fas fa-file-signature azulColor" style="padding-right: 5px;"></i>'+documento+
+                        '                               <i class="fas fa-file-signature azulColor" style="padding-right: 5px;"></i>'+(documento ? documento : '-')+
                         '                               <i class="fas fa-eye" style="font-size: 80%;color: #00c;vertical-align: top;margin-left: 5px;"></i>'+
                         '                           </a>'+
                         '')+    
@@ -13448,7 +13584,7 @@ function onWhyAtiv(this_) {
 // INICIA PAINEL
 function initPanelAtividades(ativData, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelAtividades !== 'undefined' && typeof orderDivPanel !== 'undefined') { 
+    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelAtividades !== 'undefined' && typeof orderDivPanel !== 'undefined' && typeof moment().isoWeekdayCalc !== 'undefined') { 
         if ($('#ifrArvore').length > 0 && ativData['demandas_processo'].length > 0) {
             setAtividadesProcesso(ativData['demandas_processo']);
         } else {
@@ -13716,7 +13852,6 @@ function getInsertIconAtividade() {
 }
 function appendModulesIcons() {
     var elementActions = $('#atividadesProActions');
-    var config_entidade = (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('entidades') && arrayConfigAtividades.entidades != 0) ? jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config") : null;
 
     if ($('#ifrVisualizacao').length == 0 && elementActions.length > 0) {
         var i = 0;
@@ -13734,7 +13869,7 @@ function appendModulesIcons() {
                 i = i+1;
             }
 
-            htmlModules +=  '<a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(config_entidade && config_entidade !== null && typeof config_entidade.modal_configuracoes !== 'undefined' && config_entidade.modal_configuracoes  ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
+            htmlModules +=  '<a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(checkOptionEntidade('modal_configuracoes') ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
                             '   <i class="fas fa-cog cinzaColor"></i>'+
                             '</a>'+
                             '</span>';
