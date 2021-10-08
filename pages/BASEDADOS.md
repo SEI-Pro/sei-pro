@@ -14,7 +14,7 @@ Dessa forma seu banco de dados ficará separada de sua conta pessoal do Gmail.
 
 > [Criar sua Conta do Google agora](https://accounts.google.com/SignUp)
 >
-> [Suporte Google: Como criar uma Conta do Google usando um endereço de e-mail existente](https://support.google.com/accounts/answer/27441)
+> [Suporte Google: Como criar uma Conta do Google usando um endereço de e-mail existente](https://support.google.com/accounts/answer/27441?hl=pt)
 
 > ![Tela 1](../img/tela-basedados1.png) 
 
