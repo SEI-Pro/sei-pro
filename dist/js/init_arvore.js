@@ -6,9 +6,9 @@ function getUrlExtension(url) {
     }
 }
 function pathExtensionSEIPro() {
-    var URL_SEIPRO = getUrlExtension("js/sei-pro.js");
-        URL_SEIPRO = URL_SEIPRO.toString().replace('js/sei-pro.js', '');
-    return URL_SEIPRO;
+    var URL_SPRO = getUrlExtension("js/sei-pro.js");
+        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
+    return URL_SPRO;
 }
 function loadFontIcons(elementTo) {
 	$("<link/>", {

@@ -134,7 +134,6 @@ function restore_options() {
                 var nProfile = $(this);
                 $.each(value, function (i, v) {
                     nProfile.find('.input-config-pro[data-name-input="'+i+'"]').val(v);
-                    console.log(i,v);
                 });
                 if (nProfile.find('.input-config-pro[data-name-input="spreadsheetId"]').val() != '') {
                     var conexaoTipo = nProfile.find('.sca-conexaoTipo')

@@ -724,7 +724,7 @@ function menuCopyStyle( editor ) {
         editor.addMenuGroup( 'copystyleGroup', -10 * 3 );
         editor.addMenuItem( 'copystyle', {
             label: 'Copiar formata\u00E7\u00E3o',
-            icon: URL_SEIPRO+'icons/copiarformatacao.png',
+            icon: URL_SPRO+'icons/copiarformatacao.png',
             command: 'copystyle',
             group: 'copystyleGroup'
         });
@@ -3316,13 +3316,13 @@ function tableSorterPro( editor ) {
         editor.addMenuGroup( 'tablesorterGroup' );
         editor.addMenuItem( 'addestilo', {
             label: 'Adicionar Estilo',
-            icon: URL_SEIPRO+'icons/addestilotabela.png',
+            icon: URL_SPRO+'icons/addestilotabela.png',
             command: 'addestilo',
             group: 'tableproGroup'
         });
         editor.addMenuItem( 'clonetable', {
             label: 'Duplicar Tabela',
-            icon: URL_SEIPRO+'icons/duplicartabela.png',
+            icon: URL_SPRO+'icons/duplicartabela.png',
             command: 'clonetable',
             group: 'tableproGroup'
         });

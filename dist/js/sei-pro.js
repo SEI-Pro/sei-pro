@@ -317,19 +317,6 @@ function updateGroupTablePro(valueSelect, mode) {
             console.log('NOT',{unidade: unidade, selected: valueSelect});
         }
     }
-    /*
-    setTimeout(function(){
-        checkGroupTableRender();
-    }, 500);
-    */
-}
-function checkGroupTableRender() {
-    var selectGroup = $('#selectGroupTablePro');
-    var elemRef = $('#tblProcessosRecebidos').find('tbody tr').eq(1).find('th').eq(1);
-    if (elemRef.length > 0 && elemRef.text().trim() == '' && selectGroup.val() != '') {
-        selectGroup.trigger('change');
-        console.log('checkGroupTableRender');
-    }
 }
 function storeGroupTablePro() {
     if (typeof localStorageRestorePro !== "undefined" && localStorageRestorePro('selectGroupTablePro') != null) {
@@ -1123,8 +1110,8 @@ function initReloadModalLink(TimeOut = 9000) {
 }
 function initSeiPro() {
 	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
-        $.getScript((URL_SEIPRO+"js/lib/jquery-table-edit.min.js"));
-        $.getScript((URL_SEIPRO+"js/lib/moment-duration-format.min.js"));
+        $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
+        $.getScript((URL_SPRO+"js/lib/moment-duration-format.min.js"));
         initTableSorterHome();
         insertGroupTable();
         replaceSelectAll();

@@ -98,16 +98,37 @@ var listIconsFontAwesome = ["ad","address-book","address-card","adjust","air-fre
 var html_initContentPro = '<div class="sheetsUpdate seiProForm" id="sheetsCompleteEtapaForm" style="display:none"></div>';
 if ( $('#sheetsCompleteEtapaForm').length == 0 ) { $('#divInfraBarraSistema').append(html_initContentPro) }
 
+
+function getConfigHost(callback = false, callback_else = false) {
+    var hosts = URL_SPRO+"config_hosts.json";
+        fetch(hosts)
+        .then((response) => response.json()) //assuming file contains json
+        .then((json) => setConfigHost(json, callback, callback_else));
+}
+function setConfigHost(host, callback, callback_else){
+    var set_host = false;
+    if (typeof host !== 'undefined' && host !== null &&typeof host.matches !== 'undefined' && host.matches !== null && host.matches.length > 0) {
+        for (i = 0; i < host.matches.length; i++) {
+            if (window.location.host.indexOf(host.matches[i]) !== -1) set_host = true;
+        }
+    }
+    if (set_host && typeof callback === 'function') {
+        sessionStorage.setItem('configHost_Pro', JSON.stringify(host));
+        callback();
+    } else if (!set_host && typeof callback_else === 'function') {
+        callback_else();
+    }
+}
 function insertFontIcon(iframeDoc) {
     if ( iframeDoc.find('link[datastyle="seipro-fonticon"]').length == 0 ) {
         $("<link/>", {
            rel: "stylesheet",
            type: "text/css",
            datastyle: "seipro-fonticon",
-           href: URL_SEIPRO+"css/fontawesome.min.css"
+           href: URL_SPRO+"css/fontawesome.min.css"
         }).appendTo(iframeDoc.find('head'));
         iframeDoc.find('head').append("<style type='text/css' data-style='seipro-fonticon'> "
-                                       +"   @font-face { font-family: \"Font Awesome 5 Free SEIPro\"; font-style: normal; font-weight: 900; font-display: block; src: url("+URL_SEIPRO+"webfonts/fa-solid-900.eot); src: url("+URL_SEIPRO+"webfonts/fa-solid-900.eot?#iefix) format(\"embedded-opentype\"),url("+URL_SEIPRO+"webfonts/fa-solid-900.woff2) format(\"woff2\"),url("+URL_SEIPRO+"webfonts/fa-solid-900.woff) format(\"woff\"),url("+URL_SEIPRO+"webfonts/fa-solid-900.ttf) format(\"truetype\"),url("+URL_SEIPRO+"webfonts/fa-solid-900.svg#fontawesome) format(\"svg\") }"
+                                       +"   @font-face { font-family: \"Font Awesome 5 Free SEIPro\"; font-style: normal; font-weight: 900; font-display: block; src: url("+URL_SPRO+"webfonts/fa-solid-900.eot); src: url("+URL_SPRO+"webfonts/fa-solid-900.eot?#iefix) format(\"embedded-opentype\"),url("+URL_SPRO+"webfonts/fa-solid-900.woff2) format(\"woff2\"),url("+URL_SPRO+"webfonts/fa-solid-900.woff) format(\"woff\"),url("+URL_SPRO+"webfonts/fa-solid-900.ttf) format(\"truetype\"),url("+URL_SPRO+"webfonts/fa-solid-900.svg#fontawesome) format(\"svg\") }"
                                        +"</style>");
     }
 }
@@ -145,6 +166,13 @@ function isJson(str) {
         return false;
     }
     return true;
+}
+function avgArray(array) {
+    var sum = 0;
+    for( var i = 0; i < array.length; i++ ){
+        sum += parseInt( array[i], 10 ); //don't forget to add the base
+    }
+    return sum/array.length;
 }
 function convertJsonBools(obj) {
     return JSON.parse(JSON.stringify(obj), (k, v) => v === "true" ? true : v === "false" ? false : v);
@@ -289,6 +317,7 @@ function dragColumnTable(elemTable) {
 
         function processTableHeaderRows(index, element) {
             var row = {}
+
             row.tr = $(element);
             row.drag = row.tr.find('th:eq(' + head.dragIndex + ')');
             row.drop = row.tr.find('th:eq(' + head.dropIndex + ')');
@@ -302,6 +331,7 @@ function dragColumnTable(elemTable) {
         $(this).closest('table').find('tbody > tr').each(processRows);
         function processRows(index, element) {
             var row = {};
+
             row.tr = $(element);
             row.drag = row.tr.find('td:eq(' + head.dragIndex + ')');
             row.drop = row.tr.find('td:eq(' + head.dropIndex + ')');
@@ -683,6 +713,12 @@ function pad(str, max) {
   str = str.toString();
   return str.length < max ? pad("0" + str, max) : str;
 }
+function rgbToHexString(string) {
+    string = string.substring(4, string.length-1)
+            .replace(/ /g, '')
+            .split(',');
+  return rgbToHex(parseInt(string[0]), parseInt(string[1]), parseInt(string[2]));
+}
 function rgbToHex(r, g, b) {
   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
@@ -693,6 +729,12 @@ function hexToRgb(hex) {
     g: parseInt(result[2], 16),
     b: parseInt(result[3], 16)
   } : null;
+}
+function addAlpha(color, opacity) {
+    // coerce values so ti is between 0 and 1.
+    console.log(color);
+    var _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
+    return color + _opacity.toString(16).toUpperCase();
 }
 function getHashTagsPro(inputText) {  
     var regex = /(?:^|\s)(?:#)([a-zA-Z+-§\d]+)/gm;
@@ -1015,6 +1057,8 @@ function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback
             } else {
                 iframe.find('#'+idElement).find('option:contains("'+value+'")').prop('selected',true);
             }
+
+
             $(this).unbind();
             iframe.find('button[type="submit"]').trigger('click');
             // console.log(arrayLinksArvore, url,  nameLink, idElement, value);
@@ -1023,6 +1067,7 @@ function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback
     } else {
         return false;
     }
+    
 }
 function automaticActions(type, mode, callback = false) {
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
@@ -1570,12 +1615,14 @@ function filterTagKanban(this_) {
         }, 100);
         setOptionsPro('filterTag_kanban', (tagName ? tagName : ''));
         setOptionsPro('filterTagType_kanban', tagType);
+        setOptionsPro('filterTag_removed', false);
     } else {
         _parent.find('.kanban-item').show();
         _parent.find('.kanban-item-priority').remove();
         removeOptionsPro('filterTag_kanban');
         removeOptionsPro('filterTagType_kanban');
         getKanbanUserPriority(this_, 'remove');
+        setOptionsPro('filterTag_removed', true);
     }
     _parent.find('.kanban-container').animate({scrollTop: 0}, 500);
     infraTooltipOcultar();
@@ -1601,10 +1648,12 @@ function filterTagTable(this_) {
             _parent.find('tbody').find('tr').hide();
             _parent.find('tbody').find('tr.'+tagName).show();
             $('#tabelaAtivPanel').find('.filterTagClean').show();
+            setOptionsPro('filterTag_removed', false);
     } else {
         var htmlFilter = '';
         $('.tableFollow[data-tabletype="'+typeTable+'"]').find('tbody tr').show();
         $('#tabelaAtivPanel').find('.filterTagClean').hide();
+        setOptionsPro('filterTag_removed', true);
     }
         /*    
         console.log({
@@ -1637,8 +1686,8 @@ function normalizeAreaTela() {
 }
 function initClassicEditor() {
     if (typeof ClassicEditor === 'undefined') {
-        $.getScript(URL_SEIPRO+"js/lib/ckeditor/ckeditor.js");  
-        // var htmlScript = '<script data-config="ckeditor-seipro" type="text/javascript" charset="UTF-8" src="'+URL_SEIPRO+'js/lib/ckeditor/ckeditor.js"></script>';
+        $.getScript(URL_SPRO+"js/lib/ckeditor/ckeditor.js");  
+        // var htmlScript = '<script data-config="ckeditor-seipro" type="text/javascript" charset="UTF-8" src="'+URL_SPRO+'js/lib/ckeditor/ckeditor.js"></script>';
         // $(htmlScript).appendTo('head');
     }
 }
@@ -2704,6 +2753,30 @@ function openConfigBoxPro(html = '', func_open = false, func_close = false) {
             }]
         });
 }
+function generateGreetings(){
+    var currentHour = parseInt(moment().format("HH"));
+    console.log(currentHour);
+    if (currentHour >= 5 && currentHour < 12){
+        return "Bom dia";
+    } else if (currentHour >= 12 && currentHour < 18){
+        return "Boa tarde";
+    } else if (currentHour >= 18 || currentHour < 5){
+        return "Boa noite";
+    } else {
+        return "Ol\u00E1"
+    }
+}
+function togglePainelPro(idTable, mode) {
+	if ( mode == 'hide' ) {
+		$('#'+idTable+'_full').hide();
+		$('#'+idTable+'_min').show();
+        setOptionsPro(idTable, 'hide');
+	} else {
+		$('#'+idTable+'_full').show();
+		$('#'+idTable+'_min').hide();
+        setOptionsPro(idTable, 'show');
+	}
+}
 function toggleTablePro(idTable, mode) {
 	if ( mode == 'hide' ) {
 		$('#'+idTable).hide();
@@ -2978,7 +3051,7 @@ function getStyleTable(color, width = 80) {
 	return styleTable;
 }
 function localStorageRestorePro(item) {
-    return JSON.parse(localStorage.getItem(item));
+    return isJson(localStorage.getItem(item)) ? JSON.parse(localStorage.getItem(item)) : false;
 }
 function localStorageStorePro(item, result) {
     localStorage.setItem(item, JSON.stringify(result));

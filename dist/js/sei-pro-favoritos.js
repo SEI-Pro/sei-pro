@@ -958,10 +958,10 @@ function setPanelFavorites(mode) {
             orderDivPanel(htmlPanelFavorites, idOrder, 'favoritesPro');
 
             if (typeof L === 'undefined') {
-                loadStylePro(URL_SEIPRO+"css/leaflet.css");
-                $.getScript(URL_SEIPRO+"js/lib/leaflet.js", function( data, textStatus, jqxhr ) {
+                loadStylePro(URL_SPRO+"css/leaflet.css");
+                $.getScript(URL_SPRO+"js/lib/leaflet.js", function( data, textStatus, jqxhr ) {
                     if (typeof L === 'object' && jqxhr.status == 200) {
-                        $.getScript(URL_SEIPRO+"js/lib/leaflet-geocoder.js");
+                        $.getScript(URL_SPRO+"js/lib/leaflet-geocoder.js");
                     }
                   });
             }
@@ -1031,7 +1031,7 @@ function checkFileRemoteFav(mode, data = false) {
                 setTimeout(function(){
                     statusLoadRemoteFile = true;
                 }, 5000);
-                console.log('getRemoteFileFav', datetime_server, datetime_local.add(1,'minutes'), datetime_server > datetime_local.add(1,'minutes'));
+                console.log('getRemoteFileFav');
             }
         }
     }
@@ -1341,8 +1341,8 @@ function getFavoritesEnviarProcesso() {
                         '   </div>'+
                         '</div>';
     ifrVisualizacao.find('#frmAtividadeListar').prepend(htmlAddFav);
-    loadStylePro(URL_SEIPRO+"css/sei-pro.css", ifrVisualizacao.find('head'), ifrVisualizacao);
-    loadStylePro(URL_SEIPRO+"css/fontawesome.min.css", ifrVisualizacao.find('head'), ifrVisualizacao);
+    loadStylePro(URL_SPRO+"css/sei-pro.css", ifrVisualizacao.find('head'), ifrVisualizacao);
+    loadStylePro(URL_SPRO+"css/fontawesome.min.css", ifrVisualizacao.find('head'), ifrVisualizacao);
     loadScriptFavoriteTag(ifrVisualizacao);
 }
 function favoritosLabelOptions(id_procedimento) {
@@ -1394,7 +1394,7 @@ function loadScriptFavoriteTag(iFrame) {
                         '       if (typeof $().tagsInput !== \'undefined\') {\n'+
                         '           getFavoriteTagIframe();\n'+
                         '       } else {\n'+
-                        '           $.getScript(\''+URL_SEIPRO+'js/lib/jquery.tagsinput-revisited.js\');\n'+
+                        '           $.getScript(\''+URL_SPRO+'js/lib/jquery.tagsinput-revisited.js\');\n'+
                         '           setTimeout(function(){\n'+
                         '               initFavoriteTagIframe(TimeOut - 100);\n'+
                         '               console.log(\'Reload initFavoriteTagIframe\');\n'+

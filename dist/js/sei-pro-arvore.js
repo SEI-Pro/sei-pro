@@ -1448,6 +1448,17 @@ function optionSearchInteressado(this_) {
 function setDadosProcessoArvore() {
     var prop = parent.dadosProcessoPro.propProcesso;
 
+    var htmlDescricao =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="descricao">'+
+                                '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                '      <i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>'+
+                                '      Especifica\u00E7\u00E3o:'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '   </label>'+
+                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'display:none' : '')+'">'+
+                                '       <a class="newLink" style="cursor:pointer" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.txtDescricao+'</a>'+
+                                '   </div>'+
+                                '</div>';
+
     var htmlTipoProcedimento =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="tipo_procedimento">'+
                                 '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                 '      <i class="fas fa-inbox azulColor iconDadosProcesso"></i>'+
@@ -1530,11 +1541,27 @@ function setDadosProcessoArvore() {
         htmlObservacoes = ($.inArray("Observa\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlObservacoes : '';
 
     $('.panelDadosArvorePro').remove();
-    $('#frmArvore').append(htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes);  
+    $('#frmArvore').append(htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes);  
     parent.forceOnLoadBodyPage();  
 }
+function initAtividadesProcesso(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (
+        typeof parent.arrayConfigAtividades !== 'undefined' && 
+        typeof parent.arrayConfigAtividades.perfil !== 'undefined'
+    ) {
+        if (parent.checkConfigValue('gerenciaratividades')) { 
+            setAtividadesProcesso();
+        }
+    } else {
+        setTimeout(function(){ 
+            if (TimeOut == 9000) { parent.getAtividades(); }
+            initAtividadesProcesso(TimeOut - 100); 
+        }, 500);
+    }
+}
 function setAtividadesProcesso() {
-    var htmlAtividades = getAtividadesProcesso();
+    var htmlAtividades = getAtividadesProcessoArvore();
     $('.panelDadosArvore_atividades').after(htmlAtividades).remove();
 
     if (htmlAtividades != '') {
@@ -1575,7 +1602,7 @@ function filterTagKanbanArvore(this_) {
         _parent.find('.kanban-item').show();
     }
 }
-function getAtividadesProcesso() {
+function getAtividadesProcessoArvore() {
     var htmlAtividades = '';
     var htmlInfoAtividades = '';
     if (parent.arrayAtividadesProcPro.length > 0) {
@@ -1668,7 +1695,8 @@ function stylePanelArvore() {
                                 '</div>';
             htmlResponsaveis = ($.inArray("Atribui\u00E7\u00E3o",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlResponsaveis : '';
 
-        var htmlAtividades = getAtividadesProcesso();
+        var htmlAtividades = '<div class="panelDadosArvore panelDadosArvore_atividades" data-type="atividades"></div>';
+        initAtividadesProcesso();
 
         $('#frmArvore').append(htmlAtividades+htmlResponsaveis);
 
@@ -1688,16 +1716,19 @@ function stylePanelArvore() {
         if ($.inArray("Anota\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) {
             getDadosAnotacao();
         }
+        if ($('#divRelacionados').text().trim() == '') {
+            $('#divRelacionados').hide();
+        }
     }
 }
 function initStylePanelArvore(TimeOut = 9000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }
     if (
-            typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
-            selectedItensPanelArvore.length > 0 && 
-            (!parent.userHashAtiv || (parent.userHashAtiv && parent.checkLoadAtividadesProcPro)) &&
-            typeof parent.__ !== 'undefined'
-        ) {
+        typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
+        selectedItensPanelArvore.length > 0 && 
+        (!parent.userHashAtiv || (parent.userHashAtiv && parent.checkLoadAtividadesProcPro)) &&
+        typeof parent.__ !== 'undefined'
+    ) {
         if (!getOptionsPro('optionsFlashMenu_panelinfo') || getOptionsPro('optionsFlashMenu_panelinfo') == 'enabled') { 
             stylePanelArvore();
         }
@@ -1760,11 +1791,11 @@ function initSeiProArvore() {
         // parent.resizeWinArvore();
     // }
     if (
-        (typeof parent.setAtividadesProcesso === 'function' || typeof parent.setAtividadesProcesso !== 'undefined') && 
+        (typeof parent.initAtividadesProcesso === 'function' || typeof parent.initAtividadesProcesso !== 'undefined') && 
         parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null &&
         typeof parent.__ !== 'undefined'
         ) {
-        parent.setAtividadesProcesso();
+        parent.initAtividadesProcesso();
     }
     if (
         (typeof parent.insertIconFavorites === 'function' || typeof parent.insertIconFavorites !== 'undefined') && 

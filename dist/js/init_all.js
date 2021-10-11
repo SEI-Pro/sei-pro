@@ -7,11 +7,11 @@ function getUrlExtension(url) {
         return browser.runtime.getURL(url);
     }
 }
-function getVersionExtension() {
+function getManifestExtension() {
     if (typeof browser === "undefined") {
-        return chrome.runtime.getManifest().version;
+        return chrome.runtime.getManifest();
     } else {
-        return browser.runtime.getManifest().version;
+        return browser.runtime.getManifest();
     }
 }
 function loadFontIcons(elementTo) {
@@ -42,18 +42,26 @@ function loadFilesUI() {
     loadStylePro(getUrlExtension('css/jquery-ui.css'), 'head');
 }
 function pathExtensionSEIPro() {
-    var URL_SEIPRO = getUrlExtension("js/sei-pro.js");
-        URL_SEIPRO = URL_SEIPRO.toString().replace('js/sei-pro.js', '');
-    return URL_SEIPRO;
+    var URL_SPRO = getUrlExtension("js/sei-pro.js");
+        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
+    return URL_SPRO;
 }
 function getPathExtensionPro() {
     if ($('script[data-config="config-seipro"]').length == 0) {
-        var URL_SEIPRO = pathExtensionSEIPro();
+        var URL_SPRO = pathExtensionSEIPro();
+        var manifest = getManifestExtension();
+        var VERSION_SPRO = manifest.version;
+        var NAMESPACE_SPRO = manifest.short_name;
         var scriptText =    "<script data-config='config-seipro'>\n"+
-                            "   var URL_SEIPRO = '"+URL_SEIPRO+"';\n"+
-                            "   var VERSION_SEIPRO = '"+getVersionExtension()+"';\n"+
+                            "   var URL_SPRO = '"+URL_SPRO+"';\n"+
+                            "   var VERSION_SPRO = '"+VERSION_SPRO+"';\n"+
+                            "   var NAMESPACE_SPRO = '"+NAMESPACE_SPRO+"';\n"+
                             "</script>";
         $(scriptText).appendTo('head');
+
+        if (NAMESPACE_SPRO != 'SPro') {
+            sessionStorage.setItem('other_extension', URL_SPRO);
+        }
     }
 }
 function loadScriptProAll() {
@@ -68,4 +76,15 @@ function loadScriptProAll() {
         $.getScript(getUrlExtension("js/sei-pro-all.js"));
     }
 }
-loadScriptProAll();
+if (getManifestExtension().short_name == 'SPro') {
+    setTimeout(function(){ 
+        if (sessionStorage.getItem('other_extension') === null){
+            loadScriptProAll();
+            console.log('@@@ LOADING SPRO ALL');
+        } else {
+            console.log('&&&&&&& RECUSE SPRO ALL');
+        }
+    }, 1000);
+} else {
+    loadScriptProAll();
+}

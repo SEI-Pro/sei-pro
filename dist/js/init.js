@@ -45,11 +45,11 @@ function getUrlExtension(url) {
         return browser.runtime.getURL(url);
     }
 }
-function getVersionExtension() {
+function getManifestExtension() {
     if (typeof browser === "undefined") {
-        return chrome.runtime.getManifest().version;
+        return chrome.runtime.getManifest();
     } else {
-        return browser.runtime.getManifest().version;
+        return browser.runtime.getManifest();
     }
 }
 function loadConfigPro() {
@@ -209,19 +209,27 @@ function loadScriptVisualizacaoPro() {
     }
 }
 function pathExtensionSEIPro() {
-    var URL_SEIPRO = getUrlExtension("js/sei-pro.js");
-        URL_SEIPRO = URL_SEIPRO.toString().replace('js/sei-pro.js', '');
-    return URL_SEIPRO;
+    var URL_SPRO = getUrlExtension("js/sei-pro.js");
+        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
+    return URL_SPRO;
 }
 function getPathExtensionPro() {
     if ($('script[data-config="config-seipro"]').length == 0) {
-        var URL_SEIPRO = pathExtensionSEIPro()
+        var URL_SPRO = pathExtensionSEIPro();
+        var manifest = getManifestExtension();
+        var VERSION_SPRO = manifest.version;
+        var NAMESPACE_SPRO = manifest.short_name;
         var scriptText =    "<script data-config='config-seipro'>\n"+
-                            "   var URL_SEIPRO = '"+URL_SEIPRO+"';\n"+
-                            "   var VERSION_SEIPRO = '"+getVersionExtension()+"';\n"+
+                            "   var URL_SPRO = '"+URL_SPRO+"';\n"+
+                            "   var VERSION_SPRO = '"+VERSION_SPRO+"';\n"+
+                            "   var NAMESPACE_SPRO = '"+NAMESPACE_SPRO+"';\n"+
                             "</script>";
         $(scriptText).appendTo('head');
-        console.log(chrome.runtime.getManifest().version);
+
+        if (NAMESPACE_SPRO != 'SPro') {
+            sessionStorage.setItem('other_extension', URL_SPRO);
+            console.log(manifest);
+        }
     }
 }
 function loadScriptPro() {
@@ -256,8 +264,19 @@ function loadScriptPro() {
             $.getScript(getUrlExtension("js/lib/jquery.tagsinput-revisited.js"));
             $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
             $.getScript(getUrlExtension("js/lib/chart.min.js"));
-            console.log('loadScriptPro');
+            console.log('loadScriptPro', getManifestExtension().short_name);
         });
     }
 }
-loadScriptPro();
+if (getManifestExtension().short_name == 'SPro') {
+    setTimeout(function(){ 
+        if (sessionStorage.getItem('other_extension') === null){
+            loadScriptPro();
+            console.log('@@@ LOADING SPRO');
+        } else {
+            console.log('&&&&&&& RECUSE SPRO');
+        }
+    }, 1000);
+} else {
+    loadScriptPro();
+}

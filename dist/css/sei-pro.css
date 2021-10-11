@@ -322,7 +322,6 @@ a.newLink.iconStarAtiv {
 }
 .seiProForm input[type="text"],
 .seiProForm input[type="date"],
-.seiProForm input[type="dates"],
 .seiProForm input[type="time"],
 .seiProForm input[type="email"],
 .seiProForm input[type="datetime"],
@@ -1679,6 +1678,14 @@ table.moreInfoBox td:first-child,
     margin: 7% calc(50% - 50px);
     font-weight: 600;
 }
+.kanban-container.view_min .kanban-item.tagKanName_date_pausado::before {
+    margin: 0 calc(50% - 36px);
+    font-size: 36pt;
+}
+.kanban-container.view_min .kanban-item:hover.tagKanName_date_pausado::before {
+    margin: 7% calc(50% - 50px);
+    font-size: 60pt;
+}
 .kanban-container .item_handle.drag_handler {
     background: transparent;
 }
@@ -2896,28 +2903,6 @@ div.infraTooltipTexto i.far {
     min-height: 50px;
     overflow: inherit;
 }
-/*
-#frmEstatisticas .chosen-container-single {
-    left: 7%;
-}
-#frmPesquisaProtocolo .chosen-container-single {
-    left: 16%;
-}
-#frmAtividadeListar .chosen-container-single {
-    top: 21%;
-}
-#frmDocumentoGeracaoMultiplo #divBloco .chosen-container-single,
-#frmDocumentoGeracaoMultiplo #divSerie .chosen-container-single,
-#frmGerenciarSituacao .chosen-container-single {
-    top: 40%;
-}
-#frmAtividadeAtribuir .chosen-container-single {
-    top: 6%;
-}
-#frmAcompanhamentoUnidade .chosen-container-single {
-    left: 15%;
-}
-*/
 div#chartAtivActions .chosen-container {
     float: right;
     margin-left: 20px;

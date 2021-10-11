@@ -166,11 +166,10 @@ function getServerAtividades(param, mode) {
             )
         ) {
         param.hash = userHashAtiv;
-        param.version = VERSION_SEIPRO;
+        param.version = VERSION_SPRO;
         param.perfil = (getOptionsPro('perfilAtividadesSelected')) ? getOptionsPro('perfilAtividadesSelected') : '';
         delayServerAtiv = 1; setTimeout(function(){ delayServerAtiv = 0; }, 1000);
         if (typeof loadingButtonConfirm !== 'undefined') { loadingButtonConfirm(true); }
-
         var authToken = (getTokenGoogle()) 
             ? function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer '+getTokenGoogle());
@@ -208,7 +207,8 @@ function getServerAtividades(param, mode) {
                         }
                     } else {
                         initPanelAtividades(arrayAtividadesPro);
-                    } 
+                    }
+
                 } else {
                     if (typeof ativData.padrao !== 'undefined' && typeof ativData.padrao.perfil !== 'undefined' && ativData.padrao.perfil.login != userSEI) {
                         alertaBoxPro('Error', 'exclamation-triangle', 'A chave de acesso ao sistema de '+__.atividades+' ('+ativData.padrao.perfil.login+') \u00E9 diferente do login do SEI ('+userSEI+'). <br><br>Solicite nova chave ao administrador.');
@@ -305,6 +305,7 @@ function getServerAtividades(param, mode) {
                             localStorageStorePro('configDataAtividadesProcPro', resultAtivDataProc);
                             initPanelAtividades(ativData);
                             getInsertIconAtividade();  
+                            getProfileAtiv();
 
                             console.log(ativData);
 
@@ -480,7 +481,7 @@ function sendErrorReport(this_) {
             action: action,
             user_agent: navigator.userAgent,
             user_sei: userSEI,
-            version_seipro: VERSION_SEIPRO,
+            version_seipro: VERSION_SPRO,
             text_error: textError
         };
         getServerAtividades(param, action);
@@ -1375,7 +1376,7 @@ function updateAtividade(this_ = false){
 }
 
 // CRIA PAINEL DE GESTAO DE ATIVIDADES DO PROCESSO
-function setAtividadesProcesso(storeAtividades = arrayAtividadesProcPro) {
+function setAtividadesProcessoHome(storeAtividades = arrayAtividadesProcPro) {
     var ifrArvore = $('#ifrArvore').contents();
         ifrArvore.find('#divArvore .dateBoxIcon').remove();
     $.each(storeAtividades,function(index, value){
@@ -1387,7 +1388,7 @@ function setAtividadesProcesso(storeAtividades = arrayAtividadesProcPro) {
         }
     });
     if (ifrArvore.find('.panelDadosArvore_atividades').length > 0) {
-        $('#ifrArvore')[0].contentWindow.setAtividadesProcesso();
+        $('#ifrArvore')[0].contentWindow.initAtividadesProcesso();
     }
 }
 
@@ -1788,7 +1789,7 @@ function getRowsPanelAtividades(storeAtividades, target) {
         var htmlColumnsAtividades = $.map(arrayColumnSort, function(v){
                                         return getTdRow(v);
                                     }).join('');
-                                    
+
         var htmlTableAtividades =   '       <tr data-tagname="SemGrupo" data-index="'+value.id_demanda+'" class="tagTableName_'+tagName_user+' '+tagName_unidade+' '+tagsAtivClass+' '+tagDatesAtivClass+'" style="'+tagsAtivPriority+'">'+
                                     '           <td align="center">'+
                                     '               <input type="checkbox" onclick="followSelecionarItens(this)" id="atividadePro_'+value.id_demanda+'" name="atividadePro" value="'+value.id_procedimento+'">'+
@@ -2072,7 +2073,7 @@ function getTabsRelatorio(this_) {
     } else {
         getTabReport('demandas', 'get');
     }
-    initDaterangePicker();
+    //initDaterangePicker();
 }
 function initDaterangePicker(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -2112,8 +2113,8 @@ function initDaterangePicker(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             if (TimeOut == 9000) {
-                $.getScript((URL_SEIPRO+"js/lib/daterangepicker.js"));
-                loadStylePro(URL_SEIPRO+"css/daterangepicker.css");
+                $.getScript((URL_SPRO+"js/lib/daterangepicker.js"));
+                loadStylePro(URL_SPRO+"css/daterangepicker.css");
             }
             initDaterangePicker(TimeOut - 100); 
             console.log('Reload initDaterangePicker'); 
@@ -2160,7 +2161,7 @@ function openModalConfigPanel(){
                             (checkCapacidade('config_nomenclaturas') ? getHtmlActionsConfig('nomenclaturas') : '')+
                             (checkCapacidade('config_entidades') ? getHtmlActionsConfig('entidades') : '')+
                             '   	</div>';
-    
+
             $('#configBoxProDiv').prepend(htmlBox);
         }, 
         function() {
@@ -2263,7 +2264,6 @@ function getTabsConfigPanel(panel = 'panelInfoHomeConfiguracao') {
         $('#'+tabs).tabs( "option", "active", tabActive);
     }
     getListTypesSEI();
-    console.log()
 }
 function getTabConfig(type, mode, data = false) {
     if ((checkCapacidade('config_'+type) || checkCapacidade('config_self_'+type)) && mode == 'get') {
@@ -3519,6 +3519,7 @@ function newConfig(this_) {
                 id_tipo_modalidade: tipo_modalidade_padrao,
                 carga_horaria: carga_horaria_padrao,
                 tempo_total: datesKey.dias*carga_horaria_padrao,
+                tempo_total: datesKey.dias,
                 data_inicio_vigencia: dates_inicio,
                 data_fim_vigencia: dates_fim,
                 config: {
@@ -3671,7 +3672,7 @@ function newConfigUser(this_) {
                     var dates_inicio = moment().startOf('month').format('YYYY-MM-DD HH:mm:ss');
                     var dates_fim = moment().endOf('month').format('YYYY-MM-DD HH:mm:ss');
                     var datesKey = getWorkDaysBetweenDates(dates_inicio, dates_fim, arrayConfigAtivUnidade.sigla_unidade);
-                
+
                     if (checkAtivRequiredFields(nome_completo[0], 'mark')) {
                         var key = {
                                 id_unidade: arrayConfigAtivUnidade.id_unidade,
@@ -3711,7 +3712,7 @@ function newConfigUser(this_) {
 }
 function getConfigServerDoc(action, param) {
     param.hash = userHashAtiv;
-    param.version = VERSION_SEIPRO;
+    param.version = VERSION_SPRO;
     param.perfil = (getOptionsPro('perfilAtividadesSelected')) ? getOptionsPro('perfilAtividadesSelected') : '';
     $.ajax({
         type: "POST",
@@ -5200,18 +5201,16 @@ function editConfigOptions(this_, id) {
                                         }).join('');
 
             htmlBox =   '<div id="'+idConfigBox+'" class="atividadeWork" data-entidade="'+(value && value.id_entidade ? value.id_entidade : 0)+'">'+
+                        '<div id="'+idConfigBox+'_tabs" style="border: none; min-height: 300px; margin: 0;">'+
+                        '   <ul style="font-size: 10px;">'+
+                        '       <li><a href="#tabs_'+idConfigBox+'_distribuicao">Distribuicao</a></li>'+
+                        '       <li><a href="#tabs_'+idConfigBox+'_planos_trabalho">Planos de Trabalho</a></li>'+
+                        '       <li><a href="#tabs_'+idConfigBox+'_geral">Configura\u00E7\u00F5es Gerais</a></li>'+
+                        '   </ul>'+
+                        '   <div id="tabs_'+idConfigBox+'_distribuicao">'+
                         '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine">'+
                         '      <tr>'+
-                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
-                        '               <label><i class="iconPopup iconSwitch fas fa-random cinzaColor"></i>Distribui\u00E7\u00E3o</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td colspan="2">'+
-                        '                           <table style="width:100%;">'+
-                        '                               <tr>'+
-                        '                                 <td style="text-align: left; border: none;font-size: 10pt;"><i class="iconPopup fas fa-umbrella-beach cinzaColor"></i> Feriados <Br>da Entidade</td>'+
+                        '                                 <td style="text-align: left; border: none;font-size: 10pt;"><i class="iconPopup fas fa-umbrella-beach cinzaColor"></i> Feriados da Entidade</td>'+
                         '                                 <td style="border: none;">'+
                         '                                     <span style="background: #fffcd7; padding: 5px; border-radius: 5px; font-size: 8pt;">'+
                         '                                       <i class="fas fa-info-circle azulColor" style="margin: 0 5px; font-size: 10pt;"></i>'+
@@ -5272,8 +5271,89 @@ function editConfigOptions(this_, id) {
                         '                                          </tfoot>'+
                         '                                      </table>'+
                         '                                   </td>'+
-                        '                               </tr>'+
-                        '                           </table>'+
+                        '      </tr>'+
+                        '   </table>'+
+                        '   </div>'+
+                        '   <div id="tabs_'+idConfigBox+'_planos_trabalho">'+
+                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine">'+
+                        '      <tr>'+
+                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                        '               <label><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Planos de Trabalho</label>'+
+                        '           </td>'+
+                        '           <td>'+
+                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-user-clock cinzaColor"></i> Carga hor\u00E1ria padr\u00E3o</td>'+
+                        '                      <td>'+
+                        '                          <input type="number" class="singleOptionConfig" data-key="carga_horaria_padrao" id="carga_horaria_padrao" value="'+(config && typeof config.carga_horaria_padrao !== 'undefined' && config.carga_horaria_padrao != ''  ? config.carga_horaria_padrao : 8 )+'">'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-wrench cinzaColor"></i> Tipo de modalidade padr\u00E3o</td>'+
+                        '                      <td>'+
+                        '                          <select class="singleOptionConfig" data-key="tipo_modalidade_padrao" data-type="number" id="tipo_modalidade_padrao">'+
+                        '                          '+selectModalidadesOptions+
+                        '                          </select>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '               </table>'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '      <tr>'+
+                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                        '               <label><i class="iconPopup iconSwitch fas fa-file-signature cinzaColor"></i>Modelos</label>'+
+                        '           </td>'+
+                        '           <td>'+
+                        '               <table style="font-size: 8pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td>'+
+                        '                           <a class="newLink editModelDoc" data-type="'+data.type+'" data-id_reference="'+value.id_entidade+'" data-action="edit" data-mode="modelo_termo_adesao" data-icon="pencil-alt" data-title="Editar Modelo: Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;">'+
+                        '                               <i class="fas fa-pencil-alt cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
+                        '                               Termo de Ades\u00E3o'+
+                        '                           </a>'+
+                        '                           <a class="newLink viewModelDoc" data-type="'+data.type+'" data-sign="false" data-user="false" data-id_reference="'+value.id_entidade+'" data-action="view" data-mode="modelo_termo_adesao" data-icon="eye" data-title="Visualizar Modelo: Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;">'+
+                        '                               <i class="fas fa-eye cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
+                        '                           </a>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '               </table>'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '   </table>'+
+                        '   </div>'+
+                        '   <div id="tabs_'+idConfigBox+'_geral">'+
+                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine">'+
+                        '      <tr>'+
+                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                        '               <label><i class="iconPopup iconSwitch fas fa-shield-alt cinzaColor"></i>Seguran\u00E7a</label>'+
+                        '           </td>'+
+                        '           <td>'+
+                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-link cinzaColor"></i> URL do SEI</td>'+
+                        '                      <td>'+
+                        '                          <input type="text" class="singleOptionConfig" data-key="sei_entidade" id="sei_entidade" value="'+(config && typeof config.sei_entidade !== 'undefined' && config.sei_entidade != ''  ? config.sei_entidade : url_host.replace('controlador.php','') )+'">'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-key cinzaColor"></i> M\u00E9todo de autentica\u00E7\u00E3o</td>'+
+                        '                      <td>'+
+                        '                          <select class="singleOptionConfig" data-key="metodo_autenticacao" id="metodo_autenticacao">'+
+                        '                              <option value="apikey" '+(config && (typeof config.metodo_autenticacao === 'undefined' || config.metodo_autenticacao == 'apikey')  ? 'selected' : '')+'>Chave de acesso do sistema</option>'+
+                        '                              <option value="google" '+(config && typeof config.metodo_autenticacao !== 'undefined' && config.metodo_autenticacao == 'google'  ? 'selected' : '')+'>Login com o Google</option>'+
+                        '                          </select>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fab fa-chrome cinzaColor"></i> URL do extens\u00E3o (Google Chrome)</td>'+
+                        '                      <td>'+
+                        '                          <input type="text" class="singleOptionConfig" data-key="extensao_chrome" id="extensao_chrome" value="'+(config && typeof config.extensao_chrome !== 'undefined' && config.extensao_chrome != ''  ? config.extensao_chrome : '' )+'">'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fab fa-firefox cinzaColor"></i> URL do extens\u00E3o (Mozilla Firefox)</td>'+
+                        '                      <td>'+
+                        '                          <input type="text" class="singleOptionConfig" data-key="extensao_firefox" id="extensao_firefox" value="'+(config && typeof config.extensao_firefox !== 'undefined' && config.extensao_firefox != ''  ? config.extensao_firefox : '' )+'">'+
                         '                      </td>'+
                         '                  </tr>'+
                         '               </table>'+
@@ -5330,77 +5410,20 @@ function editConfigOptions(this_, id) {
                         '                          </div>'+
                         '                      </td>'+
                         '                  </tr>'+
-                        '               </table>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
-                        '               <label><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Planos de Trabalho</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
                         '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-user-clock cinzaColor"></i> Carga hor\u00E1ria padr\u00E3o</td>'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-redo-alt cinzaColor"></i> Desativar a cria\u00E7\u00E3o de '+__.demandas+' recorrentes</td>'+
                         '                      <td>'+
-                        '                          <input type="number" class="singleOptionConfig" data-key="carga_horaria_padrao" id="carga_horaria_padrao" value="'+(config && typeof config.carga_horaria_padrao !== 'undefined' && config.carga_horaria_padrao != ''  ? config.carga_horaria_padrao : 8 )+'">'+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-wrench cinzaColor"></i> Tipo de modalidade padr\u00E3o</td>'+
-                        '                      <td>'+
-                        '                          <select class="singleOptionConfig" data-key="tipo_modalidade_padrao" data-type="number" id="tipo_modalidade_padrao">'+
-                        '                          '+selectModalidadesOptions+
-                        '                          </select>'+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '               </table>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
-                        '               <label><i class="iconPopup iconSwitch fas fa-shield-alt cinzaColor"></i>Seguran\u00E7a</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-link cinzaColor"></i> URL do SEI</td>'+
-                        '                      <td>'+
-                        '                          <input type="text" class="singleOptionConfig" data-key="sei_entidade" id="sei_entidade" value="'+(config && typeof config.sei_entidade !== 'undefined' && config.sei_entidade != ''  ? config.sei_entidade : url_host.replace('controlador.php','') )+'">'+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-key cinzaColor"></i> M\u00E9todo de autentica\u00E7\u00E3o</td>'+
-                        '                      <td>'+
-                        '                          <select class="singleOptionConfig" data-key="metodo_autenticacao" id="metodo_autenticacao">'+
-                        '                              <option value="apikey" '+(config && (typeof config.metodo_autenticacao === 'undefined' || config.metodo_autenticacao == 'apikey')  ? 'selected' : '')+'>Chave de acesso do sistema</option>'+
-                        '                              <option value="google" '+(config && typeof config.metodo_autenticacao !== 'undefined' && config.metodo_autenticacao == 'google'  ? 'selected' : '')+'>Login com o Google</option>'+
-                        '                          </select>'+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '               </table>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
-                        '               <label><i class="iconPopup iconSwitch fas fa-file-signature cinzaColor"></i>Modelos</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <table style="font-size: 8pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td>'+
-                        '                           <a class="newLink editModelDoc" data-type="'+data.type+'" data-id_reference="'+value.id_entidade+'" data-action="edit" data-mode="modelo_termo_adesao" data-icon="pencil-alt" data-title="Editar Modelo: Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;">'+
-                        '                               <i class="fas fa-pencil-alt cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                        '                               Termo de Ades\u00E3o'+
-                        '                           </a>'+
-                        '                           <a class="newLink viewModelDoc" data-type="'+data.type+'" data-sign="false" data-user="false" data-id_reference="'+value.id_entidade+'" data-action="view" data-mode="modelo_termo_adesao" data-icon="eye" data-title="Visualizar Modelo: Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;">'+
-                        '                               <i class="fas fa-eye cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                        '                           </a>'+
+                        '                          <div class="onoffswitch" style="float: right;">'+
+                        '                              <input type="checkbox" name="onoffswitch" data-key="desativa_demandas_recorrentes" class="onoffswitch-checkbox singleOptionConfig" id="desativa_demandas_recorrentes" tabindex="0" '+(config && typeof config.desativa_demandas_recorrentes !== 'undefined' && config.desativa_demandas_recorrentes  ? 'checked' : '')+'>'+
+                        '                              <label class="onoffswitch-label" for="desativa_demandas_recorrentes"></label>'+
+                        '                          </div>'+
                         '                      </td>'+
                         '                  </tr>'+
                         '               </table>'+
                         '           </td>'+
                         '      </tr>'+
                         '   </table>'+
+                        '   </div>'+
                         '</div>';
     }
     if (htmlBox != '') {
@@ -6290,7 +6313,7 @@ function configPessoal() {
                     '   <tr style="height: 40px;">'+
                     '       <td colspan="2">'+
                     '           <span style="color:#ccc;font-size: 8pt;font-family: monospace;">'+
-                    '               Vers\u00E3o: '+VERSION_SEIPRO+'<br>'+
+                    '               Vers\u00E3o '+VERSION_SPRO+
                     '               Server: '+urlServerAtiv+
                     '           </span>'+
                     '       </td>'+
@@ -6334,6 +6357,7 @@ function getTableRelatorioPanel(listRelatorios) {
     var relatorioID = '#tabs_report-'+type;
     var tabelaRelatorio = $(relatorioID);
         tabelaRelatorio.show();
+    // var arrayProcessosUnidade = getProcessoUnidadePro();
     var countRelatorios = (listRelatorios.length == 1) ? listRelatorios.length+' registro:' : listRelatorios.length+' registros:';
     if (typeof listRelatorios !== 'undefined' && listRelatorios.length > 0 && listRelatorios != 0) {
         htmlTableRelatorios =    '<table id="tableRelatorio_'+type+'" data-name-table="Relatorio_'+type+'" style="width: max-content !important; margin-top: 20px;" class="tableInfo tableZebra tableFollow tableAtividades tableRelatorioView" data-tabletype="relatorios">'+
@@ -6516,6 +6540,7 @@ function getTableRelatorioPanel(listRelatorios) {
                 }
             });
             setTimeout(function(){ 
+
                 var btnAllData =    (typeof arrayConfigAtividades.perfil.nivel !== 'undefined' && arrayConfigAtividades.perfil.nivel !== null && arrayConfigAtividades.perfil.nivel == 1 ? 
                                     '   <div class="viewTableToggle editTableToggle">'+
                                     '           <label class="label" for="changeViewTableRelatorio_'+type+'"><i class="fas fa-university cinzaColor" style="margin: 0px 6px 0 4px;"></i> Toda entidade</label>'+
@@ -7480,7 +7505,7 @@ function removeAfastamento(this_, id_afastamento = 0) {
 function getKanbanAtividades(this_) {
     var kanbanElem = '#kanbanAtivPanel';
     var kanbanDiv = $(kanbanElem);
-    kanbanDiv.html('').show();
+        kanbanDiv.html('').show();
     var listAtividadesNIniciadas = jmespath.search(arrayAtividadesPro, "[?data_inicio=='0000-00-00 00:00:00']");
         listAtividadesNIniciadas = getSortKanbanItens(listAtividadesNIniciadas, '_niniciadas');
     var listAtividadesIniciadas = jmespath.search(arrayAtividadesPro, "[?data_inicio!='0000-00-00 00:00:00'] | [?data_entrega=='0000-00-00 00:00:00']");
@@ -7554,7 +7579,6 @@ function getKanbanAtividades(this_) {
             // responsivePercentage: true,
             itemHandleOptions:{
               enabled: true,
-            //   handleClass : 'kanban_cointainer'
             },
             dropEl: function(el, target, source, sibling){
                 var targetEl = target.parentElement.getAttribute('data-id');
@@ -7596,15 +7620,15 @@ function getKanbanAtividades(this_) {
 
     // corrige a altura de todos os quadros pelo maior deles
     var maxHeightBoard = Math.max.apply(null, kanbanDiv.find('.kanban-board').map(function(){ return $(this).height() }).get());
-    kanbanDiv.find('.kanban-board').css('height', maxHeightBoard+'px');
-    kanbanDiv.find('.kanban-board .kanban-drag').css('height', (maxHeightBoard-48)+'px');
+        kanbanDiv.find('.kanban-board').css('height', maxHeightBoard+'px');
+        kanbanDiv.find('.kanban-board .kanban-drag').css('height', (maxHeightBoard-48)+'px');
 
     var tagName = getOptionsPro('filterTag_kanban');
     if (typeof tagName !== 'undefined' && tagName != '') {
         setTimeout(function(){ 
             $('.kanbanAtividade .tagTableText_'+tagName).eq(0).trigger('click');
         }, 100);
-    } else if ((!tagName || tagName == '') && ( checkCapacidade('only_self_atividades') )) {
+    } else if ((!tagName || tagName == '') && (checkCapacidade('only_self_atividades')) && !setOptionsPro('filterTag_removed') ) {
         var tagName_thisUser = removeAcentos(arrayConfigAtividades.perfil.apelido).replace(/\ /g, '').toLowerCase();
         setTimeout(function(){ 
             $('.kanbanAtividade .tagTableText_'+tagName_thisUser).eq(0).trigger('click');
@@ -7641,7 +7665,6 @@ function getKanbanAtividades(this_) {
     if (getOptionsPro('panelKanbanView')) {
         kanbanDiv.find('.viewControlPro button[data-value="'+getOptionsPro('panelKanbanView')+'"]').trigger('click');
     }
-
     updateCountKanbanBoard();
 }
 function changeViewControl(this_) {
@@ -7740,11 +7763,17 @@ function getSortKanbanItens(listAtividades, nameBoard) {
     var type = getOptionsPro('filterTagType_kanban');
     if (type == 'user') {
         listAtividades = jmespath.search(listAtividades, "sort_by([*],&prioridade)");
-    } else if (order) {
-        $.each(listAtividades, function(i, value){
-            listAtividades[i]['id_order'] = (jmespath.search(order, "[?id_demanda==`"+value.id_demanda+"`] | length(@)") > 0) ? jmespath.search(order, "[?id_demanda==`"+value.id_demanda+"`].order | [0]") : 9999;
-        });
-        listAtividades = jmespath.search(listAtividades, "sort_by([*],&id_order)");
+    } else if (order.length > 0) {
+        if (order[0].pin == true) {
+            $.each(listAtividades, function(i, value){
+                listAtividades[i]['id_order'] = (jmespath.search(order, "[?id_demanda==`"+value.id_demanda+"`] | length(@)") > 0) ? jmespath.search(order, "[?id_demanda==`"+value.id_demanda+"`].order | [0]") : 9999;
+            });
+            listAtividades = jmespath.search(listAtividades, "sort_by([*],&id_order)");
+        } else {
+            listAtividades = jmespath.search(listAtividades, "sort_by([*],&prazo_entrega)");
+        }
+    } else {
+        listAtividades = jmespath.search(listAtividades, "sort_by([*],&prazo_entrega)");
     }
     return listAtividades;
 }
@@ -7807,7 +7836,7 @@ function getKanbanItem(value) {
     var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada == '0000-00-00 00:00:00') ? true : false;
     var checkConfigAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`] | [0].config.desativa_produtividade");
 
-    var btnPause = (!checkConfigAtiv && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('pause_atividade') && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) )
+    var btnPause = (!checkConfigAtiv && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('pause_atividade') && checkPermissionAtiv(value) )
                 ?   '<span class="info_dates_pause" style="display:block; padding: 0;opacity: 1;">'+
                     '   <a class="newLink datePausado info_noclick" onclick="parent.pauseAtividade('+value.id_demanda+')">'+
                     '       <i class="fas fa-'+(check_ispaused ? 'play' : 'pause')+'-circle '+(check_ispaused ? 'azulColor' : 'laranjaColor')+'" style="padding-right: 3px;"></i>'+
@@ -7831,9 +7860,10 @@ function getKanbanItem(value) {
                     '   </a>'+
                     '</span>'
                 : '';
+        btnActionAtiv = (checkPermissionAtiv(value)) ? btnActionAtiv : '';
             
 
-    var btnExtend = (value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('extend_atividade') && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) )
+    var btnExtend = (value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('extend_atividade') && checkPermissionAtiv(value) )
                 ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
                     '   <a class="newLink dateExtend info_noclick" onclick="parent.extendAtividade('+value.id_demanda+')">'+
                     '      <i class="fas fa-retweet azulColor" style="padding-right: 3px;"></i>'+
@@ -7842,7 +7872,7 @@ function getKanbanItem(value) {
                     '</span>'
                 : '';
 
-    var btnVariation = (value.data_inicio != '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && (checkCapacidade('variation_atividade') || checkCapacidade('type_atividade')) && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) )
+    var btnVariation = (value.data_inicio != '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && (checkCapacidade('variation_atividade') || checkCapacidade('type_atividade')) && checkPermissionAtiv(value) )
                 ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
                     '   <a class="newLink dateExtend info_noclick" onclick="parent.variationAtividade('+value.id_demanda+')">'+
                     '      <i class="fas fa-'+(value.tempo_pactuado == 0 ? 'clipboard-list' : 'graduation-cap')+' azulColor" style="padding-right: 3px;"></i>'+
@@ -7900,8 +7930,8 @@ function getKanbanItem(value) {
                 '       '+btnExtend+
                 '       '+btnVariation+
                 '       '+infoAtiv+
+                '       '+checklist+
                 '   </div>'+
-                '   '+checklist+
                 '</div>',
         click: function(el) {
             var checkOver = ($(el).find('.info_noclick:hover').length > 0) ? $(el).find('.info_noclick:hover') : false;
@@ -8405,10 +8435,9 @@ function initGetChartDemandas(TimeOut = 9000) {
 // INICIA FUNCOES DO PAINEL DE GESTAO DE ATIVIDADES
 function initFunctionsPanelAtiv(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof $().tagsInput !== 'undefined' && 
-        typeof $().resizable !== 'undefined' && 
-        typeof $().tablesorter !== 'undefined' && 
-        typeof $().autocomplete !== 'undefined') {
+    if (typeof $('.atividadeTagsPro').tagsInput !== 'undefined' && 
+        typeof $('.tabelaPanelScroll').resizable !== 'undefined' && 
+        typeof $('.ui-autocomplete-input').autocomplete !== 'undefined') {
 
         initChosenReplace('panel');
 
@@ -8528,7 +8557,7 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
                                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                         '       <span class="text">Baixar</span>'+
                                         '   </button>'+
-                                        '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light '+(getOptionsPro('panelKanbanView') === false )+'">'+
+                                        '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
                                         '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                         '       <span class="text">Copiar</span>'+
                                         '   </button>'+
@@ -8550,7 +8579,7 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
             setTimeout(function(){ 
                 $('.tableAtividades .tagTableText_'+tagName).eq(0).trigger('click');
             }, 500);
-        } else if (tagName == '' && (checkCapacidade('only_self_atividades') )) {
+        } else if (tagName == '' && (checkCapacidade('only_self_atividades') && !setOptionsPro('filterTag_removed') )) {
             var tagName_thisUser = removeAcentos(arrayConfigAtividades.perfil.apelido).replace(/\ /g, '').toLowerCase();
             setTimeout(function(){ 
                 $('.tableAtividades .tagTableText_'+tagName_thisUser).eq(0).trigger('click');
@@ -8566,13 +8595,13 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
             
             $.each(arrayAtividadesPro, function(index, value){
                 if ($.inArray(value.id_demanda, idsSelected) !== -1 ) {
-                    if ((checkCapacidade('edit_atividade') || value.id_user == arrayConfigAtividades.perfil.id_user) && value.data_inicio == '0000-00-00 00:00:00') {
+                    if (checkPermissionAtiv(value) && value.data_inicio == '0000-00-00 00:00:00') {
                         iconsCount.start.push({id:value.id_demanda, id_unidade: value.id_unidade});
-                    } else if ((checkCapacidade('edit_atividade') || value.id_user == arrayConfigAtividades.perfil.id_user) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00') {
+                    } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00') {
                         iconsCount.complete.push({id:value.id_demanda, id_unidade: value.id_unidade});
-                    } else if ((checkCapacidade('edit_atividade') || value.id_user == arrayConfigAtividades.perfil.id_user) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00') {
+                    } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00') {
                         iconsCount.rate.push({id:value.id_demanda, id_unidade: value.id_unidade});
-                    } else if ((checkCapacidade('edit_atividade') || value.id_user == arrayConfigAtividades.perfil.id_user) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao != '0000-00-00 00:00:00') {
+                    } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao != '0000-00-00 00:00:00') {
                         iconsCount.send.push({id:value.id_demanda, id_unidade: value.id_unidade});
                     }
                 }
@@ -8605,6 +8634,7 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
                 checkboxRangerSelectShift();
             }
             forcePlaceHoldChosen();
+            // dragColumnTable(tabelaAtiv);
             if (getOptionsPro('panelSortColumnsPro')) {
                 dragColumnTable(tabelaAtiv);
             }
@@ -8614,12 +8644,15 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
         getInsertIconAtividade();
         checkboxRangerSelectShift();
     } else {
-        if (typeof $().tagsInput === 'undefined') { $.getScript((URL_SEIPRO+"js/lib/jquery.tagsinput-revisited.js")) }
+        if (typeof $().tagsInput === 'undefined') { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
         setTimeout(function(){ 
             initFunctionsPanelAtiv(TimeOut - 100); 
             console.log('Reload initFunctionsPanelAtiv'); 
         }, 500);
     }
+}
+function checkPermissionAtiv(value) {
+    return ((checkCapacidade('edit_atividade') && !checkCapacidade('only_self_atividades')) || (checkCapacidade('only_self_atividades') && value.id_user == parseInt(arrayConfigAtividades.perfil.id_user))) ? true : false
 }
 // BOX DE DEMANDA SIMPLIFICADA
 function saveAtividadeSimple(id_demanda = 0) {
@@ -8652,7 +8685,7 @@ function saveAtividadeSimple(id_demanda = 0) {
                 dataDistribuicao = (moment(hr_init, 'HH:mm') < moment(config_unidade.h_util_inicio, 'HH:mm')) 
                         ? moment(dt_init.format('YYYY-MM-DD')+'T'+config_unidade.h_util_inicio).format(config_unidade.hora_format)
                         : dataDistribuicao;
-            var prazoEntrega = dt_init.add(1,'hours').format(config_unidade.hora_format);
+            var prazoEntrega = dt_init.add(1,'days').format(config_unidade.hora_format);
                 prazoEntrega = (moment(hr_init, 'HH:mm') > moment(config_unidade.h_util_fim, 'HH:mm')) 
                     ? moment(dt_init.format('YYYY-MM-DD')+'T'+config_unidade.h_util_fim).format(config_unidade.hora_format)
                     : prazoEntrega;
@@ -9322,6 +9355,7 @@ function saveAtividadeFull(id_demanda = 0) {
                         '      </tr>'+
                         '      <tr class="hrForm">'+
                         '           <td colspan="4">'+
+                        (!checkOptionEntidade('desativa_demandas_recorrentes') ?
                         '               <div '+(value ? 'style="display:none"' : '')+' class="btn-group atividadesBtnModeDist" role="group" style="float: right;margin: -15px -20px 8px 0;transform: scale(0.9);">'+
                         '                   <button type="button" onclick="changeModeDistribuicao(this)" data-value="Determinada" class="btn btn-sm btn-light active">'+
                         '                       <i class="far fa-calendar-check" style="color: #888;"></i> <span class="text">\u00DAnica</span>'+
@@ -9330,6 +9364,7 @@ function saveAtividadeFull(id_demanda = 0) {
                         '                       <i class="fas fa-redo-alt" style="color: #888;"></i> <span class="text">Recorrente</span>'+
                         '                   </button>'+
                         '               </div>'+
+                        '' : '')+
                         '           </td>'+
                         '      </tr>'+
                         '      </tr>'+
@@ -9769,7 +9804,7 @@ function checkTagsIput(TimeOut = 9000) {
                 }
             });
         } else {
-            $.getScript((URL_SEIPRO+"js/lib/jquery.tagsinput-revisited.js"));
+            $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js"));
             setTimeout(function(){ 
                 checkTagsIput(TimeOut - 100); 
                 console.log('Reload checkTagsIput'); 
@@ -10177,7 +10212,6 @@ function completeAtividade(id_demanda, confirmeBox = false) {
             } else {
                 var check_isresumed = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada != '0000-00-00 00:00:00') ? true : false;
                 var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
-
                 var optionSelectDocumentos = ( arrayConfigAtividades.tipos_documentos.length > 0 ) ? $.map(arrayConfigAtividades.tipos_documentos, function(v,k){ return ( (value && v.id_tipo_documento == value.id_tipo_documento) || (dadosIfrArvore && dadosIfrArvore.nome_documento.indexOf(v.nome_documento) !== -1) ) ? '<option value="'+v.id_tipo_documento+'" selected>'+v.nome_documento+'</option>' : '<option value="'+v.id_tipo_documento+'">'+v.nome_documento+'</option>' }).join('') : '';
                 var selectDocumentos = '<select id="ativ_id_tipo_documento" onchange="checkThisAtivRequiredFields(this)" data-key="id_tipo_documento" required><option>&nbsp;</option>'+optionSelectDocumentos+'</select>';
                     selectDocumentos = (checkOptionEntidade('dispensa_tipos_requisicao')) ? '<input type="hidden" id="ativ_id_tipo_documento" data-key="id_tipo_documento" data-param="id_tipo_documento" value="0">' : selectDocumentos;
@@ -10478,10 +10512,8 @@ function getPausasAtividadeCalc(pause_lista) {
     var data_fim = _parent.find('#ativ_data_entrega');
     var tempo_despendido = _parent.find('#ativ_tempo_despendido');
     var tempo_pausado = _parent.find('#ativ_tempo_pausado');
-    var carga_horaria_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.carga_horaria_padrao");
-        carga_horaria_padrao = (carga_horaria_padrao == null) ? 8 : carga_horaria_padrao;
     var config_user = (user.is('select')) ? user.find('option:selected').data('config') : user.data('config');
-        config_user = (typeof config_user !== 'undefined') ? config_user : {carga_horaria: carga_horaria_padrao};
+    config_user = (typeof config_user !== 'undefined') ? config_user : {carga_horaria: carga_horaria_padrao};
     var config_unidade = getBoxConfigDadosUnidade(_parent);
 
     var config_user_perfil = (arrayConfigAtividades.perfil.hasOwnProperty('config') && arrayConfigAtividades.perfil.config !== null) ? arrayConfigAtividades.perfil.config : false;
@@ -11620,7 +11652,7 @@ function infoAtividade(id_demanda) {
             resetDialogBoxPro('dialogBoxPro');
         }
     }];
-    if (checkCapacidade('complete_cancel_atividade') && value.data_entrega != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) ) {
+    if (checkCapacidade('complete_cancel_atividade') && value.data_entrega != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && checkPermissionAtiv(value) ) {
         btnDialogBoxPro.unshift({
             text: 'Cancelar Conclus\u00E3o',
             icon: "ui-icon-close",
@@ -11629,7 +11661,7 @@ function infoAtividade(id_demanda) {
             }
         });
     }
-    if (checkCapacidade('complete_edit_atividade') && value.data_entrega != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && (!checkCapacidade('only_self_atividades') || value.id_user == parseInt(arrayConfigAtividades.perfil.id_user) && checkCapacidade('only_self_atividades')) ) {
+    if (checkCapacidade('complete_edit_atividade') && value.data_entrega != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && checkPermissionAtiv(value) ) {
         btnDialogBoxPro.unshift({
             text: 'Editar Conclus\u00E3o',
             icon: "ui-icon-check",
@@ -12093,7 +12125,7 @@ function actionsAtividade(id_demanda = 0, mode = 'action') {
                     } else if (mode == 'icon') { 
                         return {icon: 'fas fa-play-circle', name: 'Iniciar '+__.demanda+'', action: 'start'} 
                     }
-                } else if (value.id_user != 0 && value.id_user != parseInt(arrayConfigAtividades.perfil.id_user)) {    
+                } else if (typeof arrayConfigAtividades.perfil !== 'undefined' && value.id_user != 0 && value.id_user != parseInt(arrayConfigAtividades.perfil.id_user)) {    
                     if (mode == 'action') { 
                         infoAtividade(id_demanda);
                     } else if (mode == 'icon') { 
@@ -12344,7 +12376,7 @@ function changeAtivChecklistSwitch(this_) {
 
         if (!table.hasClass('tableEditCell')) {
             if (typeof SimpleTableCellEditor === 'undefined') { 
-                $.getScript((URL_SEIPRO+"js/lib/jquery-table-edit.min.js"));
+                $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
                 initSimpleTableCellEditor(idTable);
             } else {
                 getSimpleTableCellEditor(idTable);
@@ -12458,7 +12490,9 @@ function getBoxConfigDadosUnidade(_parent) {
                         ? _parent.find('#ativ_id_atividade').find('option:selected').data('config').sigla_unidade 
                         : (typeof _parent.find('#ativ_id_atividade').data('config') !== 'undefined') 
                             ? _parent.find('#ativ_id_atividade').data('config').sigla_unidade 
-                            : _parent.find('#ativ_id_user').find('option:selected').data('config').sigla_unidade 
+                            : (_parent.find('#ativ_id_user').is('select') && typeof _parent.find('#ativ_id_user').data('config') !== 'undefined') 
+                                ? _parent.find('#ativ_id_user').find('option:selected').data('config').sigla_unidade 
+                                : arrayConfigAtivUnidade.sigla_unidade
                     : arrayConfigAtivUnidade.sigla_unidade;
     return getConfigDadosUnidade(unidade);
 }
@@ -12914,7 +12948,6 @@ function getOptionsSelectAtiv(arrayAtiv, value, tab) {
                             recalcula_prazo: recalcula_prazo,
                             desativa_produtividade: desativa_produtividade,
                             modalidades_atividade: modalidades_atividade,
-                            observacao_gerencial: v.config.observacao_gerencial,
                             homologado: v.homologado,
                             etiqueta: (v.config != null && typeof v.config.etiquetas !== 'undefined' ? $.map(v.config.etiquetas,function(v){ return v[0] }) : []),
                             checklist: (v.config != null && typeof v.config.checklist !== 'undefined' ? $.map(v.config.checklist,function(v){ return v[0] }) : []),
@@ -13183,7 +13216,7 @@ function updateAtivTempoPactuado(this_) {
     var tempo_pactuado = _parent.find('#ativ_tempo_pactuado');
     var config_unidade = getBoxConfigDadosUnidade(_parent);
     var htmlInfoChart = '';
-
+    
     if (typeof ativ_config === 'undefined') return false;
 
     if (!checkValue(user)) {
@@ -13586,7 +13619,7 @@ function initPanelAtividades(ativData, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelAtividades !== 'undefined' && typeof orderDivPanel !== 'undefined' && typeof moment().isoWeekdayCalc !== 'undefined') { 
         if ($('#ifrArvore').length > 0 && ativData['demandas_processo'].length > 0) {
-            setAtividadesProcesso(ativData['demandas_processo']);
+            $('#ifrArvore')[0].contentWindow.initAtividadesProcesso(ativData['demandas_processo']);
         } else {
             setPanelAtividades(ativData['demandas']);
             setAtividadesUser();
@@ -13852,7 +13885,6 @@ function getInsertIconAtividade() {
 }
 function appendModulesIcons() {
     var elementActions = $('#atividadesProActions');
-
     if ($('#ifrVisualizacao').length == 0 && elementActions.length > 0) {
         var i = 0;
         var htmlModules =   '<span class="modulesActions">';
@@ -13950,10 +13982,10 @@ function initAtividades(TimeOut = 9000) {
             getAtividades();
         }
         if (typeof $.mask === 'undefined') {
-            $.getScript(URL_SEIPRO+"js/lib/jquery.maskedinput.min.js"); 
+            $.getScript(URL_SPRO+"js/lib/jquery.maskedinput.min.js"); 
         }
         if (typeof $().chosen === 'undefined') {
-            $.getScript(URL_SEIPRO+"js/lib/chosen.jquery.min.js"); 
+            $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js"); 
         }
     } else {
         setTimeout(function(){ 
@@ -13962,7 +13994,6 @@ function initAtividades(TimeOut = 9000) {
         }, 500);
     }
 }
-
 function initPerfilLoginAtiv(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined' && typeof localStorageRestorePro !== 'undefined' ) { 
@@ -14008,7 +14039,7 @@ function getServersPro() {
                     localStorageStorePro('configBasePro_atividades', perfilLoginAtiv);
                     initAtividades();
                     // console.log('INITI');
-                // } else {
+                } else {
                     // cleanAtivParams(false);
                 }
             });
@@ -14059,30 +14090,129 @@ function onLoad(TimeOut = 9000) {
         }, 500);
     }
 }
-function onSignIn(googleUser) {
-    // var token = getTokenGoogle();
-    /*
-    var profile = googleUser.getBasicProfile();
-    console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-    console.log('Name: ' + profile.getName());
-    console.log('Image URL: ' + profile.getImageUrl());
-    console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-    console.log({Token: token});
-    */
-    // token = (typeof token !== 'undefined') ? token : false;
+function getResumeAtiv() {
+    var planoTrabalho = (typeof arrayConfigAtividades.planos !== 'undefined' && arrayConfigAtividades.planos !== null && arrayConfigAtividades.planos != 0 && arrayConfigAtividades.planos.length > 0 ) ? arrayConfigAtividades.planos : false;
+    if (planoTrabalho) {
+        var planoTrabalho = (checkCapacidade('only_self_atividades')) 
+                            ? jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | [0]")
+                            : jmespath.search(arrayConfigAtividades.planos,"{tempo_homologado: sum([*].tempo_homologado), tempo_proporcional: sum([*].tempo_proporcional)}");
+            planoTrabalho = (planoTrabalho !== null) ? planoTrabalho : false;
+        var execucaoPlano = (planoTrabalho) 
+                            ? (planoTrabalho.tempo_homologado == 0) 
+                                ? '0%' 
+                                : ((planoTrabalho.tempo_homologado/planoTrabalho.tempo_proporcional)*100).toFixed(2)+'%' 
+                            : '-';
+    } else {
+        var execucaoPlano = '-';
+    }
+    var demandaResumo = (checkCapacidade('only_self_atividades')) 
+                        ? jmespath.search(arrayAtividadesPro,"[?data_entrega=='0000-00-00 00:00:00'] | [?id_user==`"+arrayConfigAtividades.perfil.id_user+"`]")
+                        : arrayAtividadesPro;
+    var demandasTotais = (typeof arrayAtividadesPro !== 'undefined' && arrayAtividadesPro !== null && arrayAtividadesPro.length > 0) ? demandaResumo.length : 0;
+    var demandasIniciadas = (checkCapacidade('only_self_atividades')) 
+                        ? jmespath.search(arrayAtividadesPro,"[?data_entrega=='0000-00-00 00:00:00'] | [?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | [?data_inicio!='0000-00-00 00:00:00'] | length(@)")
+                        : jmespath.search(arrayAtividadesPro,"[?data_entrega=='0000-00-00 00:00:00'] | [?data_inicio!='0000-00-00 00:00:00'] | length(@)");
+    var demandasAtrasadas = 0;
+    var demandasProdutividade = 0;
+    if (demandasTotais > 0) { 
+        $.each(demandaResumo,function(i, v){
+            if (v.data_entrega == '0000-00-00 00:00:00' && moment(v.prazo_entrega,'YYYY-MM-DD HH:mm:ss') < moment() && (typeof v.data_pausa === 'undefined' || v.data_pausa === null || v.data_pausa == '0000-00-00 00:00:00')) {
+                demandasAtrasadas = demandasAtrasadas+1;
+            }
+        });
+        var demandasProdutividade = $.map(arrayAtividadesPro, function(v, i){
+            if (v.produtividade !== null) {
+                return v.produtividade;
+            }
+        });
+        demandasProdutividade = (demandasProdutividade.length > 0) ? avgArray(demandasProdutividade) : 0;
+    }
+    return {
+        totais: demandasTotais, 
+        iniciadas: demandasIniciadas, 
+        atrasadas: demandasAtrasadas, 
+        executado: execucaoPlano,
+        produtividade: demandasProdutividade
+    };
+}
+function getProfileAtiv(googleUser = false) {
     if (getTokenGoogle()) {
-        // window.tokenID = token;
+        var profile = (googleUser) ? googleUser.getBasicProfile() : window.googleUser.getBasicProfile();
+        var backgroundSEI = $('.infraCorBarraSistema').css('background-color');
+            backgroundSEI = (typeof backgroundSEI !== 'undefined') ? rgbToHexString(backgroundSEI) : '#01a5da';
+        var resumeAtiv = (typeof arrayAtividadesPro !== 'undefined' && arrayAtividadesPro !== null && arrayAtividadesPro.length > 0) ? getResumeAtiv() : false;
+        var greetings = generateGreetings();
+        var htmlProfile =   '<div id="profileProDiv">'+
+                            '   <div id="profileProDiv_full" style="margin-top:20px;'+(getOptionsPro('profileProDiv') == 'hide' ? 'display:none;' : '')+'">'+
+                            '      <div class="perfilWidgets" style="float: left;width: 30%;">'+
+                            '          <img style="border-radius: 0% 50% 50% 50%;width: 96px;float: left;border: 6px solid '+backgroundSEI+';" src="'+profile.getImageUrl()+'">'+
+                            '          <div class="cartProfile" style="margin: 10px;display: inline-block;width: calc(100% - 130px);">'+
+                            '              <h2 style="margin: 10px 0;font-size: 2em;font-weight: bold;color: #363636;">'+
+                            '                  '+greetings+', '+profile.getName()+
+                            '                  <a class="newLink" id="profileProDiv_hideIcon" onclick="togglePainelPro(\'profileProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Painel\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;"><i class="fas fa-minus-square cinzaColor"></i></a>'+
+                            '              </h2>'+
+                            '              <h2 style="margin: 10px 0;font-size: 1.5em;color: #363636;">'+moment().format('LL')+'</h2>'+
+                            '          </div>'+
+                            (resumeAtiv ? 
+                            '          <div class="boardDemandas" style="clear: both;width: 100%;font-size: 9pt;color: #878787;">'+
+                            '              <div style="width: 40%;float: left;padding: 10px;margin: 10px 5px;text-align: center;">'+
+                            '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-clipboard-list cinzaColor" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.iniciadas+'/'+resumeAtiv.totais+'</span> demandas em andamento '+(!checkCapacidade('only_self_atividades') ? '<br>na unidade' : '')+
+                            '              </div>'+
+                            '              <div style="width: 40%;float: left;padding: 10px;margin: 10px 5px;text-align: center;">'+
+                            '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-exclamation-triangle '+(resumeAtiv.atrasadas == 0 ? 'cinzaColor' : 'vermelhoColor')+'" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.atrasadas+'</span> demandas em atraso '+(!checkCapacidade('only_self_atividades') ? '<br>na unidade' : '')+
+                            '              </div>'+
+                            '              <div style="width: 40%;float: left;padding: 10px;margin: 10px 5px;text-align: center;">'+
+                            '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-handshake cinzaColor" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.executado+'</span> de execu\u00E7\u00E3o'+(!checkCapacidade('only_self_atividades') ? 'dos planos <br>da unidade' : 'do plano')+
+                            '              </div>'+
+                            '              <div style="width: 40%;float: left;padding: 10px;margin: 10px 5px;text-align: center;">'+
+                            '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-chart-line cinzaColor" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.produtividade+'%</span> de produtividade m\u00E9dia '+(!checkCapacidade('only_self_atividades') ? '<br>na unidade' : '')+
+                            '              </div>'+
+                            '          </div>'+
+                            '' : '')+
+                            '      </div>'+
+                            '      <div class="calendarWidgets" style="float: right;width: 70%;margin-bottom: 20px;">'+
+                            '          <iframe id="googleCalendar" src="https://calendar.google.com/calendar/embed?src='+decodeURIComponent(profile.getEmail())+'&ctz=America%2FSao_Paulo&showTitle=0" style="border: 0" width="98%" height="300" frameborder="0" scrolling="no"></iframe>'+
+                            '      </div>'+
+                            '   </div>'+
+                            '   <div id="profileProDiv_min" style="'+(getOptionsPro('profileProDiv') == 'hide' ? '' : 'display:none;')+'">'+
+                            '      <h2 style="margin: 10px 0;font-size: 2em;font-weight: bold;color: #363636;">'+
+                            '          <i class="profileProcPro fas fa-user-circle cinzaColor" style="margin: 0 10px 0 0; font-size: 1.1em;"></i>'+
+                            '          '+greetings+', '+profile.getName()+
+                            '          <a class="newLink" id="profileProDiv_showIcon" onclick="togglePainelPro(\'profileProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Painel\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;"><i class="fas fa-plus-square cinzaColor"></i></a>'+
+                            '      </h2>'+
+                            '   </div>'+
+                            '</div>';
+
+        $('#profileProDiv').remove();
+        $('#divInfraAreaTelaD').prepend(htmlProfile);
+    }
+}
+function onSignIn(googleUser) {
+    var token = getTokenGoogle();
+    if (getTokenGoogle()) {
         getAtividades();
+        // initProfileAtiv(googleUser);
+        window.googleUser = googleUser;
         $('#tabelaAtivPanel').html('<div class="dataFallback dataLoading" data-text="Nenhum dado dispon\u00EDvel"></div>');
     }
-    // $('#ssoLoginConfig').show(); 
+    // $('#ssoLoginConfig').show();
+}
+function initProfileAtiv(googleUser, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof arrayConfigAtividades.perfil !== 'undefined' && typeof arrayConfigAtividades.perfil.id_user !== 'undefined' ) { 
+        getProfileAtiv(googleUser);
+    } else {
+        setTimeout(function(){ 
+            initProfileAtiv(googleUser, TimeOut - 100); 
+            console.log('Reload getProfileAtiv'); 
+        }, 500);
+    }
 }
 function cleanAtivParams(initAtiv = true) {
     localStorageRemovePro('configDataAtividadesPro');
     localStorageRemovePro('configDataAtividadesProcPro');
     removeOptionsPro('panelHomeView');
     removeOptionsPro('panelAtividadesView');
-    // window.tokenID = undefined;
     perfilLoginAtiv = false;
     urlServerAtiv = false;
     userHashAtiv = false;
@@ -14095,11 +14225,29 @@ function cleanAtivParams(initAtiv = true) {
     }
 }
 function signOutProfile() {
-    cleanAtivParams();
     var auth2 = gapi.auth2.getAuthInstance();
     auth2.signOut().then(function () {
         console.log('User signed out.');
         initPerfilLoginAtiv();
     });
 }
-initPerfilLoginAtiv();
+function chechHostPermission(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof getConfigHost === 'function') {
+        if (sessionStorage.getItem('configHost_Pro') !== null) {
+            setConfigHost(JSON.parse(sessionStorage.getItem('configHost_Pro')), false, initPerfilLoginAtiv);
+        } else {
+            getConfigHost(false, initPerfilLoginAtiv);
+        }
+    } else {
+        setTimeout(function(){ 
+            chechHostPermission(TimeOut - 100); 
+            console.log('Reload chechHostPermission', TimeOut); 
+        }, 500);
+    }
+}
+if (NAMESPACE_SPRO == 'SPro') {
+    chechHostPermission();
+} else {
+    initPerfilLoginAtiv(); 
+}

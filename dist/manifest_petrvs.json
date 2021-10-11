@@ -1,15 +1,15 @@
 {
   "manifest_version": 2,
-  "name": "ANTAQ Pro",
-  "short_name": "ANTAQ Pro",
-  "description": "Plataforma Eletr\u00F4nica de Governan\u00E7a da Ag\u00EAncia Nacional de Transportes Aquavi\u00E1rios - ANTAQ",
+  "name": "Petrvs PRF",
+  "short_name": "Petrvs PRF",
+  "description": "Plataforma Eletr\u00F4nica de Trabalho e Vis\u00E3o Sist\u00EAmica da Polícia Rodovi\u00E1ria Federal (PRF)",
   "version": "1.0.1",
-  "author": "ANTAQ",
-  "homepage_url": "https://github.com/ANTAQGovBr/antaq-pro",
+  "author": "INOVA - PRF",
+  "homepage_url": "https://petrvs.app.github.io/petrvs/",
   "icons": {
-    "16": "icons/antaq/icon-16.png",
-    "48": "icons/antaq/icon-48.png",
-    "128": "icons/antaq/icon-128.png"
+    "16": "icons/petrvs/icon-16.png",
+    "48": "icons/petrvs/icon-48.png",
+    "128": "icons/petrvs/icon-128.png"
   },
   "options_page": "html/options.html",
   "options_ui": {
