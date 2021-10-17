@@ -841,7 +841,7 @@ function setPanelFavorites(mode) {
                 var linkDoc = url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento;
                 var tagsFav = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? (value.etiquetas.length > 0 ? value.etiquetas.join(';') : value.etiquetas[0]) : '';
                 var tagsFavHtml = (typeof value.etiquetas !== 'undefined') ? $.map(listFavorite[index].etiquetas, function (i) { return getHtmlEtiqueta(i,'fav') }).join('') : '';
-                var tagsFavClass = (typeof value.etiquetas !== 'undefined') ? $.map(listFavorite[index].etiquetas, function (i) { return 'tagTableName_'+removeAcentos(i).replace(/\ /g, '').toLowerCase(); }).join(' ') : '';   
+                var tagsFavClass = (typeof value.etiquetas !== 'undefined') ? $.map(listFavorite[index].etiquetas, function (i) { return 'tagTableName_'+normalizeNameTag(i); }).join(' ') : '';   
                 var datesFav = (typeof value.configdate !== 'undefined' && value.configdate !== null && typeof value.configdate.date !== 'undefined' && value.configdate.date !== null) ? value.configdate.date : '';
                 if (typeof value.configdate !== 'undefined' && value.configdate !== null && typeof value.configdate.dateTo !== 'undefined' && value.configdate.dateTo !== null) { value.configdate.dateTo = moment().format('YYYY-MM-DD') }
                 var datesFavHtml = (typeof value.configdate !== 'undefined' && value.configdate !== null) ? getDatesPreview(value.configdate) : ''; 
@@ -1638,7 +1638,7 @@ function setMultipleMap() {
 
         L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
             maxZoom: 18,
-            attribution: '<a href="https://seipro.app" target="_blank">SEI Pro</a> | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            attribution: '<a href="https://seipro.app" target="_blank">'+NAMESPACE_SPRO+'</a> | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             id: 'mapbox/streets-v11',
             tileSize: 512,
             zoomOffset: -1

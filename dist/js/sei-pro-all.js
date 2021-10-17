@@ -359,7 +359,7 @@ function initReplaceSelectAll(TimeOut = 12000) {
 function appendVersionSEIPro() {
     var logoSEI = $('#divInfraBarraSistemaE img[src*="sei_logo"]');
     if (!logoSEI.hasClass('versionSEIPro')) {
-        logoSEI.attr('title', logoSEI.attr('title', )+' (SEI Pro Vers\u00E3o '+VERSION_SPRO+')').addClass('versionSEIPro');
+        logoSEI.attr('title', logoSEI.attr('title', )+' ('+NAMESPACE_SPRO+': Vers\u00E3o '+VERSION_SPRO+')').addClass('versionSEIPro');
     }
 }
 function filterIfraTable(this_) {

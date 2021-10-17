@@ -203,6 +203,7 @@
     "js/sei-pro-favoritos.js",
     "js/sei-pro-icons.js",
     "https://apis.google.com/js/api.js",
+    "https://accounts.google.com/gsi/client",
     "css/sei-pro.css",
     "css/frappe-gantt.css",
     "css/jkanban.min.css",

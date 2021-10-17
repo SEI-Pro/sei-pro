@@ -202,7 +202,9 @@
     "js/sei-pro-visualizacao.js",
     "js/sei-pro-favoritos.js",
     "js/sei-pro-icons.js",
+    "js/sei-pro-db-transition.js",
     "https://apis.google.com/js/api.js",
+    "https://accounts.google.com/gsi/client",
     "css/sei-pro.css",
     "css/frappe-gantt.css",
     "css/jkanban.min.css",
@@ -242,6 +244,9 @@
     "css/images/marker-icon-2x.png",
     "css/images/marker-icon.png",
     "css/images/marker-shadow.png",
-    "config_hosts.json"
+    "config_hosts.json",
+    "icons/icon-48.png",
+    "icons/petrvs/icon-48.png",
+    "icons/antaq/icon-48.png"
   ]
 }

@@ -472,7 +472,7 @@ function getProcessosPaginacao(this_, index, tipo) {
         var tr = $html.find('#tblProcessos'+tipo+' tbody').find('tr.infraTrClara');
             if(tr.length > 0) {
                 tr.each(function(index){
-                    $(this).find('input.infraCheckbox').attr('disabled', true).closest('td').attr('onmouseout','return infraTooltipOcultar()').attr('onmouseover','return infraTooltipMostrar(\'Desative a op\u00E7\u00E3o "Remover pagina\u00E7\u00E3o de processos" nas configura\u00E7\u00F0es do SEI Pro para utilizar esta sele\u00E7\u00E3o\')');
+                    $(this).find('input.infraCheckbox').attr('disabled', true).closest('td').attr('onmouseout','return infraTooltipOcultar()').attr('onmouseover','return infraTooltipMostrar(\'Desative a op\u00E7\u00E3o "Remover pagina\u00E7\u00E3o de processos" nas configura\u00E7\u00F0es do '+NAMESPACE_SPRO+' para utilizar esta sele\u00E7\u00E3o\')');
                     $('#tblProcessos'+tipo).append($(this)[0].outerHTML);
                 });
                 var NroItens = $html.find('#hdn'+tipo+'NroItens').val();

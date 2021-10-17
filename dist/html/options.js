@@ -317,6 +317,23 @@ function passReveal(this_){
     to.val(from.val()).show();
     _this.attr('class', showing ? 'option-ref passRevealBtn fas fa-eye' : 'option-ref passRevealBtn fas fa-eye-slash');
 }
+function getManifestExtension() {
+    if (typeof browser === "undefined") {
+        return chrome.runtime.getManifest();
+    } else {
+        return browser.runtime.getManifest();
+    }
+}
+function setNamePage() {
+    var manifest = getManifestExtension();
+    var NAMESPACE_SPRO = manifest.short_name;
+    var URLPages_SPRO = manifest.homepage_url;
+    var title = 'Configura\u00E7\u00F5es Gerais | '+NAMESPACE_SPRO;
+    $('head title').text(title);
+    $('a.manual').each(function(){
+        $(this).attr('href', URLPages_SPRO+$(this).attr('href'));
+    });
+}
 $('#options-functions').find('input[type="text"]').on("keyup", function () {
     if ($(this).val() != '') {
         $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
@@ -333,4 +350,5 @@ $('#new').click(function() { addProfile() });
 $(function(){
     restore_options();
     $('#options-tabs').tabs();
+    setNamePage();
 });

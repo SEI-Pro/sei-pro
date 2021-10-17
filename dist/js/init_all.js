@@ -58,11 +58,11 @@ function getPathExtensionPro() {
                             "   var NAMESPACE_SPRO = '"+NAMESPACE_SPRO+"';\n"+
                             "</script>";
         $(scriptText).appendTo('head');
-
-        if (NAMESPACE_SPRO != 'SPro') {
-            sessionStorage.setItem('other_extension', URL_SPRO);
-        }
+        setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
     }
+}
+function setSessionNameSpace(param) {
+    sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
 }
 function loadScriptProAll() {
     getPathExtensionPro();
@@ -78,11 +78,16 @@ function loadScriptProAll() {
 }
 if (getManifestExtension().short_name == 'SPro') {
     setTimeout(function(){ 
-        if (sessionStorage.getItem('other_extension') === null){
+        if (sessionStorage.getItem('new_extension') === null){
             loadScriptProAll();
             console.log('@@@ LOADING SPRO ALL');
         } else {
             console.log('&&&&&&& RECUSE SPRO ALL');
+            var URL_SPRO = pathExtensionSEIPro();
+            var manifest = getManifestExtension();
+            var VERSION_SPRO = manifest.version;
+            var NAMESPACE_SPRO = manifest.short_name;
+            setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
         }
     }, 1000);
 } else {

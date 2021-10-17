@@ -1083,9 +1083,10 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
 .btnCloseEtiqueta {
     position: absolute;
     display: inline-block;
-    margin: 0px 0 0 100px !important;
+    margin: 0 !important;
     padding: 2px !important;
     top: 10px;
+    right: 14px;
 }
 .tagFavAddColorInput {
     opacity: 0;
@@ -1114,6 +1115,7 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
 #listIconsFontAwesome {
     height: 400px;
     overflow-y: scroll;
+    font-size: 1.6em;
 }
 #listIconsFontAwesome span.iconList {
     padding: 2px 4px;
@@ -1518,6 +1520,19 @@ table.moreInfoBox td:first-child,
 #boxAtividade .seiProForm #ativ_etiquetas_addTag,
 #boxAtividade .seiProForm .tagsinput div {
     max-width: 100%;
+}
+#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag {
+    display: block !important;
+}
+#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavAddColor,
+#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavEditIcon {
+    height: 30px !important;
+    margin-top: -7px !important;
+    font-size: 90%;
+    padding-top: 10px;
+}
+#boxAtividade .seiProForm .info_tags_follow_txt #infoAtivTagsPro_tag {
+    max-width: 130px !important;
 }
 .seiProForm td.required {
     position: relative;
@@ -2887,6 +2902,19 @@ div.infraTooltipTexto i.far {
     width: 100% !important;
     max-width: 600px;
 }
+.panelHomePro .chosen-min,
+.ui-dialog .chosen-min {
+    min-width: 150px;
+}
+.panelHomePro .chosen-min a.chosen-single,
+.ui-dialog .chosen-min a.chosen-single {
+    height: 23px !important;
+    padding-top: 0 !important;
+}
+.panelHomePro .chosen-min .chosen-single div b,
+.ui-dialog .chosen-min .chosen-single div b {
+    margin-top: 0 !important;
+}
 .ui-dialog[aria-describedby="dialogBoxPro"],
 .ui-dialog[aria-describedby="dialogBoxPro"] .ui-dialog-content,
 .ui-dialog[aria-describedby="iframeBoxPro"],
@@ -2950,7 +2978,11 @@ div#divInfraTooltip {
     border-radius: 5px;
     text-align: left;
 }
-.g-signin2 {
+.g-signin2{
     transform: scale(1.3) !important;
     margin-top: 20px !important;
+}
+.g_id_signin {
+    margin: 0 calc(50% - 150px);
+    margin-top: 20px;
 }

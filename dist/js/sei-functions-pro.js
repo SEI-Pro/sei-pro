@@ -831,7 +831,7 @@ function setSortDivPanel() {
     }
 }
 function forcePlaceHoldChosen() {
-    $('select.selectPro').each(function(){
+    $('select').each(function(){
         var _this = $(this);
         var placeholder = _this.data('placeholder');
             placeholder = (typeof placeholder !== 'undefined') ? placeholder : false;
@@ -844,14 +844,16 @@ function forcePlaceHoldChosen() {
     });
 }
 function setPlaceHoldChosen(this_) {
-    var emptyvalue = $(this_).val().trim();
+    var emptyvalue = ($(this_).val() !== null) ? $(this_).val().trim() : '';
         emptyvalue = (emptyvalue == '0' || emptyvalue == '') ? true : false;
     var placeholder = $(this_).data('placeholder');
         placeholder = (typeof placeholder !== 'undefined') ? placeholder : false;
+    var chosenMin = $(this_).hasClass('chosen-min');
     var id = $(this_).attr('id');
         id = (typeof id !== 'undefined') ? id+'_chosen' : false;
     if (id && $('#'+id).length > 0 && emptyvalue && placeholder) {
         $('#'+id).find('.chosen-single span').text(placeholder);
+        if (chosenMin) $('#'+id).addClass('chosen-min');
     }
 }
 function initChosenReplace(mode, this_ = false, TimeOut = 9000) {
@@ -1624,6 +1626,7 @@ function filterTagKanban(this_) {
         getKanbanUserPriority(this_, 'remove');
         setOptionsPro('filterTag_removed', true);
     }
+    // console.log('$$$$$$ tagName', tagName);
     _parent.find('.kanban-container').animate({scrollTop: 0}, 500);
     infraTooltipOcultar();
     updateCountKanbanBoard();
@@ -1777,6 +1780,9 @@ function showFollowEtiqueta(this_, status, mode) {
     var table = _this.closest('table');
     var td = _this.closest('td');
     var td_info_tags_follow = td.find('.info_tags_follow');
+    if(status == 'close' && td.find('input.tag-input').val() != '') {
+        td.find('input.tag-input').trigger($.Event( "keypress", { which: 13 } ));
+    }
     checkEtiquetaPriority(this_); 
     table.find('.info_tags_follow').show();
     table.find('.info_tags_follow_txt').hide();
@@ -1856,13 +1862,17 @@ function openColorEtiqueta(this_) {
     $(this_).closest('.tag').find('input[type="color"]').trigger('click');
 }
 function selectIconEtiqueta(this_, tagName, mode) {
-    var table = (mode == 'ativ') ? $('.tableAtividades tbody') : $('.tableFavoritos tbody');
+    var table = (mode == 'ativ') 
+            ? $('.tableAtividades').is(':visible') 
+                ? $('.tableAtividades tbody, .atividadeInfo') 
+                : $('.kanbanAtividade, .atividadeInfo')
+            : $('.tableFavoritos tbody');
         table = ($('#ifrVisualizacao').contents().find('.favoritosLabelOptions').length > 0) ? $('#ifrVisualizacao').contents().find('.favoritosLabelOptions table') : table;
     var icon = $(this_).find('.iconListTxt').text();
     var value = table.find('.tag_text.tagTableText_'+tagName).data('colortag');
     table.find('.tag_text.tagTableText_'+tagName).data('icontag', icon).find('i.tagicon').attr('class', 'fas fa-'+icon);
     table.find('.tag.tagTableText_'+tagName).data('icontag', icon).find('i.tagFavEditIcon').data('icontag', icon).attr('class', 'tagFavEditIcon fas fa-'+icon);
-    resetDialogBoxPro('dialogBoxPro');
+    resetDialogBoxPro('alertBoxPro');
     $('#listIconsFontAwesome').remove();
     saveConfigEtiqueta(tagName, value, icon, mode);
 }
@@ -1921,13 +1931,24 @@ function saveFollowEtiqueta() {
             $('.ui-autocomplete-input').autocomplete("option", { source: sugestEtiquetaPro(mode) });
         }
         if (mode == 'ativ') {
+            if ($('.kanbanAtividade').is(':visible')) {
+                $('.kanban-item[data-eid="_id_'+index+'"] .info_tags_follow_etiquetas').html(tagsHtml);
+            }
+            if ($('.tableAtividades').is(':visible') && $('div.ui-dialog').is(':visible')) {
+                $('.tableAtividades tbody tr[data-index="'+index+'"] td.tdfav_tags .info_tags_follow').html(tagsHtml);
+            }
             getServerAtividades({action: 'edit_etiqueta', id: index, etiquetas: tags}, 'edit_etiqueta');
             $.each(tags, function(i,value){
                 if (value != '' && $.inArray(value, arrayConfigAtividades['etiquetas']['list']) == -1) {
                     arrayConfigAtividades['etiquetas']['list'].push(value);
                 }
             });
-            console.log(arrayConfigAtividades['etiquetas']['list']);
+            var demandaIndex = arrayAtividades.findIndex((obj => obj.id_demanda == index));
+            if (demandaIndex != -1) {
+                arrayAtividades[demandaIndex].etiquetas = tags;
+                arrayAtividadesPro[demandaIndex].etiquetas = tags;
+            }
+                
         } else if (mode == 'fav') {
             var storeFavorites = getStoreFavoritePro();
             var id_procedimento = parseInt($(this).closest('tr').data('id_procedimento'));
@@ -1937,6 +1958,9 @@ function saveFollowEtiqueta() {
         }
         infraTooltipOcultar();
     }
+}
+function normalizeNameTag(tag) {
+    return removeAcentos(tag).replace(/\ /g, '').toLowerCase().replace(/[^a-z0-9]/gi,'');
 }
 function sugestEtiquetaPro(mode) {
     return (mode == 'ativ') 
@@ -2160,9 +2184,9 @@ function openBoxIconsFA(action, nametag, mode) {
         });
         htmlBox += '</div>';
     
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+        resetDialogBoxPro('alertBoxPro');
+        alertBoxPro = $('#alertaBoxPro')
+            .html('<div>'+htmlBox+'</div>')
             .dialog({
                 title: "Icones",
                 close: function() { $('#listIconsFontAwesome').remove() },
@@ -2643,7 +2667,7 @@ function confirmaFraseBoxPro(text, phrase, func, cancel) {
     alertBoxPro = $('#alertaBoxPro')
         .html('<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>'+phraseDiv)
         .dialog({
-            title: 'SEI Pro',
+            title: NAMESPACE_SPRO,
         	width: 550,
         	close: function() { 
                 alertBoxPro = false;
@@ -2685,7 +2709,7 @@ function confirmaBoxPro(text, func, titBtn = 'OK', cancel) {
     alertBoxPro = $('#alertaBoxPro')
         .html('<strong class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+text+'</strong>')
         .dialog({
-            title: 'SEI Pro',
+            title: NAMESPACE_SPRO,
         	width: 500,
         	close: function() { 
                 alertBoxPro = false;
@@ -2713,7 +2737,7 @@ function alertaBoxPro(status, icon, text) {
     alertBoxPro = $('#alertaBoxPro')
         .html('<strong class="alerta'+status+'Pro dialogBoxDiv"><i class="fas fa-'+icon+'" style="margin-right: 5px;"></i> '+text+'</strong>')
         .dialog({
-            title: 'SEI Pro',
+            title: NAMESPACE_SPRO,
         	width: 400,
         	close: function() { 
                 alertBoxPro = false;
@@ -2733,7 +2757,7 @@ function openConfigBoxPro(html = '', func_open = false, func_close = false) {
     configBoxPro = $('#configBoxPro')
         .html('<div id="configBoxProDiv" class="configBoxProDiv">'+html+'</div>')
         .dialog({
-            title: 'SEI Pro: Configura\u00E7\u00F5es',
+            title: NAMESPACE_SPRO+': Configura\u00E7\u00F5es',
         	width: '95%',
         	height: 'auto',
             modal: true,

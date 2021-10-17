@@ -1,5 +1,5 @@
 /******************************************************************************
- SEI Pro: Extensão para o Firefox e Chrome que adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas.
+ SPro: Extensão para o Firefox e Chrome que adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas.
  Autor: Pedro Henrique Soares (pedrohsoares.adv@gmail.com)
 *******************************************************************************/
 

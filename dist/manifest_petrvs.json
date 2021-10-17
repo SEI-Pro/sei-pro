@@ -3,7 +3,7 @@
   "name": "Petrvs PRF",
   "short_name": "Petrvs PRF",
   "description": "Plataforma Eletr\u00F4nica de Trabalho e Vis\u00E3o Sist\u00EAmica da Polícia Rodovi\u00E1ria Federal (PRF)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "INOVA - PRF",
   "homepage_url": "https://petrvs.app.github.io/petrvs/",
   "icons": {
@@ -203,6 +203,7 @@
     "js/sei-pro-favoritos.js",
     "js/sei-pro-icons.js",
     "https://apis.google.com/js/api.js",
+    "https://accounts.google.com/gsi/client",
     "css/sei-pro.css",
     "css/frappe-gantt.css",
     "css/jkanban.min.css",
