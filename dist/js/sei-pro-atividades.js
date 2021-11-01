@@ -22,6 +22,7 @@ var perfilAtividadesSelected = getOptionsPro('panelAtividadesViewSyncUnidade')
                             : (getOptionsPro('perfilAtividadesSelected')) ? getOptionsPro('perfilAtividadesSelected') : '';
 var arrayProcessosUnidade = getProcessoUnidadePro();
 var arrayNomenclaturas = [];
+var dly;
 
 var chartColors = {
                     blue:"rgb(54, 162, 235)", 
@@ -1066,7 +1067,7 @@ function getChartPlanosTrabalho() {
                     titleMarginBottom: 0,
                     callbacks: {
                         label: function(tooltipItem, data) {
-                            let label = data.labels[tooltipItem.index];
+                            let label = data.datasets[tooltipItem.datasetIndex].label;
                             let value = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
                             var planoIndex = data.datasets.findIndex(function(id_key) {
                                                 return id_key.label == "Plano"
@@ -1160,7 +1161,7 @@ function getSingleChartTempoPlano(element, plano, labels = false) {
                 titleMarginBottom: 0,
                 callbacks: {
                     label: function(tooltipItem, data) {
-                        var label = data.labels[tooltipItem.index];
+                        var label = data.datasets[tooltipItem.datasetIndex].label;
                         var value = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
                         var planoIndex = data.datasets.findIndex(function(id_key) {
                                             return id_key.label == "Plano"
@@ -1324,6 +1325,45 @@ function getConfigDateAtiv(value) {
     
     return _return;
 }
+function editFieldAtiv(this_) {
+    var _this = $(this_);
+    var type_container = ($(this_).closest('.kanban-content').length > 0) ? 'kanban' : 'table';
+    var _content_desc = _this.closest('.content_edit');
+    var _info = _content_desc.find('span.info');
+    var data = _content_desc.data();
+    var value = _info.text();
+    if (_info.is("[contentEditable='true']")) {
+        _content_desc.removeClass('info_noclick');
+        _content_desc.find('.content_btnsave').toggleClass('newLink_active newLink_confirm').find('i').toggleClass('fa-thumbs-up fa-edit');
+        _info.prop('contenteditable',false).unbind();
+        if (data.old != value) {
+            console.log(value, data.old, data.id);
+            parent.getServerAtividades(
+                {
+                    action: 'edit_field', 
+                    field: data.field, 
+                    id: data.id, 
+                    value: value
+            }, 'edit_field');
+            var ativIndex = (data.id) ? parent.arrayAtividades.findIndex((obj => obj.id_demanda == data.id)) : data.id;
+                arrayAtividades[ativIndex][data.field] = value;
+                arrayAtividadesPro[ativIndex][data.field] = value;
+
+            if (type_container == 'table' && $('.kanban-item').is(':visible')) {
+                var kanban_item = $('.kanban-item[data-eid="_id_'+data.id+'"] .content_edit[data-field="'+data.field+'"]');
+                    kanban_item.find('span.info').text(value);
+            }
+        }
+    } else {
+        _content_desc.addClass('info_noclick').data('old', value);
+        _info.prop('contenteditable',true).focus().on('keypress',function(e) {
+            if(e.which == 13) {
+                _content_desc.find('.content_btnsave').trigger('click');
+            }
+        });
+        _content_desc.find('.content_btnsave').toggleClass('newLink_active newLink_confirm').find('i').toggleClass('fa-thumbs-up fa-edit');
+    }
+}
 // INSERE ICONES NA TABELA DE CONTROLE DE PROCESSOS (RECEBIDOS/GERADOS)
 function updateTableProcessos() {
     var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
@@ -1421,18 +1461,20 @@ function updateAtividade(this_ = false){
 
 // CRIA PAINEL DE GESTAO DE ATIVIDADES DO PROCESSO
 function setAtividadesProcessoHome(storeAtividades = arrayAtividadesProcPro) {
-    var ifrArvore = $('#ifrArvore').contents();
-        ifrArvore.find('#divArvore .dateBoxIcon').remove();
-    $.each(storeAtividades,function(index, value){
-        var datesAtivHtml = (typeof value.data_distribuicao !== 'undefined' && value.data_distribuicao !== null) ? getDatesPreview(getConfigDateAtiv(value)) : '';
-            datesAtivHtml = (datesAtivHtml != '') ? $(datesAtivHtml).find('.dateBoxIcon')[0].outerHTML : '';
-        var doc_requisicao = ifrArvore.find('a#anchor'+value.id_documento_requisicao);
-        if (doc_requisicao.length > 0 && datesAtivHtml != '') {
-            doc_requisicao.after('<span class="dateboxDisplay" onclick="parent.actionsAtividade('+value.id_demanda+')">'+datesAtivHtml+'</span>');
+    if ($('#ifrArvore').length > 0) {
+        var ifrArvore = $('#ifrArvore').contents();
+            ifrArvore.find('#divArvore .dateBoxIcon').remove();
+        $.each(storeAtividades,function(index, value){
+            var datesAtivHtml = (typeof value.data_distribuicao !== 'undefined' && value.data_distribuicao !== null) ? getDatesPreview(getConfigDateAtiv(value)) : '';
+                datesAtivHtml = (datesAtivHtml != '') ? $(datesAtivHtml).find('.dateBoxIcon')[0].outerHTML : '';
+            var doc_requisicao = ifrArvore.find('a#anchor'+value.id_documento_requisicao);
+            if (doc_requisicao.length > 0 && datesAtivHtml != '') {
+                doc_requisicao.after('<span class="dateboxDisplay" onclick="parent.actionsAtividade('+value.id_demanda+')">'+datesAtivHtml+'</span>');
+            }
+        });
+        if (ifrArvore.find('.panelDadosArvore_atividades').length > 0) {
+            $('#ifrArvore')[0].contentWindow.initAtividadesProcesso();
         }
-    });
-    if (ifrArvore.find('.panelDadosArvore_atividades').length > 0) {
-        $('#ifrArvore')[0].contentWindow.initAtividadesProcesso();
     }
 }
 
@@ -1454,23 +1496,29 @@ function setAtividadesUser() {
                 chartStatusUser.options.legend.display = false;
                 chartStatusUser.options.title = {display: true, text: unidade.nome_unidade+' - '+unidade.sigla_unidade};
                 chartStatusUser.update();
-                // ajustAtividadesUser();
-                setTimeout(function(){ 
-                    $('#tabelaAtivPanel .filterTablePro').css('top', '120px');
-                }, 500);
         }
     }
 }
-function ajustAtividadesUser(TimeOut = 900) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
-    if ($('#tabelaAtivPanel .filterTablePro').length > 0) {
-        $('#tabelaAtivPanel .filterTablePro').css('top', '120px');
-    } else {
-        setTimeout(function(){ 
-            ajustAtividadesUser(TimeOut - 100); 
-            console.log('Reload ajustAtividadesUser', TimeOut); 
-        }, 500);
-    }
+function setToolbarAtiv() {
+    htmlToolbarDoc =    '<div id="toolbar_atividades" class="hidden">'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="none" data-action="info_atividade"><i style="margin: 0 5px;" class="fas fa-info-circle azulColor"></i> <span class="info" alt="Informa\u00E7\u00F5es '+__.da_demanda+'">Informa\u00E7\u00F5es '+__.da_demanda+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="edit_atividade"><i style="margin: 0 5px;" class="fas fa-pencil-alt azulColor"></i> <span class="info" alt="Editar '+__.Demanda+'">Editar '+__.Demanda+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="edit_atividade"" data-subaction="notify_atividade"><i style="margin: 0 5px;" class="fas fa-envelope azulColor"></i> <span class="info" alt="Gerar Notifica\u00E7\u00E3o">Gerar Notifica\u00E7\u00E3o</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="delete_atividade"><i style="margin: 0 5px;" class="fas fa-trash-alt vermelhoColor"></i> <span class="info" alt="Excluir '+__.Demanda+'">Excluir '+__.Demanda+'</span></a>'+
+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade" data-action="pause_atividade"><i style="margin: 0 5px;" class="fas fa-pause-circle laranjaColor"></i> <span class="info" alt="Inserir '+__.Paralisacao+'">Inserir '+__.Paralisacao+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade" data-action="extend_atividade"><i style="margin: 0 5px;" class="fas fa-retweet azulColor"></i> <span class="info" alt="'+__.Prorrogar+' Prazo">'+__.Prorrogar+' Prazo</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade rate_atividade" data-action="variation_atividade"><i style="margin: 0 5px;" class="fas fa-graduation-cap azulColor"></i> <span class="info" alt="Alterar '+__.Complexidade+'">Alterar '+__.Complexidade+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade rate_atividade" data-action="type_atividade"><i style="margin: 0 5px;" class="fas fa-clipboard-list azulColor"></i> <span class="info" alt="Atribuir '+__.Atividade+'">Atribuir '+__.Atividade+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade" data-action="start_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar In\u00EDcio">Cancelar In\u00EDcio</span></a>'+
+                        
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="rate_atividade" data-action="complete_edit_atividade"><i style="margin: 0 5px;" class="fas fa-pencil-alt azulColor"></i> <span class="info" alt="Editar Conclus\u00E3o">Editar Conclus\u00E3o</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="rate_atividade" data-action="complete_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar Conclus\u00E3o">Cancelar Conclus\u00E3o</span></a>'+
+                        
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="send_atividade" data-action="rate_edit_atividade"><i style="margin: 0 5px;" class="fas fa-pencil-alt azulColor"></i> <span class="info" alt="Editar Avalia\u00E7\u00E3o">Editar Avalia\u00E7\u00E3o</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="send_atividade" data-action="rate_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar Avalia\u00E7\u00E3o">Cancelar Avalia\u00E7\u00E3o</span></a>'+
+                        '<div>';
+    return htmlToolbarDoc;
 }
 // CRIA PAINEL DE GESTAO DE ATIVIDADES
 function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
@@ -1508,7 +1556,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
         function getTdRow(type) {
             var html = '';
             if (type == 'proc') {
-                html =  '           <th class="tituloControle" data-column-order="0" data-filter-type="proc">Processo / Requisi\u00E7\u00E3o</th>';
+                html =  '           <th class="tituloControle" data-column-order="0" data-filter-type="proc">ID / Processo / Requisi\u00E7\u00E3o</th>';
             } else if (type == 'date') {
                 html =  '           <th class="tituloControle tituloFilter" data-column-order="1" data-filter-type="date">Status</th>';
             } else if (type == 'action') {
@@ -1578,185 +1626,186 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     var optionSelectsPerfil = (typeof arrayConfigAtividades.perfil !== 'undefined' && typeof arrayConfigAtividades.perfil.lotacoes_obj !== 'undefined') ? getOptionSelectPerfil(arrayConfigAtividades.perfil.lotacoes_obj, getOptionsPro('perfilAtividadesSelected')) : '';
     var selectListPerfilLotacao = (optionSelectsPerfil == '') ? '' : '<select data-type="perfil" onchange="changePerfilAtiv(this)" data-placeholder="Filtrar por usu\u00E1rio" style="max-width: 160px; float: right;" class="selectPro">'+optionSelectsPerfil+'</select>';
 
-    var htmlPanelAtividades = '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="atividadesPro" data-order="'+idOrder+'">'+
-                            '   <div class="infraBarraLocalizacao titlePanelHome">'+
-                            '       <span class="titlePanel panelHome panelHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+'">'+
-                            '           <i class="fas fa-check-circle verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
-                            '           '+__.Atividades+
-                            '       </span>'+
-                            (checkCapacidade('view_afastamento') ? 
-                            '       <span class="titlePanel panelHome panelHomeAfastamento" style="'+(getOptionsPro('panelHomeView') == 'Afastamento' ? '' : 'display:none;')+'">'+
-                            '           <i class="fas fa-luggage-cart verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
-                            '           Afastamentos'+
-                            '       </span>': '')+
-                            (checkCapacidade('view_relatorio') ? 
-                            '       <span class="titlePanel panelHome panelHomeRelatorio" style="'+(getOptionsPro('panelHomeView') == 'Relatorio' ? '' : 'display:none;')+'">'+
-                            '           <i class="fas fa-chart-pie verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
-                            '           Relat\u00F3rios'+
-                            '       </span>': '')+
-                            '       <span class="titlePanel panelHome panelHomeConfiguracao" style="'+(getOptionsPro('panelHomeView') == 'Configuracao' ? '' : 'display:none;')+'">'+
-                            '           <i class="fas fa-cog verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
-                            '           Configura\u00E7\u00F5es'+
-                            '       </span>'+
-                            '       <a class="newLink" id="atividadesProDiv_showIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
-                            '       <a class="newLink" id="atividadesProDiv_hideIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
-                            '   </div>'+
-                            '   <div id="atividadesProDiv" style="width: 98%; '+statusView+'">'+
-                            '   	<div id="atividadesProActions" class="panelHome panelHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 200px; width: calc(100% - 220px)">'+
-                            '           <div class="btn-group atividadesBtnPanel" role="group" style="float: right;margin-right: 10px;">'+
-                            '              <button type="button" onclick="getPanelAtiv(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Tabela' || !getOptionsPro('panelAtividadesView') ? 'active' : '')+'"><i class="fas fa-table" style="color: #888;"></i> <span class="text">Tabela</span></button>'+
-                            '              <button type="button" onclick="getPanelAtiv(this)" data-value="Quadro" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Quadro' ? 'active' : '')+'"><i class="fas fa-project-diagram" style="color: #888;"></i> <span class="text">Quadro</span></button>'+
-                            '              <button type="button" onclick="getPanelAtiv(this)" data-value="Cronograma" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Cronograma' ? 'active' : '')+'"><i class="fas fa-tasks" style="color: #888;"></i> <span class="text">Cronograma</span></button>'+
-                            (checkCapacidade('chart_demandas') ?
-                            '              <button type="button" onclick="getPanelAtiv(this)" data-value="Relatorio" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Relatorio' ? 'active' : '')+'"><i class="fas fa-chart-line" style="color: #888;"></i> <span class="text">Painel</span></button>'
-                            : '')+
-                            '           </div>'+
-                            '           '+selectListPerfilLotacao+
-                            '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
-                            '               <i class="fas fa-sync-alt"></i>'+
-                            '           </a>'+
-                            '   	</div>'+
-                            (checkCapacidade('view_afastamento') ? 
-                            '   	<div id="afastamentosProActions" class="panelHome panelHomeAfastamento" style="'+(getOptionsPro('panelHomeView') == 'Afastamento' ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 250px; width: calc(100% - 270px)">'+
-                            '           <div class="btn-group" role="group" style="float: right;margin-right: 10px;">'+
-                            '              <button type="button" onclick="getPanelAfast(this)" data-value="Cronograma" class="btn btn-sm btn-light '+(getOptionsPro('panelAfastamentosView') == 'Cronograma' || !getOptionsPro('panelAfastamentosView') ? 'active' : '')+'">Cronograma</button>'+
-                            '              <button type="button" onclick="getPanelAfast(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelAfastamentosView') == 'Tabela' ? 'active' : '')+'">Tabela</button>'+
-                            '           </div>'+
-                            '           '+selectListPerfilLotacao+
-                            '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
-                            '               <i class="fas fa-sync-alt"></i>'+
-                            '           </a>'+
-                            (checkCapacidade('save_afastamento') ?
-                            '           <a class="newLink iconAfastamento_add" onclick="saveAfastamento(this)" onmouseover="return infraTooltipMostrar(\'Adicionar Afastamento\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;">'+
-                            '               <i class="fas fa-user-clock"></i>'+
-                            '           </a>'+
-                            '' : '')+
-                            (checkCapacidade('delete_afastamento') ?
-                            '           <a class="newLink iconAfastamento_remove" onclick="removeAfastamento(this)" onmouseover="return infraTooltipMostrar(\'Remover Afastamentos\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
-                            '                   <span class="fa-layers fa-fw">'+
-                            '                       <i class="fas fa-trash-alt"></i>'+
-                            '                       <span class="fa-layers-counter">1</span>'+
-                            '                   </span>'+
-                            '           </a>'+
-                            '' : '')+
-                            '           <span class="modulesActions">'+
-                            '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
-                            '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
-                            '                  <i class="fas fa-check-circle cinzaColor"></i>'+
-                            '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
-                            '               </a>'+
-                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(checkOptionEntidade('modal_configuracoes') ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
-                            '                  <i class="fas fa-cog cinzaColor"></i>'+
-                            '               </a>'+
-                            (checkCapacidade('view_relatorio') ? 
-                            '               <a class="newLink iconBoxModules iconRelatorio_view" onmouseover="return infraTooltipMostrar(\'Relat\u00F3rios\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Relatorio">'+
-                            '                  <i class="fas fa-chart-pie cinzaColor"></i>'+
-                            '               </a>' : '')+
-                            '           </span>'+
-                            '   	</div>': '')+
-                            '   	<div id="configuracoesProActions" class="panelHome panelHomeConfiguracao" style="'+(getOptionsPro('panelHomeView') == 'Configuracao' ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 240px; width: calc(100% - 260px)">'+
-                            '           '+selectListPerfilLotacao+
-                            '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
-                            '               <i class="fas fa-sync-alt"></i>'+
-                            '           </a>'+
-                            (checkCapacidade('config_atividades') ? getHtmlActionsConfig('atividades') : '')+
-                            (checkCapacidade('config_planos') || checkCapacidade('config_self_planos') ? getHtmlActionsConfig('planos') : '')+
-                            (checkCapacidade('config_programas') ? getHtmlActionsConfig('programas') : '')+
-                            (checkCapacidade('config_users') ? getHtmlActionsConfig('users') : '')+
-                            (checkCapacidade('config_unidades') ? getHtmlActionsConfig('unidades') : '')+
-                            (checkCapacidade('config_tipos_documentos') ? getHtmlActionsConfig('tipos_documentos') : '')+
-                            (checkCapacidade('config_tipos_justificativas') ? getHtmlActionsConfig('tipos_justificativas') : '')+
-                            (checkCapacidade('config_tipos_modalidades') ? getHtmlActionsConfig('tipos_modalidades') : '')+
-                            (checkCapacidade('config_tipos_requisicoes') ? getHtmlActionsConfig('tipos_requisicoes') : '')+
-                            (checkCapacidade('config_nomenclaturas') ? getHtmlActionsConfig('nomenclaturas') : '')+
-                            (checkCapacidade('config_entidades') ? getHtmlActionsConfig('entidades') : '')+
-                            '           <span class="modulesActions">'+
-                            '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
-                            '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
-                            '                  <i class="fas fa-check-circle cinzaColor"></i>'+
-                            '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
-                            '               </a>'+
-                            (checkCapacidade('view_afastamento') ? 
-                            '               <a class="newLink iconBoxModules iconAfastamento_view" onmouseover="return infraTooltipMostrar(\'Afastamentos\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Afastamento">'+
-                            '                  <i class="fas fa-luggage-cart cinzaColor"></i>'+
-                            '               </a>' : '')+
-                            (checkCapacidade('view_relatorio') ? 
-                            '               <a class="newLink iconBoxModules iconRelatorio_view" onmouseover="return infraTooltipMostrar(\'Relat\u00F3rios\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Relatorio">'+
-                            '                  <i class="fas fa-chart-pie cinzaColor"></i>'+
-                            '               </a>' : '')+
-                            '           </span>'+
-                            '   	</div>'+
-                            '   	<div id="relatoriosProActions" class="panelHome panelHomeRelatorio" style="'+(getOptionsPro('panelHomeView') == 'Relatorio' ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 240px; width: calc(100% - 260px)">'+
-                            '           <div class="btn-group" role="group" style="float: right;margin-right: 10px;">'+
-                            '              <button type="button" onclick="getPanelRelatorio(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelRelatoriosView') == 'Tabela' || !getOptionsPro('panelRelatoriosView') ? 'active' : '')+'">Tabela</button>'+
-                            '              <button type="button" onclick="getPanelRelatorio(this)" data-value="Grafico" class="btn btn-sm btn-light '+(getOptionsPro('panelRelatoriosView') == 'Grafico' ? 'active' : '')+'">Gr\u00E1fico</button>'+
-                            '           </div>'+
-                            '           '+selectListPerfilLotacao+
-                            '           <a class="newLink iconRelatorio_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
-                            '               <i class="fas fa-sync-alt"></i>'+
-                            '           </a>'+
-                            '           <span class="modulesActions">'+
-                            '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
-                            '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
-                            '                  <i class="fas fa-check-circle cinzaColor"></i>'+
-                            '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
-                            '               </a>'+
-                            (checkCapacidade('view_afastamento') ? 
-                            '               <a class="newLink iconBoxModules iconAfastamento_view" onmouseover="return infraTooltipMostrar(\'Afastamentos\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Afastamento">'+
-                            '                  <i class="fas fa-luggage-cart cinzaColor"></i>'+
-                            '               </a>' : '')+
-                            '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(checkOptionEntidade('modal_configuracoes') ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
-                            '                  <i class="fas fa-cog cinzaColor"></i>'+
-                            '               </a>'+
-                            '           </span>'+
-                            '   	</div>'+
-                            '   	<div class="panelInfoHome panelInfoHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+'">'+
-                            '   	    <div id="tabelaAtivPanel" class="tabelaPanelScroll" style="margin-top: 10px;">'+
-                            '               '+htmlTableAtividades+
-                            '   	    </div>'+
-                            '   	    <div id="ganttAtivPanel" class="ganttAtividade" style="max-width: 800px; display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	    <div id="kanbanAtivPanel" class="kanbanAtividade" style="display:none; padding-top: 50px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	    <div id="chartAtivPanel" class="chartAtividade" style="display:none; padding-top: 20px; position: relative;">'+
-                            '   	        <div id="chartAtivActions" class="chartAtivPanelDiv" style="width: 100%;">'+
-                            '   	            '+selectListUsers+selectListUnidades+
-                            '   	        </div>'+
-                            '   	        <div class="line-section">Distribui\u00E7\u00E3o</div>'+
-                            '   	        <div style="position: relative;">'+
-                            '   	            <div class="chartSection tabelaPanelScroll" id="chartSectionDistribuicao" style="height: 500px;">'+
-                            '   	                <div id="chartAtivPanelDemandas" class="chartAtivPanelDiv" style="width: 50%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	                <div id="chartAtivPanelPlanos" class="chartAtivPanelDiv" style="width: 50%; float: right;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '                   </div>'+
-                            '               </div>'+
-                            '   	        <div class="line-section">Entregas</div>'+
-                            '   	        <div id="chartAtivPanelEstoque" class="chartAtivPanelDiv" style="width: 23%; float: left; clear: both;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	        <div id="chartAtivPanelStatusEntregas" class="chartAtivPanelDiv" style="width: 23%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	        <div id="chartAtivPanelProcessuais" class="chartAtivPanelDiv" style="width: 23%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	        <div id="chartAtivPanelMediaTempo" class="chartAtivPanelDiv" style="width: 31%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	        <div class="line-section">Documentos Produzidos</div>'+
-                            '   	        <div id="chartAtivPanelRequisicoes" class="chartAtivPanelDiv" style="width: 25%; float: left; clear: both;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	        <div id="chartAtivPanelDocumentos" class="chartAtivPanelDiv" style="width: 25%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            (checkCapacidade('chart_produtividade') ? 
-                            '   	        <div class="line-section">Produtividade</div>'+
-                            '   	        <div id="chartAtivPanelProdutividade" class="chartAtivPanelDiv" style="width: 45%; float: left; clear: both;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	        <div id="chartAtivPanelProdutividadeMes" class="chartAtivPanelDiv" style="width: 45%; float: right;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '' : '')+
-                            '   	    </div>'+
-                            '   	</div>'+
-                            (checkCapacidade('view_afastamento') ? 
-                            '   	<div class="panelInfoHome panelInfoHomeAfastamento" style="'+(getOptionsPro('panelHomeView') == 'Afastamento' ? '' : 'display:none;')+'">'+
-                            '   	    <div id="ganttAfastamentoPanel" class="afastamentoPanelPro" style="max-width: 800px; display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	    <div id="tableAfastamentoPanel" class="tabelaPanelScroll afastamentoPanelPro" style="margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	    <div id="reportAfastamentoPanel" class="afastamentoPanelPro" style="margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	</div>' : '')+
-                            (checkCapacidade('view_relatorio') ? 
-                            '   	<div class="panelInfoHome panelInfoHomeRelatorio" style="'+(getOptionsPro('panelHomeView') == 'Relatorio' ? '' : 'display:none;')+'">'+
-                            '   	    <div id="tableRelatorioPanel" class="relatorioPanelPro" style="margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                            '   	    <div id="chartRelatorioPanel" class="relatorioPanelPro" style="display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Em constru\u00E7\u00E3o"></div></div>'+
-                            '   	</div>' : '')+
-                            '   	<div class="panelInfoHome panelInfoHomeConfiguracao" style="border:none; '+(getOptionsPro('panelHomeView') == 'Configuracao' ? '' : 'display:none;')+'">'+
-                            '   	</div>'+
-                            '   </div>'+
-                            '</div>';
+    var htmlPanelAtividades =   '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="atividadesPro" data-order="'+idOrder+'">'+
+                                '   <div class="infraBarraLocalizacao titlePanelHome">'+
+                                '       <span class="titlePanel panelHome panelHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+'">'+
+                                '           <i class="fas fa-check-circle verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
+                                '           '+__.Atividades+
+                                '       </span>'+
+                                (checkCapacidade('view_afastamento') ? 
+                                '       <span class="titlePanel panelHome panelHomeAfastamento" style="'+(getOptionsPro('panelHomeView') == 'Afastamento' ? '' : 'display:none;')+'">'+
+                                '           <i class="fas fa-luggage-cart verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
+                                '           Afastamentos'+
+                                '       </span>': '')+
+                                (checkCapacidade('view_relatorio') ? 
+                                '       <span class="titlePanel panelHome panelHomeRelatorio" style="'+(getOptionsPro('panelHomeView') == 'Relatorio' ? '' : 'display:none;')+'">'+
+                                '           <i class="fas fa-chart-pie verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
+                                '           Relat\u00F3rios'+
+                                '       </span>': '')+
+                                '       <span class="titlePanel panelHome panelHomeConfiguracao" style="'+(getOptionsPro('panelHomeView') == 'Configuracao' ? '' : 'display:none;')+'">'+
+                                '           <i class="fas fa-cog verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
+                                '           Configura\u00E7\u00F5es'+
+                                '       </span>'+
+                                '       <a class="newLink" id="atividadesProDiv_showIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="atividadesProDiv_hideIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
+                                '   </div>'+
+                                '   <div id="atividadesProDiv" style="width: 98%; '+statusView+'">'+
+                                '   	<div id="atividadesProActions" class="panelHome panelHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 200px; width: calc(100% - 220px)">'+
+                                '           <div class="btn-group atividadesBtnPanel" role="group" style="float: right;margin-right: 10px;">'+
+                                '              <button type="button" onclick="getPanelAtiv(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Tabela' || !getOptionsPro('panelAtividadesView') ? 'active' : '')+'"><i class="fas fa-table" style="color: #888;"></i> <span class="text">Tabela</span></button>'+
+                                '              <button type="button" onclick="getPanelAtiv(this)" data-value="Quadro" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Quadro' ? 'active' : '')+'"><i class="fas fa-project-diagram" style="color: #888;"></i> <span class="text">Quadro</span></button>'+
+                                '              <button type="button" onclick="getPanelAtiv(this)" data-value="Cronograma" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Cronograma' ? 'active' : '')+'"><i class="fas fa-tasks" style="color: #888;"></i> <span class="text">Cronograma</span></button>'+
+                                (checkCapacidade('chart_demandas') ?
+                                '              <button type="button" onclick="getPanelAtiv(this)" data-value="Relatorio" class="btn btn-sm btn-light '+(getOptionsPro('panelAtividadesView') == 'Relatorio' ? 'active' : '')+'"><i class="fas fa-chart-line" style="color: #888;"></i> <span class="text">Painel</span></button>'
+                                : '')+
+                                '           </div>'+
+                                '           '+selectListPerfilLotacao+
+                                '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                                '               <i class="fas fa-sync-alt"></i>'+
+                                '           </a>'+
+                                '   	</div>'+
+                                (checkCapacidade('view_afastamento') ? 
+                                '   	<div id="afastamentosProActions" class="panelHome panelHomeAfastamento" style="'+(getOptionsPro('panelHomeView') == 'Afastamento' ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 250px; width: calc(100% - 270px)">'+
+                                '           <div class="btn-group" role="group" style="float: right;margin-right: 10px;">'+
+                                '              <button type="button" onclick="getPanelAfast(this)" data-value="Cronograma" class="btn btn-sm btn-light '+(getOptionsPro('panelAfastamentosView') == 'Cronograma' || !getOptionsPro('panelAfastamentosView') ? 'active' : '')+'">Cronograma</button>'+
+                                '              <button type="button" onclick="getPanelAfast(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelAfastamentosView') == 'Tabela' ? 'active' : '')+'">Tabela</button>'+
+                                '           </div>'+
+                                '           '+selectListPerfilLotacao+
+                                '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                                '               <i class="fas fa-sync-alt"></i>'+
+                                '           </a>'+
+                                (checkCapacidade('save_afastamento') ?
+                                '           <a class="newLink iconAfastamento_add" onclick="saveAfastamento(this)" onmouseover="return infraTooltipMostrar(\'Adicionar Afastamento\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;">'+
+                                '               <i class="fas fa-user-clock"></i>'+
+                                '           </a>'+
+                                '' : '')+
+                                (checkCapacidade('delete_afastamento') ?
+                                '           <a class="newLink iconAfastamento_remove" onclick="removeAfastamento(this)" onmouseover="return infraTooltipMostrar(\'Remover Afastamentos\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
+                                '                   <span class="fa-layers fa-fw">'+
+                                '                       <i class="fas fa-trash-alt"></i>'+
+                                '                       <span class="fa-layers-counter">1</span>'+
+                                '                   </span>'+
+                                '           </a>'+
+                                '' : '')+
+                                '           <span class="modulesActions">'+
+                                '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                                '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
+                                '                  <i class="fas fa-check-circle cinzaColor"></i>'+
+                                '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
+                                '               </a>'+
+                                '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(checkOptionEntidade('modal_configuracoes') ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
+                                '                  <i class="fas fa-cog cinzaColor"></i>'+
+                                '               </a>'+
+                                (checkCapacidade('view_relatorio') ? 
+                                '               <a class="newLink iconBoxModules iconRelatorio_view" onmouseover="return infraTooltipMostrar(\'Relat\u00F3rios\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Relatorio">'+
+                                '                  <i class="fas fa-chart-pie cinzaColor"></i>'+
+                                '               </a>' : '')+
+                                '           </span>'+
+                                '   	</div>': '')+
+                                '   	<div id="configuracoesProActions" class="panelHome panelHomeConfiguracao" style="'+(getOptionsPro('panelHomeView') == 'Configuracao' ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 240px; width: calc(100% - 260px)">'+
+                                '           '+selectListPerfilLotacao+
+                                '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                                '               <i class="fas fa-sync-alt"></i>'+
+                                '           </a>'+
+                                (checkCapacidade('config_atividades') ? getHtmlActionsConfig('atividades') : '')+
+                                (checkCapacidade('config_planos') || checkCapacidade('config_self_planos') ? getHtmlActionsConfig('planos') : '')+
+                                (checkCapacidade('config_programas') ? getHtmlActionsConfig('programas') : '')+
+                                (checkCapacidade('config_users') ? getHtmlActionsConfig('users') : '')+
+                                (checkCapacidade('config_unidades') ? getHtmlActionsConfig('unidades') : '')+
+                                (checkCapacidade('config_tipos_documentos') ? getHtmlActionsConfig('tipos_documentos') : '')+
+                                (checkCapacidade('config_tipos_justificativas') ? getHtmlActionsConfig('tipos_justificativas') : '')+
+                                (checkCapacidade('config_tipos_modalidades') ? getHtmlActionsConfig('tipos_modalidades') : '')+
+                                (checkCapacidade('config_tipos_requisicoes') ? getHtmlActionsConfig('tipos_requisicoes') : '')+
+                                (checkCapacidade('config_nomenclaturas') ? getHtmlActionsConfig('nomenclaturas') : '')+
+                                (checkCapacidade('config_entidades') ? getHtmlActionsConfig('entidades') : '')+
+                                '           <span class="modulesActions">'+
+                                '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                                '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
+                                '                  <i class="fas fa-check-circle cinzaColor"></i>'+
+                                '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
+                                '               </a>'+
+                                (checkCapacidade('view_afastamento') ? 
+                                '               <a class="newLink iconBoxModules iconAfastamento_view" onmouseover="return infraTooltipMostrar(\'Afastamentos\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Afastamento">'+
+                                '                  <i class="fas fa-luggage-cart cinzaColor"></i>'+
+                                '               </a>' : '')+
+                                (checkCapacidade('view_relatorio') ? 
+                                '               <a class="newLink iconBoxModules iconRelatorio_view" onmouseover="return infraTooltipMostrar(\'Relat\u00F3rios\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Relatorio">'+
+                                '                  <i class="fas fa-chart-pie cinzaColor"></i>'+
+                                '               </a>' : '')+
+                                '           </span>'+
+                                '   	</div>'+
+                                '   	<div id="relatoriosProActions" class="panelHome panelHomeRelatorio" style="'+(getOptionsPro('panelHomeView') == 'Relatorio' ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 240px; width: calc(100% - 260px)">'+
+                                '           <div class="btn-group" role="group" style="float: right;margin-right: 10px;">'+
+                                '              <button type="button" onclick="getPanelRelatorio(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelRelatoriosView') == 'Tabela' || !getOptionsPro('panelRelatoriosView') ? 'active' : '')+'">Tabela</button>'+
+                                '              <button type="button" onclick="getPanelRelatorio(this)" data-value="Grafico" class="btn btn-sm btn-light '+(getOptionsPro('panelRelatoriosView') == 'Grafico' ? 'active' : '')+'">Gr\u00E1fico</button>'+
+                                '           </div>'+
+                                '           '+selectListPerfilLotacao+
+                                '           <a class="newLink iconRelatorio_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                                '               <i class="fas fa-sync-alt"></i>'+
+                                '           </a>'+
+                                '           <span class="modulesActions">'+
+                                '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
+                                '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
+                                '                  <i class="fas fa-check-circle cinzaColor"></i>'+
+                                '                  <span style="font-size: 80%;color: #666;vertical-align: text-top;"> '+__.Atividades+'</span>'+
+                                '               </a>'+
+                                (checkCapacidade('view_afastamento') ? 
+                                '               <a class="newLink iconBoxModules iconAfastamento_view" onmouseover="return infraTooltipMostrar(\'Afastamentos\');" onmouseout="return infraTooltipOcultar();" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Afastamento">'+
+                                '                  <i class="fas fa-luggage-cart cinzaColor"></i>'+
+                                '               </a>' : '')+
+                                '               <a class="newLink iconBoxModules iconConfiguracao_view" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" onclick="'+(checkOptionEntidade('modal_configuracoes') ? 'openModalConfigPanel()' : 'changePanelHome(this)')+'" style="font-size: 14pt;" data-value="Configuracao">'+
+                                '                  <i class="fas fa-cog cinzaColor"></i>'+
+                                '               </a>'+
+                                '           </span>'+
+                                '   	</div>'+
+                                '   	<div class="panelInfoHome panelInfoHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+'">'+
+                                '   	    <div id="tabelaAtivPanel" class="tabelaPanelScroll" style="margin-top: 10px;">'+
+                                '               '+htmlTableAtividades+
+                                '   	    </div>'+
+                                '   	    <div id="ganttAtivPanel" class="ganttAtividade" style="max-width: 800px; display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	    <div id="kanbanAtivPanel" class="kanbanAtividade" style="display:none; padding-top: 50px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	    <div id="chartAtivPanel" class="chartAtividade" style="display:none; padding-top: 20px; position: relative;">'+
+                                '   	        <div id="chartAtivActions" class="chartAtivPanelDiv" style="width: 100%;">'+
+                                '   	            '+selectListUsers+selectListUnidades+
+                                '   	        </div>'+
+                                '   	        <div class="line-section">Distribui\u00E7\u00E3o</div>'+
+                                '   	        <div style="position: relative;">'+
+                                '   	            <div class="chartSection tabelaPanelScroll" id="chartSectionDistribuicao" style="height: 500px;">'+
+                                '   	                <div id="chartAtivPanelDemandas" class="chartAtivPanelDiv" style="width: 50%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	                <div id="chartAtivPanelPlanos" class="chartAtivPanelDiv" style="width: 50%; float: right;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '                   </div>'+
+                                '               </div>'+
+                                '   	        <div class="line-section">Entregas</div>'+
+                                '   	        <div id="chartAtivPanelEstoque" class="chartAtivPanelDiv" style="width: 23%; float: left; clear: both;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	        <div id="chartAtivPanelStatusEntregas" class="chartAtivPanelDiv" style="width: 23%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	        <div id="chartAtivPanelProcessuais" class="chartAtivPanelDiv" style="width: 23%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	        <div id="chartAtivPanelMediaTempo" class="chartAtivPanelDiv" style="width: 31%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	        <div class="line-section">Documentos Produzidos</div>'+
+                                '   	        <div id="chartAtivPanelRequisicoes" class="chartAtivPanelDiv" style="width: 25%; float: left; clear: both;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	        <div id="chartAtivPanelDocumentos" class="chartAtivPanelDiv" style="width: 25%; float: left;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                (checkCapacidade('chart_produtividade') ? 
+                                '   	        <div class="line-section">Produtividade</div>'+
+                                '   	        <div id="chartAtivPanelProdutividade" class="chartAtivPanelDiv" style="width: 45%; float: left; clear: both;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	        <div id="chartAtivPanelProdutividadeMes" class="chartAtivPanelDiv" style="width: 45%; float: right;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '' : '')+
+                                '   	    </div>'+
+                                '   	</div>'+
+                                (checkCapacidade('view_afastamento') ? 
+                                '   	<div class="panelInfoHome panelInfoHomeAfastamento" style="'+(getOptionsPro('panelHomeView') == 'Afastamento' ? '' : 'display:none;')+'">'+
+                                '   	    <div id="ganttAfastamentoPanel" class="afastamentoPanelPro" style="max-width: 800px; display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	    <div id="tableAfastamentoPanel" class="tabelaPanelScroll afastamentoPanelPro" style="margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	    <div id="reportAfastamentoPanel" class="afastamentoPanelPro" style="margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	</div>' : '')+
+                                (checkCapacidade('view_relatorio') ? 
+                                '   	<div class="panelInfoHome panelInfoHomeRelatorio" style="'+(getOptionsPro('panelHomeView') == 'Relatorio' ? '' : 'display:none;')+'">'+
+                                '   	    <div id="tableRelatorioPanel" class="relatorioPanelPro" style="margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	    <div id="chartRelatorioPanel" class="relatorioPanelPro" style="display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Em constru\u00E7\u00E3o"></div></div>'+
+                                '   	</div>' : '')+
+                                '   	<div class="panelInfoHome panelInfoHomeConfiguracao" style="border:none; '+(getOptionsPro('panelHomeView') == 'Configuracao' ? '' : 'display:none;')+'">'+
+                                '   	</div>'+
+                                '   </div>'+
+                                '</div>';
+
     if ( $('#atividadesPro').length > 0 ) { $('#atividadesPro').remove(); }
     orderDivPanel(htmlPanelAtividades, idOrder, 'atividadesPro');
 
@@ -1770,6 +1819,23 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     }
     getRowsPanelAtividades(storeAtividades, $('#tabelaAtivPanel table tbody'));
     initPanelAtividadesView();
+}
+function getBtnActionsAtividade(value, more_options = false) {
+    var iconAtivEditHtml = actionsAtividade(value.id_demanda, 'icon', 'start');
+    var btnActionAtiv = (iconAtivEditHtml && iconAtivEditHtml.hasOwnProperty('icon')) 
+                ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
+                    '   <a class="newLink info_noclick" style="font-size: 9pt;" onclick="parent.actionsAtividade('+value.id_demanda+', \'action\')">'+
+                    '       <i class="'+iconAtivEditHtml.icon+'" style="padding-right: 3px;"></i>'+
+                    '       '+iconAtivEditHtml.name+
+                    '   </a>'+
+                    (more_options ?
+                    '   <a class="newLink info_noclick" onclick="parent.initToolbarFunc(this)" style="font-size: 9pt; margin:0;" data-index="'+value.id_demanda+'">'+
+                    '       <i class="fas fa-ellipsis-v"></i>'+
+                    '   </a>' : '')+
+                    '</span>'
+                : '';
+        btnActionAtiv = (checkPermissionAtiv(value)) ? btnActionAtiv : '';
+    return btnActionAtiv;
 }
 function getRowsPanelAtividades(storeAtividades, target) {
     function getRowsPanelAtividades(value, index) {
@@ -1789,52 +1855,58 @@ function getRowsPanelAtividades(storeAtividades, target) {
         var nameUser = (value.id_user != 0 ? value.apelido : 'N\u00E3o atribu\u00EDdo');
         var tagName_user = normalizeNameTag(nameUser);
         var tagName_unidade = (countUnidades > 1) ? 'tagTableName_'+normalizeNameTag(value.sigla_unidade) : '';
-        var iconAtivEditHtml = actionsAtividade(value.id_demanda, 'icon');
-        var ativEditHtml = (iconAtivEditHtml && iconAtivEditHtml.hasOwnProperty('icon')) ? '<a class="newLink" style="font-size: 9pt;" onclick="actionsAtividade('+value.id_demanda+')"><i class="'+actionsAtividade(value.id_demanda, 'icon').icon+'" style="font-size: 100%;"></i> '+actionsAtividade(value.id_demanda, 'icon').name+'</a>' : '';
+        var ativEditHtml = getBtnActionsAtividade(value, true);
         var checklistHtml = (value.checklist && value.checklist.length > 0) ? getInfoAtividadeChecklist(value, 'icon') : '';
 
         function getTdRow(type) {
             var html = '';
             if (type == 'proc') {
-                html =  '           <td align="left">'+
+                html =  '           <td align="left" data-type="proc">'+
                         '               '+getHtmlLinkRequisicao(value)+
                         '           </td>';
             } else if (type == 'date') {
-                html =  '           <td align="left">'+
+                html =  '           <td align="left" data-type="date">'+
                         '               <span class="info_dates_fav">'+datesAtivHtml+'</span>'+
                         '           </td>';
             } else if (type == 'action') {
-                html =  '           <td align="left">'+
+                html =  '           <td align="left" data-type="action">'+
                         '               '+ativEditHtml+
                         '           </td>';
             } else if (type == 'user') {
-                html =  '           <td align="left">'+
+                html =  '           <td align="left" data-type="user">'+
                         '               <span class="info_tags_follow info_tags_user">'+getHtmlEtiquetaUnidade(value)+'</span>'+tagPacto+timerAtiv+
                         '               '+checklistHtml+
                         '           </td>';
             } else if (type == 'etiqueta') {
-                html =  '           <td align="left" class="tdfav_tags '+((tagsAtivHtml.trim() == '' && checkCapacidade('edit_etiqueta') ) ? 'info_tags_follow_empty' : '')+'" data-etiqueta-mode="ativ">'+
+                html =  '           <td align="left" data-type="etiqueta" class="tdfav_tags '+((tagsAtivHtml.trim() == '' && checkCapacidade('edit_etiqueta') ) ? 'info_tags_follow_empty' : '')+'" data-etiqueta-mode="ativ">'+
                         '               <span class="info_tags_follow">'+tagsAtivHtml+
                         '               </span>'+(!checkCapacidade('edit_etiqueta') ? '' : 
                         '               <span class="info_tags_follow_txt" style="display:none">'+
                         '                   <input value="'+tagsAtiv+'" class="atividadeTagsPro">'+
                         '               </span>'+
-                        '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                        '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>'+
                         '               <a class="newLink followLink followLinkTags followLinkTagsAdd" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\'Adicionar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i></a>')+
                         '           </td>';
             } else if (type == 'desc') {
-                html =  '           <td class="tdfav_desc">'+
+                html =  '           <td class="content_desc" data-type="desc">'+
                         '               <div style="color: #666;">'+(value.nome_atividade ? value.nome_atividade : '')+'</div>'+
-                        '               <div>'+
-                        '                   '+(!checkCapacidade('edit_assunto') ? '' : '<span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'ativ\')" onkeypress="keyFollowDesc(event, \'ativ\')" value="'+value.assunto+'"></span>')+
-                        '                   <span class="info" style="font-weight: bold; display: inline-block; padding-top: 5px;">'+value.assunto+'</span>'+
-                        '                   '+(!checkCapacidade('edit_assunto') ? '' : '<a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'ativ\')" onmouseover="return infraTooltipMostrar(\'Editar '+__.assunto+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>')+
+                        '               <div class="content_edit" data-field="assunto" style="position:relative;" data-id="'+value.id_demanda+'">'+
+                        '                   <span class="info" style="font-weight: bold;display: block;margin-top: 5px;width: 96%;padding: 0 0 0 5px;">'+value.assunto+'</span>'+
+                        '                   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_assunto') ? '<a class="newLink newLink_active followLink followLinkDesc content_btnsave" onclick="editFieldAtiv(this)" style="right: 0;top: 0;" onmouseover="return infraTooltipMostrar(\'Editar '+__.assunto+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>' : '')+
                         '               </div>'+
                         (value && value.observacao_gerencial !== null && value.observacao_gerencial != '' ? 
-                        '               <div class="inlineAlert"><i class="fas fa-comment-alt" style="color: #7baaf7;"></i> '+value.observacao_gerencial+'</div>'+
+                        '               <div class="inlineAlert content_edit" data-field="observacao_gerencial" style="position:relative" data-id="'+value.id_demanda+'">'+
+                        '                   <i class="fas fa-comment-alt" style="color: #7baaf7;position: absolute;"></i>'+
+                        '                   <span class="info" style="text-indent: 20px;display: block;">'+value.observacao_gerencial+'</span>'+
+                        '                   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_observacao_gerencial') ? '<a class="newLink newLink_active followLink followLinkDesc content_btnsave" onclick="editFieldAtiv(this)" style="right: 0;top: 6px;" onmouseover="return infraTooltipMostrar(\'Editar '+__.Observacao+' '+__.Gerencial+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>' : '')+
+                        '               </div>'+
                         '' : '')+
                         (value && value.observacao_tecnica !== null && value.observacao_tecnica != '' ? 
-                        '               <div class="inlineAlert"><i class="fas fa-reply-all" style="color: #7baaf7;"></i> '+value.observacao_tecnica+'</div>'+
+                        '               <div class="inlineAlert content_edit" data-field="observacao_tecnica" style="position:relative" data-id="'+value.id_demanda+'">'+
+                        '                   <i class="fas fa-reply-all" style="color: #7baaf7;position: absolute;"></i>'+
+                        '                   <span class="info" style="text-indent: 20px;display: block;">'+value.observacao_tecnica+'</span>'+
+                        '                   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_observacao_tecnica') ? '<a class="newLink newLink_active followLink followLinkDesc content_btnsave" onclick="editFieldAtiv(this)" style="right: 0;top: 6px;" onmouseover="return infraTooltipMostrar(\'Editar '+__.Observacao+' '+__.Tecnica+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>' : '')+
+                        '               </div>'+
                         '' : '')+
                         '           </td>';
             }
@@ -1872,7 +1944,6 @@ function getRowsPanelAtividades(storeAtividades, target) {
         target.trigger('updateAll');
         console.log('endLoop rowsPanelAtividades', index);
         initFunctionsPanelAtiv();
-        // setTimeout(function(){ }, 500);
     }
     var countUnidades = (storeAtividades.length > 0) ? uniqPro(jmespath.search(storeAtividades, "[?sigla_unidade].sigla_unidade")).length : 0;
     var t = new Date();
@@ -1893,9 +1964,9 @@ function getHtmlLinkRequisicao(value, onclick = false) {
     var linkDoc = (value.data_entrega == '0000-00-00 00:00:00') 
                     ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento+'&id_documento='+value.id_documento_requisicao 
                     : url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento+'&id_documento='+value.id_documento_entregue;
-    var documentoTips = (typeof value.documento_sei !== 'undefined' && value.documento_sei !== null && parseInt(value.documento_sei) != 0) ? value.nome_documento+' ('+value.documento_sei+')' : value.nome_documento;
-    var requisicaoTips = (typeof value.requisicao_sei !== 'undefined' && value.requisicao_sei !== null && parseInt(value.requisicao_sei) != 0) ? value.nome_requisicao+' ('+value.requisicao_sei+')' : value.nome_requisicao;
-        requisicaoTips = (value.data_entrega == '0000-00-00 00:00:00') ? 'Requisi\u00E7\u00E3o: '+requisicaoTips : 'Entrega: '+documentoTips;
+    var documentoTips = (typeof value.documento_sei !== 'undefined' && value.documento_sei !== null && parseInt(value.documento_sei) != 0) ? (value.nome_documento ? value.nome_documento : '')+' ('+value.documento_sei+')' : (value.nome_documento ? value.nome_documento : '');
+    var requisicaoTips = (typeof value.requisicao_sei !== 'undefined' && value.requisicao_sei !== null && parseInt(value.requisicao_sei) != 0) ? (value.nome_requisicao ? value.nome_requisicao : '')+' ('+value.requisicao_sei+')' : (value.nome_requisicao ? value.nome_requisicao : '');
+        requisicaoTips = (value.data_entrega == '0000-00-00 00:00:00') ? (requisicaoTips != '' ? 'Requisi\u00E7\u00E3o: '+requisicaoTips : '') : (documentoTips != '' ? 'Entrega: '+documentoTips : '');
     var iconProcesso = (arrayProcessosUnidade && $.inArray(value.processo_sei, arrayProcessosUnidade) == -1 ) ? 'fas fa-folder' : 'far fa-folder-open';
     var tipsProcesso = (arrayProcessosUnidade && $.inArray(value.processo_sei, arrayProcessosUnidade) == -1 ) ? 'Processo fechado nesta unidade' : 'Processo aberto nesta unidade';
         tipsProcesso = (!arrayProcessosUnidade) ? '' : tipsProcesso;
@@ -1919,7 +1990,8 @@ function getHtmlLinkRequisicao(value, onclick = false) {
                             '                       '+value.nome_requisicao+(value.requisicao_sei ? ' '+value.requisicao_sei : '')+
                             '                   </span>'+
                             '               </a>';
-        processoHtml = (value.id_tipo_requisicao == 0) ? '' : processoHtml;
+        processoHtml = (value.id_tipo_requisicao == 0 && value.id_procedimento == 0) ? '' : processoHtml;
+        processoHtml = '<div class="type-id">#'+value.id_demanda+'</div>'+processoHtml;
     return processoHtml;
 }
 function getHtmlActionsConfig(type) {
@@ -3761,7 +3833,7 @@ function newConfigUser(this_) {
                     '               <label class="last" for="user_email"><i class="iconPopup iconSwitch fas fa-envelope cinzaColor" style="float: initial;"></i>E-mail:</label>'+
                     '           </td>'+
                     '           <td class="required">'+
-                    '               <input id="user_email" type="email" onblur="checkInputEmail(this)" style="font-size: 1em;" value="'+'@'+window.location.hostname.replace(window.location.hostname.split('.')[0]+'.','')+'" required>'+
+                    '               <input id="user_email" type="email" onblur="checkInputEmail(this)" style="font-size: 1em;" placeholder="usuario'+'@'+window.location.hostname.replace(window.location.hostname.split('.')[0]+'.','')+'" required>'+
                     '           </td>'+
                     '      </tr>'+
                     '   </table>'+
@@ -6780,7 +6852,7 @@ function getTableAfastamentoPanel(this_) {
                                         '                   '+moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format(format_display)+
                                         '               </span>'+
                                         '           </td>'+
-                                        '           <td class="tdfav_desc">'+
+                                        '           <td class="content_desc">'+
                                         '               <div>'+
                                         '                   <span class="info" style="font-weight: bold; display: inline-block; padding-top: 5px;">'+value.observacoes+'</span>'+
                                         '               </div>'+
@@ -7482,6 +7554,12 @@ function checkInputAfast(this_) {
     } 
 }
 function changeDatesAfast(this_) {
+    clearTimeout(dly);
+    dly = setTimeout(function() {
+        changeDatesAfast_(this_);
+    }, 1000);
+}
+function changeDatesAfast_(this_) {
     var _this = $(this_);
     var _parent = _this.closest('table');
     var data = _this.data();
@@ -7744,8 +7822,8 @@ function getKanbanAtividades(this_) {
 
     // corrige a altura de todos os quadros pelo maior deles
     var maxHeightBoard = Math.max.apply(null, kanbanDiv.find('.kanban-board').map(function(){ return $(this).height() }).get());
-        kanbanDiv.find('.kanban-board').css('height', maxHeightBoard+'px');
-        kanbanDiv.find('.kanban-board .kanban-drag').css('height', (maxHeightBoard-48)+'px');
+        kanbanDiv.find('.kanban-board').css('min-height', maxHeightBoard+'px');
+        kanbanDiv.find('.kanban-board .kanban-drag').css('min-height', (maxHeightBoard-48)+'px');
 
     var tagName = getOptionsPro('filterTag_kanban');
     if (typeof tagName !== 'undefined' && tagName != '') {
@@ -7791,11 +7869,13 @@ function getKanbanAtividades(this_) {
                             '</div>';
     kanbanDiv.find('.viewControlPro').remove();
     kanbanDiv.prepend(htmlViewControl);
-    $('#selectViewControl_kanbanAtivPanel').chosen({
-        placeholder_text_single: ' ',
-        no_results_text: 'Nenhum resultado encontrado'
-    });
-    forcePlaceHoldChosen();
+    if (typeof $().chosen === 'function') {
+        $('#selectViewControl_kanbanAtivPanel').chosen({
+            placeholder_text_single: ' ',
+            no_results_text: 'Nenhum resultado encontrado'
+        });
+        forcePlaceHoldChosen();
+    }
     if (getOptionsPro('panelKanbanView')) {
         kanbanDiv.find('.viewControlPro button[data-value="'+getOptionsPro('panelKanbanView')+'"]').trigger('click');
     }
@@ -7990,16 +8070,7 @@ function getKanbanItem(value) {
                     ? getTagTempoDespendidoAtiv(value)
                     : '';
 
-    var iconAtivEditHtml = actionsAtividade(value.id_demanda, 'icon');
-    var btnActionAtiv = (iconAtivEditHtml && iconAtivEditHtml.hasOwnProperty('icon')) 
-                ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
-                    '   <a class="newLink info_noclick" style="font-size: 9pt;" onclick="parent.actionsAtividade('+value.id_demanda+')">'+
-                    '       <i class="'+actionsAtividade(value.id_demanda, 'icon').icon+'" style="padding-right: 3px;"></i>'+
-                    '       '+actionsAtividade(value.id_demanda, 'icon').name+
-                    '   </a>'+
-                    '</span>'
-                : '';
-        btnActionAtiv = (checkPermissionAtiv(value)) ? btnActionAtiv : '';
+    var btnActionAtiv = getBtnActionsAtividade(value);
             
 
     var btnExtend = (value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('extend_atividade') && checkPermissionAtiv(value) )
@@ -8015,7 +8086,7 @@ function getKanbanItem(value) {
                 ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
                     '   <a class="newLink dateExtend info_noclick" onclick="parent.variationAtividade('+value.id_demanda+')">'+
                     '      <i class="fas fa-'+(value.tempo_pactuado == 0 ? 'clipboard-list' : 'graduation-cap')+' azulColor" style="padding-right: 3px;"></i>'+
-                    '      '+(value.tempo_pactuado == 0 ? 'Atribuir atividade' : 'Alterar '+__.complexidade)+
+                    '      '+(value.tempo_pactuado == 0 ? 'Atribuir '+__.atividade : 'Alterar '+__.complexidade)+
                     '   </a>'+
                     '</span>'
                 : '';
@@ -8036,22 +8107,35 @@ function getKanbanItem(value) {
                     '</span>';
 
     var obsGerencial = (value && value.observacao_gerencial !== null && value.observacao_gerencial != '') 
-                    ? '<span class="inlineAlert"><i class="fas fa-comment-alt" style="color: #7baaf7;"></i> '+value.observacao_gerencial+'</span>'
+                    ?   '<span class="inlineAlert content_edit" data-field="observacao_gerencial" style="position:relative" data-id="'+value.id_demanda+'">'+
+                        '   <i class="fas fa-comment-alt" style="color: #7baaf7;position: absolute;"></i>'+
+                        '   <span class="info" style="text-indent: 20px;display: block;">'+value.observacao_gerencial+'</span>'+
+                        '   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_observacao_gerencial') ? '<a class="newLink newLink_active followLink followLinkDesc content_btnsave kanban-actions-edit info_noclick" style="right: -15px;top: 5px;" onclick="parent.editFieldAtiv(this)" onmouseover="return infraTooltipMostrar(\'Editar '+__.Observacao+' '+__.Gerencial+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit azulColor" style="font-size: 100%;"></i></a>' : '')+
+                        '</span>'
                     : '';
+
     var obsTecnica = (value && value.observacao_tecnica !== null && value.observacao_tecnica != '') 
-                    ? '<span class="inlineAlert"><i class="fas fa-reply-all" style="color: #7baaf7;"></i> '+value.observacao_tecnica+'</span>'
+                    ?   '<span class="inlineAlert content_edit" data-field="observacao_tecnica" style="position:relative" data-id="'+value.id_demanda+'">'+
+                        '   <i class="fas fa-reply-all" style="color: #7baaf7;position: absolute;"></i>'+
+                        '   <span class="info" style="text-indent: 20px;display: block;">'+value.observacao_tecnica+'</span>'+
+                        '   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_observacao_tecnica') ? '<a class="newLink newLink_active followLink followLinkDesc content_btnsave kanban-actions-edit info_noclick" style="right: -15px;top: 5px;" onclick="parent.editFieldAtiv(this)" onmouseover="return infraTooltipMostrar(\'Editar '+__.Observacao+' '+__.Tecnica+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit azulColor" style="font-size: 100%;"></i></a>' : '')+
+                        '</span>'
                     : '';
 
     var pinBoard = '<span style="float: right;margin: -5px -10px 0 0;" class="kanban-pinboard info_noclick"><a class="newLink info_noclick '+(getPinKanbanItem(value.id_demanda) ? 'newLink_active' : '')+'" onclick="pinKanbanItens(this, '+value.id_demanda+')" onmouseover="return infraTooltipMostrar(\''+(getPinKanbanItem(value.id_demanda) ? 'Remover do topo' : 'Fixar no topo')+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-thumbtack cinzaColor"></i></a></span>';
                     
     var checklist = getInfoAtividadeChecklist(value, 'actions');
+    var titleReumeDemanda = (value.assunto.length > 50 ? value.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : value.assunto);
 
     if (tagDate != '') { classes.push('tagKanName_'+$(tagDate).data('tagname')) }
     var item = {
         id: "_id_"+value.id_demanda,
         title:  pinBoard+
                 '<div class="kanban-content">'+
-                '   <div class="kanban-title-card">'+(value.assunto.length > 50 ? value.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : value.assunto)+'</div>'+
+                '   <div class="kanban-title-card content_edit" data-field="assunto" data-id="'+value.id_demanda+'">'+
+                '       <span class="info" style="width: 75%;">'+value.assunto+'</span>'+
+                '       '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_assunto') ? '<a style="margin: -6px -10px 0 -20px;" class="newLink newLink_active followLink content_btnsave kanban-actions-edit info_noclick" onclick="parent.editFieldAtiv(this)" onmouseover="return infraTooltipMostrar(\'Editar '+__.assunto+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit azulColor" style="font-size: 100%;"></i></a>' : '')+
+                '   </div>'+
                 '   <div class="kanban-description">'+
                 '       <sub title="'+getTitleDialogBox(value, true)+'">'+
                 '       <div style="margin: 0 0 8px 0;" class="info_noclick">'+getHtmlLinkRequisicao(value, true)+'</div>'+
@@ -8059,7 +8143,7 @@ function getKanbanItem(value) {
                 '       </sub>'+
                 '       '+obsGerencial+
                 '       '+obsTecnica+
-                '       <span class="info_tags_follow info_tags_follow_etiquetas" style="float: right;">'+
+                '       <span class="info_tags_follow info_tags_follow_etiquetas" style="float: right;display: block;">'+
                 '           '+(value.etiquetas !== null && value.etiquetas.length > 0 ? $.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i, 'ativ'))[0].outerHTML }).join('') : '')+
                 '       </span>'+
                 '       <span class="info_tags_follow">'+getHtmlEtiquetaUnidade(value)+tagPacto+'</span>'+
@@ -8086,8 +8170,10 @@ function getKanbanItem(value) {
 }
 function checklistOpen(this_) {
     var _this = $(this_);
+    var type_container = (_this.closest('.kanban-item').length > 0) ? 'kanban' : 'table';
+    var _container = (type_container == 'kanban') ? _this.closest('.kanban-item') : _this.closest('td');
     _this.closest('.info_checklist_btn').hide();
-    _this.closest('.kanban-item').find('.info_checklist').show().find('.checklist_edit').trigger('click');
+    _container.find('.info_checklist').show().find('.checklist_edit').trigger('click');
 
 }
 function checklistToggle(this_) {
@@ -8237,6 +8323,7 @@ function checklistUpdate(this_, mode, data = false, param = false) {
                 var label = checklist.find('.info_checklist_item').last().find('.label_name');
                 setTimeout(function() {
                     label.focus();
+                    selectTextPro(label[0]);
                 }, 100);
         }
         checklistUpdateArray(param.id_demanda, data.checklist);
@@ -8296,6 +8383,7 @@ function checklistUpdateArray(targetID_demanda, dataChecklist) {
 function checklistUpdateArrayAtiv(arrayAtividades, targetID_demanda, dataChecklist) {
     var demandaIndex = arrayAtividades.findIndex((obj => obj.id_demanda == targetID_demanda));
         arrayAtividades[demandaIndex].checklist = dataChecklist;
+        arrayAtividadesPro[demandaIndex].checklist = dataChecklist;
     return arrayAtividades;
 }
 function checkAtivProdutividade(this_, value) {
@@ -8399,7 +8487,7 @@ function getGanttAtividades(bar_class = false) {
                                 end: prazo.format("YYYY-MM-DD"),
                                 progress: (value.data_entrega != '0000-00-00 00:00:00') 
                                             ? 100 
-                                            : (value.data_inicio != '0000-00-00 00:00:00') ? 25 : 0,
+                                            : (value.data_inicio != '0000-00-00 00:00:00') ? (value.checklist ? getInfoAtividadeChecklist(value, 'percent') : 50) : 0,
                                 dependencies: dependencia,
                                 custom_class: customClass
                             };
@@ -8573,6 +8661,117 @@ function initGetChartDemandas(TimeOut = 9000) {
         }, 500);
     }
 }
+function initToolbarFunc(this_, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof $().toolbar !== 'undefined') { 
+        setToolbarFunc(this_);
+    } else {
+        if (TimeOut == 9000) $.getScript((URL_SPRO+"js/lib/jquery.toolbar.min.js"));
+        setTimeout(function(){ 
+            initToolbarFunc(this_, TimeOut - 100); 
+            console.log('Reload initToolbarFunc'); 
+        }, 500);
+    }
+}
+function setToolbarFunc(this_) {
+    var _this = $(this_);
+
+    if ($('#toolbar_atividades').length == 0) {
+        $('#atividadesProDiv').append(setToolbarAtiv());
+    }
+    if (!_this.hasClass('toolbar_control')) {
+        _this.addClass('toolbar_control');
+        $('.toolbar_control').toolbar({
+            content: '#toolbar_atividades',
+            position: 'bottom',
+            event: 'click', 
+            hideOnClick: true,
+            adjustment: 5,
+            style: 'menu'
+        }).on('toolbarShown', function( event ) {
+            var id = $(event.currentTarget).data('index');
+            var toolbar = $('.tool-container.tool-bottom.toolbar-menu.animate-standard:visible');
+            setTimeout(function () { 
+                if (typeof id !== 'undefined' && id !== null && toolbar.length > 0) {
+                    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id+"`] | [0]");
+                        value = (value !== null) ? value : false;
+
+                    toolbar.find('.tool-item').hide().each(function(){
+                        var action = $(this).data('action');
+                        var mode = $(this).data('mode');
+                        var show = false;
+                            if (checkPermissionAtiv(value)) {
+                                if (mode.indexOf('rate_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_avaliacao == '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // rate_atividade
+                                    show = true;
+                                } else if (mode.indexOf('complete_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // complete_atividade
+                                    show = true;
+                                } else if (mode.indexOf('send_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // send_atividade
+                                    show = true;
+                                } else if (mode.indexOf('start_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_inicio == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // start_atividade
+                                    show = true;
+                                } else if (mode == 'none') {
+                                    show = true;
+                                }
+                                if (action == 'type_atividade' && value.tempo_pactuado != 0) {
+                                    show = false;
+                                } else if (action == 'variation_atividade' && value.tempo_pactuado == 0) {
+                                    show = false;
+                                }
+                            }
+                        if (show) {
+                            $(this).show();
+                        }
+                    });
+                }
+            }, 300);
+        }).on('toolbarItemClick', function( event, triggerButton ) {
+            event.preventDefault();
+            event.stopPropagation();
+            var id = $(this).data('index');
+            var action = $(triggerButton).data('action');
+            var subaction = $(triggerButton).data('subaction');
+
+            if (typeof id !== 'undefined' && id !== null) {
+                var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id+"`] | [0]");
+                    value = (value !== null) ? value : false;
+                if (action == 'info_atividade') {
+                    parent.infoAtividade(value.id_demanda);
+                } else if (action == 'variation_atividade' || action == 'type_atividade') {
+                    parent.variationAtividade(value.id_demanda);
+                } else if (action == 'start_cancel_atividade') {
+                    parent.startCancelAtividade(value.id_demanda);
+                } else if (action == 'pause_atividade') {
+                    parent.pauseAtividade(value.id_demanda);
+                } else if (action == 'edit_atividade') {
+                    if (subaction == 'notify_atividade') {
+                        parent.notifyAtividade(value.id_demanda);
+                    } else {
+                        parent.saveAtividade(value.id_demanda);
+                    }
+                } else if (action == 'delete_atividade') {
+                    parent.deleteAtividade_(value);
+                } else if (action == 'extend_atividade') {
+                    parent.extendAtividade(value.id_demanda);
+                } else if (action == 'complete_edit_atividade') {
+                    parent.completeAtividade(value.id_demanda);
+                } else if (action == 'complete_cancel_atividade') {
+                    parent.completeCancelAtividade(value.id_demanda);
+                } else if (action == 'rate_edit_atividade') {
+                    parent.rateAtividade(value.id_demanda);
+                } else if (action == 'rate_cancel_atividade') {
+                    parent.rateCancelAtividade(value.id_demanda);
+                }
+            }
+        }).on('toolbarHidden', function( event ) {
+            event.preventDefault();
+            event.stopPropagation();
+            // $('.tool-container.tool-bottom.toolbar-menu.animate-standard').remove();
+            // $(event.currentTarget).removeClass('toolbar_control');
+            // console.log(event.currentTarget);
+        });  
+        _this.trigger('click');
+    }
+}
 // INICIA FUNCOES DO PAINEL DE GESTAO DE ATIVIDADES
 function initFunctionsPanelAtiv(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -8585,21 +8784,47 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
         var tabelaAtiv = $('#tabelaAtivPanel table.tableAtividades');
 
         getAtividadeTagsPro(); 
-        
-        tabelaAtiv.tablesorter({
-            textExtraction: {
-              1: function (elem, table, cellIndex) {
+        initNewTabProcesso();
+
+        function getFilterTableAtiv(elem) {
+            var _this = $(elem);
+            var data = _this.data();
+            var _return = $(elem).text();
+            if (data.type == 'proc') {
+                var id = $(elem).find('.type-id').text().replace('#', '');
                 var target = $(elem).find('a').not('.followLink').eq(0);
                 var texttip_span = target.find('span').attr('onmouseover');
                     texttip_span = (typeof texttip_span !== 'undefined') ? extractTooltip(texttip_span) : ''; 
                 var texttip_i = target.find('i').attr('onmouseover');
                     texttip_i = (typeof texttip_i !== 'undefined') ? extractTooltip(texttip_i) : ''; 
-                return target.text().trim()+' '+texttip_span+' '+texttip_i;
-              },
-              2: function (elem, table, cellIndex) {
+                    _return = id+' '+target.text().trim()+' '+texttip_span+' '+texttip_i;
+            } else if (data.type == 'date') {
                 var target = $(elem).find('.dateboxDisplay').eq(0);
                 var text_date = target.data('time-sorter');
-                return text_date;
+                    _return = text_date;
+            }
+            return _return;
+        }
+        
+        tabelaAtiv.tablesorter({
+            textExtraction: {
+              1: function (elem, table, cellIndex) {
+                  return getFilterTableAtiv(elem);
+              },
+              2: function (elem, table, cellIndex) {
+                return getFilterTableAtiv(elem);
+              },
+              3: function (elem, table, cellIndex) {
+                return getFilterTableAtiv(elem);
+              },
+              4: function (elem, table, cellIndex) {
+                return getFilterTableAtiv(elem);
+              },
+              5: function (elem, table, cellIndex) {
+                return getFilterTableAtiv(elem);
+              },
+              6: function (elem, table, cellIndex) {
+                return getFilterTableAtiv(elem);
               }
             },
             widgets: ["saveSort", "filter"],
@@ -8644,7 +8869,8 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
             });
             setTimeout(function(){ 
                 var selectFilterTable = getSelectViewControl('tabelaAtivPanel');
-                var htmlFlashFilterTable =  '<div class="filterTablePro" style="position: absolute;top: 52px;text-align: right;right: 320px;">'+
+                var topPosition = (jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | [0]") !== null) ? '120px' : '52px';
+                var htmlFlashFilterTable =  '<div class="filterTablePro" style="position: absolute;top: '+topPosition+';text-align: right;right: 320px;">'+
                                             '   <span class="info_dates_fav" style="margin: 0; margin-right: 20px;">'+
                                             '       <span class="dateboxDisplay tag-remove filterTagClean" onclick="parent.filterTagView(this); $(this).closest(\'table\').trigger(\'filterReset\');" style="display:none; font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
                                             '           <span class="dateBoxIcon">'+
@@ -8680,7 +8906,7 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
                                             '   '+selectFilterTable+
                                             '</div>';
 
-                var htmlFilterAtiv =    '<div class="btn-group filterTablePro" role="group" style="right: 55px;top: 52px;z-index: 99;position: absolute;">'+
+                var htmlFilterAtiv =    '<div class="btn-group filterTablePro" role="group" style="right: 55px;top: '+topPosition+';z-index: 99;position: absolute;">'+
                                         '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                         '       <span class="text">Baixar</span>'+
@@ -9099,7 +9325,7 @@ function saveAtividadeSimple(id_demanda = 0) {
                         '                            <table style="width: 100%; font-size: 10pt;">'+
                         '                                <tr>'+
                         '                                    <td style="padding-top: 15px; width: 130px; text-align: left;">'+
-                        '                                        <label for="ativ_insert_checklist"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Inserir <br>Ckecklist?</label>'+
+                        '                                        <label for="ativ_insert_checklist"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Inserir <br>Checklist?</label>'+
                         '                                    </td>'+
                         '                                    <td style="width: 50px; text-align: left;">'+
                         '                                        <div class="onoffswitch">'+
@@ -9193,13 +9419,7 @@ function saveAtividadeSimple(id_demanda = 0) {
                     text: 'Excluir',
                     icon: 'ui-icon-trash',
                     click: function(event) { 
-                        if (value.data_avaliacao != '0000-00-00 00:00:00') {
-                            confirmaFraseBoxPro(__.A_demanda+' j\u00E1 possui avalia\u00E7\u00E3o cadastrada. Tem certeza que deseja excluir?', 'EXCLUIR', function() { deleteAtividade(id_demanda) });
-                        } else if (value.data_entrega != '0000-00-00 00:00:00') {
-                            confirmaFraseBoxPro(__.A_demanda+' j\u00E1 possui entrega realizada. Tem certeza que deseja excluir?', 'EXCLUIR', function() { deleteAtividade(id_demanda) });
-                        } else {
-                            confirmaBoxPro('Tem certeza que deseja excluir '+__.esta_demanda+'?', function() { deleteAtividade(id_demanda) }, 'Excluir');
-                        }
+                        deleteAtividade_(value);
                     }
                 });
             }
@@ -9259,6 +9479,15 @@ function saveAtividadeSimple(id_demanda = 0) {
         if (checkProcessoHome) {
             multProcessUpdateInput();
         }
+    }
+}
+function deleteAtividade_(value) {
+    if (value.data_avaliacao != '0000-00-00 00:00:00') {
+        confirmaFraseBoxPro(__.A_demanda+' j\u00E1 possui avalia\u00E7\u00E3o cadastrada. Tem certeza que deseja excluir?', 'EXCLUIR', function() { deleteAtividade(value.id_demanda) });
+    } else if (value.data_entrega != '0000-00-00 00:00:00') {
+        confirmaFraseBoxPro(__.A_demanda+' j\u00E1 possui entrega realizada. Tem certeza que deseja excluir?', 'EXCLUIR', function() { deleteAtividade(value.id_demanda) });
+    } else {
+        confirmaBoxPro('Tem certeza que deseja excluir '+__.esta_demanda+'?', function() { deleteAtividade(value.id_demanda) }, 'Excluir');
     }
 }
 function changeSaveAtividade(type) {
@@ -9713,7 +9942,7 @@ function saveAtividadeFull(id_demanda = 0) {
                         '                            <table style="width: 100%; font-size: 10pt;">'+
                         '                                <tr>'+
                         '                                    <td style="padding-top: 15px; width: 130px; text-align: left;">'+
-                        '                                        <label for="ativ_insert_checklist"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Ckecklist</label>'+
+                        '                                        <label for="ativ_insert_checklist"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Checklist</label>'+
                         '                                    </td>'+
                         '                                    <td style="text-align: left;">'+
                         '                                       '+getInfoAtividadeChecklist(value, 'actions')+
@@ -9729,7 +9958,7 @@ function saveAtividadeFull(id_demanda = 0) {
                         '                            <table style="width: 100%; font-size: 10pt;">'+
                         '                                <tr>'+
                         '                                    <td style="padding-top: 15px; width: 130px; text-align: left;">'+
-                        '                                        <label for="ativ_insert_checklist"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Inserir <br>Ckecklist?</label>'+
+                        '                                        <label for="ativ_insert_checklist"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Inserir <br>Checklist?</label>'+
                         '                                    </td>'+
                         '                                    <td style="width: 50px; text-align: left;">'+
                         '                                        <div class="onoffswitch">'+
@@ -9987,6 +10216,12 @@ function prepareFieldsReplace(this_) {
     initChosenReplace('box_init', this_);
 }
 function calculoRecorrenciaAtiv(this_) {
+    clearTimeout(dly);
+    dly = setTimeout(function() {
+        calculoRecorrenciaAtiv_(this_);
+    }, 800);
+}
+function calculoRecorrenciaAtiv_(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.atividadeWork');
     var config_unidade = getBoxConfigDadosUnidade(_parent);
@@ -10551,7 +10786,7 @@ function completeAtividade(id_demanda, confirmeBox = false) {
                     text: (value.data_entrega != '0000-00-00 00:00:00') ? 'Editar Conclus\u00E3o' : 'Concluir',
                     class: 'confirm',
                     click: function(event) { 
-                        if (checkSigleInputDateAtiv(this)) {
+                        if (checkSigleInputDateAtiv_(this)) {
                             if (checkAtivRequiredFields(this, 'mark')) {
                                 if (checkAtivProdutividade(this, value)) {
                                     if (checkAtivChecklist(this, value)) {
@@ -10988,6 +11223,7 @@ function startAtividade(id_demanda = 0) {
             var arrayResp = jmespath.search(arrayConfigAtividades.planos, "[?sigla_unidade=='"+value.sigla_unidade+"']");
             optionSelectResponsavel += getOptionsSelectResp(arrayResp, value);
         }
+        // console.log(checkCapacidade('select_user_atividade'), value.id_user, optionSelectResponsavel);
         var htmlSelectResponsavel = (optionSelectResponsavel != '')
                 ?   '      <tr>'+
                     '          <td style="vertical-align: bottom; text-align: left; width: 140px;" class="label">'+
@@ -11077,7 +11313,7 @@ function startAtividade(id_demanda = 0) {
             text: 'Iniciar',
             class: 'confirm',
             click: function(event) { 
-                if (checkSigleInputDateAtiv(this)) {
+                if (checkSigleInputDateAtiv_(this)) {
                     if (checkAtivRequiredFields(this, 'mark')) {
                         var _parent = $(this).closest('.ui-dialog');
                         var data_inicio = moment(_parent.find('#ativ_data_inicio').val(), config_unidade.hora_format).format('YYYY-MM-DD HH:mm:ss');
@@ -11089,6 +11325,8 @@ function startAtividade(id_demanda = 0) {
                                             : (value.id_user == 0) 
                                                 ? parseInt(arrayConfigAtividades.perfil.id_user)
                                                 : value.id_user;
+                            id_user = (id_user == 0 || typeof id_user === 'undefined') ? parseInt(arrayConfigAtividades.perfil.id_user) : id_user;
+
                         var id_demandas_pause = (listAtividadesIniciadas && listAtividadesIniciadas.length > 0 && _parent.find('#pause_others').is(':checked')) 
                                                 ? JSON.parse(_parent.find('#lista_pause_others').val())
                                                 : [];
@@ -11118,7 +11356,7 @@ function startAtividade(id_demanda = 0) {
 
         if (checkCapacidade('edit_atividade')) {
             btnDialogBoxPro.unshift({
-                text: 'Salvar Edi\u00E7\u00E3o',
+                text: 'Editar '+__.Demanda,
                 icon: 'ui-icon-pencil',
                 click: function(event) { 
                     saveAtividade(id_demanda);
@@ -11136,7 +11374,7 @@ function startAtividade(id_demanda = 0) {
                     width: 550,
                     open: function() { 
                         updateButtonConfirm(this, true);
-                        checkSigleInputDateAtiv(this);
+                        checkSigleInputDateAtiv_(this);
                         prepareFieldsReplace(this);
                     },
                     close: function() { 
@@ -11327,7 +11565,7 @@ function pauseAtividade(id_demanda) {
                 width: 550,
                 open: function() { 
                     updateButtonConfirm(this, true);
-                    checkSigleInputDateAtiv(this);
+                    checkSigleInputDateAtiv_(this);
                     prepareFieldsReplace(this);
                 },
                 close: function() { 
@@ -11340,7 +11578,7 @@ function pauseAtividade(id_demanda) {
                     text: txtTitle,
                     class: 'confirm',
                     click: function(event) { 
-                        if (checkSigleInputDateAtiv(this)) {
+                        if (checkSigleInputDateAtiv_(this)) {
                             var _this = $(this);
                             var _parent = _this.closest('.ui-dialog');
                             var data_pausa = moment(_this.closest('.ui-dialog').find('#ativ_data_pausa').val(), config_unidade.hora_format).format('YYYY-MM-DD HH:mm:ss');
@@ -11411,7 +11649,7 @@ function variationAtividade(id_demanda, alertAtividade = false) {
                                                         ? (tempo_pactuado_fator < 1) ? parseFloat(tempo_pactuado_fator.toFixed(3)) : parseFloat(tempo_pactuado_fator.toFixed(1))
                                                         : false;
                             tempo_pactuado_fator_display = (tempo_pactuado_fator_display) ? " ["+tempo_pactuado_fator_display+" "+(tempo_pactuado_fator > 1 ? 'horas' : 'hora')+"]" : '';
-                        return "<option value='"+v.fator+"' "+selected+">"+v.complexidade+tempo_pactuado_fator_display+"</option>";
+                        return "<option value='"+v.fator+"' "+selected+">"+unicodeToChar(v.complexidade)+tempo_pactuado_fator_display+"</option>";
                     }).join('') : '<option>&nbsp;</option>';
 
             var selectAtiv =    '               <select id="ativ_id_atividade" data-key="id_atividade" style="width: 100%;" required disabled>'+
@@ -11492,7 +11730,11 @@ function variationAtividade(id_demanda, alertAtividade = false) {
                 width: 780,
                 open: function() { 
                     updateButtonConfirm(this, true);
-                    $('#ativ_fator_complexidade').trigger('change');
+                    if ($('#ativ_fator_complexidade').val() == null) {
+                        $('#ativ_id_atividade').trigger('change');
+                    } else {
+                        $('#ativ_fator_complexidade').trigger('change');
+                    }
                     initChosenReplace('box_init', this);
                 },
                 close: function() { 
@@ -11705,7 +11947,7 @@ function sendAtividade(id_demanda = 0) {
             text: __.Arquivar,
             class: 'confirm',
             click: function(event) { 
-                if (checkSigleInputDateAtiv(this)) {
+                if (checkSigleInputDateAtiv_(this)) {
                     var data_envio = moment($(this).closest('.ui-dialog').find('#ativ_data_envio').val(), config_unidade.hora_format).format('YYYY-MM-DD HH:mm:ss');
                     var action = 'send_atividade';
                     var param = {
@@ -11803,7 +12045,7 @@ function sendAtividade(id_demanda = 0) {
                 width: 700,
                 open: function() { 
                     updateButtonConfirm(this, true);
-                    checkSigleInputDateAtiv(this);
+                    checkSigleInputDateAtiv_(this);
                     prepareFieldsReplace(this);
                 },
                 close: function() { 
@@ -11941,7 +12183,7 @@ function getInfoAtividadeChecklist(value, mode) {
                         '</span>';
             if ( ((checkCapacidade('update_checklist') && value.id_user == arrayConfigAtividades.perfil.id_user) || checkCapacidade('update_checklist_all')) && value.data_entrega == '0000-00-00 00:00:00') {
                 html_list +=    '<span class="info_checklist_btn info_noclick" style="'+(!verifyChecklist ? 'display:block;' : 'display:none;')+' padding: 0;opacity: 1;">'+
-                                '   <a class="newLink" onclick="parent.checklistOpen(this)">'+
+                                '   <a class="newLink" onclick="parent.checklistOpen(this)" style="font-size: 100%;">'+
                                 '       <i style="margin-right: 3px;" class="fas fa-check-double azulColor"></i>'+
                                 '       Inserir checklist'+
                                 '   </a>'+
@@ -11994,6 +12236,10 @@ function getInfoAtividadeChecklist(value, mode) {
                         '   </span>'+
                         '</span>';
         return html_icon;
+    } else if (mode == 'percent') {
+        var valueNow = jmespath.search(checklist, "[?data_fim!='0000-00-00 00:00:00']").length;
+        var percentCheck = parseFloat(((valueNow/checklist.length)*100).toFixed(2));
+        return percentCheck;
     }
 }
 function getInfoAtividadeProdutividade_text(value) {
@@ -12115,16 +12361,26 @@ function getInfoAtividade(value) {
                             '          <td style="vertical-align: bottom;"><i class="iconPopup iconSwitch fas fa-clipboard-list cinzaColor"></i>'+__.Atividade+':</td>'+
                             '          <td>'+(value.nome_atividade ? value.nome_atividade : '-')+'</td>'+
                             '      </tr>'+
-                            '      <tr style="height: 40px;">'+
+                            '      <tr style="height: 40px;" data-index="'+value.id_demanda+'">'+
                             '          <td style="vertical-align: bottom;"><i class="iconPopup iconSwitch fas fa-comment-dots cinzaColor"></i>'+__.Assunto+':</td>'+
-                            '          <td>'+value.assunto+'</td>'+
+                            '          <td class="content_desc">'+
+                            '               <div class="content_edit" data-field="assunto" style="position:relative" data-id="'+value.id_demanda+'">'+
+                            '                   <span class="info">'+value.assunto+'</span>'+
+                            '                   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_assunto') ? '<a class="newLink content_btnsave" onclick="editFieldAtiv(this)" onmouseover="return infraTooltipMostrar(\'Editar '+__.assunto+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>' : '')+
+                            '               </div>'+
+                            '          </td>'+
                             '      </tr>'+
                             '      <tr style="height: 40px;">'+
                             '          <td style="vertical-align: bottom;"><i class="iconPopup iconSwitch fas fa-quote-left cinzaColor"></i>'+__.Observacao+' '+__.Gerencial+':</td>'+
-                            '          <td>'+(value.observacao_gerencial ? value.observacao_gerencial : '-')+'</td>'+
+                            '          <td class="content_desc">'+
+                            '               <div class="content_edit" data-field="observacao_gerencial" style="position:relative" data-id="'+value.id_demanda+'">'+
+                            '                   <span class="info">'+(value.observacao_gerencial ? value.observacao_gerencial : '-')+'</span>'+
+                            '                   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_observacao_gerencial') ? '<a class="newLink content_btnsave" style="position: absolute;top: 0;right: 0;" onclick="editFieldAtiv(this)" onmouseover="return infraTooltipMostrar(\'Editar '+__.Observacao+' '+__.Gerencial+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>' : '')+
+                            '               </div>'+
+                            '          </td>'+
                             '      </tr>'+
                             '      <tr style="height: 40px;'+tagsAtivPriority+'" data-index="'+value.id_demanda+'">'+
-                            '          <td style="vertical-align: bottom;"><i class="iconPopup iconSwitch fas fa-tags cinzaColor"></i>Etiquetas:</td>'+
+                            '          <td style="vertical-align: middle;padding: 10px 0 0 0;"><i class="iconPopup iconSwitch fas fa-tags cinzaColor"></i>Etiquetas:</td>'+
                             '          <td data-etiqueta-mode="ativ">'+
                             '               <span class="info_tags_follow">'+$.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i,'ativ')).css('cursor','initial')[0].outerHTML }).join('')+'</span>'+
                             (!checkCapacidade('edit_etiqueta') ? '' : 
@@ -12132,7 +12388,7 @@ function getInfoAtividade(value) {
                             '                   <input id="infoAtivTagsPro" value="'+((typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? value.etiquetas.join(';') : '')+'" class="atividadeTagsPro">'+
                             '               </span>'+
                             '')+
-                            '               <a class="newLink followLinkTags '+(value.etiquetas !== null && value.etiquetas.length > 0 ? 'followLinkTagsEdit' : 'followLinkTagsAdd')+'" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\''+(value.etiquetas !== null && value.etiquetas.length > 0 ? 'Editar etiqueta' : 'Adicionar etiqueta')+'\');" onmouseout="return infraTooltipOcultar();"><i class="'+(value.etiquetas !== null && value.etiquetas.length > 0 ? 'fas fa-pencil-alt' : 'fas fa-tags')+'" style="font-size: 100%;"></i></a>'+
+                            '               <a class="newLink content_btnsave followLinkTags '+(value.etiquetas !== null && value.etiquetas.length > 0 ? 'followLinkTagsEdit' : 'followLinkTagsAdd')+'" onclick="showFollowEtiqueta(this, \'show\', \'ativ\')" onmouseover="return infraTooltipMostrar(\''+(value.etiquetas !== null && value.etiquetas.length > 0 ? 'Editar etiqueta' : 'Adicionar etiqueta')+'\');" onmouseout="return infraTooltipOcultar();"><i class="'+(value.etiquetas !== null && value.etiquetas.length > 0 ? 'fas fa-edit' : 'fas fa-tags')+'" style="font-size: 100%;"></i></a>'+
                             '          </td>'+
                             '      </tr>'+
                             '      <tr style="height: 40px;">'+
@@ -12159,7 +12415,12 @@ function getInfoAtividade(value) {
                             '      </tr>'+
                             '      <tr style="height: 40px;">'+
                             '          <td style="vertical-align: bottom;"><i class="iconPopup iconSwitch fas fa-quote-left cinzaColor"></i>'+__.Observacao+' '+__.Tecnica+':</td>'+
-                            '          <td>'+(value.observacao_tecnica ? value.observacao_tecnica : '-')+'</td>'+
+                            '          <td class="content_desc">'+
+                            '               <div class="content_edit" data-field="observacao_tecnica" style="position:relative" data-id="'+value.id_demanda+'">'+
+                            '                   <span class="info">'+(value.observacao_tecnica ? value.observacao_tecnica : '-')+'</span>'+
+                            '                   '+(checkCapacidade('edit_field') && checkPermissionAtiv(value) && checkCapacidade('edit_observacao_tecnica') ? '<a class="newLink content_btnsave" onclick="editFieldAtiv(this)" style="position: absolute;top: 0;right: 0;" onmouseover="return infraTooltipMostrar(\'Editar '+__.Observacao+' '+__.Tecnica+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>' : '')+
+                            '               </div>'+
+                            '          </td>'+
                             '      </tr>'+
                             '      <tr style="height: 40px;">'+
                             '          <td style="vertical-align: bottom;"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Checklist:</td>'+
@@ -12234,6 +12495,12 @@ function moveUserCapacity(id_user) {
     getServerAtividades(param, action);
 }
 function checkSigleInputDateAtiv(this_) {
+    clearTimeout(dly);
+    dly = setTimeout(function() {
+        checkSigleInputDateAtiv_(this_);
+    }, 1000);
+}
+function checkSigleInputDateAtiv_(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.ui-dialog');
     var input = _parent.find('input[data-type="inicio"]');
@@ -12282,25 +12549,25 @@ function actionsAtividade(id_demanda = 0, mode = 'action') {
                     if (mode == 'action') { 
                         rateAtividade(id_demanda);
                     } else if (mode == 'icon') { 
-                        return {icon: 'fas fa-star-half-alt', name: 'Avaliar '+__.demanda+'', action: 'rate'} 
+                        return {icon: 'fas fa-star-half-alt', name: 'Avaliar '+__.demanda, action: 'rate'} 
                     }
                 } else if (id_demanda != 0 && checkCapacidade('complete_atividade') && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
                     if (mode == 'action') { 
                         completeAtividade(id_demanda);
                     } else if (mode == 'icon') { 
-                        return {icon: 'fas fa-check-circle', name: 'Concluir '+__.demanda+'', action: 'complete'} 
+                        return {icon: 'fas fa-check-circle', name: 'Concluir '+__.demanda, action: 'complete'} 
                     }
                 } else if (checkCapacidade('send_atividade') && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
                     if (mode == 'action') { 
                         sendAtividade(id_demanda);
                     } else if (mode == 'icon') { 
-                        return {icon: 'fas fa-archive', name: __.Arquivar+' '+__.demanda+'', action: 'send'} 
+                        return {icon: 'fas fa-archive', name: __.Arquivar+' '+__.demanda, action: 'send'} 
                     }
                 } else if (value.data_envio == '0000-00-00 00:00:00') {
                     if (mode == 'action') { 
-                        saveAtividade(id_demanda);
+                        startAtividade(id_demanda);
                     } else if (mode == 'icon') { 
-                        return {icon: 'fas fa-pencil-alt', name: 'Editar '+__.demanda+'', action: 'edit'} 
+                        return {icon: 'fas fa-play-circle', name: 'Iniciar '+__.demanda, action: 'start'} 
                     }
                 } else {
                     if (mode == 'action') { 
@@ -12314,7 +12581,7 @@ function actionsAtividade(id_demanda = 0, mode = 'action') {
                     if (mode == 'action') { 
                         startAtividade(id_demanda);
                     } else if (mode == 'icon') { 
-                        return {icon: 'fas fa-play-circle', name: 'Iniciar '+__.demanda+'', action: 'start'} 
+                        return {icon: 'fas fa-play-circle', name: 'Iniciar '+__.demanda, action: 'start'} 
                     }
                 } else if (typeof arrayConfigAtividades.perfil !== 'undefined' && value.id_user != 0 && value.id_user != parseInt(arrayConfigAtividades.perfil.id_user)) {    
                     if (mode == 'action') { 
@@ -12327,19 +12594,19 @@ function actionsAtividade(id_demanda = 0, mode = 'action') {
                         if (mode == 'action') { 
                             startAtividade(id_demanda);
                         } else if (mode == 'icon') { 
-                            return {icon: 'fas fa-play-circle', name: 'Iniciar '+__.demanda+'', action: 'start'} 
+                            return {icon: 'fas fa-play-circle', name: 'Iniciar '+__.demanda, action: 'start'} 
                         }
                     } else if (checkCapacidade('complete_atividade') && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
                         if (mode == 'action') { 
                             completeAtividade(id_demanda);
                         } else if (mode == 'icon') { 
-                            return {icon: 'fas fa-check-circle', name: 'Concluir '+__.demanda+'', action: 'complete'} 
+                            return {icon: 'fas fa-check-circle', name: 'Concluir '+__.demanda, action: 'complete'} 
                         }
                     } else if (checkCapacidade('rate_atividade') && value.data_avaliacao == '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
                         if (mode == 'action') { 
                             rateAtividade(id_demanda);
                         } else if (mode == 'icon') { 
-                            return {icon: 'fas fa-star-half-alt', name: 'Avaliar '+__.demanda+'', action: 'rate'} 
+                            return {icon: 'fas fa-star-half-alt', name: 'Avaliar '+__.demanda, action: 'rate'} 
                         }
                     } else {
                         if (mode == 'action') { 
@@ -12422,6 +12689,7 @@ function extractDataAtiv(this_) {
     arrayAtiv.fator_complexidade = (Number.isNaN(arrayAtiv.fator_complexidade)) ? null : arrayAtiv.fator_complexidade;
     arrayAtiv.lista_prioridades = extractInputPriority(this_);
     arrayAtiv.lista_recorrencia = (arrayAtiv.hasOwnProperty('lista_recorrencia') && arrayAtiv.lista_recorrencia != '') ? JSON.parse(arrayAtiv.lista_recorrencia) : arrayAtiv.lista_recorrencia;
+    arrayAtiv.id_unidade = (arrayAtiv.id_unidade == '') ? arrayConfigAtivUnidade.id_unidade : arrayAtiv.id_unidade;
     return arrayAtiv;
 }
 function extractInputPriority(this_) {
@@ -12688,6 +12956,12 @@ function getBoxConfigDadosUnidade(_parent) {
     return getConfigDadosUnidade(unidade);
 }
 function changeDadosTrabalho(this_, autotime = false) {
+  clearTimeout(dly);
+  dly = setTimeout(function() {
+    changeDadosTrabalho_(this_, autotime);
+  }, 1000);
+}
+function changeDadosTrabalho_(this_, autotime = false) {
     var _this = $(this_);
     var _parent = _this.closest('.atividadeWork');
     var data = _this.data();
@@ -13152,7 +13426,7 @@ function getOptionsSelectAtiv(arrayAtiv, value, tab) {
     return optionSelectAtividades;
 }
 function getOptionsSelectResp(arrayResp, value) {
-    var optionSelectResponsavel = ( arrayResp.length > 0 ) ? $.map(arrayResp, function(v,k){ 
+    var optionSelectResponsavel = (typeof arrayResp !== 'undefined' && arrayResp !== null && arrayResp.length > 0 ) ? $.map(arrayResp, function(v,k){ 
         var selected = ( value && v.id_user == value.id_user ) ? 'selected' : '';
         var disabled = (checkCapacidade('select_user_atividade') || arrayConfigAtividades.perfil.id_user == v.id_user) ? '' : 'disabled';
         var config = {
@@ -13184,7 +13458,7 @@ function changeAtivSelect(this_) {
                                                 ? (tempo_pactuado_fator < 1) ? parseFloat(tempo_pactuado_fator.toFixed(3)) : parseFloat(tempo_pactuado_fator.toFixed(1))
                                                 : false;
                     tempo_pactuado_fator_display = (tempo_pactuado_fator_display) ? " ["+tempo_pactuado_fator_display+" "+(tempo_pactuado_fator > 1 ? 'horas' : 'hora')+"]" : '';
-                return "<option value='"+v.fator+"' "+selected+">"+v.complexidade+tempo_pactuado_fator_display+"</option>";
+                return "<option value='"+v.fator+"' "+selected+">"+unicodeToChar(v.complexidade)+tempo_pactuado_fator_display+"</option>";
             }).join('') : '<option>&nbsp;</option>';
     _parent.find('#ativ_fator_complexidade').html(optionSelectComplexidade);
     if (selectUser.val() == '') {
@@ -14028,7 +14302,7 @@ function getSelectedItemBox(this_) {
         value = (id_demanda && value !== null) ? value : false;
     var htmlItem = (value) 
         ?   '<div class="kanban-container">'+
-            '   <div class="kanban-item">'+
+            '   <div class="kanban-item" data-eid="_id_'+id_demanda+'">'+
             getKanbanItem(value).title+
             '   </div>'+
             '</div>'
@@ -14084,6 +14358,7 @@ function getInsertIconAtividade() {
             appendIconAtividade('delete');
         }
         appendModulesIcons();
+        setAtividadesProcessoHome();
 }
 function appendModulesIcons() {
     var elementActions = $('#atividadesProActions');
@@ -14119,7 +14394,7 @@ function appendIconAtividade(name = false) {
         var htmlIconAtividade = '';
         if (name == 'save') {
             elementActions.find('.iconAtividade_'+name).remove();
-            htmlIconAtividade = getHtmlIconAtividade({name: name, title: __.Nova_Demanda+'', icon: 'fas fa-user-check', action: 'saveAtividade()'});
+            htmlIconAtividade = getHtmlIconAtividade({name: name, title: __.Nova_Demanda, icon: 'fas fa-user-check', action: 'saveAtividade()'});
         } else if (name == 'start') {
             elementActions.find('.iconAtividade_'+name).remove();
             htmlIconAtividade = getHtmlIconAtividade({name: name, title: 'Iniciar '+__.Demanda+'', icon: 'fas fa-play-circle', action: 'selectAtividadeBox(\'start\')'});
@@ -14412,7 +14687,7 @@ function getProfileAtiv(response = false) {
                             '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-exclamation-triangle '+(resumeAtiv.atrasadas == 0 ? 'cinzaColor' : 'vermelhoColor')+'" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.atrasadas+'</span> demandas em atraso '+(!checkCapacidade('only_self_atividades') ? '<br>na unidade' : '')+
                             '              </div>'+
                             '              <div style="width: 40%;float: left;padding: 10px;margin: 10px 5px;text-align: center;">'+
-                            '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-handshake cinzaColor" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.executado+'</span> de execu\u00E7\u00E3o'+(!checkCapacidade('only_self_atividades') ? 'dos planos <br>da unidade' : 'do plano')+
+                            '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-handshake cinzaColor" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.executado+'</span> de execu\u00E7\u00E3o '+(!checkCapacidade('only_self_atividades') ? 'dos planos <br>da unidade' : 'do plano')+
                             '              </div>'+
                             '              <div style="width: 40%;float: left;padding: 10px;margin: 10px 5px;text-align: center;">'+
                             '                  <span class="count" style="font-size: 20pt;display: block;"><i class="fas fa-chart-line cinzaColor" style="color: #878787;margin-right: 10px;"></i>'+resumeAtiv.produtividade+'%</span> de produtividade m\u00E9dia '+(!checkCapacidade('only_self_atividades') ? '<br>na unidade' : '')+

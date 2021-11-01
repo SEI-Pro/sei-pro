@@ -560,13 +560,13 @@ function loadLocalFilePro() {
                 var result = JSON.parse(e.target.result); 
                     result.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-                console.log(result);
-                setLocalFilePro(result);
-                localStorageStorePro('configDataFavoritesPro', result);
-                setPanelFavorites('refresh');
-                resetDialogBoxPro('dialogBoxPro');
+                    setLocalFilePro(result);
+                    localStorageStorePro('configDataFavoritesPro', result);
+                    setPanelFavorites('refresh');
+                    resetDialogBoxPro('dialogBoxPro');
                 setTimeout(function(){ 
-                    alertaBoxPro('Sucess', 'check-circle', 'Configura\u00E7\u00F5es carregadas com sucesso!');
+                        alertaBoxPro('Sucess', 'check-circle', 'Configura\u00E7\u00F5es carregadas com sucesso!');
+                        console.log('loadLocalFilePro', result.datetime, result, getStoreFavoritePro());
                 }, 500);
             }
             fr.readAsText(files.item(0));
@@ -770,8 +770,17 @@ function removeDuplicatesArray(list, ref) {
     });
     return result;
 }
+function extractOnlyAlphaNum(string) {
+    string = (string != '') ? string.replace(/[^a-z0-9 ]/gi, '').replace(/  /g, ' ') : string;
+    return string;
+}
 function extractTooltip(elem) {
-    return removeAcentos($("<div/>").html(elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(',', ' ').replace(/["']/g, "")).text());
+    return extractOnlyAlphaNum(removeAcentos($("<div/>").html(elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(',', ' ').replace(/["']/g, "")).text()));
+}
+function extractTooltipToArray(elem) {
+    var string = elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(/["']/g, '"');
+    var array = (string != '') ? JSON.parse('['+string+']') : [];
+    return (array.length > 0) ? array : false;
 }
 function ganttAutoProgressPercent(dtStar, dtEnd) {
     var dtNow = moment();
@@ -793,6 +802,7 @@ function changePanelSortPro(this_) {
     } else {
         removeOptionsPro('panelSortPro');
         $('#panelHomePro').sortable('disable');
+        $('#panelHomePro .titlePanelHome').unbind();
     }
 }
 function changePanelSortColumnsPro(this_) {
@@ -807,9 +817,12 @@ function setSortDivPanel() {
     if (getOptionsPro('panelSortPro')) {
         if ($('#panelHomePro').hasClass('ui-sortable')) {
             // console.log('### refresh #panelHomePro');
-            setTimeout(function(){ $('#panelHomePro').sortable().sortable('refresh') }, 1000);
+            setTimeout(function(){ 
+                $('#panelHomePro').sortable().sortable('refresh');
+                controleSortDivPanel();
+            }, 1000);
         } else {
-            //  console.log('### init #panelHomePro');
+            // console.log('### init #panelHomePro');
             $('#panelHomePro').sortable({
                 items: '.panelHomePro',
                 cursor: 'grabbing',
@@ -827,8 +840,18 @@ function setSortDivPanel() {
                     setOptionsPro('orderPanelHome',orderPanelHome);
                 }
             });
+            controleSortDivPanel();
         }
     }
+}
+function controleSortDivPanel() {
+    $('#panelHomePro .titlePanelHome').unbind().mouseenter(function() {
+        // console.log('enable');
+        $('#panelHomePro').sortable('enable');
+    }).mouseleave(function() {
+        // console.log('disable');
+        $('#panelHomePro').sortable('disable');
+    });
 }
 function forcePlaceHoldChosen() {
     $('select').each(function(){
@@ -1728,19 +1751,33 @@ function setPanelResize(element, name) {
         .attr('onmouseover','return infraTooltipMostrar(\'Arraste para redimensionar. Dois cliques para desativar.\')');
 }
 function saveFollowDesc(this_, mode) {
-    var tdDesc = $(this_).closest('tr').find('.tdfav_desc');
-    var info = tdDesc.find('span.info');
-    var info_txt = tdDesc.find('span.info_txt');
+    var type_container = ($(this_).closest('.kanban-content').length > 0) ? 'kanban' : 'table';
+    var _container = (type_container == 'kanban') ? $(this_).closest('.kanban-container') : $(this_).closest('table');
+    var _data_id = (type_container == 'kanban') ? $(this_).closest('.kanban-item').data('eid').replace('_id_','') : $(this_).closest('tr').data('index');
+    var _content = (type_container == 'kanban') ? $(this_).closest('.kanban-content') : $(this_).closest('tr');
+    var _content_desc = _content.find('.content_desc');
+
+    var info = _content_desc.find('span.info');
+    var info_txt = _content_desc.find('span.info_txt');
     var value = info_txt.find('input').val().replace(/[\u200B]/g, '');
-    var index = parseInt($(this_).closest('tr').data('index'));
+    var index = parseInt(_data_id);
     var id_procedimento = (typeof $(this_).closest('tr').data('id_procedimento') !== 'undefined') ? parseInt($(this_).closest('tr').data('id_procedimento')) : false;
         info.show();
         info_txt.hide();
-        // tdDesc.find('.followLinkDesc').css('margin-top','-6px');
+        // console.log(index, value, mode);
     if (value != info.text()) {
         info.text(value);
         if (mode == 'ativ') {
-            getServerAtividades({action: 'edit_assunto', id: index, assunto: value}, 'edit_assunto');
+            parent.getServerAtividades({action: 'edit_assunto', id: index, assunto: value}, 'edit_assunto');
+            var ativIndex = (index) ? parent.arrayAtividades.findIndex((obj => obj.id_demanda == index)) : index;
+            arrayAtividades[ativIndex].assunto = value;
+            arrayAtividadesPro[ativIndex].assunto = value;
+            console.log('saveFollowDesc', ativIndex);
+            if (type_container == 'table' && $('.kanban-item').is(':visible')) {
+                var kanban_item = $('.kanban-item[data-eid="_id_'+index+'"] .content_desc');
+                    kanban_item.find('span.info').text(value);
+                    kanban_item.find('span.info_txt input').val(value);
+            }
         } else if (mode == 'fav') {
             var storeFavorites = getStoreFavoritePro();
             var favoriteIndex = (id_procedimento) ? storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento)) : index;
@@ -1750,26 +1787,29 @@ function saveFollowDesc(this_, mode) {
     }
 }
 function editFollowDesc(this_, mode) {
-    var tdDesc = $(this_).closest('tr').find('.tdfav_desc');
-    var info = tdDesc.find('span.info');
-    var info_txt = tdDesc.find('span.info_txt');
-        // tdDesc.find('a.followLinkDesc').css('margin-top','-2px');
+    var type_container = ($(this_).closest('.kanban-content').length > 0) ? 'kanban' : 'table';
+    var _container = (type_container == 'kanban') ? $(this_).closest('.kanban-container') : $(this_).closest('table');
+    var _all_desc = _container.find('.content_desc');
+    var _content = (type_container == 'kanban') ? $(this_).closest('.kanban-content') : $(this_).closest('tr');
+    var _content_desc = _content.find('.content_desc');
+    var info = _content_desc.find('span.info');
+    var info_txt = _content_desc.find('span.info_txt');
         showFollowEtiqueta(this_, 'close', mode);
     if (info.is(':visible')) {
-        $(this_).closest('table').find('.tdfav_desc span.info').show();
-        $(this_).closest('table').find('.tdfav_desc span.info_txt').hide();
+        _all_desc.find('span.info').show();
+        _all_desc.find('span.info_txt').hide();
         info.hide();
         info_txt.show().find('input').focus().trigger('click');
         info_txt.show().find('input').select();  
     } else if (info.is(':hidden')) {
         info.show();
         info_txt.hide();
-        saveFollowDesc(this_, mode);
+        parent.saveFollowDesc(this_, mode);
     }
 }
 function keyFollowDesc(e, mode) {
     if(e.which == 13) {
-        saveFollowDesc(e.path[0], mode);
+        parent.saveFollowDesc(e.path[0], mode);
         if (mode == 'fav') {
             saveConfigFav();
         }
@@ -1800,11 +1840,11 @@ function showFollowEtiqueta(this_, status, mode) {
                         '</a>';
         td.find('.followLinkTags').hide();
         td_info_tags_follow.not('.info_tags_user').hide();
-        td.find('.info_tags_follow_txt').show().find('input.tag-input').focus().trigger('click').before(btnClose);
+        td.find('.info_tags_follow_txt').show().find('input.tag-input').focus().trigger('click').after(btnClose);
         addOptionsEtiqueta(this_, mode);
     } 
     setTimeout(function(){ 
-        if (status == 'close' && mode == 'fav' && !_this.closest('tr').find('.tdfav_desc span.info_txt').is(':visible')) {
+        if (status == 'close' && mode == 'fav' && !_this.closest('tr').find('.content_desc span.info_txt').is(':visible')) {
             saveConfigFav();
         }
     }, 500);
@@ -1931,10 +1971,8 @@ function saveFollowEtiqueta() {
             $('.ui-autocomplete-input').autocomplete("option", { source: sugestEtiquetaPro(mode) });
         }
         if (mode == 'ativ') {
-            if ($('.kanbanAtividade').is(':visible')) {
+            if ($('div.ui-dialog').is(':visible')) {
                 $('.kanban-item[data-eid="_id_'+index+'"] .info_tags_follow_etiquetas').html(tagsHtml);
-            }
-            if ($('.tableAtividades').is(':visible') && $('div.ui-dialog').is(':visible')) {
                 $('.tableAtividades tbody tr[data-index="'+index+'"] td.tdfav_tags .info_tags_follow').html(tagsHtml);
             }
             getServerAtividades({action: 'edit_etiqueta', id: index, etiquetas: tags}, 'edit_etiqueta');
@@ -2223,15 +2261,23 @@ function configFlashMenuPro(arrayLinksArvore) {
     var selectedItensDocArvore = ( typeof localStorageRestorePro('configViewFlashDocArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocArvorePro')) ) ? localStorageRestorePro('configViewFlashDocArvorePro') : [["Copiar n\u00FAmero SEI"],["Copiar link do documento"],["Duplicar documento"]];
     var selectedItensPanelArvore = ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) ) ? localStorageRestorePro('configViewFlashPanelArvorePro') : [["Anota\u00E7\u00F5es"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
 
-    var textBox =   '<h3 style="font-weight: bold; color: #666;">'+
-                    '   <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '       <input type="checkbox" data-name="Ativar menu do processo" data-mode="menuproc" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_proc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? '' : 'checked')+'>'+
-                    '       <label class="onoffswitch-label" for="optionFlashMenu_proc"></label>'+
-                    '   </div>'+
-                    '   <i class="iconPopup fa fa-scroll cinzaColor"></i> Menu r\u00E1pido do processo'+
-                    '</h3>'+
-                    '<div class="details-container optionsFlashMenu_menuproc '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? 'disableOptions' : '')+'" style="height: 200px; overflow-y: scroll;">'+
-                    '   <table class="tableInfo popup-wrapper tableZebra tableFlashMenu" style="font-size: 10pt;width: 100%;">';
+    var textBox =   '<div id="flashMenu_tabs" style="border: none; min-height: 300px; margin: 0;">'+
+                    '   <ul style="font-size: 10px;">'+
+                    '       <li><a href="#tabs_flashMenuPro"><i class="fa fa-scroll cinzaColor"></i> Processo</a></li>'+
+                    '       <li><a href="#tabs_flashDocMenuPro"><i class="fa fa-file cinzaColor"></i> Documentos</a></li>'+
+                    '       <li><a href="#tabs_flashDocArvorePro"><i class="fa fa-tree cinzaColor"></i> \u00C1rvore</a></li>'+
+                    '       <li><a href="#tabs_flashPanelArvorePro"><i class="fa fa-info-circle cinzaColor"></i> Painel</a></li>'+
+                    '   </ul>'+
+                    '   <div id="tabs_flashMenuPro">'+
+                    '       <h3 style="font-weight: bold; color: #666;">'+
+                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar menu do processo" data-mode="menuproc" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_proc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="onoffswitch-label" for="optionFlashMenu_proc"></label>'+
+                    '          </div>'+
+                    '          <i class="iconPopup fa fa-scroll cinzaColor"></i> Menu r\u00E1pido do processo'+
+                    '       </h3>'+
+                    '       <div class="details-container optionsFlashMenu_menuproc '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? 'disableOptions' : '')+'" style="height: 500px;overflow-y: scroll;">'+
+                    '          <table class="tableInfo popup-wrapper tableZebra tableFlashMenu" style="font-size: 10pt;width: 100%;">';
     
         $.each(selectedItensMenu,function(index, value){
             if ( jmespath.search(iconsFlashMenu, "[?name=='"+value+"'] | length(@)") > 0 ) {
@@ -2244,18 +2290,20 @@ function configFlashMenuPro(arrayLinksArvore) {
                 textBox += configFlashMenuTrPro(value, 'cinzaColor', '', 'proc');
             }            
         });
-        textBox +=  '   </table>'+
-                    '</div>';
+        textBox +=  '          </table>'+
+                    '       </div>'+
+                    '   </div>';
     
-        textBox +=   '<h3 style="font-weight: bold;border-top: 2px solid #d6d6d6;color: #666;padding-top: 20px;">'+
-                    '   <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '       <input type="checkbox" data-name="Ativar menu dos documentos" data-mode="menudoc" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_doc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? '' : 'checked')+'>'+
-                    '       <label class="onoffswitch-label" for="optionFlashMenu_doc"></label>'+
-                    '   </div>'+
-                    '   <i class="iconPopup fa fa-file cinzaColor"></i> Menu r\u00E1pido dos documentos'+
-                    '</h3>'+
-                    '<div class="details-container optionsFlashMenu_menudoc '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? 'disableOptions' : '')+'" style="height: 150px; overflow-y: scroll;">'+
-                    '   <table class="tableInfo popup-wrapper tableZebra tableFlashDocMenu" style="font-size: 10pt;width: 100%;">';
+        textBox +=  '   <div id="tabs_flashDocMenuPro">'+
+                    '       <h3 style="font-weight: bold;color: #666;">'+
+                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar menu dos documentos" data-mode="menudoc" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_doc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="onoffswitch-label" for="optionFlashMenu_doc"></label>'+
+                    '          </div>'+
+                    '          <i class="iconPopup fa fa-file cinzaColor"></i> Menu r\u00E1pido dos documentos'+
+                    '       </h3>'+
+                    '       <div class="details-container optionsFlashMenu_menudoc '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? 'disableOptions' : '')+'">'+
+                    '          <table class="tableInfo popup-wrapper tableZebra tableFlashDocMenu" style="font-size: 10pt;width: 100%;">';
     
     var statusMenuClick = ( jmespath.search(selectedItensDocMenu, "[?[0]=='Ativar menu ao clicar'] | length(@)") > 0 ) ? {chekbox: 'checked', class: 'azulColor'} : {chekbox: '', class: 'cinzaColor'};    
     textBox += configFlashMenuTrPro({name: "Ativar menu ao clicar", icon: "fas fa-mouse-pointer", alt: ""}, statusMenuClick.class, statusMenuClick.chekbox, 'doc');
@@ -2271,18 +2319,20 @@ function configFlashMenuPro(arrayLinksArvore) {
                 textBox += configFlashMenuTrPro(value, 'cinzaColor', '', 'doc');
             }            
         });
-        textBox +=  '   </table>'+
-                    '</div>';
+        textBox +=  '          </table>'+
+                    '       </div>'+
+                    '   </div>';
 
-        textBox +=  '<h3 style="font-weight: bold;border-top: 2px solid #d6d6d6;color: #666;padding-top: 20px;">'+
-                    '   <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '       <input type="checkbox" data-name="Ativar icones na arvore" data-mode="iconstree" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_tree" tabindex="0" '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? '' : 'checked')+'>'+
-                    '       <label class="onoffswitch-label" for="optionFlashMenu_tree"></label>'+
-                    '   </div>'+
-                    '   <i class="iconPopup fa fa-tree cinzaColor"></i> \u00CDcones r\u00E1pidos na \u00E1rvore'+
-                    '</h3>'+
-                    '<div class="details-container optionsFlashMenu_iconstree '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? 'disableOptions' : '')+'" style="height: 150px; overflow-y: scroll;">'+
-                    '   <table class="tableInfo popup-wrapper tableZebra tableFlashDocArvore" style="font-size: 10pt;width: 100%;">';    
+        textBox +=  '   <div id="tabs_flashDocArvorePro">'+
+                    '       <h3 style="font-weight: bold;color: #666;">'+
+                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar icones na arvore" data-mode="iconstree" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_tree" tabindex="0" '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="onoffswitch-label" for="optionFlashMenu_tree"></label>'+
+                    '          </div>'+
+                    '          <i class="iconPopup fa fa-tree cinzaColor"></i> \u00CDcones r\u00E1pidos na \u00E1rvore'+
+                    '       </h3>'+
+                    '       <div class="details-container optionsFlashMenu_iconstree '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? 'disableOptions' : '')+'">'+
+                    '          <table class="tableInfo popup-wrapper tableZebra tableFlashDocArvore" style="font-size: 10pt;width: 100%;">';    
         $.each(selectedItensDocArvore,function(index, value){
             if ( jmespath.search(iconsFlashDocArvore, "[?name=='"+value+"'] | length(@)") > 0 ) {
                 var data = jmespath.search(iconsFlashDocArvore, "[?name=='"+value+"'] | [0]");
@@ -2294,18 +2344,20 @@ function configFlashMenuPro(arrayLinksArvore) {
                 textBox += configFlashMenuTrPro(value, 'cinzaColor', '', 'tree');
             }            
         });
-        textBox +=  '   </table>'+
-                    '</div>';
+        textBox +=  '          </table>'+
+                    '       </div>'+
+                    '   </div>';
 
-        textBox +=  '<h3 style="font-weight: bold;border-top: 2px solid #d6d6d6;color: #666;padding-top: 20px;">'+
-                    '   <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '       <input type="checkbox" data-name="Ativar painel de informa\u00E7\u00F5es na arvore" data-mode="panelinfo" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_panelinfo" tabindex="0" '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? '' : 'checked')+'>'+
-                    '       <label class="onoffswitch-label" for="optionFlashMenu_panelinfo"></label>'+
-                    '   </div>'+
-                    '   <i class="iconPopup fa fa-info-circle cinzaColor"></i> Painel de Informa\u00E7\u00F5es na \u00E1rvore'+
-                    '</h3>'+
-                    '<div class="details-container optionsFlashMenu_panelinfo '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? 'disableOptions' : '')+'" style="height: 150px; overflow-y: scroll;">'+
-                    '   <table class="tableInfo popup-wrapper tableZebra tableFlashDocArvore" style="font-size: 10pt;width: 100%;">';    
+        textBox +=  '   <div id="tabs_flashPanelArvorePro">'+
+                    '       <h3 style="font-weight: bold;color: #666;">'+
+                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar painel de informa\u00E7\u00F5es na arvore" data-mode="panelinfo" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_panelinfo" tabindex="0" '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="onoffswitch-label" for="optionFlashMenu_panelinfo"></label>'+
+                    '          </div>'+
+                    '          <i class="iconPopup fa fa-info-circle cinzaColor"></i> Painel de Informa\u00E7\u00F5es na \u00E1rvore'+
+                    '       </h3>'+
+                    '       <div class="details-container optionsFlashMenu_panelinfo '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? 'disableOptions' : '')+'">'+
+                    '          <table class="tableInfo popup-wrapper tableZebra tableFlashDocArvore" style="font-size: 10pt;width: 100%;">';    
         $.each(selectedItensPanelArvore,function(index, value){
             if ( jmespath.search(iconsFlashPanelArvore, "[?name=='"+value+"'] | length(@)") > 0 ) {
                 var data = jmespath.search(iconsFlashPanelArvore, "[?name=='"+value+"'] | [0]");
@@ -2317,7 +2369,9 @@ function configFlashMenuPro(arrayLinksArvore) {
                 textBox += configFlashMenuTrPro(value, 'cinzaColor', '', 'panel');
             }            
         });
-        textBox +=  '   </table>'+
+        textBox +=  '           </table>'+
+                    '       </div>'+
+                    '   </div>'+
                     '</div>';
     
     resetDialogBoxPro('dialogBoxPro');
@@ -2326,6 +2380,12 @@ function configFlashMenuPro(arrayLinksArvore) {
         .dialog({
             title: "Personalizar Menu R\u00E1pido",
         	width: 600,
+        	open: function(){
+                $('#flashMenu_tabs').tabs();
+                setTimeout(function(){ 
+                    centralizeDialogBox(dialogBoxPro);
+                }, 100);
+            },
         	buttons: [{
                 text: "Ok",
                 click: function() { 
@@ -3879,6 +3939,24 @@ function checkBrowser(){
     }
     return browser;
 }
+function setSortLocaleCompare() {
+    $.tablesorter.characterEquivalents = {
+        'a' : '\u00e1\u00e0\u00e2\u00e3\u00e4\u0105\u00e5', // áàâãäąå
+        'A' : '\u00c1\u00c0\u00c2\u00c3\u00c4\u0104\u00c5', // ÁÀÂÃÄĄÅ
+        'c' : '\u00e7\u0107\u010d', // çćč
+        'C' : '\u00c7\u0106\u010c', // ÇĆČ
+        'e' : '\u00e9\u00e8\u00ea\u00eb\u011b\u0119', // éèêëěę
+        'E' : '\u00c9\u00c8\u00ca\u00cb\u011a\u0118', // ÉÈÊËĚĘ
+        'i' : '\u00ed\u00ec\u0130\u00ee\u00ef\u0131', // íìİîïı
+        'I' : '\u00cd\u00cc\u0130\u00ce\u00cf', // ÍÌİÎÏ
+        'o' : '\u00f3\u00f2\u00f4\u00f5\u00f6\u014d', // óòôõöō
+        'O' : '\u00d3\u00d2\u00d4\u00d5\u00d6\u014c', // ÓÒÔÕÖŌ
+        'ss': '\u00df', // ß (s sharp)
+        'SS': '\u1e9e', // ẞ (Capital sharp s)
+        'u' : '\u00fa\u00f9\u00fb\u00fc\u016f', // úùûüů
+        'U' : '\u00da\u00d9\u00db\u00dc\u016e' // ÚÙÛÜŮ
+    };
+}
 function filterTablePro(this_) {
     var _this = $(this_);
     var _parent = _this.closest('thead');
@@ -4061,7 +4139,7 @@ function getIfrArvoreDadosProcesso() {
                     numero_documento: (typeof numero_documento !== 'undefined') ? numero_documento : false,
                     assunto: (typeof assunto !== 'undefined') ? assunto : false,
                     usuario: (typeof usuario !== 'undefined') ? usuario : false,
-                    prazo: (typeof prazo !== 'undefined') ? parseInt(prazo) : false,
+                    prazo: (typeof prazo !== 'undefined') ? (parseInt(prazo) > 100 ? 100 : parseInt(prazo)) : false,
                     assinatura: (typeof assinatura !== 'undefined') ? assinatura : false,
                     versao: (typeof versao !== 'undefined') ? versao : false,
                     processos: (typeof processos !== 'undefined' && processos.length > 0) ? processos : false,
@@ -4483,7 +4561,7 @@ function loadGoogleDocs(url, iframeDoc, mode) {
         url: url,
         type: 'GET',
         success: function(data){ 
-            if ( data ) {
+            if ( data ) { console.log(data);
                 var r = confirm("Deseja substituir o conte\u00FAdo atual pelo arquivo importado?");
                 if (r == true) { 
                     iframeDoc.find('body').html(data); 
@@ -4610,6 +4688,19 @@ function enableButtonSavePro() {
 }
 function DocsToSEI(iframeDoc, mode) {
     if (mode == 'sheets') {
+        iframeDoc.find('body #sheets-viewport div').each(function(){
+            var _this = $(this);
+            var idTab = _this.attr('id');
+            var titleTab = iframeDoc.find('#sheet-button-'+idTab);
+                titleTab = (titleTab.length > 0) ? titleTab.text() : false;
+                _this.show();
+            if (titleTab) {
+                _this.prepend(   '<p class="Texto_Alinhado_Esquerda"><br></p>'+
+                                '<p class="Texto_Alinhado_Esquerda"><strong>'+titleTab+'</strong></p>'+
+                                '<p class="Texto_Alinhado_Esquerda"><br></p>'
+                            );
+            }
+        });
         iframeDoc.find('body #top-bar').remove();
         iframeDoc.find('body #footer').remove();
         iframeDoc.find('body table tbody th.row-headers-background.row-header-shim').remove();
@@ -5435,6 +5526,8 @@ function checkPageVisualizacao() {
 }
 function setNewDocDefault() {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
+        ifrVisualizacao.find('#txtProtocoloDocumentoTextoBase').removeAttr('maxlength'); // remove atributo de largura do campo de modelo de documento
+
     var form = ifrVisualizacao.find('#frmDocumentoCadastro');
     var now = moment().format('DD/MM/YYYY');
     if (form.length > 0 && typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocdefault') ) {

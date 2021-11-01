@@ -235,6 +235,7 @@ a.newLink {
     display: inline-block;
     padding: 5px;
     border-radius: 5px;
+    cursor: pointer;
 }
 a.newLink:hover {
 	background-color: #eee !important;
@@ -265,6 +266,19 @@ a.newLink.iconStarAtiv {
 }
 .newLink_active i {
     color: #444;
+}
+a.newLink_confirm,
+a.newLink_confirm:hover {
+    background-color: #007fff !important;
+    color: #fff !important;
+}
+a.newLink_confirm i,
+a.newLink_confirm:hover i {
+    color: #fff !important;
+}
+.content_btnsave i {
+    font-size: 11pt !important;
+    color: #4285f4 !important;
 }
 .botaoSEI.newLink,
 .botaoSEI.newLink i {
@@ -891,14 +905,17 @@ div.atividadesProgressoBar {
 .tableFollow a {
     font-size: 1.2em;
 }
-#tabelaAtivPanel .tableFollow td:nth-child(4) {
-    min-width: 140px;
-}
-#tabelaAtivPanel .tableFollow td:nth-child(2) {
+#tabelaAtivPanel .tableFollow td[data-type="action"],
+#tabelaAtivPanel .tableFollow td[data-type="date"]{
     min-width: 160px;
+}
+#tabelaAtivPanel .tableFollow td[data-type="user"] {
+    min-width: 220px;
 }
 .tagsinput input,
 .tableFollow .info_category select,
+.kanban-item .info_txt input,
+.atividadeInfo .info_txt input,
 .tableFollow .info_txt input {
     font-size: 1em;
     border: 2px solid #ccc;
@@ -906,9 +923,30 @@ div.atividadesProgressoBar {
     width: 60%;
     height: 30px;
 }
-.tableFollow .tdfav_desc .info_txt input {
+.kanban-item .content_desc .info_txt input {
+    width: 75%;
+    height: 26px;
+}
+.atividadeInfo .content_desc .info_txt input {
+    width: 85%;
+    height: 20px;
+}
+.tableFollow .content_desc .info_txt input {
     width: 90%;
     height: 20px;
+}
+span.info[contentEditable="true"] {
+    background-color: #eef4f9;
+    border-radius: 5px;
+    border: 2px solid #4285f4;
+    padding: 0 30px 0 0;
+    box-shadow: 0px 0px 2px 0px rgb(66 133 244 / 75%);
+    max-width: 99%;
+    min-height: 25px;
+}
+.info_checklist.edit {
+    border: 2px solid #4285f4;
+    box-shadow: 0px 0px 2px 0px rgb(66 133 244 / 75%);
 }
 .tagsinput {
 	display: -webkit-box;
@@ -1081,12 +1119,19 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
     font-style: italic;
 }
 .btnCloseEtiqueta {
-    position: absolute;
+    position: initial;
+    margin: 0px 0 0 -5px !important;
+    padding: 5px 3px !important;
+    border: 1px solid #ccc;
+    border-radius: 0 5px 5px 0 !important;
+    background-color: #fff;
+    max-height: 30px;
+}
+.content_edit .info {
     display: inline-block;
-    margin: 0 !important;
-    padding: 2px !important;
-    top: 10px;
-    right: 14px;
+}
+.info_tags_follow_txt .tagsinput {
+    padding-left: 10px;
 }
 .tagFavAddColorInput {
     opacity: 0;
@@ -1149,9 +1194,7 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
 .info_tags_follow_txt {
     margin-top: -20px;
     border-radius: 5px;
-    width: max-content;
-    position: absolute;
-    background-color: rgb(255, 255, 255);
+    background-color: transparent;
     padding: 5px 10px;
     z-index: 88;
 }
@@ -1163,9 +1206,6 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
 td.tdfav_tags {
     padding-right: 20px;
     min-width: 120px;
-}
-.tableZebra tr:nth-child(2n) .info_tags_follow_txt {
-    background: #f5f5f5;
 }
 .info_dates_follow_txt {
     background-color: #cfddeb;
@@ -1325,7 +1365,7 @@ i.iconSwitch {
     top: 0;
 }
 .tableAtividades th[data-filter-type="action"] {
-    width: 180px;
+    width: 200px;
 }
 .tableAtividades th[data-filter-type="proc"] {
     min-width: 210px;
@@ -1340,7 +1380,6 @@ i.iconSwitch {
 .followLink.followLinkTags,
 .followLink.followLinkNewtab,
 .followLink.followLinkMaps,
-.followLink.followLinkDesc,
 .followLink.followLinkDates {
     margin: 0;
     right: 0;
@@ -1495,6 +1534,9 @@ table.moreInfoBox td:first-child,
     border: 2px solid #e41212 !important;
     background: #fff3f3;
 }
+#filterTableHome_chosen {
+    margin-right: 20px;
+}
 #boxAtividade .tagsinput .tag .tag-remove::before, 
 #boxAtividade .tagsinput .tag .tag-remove::after {
     top: 14px;
@@ -1518,11 +1560,16 @@ table.moreInfoBox td:first-child,
     padding: 0.5em !important;
 }
 #boxAtividade .seiProForm #ativ_etiquetas_addTag,
+#tabelaAtivPanel .tagsinput div,
 #boxAtividade .seiProForm .tagsinput div {
     max-width: 100%;
+    display: flex;
 }
 #boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag {
     display: block !important;
+}
+#tabelaAtivPanel .tagsinput .tag {
+    margin: 5px;
 }
 #boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavAddColor,
 #boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavEditIcon {
@@ -1531,8 +1578,10 @@ table.moreInfoBox td:first-child,
     font-size: 90%;
     padding-top: 10px;
 }
-#boxAtividade .seiProForm .info_tags_follow_txt #infoAtivTagsPro_tag {
+#boxAtividade .seiProForm .info_tags_follow_txt #infoAtivTagsPro_tag,
+.info_tags_follow_txt .tag-input {
     max-width: 130px !important;
+    display: inline-block;
 }
 .seiProForm td.required {
     position: relative;
@@ -1716,6 +1765,9 @@ table.moreInfoBox td:first-child,
 .kanban-item:hover .kanban-actions {
     display: block;
 }
+.kanban-item:hover .kanban-actions-edit {
+    visibility: visible;
+}
 .kanban-item .kanban-actions {
     display: none;
 }
@@ -1731,7 +1783,7 @@ table.moreInfoBox td:first-child,
 .kanban-container.view_full .kanban-item .kanban-actions {
     display: block !important;
 }
-.kanban-item .kanban-title-card {
+.kanban-item .kanban-title-card .info {
     font-size: 12pt;
     margin: -6px 0 5px 0;
     font-family: Calibri;
@@ -2212,7 +2264,7 @@ tr .newLink.followLinkTr {
 tr:hover .newLink.followLinkTr {
     display: inline-flex;
 }
-td.tdfav_desc {
+td.content_desc {
     max-width: 500px;
 }
 .tableInfo.tableFollow tbody tr:hover {
@@ -2648,7 +2700,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
     color: #4285f4;
     font-weight: bold;
     margin-bottom: 10px;
-    display: block;
+    display: flex;
 }
 .info_checklist .info_checklist_item {
     display: block;
@@ -2947,7 +2999,8 @@ div#chartAtivActions .chosen-container {
 .kanban-priority[data-id="_niniciadas"] .kanban-pinboard {
     display: none;
 }
-.kanban-item a.newLink .fa-pencil-alt {
+.kanban-item a.newLink .fa-pencil-alt,
+.kanban-item a.newLink .fa-play-circle {
     color: #4285f4;
 }
 .kanban-item a.newLink .fa-check-circle {
@@ -2977,6 +3030,22 @@ div#divInfraTooltip {
     background: #f9efad;
     border-radius: 5px;
     text-align: left;
+    min-height: 35px;
+}
+#tabelaAtivPanel .inlineAlert {
+    min-height: 25px;
+}
+.tool-container.tool-bottom .tool-item.selected, 
+.tool-container.tool-bottom .tool-item:hover,
+.tool-container.tool-bottom .tool-item.selected, 
+.tool-container.tool-bottom .tool-item:hover i {
+    color:#fff !important;
+}
+.inlineAlert .newLink_active {
+    background: #e1dcbd;
+}
+.kanban-title-card .newLink_active {
+    background: #eef4f9;
 }
 .g-signin2{
     transform: scale(1.3) !important;
@@ -2985,4 +3054,9 @@ div#divInfraTooltip {
 .g_id_signin {
     margin: 0 calc(50% - 150px);
     margin-top: 20px;
+}
+.type-id {
+    color: #555;
+    font-size: 8pt;
+    font-family: monospace;
 }

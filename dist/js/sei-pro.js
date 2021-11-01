@@ -2,6 +2,7 @@ var actionTest = 'ondblclick="removeCacheGroupTable(this)"';
 var totalSecondsTest = 0;
 var totalSecondsTestText = '';
 var timerTest;
+var tableHomePro = [];
 
 function setTimeTest() {
     ++totalSecondsTest;
@@ -218,6 +219,7 @@ function removeAllTags() {
 	$('#divRecebidosAreaTabela').removeClass('tabelaPanelScroll');
     if($('#divRecebidosAreaTabela').find('.ui-resizable-handle.ui-resizable-s').length > 0 && typeof $('#divRecebidosAreaTabela').resizable !== 'undefined') { $('#divRecebidosAreaTabela').resizable().resizable('destroy') }
 	$('#divRecebidos').removeClass('tagintable').find('caption').show();
+	$('#divRecebidos .newRowControle').remove();
 	$('#divGerados').show();
 	$('#divRecebidos thead').show();
     $('table tr.tablesorter-headerRow').show();
@@ -226,6 +228,7 @@ function removeAllTags() {
         .trigger('filterReset')
         .trigger('update')
         .find('.filterTableProcessos').removeClass('newLink_active');
+    tableHomeDestroy(true);
 }
 function getUniqueTableTag(i, tagName, type) {
 	var tagName_ = (typeof tagName !== 'undefined' && tagName != '' ) ? removeAcentos(tagName).replace(/\ /g, '') : 'SemGrupo' ;
@@ -278,6 +281,17 @@ function getTableOnTag(type) {
     } else {
         var textRegistros = (nrSemGrupo == 1) ? nrSemGrupo+' registro:' : nrSemGrupo+' registros:' ;
         tbody.find('tr.infraCaption.tagintable').eq(0).find('td').html('<span '+actionTest+'>'+textRegistros+'</span>');
+    }
+    if (type == 'all') {
+        var newColumns =    '<th class="tituloControle newRowControle" style="text-align: center;">Especifica\u00E7\u00E3o</th>'+
+                            '<th class="tituloControle newRowControle" style="text-align: center;">Tipo</th>'+
+                            '<th class="tituloControle newRowControle" style="text-align: center;"></th>';
+        var titleCaption = $('#tblProcessosRecebidos').find('tbody').find('.tableHeader, .infraCaption').text();
+            titleCaption = (titleCaption !== '') ? ' <span class="newRowControle">(Agrupados: '+titleCaption+')</span>' : '';
+        $('#tblProcessosRecebidos').find('caption.infraCaption').show().append(titleCaption);
+        $('#tblProcessosRecebidos').find('thead').show().find('.tablesorter-headerRow').append(newColumns);
+        $('#tblProcessosRecebidos').find('tbody').find('.tableHeader, .infraCaption').remove();
+        tableHomeDestroy(true);
     }
 }
 function getArrayProcessoRecebido(href) {
@@ -345,26 +359,31 @@ function insertGroupTable(TimeOut = 9000) {
             var statusTableAcessdate =      ( storeGroupTablePro() == 'acessdate' ) ? 'selected' : '';
             var statusTableDepartSend =     ( storeGroupTablePro() == 'senddepart' ) ? 'selected' : '';
             var statusTableCreatedate =     ( storeGroupTablePro() == 'createdate' ) ? 'selected' : '';
-            var htmlControl =    '<div id="newFiltro" style="display: inline-block; vertical-align: top; float: right; text-align: right; width: 100%; margin-right: 30px;">'
-                                +'   <select id="selectGroupTablePro" class="groupTable selectPro" onchange="updateGroupTable(this)">'
-                                +'     <option value="">Agrupar processos recebidos/gerados</option>'
-                                +'     <option value="createdate" '+statusTableCreatedate+'>Agrupar processos por data de autua\u00E7\u00E3o</option>'
-                                +'     <option value="arrivaldate" '+statusTableArrivaldate+'>Agrupar processos por data de recebimento</option>'
-                                +'     <option value="senddate" '+statusTableSenddate+'>Agrupar processos por data de envio</option>'
-                                +'     <option value="acessdate" '+statusTableAcessdate+'>Agrupar processos por data do \u00FAltimo acesso</option>'
-                                +'     <option value="tags" '+statusTableTags+'>Agrupar processos por marcadores</option>'
-                                +'     <option value="types" '+statusTableTypes+'>Agrupar processos por tipo</option>'
-                                +'     <option value="users" '+statusTableUsers+'>Agrupar processos por respons\u00E1vel</option>'
-                                +'     <option value="checkpoints" '+statusTableCheckpoints+'>Agrupar processos por ponto de controle</option>'
-                                +'     <option value="senddepart" '+statusTableDepartSend+'>Agrupar processos por unidade de envio</option>'
-                                +'  </select>'
-                                +'  <a class="newLink" onclick="getTableProcessosCSV()" id="processoToCSV" onmouseover="return infraTooltipMostrar(\'Exportar informa\u00E7\u00F5es de processos em planilha CSV\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-file-download cinzaColor"></i></a>'
-                                +'</div>';
+            var statusTableAll =            ( storeGroupTablePro() == 'all' ) ? 'selected' : '';
+            var filterTableHome = selectFilterTableHome();
+            var htmlControl =    '<div id="newFiltro" style="display: inline-block; vertical-align: top; float: right; text-align: right; width: 100%; margin-right: 30px;">'+
+                                 '  '+filterTableHome+
+                                 '   <select id="selectGroupTablePro" class="groupTable selectPro" onchange="updateGroupTable(this)" data-placeholder="Agrupar processos...">'+
+                                 '     <option value="">&nbsp;</option>'+
+                                 '     <option value="">Sem agrupamento</option>'+
+                                 '     <option value="all" '+statusTableAll+'>Agrupar processos recebidos/gerados</option>'+
+                                 '     <option value="createdate" '+statusTableCreatedate+'>Agrupar processos por data de autua\u00E7\u00E3o</option>'+
+                                 '     <option value="arrivaldate" '+statusTableArrivaldate+'>Agrupar processos por data de recebimento</option>'+
+                                 '     <option value="senddate" '+statusTableSenddate+'>Agrupar processos por data de envio</option>'+
+                                 '     <option value="acessdate" '+statusTableAcessdate+'>Agrupar processos por data do \u00FAltimo acesso</option>'+
+                                 '     <option value="tags" '+statusTableTags+'>Agrupar processos por marcadores</option>'+
+                                 '     <option value="types" '+statusTableTypes+'>Agrupar processos por tipo</option>'+
+                                 '     <option value="users" '+statusTableUsers+'>Agrupar processos por respons\u00E1vel</option>'+
+                                 '     <option value="checkpoints" '+statusTableCheckpoints+'>Agrupar processos por ponto de controle</option>'+
+                                 '     <option value="senddepart" '+statusTableDepartSend+'>Agrupar processos por unidade de envio</option>'+
+                                 '  </select>'+
+                                 '  <a class="newLink" onclick="getTableProcessosCSV()" id="processoToCSV" onmouseover="return infraTooltipMostrar(\'Exportar informa\u00E7\u00F5es de processos em planilha CSV\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-file-download cinzaColor"></i></a>'+
+                                 '</div>';
 
             if ( $('#selectGroupTablePro').length == 0 && $('#tblProcessosDetalhado').length == 0) { 
                 $('#divFiltro').after(htmlControl); 
                 setTimeout(function(){ 
-                    updateGroupTable($('#selectGroupTablePro')); 
+                    updateGroupTable($('#selectGroupTablePro'));
                 }, 500);
             }
             if ( $('#idSelectTipoBloco').length != 0 ) { 
@@ -402,6 +421,7 @@ function initUpdateGroupTable(this_) {
         initTableTag(valueSelect);
         console.log('valueSelect', valueSelect);
         if ( typeof valueSelect !== 'undefined' && valueSelect != '' ) { 
+            $('#filterTableHome').val('').trigger('chosen:updated');
             updateGroupTablePro(valueSelect, 'insert');
             if (valueSelect == 'arrivaldate' || valueSelect == 'acessdate' || valueSelect == 'senddate' || valueSelect == 'senddepart' || valueSelect == 'createdate') { 
                 statusPesquisaDadosProcedimentos = true;
@@ -436,6 +456,104 @@ function initTableTag(type = '') {
         checkboxRangerSelectShift();
 	}
     initNewTabProcesso();
+    setTimeout(function(){ 
+        forcePlaceHoldChosen();
+    }, 1000);
+}
+function getFilterTableHome(this_) {
+    if (tableHomePro.length > 0 && $('.filterTableProcessos').length > 0) {
+        if ($('#selectGroupTablePro').val() != '') {
+            $('#selectGroupTablePro').val('').trigger('change').trigger('chosen:updated');
+        }
+        var _this = $(this_);
+        var value = _this.val();
+        var data = _this.find('option:selected').data();
+        var filters = [];
+        if (data.type == 'user') {
+            filters[3] = (value == '' ? '""' : '('+value+')');
+        } else if (data.type == 'proc') {
+            value = (value != '') ? extractOnlyAlphaNum(removeAcentos(value)) : value;
+            filters[2] = (value == '' ? '""' : value);
+        } else if (data.type == 'tag') {
+            value = (value != '') ? extractOnlyAlphaNum(removeAcentos(value)) : value;
+            filters[1] = (value == '' ? '' : 'Marcador? '+value);
+        } else if (data.type == 'clean') {
+            $.each(tableHomePro, function(i){
+                tableHomePro[i].trigger('filterReset');
+            });
+            _this.val('');
+            if (verifyConfigValue('substituiselecao')) {
+                forcePlaceHoldChosen();
+                _this.chosen("destroy").chosen();
+            }
+        }
+        if (filters.length > 0) {
+            setTimeout(function(){ 
+                $.each(tableHomePro, function(i){
+                    $.tablesorter.setFilters( tableHomePro[i][0], filters, true );
+                });
+            }, 100);
+        }
+    } else {
+        tableHomeDestroy(true);
+    }
+}
+function selectFilterTableHome() {
+    var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+        tableProc.find('a[href*="acao=procedimento_atribuicao_listar"]').map(function(){ return $(this).text() }).get();
+
+    var users = tableProc.find('a[href*="acao=procedimento_atribuicao_listar"]').map(function(){ return $(this).text() }).get();
+        users = (typeof users !== 'undefined' && users !== null) ? uniqPro(users) : [];
+
+    var tipos = tableProc.find('a[href*="acao=procedimento_trabalhar"]').map(function(){ 
+            var tipoNomeProc = extractTooltipToArray($(this).attr('onmouseover'));
+                tipoNomeProc = (tipoNomeProc) ? tipoNomeProc[1] : false;
+            if (tipoNomeProc) {
+                return tipoNomeProc;
+            }
+        }).get();
+        tipos = (typeof tipos !== 'undefined' && tipos !== null) ? uniqPro(tipos) : [];
+
+    var marcadores = tableProc.find('a[href*="acao=andamento_marcador_gerenciar"]').map(function(){ 
+            var tipoNomeTag = extractTooltipToArray($(this).attr('onmouseover'));
+                tipoNomeTag = (tipoNomeTag) ? tipoNomeTag[1] : false;
+            if (tipoNomeTag) {
+                return tipoNomeTag;
+            }
+        }).get();
+        marcadores = (typeof marcadores !== 'undefined' && marcadores !== null) ? uniqPro(marcadores) : [];
+
+    var html =  '<select id="filterTableHome" class="selectPro" style="width:250px;margin-right:20px !important;" onchange="getFilterTableHome(this)" data-placeholder="Filtrar processos...">'+
+                '   <option value="" data-type="clean">&nbsp;</option>'+
+                '   <option value="all" data-type="clean">Todos os processos</option>';
+
+        if (users.length > 0) {
+            html += '   <optgroup label="Por atribui\u00E7\u00E3o">'+
+                    '       <option value="" data-type="user">Processos sem atribui\u00E7\u00E3o</option>';
+            $.each(users, function(i, v){
+                html += '       <option value="'+v+'" data-type="user">Atribu\u00EDdos \u00E0 '+v+'</option>';
+            });
+            html += '   </optgroup>';
+        }
+
+        if (tipos.length > 0) {
+            html += '   <optgroup label="Por tipo de processo">';
+            $.each(tipos, function(i, v){
+                html += '       <option value="'+v+'" data-type="proc">'+v+'</option>';
+            });
+            html += '   </optgroup>';
+        }
+
+        if (marcadores.length > 0) {
+            html += '   <optgroup label="Por marcadores">';
+            $.each(marcadores, function(i, v){
+                html += '       <option value="'+v+'" data-type="tag">'+v+'</option>';
+            });
+            html += '   </optgroup>';
+        }
+
+        html += '</select>';
+    return html;
 }
 function initDadosProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -570,12 +688,21 @@ function initNewTabProcesso() {
                     attributes: true
             });
         });
+        htmlBtnAtiv = (parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null && typeof checkCapacidade !== 'undefined' && parent.checkCapacidade('save_atividade')) 
+        ?   '<a tabindex="451" class="botaoSEI iconBoxAtividade iconPro_newtab iconAtividade_save" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+__.Nova_Demanda+'\')" onclick="parent.saveAtividade()" style="position: relative; margin-left: -3px; display: none;">'+
+            '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==">'+
+            '    <span style="position: absolute;width: 40px;margin: 1px 2px;text-align: center;height: 32px;padding-top: 8px;background: transparent;left: 0;user-select: none;pointer-events: none;">'+
+            '       <i class="fas fa-user-check" style="font-size: 17pt; color: #fff;"></i>'+
+            '    </span>'+
+            '</a>'
+            : '';
+
         htmlBtn =   '<a tabindex="451" class="botaoSEI iconBoxPro iconPro_newtab" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Abrir Processos em Nova Aba\')" onclick="openListNewTab(this)" style="position: relative; margin-left: -3px; display: none;">'+
                     '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==">'+
                     '    <span style="position: absolute;width: 40px;margin: 1px 2px;text-align: center;height: 32px;padding-top: 8px;background: transparent;left: 0;user-select: none;pointer-events: none;">'+
                     '       <i class="fas fa-external-link-alt" style="font-size: 17pt; color: #fff;"></i>'+
                     '    </span>'+
-                    '</a>';
+                    '</a>'+htmlBtnAtiv;
         $('#divComandos').find('.iconPro_newtab').remove();
         $('#divComandos').append(htmlBtn);
     }, 500);
@@ -940,10 +1067,17 @@ function setTableSorterHome() {
     });
     var tableSorterHome = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
         if (tableSorterHome.length > 0) {
-            tableSorterHome.each(function(){
+            window.tableHomePro = [];
+            setSortLocaleCompare();
+            tableSorterHome.each(function(i){
 
                 if (!$(this).hasClass('infraTableOrdenacao')) {
                     corrigeTableSEI(this);
+                    $('#txtPesquisaRapida').attr('data-column','all').unbind().on('keypress',function(e) {
+                        if(e.which == 13) {
+                            $('#frmProtocoloPesquisaRapida').submit();
+                        }
+                    });
                     
                     var elemID = $(this).attr('id');
                     var sortListArray = (typeof sortListSaved !== 'undefined' && sortListSaved && typeof sortListSaved[elemID] !== 'undefined') ? sortListSaved[elemID].sortList : [];
@@ -953,14 +1087,18 @@ function setTableSorterHome() {
                                 var text_return = '';
                                 if ($(elem).find('img').length > 0) {
                                     $(elem).find('img').each(function(){
+                                        var type_img = $(this).attr('src').indexOf('anotacao') != -1 ? 'Nota:' : '';
+                                            type_img = $(this).attr('src').indexOf('marcador') != -1 ? 'Marcador:' : type_img;
                                         var prioridade = $(this).attr('src').indexOf('prioridade') != -1 ? '1' : '2';
                                         var texttip = $(this).closest('a').attr('onmouseover');
                                             texttip = (typeof texttip !== 'undefined') ? texttip : $(this).attr('onmouseover');
                                             texttip = (typeof texttip !== 'undefined') ? extractTooltip(texttip) : ''; 
-                                        text_return += prioridade+' '+texttip;
+                                        text_return += prioridade+' '+type_img+' '+texttip;
                                     });
                                 }
-                                return (text_return == '') ? '3' : text_return;
+                                text_return = (text_return == '') ? '3' : text_return.replace(/  /g, ' ');
+                                // console.log(text_return);
+                                return text_return;
                             },
                             2: function (elem, table, cellIndex) {
                                 var processo = $(elem).find('a').eq(0);
@@ -988,6 +1126,7 @@ function setTableSorterHome() {
                         widgets: ["saveSort", "filter"],
                         widgetOptions: {
                             saveSort: true,
+                            filter_external: '#txtPesquisaRapida',
                             filter_hideFilters: true,
                             filter_columnFilters: true,
                             filter_saveFilters: true,
@@ -996,6 +1135,8 @@ function setTableSorterHome() {
                         },
                         sortList: sortListArray,
                         sortReset: true,
+                        ignoreCase: true,
+                        sortLocaleCompare: true,
                         headers: {
                             0: { sorter: false, filter: false },
                             1: { filter: true },
@@ -1006,16 +1147,19 @@ function setTableSorterHome() {
                     };
                     
                     $(this).find("thead th:eq(0)").data("sorter", false);
-                    $(this).tablesorter(configSorter).on("sortEnd", function (event, data) {
-                        checkboxRangerSelectShift();
-                    }).on("filterEnd", function (event, data) {
-                        checkboxRangerSelectShift();
-                        var caption = $(this).find("caption").eq(0);
-                        var tx = caption.text();
-                            caption.text(tx.replace(/\d+/g, data.filteredRows));
-                            $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
-                            $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
-                    });
+                    var tableHomeThis = $(this).tablesorter(configSorter).on("sortEnd", function (event, data) {
+                            checkboxRangerSelectShift();
+                        }).on("filterEnd", function (event, data) {
+                            checkboxRangerSelectShift();
+                            var caption = $(this).find("caption").eq(0);
+                            var tx = caption.text();
+                                caption.text(tx.replace(/\d+/g, data.filteredRows));
+                                $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
+                                $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
+                        });
+                        
+                    tableHomePro.push(tableHomeThis);
+
                     var _this = $('#'+$(this).attr('id'));
                     var filter = $(this).find('.tablesorter-filter-row').get(0);
                     if (typeof filter !== 'undefined') {
@@ -1035,7 +1179,55 @@ function setTableSorterHome() {
             if (tableSorterHome.find('tbody tr td:nth-child(2)').find('img').length > 0) {
                 tableSorterHome.find('thead tr:first th:nth-child(2)').css('width','150px');
             }
+
+            setTimeout(function(){ 
+                if ($('.filterTableProcessos').length == 0) {
+                    setTimeout(function(){ 
+                        console.log('Reload tableHomeDestroy');
+                        tableHomeDestroy(true);
+                    }, 1000);
+                }
+                var filterStore = (typeof tableHomePro[0][0] !== 'undefined') ? $.tablesorter.storage(tableHomePro[0][0], 'tablesorter-filters') : [];
+                if (filterStore.length > 0) {
+                    var filterUser = filterStore[3];
+                        filterUser = (typeof filterUser !== 'undefined' && filterUser !== null) ? filterUser.replace('(','').replace(')','') : false;
+                    if (filterUser) {
+                        $('#filterTableHome').val(filterUser).trigger('chosen:updated');
+                    }
+                }
+            }, 1000);
         }
+}
+function tableHomeDestroy(reload = false, Timeout = 3000) {
+    if (tableHomePro.length > 0) {
+        $.each(tableHomePro, function(i){
+            tableHomePro[i].trigger("destroy");
+        });
+        $('.filterTableProcessos').remove();
+        window.tableHomePro = [];
+        if (reload) {
+            initTableSorterHome();
+            console.log('reload initTableSorterHome');
+            setTimeout(function(){ 
+                forceTableHomeDestroy(Timeout);
+            }, 1000);
+        }
+    } else {
+        initTableSorterHome();
+    }
+}
+function forceTableHomeDestroy(Timeout) {
+    if (Timeout <= 0) { return; }
+    var force = false;
+    $.each(tableHomePro, function(i){
+        var filter = $.tablesorter.storage( tableHomePro[i][0], 'tablesorter-filters');
+        var rowFilter = $(tableHomePro[i][0]).find('tr.tablesorter-filter-row').hasClass('hideme');
+        force = (filter.length > 0 && rowFilter) ? true : force;
+    });
+    if (force && Timeout > 0) {
+        tableHomeDestroy(true, Timeout-1000);
+        console.log('Reload forceTableHomeDestroy', Timeout);
+    }
 }
 function forceOnLoadBody() {
     var onload = new Function($('body').attr('onload'));

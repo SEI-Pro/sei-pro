@@ -1,15 +1,15 @@
 {
   "manifest_version": 2,
-  "name": "ANTAQ Pro",
-  "short_name": "ANTAQ Pro",
-  "description": "Plataforma Eletr\u00F4nica de Atividades da Ag\u00EAncia Nacional de Transportes Aquavi\u00E1rios - ANTAQ",
-  "version": "1.0.1",
-  "author": "ANTAQ",
-  "homepage_url": "https://antaqgovbr.github.io/antaq-pro",
+  "name": "SEI Pro Lab",
+  "short_name": "SEI Pro Lab",
+  "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
+  "version": "0.1.26.31",
+  "author": "Pedro Henrique Soares",
+  "homepage_url": "https://github.com/SEI-Pro/sei-pro",
   "icons": {
-    "16": "icons/antaq/icon-16.png",
-    "48": "icons/antaq/icon-48.png",
-    "128": "icons/antaq/icon-128.png"
+    "16": "icons/lab/icon-16.png",
+    "48": "icons/lab/icon-48.png",
+    "128": "icons/lab/icon-128.png"
   },
   "options_page": "html/options.html",
   "options_ui": {
@@ -21,12 +21,12 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "sti@antaq.gov.br"
+      "id": "lab.pedrohsoares.adv@gmail"
     }
   },
   "applications": {
     "gecko": {
-      "id": "sti@antaq.gov.br",
+      "id": "lab.pedrohsoares.adv@gmail",
       "strict_min_version": "52.0"
     }
   },

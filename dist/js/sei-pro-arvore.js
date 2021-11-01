@@ -395,6 +395,7 @@ function getDadosDoc(doc, newproc = false) {
     }
 }
 function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false) {
+    console.log('getDuplicateDoc', nameDoc, paramDoc, newproc);
     if (newproc) {
         var arrayCurrentCloneDoc = {
             nameDoc: nameDoc, 
@@ -411,15 +412,16 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false) {
         } else {
             alert('Por favor, permita popups para essa p\u00E1gina');
         } 
-        // console.log(nameDoc, paramDoc, arrayCurrentCloneDoc, newproc);
+        // console.log('getDuplicateDoc === true', nameDoc, paramDoc, arrayCurrentCloneDoc, newproc);
     } else {
         if (nameDoc && nameDoc != '') {
+            var itemSelected = false;
             var nr_sei = getNrSei(nameDoc);
             var href = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
+            // console.log('getDuplicateDoc === else', nameDoc, nr_sei, href, arrayLinksArvore);
             if (href !== null) {
                 $.ajax({ url: href }).done(function (html) {
                     let $html = $(html);
-                    var itemSelected = false;
                     $html.find('#tblSeries tbody tr').each(function (v) {
                         var text = $(this).data('desc').trim();
                         var value = $(this).find('input').val();
@@ -539,14 +541,27 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false) {
                             }
                         }
                     });
-                    if (!itemSelected) { $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\'Erro ao selecionar o tipo de documento\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor') }
+                    if (!itemSelected) { 
+                        openAlertDuplicateDoc('Erro ao selecionar o tipo de documento');
+                    }
                 });
             } else {
-                if (!itemSelected) { $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\'Erro ao localizar o link de inserir documento\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor') }
+                if (!itemSelected) { 
+                    openAlertDuplicateDoc('Erro ao localizar o link de inserir documento. Verifique se o processo encontra-se aberto em sua unidade!');
+                }
             }
         } else {
-            if (!itemSelected) { $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\'Erro ao encontrar o documento de modelo\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor') }
+            if (!itemSelected) { 
+                openAlertDuplicateDoc('Erro ao encontrar o documento de modelo');
+            }
         }
+    }
+}
+function openAlertDuplicateDoc(textAlert) {
+    if ($(containerUpload).find('.loading-action-doc').length > 0) {
+        $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\''+textAlert+'\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor') 
+    } else {
+        parent.alertaBoxPro('Error', 'exclamation-triangle', textAlert);
     }
 }
 function openWindowEditor(urlEditor, idUser) {
@@ -1610,7 +1625,7 @@ function getAtividadesProcessoArvore() {
             var htmlActionsAtividade = parent.actionsAtividade(value.id_demanda, 'icon');
             var kanbanItem = parent.getKanbanItem(value);
             
-                htmlInfoAtividades +=   '<div class="kanban-item '+kanbanItem.class.join(' ')+'">'+
+                htmlInfoAtividades +=   '<div class="kanban-item '+kanbanItem.class.join(' ')+'" data-eid="_id_'+value.id_demanda+'">'+
                                         '   '+kanbanItem.title+
                                         (htmlActionsAtividade.action == 'info' ? '' :
                                         '   <span class="info_dates_fav" style="display: block;padding: 0;margin: 10px 0 0 0;">'+

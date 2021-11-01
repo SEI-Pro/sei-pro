@@ -891,7 +891,7 @@ function setPanelFavorites(mode) {
                                             '               <a class="newLink followLink followLinkMaps followLinkMapsEdit" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Editar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                             '               <a class="newLink followLink followLinkMaps followLinkMapsAdd" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Adicionar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-map-marker-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
-                                            '           <td class="tdfav_desc">'+
+                                            '           <td class="content_desc">'+
                                             '               <span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'fav\')" onkeypress="keyFollowDesc(event, \'fav\')" value="'+value.descricao+'"></span>'+
                                             '               <span class="info">'+value.descricao+'</span>'+
                                             '               <a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'fav\')" onmouseover="return infraTooltipMostrar(\'Editar especifica\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
@@ -1013,7 +1013,7 @@ function checkFileSystemInit() {
     }
 }
 function checkFileRemoteFav(mode, data = false) {
-    if (mode == 'get') {
+    if (mode == 'get' && typeof getServerAtividades !== 'undefined') {
         var action = 'check_favoritos';
         var param = {
             action: action
@@ -1023,15 +1023,17 @@ function checkFileRemoteFav(mode, data = false) {
         if (data) {
             var storeFavorites = getStoreFavoritePro();
             var datetime_server = moment(data.datetime,'YYYY-MM-DD HH:mm:ss');
-            var datetime_local = moment(storeFavorites.config.datetime,'YYYY-MM-DD HH:mm:ss');
+            var datetime_local = moment(storeFavorites.datetime,'YYYY-MM-DD HH:mm:ss');
             if (statusLoadRemoteFile && datetime_server.isValid() && datetime_local.isValid() && datetime_server > datetime_local.add(1,'minutes')) {
                 getConfigDatetimeFav();
-                getRemoteFileFav();
-                statusLoadRemoteFile = false;
                 setTimeout(function(){
-                    statusLoadRemoteFile = true;
-                }, 5000);
-                console.log('getRemoteFileFav');
+                    getRemoteFileFav();
+                    statusLoadRemoteFile = false;
+                    setTimeout(function(){
+                        statusLoadRemoteFile = true;
+                    }, 5000);
+                    console.log('getRemoteFileFav', storeFavorites, datetime_server.format('YYYY-MM-DD HH:mm:ss'), datetime_local.add(1,'minutes').format('YYYY-MM-DD HH:mm:ss'));
+                }, 3000);
             }
         }
     }
