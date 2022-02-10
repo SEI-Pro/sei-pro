@@ -189,7 +189,21 @@ function loadScriptArvorePro() {
         $('#ifrArvore').on("load", function() {
             var iframeObjArvore = $('#ifrArvore').contents().find('head');
             var scriptArvore =  "<script data-config='config-seipro-arvore'>"+
-                                "   parent.execArvorePro(initSeiProArvore);\n"+
+                                "   $(document).ready(function () { \n"+
+                                "       function initLoadSeiProArvore(TimeOut = 1000) { \n"+
+                                "           if (TimeOut <= 0) { return; } \n"+
+                                "           if (typeof initSeiProArvore !== 'undefined' ) {  \n"+
+                                "               parent.execArvorePro(initSeiProArvore); \n"+
+                                "           } else { \n"+
+                                "               setTimeout(function(){  \n"+
+                                "                   initLoadSeiProArvore(TimeOut - 100);  \n"+
+                                "                   console.log('Reload initLoadSeiProArvore');  \n"+
+                                "               }, 500); \n"+
+                                "           } \n"+
+                                "       } \n"+
+                                "       initLoadSeiProArvore(); \n"+
+                                "   });\n"+
+                                // "   parent.execArvorePro(initSeiProArvore);\n"+
                                 "</script>";
             $(scriptArvore).prependTo(iframeObjArvore);
         });

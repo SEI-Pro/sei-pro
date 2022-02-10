@@ -55,12 +55,29 @@ var iconsFlashMenu = [
                     {name: 'Ordenar \u00C1rvore do Processo', icon: 'fa-sort-amount-down-alt', alt: 'Ordenar \u00C1rvore'}
                 ];
 var iconsFlashDocMenu = [
-                    {name: 'Copiar n\u00FAmero SEI', icon: 'fas fa-copyright', alt: ''},
-                    {name: 'Copiar nome do documento', icon: 'fas fa-file-alt', alt: ''},
-                    {name: 'Copiar link do documento', icon: 'fas fa-link', alt: ''},
-                    {name: 'Duplicar documento', icon: 'fa-copy', alt: ''},
-                    {name: 'Copiar para...', icon: 'fa-share', alt: ''},
-                    {name: 'Copiar nome com link', icon: 'fa-external-link-alt', alt: ''}
+                    {name: 'Copiar n\u00FAmero SEI', icon: 'fas fa-copyright', alt: '', show: true},
+                    {name: 'Copiar nome do documento', icon: 'fas fa-file-alt', alt: '', show: true},
+                    {name: 'Copiar link do documento', icon: 'fas fa-link', alt: '', show: true},
+                    {name: 'Duplicar documento', icon: 'fa-copy', alt: '', show: true},
+                    {name: 'Copiar para...', icon: 'fa-share', alt: '', show: true},
+                    {name: 'Imprimir Web', icon: 'fa-print', alt: '', show: false},
+                    {name: 'Visualizar em nova aba', icon: 'fa-window-restore', alt: '', show: false},
+                    {name: 'Consultar documento', icon: 'fa-users', alt: '', show: false},
+                    {name: 'Incluir em bloco', icon: 'fa-book', alt: '', show: false},
+                    {name: 'Cancelar documento', icon: 'fa-ban', alt: '', show: false},
+                    {name: 'Vers\u00F5es do documento', icon: 'fa-code-branch', alt: '', show: false},
+                    {name: 'Gerar circular', icon: 'fa-circle-notch', alt: '', show: false},
+                    {name: 'Assinatura externa', icon: 'fa-file-signature', alt: '', show: false},
+                    {name: 'Excluir documento', icon: 'fa-trash-alt', alt: '', show: false},
+                    {name: 'Editar documento', icon: 'fa-edit', alt: '', show: false},
+                    {name: 'Assinar documento', icon: 'fa-pen-alt', alt: '', show: false},
+                    {name: 'Adicionar aos favoritos', icon: 'fa-star', alt: '', show: false},
+                    {name: 'Ci\u00EAncia', icon: 'fa-thumbs-up', alt: '', show: false},
+                    {name: 'Enviar por e-mail', icon: 'fa-at', alt: '', show: false},
+                    {name: 'Mover p/ outro processo', icon: 'fa-people-carry', alt: '', show: false},
+                    {name: 'Intima\u00E7\u00E3o eletr\u00F4nica', icon: 'fa-bullhorn', alt: '', show: false},
+                    {name: 'Copiar n\u00FAmero com link', icon: 'fab fa-creative-commons-sa', alt: '', show: true},
+                    {name: 'Copiar nome com link', icon: 'fa-external-link-alt', alt: '', show: true}
                 ];
 var iconsFlashDocArvore = [
                     {name: 'Copiar n\u00FAmero SEI', icon: 'far fa-copyright', alt: '', mode: 'copy'},
@@ -68,6 +85,7 @@ var iconsFlashDocArvore = [
                     {name: 'Copiar link do documento', icon: 'fas fa-link', alt: '', mode: 'link'},
                     {name: 'Duplicar documento', icon: 'far fa-copy', alt: '', mode: 'clone'},
                     {name: 'Copiar para...', icon: 'fas fa-share', alt: 'Copiar documento para outro processo', mode: 'copyto'},
+                    {name: 'Copiar n\u00FAmero com link', icon: 'fab fa-creative-commons-sa', alt: '', mode: 'numberlink'},
                     {name: 'Copiar nome com link', icon: 'fas fa-external-link-alt', alt: '', mode: 'namelink'}
                 ];
 var iconsFlashPanelArvore = [
@@ -187,6 +205,12 @@ String.prototype.repeat = function( num )
 {
     return new Array( num + 1 ).join( this );
 }
+function extractEmails(text) {
+    return text.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+}
+function extractCPFs(text) {
+    return text.match(/(([0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2}))/gi);
+}
 function getChartLabelItemStore(idElem, chartObj){
     if (getOptionsPro(idElem+'_canvas')){
         var arrayLabels = getOptionsPro(idElem+'_canvas');
@@ -295,6 +319,25 @@ $.fn.moveTo = function(selector){
         $(this).remove();
     });
 };
+$.extend({
+    replaceTag: function (element, tagName, withDataAndEvents, deepWithDataAndEvents) {
+        var newTag = $("<" + tagName + ">")[0];
+        $.each(element.attributes, function() {
+            newTag.setAttribute(this.name, this.value);
+        });
+        $(element).children().clone(withDataAndEvents, deepWithDataAndEvents).appendTo(newTag);
+        return newTag;
+    }
+})
+$.fn.extend({
+    replaceTag: function (tagName, withDataAndEvents, deepWithDataAndEvents) {
+        // Use map to reconstruct the selector with newly created elements
+        return this.map(function() {
+            return jQuery.replaceTag(this, tagName, withDataAndEvents, deepWithDataAndEvents);
+        })
+    }
+});
+
 function userTyped(this_) {
     $(this_).data('user-typed', ($(this_).val().trim() == '' ? false : true));
 }
@@ -429,7 +472,7 @@ function fileSystemLoadFile(filename) {
             var reader = new FileReader();
             reader.onload = function(e) {
                 // Update the form fields.
-                var return_this = JSON.parse(this.result);
+                var return_this = isJson(JSON.parse(this.result)) ? JSON.parse(this.result) : [];
                 // console.log(filename, return_this);
                 fileSystemContentPro = return_this;
             };
@@ -652,6 +695,21 @@ function escapeComponent(str) {
 function escapeRegExp(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
+function escapeHtml(string) {
+    var entityMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+    };
+    return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+      return entityMap[s];
+    });
+  }
 function forceOnLoadBodyPage() {
     var onload = new Function($('body').attr('onload'));
     onload();
@@ -778,8 +836,13 @@ function extractTooltip(elem) {
     return extractOnlyAlphaNum(removeAcentos($("<div/>").html(elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(',', ' ').replace(/["']/g, "")).text()));
 }
 function extractTooltipToArray(elem) {
-    var string = elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(/["']/g, '"');
-    var array = (string != '') ? JSON.parse('['+string+']') : [];
+        elem = $("<div>").html(elem).text();
+        elem = elem.replace(/<[^>]*>?/gm, '');
+        elem = removeAcentos(elem);
+        elem = elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(/["']/g, '"');
+        // console.log(elem);
+    // var array = (elem != '') ? [] : [];
+    var array = (elem != '' && isJson('['+elem+']')) ? JSON.parse('['+elem+']') : [];
     return (array.length > 0) ? array : false;
 }
 function ganttAutoProgressPercent(dtStar, dtEnd) {
@@ -811,6 +874,14 @@ function changePanelSortColumnsPro(this_) {
         setOptionsPro('panelSortColumnsPro', true);
     } else {
         removeOptionsPro('panelSortColumnsPro');
+    }
+}
+function changePanelLabPro(this_) {
+    var _this = $(this_);
+    if (_this.is(':checked')) {
+        setOptionsPro('panelLabPro', true);
+    } else {
+        removeOptionsPro('panelLabPro');
     }
 }
 function setSortDivPanel() {
@@ -910,22 +981,20 @@ function initChosenReplace(mode, this_ = false, TimeOut = 9000) {
         }, 500);
     }
 }
-function chosenReparePosition() {
-    // setTimeout(function(){ 
-        $('.chosen-container').each(function(){
+function chosenReparePosition(target = $('body')) {
+    target.find('.chosen-container').each(function(){
             var id = $(this).attr('id');
                 id = (typeof id !== 'undefined') ? id.replace('_chosen', '') : false;
-            if (id && $('#'+id).css('position') == 'absolute') {
+            if (id && target.find('#'+id).css('position') == 'absolute') {
                 var cssElem = {
                     'position': 'absolute',
-                    'left': $('#'+id).css('left'),
-                    'top': $('#'+id).css('top')
+                    'left': target.find('#'+id).css('left'),
+                    'top': target.find('#'+id).css('top')
                 }
                 console.log(cssElem);
                 $(this).css(cssElem);
             }
         });
-    // }, 500);
 }
 function hideMenuSistemaView() {
     if ($('#divInfraAreaTelaE').length > 0) {
@@ -972,7 +1041,7 @@ function checkboxRangerSelectShift(elemSelect = false) {
     var elem = (elemSelect) ? $(elemSelect) : $('body');
     var $chkboxes = $('input[type="checkbox"]');
     var lastChecked = null;
-    $chkboxes.unbind().click(function(e) {
+    $chkboxes.unbind().on('click',function(e) {
         if (!lastChecked) {
             lastChecked = this;
             return;
@@ -1052,6 +1121,217 @@ function updateDadosProcesso(idElement, value) {
         return false;
     }
 }
+function editDadosArvorePro(this_) {
+    var _this = $(this_);
+    var data = _this.data();
+    var prop = dadosProcessoPro.propProcesso;
+
+    if (data.mode == 'descricao') {
+        var textTitle = 'Editar especifica\u00E7\u00E3o do processo';
+        var textBox =   '<div class="dialogBoxDiv seiProForm">'+
+                        '   <input value="'+prop.txtDescricao+'" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="dialogBoxProcesso" type="text" style="font-size: 10pt; width: 100%;">'+
+                        '</div>';
+    } else if (data.mode == 'tipo_procedimento') {
+        var textTitle = 'Editar tipo de procedimento';
+        var optionsSelect = $.map(prop.selTipoProcedimento_select, function(v){ 
+                var selected = (typeof prop.selTipoProcedimento !== 'undefined' && prop.selTipoProcedimento == v.id) ? 'selected' : '';
+                return '<option value="'+v.id+'" '+selected+'>'+v.name+'</option>';
+            }).join('');
+        var textBox =   '<div class="dialogBoxDiv seiProForm">'+
+                        '   <select id="dialogBoxProcesso" style="font-size: 10pt; width: 100%;">'+optionsSelect+'</select>'+
+                        '</div>';
+    } else if (data.mode == 'nivel_acesso') {
+        var textTitle = 'Editar n\u00EDvel de acesso';
+        var textBox =   '<div class="dialogBoxDiv seiProForm">'+
+                        '   <select id="dialogBoxProcesso" onchange="changeSelectHipoteseLegal(this)" style="font-size: 10pt; width: 100%;">'+
+                        '       <option value="0" '+(prop.rdoNivelAcesso == '0' ? 'selected' : '')+'>P\u00FAblico</option>'+
+                        '       <option value="1" '+(prop.rdoNivelAcesso == '1' ? 'selected' : '')+'>Restrito</option>'+
+                        '       <option value="2" '+(prop.rdoNivelAcesso == '2' ? 'selected' : '')+'>Sigiloso</option>'+
+                        '   </select>'+
+                        '   <div style=" margin-top:20px">'+
+                        '       <select id="dialogBoxProcesso_hipoteses" style="font-size: 10pt; width: 100%; margin-top:20px;'+((prop.rdoNivelAcesso == '1' || prop.rdoNivelAcesso == '1') ? 'display:block;' : 'display:none;')+'">'+
+                        '       </select>'+
+                        '   </div>'+
+                        '</div>';
+    } else if (data.mode == 'responsaveis') {
+        var textTitle = 'Editar atribui\u00E7\u00E3o de processo';
+        var textBox =   '<div class="dialogBoxDiv seiProForm">'+
+                        '   <select id="dialogBoxProcesso" style="font-size: 10pt; width: 100%;">'+
+                        '   </select>'+
+                        '</div>';
+    }
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html('<div class="dialogBoxDiv"> '+textBox+'</span>')
+        .dialog({
+            width: 450,
+            title: textTitle,
+        	open: function(){
+                if ($('#dialogBoxProcesso').is('select')) {
+                    $('#dialogBoxProcesso').chosen({
+                        placeholder_text_single: ' ',
+                        no_results_text: 'Nenhum resultado encontrado'
+                    });
+                }
+                if (data.mode == 'nivel_acesso' && (prop.rdoNivelAcesso == '1' || prop.rdoNivelAcesso == '2')) {
+                    getSelectHipoteseLegal($('#dialogBoxProcesso_hipoteses'), prop.rdoNivelAcesso);
+                } else if (data.mode == 'responsaveis') {
+                    getSelectAtribuicaoProcesso(function(html_result){
+                        var elementSelect = $('#dialogBoxProcesso');
+                        var select_result = $.map(html_result, function(v, i){
+                            var username = (v.name.indexOf('-') !== -1) ? v.name.split('-')[0].trim() : false;
+                            var data_text = (data.text.indexOf('para') !== -1) ? data.text.split('para')[1].trim() : false;
+                                data_text = (data_text.indexOf(')') !== -1) ? data_text.split(')')[0].trim() : data_text;
+                            var selected = (username && data_text == username) ? 'selected' : '';
+                            return '<option value="'+v.value+'" '+selected+'>'+v.name+'</option>';
+                        }).join('');
+
+                        elementSelect.html(select_result);
+                        elementSelect.chosen('destroy').chosen({
+                            placeholder_text_single: ' ',
+                            no_results_text: 'Nenhum resultado encontrado'
+                        }).trigger('chosen:updated');
+                    });
+                }
+            },
+            buttons: [{
+                text: "Editar",
+                class: 'confirm ui-state-active',
+                click: function() {
+                    loadingButtonConfirm(true);
+                    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
+                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
+                    
+                    if (data.mode == 'descricao') {
+                        var new_text = $('#dialogBoxProcesso').val().trim();
+                        updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', new_text, id_procedimento, function(){ 
+                            dadosProcessoPro.propProcesso.txtDescricao = new_text;
+                            resetDialogBoxPro('dialogBoxPro');
+                            alertaBoxPro('Sucess', 'check-circle', 'Especifica\u00E7\u00E3o do processo alterada com sucesso!');
+                        });
+                    } else if (data.mode == 'tipo_procedimento') {
+                        var new_id = $('#dialogBoxProcesso').val().trim();
+                        var new_text = $('#dialogBoxProcesso').find('option:selected').text().trim();
+                        updateDadosArvore('Consultar/Alterar Processo', 'selTipoProcedimento', new_id, id_procedimento, function(){ 
+                            dadosProcessoPro.propProcesso.selTipoProcedimento = new_id;
+                            dadosProcessoPro.propProcesso.hdnIdTipoProcedimento = new_id;
+                            dadosProcessoPro.propProcesso.hdnNomeTipoProcedimento = new_text;
+                            resetDialogBoxPro('dialogBoxPro');
+                            alertaBoxPro('Sucess', 'check-circle', 'Tipo de procedimento alterado com sucesso!');
+                        });
+                    } else if (data.mode == 'nivel_acesso') {
+                        var new_id = $('#dialogBoxProcesso').val().trim();
+                        var new_id_hipoteses = $('#dialogBoxProcesso_hipoteses').val() !== null ? $('#dialogBoxProcesso_hipoteses').val().trim() : false;
+                        var elementOption = (new_id == '0') ? 'optPublico' : false;
+                            elementOption = (new_id == '2') ? 'optSigiloso' : elementOption;
+                            elementOption = (new_id == '1') ? 'optRestrito' : elementOption;
+                        updateDadosArvore('Consultar/Alterar Processo', elementOption, new_id_hipoteses, id_procedimento, function(){ 
+                            dadosProcessoPro.propProcesso.rdoNivelAcesso = new_id;
+                            dadosProcessoPro.propProcesso.selHipoteseLegal = new_id_hipoteses;
+                            resetDialogBoxPro('dialogBoxPro');
+                            alertaBoxPro('Sucess', 'check-circle', 'N\u00EDvel de sigilo alterado com sucesso!');
+                        });
+                    } else if (data.mode == 'responsaveis') {
+                        var new_id = $('#dialogBoxProcesso').val().trim();
+                        updateDadosArvore('Atribuir Processo', 'selAtribuicao', new_id, id_procedimento, function(){ 
+                            resetDialogBoxPro('dialogBoxPro');
+                            alertaBoxPro('Sucess', 'check-circle', 'Atribui\u00E7\u00E3o de processo alterada com sucesso!');
+                        });
+                    }
+                }
+            }]
+    });
+}
+function getSelectAtribuicaoProcesso(callback = false) {
+    var ifrArvore = $('#ifrArvore');
+    var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
+        arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
+    var href = jmespath.search(arrayLinksArvore, "[?name=='Atribuir Processo'].url");
+    if (href !== null) {
+        $.ajax({ url: href }).done(function (html) {
+            var $html = $(html);
+            var selectAtribuicao = $html.find('#selAtribuicao option').map(function(){ if($(this).text().trim() != '') { return {name: $(this).text().trim(), value: $(this).val()} } }).get();
+            if (selectAtribuicao.length && typeof callback === 'function') {
+                callback(selectAtribuicao);
+            }
+        });
+    }
+}
+/*
+function getLinksArvorePasta(nomePasta) {
+    var ifrArvore = $('#ifrArvore');
+    var ifrArvoreForm = ifrArvore.contents();
+    var arrayLinksArvoreAll = ifrArvore[0].contentWindow.arrayLinksArvoreAll;
+    var href = (nomePasta) ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('procedimento_paginar') !== -1 && v.indexOf('no_pai='+nomePasta) !== -1) }) : [];
+    console.log(nomePasta, href, {
+        hdnArvore: ifrArvoreForm.find('#hdnArvore').val(),
+        hdnPastaAtual: ifrArvoreForm.find('#hdnPastaAtual').val(),
+        hdnProtocolos: ifrArvoreForm.find('#hdnProtocolos').val(),
+    });
+    
+    if (href.length > 0) {
+        $.ajax({ 
+            method: 'POST',
+            url: href[0],
+            data: {
+                hdnArvore: ifrArvoreForm.find('#hdnArvore').val(),
+                hdnPastaAtual: ifrArvoreForm.find('#hdnPastaAtual').val(),
+                hdnProtocolos: ifrArvoreForm.find('#hdnProtocolos').val(),
+            }
+        }).done(function (html) {
+            // var $html = $('<script>'+html+'</script>');
+            // console.log(getLinksInText($html.text()));
+            var newLinks = getLinksInText(html);
+                $.merge(newLinks, arrayLinksArvoreAll);
+                newLinks = uniqPro(newLinks);
+                ifrArvore[0].contentWindow.arrayLinksArvoreAll = newLinks;
+                console.log(newLinks);
+        });
+    }
+}
+*/
+function getLinksInText(text) {
+    var array = [];
+    text.split("'").filter(function(el) { return el.indexOf('controlador.php') !== -1 }).map(function(v){
+        if (v.indexOf('\"') !== -1) {
+            v.split('"').filter(function(i){ return i.indexOf('controlador.php') !== -1}).map(function(j){
+                var link = j.replace(/[\\"]/g, '');
+                array.push(link);
+            });
+            return false;
+        } else {
+            var link = v.replace(/[\\"]/g, '');
+            array.push(link);
+            return false;
+        }
+    });
+    array = (array.length > 0) 
+        ?   array.sort().filter(function(item, pos, ary) {
+                return !pos || item != ary[pos - 1];
+            }) 
+        : [];
+    return array;
+}
+function changeSelectHipoteseLegal(this_) {
+    if ($(this_).val() == '1' || $(this_).val() == '2') {
+        getSelectHipoteseLegal($('#dialogBoxProcesso_hipoteses'), $(this_).val());
+    } else {
+        $('#dialogBoxProcesso_hipoteses').html('').chosen('destroy').hide();
+    }
+}
+function getSelectHipoteseLegal(elementHipotese = $('#dialogBoxProcesso_hipoteses'), nivelAcesso = 1) {
+    getHipoteseLegal(dadosProcessoPro.propProcesso.urlHipoteseLegal, nivelAcesso, function(html_result){
+        elementHipotese.show().html(html_result);
+        if (dadosProcessoPro.propProcesso.selHipoteseLegal) {
+            elementHipotese.val(dadosProcessoPro.propProcesso.selHipoteseLegal);
+        }
+        elementHipotese.chosen('destroy').chosen({
+            placeholder_text_single: ' ',
+            no_results_text: 'Nenhum resultado encontrado'
+        }).trigger('chosen:updated');
+    });
+}
 function updateDadosArvore(nameLink, idElement, value, idProcedimento, callback = false) {
     if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && idProcedimento !== null && idProcedimento != 0 ) {
         if ($('#ifrArvore').length == 0) {
@@ -1077,15 +1357,31 @@ function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback
     if (typeof url !== 'undefined' && url != '') {
         $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
             var iframe = $(this).contents();
-            if (nameLink != 'Atribuir Processo') {
-                iframe.find('#'+idElement).val(value);
+            var element = iframe.find('#'+idElement);
+            if (element.is('select') && !hasNumber(value)) {
+                element.find('option:contains("'+value+'")').prop('selected',true);
             } else {
-                iframe.find('#'+idElement).find('option:contains("'+value+'")').prop('selected',true);
+                if (element.is(':radio') || element.is(':checkbox')) {
+                    element.prop('checked',true).trigger('change');
+                    if (idElement == 'optRestrito' || idElement == 'optSigiloso') {
+                        iframe.find('#selHipoteseLegal').after('<input id="selHipoteseLegal" value="'+value+'" name="selHipoteseLegal"></input>').remove();
+                    }
+                } else {
+                    element.val(value);
+                    var nameElement = (idElement.indexOf('sel') !== -1) ? idElement.replace('sel','') : false;
+                    if ( nameElement && iframe.find('#hdnId'+nameElement).length > 0 ) {
+                        iframe.find('#hdnId'+nameElement).val(value);
+                    }
+                }
+            }
+            
+            $(this).unbind();
+            if (iframe.find('button[type="submit"]').length > 0) {
+                iframe.find('button[type="submit"]').trigger('click');
+            } else {
+                iframe.find('button[name="btnSalvar"]').trigger('click');
             }
 
-
-            $(this).unbind();
-            iframe.find('button[type="submit"]').trigger('click');
             // console.log(arrayLinksArvore, url,  nameLink, idElement, value);
             if (typeof callback === 'function') callback();
         });
@@ -1208,6 +1504,21 @@ function initDocVideoPro() {
         }
     }
 }
+function insertIconNewTab() {
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    var ifrArvore = $('#ifrArvore');
+    var arrayLinksArvoreAll = ifrArvore[0].contentWindow.arrayLinksArvoreAll;
+
+    var docSelected = ifrArvore.contents().find('.infraArvoreNoSelecionado');
+    var id_documento = getParamsUrlPro(docSelected.closest('a').attr('href')).id_documento;
+    if (typeof id_documento !== 'undefined') {
+        var listLinks = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_visualizar') !== -1) });
+        if (listLinks.length > 0 && listLinks[0] != '') {
+            ifrVisualizacao.find('.openNewTab').remove()
+            ifrVisualizacao.find('#divArvoreAcoes').after('<a class="openNewTab" style="margin: 5px;padding: 5px;border-radius: 5px;background-color: #eaeaea;color: #666;text-decoration: none;right: 20px;position: absolute;user-select: none;" href="'+url_host.replace('controlador.php','')+listLinks[0]+'" target="_blank"><i class="fas fa-external-link-square-alt" style="color:#4285f4"></i> Abrir documento em nova aba</a>');
+        }
+    }
+}
 function setHtmlProtocoloAlterar() {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
     var ifrArvore = $('#ifrArvore').contents();
@@ -1320,19 +1631,38 @@ function waitLoadPro(Obj, ElemRaiz, Elem, func, TimeOut = 6000) {
     }
   }, 100);
 }
+function waitLoadProSimple(Elem, func, TimeOut = 6000) {
+  if (TimeOut <= 0) { 
+      return; 
+  }
+  setTimeout(function () {
+    if (Elem.length == 0) {
+      waitLoadPro(Elem, func, TimeOut - 100);
+    } else {
+      func();
+    }
+  }, 100);
+}
 function execArvorePro(func) {
   var Obj = $("#ifrArvore").contents();
   waitLoadPro(Obj, "#divArvore > div", "a[target='ifrVisualizacao']", function () {
     func();
     Obj.find("#divArvore > div > div:hidden").each(function () {
       var idPasta = Obj.find(this).attr("id").substr(3);
-      //console.log(idPasta + " -> evento click adicionado.");
-      Obj.find("#ancjoin" + idPasta).click(function () {
+      console.log(idPasta + " -> evento click adicionado.");
+      Obj.find("#ancjoin" + idPasta).on('click', function () {
         waitLoadPro(Obj, "#div" + idPasta, "a[target='ifrVisualizacao']", func);
+        console.log(idPasta + " -> evento click adicionado2.");
+        $('#ifrArvore')[0].contentWindow.getLinksArvorePasta(idPasta);
         $(this).off("click");
       });
     });
   });
+}
+function setClickUrlAmigavel() {
+    $("#ifrArvore").contents().find('a[target="ifrVisualizacao"]').unbind().on('click',function(){
+        updateUrlPage(false);
+    });
 }
 function arrayIDProcedimentos() {
     return localStorageRestorePro('arrayIDProcedimentos');
@@ -1597,6 +1927,63 @@ function getDadosHistoricoPaginacao(html, listProc, index, max) {
                 getDadosHistoricoPaginacao($(htmlHistorico), listProc, index+1, max);
         });
     }
+}
+function initTablePaginacaoHistorico() {
+    if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('removepaginacao')) {
+        getTablePaginacao($('#ifrVisualizacao').contents(), '#frmProcedimentoHistorico', '#tblHistorico', 1);
+    }
+}
+function getTablePaginacao(ifrView, formID, tableID, index) {
+    if (ifrView.find('.infraAreaPaginacao a').length > 0 && typeof window.tablepaginacao_cancel == 'undefined') {
+        var form = ifrView.find(formID);
+        var href = form.attr('action');
+        var param = {};
+            form.find("input[type=hidden]").map(function () { 
+                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) { 
+                    param[$(this).attr('name')] = $(this).val(); 
+                }
+            });
+            param['hdnInfraPaginaAtual'] = index;
+            console.log(index);
+
+        $.ajax({ 
+            method: 'POST',
+            data: param,
+            url: href
+        }).done(function (html) {
+            let $html = $(html);
+            var tr = $html.find(tableID+' tbody').find('tr').not('.infraTrOrdenacao');
+                if(tr.length > 0) {
+                    tr.each(function(index){
+                        if ($(this).find('th').length == 0 && !$(this).find('td').hasClass('infraTdSetaOrdenacao')) {
+                            if ($(this).find('input.infraCheckbox').length > 0) {
+                                $(this).find('input.infraCheckbox').attr('disabled', true).closest('td').attr('onmouseout','return infraTooltipOcultar()').attr('onmouseover','return infraTooltipMostrar(\'Desative a op\u00E7\u00E3o "Remover pagina\u00E7\u00E3o de processos" nas configura\u00E7\u00F0es do '+NAMESPACE_SPRO+' para utilizar esta sele\u00E7\u00E3o\')');
+                            }
+                            ifrView.find(tableID+' tbody').append($(this)[0].outerHTML);
+                        }
+                    });
+                    getTablePaginacao(ifrView, formID, tableID, index+1);
+                    var caption = ifrView.find(tableID).find('caption.infraCaption');
+                    var nrRegistros = caption.text();
+                        nrRegistros = (nrRegistros.indexOf('-') !== -1) ? nrRegistros.split('-')[0].trim()+'):' : nrRegistros;
+                        caption.html('<span>'+nrRegistros+'</span>');
+                } else {
+                    param['hdnInfraPaginaAtual'] = 0;
+                    $.ajax({  method: 'POST', data: param, url: href });
+                    ifrView.find('.infraAreaPaginacao').css('visibility','hidden');
+                    ifrView.find('.loadRemovePag').remove();
+                    ifrView.find(tableID).trigger('update');
+                }
+        });
+        if (ifrView.find('.loadRemovePag').length == 0) {
+            ifrView.find('.infraAreaPaginacao').prepend('<label class="loadRemovePag" style="float: right;margin-right: 30px;"><i class="fas fa-sync fa-spin"></i> Removendo pagina\u00E7\u00E3o... <a href="javascript:void(0);" style="font-size: 1em;" onclick="parent.cancelTablePaginacao(this)"><i class="fas fa-times" style="text-decoration: underline;"></i> Cancelar</a></label>');
+        }
+    }
+}
+function cancelTablePaginacao(this_) {
+    var _this = $(this_);
+    window.tablepaginacao_cancel = true;
+    _this.closest('label').remove();
 }
 function filterTagView(this_) {
     if ($('#kanbanAtivPanel').is(':visible')) {
@@ -1864,7 +2251,7 @@ function checkEtiquetaPriority(this_) {
 }
 function getColorTags(mode) {
     var colorTags = (mode == 'ativ') 
-            ? (typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined') 
+            ? (typeof arrayConfigAtivUnidade !== 'undefined' && arrayConfigAtivUnidade !== null && typeof arrayConfigAtivUnidade.config !== 'undefined' && arrayConfigAtivUnidade.config !== null && typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined' && arrayConfigAtivUnidade.config.etiquetas !== null) 
                 ? arrayConfigAtivUnidade.config.etiquetas.config.colortags
                 : []
             : getStoreFavoritePro().config.colortags;
@@ -2302,7 +2689,7 @@ function configFlashMenuPro(arrayLinksArvore) {
                     '          </div>'+
                     '          <i class="iconPopup fa fa-file cinzaColor"></i> Menu r\u00E1pido dos documentos'+
                     '       </h3>'+
-                    '       <div class="details-container optionsFlashMenu_menudoc '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? 'disableOptions' : '')+'">'+
+                    '       <div class="details-container optionsFlashMenu_menudoc '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? 'disableOptions' : '')+'" style="height: 500px;overflow-y: scroll;">'+
                     '          <table class="tableInfo popup-wrapper tableZebra tableFlashDocMenu" style="font-size: 10pt;width: 100%;">';
     
     var statusMenuClick = ( jmespath.search(selectedItensDocMenu, "[?[0]=='Ativar menu ao clicar'] | length(@)") > 0 ) ? {chekbox: 'checked', class: 'azulColor'} : {chekbox: '', class: 'cinzaColor'};    
@@ -2331,7 +2718,7 @@ function configFlashMenuPro(arrayLinksArvore) {
                     '          </div>'+
                     '          <i class="iconPopup fa fa-tree cinzaColor"></i> \u00CDcones r\u00E1pidos na \u00E1rvore'+
                     '       </h3>'+
-                    '       <div class="details-container optionsFlashMenu_iconstree '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? 'disableOptions' : '')+'">'+
+                    '       <div class="details-container optionsFlashMenu_iconstree '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? 'disableOptions' : '')+'" style="height: 500px;overflow-y: scroll;">'+
                     '          <table class="tableInfo popup-wrapper tableZebra tableFlashDocArvore" style="font-size: 10pt;width: 100%;">';    
         $.each(selectedItensDocArvore,function(index, value){
             if ( jmespath.search(iconsFlashDocArvore, "[?name=='"+value+"'] | length(@)") > 0 ) {
@@ -2588,8 +2975,8 @@ function initClientPro() {
 
           // Handle the initial sign-in state.
             updateSigninStatusPro(gapi.auth2.getAuthInstance().isSignedIn.get());
-            $('#authorizeButtonPro').click(function() { handleAuthClickPro() });
-            $('#signoutButtonPro').click(function() { handleSignoutClickPro() });
+            $('#authorizeButtonPro').on('click',function() { handleAuthClickPro() });
+            $('#signoutButtonPro').on('click',function() { handleSignoutClickPro() });
         }, function(error) {
           alertaBoxPro('Error', 'exclamation-triangle', JSON.stringify(error, null, 2));
         });
@@ -2747,7 +3134,9 @@ function confirmaFraseBoxPro(text, phrase, func, cancel) {
             },{
                 text: "OK",
                 class: "confirm",
-                click: function() {
+                click: function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     var confirmFrase = $('#dialogBoxConfirmFrase');
                     if (phrase.toUpperCase() == confirmFrase.val().trim().toUpperCase()) {
                         confirmFrase.removeClass('requiredNull');
@@ -3151,6 +3540,32 @@ function sessionStorageStorePro(item, result) {
 }
 function sessionStorageRemovePro(item) {
     sessionStorage.removeItem(item);
+}
+function hybridStorageRestorePro(item) {
+    if (localStorageRestorePro(item) !== null) {
+        return localStorageRestorePro(item);
+    } else if (sessionStorageRestorePro(item) !== null) {
+        return sessionStorageRestorePro(item);
+    } else {
+        return false;
+    }
+}
+function hybridStorageRemovePro(item) {
+    if (localStorageRemovePro(item) !== null) {
+        return localStorageRemovePro(item);
+    } else if (sessionStorageRemovePro(item) !== null) {
+        return sessionStorageRemovePro(item);
+    } else {
+        return false;
+    }
+}
+function hybridStorageStorePro(item, result) {
+    try {
+        localStorageStorePro(item, result);
+    } catch(e) {
+        sessionStorageStorePro(item, result);
+    }
+    return true;
 }
 function verifyOptionsPro(item) {
     var option = localStorageRestorePro('optionsPro');
@@ -3574,6 +3989,7 @@ function ajaxDadosProcessoPro(href, mode) {
         processo.selInteressadosProcedimento_list = $html.find("#selInteressadosProcedimento option").map(function () { return {name: $(this).text(), value: $(this).attr('value')} }).get();
         processo.selAssuntos = $html.find("#selAssuntos option").map(function () { return $(this).text(); }).get();
         processo.rdoNivelAcesso = $html.find('input[name=rdoNivelAcesso]:checked').val();
+        processo.urlHipoteseLegal = getUrlHipoteseLegal(html);
         
         /*
         var arrayObs = [{unidade: unidade, observacao: $html.find('#txaObservacoes').val()}];
@@ -3643,6 +4059,36 @@ function ajaxDadosProcessoPro(href, mode) {
         }
         if (mode == 'processo') { 
             setTimeout(function(){ resizeArvoreMaxWidth() }, 500);
+        }
+    });
+}
+function getUrlHipoteseLegal(html) {
+    var word = 'hipotese_legal_select_nome_base_legal';
+    var reg = new RegExp("'(.*?"+word+".*?)'", 'g');
+    if (reg.test(html)) { 
+        var urlHipotese = html.match(reg);
+            urlHipotese = (typeof urlHipotese !== 'undefined' && urlHipotese !== null && urlHipotese.length > 0) ? urlHipotese[0].split("'")[3].trim() : false;
+        return urlHipotese;
+    } else {
+        return false;
+    }
+}
+function getHipoteseLegal(urlHipoteseLegal = dadosProcessoPro.propProcesso.urlHipoteseLegal, nivelAcesso = 1, callback = false) {
+    $.ajax({
+        type: "POST",
+        url: urlHipoteseLegal,
+        dataType: 'text',
+        data: {
+            primeiroItemValor: null,
+            primeiroItemDescricao: '',
+            valorItemSelecionado: '',
+            staNivelAcesso: parseInt(nivelAcesso)
+        },
+        success: function(result){
+            var html_result = $(result.replace('<?xml version="1.0" encoding="iso-8859-1"?>','')).html();
+            if (html_result != '' && typeof callback === 'function') {
+                callback(html_result);
+            }
         }
     });
 }
@@ -4018,15 +4464,43 @@ function setHistoryProcessosPro(dadosProcessoPro) {
 function updateTitlePage(mode) {
     var processo = dadosProcessoPro.propProcesso;
     if ( typeof processo.txtDescricao !== 'undefined'  ) {
-        var protocolo = (typeof processo.txtProtocoloExibir === 'undefined') ? processo.hdnProtocoloFormatado : processo.txtProtocoloExibir;
+        var protocolo = (typeof processo !== 'undefined' && typeof processo.txtProtocoloExibir === 'undefined') ? processo.hdnProtocoloFormatado : processo.txtProtocoloExibir;
         if (mode == 'processo') {
             $('head title').text(processo.txtDescricao+' | SEI - Processo '+protocolo);
+            if (parent.verifyConfigValue('urlamigavel')) {
+                updateUrlPage();
+            }
         } else if (mode == 'editor') {
             var title = $('head title').text();
                 title = (title.indexOf('-') !== -1) ? title.split('-')[2]+' '+title.split('-')[1] : title; 
             $('head title').text('Editor: '+title+' - '+processo.txtDescricao+' | SEI - Processo '+protocolo);
         }
     }
+}
+function updateUrlPage(update = true) {
+    var processo = dadosProcessoPro.propProcesso;
+    var protocolo = (typeof processo.txtProtocoloExibir === 'undefined') ? processo.hdnProtocoloFormatado : processo.txtProtocoloExibir;
+    if (typeof protocolo !== 'undefined' && protocolo !== null && $('#ifrArvore').length > 0) {
+        var ifrArvore = $('#ifrArvore').contents();
+        var nrSEI = ifrArvore.find('.infraArvoreNoSelecionado').eq(0);
+            nrSEI = (typeof nrSEI !== 'undefined' && nrSEI !== null) ? getNrSei(nrSEI.text().trim()) : '';
+            nrSEI = (nrSEI != '') ? '@'+nrSEI : '';
+            
+        if (update) {
+            window.history.replaceState({sei: nrSEI}, document.title, "/sei/#"+protocolo+nrSEI);
+        } else {
+            window.history.pushState({sei: nrSEI}, document.title, "/sei/#"+protocolo+nrSEI);
+            iHistoryArray.push({id: iHistory, sei: nrSEI});
+        }
+        iHistory++;
+        // console.log(window.history.length, iHistory, iHistoryArray);
+    }
+}
+function getNrSei(nameDoc) {
+    var nr_sei = nameDoc.split(' ');
+        nr_sei = (nameDoc.indexOf(' ') !== -1) ? nr_sei[nr_sei.length-1] : '';
+        nr_sei = (nr_sei.indexOf('(') !== -1) ? nr_sei.replace(')','').replace('(','').trim() : nr_sei;
+    return nr_sei;
 }
 function getIfrArvoreDadosProcesso() {
     if ($('#ifrArvore').length > 0) {
@@ -5523,6 +5997,9 @@ function checkPageVisualizacao() {
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmDocumentoCadastro', "label#lblPublico", setNewDocDefault);
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmProcedimentoCadastro', "#divInfraBarraComandosSuperior", setHtmlProtocoloAlterar);
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', ".infraBarraComandos", getActionsOnSendProcess);
+    waitLoadPro($('#ifrVisualizacao').contents(), '#frmProcedimentoHistorico[action*="acao=procedimento_consultar_historico"]', ".infraAreaTabela", initTablePaginacaoHistorico);
+    waitLoadPro($('#ifrVisualizacao').contents(), 'form', "select", replaceSelectAllVisualizacao);
+    waitLoadPro($('#ifrVisualizacao').contents(), 'form', "#optRestrito", insertActionHipoteseLegal);
 }
 function setNewDocDefault() {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
@@ -5577,4 +6054,236 @@ function appendIconIntegrity() {
                                  '</a>';
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconIntegrity);
     }
+}
+function replaceSelectAllVisualizacao() {
+    var target = $('#ifrVisualizacao').contents();
+    if (typeof $().chosen !== 'undefined') {
+        target.find('select').chosen('destroy');
+        target.find('select').not('[multiple]').filter(function() { 
+                return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') 
+            }).chosen({
+                placeholder_text_single: ' ',
+                no_results_text: 'Nenhum resultado encontrado'
+            });
+        chosenReparePosition(target);
+        target.find('.infraAreaDados').css('overflow','initial');
+    }
+}
+function insertActionHipoteseLegal() {
+    var target = $('#ifrVisualizacao').contents();
+        target.find('input[name="rdoNivelAcesso"], input[name="rdoTextoInicial"]').on('change',function(){
+            parent.replaceSelectAllVisualizacao();
+            if ($(this).attr('id') == 'optPublico') {
+                target.find('#selHipoteseLegal').chosen('destroy').hide();
+            }
+            setTimeout(function(){ 
+                parent.replaceSelectAllVisualizacao();
+            }, 1000);
+        });
+}
+function insertNewIcons() {
+    if (localStorage.getItem('seiSlim')) {
+        waitLoadPro($('#ifrVisualizacao').contents(), '#divArvoreAcoes', "a.botaoSEI", appendNewIcons);
+    }
+}
+function appendStyleNewIcons(ifrVisualizacao, backgroundColor) {
+    if (ifrVisualizacao.find('style[data-style="seipro-styleicon"]').length == 0) {
+        ifrVisualizacao.find('head').prepend("<style type='text/css' data-style='seipro-styleicon'>"
+                        +"   body.seiSlim .iconBoxPro.botaoSEI:hover {\n"
+                        +"      background: "+backgroundColor+" !important;\n"
+                        +"   }\n"
+                        +"   body.seiSlim .iconBoxPro .fas {\n"
+                        +"      color: "+backgroundColor+";\n"
+                        +"   }\n"
+                        +"</style>");
+        ifrVisualizacao.find('body').addClass('seiSlim').addClass('seiSlim_view');
+    }
+}
+function appendNewIcons() {
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    var backgroundColor = ifrVisualizacao.find('.infraCorBarraSistema').css('background-color');
+    console.log('backgroundColor', backgroundColor);
+    appendStyleNewIcons(ifrVisualizacao, backgroundColor);
+    replaceNewIcons(ifrVisualizacao.find('.infraBarraComandos a.botaoSEI'));
+}
+function classNewIcons(elem) {
+    var title = elem.attr('title');
+    var text = elem.text();
+    var icone = elem.find('img');
+    var scr_icone = icone.attr('src');
+    var titulo_icone = icone.attr('alt');
+    var classe_icone = '';
+
+    if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('atualizar_andamento.gif') !== -1) {
+        classe_icone = 'fas fa-globe fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('atribuir_processo.gif') !== -1) {
+        classe_icone = 'fas fa-user fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('concluir_processo.gif') !== -1) {
+        classe_icone = 'fas fa-window-close fa-vermelhoColor';
+    } else if ((typeof text !== 'undefined' && text.indexOf('Processos Sobrestados') !== -1) || (typeof scr_icone !== 'undefined' && scr_icone.indexOf('sobrestar_processo.gif') !== -1)) {
+        classe_icone = 'fas fa-pause fa-roxoColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('enviar_processo.gif') !== -1) {
+        classe_icone = 'fas fa-envelope-open-text fa-verdeColor';
+    } else if ((typeof text !== 'undefined' && text.indexOf('Blocos Internos') !== -1) || (typeof scr_icone !== 'undefined' && scr_icone.indexOf('incluir_em_bloco.gif') !== -1)) {
+        classe_icone = 'fas fa-book fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('anotacao.gif') !== -1) {
+        classe_icone = 'fas fa-sticky-note fa-laranjaColor';
+    } else if ((typeof text !== 'undefined' && text.indexOf('Marcadores') !== -1) || (typeof scr_icone !== 'undefined' && scr_icone.indexOf('marcador.png') !== -1)) {
+        classe_icone = 'fas fa-tags fa-rosaColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('incluir_documento.gif') !== -1) {
+        classe_icone = 'fas fa-file fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('acesso_externo.gif') !== -1) {
+        classe_icone = 'fas fa-shield-alt fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('anexar_processo.gif') !== -1) {
+        classe_icone = 'fas fa-paperclip fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('duplicar_procedimento.gif') !== -1) {
+        classe_icone = 'fas fa-clone fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('gerar_processo_relacionado.gif') !== -1) {
+        classe_icone = 'fas fa-scroll fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('relacionados.png') !== -1) {
+        classe_icone = 'fas fa-people-arrows fa-azulColor';
+    } else if ((typeof text !== 'undefined' && text.indexOf('Controle de Processos') !== -1) || (typeof scr_icone !== 'undefined' && (scr_icone.indexOf('controle_processos.gif') !== -1 || scr_icone.indexOf('sei_controle_processos_barra.gif') !== -1))) {
+        classe_icone = 'fas fa-stream fa-azulColor';
+    } else if ((typeof text !== 'undefined' && text.indexOf('Pesquisa') !== -1) || (typeof scr_icone !== 'undefined' && scr_icone.indexOf('pesquisa.png') !== -1)) {
+        classe_icone = 'fas fa-search fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('gerar_arquivo_processo.gif') !== -1) {
+        classe_icone = 'fas fa-file-pdf fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('gerar_zip_processo.png') !== -1) {
+        classe_icone = 'fas fa-file-archive fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('documento_modelo.gif') !== -1) {
+        classe_icone = 'fas fa-star fa-amareloColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('imprimir_web.gif') !== -1) {
+        classe_icone = 'fas fa-print fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('email.gif') !== -1) {
+        classe_icone = 'fas fa-at fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('consultar_alterar_protocolo.gif') !== -1) {
+        classe_icone = 'fas fa-users fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('ciencia.gif') !== -1) {
+        classe_icone = 'fas fa-thumbs-up fa-cianoColor';
+    } else if ((typeof text !== 'undefined' && text.indexOf('Acompanhamento Especial') !== -1) || (typeof scr_icone !== 'undefined' && scr_icone.indexOf('acompanhamento_especial.gif') !== -1)) {
+        classe_icone = 'fas fa-eye fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('assinar.gif') !== -1) {
+        classe_icone = 'fas fa-pen-alt fa-amareloColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('gerenciar_assinatura_externa.gif') !== -1) {
+        classe_icone = 'fas fa-file-signature fa-amareloColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('documento_versoes.gif') !== -1) {
+        classe_icone = 'fas fa-code-branch fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('documento_gerar_circular.gif') !== -1) {
+        classe_icone = 'fas fa-circle-notch fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('mover_documento.gif') !== -1) {
+        classe_icone = 'fas fa-people-carry fa-azulColor';
+    } else if (typeof titulo_icone !== 'undefined' && titulo_icone.indexOf('(Hashcode)') !== -1) {
+        classe_icone = 'fas fa-fingerprint fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('ordenar_arvore.gif') !== -1) {
+        classe_icone = 'fas fa-tree fa-verdeColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('cancelar_protocolo.gif') !== -1) {
+        classe_icone = 'fas fa-ban fa-vermelhoColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('assinaturas.gif') !== -1) {
+        classe_icone = 'fas fa-file-signature fa-amareloColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('intimacao_eletronica_gerar.svg') !== -1) {
+        classe_icone = 'fas fa-bullhorn fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('autenticar.gif') !== -1) {
+        classe_icone = 'fas fa-stamp fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('lixeira.png') !== -1) {
+        classe_icone = 'fas fa-trash-alt fa-vermelhoColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('editar_conteudo.gif') !== -1) {
+        classe_icone = 'fas fa-edit fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('documento_gerar_multiplo.gif') !== -1) {
+        classe_icone = 'fas fa-file-import fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('email_encaminhar.gif') !== -1) {
+        classe_icone = 'fas fa-reply-all fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('novidades.gif') !== -1) {
+        classe_icone = 'fas fa-medal fa-roxoColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('usuario.gif') !== -1) {
+        classe_icone = 'fas fa-user-circle fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('configuracao.gif') !== -1) {
+        classe_icone = 'fas fa-cog fa-azulColor';
+    } else if (typeof scr_icone !== 'undefined' && scr_icone.indexOf('sair.gif') !== -1) {
+        classe_icone = 'fas fa-sign-out-alt fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Para saber+') !== -1) {
+        classe_icone = 'fas fa-graduation-cap fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Menu') !== -1) {
+        classe_icone = 'fas fa-ellipsis-h fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Iniciar Processo') !== -1) {
+        classe_icone = 'fas fa-folder-open fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Retorno Programado') !== -1) {
+        classe_icone = 'fas fa-retweet fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Base de Conhecimento') !== -1) {
+        classe_icone = 'fas fa-user-graduate fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Textos Padr\u00E3o') !== -1) {
+        classe_icone = 'fas fa-keyboard fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Modelos Favoritos') !== -1) {
+        classe_icone = 'fas fa-star fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Blocos de Assinatura') !== -1) {
+        classe_icone = 'fas fa-signature fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Blocos de Reuni\u00E3o') !== -1) {
+        classe_icone = 'fas fa-chalkboard-teacher fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Contatos') !== -1) {
+        classe_icone = 'fas fa-address-card fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Pontos de Controle') !== -1) {
+        classe_icone = 'fas fa-flag fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Estat\u00EDsticas') !== -1) {
+        classe_icone = 'fas fa-chart-line fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Unidade') !== -1) {
+        classe_icone = 'fas fa-briefcase fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Desempenho de Processos') !== -1) {
+        classe_icone = 'fas fa-bolt fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Grupos') !== -1) {
+        classe_icone = 'fas fa-user-friends fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('E-Mail') !== -1) {
+        classe_icone = 'fas fa-at fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Envio') !== -1) {
+        classe_icone = 'fas fa-paper-plane fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Relat\u00F3rios') !== -1) {
+        classe_icone = 'fas fa-chart-pie fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Vincula\u00E7\u00F5es e Procura\u00E7\u00F5es Eletr\u00F4nicas') !== -1) {
+        classe_icone = 'fas fa-user-tie fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Intima\u00E7\u00F5es Eletr\u00F4nicas') !== -1) {
+        classe_icone = 'fas fa-bullhorn fa-azulColor';
+    } else if (typeof text !== 'undefined' && text.indexOf('Hist\u00F3rico de Processos Visitados') !== -1) {
+        classe_icone = 'fas fa-history fa-azulColor';
+    }
+    titulo_icone = (typeof titulo_icone !== 'undefined' && titulo_icone != '') ? titulo_icone.replace('/', ' / ').replace('Gerenciar Disponibiliza\u00E7\u00F5es de ', '').replace('Gerar Arquivo ', '').replace('Libera\u00E7\u00F5es para ', '') : title;
+    return {titulo_icone: titulo_icone, classe_icone: classe_icone};
+}
+function replaceNewIcons(element) {
+    element.each(function(){
+        var iconeObj = classNewIcons($(this));
+    
+        if (typeof iconeObj !== 'undefined' && iconeObj.classe_icone != '') {
+            var html =  '<img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==">'+
+                        '<span class="newIconPro">'+
+                        '    <i class="'+iconeObj.classe_icone+'"></i>'+
+                        '</span>'+
+                        '<span class="newIconTitle">'+iconeObj.titulo_icone+'</span>'; 
+            $(this).addClass('iconBoxPro').find('img').remove();
+        } else {
+            var html =  '<span class="newIconTitle">'+iconeObj.titulo_icone+'</span>'; 
+        }
+        $(this).addClass('iconBoxPro').append(html);
+    });
+}
+function replaceNewIconsBar(element) {
+    element.each(function(){
+        var iconeObj = classNewIcons($(this));
+        var title = $(this).attr('title');
+    
+        if (typeof iconeObj !== 'undefined' && iconeObj.classe_icone != '') {
+            var html =  '<span class="newIconPro">'+
+                        '    <i class="'+iconeObj.classe_icone+'"></i>'+
+                        '</span>';
+            $(this).addClass('iconBoxPro').text('').find('img').remove().end().append(html);
+            if (typeof title !== 'undefined') {
+                $(this).addClass('iconBoxPro').attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()')
+            }
+        }
+    });
+}
+function replaceNewIconsMenu(element) {
+    element.each(function(){
+        var iconeObj = classNewIcons($(this));
+        if (typeof iconeObj !== 'undefined' && iconeObj.classe_icone != '') {
+            $(this).prepend('<i class="'+iconeObj.classe_icone+'"></i>');
+        }
+    });
 }

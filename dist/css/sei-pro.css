@@ -1365,7 +1365,7 @@ i.iconSwitch {
     top: 0;
 }
 .tableAtividades th[data-filter-type="action"] {
-    width: 200px;
+    width: 240px;
 }
 .tableAtividades th[data-filter-type="proc"] {
     min-width: 210px;
@@ -2307,7 +2307,7 @@ td.content_desc {
     background: #efefef;
     padding-left: 10px;
     border-radius: 20px;
-    right: 300px;
+    right: 350px;
     position: absolute;
 }
 .editTableToggle .label {
@@ -2420,7 +2420,7 @@ td.editCellLoadingError:after {
     content: "ENCERRADO" !important;
 }
 .tableFollow tr.disabled td:nth-child(2):before {
-    content: "DESATIVADO";
+    content: "DESATIVADO" !important;
     background: #dedede;
     padding: 3px 5px;
     border-radius: 5px;

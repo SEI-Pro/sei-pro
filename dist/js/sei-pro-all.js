@@ -1,3 +1,56 @@
+var pagesInfiniteSearch = [];
+function getTableInfiniteSearch(ifrView, formID, tableID, index) {
+    if (pagesInfiniteSearch.length == 0 || $.inArray(index, pagesInfiniteSearch) === -1) {
+        var form = ifrView.find(formID);
+        var href = form.attr('action');
+        var param = {};
+            form.find("input, select").map(function () { 
+                if ($(this).attr('name')) {
+                    if ( $(this).is('[type="radio"]') || $(this).is('[type="checkbox"]') ) {
+                        if ($(this).is(':checked')) {
+                            param[$(this).attr('name')] = $(this).val();
+                        }
+                    } else {
+                        param[$(this).attr('name')] = ($(this).val()) ? removeAcentos($(this).val()) : '';
+                    }
+                }
+            });
+            param['hdnInicio'] = index;
+            pagesInfiniteSearch.push(index);
+            ifrView.find('div.paginas').append('<label class="loadRemovePag"><i class="fas fa-sync fa-spin"></i></label>');
+
+        $.ajax({ 
+            method: 'POST',
+            data: param,
+            url: href
+        }).done(function (html) {
+            let $html = $(html);
+            var table = $html.find(tableID);
+            if(table.length > 0) {
+                table.each(function(index){
+                    ifrView.find(tableID).last().after($(this)[0].outerHTML);
+                });
+            } else {
+                param['hdnInicio'] = 0;
+                $.ajax({  method: 'POST', data: param, url: href });
+            }
+            ifrView.find('div.paginas').after($html.find('div.paginas')).remove();
+        });
+    }
+}
+function getInfiniteSearch() {
+    var nrPage = parseInt($('div.paginas b').text()+'0');
+    if ($('div.paginas span.pequeno').last().text() == 'Pr\u00F3xima') {
+        getTableInfiniteSearch($('#divInfraAreaTela'), '#frmPesquisaProtocolo', 'table.resultado', nrPage);
+    }  
+}
+function startPagesInfiniteSearch(index = false) {
+    $(window).scroll(function () { 
+       if ($(window).scrollTop() >= $(document).height() - $(window).height() - 120) {
+            getInfiniteSearch();
+       }
+    });
+}
 function repairLnkControleProcesso() {
     if (typeof $('#lnkControleProcessos').attr('onclick') !== 'undefined') {
         var lnk = $('#lnkControleProcessos').attr('onclick').match(/'(.*?)'/);
@@ -339,10 +392,16 @@ function initReplaceSelectAll(TimeOut = 12000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }
     if (typeof $().chosen !== 'undefined' && typeof verifyConfigValue === 'function') {
         if (parent.verifyConfigValue('substituiselecao') && $('#frmDocumentoGeracaoMultiplo').length == 0 ) { 
-            $('select:visible').not('[multiple="multiple"]').not('[name="selProcedimentos"]').chosen({
-                placeholder_text_single: ' ',
-                no_results_text: 'Nenhum resultado encontrado'
-            });
+            $('select')
+                .not('[multiple]')
+                .filter(function() { 
+                    return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') 
+                })
+                .not('[name="selProcedimentos"]')
+                .chosen({
+                    placeholder_text_single: ' ',
+                    no_results_text: 'Nenhum resultado encontrado'
+                });
             chosenReparePosition();
         }
     } else {
@@ -376,6 +435,122 @@ function filterIfraTable(this_) {
         _this.addClass('active');
     }
 }
+function initReplaceNewIconsBar(TimeOut = 9000) {
+    if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
+    if (typeof replaceNewIconsBar === 'function') {
+        replaceNewIconsBar($('#divInfraBarraSistema #divInfraBarraSistemaD a'));
+        replaceNewIconsMenu($('#divInfraAreaTelaE #main-menu li a'));
+    } else {
+        setTimeout(function(){ 
+            initReplaceNewIconsBar(TimeOut - 100); 
+            console.log('Reload initReplaceNewIconsBar', TimeOut); 
+        }, 500);
+    }
+}
+function initRemovePaginacaoAll(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof verifyConfigValue !== 'undefined') {
+        if (verifyConfigValue('removepaginacao')) {
+            if ($('#frmAcompanhamentoLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmAcompanhamentoLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmProcedimentoSobrestar').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmProcedimentoSobrestar', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmBlocoLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmBlocoLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmProtocoloModeloLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmProtocoloModeloLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmTextoPadraoInternoLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmTextoPadraoInternoLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmContatoLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmContatoLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmMarcadorLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmMarcadorLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmContatoRelatorioTemporarios').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmContatoRelatorioTemporarios', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmProcedimentoRelatorioSigilosos').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmProcedimentoRelatorioSigilosos', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmUnidadeLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmUnidadeLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmAssinanteLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmAssinanteLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmGrupoContatoLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmGrupoContatoLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmGrupoUnidadeLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmGrupoUnidadeLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmHipoteseLegalLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmHipoteseLegalLista', '#divInfraAreaTabela table', 1);
+            } else if ($('#frmUsuarioLista').length > 0) {
+                getTablePaginacao($('#divInfraAreaTela'), '#frmUsuarioLista', '#divInfraAreaTabela table', 1);
+            }
+        }
+    } else {
+        setTimeout(function(){ 
+            initRemovePaginacaoAll(TimeOut - 100); 
+            console.log('Reload initRemovePaginacaoAll', TimeOut); 
+        }, 500);
+    }
+}
+function initPagesInfiniteSearch(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof verifyConfigValue !== 'undefined') {
+        if (verifyConfigValue('rolageminfinita') && $('#frmPesquisaProtocolo').length > 0) {
+            startPagesInfiniteSearch();
+        }
+    } else {
+        setTimeout(function(){ 
+            initPagesInfiniteSearch(TimeOut - 100); 
+            console.log('Reload initPagesInfiniteSearch', TimeOut); 
+        }, 500);
+    }
+}
+function observeUrlPage() {
+    var hash = window.location.hash;
+    if (hash != '' && hash.indexOf('#') !== -1 && (hash.indexOf('/') !== -1 || hash.indexOf('@') !== -1) ) {
+        var protocolo = hash.replace('#','');
+            protocolo = (protocolo.indexOf('@') !== -1) ? protocolo.split('@')[1] : protocolo;
+            protocolo = (protocolo == '') 
+                        ? (hash.indexOf('@') !== -1) ? hash.replace('#','').split('@')[0] : protocolo
+                        : protocolo;
+        console.log('observeUrlPage',protocolo);
+        if (typeof protocolo !== 'undefined' && protocolo !== null && protocolo != '') {
+            var xhr = new XMLHttpRequest();
+            var href = $('#frmProtocoloPesquisaRapida').attr('action');
+            $.ajax({ 
+                method: 'POST',
+                data: { txtPesquisaRapida: protocolo },
+                url: href,
+                xhr: function() {
+                    return xhr;
+                },
+                success: function(data) { 
+                    var _return = getParamsUrlPro(xhr.responseURL);
+                    if ( _return.id_protocolo != 0 && typeof _return.id_protocolo !== 'undefined' ) {
+                        window.location.replace(xhr.responseURL);
+                    }
+                }
+            });
+        }
+    }
+}
+function initSlimPro() {
+    var htmlSlimPro =   '       <div id="controlSlimPro" style="display: inline-block;float: right;margin:0 10px 0 0">'+
+                        '           <div class="onoffswitch" style="display:inline-block;transform:scale(0.7)">'+
+                        '               <input type="checkbox" onchange="changeSlimPro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="changeSlimPro" tabindex="0" '+(localStorage.getItem('seiSlim') ? 'checked' : '')+'>'+
+                        '               <label class="onoffswitch-label" for="changeSlimPro" style="border-color: #ffffff7a;"></label>'+
+                        '           </div>'+
+                        '           <i class="fas fa-hat-wizard brancoColor" style="float: right;font-size: 1.9em;"></i> '+
+                        '       </div>';
+    $('#controlSlimPro').remove();
+    $('#divInfraBarraSistemaD').append(htmlSlimPro);
+}
+function changeSlimPro(this_) {
+    if ($(this_).is(':checked')) {
+        localStorageStorePro('seiSlim', true);
+    } else {
+        localStorageRemovePro('seiSlim');
+    }
+    window.location.reload();
+}
 function initSeiProAll() {
     appendIconEntidade();
     appendVersionSEIPro();
@@ -388,7 +563,12 @@ function initSeiProAll() {
     initTablePesquisaDownload();
     initReplaceSelectAll();
     initAppendIconFavorites();
+    initReplaceNewIconsBar();
+    initRemovePaginacaoAll();
+    initPagesInfiniteSearch();
     // observeIfrArvore();
+    observeUrlPage();
+    initSlimPro();
     console.log('initSeiProAll');
 }
 $(document).ready(function () { initSeiProAll() });

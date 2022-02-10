@@ -3,8 +3,8 @@ var perfilLoginAtiv = false;
 var urlServerAtiv = false;
 var userHashAtiv = false;
 var delayServerAtiv = 0;
-var arrayConfigAtividades = [];
-var arrayConfigAtivUnidade = [];
+var arrayConfigAtividades = (getOptionsPro('panelLabPro') && hybridStorageRestorePro('configDataAtividadesPadraoPro') !== null) ? restoreLocalDataConfigArray() : [];
+var arrayConfigAtivUnidade = (getOptionsPro('panelLabPro') && hybridStorageRestorePro('configDataAtivUnidadePro') !== null) ? hybridStorageRestorePro('configDataAtivUnidadePro') : [];
 var ganttAtividades = false;
 var ganttAfastamentos = false;
 var ganttRecorrencias = false;
@@ -13,8 +13,8 @@ var kanbanAtividadesMoving = false;
 var googleOneTap = false;
 var tableConfigEditor = {};
 var tableConfigList = {};
-var arrayAtividadesPro = (localStorage.getItem('configDataAtividadesPro') !== null) ? JSON.parse(localStorage.getItem('configDataAtividadesPro')) : [];
-var arrayAtividadesProcPro = (localStorage.getItem('configDataAtividadesProcPro') !== null) ? JSON.parse(localStorage.getItem('configDataAtividadesProcPro')) : [];
+var arrayAtividadesPro = (getOptionsPro('panelLabPro') && hybridStorageRestorePro('configDataAtividadesPro') !== null) ? hybridStorageRestorePro('configDataAtividadesPro') : [];
+var arrayAtividadesProcPro = getOptionsPro('panelLabPro') && (hybridStorageRestorePro('configDataAtividadesProcPro') !== null) ? hybridStorageRestorePro('configDataAtividadesProcPro') : [];
 var checkLoadAtividadesProcPro = false;
 var arrayAtividades = ($('#ifrArvore').length > 0) ? arrayAtividadesProcPro : arrayAtividadesPro;
 var perfilAtividadesSelected = getOptionsPro('panelAtividadesViewSyncUnidade')
@@ -22,7 +22,9 @@ var perfilAtividadesSelected = getOptionsPro('panelAtividadesViewSyncUnidade')
                             : (getOptionsPro('perfilAtividadesSelected')) ? getOptionsPro('perfilAtividadesSelected') : '';
 var arrayProcessosUnidade = getProcessoUnidadePro();
 var arrayNomenclaturas = [];
+var lastUpdateAtividades = (getOptionsPro('panelLabPro') && hybridStorageRestorePro('lastUpdateAtividades') !== null) ? hybridStorageRestorePro('lastUpdateAtividades') : false;
 var dly;
+var loadRowsPanelAtiv = false;
 
 var chartColors = {
                     blue:"rgb(54, 162, 235)", 
@@ -170,6 +172,8 @@ function getServerAtividades(param, mode) {
         param.hash = userHashAtiv;
         param.version = VERSION_SPRO;
         param.perfil = (getOptionsPro('perfilAtividadesSelected')) ? getOptionsPro('perfilAtividadesSelected') : '';
+        param.last_update = (getOptionsPro('panelLabPro') && lastUpdateAtividades && mode == 'panel') ? lastUpdateAtividades : false;
+        
         delayServerAtiv = 1; setTimeout(function(){ delayServerAtiv = 0; }, 1000);
         if (typeof loadingButtonConfirm !== 'undefined') { loadingButtonConfirm(true); }
         var authToken = (getTokenGoogle() && userHashAtiv == '') 
@@ -280,10 +284,44 @@ function getServerAtividades(param, mode) {
                                 }
                             }
                         } else if (mode == 'panel') {
-                            arrayConfigAtividades = ativData['padrao'];
-                            arrayEtiquetasList = $.map(arrayConfigAtividades['etiquetas']['list'], function (i) { return i });
-                            arrayConfigAtividades['etiquetas']['list'] = arrayEtiquetasList;
-                            arrayConfigAtivUnidade = jmespath.search(arrayConfigAtividades['unidades'], "[?selected==`true`] | [0]");
+
+                            $('#tabs-configpessoal').find('tr > td:nth-child(2)').removeClass('editCellLoading');
+
+                            if (
+                                typeof ativData.padrao === 'object' && ativData.padrao !== null && 
+                                typeof ativData.padrao.perfil !== 'undefined' && ativData.padrao.perfil !== null && 
+                                typeof ativData.padrao.perfil.nivel !== 'undefined' && ativData.padrao.perfil.nivel !== null &&
+                                typeof arrayConfigAtividades === 'object' && arrayConfigAtividades !== null && 
+                                typeof arrayConfigAtividades.perfil !== 'undefined' && arrayConfigAtividades.perfil !== null && 
+                                typeof arrayConfigAtividades.perfil.nivel !== 'undefined' && arrayConfigAtividades.perfil.nivel !== null &&
+                                ativData.padrao.perfil.nivel !== arrayConfigAtividades.perfil.nivel
+                            ) {
+                                removeLocalDataAtiv(true);
+                                getAtividades();
+                                return false;
+                            }
+
+                            if (typeof ativData['padrao'] === 'object' && ativData['padrao'] !== null) {
+                                if (param.last_update) {
+                                    appendDataConfigOnLocalArray(ativData['padrao']);
+                                } else {
+                                    removeLocalDataAtiv(true);
+                                    arrayConfigAtividades = ativData['padrao'];
+                                }
+                                
+                                if (
+                                        typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && 
+                                        typeof arrayConfigAtividades.etiquetas !== 'undefined' && arrayConfigAtividades.etiquetas !== null &&
+                                        typeof arrayConfigAtividades.etiquetas.list !== 'undefined' && arrayConfigAtividades.etiquetas.list !== null
+                                    ) {
+                                    arrayConfigAtividades['etiquetas']['list'] = $.map(arrayConfigAtividades['etiquetas']['list'], function (i) { return i }) 
+                                }
+                            }
+
+                            var arrayConfigUnidadeSeleted = (typeof ativData['padrao'] === 'object' && ativData['padrao'] !== null && ativData['padrao']['unidades'].length > 0) 
+                                                        ? jmespath.search(ativData['padrao']['unidades'], "[?selected==`true`] | [0]")
+                                                        : jmespath.search(arrayConfigAtividades['unidades'], "[?selected==`true`] | [0]");
+                            arrayConfigAtivUnidade = (arrayConfigUnidadeSeleted !== null) ? arrayConfigUnidadeSeleted : arrayConfigAtivUnidade;
 
                             arrayNomenclaturas = arrayConfigAtividades['nomenclaturas'];
                             initNameConst('set');
@@ -299,24 +337,65 @@ function getServerAtividades(param, mode) {
                                 });
                                 arrayConfigAtividades.usuarios = arrayUsuarios;
                             }
-
                             
-                            var resultAtivData = ativData['demandas'];
-                            var resultAtivDataProc = ativData['demandas_processo'];
-                                arrayAtividadesPro = resultAtivData;
-                                arrayAtividadesProcPro = resultAtivDataProc;
+                            if (typeof ativData['demandas'] !== 'undefined' && ativData['demandas'] !== null) {
+                                if (param.last_update) {
+                                    appendDataDemandaOnLocalArray(ativData['demandas'], 'demandas');
+                                } else {
+                                    arrayAtividadesPro = ativData['demandas'];
+                                }
+                            }
+                            if (typeof ativData['demandas_processo'] !== 'undefined' && ativData['demandas_processo'] !== null) {
+                                arrayAtividadesProcPro = ativData['demandas_processo'];
+                            }
+                            if (typeof ativData['demandas_excluidas'] !== 'undefined' && ativData['demandas_excluidas'] !== null && ativData['demandas_excluidas'].length > 0) {
+                                $.each(ativData['demandas_excluidas'], function(i, v){
+                                    removeRowsPanelAtividades(v.id_demanda);
+                                });
+                            }
+
                                 checkLoadAtividadesProcPro = true;
                             var arrayAtividades = ($('#ifrArvore').length > 0) ? arrayAtividadesProcPro : arrayAtividadesPro;
                             
-                            localStorageStorePro('configDataAtividadesPro', resultAtivData);
-                            localStorageStorePro('configDataAtividadesProcPro', resultAtivDataProc);
-                            initPanelAtividades(ativData);
+                            hybridStorageStorePro('configDataAtividadesPro', arrayAtividadesPro);
+                            hybridStorageStorePro('configDataAtividadesProcPro', arrayAtividadesProcPro);
+                            hybridStorageStorePro('configDataAtivUnidadePro', arrayConfigAtivUnidade);
+                            storeLocalDataConfigArray(arrayConfigAtividades);
+
+                            lastUpdateAtividades = (getOptionsPro('panelLabPro') && typeof ativData['last_update'] !== 'undefined' && ativData['last_update']) ? ativData['last_update'] : lastUpdateAtividades;
+                            hybridStorageStorePro('lastUpdateAtividades', lastUpdateAtividades);
+
+                            var ativDataPanel = false;
+                            if (typeof ativData === 'object' && ativData !== null) {
+                                if (param.last_update) {
+                                    $('.panelHome').find('.iconAtividade_update i').removeClass('fa-spin');
+                                    if (typeof ativData['demandas_processo'] !== 'undefined' && ativData['demandas_processo'] !== null && ativData['demandas_processo'].length > 0) {
+                                        ativDataPanel = {
+                                            demandas: arrayAtividadesPro, 
+                                            demandas_processo: arrayAtividadesProcPro, 
+                                            padrao: arrayConfigAtividades,
+                                            last_update: lastUpdateAtividades,
+                                            status: 1
+                                        };
+                                        initPanelAtividades(ativDataPanel);
+                                    }
+                                    if (typeof ativData['demandas'] !== 'undefined' && ativData['demandas'] !== null && ativData['demandas'].length > 0) {
+                                        getRowsPanelAtividades(ativData['demandas'], $('#tabelaAtivPanel table tbody'));
+                                    }
+                                    setAtividadesUser();
+                                } else {
+                                    arrayConfigAtividades = ativData['padrao'];
+                                    ativDataPanel = ativData;
+                                    initPanelAtividades(ativDataPanel);
+                                }
+                            }
+
                             getInsertIconAtividade();  
                             getProfileAtiv();
                             resetDialogBoxPro('configBoxPro');
                             repairPerfilSelectUnidade();
 
-                            console.log(ativData);
+                            console.log('initPanelAtividades', ativDataPanel);
 
                             if (typeof param.callback !== 'undefined' && param.callback) {
                                 if (param.callback.action == 'rate_atividade') {
@@ -336,7 +415,7 @@ function getServerAtividades(param, mode) {
                             updatePriorityKanbanItens(ativData['board'], 'update');
                             var resultAtivData = ativData['demandas'];
                                 arrayAtividadesPro = resultAtivData;
-                                localStorageStorePro('configDataAtividadesPro', resultAtivData);
+                                hybridStorageStorePro('configDataAtividadesPro', resultAtivData);
                         } else if (
                             mode == 'sign_documento' || 
                             mode == 'sign_cancel_documento' || 
@@ -441,6 +520,9 @@ function getServerAtividades(param, mode) {
                                         }
                                     }]);
                                 }
+                                if (mode == 'delete_atividade') {
+                                    removeRowsPanelAtividades(param.id_demanda);
+                                }
                         } else {
                             loadingButtonConfirm(false);
                         }
@@ -454,6 +536,88 @@ function getServerAtividades(param, mode) {
         });
     } else {
         $('#atividadesProActions').find('.iconAtividade_update i').removeClass('fa-spin');
+    }
+}
+function appendDataDemandaOnLocalArray(arrayServer, demandaType) {
+    var arrayLocal = (demandaType == 'demandas_processo') ? arrayAtividadesProcPro : arrayAtividadesPro;
+    if (arrayServer !== null && arrayServer.length > 0) {
+            $.each(arrayServer, function (i, v) {
+                var objIndexAtiv = (typeof arrayLocal === 'undefined' || arrayLocal == 0 || arrayLocal.length == 0) ? -1 : arrayLocal.findIndex((obj => obj.id_demanda == v.id_demanda));
+                if (objIndexAtiv !== -1) {
+                    arrayLocal[objIndexAtiv] = v;
+                    // console.log(demandaType, 'UPDATE', v);
+                } else if (typeof arrayLocal !== 'undefined' && arrayLocal != 0) {
+                    arrayLocal.push(v);
+                    // console.log(demandaType, 'PUSH', v);
+                }          
+                // console.log(demandaType, arrayLocal, v);
+            });
+    }
+    if (demandaType == 'demandas_processo') {
+        arrayAtividadesProcPro = arrayLocal;
+    } else {
+        arrayAtividadesPro = arrayLocal;
+    }
+}
+function storeLocalDataConfigArray(arrayConfig) {
+    if (typeof arrayConfig === 'object' && arrayConfig !== null) {
+        var list = [];
+        for (var propertyName in arrayConfig) {
+            hybridStorageStorePro('configDataAtividadesPadraoPro_'+propertyName, arrayConfig[propertyName]);
+            list.push(propertyName);
+        }
+        hybridStorageStorePro('configDataAtividadesPadraoPro', list);
+    }
+}
+function restoreLocalDataConfigArray() {
+    var arrayConfig = hybridStorageRestorePro('configDataAtividadesPadraoPro');
+    if (arrayConfig !== null) {
+        var arrayStore = [];
+        $.each(arrayConfig, function (i, v) {
+            var dataValue = hybridStorageRestorePro('configDataAtividadesPadraoPro_'+v);
+            if (dataValue !== null) {
+                arrayStore[v] = dataValue;
+            }
+        });
+        return arrayStore;
+    } else {
+        return false;
+    }
+}
+function removeLocalDataConfigArray() {
+    var arrayConfig = hybridStorageRestorePro('configDataAtividadesPadraoPro');
+    if (arrayConfig !== null) {
+        var arrayStore = [];
+        $.each(arrayConfig, function (i, v) {
+            var dataValue = hybridStorageRemovePro('configDataAtividadesPadraoPro_'+v);
+            if (dataValue !== null) {
+                arrayStore[v] = dataValue;
+            }
+        });
+        return arrayStore;
+    } else {
+        return false;
+    }
+}
+function appendDataConfigOnLocalArray(arrayServer) {
+    if (typeof arrayServer === 'object' && arrayServer !== null) {
+        for (var propertyName in arrayServer) {
+            if (arrayServer.hasOwnProperty(propertyName) && arrayServer[propertyName].length > 0) {
+                var arrayLocal = arrayServer[propertyName];
+                    $.each(arrayLocal, function (i, v) {
+                        var primarykey = v.primarykey;
+                        var objIndexAtiv = (typeof arrayConfigAtividades[propertyName] === 'undefined' || arrayConfigAtividades[propertyName] == 0 || arrayConfigAtividades[propertyName].length == 0) ? -1 : arrayConfigAtividades[propertyName].findIndex((obj => obj[primarykey] == v[primarykey]));
+                        if (objIndexAtiv !== -1) {
+                            arrayConfigAtividades[propertyName][objIndexAtiv] = v;
+                            // console.log(propertyName, 'UPDATE', v);
+                        } else if (typeof arrayConfigAtividades[propertyName] !== 'undefined' && arrayConfigAtividades[propertyName] != 0) {
+                            arrayConfigAtividades[propertyName].push(v);
+                            // console.log(propertyName, 'PUSH', v);
+                        }          
+                        // console.log(propertyName, arrayConfigAtividades[propertyName], v);
+                    });
+            }
+        }
     }
 }
 function loopRepairKanbanPinMoveCard() {
@@ -487,10 +651,12 @@ function repairPerfilSelectUnidade() {
         
         });
         setOptionsPro('perfilAtividadesSelected', sigla_unidade);
+        console.log('perfilAtividadesSelected', sigla_unidade);
     }
 }
 function failureScreen(data, textStatus) {
     var dataResponse = $("<div/>").html(data.responseText).text();
+        dataResponse = (dataResponse) ? dataResponse.trim() : '';
     var htmlReportError =   '<p style="margin: 10px 0;">'+
                             '   <span>'+
                             '       <a class="newLink" onclick="openErrorReport(this)" style="font-size: 9pt;cursor: pointer;">'+
@@ -498,7 +664,7 @@ function failureScreen(data, textStatus) {
                             '           Relat\u00F3rio de erros'+
                             '           <i class="fas fa-angle-double-right" style="font-size: 100%;"></i>'+
                             '       </a>'+
-                            (checkCapacidade('report_errors') ?
+                            (checkCapacidade('report_errors') && dataResponse != '' ?
                             '       <a class="newLink sendReport" onclick="sendErrorReport(this)" data-send="false" style="font-size: 9pt;cursor: pointer;float: right;">'+
                             '           <i class="fas fa-paper-plane" style="font-size: 100%;"></i> '+
                             '           <span class="labelLink">Notificar o Administrador</span>'+
@@ -509,7 +675,7 @@ function failureScreen(data, textStatus) {
                             '       '+dataResponse+
                             '   </pre>'+
                             '</p>';
-    var textError = (textStatus === 'timeout') ? 'Erro ao receber sua informa\u00E7\u00F5es do servidor de dados. Tente novamente mais tarde. ('+textStatus+')' : 'Erro ao enviar sua informa\u00E7\u00F5es. Tente novamente mais tarde ou notifique o administrador.'+htmlReportError;
+    var textError = (textStatus === 'timeout' || dataResponse == '') ? 'Erro ao receber sua informa\u00E7\u00F5es do servidor de dados. Tente novamente mais tarde. ('+textStatus+')' : 'Erro ao enviar sua informa\u00E7\u00F5es. Tente novamente mais tarde ou notifique o administrador.'+htmlReportError;
     alertaBoxPro('Error', 'exclamation-triangle', textError);
 }
 function sendErrorReport(this_) {
@@ -545,49 +711,43 @@ function getChartDemandas(param) {
         param.action = action;
         param.id_user = (param.id_user) ? param.id_user : 0;
         getServerAtividades(param, action);
+        $('.panelHomePro .iconAtividade_update i').addClass('fa-spin');
 }
 function changeChartAtiv(this_) {
     var _this = $(this_);
     var _parent = _this.closest('#chartAtivActions');
     var elem_user = _parent.find('#selectChartUserAtiv');
-    var id_user = elem_user.val();
-        id_user = parseInt(id_user);
-    var elem_unidade = _parent.find('#selectChartUnidadeAtiv');
-    var id_unidade = elem_unidade.val();
-        id_unidade = parseInt(id_unidade);
     var elem_programa = _parent.find('#selectChartProgramasAtiv');
+
+    if (_this.attr('id') == 'selectChartProgramasAtiv') {
+        elem_user.val('').chosen("destroy").chosen({
+            placeholder_text_single: ' ',
+            no_results_text: 'Nenhum resultado encontrado'
+        });
+        forcePlaceHoldChosen();
+    }
+
+    var id_user = elem_user.val();
+        id_user = (id_user !== null) ? parseInt(id_user) : 0;
+
     var id_programa = elem_programa.val();
-        id_programa = parseInt(id_programa);
-    var sigla_unidade = (_this.data('type') == 'unidade')
-            ? elem_unidade.find('option:selected').data('label')
-            : elem_user.find('option:selected').data('label');
+        id_programa = (typeof elem_programa !== 'undefined' && typeof id_programa !== 'undefined' && id_programa !== null) ? parseInt(id_programa) : 0;
+
+    var id_unidade = elem_programa.find('option:selected').data('id_unidade');
+        id_unidade = (typeof elem_programa !== 'undefined' && typeof id_unidade !== 'undefined' && id_unidade !== null) ? parseInt(id_unidade) : 0;
+
+    var sigla_unidade = (typeof elem_programa !== 'undefined') ? elem_programa.find('option:selected').data('label') : arrayConfigAtivUnidade.sigla_unidade;
 
     var _param = {id_user: id_user, id_unidade: id_unidade, id_programa: id_programa, sigla_unidade: sigla_unidade};
         _parent.find('.loadChartUserAtiv').remove();
         _parent.append('<i class="fas fa-spinner fa-spin loadChartUserAtiv" style="float: right; font-size: 12pt; margin-top: 8px;"></i>');
 
-        elem_user.find('optgroup').each(function(){
-            if (sigla_unidade && sigla_unidade != '' && $(this).attr('label') != sigla_unidade) {
-                $(this).prop('disabled', true);
-            } else {
-                $(this).prop('disabled', false);
-            }
-        });
-        /*
-        elem_unidade.find('option').each(function(){
-            if (sigla_unidade && sigla_unidade != '' && $(this).attr('data-label') != sigla_unidade) {
-                $(this).prop('disabled', true);
-            } else {
-                $(this).prop('disabled', false);
-            }
-        });
-        */
-
     getChartDemandas(_param);
-    setOptionsPro('selectChartAtiv', {id_user: id_user, id_unidade: id_unidade, id_programa: id_programa, sigla_unidade: sigla_unidade});
+    setOptionsPro('selectChartAtiv', _param);
 }
 function setChartAtividades(data, mode) {
     $('.loadChartUserAtiv').remove();
+    $('.panelHomePro .iconAtividade_update i').removeClass('fa-spin');
     if (mode == 'chart_demandas') {
         if (typeof data.demandasmes !== 'undefined' && data.demandasmes) { setChartDemandasAtiv(data.demandasmes); }
         if (typeof data.estoque !== 'undefined' && data.estoque) { setChartDemandasEstoqueAtiv(data.estoque); }
@@ -598,32 +758,82 @@ function setChartAtividades(data, mode) {
         if (typeof data.documentos !== 'undefined' && data.documentos) { setChartDemandasDocumentosAtiv(data.documentos); }
         if (typeof data.produtividade !== 'undefined' && data.produtividade) { setChartDemandasProdutividadeAtiv(data.produtividade); }
         if (typeof data.produtividademes !== 'undefined' && data.produtividademes) { setChartDemandasProdutividadeMesAtiv(data.produtividademes); }
-        /*
-        */
-        if (typeof data.programas !== 'undefined' && data.programas) { setChartProgramasAtiv(data.programas); }
-        getChartPlanosTrabalho();
+        
+        if (typeof data.programas !== 'undefined' && data.programas) { 
+            var id_programa_selected = (typeof data.programa !== 'undefined' && data.programa !== null && data.programa.hasOwnProperty('id_programa') && data.programa.id_programa != 0) ? data.programa.id_programa : false;
+            setSelectProgramas(data.programas, 'selectChartProgramasAtiv', 'selectChartAtiv', id_programa_selected); 
+            console.log('id_programa_selected', id_programa_selected);
+        }
+        if (typeof data.planos !== 'undefined' && data.planos) { setChartUsuariosAtiv(data.planos); }
+        getChartPlanosTrabalho(data.planos);
         initPanelResize('#chartSectionDistribuicao', 'chartDistribuicao');
         forcePlaceHoldChosen();
     }
 }
-function setChartProgramasAtiv(data) {
+function setSelectProgramas(data, idElem = 'selectChartProgramasAtiv', optionStore = 'selectChartAtiv', id_selected = false) {
     var listUnidadesPrograma = jmespath.search(data,"[*].id_unidade");
         listUnidadesPrograma = (listUnidadesPrograma !== null) ? uniqPro(listUnidadesPrograma) : 0;
 
-    var elem_unidade = $('#selectChartUnidadeAtiv');
     var optionSelectPrograma =  '<option value="0" data-label="">&nbsp;</option>';
     if (listUnidadesPrograma.length > 1) {
         $.each(listUnidadesPrograma, function(index, value){
             var arrayProgramas = jmespath.search(data, "[?id_unidade==`"+value+"`]");
-            var disabled = (arrayProgramas[0].sigla_unidade != '' && elem_unidade.find('option:selected').data('label') != arrayProgramas[0].sigla_unidade) ? 'disabled' : '';
-            optionSelectPrograma += '<optgroup label="Programas de Gest\u00E3o: '+arrayProgramas[0].sigla_unidade+'" '+disabled+'>';
-            optionSelectPrograma += $.map(arrayProgramas, function(v){ return (getOptionsPro('selectChartAtiv') && getOptionsPro('selectChartAtiv').id_programa == v.id_programa) ? '<option value="'+v.id_programa+'"  data-label="'+v.sigla_unidade+'" selected>'+v.sigla_unidade+'</option>' : '<option value="'+v.id_programa+'"  data-label="'+v.sigla_unidade+'">'+moment(v.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(v.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</option>' }).join('');
+            optionSelectPrograma += '<optgroup label="'+arrayProgramas[0].sigla_unidade+' - '+arrayProgramas[0].nome_unidade+'">';
+            optionSelectPrograma += $.map(arrayProgramas, function(v){ 
+                // console.log(v.id_programa,id_selected);
+                var selected = ((id_selected && v.id_programa == id_selected) || (getOptionsPro(optionStore) && getOptionsPro(optionStore).id_programa == v.id_programa)) ? 'selected' : '';
+                return '<option value="'+v.id_programa+'" data-label="'+v.sigla_unidade+'" data-id_unidade="'+v.id_unidade+'" '+selected+'>'+moment(v.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(v.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</option>';
+            }).join('');
             optionSelectPrograma += '</optgroup>';
         });
     } else {
-        optionSelectPrograma += $.map(jmespath.search(data, "[]"), function(v){ return (getOptionsPro('selectChartAtiv') && getOptionsPro('selectChartAtiv').id_programa == v.id_programa) ? '<option value="'+v.id_programa+'"  data-label="'+v.sigla_unidade+'" selected>'+v.sigla_unidade+'</option>' : '<option value="'+v.id_programa+'"  data-label="'+v.sigla_unidade+'">'+moment(v.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(v.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</option>' }).join('');
+        optionSelectPrograma += $.map(jmespath.search(data, "[]"), function(v){ 
+            var selected = ((id_selected && v.id_programa == id_selected) || (getOptionsPro(optionStore) && getOptionsPro(optionStore).id_programa == v.id_programa)) ? 'selected' : '';
+            return '<option value="'+v.id_programa+'"  data-label="'+v.sigla_unidade+'" '+selected+'>'+moment(v.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(v.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</option>';
+        }).join('');
     }
-    // $('#selectChartProgramasAtiv').html(optionSelectPrograma);
+    $('#'+idElem).html(optionSelectPrograma).chosen("destroy").chosen({
+        placeholder_text_single: ' ',
+        no_results_text: 'Nenhum resultado encontrado'
+    });
+    $('#'+idElem+'_chosen').addClass('chosen-min');
+    forcePlaceHoldChosen();
+}
+function setChartUsuariosAtiv(data = false) {
+    var arrayPlanos = (data) ? data : arrayConfigAtividades.planos;
+    var unidadesPlanos = (typeof data !== 'undefined' && data != 0 && data.length > 0) 
+                            ? uniqPro(jmespath.search(data, "[?sigla_unidade].sigla_unidade"))
+                            : [];
+    var optionSelectUser = '<option value="0" data-label="">&nbsp;</option>';
+    if (unidadesPlanos.length > 1) {
+        $.each(unidadesPlanos, function(index, sigla_unidade){
+            var arrayResp = jmespath.search(arrayPlanos, "[?sigla_unidade=='"+sigla_unidade+"']");
+            var uniqUser = [];
+            optionSelectUser += '<optgroup label="'+sigla_unidade+'">';
+            optionSelectUser += $.map(arrayResp, function(v){ 
+                var selected = (getOptionsPro('selectChartAtiv') && getOptionsPro('selectChartAtiv').id_user == v.id_user) ? 'selected' : '';
+                if (!uniqUser.includes(v.id_user)) {
+                    uniqUser.push(v.id_user);
+                    return '<option value="'+v.id_user+'"  data-label="'+sigla_unidade+'" '+selected+'>'+v.apelido+'</option>';
+                }
+        }).join('');
+            optionSelectUser += '</optgroup>';
+        });
+    } else {
+        var uniqUser = [];
+        optionSelectUser += $.map(jmespath.search(arrayPlanos, "[]"), function(v){ 
+            var selected = (getOptionsPro('selectChartAtiv') && getOptionsPro('selectChartAtiv').id_user == v.id_user) ? 'selected' : '';
+            if (!uniqUser.includes(v.id_user)) {
+                uniqUser.push(v.id_user);
+                return '<option value="'+v.id_user+'"  data-label="'+unidadesPlanos+'" '+selected+'>'+v.apelido+'</option>';
+            }
+        }).join('');
+    }
+    $('#selectChartUserAtiv').html(optionSelectUser).chosen("destroy").chosen({
+        placeholder_text_single: ' ',
+        no_results_text: 'Nenhum resultado encontrado'
+    });
+    $('#selectChartUserAtiv_chosen').addClass('chosen-min');
 }
 function setChartDemandasAtiv(data) {
         var idElem = 'chartAtivPanelDemandas';
@@ -978,20 +1188,29 @@ function setChartHbar(idElem, datasets, labels, title) {
     });
     getChartLabelItemStore(idElem, chartHBar);
 }
-function getChartPlanosTrabalho() {
+function getChartPlanosTrabalho(data = false) {
     var idElem = 'chartAtivPanelPlanos';
 
-    var id_unidade = $('#selectChartUnidadeAtiv').val();
+    var selectChart = getOptionsPro('selectChartAtiv');
+    var selectPrograma = $('#selectChartProgramasAtiv');
+    var selectUnidadeID = selectPrograma.find('option:selected').data('id_unidade');
+        selectUnidadeID = (typeof selectUnidadeID !== 'undefined' && selectUnidadeID !== null) ? selectUnidadeID : 0;
+    var id_unidade = (typeof selectChart !== 'undefined' && selectChart && selectChart.id_unidade !== null) ? selectChart.id_unidade : selectUnidadeID;
+
     var qunidade = (id_unidade != 0) ? "?id_unidade==`"+id_unidade+"`" : "*";
     var id_user = $('#selectChartUserAtiv').val();
     var quser = (id_user != 0) ? "?id_user==`"+id_user+"`" : "*";
-    var planosSelected = jmespath.search(arrayConfigAtividades.planos, "["+qunidade+"] | ["+quser+"] | [?data_fim=='0000-00-00 00:00:00']"); 
+    var planosSelected = (data) ? jmespath.search(data, "["+qunidade+"] | ["+quser+"] | [?data_fim=='0000-00-00 00:00:00']") : null;
+        planosSelected = (planosSelected !== null && planosSelected.length > 0 ) ? planosSelected : false;
+    var elemChart = $('#'+idElem);
 
-    if (planosSelected !== null) {
-        var height = (planosSelected !== null && planosSelected.length > 1 ) 
+    if (planosSelected) {
+        var height = (planosSelected.length > 1 ) 
                         ? 20*(planosSelected.length+1) 
                         : 80;
-        $('#'+idElem).html('<canvas id="'+idElem+'_canvas" width="380" height="'+height+'"></canvas>');
+        var infoPlanos = '<div style="position: absolute;right: 0;" class="infoPlanosChart"><a class="newLink" onclick="dialogNomenclaturasPlanos()"><i class="fas fa-info-circle"></i>Entenda as nomenclaturas</a></div>';
+            elemChart.find('.infoPlanosChart').remove();
+            elemChart.html(infoPlanos+'<canvas id="'+idElem+'_canvas" width="380" height="'+height+'"></canvas>');
         var element = $('#'+idElem+'_canvas');
         new Chart(element).destroy();
         var dataset = [{
@@ -1020,12 +1239,17 @@ function getChartPlanosTrabalho() {
                 backgroundColor: chartColors.light_grey,
                 data: jmespath.search(planosSelected, "[].tempo_proporcional")
             }];
-        
+        var id_unidade_perfil = (id_unidade && id_unidade > 0) ? id_unidade : arrayConfigAtivUnidade.id_unidade;
+        var mostrar_notas = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+id_unidade_perfil+"`] | [0].config.planos.mostrar_notas");
+        var apelido_display = (mostrar_notas !== null && mostrar_notas) ? 'apelido_avaliacao' : 'apelido';
         var planos = jmespath.search(planosSelected, "{tempo_projetado: max([*].tempo_pactuado), tempo_total: max([*].tempo_proporcional)}");
+
+            console.log('apelido_display',apelido_display, id_unidade, mostrar_notas, id_unidade_perfil);
+
         var chartTempoPlano = new Chart(element, {
             type: 'horizontalBar',
             data: {
-                    labels: jmespath.search(planosSelected, "[].apelido"),
+                    labels: jmespath.search(planosSelected, "[]."+apelido_display),
                     datasets: dataset
 
                 },
@@ -1082,7 +1306,72 @@ function getChartPlanosTrabalho() {
             }
         });
         getChartLabelItemStore(idElem, chartTempoPlano);
+    } else {
+        elemChart.html('<div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div>');
     }
+}
+function dialogNomenclaturasPlanos() {
+
+    var htmlBox =   '<div id="boxInfoPlanos" class="atividadeWork">'+
+                    '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow">'+
+                    '      <tr>'+
+                    '          <td style="text-align: left;width: 200px;" class="label">'+
+                    '               <label style="background-color: '+chartColors.light_grey+';padding: 5px 8px;border-radius: 5px;"><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i>Tempo do Plano:</label>'+
+                    '           </td>'+
+                    '           <td style="text-align: left;">'+
+                    '               <label>Tempo l\u00EDquido estabelecido para o cumprimento do plano de trabalho (meta), j\u00E1 reduzido pelos afastamentos e dias n\u00E3o-\u00FAteis (tempo proporcional).</label>'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '      <tr>'+
+                    '          <td style="text-align: left;" class="label">'+
+                    '               <label style="background-color: '+chartColors.blue+';color:#fff;padding: 5px 8px;border-radius: 5px;"><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Tempo Pactuado:</label>'+
+                    '           </td>'+
+                    '           <td style="text-align: left;">'+
+                    '               <label>Somat\u00F3rio dos tempos acordados de todas as demandas <u>cadastradas</u> dentro do plano de trabalho. Em outras palavras, significa o total de tempos a serem entregues pela usu\u00E1rio nas demandas criadas no plano.</label>'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '      <tr>'+
+                    '          <td style="text-align: left;" class="label">'+
+                    '               <label style="background-color: '+chartColors.yellow+';padding: 5px 8px;border-radius: 5px;"><i class="iconPopup iconSwitch fas fa-hourglass-half cinzaColor"></i>Tempo Despendido:</label>'+
+                    '           </td>'+
+                    '           <td style="text-align: left;">'+
+                    '               <label>Somat\u00F3rio dos tempo de execu\u00E7\u00E3o de todas as demandas <u>entregues</u> dentro do plano de trabalho. Em outros termos, representa o total de tempos de dura\u00E7\u00E3o das demandas realizadas no plano.</label>'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '      <tr>'+
+                    '          <td style="text-align: left;" class="label">'+
+                    '               <label style="background-color: '+chartColors.green+';color:#fff;padding: 5px 8px;border-radius: 5px;"><i class="iconPopup iconSwitch fas fa-star cinzaColor"></i>Tempo Homologado:</label>'+
+                    '           </td>'+
+                    '           <td style="text-align: left;">'+
+                    '               <label>Somat\u00F3rio dos tempo validados pelo gestor em todas as demandas <u>avaliadas</u> dentro do plano de trabalho. Quer dizer, total de tempos aceitos das demandas chanceladas no plano. '+
+                    '                   <br>Caso a demanda seja aceita (nota final da avalia\u00E7\u00E3o maior ou igual a 5 (cinco)), o <u>tempo homologado ser\u00E1 igual ao tempo pactuado</u> da demanda. <br>Caso n\u00E3o aceita, o tempo homologado ser\u00E1 igual a 0 (zero).</label>'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '      <tr>'+
+                    '          <td style="text-align: left;" class="label">'+
+                    '               <label style="background-color: '+chartColors.silver+';padding: 5px 8px;border-radius: 5px;"><i class="iconPopup iconSwitch fas fa-history cinzaColor"></i>Tempo Programado:</label>'+
+                    '           </td>'+
+                    '           <td style="text-align: left;">'+
+                    '               <label>Tempo estimado da meta do plano de trabalho caso ele encerrasse na data de hoje. Ou seja, \u00E9 o valor m\u00EDnimo ideal do Tempo Homologado para que o plano de trabalho seja considerado "em dia".</label>'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '   </table>'+
+                    '</div>';
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+        .dialog({
+            title: 'Nomenclaturas do Programa de Gest\u00E3o por Resultado',
+            width: 780,
+            open: function() { 
+                updateButtonConfirm(this, true);
+            },
+            close: function() { 
+                $('#boxInfoPlanos').remove();
+                resetDialogBoxPro('dialogBoxPro');
+            },
+    });
 }
 function getSingleChartTempoPlano(element, plano, labels = false) {
     var dataset = [{
@@ -1407,10 +1696,13 @@ function changeViewStatesAtiv(this_){
         setOptionsPro('panelAtividadesViewSelf',_this.is(':checked'));
     } else if (data.type == 'view_ativ_sub') {
         setOptionsPro('panelAtividadesViewSubordinada',_this.is(':checked'));
+    } else if (data.type == 'view_ativ_lab') {
+        changePanelLabPro(this_);
     } else if (data.type == 'sync_unidades') {
         setOptionsPro('panelAtividadesViewSyncUnidade',_this.is(':checked'));
         perfilAtividadesSelected = $('#selInfraUnidades').val().trim();
     }
+    removeLocalDataAtiv();
     getAtividades();
     _this.closest('td').addClass('editCellLoading');
 }
@@ -1442,6 +1734,7 @@ function changeBaseDadosAtiv(this_){
         removeOptionsPro('perfilAtividadesSelected');
         setOptionsPro('configBaseSelectedPro_atividades',perfilSelected);
         localStorageStorePro('configBasePro_atividades', {URL_API: perfilLoginAtiv.URL_API, KEY_USER: perfilLoginAtiv.KEY_USER});
+        removeLocalDataAtiv(true);
         if (userHashAtiv == '' && perfilLoginAtiv.conexaoTipo == 'googleapi') {
             setPerfilLoginGoogle(_this);
         } else {
@@ -1451,6 +1744,7 @@ function changeBaseDadosAtiv(this_){
     }
 }
 function updateAtividade_(this_){
+    // removeLocalDataAtiv();
     resetDialogBoxPro('dialogBoxPro');
     updateAtividade(this_);
 }
@@ -1482,20 +1776,32 @@ function setAtividadesProcessoHome(storeAtividades = arrayAtividadesProcPro) {
 function setAtividadesUser() {
     if ($('#frmProcedimentoControlar').length > 0) {
         var unidade = arrayConfigAtivUnidade;
-        var plano = jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | [0]");
+        var plano = (
+                        typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null &&
+                        typeof arrayConfigAtividades.planos !== 'undefined' && arrayConfigAtividades.planos !== null && arrayConfigAtividades.planos.length > 0 &&
+                        typeof arrayConfigAtividades.perfil !== 'undefined' && arrayConfigAtividades.perfil !== null 
+                    ) ? jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | [0]") : null;
+        var filterAtivPanel = $('#tabelaAtivPanel').find('.filterTablePro');
         if (plano !== null) {
                 var target = $('#atividadesProDiv');
                 target.find('.atividadesProStatus').remove();
                 var htmlUser =  '<div id="atividadesStatus" class="atividadesProStatus">'+
-                    '    <div id="statusUser"><canvas id="chartStatusUser" width="300" height="70"></canvas></div>'+
+                    '    <div id="statusUser"><canvas id="chartStatusUser" width="500" height="70"></canvas></div>'+
                     '</div>';
                 target.prepend(htmlUser).css('margin-top', '70px');
                 var element = $('#chartStatusUser');
-                var chartStatusUser = getSingleChartTempoPlano(element, plano, plano.apelido);
-                chartStatusUser.options.scales.xAxes[0].ticks.display = false;
-                chartStatusUser.options.legend.display = false;
-                chartStatusUser.options.title = {display: true, text: unidade.nome_unidade+' - '+unidade.sigla_unidade};
-                chartStatusUser.update();
+                waitLoadProSimple(element, function(){
+                    var mostrar_notas = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+plano.id_unidade+"`] | [0].config.planos.mostrar_notas");
+                    var apelido_display = (mostrar_notas !== null && mostrar_notas) ? 'apelido_avaliacao' : 'apelido';
+                    var chartStatusUser = getSingleChartTempoPlano(element, plano, plano[apelido_display]);
+                    chartStatusUser.options.scales.xAxes[0].ticks.display = false;
+                    chartStatusUser.options.legend.display = false;
+                    chartStatusUser.options.title = {display: true, text: unidade.nome_unidade+' - '+unidade.sigla_unidade};
+                    chartStatusUser.update();
+                });
+                filterAtivPanel.css('top','120px');
+        } else {
+            filterAtivPanel.css('top','52px');
         }
     }
 }
@@ -1506,8 +1812,9 @@ function setToolbarAtiv() {
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="edit_atividade"" data-subaction="notify_atividade"><i style="margin: 0 5px;" class="fas fa-envelope azulColor"></i> <span class="info" alt="Gerar Notifica\u00E7\u00E3o">Gerar Notifica\u00E7\u00E3o</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="delete_atividade"><i style="margin: 0 5px;" class="fas fa-trash-alt vermelhoColor"></i> <span class="info" alt="Excluir '+__.Demanda+'">Excluir '+__.Demanda+'</span></a>'+
 
-                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade" data-action="pause_atividade"><i style="margin: 0 5px;" class="fas fa-pause-circle laranjaColor"></i> <span class="info" alt="Inserir '+__.Paralisacao+'">Inserir '+__.Paralisacao+'</span></a>'+
-                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade" data-action="extend_atividade"><i style="margin: 0 5px;" class="fas fa-retweet azulColor"></i> <span class="info" alt="'+__.Prorrogar+' Prazo">'+__.Prorrogar+' Prazo</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade pause_atividade" data-action="pause_atividade"><i style="margin: 0 5px;" class="fas fa-pause-circle laranjaColor"></i> <span class="info" alt="Inserir '+__.Paralisacao+'">Inserir '+__.Paralisacao+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade play_atividade" data-action="pause_atividade"><i style="margin: 0 5px;" class="fas fa-play-circle azulColor"></i> <span class="info" alt="Inserir '+__.Retomar+' '+__.Demanda+'">'+__.Retomar+' '+__.Demanda+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade paused_atividade" data-action="extend_atividade"><i style="margin: 0 5px;" class="fas fa-retweet azulColor"></i> <span class="info" alt="'+__.Prorrogar+' Prazo">'+__.Prorrogar+' Prazo</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade rate_atividade" data-action="variation_atividade"><i style="margin: 0 5px;" class="fas fa-graduation-cap azulColor"></i> <span class="info" alt="Alterar '+__.Complexidade+'">Alterar '+__.Complexidade+'</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade rate_atividade" data-action="type_atividade"><i style="margin: 0 5px;" class="fas fa-clipboard-list azulColor"></i> <span class="info" alt="Atribuir '+__.Atividade+'">Atribuir '+__.Atividade+'</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade" data-action="start_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar In\u00EDcio">Cancelar In\u00EDcio</span></a>'+
@@ -1517,6 +1824,8 @@ function setToolbarAtiv() {
                         
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="send_atividade" data-action="rate_edit_atividade"><i style="margin: 0 5px;" class="fas fa-pencil-alt azulColor"></i> <span class="info" alt="Editar Avalia\u00E7\u00E3o">Editar Avalia\u00E7\u00E3o</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="send_atividade" data-action="rate_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar Avalia\u00E7\u00E3o">Cancelar Avalia\u00E7\u00E3o</span></a>'+
+                        
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="archive_atividade" data-action="send_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar Arquivamento">Cancelar Arquivamento</span></a>'+
                         '<div>';
     return htmlToolbarDoc;
 }
@@ -1599,32 +1908,23 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     }
     var idOrder = (getOptionsPro('orderPanelHome') && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='atividadesPro'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='atividadesPro'].index | [0]") : '';
 
-    var unidadesPlanos = (typeof arrayConfigAtividades.planos !== 'undefined' && arrayConfigAtividades.planos != 0 && arrayConfigAtividades.planos.length > 0) 
-                            ? uniqPro(jmespath.search(arrayConfigAtividades.planos, "[?sigla_unidade].sigla_unidade"))
-                            : [];
-    var countUnidadesPlanos = (typeof arrayConfigAtividades.planos !== 'undefined' && arrayConfigAtividades.planos.length > 0) ? unidadesPlanos.length : 0;
-    var optionSelectUser = '';
-    if (countUnidadesPlanos > 1) {
-        $.each(unidadesPlanos, function(index, sigla_unidade){
-            var arrayResp = jmespath.search(arrayConfigAtividades.planos, "[?sigla_unidade=='"+sigla_unidade+"']");
-            optionSelectUser += '<optgroup label="'+sigla_unidade+'">';
-            optionSelectUser += $.map(arrayResp, function(v){ return (getOptionsPro('selectChartAtiv') && getOptionsPro('selectChartAtiv').id_user == v.id_user) ? '<option value="'+v.id_user+'"  data-label="'+sigla_unidade+'" selected>'+v.apelido+'</option>' : '<option value="'+v.id_user+'"  data-label="'+sigla_unidade+'">'+v.apelido+'</option>' }).join('');
-            optionSelectUser += '</optgroup>';
-        });
-    } else {
-        optionSelectUser += $.map(jmespath.search(arrayConfigAtividades.planos, "[]"), function(v){ return (getOptionsPro('selectChartAtiv') && getOptionsPro('selectChartAtiv').id_user == v.id_user) ? '<option value="'+v.id_user+'"  data-label="'+unidadesPlanos+'" selected>'+v.apelido+'</option>' : '<option value="'+v.id_user+'"  data-label="'+unidadesPlanos+'">'+v.apelido+'</option>' }).join('');
-    }
-    var selectListUsers = '<select id="selectChartUserAtiv" data-type="user" onchange="changeChartAtiv(this)" style="max-width: 160px; float: right;" class="selectPro chosen-min" onchange="changeChartAtiv(this);" data-placeholder="Filtrar por usu\u00E1rio" ><option value="0" data-label="">&nbsp;</option>'+optionSelectUser+'</select>';
-
-    var selectListProgramas = '<select id="selectChartProgramasAtiv" data-type="programas" onchange="changeChartAtiv(this)" style="max-width: 160px; float: right;" class="selectPro  chosen-min" onchange="changeChartAtiv(this);"><option value="0" data-label="">&nbsp;</option></select>';
-
+    var selectListUsers = '<select id="selectChartUserAtiv" data-type="user" onchange="changeChartAtiv(this)" style="max-width: 160px; float: right;" class="selectPro chosen-min" onchange="changeChartAtiv(this);" data-placeholder="Filtrar por usu\u00E1rio" ><option value="0" data-label="">&nbsp;</option></select>';
+    
+    var selectListProgramas = '<select id="selectChartProgramasAtiv" data-type="programas" onchange="changeChartAtiv(this)" data-placeholder="Filtrar por programa de gest\u00E3o" style="max-width: 260px; width: 300px; float: right;" class="selectPro  chosen-min" onchange="changeChartAtiv(this);"><option value="0" data-label="">&nbsp;</option></select>';
+    /*
     var unidadeSuper = (typeof arrayConfigAtivUnidade !== 'undefined' && arrayConfigAtivUnidade !== null && arrayConfigAtivUnidade.hasOwnProperty('id_unidade')) ? arrayConfigAtivUnidade.id_unidade : 0;
     var unidadesWithDependecia = (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('unidades') && arrayConfigAtividades.unidades != 0) ? $.merge([arrayConfigAtivUnidade], jmespath.search(arrayConfigAtividades.unidades,"[?dependencia==`"+unidadeSuper+"`]")) : null;
     var optionSelectsUnidades = (unidadesWithDependecia !== null) ? getOptionSelectPerfil(unidadesWithDependecia, getOptionsPro('selectChartAtiv'), false) : '';
     var selectListUnidades = (optionSelectsUnidades == '') ? '' : '<select id="selectChartUnidadeAtiv" data-type="unidade" onchange="changeChartAtiv(this)" data-placeholder="Filtrar por unidade" style="max-width: 260px; float: right;" class="selectPro chosen-min"><option value="0" data-label="">&nbsp;</option>'+optionSelectsUnidades+'</select>';
-    
+    */
     var optionSelectsPerfil = (typeof arrayConfigAtividades.perfil !== 'undefined' && typeof arrayConfigAtividades.perfil.lotacoes_obj !== 'undefined') ? getOptionSelectPerfil(arrayConfigAtividades.perfil.lotacoes_obj, getOptionsPro('perfilAtividadesSelected')) : '';
     var selectListPerfilLotacao = (optionSelectsPerfil == '') ? '' : '<select data-type="perfil" onchange="changePerfilAtiv(this)" data-placeholder="Filtrar por usu\u00E1rio" style="max-width: 160px; float: right;" class="selectPro">'+optionSelectsPerfil+'</select>';
+
+    var urlGuiaUtilizacao = (typeof arrayConfigAtividades !== 'undefined' && typeof arrayConfigAtividades.perfil !== 'undefined' && typeof arrayConfigAtividades.perfil.id_entidade !== 'undefined') ? jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.guia_utilizacao") : null;
+        urlGuiaUtilizacao = (urlGuiaUtilizacao === null) ? urlGuiaUtilizacao : 'https://bit.ly/Guia-ANTAQPro';
+    var btnGuiaUtilizacao = '<a class="newLink iconAtividade_guia" href="'+urlGuiaUtilizacao+'" target="_blank" onmouseover="return infraTooltipMostrar(\'Guia de Utiliza\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                            '    <i class="fas fa-graduation-cap"></i>'+
+                            '</a>';
 
     var htmlPanelAtividades =   '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="atividadesPro" data-order="'+idOrder+'">'+
                                 '   <div class="infraBarraLocalizacao titlePanelHome">'+
@@ -1646,7 +1946,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '           <i class="fas fa-cog verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
                                 '           Configura\u00E7\u00F5es'+
                                 '       </span>'+
-                                '       <a class="newLink" id="atividadesProDiv_showIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="atividadesProDiv_showIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'show\'); getPanelAtividades_();" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
                                 '       <a class="newLink" id="atividadesProDiv_hideIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
                                 '   </div>'+
                                 '   <div id="atividadesProDiv" style="width: 98%; '+statusView+'">'+
@@ -1663,6 +1963,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-sync-alt"></i>'+
                                 '           </a>'+
+                                '           '+btnGuiaUtilizacao+
                                 '   	</div>'+
                                 (checkCapacidade('view_afastamento') ? 
                                 '   	<div id="afastamentosProActions" class="panelHome panelHomeAfastamento" style="'+(getOptionsPro('panelHomeView') == 'Afastamento' ? '' : 'display:none;')+' position: absolute; z-index: 101; left: 250px; width: calc(100% - 270px)">'+
@@ -1674,6 +1975,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-sync-alt"></i>'+
                                 '           </a>'+
+                                '           '+btnGuiaUtilizacao+
                                 (checkCapacidade('save_afastamento') ?
                                 '           <a class="newLink iconAfastamento_add" onclick="saveAfastamento(this)" onmouseover="return infraTooltipMostrar(\'Adicionar Afastamento\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;">'+
                                 '               <i class="fas fa-user-clock"></i>'+
@@ -1707,6 +2009,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-sync-alt"></i>'+
                                 '           </a>'+
+                                '           '+btnGuiaUtilizacao+
                                 (checkCapacidade('config_atividades') ? getHtmlActionsConfig('atividades') : '')+
                                 (checkCapacidade('config_planos') || checkCapacidade('config_self_planos') ? getHtmlActionsConfig('planos') : '')+
                                 (checkCapacidade('config_programas') ? getHtmlActionsConfig('programas') : '')+
@@ -1743,6 +2046,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '           <a class="newLink iconRelatorio_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-sync-alt"></i>'+
                                 '           </a>'+
+                                '           '+btnGuiaUtilizacao+
                                 '           <span class="modulesActions">'+
                                 '               <a class="newLink newLink_active iconBoxModules iconAtividade_view" onclick="changePanelHome(this)" style="font-size: 14pt;" data-value="Atividade">'+
                                 '                  <i class="fas fa-chevron-left cinzaColor"></i>'+
@@ -1766,7 +2070,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '   	    <div id="kanbanAtivPanel" class="kanbanAtividade" style="display:none; padding-top: 50px; position: relative;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
                                 '   	    <div id="chartAtivPanel" class="chartAtividade" style="display:none; padding-top: 20px; position: relative;">'+
                                 '   	        <div id="chartAtivActions" class="chartAtivPanelDiv" style="width: 100%;">'+
-                                '   	            '+selectListUsers+selectListUnidades+
+                                '   	            '+selectListUsers+selectListProgramas+
                                 '   	        </div>'+
                                 '   	        <div class="line-section">Distribui\u00E7\u00E3o</div>'+
                                 '   	        <div style="position: relative;">'+
@@ -1817,13 +2121,19 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     if (!getOptionsPro('panelHomeView') || getOptionsPro('panelHomeView') == 'Atividade') {  
         initFunctionsPanelAtiv();
     }
-    getRowsPanelAtividades(storeAtividades, $('#tabelaAtivPanel table tbody'));
+    if (sessionStorageRestorePro('configDataAtividadesHTML') !== null) {
+        $('#tabelaAtivPanel table tbody').html(sessionStorageRestorePro('configDataAtividadesHTML'));
+        setAtividadesUser();
+        initFunctionsPanelAtiv();
+    } else if (typeof storeAtividades !== 'undefined' && storeAtividades !== null && storeAtividades) {
+        getRowsPanelAtividades(storeAtividades, $('#tabelaAtivPanel table tbody'));
+    }
     initPanelAtividadesView();
 }
 function getBtnActionsAtividade(value, more_options = false) {
     var iconAtivEditHtml = actionsAtividade(value.id_demanda, 'icon', 'start');
     var btnActionAtiv = (iconAtivEditHtml && iconAtivEditHtml.hasOwnProperty('icon')) 
-                ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
+                ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;min-width: max-content;">'+
                     '   <a class="newLink info_noclick" style="font-size: 9pt;" onclick="parent.actionsAtividade('+value.id_demanda+', \'action\')">'+
                     '       <i class="'+iconAtivEditHtml.icon+'" style="padding-right: 3px;"></i>'+
                     '       '+iconAtivEditHtml.name+
@@ -1838,7 +2148,7 @@ function getBtnActionsAtividade(value, more_options = false) {
     return btnActionAtiv;
 }
 function getRowsPanelAtividades(storeAtividades, target) {
-    function getRowsPanelAtividades(value, index) {
+    function setRowsPanelAtividades(value, index) {
         var tagsAtiv = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? value.etiquetas.join(';') : '';
         var tagsAtivHtml = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? $.map(storeAtividades[index].etiquetas, function (i) { return getHtmlEtiqueta(i,'ativ') }).join('') : '';
         var tagsAtivClass = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? $.map(storeAtividades[index].etiquetas, function (i) { return 'tagTableName_'+normalizeNameTag(i); }).join(' ') : '';   
@@ -1938,12 +2248,26 @@ function getRowsPanelAtividades(storeAtividades, target) {
                 if (iconDateAtiv != '') { $(this).find('.atividadeBoxDisplay').append('<span class="dateboxDisplay" data-prazo-entrega="'+value.prazo_entrega+'">'+iconDateAtiv+'</span>') }
             });
         }
-        target.append(htmlTableAtividades);
+        var tr_demanda = target.find('tr[data-index="'+value.id_demanda+'"]');
+        if (tr_demanda.length > 0) {
+            tr_demanda.before(htmlTableAtividades).remove();
+        } else {
+            target.append(htmlTableAtividades);
+        }
     }
     function initRowsPanelAtividades(index) {
+        loadRowsPanelAtiv = true;
         target.trigger('updateAll');
-        console.log('endLoop rowsPanelAtividades', index);
         initFunctionsPanelAtiv();
+        var totaldados = storeAtividades.length-1;
+        var caption = $('#tabelaAtivPanel table').find('caption.infraCaption');
+            caption.find('.progress').remove().end().append('<span class="progress" style="color: #777;font-size: 0.8em;padding: 5px;margin: 5px;"><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... ('+index+'/'+totaldados+')</span>');
+        if (totaldados <= index) {
+            getHtmlTableAtiv();
+            caption.find('.progress').remove();
+            loadRowsPanelAtiv = false;
+        }
+        console.log('endLoop rowsPanelAtividades', index, loadRowsPanelAtiv);
     }
     var countUnidades = (storeAtividades.length > 0) ? uniqPro(jmespath.search(storeAtividades, "[?sigla_unidade].sigla_unidade")).length : 0;
     var t = new Date();
@@ -1951,14 +2275,45 @@ function getRowsPanelAtividades(storeAtividades, target) {
     storeAtividades.forEach(function (value, index) {
         if (index >= limit) {
             setTimeout(function(){
-                getRowsPanelAtividades(value, index);
-                if (storeAtividades.length-1 == index || index % 100 == 0) { initRowsPanelAtividades(index) }
+                setRowsPanelAtividades(value, index);
+                if (storeAtividades.length-1 == index || index % 100 == 0) { 
+                    initRowsPanelAtividades(index);
+                }
             }, 50*index);
         } else {
-            getRowsPanelAtividades(value, index);
+            setRowsPanelAtividades(value, index);
+            loadRowsPanelAtiv = false;
         }
     });
     if (storeAtividades.length <= limit) { initRowsPanelAtividades(100) }
+}
+function removeRowsPanelAtividades(id_demanda) {
+    var tableAtiv = $('#tabelaAtivPanel table');
+    var kanbanAtiv = $('#kanbanAtivPanel');
+    var tr = tableAtiv.find('tr[data-index="'+id_demanda+'"]');
+
+    if (tr.length > 0) {
+        tr.remove();
+    } else if (kanbanAtiv.is(':visible')) {
+        var value = getAtividadeData(id_demanda);
+        var item = getKanbanItem(value);
+        kanbanAtividades.removeElement(item.id);
+    }
+    var objIndexAtiv = (typeof arrayAtividadesPro === 'undefined' || arrayAtividadesPro == 0 || arrayAtividadesPro.length == 0) ? -1 : arrayAtividadesPro.findIndex((obj => obj.id_demanda == id_demanda));
+    if (objIndexAtiv !== -1) {
+        arrayAtividadesPro.splice(objIndexAtiv, 1);
+        hybridStorageStorePro('configDataAtividadesPro', arrayAtividadesPro);
+        getHtmlTableAtiv();
+        return true;
+    } else {
+        return false;
+    }
+}
+function getHtmlTableAtiv() {
+    var html = $('#tabelaAtivPanel table tbody').html();
+    if (typeof html !== 'undefined' && html !== null && html != '') {
+        sessionStorageStorePro('configDataAtividadesHTML', html);
+    }
 }
 function getHtmlLinkRequisicao(value, onclick = false) {
     var linkDoc = (value.data_entrega == '0000-00-00 00:00:00') 
@@ -2016,6 +2371,14 @@ function getHtmlActionsConfig(type) {
                 '                   </span>'+
                 '               </a>'+
                 '' : '')+
+                ( type == 'planos' && (checkCapacidade('config_update_planos') || checkCapacidade('config_self_planos') ) ? 
+                '               <a class="newLink iconConfig_recalc" data-type="'+type+'" data-mode="recalc" data-id="0" onclick="updateCalcPlanos(this)" onmouseover="return infraTooltipMostrar(\'Recalcular horas de planos de trabalho\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
+                '                   <span class="fa-layers fa-fw">'+
+                '                       <i class="fas fa-calculator"></i>'+
+                '                       <span class="fa-layers-counter">1</span>'+
+                '                   </span>'+
+                '               </a>'+
+                '' : '')+
                 ( type == 'atividades' && checkCapacidade('config_update_pgr') ? 
                 '               <a class="newLink iconConfig_approve" data-type="'+type+'" data-mode="approve" data-id="0" onclick="approveConfig(this)" onmouseover="return infraTooltipMostrar(\'Homologar '+param.name+'\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
                 '                   <span class="fa-layers fa-fw">'+
@@ -2030,7 +2393,7 @@ function getHtmlActionsConfig(type) {
                 '                   </span>'+
                 '               </a>'+
                 '' : '')+
-                ( type != 'users' || (type == 'users' && checkCapacidade('config_users_all')) ? 
+                ( (type != 'users' && checkCapacidade('config_update_'+type)) || (type == 'users' && checkCapacidade('config_users_all')) ? 
                 '               <a class="newLink iconConfig_remove" data-type="'+type+'" data-mode="disable" data-id="0" onclick="disableConfig(this)" onmouseover="return infraTooltipMostrar(\'Desativar '+param.name+'\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
                 '                   <span class="fa-layers fa-fw">'+
                 '                       <i class="fas fa-times-circle"></i>'+
@@ -2044,7 +2407,7 @@ function getHtmlActionsConfig(type) {
                 '                   </span>'+
                 '               </a>'+
                 (checkCapacidade('config_new_'+type) ? 
-                '               <a class="newLink iconConfig_clone" data-type="'+type+'" data-mode="clone" data-id="0" onclick="cloneConfig(this)" onmouseover="return infraTooltipMostrar(\'Duplicar '+param.name+'\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
+                '               <a class="newLink iconConfig_clone" data-type="'+type+'" data-mode="clone" data-id="0" onclick="cloneConfig(this, event);" onmouseover="return infraTooltipMostrar(\'Duplicar '+param.name+'\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
                 '                   <span class="fa-layers fa-fw">'+
                 '                       <i class="fas fa-copy"></i>'+
                 '                       <span class="fa-layers-counter">1</span>'+
@@ -2113,6 +2476,12 @@ function selectViewControl(this_) {
     });
     forcePlaceHoldChosen();
 }
+function getAtividadeData(id_demanda) {
+    var value = (id_demanda && id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+        value = (value === null && typeof arrayAtividadesProcPro !== 'undefined') ? jmespath.search(arrayAtividadesProcPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : value;
+        value = (value === null) ? false : value;
+    return value;
+}
 function getHtmlEtiquetaUnidade(value) {
     var nameUser = (value.id_user != 0 ? value.apelido : 'N\u00E3o atribu\u00EDdo');
     var tagName_user = normalizeNameTag(nameUser);
@@ -2152,10 +2521,26 @@ function initPanelAtividadesView() {
         getTabsRelatorio();
     }
 }
+function removeLocalDataAtiv(force = false) {
+    removeLocalDataConfigArray();
+    hybridStorageRemovePro('lastUpdateAtividades');
+    hybridStorageRemovePro('configDataAtividadesPro');
+    hybridStorageRemovePro('configDataAtividadesProcPro');
+    hybridStorageRemovePro('configDataAtividadesPadraoPro');
+    sessionStorageRemovePro('configDataAtividadesHTML');
+    if (force) {
+        arrayAtividadesPro = [];
+        arrayAtividadesProcPro = [];
+        arrayConfigAtividades = [];
+    }
+    lastUpdateAtividades = false;
+}
 function changePerfilAtiv(this_) {
     var _this = $(this_);
+    removeLocalDataAtiv(true);
     $('.tabelaControle .atividadeBoxDisplay').html('');
     resetDialogBoxPro('dialogBoxPro');
+    removeOptionsPro('selectChartAtiv');
     setOptionsPro('perfilAtividadesSelected', _this.val());
     updateAtividade(_this.closest('.panelHome').find('.iconAtividade_update')[0]);
     perfilAtividadesSelected = _this.val();
@@ -2176,6 +2561,9 @@ function changePanelHome(this_) {
         getTabsRelatorio();
     } else if (mode == 'Atividade') {
         updateAtividade();
+        setTimeout(function(){ 
+            setPanelAtividades();
+        }, 300);
         $('#tabelaAtivPanel').find('.dataFallback').addClass('dataLoading');
         $('#atividadesProActions').find('.iconAtividade_update i').addClass('fa-spin');
     } else if (mode == 'Configuracao') {
@@ -2243,12 +2631,14 @@ function getChartRelatorio(this_) {
 function getTabsRelatorio(this_) {
     var _this = $(this_);
     var panel = 'tableRelatorioPanel';
-    var tabs = 'tabsPanelRelatorio';
+    var tabs = 'tabsPanelRelatorio'; //tabelaPanelScroll resizeObserve
     var htmlToolbar =   '<div id="'+tabs+'" style="border: none; min-height: 300px; margin: 0;">'+
                         '    <ul>'+
                         '       <li><a href="#tabs_report-demandas"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> '+__.Demandas+'</a></li>'+
+                        '       <li><a href="#tabs_report-planos"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> Planos de Trabalho</a></li>'+
                         '    </ul>'+
-                        '    <div id="tabs_report-demandas" class="tabelaPanelScroll resizeObserve" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                        '    <div id="tabs_report-demandas" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                        '    <div id="tabs_report-planos" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
                         '</div>';
     $('#'+panel).html(htmlToolbar).show();
     $('#'+tabs).tabs({
@@ -2317,23 +2707,29 @@ function initDaterangePicker(TimeOut = 9000) {
 }
 function getTabReport(type, mode, data = false) {
     if (checkCapacidade('report_'+type) && mode == 'get') {
-        var all_data = $('#changeViewTableRelatorio_'+type).is(':checked');
+
+        var data = getOptionsPro('selectReport_'+type);
+            data = (typeof data !== 'undefined' && data !== null && data) ? data : false;
+        var id_programa = (data && typeof data.id_programa !== 'undefined' && data.id_programa !== null) ? data.id_programa : 0;
+
+        var all_data = (getOptionsPro('changeViewTableReport_'+type) == 'show') ? true : false;
         var action = 'report_'+type;
         var param = {
             action: action,
-            all_data: all_data
+            all_data: all_data,
+            id_programa: id_programa
         };
         getServerAtividades(param, action);
         $('#tabs_report-'+type).css('width',$('#tabsPanelRelatorio').width()).find('.dataFallback').addClass('dataLoading');
 
     } else if (checkCapacidade('report_'+type) && mode == 'set') {
-        updateServerTabReport(data);
+        updateServerTabReport(data, param);
         infraTooltipOcultar();
     }
 }
 function updateServerTabReport(data, param) {
     loadingButtonConfirm(false);
-    getTableRelatorioPanel(data.demandas);
+    getTableRelatorioPanel(data, param);
 }
 function openModalConfigPanel(){
     openConfigBoxPro('', 
@@ -2618,7 +3014,6 @@ function updateServerTabConfig(data, param) {
 }
 function updateConfigCells(data, param, tr) {
 
-    // var param_key = param.key;
     var param_key = (isJson(param.key)) ? JSON.parse(param.key) : param.key;
 
     var td = tr.find('td[data-key="'+param_key+'"]');
@@ -2631,9 +3026,15 @@ function updateConfigCells(data, param, tr) {
         else if (param.mode == 'approve') { tr.addClass('approve').removeClass('disapprove') }
         else if (param.mode == 'disapprove') { tr.addClass('disapprove').removeClass('approve') }
         else if (param.mode == 'reactive') { tr.removeClass('disabled') }
-        else if (param.mode == 'clone' || param.mode == 'new') { 
-            getTabConfig(param.type, 'get');
-        } else if (param.mode == 'option') { 
+        else if (param.mode == 'clone' || param.mode == 'new') {
+            setTimeout(function(){
+                // console.log('updateConfigCells', param, data, delayServerAtiv);
+                if (delayServerAtiv == 0) {
+                    delayServerAtiv = 1; setTimeout(function(){ delayServerAtiv = 0; }, 1000);
+                    getTabConfig(param.type, 'get');
+                }
+            }, 1000);
+        } else if (param.mode == 'option') {
             loadingButtonConfirm(false);
             if (data.status == 1) {
                 dialogBoxPro.dialog('close');
@@ -2693,6 +3094,28 @@ function updateConfigCells(data, param, tr) {
             var icon = linkIcon.find('i');
                 linkIcon.removeClass('loading');
                 icon.attr('class',icon.data('icon'));
+        } else if (param.action == 'config_update_planos' && param.mode == 'clone') {
+            setTimeout(function(){
+                // console.log('delayServerAtiv', delayServerAtiv, param, data, tableConfigList.planos);
+                if (delayServerAtiv == 0) {
+                    delayServerAtiv = 1; setTimeout(function(){ delayServerAtiv = 0; }, 1000);
+                    var listUpdate = [];
+                    var tableConfig = $('#tabelaConfigPanel_'+param.type);
+                    if (data.last_ids.length > 0) {
+                        $.each(data.last_ids,function(i,v){
+                            var checkbox = tableConfig.find('tr[data-id="'+v+'"]').find('input[name="configuracoesPro"]');
+                                checkbox.trigger('click');
+                                // console.log('tr[data-id="'+v+'"]', checkbox[0]);
+                            var value = jmespath.search(tableConfigList.planos, "[?id_plano==`"+v+"`] | [0]");
+                            if (value !== null) {
+                                listUpdate.push(value);
+                            }
+                        });
+                        dialogUpdateCalcPlanos(listUpdate, 'clone');
+                        // console.log('dialogUpdateCalcPlanos',listUpdate);
+                    }
+                }
+            }, 5000);
         }
 
         setTimeout(function(){ 
@@ -2702,6 +3125,37 @@ function updateConfigCells(data, param, tr) {
             }
         }, 500);
     }
+}
+function dialogUpdateCalcPlanos(listUpdate = tableConfigList.planos, messageBox = 'update') {
+    alertaBoxPro('Sucess', 'check-circle','Atualizando c\u00E1lculo de horas nos planos de trabalho... <span id="countLoopPlanos"></span> <div class="info_checklist" style="heigth:20px"><div id="progressLoopPlanos" class="checklist_progress" style="float:none; width:95%"></div></div>');
+    var time = 0;
+    var index = 0;
+    var total = listUpdate.length;
+    $('#progressLoopPlanos').progressbar({
+        value: 0,
+        max: total
+    });
+
+    $.each(listUpdate,function(i, v){
+            time += 2000;
+        
+        setTimeout( function(){ 
+            var counter = index+1;
+                updateConfigTempoPactuadoById(v.id_plano);
+                $('#progressLoopPlanos').progressbar({value: counter});
+                $('#countLoopPlanos').text('('+counter+'/'+total+')');
+                index++;
+
+                if (index >= total) {
+                    resetDialogBoxPro('alertBoxPro');
+                    if (messageBox == 'update') {
+                        alertaBoxPro('Sucess', 'check-circle','C\u00E1lculos de horas dos planos atualizados com sucesso');
+                    } else if (messageBox == 'clone') {
+                        alertaBoxPro('Sucess', 'check-circle','Planos de trabalho duplicados com sucesso');
+                    }
+                }
+        }, time);
+    });
 }
 function getRowsTableTabConfig(type, mode, list = false, value = false) {
     var _return = '';
@@ -2726,13 +3180,13 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         } else if (mode == 'body') {
             if (value) {
                 if (value.exclude == false) {
-                    var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'disabled' : '';
-                    var classClone = (value.nome_atividade.indexOf('(C\u00F3pia)') !== -1) ? {name: 'clone', text: 'C\u00D3PIA' } : false;
-                    var classNew = (value.nome_atividade.indexOf('(Novo)') !== -1) ? {name: 'new', text: 'NOVO' } : false;
-                    var classHomologa = (value.homologado) ? {name: 'approve', text: 'HOMOLOGADO' } : {name: 'disapprove', text: '' };
+                    var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? ' disabled' : '';
+                    var classClone = (value.nome_atividade.indexOf('(C\u00F3pia)') !== -1) ? {name: ' clone', text: 'C\u00D3PIA' } : false;
+                    var classNew = (value.nome_atividade.indexOf('(Novo)') !== -1) ? {name: ' new', text: 'NOVO' } : false;
+                    var classHomologa = (value.homologado) ? {name: ' approve', text: 'HOMOLOGADO' } : {name: 'disapprove', text: '' };
                         _return =   '       <tr data-tagname="SemGrupo" data-type="'+type+'" data-rowindex="id_'+type.slice(0, -1)+'" data-id="'+value.id_atividade+'" class="'+classDisabled+(classClone ? ' '+classClone.name : '')+(classNew ? ' '+classNew.name : (classHomologa ? ' '+classHomologa.name : '') )+'">'+
                                     '           <td align="center">'+
-                                    '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_atividade+'" name="configuracoesPro" value="'+value.id_atividade+'" '+(checkCapacidade('config_update_'+type) && (checkCapacidade('config_update_pgr') || !value.homologado) ? '' : 'disabled')+'></td>'+
+                                    '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_atividade+'" name="configuracoesPro" value="'+value.id_atividade+'" '+((checkCapacidade('config_update_pgr') || !value.homologado) ? '' : 'disabled')+'></td>'+
                                     '           <td align="left" class="'+(checkCapacidade('config_update_pgr') || !value.homologado ? 'editCell' : '')+'" data-key="nome_atividade" data-text="'+(classNew ? classNew.text : (classClone ? classClone.text : (classHomologa ? ' '+classHomologa.text : '') ))+'"><span>'+value.nome_atividade+'</span></td>'+
                                     '           <td align="left" class="'+(checkCapacidade('config_update_pgr') || !value.homologado ? 'editCellNum' : '')+'" data-key="tempo_pactuado">'+value.tempo_pactuado+'</td>'+
                                     '           <td align="left" class="editCellNum" data-key="dias_planejado">'+value.dias_planejado+'</td>'+
@@ -2788,6 +3242,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '              <th class="tituloControle tituloFilter" style="width: 150px;">Data de In\u00EDcio</th>'+
                             '              <th class="tituloControle tituloFilter" style="width: 150px;">Data de Encerramento</th>'+
                             '              <th class="tituloControle tituloFilter" style="width: 250px;">Tempo Total Pactuado (horas)</th>'+
+                            '              <th class="tituloControle tituloFilter" style="width: 250px;">Tempo Pactuado Proporcional (horas)</th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;" colspan="2">Op\u00E7\u00F5es</th>'+
                             (checkCapacidade('config_update_'+type) ? 
                             '              <th class="tituloControle" data-sorter="false" style="min-width: 120px;">A\u00E7\u00F5es</th>'+
@@ -2795,17 +3250,20 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '          </tr>';
         } else if (mode == 'body') {
             if (value) {
-                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'disabled' : '';
-                var classClosed = (moment(value.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss') < moment()) ? {name: 'closed', text: 'ENCERRADO' } : false;
-                var classFuture = (moment(value.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss') > moment()) ? {name: 'future', text: 'FUTURO' } : false;
+                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? ' disabled' : '';
+                var classClosed = (moment(value.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss') < moment()) ? {name: ' closed', text: 'ENCERRADO' } : false;
+                var classFuture = (moment(value.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss') > moment()) ? {name: ' future', text: 'FUTURO' } : false;
                 var modalidade = jmespath.search(arrayConfigAtividades.tipos_modalidades,"[?id_tipo_modalidade==`"+value.id_tipo_modalidade+"`] | [0]");
                 var view_modelos = (modalidade !== null && modalidade.hasOwnProperty('config') && typeof modalidade.config !== 'undefined' && modalidade.config !== null && modalidade.config.hasOwnProperty('modelos')) ? modalidade.config.modelos : false;        
                 var assinatura = (typeof value.config !== 'undefined' && value.config !== null && typeof value.config.assinatura !== 'undefined' && value.config.hasOwnProperty('assinatura')) ? value.config.assinatura : false;
                 var btnAssinatura = (view_modelos) ? '<a class="newLink viewModelDoc" data-type="'+type+'" data-sign="true" data-user="'+value.id_user+'" data-id_reference="'+value.id_plano+'" data-icon="pencil-alt" data-action="view" data-mode="modelo_termo_adesao" data-title="Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\''+(assinatura ? 'Documento assinado eletronicamente por '+assinatura[0].nome_completo+', em '+moment(assinatura[0].datetime,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm') : 'Visualizar Termo de Ades\u00E3o para assinatura')+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature '+(assinatura ? 'azulColor' : 'cinzaColor')+'" style="font-size: 100%;"></i> <i class="fas fa-'+(assinatura ? 'user-edit azulColor' : 'pencil-alt cinzaColor')+'" style="font-size: 100%; margin-left: -10px;"></i></a>' : '';
+                    btnAssinatura = (classFuture && !assinatura) 
+                                    ? '<a class="newLink viewModelDoc" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\'Dispon\u00EDvel para assinatura ap\u00F3s iniciada a vig\u00EAncia do plano\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature cinzaColor" style="font-size: 100%;"></i> <i class="fas fa-pencil-alt cinzaColor" style="font-size: 100%; margin-left: -10px;"></i></a>' 
+                                    : btnAssinatura;
                 var classAssinatura = (view_modelos && assinatura) ? 'alertAssinatura' : '';
                     _return =   '       <tr data-tagname="SemGrupo" data-type="'+type+'" data-rowindex="id_'+type.slice(0, -1)+'" data-id="'+value.id_plano+'"  data-idref="'+value.id_user+'" data-idreftype="id_user" class="'+classDisabled+(classClosed ? ' '+classClosed.name : (classFuture ? classFuture.name : ''))+'">'+
                                 '           <td align="center">'+
-                                '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_plano+'" name="configuracoesPro" value="'+value.id_plano+'" '+(checkCapacidade('config_update_'+type) ? '' : 'disabled')+'></td>'+
+                                '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_plano+'" name="configuracoesPro" value="'+value.id_plano+'" '+( (type == 'planos' && checkCapacidade('config_self_planos')) || checkCapacidade('config_update_'+type) ? '' : 'disabled')+'></td>'+
                                 '           <td align="left" class="'+(checkCapacidade('config_update_'+type) ? 'editCellSelect' : '')+' '+classAssinatura+'" data-array="usuarios" data-key="id_user" data-value="nome_completo" data-new-item="false" data-text="'+(classClosed ? classClosed.text : (classFuture ? classFuture.text : '') )+'"><span>'+value.nome_completo+'</span></td>'+
                                 (countUnidades > 1 ?
                                 '           <td align="left" class="'+(checkCapacidade('config_update_'+type) ? 'editCellSelect' : '')+' '+classAssinatura+'" data-array="unidades" data-key="id_unidade" data-value="sigla_unidade" data-new-item="false">'+value.sigla_unidade+'</td>'+
@@ -2815,6 +3273,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                                 '           <td align="left" style="text-align:center;" class="'+(checkCapacidade('config_update_'+type) ? 'editCellDate' : '')+' '+classAssinatura+'" data-key="data_inicio_vigencia" data-ref-limit="data_inicio" data-label-limit="data_fim" data-limit="max" data-time-sorter="'+moment(value.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')+'">'+moment(value.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</td>'+
                                 '           <td align="left" style="text-align:center;" class="'+(checkCapacidade('config_update_'+type) ? 'editCellDate' : '')+' '+classAssinatura+'" data-key="data_fim_vigencia" data-ref-limit="data_fim" data-label-limit="data_inicio" data-limit="min" data-time-sorter="'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')+'">'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</td>'+
                                 '           <td align="left" class="" data-key="tempo_total" style="text-align: center;">'+value.tempo_total+'</td>'+
+                                '           <td align="left" class="" data-key="tempo_proporcional" style="text-align: center;">'+value.tempo_proporcional+'</td>'+
                                 '           <td align="left" style="width: 100px;" data-time-sorter="'+(view_modelos && assinatura ? assinatura[0].datetime : (view_modelos ? '0000-00-00 00:00:00' : '') )+'">'+
                                 '               '+btnAssinatura+
                                 '           </td>'+
@@ -2832,7 +3291,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                                 '' : '')+
                                 '       </tr>';
             } else {
-                var colspan = 8;
+                var colspan = 9;
                     colspan = (checkCapacidade('config_update_'+type)) ? colspan+1 : colspan;
                     colspan = (countUnidades > 1 ) ? colspan+1 : colspan;
                     _return =   '       <tr class="noData">'+
@@ -2862,9 +3321,9 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '          </tr>';
         } else if (mode == 'body') {
             if (value) {
-                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'disabled' : '';
-                var classClosed = (moment(value.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss') < moment()) ? {name: 'closed', text: 'ENCERRADO' } : false;
-                var classFuture = (moment(value.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss') > moment()) ? {name: 'future', text: 'FUTURO' } : false;
+                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? ' disabled' : '';
+                var classClosed = (moment(value.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss') < moment()) ? {name: ' closed', text: 'ENCERRADO' } : false;
+                var classFuture = (moment(value.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss') > moment()) ? {name: ' future', text: 'FUTURO' } : false;
                     _return =   '       <tr data-tagname="SemGrupo" data-type="'+type+'" data-rowindex="id_'+type.slice(0, -1)+'" data-id="'+value.id_programa+'" data-idref="'+value.id_unidade+'" data-idreftype="id_unidade" class="'+classDisabled+(classClosed ? ' '+classClosed.name : (classFuture ? classFuture.name : ''))+'">'+
                                 '           <td align="center">'+
                                 '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_programa+'" name="configuracoesPro" value="'+value.id_programa+'" '+(checkCapacidade('config_update_'+type) ? '' : 'disabled')+'></td>'+
@@ -2918,9 +3377,9 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '          </tr>';
         } else if (mode == 'body') {
             if (value) {
-                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'disabled' : '';
-                var classClone = (value.nome_completo.indexOf('(C\u00F3pia)') !== -1) ? {name: 'clone', text: 'C\u00D3PIA' } : false;
-                var classNew = (value.nome_completo.indexOf('(Novo)') !== -1) ? {name: 'new', text: 'NOVO' } : false;
+                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? ' disabled' : '';
+                var classClone = (value.nome_completo.indexOf('(C\u00F3pia)') !== -1) ? {name: ' clone', text: 'C\u00D3PIA' } : false;
+                var classNew = (value.nome_completo.indexOf('(Novo)') !== -1) ? {name: ' new', text: 'NOVO' } : false;
                 var lotacao = (value.lotacao !== null) ? $.map(value.lotacao, function(v){ 
                                                             var tagName = normalizeNameTag(v.sigla_unidade);
                                                             var tagColor = typeof v.config !== 'undefined' && v.config !== null && v.config.principal  ? {color: '#bfd5e8', background: '#406987', textcolor: 'white'} : {color: '#406987', background: '#bfd5e8', textcolor: 'black'};
@@ -2988,9 +3447,9 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '          </tr>';
         } else if (mode == 'body') {
             if (value) {
-                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'disabled' : '';
-                var classClone = (value.nome_unidade.indexOf('(C\u00F3pia)') !== -1) ? {name: 'clone', text: 'C\u00D3PIA' } : false;
-                var classNew = (value.nome_unidade.indexOf('(Novo)') !== -1) ? {name: 'new', text: 'NOVO' } : false;
+                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? ' disabled' : '';
+                var classClone = (value.nome_unidade.indexOf('(C\u00F3pia)') !== -1) ? {name: ' clone', text: 'C\u00D3PIA' } : false;
+                var classNew = (value.nome_unidade.indexOf('(Novo)') !== -1) ? {name: ' new', text: 'NOVO' } : false;
                 var config = (value.config && value.config !== null && (Object.keys(value.config).length > 0 || value.config.length > 0 )) ? value.config : false;
                 var dependencia_config = (value.dependencia_config && value.dependencia_config !== null && (Object.keys(value.dependencia_config).length > 0 || value.dependencia_config.length > 0 )) ? value.dependencia_config : false;
                 var autoedicao_subordinadas = (dependencia_config && dependencia_config !== null && typeof dependencia_config.administrativo !== 'undefined' && typeof dependencia_config.administrativo.autoedicao_subordinadas !== 'undefined' && dependencia_config.administrativo.autoedicao_subordinadas) ? dependencia_config.administrativo.autoedicao_subordinadas : false;
@@ -3044,9 +3503,9 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '          </tr>';
         } else if (mode == 'body') {
             if (value) {
-                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'disabled' : '';
-                var classClone = (value.nome_entidade.indexOf('(C\u00F3pia)') !== -1) ? {name: 'clone', text: 'C\u00D3PIA' } : false;
-                var classNew = (value.nome_entidade.indexOf('(Novo)') !== -1) ? {name: 'new', text: 'NOVO' } : false;
+                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? ' disabled' : '';
+                var classClone = (value.nome_entidade.indexOf('(C\u00F3pia)') !== -1) ? {name: ' clone', text: 'C\u00D3PIA' } : false;
+                var classNew = (value.nome_entidade.indexOf('(Novo)') !== -1) ? {name: ' new', text: 'NOVO' } : false;
                     _return =   '       <tr data-tagname="SemGrupo" data-type="'+type+'" data-rowindex="id_'+type.slice(0, -1)+'" data-id="'+value.id_entidade+'" class="'+classDisabled+(classClone ? ' '+classClone.name : '')+(classNew ? ' '+classNew.name : '')+'">'+
                                 '           <td align="center">'+
                                 '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_entidade+'" name="configuracoesPro" value="'+value.id_entidade+'" '+(checkCapacidade('config_update_'+type) ? '' : 'disabled')+'></td>'+
@@ -3103,9 +3562,9 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '          </tr>';
         } else if (mode == 'body') {
             if (value) {
-                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'disabled' : '';
-                var classClone = (value[param.label_name].indexOf('(C\u00F3pia)') !== -1) ? {name: 'clone', text: 'C\u00D3PIA' } : false;
-                var classNew = (value[param.label_name].indexOf('(Novo)') !== -1) ? {name: 'new', text: 'NOVO' } : false;
+                var classDisabled = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? ' disabled' : '';
+                var classClone = (value[param.label_name].indexOf('(C\u00F3pia)') !== -1) ? {name: ' clone', text: 'C\u00D3PIA' } : false;
+                var classNew = (value[param.label_name].indexOf('(Novo)') !== -1) ? {name: ' new', text: 'NOVO' } : false;
                     _return =   '       <tr data-tagname="SemGrupo" data-type="'+type+'" data-rowindex="id_'+type.slice(0, -1)+'" data-id="'+value[param.label_id]+'" class="'+classDisabled+(classClone ? ' '+classClone.name : '')+(classNew ? ' '+classNew.name : '')+'">'+
                                 '           <td align="center">'+
                                 '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value[param.label_id]+'" value="'+value[param.label_id]+'" name="configuracoesPro" '+(checkCapacidade('config_update_'+type) && param.edit_table ? '' : 'disabled')+'></td>'+
@@ -3165,14 +3624,14 @@ function getTableTabConfig(type, listConfig) {
             var countUnidades = 0;
         }
         htmlTableConfig =   '<div id="tabelaConfigPanel_'+type+'" class="tabelaPanelScroll" style="margin-top: 5px;">'+
-                            (checkCapacidade('config_update_'+type) ? 
-                            '   <div class="editTableToggle hideDisabledItens" style="right: 460px;">'+
+                            '   <div class="editTableToggle hideDisabledItens" style="right: 500px;">'+
                             '           <label class="label" for="changeDisabledTableConfig_'+type+'"><i class="fas fa-eye-slash '+(getOptionsPro('changeDisabledTableConfig_'+type) && getOptionsPro('changeDisabledTableConfig_'+type) == 'show' ? 'azulColor' : 'cinzaColor')+'" style="margin: 0px 6px 0 4px;"></i> Inativos</label>'+
                             '           <div class="onoffswitch">'+
                             '               <input type="checkbox" name="onoffswitch" data-type="'+type+'" onchange="changeDisabledTableConfig(this)" class="onoffswitch-checkbox" id="changeDisabledTableConfig_'+type+'" tabindex="0" '+(getOptionsPro('changeDisabledTableConfig_'+type) && getOptionsPro('changeDisabledTableConfig_'+type) == 'show' ? 'checked' : '')+'>'+
                             '               <label class="onoffswitch-label" for="changeDisabledTableConfig_'+type+'"></label>'+
                             '           </div>'+
                             '   </div>'+
+                            (checkCapacidade('config_update_'+type) ? 
                             '   <div class="editTableToggle">'+
                             '           <label class="label" for="changeViewTableConfig_'+type+'"><i class="fas fa-edit azulColor" style="margin: 0px 6px 0 4px;"></i> Edi\u00E7\u00E3o</label>'+
                             '           <div class="onoffswitch">'+
@@ -3448,7 +3907,7 @@ function getTableTabConfig(type, listConfig) {
             });
             setTimeout(function(){ 
 
-                var htmlFilterConfig =  '<div class="btn-group filterTablePro" role="group" style="right: 25px;top: -38px;z-index: 99;position: absolute;">'+
+                var htmlFilterConfig =  '<div class="btn-group filterTablePro" role="group" style="right: 55px;top: -38px;z-index: 99;position: absolute;">'+
                                         '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                         '       <span class="text">Baixar</span>'+
@@ -3500,8 +3959,10 @@ function getTableTabConfig(type, listConfig) {
             }
             if (count_all > 0) {
                 $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_clone').show().find('.fa-layers-counter').text(count_all);
+                $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_recalc').show().find('.fa-layers-counter').text(count_all);
             } else {
                 $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_clone').hide();
+                $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_recalc').hide();
             }
         });
         setTimeout(function(){ 
@@ -3522,6 +3983,7 @@ function updateConfigServerInline(_this, type, value, data, data_tr, objIndex) {
     var update = updateConfigServer({mode: 'update', id: data_tr.id, type: data_tr.type, key: data.key, value: value, rowindex: data_tr.rowindex});
     if (type == 'planos' && (data.key == 'data_inicio_vigencia' || data.key == 'data_fim_vigencia' || data.key == 'carga_horaria')) {
         updateConfigTempoPactuado(_this, data_tr.id, update.objIndex, data_tr);
+        console.log('updateConfigTempoPactuado',_this, data_tr.id, update.objIndex, data_tr);
     }
 }
 function changeDisabledTableConfig(this_) {
@@ -3566,7 +4028,6 @@ function changeViewTableReport(this_) {
     var table = $('#tableRelatorio_'+type);
     var icon = _this.closest('.viewTableToggle').find('.label i');
         icon.toggleClass('fa-university fa-sync-alt').addClass('fa-spin');
-    getTabReport(type, 'get');
     if (checkbox) {
         icon.addClass('azulColor').removeClass('cinzaColor');
         setOptionsPro('changeViewTableReport_'+type,'show');
@@ -3574,6 +4035,7 @@ function changeViewTableReport(this_) {
         icon.addClass('cinzaColor').removeClass('azulColor');
         setOptionsPro('changeViewTableReport_'+type,'hide');
     }
+    getTabReport(type, 'get');
 }
 function getWorkDaysBetweenDates(inicio, fim, sigla_unidade) {
     var config_unidade = getConfigDadosUnidade(sigla_unidade);
@@ -3592,6 +4054,23 @@ function getWorkDaysBetweenDates(inicio, fim, sigla_unidade) {
         dias = (dias < 0) ? false : dias;
     return {dias: dias, feriados: arrayFeriados};
 }
+function updateConfigTempoPactuadoById(id_plano) {
+    var objIndex = (typeof tableConfigList.planos === 'undefined' || tableConfigList.planos == 0 || tableConfigList.planos.length == 0) ? -1 : tableConfigList.planos.findIndex((obj => obj['id_plano'] == id_plano));
+    if (objIndex !== -1) {
+        var tableConfigElem = $('#tableConfiguracoesPanel_planos');
+        var tableConfigScroll = $('#tabelaConfigPanel_planos');
+        var _parent = tableConfigElem.find('tr[data-id="'+id_plano+'"]');
+        var _this = _parent.find('td[data-key="data_fim_vigencia"]');
+        var data_tr = _parent.data();
+            _parent.find('td[data-key="tempo_total"]').addClass('editCellLoading')
+            _parent.get(0).scrollIntoView();
+            tableConfigScroll.scrollTop(tableConfigScroll.scrollTop()-35);
+            updateConfigTempoPactuado(_this, data_tr.id, objIndex, data_tr);
+        return true;
+    } else {
+        return false;
+    }
+}
 function updateConfigTempoPactuado(_this, id, objIndex, data_tr) {
     var value = jmespath.search(tableConfigList.planos, "[?id_plano==`"+id+"`] | [0]");
     if (value !== null) {
@@ -3601,11 +4080,19 @@ function updateConfigTempoPactuado(_this, id, objIndex, data_tr) {
             var tr = _this.closest('tr');
             tr.find('td[data-key="tempo_total"]').text(tempo_total);
             tableConfigList.planos[objIndex].tempo_total = tempo_total;
+
+
+            var array_tempo_proporcional = checkDatesPlanoAfast(value);
+            if (typeof array_tempo_proporcional !== 'undefined' && array_tempo_proporcional.tempo_proporcional != value.tempo_proporcional) {
+                var tempo_proporcional = array_tempo_proporcional.tempo_proporcional;
+                    tempo_proporcional = parseInt(tempo_proporcional.toFixed(2));
+
+                tr.find('td[data-key="tempo_proporcional"]').text(tempo_proporcional).addClass('editCellLoading');
+                tableConfigList.planos[objIndex].tempo_proporcional = tempo_proporcional;
+                updateConfigServer({mode: 'update', id: id, type: 'planos', key: 'tempo_proporcional', value: tempo_proporcional, rowindex: data_tr.rowindex});
+            }
+
             updateConfigServer({mode: 'update', id: id, type: 'planos', key: 'tempo_total', value: tempo_total, rowindex: data_tr.rowindex});
-            setTimeout(function(){ 
-                updateTempoProporcionalPlanos();
-                console.log('updateTempoProporcionalPlanos'); 
-            }, 1500);
         }
     }
 }
@@ -3630,7 +4117,7 @@ function reactiveConfig(this_) {
         }
     }
 }
-function cloneConfig(this_) {
+function cloneConfig(this_, e) {
     var _this = $(this_);
     var data_this = _this.data();
     var id = data_this.id;
@@ -3672,13 +4159,25 @@ function newConfig(this_) {
     var _this = $(this_);
     var data_this = _this.data();
     var type = data_this.type;
-    var carga_horaria_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.carga_horaria_padrao");
-        carga_horaria_padrao = (carga_horaria_padrao == null) ? 8 : carga_horaria_padrao;
-    var tipo_modalidade_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.tipo_modalidade_padrao");
-        tipo_modalidade_padrao = (tipo_modalidade_padrao == null) ? 4 : tipo_modalidade_padrao;
+
+    var config_unidade = (typeof arrayConfigAtivUnidade !== 'undefined' && arrayConfigAtivUnidade !== null && typeof arrayConfigAtivUnidade.config !== 'undefined' && arrayConfigAtivUnidade.config !== null) ? arrayConfigAtivUnidade.config : false;
+    var duracao_padrao = (config_unidade && typeof config_unidade.planos !== 'undefined' && config_unidade.planos !== null && typeof config_unidade.planos.duracao_padrao !== 'undefined' && config_unidade.planos.duracao_padrao !== null) ? config_unidade.planos.duracao_padrao : 1;
+        duracao_padrao = parseInt(duracao_padrao)-1;
+
+    var config_entidade = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config");
+        config_entidade = (config_entidade !== null) ? config_entidade : false;
+    var carga_horaria_padrao = (config_entidade && typeof config_entidade.carga_horaria_padrao !== 'undefined' && config_entidade.carga_horaria_padrao !== null) ? config_entidade.carga_horaria_padrao : 8;
+    // var tipo_modalidade_padrao = jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config.tipo_modalidade_padrao");
+    // tipo_modalidade_padrao = (tipo_modalidade_padrao == null) ? 4 : tipo_modalidade_padrao;
+    var tipo_modalidade_padrao = (config_entidade && typeof config_entidade.tipo_modalidade_padrao !== 'undefined' && config_entidade.tipo_modalidade_padrao !== null) ? config_entidade.tipo_modalidade_padrao : 4;
+
     var action = (checkCapacidade('config_new_'+type)) ? 'config_new_'+type: 'config_update_'+type;
     var dates_inicio = (type == 'planos' || type == 'programas') ? moment().startOf('month').format('YYYY-MM-DD HH:mm:ss') : false;
-    var dates_fim = (type == 'planos' || type == 'programas') ? moment().endOf('month').format('YYYY-MM-DD HH:mm:ss') : false;
+    var dates_fim = (type == 'planos' || type == 'programas') 
+                    ? (duracao_padrao > 0) 
+                        ? moment().add(duracao_padrao, 'months').endOf('month').format('YYYY-MM-DD HH:mm:ss') 
+                        : moment().endOf('month').format('YYYY-MM-DD HH:mm:ss') 
+                    : false;
     var datesKey = (type == 'planos' || type == 'programas') ? getWorkDaysBetweenDates(dates_inicio, dates_fim, arrayConfigAtivUnidade.sigla_unidade) : false;
     var key = (type == 'atividades') 
             ? {
@@ -3715,7 +4214,7 @@ function newConfig(this_) {
                 id_tipo_modalidade: tipo_modalidade_padrao,
                 carga_horaria: carga_horaria_padrao,
                 tempo_total: datesKey.dias*carga_horaria_padrao,
-                tempo_total: datesKey.dias,
+                tempo_proporcional: datesKey.dias*carga_horaria_padrao,
                 data_inicio_vigencia: dates_inicio,
                 data_fim_vigencia: dates_fim,
                 config: {
@@ -3974,6 +4473,51 @@ function approveConfig(this_) {
                     mode: data_this.mode
                 };
                 getServerAtividades(param, action);
+            }
+        }, function() {
+            if (id != 0) {
+                if ($(idTable).is(':visible') && _this.closest('tr').hasClass('infraTrMarcada')) {
+                    $(idTable).find('.lnkInfraCheck').data('index',1).trigger('click');
+                }
+            }
+        }
+    );
+}
+function updateCalcPlanos(this_) {
+    var _this = $(this_);
+    var td = _this.closest('td');
+    var tr = _this.closest('tr');
+    var data = td.data();
+    var data_this = _this.data();
+    var label = '<b style="font-weight: bold;">RECALCULAR</b>';
+    var id = data_this.id;
+    var data_tr = tr.data();
+        data_tr = (typeof data_tr !== 'undefined') ? tr.data() : data_this;
+    var ids = [];
+    var idTable = '#tableConfiguracoesPanel_'+data_tr.type;
+    var countSelected = $(idTable+' tr.infraTrMarcada').length;
+    if (id != 0) {
+        if ($(idTable).is(':visible') && countSelected > 0) {
+            $(idTable).find('.lnkInfraCheck').data('index',1).trigger('click');
+        }
+        _this.closest('tr').find('td').eq(0).find('input[type="checkbox"]').trigger('click');
+    } else {
+        ids = $(idTable).find('.checkboxSelectConfiguracoes:checked').map(function(){ return $(this).val() }).get();
+    }
+
+    confirmaFraseBoxPro('Tem certeza que deseja '+label+(countSelected > 1 ? 'os registros' : 'o registro')+(id == 0 ? (countSelected > 1 ? ' selecionados' : ' selecionado') : '')+'?', 'SIM', 
+        function(){
+            var action = 'config_update_'+data_this.type;
+            var listUpdate = [];
+            if (checkCapacidade(action)) {
+                $.each(tableConfigList.planos, function(i,v){
+                    if ($.inArray(v.id_plano.toString(), ids) !== -1) {
+                        listUpdate.push(v);
+                    }
+                });
+                if (listUpdate.length > 0) {
+                    dialogUpdateCalcPlanos(listUpdate, 'update');
+                }
             }
         }, function() {
             if (id != 0) {
@@ -4750,7 +5294,7 @@ function editConfigOptions(this_, id) {
             if (lotacao) {
                 $.each(lotacao, function(i, v){
                     htmlBox +=  '                        <tr data-index="'+i+'" data-id="'+v.id_lotacao+'" data-value="'+v.id_unidade+'" data-key="lotacao" style="text-align: left;">'+
-                                '                            <td class="editCellSelect" data-type="num_switch" data-key="unidade" style="padding: 0 10px;">'+unicodeToChar(v.nome_unidade+' ('+v.sigla_unidade+')')+'</td>'+
+                                '                            <td class="editCellSelect" data-type="num_switch" data-key="unidade" style="padding: 0 10px;">'+unicodeToChar(v.sigla_unidade+' - '+v.nome_unidade)+'</td>'+
                                 '                            <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
                                 '                               <div class="onoffswitch" style="transform: scale(0.8);">'+
                                 '                                   <input data-key="principal" type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch_lotacaoDefault switch_lotacaoDefault_'+i+'" onchange="changeSwitchConfigItem(this)" id="changeItemConfig_'+data.type+'_'+i+'" tabindex="0" '+(typeof v.config !== 'undefined' && v.config !== null && v.config.principal  ? 'checked' : '')+'>'+
@@ -5012,6 +5556,21 @@ function editConfigOptions(this_, id) {
                             '           </td>'+
                             '           <td>'+
                             '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                            '                  <tr style="height: 40px;">'+
+                            '                      <td style="text-align: left;"><i class="iconPopup fas fa-star-half-alt cinzaColor"></i> Mostrar notas atribu\u00EDdas nos planos de trabalho (m\u00E9dia geral)</td>'+
+                            '                      <td>'+
+                            '                          <div class="onoffswitch" style="float: right;">'+
+                            '                              <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="planos_mostrar_notas" tabindex="0" '+(config && typeof config.planos !== 'undefined' && typeof config.planos.mostrar_notas !== 'undefined' && config.planos.mostrar_notas  ? 'checked' : '')+'>'+
+                            '                              <label class="onoffswitch-label" for="planos_mostrar_notas"></label>'+
+                            '                          </div>'+
+                            '                      </td>'+
+                            '                  </tr>'+
+                            '                  <tr style="height: 40px;">'+
+                            '                      <td style="text-align: left;"><i class="iconPopup fas fa-stopwatch cinzaColor"></i> Prazo de dura\u00E7\u00E3o padr\u00E3o para novos planos (meses)</td>'+
+                            '                      <td>'+
+                            '                            <input type="number" style="width: 50px !important;float: right;" id="planos_duracao_padrao" min="1" tabindex="0" value="'+(config && typeof config.planos !== 'undefined' && typeof config.planos.duracao_padrao !== 'undefined' && config.planos.duracao_padrao ? config.planos.duracao_padrao : '1')+'">'+
+                            '                      </td>'+
+                            '                  </tr>'+
                             '                  <tr style="height: 40px;">'+
                             '                      <td style="text-align: left;"><i class="iconPopup fas fa-stopwatch cinzaColor"></i> Prazo de anteced\u00EAncia m\u00EDnima para convoca\u00E7\u00F5es \u00E0 unidade <br>(apenas para PGR Semipresencial ou Teletrabalho)</td>'+
                             '                      <td>'+
@@ -5578,7 +6137,21 @@ function editConfigOptions(this_, id) {
                         '               <label><i class="iconPopup iconSwitch fas fa-magic cinzaColor"></i>Visualiza\u00E7\u00E3o</label>'+
                         '           </td>'+
                         '           <td>'+
-                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '               <table style="font-size: 10pt;width: 100%; margin: 0;" class="seiProForm">'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;" colspan="2">'+
+                        '                           <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                        '                              <tr style="height: 40px;">'+
+                        '                                  <td style="text-align: left;">'+
+                        '                                       <i class="iconPopup fas fa-graduation-cap cinzaColor"></i> URL do Guia de Utiliza\u00E7\u00E3o'+
+                        '                                  </td>'+
+                        '                                  <td style="width: 250px;">'+
+                        '                                      <input type="text" class="singleOptionConfig" data-key="guia_utilizacao" id="extensao_firefox" value="'+(config && typeof config.guia_utilizacao !== 'undefined' && config.guia_utilizacao != ''  ? config.guia_utilizacao : 'https://bit.ly/Guia-ANTAQPro' )+'">'+
+                        '                                  </td>'+
+                        '                              </tr>'+
+                        '                           </table>'+
+                        '                      </td>'+
+                        '                  </tr>'+
                         '                  <tr style="height: 40px;">'+
                         '                      <td style="text-align: left;"><i class="iconPopup fas fa-window-restore cinzaColor"></i> Abrir as configura\u00E7\u00F5es do sistema em janela apartada (modal)</td>'+
                         '                      <td>'+
@@ -5743,14 +6316,17 @@ function editConfigOptions(this_, id) {
                                             : jmespath.search(arrayList,"[*].{label: name, value: value}");
                                 selectArray = selectArray.filter((v,i,a)=>a.findIndex(t=>(t.value === v.value))===i);
                             var htmlOptions = $.map(selectArray, function(v){
-                                                    var selected = (v.label == _this.text().trim()) ? 'selected' : '';
+                                                    var selected = (v.label == _this.text().trim()) ? 'selected' : ''; 
                                                     var disable = (data_tr.key == 'perfil' && arrayConfigAtividades.perfil.nivel > v.nivel) ? 'disabled' : '';
                                                         return '<option value="'+v.value+'" '+selected+' '+disable+'>'+v.label+'</option>';
                                                 }).join('');
                         } else if (data_tr.key == 'lotacao') {
                             var htmlOptions = getOptionSelectPerfil(arrayConfigAtividades.unidades_all, _this.text().trim(), false);
                         }
-                            _this.html(`<select data-type="`+data.type+`" onchange="changeSelectConfigItem(this)" onblur="changeSelectConfigItem(this)"><option value=""></option>`+htmlOptions+'</select>').find('select').focus();
+                            _this.html(`<select data-type="`+data.type+`" onchange="changeSelectConfigItem(this)" onblur="changeSelectConfigItem(this)"><option value=""></option>`+htmlOptions+'</select>').find('select').focus().chosen({
+                                placeholder_text_single: ' ',
+                                no_results_text: 'Nenhum resultado encontrado'
+                            });
                     },
                     renderValue: (elem, formattedNewVal) => { 
                             $(elem).text(formattedNewVal); 
@@ -5874,12 +6450,12 @@ function setParamEditorAtiv(mode, text, id_user = false) {
             if (check_lista_atividades || check_lista_integral) {
                 rowListaAtividades +=   '           <tr>'+
                                         '                <td>'+sigla_unidade+value.nome_atividade+'</td>'+
-                                        '                <td>'+complexidade+'</td>'+
-                                        '                <td>'+parametros+'</td>'+
+                                        '                <td>'+unicodeToChar(complexidade)+'</td>'+
+                                        '                <td>'+unicodeToChar(parametros)+'</td>'+
                                         '                <td>'+(value.tempo_pactuado*ganho_presencial).toFixed(2)+'</td>'+
                                         '                <td>'+(value.tempo_pactuado*ganho_tele).toFixed(2)+'</td>'+
                                         '                <td>'+((1-ganho_tele)*100).toFixed(2)+'%'+'</td>'+
-                                        '                <td>'+entregas+'</td>'+
+                                        '                <td>'+unicodeToChar(entregas)+'</td>'+
                                         '           </tr>';
             }
         });
@@ -6168,24 +6744,26 @@ function configServerKey(this_, mode) {
     // console.log(param);
     getConfigServer(action, param);
 }
-function checkDatesLoopArray(array, inicio, fim, id_user, id_target, labels, includes = false, search_target = false) {
+function checkDatesLoopArray(array, inicio, fim, id_user, id_target, labels, includes = false, search_target = false, add_loop = 'days') {
     var format = 'YYYY-MM-DDTHH:mm';
     // var format = (inicio.indexOf('T') !== -1) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
     var _inicio = moment(inicio, format);
     var _fim = moment(fim, format);
     var checkBetween = false;
-    var checkInicio = checkDatesBetweenArray(array, _inicio.format(format), id_user, id_target, labels, includes, search_target);
-    var checkFim = checkDatesBetweenArray(array, _fim.format(format), id_user, id_target, labels, includes, search_target);
-        while(_inicio.add(1, 'days').diff(_fim) < 0) {
-            var check = checkDatesBetweenArray(array, _inicio.clone().format(format), id_user, id_target, labels, includes, search_target);
+    var checkInicio = checkDatesBetweenArray(array, _inicio.format(format), id_user, id_target, labels, includes, search_target, add_loop);
+    var checkFim = checkDatesBetweenArray(array, _fim.format(format), id_user, id_target, labels, includes, search_target, add_loop);
+        while(_inicio.add(1, add_loop).diff(_fim) < 0) {
+            var check = checkDatesBetweenArray(array, _inicio.clone().format(format), id_user, id_target, labels, includes, search_target, add_loop);
             if (check) {
                 checkBetween = check;
+                break;
             }
         }
         // console.log(array, inicio, format, checkInicio, checkBetween, checkFim, id_user, id_target, labels, includes);
+
     return (checkInicio || checkBetween || checkFim) ? (checkInicio || checkBetween || checkFim) : false;
 }
-function checkDatesBetweenArray(array, date_target, id_user, id_target, labels, includes = false, search_target = false) {
+function checkDatesBetweenArray(array, date_target, id_user, id_target, labels, includes = false, search_target = false, add_loop = 'days') {
     var format = (date_target.indexOf('T') !== -1) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
     // var mode_between = (date_target.indexOf('T') !== -1) ? 'minutes' : 'days';
     var userDates = (search_target) 
@@ -6194,11 +6772,16 @@ function checkDatesBetweenArray(array, date_target, id_user, id_target, labels, 
     var checkDates = [];
     var target = moment(date_target,format);
         includes = (includes) ? '[]' : '()';
-    // console.log({search_target: search_target, format: format, userDates: userDates, date_target: date_target, id_user: id_user, id_target: id_target});
+        
+        // console.log({search_target: search_target, format: format, userDates: userDates, date_target: date_target, id_user: id_user, id_target: id_target});
+
     $.each(userDates,function(index, value){
         var start = moment(value[labels.inicio], 'YYYY-MM-DD HH:mm:ss');
         var finish = moment(value[labels.fim], 'YYYY-MM-DD HH:mm:ss');
-        var check = target.isBetween(start, finish, 'days', includes);
+        var check = target.isBetween(start, finish, add_loop, includes);
+
+        // console.log('$$$ => ',target.format(format), start.format(format), finish.format(format), add_loop, includes);
+
         var check_array = (search_target) 
                 ? (id_target != value[labels.idreftype]) ? true : false
                 : (id_target != value[labels.id]) ? true : false;
@@ -6208,7 +6791,7 @@ function checkDatesBetweenArray(array, date_target, id_user, id_target, labels, 
             //return false;
         }
     });
-    return checkDates;
+    return (checkDates && checkDates.length ? checkDates : false);
 }
 function checkOptionConfigSEI(this_) {
     var _this = $(this_);
@@ -6364,8 +6947,10 @@ function extractOptionConfigUnidade(this_) {
                 envio_automatico: _parent.find('#atividades_envio_automatico').is(':checked').toString()
             },
             planos:{
+                duracao_padrao: parseInt(_parent.find('#planos_duracao_padrao').val()),
                 prazo_comparecimento: parseInt(_parent.find('#planos_prazo_comparecimento').val()),
-                data_comparecimento: _parent.find('#planos_data_comparecimento').val()
+                data_comparecimento: _parent.find('#planos_data_comparecimento').val(),
+                mostrar_notas: _parent.find('#planos_mostrar_notas').is(':checked')
             },
             distribuicao:{
                 horario_util:{
@@ -6408,7 +6993,6 @@ function saveOptionConfigItem(this_, type, id) {
         key: JSON.stringify(convertJsonBools(key)),
         mode: 'option'
     };
-    console.log(type, param);
     getConfigServer(action, param);
 }
 // CRIA PAINEL DE CONFIGURACOES
@@ -6418,6 +7002,7 @@ function configPessoal() {
     var stateAtivDataSub = ( !verifyOptionsPro('panelAtividadesViewSubordinada') || getOptionsPro('panelAtividadesViewSubordinada') ) ? 'checked' : '';
     // var stateAtivDataSyncUnidade = ( getOptionsPro('panelAtividadesViewSyncUnidade') ) ? 'checked' : '';
     var statePanelSortPro = ( getOptionsPro('panelSortPro') ) ? 'checked' : '';
+    var statePanelLabPro = ( getOptionsPro('panelLabPro') ) ? 'checked' : '';
     var statePanelSortColumnsPro = ( getOptionsPro('panelSortColumnsPro') ) ? 'checked' : '';
     var configBaseSelected = ( getOptionsPro('configBaseSelectedPro_atividades') ) ? getOptionsPro('configBaseSelectedPro_atividades') : 0;
     var configBaseProAtiv = ( localStorageRestorePro('configBasePro') != null ) ? localStorageRestorePro('configBasePro') : false;
@@ -6427,13 +7012,22 @@ function configPessoal() {
     var configUser = (typeof arrayConfigAtividades.perfil !== 'undefined' && arrayConfigAtividades.perfil.hasOwnProperty('config') && typeof arrayConfigAtividades.perfil.config !== 'undefined' && arrayConfigAtividades.perfil.config !== null) ? arrayConfigAtividades.perfil.config : false;
     // console.log('configUser',configUser);
 
-    var htmlSelectConfigBase = '<select style="width: 100%; margin: 0 !important; padding: 0 5px !important;" class="required infraText txtsheetsSelect" id="selectBaseDadosAtiv" onchange="changeBaseDadosAtiv(this)">'+optionSelectConfigBasePro+'</select>';
+    var htmlSelectConfigBase = '<select style="width: 100%; margin: 0 !important; padding: 0 5px !important;width: 300px;" class="required infraText txtsheetsSelect" id="selectBaseDadosAtiv" onchange="changeBaseDadosAtiv(this)">'+optionSelectConfigBasePro+'</select>';
     
     var textBox =   '<table style="font-size: 10pt;width: 50%; margin-top: 30px;min-width: 650px;" class="seiProForm">'+
                     '   <tr style="height: 40px;">'+
+                    '       <td><i class="iconPopup fas fa-flask cinzaColor"></i> Sincronizar dados localmente para aumentar desempenho (experimental)</td>'+
+                    '       <td style="width: 300px;">'+
+                    '           <div class="onoffswitch" style="float: left;">'+
+                    '               <input type="checkbox" data-type="view_ativ_lab" onchange="changeViewStatesAtiv(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelLabPro" tabindex="0" '+statePanelLabPro+'>'+
+                    '               <label class="onoffswitch-label" for="panelLabPro"></label>'+
+                    '           </div>'+
+                    '       </td>'+
+                    '   </tr>'+
+                    '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup far fa-hand-rock cinzaColor"></i> Ordenar pain\u00E9is de gest\u00E3o arrastando e soltando</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch" style="float: right;">'+
+                    '           <div class="onoffswitch" style="float: left;">'+
                     '               <input type="checkbox" onchange="changePanelSortPro(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelSortPro" tabindex="0" '+statePanelSortPro+'>'+
                     '               <label class="onoffswitch-label" for="panelSortPro"></label>'+
                     '           </div>'+
@@ -6442,7 +7036,7 @@ function configPessoal() {
                     '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup fas fa-arrows-alt-h cinzaColor"></i> Ordenar colunas do painel de '+__.demandas+' arrastando e soltando</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch" style="float: right;">'+
+                    '           <div class="onoffswitch" style="float: left;">'+
                     '               <input type="checkbox" onchange="changePanelSortColumnsPro(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelSortColumnsPro" tabindex="0" '+statePanelSortColumnsPro+'>'+
                     '               <label class="onoffswitch-label" for="panelSortColumnsPro"></label>'+
                     '           </div>'+
@@ -6451,7 +7045,7 @@ function configPessoal() {
                     '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup fas fa-street-view cinzaColor"></i> Visualizar apenas '+__.minhas_demandas+'</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch" style="float: right;">'+
+                    '           <div class="onoffswitch" style="float: left;">'+
                     '               <input type="checkbox" data-type="view_ativ_self" onchange="changeViewStatesAtiv(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelAtividadesViewSelf" tabindex="0" '+selfAtivData+'>'+
                     '               <label class="onoffswitch-label" for="panelAtividadesViewSelf"></label>'+
                     '           </div>'+
@@ -6460,16 +7054,16 @@ function configPessoal() {
                     '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup fas fa-archive cinzaColor"></i> Visualizar '+__.demandas+' j\u00E1 '+__.arquivadas+'</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch" style="float: right;">'+
+                    '           <div class="onoffswitch" style="float: left;">'+
                     '               <input type="checkbox" data-type="view_ativ_send" onchange="changeViewStatesAtiv(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelAtividadesViewSend" tabindex="0" '+stateAtivData+'>'+
                     '               <label class="onoffswitch-label" for="panelAtividadesViewSend"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
                     '   <tr style="height: 40px;">'+
-                    '       <td><i class="iconPopup fas fa-exchange-alt cinzaColor"></i> Visualizar '+__.demandas+' das unidades subordinadas</td>'+
+                    '       <td><i class="iconPopup fas fa-exchange-alt cinzaColor"></i> Visualizar '+__.demandas+' e afastamentos das unidades subordinadas</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch" style="float: right;">'+
+                    '           <div class="onoffswitch" style="float: left;">'+
                     '               <input type="checkbox" data-type="view_ativ_sub" onchange="changeViewStatesAtiv(this);saveConfigPersonalUser(this);" name="onoffswitch" class="onoffswitch-checkbox" id="panelAtividadesViewSub" tabindex="0" '+stateAtivDataSub+'>'+
                     '               <label class="onoffswitch-label" for="panelAtividadesViewSub"></label>'+
                     '           </div>'+
@@ -6518,8 +7112,10 @@ function configPessoal() {
     return textBox;
 }
 function saveConfigPersonalUser(this_) {
+    removeLocalDataAtiv();
     var _this = $(this_);
     var _parent = _this.closest('.ui-tabs-panel');
+    var funcoes_experimentais = _parent.find('#panelLabPro').is(':checked');
     var ordenar_paineis = _parent.find('#panelSortPro').is(':checked');
     var ordenar_colunas = _parent.find('#panelSortColumnsPro').is(':checked');
     var visualiza_enviadas = _parent.find('#panelAtividadesViewSend').is(':checked');
@@ -6528,6 +7124,7 @@ function saveConfigPersonalUser(this_) {
     var horario_inicio = _parent.find('#distribuicao_horario_util_inicio').val();
     var horario_fim = _parent.find('#distribuicao_horario_util_fim').val();
     var config = {
+        funcoes_experimentais: funcoes_experimentais,
         ordenar_paineis: ordenar_paineis,
         ordenar_colunas: ordenar_colunas,
         visualiza_enviadas: visualiza_enviadas,
@@ -6548,150 +7145,229 @@ function saveConfigPersonalUser(this_) {
     getServerAtividades(param, action);
     _this.closest('tr').find('td').eq(0).addClass('editCellLoading');
 }
-function getTableRelatorioPanel(listRelatorios) {
-    var type = 'demandas';
+function getTableRelatorioPanel(data, param) {
+    var type = param.action.replace('report_','');
     var relatorioID = '#tabs_report-'+type;
     var tabelaRelatorio = $(relatorioID);
         tabelaRelatorio.show();
+    var listRelatorios = data.result;
     // var arrayProcessosUnidade = getProcessoUnidadePro();
+    // console.log(tabelaRelatorio, type, data, param);
     var countRelatorios = (listRelatorios.length == 1) ? listRelatorios.length+' registro:' : listRelatorios.length+' registros:';
     if (typeof listRelatorios !== 'undefined' && listRelatorios.length > 0 && listRelatorios != 0) {
-        htmlTableRelatorios =    '<table id="tableRelatorio_'+type+'" data-name-table="Relatorio_'+type+'" style="width: max-content !important; margin-top: 20px;" class="tableInfo tableZebra tableFollow tableAtividades tableRelatorioView" data-tabletype="relatorios">'+
-                                '   <caption class="infraCaption" style="text-align: left; margin-top: 20px;">'+countRelatorios+'</caption>'+
-                                '   <thead>'+
-                                '       <tr class="tableHeader" style="height: 30px;">'+  
-                                '           <th class="tituloControle" style="width: 50px;">ID</th>'+
-                                '           <th class="tituloControle" style="width: 80px;">Unidade</th>'+
-                                '           <th class="tituloControle" style="width: 210px;">Processo</th>'+
-                                '           <th class="tituloControle" style="width: 180px;">Requisi\u00E7\u00E3o</th>'+
-                                '           <th class="tituloControle" style="width: 400px;">'+__.Assunto+'</th>'+
-                                '           <th class="tituloControle" style="width: 400px;">'+__.Atividade+'</th>'+
-                                '           <th class="tituloControle" style="width: 180px;">Etiquetas</th>'+
-                                '           <th class="tituloControle" style="width: 180px;">Respons\u00E1vel</th>'+
-                                '           <th class="tituloControle" style="width: 140px;">Tempo Planejado (horas)</th>'+
-                                '           <th class="tituloControle" style="width: 120px;">Dias de Planejamento</th>'+
-                                '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Distribui\u00E7\u00E3o</th>'+
-                                '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Prazo de Entrega</th>'+
-                                '           <th class="tituloControle" style="width: 140px;">Tempo Pactuado (horas)</th>'+
-                                '           <th class="tituloControle" style="width: 120px;">Fator de '+__.Complexidade+'</th>'+
-                                '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de In\u00EDcio</th>'+
-                                '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Conclus\u00E3o</th>'+
-                                '           <th class="tituloControle" style="width: 210px;">Status Entrega</th>'+
-                                '           <th class="tituloControle" style="width: 210px;">Documento Entregue</th>'+
-                                '           <th class="tituloControle" style="width: 140px;">Tempo Despendido (horas)</th>'+
-                                '           <th class="tituloControle" style="width: 120px;">Produtividade</th>'+
-                                '           <th class="tituloControle" style="width: 80px;">Nota Atribu\u00EDda</th>'+
-                                '           <th class="tituloControle" style="width: 120px;">Coment\u00E1rios</th>'+
-                                '           <th class="tituloControle" style="width: 120px;">Justificativas</th>'+
-                                '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Avalia\u00E7\u00E3o</th>'+
-                                '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de '+__.Arquivamento+'</th>'+
-                                '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">\u00DAltima Atualiza\u00E7\u00E3o</th>'+
-                                '       </tr>'+
-                                '   </thead>'+
-                                '   <tbody>';
-        $.each(listRelatorios,function(index, value){
-            var linkProc = (parseInt(value.id_procedimento) == 0) ? '' : url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento;
-            var linkReq = (parseInt(value.id_documento_requisicao) == 0) ? '' : url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento+'&id_documento='+value.id_documento_requisicao;
-            var linkDoc = (parseInt(value.id_documento_entregue) == 0) ? '' : url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento+'&id_documento='+value.id_documento_requisicao;
-            var documentoTips = (typeof value.documento_sei !== 'undefined' && value.documento_sei !== null && value.documento_sei != '' && parseInt(value.documento_sei) != 0) ? value.nome_documento+' ('+value.documento_sei+')' : value.nome_documento;
-            var requisicaoTips = (typeof value.requisicao_sei !== 'undefined' && value.requisicao_sei !== null && value.requisicao_sei != '' && parseInt(value.requisicao_sei) != 0) ? value.nome_requisicao+' ('+value.requisicao_sei+')' : value.nome_requisicao;
-                // requisicaoTips = (value.data_entrega == '0000-00-00 00:00:00') ? 'Requisi\u00E7\u00E3o: '+requisicaoTips : 'Entrega: '+documentoTips;
-            var iconProcesso = ( $.inArray(value.processo_sei, arrayProcessosUnidade) == -1 ) ? 'fas fa-folder' : 'far fa-folder-open';
-            var tipsProcesso = ( $.inArray(value.processo_sei, arrayProcessosUnidade) == -1 ) ? 'Processo fechado nesta unidade' : 'Processo aberto nesta unidade';
-            var nameUser = (value.id_user != 0 ? value.nome_completo : 'N\u00E3o atribu\u00EDdo');
-            var iconRequisicao = (value.data_entrega == '0000-00-00 00:00:00') ? 'far fa-list-alt' : 'fas fa-list-alt'; 
+        if (type == 'demandas') {
+            htmlTableRelatorios =    '<table id="tableRelatorio_'+type+'" data-name-table="Relatorio_'+type+'" style="width: max-content !important; margin-top: 20px;" class="tableInfo tableZebra tableFollow tableAtividades tableRelatorioView" data-tabletype="relatorios">'+
+                                    '   <caption class="infraCaption" style="text-align: left; margin-top: 20px;">'+countRelatorios+'</caption>'+
+                                    '   <thead>'+
+                                    '       <tr class="tableHeader" style="height: 30px;">'+  
+                                    '           <th class="tituloControle" style="width: 50px;">ID</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Unidade</th>'+
+                                    '           <th class="tituloControle" style="width: 210px;">Processo</th>'+
+                                    '           <th class="tituloControle" style="width: 180px;">Requisi\u00E7\u00E3o</th>'+
+                                    '           <th class="tituloControle" style="width: 400px;">'+__.Assunto+'</th>'+
+                                    '           <th class="tituloControle" style="width: 400px;">'+__.Atividade+'</th>'+
+                                    '           <th class="tituloControle" style="width: 180px;">Etiquetas</th>'+
+                                    '           <th class="tituloControle" style="width: 180px;">Respons\u00E1vel</th>'+
+                                    '           <th class="tituloControle" style="width: 140px;">Tempo Planejado (horas)</th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Dias de Planejamento</th>'+
+                                    '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Distribui\u00E7\u00E3o</th>'+
+                                    '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Prazo de Entrega</th>'+
+                                    '           <th class="tituloControle" style="width: 140px;">Tempo Pactuado (horas)</th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Fator de '+__.Complexidade+'</th>'+
+                                    '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de In\u00EDcio</th>'+
+                                    '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Conclus\u00E3o</th>'+
+                                    '           <th class="tituloControle" style="width: 210px;">Status Entrega</th>'+
+                                    '           <th class="tituloControle" style="width: 210px;">Documento Entregue</th>'+
+                                    '           <th class="tituloControle" style="width: 140px;">Tempo Despendido (horas)</th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Produtividade</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Nota Atribu\u00EDda</th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Coment\u00E1rios</th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Justificativas</th>'+
+                                    '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Avalia\u00E7\u00E3o</th>'+
+                                    '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de '+__.Arquivamento+'</th>'+
+                                    '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">\u00DAltima Atualiza\u00E7\u00E3o</th>'+
+                                    '       </tr>'+
+                                    '   </thead>'+
+                                    '   <tbody>';
+            $.each(listRelatorios,function(index, value){
+                var linkProc = (parseInt(value.id_procedimento) == 0) ? '' : url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento;
+                var linkReq = (parseInt(value.id_documento_requisicao) == 0) ? '' : url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento+'&id_documento='+value.id_documento_requisicao;
+                var linkDoc = (parseInt(value.id_documento_entregue) == 0) ? '' : url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento+'&id_documento='+value.id_documento_requisicao;
+                var documentoTips = (typeof value.documento_sei !== 'undefined' && value.documento_sei !== null && value.documento_sei != '' && parseInt(value.documento_sei) != 0) ? value.nome_documento+' ('+value.documento_sei+')' : value.nome_documento;
+                var requisicaoTips = (typeof value.requisicao_sei !== 'undefined' && value.requisicao_sei !== null && value.requisicao_sei != '' && parseInt(value.requisicao_sei) != 0) ? value.nome_requisicao+' ('+value.requisicao_sei+')' : value.nome_requisicao;
+                    // requisicaoTips = (value.data_entrega == '0000-00-00 00:00:00') ? 'Requisi\u00E7\u00E3o: '+requisicaoTips : 'Entrega: '+documentoTips;
+                var iconProcesso = ( $.inArray(value.processo_sei, arrayProcessosUnidade) == -1 ) ? 'fas fa-folder' : 'far fa-folder-open';
+                var tipsProcesso = ( $.inArray(value.processo_sei, arrayProcessosUnidade) == -1 ) ? 'Processo fechado nesta unidade' : 'Processo aberto nesta unidade';
+                var nameUser = (value.id_user != 0 ? value.nome_completo : 'N\u00E3o atribu\u00EDdo');
+                var iconRequisicao = (value.data_entrega == '0000-00-00 00:00:00') ? 'far fa-list-alt' : 'fas fa-list-alt'; 
 
-            var processoHtml = (value.processo_sei !== null && value.processo_sei != '')
-                        ? '               <a '+(linkProc == '' ? 'style="cursor: auto;"' : 'style="text-decoration: underline; color: #00c;" href="'+linkProc+'" target="_blank"')+'>'+
-                        '                   <i class="'+iconProcesso+'" '+(linkProc == '' ? 'style="color: #a2a2a2;"' : 'style="color: #00c; text-decoration: underline;"')+'></i> '+
-                        '                   <span '+(linkProc == '' ? '' : 'style="color: #00c;"')+'></i> '+
-                        '                       '+value.processo_sei+
-                        '                   </span>'+
-                        '               </a>'
-                        : '';
+                var processoHtml = (value.processo_sei !== null && value.processo_sei != '')
+                            ? '               <a '+(linkProc == '' ? 'style="cursor: auto;"' : 'style="text-decoration: underline; color: #00c;" href="'+linkProc+'" target="_blank"')+'>'+
+                            '                   <i class="'+iconProcesso+'" '+(linkProc == '' ? 'style="color: #a2a2a2;"' : 'style="color: #00c; text-decoration: underline;"')+'></i> '+
+                            '                   <span '+(linkProc == '' ? '' : 'style="color: #00c;"')+'></i> '+
+                            '                       '+value.processo_sei+
+                            '                   </span>'+
+                            '               </a>'
+                            : '';
 
-            var requisicaoHtml =    '               <a '+(linkReq == '' ? 'style="cursor: auto;"' : 'style="text-decoration: underline; color: #00c;" href="'+linkReq+'" target="_blank"')+'>'+
-                                    '                   <i class="'+iconRequisicao+'" '+(linkReq == '' ? 'style="color: #a2a2a2;"' : 'style="color: #00c; text-decoration: underline;"')+' onmouseover="return infraTooltipMostrar(\''+requisicaoTips+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
-                                    '                   <span '+(linkReq == '' ? '' : 'style="color: #00c;"')+'></i> '+
-                                    '                       '+requisicaoTips+
-                                    '                   </span>'+
-                                    '               </a>';
+                var requisicaoHtml =    '               <a '+(linkReq == '' ? 'style="cursor: auto;"' : 'style="text-decoration: underline; color: #00c;" href="'+linkReq+'" target="_blank"')+'>'+
+                                        '                   <i class="'+iconRequisicao+'" '+(linkReq == '' ? 'style="color: #a2a2a2;"' : 'style="color: #00c; text-decoration: underline;"')+' onmouseover="return infraTooltipMostrar(\''+requisicaoTips+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
+                                        '                   <span '+(linkReq == '' ? '' : 'style="color: #00c;"')+'></i> '+
+                                        '                       '+requisicaoTips+
+                                        '                   </span>'+
+                                        '               </a>';
 
-            var documentoHtml =     (value.data_entrega == '0000-00-00 00:00:00') ? '' : 
-                                    '               <a '+(linkDoc == '' ? 'style="cursor: auto;"' : 'style="text-decoration: underline; color: #00c;" href="'+linkDoc+'" target="_blank"')+'>'+
-                                    '                   <i class="'+iconRequisicao+'" '+(linkDoc == '' ? 'style="color: #a2a2a2;"' : 'style="color: #00c; text-decoration: underline;"')+' onmouseover="return infraTooltipMostrar(\''+documentoTips+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
-                                    '                   <span '+(linkDoc == '' ? '' : 'style="color: #00c;"')+'></i> '+
-                                    '                       '+documentoTips+
-                                    '                   </span>'+
-                                    '               </a>';
+                var documentoHtml =     (value.data_entrega == '0000-00-00 00:00:00') ? '' : 
+                                        '               <a '+(linkDoc == '' ? 'style="cursor: auto;"' : 'style="text-decoration: underline; color: #00c;" href="'+linkDoc+'" target="_blank"')+'>'+
+                                        '                   <i class="'+iconRequisicao+'" '+(linkDoc == '' ? 'style="color: #a2a2a2;"' : 'style="color: #00c; text-decoration: underline;"')+' onmouseover="return infraTooltipMostrar(\''+documentoTips+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
+                                        '                   <span '+(linkDoc == '' ? '' : 'style="color: #00c;"')+'></i> '+
+                                        '                       '+documentoTips+
+                                        '                   </span>'+
+                                        '               </a>';
 
-            var statusAtividade = (moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss') < moment()) ? 'Atrasado' : 'No prazo';
-                statusAtividade = (value.data_entrega != '0000-00-00 00:00:00' && moment(value.data_entrega,'YYYY-MM-DD HH:mm:ss') <= moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss')) ? 'Entregue no prazo' : statusAtividade;
-                statusAtividade = (value.data_entrega != '0000-00-00 00:00:00' && moment(value.data_entrega,'YYYY-MM-DD HH:mm:ss') > moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss')) ? 'Entregue fora do prazo' : statusAtividade;
-                            
+                var statusAtividade = (moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss') < moment()) ? 'Atrasado' : 'No prazo';
+                    statusAtividade = (value.data_entrega != '0000-00-00 00:00:00' && moment(value.data_entrega,'YYYY-MM-DD HH:mm:ss') <= moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss')) ? 'Entregue no prazo' : statusAtividade;
+                    statusAtividade = (value.data_entrega != '0000-00-00 00:00:00' && moment(value.data_entrega,'YYYY-MM-DD HH:mm:ss') > moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss')) ? 'Entregue fora do prazo' : statusAtividade;
+                                
 
-            htmlTableRelatorios +=    '       <tr data-tagname="SemGrupo" data-index="'+index+'">'+
-                                        '           <td align="center">'+value.id_demanda+'</td>'+
-                                        '           <td align="left">'+value.sigla_unidade+'</td>'+
-                                        '           <td align="left">'+processoHtml+'</td>'+
-                                        '           <td align="left">'+requisicaoHtml+'</td>'+
-                                        '           <td align="left">'+value.assunto+'</td>'+
-                                        '           <td align="left">'+value.nome_atividade+'</td>'+
-                                        '           <td align="left">'+(value.etiquetas ? value.etiquetas.join('; ') : '')+'</td>'+
-                                        '           <td align="left">'+nameUser+'</td>'+
-                                        '           <td align="center">'+value.tempo_planejado+'</td>'+
-                                        '           <td align="center">'+value.dias_planejado+'</td>'+
-                                        '           <td align="center">'+
-                                        '               <span class="info_dates_fav" data-time-sorter="'+value.data_distribuicao+'">'+
-                                        '                   '+(value.data_distribuicao == '0000-00-00 00:00:00' ? '' : moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
-                                        '               </span>'+
-                                        '           </td>'+
-                                        '           <td align="center">'+
-                                        '               <span class="info_dates_fav" data-time-sorter="'+value.prazo_entrega+'">'+
-                                        '                   '+(value.prazo_entrega == '0000-00-00 00:00:00' ? '' : moment(value.prazo_entrega, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
-                                        '               </span>'+
-                                        '           </td>'+
-                                        '           <td align="center">'+value.tempo_pactuado+'</td>'+
-                                        '           <td align="center">'+value.fator_complexidade+'</td>'+
-                                        '           <td align="center">'+
-                                        '               <span class="info_dates_fav" data-time-sorter="'+value.data_inicio+'">'+
-                                        '                   '+(value.data_inicio == '0000-00-00 00:00:00' ? '' : moment(value.data_inicio, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
-                                        '               </span>'+
-                                        '           </td>'+
-                                        '           <td align="center">'+
-                                        '               <span class="info_dates_fav" data-time-sorter="'+value.data_entrega+'">'+
-                                        '                   '+(value.data_entrega == '0000-00-00 00:00:00' ? '' : moment(value.data_entrega, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
-                                        '               </span>'+
-                                        '           </td>'+
-                                        '           <td align="left">'+statusAtividade+'</td>'+
-                                        '           <td align="left">'+documentoHtml+'</td>'+
-                                        '           <td align="center">'+value.tempo_despendido+'</td>'+
-                                        '           <td align="left">'+(value.produtividade == 0 ? '' : ((value.produtividade*100).toFixed(2)+'%'))+'</td>'+
-                                        '           <td align="center">'+(value.avaliacao == 0 ? '' : value.avaliacao.nota_atribuida)+'</td>'+
-                                        '           <td align="left">'+(value.avaliacao == 0 ? '' : value.avaliacao.comentarios)+'</td>'+
-                                        '           <td align="left">'+(value.avaliacao == 0 ? '' : $.map(value.avaliacao.justificativas, function(v){ return v.nome_justificativa }).join(', '))+'</td>'+
-                                        '           <td align="center">'+
-                                        '               <span class="info_dates_fav" data-time-sorter="'+value.data_avaliacao+'">'+
-                                        '                   '+(value.data_avaliacao == '0000-00-00 00:00:00' ? '' : moment(value.data_avaliacao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
-                                        '               </span>'+
-                                        '           </td>'+
-                                        '           <td align="center">'+
-                                        '               <span class="info_dates_fav" data-time-sorter="'+value.data_envio+'">'+
-                                        '                   '+(value.data_envio == '0000-00-00 00:00:00' ? '' : moment(value.data_envio, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
-                                        '               </span>'+
-                                        '           </td>'+
-                                        '           <td align="center">'+
-                                        '               <span class="info_dates_fav" data-time-sorter="'+value.datetime+'">'+
-                                        '                   '+(value.datetime == '0000-00-00 00:00:00' ? '' : moment(value.datetime, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
-                                        '               </span>'+
-                                        '           </td>'+
+                htmlTableRelatorios +=    '       <tr data-tagname="SemGrupo" data-index="'+index+'">'+
+                                            '           <td align="center">'+value.id_demanda+'</td>'+
+                                            '           <td align="left">'+value.sigla_unidade+'</td>'+
+                                            '           <td align="left">'+processoHtml+'</td>'+
+                                            '           <td align="left">'+requisicaoHtml+'</td>'+
+                                            '           <td align="left">'+value.assunto+'</td>'+
+                                            '           <td align="left">'+value.nome_atividade+'</td>'+
+                                            '           <td align="left">'+(value.etiquetas ? value.etiquetas.join('; ') : '')+'</td>'+
+                                            '           <td align="left">'+nameUser+'</td>'+
+                                            '           <td align="center">'+value.tempo_planejado+'</td>'+
+                                            '           <td align="center">'+value.dias_planejado+'</td>'+
+                                            '           <td align="center">'+
+                                            '               <span class="info_dates_fav" data-time-sorter="'+value.data_distribuicao+'">'+
+                                            '                   '+(value.data_distribuicao == '0000-00-00 00:00:00' ? '' : moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
+                                            '               </span>'+
+                                            '           </td>'+
+                                            '           <td align="center">'+
+                                            '               <span class="info_dates_fav" data-time-sorter="'+value.prazo_entrega+'">'+
+                                            '                   '+(value.prazo_entrega == '0000-00-00 00:00:00' ? '' : moment(value.prazo_entrega, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
+                                            '               </span>'+
+                                            '           </td>'+
+                                            '           <td align="center">'+value.tempo_pactuado+'</td>'+
+                                            '           <td align="center">'+value.fator_complexidade+'</td>'+
+                                            '           <td align="center">'+
+                                            '               <span class="info_dates_fav" data-time-sorter="'+value.data_inicio+'">'+
+                                            '                   '+(value.data_inicio == '0000-00-00 00:00:00' ? '' : moment(value.data_inicio, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
+                                            '               </span>'+
+                                            '           </td>'+
+                                            '           <td align="center">'+
+                                            '               <span class="info_dates_fav" data-time-sorter="'+value.data_entrega+'">'+
+                                            '                   '+(value.data_entrega == '0000-00-00 00:00:00' ? '' : moment(value.data_entrega, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
+                                            '               </span>'+
+                                            '           </td>'+
+                                            '           <td align="left">'+statusAtividade+'</td>'+
+                                            '           <td align="left">'+documentoHtml+'</td>'+
+                                            '           <td align="center">'+value.tempo_despendido+'</td>'+
+                                            '           <td align="left">'+(value.produtividade == 0 ? '' : ((value.produtividade*100).toFixed(2)+'%'))+'</td>'+
+                                            '           <td align="center">'+(value.avaliacao == 0 ? '' : value.avaliacao.nota_atribuida)+'</td>'+
+                                            '           <td align="left">'+(value.avaliacao == 0 ? '' : value.avaliacao.comentarios)+'</td>'+
+                                            '           <td align="left">'+(value.avaliacao == 0 ? '' : $.map(value.avaliacao.justificativas, function(v){ return v.nome_justificativa }).join(', '))+'</td>'+
+                                            '           <td align="center">'+
+                                            '               <span class="info_dates_fav" data-time-sorter="'+value.data_avaliacao+'">'+
+                                            '                   '+(value.data_avaliacao == '0000-00-00 00:00:00' ? '' : moment(value.data_avaliacao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
+                                            '               </span>'+
+                                            '           </td>'+
+                                            '           <td align="center">'+
+                                            '               <span class="info_dates_fav" data-time-sorter="'+value.data_envio+'">'+
+                                            '                   '+(value.data_envio == '0000-00-00 00:00:00' ? '' : moment(value.data_envio, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
+                                            '               </span>'+
+                                            '           </td>'+
+                                            '           <td align="center">'+
+                                            '               <span class="info_dates_fav" data-time-sorter="'+value.datetime+'">'+
+                                            '                   '+(value.datetime == '0000-00-00 00:00:00' ? '' : moment(value.datetime, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
+                                            '               </span>'+
+                                            '           </td>'+
+                                            '       </tr>';
+            });
+        } else if (type == 'planos') {
+            htmlTableRelatorios =    '<table id="tableRelatorio_'+type+'" data-name-table="Relatorio_'+type+'" style="width: max-content !important; margin-top: 20px;" class="tableInfo tableZebra tableFollow tableAtividades tableRelatorioView" data-tabletype="relatorios">'+
+                                    '   <caption class="infraCaption" style="text-align: left; margin-top: 20px;">'+countRelatorios+'</caption>'+
+                                    '   <thead>'+
+                                    '       <tr class="tableHeader" style="height: 30px;">'+  
+                                    '           <th class="tituloControle" style="width: 50px;">ID</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Status</th>'+
+                                    '           <th class="tituloControle" style="width: 100px;">Unidade</th>'+
+                                    '           <th class="tituloControle" style="width: 210px;">Nome Completo</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Apelido</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Matr\u00EDcula</th>'+
+                                    '           <th class="tituloControle">Tipo de Modalidade</th>'+
+                                    '           <th class="tituloControle" style="width: 100px;">Carga Hor\u00E1ria</th>'+
+                                    '           <th class="tituloControle" style="width: 150px;">Data de In\u00EDcio</th>'+
+                                    '           <th class="tituloControle" style="width: 150px;">Data de Encerramento</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Pactuado Total (horas)</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Pactuado Parcial (horas)</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Homologado (horas)</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Despendido (horas)</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Execu\u00E7\u00E3o do Plano</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Produtividade do Plano</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Nota M\u00E9dia Atribu\u00EDda</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Total de Avalia\u00E7\u00F5es</th>'+
+                                    '           <th class="tituloControle" style="">Assinatura</th>'+
+                                    '           <th class="tituloControle" style="">Status Assinatura</th>'+
+                                    '       </tr>'+
+                                    '   </thead>'+
+                                    '   <tbody>';
+            $.each(listRelatorios,function(index, value){
+                var status = (moment(value.data_fim,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_fim != '0000-00-00 00:00:00') ? 'DESATIVADO' : 'ATIVO';
+                    status = (moment(value.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss') < moment()) ? 'ENCERRADO' : status;
+                    status = (moment(value.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss') > moment()) ? 'FUTURO' : status;
+
+                var modalidade = jmespath.search(arrayConfigAtividades.tipos_modalidades,"[?id_tipo_modalidade==`"+value.id_tipo_modalidade+"`] | [0]");
+                var view_modelos = (modalidade !== null && modalidade.hasOwnProperty('config') && typeof modalidade.config !== 'undefined' && modalidade.config !== null && modalidade.config.hasOwnProperty('modelos')) ? modalidade.config.modelos : false;        
+                var assinatura = (typeof value.config !== 'undefined' && value.config !== null && typeof value.config.assinatura !== 'undefined' && value.config.hasOwnProperty('assinatura')) ? value.config.assinatura : false;
+                var statusAssinatura = (view_modelos) ? (assinatura ? 'Documento assinado eletronicamente por '+assinatura[0].nome_completo+', em '+moment(assinatura[0].datetime,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm') : 'Termo de Ades\u00E3o pendente de assinatura') : 'Assinatura indispon\u00EDvel';
+                    statusAssinatura = (status == 'FUTURO' && !assinatura) 
+                                    ? 'Dispon\u00EDvel para assinatura ap\u00F3s iniciada a vig\u00EAncia do plano' 
+                                    : statusAssinatura;
+                var btnAssinatura = (view_modelos) ? '<a class="newLink viewModelDoc" data-type="'+type+'" data-sign="true" data-user="'+value.id_user+'" data-id_reference="'+value.id_plano+'" data-icon="pencil-alt" data-action="view" data-mode="modelo_termo_adesao" data-title="Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\''+statusAssinatura+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature '+(assinatura ? 'azulColor' : 'cinzaColor')+'" style="font-size: 100%;"></i> <i class="fas fa-'+(assinatura ? 'user-edit azulColor' : 'pencil-alt cinzaColor')+'" style="font-size: 100%; margin-left: -10px;"></i></a>' : '';
+                    btnAssinatura = (status == 'FUTURO' && !assinatura) 
+                                    ? '<a class="newLink viewModelDoc" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\''+statusAssinatura+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature cinzaColor" style="font-size: 100%;"></i> <i class="fas fa-pencil-alt cinzaColor" style="font-size: 100%; margin-left: -10px;"></i></a>' 
+                                    : btnAssinatura;
+                var execucao_plano = (value.tempo_proporcional > 0) ? ((value.tempo_homologado/value.tempo_proporcional)*100).toFixed(2)+'%' : '0%';
+                var produtividade_plano = (value.tempo_despendido > 0) ? ((value.tempo_pactuado/value.tempo_despendido)*100).toFixed(2)+'%' : '0%';
+                var nota_media = (typeof value.avaliacao !== 'undefined' && value.avaliacao !== null && typeof value.avaliacao.nota_atribuida !== 'undefined' && value.avaliacao.hasOwnProperty('nota_atribuida') && value.avaliacao.nota_atribuida !== null) ? value.avaliacao.nota_atribuida : '-';
+                var total_avaliacoes = (typeof value.avaliacao !== 'undefined' && value.avaliacao !== null && typeof value.avaliacao.total_avaliacoes !== 'undefined' && value.avaliacao.hasOwnProperty('total_avaliacoes') && value.avaliacao.total_avaliacoes !== null) ? value.avaliacao.total_avaliacoes : '-';
+                htmlTableRelatorios +=  '       <tr data-tagname="SemGrupo" data-index="'+index+'">'+
+                                        '           <td align="center">'+value.id_plano+'</td>'+
+                                        '           <td align="center">'+status+'</td>'+
+                                        '           <td align="center">'+value.sigla_unidade+'</td>'+
+                                        '           <td align="left">'+value.nome_completo+'</td>'+
+                                        '           <td align="left">'+value.apelido+'</td>'+
+                                        '           <td align="left">'+value.matricula+'</td>'+
+                                        '           <td align="left">'+value.nome_modalidade+'</td>'+
+                                        '           <td align="left">'+value.carga_horaria+'</td>'+
+                                        '           <td align="left" style="text-align:center;" data-time-sorter="'+moment(value.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')+'">'+moment(value.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</td>'+
+                                        '           <td align="left" style="text-align:center;" data-time-sorter="'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')+'">'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_total.toFixed(2))+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_proporcional.toFixed(2))+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_homologado.toFixed(2))+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_despendido.toFixed(2))+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+execucao_plano+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+produtividade_plano+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+nota_media+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+total_avaliacoes+'</td>'+
+                                        '           <td align="left" style="text-align: center;">'+btnAssinatura+'</td>'+
+                                        '           <td align="left" style="">'+statusAssinatura+'</td>'+
                                         '       </tr>';
-        });
+            });
+        }
         htmlTableRelatorios +=   '   </tbody>'+
                                 '</table>';
 
-        tabelaRelatorio.html(htmlTableRelatorios);
-        initPanelResize(relatorioID+'.tabelaPanelScroll', 'relatorioTabelaPro');
+        var tableRelatorioID = 'tabelaRelatorioPanel_'+type;
+        tabelaRelatorio.html('<div id="'+tableRelatorioID+'" class="tabelaPanelScroll" style="margin-top: 5px;">'+htmlTableRelatorios+'<div>');
+        
+        var tableRelatorioElem = $('#'+tableRelatorioID);
+        if (!getOptionsPro('panelHeight_relatoriosTabelaPro_'+type) && tableRelatorioElem.height() > 800) { setOptionsPro('panelHeight_relatoriosTabelaPro_'+type, 800) }
+        initPanelResize('#'+tableRelatorioID, 'relatoriosTabelaPro_'+type);
         
         var relatorioTabela = $('#tableRelatorio_'+type);
             relatorioTabela.tablesorter({
@@ -6738,10 +7414,10 @@ function getTableRelatorioPanel(listRelatorios) {
             setTimeout(function(){ 
 
                 var btnAllData =    (typeof arrayConfigAtividades.perfil.nivel !== 'undefined' && arrayConfigAtividades.perfil.nivel !== null && arrayConfigAtividades.perfil.nivel == 1 ? 
-                                    '   <div class="viewTableToggle editTableToggle">'+
+                                    '   <div class="viewTableToggle editTableToggle" style="right: 600px;">'+
                                     '           <label class="label" for="changeViewTableRelatorio_'+type+'"><i class="fas fa-university cinzaColor" style="margin: 0px 6px 0 4px;"></i> Toda entidade</label>'+
                                     '           <div class="onoffswitch">'+
-                                    '               <input type="checkbox" name="onoffswitch" data-type="'+type+'" onchange="changeViewTableReport(this)" class="onoffswitch-checkbox" id="changeViewTableRelatorio_'+type+'" tabindex="0" '+(getOptionsPro('changeViewTableReport_'+type) ? 'checked' : false )+'>'+
+                                    '               <input type="checkbox" name="onoffswitch" data-type="'+type+'" onchange="changeViewTableReport(this)" class="onoffswitch-checkbox" id="changeViewTableRelatorio_'+type+'" tabindex="0" '+(getOptionsPro('changeViewTableReport_'+type) == 'show' ? 'checked' : false )+'>'+
                                     '               <label class="onoffswitch-label" for="changeViewTableRelatorio_'+type+'"></label>'+
                                     '           </div>'+
                                     '   </div>'
@@ -6751,9 +7427,12 @@ function getTableRelatorioPanel(listRelatorios) {
                                     '           <label class="label" for="changeDatesTableRelatorio_'+type+'"><i class="fas fa-calendar-alt cinzaColor" style="margin: 0px 6px 0 4px;"></i></label>'+
                                     '           <input type="dates" data-type="'+type+'" onchange="changeViewTableReport(this)" id="changeDatesTableRelatorio_'+type+'" tabindex="0" value="'+(getOptionsPro('changeDatesTableReport_'+type) ? getOptionsPro('changeDatesTableReport_'+type) : '' )+'">'+
                                     '   </div>';
-
-                var htmlFilterRelatorio =   '<div class="btn-group filterTablePro notCopy" role="group" style="right: 8px;top: 50px;z-index: 99;position: absolute;">'+
-                                            '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
+ 
+                var selectListProgramas = '<select id="selectReportProgramas_'+type+'" data-type="'+type+'" onchange="changeReportPrograma(this)" data-placeholder="Filtrar por programa de gest\u00E3o" style="max-width: 260px; width: 300px; float: right;" class="selectPro chosen-min"><option value="0" data-label="">&nbsp;</option></select>';
+ 
+                var htmlFilterRelatorio =   '<div class="btn-group filterTablePro notCopy" role="group" style="right: 55px;top: 50px;z-index: 999;position: absolute;">'+
+                                            '   '+selectListProgramas+
+                                            '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt; margin-left: 20px;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                             '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                             '       <span class="text">Baixar</span>'+
                                             '   </button>'+
@@ -6771,8 +7450,15 @@ function getTableRelatorioPanel(listRelatorios) {
                     observerFilterRelatorio.observe(filterRelatorio, {
                         attributes: true
                     });
+
+                if (typeof data.programas !== 'undefined' && data.programas !== null && data.programas.length > 0) {
+                    setSelectProgramas(data.programas, 'selectReportProgramas_'+type, 'selectReport_'+type);
+                }
             }, 500);
         }
+    } else {
+        removeOptionsPro('selectReport_'+type);
+        tabelaRelatorio.html('<div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\u00EDvel"></div>');
     }
 }
 function getChartAfastamentoPanel(this_) {
@@ -6816,14 +7502,15 @@ function getTableAfastamentoPanel(this_) {
                 tagColor = (tagColor !== null) ? tagColor : { "icontag": "luggage-cart", "colortag": "#bfd5e11", "textcolor": "black"};
             var horas_afastamento = jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+value.id_tipo_motivo+"`] | [0].config.horas_afastamento");
                 horas_afastamento = (horas_afastamento) ? true : false;
+            var dia_inteiro = (moment(value.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00' && (moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '23:59:59' || moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00')) ? true : false;
             var format_sys = (horas_afastamento) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
-            var format_display = (horas_afastamento) ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
+            var format_display = (!dia_inteiro) ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
             var type_input = (horas_afastamento) ? 'datetime-local' : 'date';
 
             var tagDate = getDatesPreview(dateConfig);
             htmlTableAfastamentos +=    '       <tr data-tagname="SemGrupo" data-index="'+value.id_afastamento+'" class="tagTableName_'+tagName_thisUser+' tagTableName_'+tagName_thisMotivo+' tagTableName_date_'+tagName_thisDate+'">'+
                                         '           <td align="center">'+
-                                        '               <input type="checkbox" class="checkboxSelectAfastamento" onclick="followSelecionarItens(this)" id="afastamentoPro_'+value.id_afastamento+'" name="afastamentoPro" value="'+value.id_afastamento+'">'+
+                                        '               <input type="checkbox" '+(checkPermissionAfast(value, 'delete_afastamento') ? '' : 'disabled')+' class="checkboxSelectAfastamento" onclick="followSelecionarItens(this)" id="afastamentoPro_'+value.id_afastamento+'" name="afastamentoPro" value="'+value.id_afastamento+'">'+
                                         '           </td>'+
                                         '           <td align="left">'+
                                         '               <span class="info_tags_follow info_tags_user">'+
@@ -6858,10 +7545,10 @@ function getTableAfastamentoPanel(this_) {
                                         '               </div>'+
                                         '           </td>'+
                                         '           <td align="right">'+
-                                        (checkCapacidade('edit_afastamento') ?
+                                        (checkPermissionAfast(value, 'edit_afastamento')  ?
                                         '               <a class="newLink followLinkTr" onclick="saveAfastamento(this,'+value.id_afastamento+')" onmouseover="return infraTooltipMostrar(\'Editar afastamento\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                         '' : '')+
-                                        (checkCapacidade('delete_afastamento') ?
+                                        (checkPermissionAfast(value, 'delete_afastamento') ?
                                         '               <a class="newLink followLinkTr" onclick="removeAfastamento(this, '+value.id_afastamento+')" onmouseover="return infraTooltipMostrar(\'Excluir afastamento\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash" style="font-size: 100%;"></i></a>'+
                                         '' : '')+
                                         '           </td>'+
@@ -7027,7 +7714,8 @@ function getGanttAfastamento(bar_class = false) {
                     var horas_afastamento = jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+value.id_tipo_motivo+"`] | [0].config.horas_afastamento");
                         horas_afastamento = (horas_afastamento) ? true : false;
                     var format_sys = (horas_afastamento) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
-                    var format_display = (horas_afastamento) ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
+                    var dia_inteiro = (moment(value.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00' && (moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '23:59:59' || moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00')) ? true : false;
+                    var format_display = (!dia_inteiro) ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
                     var type_input = (horas_afastamento) ? 'datetime-local' : 'date';
                     var html = '<div class="details-container seiProForm">'+
                                 '   <table class="tableInfo tableLine">'+
@@ -7077,13 +7765,13 @@ function getGanttAfastamento(bar_class = false) {
                                 '           <td class="td_view" style="vertical-align: middle; padding: 0 10px;" colspan="2">'+
                                 '               <p>'+
                                 '                   <span class="boxInfo">'+
-                                (checkCapacidade('delete_afastamento') ?
+                                (checkPermissionAfast(value, 'delete_afastamento') ?
                                 '                       <a class="ui-button ui-corner-all ui-widget" style="color: #2b2b2b; text-decoration: none; float: left;" onclick="removeAfastamento(this, '+value.id_afastamento+')">'+
                                 '                           <i style="margin-right: 3px; color: #e46e64;" class="fas fa-trash"></i>'+
                                 '                           Excluir'+
                                 '                       </a>'+
                                 '' : '')+
-                                (checkCapacidade('edit_afastamento') ?
+                                (checkPermissionAfast(value, 'edit_afastamento') ?
                                 '                       <a class="ui-button ui-corner-all ui-widget" style="color: #2b2b2b; text-decoration: none; float: right;" onclick="editAfastamento(this)">'+
                                 '                           <i style="margin-right: 3px; color: #8a8a8a;" class="fas fa-pencil-alt"></i>'+
                                 '                           Editar'+
@@ -7176,10 +7864,13 @@ function getGanttAfastamento(bar_class = false) {
 function saveAfastamento(this_, id_afastamento = 0) {
     var _this = $(this_);
     var value = (id_afastamento != 0) ? jmespath.search(arrayConfigAtividades.afastamentos.lista, "[?id_afastamento==`"+id_afastamento+"`] | [0]") : false;
-    var optionSelectUser = $.map(arrayConfigAtividades.usuarios, function(v){ if (value && v.id_user == value.id_user) { return '<option value="'+v.id_user+'" selected>'+v.apelido+'</option>' } else { return '<option value="'+v.id_user+'">'+v.apelido+'</option>' } }).join('');
+    var optionSelectUser = (checkCapacidade('only_self_atividades')) 
+                            ? '<option value="'+arrayConfigAtividades.perfil.id_user+'" selected>'+arrayConfigAtividades.perfil.apelido+'</option>'
+                            : $.map(arrayConfigAtividades.usuarios, function(v){ if (value && v.id_user == value.id_user) { return '<option value="'+v.id_user+'" selected>'+v.apelido+'</option>' } else { return '<option value="'+v.id_user+'">'+v.apelido+'</option>' } }).join('');
     var optionSelectMotivo = $.map(arrayConfigAtividades.afastamentos.tipos_motivos, function(v){ 
                                 var selected = ( value && v.id_tipo_motivo == value.id_tipo_motivo ) ? 'selected' : '';
-                                return "<option value='"+v.id_tipo_motivo+"' "+selected+" data-config='"+JSON.stringify(v.config)+"'>"+v.nome_motivo+"</option>";
+                                var integracao_interna = (typeof v.config !== 'undefined' && v.config !== null && v.config.hasOwnProperty('integracao_interna')) ? true : false;
+                                return (integracao_interna) ? "" : "<option value='"+v.id_tipo_motivo+"' "+selected+" data-config='"+JSON.stringify(v.config)+"'>"+v.nome_motivo+"</option>";
                             }).join('');
     var horas_afastamento = (value) ? jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+value.id_tipo_motivo+"`] | [0].config.horas_afastamento") : false;
         horas_afastamento = (horas_afastamento) ? true : false;
@@ -7269,7 +7960,7 @@ function saveAfastamento(this_, id_afastamento = 0) {
                     click: function(event) { 
                         var _parent = $(this).closest('.ui-dialog');
                         var target = _parent.find('input[data-type="inicio"]').get(0);
-                        console.log(checkDatesAfast(target), checkAtivRequiredFields(target, 'mark'));
+                        console.log("IGNORE", checkDatesAfast(target), checkAtivRequiredFields(target, 'mark'));
                         if (checkDatesAfast(target) && checkAtivRequiredFields(target, 'mark')) {
                             var param = extractDataAfast(_parent);
                             var action = (value && id_afastamento != 0 ? 'edit_afastamento' : 'save_afastamento');
@@ -7307,7 +7998,8 @@ function checkDatesPlanoAfast(value) {
                         ? jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos, "[?id_tipo_motivo==`"+afastResult.id_tipo_motivo+"`] | [0].config.horas_afastamento") : false;
             var horasAfastamento = (checkHorasAfastamento) 
                         ? moment(afastResult.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').diff(moment(afastResult.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss'), 'hours', true) : value.carga_horaria;
-            result_ = result_+horasAfastamento;
+                        horasAfastamento = (horasAfastamento > value.carga_horaria) ? value.carga_horaria : horasAfastamento;
+                result_ = result_+horasAfastamento;
             // console.log(afastResult, checkHorasAfastamento, horasAfastamento);
         });
         return result_;
@@ -7449,7 +8141,7 @@ function checkDatesAfast(element, formAfast = true) {
     var format = (inicio.val().indexOf('T') !== -1) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
     var format_display = (inicio.val().indexOf('T') !== -1) ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
     var type_datetime = (inicio.val().indexOf('T') !== -1) ? true : false;
-    
+
     if ( moment(inicio_val, format) > moment(fim_val, format) ) { 
         element.setCustomValidity('*'); 
         alert = 'A '+inicio.data('name')+' deve ser maior ou igual que a '+fim.data('name');
@@ -7458,7 +8150,7 @@ function checkDatesAfast(element, formAfast = true) {
         var check = (userAfastList !== null) 
                     ? checkDatesLoopArray(userAfastList, inicio_val, fim_val, id_user_val, id_afastamento, {inicio: 'inicio_afastamento', fim: 'fim_afastamento', id: 'id_user', idreftype: 'id_afastamento'}, true, true)
                     : false;
-            /*
+            /* 
             console.log({
                 id_user_len: id_user.length, 
                 afastamentos_lista: userAfastList, 
@@ -7468,20 +8160,33 @@ function checkDatesAfast(element, formAfast = true) {
                 param: {inicio: 'inicio_afastamento', fim: 'fim_afastamento', id: 'id_afastamento', idreftype: 'id_afastamento'}, 
                 check: check
             });
-            */
+             */
 
         if (check && check.length > 0) {
             var v = jmespath.search(arrayConfigAtividades.afastamentos.lista,"[?id_afastamento==`"+check[0]+"`] | [0]");            
             var horas_afastamento = (v !== null) ? jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+v.id_tipo_motivo+"`] | [0].config.horas_afastamento") : null;
                 horas_afastamento = (horas_afastamento !== null) ? horas_afastamento : false;
 
-                // console.log(horas_afastamento, type_datetime, formAfast, v.id_tipo_motivo);
             if (formAfast || (!formAfast && horas_afastamento == false)) {
-                var text_conflict = v.apelido+' ('+v.nome_motivo+') '+moment(v.inicio_afastamento,'YYYY-MM-DD HH:mm:ss').format(format_display)+' \u00E0 '+moment(v.fim_afastamento,'YYYY-MM-DD HH:mm:ss').format(format_display);
+                // console.log(horas_afastamento, type_datetime, formAfast, v.id_tipo_motivo);
+
+                var format_display_afast = (moment(v.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00' && (moment(v.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '23:59:59' || moment(v.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00')) ? 'DD/MM/YYYY' : 'DD/MM/YYYY HH:mm';
+                var text_conflict = v.apelido+' ('+v.nome_motivo+') '+moment(v.inicio_afastamento,'YYYY-MM-DD HH:mm:ss').format(format_display_afast)+' \u00E0 '+moment(v.fim_afastamento,'YYYY-MM-DD HH:mm:ss').format(format_display_afast);
                     element.setCustomValidity('*'); 
                     alert = (formAfast) 
-                            ? 'A '+data['name']+' n\u00E3o pode estar inclu\u00EDda em outra data j\u00E1 cadastrada \n\n'+text_conflict
-                            : 'A '+data['name']+' est\u00E1 inclu\u00EDda em uma data de afastamento \n\n'+text_conflict;
+                            ? 'O afastamento n\u00E3o pode estar inclu\u00EDda em outra data j\u00E1 cadastrada \n\n'+text_conflict
+                            : 'O afastamento est\u00E1 inclu\u00EDda em uma data de afastamento \n\n'+text_conflict;
+
+                var inicioAfastMinute = moment(v.inicio_afastamento,'YYYY-MM-DD HH:mm:ss') > moment(inicio_val, format) ? moment(v.inicio_afastamento,'YYYY-MM-DD HH:mm:ss').startOf('day') : moment(inicio_val, format);
+                var fimAfastMinute = moment(v.fim_afastamento,'YYYY-MM-DD HH:mm:ss') < moment(fim_val, format) ? (moment(inicio_val, format) > moment(v.fim_afastamento,'YYYY-MM-DD HH:mm:ss') ? moment(inicio_val, format) : moment(v.fim_afastamento,'YYYY-MM-DD HH:mm:ss')) : (type_datetime ? moment(fim_val, format) : moment(fim_val, format).endOf('day'));
+
+                var checkDatesMinutes = checkDatesLoopArray([v], inicioAfastMinute.format('YYYY-MM-DDTHH:mm'), fimAfastMinute.format('YYYY-MM-DDTHH:mm'), id_user_val, id_afastamento, {inicio: 'inicio_afastamento', fim: 'fim_afastamento', id: 'id_user', idreftype: 'id_afastamento'}, true, true, 'minutes');
+                // console.log('checkDatesMinutes', checkDatesMinutes, [v], inicioAfastMinute.format('YYYY-MM-DDTHH:mm'), fimAfastMinute.format('YYYY-MM-DDTHH:mm'), id_user_val, id_afastamento, {inicio: 'inicio_afastamento', fim: 'fim_afastamento', id: 'id_user', idreftype: 'id_afastamento'}, true, true, 'minutes');
+
+                if (!checkDatesMinutes || checkDatesMinutes.length == 0) {
+                    element.setCustomValidity(''); 
+                    alert = '';
+                }
             }
         } else {
             element.setCustomValidity(''); 
@@ -7494,10 +8199,18 @@ function checkDatesAfast(element, formAfast = true) {
     function checkDatesAfastValidation() {
         if (userValidation) {
             _this.removeClass('requiredNull');
+            _parent.find('#infoBox_dateAfast').hide().html(''); 
             return true;
         } else {
             _this.addClass('requiredNull');
             element.setCustomValidity(alert);
+
+            var ativAfastHtml = '<span style="background: #fffcd7;padding: 5px;border-radius: 5px;margin: 10px 0;display: block;">'+
+                                '   <i class="fas fa-info-circle azulColor" style="margin: 0 5px;"></i>'+
+                                '   '+alert+
+                                '</div>';
+            _parent.find('#infoBox_dateAfast').show().html(ativAfastHtml);  
+
             var isValid = element.reportValidity();
             return false;
         }
@@ -7533,6 +8246,7 @@ function changeInputAfast(this_) {
         _fim.attr('type','date').val(fim_format).show();
     }
     prepareFieldsReplace(this_);
+    changeDatesAfast(this_);
 }
 function checkInputAfast(this_) {
     var _this = $(this_);
@@ -7572,6 +8286,7 @@ function changeDatesAfast_(this_) {
         fim.attr('min', _this.val());
     }
     */
+    _parent.find('input.requiredNull').removeClass('requiredNull');
     checkDatesAfast(_this.data('type') == 'user' ? inicio.get(0) : this_);
     checkAtividadesInAfastamentos(this_);
 }
@@ -7665,7 +8380,7 @@ function extractDataAfast(_parent) {
         _parent.find('.data_extract').each(function(){
             var _this = $(this);
             if (typeof _this.data('key') !== 'undefined') {
-                var value = (_this.attr('type') == 'date') ? _this.val()+' 00:00:00': _this.val();
+                var value = (_this.attr('type') == 'date') ? (_this.data('key') == 'fim_afastamento' ? _this.val()+' 23:59:59' : _this.val()+' 00:00:00') : _this.val();
                     value = (_this.attr('type') == 'datetime-local') ? (_this.val() == '' ? '' : moment(_this.val(), 'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss')) : value;
                     value = (_this.is('textarea') || (_this.is('input') && _this.attr('type') == 'text') ) ? value.replace(/["']/g, "") : value;
                 param[_this.data('key')] = value;
@@ -7799,7 +8514,7 @@ function getKanbanAtividades(this_) {
                 } else if (targetEl == '_concluidas' && sourceEl == '_avaliadas') {
                     rateCancelAtividade(idEl);
                 } else if (targetEl == '_arquivadas' && sourceEl == '_avaliadas') {
-                    sendAtividade(idEl);
+                    archiveAtividade(idEl);
                 } else if (targetEl == '_avaliadas' && sourceEl == '_arquivadas') {
                     sendCancelAtividade(idEl);
                 }
@@ -8010,7 +8725,7 @@ function pinKanbanItens(this_, id_demanda) {
     var _parent = _this.closest('.kanban-board');
     var _hasActive = _this.hasClass('newLink_active');
     var source = _parent.data('id');
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     var item = getKanbanItem(value);
     var order = (_hasActive) ? -1 : 0;
 
@@ -8071,7 +8786,6 @@ function getKanbanItem(value) {
                     : '';
 
     var btnActionAtiv = getBtnActionsAtividade(value);
-            
 
     var btnExtend = (value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && checkCapacidade('extend_atividade') && checkPermissionAtiv(value) )
                 ?   '<span class="info_dates_extend" style="display:block; padding: 0;opacity: 1;">'+
@@ -8093,18 +8807,20 @@ function getKanbanItem(value) {
 
     var tempoPactuado = (value.tempo_pactuado == 0) ? 'N\u00E3o pactuado' : decimalHourToMinute(value.tempo_pactuado)+' '+(value.tempo_pactuado > 1 ? 'horas' : 'hora');
     var tagPacto =  '<span class="info_tags_follow info_tags_pacto">'+
-                    '   <span data-colortag="#bfd5e8" style="background-color: #eef4f9;" class="tag_text tagTableText_isaac" title="'+value.tempo_pactuado+' '+(value.tempo_pactuado > 1 ? 'horas' : 'hora')+'">'+
+                    '   <span data-colortag="#bfd5e8" style="background-color: #eef4f9;" class="tag_text" title="'+value.tempo_pactuado+' '+(value.tempo_pactuado > 1 ? 'horas' : 'hora')+'">'+
                     '       <i data-colortag="#406987" class="fas fa-handshake" style="font-size: 90%; margin: 0px 2px; color: #406987;"></i>'+
                     '       '+tempoPactuado+
                     '   </span>'+
                     '</span>';
 
-    var infoAtiv =  '<span class="info_ativ" style="display:block; padding: 0;opacity: 1;">'+
-                    '   <a class="newLink info_noclick" onclick="parent.infoAtividade('+value.id_demanda+')">'+
-                    '      <i class="fas fa-info-circle azulColor" style="padding-right: 3px;"></i>'+
-                    '      Informa\u00E7\u00F5es '+__.da_demanda+''+
-                    '   </a>'+
-                    '</span>';
+    var infoAtiv =  ($(btnActionAtiv).find('.fa-info-circle').length > 0) 
+                    ? ' ' 
+                    :   '<span class="info_ativ" style="display:block; padding: 0;opacity: 1;">'+
+                        '   <a class="newLink info_noclick" onclick="parent.infoAtividade('+value.id_demanda+')">'+
+                        '      <i class="fas fa-info-circle azulColor" style="padding-right: 3px;"></i>'+
+                        '      Informa\u00E7\u00F5es '+__.da_demanda+''+
+                        '   </a>'+
+                        '</span>';
 
     var obsGerencial = (value && value.observacao_gerencial !== null && value.observacao_gerencial != '') 
                     ?   '<span class="inlineAlert content_edit" data-field="observacao_gerencial" style="position:relative" data-id="'+value.id_demanda+'">'+
@@ -8649,9 +9365,16 @@ function getChartAtividades(bar_class = false) {
 function initGetChartDemandas(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if ($('.chartAtivPanelDiv').is(':visible')) {
+        var selectChart = getOptionsPro('selectChartAtiv');
+        var selectPrograma = $('#selectChartProgramasAtiv');
+        var selectUnidadeID = selectPrograma.find('option:selected').data('id_unidade');
+            selectUnidadeID = (typeof selectUnidadeID !== 'undefined' && selectUnidadeID !== null) ? selectUnidadeID : 0;
+        var selectProgramaID = selectPrograma.val();
+            selectProgramaID = (typeof selectProgramaID !== 'undefined' && selectProgramaID !== null) ? selectProgramaID : 0;
         var param = {
-                        id_user: $('#selectChartUserAtiv').val(), 
-                        id_unidade: $('#selectChartUnidadeAtiv').val()
+                        id_user: (typeof selectChart !== 'undefined' && selectChart.id_user !== null) ? selectChart.id_user : $('#selectChartUserAtiv').val(), 
+                        id_unidade: (typeof selectChart !== 'undefined' && selectChart.id_unidade !== null) ? selectChart.id_unidade : selectUnidadeID,
+                        id_programa: (typeof selectChart !== 'undefined' && selectChart.id_programa !== null) ? selectChart.id_programa : selectProgramaID
                     };
         getChartDemandas(param);
     } else {
@@ -8705,11 +9428,18 @@ function setToolbarFunc(this_) {
                                     show = true;
                                 } else if (mode.indexOf('complete_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // complete_atividade
                                     show = true;
+                                    if (mode.indexOf('pause_atividade') !== -1 && typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada == '0000-00-00 00:00:00') {
+                                        show = false;
+                                    } else if (mode.indexOf('play_atividade') !== -1 && (typeof value.data_retomada === 'undefined' || value.data_retomada === null || value.data_retomada != '0000-00-00 00:00:00')) {
+                                        show = false;
+                                    }
                                 } else if (mode.indexOf('send_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // send_atividade
                                     show = true;
                                 } else if (mode.indexOf('start_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_inicio == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // start_atividade
                                     show = true;
-                                } else if (mode == 'none') {
+                                } else if (mode.indexOf('archive_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio != '0000-00-00 00:00:00') { // archive_atividade
+                                    show = true;
+                                } else if (mode == 'none' && value.data_envio == '0000-00-00 00:00:00') {
                                     show = true;
                                 }
                                 if (action == 'type_atividade' && value.tempo_pactuado != 0) {
@@ -8760,6 +9490,8 @@ function setToolbarFunc(this_) {
                     parent.rateAtividade(value.id_demanda);
                 } else if (action == 'rate_cancel_atividade') {
                     parent.rateCancelAtividade(value.id_demanda);
+                } else if (action == 'send_cancel_atividade') {
+                    parent.sendCancelAtividade(value.id_demanda);
                 }
             }
         }).on('toolbarHidden', function( event ) {
@@ -9011,6 +9743,21 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
         }, 500);
     }
 }
+function changeReportPrograma(this_) {
+    var _this = $(this_);
+    var type = _this.data('type');
+    var _parent = _this.closest('.filterTablePro');
+    var data = _this.find('option:selected').data();
+        data = (typeof data !== 'undefined' && data !== null) ? data : false;
+    var id_programa = (typeof _this !== 'undefined' && _this.val() !== null) ? _this.val() : 0;
+
+    var _param = {id_programa: id_programa};
+        _parent.find('.loadChartUserAtiv').remove();
+        _parent.prepend('<i class="fas fa-spinner fa-spin loadChartUserAtiv" style="float: right; font-size: 12pt; margin: 5px;"></i>');
+
+    setOptionsPro('selectReport_'+type, _param);
+    getTabReport(type, 'get');
+}
 function getAtividadeTagsPro() {
     if (typeof $('.atividadeTagsPro').tagsInput !== 'undefined') {
         $('.atividadeTagsPro').tagsInput({
@@ -9034,13 +9781,16 @@ function getAtividadeTagsPro() {
 function checkPermissionAtiv(value) {
     return ((checkCapacidade('edit_atividade') && !checkCapacidade('only_self_atividades')) || (checkCapacidade('only_self_atividades') && value.id_user == parseInt(arrayConfigAtividades.perfil.id_user))) ? true : false
 }
+function checkPermissionAfast(value, capacidade) {
+    return ((checkCapacidade(capacidade) && !checkCapacidade('only_self_afastamentos')) || (checkCapacidade('only_self_afastamentos') && value.id_user == parseInt(arrayConfigAtividades.perfil.id_user))) ? true : false
+}
 // BOX DE DEMANDA SIMPLIFICADA
 function saveAtividadeSimple(id_demanda = 0) {
     var checkPlanos = (typeof arrayConfigAtividades.planos !== 'undefined' && arrayConfigAtividades.planos != 0 && arrayConfigAtividades.planos.length > 0) ? true : false;
     if (!checkPlanos) {
         alertaBoxPro('Error', 'exclamation-triangle', 'Nenhum plano de trabalho ativo!');
     } else {
-        var value = (id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+        var value = getAtividadeData(id_demanda);
         var unidades =  (typeof arrayConfigAtividades.atividades !== 'undefined' && arrayConfigAtividades.atividades != 0 && arrayConfigAtividades.atividades.length > 0) 
                             ? uniqPro(jmespath.search(arrayConfigAtividades.atividades, "[?sigla_unidade].sigla_unidade"))
                             : [];
@@ -9529,7 +10279,7 @@ function saveAtividadeFull(id_demanda = 0) {
     if (!checkPlanos) {
         alertaBoxPro('Error', 'exclamation-triangle', 'Nenhum plano de trabalho ativo!');
     } else {
-        var value = (id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+        var value = getAtividadeData(id_demanda);
         var unidades =  (typeof arrayConfigAtividades.atividades !== 'undefined' && arrayConfigAtividades.atividades != 0 && arrayConfigAtividades.atividades.length > 0) 
                             ? uniqPro(jmespath.search(arrayConfigAtividades.atividades, "[?sigla_unidade].sigla_unidade"))
                             : [];
@@ -10603,7 +11353,7 @@ function multProcessRemove(this_) {
 }
 function completeAtividade(id_demanda, confirmeBox = false) {
     var dadosIfrArvore = getIfrArvoreDadosProcesso();
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     if (!checkSignDocsPlano(value)) {
         alertSignDocsPlano(value);
     } else {
@@ -10819,7 +11569,7 @@ function completeAtividade(id_demanda, confirmeBox = false) {
                     if (!checkConfigAtiv && checkCapacidade('pause_atividade')) {
                         var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada == '0000-00-00 00:00:00') ? true : false;
                         btnDialogBoxPro.unshift({
-                            text: (check_ispaused ? __.Retomar+' '+__.Demanda+'' : 'Inserir '+__.Paralisacao),
+                            text: (check_ispaused ? __.Retomar+' '+__.Demanda : 'Inserir '+__.Paralisacao),
                             icon: 'ui-icon-'+(check_ispaused ? 'play' : 'pause'),
                             click: function(event) { 
                                 pauseAtividade(id_demanda);
@@ -11097,7 +11847,7 @@ function getPausasAtividadePanel(pause_lista) {
         });
 }
 function completeCancelAtividade(id_demanda) {
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     if (checkCapacidade('complete_cancel_atividade')) {
         confirmaFraseBoxPro(__.A_demanda+' j\u00E1 foi entregue. Tem certeza que deseja cancelar?', 'CANCELAR', function(){
             var action = 'complete_cancel_atividade';
@@ -11159,7 +11909,7 @@ function startAtividadeNewDoc() {
     }
 }
 function sendAtividadesEnviarProcesso() {
-    var sendAtivList = jmespath.search(arrayAtividadesProcPro, "[?data_envio=='0000-00-00 00:00:00'] | [?id_unidade==`"+arrayConfigAtivUnidade.id_unidade+"`]");
+    var sendAtivList = jmespath.search(arrayAtividadesProcPro, "[?data_envio=='0000-00-00 00:00:00'] | [?data_avaliacao!='0000-00-00 00:00:00'] | [?id_unidade==`"+arrayConfigAtivUnidade.id_unidade+"`]");
     // var sendAtivList = jmespath.search(arrayAtividadesProcPro, "[?data_envio=='0000-00-00 00:00:00']");
     
     if (sendAtivList.length > 0) {
@@ -11172,12 +11922,12 @@ function sendAtividadesEnviarProcesso() {
             htmlTableAtividades =   '<div style="max-height: 300px;overflow-y: scroll;display: block;font-size: 10pt;position: initial;margin-top: 20px;">'+
                                     '   '+htmlTableAtividades+
                                     '</div>'; 
-        confirmaBoxPro((sendAtivList.length == 1 ? 'Existe '+__.demanda+' pendente' : 'Existem '+__.demandas+' pendentes')+' de '+__.arquivamento+'. Deseja '+__.arquivar+' agora?'+htmlTableAtividades, sendAtividade, __.Arquivar+'...');
+        confirmaBoxPro((sendAtivList.length == 1 ? 'Existe '+__.demanda+' pendente' : 'Existem '+__.demandas+' pendentes')+' de '+__.arquivamento+'. Deseja '+__.arquivar+' agora?'+htmlTableAtividades, archiveAtividade, __.Arquivar+'...');
     }
 }
 function startAtividade(id_demanda = 0) {
     var dadosIfrArvore = getIfrArvoreDadosProcesso();
-    var value = (id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+    var value = getAtividadeData(id_demanda);
     if (!checkSignDocsPlano(value)) {
         alertSignDocsPlano(value);
     } else {
@@ -11448,7 +12198,7 @@ function changeOthersAtiv(this_, target) {
     }
     if (_this.attr('id') == 'init_others') {
         var id_demanda = _this.data('id_demanda');
-        var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+        var value = getAtividadeData(id_demanda);
         var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
         var dataDistribuicao_vinculadas = (value.id_vinculacao !== null) ? jmespath.search(arrayAtividadesPro, "reverse(sort_by([?id_vinculacao=='"+value.id_vinculacao+"'] | [?data_inicio=='0000-00-00 00:00:00'], &data_distribuicao)) | [*].data_distribuicao | [0]") : null;
         var dataDistribuicao = (dataDistribuicao_vinculadas !== null && _this.is(':checked')) ? moment(dataDistribuicao_vinculadas, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format) : moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
@@ -11499,7 +12249,7 @@ function getRecalculaPrazo(data_ref, hora_format, prazo, config_unidade) {
     return prazoEntrega;
 }
 function pauseAtividade(id_demanda) {
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada == '0000-00-00 00:00:00') ? true : false;
     var check_isresumed = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada != '0000-00-00 00:00:00') ? true : false;
     // console.log('check_ispaused->',check_ispaused, 'check_isresumed->',check_isresumed);
@@ -11600,7 +12350,7 @@ function pauseAtividade(id_demanda) {
     }
 }
 function variationAtividade(id_demanda, alertAtividade = false) {
-    var value = (id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+    var value = getAtividadeData(id_demanda);
     if (checkCapacidade('variation_atividade') || checkCapacidade('type_atividade') ) {
         var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
 
@@ -11765,7 +12515,7 @@ function variationAtividade(id_demanda, alertAtividade = false) {
     }
 }
 function extendAtividade(id_demanda) {
-    var value = (id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+    var value = getAtividadeData(id_demanda);
     // console.log(value);
     if (checkCapacidade('extend_atividade')) {
         var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
@@ -11848,7 +12598,7 @@ function extendAtividade(id_demanda) {
     }
 }
 function startCancelAtividade(id_demanda) {
-    var value = (id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+    var value = getAtividadeData(id_demanda);
     if (checkCapacidade('start_cancel_atividade')) {
         confirmaFraseBoxPro(__.A_demanda+' j\u00E1 foi '+getNameGenre('demanda', 'iniciado', 'iniciada')+'. Tem certeza que deseja cancelar?', 'CANCELAR', function(){
             var action = 'start_cancel_atividade';
@@ -11875,7 +12625,7 @@ function statusIconsAtividade(value) {
             '</span>';
 }
 function sendCancelAtividade(id_demanda) {
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     if (value.data_entrega != '0000-00-00 00:00:00') {
         confirmaFraseBoxPro(__.A_demanda+' j\u00E1 foi '+getNameGenre('demanda', 'arquivado', 'arquivada')+'. Tem certeza que deseja cancelar?', 'CANCELAR', function(){
             var action = 'send_cancel_atividade';
@@ -11913,7 +12663,7 @@ function archiveAtividade(id_demanda = 0) {
 }
 function sendAtividade(id_demanda = 0) {
     var dadosIfrArvore = getIfrArvoreDadosProcesso();   
-    var value = (id_demanda != 0) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : false;
+    var value = getAtividadeData(id_demanda);
     var checkAtivProcesso = (value && value.id_procedimento !== null && parseInt(value.id_procedimento) != 0) ? true : false;
     var listaAtividades = (dadosIfrArvore && id_demanda == 0) 
                 ? jmespath.search(arrayAtividadesProcPro, "[?data_avaliacao=='0000-00-00 00:00:00'] | [?data_envio=='0000-00-00 00:00:00']")
@@ -12057,7 +12807,7 @@ function sendAtividade(id_demanda = 0) {
     }
 }
 function infoAtividade(id_demanda) {
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     var htmlInfo = getInfoAtividade(value);
     var htmlBox =   '<div id="boxAtividade" class="atividadeInfo">'+
                     '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine tableInfo">'+
@@ -12102,6 +12852,24 @@ function infoAtividade(id_demanda) {
             text: actionsAtividade(value.id_demanda, 'icon').name,
             click: function(event) { 
                 actionsAtividade(value.id_demanda);
+            }
+        });
+    }
+    if (checkCapacidade('edit_atividade') && value.data_inicio == '0000-00-00 00:00:00') {
+        btnDialogBoxPro.unshift({
+            text: 'Editar '+__.Demanda,
+            icon: 'ui-icon-pencil',
+            click: function(event) { 
+                saveAtividade(value.id_demanda);
+            }
+        });
+    }
+    if (checkCapacidade('rate_cancel_atividade') && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
+        btnDialogBoxPro.unshift({
+            text: 'Cancelar Avalia\u00E7\u00E3o',
+            icon: 'ui-icon-close',
+            click: function(event) { 
+                rateCancelAtividade(id_demanda);
             }
         });
     }
@@ -12542,8 +13310,8 @@ function actionsAtividade(id_demanda = 0, mode = 'action') {
             }
             tr.find('td').eq(0).find('input[type="checkbox"]').trigger('click');
         }
-        var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
-        if (value !== null) {
+        var value = getAtividadeData(id_demanda);
+        if (value) {
             if (checkCapacidade('edit_atividade') && checkCapacidade('select_user_atividade')) {
                 if (id_demanda != 0 && checkCapacidade('rate_atividade') && value.data_avaliacao == '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
                     if (mode == 'action') { 
@@ -12559,7 +13327,7 @@ function actionsAtividade(id_demanda = 0, mode = 'action') {
                     }
                 } else if (checkCapacidade('send_atividade') && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
                     if (mode == 'action') { 
-                        sendAtividade(id_demanda);
+                        archiveAtividade(id_demanda);
                     } else if (mode == 'icon') { 
                         return {icon: 'fas fa-archive', name: __.Arquivar+' '+__.demanda, action: 'send'} 
                     }
@@ -12621,7 +13389,7 @@ function actionsAtividade(id_demanda = 0, mode = 'action') {
     }
 }
 function notifyAtividade(id_demanda = 0) {
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     var user = jmespath.search(arrayConfigAtividades.planos, "[?id_user==`"+value.id_user+"`] | [0]");
     var notificacao_unidade = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+value.id_unidade+"`].config.distribuicao.notificacao | [0]");
     var requisicao = (typeof value.requisicao_sei !== 'undefined' && value.requisicao_sei !== null && parseInt(value.requisicao_sei) != 0) ? value.nome_requisicao+' ('+value.requisicao_sei+')' : value.nome_requisicao;
@@ -12689,6 +13457,7 @@ function extractDataAtiv(this_) {
     arrayAtiv.fator_complexidade = (Number.isNaN(arrayAtiv.fator_complexidade)) ? null : arrayAtiv.fator_complexidade;
     arrayAtiv.lista_prioridades = extractInputPriority(this_);
     arrayAtiv.lista_recorrencia = (arrayAtiv.hasOwnProperty('lista_recorrencia') && arrayAtiv.lista_recorrencia != '') ? JSON.parse(arrayAtiv.lista_recorrencia) : arrayAtiv.lista_recorrencia;
+    arrayAtiv.id_user = (arrayAtiv.hasOwnProperty('id_user') && arrayAtiv.id_user.trim() != '') ? arrayAtiv.id_user : 0;
     arrayAtiv.id_unidade = (arrayAtiv.id_unidade == '') ? arrayConfigAtivUnidade.id_unidade : arrayAtiv.id_unidade;
     return arrayAtiv;
 }
@@ -13146,7 +13915,7 @@ function getTagTempoDespendidoAtiv(value, float_right = true) {
 }
 function getTempoDecorridoAtiv(value) {
     var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
-    var config_user = (arrayConfigAtividades.perfil.hasOwnProperty('config') && arrayConfigAtividades.perfil.config !== null) ? arrayConfigAtividades.perfil.config : false;
+    var config_user = (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.perfil.hasOwnProperty('config') && arrayConfigAtividades.perfil.config !== null) ? arrayConfigAtividades.perfil.config : false;
     var h_util_inicio = (config_user && config_user.hasOwnProperty('distribuicao') && config_user.distribuicao.hasOwnProperty('horario_util')) ? config_user.distribuicao.horario_util.inicio : config_unidade.h_util_inicio;
     var h_util_fim = (config_user && config_user.hasOwnProperty('distribuicao') && config_user.distribuicao.hasOwnProperty('horario_util')) ? config_user.distribuicao.horario_util.fim : config_unidade.h_util_fim;
     var carga_horaria = jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+value.id_user+"`] | [0].carga_horaria");
@@ -13350,8 +14119,8 @@ function getOptionSelectPerfil(arraySelectPerfil, selected = false, sigla_displa
             if (listSelectPerfil.length > 0 && $.inArray(target, listSelectPerfil) == -1 ) {
                 var selected_ = (selected && selected == target ) ? 'selected' : '';
                 return (sigla_display) 
-                        ? "<option data-label='"+v.sigla_unidade+"' title='"+v.nome_unidade+" ("+v.sigla_unidade+")' value='"+v.sigla_unidade+"' "+selected_+">"+v.sigla_unidade+"</option>"
-                        : "<option data-label='"+v.sigla_unidade+"' value='"+v.id_unidade+"' "+selected_+">"+v.nome_unidade+" ("+v.sigla_unidade+")</option>";
+                        ? "<option data-label='"+v.sigla_unidade+"' title='"+v.sigla_unidade+" - "+v.nome_unidade+"' value='"+v.sigla_unidade+"' "+selected_+">"+v.sigla_unidade+"</option>"
+                        : "<option data-label='"+v.sigla_unidade+"' value='"+v.id_unidade+"' "+selected_+">"+v.sigla_unidade+" - "+v.nome_unidade+"</option>";
             }
         });
         optionSelectPerfil += (excludedDependencia != '') ? excludedDependencia : '';
@@ -13363,14 +14132,14 @@ function getOptionsSelectPerfilGroup(arraySelectPerfil, arrayPerfil, selected = 
     var optionSelectPerfil = ( arrayPerfil.length > 0 ) ? $.map(arrayPerfil, function(v,k){ 
         var target = (sigla_display) 
                     ? v.sigla_unidade.trim() 
-                    : (parseInt(selected) > 0) ? v.id_unidade : v.nome_unidade+' ('+v.sigla_unidade+')';
+                    : (parseInt(selected) > 0) ? v.id_unidade : v.sigla_unidade+' - '+v.nome_unidade;
         var selected_ = (selected && selected == target ) ? 'selected' : '';
         var arrayPerfilSub = jmespath.search(arraySelectPerfil, "[?dependencia==`"+v.id_unidade+"`]");
         var symbolTab = ' \uFEFF \uFEFF \uFEFF \uFEFF ';
         var tabSub = (v.dependencia != 0) ? '\u21AA ' : ''; 
         var _result = (sigla_display) 
-                    ? "<option data-id_unidade='"+v.id_unidade+"' data-label='"+v.sigla_unidade+"' title='"+v.nome_unidade+" ("+v.sigla_unidade+")' value='"+v.sigla_unidade+"' "+selected_+">"+(tab ? symbolTab : '')+tabSub+v.sigla_unidade+"</option>"
-                    : "<option data-id_unidade='"+v.id_unidade+"' data-label='"+v.sigla_unidade+"' value='"+v.id_unidade+"' "+selected_+">"+(tab ? symbolTab : '')+tabSub+v.nome_unidade+" ("+v.sigla_unidade+")</option>";
+                    ? "<option data-id_unidade='"+v.id_unidade+"' data-label='"+v.sigla_unidade+"' title='"+v.sigla_unidade+" - "+v.nome_unidade+"' value='"+v.sigla_unidade+"' "+selected_+">"+(tab ? symbolTab : '')+tabSub+v.sigla_unidade+" - "+v.nome_unidade+"</option>"
+                    : "<option data-id_unidade='"+v.id_unidade+"' data-label='"+v.sigla_unidade+"' value='"+v.id_unidade+"' "+selected_+">"+(tab ? symbolTab : '')+tabSub+v.sigla_unidade+" - "+v.nome_unidade+"</option>";
         if (arrayPerfilSub !== null && arrayPerfilSub.length > 0 && v.dependencia != 0) {
             _result += getOptionsSelectPerfilGroup(arraySelectPerfil, arrayPerfilSub, selected, sigla_display, true, loopOut+1);
         }
@@ -13764,7 +14533,7 @@ function getListAtivPrioridades(this_, id_user, id_demanda) {
 
 // BOX DE AVALIACAO
 function rateAtividade(id_demanda = 0, alertAtividade = false) {
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
 
     if (value.id_atividade == 0 || value.tempo_pactuado == 0 || value.fator_complexidade == 0) {
         variationAtividade(id_demanda, true);
@@ -13951,7 +14720,7 @@ function rateAtividade(id_demanda = 0, alertAtividade = false) {
     }
 }
 function rateCancelAtividade(id_demanda) {
-    var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]");
+    var value = getAtividadeData(id_demanda);
     if (checkCapacidade('rate_cancel_atividade')) {
         confirmaFraseBoxPro( __.A_demanda+' j\u00E1 foi '+getNameGenre('demanda', 'avaliado', 'avaliada')+'. Tem certeza que deseja cancelar?', 'CANCELAR', function(){
             var action = 'rate_cancel_atividade';
@@ -14092,8 +14861,8 @@ function onWhyAtiv(this_) {
 
 // INICIA PAINEL
 function initPanelAtividades(ativData, TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelAtividades !== 'undefined' && typeof orderDivPanel !== 'undefined' && typeof moment().isoWeekdayCalc !== 'undefined') { 
+    if (TimeOut <= 0 || !ativData) { return; }
+    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelAtividades !== 'undefined' && typeof orderDivPanel !== 'undefined' && typeof moment().isoWeekdayCalc !== 'undefined' && !loadRowsPanelAtiv) { 
         if ($('#ifrArvore').length > 0 && ativData['demandas_processo'].length > 0) {
             $('#ifrArvore')[0].contentWindow.initAtividadesProcesso(ativData['demandas_processo']);
         } else {
@@ -14132,6 +14901,11 @@ function getPanelAtividades(callback) {
         };
     getServerAtividades(param, 'panel');
 }
+function getPanelAtividades_() {
+    if (typeof arrayConfigAtividades == 'undefined' || arrayConfigAtividades.length == 0) {
+        getPanelAtividades();
+    }
+}
 function getAtividades(callback) {
     var ifrArvore = $('#ifrArvore');
     if (ifrArvore.length > 0) {
@@ -14139,7 +14913,9 @@ function getAtividades(callback) {
             id_procedimento = (typeof id_procedimento !== 'undefined') ? parseInt(id_procedimento) : 0;
         getAtividadesProcesso(id_procedimento, callback);
     } else {
-        getPanelAtividades(callback);
+        if ($('#atividadesProDiv').is(':visible')) {
+            getPanelAtividades(callback);
+        }
     }
 }
 function getTitleDialogBox(v, full = false) {
@@ -14298,7 +15074,7 @@ function getSelectedItemBox(this_) {
     var _this = $(this_);
     var _parent = _this.closest('table');
     var id_demanda = (checkValue(_this)) ? _this.val() : false;
-    var value = (id_demanda) ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`"+id_demanda+"`] | [0]") : null;
+    var value = (id_demanda) ? getAtividadeData(id_demanda) : null;
         value = (id_demanda && value !== null) ? value : false;
     var htmlItem = (value) 
         ?   '<div class="kanban-container">'+
@@ -14330,32 +15106,34 @@ function getInsertIconAtividade() {
         if (checkCapacidade('save_atividade')) {
             appendIconAtividade('save');
         }
-        if (checkCapacidade('start_atividade') && 
-            (
-                ( !checkCapacidade('only_self_atividades') ) 
-                    ? (jmespath.search(arrayAtividadesList, "[?data_inicio=='0000-00-00 00:00:00'] | length(@)") > 0)
-                    : (jmespath.search(arrayAtividadesList, "[?data_inicio=='0000-00-00 00:00:00'] | [?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | length(@)") > 0)
-            )
-        ) {
-            appendIconAtividade('start');
-        }
-        if ((checkCapacidade('complete_atividade') || checkCapacidade('start_cancel_atividade')) && 
-            (
-                ( !checkCapacidade('only_self_atividades') ) 
-                    ? (jmespath.search(arrayAtividadesList, "[?data_entrega=='0000-00-00 00:00:00'] | [?data_inicio!='0000-00-00 00:00:00'] | length(@)") > 0)
-                    : (jmespath.search(arrayAtividadesList, "[?data_entrega=='0000-00-00 00:00:00'] | [?data_inicio!='0000-00-00 00:00:00'] | [?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | length(@)") > 0)
-            )
-        ) {
-            appendIconAtividade('complete');
-        }
-        if (checkCapacidade('rate_atividade') && jmespath.search(arrayAtividadesList, "[?data_entrega!='0000-00-00 00:00:00'] | [?data_avaliacao=='0000-00-00 00:00:00'] | length(@)") > 0) {
-            appendIconAtividade('rate');
-        }
-        if (checkCapacidade('send_atividade') && jmespath.search(arrayAtividadesList, "[?data_avaliacao!='0000-00-00 00:00:00'] | [?data_envio=='0000-00-00 00:00:00'] | length(@)") > 0) {
-            appendIconAtividade('send');
-        }
-        if (checkCapacidade('delete_atividade') && jmespath.search(arrayAtividadesList, "[?data_inicio=='0000-00-00 00:00:00'] | length(@)") > 0) {
-            appendIconAtividade('delete');
+        if (arrayAtividadesList.length > 0) {
+            if (checkCapacidade('start_atividade') && 
+                (
+                    ( !checkCapacidade('only_self_atividades') ) 
+                        ? (jmespath.search(arrayAtividadesList, "[?data_inicio=='0000-00-00 00:00:00'] | length(@)") > 0)
+                        : (jmespath.search(arrayAtividadesList, "[?data_inicio=='0000-00-00 00:00:00'] | [?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | length(@)") > 0)
+                )
+            ) {
+                appendIconAtividade('start');
+            }
+            if ((checkCapacidade('complete_atividade') || checkCapacidade('start_cancel_atividade')) && 
+                (
+                    ( !checkCapacidade('only_self_atividades') ) 
+                        ? (jmespath.search(arrayAtividadesList, "[?data_entrega=='0000-00-00 00:00:00'] | [?data_inicio!='0000-00-00 00:00:00'] | length(@)") > 0)
+                        : (jmespath.search(arrayAtividadesList, "[?data_entrega=='0000-00-00 00:00:00'] | [?data_inicio!='0000-00-00 00:00:00'] | [?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | length(@)") > 0)
+                )
+            ) {
+                appendIconAtividade('complete');
+            }
+            if (checkCapacidade('rate_atividade') && jmespath.search(arrayAtividadesList, "[?data_entrega!='0000-00-00 00:00:00'] | [?data_avaliacao=='0000-00-00 00:00:00'] | length(@)") > 0) {
+                appendIconAtividade('rate');
+            }
+            if (checkCapacidade('send_atividade') && jmespath.search(arrayAtividadesList, "[?data_avaliacao!='0000-00-00 00:00:00'] | [?data_envio=='0000-00-00 00:00:00'] | length(@)") > 0) {
+                appendIconAtividade('send');
+            }
+            if (checkCapacidade('delete_atividade') && jmespath.search(arrayAtividadesList, "[?data_inicio=='0000-00-00 00:00:00'] | length(@)") > 0) {
+                appendIconAtividade('delete');
+            }
         }
         appendModulesIcons();
         setAtividadesProcessoHome();
@@ -14423,9 +15201,9 @@ function appendIconAtividade(name = false) {
 function getHtmlIconAtividade(value) {
     var htmlBtn = '';
     if ($('#ifrVisualizacao').length > 0) {
-        htmlBtn =   '<a tabindex="451" class="botaoSEI iconBoxAtividade iconAtividade_'+value.name+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+value.title+'\')" onclick="parent.'+value.action+'" style="position: relative;display: inline-block;">'+
+        htmlBtn =   '<a tabindex="451" class="botaoSEI iconBoxAtividade iconBoxPro iconAtividade_'+value.name+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+value.title+'\')" onclick="parent.'+value.action+'" style="position: relative;display: inline-block;">'+
                     '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==">'+
-                    '    <span style="position: absolute;width: 40px;margin: 1px 2px;text-align: center;height: 32px;padding-top: 8px;background: transparent;left: 0;user-select: none;pointer-events: none;">'+
+                    '    <span class="newIconPro" style="position: absolute;width: 40px;margin: 1px 2px;text-align: center;height: 32px;padding-top: 8px;background: transparent;left: 0;user-select: none;pointer-events: none;">'+
                     '       <i class="'+value.icon+'" style="font-size: 17pt; color: #fff;"></i>'+
                     '    </span>'+
                     '</a>';
@@ -14440,7 +15218,7 @@ function getHtmlIconAtividade(value) {
     return htmlBtn;
 }
 function initEmptyAtividades(reloadProfile = false) {
-    arrayAtividadesPro = [];
+    // arrayAtividadesPro = [];
     initNameConst('get');
     setPanelAtividades();
     if (reloadProfile) {
@@ -14751,6 +15529,7 @@ function initProfileAtiv(googleUser, TimeOut = 9000) {
 function cleanAtivParams(initAtiv = true, reloadProfile = false) {
     localStorageRemovePro('configDataAtividadesPro');
     localStorageRemovePro('configDataAtividadesProcPro');
+    localStorageRemovePro('configDataAtividadesPadraoPro');
     sessionStorageRemovePro('googleUser');
     removeOptionsPro('panelHomeView');
     removeOptionsPro('panelAtividadesView');
@@ -14759,6 +15538,7 @@ function cleanAtivParams(initAtiv = true, reloadProfile = false) {
     userHashAtiv = '';
     arrayAtividadesPro = [];
     arrayAtividadesProcPro = [];
+    arrayConfigAtividades = [];
     window.googleUser = undefined;
     infraTooltipOcultar();
     $('#atividadesPro').remove();

@@ -64,8 +64,16 @@ function getPathExtensionPro() {
 function setSessionNameSpace(param) {
     sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
 }
+function loadStyleDesign() {
+    if (localStorage.getItem('seiSlim')) {
+        var body = document.body;
+        body.classList.add("seiSlim");
+        body.classList.add("seiSlim_parent");
+    }
+}
 function loadScriptProAll() {
     getPathExtensionPro();
+    loadStyleDesign();
 	if (!$('#frmEditor').length) {
         loadFilesUI();
         loadFontIcons('head');

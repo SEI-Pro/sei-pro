@@ -38,4 +38,4 @@ function initIconEntidade(TimeOut = 9000) {
         }, 500);
     }
 }
-initIconEntidade();
+//initIconEntidade();

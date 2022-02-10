@@ -175,32 +175,32 @@ function addButton(TimeOut = 9000) {
                         $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('disable').beforeList);
                     }
                 });
-                $('.getTablestylesButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { getSyleSelectedTable(this) } });
-                $('.getQuickTableButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { getQuickTable(this) } });
-                $('.importDocButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { importDocPro(this) } });
-                $('.getLinkLegisButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getLegisSEI(this) } });
-                $('.getLinkNatJusButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNatJusSEI(this) } });
-                $('.getCapLetterButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { convertFirstLetter(this) } });
-                $('.getFontSizeUpButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'up') } });
-                $('.getFontSizeDownButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'down') } });
-                $('.getCopyStyleButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { setCopyStyle(this) } });
-                $('.getAlignButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { openAlignText(this) } });
-                $('.getAlignLeftButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'left') } });
-                $('.getAlignCenterButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'center') } });
-                $('.getAlignRightButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'right') } });
-                $('.getAlignJustifyButtom').click(function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'justify') } });
-                $('.getCitacaoDocumentoButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getCitacaoDocumento(this) } });
-                $('.getNotaRodapeButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNotaRodape(this) } });
-                $('.getSumarioButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSumarioDocumento(this) } });
-                $('.getDadosProcessoButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getDadosEditor(this) } });
-                $('.getTinyUrlButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
-                $('.getQrCodeButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getQrCode(this) } });
-                $('.getPageBreakButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPageBreak(this) } });
-                $('.getLatexButtom').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
-                $('.getProcessoPublicoButton').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
-                $('.getMinutaWatermarkButton').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
-                $('.getMarkSigiloButton').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
-                $('.getBoxSigiloButton').click(function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
+                $('.getTablestylesButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getSyleSelectedTable(this) } });
+                $('.getQuickTableButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getQuickTable(this) } });
+                $('.importDocButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { importDocPro(this) } });
+                $('.getLinkLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getLegisSEI(this) } });
+                $('.getLinkNatJusButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNatJusSEI(this) } });
+                $('.getCapLetterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { convertFirstLetter(this) } });
+                $('.getFontSizeUpButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'up') } });
+                $('.getFontSizeDownButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'down') } });
+                $('.getCopyStyleButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setCopyStyle(this) } });
+                $('.getAlignButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { openAlignText(this) } });
+                $('.getAlignLeftButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'left') } });
+                $('.getAlignCenterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'center') } });
+                $('.getAlignRightButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'right') } });
+                $('.getAlignJustifyButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'justify') } });
+                $('.getCitacaoDocumentoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getCitacaoDocumento(this) } });
+                $('.getNotaRodapeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNotaRodape(this) } });
+                $('.getSumarioButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSumarioDocumento(this) } });
+                $('.getDadosProcessoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getDadosEditor(this) } });
+                $('.getTinyUrlButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
+                $('.getQrCodeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getQrCode(this) } });
+                $('.getPageBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPageBreak(this) } });
+                $('.getLatexButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
+                $('.getProcessoPublicoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
+                $('.getMinutaWatermarkButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
+                $('.getMarkSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
+                $('.getBoxSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
                 initFunctions();
                 addStyleIframes(); 
         } else {
@@ -385,13 +385,14 @@ function getBoxSigilo(this_) {
     setParamEditor(this_);
     oEditor.openDialog('SigiloSEI');
 }
-function actionsMarkSigilo(this_, mode) {
+function actionsMarkSigilo(this_, mode, text = false, increment = false) {
     var _this = $(this_);
     var _parent = _this.closest('.cke_dialog_page_contents');
     var result = '';
     if (mode == 'replace') {
-        var textFind = _parent.find('#cke_inputSigilo2_textInput').val().trim();
+        var textFind = (text) ? text : _parent.find('#cke_inputSigilo2_textInput').val().trim();
         if (textFind != '') {
+            var i_increment = (increment) ? parseInt($('#tabSigilo2_result .count').length ? $('#tabSigilo2_result .count').text() : 0) : 0; console.log(i_increment);
             var i = 0;
             var displayResult = '';
             var tagSigilo = iframeEditor.find('p:contains("'+textFind+'") span.sigiloSEI');
@@ -406,7 +407,8 @@ function actionsMarkSigilo(this_, mode) {
                 oEditor.fire('saveSnapshot');
                 matches = iframeEditor.find('p').map(function(){ return $(this).text() }).get().join(' ').match(new RegExp('\\b'+textFind+'\\b', 'igm'));
                 i = matches ? matches.length : 0;
-                displayResult = '  <i class="fas fa-check-circle verdeColor"></i> '+i+' '+(i==1 ? 'marca' : 'marcas')+' '+(i==1 ? 'adicionada' : 'adicionadas')+' com sucesso!';
+                i = i+i_increment;
+                displayResult = '  <i class="fas fa-check-circle verdeColor"></i> <span class="count">'+i+'</span> '+(i==1 ? 'marca' : 'marcas')+' '+(i==1 ? 'adicionada' : 'adicionadas')+' com sucesso!';
             } else {
                 displayResult = '  <i class="fas fa-info-circle" style="color: #007fff;"></i> Nenhum texto encontrado!';
             }
@@ -468,6 +470,19 @@ function actionsMarkSigilo(this_, mode) {
             $('#tabSigilo2_result').hide().html('');
             $('#tabSigilo3_result').hide().html('');
             rodapeSigiloMark();
+    } else if (mode == 'email_cpf') {
+        oEditor.focus();
+        $('#tabSigilo2_result').html('');
+        var arrayEmails = extractEmails(iframeEditor.text());
+            arrayEmails = (arrayEmails.length > 0) ? uniqPro(arrayEmails) : [];
+        var arrayCPFs = extractCPFs(iframeEditor.text());
+            arrayCPFs = (arrayCPFs.length > 0) ? uniqPro(arrayCPFs) : [];
+        var arrayDadosSensiveis = $.merge(arrayCPFs, arrayEmails);
+            if (arrayDadosSensiveis.length > 0) {
+                $.each(arrayDadosSensiveis, function(i,v){
+                    actionsMarkSigilo(this_, 'replace', v, true);
+                });
+            }
     }
 }
 function rodapeSigiloMark() {
@@ -508,7 +523,7 @@ function getDialogSigilo() {
       {
          return {
             title : 'Gerenciar marcas de sigilo do documento',
-            minWidth : 500,
+            minWidth : 700,
             minHeight : 80,
             buttons: [ CKEDITOR.dialog.okButton ],
             onShow : function() {
@@ -522,32 +537,8 @@ function getDialogSigilo() {
             contents :
             [
                {
-                  id : 'tab1',
-                  label : 'Tarjar marcas',
-                  elements :
-                  [
-                    {
-                        type: 'html',
-                        html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                              ' <tbody>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo1_label" for="cke_inputSigilo1_textInput">Aplicar tarja de sigilo <br> no documento</label>'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                              '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'apply\')" title="Aplicar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo1_label" id="buttonSigilo1_uiElement">'+
-                              '                 <span id="buttonSigilo1_label" class="cke_dialog_ui_button">Aplicar</span>'+
-                              '             </a>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              ' </tbody>'+
-                              '</table>'+
-                              '<div id="tabSigilo1_result" class="tabSigilo_result" style="display:none; margin-top: 15px;"></div>'
-             		}
-                  ]
-               }, {
                   id : 'tab2',
-                  label : 'Localizar texto',
+                  label : '1. Localizar texto e dados sens\u00EDveis',
                   elements :
                   [
                     {
@@ -575,13 +566,47 @@ function getDialogSigilo() {
                               '             </a>'+
                               '         </td>'+
                               '     </tr>'+
+                              '     <tr class="cke_dialog_ui_hbox">'+
+                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:20px 0 0">'+
+                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo2_label" for="cke_inputSigilo2_textInput">Localizar dados sens\u00EDveis como <br>e-mails e CPFs em todo o documento</label>'+
+                              '         </td>'+
+                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:20px 0 0">'+
+                              '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'email_cpf\')" title="Localizar dados sens\u00EDveis" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo2_label" id="buttonSigilo2_uiElement">'+
+                              '                 <span id="buttonSigilo2_label" class="cke_dialog_ui_button">Localizar dados sens\u00EDveis</span>'+
+                              '             </a>'+
+                              '         </td>'+
+                              '     </tr>'+
                               ' </tbody>'+
                               '</table>'+
                               '<div id="tabSigilo2_result" class="tabSigilo_result" style="display:none; margin-top: 15px;"></div>'
              		}
                   ]
                }, {
-                  id : 'tab13',
+                id : 'tab1',
+                label : '2. Tarjar marcas de sigilo',
+                elements :
+                [
+                  {
+                      type: 'html',
+                      html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
+                            ' <tbody>'+
+                            '     <tr class="cke_dialog_ui_hbox">'+
+                            '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
+                            '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo1_label" for="cke_inputSigilo1_textInput">Aplicar tarja de sigilo <br> no documento</label>'+
+                            '         </td>'+
+                            '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
+                            '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'apply\')" title="Aplicar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo1_label" id="buttonSigilo1_uiElement">'+
+                            '                 <span id="buttonSigilo1_label" class="cke_dialog_ui_button">Aplicar</span>'+
+                            '             </a>'+
+                            '         </td>'+
+                            '     </tr>'+
+                            ' </tbody>'+
+                            '</table>'+
+                            '<div id="tabSigilo1_result" class="tabSigilo_result" style="display:none; margin-top: 15px;"></div>'
+                   }
+                ]
+             }, {
+                  id : 'tab3',
                   label : 'Remover marcas',
                   elements :
                   [
@@ -607,6 +632,24 @@ function getDialogSigilo() {
                               '       <i class="fas fa-exclamation-triangle laranjaColor"></i> Marcas de sigilo j\u00E1 tarjadas n\u00E3o poder\u00E3o ser revertidas ap\u00F3s salvar e abandonar <br>este editor de documentos.'+
                               '     </label>'+
                               '</div>'
+             		}
+                  ]
+               }, {
+                  id : 'tab4',
+                  label : 'Guia r\u00E1pido',
+                  elements :
+                  [
+                    {
+                        type: 'html',
+                        html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
+                              ' <tbody>'+
+                              '     <tr class="cke_dialog_ui_hbox">'+
+                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:100%; padding:0px">'+
+                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo_label" for="cke_inputSigilo_textInput">Acesse o guia r\u00E1pido sobre como <a target="_blank" href="https://sei-pro.github.io/sei-pro/pages/SIGILODOC.html" class="linkDialog">Adicionar marca de sigilo e tarjas pretas de confidencialidade <i class="fas fa-external-link-alt" style="color: #00c; font-size: 90%; text-decoration: underline;"></i></a></label>'+
+                              '         </td>'+
+                              '     </tr>'+
+                              ' </tbody>'+
+                              '</table>'
              		}
                   ]
                }

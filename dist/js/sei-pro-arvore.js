@@ -1,4 +1,6 @@
 var arrayLinksArvore = [];
+var arrayLinksArvoreAll = [];
+var arrayIconsView = [];
 var arrayLinksPage = [];
 var arvoreDropzone = false;
 var containerUpload = 'body';
@@ -45,7 +47,8 @@ function initToolbarDocs() {
             var data = jmespath.search(iconsFlashDocMenu, "[?name=='"+value[0]+"'] | [0]");
             if ( data !== null ) {
                 var valueAlt = ( data.alt != '' ) ? data.alt : data.name;
-                htmlToolbarDoc +=  '   <a href="#" data-action="linksArvore" style="width: 175px;"><i class="fa '+data.icon+'"></i><span class="info" title="'+data.name+'" alt="'+valueAlt+'">'+valueAlt+'</span></a>';
+                var show = (data.show) ? '' : 'display:none;';
+                htmlToolbarDoc +=  '   <a href="#" data-action="linksArvore" style="width: 175px;'+show+'"><i class="fa '+data.icon+'"></i><span class="info" title="'+data.name+'" alt="'+valueAlt+'">'+valueAlt+'</span></a>';
             }
         });
         htmlToolbarDoc +=  '</div>';
@@ -129,9 +132,59 @@ function actionToolbarPro(this_, triggerButton) {
         } else if ( button_txt == 'Copiar nome com link' ) {
             callActionsArvore(doc, 'namelink');
             button_clicktxt = 'Nome e link copiado!';
+        } else if ( button_txt == 'Copiar n\u00FAmero com link' ) {
+            callActionsArvore(doc, 'numberlink');
+            button_clicktxt = 'Nome e link copiado!';
         } else if ( button_txt == 'Copiar link do documento' ) {
             callActionsArvore(doc, 'link');
-            button_clicktxt = 'Link copiado!';
+        } else if ( button_txt == 'Imprimir Web' ) {
+            callActionsArvore(doc, 'print');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Visualizar em nova aba' ) {
+            callActionsArvore(doc, 'view');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Consultar documento' ) {
+            callActionsArvore(doc, 'doc_view');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Incluir em bloco' ) {
+            callActionsArvore(doc, 'doc_bloco');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Cancelar documento' ) {
+            callActionsArvore(doc, 'doc_cancelar');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Vers\u00F5es do documento' ) {
+            callActionsArvore(doc, 'doc_versoes');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Gerar circular' ) {
+            callActionsArvore(doc, 'doc_circular');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Assinatura externa' ) {
+            callActionsArvore(doc, 'doc_assinatura_externa');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Excluir documento' ) {
+            callActionsArvore(doc, 'doc_excluir');
+            button_clicktxt = 'Excluindo...';
+        } else if ( button_txt == 'Editar documento' ) {
+            callActionsArvore(doc, 'doc_editar');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Assinar documento' ) {
+            callActionsArvore(doc, 'doc_assinar');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Adicionar aos favoritos' ) {
+            callActionsArvore(doc, 'doc_favorito');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Ci\u00EAncia' ) {
+            callActionsArvore(doc, 'doc_ciencia');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Enviar por e-mail' ) {
+            callActionsArvore(doc, 'doc_email');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Mover p/ outro processo' ) {
+            callActionsArvore(doc, 'doc_mover');
+            button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Intima\u00E7\u00E3o eletr\u00F4nica' ) {
+            callActionsArvore(doc, 'doc_intimacao');
+            button_clicktxt = 'Abrindo...';
         } else {
             parent.targetIfrVisualizacaoPro(url);
         }
@@ -193,8 +246,42 @@ function getToolbarPro(click) {
             }).on('toolbarShown', function( event ) {
                 $(event.currentTarget).addClass('highlight');
                 $(event.currentTarget).next().addClass('highlight');
+                var id_documento = $(event.currentTarget).attr('id');
+                    id_documento = (typeof id_documento !== 'undefined') ? parseInt(id_documento.replace('anchorImg','')) : false;
+                var listLinks = (id_documento) ? arrayLinksArvoreAll.filter(function(v){ return v.indexOf('id_documento='+id_documento) !== -1 }) : [];
+                    setTimeout(function () { 
+                        var toolbar = $('.tool-container.tool-bottom.toolbar-menu.animate-standard:visible');
+                        if (id_documento && listLinks.length > 0 && toolbar.length > 0) {
+                                updateLinksToolbar(toolbar, listLinks, id_documento, false);
+                                var doc = listLinks.filter(function(v){ return (v.indexOf('acao=arvore_visualizar') !== -1 && v.indexOf('id_documento='+id_documento) !== -1) });
+                                if (doc.length > 0) {
+                                    setTimeout(function () { 
+                                        if (toolbar.is(':visible') && !delayAjax) {
+                                            delayAjax = true;
+                                            setTimeout(function(){ delayAjax = false }, 1000);
+                                            $.ajax({ url: doc[0] }).done(function (html) {
+                                                var $html = $(html);
+                                                var textLink = $html.filter('script').not('[src*="js"]').text();
+                                                var arrayLinksArvoreDoc = getLinksInText(textLink);
+
+                                                var objIndexLink = (typeof arrayLinksArvoreAll === 'undefined' || arrayLinksArvoreAll.length == 0) ? -1 : arrayLinksArvoreAll.findIndex((obj => obj == doc[0]));
+                                                if (objIndexLink !== -1) {
+                                                    arrayLinksArvoreAll.splice(objIndexLink, 1);
+                                                }
+
+                                                $.merge(arrayLinksArvoreAll, arrayLinksArvoreDoc);
+                                                setTimeout(function () {
+                                                    updateLinksToolbar(toolbar, arrayLinksArvoreAll.filter(function(v){ return v.indexOf('id_documento='+id_documento) !== -1 }), id_documento, true);
+                                                    // console.log(arrayLinksArvoreAll.filter(function(v){ return v.indexOf('id_documento='+id_documento) !== -1 }));
+                                                }, 300);
+                                            });
+                                        }
+                                    }, 300);
+                                }
+                        }
+                    }, 300);
                 if (click) {
-                checkToolbarToClose();
+                    checkToolbarToClose();
                 }
                 setTimeout(function () { 
                     if ( $('.tool-container.tool-bottom.toolbar-menu.animate-standard:visible').length > 0 ) {
@@ -214,6 +301,91 @@ function getToolbarPro(click) {
             });  
         }
     }
+}
+
+function getLinksArvorePasta(nomePasta) {
+    var href = (nomePasta) ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('procedimento_paginar') !== -1 && v.indexOf('no_pai='+nomePasta) !== -1) }) : [];
+    if (href.length > 0) {
+        $.ajax({ 
+            method: 'POST',
+            url: href[0],
+            data: {
+                hdnArvore: $('#hdnArvore').val(),
+                hdnPastaAtual: $('#hdnPastaAtual').val(),
+                hdnProtocolos: $('#hdnProtocolos').val(),
+            }
+        }).done(function (html) {
+            var newLinks = getLinksInText(html);
+                $.merge(newLinks, arrayLinksArvoreAll);
+                newLinks = uniqPro(newLinks);
+                arrayLinksArvoreAll = newLinks;
+                console.log(arrayLinksArvoreAll);
+        });
+    }
+}
+function getLinksInText(text) {
+    var array = [];
+    text.split("'").filter(function(el) { return el.indexOf('controlador.php') !== -1 }).map(function(v){
+        if (v.indexOf('\"') !== -1) {
+            v.split('"').filter(function(i){ return i.indexOf('controlador.php') !== -1}).map(function(j){
+                var link = j.replace(/[\\"]/g, '');
+                array.push(link);
+            });
+            return false;
+        } else {
+            var link = v.replace(/[\\"]/g, '');
+            array.push(link);
+            return false;
+        }
+    });
+    array = (array.length > 0) 
+        ?   array.sort().filter(function(item, pos, ary) {
+                return !pos || item != ary[pos - 1];
+            }) 
+        : [];
+    return array;
+}
+function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = false) {
+    var listIconsView = (checkIconsView && arrayIconsView.length > 0) ? jmespath.search(arrayIconsView, "[?id_documento==`"+id_documento+"`] | [0].icones") : null;
+        listIconsView = (listIconsView === null) ? [] : listIconsView;
+        
+        toolbar.find('.tool-item').each(function(){
+        var a = $(this);
+        if (a.text() == 'Imprimir Web' && listLinks.filter(function(v){ return v.indexOf('documento_imprimir_web') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Visualizar em nova aba' && listLinks.filter(function(v){ return v.indexOf('documento_visualizar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Consultar documento' && listLinks.filter(function(v){ return v.indexOf('documento_alterar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Incluir em bloco' && listLinks.filter(function(v){ return v.indexOf('bloco_escolher') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Cancelar documento' && listLinks.filter(function(v){ return v.indexOf('documento_cancelar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Vers\u00F5es do documento' && listLinks.filter(function(v){ return v.indexOf('documento_versao_listar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Gerar circular' && listLinks.filter(function(v){ return v.indexOf('documento_gerar_circular') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Assinatura externa' && listLinks.filter(function(v){ return v.indexOf('assinatura_externa_gerenciar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Excluir documento' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_lixeira') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_excluir') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Editar documento' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_editar_conteudo') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('editor_montar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Assinar documento' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_assinar') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_assinar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Adicionar aos favoritos' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_documento_modelo') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('protocolo_modelo_cadastrar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Ci\u00EAncia' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_ciencia') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_ciencia') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Enviar por e-mail' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_email') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('email_encaminhar') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Mover p/ outro processo' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_mover_documento') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_mover') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Intima\u00E7\u00E3o eletr\u00F4nica' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('intimacao_eletronica_gerar') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('md_pet_intimacao_cadastrar') !== -1 }).length > 0 ) {
+            a.show();
+        }
+
+    });
 }
 function getLinksArvore() {
     var linksArvore = [];
@@ -239,8 +411,25 @@ function getLinksArvore() {
                     linksArvore.push(value);
                 });
             }
+            $.each(text.split('\n'), function(ind, val){
+                if (val.indexOf("].acoes = '") !== -1) {
+                    var arrayIconsAcoes = [];
+                    if (val.indexOf('"') !== -1) {
+                        var id_documento = (val.indexOf('id_documento') !== -1) ? val.match(/id_documento=([^&]*)/)[1] : false;
+                        if (id_documento) {
+                            val.split('"').filter(function(i){ return i.indexOf('imagens/') !== -1}).map(function(j){
+                                arrayIconsAcoes.push(j);
+                            });
+                            arrayIconsView.push({id_documento: parseInt(id_documento), icones: arrayIconsAcoes});
+                        }
+                    }
+                }
+            });
         }
     });
+    var textLink = $('script').not('[src*="js"]').text();
+    arrayLinksArvoreAll = getLinksInText(textLink);
+
     if ( typeof parent.iconsFlashMenu !== 'undefined' ) {
         linksArvore.push(parent.iconsFlashMenu[0]); 
         linksArvore.push(parent.iconsFlashMenu[1]); 
@@ -328,19 +517,95 @@ function callActionsArvore(doc, mode) {
         copyToClipboard(documento+' ('+citacaoDoc+nr_sei+')');
     } else if (mode == 'namelink') {
         copyToClipboardHTML(documento+' ('+citacaoDoc+'<a href="'+linkDoc+'" target="_blank">'+nr_sei+'</a>)');
+    } else if (mode == 'numberlink') {
+        copyToClipboardHTML('<a href="'+linkDoc+'" target="_blank">'+nr_sei+'</a>');
     } else if (mode == 'linkproc') {
         copyToClipboard(linkProc);
+    } else if (mode == 'print') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_imprimir_web') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
+        }
+    } else if (mode == 'view') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_visualizar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
+        }
+    } else if (mode == 'doc_view') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_alterar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_bloco') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('bloco_escolher') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_cancelar') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_cancelar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_versoes') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_versao_listar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_circular') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_gerar_circular') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_assinatura_externa') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('assinatura_externa_gerenciar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_excluir') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_excluir') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_editar') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('editor_montar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
+        }
+    } else if (mode == 'doc_assinar') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_assinar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
+        }
+    } else if (mode == 'doc_favorito') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('protocolo_modelo_cadastrar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_ciencia') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_ciencia') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_email') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('email_encaminhar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
+        }
+    } else if (mode == 'doc_mover') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_mover') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
+    } else if (mode == 'doc_intimacao') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('md_pet_intimacao_cadastrar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            parent.document.getElementById('ifrVisualizacao').setAttribute("src",link[0]);
+        }
     } else if (mode == 'link') {
         copyToClipboard(linkDoc);
     }
     // console.log('copyToClipboard', {id_documento: id_documento, mode: mode, nameDoc: nameDoc, nr_sei: nr_sei, documento: documento});
     // console.log(mode, doc.text(), nr_sei);
-}
-function getNrSei(nameDoc) {
-    var nr_sei = nameDoc.split(' ');
-        nr_sei = (nameDoc.indexOf(' ') !== -1) ? nr_sei[nr_sei.length-1] : '';
-        nr_sei = (nr_sei.indexOf('(') !== -1) ? nr_sei.replace(')','').replace('(','').trim() : nr_sei;
-    return nr_sei;
 }
 function getNomeSei(nameDoc) {
     var documento = nameDoc.split(' ');
@@ -384,6 +649,7 @@ function getDadosDoc(doc, newproc = false) {
                     paramDoc['txaObservacoes'] = $htmlConsulta.find('#txaObservacoes').val();
                     paramDoc['rdoNivelAcesso'] = $htmlConsulta.find('input[name="rdoNivelAcesso"]:checked').val();
                     paramDoc['selHipoteseLegal'] = $htmlConsulta.find('#selHipoteseLegal').val();
+                    paramDoc['urlHipoteseLegal'] = parent.getUrlHipoteseLegal(html);
                 // console.log(nameDoc, paraUrl.id_documento, paramDoc);
                 getDuplicateDoc(nameDoc, paramDoc, newproc);
             }).fail(function(data){
@@ -395,7 +661,7 @@ function getDadosDoc(doc, newproc = false) {
     }
 }
 function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false) {
-    console.log('getDuplicateDoc', nameDoc, paramDoc, newproc);
+    // console.log('getDuplicateDoc', nameDoc, paramDoc, newproc);
     if (newproc) {
         var arrayCurrentCloneDoc = {
             nameDoc: nameDoc, 
@@ -624,7 +890,6 @@ function loadUploadArvore() {
     });
     arvoreDropzone.on("addedfiles", function(files) {
         dropzoneCancelInfo();
-        console.log()
         if (verifyConfigValue('sortbeforeupload') && arvoreDropzone.getQueuedFiles().length > 1) {
             sortUploadArvore();
         } else {
@@ -1003,7 +1268,7 @@ function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') 
             } else if (mode == 'increment') {
                 value = iframe.find('#txaDescricao').val()+'\n'+value; 
                 value = value.substring(0,499); 
-                console.log({mode: mode, value: value});
+                // console.log({mode: mode, value: value});
                 iframe.find('#txaDescricao').val(value);
             }
             iframe.find('#chkSinPrioridade').prop('checked', priority);
@@ -1299,10 +1564,10 @@ function sticknotePosition() {
         stickNoteDivSelected = $(window.getSelection().anchorNode).closest('div').index();
         stickNoteDivSelected = (stickNoteDivSelected > $('.stickNotePro div').length-1) ? 0 : stickNoteDivSelected;
     }
-    console.log(stickNoteDivSelected);
+    // console.log(stickNoteDivSelected);
 }
 function sticknoteCheck(this_) {
-    console.log(stickNoteDivSelected);
+    // console.log(stickNoteDivSelected);
     if (typeof stickNoteDivSelected == 'object') {
         $('.stickNotePro div').each(function(index){
             if (index >= stickNoteDivSelected.start && index <= stickNoteDivSelected.end) {
@@ -1319,7 +1584,7 @@ function sticknoteToggleCheck(id) {
         selected.removeClass('stickNoteCheck').removeClass('stickNoteChecked');
     } else {
         selected.addClass('stickNoteCheck');
-        console.log('sticknoteToggleCheck', id, selected.text().trim());
+        // console.log('sticknoteToggleCheck', id, selected.text().trim());
         if (selected.text().trim() == '') {
             selected.text(' ')
             setTimeout(function() {
@@ -1381,7 +1646,7 @@ function getDadosInteressadosArvore(this_) {
                     iframe.find('#selTipoProcedimentoPesquisa').val(data.tipoProcedimento);
                 }
                 iframe.find('#chkSinTramitacao').prop('checked', data.tramiteUnidade);
-                console.log({interessado: data.interessado, natureza: data.mesmaNatureza, tipo: data.tipoProcedimento, tramite: data.tramiteUnidade});
+                // console.log({interessado: data.interessado, natureza: data.mesmaNatureza, tipo: data.tipoProcedimento, tramite: data.tramiteUnidade});
                 $(this).unbind().on('load', function(){
                     $(this).unbind();
                     _this.find('i.iconInteressadosProcesso').toggleClass('fa-folder-open fa-spinner').removeClass('fa-spin');
@@ -1439,7 +1704,7 @@ function getDadosInteressadosArvore(this_) {
                                             '</div>';
                         })
                         _this.closest('.dadosInteressados').find('.dadosInteressados_result').html(htmlResult).show();
-                        console.log(count, result);
+                        // console.log(count, result);
                 });
                 iframe.find('#sbmPesquisar').trigger('click');
         });
@@ -1450,7 +1715,7 @@ function optionSearchInteressado(this_) {
     var data = _this.data();
     var _parent = _this.closest('.dadosInteressados');
     var checkbox = _this.find('i').hasClass('fa-check-square') ? false : true;
-    console.log('checkbox',checkbox);
+    // console.log('checkbox',checkbox);
     if (data.type == 'tramiteUnidade') {
         _parent.find('a.interessadosProcesso').data('tramite-unidade',checkbox).trigger('click');
         setOptionsPro('panelDadosArvoreInteressados_tramiteUnidade', checkbox);
@@ -1462,7 +1727,7 @@ function optionSearchInteressado(this_) {
 }
 function setDadosProcessoArvore() {
     var prop = parent.dadosProcessoPro.propProcesso;
-
+    var processoAberto = (jmespath.search(arrayLinksArvore, "[?name=='Consultar/Alterar Processo'] | [0]") !== null) ? true : false;
     var htmlDescricao =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="descricao">'+
                                 '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                 '      <i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>'+
@@ -1471,6 +1736,9 @@ function setDadosProcessoArvore() {
                                 '   </label>'+
                                 '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'display:none' : '')+'">'+
                                 '       <a class="newLink" style="cursor:pointer" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.txtDescricao+'</a>'+
+                                (processoAberto ?
+                                '       <a class="newLink" data-mode="descricao" style="cursor:pointer" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                '' : '')+
                                 '   </div>'+
                                 '</div>';
 
@@ -1482,6 +1750,9 @@ function setDadosProcessoArvore() {
                                 '   </label>'+
                                 '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'display:none' : '')+'">'+
                                 '       <a class="newLink" style="cursor:pointer" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnNomeTipoProcedimento+'</a>'+
+                                (processoAberto ?
+                                '       <a class="newLink" data-mode="tipo_procedimento" style="cursor:pointer" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                '' : '')+
                                 '   </div>'+
                                 '</div>';
         htmlTipoProcedimento = ($.inArray("Tipo de Procedimento",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlTipoProcedimento : '';
@@ -1500,6 +1771,9 @@ function setDadosProcessoArvore() {
                             '   </label>'+
                             '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'display:none' : '')+'">'+
                             '      <a class="newLink" style="cursor:pointer" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+dataNivelAcesso.name+'</a>'+
+                            (processoAberto ?
+                            '       <a class="newLink" data-mode="nivel_acesso" style="cursor:pointer" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                            '' : '')+
                             '   </div>'+
                             '</div>';
         htmlNivelAcesso = ($.inArray("N\u00EDvel de Acesso",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlNivelAcesso : '';
@@ -1577,7 +1851,8 @@ function initAtividadesProcesso(TimeOut = 9000) {
 }
 function setAtividadesProcesso() {
     var htmlAtividades = getAtividadesProcessoArvore();
-    $('.panelDadosArvore_atividades').after(htmlAtividades).remove();
+    $('.panelDadosArvore_atividades').remove();
+    $('.panelDadosArvore').eq(0).before(htmlAtividades);
 
     if (htmlAtividades != '') {
         $('.kanban-item .checklist_progress').each(function(){
@@ -1687,11 +1962,15 @@ function stylePanelArvore() {
         if (infoResponsaveis != '') {
             $.each(infoResponsaveis.split('<br />'), function(i, v){
                 var result = $('<div/>').html(v).contents();
-                if (result.text().trim() != '') {
+                var result_text = result.text().trim();
+                if (result_text != '') {
                     var naoAtribuido = ($('<div/>').append(result).find('a.ancoraSigla').length == 1) ? ' <span class="infoAlerta">(n\u00E3o atribu\u00EDdo)</span>' : '';
+                    var iconEdit = (result_text.indexOf($('#selInfraUnidades', window.parent.document).find('option:selected').text()) !== -1) 
+                                    ? '<a class="newLink" data-mode="responsaveis" data-text="'+result_text+'" style="cursor:pointer" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>' 
+                                    : ''
                     htmlInfoResponsaveis += '<div>'+
                                             '   <a class="newLink" style="cursor:pointer" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+
-                                            '   '+result.text().trim()+naoAtribuido+
+                                            '   '+result_text+naoAtribuido+iconEdit+
                                             '   </a>'+
                                             '</div>';
                 }
@@ -1749,7 +2028,9 @@ function initStylePanelArvore(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
-            parent.initNameConst();
+            if (typeof parent.initNameConst === 'function') {
+                parent.initNameConst();
+            }
             initStylePanelArvore(TimeOut - 100); 
             console.log('Reload initStylePanelArvore', TimeOut); 
         }, 500);
@@ -1783,7 +2064,15 @@ function initBreakDocTwoLines(TimeOut = 9000) {
         }, 500);
     }
 }
+function loadStyleDesign() {
+    if (localStorage.getItem('seiSlim')) {
+        var body = document.body;
+        body.classList.add("seiSlim");
+        body.classList.add("seiSlim_arvore");
+    }
+}
 function initSeiProArvore() {
+    loadStyleDesign();
     arrayLinksArvore = getLinksArvore();
     arrayLinksPage = getLinksPage();
     parent.linksArvore = getLinksPage();
@@ -1826,6 +2115,9 @@ function initSeiProArvore() {
     }
     if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined'  && parent.checkConfigValue('menususpenso')) {
         parent.hideMenuSistemaView();
+    }
+    if (typeof parent.setClickUrlAmigavel !== 'undefined'  && parent.verifyConfigValue('urlamigavel')) {
+        parent.setClickUrlAmigavel();
     }
 }
 
