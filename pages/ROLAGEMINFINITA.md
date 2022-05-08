@@ -6,6 +6,8 @@ Essa ferramenta adiciona na pesquisa de processos do SEI a funcionalidade de mos
 
 > ![Tela Estilo de Tabelas](../img/tela-rolageminfinita.gif) 
 
+Essa funcionalidade não vem ativada por padrão no **SEI Pro**, sendo necessário ativá-la nas **Opções da Extensão**.
+
 ## Próximo item
 
 > [Inserir ...](../pages/PAGE.md)
