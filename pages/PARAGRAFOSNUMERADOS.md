@@ -2,7 +2,7 @@
 
 ## ![SEI Pro Parágrafos Numerados](../img/icon-paragrafosnumerados.png) Visualizar parágrafos numerados no visualizador de documentos
 
-Essa ferramenta adiciona ao visualizador de documentos do SEI a possibilidade de visualizar numeração crescente em todos os parágrafos do documento.
+Essa ferramenta adiciona ao SEI a possibilidade de visualizar numeração crescente em todos os parágrafos do documento.
 
 > ![Tela Parágrafos Numerados](../img/tela-paragrafosnumerados.gif) 
 
