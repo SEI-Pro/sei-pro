@@ -2,7 +2,7 @@
 
 ## ![SEI Pro Ações em Lote](../img/icon-acoeslote.png) Ações em Lote
 
-Essa ferramenta adiciona ao SEI a funcionalidade de dar ciência, excluir, alterar sigilo, assinar e cancelar documentos dentro de um processo.
+Essa ferramenta adiciona ao SEI a funcionalidade de dar ciência, excluir, alterar sigilo, assinar e cancelar **múltiplos** documentos dentro de um processo.
 
 > ![Tela Estilo de Tabelas](../img/tela-acoeslote.gif) 
 
