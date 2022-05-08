@@ -13,6 +13,10 @@ Ainda, é possível adicionar prazos em lote. Basta selecioná-los e clicar no �
 
 > ![Tela Estilo de Tabelas](../img/tela-controleprazo1.gif) 
 
+Caso prefira, você poderá gerenciar o prazo do processo dentro dele, através da barra lateral de informações, ao editar as opções de marcadores.
+
+> ![Tela Estilo de Tabelas](../img/tela-controleprazo2.gif) 
+
 ## Próximo item
 
 > [Inserir ...](../pages/PAGE.md)
