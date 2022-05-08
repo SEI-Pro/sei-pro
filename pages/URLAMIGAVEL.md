@@ -2,7 +2,7 @@
 
 ## ![SEI Pro URL Amigável](../img/icon-urlamigavel.png) Endereços amigáveis em processos e documentos
 
-Essa ferramenta adiciona à página de processos endereços amigáveis para compartilhamento (link).
+Essa ferramenta adiciona à página de processos do SEI endereços amigáveis para compartilhamento (link).
 
 > ![Tela Estilo de Tabelas](../img/tela-urlamigavel.gif) 
 
