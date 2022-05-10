@@ -4,6 +4,7 @@
 
 - [Gerenciar projetos](./pages/PROJETOS.md)
 - [Gerenciar processos favoritos](./pages/FAVORITOS.md)
+- [Controle de Prazos](./pages/PRAZOS.md)
 - [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](./pages/AGRUPAR.md)
 - [Inserir documento externo (HTML, Google Docs e Google Planilhas)](./pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
@@ -44,6 +45,13 @@
 - [Dividir as informações do documento na árvore do processo em duas linhas](./pages/DIVIDIRLINHASARVORE.md)
 - [Redimensionar automaticamente a árvore do processo pela sua largura total](./pages/RESIZEARVORE.md),
 - [Utilizar caixas de seleção inteligentes](./pages/SUBSTITUIRSELECAO.md)
+- [Ações em Lote](./pages/ACOESEMLOTE.md)
+- [Rolagem infinita na pesquisa de processos](./pages/ROLAGEMINFINITA.md)
+- [Utilizar endereços amigáveis em processos e documentos](./pages/URLAMIGAVEL.md)
+- [Alertar sobre documentos não assinados ao enviar um processo](./pages/DOCSNAOASSINADOS.md)
+- [Permitir cores personalizadas em Marcadores](./pages/CORESMARCADORES.md)
+- [Visualizar parágrafos numerados no visualizador de documentos](./pages/PARAGRAFOSNUMERADOS.md)
+- [Gerar Certidão de Documento Oficial com Sigilo](./pages/CERTIDAOSIGILO.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
