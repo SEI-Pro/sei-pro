@@ -2,6 +2,20 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.0
+16/05/2022
+
+- Correções e melhorias
+- Adicionado o [Controle de Prazos](../pages/PRAZOS.md)  (Sugestão de Bruno Crescenti)
+- Adicionado as [Caixas de seleção inteligentes](../pages/SUBSTITUIRSELECAO.md)
+- Adicionado as [Ações em Lote](../pages/ACOESEMLOTE.md)
+- Adicionado a [Rolagem infinita na pesquisa de processos](../pages/ROLAGEMINFINITA.md)
+- Adicionado os [Endereços amigáveis em processos e documentos](../pages/URLAMIGAVEL.md) (Sugestão Di Quirino)
+- Adicionado o [Alerta sobre documentos não assinados ao enviar um processo](../pages/DOCSNAOASSINADOS.md) (Sugestão Leonardo Rafaele)
+- Adicionado as [Cores personalizadas em Marcadores](../pages/CORESMARCADORES.md) (Sugestão de Felyssa)
+- Adicionado os [Parágrafos numerados no visualizador de documentos](../pages/PARAGRAFOSNUMERADOS.md) (Sugestão de Francisco Eudes)
+- Adicionado a [Certidão de Documento Oficial com Sigilo](../pages/CERTIDAOSIGILO.md) (Sugestão de Tatiana Cabral - CGU)
+
 ### Versão 0.1.26
 08/09/2021
 
@@ -157,3 +171,10 @@
 - [Dividir as informações do documento na árvore do processo em duas linhas](../pages/DIVIDIRLINHASARVORE.md)
 - [Redimensionar automaticamente a árvore do processo pela sua largura total](../pages/RESIZEARVORE.md)
 - [Utilizar caixas de seleção inteligentes](../pages/SUBSTITUIRSELECAO.md)
+- [Ações em Lote](../pages/ACOESEMLOTE.md)
+- [Rolagem infinita na pesquisa de processos](../pages/ROLAGEMINFINITA.md)
+- [Utilizar endereços amigáveis em processos e documentos](../pages/URLAMIGAVEL.md)
+- [Alertar sobre documentos não assinados ao enviar um processo](../pages/DOCSNAOASSINADOS.md)
+- [Permitir cores personalizadas em Marcadores](../pages/CORESMARCADORES.md)
+- [Visualizar parágrafos numerados no visualizador de documentos](../pages/PARAGRAFOSNUMERADOS.md)
+- [Gerar Certidão de Documento Oficial com Sigilo](../pages/CERTIDAOSIGILO.md)
