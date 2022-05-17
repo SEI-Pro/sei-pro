@@ -6,6 +6,7 @@
 16/05/2022
 
 - Correções e melhorias
+- Adicionado a [Enumeração de Normas (Legística)](../pages/LEGISTICA.md) (Migrado do projeto [SEI Legis](https://github.com/SEI-Pro/sei-legis)
 - Adicionado o [Controle de Prazos](../pages/PRAZOS.md)  (Sugestão de Bruno Crescenti)
 - Adicionado as [Caixas de seleção inteligentes](../pages/SUBSTITUIRSELECAO.md)
 - Adicionado as [Ações em Lote](../pages/ACOESEMLOTE.md)
