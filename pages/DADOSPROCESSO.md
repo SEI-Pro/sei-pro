@@ -65,6 +65,7 @@ Funções Avançadas. Adicione um numerador ao final do campo dinâmico para ret
 | `#documento+3`  |  Terceiro documento do processo em relação ao atual |
 | `#documento-1`  |  Primeiro documento do processo anterior ao atual |
 | `#documento-6`  |  Sexto documento do processo anterior ao atual |
+| `#documento-ultimo`  |  Último documento do processo |
 | `#hoje+1`  |  Amanhã _(em formato [dia] de [mês] de [ano])_ |
 | `#hoje-1`  |  Ontem _(em formato [dia] de [mês] de [ano])_ |
 | `#hoje+7`  |  Data daqui 7 dias _(em formato [dia] de [mês] de [ano])_ |
