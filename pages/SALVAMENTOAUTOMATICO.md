@@ -1,0 +1,13 @@
+# [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
+
+## ![SEI Pro Salvamento Automático](../img/icon-salvamentoautomatico.png) Salvamento Automático
+
+Essa ferramenta adiciona ao editor de texto SEI a possibilidade de salvar automaticamente do documento após um período pré-determinado.
+
+> ![Tela Salvamento Automático](../img/tela-salvamentoautomatico.gif) 
+
+Essa funcionalidade não vem ativada por padrão no **SEI Pro**, sendo necessário ativá-la na barra de ferramentas do **Editor do SEI**.
+
+## Próximo item
+
+> [Inserir ...](../pages/PAGE.md)
