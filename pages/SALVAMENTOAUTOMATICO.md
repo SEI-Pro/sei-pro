@@ -8,6 +8,8 @@ Essa ferramenta adiciona ao editor de texto SEI a possibilidade de salvar automa
 
 Essa funcionalidade não vem ativada por padrão no **SEI Pro**, sendo necessário ativá-la na barra de ferramentas do **Editor do SEI**.
 
+Definir o intervalo de salvamento automático para **0** irá desativar a funcionalidade. 
+
 ## Próximo item
 
 > [Inserir ...](../pages/PAGE.md)
