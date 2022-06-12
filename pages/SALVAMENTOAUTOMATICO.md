@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Salvamento Automático](../img/icon-salvamentoautomatico.png) Salvamento Automático
+## ![SEI Pro Salvamento Automático](../img/icon-salvamentoautomatico.png) Salvar documentos automaticamente
 
 Essa ferramenta adiciona ao editor de texto SEI a possibilidade de salvar automaticamente do documento após um período pré-determinado.
 
