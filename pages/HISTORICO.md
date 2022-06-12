@@ -3,7 +3,7 @@
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
 ### Versão 1.0
-16/05/2022
+15/06/2022
 
 - Correções e melhorias
 - Adicionado a [Alteração do layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
