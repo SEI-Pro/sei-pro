@@ -1,6 +1,6 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Editar Imagens](../img/icon-editarimagens.png) Envio, formatação e edição avançada de imagens no editor de documentos
+## ![SEI Pro Editar Imagens](../img/icon-editarimagens.png) Enviar múltiplas imagens, formatar e editar opções avançadas
 
 Essa ferramenta adiciona ao editor de texto SEI a possibilidade de enviar múltiplas imagens arrastando e soltando.
 
