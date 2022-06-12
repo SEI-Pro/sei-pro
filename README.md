@@ -53,6 +53,9 @@
 - [Permitir cores personalizadas em Marcadores](./pages/CORESMARCADORES.md)
 - [Visualizar parágrafos numerados no visualizador de documentos](./pages/PARAGRAFOSNUMERADOS.md)
 - [Gerar Certidão de Documento Oficial com Sigilo](./pages/CERTIDAOSIGILO.md)
+- [Enviar múltiplas imagens, formatar e editar opções avançadas](./pages/EDITARIMAGENS.md)
+- [Reduzir a qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
+- [Salvar documentos automaticamente](./pages/SALVAMENTOAUTOMATICO.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
