@@ -10,7 +10,7 @@ Ainda, é possível formatar e editar as imagens a partir de opções avançadas
 
 > ![Tela Editar Imagens](../img/tela-editarimagens1.gif) 
 
-Ao clicar duas vezes sobre a imagem é possível formatar os seguintes atributos
+Ao clicar duas vezes sobre a imagem é possível ajustar os seguintes atributos
 
 | **Atributos** | **Valores** |
 | ------------------- | ------------------- |
@@ -24,6 +24,16 @@ Ao clicar duas vezes sobre a imagem é possível formatar os seguintes atributos
 | Alinhamento | <não ajustado> / Superior / Inferior / Esqueda / Direita |
 | Qualidade da Imagem | 0-100 (somente antes do upload) |
 | Filtro | <não ajustado> / Escala de cinza / Borrado / Caixa sombreada / Cores invertidas / Envelhecido |
+
+Selecione a opção **Editar Imagem** (botão direito) para cortar, girar, inverter, desenhar, reparar, adicionar filtros, redimensionar e adicionar marca d'água na imagem.
+
+> ![Tela Editar Imagens](../img/tela-editarimagens2.gif) 
+
+
+> ![Tela Editar Imagens](../img/tela-editarimagens3.gif) 
+
+
+> ![Tela Editar Imagens](../img/tela-editarimagens4.gif) 
 
 ## Próximo item
 
