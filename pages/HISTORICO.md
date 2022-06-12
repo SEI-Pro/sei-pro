@@ -6,6 +6,7 @@
 16/05/2022
 
 - Correções e melhorias
+- Adicionado a [Alteração do layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
 - Adicionado a [Envio de múltiplas imagens, formatação e editação de opções avançadas](../pages/EDITARIMAGENS.md)
 - Adicionado a [Redução da qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)
 - Adicionado a [Salvamento de documentos automaticamente](../pages/SALVAMENTOAUTOMATICO.md)
@@ -134,6 +135,7 @@
 
 # Lista de funções do SEI Pro ![SEI Pro](../img/icon-32.png)
 
+- [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
 - [Gerenciar projetos](../pages/PROJETOS.md)
 - [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](../pages/AGRUPAR.md)
 - [Inserir documento externo (HTML, Google Docs e Google Planilhas)](../pages/INSERIRDOC.md)
