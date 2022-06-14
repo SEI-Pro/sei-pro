@@ -3,7 +3,6 @@ var totalSecondsTest = 0;
 var totalSecondsTestText = '';
 var timerTest;
 var tableHomePro = [];
-var delayCrash = false;
 
 function setTimeTest() {
     ++totalSecondsTest;
@@ -15,9 +14,13 @@ function setTimeTest() {
 // On load, called to load the auth2 library and API client library.
 function handleClientLoadPro(TimeOut = 3000) {
     if (TimeOut <= 0) { return; }
-    if (typeof spreadsheetIdProjetos_Pro !== 'undefined' && typeof gapi !== 'undefined' && typeof initClientPro !== 'undefined') { 
+    if ((typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined' || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined') && typeof gapi !== 'undefined' && typeof initClientPro !== 'undefined') { 
         gapi.load('client:auth2', initClientPro);
-    } else if (spreadsheetIdProjetos_Pro === false) {
+    } else if (
+            (typeof spreadsheetIdProjetos_Pro !== 'undefined' && spreadsheetIdProjetos_Pro === false) || 
+            (typeof spreadsheetIdFormularios_Pro !== 'undefined' && spreadsheetIdFormularios_Pro === false) ||
+            (typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' && spreadsheetIdSyncProcessos_Pro === false)
+        ) {
         console.log('notConfig handleClientLoadPro'); 
         return;
     } else {
@@ -31,7 +34,7 @@ function handleClientLoadPro(TimeOut = 3000) {
 //// Agrupamento de lista de processos
 function getListTypes(acaoType) {
     var arrayTag = [''];
-    if (acaoType == 'tags') {
+    if (acaoType == 'tags' || acaoType == 'deadline') {
     	var acaoType_ = 'acao=andamento_marcador_gerenciar';
 	} else if (acaoType == 'types') {
 		var acaoType_ = 'acao=procedimento_trabalhar';
@@ -50,8 +53,10 @@ function getListTypes(acaoType) {
                 tag = ( acaoType == 'users' ) ? $(this).text() : tag;
                 tag = ( acaoType == 'checkpoints' ) ? $(this).attr('onmouseover').split("'")[1] : tag;
                 tag = ( acaoType == 'senddepart' ) ? getArrayProcessoRecebido($(this).attr('href')).unidadesendfull : tag;
-                tag = ( acaoType == 'senddepart' && typeof tag === 'undefined') ? '' : tag;
-                if ( acaoType == 'arrivaldate' || acaoType == 'acessdate'  || acaoType == 'senddate'   || acaoType == 'createdate' ) {
+                tag = ( acaoType == 'deadline' ) ? $(this).closest('tr').find('td.prazoBoxDisplay .dateboxDisplay').data('time-sorter') : tag;
+                tag = ( (acaoType == 'deadline' || acaoType == 'senddepart') && typeof tag === 'undefined') ? '' : tag;
+                tag = ( acaoType == 'deadline' && tag != '') ? moment(tag, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : tag;
+                if ( acaoType == 'arrivaldate' || acaoType == 'acessdate' || acaoType == 'senddate' || acaoType == 'createdate' || acaoType == 'deadline' ) {
                     var startDateNow = moment();
                     var startDateYesterday = moment().subtract(1, 'days');
                     var startDate1Yesterday = moment().subtract(2, 'days');
@@ -77,26 +82,67 @@ function getListTypes(acaoType) {
                     var endDateLastQuarter = moment().subtract(4, 'months').endOf('month');
                     var startDateLastYear = moment().subtract(1, 'years');
                     var endDateLastYear = moment().subtract(11, 'months').endOf('month');
+
+                    var startDateTomorrow = moment().add(1, 'day');
+                    var startDate1Tomorrow = moment().add(2, 'day');
+                    var startDateNextWeek = moment().add(1, 'week').startOf('isoWeek');
+                    var endDateNextWeek = moment().add(1, 'week').endOf('isoWeek');
+                    var startDate2NextWeek = moment().add(2, 'week').startOf('isoWeek');
+                    var endDate2NextWeek = moment().add(2, 'week').endOf('isoWeek');
+                    var startDate3NextWeek = moment().add(3, 'week').startOf('isoWeek');
+                    var endDate3NextWeek = moment().add(3, 'week').endOf('isoWeek');
+                    var startDate4NextWeek = moment().add(4, 'week').startOf('isoWeek');
+                    var endDate4NextWeek = moment().add(4, 'week').endOf('isoWeek');
+                    var startDate5NextWeek = moment().add(5, 'week').startOf('isoWeek');
+                    var endDate5NextWeek = moment().add(5, 'week').endOf('isoWeek');
+                    var startDateNextMonth = moment().add(1, 'month').startOf('month');
+                    var endDateNextMonth = moment().add(1, 'month').endOf('month');
+                    var startDate2NextMonth = moment().add(2, 'month').startOf('month');
+                    var endDate2NextMonth = moment().add(2, 'month').endOf('month');
+                    var startDate3NextMonth = moment().add(3, 'month').startOf('month');
+                    var endDate3NextMonth = moment().add(3, 'month').endOf('month');
+                    var startDateNextQuarter = moment().add(4, 'month').startOf('month');
+                    var endDateNextQuarter = moment().add(6, 'month').endOf('month');
+                    var startDateNextYear = moment().add(1, 'year');
+                    var endDateNextYear = moment().add(11, 'month').endOf('month');
                     var dataRecebido =  (acaoType == 'arrivaldate') ? getArrayProcessoRecebido($(this).attr('href')).datahora : '';
                         dataRecebido =  (acaoType == 'acessdate') ? getArrayProcessoRecebido($(this).attr('href')).datetime : dataRecebido;
                         dataRecebido =  (acaoType == 'senddate') ? getArrayProcessoRecebido($(this).attr('href')).datesend : dataRecebido;
                         dataRecebido =  (acaoType == 'createdate') ? getArrayProcessoRecebido($(this).attr('href')).datageracao : dataRecebido;
-                        dataRecebido = (dataRecebido != '') ? moment(dataRecebido,'YYYY/MM/DD HH:mm:ss') : '';
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateNow.format('YYYY-MM-DD') ) { tag = 'a.Hoje'; }
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateYesterday.format('YYYY-MM-DD') ) { tag = 'a.Ontem'; } 
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDate1Yesterday.format('YYYY-MM-DD') ) { tag = 'b.Anteontem'; } 
-                    if (dataRecebido != '' && tag == '' && dataRecebido.isBetween(startDateWeek, endDateWeek) ) { tag = 'c.Essa semana'; }
-                    if (dataRecebido != '' && tag == '' && dataRecebido.isBetween(startDateLastWeek, endDateLastWeek) ) { tag = 'd.Semana passada'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastWeek, endDate2LastWeek) ) { tag = 'e.Duas semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastWeek, endDate3LastWeek) ) { tag = 'f.Tr\u00EAs semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate4LastWeek, endDate4LastWeek) ) { tag = 'g.Quatro semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate5LastWeek, endDate5LastWeek) ) { tag = 'h.Cinco semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastMonth, endDateLastMonth) ) { tag = 'i.Um m\u00EAs atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastMonth, endDate2LastMonth) ) { tag = 'j.Dois meses atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastMonth, endDate3LastMonth) ) { tag = 'k.Tr\u00EAs meses atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastQuarter, endDateLastQuarter) ) { tag = 'l.Seis meses atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastYear, endDateLastYear) ) { tag = 'm.Um ano atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido < endDateLastYear ) { tag = 'n.Maior que um ano atr\u00E1s'; }
+                        dataRecebido =  (acaoType == 'deadline') ? $(this).closest('tr').find('td.prazoBoxDisplay .dateboxDisplay').data('time-sorter') : dataRecebido;
+                        dataRecebido = (typeof dataRecebido !== 'undefined' && dataRecebido != '') ? moment(dataRecebido,'YYYY-MM-DD HH:mm:ss') : '';
+                        
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateWeek, endDateWeek) ) { tag = 'l.Essa semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastWeek, endDateLastWeek) ) { tag = 'k.Semana passada'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastWeek, endDate2LastWeek) ) { tag = 'j.Duas semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastWeek, endDate3LastWeek) ) { tag = 'i.Tr\u00EAs semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate4LastWeek, endDate4LastWeek) ) { tag = 'h.Quatro semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate5LastWeek, endDate5LastWeek) ) { tag = 'g.Cinco semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastMonth, endDateLastMonth) ) { tag = 'f.Um m\u00EAs atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastMonth, endDate2LastMonth) ) { tag = 'e.Dois meses atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastMonth, endDate3LastMonth) ) { tag = 'd.Tr\u00EAs meses atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastQuarter, endDateLastQuarter) ) { tag = 'c.Seis meses atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastYear, endDateLastYear) ) { tag = 'b.Um ano atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido < endDateLastYear ) { tag = 'a.Maior que um ano atr\u00E1s'; }
+
+                    if (dataRecebido != '' && dataRecebido > endDateNextYear ) { tag = 'zc.Maior que um ano'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextYear, endDateNextYear) ) { tag = 'zb.Em um ano'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextQuarter, endDateNextQuarter) ) { tag = 'za.Em seis meses'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3NextMonth, endDate3NextMonth) ) { tag = 'y.Em tr\u00EAs meses'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2NextMonth, endDate2NextMonth) ) { tag = 'x.Em dois meses'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextMonth, endDateNextMonth) ) { tag = 'w.Em um m\u00EAs'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate5NextWeek, endDate5NextWeek) ) { tag = 'v.Em cinco semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate4NextWeek, endDate4NextWeek) ) { tag = 'u.Em quatro semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3NextWeek, endDate3NextWeek) ) { tag = 't.Em tr\u00EAs semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2NextWeek, endDate2NextWeek) ) { tag = 's.Em duas semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextWeek, endDateNextWeek) ) { tag = 'r.Semana quem vem'; }
+
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDate1Tomorrow.format('YYYY-MM-DD') ) { tag = 'q.Depois de amanh\u00E3'; } 
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateTomorrow.format('YYYY-MM-DD') ) { tag = 'p.Amanh\u00E3'; } 
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateNow.format('YYYY-MM-DD') ) { tag = 'o.Hoje'; }
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateYesterday.format('YYYY-MM-DD') ) { tag = 'n.Ontem'; } 
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDate1Yesterday.format('YYYY-MM-DD') ) { tag = 'm.Anteontem'; } 
+
                     /*
                     var datas = [
                         {startDateNow: moment(startDateNow).format('DD/MM/YYYY'), startDateYesterday: moment(startDateYesterday).format('DD/MM/YYYY'), startDate1Yesterday: moment(startDate1Yesterday).format('DD/MM/YYYY')},
@@ -116,8 +162,11 @@ function getListTypes(acaoType) {
                     */
                 }
             //console.log(tag, acaoType);
-            var tag_ = (typeof tag !== 'undefined' && tag != '' ) ? removeAcentos(tag).replace(/\ /g, '') : 'SemGrupo' ;
-            $(this).closest('tr').attr('data-tagname', tag_);
+            var tag_ = (typeof tag !== 'undefined' && tag != '' ) ? removeAcentos(tag).replace(/\ /g, '') : 'SemGrupo';
+            var tr_tag = $(this).closest('tr')
+                tr_tag.attr('data-tagname', tag_);
+                if (getOptionsPro('panelGroup_'+tag_))  tr_tag.hide();
+
             arrayTag.push(tag);
         }
     });
@@ -152,19 +201,53 @@ function appendGerados(type) {
     if ($('#divRecebidosAreaPaginacaoInferior a').length == 0) { $('#divRecebidosAreaPaginacaoInferior').hide() }
 }
 function removeDuplicateValue(element) {
-    $(element).val(uniqPro($(element).val().split(',')).join(','));
+    if ($(element).length) {
+        $(element).val(uniqPro($(element).val().split(',')).join(','));
+    }
 }
 function setSelectAllTr(this_, tagname = false) {
+    var limit = 100;
     var index = (typeof $(this_).data('index') !== 'undefined') ? $(this_).data('index') : 0;
     var tagname_select = (tagname) ? 'tr[data-tagname="'+tagname+'"]:visible' : 'tr:visible';
+    var listCheckbox = [];
     if (index < 1) {
-        $(this_).closest('table').find(tagname_select).find('input[type=checkbox]').trigger('click');
+        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]');
+        var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : true;
+        
+        if (t) {
+            for (i = 0; i <= t; i++) {
+                var init = i*limit;
+                var end = (i+1)*limit;
+                listCheckbox.push(checkbox.slice(init,end));
+            }
+        } else {
+            checkbox.trigger('click');
+        }
         $(this_).data('index',index+1);
     } else {
-        $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:checked').trigger('click');
+        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:checked');
+        var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : false;
+        
+        if (t) {
+            for (i = 0; i <= t; i++) {
+                var init = i*limit;
+                var end = (i+1)*limit;
+                listCheckbox.push(checkbox.slice(init,end));
+            }
+        } else {
+            checkbox.trigger('click');
+        }
         $(this_).data('index',0);
     }
     updateTipSelectAll(this_);
+    
+    if (t) {
+        listCheckbox.forEach(function(value, i) {
+            setTimeout(function(){ 
+                value.trigger('click');
+            });
+        });
+    }
 }
 function getSelectAllTr(this_, tagname) {
     if ($(this_).closest('table').find('tr[data-tagname="SemGrupo"]:visible input[type=checkbox]:checked').length > 0) {
@@ -184,6 +267,8 @@ function updateTipSelectAll(this_) {
     $(this_).attr('onmouseenter','return infraTooltipMostrar(\''+text+'\')');
     if (_this.is(':hover')) {
         infraTooltipMostrar(text);
+    } else {
+        infraTooltipOcultar();
     }
 }
 function replaceSelectAll() {
@@ -229,20 +314,29 @@ function removeAllTags() {
         .trigger('filterReset')
         .trigger('update')
         .find('.filterTableProcessos').removeClass('newLink_active');
+    initControlePrazo();
     tableHomeDestroy(true);
 }
 function getUniqueTableTag(i, tagName, type) {
 	var tagName_ = (typeof tagName !== 'undefined' && tagName != '' ) ? removeAcentos(tagName).replace(/\ /g, '') : 'SemGrupo' ;
 		tagName = (typeof tagName === 'undefined' && tagName == '' ) ? ' ' : tagName;
-        tagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
+        tagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
 	var tbRecebidos = $('#divRecebidos table');
 	var countTd = tbRecebidos.find('tr:not(.tablesorter-headerRow)').eq(1).find('td').length;
 	var iconSelect = '<label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \''+tagName_+'\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck" class="infraImg"></a></th>';
 	var tagCount = $('#divRecebidos table tbody').find('tr[data-tagname="'+tagName_+'"]:visible').length;
+    var collapseBtn =   '<span class="tagintable">'+
+                        '   <a class="controleTableTag newLink" data-htagname="'+tagName_+'" onclick="toggleGroupTablePro(this)" data-action="show" onmouseover="return infraTooltipMostrar(\'Mostrar Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? '' : 'display:none;' )+'">'+
+                        '       <i class="fas fa-plus-square cinzaColor"></i>'+
+                        '   </a>'+
+                        '   <a class="controleTableTag newLink" data-htagname="'+tagName_+'" onclick="toggleGroupTablePro(this)" data-action="hide" onmouseover="return infraTooltipMostrar(\'Recolher Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? 'display:none;' : '' )+'">'+
+                        '       <i class="fas fa-minus-square cinzaColor"></i>'+
+                        '   </a>';
+                        '</span>';
 	var htmlBody = '<tr class="infraCaption tagintable"><td colspan="'+(countTd+3)+'"><span '+actionTest+'>'+tagCount+' registros:</span></td></tr>'
 					+'<tr data-htagname="'+tagName_+'" class="tagintable tableHeader">'
 					+'<th class="tituloControle" width="5%" align="center">'+iconSelect+'</th>'
-					+'<th class="tituloControle" colspan="'+(countTd+2)+'">'+tagName+'</th>'
+					+'<th class="tituloControle" colspan="'+(countTd+2)+'">'+tagName+collapseBtn+'</th>'
 					+'</tr>';
 		$(htmlBody).appendTo('#divRecebidos table tbody');
 		if ( i == 0 ) { 
@@ -250,13 +344,30 @@ function getUniqueTableTag(i, tagName, type) {
             tbRecebidos.find('caption').hide(); 
         }
 }
+function toggleGroupTablePro(this_) {
+    var _this = $(this_);
+    var data = _this.data();
+    if (data.action == 'hide') {
+        _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').hide();
+        _this.closest('span').find('a[data-action="show"]').show();
+        _this.closest('span').find('a[data-action="hide"]').hide();
+        setOptionsPro('panelGroup_'+data.htagname, true);
+    } else {
+        _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').show();
+        _this.closest('span').find('a[data-action="show"]').hide();
+        _this.closest('span').find('a[data-action="hide"]').show();
+        removeOptionsPro('panelGroup_'+data.htagname);
+    }
+}
 function getTableOnTag(type) {
     $('#divRecebidos table tbody tr').each(function(index){
     	var dataTag = $(this).attr('data-tagname');
     		dataTag = ( dataTag == '' ) ? 'SemGrupo' : dataTag;
     	if ( typeof dataTag !== 'undefined' && $(this).find('td').eq(2).find('a').length > 0 ) {
     		var desc = $(this).find('td').eq(2).find('a').attr('onmouseover').split("','");            
-    		var htmlDesc = '<td class="tagintable">'+desc[0].replace("return infraTooltipMostrar('", "")+'</td><td class="tagintable">'+desc[1].replace("');","")+'</td>';
+    		var htmlDesc = (type == 'all')
+                ? '<td class="tagintable">'+desc[0].replace("return infraTooltipMostrar('", "")+'</td>'
+                : '<td class="tagintable">'+desc[0].replace("return infraTooltipMostrar('", "")+'</td><td class="tagintable">'+desc[1].replace("');","")+'</td>';
             var dataRecebido = getArrayProcessoRecebido($(this).find('td').eq(2).find('a').attr('href'));
             var textBoxDesc =   (type == 'arrivaldate' || type == 'acessdate') 
                                 ? dataRecebido.descricao+' em: '+moment(dataRecebido.datahora, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+'<br>'
@@ -268,6 +379,7 @@ function getTableOnTag(type) {
                 textDataRecebido = (dataRecebido != '' && type == 'createdate') ? moment(dataRecebido.datageracao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY') : textDataRecebido;
                 textDataRecebido = (dataRecebido != '' && (type == 'senddate' || type == 'senddepart') && dataRecebido.datesend != '') ? moment(dataRecebido.datesend, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY') : textDataRecebido;
             var htmlDataRecebido = (dataRecebido != '') ? '<td class="tagintable"><span onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+textBox+'\')">'+textDataRecebido+'</span></td>' : '<td class="tagintable"></td>';
+                htmlDataRecebido = (type == 'all') ? '' : htmlDataRecebido;
     			$(this).find('td').eq(3).after(htmlDesc+htmlDataRecebido);
     		var cloneTr = $(this).clone();
     		$('#divRecebidos table tbody').find('tr[data-htagname="'+dataTag+'"]').after(cloneTr);
@@ -282,16 +394,18 @@ function getTableOnTag(type) {
     } else {
         var textRegistros = (nrSemGrupo == 1) ? nrSemGrupo+' registro:' : nrSemGrupo+' registros:' ;
         tbody.find('tr.infraCaption.tagintable').eq(0).find('td').html('<span '+actionTest+'>'+textRegistros+'</span>');
+        tbody.find('tr[data-tagname="SemGrupo"]:not(.infraTrClara)').eq(0).hide();
     }
     if (type == 'all') {
         var newColumns =    '<th class="tituloControle newRowControle" style="text-align: center;">Especifica\u00E7\u00E3o</th>'+
-                            '<th class="tituloControle newRowControle" style="text-align: center;">Tipo</th>'+
-                            '<th class="tituloControle newRowControle" style="text-align: center;"></th>';
+                            // '<th class="tituloControle newRowControle" style="text-align: center;">Tipo</th>'+
+                            (checkConfigValue('gerenciarprazos') ? '<th class="tituloControle newRowControle" style="text-align: center;">Prazo</th>' : '');
         var titleCaption = $('#tblProcessosRecebidos').find('tbody').find('.tableHeader, .infraCaption').text();
             titleCaption = (titleCaption !== '') ? ' <span class="newRowControle">(Agrupados: '+titleCaption+')</span>' : '';
         $('#tblProcessosRecebidos').find('caption.infraCaption').show().append(titleCaption);
         $('#tblProcessosRecebidos').find('thead').show().find('.tablesorter-headerRow').append(newColumns);
         $('#tblProcessosRecebidos').find('tbody').find('.tableHeader, .infraCaption').remove();
+        $('#tblProcessosRecebidos').find('thead').find('.prazoBoxDisplay').remove();
         tableHomeDestroy(true);
     }
 }
@@ -337,7 +451,7 @@ function storeGroupTablePro() {
     if (typeof localStorageRestorePro !== "undefined" && localStorageRestorePro('selectGroupTablePro') != null) {
         //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
         var selectGroup = localStorageRestorePro('selectGroupTablePro');
-        if ($.isArray(selectGroup) && jmespath.search(selectGroup, "[?unidade=='"+unidade+"'].unidade | [0]") == unidade ) {
+        if ($.isArray(selectGroup) && typeof jmespath !== 'undefined' && jmespath.search(selectGroup, "[?unidade=='"+unidade+"'].unidade | [0]") == unidade ) {
             return jmespath.search(selectGroup, "[?unidade=='"+unidade+"'].selected | [0]");
         } else if (!$.isArray(selectGroup)) {
             localStorageStorePro('selectGroupTablePro', [{unidade: unidade, selected: selectGroup}]);
@@ -349,6 +463,7 @@ function storeGroupTablePro() {
     }
 }
 function insertGroupTable(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined' && (checkConfigValue('agruparlista') || verifyConfigValue('removepaginacao')) ) {
         if (checkConfigValue('agruparlista')) { 
             var statusTableTags =           ( storeGroupTablePro() == 'tags' ) ? 'selected' : '';
@@ -357,17 +472,19 @@ function insertGroupTable(TimeOut = 9000) {
             var statusTableCheckpoints =    ( storeGroupTablePro() == 'checkpoints' ) ? 'selected' : '';
             var statusTableArrivaldate =    ( storeGroupTablePro() == 'arrivaldate' ) ? 'selected' : '';
             var statusTableSenddate =       ( storeGroupTablePro() == 'senddate' ) ? 'selected' : '';
+            var statusTableDeadline =       ( storeGroupTablePro() == 'deadline' ) ? 'selected' : '';
             var statusTableAcessdate =      ( storeGroupTablePro() == 'acessdate' ) ? 'selected' : '';
             var statusTableDepartSend =     ( storeGroupTablePro() == 'senddepart' ) ? 'selected' : '';
             var statusTableCreatedate =     ( storeGroupTablePro() == 'createdate' ) ? 'selected' : '';
             var statusTableAll =            ( storeGroupTablePro() == 'all' ) ? 'selected' : '';
             var filterTableHome = selectFilterTableHome();
-            var htmlControl =    '<div id="newFiltro" style="display: inline-block; vertical-align: top; float: right; text-align: right; width: 100%; margin-right: 30px;">'+
+            var htmlControl =    '<div id="newFiltro">'+
                                  '  '+filterTableHome+
                                  '   <select id="selectGroupTablePro" class="groupTable selectPro" onchange="updateGroupTable(this)" data-placeholder="Agrupar processos...">'+
                                  '     <option value="">&nbsp;</option>'+
                                  '     <option value="">Sem agrupamento</option>'+
                                  '     <option value="all" '+statusTableAll+'>Agrupar processos recebidos/gerados</option>'+
+                                 '     <option value="deadline" '+statusTableDeadline+'>Agrupar processos por prazo</option>'+
                                  '     <option value="createdate" '+statusTableCreatedate+'>Agrupar processos por data de autua\u00E7\u00E3o</option>'+
                                  '     <option value="arrivaldate" '+statusTableArrivaldate+'>Agrupar processos por data de recebimento</option>'+
                                  '     <option value="senddate" '+statusTableSenddate+'>Agrupar processos por data de envio</option>'+
@@ -382,9 +499,12 @@ function insertGroupTable(TimeOut = 9000) {
                                  '</div>';
 
             if ( $('#selectGroupTablePro').length == 0 && $('#tblProcessosDetalhado').length == 0) { 
-                $('#divFiltro').after(htmlControl); 
+                $('#divFiltro').after(htmlControl).css('width','50%');
                 setTimeout(function(){ 
                     updateGroupTable($('#selectGroupTablePro'));
+                    if ($('#selectGroupTablePro_chosen').length == 0 && verifyConfigValue('substituiselecao')) {
+                        initChosenFilterHome();
+                    }
                 }, 500);
             }
             if ( $('#idSelectTipoBloco').length != 0 ) { 
@@ -394,10 +514,29 @@ function insertGroupTable(TimeOut = 9000) {
         } else {
             initProcessoPaginacao($('#selectGroupTablePro'));
         }
-    } else if (typeof checkConfigValue === 'undefined' ) {
+    } else {
         setTimeout(function(){ 
             insertGroupTable(TimeOut - 100); 
             console.log('Reload insertGroupTable'); 
+        }, 500);
+    }
+}
+function initChosenFilterHome(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof $().chosen !== 'undefined') { 
+        $('#newFiltro .selectPro').chosen({
+            placeholder_text_single: ' ',
+            no_results_text: 'Nenhum resultado encontrado'
+        });
+        forcePlaceHoldChosen();
+    } else {
+        if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) { 
+            $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
+            console.log('@load chosen');
+        }
+        setTimeout(function(){ 
+            initChosenFilterHome(TimeOut - 100); 
+            console.log('Reload initChosenFilterHome'); 
         }, 500);
     }
 }
@@ -559,9 +698,12 @@ function selectFilterTableHome() {
 function initDadosProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro !== 'undefined'  && typeof $("#ifrArvore").contents().find('#topmenu').find('a[target="ifrVisualizacao"]').eq(0).attr('href') !== 'undefined' ) { 
-        var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
-            idProcedimento = (typeof idProcedimento !== 'undefined') ? idProcedimento : getParamsUrlPro($("#ifrArvore").contents().find('#topmenu').find('a[target="ifrVisualizacao"]').eq(0).attr('href')).id_procedimento;
-            getDadosIframeProcessoPro(idProcedimento, 'processo');
+        var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
+            id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
+            id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
+            // idProcedimento = (typeof idProcedimento !== 'undefined') ? idProcedimento : getParamsUrlPro($("#ifrArvore").contents().find('#topmenu').find('a[target="ifrVisualizacao"]').eq(0).attr('href')).id_procedimento;
+            // console.log(id_procedimento, 'processo');
+            getDadosIframeProcessoPro(id_procedimento, 'processo');
     } else {
         setTimeout(function(){ 
             initDadosProcesso(TimeOut - 100); 
@@ -607,6 +749,7 @@ function getProcessosPaginacao(this_, index, tipo) {
                     //ItensHash_.val(ItensHash);
                 getProcessosPaginacao(this_, index+1, tipo);
                 if (checkConfigValue('gerenciarfavoritos')) appendStarOnProcess();
+                initControlePrazo(true);
             } else {
                 param['hdn'+tipo+'PaginaAtual'] = 0;
                 $.ajax({  method: 'POST', data: param, url: href });
@@ -672,15 +815,17 @@ function observeHistoryBrowserPro() {
 }
 */
 function initNewTabProcesso() { 
+    var iconLabel = localStorage.getItem('iconLabel');
+    var iconBoxSlim = localStorage.getItem('seiSlim');
     var observerTableControle = new MutationObserver(function(mutations) {
         var _this = $(mutations[0].target);
         var _parent = _this.closest('table');
         if (_parent.find('tr.infraTrMarcada').length > 0) {
-            $('#divComandos').find('.iconPro_newtab').show();
+            $('#divComandos').find('.iconPro_Observe').removeClass('botaoSEI_hide');
             removeDuplicateValue('#hdnRecebidosItensSelecionados');
             removeDuplicateValue('#hdnGeradosItensSelecionados');
         } else {
-            $('#divComandos').find('.iconPro_newtab').hide();
+            $('#divComandos').find('.iconPro_Observe').addClass('botaoSEI_hide');
         }
     });
     setTimeout(function(){ 
@@ -690,21 +835,39 @@ function initNewTabProcesso() {
             });
         });
         htmlBtnAtiv = (parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null && typeof checkCapacidade !== 'undefined' && parent.checkCapacidade('save_atividade') && typeof __ !== 'undefined') 
-        ?   '<a tabindex="451" class="botaoSEI iconBoxAtividade iconPro_newtab iconAtividade_save" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+__.Nova_Demanda+'\')" onclick="parent.saveAtividade()" style="position: relative; margin-left: -3px; display: none;">'+
-            '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==">'+
-            '    <span style="position: absolute;width: 40px;margin: 1px 2px;text-align: center;height: 32px;padding-top: 8px;background: transparent;left: 0;user-select: none;pointer-events: none;">'+
+        ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+__.Nova_Demanda+'\')"')+' onclick="parent.saveAtividade()" style="position: relative; margin-left: -3px;">'+
+            '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="'+__.Nova_Demanda+'">'+
+            '    <span class="botaoSEI_iconBox">'+
             '       <i class="fas fa-user-check" style="font-size: 17pt; color: #fff;"></i>'+
             '    </span>'+
+            (iconLabel ?
+            '    <span class="newIconTitle">'+__.Nova_Demanda+'</span>'+
+            '' : '')+
             '</a>'
             : '';
 
-        htmlBtn =   '<a tabindex="451" class="botaoSEI iconBoxPro iconPro_newtab" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Abrir Processos em Nova Aba\')" onclick="openListNewTab(this)" style="position: relative; margin-left: -3px; display: none;">'+
-                    '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==">'+
-                    '    <span style="position: absolute;width: 40px;margin: 1px 2px;text-align: center;height: 32px;padding-top: 8px;background: transparent;left: 0;user-select: none;pointer-events: none;">'+
+        var htmlBtnPrazo =  (checkConfigValue('gerenciarprazos')) ? 
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\')"')+' onclick="addControlePrazo()" style="position: relative; margin-left: -3px;">'+
+                            '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Adicionar prazo">'+
+                            '    <span class="botaoSEI_iconBox">'+
+                            '       <i class="far fa-clock" style="font-size: 17pt; color: #fff;"></i>'+
+                            '    </span>'+
+                            (iconLabel ?
+                            '    <span class="newIconTitle">Adicionar prazo</span>'+
+                            '' : '')+
+                            '</a>'
+                            : '';
+
+        htmlBtn =   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPro_newtab" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Abrir Processos em Nova Aba\')"')+' onclick="openListNewTab(this)" style="position: relative; margin-left: -3px;">'+
+                    '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Abrir Processos em Nova Aba">'+
+                    '    <span class="botaoSEI_iconBox">'+
                     '       <i class="fas fa-external-link-alt" style="font-size: 17pt; color: #fff;"></i>'+
                     '    </span>'+
-                    '</a>'+htmlBtnAtiv;
-        $('#divComandos').find('.iconPro_newtab').remove();
+                    (iconLabel ?
+                    '    <span class="newIconTitle">Abrir Processos em Nova Aba</span>'+
+                    '' : '')+
+                    '</a>'+htmlBtnAtiv+htmlBtnPrazo;
+        $('#divComandos').find('.iconPro_Observe').remove();
         $('#divComandos').append(htmlBtn);
     }, 500);
 }
@@ -738,17 +901,21 @@ function initPanelFavorites(TimeOut = 9000) {
         }, 500);
     }
 }
-function checkLoadConfigProject(TimeOut = 9000) {
+function checkLoadConfigSheets(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined') { 
-        if (checkConfigValue('gerenciarprojetos') && typeof spreadsheetIdProjetos_Pro !== 'undefined' && spreadsheetIdProjetos_Pro !== false && spreadsheetIdProjetos_Pro !== 'undefined') {
+        if (
+            (checkConfigValue('gerenciarprojetos') && typeof spreadsheetIdProjetos_Pro !== 'undefined' && spreadsheetIdProjetos_Pro !== false && spreadsheetIdProjetos_Pro !== 'undefined') ||
+            (checkConfigValue('gerenciarformularios') && typeof spreadsheetIdFormularios_Pro !== 'undefined' && spreadsheetIdFormularios_Pro !== false && spreadsheetIdFormularios_Pro !== 'undefined') ||
+            (checkConfigValue('sincronizarprocessos') && typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' && spreadsheetIdSyncProcessos_Pro !== false && spreadsheetIdSyncProcessos_Pro !== 'undefined')
+        ){
             handleClientLoadPro();
             console.log('handleClientLoadPro');
         }
     } else {
         setTimeout(function(){ 
-            checkLoadConfigProject(TimeOut - 100); 
-            console.log('Reload checkLoadConfigProject'); 
+            checkLoadConfigSheets(TimeOut - 100); 
+            console.log('Reload checkLoadConfigSheets'); 
         }, 500);
     }
 }
@@ -775,8 +942,8 @@ function insertDivPanelControleProc() {
     var statusView = ( getOptionsPro('frmProcedimentoControlar') == 'hide' ) ? 'none' : 'initial';
     var statusIconShow = ( getOptionsPro('frmProcedimentoControlar') == 'hide' ) ? '' : 'display:none;';
     var statusIconHide = ( getOptionsPro('frmProcedimentoControlar') == 'hide' ) ? 'display:none;' : '';
-    var idOrder = (getOptionsPro('orderPanelHome') && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | [0]") : '';
-    var htmlIconTable =     '<i class="controleProcPro fas fa-folder-open cinzaColor" style="margin: 0 10px 0 0; font-size: 1.1em;"></i>';
+    var idOrder = (getOptionsPro('orderPanelHome') && typeof jmespath !== 'undefined' && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | [0]") : '';
+    var htmlIconTable =     '<i class="controleProcPro '+(localStorage.getItem('seiSlim') ? 'fad fa-folders' : 'fas fa-folder-open')+' cinzaColor" style="margin: 0 10px 0 0; font-size: 1.1em;"></i>';
     var htmlToggleTable =   '<a class="controleProcPro newLink" id="frmProcedimentoControlar_showIcon" onclick="toggleTablePro(\'frmProcedimentoControlar\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
                             '<a class="controleProcPro newLink" id="frmProcedimentoControlar_hideIcon" onclick="toggleTablePro(\'frmProcedimentoControlar\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>';
     var htmlDivPanel = '<div class="controleProcPro panelHomePro" style="display: inline-block; width: 100%;" id="processosSEIPro" data-order="'+idOrder+'"></div>';
@@ -803,7 +970,8 @@ function initSortDivPanel(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initSortDivPanel(TimeOut - 100); 
-            console.log('Reload initSortDivPanel'); 
+            console.log('Reload initSortDivPanel', TimeOut); 
+            if (TimeOut == 9000) fnJqueryPro();
         }, 500);
     }
 }
@@ -815,7 +983,7 @@ function getTableProcessosCSV() {
                     '       <tr>'+
                     '           <th>ID</th>'+
                     '           <th>Protocolo</th>'+
-                    '           <th>Link Permanente</th>'+
+                    '           <th>Link_Permanente</th>'+
                     '           <th>Atribuicao</th>'+
                     '           <th>Etiqueta</th>'+
                     '           <th>Etiqueta_Descricao</th>'+
@@ -831,6 +999,7 @@ function getTableProcessosCSV() {
                     '           <th>Data_Envio</th>'+
                     '           <th>Data_Envio_Descricao</th>'+
                     '           <th>Unidade_Envio</th>'+
+                    '           <th>Documento_Incluido</th>'+
                     '       </tr>'+
                     '   </thead>'+
                     '   <tbody>';
@@ -842,6 +1011,7 @@ function getTableProcessosCSV() {
             var etiqueta = td.eq(1).find('a[href*="andamento_marcador_gerenciar"]').attr('onmouseover');
             var etiqueta_array = (typeof etiqueta !== 'undefined' && etiqueta != '') ? extractAllTextBetweenQuotes(etiqueta) : false;
             var anotacao = td.eq(1).find('a[href*="anotacao_registrar"]').attr('onmouseover');
+            var doc_incluido = td.eq(1).find('img[src*="exclamacao.png"]').length > 0 ? 'Um novo documento foi incluido ou assinado' : '';
             var anotacao_array = (typeof anotacao !== 'undefined' && anotacao != '') ? extractAllTextBetweenQuotes(anotacao) : false;
             var pontocontrole = td.eq(1).find('a[href*="andamento_situacao_gerenciar"]').attr('onmouseover');
             var pontocontrole_array = (typeof pontocontrole !== 'undefined' && pontocontrole != '') ? extractAllTextBetweenQuotes(pontocontrole) : false;
@@ -880,6 +1050,7 @@ function getTableProcessosCSV() {
                                 '           <td>'+data_envio+'</td>'+
                                 '           <td>'+desc_envio+'</td>'+
                                 '           <td>'+unidade_envio+'</td>'+
+                                '           <td>'+doc_incluido+'</td>'+
                                 '       </tr>';
             //console.log(id_protocolo, nr_processo, etiqueta_array, anotacao_array, descricao_array, atribuicao, data_visita, data_geracao, data_recebimento, data_envio, unidade_envio);
         });
@@ -888,140 +1059,12 @@ function getTableProcessosCSV() {
     downloadTableCSV($(htmlTable), 'ListaProcessos_SEIPro');
 }
 
-// PESQUISA PROCESSOS POR LISTA
-var arrayProtocoloSEI = [];
-function loopIDProtocoloSEI(protocoloSEI, index, TimeOut = 200) {
-    if (TimeOut <= 0) { 
-        var next = index+1;
-        var htmlTr =    '<tr>'+
-                        '    <td style="font-size: 9pt; text-align: center;">'+arrayProtocoloSEI[index]+'</td>'+
-                        '    <td style="font-size: 9pt; text-align: center;">ERROR</td>'+
-                        '    <td style="font-size: 9pt; word-break: break-all;">-</td>'+
-                        '</tr>';
-        $('.tableResultProtocoloSEI').find('tbody').append(htmlTr);
-        loopIDProtocoloSEI(arrayProtocoloSEI[next], next);
-        return;
-    }
-    if (index < arrayProtocoloSEI.length) { 
-        getIDProtocoloSEI(protocoloSEI,  
-            function(html){
-                let $html = $(html);
-                var params = getParamsUrlPro($html.find('#ifrArvore').attr('src'));
-                var next = index+1;
-                loopIDProtocoloSEI(arrayProtocoloSEI[next], next);
-                appendSearchProtocoloSEI(params, index);
-            }, 
-            function(){
-                setTimeout(function(){ 
-                    loopIDProtocoloSEI(arrayProtocoloSEI[index], index, TimeOut - 100); 
-                    console.log('ERROR', 'Reload loopIDProtocoloSEI', TimeOut); 
-                }, 500);
-            });
-    } else {
-        setTimeout(function(){ 
-            alertaBoxPro('Sucess', 'check-circle', 'Protocolos pesquisados com sucesso!');
-            loadingButtonConfirm(false);
-            $('.ui-dialog .ui-dialog-buttonset .confirm.ui-button').addClass('ui-state-active');
-        }, 500);
-    }
-
-}
-function appendSearchProtocoloSEI(params, index) {
-    var url_host = window.location.href.split('?')[0];
-    var documento = (params.id_documento != '') ? '&id_documento='+String(params.id_documento) : '';
-    var tipo = (params.id_documento != '') ? '<i class="far fa-file"></i> Documento' : '<i class="far fa-folder-open"></i> Protocolo';
-    var href = url_host+'?acao=procedimento_trabalhar&id_procedimento='+String(params.id_procedimento)+documento;
-    var htmlTr =    '<tr>'+
-                    '    <td style="font-size: 9pt; text-align: center;">'+arrayProtocoloSEI[index]+'</td>'+
-                    '    <td style="font-size: 9pt; text-align: center;">'+tipo+'</td>'+
-                    '    <td style="font-size: 9pt; word-break: break-all;"><a style="text-decoration: underline; color: #00c; font-size: 9pt;" target="_blank" href="'+href+'">'+href+'</a></td>'+
-                    '</tr>';
-    $('.tableResultProtocoloSEI').find('tbody').append(htmlTr);
-    var d = $('#divResulProtocoloSEI');
-        d.scrollTop(d.prop("scrollHeight"));
-}
-function cleanSearchProtocoloSEI() {
-    $('.tableResultProtocoloSEI').find('tbody').html('');
-    $('.resultProtocoloSEI').hide();
-    $('.searchProtocoloSEI').css('width', '100%');
-    $('#resultProtocoloSEI').css('width', '');
-    dialogBoxPro.dialog( "option", "width", 300 );
-    $('#searchProtocoloSEI').val('');
-    loadingButtonConfirm(false);
-    $('.ui-dialog .ui-dialog-buttonset .confirm.ui-button').addClass('ui-state-active');
-}
-function initSearchProtocoloSEI() {
-    var lines = $('#searchProtocoloSEI').val().split(/\n/);
-        arrayProtocoloSEI = [];
-    for (var i=0; i < lines.length; i++) {
-      if (/\S/.test(lines[i])) {
-        arrayProtocoloSEI.push($.trim(lines[i]));
-      }
-    }
-    if(arrayProtocoloSEI !== null && arrayProtocoloSEI.length > 0 && !checkLoadingButtonConfirm()) {
-        loopIDProtocoloSEI(arrayProtocoloSEI[0], 0);
-        $('.resultProtocoloSEI').show();
-        $('.searchProtocoloSEI').css('width', '30%');
-        $('#resultProtocoloSEI').css('width', '70%');
-        dialogBoxPro.dialog( "option", "width", 900 );
-        loadingButtonConfirm(true);
-    }
-}
 function copyTableResultProtocoloSEI() {
     var htmlTable = $('.tableResultProtocoloSEI')[0].outerHTML;
         copyToClipboardHTML(htmlTable);
 }
 function downloadTableResultProtocoloSEI() {
     downloadTableCSV($('.tableResultProtocoloSEI'), 'PesquisaProtocolo_SEIPro');
-}
-function initBoxSearchProtocoloSEI() {
-    resetDialogBoxPro();
-    var htmlBox =   '<div class="searchProtocoloSEI" style="width: 100%; float: left;"><textarea placeholder="Insira os n\u00FAmeros de processo ou n\u00FAmeros SEI, um em cada linha..." id="searchProtocoloSEI" style="width: 90%; border: 2px solid #c5c5c5; height: 330px; border-radius: 5px;"></textarea></div>'+
-                    '<div id="resultProtocoloSEI" class="resultProtocoloSEI" style="float: right; display: none;">'+
-                    '    <div id="divResulProtocoloSEI" style="overflow-y: scroll; height: 300px;">'+
-                    '       <table style="font-size: 9pt !important; width: 100%;" class="tableInfo tableZebra tableFollow seiProForm tableResultProtocoloSEI resultProtocoloSEI">'+
-                    '           <thead>'+
-                    '               <tr>'+
-                    '                   <th class="tituloControle" style="width: 140px; padding: 5px 0px;">Protocolo</th>'+
-                    '                   <th class="tituloControle" style="width: 90px; padding: 5px 0px;">Tipo</th>'+
-                    '                   <th class="tituloControle" style="padding: 5px 0px;">Link Permanente</th>'+
-                    '               </tr>'+
-                    '           </thead>'+
-                    '           <tbody>'+
-                    '           </thead>'+
-                    '       </table>'+
-                    '    </div>'+
-                    '    <div class="ui-dialog-buttonpane actionsResultProtocoloSEI">'+
-                    '        <button type="button" class="ui-button ui-corner-all ui-widget" onclick="copyTableResultProtocoloSEI()">Copiar Tabela</button>'+
-                    '        <button type="button" class="ui-button ui-corner-all ui-widget" onclick="downloadTableResultProtocoloSEI()">Baixar CSV</button>'+
-                    '    </div>'+
-                    '</div>';
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
-        .dialog({
-            title: "Pesquisar Link Permanente",
-            width: 300,
-            open: function( event, ui ) {
-                var processosTela = getProcessoUnidadePro();
-                    processosTela = (processosTela.length > 0) ? processosTela.join('\n') : '';
-                if (processosTela != '') { 
-                    $('#searchProtocoloSEI').val(processosTela);
-                }
-            },
-            close: function() { $('#configDatesBox').remove() },
-            buttons: [{
-                text: 'Limpar',
-                click: function() {
-                        cleanSearchProtocoloSEI();
-                    }
-                },{
-                text: 'Pesquisar',
-                class: 'confirm ui-state-active',
-                click: function() {
-                        initSearchProtocoloSEI();
-                    }
-                }]
-        });
 }
 function filterTableProcessos(this_) {
     var _this = $(this_);
@@ -1118,6 +1161,11 @@ function setTableSorterHome() {
                                     texttip = (typeof texttip !== 'undefined') ? extractTooltip(texttip) : ''; 
                                     // console.log(texttip);
                                 return nrProc+' '+texttip;
+                            },
+                            4: function (elem, table, cellIndex) {
+                              var target = $(elem).find('.dateboxDisplay').eq(0);
+                              var text_date = target.data('time-sorter');
+                              return text_date;
                             }
                             /*,
                             4: function (elem, table, cellIndex) {
@@ -1197,8 +1245,8 @@ function setTableSorterHome() {
                         tableHomeDestroy(true);
                     }, 1000);
                 }
-                var filterStore = (typeof tableHomePro[0][0] !== 'undefined') ? $.tablesorter.storage(tableHomePro[0][0], 'tablesorter-filters') : [];
-                if (filterStore.length > 0) {
+                var filterStore = (typeof tableHomePro[0] !== 'undefined' && typeof tableHomePro[0][0] !== 'undefined') ? $.tablesorter.storage(tableHomePro[0][0], 'tablesorter-filters') : [];
+                if (typeof filterStore !== 'undefined' && filterStore !== null && filterStore.length > 0) {
                     var filterUser = filterStore[3];
                         filterUser = (typeof filterUser !== 'undefined' && filterUser !== null) ? filterUser.replace('(','').replace(')','') : false;
                     if (filterUser) {
@@ -1215,9 +1263,9 @@ function tableHomeDestroy(reload = false, Timeout = 3000) {
         });
         $('.filterTableProcessos').remove();
         window.tableHomePro = [];
-        if (reload) {
+        if (reload && Timeout > 0) {
             initTableSorterHome();
-            console.log('reload initTableSorterHome');
+            console.log('reload initTableSorterHome', Timeout);
             setTimeout(function(){ 
                 forceTableHomeDestroy(Timeout);
             }, 1000);
@@ -1232,7 +1280,7 @@ function forceTableHomeDestroy(Timeout) {
     $.each(tableHomePro, function(i){
         var filter = $.tablesorter.storage( tableHomePro[i][0], 'tablesorter-filters');
         var rowFilter = $(tableHomePro[i][0]).find('tr.tablesorter-filter-row').hasClass('hideme');
-        force = (filter.length > 0 && rowFilter) ? true : force;
+        force = (typeof filter !== 'undefined' && filter !== null && filter.length > 0 && rowFilter) ? true : force;
     });
     if (force && Timeout > 0 && $('#tblProcessosGerados').is(':visible')) {
         tableHomeDestroy(true, Timeout-1000);
@@ -1312,7 +1360,7 @@ function initReloadModalLink(TimeOut = 9000) {
 }
 function initReplaceNewIcons(TimeOut = 9000) {
     if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
-    if (typeof replaceNewIconsBar === 'function') {
+    if (typeof replaceNewIcons === 'function') {
         replaceNewIcons($('.infraBarraComandos a.botaoSEI'));
     } else {
         setTimeout(function(){ 
@@ -1369,6 +1417,422 @@ function setObserveUrlChange() {
         });
     }
 }
+function addControlePrazo(this_ = false) {
+    var dateRef = moment().format('YYYY-MM-DD');
+    var timeRef = '23:59';
+    var dueSetDate = true;
+    var tagName = false;
+    var textTag = '';
+    var textControle = 'Adicionar';
+    var form = $('#frmProcedimentoControlar');
+    var href = $('#divComandos a[onclick*="andamento_marcador_gerenciar"]').attr('onclick');
+        href = (typeof href !== 'undefined') ? href.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
+        href = (href && href !== null && href.length > 0 && href[0] != '') ? href[0] : false;
+    if (this_) {
+        var _this = $(this_);
+        var _data = _this.data();
+        var _parent = _this.closest('tr');
+        var _processo = _parent.find('a[href*="procedimento_trabalhar"]');
+        var _tag = _parent.find('a[href*="andamento_marcador_gerenciar"]').attr('onmouseover');
+        var tag = (typeof _tag !== 'undefined') ? _tag.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
+            tagName = (tag && tag !== null && tag.length > 0 && tag[2] != '') ? tag[2] : false;
+            textTag = (tag && tag !== null && tag.length > 0 && tag[0] != '') ? tag[0] : false;
+
+        var processo = _processo.text().trim();
+        var linkParams = getParamsUrlPro(_processo.attr('href'));
+        var id_procedimento = (linkParams && typeof linkParams.id_procedimento !== 'undefined') ? linkParams.id_procedimento : false;
+            dateRef = (typeof _data.timeSorter !== 'undefined') ? moment(_data.timeSorter, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD') : dateRef;
+            timeRef = (typeof _data.timeSorter !== 'undefined') ? moment(_data.timeSorter, 'YYYY-MM-DD HH:mm').format('HH:mm') : timeRef;
+            textControle = (typeof _data.timeSorter !== 'undefined') ? 'Alterar' : textControle;
+            dueSetDate = (typeof _data.duesetdate !== 'undefined') ? _data.duesetdate : dueSetDate;
+
+            _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+            _parent.find('input[type="checkbox"]').trigger('click');
+            textTag = (typeof _data.timeSorter !== 'undefined') ? textTag.replace(moment(_data.timeSorter, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm'), '').replace('Ate ', '').trim() : textTag;
+            textTag = (typeof textTag !== 'undefined') ? textTag.replace(/\\n/g, "") : '';
+    }
+    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+    
+    var htmlBox =   '<div class="dialogBoxDiv">'+
+                    '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
+                    '      <tr style="height: 40px;">'+
+                    '          <td style="vertical-align: bottom;">'+
+                    '               <i class="iconPopup iconSwitch fas fa-calendar-alt '+(dueSetDate ? 'azulColor' : 'cinzaColor')+'"></i> '+
+                    '               Controlar vencimento?'+
+                    '          </td>'+
+                    '          <td>'+
+                    '              <div class="onoffswitch" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(dueSetDate ? 'checked' : '')+'>'+
+                    '                  <label class="onoffswitch-label" for="configDatesBox_duesetdate"></label>'+
+                    '              </div>'+
+                    '          </td>'+
+                    '      </tr>'+
+                    '      <tr style="height: 40px;" class="configDates_duesetdate">'+
+                    '          <td class="label" style="vertical-align: bottom;">'+
+                    '               <i class="iconPopup '+(dueSetDate ? 'fas fa-clock' : 'far fa-clock')+' azulColor"></i> <span>'+(dueSetDate ? 'Data de vencimento' : 'Data inicial')+'</span>'+
+                    '          </td>'+
+                    '          <td class="input" style="position:relative">'+
+                    '               <span class="newLink_active" style="margin: 0px;padding: 5px 8px;border-radius: 5px;position: absolute;top: 10px;'+(dueSetDate ? 'display:block;' : 'display:none;')+'">At\u00E9</span>'+
+                    '               <input type="date" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
+                    '               <input type="time" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_time" value="'+timeRef+'" style="width:70px; float: right;">'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '      <tr style="height: 40px;">'+
+                    '          <td class="label" style="vertical-align: bottom;">'+
+                    '               <i class="iconPopup fas fa-tags azulColor"></i> <span>Marcador</span>'+
+                    '          </td>'+
+                    '          <td>'+
+                    '               <select id="configDatesBox_tag" style="width:310px; float: right;">'+
+                    '               </select>'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '      <tr style="height: 40px;">'+
+                    '          <td class="label" style="vertical-align: bottom;">'+
+                    '               <i class="iconPopup fas fa-comment-alt azulColor"></i> <span>Texto</span>'+
+                    '          </td>'+
+                    '          <td>'+
+                    '               <input type="text" id="configDatesBox_text" style="width:290px; float: right;" value="'+textTag+'">'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '   </table>'+
+                    '</div>';
+
+    var btnDialogBoxPro =   [{
+            text: (this_) ? 'Remover Prazo' : 'Remover Prazos',
+            icon: 'ui-icon-closethick',
+            click: function(event) { 
+                setPrazoMarcador('remove', this_, form, href);
+            }
+        },{
+            text: textControle+' Prazo',
+            class: 'confirm',
+            icon: 'ui-icon-tag',
+            click: function() { 
+                setPrazoMarcador('add', this_, form, href);
+            }
+        }];
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html('<div class="dialogBoxDiv"> '+htmlBox+'</div>')
+        .dialog({
+            title: (this_) ? textControle+' controle de prazo ('+processo+')' : 'Controle de prazo em processos ('+tblProcessos.find('input[type="checkbox"]:checked').length+')',
+            width: 550,
+            open: function() {
+                var listaMarcadores = getOptionsPro('listaMarcadores');
+                if (listaMarcadores) {
+                    var htmlOptions = $.map(listaMarcadores, function(v){
+                                        var selected = (tagName && tagName == v.name) ? 'selected' : '';
+                                        return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
+                                    }).join('');
+                    $('#configDatesBox_tag').html(htmlOptions).chosenImage();
+                } else {
+                    var param = {};
+                        form.find("input[type=hidden]").map(function () {
+                            if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                                param[$(this).attr('name')] = $(this).val(); 
+                            }
+                        });
+                    $.ajax({ 
+                        method: 'POST',
+                        data: param,
+                        url: href
+                    }).done(function (html) {
+                        var $html = $(html);
+                            listaMarcadores = getListaMarcadores($html).array;
+                        var htmlOptions = $.map(listaMarcadores, function(v){
+                                            var selected = (tagName && tagName == v.name) ? 'selected' : '';
+                                            return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
+                                        }).join('');
+                        $('#configDatesBox_tag').html(htmlOptions).chosenImage();
+                    });
+                }
+            },
+            close: function() {
+                if (this_) _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+            },
+            buttons: btnDialogBoxPro
+    });
+}
+function setPrazoMarcador(mode, this_, form, href) {
+
+    var _this = (this_) ? $(this_) : false;
+    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+    var _dateRef = $('#configDatesBox_date').val();
+    var _timeRef = $('#configDatesBox_time').val();
+    var _tagSelected = $('#configDatesBox_tag').val();
+    var _textTag = $('#configDatesBox_text').val();
+        _textTag = (_textTag != '') ? '\n'+_textTag : '';
+    if (mode == 'add' && _dateRef == '') {
+        alertaBoxPro('Error', 'exclamation-triangle', 'Selecione uma data!');
+    } else {
+        var param = {};
+            form.find("input[type=hidden]").map(function () {
+                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                    param[$(this).attr('name')] = $(this).val(); 
+                }
+            });
+            _dateRef = _dateRef+' '+(_timeRef != '' ? _timeRef : '23:59');
+        var _dateTo = ($('#configDatesBox_duesetdate').is(':checked')) ? _dateRef : false;
+        
+        if (href && href != '') {
+            tblProcessos.find('tr.infraTrMarcada td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin azulColor"></i>');
+            $.ajax({ 
+                method: 'POST',
+                data: param,
+                url: href
+            }).done(function (html) {
+                var $html = $(html);
+                var xhr = new XMLHttpRequest();
+                var formTag = $html.find('#frmGerenciarMarcador');
+                var hrefTag = formTag.attr('action');
+                var dateSubmit = (_dateTo) ? 'Ate '+moment(_dateTo, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : moment(_dateRef, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
+                    dateSubmit = dateSubmit+_textTag;
+                var optionsMarcadores = getListaMarcadores($html);
+                var selectTags = optionsMarcadores.array;
+                var indexSelected = optionsMarcadores.indexSelected;
+                // var tagSelected = (typeof selectTags[indexSelected] !== 'undefined') ? selectTags[indexSelected].value : selectTags[0].value;
+                    // console.log(tagSelected, indexSelected, selectTags);
+
+                var paramTag = {};
+                    formTag.find("input[type=hidden], textarea, button").map(function () {
+                        if ( $(this).attr('name')) {
+                            paramTag[$(this).attr('name')] = $(this).val(); 
+                        }
+                    });
+                    paramTag['txaTexto'] = (mode == 'remove') ? '' : dateSubmit;
+                    paramTag['hdnIdMarcador'] = _tagSelected;
+
+                    var postDataTag = '';
+                    for (var k in paramTag) {
+                        if (postDataTag !== '') postDataTag = postDataTag + '&';
+                        var valor = (k!='txaTexto') ? paramTag[k] : escapeComponent(paramTag[k]);
+                            postDataTag = postDataTag + k + '=' + valor;
+                    }
+                    console.log(postDataTag);
+
+                if (hrefTag && hrefTag != '') {
+                    $.ajax({ 
+                        method: 'POST',
+                        // data: paramTag,
+                        data: postDataTag,
+                        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+                        xhr: function() {
+                            return xhr;
+                        },
+                        url: hrefTag
+                    }).done(function (htmlResult) {
+                        if (xhr.responseURL != hrefTag) {
+                            var $htmlResult = $(htmlResult);
+                            var ids = paramTag['hdnIdProtocolo'];
+                                ids = (ids.indexOf(',') !== -1) ? ids.split(',') : [ids];
+                            var tagResult = $htmlResult.find('a[href*="andamento_marcador_gerenciar"]').map(function(){ 
+                                var tagResultLink = getParamsUrlPro($(this).attr('href'));
+                                if (tagResultLink && typeof tagResultLink.id_procedimento !== 'undefined' && $.inArray(tagResultLink.id_procedimento, ids) !== -1) {
+                                    return {id_procedimento: tagResultLink.id_procedimento, html: this.outerHTML};
+                                }
+                            }).get();
+                            
+                            if (tagResult.length > 0) {
+                                $.each(tagResult, function(i, v){
+                                    var _dateConfig = moment(_dateRef, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                                    var tr = $('tr#P'+v.id_procedimento);
+                                    var td = tr.find('td').eq(1);
+                                    td.find('a[href*="andamento_marcador_gerenciar"]').remove();
+                                    td.append(v.html);
+                                    if (mode == 'add') {
+                                        var config = {
+                                                            date: _dateConfig, 
+                                                            dateDue: (_dateTo) ? _dateConfig : undefined, 
+                                                            countdays: true, 
+                                                            workday: false, 
+                                                            duesetdate: _dateTo,
+                                                            displayformat: 'DD/MM/YYYY HH:mm',
+                                                            action: 'addControlePrazo(this)'
+                                                        };
+                                        var htmlDatePreview = getDatesPreview(config);
+                                            tr.find('td.prazoBoxDisplay').html(htmlDatePreview);
+                                            if ($(htmlDatePreview).hasClass('tagTableText_date_atrasado')) {
+                                                // tr.css('background-color','#fff1f0');
+                                                tr.addClass('infraTrAtrasada');
+                                            } else if (moment(_dateRef, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD') == moment().format('YYYY-MM-DD')) {
+                                                // tr.css('background-color','#fdf9df');
+                                                tr.addClass('infraTrAlerta');
+                                            } else {
+                                                // tr.css('background-color','transparent');
+                                                tr.removeClass('infraTrAlerta').removeClass('infraTrAtrasada');
+                                            }
+                                    } else {
+                                        // tr.css('background-color','transparent');
+                                        tr.removeClass('infraTrAlerta').removeClass('infraTrAtrasada');
+                                        tr.find('td.prazoBoxDisplay').html('');
+                                        setControlePrazo();
+                                    }
+                                });
+                                if (this_) tblProcessos.find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+                                setTimeout(function(){ 
+                                    console.log('Reload tableHomeDestroy');
+                                    tableHomeDestroy(true);
+                                }, 500);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        resetDialogBoxPro('dialogBoxPro');
+    }
+}
+function getListaMarcadores(html) {
+    var indexSelected = 0;
+    var selectTags = html.find('#selMarcador').find('option').map(function(i, v){ 
+                        if ($(this).is(':selected')) indexSelected = i-1;
+                        if ($(this).text().trim() != '') { 
+                            return {name: $(this).text().trim(), value: $(this).val(), img: $(this).attr('data-imagesrc') } 
+                        } 
+                    }).get();
+        if (selectTags.length > 0) setOptionsPro('listaMarcadores',selectTags);
+    return {array: selectTags, indexSelected: indexSelected};
+}
+function configDatesSwitchChangePrazo(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest('.ui-dialog');
+    if (_this.is(':checked')) {
+        _parent.find('.configDates_setdate').show();
+        _parent.find('.configDates_duesetdate').show();
+        _this.closest('tr').find('.iconSwitch').addClass('azulColor');
+    } else {
+        _parent.find('.configDates_setdate').hide();
+        _parent.find('.configDates_duesetdate').hide();
+        _this.closest('tr').find('.iconSwitch').removeClass('azulColor');
+    }
+}
+function configDatesSwitchChangeHome(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest('.ui-dialog');
+    if (_this.is(':checked')) {
+        _parent.find('.configDates_duesetdate .label i').attr('class','iconPopup fas fa-clock azulColor');
+        _parent.find('.configDates_duesetdate .label span').text('Data de vencimento');
+        _parent.find('.configDates_duesetdate .input span').show();
+        _this.closest('tr').find('.iconSwitch').addClass('azulColor');
+    } else {
+        _parent.find('.configDates_duesetdate .label i').attr('class','iconPopup far fa-clock azulColor');
+        _parent.find('.configDates_duesetdate .label span').text('Data inicial');
+        _parent.find('.configDates_duesetdate .input span').hide();
+        _this.closest('tr').find('.iconSwitch').removeClass('azulColor');
+    }
+}
+function setControlePrazo(force = false) {
+    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+    if (
+        tblProcessos.find('tbody tr').not('.tableHeader').find('td.prazoBoxDisplay').length == 0 ||
+        tblProcessos.find('thead tr').find('th.prazoBoxDisplay').length < 2 ||
+        force == true
+        ) {
+            tblProcessos.find('.prazoBoxDisplay').remove();
+            tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="prazoBoxDisplay" style="text-align: center;"></td>');
+
+        if ( tblProcessos.find('thead').length > 0 ) {
+            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header prazoBoxDisplay" style="width: 140px;min-width: 140px;"> Prazos</th>');
+        } else {
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.prazoBoxDisplay').remove();
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay" style="width: 140px;min-width: 140px;"> Prazos</th>');
+        }
+    }
+    tblProcessos.find('tbody tr').each(function(){
+        var _tag = $(this).find('a[href*="andamento_marcador_gerenciar"]').attr('onmouseover');
+        var _checkbox = $(this).find('input[type="checkbox"]');
+        var _processo = $(this).find('a[href*="procedimento_trabalhar"]');
+        var content = (typeof _tag !== 'undefined') ? _tag.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
+            content = (content && content !== null && content.length > 0 && content[0] != '') ? content[0] : false;
+        var dateTo = (content && removeAcentos(content).toLowerCase().indexOf('ate') !== -1) ? true : false;
+
+        var dateContent = (content) ? content.match(/(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}/img) : null;
+        var timeContent = (content) ? content.match(/(\d{1,2}:\d{2})/img) : null;
+        var dateTag = (dateContent !== null) ? dateContent[0]+' '+(timeContent !== null ? timeContent[0] : '23:59') : false;
+            dateTag = (dateTag) ? moment(dateTag,'DD/MM/YYYY HH:mm') : false;
+
+        // var dateTag = (content && content.indexOf(' ') !== -1) ? content.split(' ')[1] : (content) ? content : false;
+            // dateTag = (dateTag && dateTag != '') ? moment(dateTag,'DD/MM/YYYY') : false;
+        var linkParams = getParamsUrlPro(_processo.attr('href'));
+        var id_procedimento = (linkParams && typeof linkParams.id_procedimento !== 'undefined') ? linkParams.id_procedimento : false;
+        var processo = _processo.text();
+        if (dateTag && dateTag.isValid()) {
+            var config = {
+                                date: dateTag.format('YYYY-MM-DD HH:mm:ss'), 
+                                dateDue: (dateTo) ? dateTag.format('YYYY-MM-DD HH:mm:ss') : undefined, 
+                                dateMaxProgress: 30,
+                                countdays: true, 
+                                workday: false, 
+                                duesetdate: dateTo,
+                                displayformat: 'DD/MM/YYYY HH:mm',
+                                action: 'addControlePrazo(this)'
+                            };
+            var htmlDatePreview = getDatesPreview(config);
+            $(this).find('td.prazoBoxDisplay').html(htmlDatePreview);
+            if ($(htmlDatePreview).hasClass('tagTableText_date_atrasado')) {
+                // $(this).css('background-color','#fff1f0');
+                $(this).addClass('infraTrAtrasada');
+            } else if (dateTag.format('YYYY-MM-DD') == moment().format('YYYY-MM-DD')) {
+                // $(this).css('background-color','#fdf9df');
+                $(this).addClass('infraTrAlerta');
+            }
+        } else if (!_checkbox.is(':disabled')) {
+            var htmlDateAdd =   '<a class="addControlePrazo" onclick="addControlePrazo(this)">'+
+                                '   <i class="fas fa-clock azulColor"></i>'+
+                                '   <span style="font-size: 9pt;color: #666;font-style: italic;">Adicionar prazo</span>'+
+                                '</a>';
+            $(this).find('td.prazoBoxDisplay').html(htmlDateAdd);
+        }
+    });
+}
+function initControlePrazo(force = false, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof checkConfigValue !== 'undefined' && typeof moment == 'function') { 
+        if (checkConfigValue('gerenciarprazos')) {
+            setControlePrazo(force);
+        }
+    } else {
+        setTimeout(function(){ 
+            initControlePrazo(force, TimeOut - 100); 
+            console.log('Reload initControlePrazo'); 
+        }, 500);
+    }
+}
+function getAllMarcadoresHome() {
+    var arrayMarcadores = [];
+    $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('tr').each(function(){
+        var _processo = $(this).find('a[href*="acao=procedimento_trabalhar"]');
+        var _marcador = $(this).find('a[href*="acao=andamento_marcador_gerenciar"]');
+        var marcador = false;
+
+        if (_processo.length > 0 && _marcador.length > 0) {
+
+            var _tags = (typeof _marcador.attr('onmouseover') !== 'undefined') ? _marcador.attr('onmouseover').match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
+            var tagName = (_tags && _tags !== null && _tags.length > 0 && _tags[2] != '') ? _tags[2] : false;
+            var textName = (_tags && _tags !== null && _tags.length > 0 && _tags[0] != '') ? _tags[0] : false;
+
+            arrayMarcadores.push({
+                id_procedimento: getParamsUrlPro(_processo.attr('href')).id_procedimento,
+                icon: _marcador.find('img').attr('src'),
+                tag: tagName,
+                name: textName
+            });
+        }
+    });
+    sessionStorageStorePro('dadosMarcadoresProcessoPro', arrayMarcadores);
+}
+function initAllMarcadoresHome(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof getParamsUrlPro !== 'undefined') { 
+        getAllMarcadoresHome();
+    } else {
+        setTimeout(function(){ 
+            initAllMarcadoresHome(TimeOut - 100); 
+            console.log('Reload initAllMarcadoresHome'); 
+        }, 500);
+    }
+}
 function initSeiPro() {
 	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
         $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
@@ -1377,16 +1841,19 @@ function initSeiPro() {
         insertGroupTable();
         replaceSelectAll();
         initPanelFavorites();
-        checkLoadConfigProject();
+        checkLoadConfigSheets();
         insertDivPanel();
         initNewTabProcesso();
         forceOnLoadBody();
         observeAreaTela();
         initReplaceSticknoteHome();
         initReplaceNewIcons();
+        initControlePrazo();
+        initAllMarcadoresHome();
 	} else if ( $("#ifrArvore").length > 0 ) {
         initDadosProcesso();
         initObserveUrlChange();
+        checkLoadConfigSheets();
         //observeHistoryBrowserPro();
 	}
     initReloadModalLink();

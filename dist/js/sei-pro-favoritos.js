@@ -812,6 +812,11 @@ function setPanelFavorites(mode) {
     var statusIconShow = ( getOptionsPro('favoritesProDiv') == 'hide' ) ? '' : 'display:none;';
     var statusIconHide = ( getOptionsPro('favoritesProDiv') == 'hide' ) ? 'display:none;' : '';
     var storeFavorites = getStoreFavoritePro()['favorites'];
+        storeFavorites.forEach(function(fav){
+            if (fav.order === null) {
+                fav.order = -1;
+            }
+        });
         storeFavorites = (checkObjHasProperty(storeFavorites, 'order')) ? jmespath.search(storeFavorites, "sort_by([*],&order)") : storeFavorites;
     var arrayProcessosUnidade = getProcessoUnidadePro();
     var selectedCategoryView = (getOptionsPro('panelFavoritosView')) ? getOptionsPro('panelFavoritosView') : '';
@@ -856,8 +861,8 @@ function setPanelFavorites(mode) {
                     htmlTableFavorites +=   '       <tr data-tagname="SemGrupo" data-index="'+index+'" data-id_procedimento="'+value.id_procedimento+'" class="'+tagsFavClass+' '+tagDatesFavClass+'">'+
                                             '           <td align="center"><input type="checkbox" onclick="followSelecionarItens(this)" id="favoritePro_'+value.id_procedimento+'" name="favoritePro" value="'+value.id_procedimento+'"></td>'+
                                             '           <td align="left">'+
-                                            '               <a class="followLinkProcesso" style="text-decoration: underline; color: #00c;" href="'+linkDoc+'">'+
-                                            '               <i class="'+iconProcesso+'" style="color: #00c;text-decoration: underline;"  onmouseover="return infraTooltipMostrar(\''+tipsProcesso+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
+                                            '               <a class="followLinkProcesso bLink" style="text-decoration: underline;" href="'+linkDoc+'">'+
+                                            '               <i class="'+iconProcesso+' bLink" style="text-decoration: underline;"  onmouseover="return infraTooltipMostrar(\''+tipsProcesso+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
                                             '               '+value.processo+'</a>'+
                                             '               <a class="newLink followLink followLinkNewtab" href="'+linkDoc+'" onmouseover="return infraTooltipMostrar(\'Abrir em nova aba\');" onmouseout="return infraTooltipOcultar();" target="_blank"><i class="fas fa-external-link-alt" style="font-size: 90%; text-decoration: underline;"></i></a>'+
                                             '               <div class="info_icons_fav">'+htmlIconsHome+'</div>'+
@@ -977,6 +982,7 @@ function setPanelFavorites(mode) {
         initFunctionsPanelFav();
         checkFileSystemInit();
         appendStarOnProcess();
+        console.log('setPanelFavorites');
     } else {
         checkFileLocalFav();
         appendStarOnProcess();
@@ -1013,7 +1019,7 @@ function checkFileSystemInit() {
     }
 }
 function checkFileRemoteFav(mode, data = false) {
-    if (mode == 'get' && typeof getServerAtividades !== 'undefined') {
+    if (mode == 'get' && typeof getServerAtividades !== 'undefined' && (typeof checkLoadFavoritesProcPro === 'undefined' || !checkLoadFavoritesProcPro) ) {
         var action = 'check_favoritos';
         var param = {
             action: action
@@ -1201,6 +1207,7 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             });
             checkboxRangerSelectShift();
             checkFileRemoteFav('get');
+            console.log('initFunctionsPanelFav',TimeOut);
         }, 500);
 
         var filterFav = tableFavorites.find('.tablesorter-filter-row').get(0);
@@ -1342,9 +1349,9 @@ function getFavoritesEnviarProcesso() {
                         favoritosLabelOptions(id_procedimento)+
                         '   </div>'+
                         '</div>';
-    ifrVisualizacao.find('#frmAtividadeListar').prepend(htmlAddFav);
+    ifrVisualizacao.find('#frmAtividadeListar').append(htmlAddFav);
     loadStylePro(URL_SPRO+"css/sei-pro.css", ifrVisualizacao.find('head'), ifrVisualizacao);
-    loadStylePro(URL_SPRO+"css/fontawesome.min.css", ifrVisualizacao.find('head'), ifrVisualizacao);
+    loadStylePro((localStorage.getItem('seiSlim') ? URL_SPRO+"css/fontawesome.pro.min.css" : URL_SPRO+"css/fontawesome.min.css"), ifrVisualizacao.find('head'), ifrVisualizacao);
     loadScriptFavoriteTag(ifrVisualizacao);
 }
 function favoritosLabelOptions(id_procedimento) {

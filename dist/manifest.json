@@ -1,15 +1,15 @@
 {
   "manifest_version": 2,
-  "name": "SEI Pro Lab",
-  "short_name": "SEI Pro Lab",
+  "name": "SEI Pro",
+  "short_name": "SEI Pro",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "0.1.27.19",
+  "version": "1.0.2",
   "author": "Pedro Henrique Soares",
-  "homepage_url": "https://github.com/SEI-Pro/sei-pro",
+  "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
-    "16": "icons/lab/icon-16.png",
-    "48": "icons/lab/icon-48.png",
-    "128": "icons/lab/icon-128.png"
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   },
   "options_page": "html/options.html",
   "options_ui": {
@@ -21,12 +21,12 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "lab.pedrohsoares.adv@gmail"
+      "id": "pedrohsoares.adv@gmail"
     }
   },
   "applications": {
     "gecko": {
-      "id": "lab.pedrohsoares.adv@gmail",
+      "id": "pedrohsoares.adv@gmail",
       "strict_min_version": "52.0"
     }
   },
@@ -48,6 +48,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/fontawesome.pro.min.css",
         "css/fontawesome.min.css",
         "css/frappe-gantt.css",
         "css/jkanban.min.css",
@@ -97,6 +98,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/fontawesome.pro.min.css",
         "css/fontawesome.min.css",
         "css/frappe-gantt.css",
         "css/jkanban.min.css",
@@ -156,6 +158,16 @@
     {
       "js": [
         "js/lib/jquery-3.4.1.min.js",
+        "js/init_visualizacao_html.js"
+      ],
+      "all_frames": true,
+      "matches": [
+        "*://*.br/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*"
+      ]
+    },
+    {
+      "js": [
+        "js/lib/jquery-3.4.1.min.js",
         "js/lib/jmespath.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
@@ -174,6 +186,10 @@
       ]
     }
   ],
+  "browser_action": {
+    "default_title": "Agenda Integrada",
+    "default_popup": "html/options.html"
+  },
   "web_accessible_resources": [
     "js/lib/jquery-3.4.1.min.js",
     "js/lib/jquery-ui.min.js",
@@ -196,8 +212,13 @@
     "js/lib/jquery.maskedinput.min.js",
     "js/lib/leaflet.js",
     "js/lib/leaflet-geocoder.js",
+    "js/lib/filerobot-image-editor.min.js",
+    "js/lib/jszip.min.js",
+    "js/lib/jszip-utils.min.js",
     "js/sei-functions-pro.js",
     "js/sei-gantt.js",
+    "js/sei-forms.js",
+    "js/sei-sync-processos.js",
     "js/sei-pro-atividades.js",
     "js/sei-pro.js",
     "js/sei-pro-all.js",
@@ -206,6 +227,7 @@
     "js/sei-pro-visualizacao.js",
     "js/sei-pro-favoritos.js",
     "js/sei-pro-icons.js",
+    "js/sei-legis.js",
     "https://apis.google.com/js/api.js",
     "https://accounts.google.com/gsi/client",
     "css/sei-pro.css",
@@ -219,16 +241,37 @@
     "css/images/ui-icons_ffffff_256x240.png",
     "css/images/ui-icons_cc0000_256x240.png",
     "css/images/ui-icons_777620_256x240.png",
+    "css/fontawesome.pro.min.css",
     "css/fontawesome.min.css",
     "css/jquery.toolbar.css",
     "css/chart.min.css",
     "css/chosen.min.css",
     "css/leaflet.css",
-    "webfonts/fa-brands-400.svg",
-    "webfonts/fa-brands-400.eot",
-    "webfonts/fa-brands-400.woff2",
-    "webfonts/fa-brands-400.woff",
-    "webfonts/fa-brands-400.ttf",
+    "webfonts/pro/fa-light-300.svg",
+    "webfonts/pro/fa-light-300.eot",
+    "webfonts/pro/fa-light-300.woff2",
+    "webfonts/pro/fa-light-300.woff",
+    "webfonts/pro/fa-light-300.ttf",
+    "webfonts/pro/fa-duotone-900.svg",
+    "webfonts/pro/fa-duotone-900.eot",
+    "webfonts/pro/fa-duotone-900.woff2",
+    "webfonts/pro/fa-duotone-900.woff",
+    "webfonts/pro/fa-duotone-900.ttf",
+    "webfonts/pro/fa-brands-400.svg",
+    "webfonts/pro/fa-brands-400.eot",
+    "webfonts/pro/fa-brands-400.woff2",
+    "webfonts/pro/fa-brands-400.woff",
+    "webfonts/pro/fa-brands-400.ttf",
+    "webfonts/pro/fa-regular-400.svg",
+    "webfonts/pro/fa-regular-400.eot",
+    "webfonts/pro/fa-regular-400.woff2",
+    "webfonts/pro/fa-regular-400.woff",
+    "webfonts/pro/fa-regular-400.ttf",
+    "webfonts/pro/fa-solid-900.svg",
+    "webfonts/pro/fa-solid-900.eot",
+    "webfonts/pro/fa-solid-900.woff2",
+    "webfonts/pro/fa-solid-900.woff",
+    "webfonts/pro/fa-solid-900.ttf",
     "webfonts/fa-regular-400.svg",
     "webfonts/fa-regular-400.eot",
     "webfonts/fa-regular-400.woff2",
@@ -239,9 +282,16 @@
     "webfonts/fa-solid-900.woff2",
     "webfonts/fa-solid-900.woff",
     "webfonts/fa-solid-900.ttf",
+    "webfonts/fa-brands-400.svg",
+    "webfonts/fa-brands-400.eot",
+    "webfonts/fa-brands-400.woff2",
+    "webfonts/fa-brands-400.woff",
+    "webfonts/fa-brands-400.ttf",
     "icons/addestilotabela.png",
     "icons/copiarformatacao.png",
     "icons/duplicartabela.png",
+    "icons/editarimagem.png",
+    "icons/formatarimagem.png",
     "css/images/layers-2x.png",
     "css/images/layers.png",
     "css/images/marker-icon-2x.png",

@@ -6,7 +6,7 @@ body { font-family: arial, helvetica, sans-serif; font-size: 14px; margin: 0; }
 body {  
     background: #f8f9fa; 
 }
-h1 { font-size: 22px; margin: 10px 0 10px 52px; }
+h1 { font-size: 22px; margin: 10px 0 10px 35px; }
 .panel {
     background: #fff;
     border: 1px solid #ddd;
@@ -23,7 +23,7 @@ h1 { font-size: 22px; margin: 10px 0 10px 52px; }
     position: absolute;
     width: 800px;
     display: block;
-    margin: 10px calc(50vw - 440px);
+    margin: 10px calc(50vw - 480px);
     text-align: right;
 }
 .panel.heading {
@@ -39,6 +39,7 @@ h1 { font-size: 22px; margin: 10px 0 10px 52px; }
 }
 
 input[type=text], 
+input[type=number], 
 input[type=password], 
 select {
     width: 97%;
@@ -49,6 +50,7 @@ select {
     color: #666;
 }
 input[type=text]::placeholder, 
+input[type=number]::placeholder, 
 input[type=password]::placeholder {
     color: #B5B5B4;
 }
@@ -211,7 +213,7 @@ i.laranjaColor {
     display: none;
 }
 .SEIPro_lab tr.lab {
-    display: table-row;;
+    display: table-row;
 }
 @media only screen and (max-width: 1115px) {
     .button-flat .btn_text {

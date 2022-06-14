@@ -333,14 +333,27 @@ function setTablePesquisaDownload() {
         $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
 }
 function initTablePesquisaDownload() {
-    if ($('#frmPesquisaProtocolo').find('#conteudo table.resultado').length > 0) {
+    var resultado = $('#frmPesquisaProtocolo').find('#conteudo table.resultado');
+    if (resultado.length > 0) {
         setTablePesquisaDownload();
+        initScrollToElement();
+    }
+}
+function initScrollToElement(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof scrollToElement !== 'undefined') {
+        scrollToElement($('html'), $('#frmPesquisaProtocolo').find('#conteudo table.resultado'), 50);
+    } else {
+        setTimeout(function(){ 
+            initScrollToElement(TimeOut - 100); 
+            console.log('Reload initScrollToElement', TimeOut); 
+        }, 500);
     }
 }
 function initAppendIconFavorites(TimeOut = 9000) {
     var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
     if (TimeOut <= 0 || parent.window.name != '' ||  table.length == 0) { return; }
-    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconFavorites !== 'undefined') {
+    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconFavorites !== 'undefined' && typeof getStoreFavoritePro !== 'undefined') {
         if (checkConfigValue('gerenciarfavoritos')) {
             setAppendIconFavorites();
         }
@@ -366,7 +379,15 @@ function setAppendIconFavorites() {
     }
 }
 function loadScriptEntidade() {
-    $.getScript(URL_SPRO+"js/sei-pro-icons.js");
+    // $.getScript(URL_SPRO+"js/sei-pro-icons.js");
+    /*
+    if (window.location.host.indexOf('.antaq.gov.br') !== -1 && !urlServerAtiv && !userHashAtiv) {
+        initEmptyAtividades();
+        $('.panelHome').find('.iconAtividade_update i').removeClass('fa-spin');
+        $('#tabelaAtivPanel').attr('class','').css('text-align','center').html('<a class="newLink" onclick="getResendKey()" style="transform: scale(1.4);margin: 10px 0;"><i class="fas fa-key laranjaColor"></i> Solicitar chave de acesso</a>');
+    }
+    console.log('loadScriptEntidade');
+    */
 }
 function appendIconEntidade() {
     if ($('.infraTituloLogoSistema').length > 0 && $('#iconEntidade').length == 0) {
@@ -375,7 +396,7 @@ function appendIconEntidade() {
 }
 function initGetConfigHost(TimeOut = 9000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }
-    if (typeof getConfigHost === 'function') {
+    if (typeof getConfigHost === 'function' && typeof urlServerAtiv !== 'undefined') {
         if (sessionStorage.getItem('configHost_Pro') !== null) {
             setConfigHost(JSON.parse(sessionStorage.getItem('configHost_Pro')), loadScriptEntidade);
         } else {
@@ -435,18 +456,6 @@ function filterIfraTable(this_) {
         _this.addClass('active');
     }
 }
-function initReplaceNewIconsBar(TimeOut = 9000) {
-    if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
-    if (typeof replaceNewIconsBar === 'function') {
-        replaceNewIconsBar($('#divInfraBarraSistema #divInfraBarraSistemaD a'));
-        replaceNewIconsMenu($('#divInfraAreaTelaE #main-menu li a'));
-    } else {
-        setTimeout(function(){ 
-            initReplaceNewIconsBar(TimeOut - 100); 
-            console.log('Reload initReplaceNewIconsBar', TimeOut); 
-        }, 500);
-    }
-}
 function initRemovePaginacaoAll(TimeOut = 9000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }
     if (typeof verifyConfigValue !== 'undefined') {
@@ -503,6 +512,17 @@ function initPagesInfiniteSearch(TimeOut = 9000) {
         }, 500);
     }
 }
+function initObserveUrlPage(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof getParamsUrlPro !== 'undefined') {
+        observeUrlPage();
+    } else {
+        setTimeout(function(){ 
+            initObserveUrlPage(TimeOut - 100); 
+            console.log('Reload initObserveUrlPage', TimeOut); 
+        }, 500);
+    }
+}
 function observeUrlPage() {
     var hash = window.location.hash;
     if (hash != '' && hash.indexOf('#') !== -1 && (hash.indexOf('/') !== -1 || hash.indexOf('@') !== -1) ) {
@@ -533,25 +553,118 @@ function observeUrlPage() {
     }
 }
 function initSlimPro() {
-    var htmlSlimPro =   '       <div id="controlSlimPro" style="display: inline-block;float: right;margin:0 10px 0 0">'+
-                        '           <div class="onoffswitch" style="display:inline-block;transform:scale(0.7)">'+
+    var htmlSlimPro =   '       <div id="controlSlimPro" style="display: inline-block;float: right;margin:3px 10px 0 0">'+
+                        '           <div class="onoffswitch" style="display:inline-block;transform:scale(0.7)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Desativar estilo avan\u00E7ado' : 'Ativar estilo avan\u00E7ado')+'\')">'+
                         '               <input type="checkbox" onchange="changeSlimPro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="changeSlimPro" tabindex="0" '+(localStorage.getItem('seiSlim') ? 'checked' : '')+'>'+
                         '               <label class="onoffswitch-label" for="changeSlimPro" style="border-color: #ffffff7a;"></label>'+
                         '           </div>'+
-                        '           <i class="fas fa-hat-wizard brancoColor" style="float: right;font-size: 1.9em;"></i> '+
+                        '           <i onclick="openStyleBoxSlimPro()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Escolher cor principal' : 'Ativar estilo avan\u00E7ado')+'\')" class="fas fa-palette brancoColor" style="float: right;font-size: 16pt;cursor: pointer;"></i> '+
                         '       </div>';
     $('#controlSlimPro').remove();
     $('#divInfraBarraSistemaD').append(htmlSlimPro);
+    initStyleBoxSlimPro();
 }
-function changeSlimPro(this_) {
-    if ($(this_).is(':checked')) {
-        localStorageStorePro('seiSlim', true);
+function initStyleBoxSlimPro(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof sessionStorageRestorePro !== 'undefined' ) { 
+        if (sessionStorageRestorePro('seiSlim_openBox')) { 
+            openStyleBoxSlimPro();
+        }
+        if (getOptionsPro('colorSlimPro')) {
+            setColorSlimPro(getOptionsPro('colorSlimPro'));
+        }
+        $(document).ready(function () { initToolbarOnTop() });
     } else {
-        localStorageRemovePro('seiSlim');
+        setTimeout(function(){ 
+            initStyleBoxSlimPro(TimeOut - 100); 
+            console.log('Reload initStyleBoxSlimPro'); 
+        }, 500);
     }
-    window.location.reload();
+}
+function initMarcadorUserColor(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof extractHexColor !== 'undefined' ) { 
+        if (checkConfigValue('coresmarcadores')) {
+            setMarcadorUserColor();
+        }
+    } else {
+        setTimeout(function(){ 
+            initMarcadorUserColor(TimeOut - 100); 
+            console.log('Reload initMarcadorUserColor'); 
+        }, 500);
+    }
+}
+function setMarcadorUserColor() {
+    if ($('#frmMarcadorCadastro').length) {
+        var txtNome = $('#txtNome');
+        var oldColor = extractHexColor(txtNome.val());
+            oldColor = (oldColor !== null) ? oldColor : '';
+        var htmlUserColor = '<div style="position: absolute;top: 0;left: 63%;">'+
+                            '   <label id="lblUserColor" for="txaUserColor" style="display: block;" class="infraLabelOpcional">Cor Personalizada:</label>'+
+                            '   <input onchange="changeMarcadorUserColor(this)" type="color" value="'+oldColor+'">'+
+                            '</div>';
+        txtNome.after(htmlUserColor);
+        replaceColorsIcons($('#selStaIcone a.dd-option'));
+        replaceColorsIcons($('#selStaIcone a.dd-selected'));
+    } else if ($('#frmGerenciarMarcador').length) {
+        replaceColorsIcons($('#selMarcador a.dd-option'));
+        replaceColorsIcons($('#selMarcador a.dd-selected'));
+    } else if ($('#frmMarcadorLista').length) {
+        replaceColorsIcons($('#frmMarcadorLista td:nth-child(2) a[href="#"]'));
+    } else {
+        replaceColorsIcons($('a[href*="andamento_marcador_gerenciar"]'));
+    }
+}
+function changeMarcadorUserColor(this_) {
+    var _this = $(this_);
+    var txtNome = $('#txtNome');
+    var oldColor = extractHexColor(txtNome.val());
+    var newText = (oldColor !== null && oldColor != '') ? txtNome.val().replace(oldColor[0], _this.val()) : txtNome.val()+' '+_this.val();
+        txtNome.val(newText);
+}
+function checkBlankPageSEI() {
+    var title = $('#divInfraBarraLocalizacao').text();
+    var content = $('#divInfraAreaDados').text();
+    var urlHome = $('#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
+    setTimeout(function(){ 
+        if (window.location.hash == '' && typeof title !== 'undefined' && typeof content !== 'undefined' && title.trim() == '' && content.trim() == '' && typeof urlHome !== 'undefined' && window.location.href.indexOf('controlador.php') === -1) {
+            console.log('redirect checkBlankPageSEI'); 
+            window.location.href = urlHome;
+        }
+    }, 3000);
+}
+function initCheckLoadJqueryUI() {
+    setTimeout(function(){ 
+        checkLoadJqueryUI();
+    }, 2000);
+}
+function checkPageParent() {
+    if ($('#frmProcedimentoCadastro').length > 0 && $('#frmProcedimentoCadastro').attr('action').indexOf('acao=procedimento_gerar&acao_origem=procedimento_gerar') !== -1) {
+        $('body').addClass('seiSlim_view');
+        var checkMenu = $('#divInfraAreaTelaE').is(':visible');
+        $('#divInfraAreaTelaD').attr('style',(checkMenu ? 'width: 78% !important' : 'width: 99% !important'));
+    }
+}
+function initInfraImg(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof setInfraImg !== 'undefined' ) { 
+        setInfraImg();
+    } else {
+        setTimeout(function(){ 
+            initInfraImg(TimeOut - 100); 
+            console.log('Reload initInfraImg'); 
+        }, 500);
+    }
+}
+function initQRCodeLib() {
+    if ($('#ifrArvore').length > 0 && typeof $().qrcode !== 'function' ) {
+        $.getScript(URL_SPRO+"js/lib/jquery-qrcode-0.18.0.min.js");
+    }
 }
 function initSeiProAll() {
+    initInfraImg();
+    checkPageParent();
+    initMarcadorUserColor();
     appendIconEntidade();
     appendVersionSEIPro();
     initTableSorter();
@@ -563,12 +676,15 @@ function initSeiProAll() {
     initTablePesquisaDownload();
     initReplaceSelectAll();
     initAppendIconFavorites();
-    initReplaceNewIconsBar();
+    // initReplaceNewIconsBar();
     initRemovePaginacaoAll();
     initPagesInfiniteSearch();
     // observeIfrArvore();
-    observeUrlPage();
+    initObserveUrlPage();
     initSlimPro();
+    //checkBlankPageSEI();
+    initCheckLoadJqueryUI();
+    initQRCodeLib();
     console.log('initSeiProAll');
 }
 $(document).ready(function () { initSeiProAll() });

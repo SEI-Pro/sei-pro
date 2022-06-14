@@ -237,6 +237,11 @@ a.newLink {
     border-radius: 5px;
     cursor: pointer;
 }
+span.bLink,
+i.bLink,
+a.bLink {
+    color: #00c !important;
+}
 a.newLink:hover {
 	background-color: #eee !important;
 }
@@ -338,6 +343,7 @@ a.newLink_confirm:hover i {
 .seiProForm input[type="date"],
 .seiProForm input[type="time"],
 .seiProForm input[type="email"],
+.seiProForm input[type="password"],
 .seiProForm input[type="datetime"],
 .seiProForm input[type="datetime-local"],
 .seiProForm input[type="number"] {
@@ -354,6 +360,7 @@ a.newLink_confirm:hover i {
 .seiProForm input[type="dates"],
 .seiProForm input[type="time"],
 .seiProForm input[type="email"],
+.seiProForm input[type="password"],
 .seiProForm input[type="datetime"],
 .seiProForm input[type="datetime-local"],
 .seiProForm textarea,
@@ -682,6 +689,7 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 .onoffswitch-checkbox:checked + .onoffswitch-label:before {
     right: 0px; 
 }
+.seiProForm .trCinza,
 .tableZebra tbody tr:nth-child(even) {
     background-color: #f5f5f5;  
 }
@@ -827,6 +835,10 @@ div.atividadesProgressoBar {
 }
 .ui-tabs-tab .closeReport {
     margin: 2px 0 0 5px;
+}
+.ui-tabs-tab .closeReport,
+.stickDadosArvore .removeStickNote,
+.stickDadosArvore .cancelStickNote {
     color: #929292;
     cursor: pointer;
 }
@@ -893,8 +905,10 @@ div.atividadesProgressoBar {
     margin: 10px 0 20px 0;
     background-color: #fff;
 }
-.tableFollow caption.infraCaption {
-    font-size: 1.2em !important;
+.tableFollow caption.infraCaption,
+.tableFollow caption.infraCaption a,
+.tableFollow caption.infraCaption span {
+    font-size: 1em !important;
     color: #666 !important;
 }
 .tableFollow th.tituloControle {
@@ -930,6 +944,9 @@ div.atividadesProgressoBar {
 .atividadeInfo .content_desc .info_txt input {
     width: 85%;
     height: 20px;
+}
+.tableFollow td.content_desc div {
+    padding-top: 5px;
 }
 .tableFollow .content_desc .info_txt input {
     width: 90%;
@@ -1328,7 +1345,7 @@ i.iconSwitch {
     margin: 0 10px;
     max-width: 70px;
     overflow: hidden;
-    display: inherit;
+    display: table-cell;
 }
 .tabelaControle td.atividadeBoxDisplay:hover {
     overflow: visible;
@@ -1657,7 +1674,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_niniciadas"] .kanban-title-board::before {
     content: "\f017";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     padding-right: 10px;
     color: #989898;
 }
@@ -1667,7 +1684,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_iniciadas"] .kanban-title-board::before {
     content: "\f144";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     padding-right: 10px;
     color: #4285f4;
 }
@@ -1677,7 +1694,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_concluidas"] .kanban-title-board::before {
     content: "\f058";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     padding-right: 10px;
     color: #9cb639;
 }
@@ -1687,7 +1704,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_avaliadas"] .kanban-title-board::before {
     content: "\f005";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     padding-right: 10px;
     color: #fed35b;
 }
@@ -1697,7 +1714,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_arquivadas"] .kanban-title-board::before {
     content: "\f187";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     padding-right: 10px;
     color: #989898;
 }
@@ -1715,9 +1732,18 @@ table.moreInfoBox td:first-child,
     position: absolute;
     top: 10px;
 }
-.kanban-container .kanban-item.tagKanName_urgente {
+.kanban-container .kanban-item.tagKanName_urgente,
+.urgenteBoxDisplay {
     background: #f9e2e0;
 }
+.importanteBoxDisplay {
+    background: #f9e2e0;
+}
+.alertaBoxDisplay {
+    padding: 5px;
+    border-radius: 5px;
+}
+.alertaBoxDisplay,
 .kanban-container .kanban-item.tagKanName_importante {
     background: #fffcd7;
 }
@@ -1735,7 +1761,7 @@ table.moreInfoBox td:first-child,
 .kanban-container .kanban-item.tagKanName_date_pausado:before {
     content: "\f04c";
     position: absolute;
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     font-size: 60pt;
     text-align: center;
     color: #9898983d;
@@ -1925,11 +1951,12 @@ table.moreInfoBox td:first-child,
 .dz-drag-hover:before {
     content: "\f093";
     font-size: 80px;
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     text-align: center;
     font-weight: 600;
     position: fixed;
     width: -webkit-fill-available;
+    width: -moz-available;
     z-index: 9999;
     height: 100%;
     top: 0 !important;
@@ -1937,6 +1964,9 @@ table.moreInfoBox td:first-child,
     padding: calc(50% - 40px) 0px;
     color: #017FFF;
     background: rgb(255 255 255 / 75%);
+}
+.seiSlim.seiSlim_arvore.dz-drag-hover:before {
+    font-family: 'Font Awesome 5 Pro';
 }
 .dz-size {
     background: #eaeaea;
@@ -2039,6 +2069,7 @@ table.moreInfoBox td:first-child,
     position: fixed;
     height: 100%;
     width: -webkit-fill-available;
+    width: -moz-available;
     text-align: center;
     padding-top: calc(50% + 40px);
     font-family: Calibri;
@@ -2255,6 +2286,7 @@ a.newLink.filterTableProcessos.newLink_active i {
     font-weight: bold;
 }
 tr .newLink.followLinkTr:hover i,
+.txt_cinza,
 tr .newLink.followLinkTr:hover {
     color: #666 !important;
 }
@@ -2333,32 +2365,36 @@ td.content_desc {
 td.editCellLoading:after {
     content: "\f2f1" !important;
     position: absolute;
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #017fff !important;
     animation: fa-spin 2s linear infinite;
     margin-left: 10px;
+    font-weight: 600;
 }
 td.editCellConfirm:after {
     content: "\f00c";
     position: absolute;
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #64e4a4;
     margin-left: 10px;
+    font-weight: 600;
 }
 td.editCellLoadingError:after {
     content: "\f06a";
     position: absolute;
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #e46e64;
     margin-left: 10px;
+    font-weight: 600;
 }
 .dataLoading:before {
     content: "\f2f1" !important;
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     width: 50px;
     height: 50px;
     padding: 0;
     font-size: 50px;
+    font-weight: bold;
     left: calc(50% - 50px);
     top: calc(50% - 25px);
     color: #f1f1f1;
@@ -2455,7 +2491,7 @@ td.editCellSEI:hover:after,
 td.editCellNew:hover:after,
 td.editCellSelect:hover:after {
     content: "\f303";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     margin-left: 10px;
     color: #d2d2d2;
     font-size: 1.3em;
@@ -2498,11 +2534,12 @@ div#divInfraBarraSistemaE.barSuspenso {
 }
 div#divInfraBarraSistemaE.barSuspenso:before {
     content: "\f0c9";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #fff;
     font-size: 2em;
     margin: 7px 10px 0 0;
     float: left;
+    font-weight: 600;
 }
 .tableSortable .ui-sortable-helper {
     display: table;
@@ -2512,22 +2549,25 @@ div#divInfraBarraSistemaE.barSuspenso:before {
 }
 .tableOptionConfig tr[data-key="tipo_processo"] td:first-child:before {
     content: "\f07c";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #017fff;
     margin-right: 10px;
+    font-weight: 600;
 }
 .tableOptionConfig tr[data-key="etiquetas"] td:first-child:before {
     content: "\f02b";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #017fff;
     margin-right: 10px;
+    font-weight: 600;
 }
 .tableOptionConfig tr[data-key="checklist"] td:first-child:before {
     content: "\f14a";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #017fff;
     margin-right: 10px;
     font-size: 12pt;
+    font-weight: 600;
 }
 .ui-state-active .ui-tabs-anchor i {
     color: #fff !important;
@@ -2547,6 +2587,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
     transition: box-shadow 0.5s ease 0s;
     -webkit-font-smoothing: subpixel-antialiased;
     width: -webkit-fill-available;
+    width: -moz-available;
     min-height: 40px;
     margin: 10px 20px 10px 10px;
     font-size: 11pt;
@@ -2562,6 +2603,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
 .stickDadosArvore {
     border-top: 1px solid rgb(218, 218, 218) !important;
     padding: 1.2em 0.2em 1.2em 1.2em !important;
+    width: calc(100% - 1.4em) !important;
 }
 .stickDadosArvore {
     transition: all 300ms linear;
@@ -2572,6 +2614,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
     left: 30px;
     font-size: 14pt;
     width: -webkit-fill-available;
+    width: -moz-available;
     margin-right: 70px;
 }
 .stickDadosArvore .actionsNew {
@@ -2603,6 +2646,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
     background: linear-gradient(rgb(253 221 221), rgb(250 194 195));
     position: relative;
 }
+.stickDadosArvore .checkListStickNote,
 .stickDadosArvore .priorityStickNote {
     color: #4285f4 !important;
 }
@@ -2611,12 +2655,13 @@ div#divInfraBarraSistemaE.barSuspenso:before {
 }
 .stickDadosArvore.priority .stickNotePro:before {
     content: "\f06a";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     color: #e46f642d;
     position: absolute;
     top: 10px;
     right: 20px;
     font-size: 40px;
+    font-weight: 600;
 }
 .stickDadosArvore .stickNoteDate {
     position: absolute;
@@ -2814,7 +2859,7 @@ div.infraTooltipTexto i.far {
 }
 .stickNotePro .stickNoteCheck:before {
     content: "\f0c8";
-    font-family: 'Font Awesome 5 Free SEIPro';
+    font-family: 'Font Awesome 5 Free';
     position: absolute;
     margin-left: -25px;
     font-size: 13pt;
@@ -3059,4 +3104,103 @@ div#divInfraTooltip {
     color: #555;
     font-size: 8pt;
     font-family: monospace;
+}
+tr:hover td.prazoBoxDisplay a.addControlePrazo,
+tr.infraTrMarcada td.prazoBoxDisplay a.addControlePrazo {
+    display: inline-block;
+}
+tr.infraTrSelecionada td.prazoBoxDisplay a.addControlePrazo {
+    display: inline-block;
+    background-color: rgb(232, 232, 232);
+    color: rgb(68, 68, 68);
+}
+tr td.prazoBoxDisplay a.addControlePrazo:hover {
+    text-decoration: none;
+}
+tr td.prazoBoxDisplay a.addControlePrazo {
+    display: none;
+    padding: 0 5px;
+    border-radius: 5px;
+    user-select: none;
+}
+ul.sm-nowrap {
+    z-index: 999 !important;
+}
+.infraTrAtrasada {
+    background-color: #fff1f0 !important;
+}
+.infraTrAlerta {
+    background-color: #fdf9df !important;
+}
+.openNewTab {
+    margin: 5px;
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #eaeaea;
+    color: #666;
+    text-decoration: none;
+    right: 20px;
+    position: absolute;
+    user-select: none;
+}
+#divComandos .botaoSEI.botaoSEI_hide {
+    display: none !important;
+}
+#newFiltro {
+    display: inline-block; 
+    vertical-align: top; 
+    float: right; 
+    text-align: right; 
+    width: 100%; 
+    margin-right: 30px;
+}
+a.controleTableTag {
+    transform: scale(0.7);
+}
+.hashSpan {
+    background: #e4e4e4;
+    padding: 2px 5px;
+    border-radius: 5px;
+}
+div.infraTooltip {
+    font-family: arial,verdana,helvetica,sans-serif;
+    font-size: 9pt;
+    position:absolute;
+    top:0;
+    left:0;
+    visibility:hidden;
+    color: #000000;
+    z-index:999;
+    background:#ffffaa;
+    padding: .4em;
+    border: .2em solid #d9d9d9;
+    border-radius: 4px;  
+    box-shadow: 0 0 5px #a0a0a0; 
+}
+div.infraTooltipTitulo {
+    font-size: 9pt !important; 
+    font-weight:bold;
+    background-color:#FFFFE1;
+    border-bottom:.1em solid black;
+    padding:.2em;
+    background-color:transparent; 
+}
+table.tabInfraTooltip {
+    font-size: 9pt !important; 
+}
+div.infraTooltipTexto {
+    font-size: 9pt !important; 
+    padding:.1em;
+}
+div.infraTooltipTexto b {
+    font-weight:bold;
+}
+div.infraTooltipTexto i {
+    font-style:italic;
+}
+td.prazoBoxDisplay {
+    min-width: 115px;
+}
+.chosen-container .chosen-results li.disabled-result {
+    color: #a2a2a2 !important;
 }

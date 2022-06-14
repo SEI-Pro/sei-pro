@@ -7,7 +7,7 @@
     <script src="../js/lib/jquery-ui.min.js"></script>
     <script src="../js/lib/jmespath.min.js"></script>
     <link rel="stylesheet" type="text/css" href="page.css">
-    <link rel="stylesheet" type="text/css" href="../css/fontawesome.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/fontawesome.pro.min.css">
     <link rel="stylesheet" type="text/css" href="../css/jquery-ui.css">
 </head>
 <body class="SEIPro">
@@ -21,13 +21,13 @@
 			<button class="save button-flat button-light" style="float:right" style="width: 100px"><i class="fas fa-save"></i> Salvar</button>
             <div id="alertaBoxPro" style="display: none;"></div>
         </div>
-        <h1><i class="fas fa-cog icon"></i> <span class="title">Configura&ccedil;&otilde;es Gerais</span></h1>
+        <h1><img src="../icons/icon-32.png" style="vertical-align: middle;margin-right: 10px;"> <span class="title"><span class="name-space"></span> | Configura&ccedil;&otilde;es</span></h1>
     </div>
     <div class="panel options-panel options-profile" id="options-tabs">
         <ul>
-            <li><a href="#options-functions">Geral</a></li>
-            <li><a href="#options-database">Base de Dados</a></li>
-            <li><a href="#options-complements">Complementos</a></li>
+            <li><a href="#options-functions"><i class="fas fa-cog"></i> Geral</a></li>
+            <li><a href="#options-database"><i class="fas fa-database"></i> Base de Dados</a></li>
+            <li><a href="#options-complements"><i class="fas fa-puzzle-piece"></i> Complementos</a></li>
         </ul>
         <div id="options-database">
             <div id="options-profile">
@@ -54,6 +54,8 @@
                             <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;" required>
                                 <option value="projetos">Projetos</option>
                                 <option value="atividades">Atividades</option>
+                                <option value="formularios">Formul&aacute;rios</option>
+                                <option value="processos">Processos</option>
                             </select>
                         </td>
                     </tr>
@@ -179,6 +181,34 @@
                 <tr>
                     <td>
                         <p>
+                            <i class="iconPopup fas fa-clipboard-list azulColor"></i><span class="info">Gerenciar Formul&aacute;rios</span>
+                            <a href="/pages/FORMULARIOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="gerenciarformularios" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciarformularios" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciarformularios"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr class="lab">
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-folder-open azulColor"></i><span class="info">Sincronizar Base de Processos</span>
+                            <a href="/pages/SYNCPROCESSOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="sincronizarprocessos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_sincronizarprocessos" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_sincronizarprocessos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
                             <i class="iconPopup fa fa-star azulColor"></i><span class="info">Gerenciar Processos Favoritos</span>
                             <a class="manual" href="/pages/FAVORITOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
@@ -187,6 +217,34 @@
                            <div class="onoffswitch">
                                <input type="checkbox" data-name="gerenciarfavoritos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciarfavoritos" tabindex="0" checked>
                                <label class="onoffswitch-label" for="itemConfigGeral_gerenciarfavoritos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-clock azulColor"></i><span class="info">Controlar Prazos</span>
+                            <a class="manual" href="/pages/PRAZOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="gerenciarprazos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciarprazos" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciarprazos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-cogs azulColor"></i><span class="info">A&ccedil;&otilde;es em Lote</span>
+                            <a class="manual" href="/pages/ACOESEMLOTE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="acoesemlote" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_acoesemlote" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_acoesemlote"></label>
                            </div>
                     </td>
                 </tr>
@@ -401,6 +459,48 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-pen-alt azulColor"></i><span class="info">Alertar sobre documentos n&atilde;o assinados ao enviar um processo</span>
+                            <a class="manual" href="/pages/DOCSNAOASSINADOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="naoassinados" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_naoassinados" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_naoassinados"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-tags azulColor"></i><span class="info">Permitir cores personalizadas em Marcadores</span>
+                            <a class="manual" href="/pages/CORESMARCADORES.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="coresmarcadores" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_coresmarcadores" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_coresmarcadores"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-paragraph cinzaColor"></i><span class="info">Visualizar par&aacute;grafos numerados no visualizador de documentos</span>
+                            <a class="manual" href="/pages/PARAGRAFOSNUMERADOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="linhanumerada" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_linhanumerada" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_linhanumerada"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
                     <td colspan="2" style="padding: 0;">
                         <table>
                             <tr>
@@ -414,8 +514,88 @@
                                         <option value="citacaodoc_1">Documento (SEI n&ordm; 0000)</option>
                                         <option value="citacaodoc_2">Documento (SEI 0000)</option>
                                         <option value="citacaodoc_3">Documento (0000)</option>
+                                        <option value="citacaodoc_4">0000</option>
                                     </select>
                                 </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-user-lock azulColor"></i><span class="info">Gerar Certid&atilde;o de Documento Oficial com Sigilo</span>
+                            <a class="manual" href="/pages/CERTIDAOSIGILO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="certidaosigilo" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_certidaosigilo" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_certidaosigilo"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr id="getDocCertidao_docName">
+                    <td colspan="2" style="padding: 0;">
+                        <table>
+                            <tr>
+                                <td style="width: 60%;">
+                                    <span>
+                                        <i class="iconPopup fas fa-file-contract azulColor"></i><span class="info">Nome do tipo de documento do SEI da Certid&atilde;o</span>
+                                        <a class="manual" href="/pages/CERTIDAOSIGILO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                                    </span>
+                                </td>
+                                <td style="width: 40%; text-align: right;">
+                                    <input type="text" id="itemConfigGeral_certidaosigilo_nomedoc" maxlength="1000" data-name="certidaosigilo_nomedoc" value="Certid&atilde;o">
+                                   </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding: 0;">
+                        <table>
+                            <tr>
+                                <td style="width: 80%;">
+                                    <span>
+                                        <i class="iconPopup fas fa-save azulColor"></i><span class="info">Intervalo em minutos para o salvamento autom&aacute;tico</span>
+                                        <a class="manual" href="/pages/SALVAMENTOAUTOMATICO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                                    </span>
+                                </td>
+                                <td style="width: 20%; text-align: right;">
+                                    <input type="number" step="1" id="itemConfigGeral_salvamentoautomatico" max="360" min="1" data-name="salvamentoautomatico" value="5">
+                                   </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-photo-video azulColor"></i><span class="info">Envio, formata&ccedil;&atilde;o e edi&ccedil;&atilde;o avan&ccedil;ada de imagens no editor de documentos</span>
+                            <a class="manual" href="/pages/EDITARIMAGENS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="editarimagens" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_editarimagens" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_editarimagens"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding: 0;">
+                        <table>
+                            <tr>
+                                <td style="width: 80%;">
+                                    <span>
+                                        <i class="iconPopup fas fa-images azulColor"></i><span class="info">Reduzir a qualidade das imagens inseridas nos documentos (%)</span>
+                                        <a class="manual" href="/pages/QUALIDADEIMAGENS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                                    </span>
+                                </td>
+                                <td style="width: 20%; text-align: right;">
+                                    <input type="number" step="1" id="itemConfigGeral_qualidadeimagens" max="100" min="1" data-name="qualidadeimagens" value="60">
+                                   </td>
                             </tr>
                         </table>
                     </td>
@@ -496,6 +676,18 @@
                                        <input type="checkbox" data-name="newdocnivel" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_newdocnivel" tabindex="0" checked>
                                        <label class="onoffswitch-label" for="itemConfigGeral_newdocnivel"></label>
                                    </div>
+                            </td>
+                        </tr>
+                        <tr id="newDoc_sigilo">
+                            <td style="width: 60%;">
+                                <span style="padding-left: 40px;">
+                                    <i class="iconPopup fa fa-balance-scale cinzaColor"></i><span class="info">Hip&oacute;tese legal do documento</span>
+                                </span>
+                            </td>
+                            <td style="width: 40%;">
+                                   <select id="itemConfigGeral_newdocsigilo" data-name="newdocsigilo">
+                                       <option value=""></option>
+                                   </select>
                             </td>
                         </tr>
                     </table>

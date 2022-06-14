@@ -1,7 +1,17 @@
 var idEditor,
     oEditor, 
+    imgEditor, 
     txaEditor = ($('#frmEditor').length > 0) ? 'div[id^=cke_txaEditor_]' : 'div#cke_txaConteudo',
-    iframeEditor;
+    iframeEditor,
+    autoSaveEditor;
+
+var autoSaveInterval = (checkConfigValue('salvamentoautomatico')) ? getConfigValue('salvamentoautomatico') : 5;
+var isIntervalInProgress = false;
+var isSeiSlim = (localStorage.getItem('seiSlim')) ? true : false;
+var isDarkMode = (localStorage.getItem('darkModePro')) ? true : false;
+var qualidadeImagens = (checkConfigValue('qualidadeimagens')) ? getConfigValue('qualidadeimagens') : 60;
+    qualidadeImagens = (qualidadeImagens > 100) ? 100 : qualidadeImagens;
+    qualidadeImagens = (qualidadeImagens < 0) ? 0 : qualidadeImagens;
 
 function setParamEditor(this_) {
     idEditor = $(this_).closest('div.cke').attr('id').replace('cke_', '');
@@ -23,6 +33,7 @@ function htmlButton(status) {
     var icon16baseTinyUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIhSURBVDjLY/j//z8DJZhhGBlgZ2fHnZWVVdra2vpu3rx5/2tqah7m5OSYA7EEkH0XJAaSA6kBqUUxwMjIiM3Hx6dr4sSJ/1+8ePH/7t27/w8ePPi/sbHxXnV19aGbN2/+AIkdOXLkP0gNSC1ID9wAQ0NDv+Li4g9Xr159FxERsc3b2/tPamrq/0mTJv2vrKz8D2KDxEByK1aseAhSC9KD7IKupqam75MnT0739/fnsre3/7x3797/586d+3/o0KH/a9eu/Z8xx+Jf6nzD/yA1ILUgPXADdHV1M9PT099PmzatJCgoaKejo+MvNze3/4GBgWAMYifMMPrfuDnqf/gMjf8gtSA9cAM0gcDX1/d6b2/v+1WrVr1dt27d//yltv9zF1n8T19g8j9pruH/mvWh/1ednvi/ZLX/f9c+iX+a2hpacAPU1NSYgc428PLyup+SkvIlOzv7e/Zi8/8bzk37v/bsFLDGFacn/J+wp+T/wuNd/zOWuv03bWf/rdvMyIgzfpOB/gVp7tuV/79zR/b/1m1p/xs2J/5v2pr+f8ah5v8xC2z+q9Yz/MRpQPRszf8rT034v/RE7/+Fx7r+zzvaATQk6//0Q03/05Z6/FesZbguXcnAidOAwOmKfz0nSv917hf9a93N/zduvtX/aQcb/ictdvsvX8twUbKSgZ2kpKzdzPg6fqHzf/lqhjNAzWwk5wWgk1/LVTP/F61kYEEWBwAP7or0z//OfQAAAABJRU5ErkJggg==';
 	var icon16baseQrCode = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAZQTFRFAAAAWVlZv8SjvQAAAAJ0Uk5TAP9bkSK1AAAANUlEQVR4nGNgYGCo3cfgqsQQuorBZRGIzcjAELGJQV+MgdGFoWYPg6sXQ+gaBlchhpovQLUABRUK5/bjcC8AAAAASUVORK5CYII=';
 	var icon16basePageBreak = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OTkxQjM5N0RFNjI4MTFFQUFBNzU5OEQxRjkxRTg4RkUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OTkxQjM5N0VFNjI4MTFFQUFBNzU5OEQxRjkxRTg4RkUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5OTFCMzk3QkU2MjgxMUVBQUE3NTk4RDFGOTFFODhGRSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5OTFCMzk3Q0U2MjgxMUVBQUE3NTk4RDFGOTFFODhGRSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsiipPkAAAH9SURBVHjajFPPa5NBEH37I4aECFZCtVBiJVJQD5UWG/DirYccvGvtUVAo1ZsieLCnglAiiJfS/6CXNDn02mMP9dCk4KEomkKh1JDYGPJ7ndl8+/ElhuLCY3dnZ9/MvNkVABKEawSBf8cp4acxpocLxv1Op9MkmG6366PVaplsNvuRzqcIkkgwCjzm3YV6vW5qtZqpVquGCZvNpsnn85bkvwj4ApMwgcuEicgnxVl4ZYoggXZ1SCnR6/XsHAqFUCqVUC6XEY1G+fiO52ZDCiEGtJkfrr3RaJhCoWDa7faALqO0GSBwQrJTsVi0a1cWa1OpVHxbLpezJDLYDkrNn7kUHp92N6GUsnt3rrVGOp1eoeW4r8GjtSUcn59R/RoPkvfwIrVk7d9/HeP9zjreLbyCVBKUjdUqFov1g3kl7K1tZfCjc4LbN29h/7CAo5MSNJHdpX2YIo6Fr+DtwkuQryWIRCKcWcon+HJ0gPXtz7h6I47kZAJSSGipoEQ//YNvX/H7Tw0bjz/YyNwpJuASTnnBxssPp2bj0xPPdCw8G1Ya4pLCTHIaIa1wPRJH5ulqv5feAwpuxBBYwRQrvph5bpY33/hdcuA9Z689EjOiG9aWGJvE6pPXvp1dXTf8DEa8b6eNCX4yt+aZHtk5+cyJoeDBLPiljV/wi7us318BBgDZbKOY1qZo6AAAAABJRU5ErkJggg==';
+	var icon16baseSessionBreak = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAJBQTFRFAAAAGhoaGBgYHx8fJCQkKCgoLCwsMTExNjY2PDw8QEBAICAgHh4eJiYmKioqLy8vMzMzOTk5Pz8/RERESEhIiLPtgq/r////hrLrgK7raKDjRHza////lrztl73tibToVJDdOGrTVZHecqfoa6LnVZHeMmTNyOD/YpzlYZvl////////////////////////YBj23gAAADB0Uk5TAP/4+Pj4+Pj4//jp1NTU1NTU1NzU1OX54NTVKQj////LKf/b1NYp/+jUxx61DpkEbZ1l9QAAAGlJREFUeJxjYCAOMDIxs7CysXNwckEFuHl4+fgFBIWERRgYRNFViIFExOGAgUFCUkqaQQYOGBhk5eQVFJWUlBggmIFBWUVVjUFdXR2KGRg0NLW0QVqgmIFBU0cX1RY9fTR3YHcpsjsIAgDdmQt3Mog0NQAAAABJRU5ErkJggg==';
     var icon16baseLatex = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAACzSURBVCjPY/jPgB8yEKmg0aHxf93/6jPlR4vP5P/I+p9yFMOEuvP7/pedKerJ7cmYnNwTOx9DQaVB9/8J/3McILyw/VjcUFA//3/a/QQBPI5MOT/7f2QBHgWxCRHvg2bhVBAjEHY/8DaecAhd73/GswfCNvmPoSA4we+8x2kQywLoTP33aAqCDHzeu79xrLepN+83uq/3Xwvdm94Jrvsd9lvtN91vuF93v+Z+tX5S44ICBQA4egHkwuNCKQAAAABJRU5ErkJggg==';
     var icon16baseQuickTable = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJySURBVBgZpcFNbNN1HMDhT//9d926NWRb65BtB8MWAZGwZIGRcNAZD2qA6E6cOKDhAjFmBzwYYzQeOXHHiwfFAOHAZScUEmeUAPFlWzMDyOtm27XdoF1/3xdZ0iYcvBCeJ+HuvIiYlm+vVD535yN1GzIz1EDMUDXUHFFD1BA1RBUVR81+jWkx9xNTe7I5nsMX3y/uimnpjW7mGn+fYa1RxtQwMUwFF2VdI37s2kvVU4gJosKn+74mBE3HPFW6MZncnHybdGaAzKadeBA8CNqsU1+Zp2f0KK8PvguJiLbHDSGIEvOUqw0PRZdJdR1Aqr8RdY6hWqJRKfBnOMTS7T1wu8izDo730RQlLl57o8PVPuzuHQWSWP0RxOuU78zQ9+rHTL5ymA3nZpeYmhigrVhrEESJTXXMxY6ls6O41CH5MoSASJK/CvNY4SsiWSfv3Vy6+h6SGiAVw/bBDM2gxC52urN/PFcvzWNidGRGwGLyQ2/RUyqgoUlt6Qb3XjrJO3tHiFIZNiw+qCFixCZ69vH9n3/6vX5oevdwmpXCRXLDbyKNCs0nRR7KNmrbP6Oa2MKFa6vEiVUM2LGlE8fA3XF3vjx7y8srZV88N+YPZt73ue/2eWXhB2+bub7stSfB2+b/qfiRU7Me0yJmrF3/hHRnH8uNPKXRU9yrZ+FmkSgBweDK3AptW/MdqBoxLZvtF0LtDsv9x5nYP8XlP4pM7szRdn72Xz6YyNO2cLdKMoKYlqr0kh0/TbZnhIflOlsHurj1aA1VQ815bbCDhbtVnmXmlnB3Nkx/M3dVgu5uqnUHUYIoKkZQQ1T4P5XVxsWEu/Mi/gPrlHrAGd9XNQAAAABJRU5ErkJggg==';
     var icon16baseFonteSizeUp = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAaRQTFRFAAAAJWQhJWQhKmkkJmUiJmUiSoxFTY9IM3UuPoI4KVcpJmYjS41GfL92fsB5V5lRPoI4VIIsKGgjLG0nUJJLgMF6gsJ9bK1lRYw9SZJDQIfYQ4vYSY7aQ4nZQITYQYTYOnPTMmLMKGgjMXQsNnoxhcN+h8WBVZpOSZZEPoPXbKfikbzpj7rni7fncaTiQn7WL1zLPYI2icaCjMeFTJVFO33WVpbdc6njc6jhcaThPnfTMF/LQ4o8jsmHkcqKU55KPHnUcKbiR4jaQ37Wgq7kOm3PSpJCk8uLlcyOWaZQOHHRY5veXpbcNWnPNWnPfKniOmzRNWrQQoDXap/fNGbNL13JM2HMeabhRHrVJ0rCNmrPaJ3fUovaMV/LLlnHN2fNeqbhU4bYJUa/MmPMXpPbeafiSoPYOmrPOWjORXrVgajjVobZI0G+MF3LP3TTN2bMN2PMd6DfWonaIj67L1zKMF/LdaThWIzaLFLGJEW/J0jDa5bcYI/bIT+9Hji2OGjOXY/aYJDbUIPXK1DEI0K9Ij+8K03DQnHQUX7WTXzVMVXGHTm2xQFYYgAAAIx0Uk5TAAHJwwHR///OAQfb/////9gHu/f/////9rdAhZSPkJqKDQEB/////zhT3v////u2Cv////8cuvL195gI/////3f3raD/mf////8i4t9UgP+lA6r3ZgqI/9IGXPbRTiqg//INFer/07K12P/5GwGbmbH//yIKRP/sPRN///9UAq7+/+2NECqi6v//vTG9O0R8AAAAu0lEQVR4nGNgwASMTMwofBZWNnYOTgSfi5uHl49fQBAuICQsIiomLiEpJS0jKyevoMigpKyiqqauwaCppa2jq6dvAFRjaGRswsBgamZuYWllDdJkY2tnz8Dg4Ojk7OIKNsXN3cOTwcvbx9fPPwBudGBQcEhoWHhEJEwgKjomNi4+ITEJyk9OSU1Lz8jMys6B8HPz/POBVEFhUTGYX1JaVl7BwFBZVV1TWwcSqG9obGpuaW1r7+js6sbwOwC2BCZS1lMuNQAAAABJRU5ErkJggg==';
@@ -37,121 +48,143 @@ function htmlButton(status) {
     var icon16baseMarkSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALvSURBVDjLZZJdSFNhGMf/5+zo2pyb5cdyxXRNW2WkhhJGXlReFEZEBV0UVARBIAiCXnojdFE3QUQR3k6iC6GIoK+LMDNBaVpOW04by/yYzuk8O9v57DnHJqteeM57zvue5/c+///zMpqmITv6+vpsqqp2KorSRLGDAhRxiiFZlu+2t7dv4J/BZAF+v7+OkvtdLpfHbreDZVnQN9LpNGKxGGZpEOh8V1dX4D8AJdto87PX660SRRHRaBQ8z+ung+M4OJ1O4+dgMDhNa4e6u7uFLIDTH7R4q7y8vEqSJIRCoRkq9wSt/dIBgiC4EonER4/H46qtFKqqmXBq+vlt8MvvwaTnrhoASmiyWq0Ih8MgyJm2trZITpWRnp6eFmbtbbChuhiWkitweOqRmPVh6nXvnSygVNecTCb199l/jbpc56+3ey7BXtSAeHgS+YyIQvtO2IrdDiYycF0bCvuwuGYxNJ+tGYFJk6ApMjRZJpPWUVTVDMeeU8jMP4GwwmDpWwpSWlxJCxtHOZCJFy8cBwMWjMlC82lAZcidbUjFhpFJBODwtiI99whsvow8WwXM/BhSfH5LY8ebEKefBGiQl5+CM5eAYWwEyMPCHClhVJQdPEfJD8HmyRDXPVgZHEWaX8LhjkmjnaxeJlS6C4qIxMQoEsERLEQmsRrPoKymFeJCL0z5GjLrFYgNfILz5DWoUmrLHwJI0GVoioQi314siSziCQskzY35L/dBVwl8fBeWB4ex3cuAK7BDk8QcAPVe0xSqQMLq1wDGxn/gwLGbMEc/IPRsEIFXcUy9fAfWtAaWU6laFXrOXwBotEgSiqor8X1mEeLEC3hqm1FQQN0Zn4LviJtOL6auiIbcXABnlENUVdY9mMBEaB73Hj9A475KWEvNaNrvIx9+QuKTKHRT+STKkJ0L0CWYd9+ApcIEf4vZaCHZTmCSJgpQhCQpzFChyqZfuvFbADGDmf5Ooyx9Q6dvhrw10w3bvFiKsvmug/6M39LTvtXHnYlaAAAAAElFTkSuQmCC';
     var icon16baseBoxSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALPSURBVDjLbVLdS1NhGP+d7bS5tcZYkzmzWmqKSSISpElEUEEkXfRxGRFBEA2MSC93o3TT6Ka/wECJQG+7CfrSLFLzIkd+TDsOjFg559nH2XvOe07Pe9Qy64XnfDzv8/ye3+/3vpJlWdhaQ0NDPtM0ezjnHRRBClCsUowbhvGwu7s7jx1L2gIYHBxspeaR6urqQ36/Hw6HA/QPTdOQyWSwRIuALvX29k7/A0DNPtr8VFdXV88YQzqdRqFQENMhyzLC4bBdnEwmFyjXEo/HS1sADvGg5O1IJFKv6zrm5uYWVVWN0rdLhPienZ1dEcDErp6kxLYzkMWDkh1erxepVArU1BWLxZRtNUpfX98ZRVGS0WjUrv0fQKXQTNPE99JOo0ROsBM1xLbyLw+Utzes8VQjvuc8tuaLzRNwWjosbsAyNkLXOQam22xTwxVZXNg3gcZbU9IGAzLxyuXTkMgOyemh93nApD25grbphLgObqiU6kG2mEV/VwILT9/9kSAmiULjxzPI7hAkyUcAuwBPgNImUMyBr89DY+uoCTXh2vAdxJmxDYAowhSTGNZmJknnbgSOnMDd548pz8AsDkb6I8EGNFUdh6oVcK/0HsVEUHpzf9UiAB1ChkVUA40NcLhC5IwJg5rPNl8HJxbc5DCJ5UoujaM1ncizEiaXX7OWfodLtgjdoilCa/bzNJxuPwItndAMZjcrP+ehmwYB6tCpZr2sonX/SeT1ovxhaVSzAYRWiyQEDkfh9O6l68UIQINB/oT9B6iZ22DfcssI+qowlR7DWGr0C1nRRgCMtJowDeHBDAHsASp8KBHAwHgCzCzbbGpDzWivPYePyihSsy+gcbSuPLDKNoCQ4K65Cc9BJySX2z7C4XY6CZoM0stLKk49uQrJ4UEm+xWJghPHHvHyximwMhZHemB7YV8cfTOM32+6Ycg7Vbxce4WRAt0YAby5fgEeKcjVvgWNOgAAAABJRU5ErkJggg==';
     var icon16baseNatJus = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALDSURBVDjLpZNLTBNRFIb/6RMqtEDBFopFXiFGIERYmKgJUXBFQly4gI1LXbghcYPiI/JYmbhxLQvC3hjjQkSL4SnvYCRUCNJCSwSq0OnMdObeud6ZBIzB6MJJTiZz7/m/c89/5gqMMfzPY/tXwkYkUmkRhOuU0nJCyKvs7OyXPp+PHu4LfzvBSjh83+PxPM5wOs1vSZKQTCbjsizX1NXV7ZmLBuBPMbOw0LsVjzNVVZmiKIwLGQewRCLB5ufnv49NTGQYeZY/VQ6Nj/d5vd67BV4vOAC8IjjEqA673Y4stzuHi28buccAoVCoJ+D3dwZ8PqTTaRPAewf3wHwfHBwgx+OBRkjnMcDq4GB3FaX3TrvdZkVDfCg0QtM0c52birSm5f0G2O7q6vY7HF0FNhtofz/02VlTbIgM8ZORdvS+v4bME04kRRGpVCp8BFhtb7+ZUVralcF7JpOTIJEIhIEBYGjoV2Wiojj/DDpeNOHT8hJSothkjnEsGHT6W1qUYGsrtOlpkFgMOh/Xw+Y1MKpCZRQqhxTlVaK2+CI+fn2Hxc0pppC0+8OdhGhLWq0lRQ4HGDeHRKPQueOUB9FVNFffAGU6qE6hgyG2H0VN8QWIqizMRkb2a3ssebYfsqzK8Tj0RAKU93YIMI5siDf2vkDTuYm6Bo1qOEgnUXfqEkRNskytj+5ZdkRxI7y4uJRcXmb2wkLQVMoMhSgglMDnDsLvLkGhpwx2ayYKsgOYi45hbG10R1LRYP7Kz3Jz8+srKuYqq6r8mYzZpc1N3GqLQuFjVHkrMlFZef5Z4XzZVcxExjEcfrOtElyJ9bHPR3fhaVZW7kmX6/m5QKDRIwhuhRsZkyQ9Kkmtbbu7r6t7LKmG4GVXKDy8peqmeOXYZXrkcAgeq7U+02JppIytqbr+tkNRksZe2QMhRXWrS9Zp2bc+tn6o+QkxLL87j8znVAAAAABJRU5ErkJggg==';
-    
+    var icon16baseAutoSave = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJFSURBVDjLpZPNS1RhFMZ/5733zkzjR/ZBCUpoJdUiBCkll4m0CUKJIGpVSLjyL2gntDFop6shAolWbcSNIW0ircHBUHCloo3VjNY0jjP3831bWA5ai8Bnfc7vPOfhHDHGcBjZAENji7N1cSj7IcdqY2zkKoiC2qSFNsKPYoXpTPbBynj/4j8BlbLL9c4L3OqoZWLmM4/vXdpX9OJtHq0lBXQdBIgxhvtPZmZ7ui+yspZrjwKfWExxtMbh66YLAgj4geZnyd2YzmT7Vsb75/c5UEqwDLgVl55r57hxuYY3c18Y6mtDgO1KSBBETMwV0VpeA2f3ARKOwvUCcgWX9bzH0NhqvC4Okx9zBzNpPdGQ4OHIrJnOZLtWxvs/2AChNnhRiFIKy8j/ZjILiALYLgc4YnO8zsJSIWUv4Pt2CMBU+tteoxtC0YN8wUdEV1eItMHCIdSagru5l0kQaZ4OdqC1wQAWhqQNnudR3PGrANu2aGmE9FJATSxJwinhegHDr1ZRAmGk0ZHGAMYYMJB0dh0ogOVs6VNqcoGtosYv1+9lYikHERvBQsQCozBGCMIQ3w+rDtKjvQMAd4bfL59vFqYzQasjNoM36wi1vzvHgBFNwo4x8nKNreJOFfBHy9nSXGpyoSPSYOGgqZCae8TJ5BkERb68zsDVZygSlD3/b0B6tPf2byempRFO127T095JQ6wJFBTcJk7VhCRjYItUT/mgrgxOvWtrPtLdEG8gYdcT6gDRGjERWsosrS2TKwbMP78rcth3/gX/0SEvLZFG1QAAAABJRU5ErkJggg==';
+    var icon16baseSEILegis = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAZJQTFRFAAAA////////////////////8/jozuKi+fvz////+Pz+p9vzdMfrbMPrhs7uueL1+v3+5vDQlb838vfm9fv+Na3jAJfb4/T7////teH0esns3PH6wOX2d8js6/f8////v+X2SbXm4vP7/////////////v//X77pB5rcYb/p2fD6////////wOb3FJ/eEJ7dCJvcptvy////////I6bgc8br/f7/teH1J6fhDJzd8fr9+/3/AZjbktLw////////zuv42O/6////Oa7jBprccsbr1+/5gczuF6Df+fz+////1+/5KajhHaPfweb2////////9vv+l9XwKKjhMqzi6fb8////+fv06vPX3+7W/P35/////////////f7/h8/uitDv////9Pv+PrDkV7vo/v//zOr4P7Hkh87ur970b8TrltTw////////t+L11e75yur4Q7Pl8fn9////////3fH6CpvdGKHf8fn9////2/D6rd70lNPwm9bxx+j3/v//////////0u35l9Xx3vL7////T5fsgAAAAIZ0Uk5TACFMVDwP8P/PGLn//////Jv7/9u9///YDv7/5vn/1gn8/+F9YEiu////6Vg1+P////9Tp///yvv//8nC//9vLPLjl/////D//7sf7P//+D0kv////9sG0v//so+Le7///zm+//+d9P//////MQv/6fT/yAEC5///x5Hk////9p8RS/D/5jRwoQdUAAAA20lEQVR4nGNgYGBgZGJmYQXSbOzs7BwMDJxc3Dy8fPwCDAyCQkJCwgwMIqJiICAOE5CQFBOTkpaRlYMJyCuIiSkqKauowrWoqYuJaWhqacMEdHT1xPTFxAwMjaACxiZipmbmFmKWVlABaxsxWzt7BzExR6iAk7OYi6ubu5iHJ1TAy9sH5AxfP3+YLQGBQcFiYiGhYQzhEZERUQwM0TGxcfFiYgmJDEnJYimpDAxp6RmZWWJi2Tm5eUCt+QwMBWCvFBYVl5SWiZVXMDBUVlXX1NbVNzAwNDY1t7QCAG4cKfQLuoXsAAAAAElFTkSuQmCC';
+
     var htmlButtonTable =   '   <div class="divQuickTable" style="display:none;"></div>'+
                             '   <a class="getQuickTableButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Tabela R\u00E1pida" hidefocus="true">'+
-                            '      <span class="cke_button_icon" style="background: url(\''+icon16baseQuickTable+'\');">&nbsp;</span>'+
+                            '      <span class="cke_button_icon cke_button__quicktable_icon" style="background: url(\''+icon16baseQuickTable+'\');">&nbsp;</span>'+
                             '      <span class="cke_button_label" aria-hidden="false">Tabela R\u00E1pida</span>'+
                             '   </a>'+
                             '   <a class="getTablestylesButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Adicionar estilo \u00E0 tabela" hidefocus="true">'+
-                            '      <span class="cke_button_icon" style="background: url(\''+icon16baseTable+'\');">&nbsp;</span>'+
+                            '      <span class="cke_button_icon cke_button__tablestyles_icon" style="background: url(\''+icon16baseTable+'\');">&nbsp;</span>'+
                             '      <span class="cke_button_label" aria-hidden="false">Adicionar estilo a tabela</span>'+
                             '   </a>';
 
     var htmlButtonBeforeCut =   '   <a class="getCopyStyleButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Copiar formata\u00E7\u00E3o" hidefocus="true">'+
-                                '      <span class="cke_button_icon" style="background: url(\''+icon16baseCopyStyle+'\');">&nbsp;</span>'+
+                                '      <span class="cke_button_icon cke_button__copy_style_pro_icon" style="background: url(\''+icon16baseCopyStyle+'\');">&nbsp;</span>'+
                                 '      <span class="cke_button_label" aria-hidden="false">Copiar formata\u00E7\u00E3o</span>'+
                                 '   </a>';
     
     var htmlButtonBeforeList =  '   <div class="divAlignText" style="display:none;">'+
                                 '       <a class="getAlignLeftButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto \u00E0 esquerda" hidefocus="true">'+
-                                '           <span class="cke_button_icon" style="background: url(\''+icon16baseAlignLeft+'\');">&nbsp;</span>'+
+                                '           <span class="cke_button_icon cke_button__align_left_pro_icon" style="background: url(\''+icon16baseAlignLeft+'\');">&nbsp;</span>'+
                                 '           <span class="cke_button_label" aria-hidden="false">Alinhar texto \u00E0 esquerda</span>'+
                                 '       </a>'+
                                 '       <a class="getAlignCenterButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto ao centro" hidefocus="true">'+
-                                '           <span class="cke_button_icon" style="background: url(\''+icon16baseAlignCenter+'\');">&nbsp;</span>'+
+                                '           <span class="cke_button_icon cke_button__align_center_pro_icon" style="background: url(\''+icon16baseAlignCenter+'\');">&nbsp;</span>'+
                                 '           <span class="cke_button_label" aria-hidden="false">Alinhar texto ao centro</span>'+
                                 '       </a>'+
                                 '       <a class="getAlignRightButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto \u00E0 direita" hidefocus="true">'+
-                                '           <span class="cke_button_icon" style="background: url(\''+icon16baseAlignRight+'\');">&nbsp;</span>'+
+                                '           <span class="cke_button_icon cke_button__align_rigth_pro_icon" style="background: url(\''+icon16baseAlignRight+'\');">&nbsp;</span>'+
                                 '           <span class="cke_button_label" aria-hidden="false">Alinhar texto \u00E0 direita</span>'+
                                 '       </a>'+
                                 '       <a class="getAlignJustifyButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto justificadamente" hidefocus="true">'+
-                                '           <span class="cke_button_icon" style="background: url(\''+icon16baseAlignJustify+'\');">&nbsp;</span>'+
+                                '           <span class="cke_button_icon cke_button__align_justify_pro_icon" style="background: url(\''+icon16baseAlignJustify+'\');">&nbsp;</span>'+
                                 '           <span class="cke_button_label" aria-hidden="false">Alinhar texto justificadamente</span>'+
                                 '       </a>'+
                                 '   </div>'+
                                 '   <a class="getAlignButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto" hidefocus="true">'+
-                                '      <span class="cke_button_icon" style="background: url(\''+icon16baseAlignCenter+'\');">&nbsp;</span>'+
+                                '      <span class="cke_button_icon cke_button__align_pro_icon" style="background: url(\''+icon16baseAlignCenter+'\');">&nbsp;</span>'+
                                 '      <span class="cke_button_label" aria-hidden="false">Alinhar texto</span>'+
                                 '   </a>';
     
     var htmlButtonAfterLetters =    '   <a class="getCapLetterButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)" hidefocus="true">'+
-                                    '      <span class="cke_button_icon" style="background: url(\''+icon16baseCapLetter+'\');">&nbsp;</span>'+
+                                    '      <span class="cke_button_icon cke_button__capletter_pro_icon" style="background: url(\''+icon16baseCapLetter+'\');">&nbsp;</span>'+
                                     '      <span class="cke_button_label" aria-hidden="false">Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)</span>'+
                                     '   </a>'+
                                     '   <a class="getFontSizeUpButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Aumentar tamanho da fonte" hidefocus="true">'+
-                                    '      <span class="cke_button_icon" style="background: url(\''+icon16baseFonteSizeUp+'\');">&nbsp;</span>'+
+                                    '      <span class="cke_button_icon cke_button__fontsize_up_pro_icon" style="background: url(\''+icon16baseFonteSizeUp+'\');">&nbsp;</span>'+
                                     '      <span class="cke_button_label" aria-hidden="false">Aumentar tamanho da fonte</span>'+
                                     '   </a>'+
                                     '   <a class="getFontSizeDownButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Diminuir tamanho da fonte" hidefocus="true">'+
-                                    '      <span class="cke_button_icon" style="background: url(\''+icon16baseFonteSizeDown+'\');">&nbsp;</span>'+
+                                    '      <span class="cke_button_icon cke_button__fontsize_down_pro_icon" style="background: url(\''+icon16baseFonteSizeDown+'\');">&nbsp;</span>'+
                                     '      <span class="cke_button_label" aria-hidden="false">Diminuir tamanho da fonte</span>'+
                                     '   <a class="getMarkSigiloButton cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Adicionar / Remover marca de sigilo no texto" hidefocus="true">'+
-                                    '      <span class="cke_button_icon" style="background: url(\''+icon16baseMarkSigilo+'\');">&nbsp;</span>'+
+                                    '      <span class="cke_button_icon cke_button__mark_sigilo_pro_icon" style="background: url(\''+icon16baseMarkSigilo+'\');">&nbsp;</span>'+
                                     '      <span class="cke_button_label" aria-hidden="false">Adicionar / Remover marca de sigilo no texto</span>'+
-                                    '   </a>'+
                                     '   </a>';
+    
+    var htmlButtonAfterSave =   '   <a class="getAutoSaveButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Salvamento autom\u00E1tico ('+autoSaveInterval+' '+(autoSaveInterval == 1 ? 'minuto' : 'minutos')+')" hidefocus="true">'+
+                                '      <span class="cke_button_icon cke_button__autosave_pro_icon" style="background: url(\''+icon16baseAutoSave+'\');">&nbsp;</span>'+
+                                '      <span class="cke_button_label" aria-hidden="false">Salvamento autom\u00E1tico ('+autoSaveInterval+' '+autoSaveInterval+' '+(autoSaveInterval == 1 ? 'minuto' : 'minutos')+')</span>'+
+                                '   </a>';
     
     var htmlButton =    '<span class="cke_iconPro cke_toolgroup '+classStatus+'" role="presentation">'+
                         '   <a class="importDocButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir conte&uacute;do externo" hidefocus="true">'+
-                        '       <span class="cke_button_icon" style="background: url(\''+icon16baseImport+'\');">&nbsp;</span>'+
+                        '       <span class="cke_button_icon cke_button__externalfile_icon" style="background: url(\''+icon16baseImport+'\');">&nbsp;</span>'+
                         '       <span class="cke_button_label" aria-hidden="false">Inserir conte&uacute;do externo</span>'+
                         '   </a>'+
                         '   <a class="getLinkLegisButtom cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar link de legisla\u00E7\u00E3o" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseLegis+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__linklegis_icon" style="background: url(\''+icon16baseLegis+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Adicionar link de legisla\u00E7\u00E3o</span>'+
                         '   </a>'+
                         '   <a '+($('#frmEditor').length==0 ? 'style="display:none"' : '')+' class="getCitacaoDocumentoButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir refer\u00EAncia de documento do processo" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseCitaDocumento+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__citacaodoc_icon" style="background: url(\''+icon16baseCitaDocumento+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir refer\u00EAncia de documento do processo</span>'+
                         '   </a>'+
                         '   <a class="getNotaRodapeButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir nota de rodap\u00E9" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseNotaRodape+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__notarodape_icon" style="background: url(\''+icon16baseNotaRodape+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir nota de rodap\u00E9</span>'+
                         '   </a>'+
                         '   <a class="getSumarioButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir sum\u00E1rio" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseSumario+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__sumario_icon" style="background: url(\''+icon16baseSumario+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir sum\u00E1rio</span>'+
                         '   </a>'+
                         '   <a '+($('#frmEditor').length==0 ? 'style="display:none"' : '')+' class="getDadosProcessoButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir dados do processo" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseDadosProcesso+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__dadosprocesso_icon" style="background: url(\''+icon16baseDadosProcesso+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir dados do processo</span>'+
                         '   </a>'+
                         '   <a class="getTinyUrlButtom cke_button cke_buttonPro cke_button_off" href="#" title="Gerar link curto do TinyURL" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseTinyUrl+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__tinyurl_icon" style="background: url(\''+icon16baseTinyUrl+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Gerar link curto do TinyURL</span>'+
                         '   </a>'+
                         '   <a class="getQrCodeButtom cke_button cke_buttonPro cke_button_off" href="#" title="Gerar C\u00F3digo QR" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseQrCode+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__qrcode_icon" style="background: url(\''+icon16baseQrCode+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Gerar C\u00F3digo QR</span>'+
                         '   </a>'+
                         '   <a class="getPageBreakButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Quebra de P\u00E1gina" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16basePageBreak+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__pagebreak_icon" style="background: url(\''+icon16basePageBreak+'\') '+(isSeiSlim ? '' : '!important')+';">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir Quebra de P\u00E1gina</span>'+
                         '   </a>'+
+                        '   <a class="getSessionBreakButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Quebra de Sess\u00E3o" hidefocus="true">'+
+                        '      <span class="cke_button_icon cke_button__sessionbreak_icon" style="background: url(\''+icon16baseSessionBreak+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_label" aria-hidden="false">Inserir Quebra de Sess\u00E3o</span>'+
+                        '   </a>'+
                         '   <a class="getLatexButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Equa\u00E7\u00E3o" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseLatex+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__latex_icon" style="background: url(\''+icon16baseLatex+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir Equa\u00E7\u00E3o</span>'+
                         '   </a>'+
                         '   <a class="getProcessoPublicoButton cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar Link de Documento P\u00FAblico" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseDocPublico+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__processopublico_icon" style="background: url(\''+icon16baseDocPublico+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Adicionar Link de Documento P\u00FAblico</span>'+
                         '   </a>'+
                         '   <a class="getMinutaWatermarkButton cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar Marca D\'\u00E1gua de MINUTA/MODELO" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseWatermark+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__watermark_icon" style="background: url(\''+icon16baseWatermark+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Adicionar Marca D\'\u00E1gua de MINUTA/MODELO</span>'+
                         '   </a>'+
                         '   <a class="getBoxSigiloButton cke_button cke_buttonPro cke_button_off" href="#" title="Gerenciar marcas de sigilo do documento" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseBoxSigilo+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__boxsigilo_icon" style="background: url(\''+icon16baseBoxSigilo+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Gerenciar marcas de sigilo do documento</span>'+
                         '   </a>'+(verifyConfigValue('natjus') ? 
                         '   <a class="getLinkNatJusButtom cke_button cke_buttonPro cke_button_off" href="#" title="Pesquisa NatJus" hidefocus="true">'+
-                        '      <span class="cke_button_icon" style="background: url(\''+icon16baseNatJus+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_icon cke_button__natjus_icon" style="background: url(\''+icon16baseNatJus+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Pesquisa NatJus</span>'+
                         '   </a>' : '')+
                         '</span>';
-    return {default: htmlButton, tables: htmlButtonTable, beforeCut: htmlButtonBeforeCut, afterletters: htmlButtonAfterLetters, beforeList: htmlButtonBeforeList};
+
+    var htmlButtonLegis =   '<span id="cke_legis" class="cke_toolgroup" role="presentation">'+
+                            '   <a class="getLegisButtom cke_button cke_button_off" href="#" title="Enumerar norma" hidefocus="true">'+
+                            '      <span class="cke_button_icon" style="background: url(\''+icon16baseSEILegis+'\');">&nbsp;</span>'+
+                            '      <span class="cke_button_label" aria-hidden="false">Enumerar norma</span>'+
+                            '   </a>'+
+                            '   <a class="helpLegisButtom cke_button cke_button_off" href="'+URLPAGES_SPRO+'/pages/LEGISTICA.html" target="_blank" title="Ajuda" hidefocus="true">'+
+                            '      <span class="cke_button_icon" style="background-image: url(https://sei.antaq.gov.br/sei/editor/ck/skins/moonocolor/icons.png);background-position: 0 -168px;background-size:auto;">&nbsp;</span>'+
+                            '      <span class="cke_button_label" aria-hidden="false">Ajuda</span>'+
+                            '   </a>'+
+                            '</span>';
+
+    return {default: htmlButton, tables: htmlButtonTable, beforeCut: htmlButtonBeforeCut, afterletters: htmlButtonAfterLetters, beforeList: htmlButtonBeforeList, afterSave: htmlButtonAfterSave, newBlock: htmlButtonLegis};
 }
 function addButton(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -166,13 +199,17 @@ function addButton(TimeOut = 9000) {
                         $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('').afterletters);
                         $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('').beforeCut);
                         $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('').beforeList);
-                        insertFontIcon($('iframe[title*="'+idEditor+'"]').contents());
+                        // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('').afterSave);
+                        $(this).find('span.cke_toolbox').append(htmlButton('').newBlock);
+                        insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
                     } else {
                         $(this).find('span.cke_toolbox').append(htmlButton('disable').default);
                         $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('disable').tables);
                         $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('disable').afterletters);
                         $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('disable').beforeCut);
                         $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('disable').beforeList);
+                        // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('disable').afterSave);
+                        $(this).find('span.cke_toolbox').append(htmlButton('disable').newBlock);
                     }
                 });
                 $('.getTablestylesButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getSyleSelectedTable(this) } });
@@ -196,11 +233,16 @@ function addButton(TimeOut = 9000) {
                 $('.getTinyUrlButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
                 $('.getQrCodeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getQrCode(this) } });
                 $('.getPageBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPageBreak(this) } });
+                $('.getSessionBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSessionBreak(this) } });
                 $('.getLatexButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
                 $('.getProcessoPublicoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
                 $('.getMinutaWatermarkButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
                 $('.getMarkSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
                 $('.getBoxSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
+                // $('.getAutoSaveButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getAutoSave(this) } });
+                $('.getLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { initLegis(this) } });
+                // $('.getUploadImgBase64Buttom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogUploadImgBase64(this) } });
+                $('.cke_combo_button').on('click',function() { setDarkModeCkePanel(); });
                 initFunctions();
                 addStyleIframes(); 
         } else {
@@ -212,55 +254,61 @@ function addButton(TimeOut = 9000) {
 function addStyleIframes(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     setTimeout(function(){
+        $('div[id*="cke_txaEditor_"] a.cke_button').each(function(){
+            var title = $(this).attr('title');
+                title = (typeof title !== 'undefined') ? title.replace(/["']/g, "") : '';
+            if (typeof title !== 'undefined' && title != '') {  
+                $(this).attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()').removeAttr('title');
+            }
+        });
         var editorTitle = ($('#frmEditor').length > 0) ? 'iframe[title*="txaEditor_"]' : 'iframe[title*="txaConteudo"]';
         if ( $(editorTitle).eq(0).contents().find('head').find('style[data-style="seipro"]').length == 0 ) {
             $(editorTitle).each(function(){
                 var iframe = $(this).contents();
                 if ( iframe.find('head').find('style[data-style="seipro"]').length == 0 ) {
-                    iframe.find('head').append('<style type="text/css" data-style="seipro"> '
-                                               +'   p .ancoraSei { background: #e4e4e4; } '
-                                               +'   span.sigiloSEI { background-color: #ececec; border-bottom: 2px solid #d79d23; } '
-                                               +'   span.sigiloSEI::before { content: "\\f023"; font-family: "Font Awesome 5 Free SEIPro"; color: #d79d23; margin: 0 5px; font-size: 80%; } '
-                                               +'   .pageBreakPro { background: #f1f1f1; height: 15px; }'
-                                               +'   .pageBreakPro::before { border-bottom: 2px dashed #bfbfbf; display: block; content: \'\'; height: 7px; }'
-                                               +'   .pageBreakPro::after { content: \'\u21B3 Quebra de p\u00E1gina\'; font-family: Calibri; text-align: center; display: block; margin-top: -10px; color: #585858; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; font-size: 10pt; font-style: italic; }'
-                                               +'   .linkDisplayPro { user-select: none; position: absolute; display: inline-block; padding: 8px; box-shadow: 0 1px 3px 1px rgba(60,64,67,.35); background: #fff; border-color: #dadce0; border-radius: 8px; margin-top: 16px; text-align: left; text-indent: initial; font-size: 12pt; text-transform: initial; font-weight: initial; letter-spacing: initial; text-decoration: initial; white-space: nowrap; }'
-                                               +'   .linkDisplayPro a { padding: 0 8px; cursor: pointer; text-decoration: underline; color:#1155cc; }'
-                                               +'   .linkDisplayPro a .info { display: none; position: absolute; background: #fff; width: calc( 100% - 150px); }'
-                                               +'   .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDIwNSAyNTIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+Y3Vyc29yPC90aXRsZT4KICAgIDxkZXNjPjwvZGVzYz4KICAgIDxkZWZzPjwvZGVmcz4KICAgIDxnIGlkPSJQYWdlLTQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJBcnRib2FyZC0xIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDkuMDAwMDAwLCAtMi4wMDAwMDApIiBmaWxsPSIjMDAwMDAwIj4KICAgICAgICAgICAgPGcgaWQ9ImN1cnNvciIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDkuMDAwMDAwLCAyLjAwMDAwMCkiPgogICAgICAgICAgICAgICAgPHBhdGggZD0iTTE3MCwxNCBMMjAwLjAwNzUzNywxNCBDMjAyLjc2OTA1NywxNCAyMDUsMTEuNzYzNjQ5MyAyMDUsOS4wMDQ5NzA5MiBMMjA1LDQuOTk1MDI5MDggQzIwNSwyLjIzMzgyMjEyIDIwMi43NjQ3OTgsMCAyMDAuMDA3NTM3LDAgTDEwMS45OTI0NjMsMCBDOTkuMjMwOTQzMSwwIDk3LDIuMjM2MzUwNjkgOTcsNC45OTUwMjkwOCBMOTcsOS4wMDQ5NzA5MiBDOTcsMTEuNzY2MTc3OSA5OS4yMzUyMDE3LDE0IDEwMS45OTI0NjMsMTQgTDEzMywxNCBMMTMzLDIzOCBMMTAxLjk5MjQ2MywyMzggQzk5LjIzMDk0MzEsMjM4IDk3LDI0MC4yMzYzNTEgOTcsMjQyLjk5NTAyOSBMOTcsMjQ3LjAwNDk3MSBDOTcsMjQ5Ljc2NjE3OCA5OS4yMzUyMDE3LDI1MiAxMDEuOTkyNDYzLDI1MiBMMjAwLjAwNzUzNywyNTIgQzIwMi43NjkwNTcsMjUyIDIwNSwyNDkuNzYzNjQ5IDIwNSwyNDcuMDA0OTcxIEwyMDUsMjQyLjk5NTAyOSBDMjA1LDI0MC4yMzM4MjIgMjAyLjc2NDc5OCwyMzggMjAwLjAwNzUzNywyMzggTDE3MCwyMzggTDE3MCwxNCBaIiBpZD0iQ29tYmluZWQtU2hhcGUiPjwvcGF0aD4KICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02NSwyMjIuMjgwODI5IEM2MC42MTMxMTc2LDIyMi4yODA4MjkgNTYuMzc0MjE2MiwyMjIuMjgwODI4IDUyLjk5OTk5OTUsMjIyLjI4MDgyOCBMNTMsMTcwIEw0MiwxNzAgTDQyLDIyMi41NjA1OTMgQzM4LjYxMzAyNDYsMjIyLjU2MDU5MyAzNC4zNzYzMzA4LDIyMi41NjA1OTMgMzAuMDAwMDAwNSwyMjIuNTYwNTk0IEwzMCwxNzAgTDE5LDE3MCBMMTksMjIyLjU2MDU5NSBDMTYuMzI0ODY1LDIyMi41NjA1OTUgMTMuODQ2MzM2OSwyMjIuNTYwNTk1IDExLjc2MTI3MjUsMjIyLjU2MDU5NiBDLTAuMzY5NTg2NDM4LDIyMi41NjA1OTkgMS4yODM4MTc0NiwyMTEuNTA5MzEzIDEuMjgzODE3NDYsMjExLjUwOTMxMyBDMS4yODM4MTc0NiwyMTEuNTA5MzEzIDAuMzg5Njg5OTQ0LDE3Ny43NTYgMC4zOTY1NzEyNzcsMTU4IEw5NC43NDA4MjMyLDE1OCBDOTQuNzM5MjczNiwxNzcuNzkzMDg5IDkzLjg1MzUzOTYsMjExLjIyOTU0OCA5My44NTM1Mzk2LDIxMS4yMjk1NDggQzkzLjg1MzUzOTYsMjExLjIyOTU0OCA5NS41MDY5NDM1LDIyMi4yODA4MzQgODMuMzc2MDg0NSwyMjIuMjgwODMxIEM4MS4yNTUzNzgyLDIyMi4yODA4MyA3OC43Mjc2NDE1LDIyMi4yODA4MyA3Ni4wMDAwMDAyLDIyMi4yODA4MyBMNzYsMTcwIEw2NSwxNzAgTDY1LDIyMi4yODA4MjkgWiBNMC41NzQ1MzQwMzYsMTQ3IEMwLjU3OTc2ODM4NywxNDYuODk2MTQ5IDAuNTg1MTMxNjM4LDE0Ni43OTQ3NTUgMC41OTA2MjU1MTQsMTQ2LjY5NTg2NiBDMS4yODM4MTc0OCwxMzQuMjE4NDA5IC0wLjc5NzExMjI4NiwxMjIuNDM0MTQ2IDE2Ljg3OTI4MTYsMTE2LjE5NTQyMiBDMzQuNTU1Njc1NSwxMDkuOTU2Njk4IDI4LjY2NjI1MzYsMTA3LjUzMDUyMiAzMC4zOTc4NzkyLDk1Ljc0NjI1NzYgQzMyLjEyOTUwNDgsODMuOTYxOTkzIDI1Ljg5MjEyOTgsNzguMDY5ODYzIDI1Ljg5MjEzMTUsNDQuNzk2NjQ5NiBDMjUuODkyMTMzLDE3Ljk2MDcyMDYgMzguNTE2OTQ2NywxMy45MjIwMTczIDQ1LjUyMjA5MzksMTMuMzYzNzYxNyBDNDUuNjA4OTgxNCwxMy4xMzQwNzI3IDQ1LjcwMDI1MDYsMTMuMDE2NDM5MSA0NS43OTYwNjMxLDEzLjAxNjQzOTEgQzQ5LjgzNzIwNTYsMTMuMDE2NDM4OSA2OS4yNDUyMjM3LDExLjI0MzY3MTMgNjkuMjQ1MjI1NSw0NC41MTY4ODQ3IEM2OS4yNDUyMjczLDc3Ljc5MDA5ODIgNjMuMDA3ODUyMyw4My42ODIyMjgxIDY0LjczOTQ3NzgsOTUuNDY2NDkyOCBDNjYuNDcxMTAzNCwxMDcuMjUwNzU3IDYwLjU4MTY4MTUsMTA5LjY3NjkzMyA3OC4yNTgwNzU0LDExNS45MTU2NTcgQzk1LjkzNDQ2OTMsMTIyLjE1NDM4MSA5My44NTM1Mzk1LDEzMy45Mzg2NDQgOTQuNTQ2NzMxNSwxNDYuNDE2MTAxIEM5NC41NTcwNTg2LDE0Ni42MDE5ODkgOTQuNTY2OTI0MiwxNDYuNzk2NzI0IDk0LjU3NjMzOTcsMTQ3IEwwLjU3NDUzNDAzNiwxNDcgWiBNNDcuNSw0MSBDNTIuMTk0NDIwNCw0MSA1NiwzNy4xOTQ0MjA0IDU2LDMyLjUgQzU2LDI3LjgwNTU3OTYgNTIuMTk0NDIwNCwyNCA0Ny41LDI0IEM0Mi44MDU1Nzk2LDI0IDM5LDI3LjgwNTU3OTYgMzksMzIuNSBDMzksMzcuMTk0NDIwNCA0Mi44MDU1Nzk2LDQxIDQ3LjUsNDEgWiIgaWQ9IkNvbWJpbmVkLVNoYXBlIj48L3BhdGg+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=") 12 1, auto !important; }'
-                                               +'</style>');
+                    iframe.find('head').append('<style type="text/css" data-style="seipro"> \n'
+                                               +(localStorage.getItem('darkModePro') ? '   * { color: #fbfbfe; } \n' : '')
+                                               +'   p .ancoraSei { background: #e4e4e4; } \n'
+                                               +'   html.dark-mode body[contenteditable="false"], \n'
+                                               +'   html.dark-mode p.Texto_Fundo_Cinza_Maiusculas_Negrito, \n'
+                                               +'   html.dark-mode p.Texto_Fundo_Cinza_Negrito, \n'
+                                               +'   html.dark-mode p .ancoraSei, \n'
+                                               +'   html.dark-mode p.Item_Nivel1 { \n'
+                                               +'       background-color: #e5e5e566 !important;  \n'
+                                               +'   } \n'
+                                               +'   html.dark-mode .dark-mode-color-black, \n'
+                                               +'   html.dark-mode .dark-mode-color-black * { \n'
+                                               +'       color: #000 !important;  \n'
+                                               +'   } \n'
+                                               +'   html.dark-mode .dark-mode-color-white, \n'
+                                               +'   html.dark-mode .dark-mode-color-white * { \n'
+                                               +'       color: #fff !important;  \n'
+                                               +'   } \n'
+                                               +"   p .legis { background: #f1f1f1; } "
+                                               +"   p .error { background-color: #ffd2d2; } "
+                                               +"   p .alert { cursor: pointer; background: #fffbc9; border-left: 3px solid #ffe52a; padding-left: 4px; } "
+                                               +"   span.tooltips { position: absolute; text-align: left; background: #fffbc9; text-indent: 0; border-left: 3px solid #ffe52a; margin: -46px 0px 0px -7px; width: 500px; font-size: 10pt; padding: 5px; color: #636363; height: 36px; }"
+                                               +"   span.tooltips .ignoretext { background: #ecdc89; padding: 3px 5px; margin: 3px; font-size: 8pt; text-transform: uppercase; border-radius: 5px; float: right; }"
+                                               +'   span.sigiloSEI { background-color: #ececec; border-bottom: 2px solid #d79d23; } \n'
+                                               +'   span.sigiloSEI::before { content: "\\f023"; font-family: "Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'"; color: #d79d23; margin: 0 5px; font-size: 80%; } \n'
+                                               +'   html.dark-mode .pageBreakPro, html.dark-mode .sessionBreakPro { background: #6f7071; height: 15px; } \n'
+                                               +'   .pageBreakPro, .sessionBreakPro { background: #f1f1f1; height: 15px; } \n'
+                                               +'   .pageBreakPro::before, .sessionBreakPro::before { border-bottom: 2px dashed #bfbfbf; display: block; content: \'\'; height: 7px; } \n'
+                                               +'   .pageBreakPro::after, .sessionBreakPro::after { content: \'\u21B3 Quebra de p\u00E1gina\'; font-family: Calibri; text-align: center; display: block; margin-top: -10px; color: #585858; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; font-size: 10pt; font-style: italic; } \n'
+                                               +'   .sessionBreakPro::after { content: \'\u21B3 Quebra de sess\u00E3o\' !important; } \n'
+                                               +'   .linkDisplayPro { user-select: none; position: absolute; display: inline-block; padding: 8px; box-shadow: 0 1px 3px 1px rgba(60,64,67,.35); background: #fff; border-color: #dadce0; border-radius: 8px; margin-top: 16px; text-align: left; text-indent: initial; font-size: 12pt; text-transform: initial; font-weight: initial; letter-spacing: initial; text-decoration: initial; white-space: nowrap; } \n'
+                                               +'   .linkDisplayPro a { padding: 0 8px; cursor: pointer; text-decoration: underline; color:#1155cc; } \n'
+                                               +'   html.dark-mode .linkDisplayPro { background-color:#3D3D3D !important; } \n'
+                                               +'   html.dark-mode .linkDisplayPro a { color:#fbfbfe !important; } \n'
+                                               +'   html.dark-mode .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIiA/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZlcnNpb249IjEuMSIgd2lkdGg9IjEzLjY0MDMyODc0MzE5OTIzNCIgaGVpZ2h0PSIxNi4xMjAwMDAwMDAwMDAwMDUiIHZpZXdCb3g9IjMxNC42Njk2NzEyNTY4MDA3NyAzMTEuOTQgMTMuNjQwMzI4NzQzMTk5MjM0IDE2LjEyMDAwMDAwMDAwMDAwNSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxkZXNjPkNyZWF0ZWQgd2l0aCBGYWJyaWMuanMgNC42LjA8L2Rlc2M+CjxkZWZzPgo8L2RlZnM+CjxnIHRyYW5zZm9ybT0ibWF0cml4KDAuMDYgMCAwIDAuMDYgMzI0LjU3IDMyMCkiIGlkPSJ3MGQwNHhBNjhSaG1qYldBZWQyTmgiICA+CjxwYXRoIHN0eWxlPSJzdHJva2U6IG5vbmU7IHN0cm9rZS13aWR0aDogMTsgc3Ryb2tlLWRhc2hhcnJheTogbm9uZTsgc3Ryb2tlLWxpbmVjYXA6IGJ1dHQ7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2UtbGluZWpvaW46IG1pdGVyOyBzdHJva2UtbWl0ZXJsaW1pdDogNDsgZmlsbDogcmdiKDI1NSwyNTUsMjU1KTsgZmlsbC1ydWxlOiBldmVub2RkOyBvcGFjaXR5OiAxOyIgdmVjdG9yLWVmZmVjdD0ibm9uLXNjYWxpbmctc3Ryb2tlIiAgdHJhbnNmb3JtPSIgdHJhbnNsYXRlKC0xNTEsIC0xMjYpIiBkPSJNIDE3MCAxNCBMIDIwMC4wMDc1MzcgMTQgQyAyMDIuNzY5MDU3IDE0IDIwNSAxMS43NjM2NDkzIDIwNSA5LjAwNDk3MDkyIEwgMjA1IDQuOTk1MDI5MDggQyAyMDUgMi4yMzM4MjIxMiAyMDIuNzY0Nzk4IDAgMjAwLjAwNzUzNyAwIEwgMTAxLjk5MjQ2MyAwIEMgOTkuMjMwOTQzMSAwIDk3IDIuMjM2MzUwNjkgOTcgNC45OTUwMjkwOCBMIDk3IDkuMDA0OTcwOTIgQyA5NyAxMS43NjYxNzc5IDk5LjIzNTIwMTcgMTQgMTAxLjk5MjQ2MyAxNCBMIDEzMyAxNCBMIDEzMyAyMzggTCAxMDEuOTkyNDYzIDIzOCBDIDk5LjIzMDk0MzEgMjM4IDk3IDI0MC4yMzYzNTEgOTcgMjQyLjk5NTAyOSBMIDk3IDI0Ny4wMDQ5NzEgQyA5NyAyNDkuNzY2MTc4IDk5LjIzNTIwMTcgMjUyIDEwMS45OTI0NjMgMjUyIEwgMjAwLjAwNzUzNyAyNTIgQyAyMDIuNzY5MDU3IDI1MiAyMDUgMjQ5Ljc2MzY0OSAyMDUgMjQ3LjAwNDk3MSBMIDIwNSAyNDIuOTk1MDI5IEMgMjA1IDI0MC4yMzM4MjIgMjAyLjc2NDc5OCAyMzggMjAwLjAwNzUzNyAyMzggTCAxNzAgMjM4IEwgMTcwIDE0IFoiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgLz4KPC9nPgo8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLjA2IDAgMCAwLjA2IDMxOCAzMTkuNDgpIiBpZD0iNjlfbUZlWUc0MzlsTGM2X3FqUHlhIiAgPgo8cGF0aCBzdHlsZT0ic3Ryb2tlOiBub25lOyBzdHJva2Utd2lkdGg6IDE7IHN0cm9rZS1kYXNoYXJyYXk6IG5vbmU7IHN0cm9rZS1saW5lY2FwOiBidXR0OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlcjsgc3Ryb2tlLW1pdGVybGltaXQ6IDQ7IGZpbGw6IHJnYigyNTUsMjU1LDI1NSk7IGZpbGwtcnVsZTogZXZlbm9kZDsgb3BhY2l0eTogMTsiIHZlY3Rvci1lZmZlY3Q9Im5vbi1zY2FsaW5nLXN0cm9rZSIgIHRyYW5zZm9ybT0iIHRyYW5zbGF0ZSgtNDcuNTcsIC0xMTcuNzgpIiBkPSJNIDY1IDIyMi4yODA4MjkgQyA2MC42MTMxMTc2IDIyMi4yODA4MjkgNTYuMzc0MjE2MiAyMjIuMjgwODI4IDUyLjk5OTk5OTUgMjIyLjI4MDgyOCBMIDUzIDE3MCBMIDQyIDE3MCBMIDQyIDIyMi41NjA1OTMgQyAzOC42MTMwMjQ2IDIyMi41NjA1OTMgMzQuMzc2MzMwOCAyMjIuNTYwNTkzIDMwLjAwMDAwMDUgMjIyLjU2MDU5NCBMIDMwIDE3MCBMIDE5IDE3MCBMIDE5IDIyMi41NjA1OTUgQyAxNi4zMjQ4NjUgMjIyLjU2MDU5NSAxMy44NDYzMzY5IDIyMi41NjA1OTUgMTEuNzYxMjcyNSAyMjIuNTYwNTk2IEMgLTAuMzY5NTg2NDM4IDIyMi41NjA1OTkgMS4yODM4MTc0NiAyMTEuNTA5MzEzIDEuMjgzODE3NDYgMjExLjUwOTMxMyBDIDEuMjgzODE3NDYgMjExLjUwOTMxMyAwLjM4OTY4OTk0NCAxNzcuNzU2IDAuMzk2NTcxMjc3IDE1OCBMIDk0Ljc0MDgyMzIgMTU4IEMgOTQuNzM5MjczNiAxNzcuNzkzMDg5IDkzLjg1MzUzOTYgMjExLjIyOTU0OCA5My44NTM1Mzk2IDIxMS4yMjk1NDggQyA5My44NTM1Mzk2IDIxMS4yMjk1NDggOTUuNTA2OTQzNSAyMjIuMjgwODM0IDgzLjM3NjA4NDUgMjIyLjI4MDgzMSBDIDgxLjI1NTM3ODIgMjIyLjI4MDgzIDc4LjcyNzY0MTUgMjIyLjI4MDgzIDc2LjAwMDAwMDIgMjIyLjI4MDgzIEwgNzYgMTcwIEwgNjUgMTcwIEwgNjUgMjIyLjI4MDgyOSBaIE0gMC41NzQ1MzQwMzYgMTQ3IEMgMC41Nzk3NjgzODcgMTQ2Ljg5NjE0OSAwLjU4NTEzMTYzOCAxNDYuNzk0NzU1IDAuNTkwNjI1NTE0IDE0Ni42OTU4NjYgQyAxLjI4MzgxNzQ4IDEzNC4yMTg0MDkgLTAuNzk3MTEyMjg2IDEyMi40MzQxNDYgMTYuODc5MjgxNiAxMTYuMTk1NDIyIEMgMzQuNTU1Njc1NSAxMDkuOTU2Njk4IDI4LjY2NjI1MzYgMTA3LjUzMDUyMiAzMC4zOTc4NzkyIDk1Ljc0NjI1NzYgQyAzMi4xMjk1MDQ4IDgzLjk2MTk5MyAyNS44OTIxMjk4IDc4LjA2OTg2MyAyNS44OTIxMzE1IDQ0Ljc5NjY0OTYgQyAyNS44OTIxMzMgMTcuOTYwNzIwNiAzOC41MTY5NDY3IDEzLjkyMjAxNzMgNDUuNTIyMDkzOSAxMy4zNjM3NjE3IEMgNDUuNjA4OTgxNCAxMy4xMzQwNzI3IDQ1LjcwMDI1MDYgMTMuMDE2NDM5MSA0NS43OTYwNjMxIDEzLjAxNjQzOTEgQyA0OS44MzcyMDU2IDEzLjAxNjQzODkgNjkuMjQ1MjIzNyAxMS4yNDM2NzEzIDY5LjI0NTIyNTUgNDQuNTE2ODg0NyBDIDY5LjI0NTIyNzMgNzcuNzkwMDk4MiA2My4wMDc4NTIzIDgzLjY4MjIyODEgNjQuNzM5NDc3OCA5NS40NjY0OTI4IEMgNjYuNDcxMTAzNCAxMDcuMjUwNzU3IDYwLjU4MTY4MTUgMTA5LjY3NjkzMyA3OC4yNTgwNzU0IDExNS45MTU2NTcgQyA5NS45MzQ0NjkzIDEyMi4xNTQzODEgOTMuODUzNTM5NSAxMzMuOTM4NjQ0IDk0LjU0NjczMTUgMTQ2LjQxNjEwMSBDIDk0LjU1NzA1ODYgMTQ2LjYwMTk4OSA5NC41NjY5MjQyIDE0Ni43OTY3MjQgOTQuNTc2MzM5NyAxNDcgTCAwLjU3NDUzNDAzNiAxNDcgWiBNIDQ3LjUgNDEgQyA1Mi4xOTQ0MjA0IDQxIDU2IDM3LjE5NDQyMDQgNTYgMzIuNSBDIDU2IDI3LjgwNTU3OTYgNTIuMTk0NDIwNCAyNCA0Ny41IDI0IEMgNDIuODA1NTc5NiAyNCAzOSAyNy44MDU1Nzk2IDM5IDMyLjUgQyAzOSAzNy4xOTQ0MjA0IDQyLjgwNTU3OTYgNDEgNDcuNSA0MSBaIiBzdHJva2UtbGluZWNhcD0icm91bmQiIC8+CjwvZz4KPC9zdmc+") 12 1, auto !important; } \n'
+                                               +'   .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDIwNSAyNTIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+Y3Vyc29yPC90aXRsZT4KICAgIDxkZXNjPjwvZGVzYz4KICAgIDxkZWZzPjwvZGVmcz4KICAgIDxnIGlkPSJQYWdlLTQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJBcnRib2FyZC0xIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDkuMDAwMDAwLCAtMi4wMDAwMDApIiBmaWxsPSIjMDAwMDAwIj4KICAgICAgICAgICAgPGcgaWQ9ImN1cnNvciIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDkuMDAwMDAwLCAyLjAwMDAwMCkiPgogICAgICAgICAgICAgICAgPHBhdGggZD0iTTE3MCwxNCBMMjAwLjAwNzUzNywxNCBDMjAyLjc2OTA1NywxNCAyMDUsMTEuNzYzNjQ5MyAyMDUsOS4wMDQ5NzA5MiBMMjA1LDQuOTk1MDI5MDggQzIwNSwyLjIzMzgyMjEyIDIwMi43NjQ3OTgsMCAyMDAuMDA3NTM3LDAgTDEwMS45OTI0NjMsMCBDOTkuMjMwOTQzMSwwIDk3LDIuMjM2MzUwNjkgOTcsNC45OTUwMjkwOCBMOTcsOS4wMDQ5NzA5MiBDOTcsMTEuNzY2MTc3OSA5OS4yMzUyMDE3LDE0IDEwMS45OTI0NjMsMTQgTDEzMywxNCBMMTMzLDIzOCBMMTAxLjk5MjQ2MywyMzggQzk5LjIzMDk0MzEsMjM4IDk3LDI0MC4yMzYzNTEgOTcsMjQyLjk5NTAyOSBMOTcsMjQ3LjAwNDk3MSBDOTcsMjQ5Ljc2NjE3OCA5OS4yMzUyMDE3LDI1MiAxMDEuOTkyNDYzLDI1MiBMMjAwLjAwNzUzNywyNTIgQzIwMi43NjkwNTcsMjUyIDIwNSwyNDkuNzYzNjQ5IDIwNSwyNDcuMDA0OTcxIEwyMDUsMjQyLjk5NTAyOSBDMjA1LDI0MC4yMzM4MjIgMjAyLjc2NDc5OCwyMzggMjAwLjAwNzUzNywyMzggTDE3MCwyMzggTDE3MCwxNCBaIiBpZD0iQ29tYmluZWQtU2hhcGUiPjwvcGF0aD4KICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02NSwyMjIuMjgwODI5IEM2MC42MTMxMTc2LDIyMi4yODA4MjkgNTYuMzc0MjE2MiwyMjIuMjgwODI4IDUyLjk5OTk5OTUsMjIyLjI4MDgyOCBMNTMsMTcwIEw0MiwxNzAgTDQyLDIyMi41NjA1OTMgQzM4LjYxMzAyNDYsMjIyLjU2MDU5MyAzNC4zNzYzMzA4LDIyMi41NjA1OTMgMzAuMDAwMDAwNSwyMjIuNTYwNTk0IEwzMCwxNzAgTDE5LDE3MCBMMTksMjIyLjU2MDU5NSBDMTYuMzI0ODY1LDIyMi41NjA1OTUgMTMuODQ2MzM2OSwyMjIuNTYwNTk1IDExLjc2MTI3MjUsMjIyLjU2MDU5NiBDLTAuMzY5NTg2NDM4LDIyMi41NjA1OTkgMS4yODM4MTc0NiwyMTEuNTA5MzEzIDEuMjgzODE3NDYsMjExLjUwOTMxMyBDMS4yODM4MTc0NiwyMTEuNTA5MzEzIDAuMzg5Njg5OTQ0LDE3Ny43NTYgMC4zOTY1NzEyNzcsMTU4IEw5NC43NDA4MjMyLDE1OCBDOTQuNzM5MjczNiwxNzcuNzkzMDg5IDkzLjg1MzUzOTYsMjExLjIyOTU0OCA5My44NTM1Mzk2LDIxMS4yMjk1NDggQzkzLjg1MzUzOTYsMjExLjIyOTU0OCA5NS41MDY5NDM1LDIyMi4yODA4MzQgODMuMzc2MDg0NSwyMjIuMjgwODMxIEM4MS4yNTUzNzgyLDIyMi4yODA4MyA3OC43Mjc2NDE1LDIyMi4yODA4MyA3Ni4wMDAwMDAyLDIyMi4yODA4MyBMNzYsMTcwIEw2NSwxNzAgTDY1LDIyMi4yODA4MjkgWiBNMC41NzQ1MzQwMzYsMTQ3IEMwLjU3OTc2ODM4NywxNDYuODk2MTQ5IDAuNTg1MTMxNjM4LDE0Ni43OTQ3NTUgMC41OTA2MjU1MTQsMTQ2LjY5NTg2NiBDMS4yODM4MTc0OCwxMzQuMjE4NDA5IC0wLjc5NzExMjI4NiwxMjIuNDM0MTQ2IDE2Ljg3OTI4MTYsMTE2LjE5NTQyMiBDMzQuNTU1Njc1NSwxMDkuOTU2Njk4IDI4LjY2NjI1MzYsMTA3LjUzMDUyMiAzMC4zOTc4NzkyLDk1Ljc0NjI1NzYgQzMyLjEyOTUwNDgsODMuOTYxOTkzIDI1Ljg5MjEyOTgsNzguMDY5ODYzIDI1Ljg5MjEzMTUsNDQuNzk2NjQ5NiBDMjUuODkyMTMzLDE3Ljk2MDcyMDYgMzguNTE2OTQ2NywxMy45MjIwMTczIDQ1LjUyMjA5MzksMTMuMzYzNzYxNyBDNDUuNjA4OTgxNCwxMy4xMzQwNzI3IDQ1LjcwMDI1MDYsMTMuMDE2NDM5MSA0NS43OTYwNjMxLDEzLjAxNjQzOTEgQzQ5LjgzNzIwNTYsMTMuMDE2NDM4OSA2OS4yNDUyMjM3LDExLjI0MzY3MTMgNjkuMjQ1MjI1NSw0NC41MTY4ODQ3IEM2OS4yNDUyMjczLDc3Ljc5MDA5ODIgNjMuMDA3ODUyMyw4My42ODIyMjgxIDY0LjczOTQ3NzgsOTUuNDY2NDkyOCBDNjYuNDcxMTAzNCwxMDcuMjUwNzU3IDYwLjU4MTY4MTUsMTA5LjY3NjkzMyA3OC4yNTgwNzU0LDExNS45MTU2NTcgQzk1LjkzNDQ2OTMsMTIyLjE1NDM4MSA5My44NTM1Mzk1LDEzMy45Mzg2NDQgOTQuNTQ2NzMxNSwxNDYuNDE2MTAxIEM5NC41NTcwNTg2LDE0Ni42MDE5ODkgOTQuNTY2OTI0MiwxNDYuNzk2NzI0IDk0LjU3NjMzOTcsMTQ3IEwwLjU3NDUzNDAzNiwxNDcgWiBNNDcuNSw0MSBDNTIuMTk0NDIwNCw0MSA1NiwzNy4xOTQ0MjA0IDU2LDMyLjUgQzU2LDI3LjgwNTU3OTYgNTIuMTk0NDIwNCwyNCA0Ny41LDI0IEM0Mi44MDU1Nzk2LDI0IDM5LDI3LjgwNTU3OTYgMzksMzIuNSBDMzksMzcuMTk0NDIwNCA0Mi44MDU1Nzk2LDQxIDQ3LjUsNDEgWiIgaWQ9IkNvbWJpbmVkLVNoYXBlIj48L3BhdGg+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=") 12 1, auto !important; } \n'
+                                               +'</style>\n');
+                    if (localStorage.getItem('darkModePro')) iframe.find('html').addClass('dark-mode');
+                    repareBgTableColor(iframe);
                 }
-                iframe.find('body').on('mousedown', function(e) { 
-                    if ( typeof e.target.href !== 'undefined' && e.target.href.indexOf('http')  !== -1 && checkConfigValue('editarlinks')) { 
-                        showLinkTips(e.target, iframe);
-                    } else {
-                        hideLinkTips(iframe);
-                    }
-                    hideQuickTable();
-                }).on('mouseup', function(e) { 
-                    applyCopyStyle();
-                    activeIconsSelectedText();
-                    closeAlignText();
-                }).on('blur', function(e) { 
-                    hideLinkTips(iframe);
-                    hideQuickTable();
-                    removeCopyStyle();
-                    closeAlignText();
-                });
+                setOnBodyActs(iframe);
             });
-            for(var id in CKEDITOR.instances) {
-                CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere º no mac (option+0)
-                CKEDITOR.instances[id].on('focus', function(e) {
-                    // Fill some global var here
-                    idEditor = e.editor.name;
-                    oEditor = CKEDITOR.instances[idEditor];
-                    iframeEditor = ($('#frmEditor').length > 0) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor);
-                    $('#idEditor').val(idEditor);
-                    if ( iframeEditor.find('body').attr('contenteditable') == 'true' || $('#frmEditor').length == 0) {
-                        $('#cke_'+idEditor).find('.cke_iconPro').removeClass('cke_button_disabled');
-                    }
-                });
-            }
+            setCKEDITOR_instances();
             $('head').append("<style type='text/css' data-style='seipro'> "
                             +"  .divAlignText { display:none; background-image: -webkit-linear-gradient(top,#fff,#e4e4e4); position: absolute; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
                             +"  .divQuickTable { display:none; position: absolute; background: #f1f1f1; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
@@ -274,6 +322,100 @@ function addStyleIframes(TimeOut = 9000) {
             console.log('addStyleIframes Reload',TimeOut);
         }
     }, 500);
+}
+function setOnBodyActs(iframe) {
+    iframe.find('body').on('mousedown', function(e) { 
+        if ( typeof e.target.href !== 'undefined' && e.target.href.indexOf('http')  !== -1 && checkConfigValue('editarlinks')) { 
+            showLinkTips(e.target, iframe);
+        } else {
+            hideLinkTips(iframe);
+        }
+        hideQuickTable();
+    }).on('mouseup', function(e) { 
+        applyCopyStyle();
+        activeIconsSelectedText();
+        closeAlignText();
+    }).on('blur', function(e) { 
+        hideLinkTips(iframe);
+        hideQuickTable();
+        removeCopyStyle();
+        closeAlignText();
+    });
+}
+function setDarkModeCkePanel() {
+    var iframeCkePanel = $('iframe.cke_panel_frame').contents();
+    if (localStorage.getItem('darkModePro') && iframeCkePanel.find('style[data-style="seipro"]').length == 0) {
+    iframeCkePanel.find('head').append('<style type="text/css" data-style="seipro">\n'+
+        '  body { background-color: #202123 !important; }\n'+
+        '  .cke_panel_block * { background: #202123; border: none !important; color: #fff; box-shadow: none !important; text-shadow: none !important;}\n'+
+        '  .cke_panel_block a[onclick*="Fundo"] p { background-color: #6f7071; }\n'+
+        '  .cke_panel_block a:hover, .cke_panel_block a:hover p { background-color: #017fff !important; }\n'+
+        '  .cke_panel_block .cke_selected *  { background: transparent; color: #202123 !important; }\n'+
+        '</style>');
+    }
+}
+function repareBgTableColor(iframe) {
+    iframe.find('span[style*="background-color"],tr[style*="background-color"],td[style*="background-color"]').each(function(){
+        setBgTableColor(this);
+    });
+}
+function setBgTableColor(this_) {
+    var bgColor = $(this_).css('background-color');
+    if (typeof bgColor !== 'undefined' && bgColor !== null) {
+        var brightness = getBrightnessColor(rgbToHexString(bgColor));
+        var textColour = (brightness > 125) ? 'black' : 'white';
+        $(this_).addClass('dark-mode-color-'+textColour);
+    }
+}
+function setCKEDITOR_instances() {
+    for(var id in CKEDITOR.instances) {
+        CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere º no mac (option+0)
+        CKEDITOR.instances[id].on('focus', function(e) {
+            // Fill some global var here
+            idEditor = e.editor.name;
+            oEditor = CKEDITOR.instances[idEditor];
+            iframeEditor = ($('#frmEditor').length > 0) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor);
+            $('#idEditor').val(idEditor);
+            if ( iframeEditor.find('body').attr('contenteditable') == 'true' || $('#frmEditor').length == 0) {
+                $('#cke_'+idEditor).find('.cke_iconPro').removeClass('cke_button_disabled');
+            }
+            if (checkConfigValue('editarimagens')) editImgPro(oEditor);
+        });
+    }
+}
+// Adiciona salvamento automatico
+function checkAutoSave() {
+    if (getOptionsPro('autoSaveEditor')) {
+        // $('.getAutoSaveButtom').trigger('click');
+    }
+}
+function getAutoSave(this_) {
+    /*
+    setParamEditor(this_);
+
+    if ($('#cke_'+idEditor).find('.getAutoSaveButtom').hasClass('cke_button_on')) {
+        $('#cke_'+idEditor).find('.getAutoSaveButtom').addClass('cke_button_off').removeClass('cke_button_on');
+        clearInterval(autoSaveEditor);
+        removeOptionsPro('autoSaveEditor');
+    } else {
+        clearInterval(autoSaveEditor);
+        autoSaveEditor = setInterval(function () {
+            if (isIntervalInProgress) return false;
+                isIntervalInProgress = true;
+            if (!$('#cke_'+idEditor).find('.cke_button.cke_button__save').hasClass('cke_button_disabled')) {
+                console.log('setAutoSave');
+                oEditor = CKEDITOR.instances[idEditor];
+                if (typeof oEditor !== 'undefined') {
+                    var $form = oEditor.element.$.form;
+                    if ($form) $form.submit();
+                }
+            }
+            isIntervalInProgress = false;
+        },autoSaveInterval * 1000 * 60);
+        $('#cke_'+idEditor).find('.getAutoSaveButtom').addClass('cke_button_on').removeClass('cke_button_off');
+        setOptionsPro('autoSaveEditor', true);
+    }
+    */
 }
 // Adiciona quebra de pagina
 function getPageBreak(this_) {
@@ -289,6 +431,24 @@ function getPageBreak(this_) {
             iframeEditor.find(pElement).before(htmlBreakPage);
         } else {
             pElement.before(htmlBreakPage);
+        }
+        oEditor.fire('saveSnapshot');
+    }
+}
+// Adiciona quebra de pagina
+function getSessionBreak(this_) {
+    setParamEditor(this_);
+    
+    var htmlSessionPage = '<div class="sessionBreakPro" style="counter-reset: paragrafo-n1 paragrafo-n2 paragrafo-n3 paragrafo-n4 romano_maiusculo letra_minuscula item-n1 item-n2 item-n3 item-n4 "></div>';
+    var select = oEditor.getSelection().getStartElement();
+    var pElement = $(select.$).closest('p');
+    if ( pElement.length > 0 ) {
+        oEditor.focus();
+        oEditor.fire('saveSnapshot');
+        if ($('#frmEditor').length > 0) {
+            iframeEditor.find(pElement).before(htmlSessionPage);
+        } else {
+            pElement.before(htmlSessionPage);
         }
         oEditor.fire('saveSnapshot');
     }
@@ -379,6 +539,23 @@ function getMarkSigilo(this_) {
         var element = $(select.$).closest('.sigiloSEI');
             element.after(element.html()).remove();
         console.log(element.html());
+    }
+}
+function getTarjaSigilo(this_) {
+    setParamEditor(this_);
+
+    var style = new CKEDITOR.style({
+        element: 'span',
+        attributes: {
+            'class': 'sigiloSEI'
+        }
+    });
+    if (hasSelection(oEditor)) {
+        oEditor.focus();
+        oEditor.fire('saveSnapshot');
+        oEditor.applyStyle(style);
+        actionsMarkSigilo(undefined, 'apply');
+        oEditor.fire('saveSnapshot');
     }
 }
 function getBoxSigilo(this_) {
@@ -538,7 +715,7 @@ function getDialogSigilo() {
             [
                {
                   id : 'tab2',
-                  label : '1. Localizar texto e dados sens\u00EDveis',
+                  label : '1. Localizar texto e dados pessoais',
                   elements :
                   [
                     {
@@ -568,11 +745,11 @@ function getDialogSigilo() {
                               '     </tr>'+
                               '     <tr class="cke_dialog_ui_hbox">'+
                               '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:20px 0 0">'+
-                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo2_label" for="cke_inputSigilo2_textInput">Localizar dados sens\u00EDveis como <br>e-mails e CPFs em todo o documento</label>'+
+                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo2_label" for="cke_inputSigilo2_textInput">Localizar dados pessoais como <br>e-mails e CPFs em todo o documento</label>'+
                               '         </td>'+
                               '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:20px 0 0">'+
-                              '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'email_cpf\')" title="Localizar dados sens\u00EDveis" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo2_label" id="buttonSigilo2_uiElement">'+
-                              '                 <span id="buttonSigilo2_label" class="cke_dialog_ui_button">Localizar dados sens\u00EDveis</span>'+
+                              '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'email_cpf\')" title="Localizar dados pessoais" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo2_label" id="buttonSigilo2_uiElement">'+
+                              '                 <span id="buttonSigilo2_label" class="cke_dialog_ui_button">Localizar dados pessoais</span>'+
                               '             </a>'+
                               '         </td>'+
                               '     </tr>'+
@@ -645,7 +822,7 @@ function getDialogSigilo() {
                               ' <tbody>'+
                               '     <tr class="cke_dialog_ui_hbox">'+
                               '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:100%; padding:0px">'+
-                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo_label" for="cke_inputSigilo_textInput">Acesse o guia r\u00E1pido sobre como <a target="_blank" href="https://sei-pro.github.io/sei-pro/pages/SIGILODOC.html" class="linkDialog">Adicionar marca de sigilo e tarjas pretas de confidencialidade <i class="fas fa-external-link-alt" style="color: #00c; font-size: 90%; text-decoration: underline;"></i></a></label>'+
+                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo_label" for="cke_inputSigilo_textInput">Acesse o guia r\u00E1pido sobre como <a target="_blank" href="https://sei-pro.github.io/sei-pro/pages/SIGILODOC.html" class="linkDialog">Adicionar marca de sigilo e tarjas pretas de confidencialidade <i class="fas fa-external-link-alt bLink" style="font-size: 90%; text-decoration: underline;"></i></a></label>'+
                               '         </td>'+
                               '     </tr>'+
                               ' </tbody>'+
@@ -779,6 +956,61 @@ function menuCopyStyle( editor ) {
         editor.addCommand( 'copystyle', {
             exec: function( editor ) {
                 actionCopyStyle(editor);
+            }
+        });
+    }
+}
+function editImgPro( editor ) {
+    if ( editor.contextMenu && !delayCrash && typeof editor.getMenuItem('ImageEditorPro') === 'undefined') {
+
+        delayCrash = true;
+        setTimeout(function(){ delayCrash = false }, 300);
+
+        editor.removeMenuItem('image');
+
+        editor.addMenuGroup( 'base64imageGroup', 30);
+        editor.addMenuItem( 'base64imageItem', {
+            label: 'Formatar Imagem',
+            icon: URL_SPRO+'icons/formatarimagem.png',
+            command: 'base64imageDialog',
+            group: 'base64imageGroup'
+        });
+        editor.contextMenu.addListener( function( element ) {
+            if (element && element.getName() === "img") {
+                editor.getSelection().selectElement(element);
+                return { base64imageItem: CKEDITOR.TRISTATE_ON };
+            }
+            return null;
+        });
+        editor.addCommand( 'base64imageDialog', {
+            exec: function( editor ) {
+                openDialogUploadImgBase64(editor);
+            }
+        });
+
+        editor.addMenuItem( 'ImageEditorPro', {
+            label: 'Editar Imagem',
+            icon: URL_SPRO+'icons/editarimagem.png',
+            command: 'ImageEditorPro',
+            group: 'base64imageGroup'
+        });
+        editor.contextMenu.addListener( function( element ) {
+            if (element && element.getName() === "img") {
+                editor.getSelection().selectElement(element);
+                return { ImageEditorPro: CKEDITOR.TRISTATE_ON };
+            }
+            return null;
+        });
+        editor.addCommand( 'ImageEditorPro', {
+            exec: function( editor ) {
+                openImageEditorPro(editor);
+            }
+        });
+
+        editor.on("doubleclick", function(evt){
+            if(evt.data.element && !evt.data.element.isReadOnly() && evt.data.element.getName() === "img") {
+                evt.data.dialog = 'base64imageDialog';
+                editor.getSelection().selectElement(evt.data.element);
             }
         });
     }
@@ -1035,6 +1267,9 @@ function setSyleTable(value) {
 					$(this).html('<p class="'+classTdP+'">'+$(this).html()+'</p>');
 				}
 			});
+    });
+    elementTable.find('span[style*="background-color"],tr[style*="background-color"],td[style*="background-color"]').each(function(){
+        setBgTableColor(this);
     });
 }
 
@@ -1619,7 +1854,7 @@ function insertCitacaoDocumento(id_protocolo) {
         var nrSei = ( dataValue.nr_sei != '' ) ? dataValue.nr_sei : dataValue.documento;
         var citacaoDoc = getCitacaoDoc();
         var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+dataValue.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
-        var citacaoDocumento = ( dataValue.nr_sei != '' ) ? dataValue.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
+        var citacaoDocumento = ( dataValue.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? dataValue.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
         oEditor.focus();
         oEditor.fire('saveSnapshot');
         oEditor.insertHtml(citacaoDocumento);
@@ -1853,7 +2088,127 @@ function reorderNtRodape(iframeEditor) {
         iframeEditor.find('body').append(value.html);
     });
 }
+function initAddButtonTarjaSigilo(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if ($('.getMarkSigiloButton').length > 0) { 
+        addButtonTarjaSigilo()
+    } else {
+        setTimeout(function(){ 
+            initAddButtonTarjaSigilo(TimeOut - 100); 
+            console.log('Reload initAddButtonTarjaSigilo'); 
+        }, 500);
+    }
+}
+function addButtonTarjaSigilo() {
+    var icon16baseTarjaSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAeBQTFRFAAAApaWlo6OjoKCgnZ2dmpqal5eXlJSUkJCQpKSkoqKivLy8ysrKzMzMwsLCra2tjIyMiYmJpKSkoaGhxMTEvr6+oaGhlpaWk5OTl5eXrq6uhISEgYGBoaGhurq6v7+/mJiYlJSUkZGRjo6OioqKh4eHqKios6R72KVX27GF0J1G0ZUrnZ2dk5OTgoKCqZlk6L538NK0//Pl79Ksx4xJmZmZxsbGlJSUj4+P3bIm69N++eOy58CL9tOu/ODE059m4cNhqKCIkZGRjo6O3Lla37hV3rVR3bFN3rA/7tR8/fbE9t1s7cpt16Nj0ptdyZJP4cJg/PPJ/fPL/vbU//bX//TY//jg9eOp7tN5/ffH9dxf9+Jb8tZ63pg+zI1C4L9c/PPI+d91/eaJ/+eV/+Wa5sp56Mt39dxe9+Fa8dR73plI1o0o37tY/PHH+dxv7btW771h5sZx1rhy/fbC999j+OJd8NN525dD9dyo1Ige3rdT/PDG+Nlq/eJ82bdj1bZ60beQ5MlV9d9b7dB43JdB7bpE+ee204MY3bJO++/D+NZl7LZMqolD//Lg2JpUvnoaxZhJxYU23psz775C+eW00n4TAAAAhWcs+ceU+cmRyYVBQigMWkETiWEps4FFMicSJ8ijcQAAAKB0Uk5TAAyBuszMuoEMMN7//////94wDNv/////////2wl1///dHwUFH+X//////5muKSn///////3D//8IZP///////////////////////////TL//////////////////zf//////////////////////////////////////////////////////////////////////////////////////41iaEMAAADYSURBVHicY2BgYGBkYmZhZWPnYIACTi5uHl4ePn4BQQhfSFhEVExcQlJKSloGLCArJ6+gqKSsoqqmrqGppc3AoCMipguS0NM3MDQyNmFgMDUztwAJWFpZ29ja2TM4ODo5u7i6uXt4enn7+Pr5MwQEBgWHhIaFR0RGRcfExjEwxCckJiWnpKZFpmdkZmUDtebk5uUXFBYVl5SWlVdUAgWqqmtq6+obGpuaW1rb2oECHZ1d3T29ff0TJk6aPGUqUGAaEEyfMXPW7GkQABaYM3fe/GnIAsgAQwAAnahR/kU9cZYAAAAASUVORK5CYII=';
+    var htmlButtonAfterLetters =    '   <a class="getTarjaSigiloButton cke_iconPro cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar tarja de sigilo no texto" hidefocus="true">'+
+                                    '      <span class="cke_button_icon" style="background: url(\''+icon16baseTarjaSigilo+'\');">&nbsp;</span>'+
+                                    '      <span class="cke_button_label" aria-hidden="false">Adicionar tarja de sigilo no texto</span>'+
+                                    '   </a>';
+        $(txaEditor).each(function(index){ 
+            var idEditor = $(this).attr('id').replace('cke_', '');
+            if ( $('iframe[title*="'+idEditor+'"]').contents().find('body').attr('contenteditable') == 'true' ) {
+                $(this).find('span.cke_toolgroup .getMarkSigiloButton').after(htmlButtonAfterLetters);
+            }
+        });
+        $('.getTarjaSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTarjaSigilo(this) } });
+}
+function setDocCertidao() {
+    var dadosDocCertidao = sessionStorageRestorePro('dadosDocCertidao');
+    var nomeDocCertidao = sessionStorageRestorePro('nomeDocCertidao');
+    var param = getParamsUrlPro(window.location.href);
+    if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_certidao' && dadosDocCertidao && nomeDocCertidao) {
+        setCKEDITOR_instances();
+        initAddButtonTarjaSigilo();
+        var modeloHtml =    '<p class="Texto_Centralizado_Maiusculas_Negrito">CERTID\u00C3O</p>'+
+                            '<p class="Texto_Centralizado_Maiusculas_Negrito">C\u00D3PIA DE DOCUMENTO OFICIAL COM RESTRI\u00C7\u00C3O LEGAL DE PARTE(S) SOB SIGILO<br><br></p>'+
+                            '<p class="Texto_Alinhado_Esquerda">Em observ\u00E2ncia \u00E0 <a class="ancoraSei legisSeiPro" data-norma="Lei12527" data-normafull="Lei n\u00BA 12.527, de 18 de novembro de 2011" data-index="0" data-cke-saved-href="http://www.planalto.gov.br/ccivil_03/_Ato2011-2014/2011/Lei/L12527.htm" href="http://www.planalto.gov.br/ccivil_03/_Ato2011-2014/2011/Lei/L12527.htm" target="_blank" data-reflinkpro="HdNxK8xI">Lei n\u00BA 12.527, de 18 de novembro de 2011</a>, que estabelece, em seu artigo 7\u00BA, \u00A72\u00BA, que:</p>'+
+                            '<p class="Citacao">Art. 7\u00BA O acesso \u00E0 informa\u00E7\u00E3o de que trata esta Lei compreende, entre outros, os direitos de obter:<br></p>'+
+                            '<p class="Citacao">(...)</p>'+
+                            '<p class="Citacao">\u00A72\u00BA Quando n\u00E3o for autorizado acesso integral \u00E0 informa\u00E7\u00E3o, por ser ela parcialmente sigilosa, \u00E9 assegurado o acesso \u00E0 parte n\u00E3o sigilosa por meio de certid\u00E3o, extrato ou c\u00F3pia com oculta\u00E7\u00E3o da parte sob sigilo.</p>'+
+                            '<p class="Citacao">(...)</p>'+
+                            '<p class="Texto_Alinhado_Esquerda">Como servidor(a) p\u00FAblico(a) em exerc\u00EDcio, aponho minha assinatura e confiro f\u00E9 p\u00FAblica ao documento abaixo, confirmando que esta vers\u00E3o se trata de c\u00F3pia fiel da documenta\u00E7\u00E3o original, havendo sido ocultadas (tarjadas) exclusivamente as informa\u00E7\u00F5es protegidas por sigilo legal, assegurando a fidelidade da informa\u00E7\u00E3o p\u00FAblica. Assim, esta vers\u00E3o passa a coexistir com o documento integral criado com o amparo da citada Lei.</p>'+
+                            '<p class="Texto_Alinhado_Esquerda"><br></p>'+
+                            '<table border="0" cellspacing="1" cellpadding="1" style="border-collapse:collapse;border-color: rgb(206 206 206);margin-left:auto;margin-right:auto;width:100%;">'+
+                            '   <tbody>'+
+                            '       <tr>'+
+                            '           <td style="background-color: rgb(238, 238, 238);">'+
+                            '               <p class="Texto_Centralizado" id="">In\u00EDcio do(a) '+nomeDocCertidao+'</p>'+
+                            '           </td>'+
+                            '       </tr>'+
+                            '       <tr>'+
+                            '           <td contenteditable="false">'+
+                            '               <p class="Tabela_Texto_Alinhado_Esquerda"><br></p>'+
+                            '               '+dadosDocCertidao+
+                            '               <p class="Tabela_Texto_Alinhado_Esquerda"><br></p>'+
+                            '           </td>'+
+                            '       </tr>'+
+                            '       <tr>'+
+                            '           <td style="background-color: rgb(238, 238, 238);">'+
+                            '               <p class="Texto_Centralizado">Fim do(a) '+nomeDocCertidao+'<br></p>'+
+                            '           </td>'+
+                            '       </tr>'+
+                            '   </tbody>'+
+                            '</table>'+
+                            '<p class="Texto_Alinhado_Esquerda"><br></p>';
+                            
+            var elemIframe = $('iframe').filter(function(){ return $(this).contents().find('body').attr('contenteditable') == 'true' }).eq(0)
+            if (elemIframe.length > 0) {
+                var iframe = elemIframe.contents();
+                if (elemIframe.attr('title').indexOf(',') !== -1) {
+                    var idEditor = elemIframe.attr('title').split(',')[1].trim();
+                    $('#idEditor').val(idEditor);
+                    oEditor = CKEDITOR.instances[idEditor];
+                    if (typeof oEditor !== 'undefined') {
+                        oEditor.focus();
+                        oEditor.fire('saveSnapshot');
+                        iframe.find('body').html(modeloHtml);
+                        actionsMarkSigilo(undefined, 'apply');
+                        enableButtonSavePro();
+                        
+                        var $form = oEditor.element.$.form;
+                        if ($form) $form.submit();
 
+                        sessionStorageRemovePro('dadosDocCertidao');
+                        sessionStorageRemovePro('nomeDocCertidao');
+                    }
+                }
+            }
+        /*
+        var maxIframeHeight = {value: 0, index: -1}
+        $('iframe.cke_wysiwyg_frame').each(function(index){
+            if ( $(this).contents().find('body').attr('contenteditable') == 'true' ) {
+                var height = $(this).height();
+                if (height > maxIframeHeight.value) { 
+                    maxIframeHeight = {value: height, index: index};
+                }
+            }
+        });
+        if (maxIframeHeight.index != -1) {
+            var elemIframe = $('iframe').eq(maxIframeHeight.index);
+            var iframe = elemIframe.contents();
+            if (elemIframe.attr('title').indexOf(',') !== -1) {
+                var idEditor = elemIframe.attr('title').split(',')[1].trim();
+                $('#idEditor').val(idEditor);
+                oEditor = CKEDITOR.instances[idEditor];
+                if (typeof oEditor !== 'undefined') {
+                    oEditor.focus();
+                    oEditor.fire('saveSnapshot');
+                    iframe.find('body').html(modeloHtml);
+                    actionsMarkSigilo(undefined, 'apply');
+                    enableButtonSavePro();
+                    
+                    var $form = oEditor.element.$.form;
+                    if ($form) $form.submit();
+
+                    sessionStorageRemovePro('dadosDocCertidao');
+                    sessionStorageRemovePro('nomeDocCertidao');
+                }
+            }
+        }
+        */
+    }
+}
 // SUBSTITUI CAMPOS PERSONALIZADOS
 function sumTagValue(value) {
     var return_ = value;
@@ -1885,6 +2240,7 @@ function sumTagValue(value) {
             });
             var iDoc = indexDoc+(i+1);
                 iDoc = (docs.length <= iDoc) ? (docs.length-1) : iDoc;
+                iDoc = (value.indexOf('-') !== -1 && value.split('-')[1] == 'ultimo') ? (docs.length-1) : iDoc;
             docValue = getHtmlListDocumentos(docs[iDoc]);
         } else if (hasNumber(value)) {
             docValue = getHtmlListDocumentos(docs[i]);
@@ -1898,7 +2254,7 @@ function getHtmlListDocumentos(value) {
         var nrSei = ( value.nr_sei != '' ) ? value.nr_sei : value.documento;
         var citacaoDoc = getCitacaoDoc();
         var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+value.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
-        return ( value.nr_sei != '' ) ? value.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
+        return ( value.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? value.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
     } else { return '' }
 }
 function replaceDadosEditor(this_) {
@@ -1957,13 +2313,15 @@ function replaceDadosEditor(this_) {
                                       }))
                             : null;
         documentos = (documentos !== null) ? '<span class="ancoraSei dynamicField">'+documentos+'</span>' : documentos;
+    var totaldocumentos = (typeof docs !== 'undefined' && docs !== null && $.inArray('totaldocumentos', arrayTags) !== -1) ? '<span class="ancoraSei dynamicField">'+docs.length+'</span>' : null;
 
-    var dadosProcesso = {processo: processo, autuacao: autuacao, tipo: tipo, especificacao: especificacao, hoje: hoje, interessados: interessados, assuntos: assuntos, acesso: acesso, documentos: documentos, observacoes: observacoes, observacao: observacao};
+    var dadosProcesso = {processo: processo, autuacao: autuacao, tipo: tipo, especificacao: especificacao, hoje: hoje, interessados: interessados, assuntos: assuntos, acesso: acesso, documentos: documentos, totaldocumentos: totaldocumentos, observacoes: observacoes, observacao: observacao};
     var dadosTags = [];
         $.each(prop.txaTagsObservacoes, function (index, valueTag) {
             if (valueTag.unidade != unidade) {
                 $.each(valueTag.tags, function (i, v) {
                     dadosProcesso[v.name] = '<span class="ancoraSei dynamicField">'+v.value+'</span>';
+                    dadosTags.push(v.name);
                 });
             }
         });
@@ -1971,6 +2329,7 @@ function replaceDadosEditor(this_) {
             if (valueTag.unidade == unidade) {
                 $.each(valueTag.tags, function (i, v) {
                     dadosProcesso[v.name] = '<span class="ancoraSei dynamicField">'+v.value+'</span>';
+                    dadosTags.push(v.name);
                 });
             }
         });
@@ -1979,12 +2338,14 @@ function replaceDadosEditor(this_) {
     oEditor.focus();
     oEditor.fire('saveSnapshot');
     $.each(arrayTags, function (i, value) {
-        var underline = (value.indexOf('_') !== -1) ? '_'+value.split('_')[1] : '';
+        var _value = value;
+        var underline = (value.indexOf('_') !== -1 && $.inArray(_value, dadosTags) === -1) ? '_'+value.split('_')[1] : '';
             value = (value.indexOf('_') !== -1) ? value.split('_')[0] : value;
+            value = ($.inArray(_value, dadosTags) !== -1) ? _value : value;
         var hashTag = (value.indexOf('+') !== -1) ? '#'+(value.replace('+', '\\+')) : '#'+value;
         var hashSpan = '<span class="ancoraSei hashField" data-hash="'+value+'">#'+value+'</span>';
         var fieldSpan = (typeof dadosProcesso[value] !== 'undefined' && dadosProcesso[value] !== null) ? dadosProcesso[value] : hashSpan;
-            fieldSpan = (value.indexOf('+') !== -1 || value.indexOf('-') !== -1 || hasNumber(value) ) ? sumTagValue(value): fieldSpan;
+            fieldSpan = (value.indexOf('+') !== -1 || value.indexOf('-') !== -1 || (hasNumber(value) && $.inArray(_value, dadosTags) === -1) ) ? sumTagValue(value): fieldSpan;
             fieldSpan = fieldSpan+'&nbsp;';
             iframeEditor.find('p').each(function(){
                 $(this).html($(this).html().replace(new RegExp(hashTag+underline, "i"), function(){ count++; return fieldSpan }));
@@ -2043,6 +2404,9 @@ function getDadosEditor(this_, TimeOut = 9000) {
         oEditor.openDialog('DadosSEI');
     } else {
         setTimeout(function(){ 
+            if (typeof dadosProcessoPro.propProcesso === 'undefined' && getDadosProcessoSession() ) {
+                dadosProcessoPro = getDadosProcessoSession();
+            }
             getDadosEditor(this_, TimeOut - 100); 
             $(this_).fadeOut(200).fadeIn(200);
             console.log('Reload getDadosEditor'); 
@@ -2065,7 +2429,7 @@ function getDialogDadosEditor() {
         $.each(tagsArray.tags, function(index, v){
              tableNewDynamicField +=  '     <tr class="cke_dialog_ui_hbox" data-tag="'+v.name+'">'+
                                       '         <td class="" role="presentation" style="width:30%; padding:8px">'+
-                                      '             <label class="cke_dialog_ui_labeled_label"><b style="background: #e4e4e4; padding: 2px 5px; border-radius: 5px;">#'+v.name+'</b></label>'+
+                                      '             <label class="cke_dialog_ui_labeled_label"><b class="hashSpan">#'+v.name+'</b></label>'+
                                       '         </td>'+
                                       '         <td class="" role="presentation" style="width:70%; padding:8px">'+
                                       '             <em>'+v.value+'</em>'+
@@ -2226,6 +2590,7 @@ function getDialogDadosEditor() {
                               '                       '+getDialogDadosEditor_htmlListTag('acesso', 'N\u00EDvel de acesso do processo')+
                               '                       '+getDialogDadosEditor_htmlListTag('acesso_texto', 'N\u00EDvel de acesso do processo <em>(sem \u00EDcone)</em>')+
                               '                       '+getDialogDadosEditor_htmlListTag('documentos', 'Lista de todos os documentos do processo (separados por v\u00EDrgula)</em>')+
+                              '                       '+getDialogDadosEditor_htmlListTag('totaldocumentos', 'N\u00FAmero de documentos do processo</em>')+
                               '                       '+getDialogDadosEditor_htmlListTag('documentos_lista', 'Lista de todos os documentos do processo (em formato de lista)</em>')+
                               '                       '+getDialogDadosEditor_htmlListTag('hoje', 'Data de hoje <em>(em formato [dia] de [m\u00EAs] de [ano])</em>')+
                               '                   </tbody>'+
@@ -2295,7 +2660,7 @@ function newDynamicField(this_) {
         if ($.inArray(name, arrayRestictTags) === -1) {
             var htmlNewDynamicField = '     <tr class="cke_dialog_ui_hbox" data-tag="'+name+'">'+
                                       '         <td class="" role="presentation" style="width:30%; padding:8px">'+
-                                      '             <label class="cke_dialog_ui_labeled_label"><b style="background: #e4e4e4; padding: 2px 5px; border-radius: 5px;">#'+name+'</b></label>'+
+                                      '             <label class="cke_dialog_ui_labeled_label"><b class="hashSpan">#'+name+'</b></label>'+
                                       '         </td>'+
                                       '         <td class="" role="presentation" style="width:70%; padding:8px">'+
                                       '             <em>'+value+'</em>'+
@@ -2337,7 +2702,7 @@ function newDynamicField(this_) {
 function updateDynamicField() {
     var selectId = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'listDados')._.inputId;
         $('#'+selectId).find('option').each(function(){
-            if($(this).text().trim().split(' ')[0] == 'Personalizado') {
+            if ($(this).text().trim().split(' ')[0] == 'Personalizado') {
                 $(this).remove();
             }
         });
@@ -2365,7 +2730,7 @@ function updateDynamicField() {
 function getDialogDadosEditor_htmlListTag(tag, desc) {
     return '          <tr class="cke_dialog_ui_hbox">'+
            '              <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:8px">'+
-           '                  <label class="cke_dialog_ui_labeled_label"><b style="background: #e4e4e4;padding: 2px 5px;border-radius: 5px;">#'+tag+'</b></label>'+
+           '                  <label class="cke_dialog_ui_labeled_label"><b class="hashSpan">#'+tag+'</b></label>'+
            '              </td>'+
            '              <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px; vertical-align: middle;">'+
            '                  '+desc+
@@ -2664,7 +3029,7 @@ function getDialogQrCode() {
 						'			</td><td>'+
 						'				<label for="QrPro-fontcolor">Cor da fonte</label><input id="QrPro-fontcolor" type="color" value="#ff9818">'+
 						'			</td><td>'+
-						'				<label for="QrPro-label" class="QrMode-e">Etiqueta</label><input id="QrPro-label" type="text" value="Sei Pro">'+
+						'				<label for="QrPro-label" class="QrMode-e">Etiqueta</label><input id="QrPro-label" type="text" value="'+NAMESPACE_SPRO+'">'+
 						'			</td></tr>'+
 						'			<tr class="QrMode-imagem"><td colspan="2">'+
 						'				<label for="QrPro-image">Imagem</label><input id="QrPro-image" type="file">'+
@@ -2758,7 +3123,7 @@ function resetOptionsQR() {
 		['QrPro-quiet', '1'],
 		['QrPro-radius', '50'],
 		['QrPro-mode', '0'],
-		['QrPro-label', 'Sei Pro'],
+		['QrPro-label', NAMESPACE_SPRO],
 		['QrPro-msize', '20'],
 		['QrPro-mposx', '50'],
 		['QrPro-mposy', '50'],
@@ -2887,7 +3252,8 @@ function insertProtocoloOnBox(idEditor) {
     var selectTxt = oEditor.getSelection().getSelectedText();
     setTimeout(function(){ 
         if ( typeof selectTxt !== 'undefined' && selectTxt != '' ) { 
-                CKEDITOR.dialog.getCurrent().getContentElement('general', 'protocolo').setValue(selectTxt);
+            CKEDITOR.dialog.getCurrent().getContentElement('general', 'protocolo').setValue(selectTxt);
+            document.getElementById(CKEDITOR.dialog.getCurrent().getButton('ok').domId).click();
         }
     }, 100);
 }
@@ -2981,6 +3347,655 @@ function getDialogLinkPro() {
          };
       } );
 }
+function initDialogUploadImgBase64() {
+    if (checkConfigValue('editarimagens')) {
+        getDialogUploadImgBase64();
+    }
+}
+function openDialogUploadImgBase64(oEditor) {
+    oEditor.openDialog('base64imageDialog');
+}
+function getDialogUploadImgBase64() {
+    /*
+    * Created by ALL-INKL.COM - Neue Medien Muennich - 04. Feb 2014
+    * Licensed under the terms of GPL, LGPL and MPL licenses.
+    */
+    CKEDITOR.dialog.add("base64imageDialog", function(editor){
+        var t = null,
+            selectedImg = null,
+            orgWidth = null, orgHeight = null,
+            imgPreview = null, imgLoading = null, urlCB = null, urlI = null, fileCB = null, imgScal = 1, lock = true;
+        /* Check File Reader Support */
+        function fileSupport() {
+            var r = false, n = null;
+            try {
+                if (FileReader) {
+                    var n = document.createElement("input");
+                    if (n && "files" in n) r = true;
+                }
+            } catch(e) { r = false; }
+            n = null;
+            return r;
+        }
+        var fsupport = fileSupport();
+        /* Load preview image */
+        function imagePreviewLoad(s) {
+            /* no preview */
+            if (typeof(s) != "string" || !s) {
+                imgLoading.getElement().setHtml("");
+                return;
+            }
+            /* Create image */
+            var i = new Image();
+            /* Display loading text in preview element */
+            imgLoading.getElement().setHtml("Carregando...");
+            /* When image is loaded */
+            i.onload = function() {
+                /* Remove preview */
+                imgLoading.getElement().setHtml("");
+                /* Set attributes */
+                if (orgWidth == null || orgHeight == null) {
+                    if (!$(this).attr('data-width')) t.setValueOf("tab-properties", "width", this.width);
+                    if (!$(this).attr('data-height')) t.setValueOf("tab-properties", "height", this.height);
+                    imgScal = 1;
+                    if (this.height > 0 && this.width > 0) imgScal = this.width / this.height;
+                    if (imgScal <= 0) imgScal = 1;
+                } else {
+                    orgWidth = null;
+                    orgHeight = null;
+                }
+                this.id = editor.id+"previewimage_"+randomString(4);
+                this.setAttribute("class","previewImage");
+                this.setAttribute("alt", "");
+                this.setAttribute("style", "cursor:move;max-width:400px;max-height:100px;float:left;margin: 5px;");
+
+                if (!$(this).attr('data-width')) $(this).attr('data-width', this.width);
+                if (!$(this).attr('data-height')) $(this).attr('data-height', this.height);
+
+                /* Insert preview image */
+                try {
+                    var boxPreview = CKEDITOR.dialog.getCurrent().getContentElement("tab-source", "preview").getElement().$;
+                    var p = imgPreview.getElement().$;
+                    if (p) {
+                        p.appendChild(this);
+                        // if (qualidadeImagens > 0 && !$(this).attr('quality')) qualityImages(this, this, quality);
+                        if (boxPreview) {
+                            $(boxPreview).sortable({
+                                items: 'img.previewImage',
+                                cursor: 'grabbing',
+                                start: function(event, ui){
+                                    ui.placeholder.height(ui.item.height());
+                                    ui.placeholder.width(ui.item.width());
+                                },
+                                forceHelperSize: true,
+                                opacity: 0.5
+                            });
+                        }
+                    }
+                } catch(e) {}
+                
+            };
+            /* Error Function */
+            i.onerror = function(){ imgLoading.getElement().setHtml(""); };
+            i.onabort = function(){ imgLoading.getElement().setHtml(""); };
+            /* Load image */
+            i.src = s;
+            if (!isBase64(s)) { 
+                getBase64Image($(i));
+                //console.log($(i), s);
+            }
+        }
+        function loopFileUpload(files, i) {
+            var fr = new FileReader();
+            fr.onload = (function(f) { return function(e) {
+                imgLoading.getElement().setHtml("");
+                imagePreviewLoad(e.target.result);
+            }; })(files[i]);
+            fr.onerror = function(){ imgLoading.getElement().setHtml(""); };
+            fr.onabort = function(){ imgLoading.getElement().setHtml(""); };
+            try {
+                fr.readAsDataURL(files[i]);
+            } catch(e) {}
+        }
+        /* Change input values and preview image */
+        function imagePreview(src){
+            /* Remove preview */
+            imgLoading.getElement().setHtml("");
+            imgPreview.getElement().setHtml("");
+            if (src == "base64") {
+                /* Disable Checkboxes */
+                if (urlCB) urlCB.setValue(false, true);
+                if (fileCB) fileCB.setValue(false, true);
+            } else if (src == "url") {
+                /* Enable Image URL Checkbox */
+                if (urlCB) urlCB.setValue(true, true);
+                if (fileCB) fileCB.setValue(false, true);
+                /* Load preview image */
+                if (urlI) imagePreviewLoad(urlI.getValue());
+            } else if (fsupport) {
+                /* Enable Image File Checkbox */
+                if (urlCB) urlCB.setValue(false, true);
+                if (fileCB) fileCB.setValue(true, true);
+                /* Read file and load preview */
+                var fileI = t.getContentElement("tab-source", "file");
+                var n = null;
+                try { n = fileI.getInputElement().$; } catch(e) { n = null; }
+                if (n && "files" in n && n.files && n.files.length > 0 && n.files[0]) {
+                    if ("type" in n.files[0] && !n.files[0].type.match("image.*")) return;
+                    if (!FileReader) return;
+                    imgLoading.getElement().setHtml("Carregando...");
+                    for (var i in n.files) {
+                        loopFileUpload(n.files, i);
+                    }
+                }
+            }
+        };
+        /* Calculate image dimensions */
+        function getImageDimensions() {
+            var o = {
+                "w" : t.getContentElement("tab-properties", "width").getValue(),
+                "h" : t.getContentElement("tab-properties", "height").getValue(),
+                "uw" : "px",
+                "uh" : "px"
+            };
+            if (o.w.indexOf("%") >= 0) o.uw = "%";
+            if (o.h.indexOf("%") >= 0) o.uh = "%";
+            o.w = parseInt(o.w, 10);
+            o.h = parseInt(o.h, 10);
+            if (isNaN(o.w)) o.w = 0;
+            if (isNaN(o.h)) o.h = 0;
+            return o;
+        }
+        /* Set image dimensions */
+        function imageDimensions(src) {
+            var o = getImageDimensions();
+            var u = "px";
+            if (src == "width") {
+                if (o.uw == "%") u = "%";
+                o.h = Math.round(o.w / imgScal);
+            } else {
+                if (o.uh == "%") u = "%";
+                o.w = Math.round(o.h * imgScal); 
+            }
+            if (u == "%") {
+                o.w += "%";
+                o.h += "%";
+            }
+            t.getContentElement("tab-properties", "width").setValue(o.w),
+            t.getContentElement("tab-properties", "height").setValue(o.h)
+        }
+        /* Set integer Value */
+        function integerValue(elem) {
+            var v = elem.getValue(), u = "";
+            if (v.indexOf("%") >= 0) u = "%";
+            v = parseInt(v, 10);
+            if (isNaN(v)) v = 0;
+            elem.setValue(v+u);
+        }
+        function addImgOnEditor(img) {
+            /* Get image source */
+            var src = $(img).attr('src');
+            var data = $(img).data();
+            var quality = t.getValueOf("tab-properties", "quality");
+                quality = (quality != "") ? parseInt(quality)*0.01 : qualidadeImagens*0.01;
+                quality = (quality > 100) ? 100 : quality;
+                quality = (quality < 0) ? 0 : quality;
+            // try { src = CKEDITOR.document.getById(editor.class+"previewimage").$.src; } catch(e) { src = ""; }
+            if (typeof(src) != "string" || src == null || src === "") return;
+            /* selected image or new image */
+            if (selectedImg) var newImg = selectedImg; else var newImg = editor.document.createElement("img");
+            newImg.setAttribute("src", src);
+            src = null;
+            /* Set attributes */
+            newImg.setAttribute("alt", t.getValueOf("tab-properties", "alt").replace(/^\s+/, "").replace(/\s+$/, ""));
+            var attr = {
+                "width" : ["width", "width:#;", "integer", 1],
+                "height" : ["height", "height:#;", "integer", 1],
+                "maxwidth" : ["maxwidth", "max-width:#;object-fit: contain;", "integer", 1],
+                "maxheight" : ["maxheight", "max-height:#;object-fit: contain;", "integer", 1],
+                "vmargin" : ["vspace", "margin-top:#;margin-bottom:#;", "integer", 0],
+                "hmargin" : ["hspace", "margin-left:#;margin-right:#;", "integer", 0],
+                "align" : ["align", ""],
+                "filter" : ["filter", ""],
+                "border" : ["border", "border:# solid black;", "integer", 0]
+            }, css = [], value, cssvalue, attrvalue, k;
+            for(k in attr) {
+                value = t.getValueOf("tab-properties", k);
+                attrvalue = value;
+                cssvalue = value;
+                unit = "px";
+                if (k == "align") {
+                    switch(value) {
+                        case "top":
+                        case "bottom":
+                            attr[k][1] = "vertical-align:#;";
+                            break;
+                        case "left":
+                        case "right":
+                            attr[k][1] = "float:#;";
+                            break;
+                        default:
+                            value = null;
+                            break;
+                    }
+                } else if (k == "filter") {
+                    switch(value) {
+                        case "grayscale":
+                            attr[k][1] = "filter:grayscale(1);";
+                            break;
+                        case "blur":
+                            attr[k][1] = "filter:blur(3px);";
+                            break;
+                        case "shadow":
+                            attr[k][1] = "filter:drop-shadow(2px 4px 6px black);";
+                            break;
+                        case "invert":
+                            attr[k][1] = "filter:invert(1);";
+                            break;
+                        case "sepia":
+                            attr[k][1] = "filter:sepia(1);";
+                            break;
+                        default:
+                            value = null;
+                            break;
+                    }
+                }
+                if (attr[k][2] == "integer") {
+                    if (value.indexOf("%") >= 0) unit = "%";
+                    value = parseInt(value, 10);
+                    if (isNaN(value)) value = null; else if (value < attr[k][3]) value = null;
+                    if (value != null) {
+                        if (unit == "%") {
+                            attrvalue = value+"%";
+                            cssvalue = value+"%";
+                        } else {
+                            attrvalue = value;
+                            cssvalue = value+"px";
+                        }
+                    }
+                }
+                if (value != null) {
+                    if (k == 'width' && typeof data !== 'undefined' && data.width && !selectedImg) {
+                        newImg.setAttribute('width', data.width);
+                    } else if (k == 'height' && typeof data !== 'undefined' && data.height && !selectedImg) {
+                        newImg.setAttribute('height', data.height);
+                    } else {
+                        newImg.setAttribute(attr[k][0], attrvalue);
+                        css.push(attr[k][1].replace(/#/g, cssvalue));
+                    }
+                }
+            }
+            if (css.length > 0) newImg.setAttribute("style", css.join(""));
+            if (newImg.getAttribute('maxwidth')) {
+                newImg.removeAttribute('height');
+            }
+            if (newImg.getAttribute('maxheight')) {
+                newImg.removeAttribute('width');
+            }
+            /* Insert new image */
+            if (!selectedImg) editor.insertElement(newImg);
+            if (qualidadeImagens > 0 && !$(newImg).attr('quality')) {
+                newImg.setAttribute("quality",quality);
+                qualityImages(newImg.$, newImg.$, quality);
+            }
+            /* Resize image */
+            if (editor.plugins.imageresize) editor.plugins.imageresize.resize(editor, newImg, 800, 800);
+        }
+
+
+        if (fsupport) {
+            /* Dialog with file and url image source */
+            var sourceElements = [
+                {
+                    type: "vbox",
+                    widths: ["70px"],
+                    children: [
+                        {
+                            type: "checkbox",
+                            id: "filecheckbox",
+                            style: "margin-top:5px",
+                            label: "Navegar neste computador:"
+                        },
+                        {
+                            type: "file",
+                            id: "file",
+                            label: "",
+                            onChange: function(){ imagePreview("file"); }
+                        }
+                    ]
+                },{
+                    type: "vbox",
+                    widths: ["70px"],
+                    children: [
+                        {
+                            type: "checkbox",
+                            id: "urlcheckbox",
+                            style: "margin-top:5px",
+                            label: "URL da Imagem:"
+                        },
+                        {
+                            type: "text",
+                            id: "url",
+                            label: "",
+                            onChange: function(){ imagePreview("url"); }
+                        }
+                    ]
+                },
+                {
+                    type: "html",
+                    id: "loading",
+                    html: new CKEDITOR.template("<div style=\"text-align:center;\"></div>").output()
+                },
+                {
+                    type: "html",
+                    id: "preview",
+                    html: new CKEDITOR.template("<div class=\"dropFilePro\" style=\"text-align:center;max-width: 700px;\"></div>").output()
+                }
+            ];
+        } else {
+            /* Dialog with url image source */
+            var sourceElements = [
+                {
+                    type: "text",
+                    id: "url",
+                    label: "URL da Imagem:",
+                    onChange: function(){ imagePreview("url"); }
+                },
+                {
+                    type: "html",
+                    id: "loading",
+                    html: new CKEDITOR.template("<div style=\"text-align:center;\"></div>").output()
+                },
+                {
+                    type: "html",
+                    id: "preview",
+                    html: new CKEDITOR.template("<div class=\"dropFilePro\" style=\"text-align:center;max-width: 700px;\"></div>").output()
+                }
+            ];
+        }
+        /* Dialog */
+        return {
+            title: editor.lang.common.image,
+            minWidth: 750,
+            minHeight: 180,
+            onLoad: function(){
+                if (fsupport) {
+                    /* Get checkboxes */
+                    urlCB = this.getContentElement("tab-source", "urlcheckbox");
+                    fileCB = this.getContentElement("tab-source", "filecheckbox");
+                    /* Checkbox Events */
+                    urlCB.getInputElement().on("click", function(){ imagePreview("url"); });
+                    fileCB.getInputElement().on("click", function(){ imagePreview("file"); });
+                    
+                }
+                /* Get url input element */
+                urlI = this.getContentElement("tab-source", "url");
+                /* Get image preview element */
+                imgLoading = this.getContentElement("tab-source", "loading");
+                imgPreview = this.getContentElement("tab-source", "preview");
+                /* Constrain proportions or not */
+                this.getContentElement("tab-properties", "lock").getInputElement().on("click", function(){
+                    if (this.getValue()) lock = true; else lock = false;
+                    if (lock) imageDimensions("width");
+                }, this.getContentElement("tab-properties", "lock"));
+                /* Change Attributes Events  */
+                this.getContentElement("tab-properties", "width").getInputElement().on("keyup", function(){ if (lock) imageDimensions("width"); });
+                this.getContentElement("tab-properties", "height").getInputElement().on("keyup", function(){ if (lock) imageDimensions("height"); });
+                this.getContentElement("tab-properties", "vmargin").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "vmargin"));
+                this.getContentElement("tab-properties", "hmargin").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "hmargin"));
+                this.getContentElement("tab-properties", "border").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "border"));
+                this.getContentElement("tab-properties", "maxwidth").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "maxwidth"));
+                this.getContentElement("tab-properties", "maxheight").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "maxheight"));
+                this.getContentElement("tab-properties", "quality").getInputElement().setAttribute('type','number').setAttribute('max','100').setAttribute('min','1');
+                checkLoadJqueryUI();
+            },
+            onShow: function(){
+
+                fileElem = this.getContentElement("tab-source", "file").getElement().$;
+                if (fileElem) {
+                    $(fileElem).css('height','90px').find('iframe').css('height','90px').contents()
+                        .find('head').append('<style type="text/css" data-style="seipro">input[type="file"]:before { content: "Arraste arquivos para c\u00E1 ou clique em "; }</style>')
+                        .end()
+                        .find('input[type="file"]')
+                        .prop('multiple','multiple')
+                        .css({
+                            'width':'100%',
+                            'display':'block',
+                            'background':'#f2f2f2',
+                            'padding':'30px 10px 30px 40px',
+                            'border-radius':'10px',
+                            'font-size':'13pt',
+                            'color':'#999',
+                            'filter': (isDarkMode ? 'invert(1) brightness(1.5)' : 'none'),
+                            'border':'1px dashed #ccc'
+                        });
+                }
+                /* Remove preview */
+                imgLoading.getElement().setHtml("");
+                imgPreview.getElement().setHtml("");
+                t = this, orgWidth = null, orgHeight = null, imgScal = 1, lock = true;
+                /* selected image or null */
+                selectedImg = editor.getSelection().getSelectedElement();;
+                if (selectedImg && selectedImg.getName() == "img") {
+                    // selectedImg = selectedImg.getSelectedElement();
+                    this.getContentElement("tab-properties", "quality").disable();
+                    if (typeof(selectedImg.getAttribute("src")) == "string") {
+                        var srcSelectedImg = selectedImg.getAttribute("src");
+                        var base64strImg = srcSelectedImg.substring(srcSelectedImg.indexOf(',') + 1)
+                        var decoded = atob(base64strImg);
+                        console.log("FileSize: " + decoded.length);
+                        this.getContentElement("tab-properties", "imglength").getElement().setHtml("Tamanho da imagem: <br>"+infraFormatarTamanhoBytes(decoded.length));
+                    }
+                }
+                if (!selectedImg || selectedImg.getName() !== "img") {
+                    selectedImg = null;
+                    this.getContentElement("tab-properties", "quality").enable();
+                    this.getContentElement("tab-properties", "imglength").getElement().setHtml("");
+                }
+                /* Set input values */
+                t.setValueOf("tab-properties", "lock", lock);
+                t.setValueOf("tab-properties", "vmargin", "0");
+                t.setValueOf("tab-properties", "hmargin", "0");
+                t.setValueOf("tab-properties", "border", "0");
+                t.setValueOf("tab-properties", "maxwidth", "0");
+                t.setValueOf("tab-properties", "maxheight", "0");
+                t.setValueOf("tab-properties", "quality", qualidadeImagens);
+                t.setValueOf("tab-properties", "align", "none");
+                t.setValueOf("tab-properties", "filter", "none");
+                if (selectedImg) {
+                    /* Set input values from selected image */
+                    if (typeof(selectedImg.getAttribute("width")) == "string") orgWidth = selectedImg.getAttribute("width");
+                    if (typeof(selectedImg.getAttribute("height")) == "string") orgHeight = selectedImg.getAttribute("height");
+                    if ((orgWidth == null || orgHeight == null) && selectedImg.$) {
+                        orgWidth = selectedImg.$.width;
+                        orgHeight = selectedImg.$.height;
+                    }
+                    if (orgWidth != null && orgHeight != null) {
+                        t.setValueOf("tab-properties", "width", orgWidth);
+                        t.setValueOf("tab-properties", "height", orgHeight);
+                        orgWidth = parseInt(orgWidth, 10);
+                        orgHeight = parseInt(orgHeight, 10);
+                        imgScal = 1;
+                        if (!isNaN(orgWidth) && !isNaN(orgHeight) && orgHeight > 0 && orgWidth > 0) imgScal = orgWidth / orgHeight;
+                        if (imgScal <= 0) imgScal = 1;
+                    }
+                    if (typeof(selectedImg.getAttribute("src")) == "string") {
+                        if (selectedImg.getAttribute("src").indexOf("data:") === 0) {
+                            imagePreview("base64");
+                            imagePreviewLoad(selectedImg.getAttribute("src"));
+                        } else {
+                            t.setValueOf("tab-source", "url", selectedImg.getAttribute("src"));
+                        }
+                    }
+                    if (typeof(selectedImg.getAttribute("alt")) == "string") t.setValueOf("tab-properties", "alt", selectedImg.getAttribute("alt"));
+                    if (typeof(selectedImg.getAttribute("hspace")) == "string") t.setValueOf("tab-properties", "hmargin", selectedImg.getAttribute("hspace"));
+                    if (typeof(selectedImg.getAttribute("vspace")) == "string") t.setValueOf("tab-properties", "vmargin", selectedImg.getAttribute("vspace"));
+                    if (typeof(selectedImg.getAttribute("border")) == "string") t.setValueOf("tab-properties", "border", selectedImg.getAttribute("border"));
+                    if (typeof(selectedImg.getAttribute("maxwidth")) == "string") t.setValueOf("tab-properties", "maxwidth", selectedImg.getAttribute("maxwidth"));
+                    if (typeof(selectedImg.getAttribute("maxheight")) == "string") t.setValueOf("tab-properties", "maxheight", selectedImg.getAttribute("maxheight"));
+                    if (typeof(selectedImg.getAttribute("filter")) == "string") t.setValueOf("tab-properties", "filter", selectedImg.getAttribute("filter"));
+                    if (typeof(selectedImg.getAttribute("quality")) == "string") t.setValueOf("tab-properties", "quality", parseInt(selectedImg.getAttribute("quality")*100));
+                    if (typeof(selectedImg.getAttribute("align")) == "string") {
+                        switch(selectedImg.getAttribute("align")) {
+                            case "top":
+                            case "text-top":
+                                t.setValueOf("tab-properties", "align", "top");
+                                break;
+                            case "baseline":
+                            case "bottom":
+                            case "text-bottom":
+                                t.setValueOf("tab-properties", "align", "bottom");
+                                break;
+                            case "left":
+                                t.setValueOf("tab-properties", "align", "left");
+                                break;
+                            case "right":
+                                t.setValueOf("tab-properties", "align", "right");
+                                break;
+                        }
+                    }
+                    t.selectPage("tab-properties");
+                }
+            },
+            onOk : function(){
+                var imgs = CKEDITOR.document.getElementsByTag("img").$;
+                if (typeof imgs !== 'undefined' && imgs.length > 0) {
+                    $.each(imgs, function(i, img){
+                        var src = $(img).attr('src');
+                        if (!isValidHttpUrl(src)) {
+                            addImgOnEditor(img);
+                        }
+                    })
+                }
+            },
+            /* Dialog form */
+            contents: [
+                {
+                    id: "tab-source",
+                    label: editor.lang.common.generalTab,
+                    elements: sourceElements
+                },
+                {
+                    id: "tab-properties",
+                    label: editor.lang.common.advancedTab,
+                    elements: [
+                        {
+                            type: "text",
+                            id: "alt",
+                            label: "Texto Alternativo"
+                        },
+                        {
+                            type: 'hbox',
+                            widths: ["30%", "30%", "40%"],
+                            children: [
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "width",
+                                    label: editor.lang.common.width
+                                },
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "height",
+                                    label: editor.lang.common.height
+                                },
+                                {
+                                    type: "checkbox",
+                                    id: "lock",
+                                    label: "Travar Propor\u00E7\u00F5es",
+                                    style: "margin-top:18px;"
+                                }
+                            ]
+                        },
+                        {
+                            type: 'hbox',
+                            widths: ["30%", "30%", "40%"],
+                            style: "margin-top:10px;",
+                            children: [
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "vmargin",
+                                    label: "Margem Vertical"
+                                },
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "hmargin",
+                                    label: "Margem Horizontal"
+                                },
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "border",
+                                    label: "Borda"
+                                }
+                            ]
+                        },
+                        {
+                            type: 'hbox',
+                            widths: ["30%", "30%", "40%"],
+                            children: [
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "maxwidth",
+                                    label: "Largura M\u00E1xima"
+                                },
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "maxheight",
+                                    label: "Altura M\u00E1xima"
+                                },{
+                                    type: "select",
+                                    id: "align",
+                                    label: editor.lang.common.align,
+                                    items: [
+                                        [editor.lang.common.notSet, "none"],
+                                        [editor.lang.common.alignTop, "top"],
+                                        [editor.lang.common.alignBottom, "bottom"],
+                                        [editor.lang.common.alignLeft, "left"],
+                                        [editor.lang.common.alignRight, "right"]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            type: 'hbox',
+                            widths: ["30%", "30%", "40%"],
+                            children: [
+                                {
+                                    type: "text",
+                                    width: "80px",
+                                    id: "quality",
+                                    label: "Qualidade da Imagem"
+                                },{
+                                    type: "select",
+                                    id: "filter",
+                                    label: "Filtro",
+                                    items: [
+                                        [editor.lang.common.notSet, "none"],
+                                        ["Escala de Cinza", "grayscale"],
+                                        ["Borrado", "blur"],
+                                        ["Caixa Sombreada", "shadow"],
+                                        ["Cores Invertidas", "invert"],
+                                        ["Envelhecido", "sepia"]
+                                    ]
+                                },{
+                                    type: "html",
+                                    id: "imglength",
+                                    html: new CKEDITOR.template("<div style=\"text-align:left;\"></div>").output()
+                                },
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+    });
+}
 function hideLinkTips(iframeDoc) {
     if (iframeDoc.find('.linkDisplayPro:hover').length == 0) {
         iframeDoc.find('.linkDisplayPro').closest('a');
@@ -3011,6 +4026,113 @@ function showLinkTips(this_, iframeDoc) {
         var windowWidth = $(window).width();
         var margin = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-(boxDisplayLink_left+boxDisplayLink_width+45) : 0;
             boxDisplayLink.css('margin-left', margin);
+}
+function openImageEditorPro(this_) {
+    oEditor.openDialog('ImageEditorPro');
+}
+function initDialogImageEditorPro() {
+    if (checkConfigValue('editarimagens')) {
+        getDialogImageEditorPro();
+    }
+}
+function getDialogImageEditorPro() {
+    if (checkConfigValue('editarimagens')) {
+        var htmlImageEditorPro =    '<div id="ImageEditorPro"></div>'; 
+        var wScreen = $('body').width()-5;
+            wScreen = wScreen > 900 ? 900 : wScreen;
+        var hScreen = $('body').height()-10;
+            hScreen = hScreen > 900 ? 900 : hScreen
+
+        CKEDITOR.dialog.add( 'ImageEditorPro', function ( editor ) {
+            return {
+                title : 'Editar Imagem',
+                minWidth : wScreen,
+                minHeight : hScreen,
+                buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
+                onOk: function(event, a, b) {
+                        event.data.hide = false;
+                    var newImgBase64 = imgEditor.getCurrentImgData().imageData.imageBase64;
+                    var selectedImg = oEditor.getSelection().getStartElement().$;
+                    if (selectedImg) {
+                        selectedImg.setAttribute("src", newImgBase64);
+                        imgEditor.terminate();
+                        CKEDITOR.dialog.getCurrent().hide();
+                    }
+                },
+                onShow : function() {
+                    checkLoadFileRobot(function(){
+                        selectedImg = editor.getSelection();
+                        if (selectedImg) {
+                            selectedImg = selectedImg.getSelectedElement();
+                        } else  if (!selectedImg || selectedImg.getName() !== "img") {
+                            selectedImg = null;
+                        }
+                        if (typeof(selectedImg.getAttribute("src")) == "string") {
+                            console.log('onShow', selectedImg);
+                            var { TABS, TOOLS } = FilerobotImageEditor;
+                            var config = {
+                                source: selectedImg.getAttribute("src"),
+                                onSave: function (editedImageObject, designState) { 
+                                    selectedImg.setAttribute("src", editedImageObject.imageBase64);
+                                    CKEDITOR.dialog.getCurrent().hide();
+                                },
+                                annotationsCommon: {
+                                    fill: '#ff0000'
+                                },
+                                Text: { text: NAMESPACE_SPRO+'...' },
+                                translations: {
+                                    'toolbar.adjust': 'Ajustes'
+                                },
+                                language: 'pt',
+                                tabsIds: [TABS.ADJUST, TABS.ANNOTATE, TABS.FINETUNE, TABS.FILTERS,  TABS.RESIZE, TABS.WATERMARK], // or ['Adjust', 'Annotate', 'Watermark']
+                                defaultTabId: TABS.ADJUST, // or 'Annotate'
+                                defaultToolId: TOOLS.TEXT, // or 'Text'
+                                loadableDesignState: false,
+                                observePluginContainerSize: true
+                            };
+
+                            // Assuming we have a div with id="editor_container"
+                            var filerobotImageEditor = new FilerobotImageEditor(
+                                document.querySelector('#ImageEditorPro'),
+                                config
+                            );
+
+                            filerobotImageEditor.render({
+                                onClose: (closingReason) => {
+                                    console.log('Closing reason', closingReason);
+                                    filerobotImageEditor.terminate();
+                                }
+                            });
+                            imgEditor = filerobotImageEditor;
+                            setTimeout(function(){ 
+                                var ImageEditorPro_ = $('#ImageEditorPro');
+                                    ImageEditorPro_.css('height',hScreen);
+                                var wImageEditorPro = ImageEditorPro_.width();
+                                var hImageEditorPro = ImageEditorPro_.height();
+                                    // ImageEditorPro_.find('.FIE_main-container').css('height',hImageEditorPro-30);
+                                    // ImageEditorPro_.find('.FIE_editor-content').css('height',hImageEditorPro-70);
+                                    // ImageEditorPro_.find('.FIE_editor-content').css('width',wImageEditorPro-100);
+                            }, 500);
+                        }
+                    });
+                },
+                contents :
+                [
+                {
+                    id : 'tab1',
+                    label : 'Editar Imagem',
+                    elements :
+                    [
+                        {
+                            type: 'html',
+                            html: htmlImageEditorPro
+                        }
+                    ]
+                }
+                ]
+            };
+        });
+    }
 }
 function importDocPro(this_) {
     setParamEditor(this_);
@@ -3088,6 +4210,11 @@ function getDialogImportDocPro() {
              		},{
 						type: 'html',
 						html: tipsDocs
+             		},{
+                        type: 'checkbox',
+                        id: 'replaceTextDocs',
+                        'default': 'checked',
+                        label: 'Substituir todo o documento pelo conte\u00FAdo externo'
              		}
                   ]
                },{
@@ -3103,6 +4230,11 @@ function getDialogImportDocPro() {
              		},{
 						type: 'html',
 						html: tipsSheets
+             		},{
+                        type: 'checkbox',
+                        id: 'replaceTextSheets',
+                        'default': 'checked',
+                        label: 'Substituir todo o documento pelo conte\u00FAdo externo'
              		}
                   ]
                }
@@ -3189,7 +4321,7 @@ function wordToSEI(iframe) {
     iframe.find('a.msocomanchor').remove();
     iframe.find('div[style="mso-element:comment-list"]').remove();
     iframe.find('*').contents().each(function() {
-        if(this.nodeType === Node.COMMENT_NODE) {
+        if (this.nodeType === Node.COMMENT_NODE) {
             $(this).remove();
         }
     });
@@ -3263,6 +4395,8 @@ function readImageAsBase64(item, editor) {
                 class: 'img-base64'
             }
         });
+        
+        if (qualidadeImagens > 0) qualityImages(element.$, element.$);
         // We use a timeout callback to prevent a bug where insertElement inserts at first caret position
         setTimeout(function () {
             editor.insertElement(element);
@@ -3297,7 +4431,7 @@ function openDialogLatex(this_) {
 }
 function getDialogLatex() {
     var htmlLatexPreview =  '<div id="latexPreview" style="text-align: center;margin: 20px;"></div>'+
-                            '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Consulte o <a href="https://pt.wikipedia.org/wiki/Ajuda:Guia_de_edi%C3%A7%C3%A3o/F%C3%B3rmulas_TeX" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238); font-style: italic;">Guia de edi\u00E7\u00E3o/F\u00F3rmulas TeX</a> para utilizar a liguagem LaTeX. <br>Se preferir, utilize um <a href="https://editor.codecogs.com/" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238); font-style: italic;">editor visual de equa\u00E7\u00F5es LaTeX</a>. </label>';
+                            '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Consulte o <a href="https://pt.wikipedia.org/wiki/Ajuda:Guia_de_edi%C3%A7%C3%A3o/F%C3%B3rmulas_TeX" target="_blank" class="linkDialog" style="font-style: italic;">Guia de edi\u00E7\u00E3o/F\u00F3rmulas TeX</a> para utilizar a liguagem LaTeX. <br>Se preferir, utilize um <a href="https://editor.codecogs.com/" target="_blank" class="linkDialog" style="font-style: italic;">editor visual de equa\u00E7\u00F5es LaTeX</a>. </label>';
     CKEDITOR.dialog.add( 'latexDialog', function ( editor )
       {
          return {
@@ -3444,7 +4578,7 @@ function tableSorterPro( editor ) {
                 var column_nr = element.getAscendant( { td:1, th:1 }, true ).getIndex();
                 var table = element.getAscendant({table:1});
                 var tbody = table.getElementsByTag('tbody').getItem(0);
-                if(tbody == undefined) tbody = table;
+                if (tbody == undefined) tbody = table;
                 var items = tbody.$.childNodes;
                 var itemsArr = [];
                 for (var i in items) {
@@ -3455,11 +4589,11 @@ function tableSorterPro( editor ) {
                 itemsArr.sort(function(a, b) {
                     var aText = a.childNodes[column_nr].innerText.trim();
                     var bText = b.childNodes[column_nr].innerText.trim();
-                    if(!aText || 0 === aText.length) 
-                        if(!bText || 0 === bText.length) return 0;
+                    if (!aText || 0 === aText.length) 
+                        if (!bText || 0 === bText.length) return 0;
                         else return 1;
-                    if(!bText || 0 === bText.length) return -1;
-                    if(order == 'desc') return bText.localeCompare(aText, undefined, {numeric:true});
+                    if (!bText || 0 === bText.length) return -1;
+                    if (order == 'desc') return bText.localeCompare(aText, undefined, {numeric:true});
                     return aText.localeCompare(bText, undefined, {numeric:true});
                 });
 
@@ -3472,17 +4606,82 @@ function tableSorterPro( editor ) {
     }
 }
 function initContextMenuPro() { 
-	$(txaEditor).each(function(index){ 
-		var idEditor_ = $(this).attr('id').replace('cke_', '');
-		var iframe_ = $('iframe[title*="'+idEditor_+'"]').contents();
-		if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-			var oEditor_ = CKEDITOR.instances[idEditor_];
-				tableSorterPro(oEditor_);
-                menuCopyStyle(oEditor_);
-		}
-	});
+    setTimeout(function () {
+        $(txaEditor).each(function(index){ 
+            var idEditor_ = $(this).attr('id').replace('cke_', '');
+            var iframe_ = $('iframe[title*="'+idEditor_+'"]').contents();
+            if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
+                var oEditor_ = CKEDITOR.instances[idEditor_];
+                    tableSorterPro(oEditor_);
+                    menuCopyStyle(oEditor_);
+                    if (checkConfigValue('editarimagens')) {
+                        editImgPro(oEditor_);
+                    }
+            }
+        });
+    }, 2000);
 }
+// INSERE FUNCAO ARRASTA E SOLTA PARA IMAGENS
+function initDropImages() {
+    if (checkConfigValue('editarimagens')) {
+        setTimeout(function () {
+            $('iframe.cke_wysiwyg_frame').each(function(index){
+                var iframe = $(this).contents();
+                var instanceIframe = $(this).attr('title');
+                    instanceIframe = (typeof instanceIframe !== 'undefined') ? instanceIframe.split(',')[1].trim() : '';
+                if ( iframe.find('body').attr('contenteditable') == 'true' ) {
+                    iframe.find('body').attr('data-editor', instanceIframe).unbind().on('drop dragdrop',function(e){
+                        var items = e.originalEvent.dataTransfer.items;
+                        if (typeof items !== 'undefined') {
+                            var currentEditor = CKEDITOR.instances[$(e.currentTarget).data('editor')];
+                            if (typeof currentEditor !== 'undefined') {
+                                for (var i = 0; i < items.length; i++) {
+                                    if (items[i].type.indexOf("image") !== -1) {
+                                        readImageAsBase64(items[i], currentEditor);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    setOnBodyActs(iframe);
+                }
+            });
+        }, 1000);
+    }
+}
+function qualityImages( src, dst, quality, type) {
+    var tmp = new Image(),
+        canvas, context, cW, cH;
 
+        type = type || 'image/jpeg';
+        quality = quality || qualidadeImagens*0.01;
+
+        cW = src.naturalWidth;
+        cH = src.naturalHeight;
+
+        tmp.src = src.src;
+        tmp.onload = function() {
+            canvas = document.createElement( 'canvas' );
+
+            cW /= 2;
+            cH /= 2;
+
+            if ( cW < src.width ) cW = src.width;
+            if ( cH < src.height ) cH = src.height;
+
+            canvas.width = cW;
+            canvas.height = cH;
+            context = canvas.getContext( '2d' );
+            context.drawImage( tmp, 0, 0, cW, cH );
+
+            dst.src = canvas.toDataURL( type, quality );
+
+            if ( cW <= src.width || cH <= src.height )
+                return;
+
+            tmp.src = dst.src;
+        }
+}
 // INSERE LINK DE DOCUMENTO PUBLICO
 function getCheckerProcessoPublicoPro() {
     $('<iframe>', {
@@ -3722,7 +4921,8 @@ function insertMinutaWatermark(iframe, type, mode = 'minuta') {
                         '      <a class="ancoraSei" contenteditable="false" style="text-indent:0;">\n'+
                         '          <style type="text/css" data-style="seipro-watermark">\n'+
                         '              body:after { content: "'+textMinuta+'"; font-size: 9em; color: rgb(167 167 167 / 20%); z-index: 999; display: flex; align-items: center; justify-content: center; position: fixed; transform: rotate(-45deg); top: 0; right: 0; left: 0; bottom: 0; pointer-events: none; user-select: none; font-family: Arial; }\n'+
-                        '              .minutaAncora { text-indent: 0; font-size: .8em; padding: 2px 5px; background:#e4e4e4; border-radius: 5px; font-weight: bold; color:#d45656; margin: 0 5px; }\n'+
+                        '              html.dark-mode .minutaAncora, html.dark-mode .minutaAncora:after { background: #6f7071 !important; color: #f9f9f9 !important; }\n'+
+                        '              .minutaAncora { text-indent: 0; font-size: .8em; padding: 2px 5px; background: #e4e4e4; border-radius: 5px; font-weight: bold; color:#d45656; margin: 0 5px; }\n'+
                         '              body.cke_editable .minutaAncora:after { content: " [delete isto para remover a marca d\'agua]"; color:#888; font-weight: normal; font-size: .85em; margin: 0 5px; }\n'+
                         '              body.cke_editable:after { width: fit-content; margin: 0 33%; overflow: hidden; }\n'+
                         '          </style>\n'+
@@ -3765,15 +4965,20 @@ function initFunctions() {
 	getDialogQrCode();
     getDialogLinkPro();
     getDialogImportDocPro();
+    initDialogUploadImgBase64();
     getDialogLatex();
     getDialogProcessoPublicoPro();
     getDialogSigilo();
+    initDialogImageEditorPro();
 	loadResizeImg();
     updateDialogDefinitionPro();
     loadPasteImgToBase64();
     initContextMenuPro();
-    insertFontIcon($('html'));
+    insertFontIcon('head');
     reloadModalLink();
+    setDocCertidao();
+    checkAutoSave();
+    initDropImages();
 	
 	// RETORNA DADOS DO PROCESSO
 	var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
