@@ -2,6 +2,25 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.0
+15/06/2022
+
+- Correções e melhorias
+- Adicionado a [Alteração do layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
+- Adicionado a [Envio de múltiplas imagens, formatação e editação de opções avançadas](../pages/EDITARIMAGENS.md)
+- Adicionado a [Redução da qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)
+- Adicionado a [Salvamento de documentos automaticamente](../pages/SALVAMENTOAUTOMATICO.md)
+- Adicionado a [Enumeração de Normas (Legística)](../pages/LEGISTICA.md) (Migrado do projeto [SEI Legis](https://github.com/SEI-Pro/sei-legis))
+- Adicionado o [Controle de Prazos](../pages/PRAZOS.md)  (Sugestão de Bruno Crescenti)
+- Adicionado as [Caixas de seleção inteligentes](../pages/SUBSTITUIRSELECAO.md)
+- Adicionado as [Ações em Lote](../pages/ACOESEMLOTE.md)
+- Adicionado a [Rolagem infinita na pesquisa de processos](../pages/ROLAGEMINFINITA.md)
+- Adicionado os [Endereços amigáveis em processos e documentos](../pages/URLAMIGAVEL.md) (Sugestão Di Quirino)
+- Adicionado o [Alerta sobre documentos não assinados ao enviar um processo](../pages/DOCSNAOASSINADOS.md) (Sugestão Leonardo Rafaele)
+- Adicionado as [Cores personalizadas em Marcadores](../pages/CORESMARCADORES.md) (Sugestão de Felyssa)
+- Adicionado os [Parágrafos numerados no visualizador de documentos](../pages/PARAGRAFOSNUMERADOS.md) (Sugestão de Francisco Eudes)
+- Adicionado a [Certidão de Documento Oficial com Sigilo](../pages/CERTIDAOSIGILO.md) (Sugestão de Tatiana Cabral - CGU)
+
 ### Versão 0.1.26
 08/09/2021
 
@@ -116,6 +135,7 @@
 
 # Lista de funções do SEI Pro ![SEI Pro](../img/icon-32.png)
 
+- [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
 - [Gerenciar projetos](../pages/PROJETOS.md)
 - [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](../pages/AGRUPAR.md)
 - [Inserir documento externo (HTML, Google Docs e Google Planilhas)](../pages/INSERIRDOC.md)
@@ -157,3 +177,13 @@
 - [Dividir as informações do documento na árvore do processo em duas linhas](../pages/DIVIDIRLINHASARVORE.md)
 - [Redimensionar automaticamente a árvore do processo pela sua largura total](../pages/RESIZEARVORE.md)
 - [Utilizar caixas de seleção inteligentes](../pages/SUBSTITUIRSELECAO.md)
+- [Ações em Lote](../pages/ACOESEMLOTE.md)
+- [Rolagem infinita na pesquisa de processos](../pages/ROLAGEMINFINITA.md)
+- [Utilizar endereços amigáveis em processos e documentos](../pages/URLAMIGAVEL.md)
+- [Alertar sobre documentos não assinados ao enviar um processo](../pages/DOCSNAOASSINADOS.md)
+- [Permitir cores personalizadas em Marcadores](../pages/CORESMARCADORES.md)
+- [Visualizar parágrafos numerados no visualizador de documentos](../pages/PARAGRAFOSNUMERADOS.md)
+- [Gerar Certidão de Documento Oficial com Sigilo](../pages/CERTIDAOSIGILO.md)
+- [Enviar múltiplas imagens, formatar e editar opções avançadas](../pages/EDITARIMAGENS.md)
+- [Reduzir a qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)
+- [Salvar documentos automaticamente](../pages/SALVAMENTOAUTOMATICO.md)

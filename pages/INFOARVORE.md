@@ -8,6 +8,8 @@ Essa funcionalidade adiciona à árvore do processo informações adicionais.
 
 As seguintes informações estão disponíveis:
 - Atribuição
+- Marcador
+- Especificação
 - Tipo de Procedimento
 - Nível de Acesso
 - Interessados
