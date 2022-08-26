@@ -26,6 +26,10 @@ var fileSystemPro = false;
 var fileSystemContentPro = false;
 var delayCrash = false;
 var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
+var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
+var divInformacao = isNewSEI ? '#divArvoreInformacao' : '#divInformacao';
+var mainMenu = isNewSEI ? '#infraMenu' : '#main-menu';
+var idMenu = isNewSEI ? '#divInfraSidebarMenu '+mainMenu : '#divInfraAreaTelaE '+mainMenu;
 var iconsFlashMenu = [
                     {name: 'Copiar n\u00FAmero do processo', icon: 'fas fa-copyright', alt: ''},
                     {name: 'Copiar somente o n\u00FAmero', icon: 'fab fa-cuttlefish', alt: ''},
@@ -146,6 +150,46 @@ function initUrlExtension(url) {
     } else if (typeof URL_SPRO !== 'undefined') {
         return URL_SPRO+url;
     }
+}
+function calcFilterResume(table) {
+    table.find('.filterResume').each(function(){
+        var data = $(this).data();
+        var total = $('.filterResume_'+data.resumetype+':visible').map(function(v){ if ($(this).text() != '') return parseFloat($(this).text()); }).get();
+        var count = $('.filterResume_'+data.resumetype+':visible').map(function(v){ if ($(this).text() != '') return $(this).text().trim(); }).get();
+        var dist = (count.length > 0) ? uniqPro(count).length : 0;
+        var sum = total.reduce(function(a, b) { return a + b; }, 0);
+        var avg = (sum/total.length) || 0;
+        var result = (data.resumemod == 'avg') ? avg.toFixed(2)+' <sup>[MED]</sup>' : sum.toFixed(2)+' <sup>[TOTAL]</sup>';
+            result = (data.resumemod == 'dist') ? dist+' <sup>[DIST]</sup>' : result;
+        $(this).html(result);
+    })
+}
+function getStylesOnEditor() {
+    var styles = false;
+    $('script').each(function(){
+        if (typeof $(this).attr('src') == 'undefined' && $(this).html().indexOf('stylesheetParser_validSelectors') !== -1) {
+            var text = $(this).html();
+                styles = text.indexOf('/') === -1 ? false : $.map(text.split('/'), function(v) {
+                    return (v.indexOf('(') !== -1) ? v.replace('(p)','').match(/\(([^)]+)\)/) : null;
+                });
+                styles = styles ? styles.map(function(v){ return v.replace("(","").replace(")","") }) : false;
+                styles = styles ? styles.join('|').replace(":before","").replace('||','|').replace(/\\r\\n/g, '') : false;
+                styles = styles && styles.indexOf('|') !== -1 ? uniqPro(styles.split('|')) : false;
+                styles = styles ? styles.filter(function(v){ return v.indexOf('before') === -1 }) : false;
+        }
+    });
+    if (styles) {
+        setOptionsPro('stylesEditor',styles);
+    } else {
+        removeOptionsPro('stylesEditor');
+    }
+}
+function filterTextExtractDate(elem, table, cellIndex) {
+    var text = $(elem).text();
+    if ($(table).find('tr.tablesorter-headerRow th.tablesorter-header[data-column="'+cellIndex+'"]').text().toLowerCase().indexOf('data') !== -1) {
+        text = (text.indexOf(':') !== -1) ? moment(text, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD HH:mm:ss') : moment(text, 'DD/MM/YYYY').format('YYYY-MM-DD');
+    }
+    return text;
 }
 function insertFontIcon(elementTo, target = $('html')) {
     var iconBoxSlim = (localStorage.getItem('seiSlim')) ? true : false;
@@ -969,6 +1013,7 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
     if (typeof $().chosen !== 'undefined') {
         var _this = $(this_);
         var _parent = (_this.closest('.popup-wrapper').length > 0) ? _this.closest('.popup-wrapper') : _this.closest('.ui-dialog');
+            _parent = (typeof _parent !== 'undefined' && _parent.length) ? _parent : _this.closest('.cke_dialog');
         if  (mode == 'panel') {
             $('.panelHome select')
                 .not('[multiple]')
@@ -1341,14 +1386,14 @@ function editDadosArvorePro_(this_) {
             var textTag = dataMarcador.name;
                 tagName = dataMarcador.tag;
             
-            var time = textTag.match(/(\d{1,2}:\d{2})/img);
+            var time = (textTag) ? textTag.match(/(\d{1,2}:\d{2})/img) : null;
                 time = (time !== null) ? ' '+time[0] : '';
             var regexDue = /(ate )(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-            var checkDateDue = regexDue.exec(removeAcentos(textTag.trim()).toLowerCase().replaceAll('  ',' '));
+            var checkDateDue = (textTag) ? regexDue.exec(removeAcentos(textTag.trim()).toLowerCase().replaceAll('  ',' ')) : null;
                 datePrazoDue = (checkDateDue !== null) ? moment(checkDateDue[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
 
             var regex = /(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-            var checkDate = regex.exec(removeAcentos(textTag.trim()));
+            var checkDate = (textTag) ? regex.exec(removeAcentos(textTag.trim())) : null;
                 datePrazo = (checkDateDue === null && checkDate !== null) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
                 checkPrazo = (datePrazoDue || datePrazo) ? true : false;
             
@@ -1358,6 +1403,7 @@ function editDadosArvorePro_(this_) {
                 dateRef = (checkPrazo) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD') : dateRef;
                 timeRef = (checkPrazo) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('HH:mm') : timeRef;
                 textTag = (checkPrazo) ? textTag.replace(checkDate[0]+time, '').replace('Ate ', '').replace(/\\r\\n/g, '').trim() : textTag;
+                textTag = (!textTag) ? '' : textTag;
         }
 
         var textBox =   '<div class="dialogBoxDiv seiProForm">'+
@@ -1393,7 +1439,7 @@ function editDadosArvorePro_(this_) {
                         '          <td class="input" style="position:relative">'+
                         '               <span class="newLink_active" style="margin: 0px;padding: 5px 8px;border-radius: 5px;position: absolute;top: 10px;'+(datePrazoDue ? 'display:block;' : 'display:none;')+'">At\u00E9</span>'+
                         '               <input type="date" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
-                        '               <input type="time" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_time" value="'+timeRef+'" style="width:70px; float: right;">'+
+                        '               <input type="time" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_time" value="'+timeRef+'" style="width:80px; float: right;">'+ 
                         '           </td>'+
                         '      </tr>'+
                         '      <tr style="height: 40px;">'+
@@ -1451,7 +1497,8 @@ function editDadosArvorePro_(this_) {
                     });
                 } else if (data.mode == 'marcador') {
                     var listaMarcadores = getOptionsPro('listaMarcadores');
-                    if (listaMarcadores) {
+                    var listaMarcadores_unidade = getOptionsPro('listaMarcadores_unidade');
+                    if (listaMarcadores && listaMarcadores_unidade == $('#selInfraUnidades').val()) {
                         var htmlOptions = $.map(listaMarcadores, function(v){
                                             var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                             return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
@@ -1781,7 +1828,7 @@ function updateDadosArvoreMultIframe(nameLink, values, ifrArvore, callback) {
         return false;
     }
 }
-function automaticActions(type, mode, callback = false) {
+function automaticActions(type, mode, value = false, callback = false) {
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
@@ -1789,6 +1836,11 @@ function automaticActions(type, mode, callback = false) {
         updateDadosArvore('Anota\u00E7\u00F5es', 'txaDescricao', '', id_procedimento, callback);
     } else if (type == 'atribuicao' && mode == 'remove') {
         updateDadosArvore('Atribuir Processo', 'selAtribuicao', 'null', id_procedimento, callback);
+    } else if (type == 'urgencia_processo') {
+        updateDadosArvore('Atualizar Andamento', 'txaDescricao', (mode == 'remove' ? 'Removida' : 'Adicionada')+' marca de urg\u00EAncia no processo', id_procedimento, callback);
+    } else if (type == 'urgencia_documento') {
+        console.log(type, mode, value);
+        updateDadosArvore('Atualizar Andamento', 'txaDescricao', (mode == 'remove' ? 'Removida' : 'Adicionada')+' marca de urg\u00EAncia no documento '+value, id_procedimento, callback);
     } else if (type == 'marcador' && mode == 'remove') {
         updateDadosArvore('Gerenciar Marcador', 'hdnIdMarcador', '', id_procedimento, callback);
     }
@@ -1802,8 +1854,8 @@ function getActionsOnSendProcess() {
         var checkAtribuicao = _parent.find('#chkSinRemoverAtribuicao').is(':checked');
 
         var sendAutomaticActions = [];
-            sendAutomaticActions[0] = {name: 'marcador', send: checkMarcador, run: false, index: 0};
-            sendAutomaticActions[1] = {name: 'atribuicao', send: checkAtribuicao, run: false, index: 1};
+            sendAutomaticActions[0] = {name: 'marcador', method: 'remove', send: checkMarcador, value: false, run: false, index: 0};
+            sendAutomaticActions[1] = {name: 'atribuicao', method: 'remove', send: checkAtribuicao, value: false, run: false, index: 1};
             parent.window.sendAutomaticActions = sendAutomaticActions;
             getAutomaticActions();
     });
@@ -1831,7 +1883,7 @@ function getAutomaticActions() {
             nextRun = (nextRun !== null) ? nextRun : false;
             if (nextRun) {
                 if (nextRun.send) {
-                    automaticActions(nextRun.name, 'remove', function(){
+                    automaticActions(nextRun.name, nextRun.method, nextRun.value, function(){
                         parent.window.sendAutomaticActions[nextRun.index].run = true;
                         setTimeout(function(){ 
                             // console.log(nextRun);
@@ -2022,14 +2074,14 @@ function initDocZipPro() {
     var protocoloSelected = getParamsUrlPro(docSelected.closest('a').attr('href')).id_documento;
     if (typeof protocoloSelected !== 'undefined') {
         var iconSelected = ifrArvore.find('#anchorImg'+protocoloSelected).find('img').attr('src');
-        var linkFile = ifrVisualizacao.find('#divInformacao a.ancoraArvoreDownload').attr('href');
+        var linkFile = ifrVisualizacao.find(divInformacao+' a.ancoraArvoreDownload').attr('href');
         if (iconSelected.indexOf('zip') !== -1) {
             checkDocZipPro(ifrVisualizacao);
         }
     }
 }
 function checkDocZipPro(ifrVisualizacao, TimeOut = 9000) {
-    var linkFile = ifrVisualizacao.find('#divInformacao a.ancoraArvoreDownload').attr('href');
+    var linkFile = ifrVisualizacao.find(divInformacao+' a.ancoraArvoreDownload').attr('href');
     if (TimeOut <= 0) { return; }
     if (typeof linkFile !== 'undefined') { 
             loadDocZipPro(linkFile, ifrVisualizacao);
@@ -2054,7 +2106,7 @@ function loadDocZipPro(linkFile, ifrVisualizacao) {
                     '   </div>'+
                     '</div>';
     ifrVisualizacao.find('#divZip').remove();
-    ifrVisualizacao.find('#divInformacao').after(divVideo);
+    ifrVisualizacao.find(divInformacao).after(divVideo);
 
     var urlZip = ifrVisualizacao.find('a.ancoraArvoreDownload').attr('href');
 
@@ -2093,7 +2145,7 @@ function initDocVideoPro() {
     var protocoloSelected = getParamsUrlPro(docSelected.closest('a').attr('href')).id_documento;
     if (typeof protocoloSelected !== 'undefined') {
         var iconSelected = ifrArvore.find('#anchorImg'+protocoloSelected).find('img').attr('src');
-        var linkFile = ifrVisualizacao.find('#divInformacao a.ancoraArvoreDownload').attr('href');
+        var linkFile = ifrVisualizacao.find(divInformacao+' a.ancoraArvoreDownload').attr('href');
         if (iconSelected.indexOf('video') !== -1) {
             checkDocVideoPro(ifrVisualizacao);
         }
@@ -2109,10 +2161,10 @@ function insertIconNewTab() {
     if (typeof id_documento !== 'undefined') {
         var listLinks = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_visualizar') !== -1) });
         if (listLinks.length > 0 && listLinks[0] != '') {
-            var html =  '<a class="openNewTab" style="margin: 5px;padding: 5px;border-radius: 5px 0 0 5px;background-color: #eaeaea;color: #666;text-decoration: none;right: 40px;position: absolute;user-select: none;" href="'+url_host.replace('controlador.php','')+listLinks[0]+'" target="_blank">'+
+            var html =  '<a class="openNewTab" style="margin: 10px 5px;padding: 5px;border-radius: 5px 0 0 5px;background-color: #eaeaea;color: #666;text-decoration: none;right: 60px;position: absolute;user-select: none;" href="'+url_host.replace('controlador.php','')+listLinks[0]+'" target="_blank">'+
                         '   <i class="fas fa-external-link-square-alt" style="color:#4285f4"></i> Abrir documento em nova aba'+
                         '</a>'+
-                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento (HTML)\')" style="margin: 5px;padding: 5px;border-radius: 0 5px 5px 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 20px;position: absolute;user-select: none;" onclick="parent.downloadDocumentVisualizacao(this)" target="_blank">'+
+                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento (HTML)\')" style="margin: 10px 5px;padding: 5px;border-radius: 0 5px 5px 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 40px;position: absolute;user-select: none;" onclick="parent.downloadDocumentVisualizacao(this)" target="_blank">'+
                         '   <i class="fas fa-download" style="color:#4285f4"></i>'+
                         '</a>';
 
@@ -2181,9 +2233,43 @@ function setHtmlProtocoloAlterar() {
                         '</div>';
             ifrVisualizacao.find('#divInfraBarraComandosSuperior').after(html);
     }
+
+    if (form.length > 0 && ifrVisualizacao.find('#txtDescricao').length ) {
+        ifrVisualizacao.find('div.urgentePro').remove();
+        ifrVisualizacao.find('#txtDescricao').css('width','86%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="urgentePro" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+        formControlerAlterarProcesso(ifrVisualizacao);
+    }
+}
+function formControlerAlterarProcesso(ifrVisualizacao) {
+    ifrVisualizacao.find('button[name="btnSalvar"]').on('click', function() {
+        var _this = $(this);
+        var _parent = _this.closest('body');
+        var oldText = _parent.find('#txtDescricao').attr('data-oldtext');
+        var newText = _parent.find('#txtDescricao').val();
+        var checkAddUrgencia = (typeof oldText !== 'undefined' && oldText.toLowerCase().indexOf('(urgente)') === -1 && typeof newText !== 'undefined' && newText.toLowerCase().indexOf('(urgente)') !== -1 ) ? true : false;
+        var checkRemoveUrgencia = (typeof oldText !== 'undefined' && oldText.toLowerCase().indexOf('(urgente)') !== -1 && typeof newText !== 'undefined' && newText.toLowerCase().indexOf('(urgente)') === -1 ) ? true : false;
+        var methodSend = checkAddUrgencia ? 'add' : false;
+            methodSend = checkRemoveUrgencia ? 'remove' : methodSend;
+        var checkSend = (checkAddUrgencia || checkRemoveUrgencia) ? true : false;
+        if ($('#ifrVisualizacao')[0].contentWindow.OnSubmitForm()) {
+            if (typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso === 'undefined' && typeof getDadosProcessoSession() !== 'undefined' && getDadosProcessoSession().propProcesso !== 'undefined' ) {
+                dadosProcessoPro.propProcesso = getDadosProcessoSession().propProcesso;
+            }
+
+            if (typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.txtDescricao !== 'undefined') {
+                dadosProcessoPro.propProcesso.txtDescricao = newText;
+                setSessionProcessosPro(dadosProcessoPro);
+            }
+            
+            var sendAutomaticActions = [];
+            sendAutomaticActions[0] = {name: 'urgencia_processo', method: methodSend, send: checkSend, value: false, run: false, index: 0};
+            parent.window.sendAutomaticActions = sendAutomaticActions;
+            getAutomaticActions();
+        }
+    });
 }
 function checkDocVideoPro(ifrVisualizacao, TimeOut = 9000) {
-    var linkFile = ifrVisualizacao.find('#divInformacao a.ancoraArvoreDownload').attr('href');
+    var linkFile = ifrVisualizacao.find(divInformacao+' a.ancoraArvoreDownload').attr('href');
     if (TimeOut <= 0) { return; }
     if (typeof linkFile !== 'undefined') { 
             loadDocVideoPro(linkFile, ifrVisualizacao);
@@ -2203,7 +2289,7 @@ function loadDocVideoPro(linkFile, ifrVisualizacao) {
                     '    </video>'+
                     '</div>';
     ifrVisualizacao.find('#divVideo').remove();
-    ifrVisualizacao.find('#divInformacao').after(divVideo);
+    ifrVisualizacao.find(divInformacao).after(divVideo);
     ifrVisualizacao.find('#divVideo video').on('loadedmetadata', function(event) {
           this.currentTime = 0;
     });
@@ -3640,6 +3726,7 @@ function execConcluirReabrirProcessoPro(url) {
 //Initializes the API client library and sets up sign-in state listeners.
 function initClientPro() {
     if ( typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdAtividades_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined'  || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' ) {
+
         gapi.client.init({
           apiKey: API_KEY_PRO,
           clientId: CLIENT_ID_PRO,
@@ -3647,18 +3734,30 @@ function initClientPro() {
           scope: 'https://www.googleapis.com/auth/spreadsheets'
         }).then(function () {
           // Listen for sign-in state changes.
-          gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatusPro);
+            
+            if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
+            if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
+            if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
+            /*
+            */
+            gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatusPro);
 
-          // Handle the initial sign-in state.
+            // Handle the initial sign-in state.
             updateSigninStatusPro(gapi.auth2.getAuthInstance().isSignedIn.get());
             $('#authorizeButtonPro').on('click',function() { handleAuthClickPro() });
             $('#signoutButtonPro').on('click',function() { handleSignoutClickPro() });
+
         }, function(error) {
           alertaBoxPro('Error', 'exclamation-triangle', JSON.stringify(error, null, 2));
         });
     }
 }
-
+function onSignInPro(response) {
+    const responsePayload = parseJwt(response.credential);
+    var googleUser = {response: response, decode: responsePayload};
+        window.googleUser = googleUser;
+        sessionStorageStorePro('googleUser', googleUser);
+}
 // Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
 function updateSigninStatusPro(isSignedIn) {
     if (isSignedIn) {
@@ -3839,8 +3938,8 @@ function confirmaFraseBoxPro(text, phrase, func, cancel) {
                     var confirmFrase = $('#dialogBoxConfirmFrase');
                     if (phrase.toUpperCase() == confirmFrase.val().trim().toUpperCase()) {
                         confirmFrase.removeClass('requiredNull');
-                        $(this).dialog('close');
                         func();
+                        $(this).dialog('close');
                     } else {
                         confirmFrase.addClass('requiredNull');
                     }
@@ -3950,16 +4049,17 @@ function togglePainelPro(idTable, mode) {
 	}
 }
 function toggleTablePro(idTable, mode) {
+    var elemTable = idTable.substring(1);
 	if ( mode == 'hide' ) {
-		$('#'+idTable).hide();
-		$('#'+idTable+'_hideIcon').hide();
-		$('#'+idTable+'_showIcon').show();
-        setOptionsPro(idTable, 'hide');
+		$(idTable).addClass('displayNone');
+		$('#'+elemTable+'_hideIcon').hide();
+		$('#'+elemTable+'_showIcon').show();
+        setOptionsPro(elemTable, 'hide');
 	} else {
-		$('#'+idTable).css('display', 'inline-table');
-		$('#'+idTable+'_hideIcon').show();
-		$('#'+idTable+'_showIcon').hide();
-        setOptionsPro(idTable, 'show');
+		$(idTable).removeClass('displayNone').css('display', 'inline-table');
+		$('#'+elemTable+'_hideIcon').show();
+		$('#'+elemTable+'_showIcon').hide();
+        setOptionsPro(elemTable, 'show');
 	}
 }
 function getColorID() {
@@ -4434,7 +4534,7 @@ function getProcessoUnidadePro(selected = false, obj = false) {
     }
 }
 function getListTypesSEI() {
-    var hrefConsulta = $('#main-menu').find('a[href*="protocolo_pesquisa"]').attr('href');
+    var hrefConsulta = $(mainMenu).find('a[href*="protocolo_pesquisa"]').attr('href');
     if (typeof hrefConsulta !== 'undefined' && hrefConsulta != '') {
         $.ajax({ url: hrefConsulta }).done(function (html) {
             var $htmlConsulta = $(html);
@@ -4500,7 +4600,7 @@ function checkDadosIframeProcessoPro(mode) {
     }, 500);
 }
 function getDadosPesquisaPro(iframe, mode) {
-    var href = iframe.find('#main-menu').find('li a').map(function () { if ($(this).attr('href').indexOf('acao=protocolo_pesquisar') !== -1) { return $(this).attr('href') } }).get().join();
+    var href = iframe.find(mainMenu).find('li a').map(function () { if ($(this).attr('href').indexOf('acao=protocolo_pesquisar') !== -1) { return $(this).attr('href') } }).get().join();
     if (href != '') {
         var tiposDocumentos = [];
         $.ajax({ url: href }).done(function (html) {
@@ -5007,6 +5107,7 @@ function getHistoryProcessosPro() {
                     observerFilterHistory.observe(filterHistory, {
                         attributes: true
                     });
+                    historyTable.find('.tablesorter-filter-row input.tablesorter-filter').eq(2).attr('type','date');
             }, 500);
         }
     }, 500);
@@ -5485,7 +5586,7 @@ function getDocumentosActions() {
                         '   <table id="actionsTablePro" style="font-size: 8pt !important;width: 100%;" class="seiProForm tabelaControle tableDialog tableInfo tableZebra">'+
                         '        <thead>'+
                         '            <tr class="tableHeader" onmouseout="infraTooltipOcultar();">'+
-                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
+                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
                         '                <th class="tituloControle" style="text-align: center;">N\u00BA SEI</th>'+
                         '                <th class="tituloControle" style="text-align: center;">Documento</th>'+
                         '                <th class="tituloControle" style="text-align: center;">Assinatura</th>'+
@@ -5749,24 +5850,31 @@ function copyLinkProcesso(this_) {
     copyToClipboard(linkProc);
     _this.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 }
+function verifyMenuSistemaView() {
+    var prefixoCookie = $('#hdnInfraPrefixoCookie').val();
+    if (infraLerCookie(prefixoCookie+'_menu_mostrar') == 'N' && $(mainMenu).is(':visible')) {
+        $('#lnkInfraMenuSistema').trigger('click');
+    }
+    checkMenuSistemaView();
+}
 function setCapaProcesso(loop = true) {
     var ifrArvore = $('#ifrArvore').contents();
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
     var prop = (getDadosProcessoSession()) ? getDadosProcessoSession().propProcesso : dadosProcessoPro.propProcesso;
-    var id_procedimento = prop.hdnIdProcedimento;
+    var id_procedimento = (typeof prop !== 'undefined' && typeof prop.hdnIdProcedimento !== 'undefined') ? prop.hdnIdProcedimento : getParamsUrlPro(window.location.href).id_protocolo;
     var hipoteseLegal = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '1') ? jmespath.search(prop.selHipoteseLegal_select, "[?id=='"+prop.selHipoteseLegal+"'] | [0].name") : null;
         hipoteseLegal = (hipoteseLegal == null) ? '' :  hipoteseLegal;
     var dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '0') ? {name: 'P\u00FAblico', icon: 'fas fa-globe-americas'} : false;
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '1') ? {name: 'Restrito: '+hipoteseLegal, icon: 'fas fa-lock'} : dataNivelAcesso;
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '2') ? {name: 'Sigiloso', icon: 'fas fa-user-slash'} : dataNivelAcesso;
-    var htmlInfoProc = ifrVisualizacao.find('#divInformacao').html();
+    var htmlInfoProc = ifrVisualizacao.find(divInformacao).html();
 
     var htmlMarcador = getHtmlMarcador(id_procedimento, false);
     var iconMarcador = htmlMarcador.icon;
     var linkPrazo = htmlMarcador.prazo;
     var dataMarcador = htmlMarcador.data;
 
-    var html =  '<div id="capaProcessoPro">'+
+    var html =  '<div id="capaProcessoPro" '+(isNewSEI ? 'class="newSEI_capaProcessoPro"': '')+'>'+
                 '      <div style="float: right;max-width: 40%;">'+
                 '           <div class="qrcapa" onmouseover="return infraTooltipMostrar(\'Aponte a c\u00E2mera para abrir o processo em seu celular\');" onmouseout="return infraTooltipOcultar();"></div>'+
                 '           <div class="infocapa">'+
@@ -5802,7 +5910,7 @@ function setCapaProcesso(loop = true) {
                 '         <div class="label txt_cinza"><i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>Especifica\u00E7\u00E3o:</div>'+
                 '         <div class="data">'+
                 (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' ? 
-                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.txtDescricao+'</a>' : 
+                '               <a class="newLink '+(prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? 'urgentePro' : '')+'" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+(prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? '<div class="urgentePro"></div>' : '')+prop.txtDescricao+'</a>' : 
                 '')+
                 '           </div>'+
                 '      </div>'+
@@ -5853,7 +5961,8 @@ function setCapaProcesso(loop = true) {
 
     if (typeof prop !== 'undefined' && typeof id_procedimento !== 'undefined' && ifrArvore.find('#span'+id_procedimento).hasClass('infraArvoreNoSelecionado')) {
         ifrVisualizacao.find('#divArvoreHtml').append(html);
-        ifrVisualizacao.find('#divInformacao').hide();
+        ifrVisualizacao.find(divInformacao).hide();
+        replaceColorsIcons(ifrVisualizacao.find('.tagUserColorPro'));
         if (typeof $().qrcode === 'function') {
             ifrVisualizacao.find('.qrcapa').html('').qrcode({
                 render: 'image',
@@ -5875,23 +5984,26 @@ function getHtmlMarcador(id_procedimento, processoAberto) {
     var iconMarcador = (processoAberto) ? '<i class="fas fa-spinner fa-spin"></i>' : '';
     var linkPrazo = '';
     if (dataMarcador) {
+        var tagNameClean = (dataMarcador.tag && dataMarcador.tag != '' && dataMarcador.tag.indexOf('#') !== -1) ? dataMarcador.tag.replace(extractHexColor(dataMarcador.tag),'') : dataMarcador.tag;
+            tagNameClean = (typeof tagNameClean !== 'undefined' && tagNameClean !=  '') ? tagNameClean.trim() : tagNameClean;
         var regex = /(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-        var time = (typeof dataMarcador.name !== 'undefined' && dataMarcador.name !== null) ? dataMarcador.name.match(/(\d{1,2}:\d{2})/img) : null;
+        var time = (typeof dataMarcador.name !== 'undefined' && dataMarcador.name !== null) ? String(dataMarcador.name).match(/(\d{1,2}:\d{2})/img) : null;
             time = (time !== null) ? ' '+time[0] : '';
         var regexDue = /(ate )(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-        var checkDateDue = (typeof dataMarcador.name !== 'undefined') ? regexDue.exec(removeAcentos(dataMarcador.name.trim()).toLowerCase().replaceAll('  ',' ')) : null;
+        var checkDateDue = (typeof dataMarcador.name !== 'undefined' && dataMarcador.name !== null && typeof dataMarcador.name === 'string') ? regexDue.exec(removeAcentos(String(dataMarcador.name).trim()).toLowerCase().replaceAll('  ',' ')) : null;
             datePrazoDue = (checkDateDue !== null) ? moment(checkDateDue[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-        var checkDate = (typeof dataMarcador.name !== 'undefined') ? regex.exec(removeAcentos(dataMarcador.name.trim())) : null;
+        var checkDate = (typeof dataMarcador.name !== 'undefined' && dataMarcador.name !== null && typeof dataMarcador.name === 'string') ? regex.exec(removeAcentos(dataMarcador.name.trim())) : null;
             datePrazo = (checkDateDue === null && checkDate !== null) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
             iconPrazo = (datePrazo) ? parent.getDatesPreview({date: datePrazo}) : false;
             iconPrazo = (datePrazoDue) ? parent.getDatesPreview({date: datePrazoDue}) : iconPrazo;
             linkPrazo = (iconPrazo) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconPrazo+'</a>' : '';
-            iconMarcador = (typeof dataMarcador.icon !== 'undefined') ? '<img src="'+dataMarcador.icon+'" class="imagemStatus"> '+dataMarcador.tag+(dataMarcador.name ? ': '+dataMarcador.name.replace(/\\r\\n/g, "<br>") : '') : 'Nenhum marcador';
+            iconMarcador = (typeof dataMarcador.icon !== 'undefined') ? (checkConfigValue('coresmarcadores') ? '<span data-color="true" class="tagUserColorPro">' : '')+'<img src="'+dataMarcador.icon+'" class="imagemStatus" title="'+dataMarcador.tag+'">'+(checkConfigValue('coresmarcadores') ? '</span>' : '')+' '+tagNameClean+(dataMarcador.name ? ': '+dataMarcador.name.replace(/\\r\\n/g, "<br>") : '') : 'Nenhum marcador';
     }
     return {icon: iconMarcador, prazo: linkPrazo, data: dataMarcador};
 }
 function getDocCertidao(this_) {
     var _this = $(this_);
+    var itemSelected = false;
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
     var ifrArvoreHtml = ifrVisualizacao.find('#ifrArvoreHtml').contents();
     var contentBody = ifrArvoreHtml.find('body').clone(true);
@@ -5906,113 +6018,130 @@ function getDocCertidao(this_) {
 
     if (href !== null) {
         alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Gerando Certid\u00E3o de Documento Oficial com Sigilo');
-        $.ajax({ url: href }).done(function (html) {
-            let $html = $(html);
-            $html.find('#tblSeries tbody tr').each(function (v) {
-                var text = $(this).data('desc').trim();
-                var value = $(this).find('input').val();
-                var urlDoc = $(this).find('a.ancoraOpcao').attr('href');
-                if (text != '') {
-                    var nameOption = escapeRegExp(text.replace(/_|:/g, ' '));
-                        nameDoc = nameDoc.replace(/_|:/g, ' ');
-                    var reg = new RegExp('^\\b'+nameOption, "igm");
-                    if (reg.test(parent.removeAcentos(nameDoc.trim().toLowerCase()))) { 
-                        if (typeof urlDoc !== 'undefined' && text != 'externo') {
-                            itemSelected = true;
-                            $.ajax({ url: urlDoc }).done(function (htmlDoc) {
-                                var $htmlDoc = $(htmlDoc);
-                                var form = $htmlDoc.find('#frmDocumentoCadastro');
-                                var hrefForm = form.attr('action');
-                                var param = {};
-                                    form.find("input[type=hidden]").each(function () {
-                                        if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-                                            param[$(this).attr('name')] = $(this).val(); 
-                                        }
-                                    });
-                                    form.find('input[type=text]').each(function () { 
-                                        if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
-                                            param[$(this).attr('id')] = $(this).val();
-                                        }
-                                    });
-                                    form.find('select').each(function () { 
-                                        if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
-                                            param[$(this).attr('id')] = $(this).val();
-                                        }
-                                    });
-                                    form.find('input[type=radio]').each(function () { 
-                                        if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
-                                            param[$(this).attr('name')] = $(this).val();
-                                        }
-                                    });
-                                    param.rdoNivelAcesso = '0';
-                                    param.hdnFlagDocumentoCadastro = '2';
-                                    param.txaObservacoes = '';
-                                    param.txtDescricao = 'de Documento Oficial com Sigilo';
-
-                                    var postData = '';
-                                    for (var k in param) {
-                                        if (postData !== '') postData = postData + '&';
-                                        var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
-                                            valor = (k=='txtDataElaboracao') ? param[k] : escapeComponent(param[k]);
-                                            valor = (k=='hdnInteressados') ? param[k] : valor;
-                                            valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
-                                            valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
-                                            postData = postData + k + '=' + valor;
-                                    }
-
-                                    var xhr = new XMLHttpRequest();
-                                    $.ajax({
-                                        method: 'POST',
-                                        // data: param,
-                                        data: postData,
-                                        url: hrefForm,
-                                        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
-                                        xhr: function() {
-                                            return xhr;
-                                        },
-                                    }).done(function (htmlResult) {
-                                        var status = (xhr.responseURL.indexOf('controlador.php?acao=arvore_visualizar&acao_origem=documento_gerar') !== -1) ? true : false;
-                                        var class_icon = '';
-                                        var text_icon = '';
-                                        if (status) {
-                                            alertaBoxPro('Sucess', 'check-circle', 'Certid\u00E3o gerada com sucesso');
-                                            var $htmlResult = $(htmlResult);
-                                            var urlEditor = [];
-                                            var idUser = false;
-                                            $.each($htmlResult.text().split('\n'), function(i, v){
-                                                if (v.indexOf("atualizarArvore('") !== -1) {
-                                                    urlReload = v.split("'")[1];
-                                                }
-                                                if (v.indexOf("acao=editor_montar") !== -1) {
-                                                    urlEditor.push(v.split("'")[1]);
-                                                }
-                                                if (v.indexOf("janelaEditor_") !== -1) {
-                                                    idUser = v.split("_")[1];
+        $.ajax({ url: href }).done(function (htmlInitDoc) {
+            var $htmlInitDoc = $(htmlInitDoc);
+            var form = $htmlInitDoc.find('#frmDocumentoEscolherTipo');
+            var hrefForm = form.attr('action');
+            var param = {};
+                form.find("input[type=hidden]").each(function () {
+                    if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                        param[$(this).attr('name')] = $(this).val(); 
+                    }
+                });
+                param.hdnFiltroSerie = 'T';
+            
+                $.ajax({
+                    method: 'POST',
+                    data: param,
+                    url: hrefForm
+                }).done(function (htmlFullList) {
+                    var $htmlFullList = $(htmlFullList);
+                    $htmlFullList.find('#tblSeries tbody tr').each(function (v) {
+                        var text = $(this).data('desc').trim();
+                        var value = $(this).find('input').val();
+                        var urlDoc = $(this).find('a.ancoraOpcao').attr('href');
+                        if (text != '') {
+                            var nameOption = escapeRegExp(text.replace(/_|:/g, ' '));
+                                nameDoc = nameDoc.replace(/_|:/g, ' ');
+                            var reg = new RegExp('^\\b'+nameOption, "igm");
+                            if (reg.test(parent.removeAcentos(nameDoc.trim().toLowerCase()))) {
+                                if (typeof urlDoc !== 'undefined' && text != 'externo') {
+                                    itemSelected = true;
+                                    $.ajax({ url: urlDoc }).done(function (htmlDoc) {
+                                        var $htmlDoc = $(htmlDoc);
+                                        var form = $htmlDoc.find('#frmDocumentoCadastro');
+                                        var hrefForm = form.attr('action');
+                                        var param = {};
+                                            form.find("input[type=hidden]").each(function () {
+                                                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                                                    param[$(this).attr('name')] = $(this).val(); 
                                                 }
                                             });
-                                            if (urlEditor.length > 0 && idUser) {
-                                                sessionStorageStorePro('dadosDocCertidao',contentHtml);
-                                                sessionStorageStorePro('nomeDocCertidao',ifrArvore.contents().find('.infraArvoreNoSelecionado').eq(0).text());
-                                                openWindowEditor(urlEditor[0]+'#&acao_pro=set_certidao', idUser);
+                                            form.find('input[type=text]').each(function () { 
+                                                if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
+                                                    param[$(this).attr('id')] = $(this).val();
+                                                }
+                                            });
+                                            form.find('select').each(function () { 
+                                                if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
+                                                    param[$(this).attr('id')] = $(this).val();
+                                                }
+                                            });
+                                            form.find('input[type=radio]').each(function () { 
+                                                if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
+                                                    param[$(this).attr('name')] = $(this).val();
+                                                }
+                                            });
+                                            param.rdoNivelAcesso = '0';
+                                            param.hdnFlagDocumentoCadastro = '2';
+                                            param.txaObservacoes = '';
+                                            param.txtDescricao = 'de Documento Oficial com Sigilo';
+
+                                            var postData = '';
+                                            for (var k in param) {
+                                                if (postData !== '') postData = postData + '&';
+                                                var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
+                                                    valor = (k=='txtDataElaboracao') ? param[k] : escapeComponent(param[k]);
+                                                    valor = (k=='hdnInteressados') ? param[k] : valor;
+                                                    valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
+                                                    valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
+                                                    postData = postData + k + '=' + valor;
                                             }
-                                            if (urlReload) {
-                                                ifrArvore.attr('src', urlReload);
-                                            } else {
-                                                ifrArvore[0].contentWindow.location.reload(true);
-                                            }
-                                        } else {
-                                            alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao gerar o documento do tipo "'+nameDoc+'".');
-                                        }
+
+                                            var xhr = new XMLHttpRequest();
+                                            $.ajax({
+                                                method: 'POST',
+                                                // data: param,
+                                                data: postData,
+                                                url: hrefForm,
+                                                contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+                                                xhr: function() {
+                                                    return xhr;
+                                                },
+                                            }).done(function (htmlResult) {
+                                                var status = (xhr.responseURL.indexOf('controlador.php?acao=arvore_visualizar&acao_origem=documento_gerar') !== -1) ? true : false;
+                                                var class_icon = '';
+                                                var text_icon = '';
+                                                if (status) {
+                                                    alertaBoxPro('Sucess', 'check-circle', 'Certid\u00E3o gerada com sucesso');
+                                                    var $htmlResult = $(htmlResult);
+                                                    var urlEditor = [];
+                                                    var idUser = false;
+                                                    $.each($htmlResult.text().split('\n'), function(i, v){
+                                                        if (v.indexOf("atualizarArvore('") !== -1) {
+                                                            urlReload = v.split("'")[1];
+                                                        }
+                                                        if (v.indexOf("acao=editor_montar") !== -1) {
+                                                            urlEditor.push(v.split("'")[1]);
+                                                        }
+                                                        if (v.indexOf("janelaEditor_") !== -1) {
+                                                            idUser = v.split("_")[1];
+                                                        }
+                                                    });
+                                                    if (urlEditor.length > 0 && idUser) {
+                                                        sessionStorageStorePro('dadosDocCertidao',contentHtml);
+                                                        sessionStorageStorePro('nomeDocCertidao',ifrArvore.contents().find('.infraArvoreNoSelecionado').eq(0).text());
+                                                        openWindowEditor(urlEditor[0]+'#&acao_pro=set_certidao', idUser);
+                                                    }
+                                                    if (urlReload) {
+                                                        ifrArvore.attr('src', urlReload);
+                                                    } else {
+                                                        ifrArvore[0].contentWindow.location.reload(true);
+                                                    }
+                                                } else {
+                                                    alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao gerar o documento do tipo "'+nameDoc+'".');
+                                                }
+                                            });
                                     });
-                            });
+                                }
+                                return false;
+                            }
                         }
-                        return false;
-                    }
+                });
+                if (!itemSelected) { 
+                    alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao selecionar o tipo de documento "'+nameDoc+'". Verifique se o tipo est\u00E1 dispon\u00EDvel no sistema e tente novamente');
                 }
             });
-            if (!itemSelected) { 
-                alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao selecionar o tipo de documento "'+nameDoc+'". Verifique se o tipo est\u00E1 dispon\u00EDvel no sistema e tente novamente');
-            }
         });
     } else {
         if (!itemSelected) { 
@@ -6863,6 +6992,7 @@ function loadGoogleDocs(url, iframeDoc, mode) {
                         iframeDoc.find('body').html(data);
                         oEditor.fire('saveSnapshot');
                         enableButtonSavePro();
+                        DocsToSEI(iframeDoc, mode);
                     } else {
                         var select = oEditor.getSelection().getStartElement();
                         var pElement = $(select.$).closest('p');
@@ -6870,6 +7000,7 @@ function loadGoogleDocs(url, iframeDoc, mode) {
                             iframeDoc.find(pElement).before(data);
                             oEditor.fire('saveSnapshot');
                             enableButtonSavePro();
+                            DocsToSEI(iframeDoc, mode);
                         }
                     }
                     if (CKEDITOR.dialog.getCurrent() !== null) CKEDITOR.dialog.getCurrent().hide();
@@ -6990,6 +7121,7 @@ function enableButtonSavePro() {
         if (CKEDITOR.dialog.getCurrent() != null ) {
             CKEDITOR.dialog.getCurrent().hide();
         }
+        console.log('enableButtonSavePro')
     }
 }
 function DocsToSEI(iframeDoc, mode) {
@@ -7185,7 +7317,8 @@ function openSEINrPro(this_, nrSEI){
         }, 
         function(){
             alertBoxPro();
-        });
+        }
+    );
 }
 function openEditorDoc(paramData) {
     var htmlEditorBox =  '<div class="editorBoxProDiv" style="width: 100%; margin: 0; text-align: center;">'+
@@ -7248,10 +7381,23 @@ function openEditorViewDoc(paramData, paramTarget, dataResult) {
         resetDialogBoxPro('editorBoxPro');
         // console.log(paramData, paramTarget);
 
-        var btnDialogBoxPro = null;
+        var btnDialogBoxPro = [{
+            text: 'Imprimir Documento',
+            icon: 'ui-icon-print',
+            click: function(event) {
+                printDocumento();
+            }
+        }];
+        
         if (paramTarget.return_sign && dataResult.status_assinatura) {
             if (checkCapacidade('sign_cancel_documento')) {
                 btnDialogBoxPro = [{
+                    text: 'Imprimir Documento',
+                    icon: 'ui-icon-print',
+                    click: function(event) {
+                        printDocumento();
+                    }
+                },{
                     text: 'Cancelar Assinatura',
                     icon: 'ui-icon-close',
                     click: function(event) {
@@ -7316,6 +7462,20 @@ function openEditorViewDoc(paramData, paramTarget, dataResult) {
     } else {
         alertaBoxPro('Error', 'exclamation-triangle', 'Assinatura dispon\u00EDvel apenas para o usu\u00E1rio!');
     }
+}
+function printDocumento() {
+    var htmlPrint = $('#view_doc').html()+$('.signed')[0].outerHTML;
+
+        $('#printBoxPro').addClass('hidePrint').html(htmlPrint);
+        $('.infraAreaGlobal').addClass('hidePrint');
+        $('.ui-dialog').addClass('hidePrint');
+        window.print();
+
+        setTimeout(function(){ 
+            $('#printBoxPro').removeClass('hidePrint').html('');
+            $('.infraAreaGlobal').removeClass('hidePrint');
+            $('.ui-dialog').removeClass('hidePrint');
+        }, 500);
 }
 function checkDocAssinatura(this_) {
     var _this = $(this_);
@@ -7382,6 +7542,7 @@ function loadFunctionEditorView(this_) {
     _parent.find('.todo-list__label').find('input[type="checkbox"]').prop('disabled',false);
     _parent.find('.todo-list__label').unbind().on('click', function(e){
         e.preventDefault();
+        $('.todo-list__label input[type="checkbox"]').not(this).attr('checked', false);
        var checkbox = $(this).find('input[type="checkbox"]');
         if (checkbox.attr('checked') == 'checked') {
            checkbox.removeProp('checked');
@@ -7476,36 +7637,114 @@ function getEditorConfigOptions(readonly = false) {
         })
     }
 }
-function openDialogDoc(param) {
-    var href = url_host+'?acao=procedimento_trabalhar&id_procedimento='+param.id_procedimento+'&id_documento='+param.id_documento;
+function openDialogAnexo(this_) {
+    var _this = $(this_);
+    var data = _this.data();
+    var iconLoad = _this.find('i').attr('class');
+        _this.data('icon-load', iconLoad);
+        _this.find('i').attr('class', 'fas fa-spinner fa-spin');
+
     var btnDialogBoxPro = [{
-            text: 'Ok',
-            class: 'confirm',
-            click: function(event) {
-                resetDialogBoxPro('iframeBoxPro');
+        text: 'Baixar',
+        icon: 'ui-icon-disk',
+        click: function(event) {
+            var link = document.createElement('a');
+            link.href = data.url;
+            link.download = data.title;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    },{
+        text: 'Abrir',
+        icon: 'ui-icon-extlink',
+        click: function(event) {
+            var win = window.open(data.url, '_blank');
+            if (win) {
+                win.focus();
+            } else {
+                alert('Por favor, permita popups para essa p\u00E1gina');
             }
-        },{
-            text: 'Abrir documento',
-            icon: 'ui-icon-extlink',
-            click: function(event) {
-                var win = window.open(href, '_blank');
-                if (win) {
-                    win.focus();
-                } else {
-                    alert('Por favor, permita popups para essa p\u00E1gina');
-                }
-                resetDialogBoxPro('iframeBoxPro');
-            }
-        }];
+            resetDialogBoxPro('iframeBoxPro');
+        }
+    }];
     resetDialogBoxPro('iframeBoxPro');
     iframeBoxPro = $('#iframeBoxPro')
-        .html('<div class="iframeBoxDiv" style="width: 100%; margin: 10% 0; text-align: center;"><i class="fas fa-spinner fa-spin azulColor" style="font-size: 22pt;"></i></div>')
+        .html('<div class="iframeBoxDiv" style="width: 100%; height: 100%; margin: 0;"><iframe src="'+data.url+'" frameborder="0" height="100%" width="100%"></iframe></div>')
         .dialog({
-            width: 450,
-            height: 150,
-            title: (param.title ? param.title : ''),
+            width: 950,
+            height: $(window).height(),
+            title: data.title,
+            open: function(){
+                _this.find('i').attr('class', _this.data('icon-load'));
+            },
             buttons: btnDialogBoxPro
         });
+}
+function openDialogDoc(param, forceDownload = false, _this = false) {
+    var href = url_host+'?acao=procedimento_trabalhar&id_procedimento='+param.id_procedimento+'&id_documento='+param.id_documento;
+
+    if (forceDownload) {
+        _this.find('i').attr('class', 'fas fa-spinner fa-spin');
+    } else {
+        var btnDialogBoxPro = [{
+                text: 'Imprimir',
+                icon: 'ui-icon-print',
+                click: function(event) {
+                    var htmlPrint = $('.iframeBoxDiv iframe').contents().find('html');
+                    $('#printBoxPro').addClass('hidePrint').html(htmlPrint);
+                    $('.infraAreaGlobal').addClass('hidePrint');
+                    $('.ui-dialog').addClass('hidePrint');
+                    window.print();
+
+                    setTimeout(function(){ 
+                        $('#printBoxPro').removeClass('hidePrint').html('');
+                        $('.infraAreaGlobal').removeClass('hidePrint');
+                        $('.ui-dialog').removeClass('hidePrint');
+                        resetDialogBoxPro('iframeBoxPro');
+                    }, 500);
+                }
+            },{
+                text: 'Baixar',
+                icon: 'ui-icon-disk',
+                click: function(event) {
+                    var iframeBoxDiv = $('.iframeBoxDiv iframe').contents();
+                    var nameFile = iframeBoxDiv.find('title').text();
+                    var contentDocument = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">';
+                        contentDocument += iframeBoxDiv.find('html')[0].outerHTML;
+                    var downloadLink = document.createElement("a");
+                    var blob = new Blob(["\ufeff", contentDocument]);
+                    var url = URL.createObjectURL(blob);
+                    downloadLink.href = url;
+                    downloadLink.download = nameFile+'.html';
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                }
+            },{
+                text: 'Abrir',
+                icon: 'ui-icon-extlink',
+                click: function(event) {
+                    var win = window.open(href, '_blank');
+                    if (win) {
+                        win.focus();
+                    } else {
+                        alert('Por favor, permita popups para essa p\u00E1gina');
+                    }
+                    resetDialogBoxPro('iframeBoxPro');
+                }
+            }];
+        resetDialogBoxPro('iframeBoxPro');
+        iframeBoxPro = $('#iframeBoxPro')
+            .html('<div class="iframeBoxDiv" style="width: 100%; margin: 10% 0; text-align: center;"><i class="fas fa-spinner fa-spin azulColor" style="font-size: 22pt;"></i></div>')
+            .dialog({
+                width: 500,
+                height: 200,
+                title: (param.title ? param.title : ''),
+                buttons: btnDialogBoxPro
+            });
+    }
 
     $.ajax({ url: href }).done(function (html) {
         let $html = $(html);
@@ -7525,30 +7764,65 @@ function openDialogDoc(param) {
                 procVisualizacao = (procVisualizacao) ? procVisualizacao.split('"')[1] : false;
                 
             if (urlVisualizacao) {
-                resetDialogBoxPro('iframeBoxPro');
-                iframeBoxPro = $('#iframeBoxPro')
-                    .html('<div class="iframeBoxDiv" style="width: 100%; height: 100%; margin: 0;"><iframe src="'+urlVisualizacao+'" frameborder="0" height="100%" width="100%"></iframe></div>')
-                    .dialog({
-                        width: 950,
-                        height: $(window).height(),
-                        title: (param.title ? param.title : ''),
-                        close: function() { 
-                            iframeBoxPro = false;
-                            $('.iframeBoxPro').html('');
-                        },
-                        buttons: btnDialogBoxPro
+                if (forceDownload) {
+                    if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
+                    $('#frmCheckerProcessoPro').attr('src', urlVisualizacao).unbind().on('load', function(){
+                        var nameFile = $(this).contents().find('title').text();
+                        var contentDocument = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">';
+                            contentDocument += $(this).contents().find('html')[0].outerHTML;
+                        var downloadLink = document.createElement("a");
+                        var blob = new Blob(["\ufeff", contentDocument]);
+                        var url = URL.createObjectURL(blob);
+                        downloadLink.href = url;
+                        downloadLink.download = nameFile+'.html';
+                        
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+
+                        _this.attr('onmouseover','return infraTooltipMostrar(\'Documento baixado\')').find('i').attr('class', 'fas fa-download verdeColor');
+                        _this.closest('tr').addClass('infraTrAcessada').addClass('infraDocBaixado');
+                        //scrollToElement($('html'),_this.closest('tr'), 50);
                     });
+
+                } else {
+                    resetDialogBoxPro('iframeBoxPro');
+                    iframeBoxPro = $('#iframeBoxPro')
+                        .html('<div class="iframeBoxDiv" style="width: 100%; height: 100%; margin: 0;"><iframe src="'+urlVisualizacao+'" frameborder="0" height="100%" width="100%"></iframe></div>')
+                        .dialog({
+                            width: 950,
+                            height: $(window).height(),
+                            title: (param.title ? param.title : ''),
+                            close: function() { 
+                                iframeBoxPro = false;
+                                $('.iframeBoxPro').html('');
+                            },
+                            buttons: btnDialogBoxPro
+                        });
+                }
             } else {
-                resetDialogBoxPro('iframeBoxPro');
-                alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel acessar o documento. <br> Verifique se o processo <a href="'+href+'" target="_blank" class="bLink" style="text-decoration: underline; font-size: 10pt;">'+procVisualizacao+'<i class="fas fa-external-link-alt bLink"" style="font-size: 80%;vertical-align: top;margin-left: 5px;"></i></a> est\u00E1 acess\u00EDvel para sua unidade');    
+                if (forceDownload) {
+                    _this.attr('onmouseover','return infraTooltipMostrar(\'Erro ao baixar documento\')').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor');
+                } else {
+                    resetDialogBoxPro('iframeBoxPro');
+                    alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel acessar o documento. <br> Verifique se o processo <a href="'+href+'" target="_blank" class="bLink" style="text-decoration: underline; font-size: 10pt;">'+procVisualizacao+'<i class="fas fa-external-link-alt bLink"" style="font-size: 80%;vertical-align: top;margin-left: 5px;"></i></a> est\u00E1 acess\u00EDvel para sua unidade');    
+                }
             }
         }).fail(function(data){
-            resetDialogBoxPro('iframeBoxPro');
-            alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
+            if (forceDownload) {
+                _this.attr('onmouseover','return infraTooltipMostrar(\'Erro ao baixar documento\')').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor');
+            } else {
+                resetDialogBoxPro('iframeBoxPro');
+                alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
+            }
         });
     }).fail(function(data){
-        resetDialogBoxPro('iframeBoxPro');
-        alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
+        if (forceDownload) {
+            _this.attr('onmouseover','return infraTooltipMostrar(\'Erro ao baixar documento\')').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor');
+        } else {
+            resetDialogBoxPro('iframeBoxPro');
+            alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao acessar o documento.');
+        }
     });
 }
 function updateDialogDefinitionPro() {
@@ -7737,7 +8011,7 @@ function sendChecksumPro(url) {
   xhr.send();
 }
 function getChecksumPro() {
-    var linkAnexo = $('#ifrVisualizacao').contents().find('#divInformacao a');
+    var linkAnexo = $('#ifrVisualizacao').contents().find(divInformacao+' a');
     var url = (linkAnexo.length > 0 && linkAnexo.attr('href').indexOf('acao=documento_download_anexo') !== -1) ? linkAnexo.attr('href') : false;
     if (url) { 
         openChecksumPro();
@@ -7832,7 +8106,16 @@ function checkPageVisualizacao() {
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmProcedimentoHistorico[action*="acao=procedimento_consultar_historico"]', ".infraAreaTabela", initTablePaginacaoHistorico);
     waitLoadPro($('#ifrVisualizacao').contents(), 'form', "select", replaceSelectAllVisualizacao);
     waitLoadPro($('#ifrVisualizacao').contents(), 'form', "#optRestrito", insertActionHipoteseLegal);
-    waitLoadPro($('#ifrVisualizacao').contents(), 'form', ".infraImg", function() { setInfraImg($('#ifrVisualizacao').contents()) });
+    waitLoadPro($('#ifrVisualizacao').contents(), 'form', ".infraImg, .InfraImg", function() { setInfraImg($('#ifrVisualizacao').contents()) });
+}
+function addUrgentPro(this_) {
+    var _this = $(this_);
+    var text = _this.closest('.infraAreaDados').find('input[type="text"]');
+    if (text.length && text.val().toLowerCase().indexOf('(urgente)') !== -1) {
+        text.val(text.val().replace(/\(urgente\)/ig,'').trim() );
+    } else if (text.length && typeof text.val() !== 'undefined') {
+        text.val(text.val().trim()+' (URGENTE)');
+    }
 }
 function setNewDocDefault() {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
@@ -7840,6 +8123,11 @@ function setNewDocDefault() {
 
     var form = ifrVisualizacao.find('#frmDocumentoCadastro');
     var now = moment().format('DD/MM/YYYY');
+    if (form.length > 0 && ifrVisualizacao.find('#txtNumero').length ) {
+        ifrVisualizacao.find('div.urgentePro').remove();
+        ifrVisualizacao.find('#txtNumero').css('width','46%').attr('data-oldtext',ifrVisualizacao.find('#txtNumero').val()).after('<div class="urgentePro" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+        formControlerAlterarDocumento(ifrVisualizacao);
+    }
     if (form.length > 0 && typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocdefault') ) {
         if (form.attr('action').indexOf('controlador.php?acao=documento_gerar&acao_origem=documento_gerar&arvore=1') !== -1) {
             if (checkConfigValue('newdocnivel')) { ifrVisualizacao.find('#optPublico').trigger('click') }
@@ -7881,13 +8169,37 @@ function setNewDocDefault() {
         }
     }
 }
+function formControlerAlterarDocumento(ifrVisualizacao) {
+    ifrVisualizacao.find('button[name="btnSalvar"]').unbind().removeAttr('onclick').on('click', function() {
+        var _this = $(this);
+        var contentW = $('#ifrVisualizacao')[0].contentWindow;
+        var _parent = _this.closest('body');
+        var oldText = _parent.find('#txtNumero').attr('data-oldtext');
+        var newText = _parent.find('#txtNumero').val();
+        var checkAddUrgencia = (typeof oldText !== 'undefined' && oldText.toLowerCase().indexOf('(urgente)') === -1 && typeof newText !== 'undefined' && newText.toLowerCase().indexOf('(urgente)') !== -1 ) ? true : false;
+        var checkRemoveUrgencia = (typeof oldText !== 'undefined' && oldText.toLowerCase().indexOf('(urgente)') !== -1 && typeof newText !== 'undefined' && newText.toLowerCase().indexOf('(urgente)') === -1 ) ? true : false;
+        var methodSend = checkAddUrgencia ? 'add' : false;
+            methodSend = checkRemoveUrgencia ? 'remove' : methodSend;
+        var checkSend = (checkAddUrgencia || checkRemoveUrgencia) ? true : false;
+        var nrSEI = $('#ifrArvore').contents().find('.infraArvoreNoSelecionado').eq(0);
+            nrSEI = (typeof nrSEI !== 'undefined' && nrSEI !== null) ? getNrSei(nrSEI.text().trim()) : '';
+
+        if (contentW.OnSubmitForm()) { 
+            contentW.submeter();
+            var sendAutomaticActions = [];
+            sendAutomaticActions[0] = {name: 'urgencia_documento', method: methodSend, send: checkSend, value: nrSEI, run: false, index: 0};
+            parent.window.sendAutomaticActions = sendAutomaticActions;
+            getAutomaticActions();
+        }
+    });
+}
 function insertIconBatchActions() {
     waitLoadPro($('#ifrVisualizacao').contents(), '#divArvoreAcoes', "a.botaoSEI", appendIconBatchActions);
 }
 function appendIconBatchActions(loop = true) {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
     var base64IconDynamicField = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAxNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RkM1NkJDN0U4QzVFMTFFQ0I3RDVDMzJGODUxRkVDMjIiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RkM1NkJDN0Q4QzVFMTFFQ0I3RDVDMzJGODUxRkVDMjIiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIwMjAgTWFjaW50b3NoIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9IjRBN0U0QzkwQUYxMTc5OTFEMUYyMDNCNDExOTFGRTQwIiBzdFJlZjpkb2N1bWVudElEPSI0QTdFNEM5MEFGMTE3OTkxRDFGMjAzQjQxMTkxRkU0MCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjYH0WAAAApDSURBVHjazFl7jFRXHf7Ofcx7Z2efsMDugrwX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';
-    var htmlIconbatchActions =  '<a href="#" id="iconBatchActions" onclick="parent.getDocumentosActions();" tabindex="452" class="botaoSEI">'+
+    var htmlIconbatchActions =  '<a href="#" id="iconBatchActions" onclick="parent.getDocumentosActions();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Iniciar a\u00E7\u00F5es em lote\')"  tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconDynamicField+'" alt="Iniciar a\u00E7\u00F5es em lote" title="Iniciar a\u00E7\u00F5es em lote">'+
                                 '</a>';
     if (ifrVisualizacao.find('#iconBatchActions').length == 0) {
@@ -7928,6 +8240,22 @@ function appendIconDocCertidao(loop = true) {
             },1500);
         }
     }
+}
+function insertTooltipOnButtons() {
+    waitLoadPro($('#ifrVisualizacao').contents(), '#divArvoreAcoes', "a.botaoSEI", appendTooltipOnButtons);
+}
+function appendTooltipOnButtons() {
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    ifrVisualizacao.find('#divArvoreAcoes a img[title]').each(function(){
+        var _this = $(this);
+        var title = _this.attr('title');
+        var link = _this.closest('a');
+        if (typeof title !== 'undefined' && typeof link !== 'undefined') {
+            _this.removeAttr('title');
+            link.attr('onmouseover','return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()');
+            
+        }
+    });
 }
 function insertIconNewDoc() {
     waitLoadPro($('#ifrVisualizacao').contents(), '#divArvoreAcoes', "a.botaoSEI", appendIconNewDoc);
@@ -7987,11 +8315,11 @@ function appendIconFormSheet(loop = true) {
     }
 }
 function insertIconIntegrity() {
-    waitLoadPro($('#ifrVisualizacao').contents(), '#divInformacao', "a.ancoraArvoreDownload", appendIconIntegrity);
+    waitLoadPro($('#ifrVisualizacao').contents(), divInformacao, "a.ancoraArvoreDownload", appendIconIntegrity);
 }
 function appendIconIntegrity(loop = true) {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
-    var linkAnexo = ifrVisualizacao.find('#divInformacao').find('a').eq(0).attr('href');
+    var linkAnexo = ifrVisualizacao.find(divInformacao).find('a').eq(0).attr('href');
     if (ifrVisualizacao.find('#iconIntegrityPro').length == 0 ) {
         var base64IconIntegrity = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MDgxQ0NGRjUyNkNEMTFFQkFCOUJEQUI3RTE0QTRDODQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MDgxQ0NGRjYyNkNEMTFFQkFCOUJEQUI3RTE0QTRDODQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDowODFDQ0ZGMzI2Q0QxMUVCQUI5QkRBQjdFMTRBNEM4NCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDowODFDQ0ZGNDI2Q0QxMUVCQUI5QkRBQjdFMTRBNEM4NCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pm2LucYAAAbsSURBVHja7FhZ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';
         var htmlIconIntegrity =  '<a href="#" id="iconIntegrityPro" onclick="parent.getChecksumPro();" tabindex="452" class="botaoSEI">'+
@@ -8341,7 +8669,7 @@ function replaceColorsIcons(element) {
     element.each(function(){
         var img = $(this).find('img').attr('src');
         if(typeof img !== 'undefined' && img != '') {
-            var arrayTip = extractTooltipToArray($(this).attr('onmouseover'));
+            var arrayTip = (typeof $(this).attr('onmouseover') !== 'undefined') ? extractTooltipToArray($(this).attr('onmouseover')) : ['',$(this).find('img').attr('title')];
             var colorTag = (typeof arrayTip !== 'undefined' && typeof arrayTip[1] !== 'undefined' && extractHexColor(arrayTip[1]) !== null) ? extractHexColor(arrayTip[1])[0] : false;
                 colorTag = ($('#frmMarcadorLista').length) 
                             ? (extractHexColor($(this).closest('td').next().text())) ? extractHexColor($(this).closest('td').next().text())[0] : false
@@ -8615,7 +8943,7 @@ function setNewDoc(id_procedimento, id_tipo_documento) {
     });
 }
 function setNewProc(id_tipo_procedimento, id_tipo_documento) {
-var urlInitProc = $('#main-menu a[href*="acao=procedimento_escolher_tipo"]').attr('href');
+var urlInitProc = $(mainMenu+' a[href*="acao=procedimento_escolher_tipo"]').attr('href');
     if (urlInitProc !== null) {
         $.ajax({ url: urlInitProc }).done(function (htmlInitProc) {
             var $htmlInitProc = $(htmlInitProc);
@@ -8761,69 +9089,71 @@ if (localStorage.getItem('seiSlim')) {
                           +"  }\n"
                           +"</style>");
     if (saveSize) setOptionsPro('iframeSizeSlimPro',tLeft);
-  }
-function infraMenuSistemaEsquema(bolInicializar, tipo){
-    var mostrarMenu = null;
-    var tamanhoDados = null;
-    var title = '';
+}
+if (verifyConfigValue('menususpenso')) {
+    function infraMenuSistemaEsquema(bolInicializar, tipo){
+        var mostrarMenu = null;
+        var tamanhoDados = null;
+        var title = '';
 
-    if (bolInicializar == undefined) bolInicializar = false; 
+        if (bolInicializar == undefined) bolInicializar = false; 
 
-    var lnkMenu = document.getElementById('lnkInfraMenuSistema');
-    if (lnkMenu == null) return;
+        var lnkMenu = document.getElementById('lnkInfraMenuSistema');
+        if (lnkMenu == null) return;
 
-    var hdnCookie = document.getElementById('hdnInfraPrefixoCookie');
-    if (hdnCookie == null) return;
+        var hdnCookie = document.getElementById('hdnInfraPrefixoCookie');
+        if (hdnCookie == null) return;
 
-    var prefixoCookie = hdnCookie.value;
-    infraTooltipOcultar();
+        var prefixoCookie = hdnCookie.value;
+        infraTooltipOcultar();
 
-    if (bolInicializar){
-    //le do cookie
-    if (infraLerCookie(prefixoCookie+'_menu_mostrar')!='N'){
-        tamanhoDados = document.getElementById("divInfraAreaTelaD").offsetWidth/document.getElementById("divInfraAreaTela").offsetWidth;
-        tamanhoDados = Math.floor(tamanhoDados*Math.pow(10,2));
-        infraCriarCookie(prefixoCookie+'_menu_tamanho_dados',tamanhoDados,1);
-        title = 'Ocultar';
-    } else {
-        title = 'Exibir';
-    }
-    } else {
-    if (tipo == undefined || tipo == null) {
-        if (document.getElementById('divInfraAreaTelaE').style.display == ''){
-        tipo = 'Ocultar';
+        if (bolInicializar){
+        //le do cookie
+        if (infraLerCookie(prefixoCookie+'_menu_mostrar')!='N'){
+            tamanhoDados = document.getElementById("divInfraAreaTelaD").offsetWidth/document.getElementById("divInfraAreaTela").offsetWidth;
+            tamanhoDados = Math.floor(tamanhoDados*Math.pow(10,2));
+            infraCriarCookie(prefixoCookie+'_menu_tamanho_dados',tamanhoDados,1);
+            title = 'Ocultar';
         } else {
-        tipo = 'Exibir';
+            title = 'Exibir';
         }
-    }
-    if (tipo == 'Ocultar' || (getOptionsPro('panelMenuSistemaView') !== false && !$('#divInfraBarraSistemaE').hasClass('barSuspenso'))) {
-        document.getElementById('divInfraAreaTelaE').style.display='none';
-        document.getElementById('divInfraAreaTelaD').style.width = '99%';
-        infraCriarCookie(prefixoCookie+'_menu_mostrar','N',1);
-        title = 'Exibir';
-        if ($('#divInfraBarraSistemaE').hasClass('barSuspenso')) removeOptionsPro('panelMenuSistemaView');
-        if (getOptionsPro('panelMenuSistemaView')) setMenuSistemaView();
-    } else {
-        setMenuSistemaView(true);
-        removeOptionsPro('panelMenuSistemaView');
+        } else {
+        if (tipo == undefined || tipo == null) {
+            if (document.getElementById('divInfraAreaTelaE').style.display == ''){
+            tipo = 'Ocultar';
+            } else {
+            tipo = 'Exibir';
+            }
+        }
+        if (tipo == 'Ocultar' || (getOptionsPro('panelMenuSistemaView') !== false && !$('#divInfraBarraSistemaE').hasClass('barSuspenso'))) {
+            document.getElementById('divInfraAreaTelaE').style.display='none';
+            document.getElementById('divInfraAreaTelaD').style.width = '99%';
+            infraCriarCookie(prefixoCookie+'_menu_mostrar','N',1);
+            title = 'Exibir';
+            if ($('#divInfraBarraSistemaE').hasClass('barSuspenso')) removeOptionsPro('panelMenuSistemaView');
+            if (getOptionsPro('panelMenuSistemaView')) setMenuSistemaView();
+        } else {
+            setMenuSistemaView(true);
+            removeOptionsPro('panelMenuSistemaView');
 
-        tamanhoDados = infraLerCookie(prefixoCookie+'_menu_tamanho_dados');
-        document.getElementById('divInfraAreaTelaE').style.display='';
+            tamanhoDados = infraLerCookie(prefixoCookie+'_menu_tamanho_dados');
+            document.getElementById('divInfraAreaTelaE').style.display='';
 
-        if (tamanhoDados == null) tamanhoDados = infraClientWidth() * 0.80;
+            if (tamanhoDados == null) tamanhoDados = infraClientWidth() * 0.80;
 
-        document.getElementById('divInfraAreaTelaD').style.width = tamanhoDados+'%';
-        infraCriarCookie(prefixoCookie+'_menu_mostrar','S',1);
-        title = 'Ocultar';
-    }
-    if (tipo == 'Ocultar') setOptionsPro('panelMenuSistemaView', 'active');
-        infraResize();
-        checkMenuSistemaView();
+            document.getElementById('divInfraAreaTelaD').style.width = tamanhoDados+'%';
+            infraCriarCookie(prefixoCookie+'_menu_mostrar','S',1);
+            title = 'Ocultar';
+        }
+        if (tipo == 'Ocultar') setOptionsPro('panelMenuSistemaView', 'active');
+            infraResize();
+            checkMenuSistemaView();
+        }
     }
 }
 function setInfraImg(target = $('html')) {
-    target.find('img[src*="/infra_css/"], img.infraImg').wrap(function(){
-        return ($(this).closest('.infraImgPro').length == 0) ? '<span class="infraImgPro" data-img="'+$(this).attr('src')+'"></span>' : false;
+    target.find('img[src*="/infra_css/"], img.infraImg, img.InfraImg').wrap(function(){
+        return ($(this).closest('.infraImgPro').length == 0 && $(this).closest('#tblAnexos').length == 0) ? '<span class="infraImgPro" data-img="'+$(this).attr('src')+'"></span>' : false;
     });
 }
 function fnJqueryPro() {
@@ -8899,5 +9229,6 @@ function fnJqueryPro() {
             })
         }
     });
+    if (isNewSEI) $('body').addClass('newSEI');
 }
 $(document).ready(function () { fnJqueryPro() });

@@ -16,6 +16,9 @@ function initSeiProVisualizacao() {
     if (typeof parent.insertIconNewDoc === 'function' && typeof parent.linksArvore !== 'undefined') {
         parent.insertIconNewDoc();
     }
+    if (typeof parent.insertTooltipOnButtons === 'function' && !localStorage.getItem('seiSlim')) {
+        parent.insertTooltipOnButtons();
+    }
     if (typeof parent.insertIconDocCertidao === 'function' && typeof parent.linksArvore !== 'undefined') {
         parent.insertIconDocCertidao();
     }
@@ -37,6 +40,8 @@ function initSeiProVisualizacao() {
     if (typeof parent.setCapaProcesso === 'function') {
         parent.setCapaProcesso();
     }
+    if (typeof parent.verifyMenuSistemaView === 'function') {
+        parent.verifyMenuSistemaView();
+    }
 }
-
 $(document).ready(function () { initSeiProVisualizacao() });

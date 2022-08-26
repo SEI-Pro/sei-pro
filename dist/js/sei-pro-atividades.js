@@ -26,8 +26,12 @@ var arrayNomenclaturas = [];
 var lastUpdateAtividades = (!getOptionsPro('panelLocalStorePro') && hybridStorageRestorePro('lastUpdateAtividades') !== null) ? hybridStorageRestorePro('lastUpdateAtividades') : false;
 var dly;
 var loadRowsPanelAtiv = false;
+var indexReportUpdate = 0;
+var listReportsUpdate = ['atividades', 'programas', 'planos'];
+var nameReportsUpdate = ['Atividades', 'Programas de Gest\u00E3o', 'Planos de Trabalho'];
 var chartColors = {
                     blue:"rgb(54, 162, 235)", 
+                    dark_blue:"rgb(4 110 188)", 
                     green:"rgb(75, 192, 192)", 
                     red:"rgb(255, 99, 132)", 
                     magenta:"rgb(218,112,214)",
@@ -261,6 +265,12 @@ function getServerAtividades(param, mode) {
                             $('#tabs-configpessoal').find('tr td:first-child').removeClass('editCellLoading');
                         } else if (mode.indexOf('config_update_') !== -1 || (mode.indexOf('config_new_') !== -1 && mode != 'config_new_users')) {
                             updateServerTabConfig(ativData, param);
+                            if (mode == 'config_update_planos' && param.mode == 'homologacao') {
+                                loadingButtonConfirm(false);
+                                resetDialogBoxPro('dialogBoxPro');
+                                updateAtividade();
+                                alertaBoxPro('Sucess', 'check-circle', 'Justificativa cadastrada com sucesso!');
+                            }
                         } else if (mode == 'update_checklist') {
                             checklistUpdate(false, 'update', ativData, param);
                         } else if (mode.indexOf('config_') !== -1) {
@@ -453,6 +463,7 @@ function getServerAtividades(param, mode) {
                             mode == 'save_atividade' || 
                             mode == 'edit_atividade' || 
                             mode == 'delete_atividade' || 
+                            mode == 'delete_atividade_all' || 
                             mode == 'start_atividade' || 
                             mode == 'extend_atividade' || 
                             mode == 'variation_atividade' || 
@@ -487,7 +498,7 @@ function getServerAtividades(param, mode) {
                                     txtAlert = (mode == 'sign_documento') ? 'Documento assinado' : txtAlert;
                                     txtAlert = (mode == 'sign_cancel_documento') ? 'Assinatura do documento cancelada' : txtAlert;
                                     txtAlert = (mode == 'edit_atividade') ? __.Demanda+' '+getNameGenre('demanda', 'editado', 'editada') : txtAlert;
-                                    txtAlert = (mode == 'delete_atividade') ? (typeof ativData['delete_demandas'] !== 'undefined' && ativData['delete_demandas'].length > 1 ? __.Demandas+' '+getNameGenre('demanda', 'deletados', 'deletadas') : __.Demanda+' '+getNameGenre('demanda', 'deletado', 'deletada')) : txtAlert;
+                                    txtAlert = (mode == 'delete_atividade' || mode == 'delete_atividade_all') ? (typeof ativData['delete_demandas'] !== 'undefined' && ativData['delete_demandas'].length > 1 ? __.Demandas+' '+getNameGenre('demanda', 'deletados', 'deletadas') : __.Demanda+' '+getNameGenre('demanda', 'deletado', 'deletada')) : txtAlert;
                                     txtAlert = (mode == 'start_atividade') ? __.Demanda+' '+getNameGenre('demanda', 'iniciado', 'iniciada') : txtAlert;
                                     txtAlert = (mode == 'extend_atividade') ? __.Demanda+' '+getNameGenre('demanda', 'prorrogado', 'prorrogada') : txtAlert;
                                     txtAlert = (mode == 'variation_atividade') ? __.Complexidade+' '+getNameGenre('complexidade', 'alterado', 'alterada') : txtAlert;
@@ -509,9 +520,15 @@ function getServerAtividades(param, mode) {
                                     txtAlert = (mode == 'delete_afastamento') ? (typeof ativData['id_afastamentos'] !== 'undefined' && ativData['id_afastamentos'].length > 1 ? 'Afastamentos deletados' : 'Afastamento deletado') : txtAlert;
                                 
                                 loadingButtonConfirm(false);
-                                if (mode == 'sign_documento' || mode == 'sign_cancel_documento') {
+
+                                if (param.action == 'sign_documento' || param.action == 'sign_cancel_documento') {
                                     resetDialogBoxPro('editorBoxPro');
+                                    
+                                    if (typeof ativData.refresh_page !== 'undefined' && ativData.refresh_page && $('#tableConfiguracoesPanel_'+param.type).is(':visible')) {
+                                        getTabConfig(param.type, 'get');
+                                    }
                                 }
+                                
                                 if (mode != 'pause_atividade_remove') {
                                     resetDialogBoxPro('dialogBoxPro');
                                 } else {
@@ -534,8 +551,21 @@ function getServerAtividades(param, mode) {
                                 }
                                 if (mode == 'save_afastamento' || mode == 'edit_afastamento' || mode == 'delete_afastamento') {
                                     setTimeout(function(){ 
-                                        console.log('updateTempoProporcionalPlanos', mode);
-                                        updateTempoProporcionalPlanos();
+                                        if (mode == 'edit_afastamento' || mode == 'delete_afastamento') {
+                                            objIndexAtiv = (typeof arrayConfigAtividades.afastamentos === 'undefined' || arrayConfigAtividades.afastamentos == 0 || arrayConfigAtividades.afastamentos.length == 0 || typeof arrayConfigAtividades.afastamentos.lista === 'undefined' || arrayConfigAtividades.afastamentos.lista == 0 || arrayConfigAtividades.afastamentos.lista.length == 0) ? -1 : arrayConfigAtividades.afastamentos.lista.findIndex((obj => obj.id_afastamento == param.id_afastamento));
+                                            if (objIndexAtiv !== -1) {
+                                                if (mode == 'edit_afastamento') {
+                                                    arrayConfigAtividades.afastamentos.lista[objIndexAtiv] = param.id_afastamento;
+                                                } else if (mode == 'delete_afastamento') {
+                                                    arrayConfigAtividades.afastamentos.lista.splice(objIndexAtiv, 1);
+                                                }
+                                            }
+                                        } else if (mode == 'save_afastamento' && typeof ativData['result'] !== 'undefined' && ativData['result'] !== null && ativData['result'].length > 0) {
+                                            arrayConfigAtividades.afastamentos.lista.push(ativData['result'][0]);
+                                        }
+                                        setTimeout(function(){ 
+                                            updateTempoProporcionalPlanos();
+                                        }, 1000);
                                         initPanelAtividadesView();
                                     }, 1500);
                                 }
@@ -554,11 +584,15 @@ function getServerAtividades(param, mode) {
                                         }
                                     }]);
                                 }
-                                if (mode == 'delete_atividade') {
+                                if (mode == 'delete_atividade' || mode == 'delete_atividade_all') {
                                     removeRowsPanelAtividades(param.id_demanda);
                                 }
                         } else {
                             loadingButtonConfirm(false);
+                        }
+                        if (typeof arrayConfigAtividades !== 'undefined' && typeof arrayConfigAtividades.perfil !== 'undefined' &&typeof arrayConfigAtividades.perfil.nivel !== 'undefined' &&  arrayConfigAtividades.perfil.nivel == 1) {
+                            indexReportUpdate = 0;
+                            checkUpdateReports();
                         }
                     }
                 }
@@ -648,22 +682,26 @@ function appendDataConfigOnLocalArray(arrayServer) {
                         } else if (typeof arrayConfigAtividades[propertyName]['lista'] !== 'undefined' && arrayConfigAtividades[propertyName]['lista'] != 0) {
                             arrayConfigAtividades[propertyName]['lista'].push(v);
                             // console.log(propertyName, 'PUSH', v);  
-                        }          
-                        // console.log(propertyName, arrayConfigAtividades[propertyName]['lista'], v);
+                        }   
+                        if (typeof arrayLocal  !== 'undefined' &&  arrayLocal.length > 0 ) {
+                            updateTempoProporcionalPlanos();
+                        }       
                     });
                 } else {
-                    $.each(arrayLocal, function (i, v) {
-                        var primarykey = v.primarykey;
-                        var objIndexAtiv = (typeof arrayConfigAtividades[propertyName] === 'undefined' || arrayConfigAtividades[propertyName] == 0 || arrayConfigAtividades[propertyName].length == 0) ? -1 : arrayConfigAtividades[propertyName].findIndex((obj => obj[primarykey] == v[primarykey]));
-                        if (objIndexAtiv !== -1) {
-                            arrayConfigAtividades[propertyName][objIndexAtiv] = v;
-                            // console.log(propertyName, 'UPDATE', v);
-                        } else if (typeof arrayConfigAtividades[propertyName] !== 'undefined' && arrayConfigAtividades[propertyName] != 0) {
-                            arrayConfigAtividades[propertyName].push(v);
-                            // console.log(propertyName, 'PUSH', v);
-                        }          
-                        // console.log(propertyName, arrayConfigAtividades[propertyName], v);
-                    });
+                    if (arrayServer[propertyName].length > 0) {
+                        $.each(arrayServer[propertyName], function (i, v) {
+                            var primarykey = v.primarykey;
+                            var objIndexAtiv = (typeof arrayConfigAtividades[propertyName] === 'undefined' || arrayConfigAtividades[propertyName] == 0 || arrayConfigAtividades[propertyName].length == 0) ? -1 : arrayConfigAtividades[propertyName].findIndex((obj => obj[primarykey] == v[primarykey]));
+                            if (objIndexAtiv !== -1) {
+                                arrayConfigAtividades[propertyName][objIndexAtiv] = v;
+                                // console.log(propertyName, 'UPDATE', v);
+                            } else if (typeof arrayConfigAtividades[propertyName] !== 'undefined' && arrayConfigAtividades[propertyName] != 0) {
+                                arrayConfigAtividades[propertyName].push(v);
+                                // console.log(propertyName, 'PUSH', v);
+                            }          
+                            // console.log(propertyName, arrayConfigAtividades[propertyName], v);
+                        });
+                    }
                 }
             }
         }
@@ -1268,6 +1306,10 @@ function getChartPlanosTrabalho(data = false) {
                     backgroundColor: chartColors.green,
                     data: jmespath.search(planosSelected, "[].tempo_homologado")
                 },{
+                    label: 'Entregue',
+                    backgroundColor: chartColors.dark_blue,
+                    data: jmespath.search(planosSelected, "[].tempo_entregue")
+                }, {
                     label: 'Despendido',
                     backgroundColor: chartColors.yellow,
                     data: jmespath.search(planosSelected, "[].tempo_despendido")
@@ -1292,10 +1334,10 @@ function getChartPlanosTrabalho(data = false) {
                 }];
             var id_unidade_perfil = (id_unidade && id_unidade > 0) ? id_unidade : arrayConfigAtivUnidade.id_unidade;
             var mostrar_notas = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+id_unidade_perfil+"`] | [0].config.planos.mostrar_notas");
-            var apelido_display = (mostrar_notas !== null && mostrar_notas) ? 'apelido_avaliacao' : 'apelido';
+            var apelido_display = (mostrar_notas !== null && mostrar_notas) ? 'apelido_avaliacao_duracao' : 'apelido';
             var planos = jmespath.search(planosSelected, "{tempo_projetado: max([*].tempo_pactuado), tempo_total: max([*].tempo_proporcional)}");
 
-                console.log('apelido_display',apelido_display, id_unidade, mostrar_notas, id_unidade_perfil);
+                // console.log('apelido_display',apelido_display, id_unidade, mostrar_notas, id_unidade_perfil);
 
             var chartTempoPlano = new Chart(element, {
                 type: 'horizontalBar',
@@ -1385,6 +1427,14 @@ function dialogNomenclaturasPlanos() {
                     '      </tr>'+
                     '      <tr>'+
                     '          <td style="text-align: left;" class="label">'+
+                    '               <label style="background-color: '+chartColors.dark_blue+';color:#fff;padding: 5px 8px;border-radius: 5px;"><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Tempo Entregue:</label>'+
+                    '           </td>'+
+                    '           <td style="text-align: left;">'+
+                    '               <label>Somat\u00F3rio dos tempos acordados de todas as demandas <u>entregues</u> dentro do plano de trabalho. Em outras palavras, significa o total de tempos j\u00E1 conclu\u00EDdos pela usu\u00E1rio nas demandas criadas no plano.</label>'+
+                    '           </td>'+
+                    '      </tr>'+
+                    '      <tr>'+
+                    '          <td style="text-align: left;" class="label">'+
                     '               <label style="background-color: '+chartColors.yellow+';padding: 5px 8px;border-radius: 5px;"><i class="iconPopup iconSwitch fas fa-hourglass-half cinzaColor"></i>Tempo Despendido:</label>'+
                     '           </td>'+
                     '           <td style="text-align: left;">'+
@@ -1432,6 +1482,11 @@ function getSingleChartTempoPlano(element, plano, labels = false) {
         barPercentage: 0.7,
         backgroundColor: chartColors.green,
         data: [roundToTwo(plano.tempo_homologado)]
+    },{
+        label: 'Entregue',
+        barPercentage: 0.7,
+        backgroundColor: chartColors.dark_blue,
+        data: [roundToTwo(plano.tempo_entregue)]
     },{
         label: 'Despendido',
         barPercentage: 0.7,
@@ -1713,10 +1768,10 @@ function updateTableProcessos() {
             tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="atividadeBoxDisplay" style="text-align: center;"></td>');
 
         if ( tblProcessos.find('thead').length > 0 ) {
-            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header atividadeBoxDisplay"> '+__.Demandas+'</th>');
+            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header '+(isNewSEI ? 'infraTh' : '')+' atividadeBoxDisplay"> '+__.Demandas+'</th>');
         } else {
             $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.atividadeBoxDisplay').remove();
-            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header atividadeBoxDisplay"> '+__.Demandas+'</th>');
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header '+(isNewSEI ? 'infraTh' : '')+' atividadeBoxDisplay"> '+__.Demandas+'</th>');
         }
         if ($('.tabelaControle').find('tr').hasClass('tableHeader')) { 
             $('.tabelaControle').find('tr.tableHeader').each(function(){ 
@@ -1841,9 +1896,9 @@ function setAtividadesUser() {
         if (plano !== null && target.length > 0) {
                     target.find('.atividadesProStatus').remove();
                 var htmlUser =  '<div id="atividadesStatus" class="atividadesProStatus">'+
-                                '    <div id="statusUser"><canvas id="chartStatusUser" width="500" height="70"></canvas></div>'+
+                                '    <div id="statusUser"><canvas id="chartStatusUser" width="500" height="90"></canvas></div>'+
                                 '</div>';
-                    target.prepend(htmlUser).css('margin-top', '70px');
+                    target.prepend(htmlUser).css('margin-top', '90px');
                 var element = $('#chartStatusUser');
                 waitLoadProSimple(element, function(){
                     var mostrar_notas = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+plano.id_unidade+"`] | [0].config.planos.mostrar_notas");
@@ -1854,7 +1909,7 @@ function setAtividadesUser() {
                     chartStatusUser.options.title = {display: true, text: unidade.nome_unidade+' - '+unidade.sigla_unidade};
                     chartStatusUser.update();
                 });
-                filterAtivPanel.css('top','120px');
+                filterAtivPanel.css('top','140px');
         } else {
             filterAtivPanel.css('top','52px');
         }
@@ -1864,8 +1919,7 @@ function setToolbarAtiv() {
     htmlToolbarDoc =    '<div id="toolbar_atividades" class="hidden">'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="none" data-action="info_atividade"><i style="margin: 0 5px;" class="fas fa-info-circle azulColor"></i> <span class="info" alt="Informa\u00E7\u00F5es '+__.da_demanda+'">Informa\u00E7\u00F5es '+__.da_demanda+'</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="edit_atividade"><i style="margin: 0 5px;" class="fas fa-pencil-alt azulColor"></i> <span class="info" alt="Editar '+__.Demanda+'">Editar '+__.Demanda+'</span></a>'+
-                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="edit_atividade"" data-subaction="notify_atividade"><i style="margin: 0 5px;" class="fas fa-envelope azulColor"></i> <span class="info" alt="Gerar Notifica\u00E7\u00E3o">Gerar Notifica\u00E7\u00E3o</span></a>'+
-                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="delete_atividade"><i style="margin: 0 5px;" class="fas fa-trash-alt vermelhoColor"></i> <span class="info" alt="Excluir '+__.Demanda+'">Excluir '+__.Demanda+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade" data-action="edit_atividade" data-subaction="notify_atividade"><i style="margin: 0 5px;" class="fas fa-envelope azulColor"></i> <span class="info" alt="Gerar Notifica\u00E7\u00E3o">Gerar Notifica\u00E7\u00E3o</span></a>'+
 
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade pause_atividade" data-action="pause_atividade"><i style="margin: 0 5px;" class="fas fa-pause-circle laranjaColor"></i> <span class="info" alt="Inserir '+__.Paralisacao+'">Inserir '+__.Paralisacao+'</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade play_atividade" data-action="pause_atividade"><i style="margin: 0 5px;" class="fas fa-play-circle azulColor"></i> <span class="info" alt="Inserir '+__.Retomar+' '+__.Demanda+'">'+__.Retomar+' '+__.Demanda+'</span></a>'+
@@ -1873,7 +1927,7 @@ function setToolbarAtiv() {
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade rate_atividade" data-action="variation_atividade"><i style="margin: 0 5px;" class="fas fa-graduation-cap azulColor"></i> <span class="info" alt="Alterar '+__.Complexidade+'">Alterar '+__.Complexidade+'</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade rate_atividade" data-action="type_atividade"><i style="margin: 0 5px;" class="fas fa-clipboard-list azulColor"></i> <span class="info" alt="Atribuir '+__.Atividade+'">Atribuir '+__.Atividade+'</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="complete_atividade" data-action="start_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar In\u00EDcio">Cancelar In\u00EDcio</span></a>'+
-                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade complete_atividade" data-action="rate_default_atividade"><i style="margin: 0 5px;" class="fas fa-exclamation-circle vermelhoColor"></i> <span class="info" alt="Omiss\u00E3o de '+__.Demanda+'">Omiss\u00E3o de '+__.Demanda+'</span></a>'+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="rate_default_atividade" data-action="rate_default_atividade"><i style="margin: 0 5px;" class="fas fa-exclamation-circle vermelhoColor"></i> <span class="info" alt="Omiss\u00E3o de '+__.Demanda+'">Omiss\u00E3o de '+__.Demanda+'</span></a>'+
                         
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="rate_atividade" data-action="complete_edit_atividade"><i style="margin: 0 5px;" class="fas fa-pencil-alt azulColor"></i> <span class="info" alt="Editar Conclus\u00E3o">Editar Conclus\u00E3o</span></a>'+
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="rate_atividade" data-action="complete_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar Conclus\u00E3o">Cancelar Conclus\u00E3o</span></a>'+
@@ -1882,6 +1936,8 @@ function setToolbarAtiv() {
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="send_atividade" data-action="rate_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar Avalia\u00E7\u00E3o">Cancelar Avalia\u00E7\u00E3o</span></a>'+
                         
                         '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="archive_atividade" data-action="send_cancel_atividade"><i style="margin: 0 5px;" class="fas fa-times-circle vermelhoColor"></i> <span class="info" alt="Cancelar Arquivamento">Cancelar Arquivamento</span></a>'+
+
+                        '   <a href="#" style="width: 175px;padding-top: 10px;display:none;" data-mode="start_atividade delete_atividade_all" data-action="delete_atividade"><i style="margin: 0 5px;" class="fas fa-trash-alt vermelhoColor"></i> <span class="info" alt="Excluir '+__.Demanda+'">Excluir '+__.Demanda+'</span></a>'+
                         '<div>';
     return htmlToolbarDoc;
 }
@@ -1897,7 +1953,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
     var htmlTableAtividades = (userHashAtiv == '') ? '<div class="g-signin2" data-onsuccess="onSignIn" data-longtitle="true"></div>' : '<div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div>';
         htmlTableAtividades = (googleOneTap && userHashAtiv == '') 
         ?   '<div id="g_id_onload"'+
-            '        data-client_id="648601411036-7hm2pvgpc9e0r4l8fpd8o1al571hruac.apps.googleusercontent.com"'+
+            '        data-client_id="'+CLIENT_ID_PRO+'"'+
             '        data-context="signin"'+
             '        data-ux_mode="popup"'+
             '        data-callback="onSignIn"'+
@@ -1953,7 +2009,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '   <caption class="infraCaption" style="text-align: left; margin-top: 10px;">'+countAtividade+'</caption>'+
                                 '   <thead>'+
                                 '       <tr class="tableHeader">'+
-                                '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck"></a></th>'+
+                                '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck"></a></th>'+
                                 '           '+htmlColumnsAtividades+
                                 '       </tr>'+
                                 '   </thead>'+
@@ -2000,8 +2056,8 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '           <i class="fas fa-cog verdeColor" style="margin: 0 5px; font-size: 1.1em;"></i>'+
                                 '           Configura\u00E7\u00F5es'+
                                 '       </span>'+
-                                '       <a class="newLink" id="atividadesProDiv_showIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'show\'); getPanelAtividades_();" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
-                                '       <a class="newLink" id="atividadesProDiv_hideIcon" onclick="toggleTablePro(\'atividadesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="atividadesProDiv_showIcon" onclick="toggleTablePro(\'#atividadesProDiv\',\'show\'); getPanelAtividades_();" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="atividadesProDiv_hideIcon" onclick="toggleTablePro(\'#atividadesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
                                 '   </div>'+
                                 '   <div id="atividadesProDiv" style="width: 98%; '+statusView+'">'+
                                 '   	<div id="atividadesProActions" class="panelHome panelHomeAtividade" style="'+(getOptionsPro('panelHomeView') == 'Atividade' || !getOptionsPro('panelHomeView') ? '' : 'display:none;')+' position: absolute; z-index: 9999; left: 200px; width: calc(100% - 220px)">'+
@@ -2102,7 +2158,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '              <button type="button" onclick="getPanelRelatorio(this)" data-value="Grafico" class="btn btn-sm btn-light '+(getOptionsPro('panelRelatoriosView') == 'Grafico' ? 'active' : '')+'">Gr\u00E1fico</button>'+
                                 '           </div>'+
                                 '           '+selectListPerfilLotacao+
-                                '           <a class="newLink iconRelatorio_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                                '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-sync-alt"></i>'+
                                 '           </a>'+
                                 '           '+btnGuiaUtilizacao+
@@ -2163,8 +2219,12 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
                                 '   	</div>' : '')+
                                 (checkCapacidade('view_relatorio') ? 
                                 '   	<div class="panelInfoHome panelInfoHomeRelatorio" style="'+(getOptionsPro('panelHomeView') == 'Relatorio' ? '' : 'display:none;')+'">'+
-                                '   	    <div id="tableRelatorioPanel" class="relatorioPanelPro" style="margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
-                                '   	    <div id="chartRelatorioPanel" class="relatorioPanelPro" style="display:none; padding-top: 20px; position: relative;"><div class="dataFallback" data-text="Em constru\u00E7\u00E3o"></div></div>'+
+                                '   	    <div id="tableRelatorioPanel" class="relatorioPanelPro" style="display:none; margin-top: 10px; display:none !important;"><div class="dataFallback" data-text="Nenhum dado dispon\u00EDvel"></div></div>'+
+                                '   	    <div id="chartRelatorioPanel" class="relatorioPanelPro" style="display:none; padding-top: 20px; position: relative;">'+
+                                (checkOptionEntidade('painel_bi') ?
+                                '               <iframe id="chartRelatorioPanelBI"></iframe>'+
+                                '' : '               <div class="dataFallback" data-text="Em constru\u00E7\u00E3o"></div>')+
+                                '           </div>'+
                                 '   	</div>' : '')+
                                 '   	<div class="panelInfoHome panelInfoHomeConfiguracao" style="border:none; '+(getOptionsPro('panelHomeView') == 'Configuracao' ? '' : 'display:none;')+'">'+
                                 '   	</div>'+
@@ -2433,10 +2493,18 @@ function getHtmlActionsConfig(type) {
                 '                   </span>'+
                 '               </a>'+
                 '' : '')+
-                ( type == 'planos' && (checkCapacidade('config_update_planos') || checkCapacidade('config_self_planos') ) ? 
+                ( type == 'planos' && (checkCapacidade('config_update_planos') || checkCapacidade('config_update_self_planos') ) ? 
                 '               <a class="newLink iconConfig_recalc" data-type="'+type+'" data-mode="recalc" data-id="0" onclick="updateCalcPlanos(this)" onmouseover="return infraTooltipMostrar(\'Recalcular horas de planos de trabalho\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
                 '                   <span class="fa-layers fa-fw">'+
                 '                       <i class="fas fa-calculator"></i>'+
+                '                       <span class="fa-layers-counter">1</span>'+
+                '                   </span>'+
+                '               </a>'+
+                '' : '')+
+                ( type == 'planos' && checkCapacidade('config_update_planos') ? 
+                '               <a class="newLink iconConfig_close" data-type="'+type+'" data-mode="close" data-id="0" onclick="closeConfig(this)" onmouseover="return infraTooltipMostrar(\'Encerrar antecipadamente planos de trabalho\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
+                '                   <span class="fa-layers fa-fw">'+
+                '                       <i class="fas fa-hourglass-end"></i>'+
                 '                       <span class="fa-layers-counter">1</span>'+
                 '                   </span>'+
                 '               </a>'+
@@ -2574,13 +2642,16 @@ function initPanelAtividadesView() {
         $('#afastamentosProActions').find('button[data-value="'+viewModePanel+'"].btn').trigger('click');
     } else if (checkCapacidade('view_relatorio')) {
         var viewModePanel = (getOptionsPro('panelRelatoriosView')) ? getOptionsPro('panelRelatoriosView') : 'Tabela';
-        $('#afastamentosProActions').find('button[data-value="'+viewModePanel+'"].btn').trigger('click');
+        $('#relatoriosProActions').find('button[data-value="'+viewModePanel+'"].btn').trigger('click');
     }
     if ($('.panelInfoHomeConfiguracao').is(':visible')) {
         getTabsConfigPanel();
     }
     if ($('.panelInfoHomeRelatorio').is(':visible')) {
-        getTabsRelatorio();
+        //getTabsRelatorio();
+        var viewModePanel = (getOptionsPro('panelRelatoriosView')) ? getOptionsPro('panelRelatoriosView') : 'Tabela';
+        $('#relatoriosProActions').find('button[data-value="'+viewModePanel+'"].btn').trigger('click');
+        
     }
     console.log('initPanelAtividadesView ****');
 }
@@ -2591,6 +2662,8 @@ function removeLocalDataAtiv(force = false) {
     hybridStorageRemovePro('configDataAtividadesProcPro');
     hybridStorageRemovePro('configDataAtividadesPadraoPro');
     sessionStorageRemovePro('configDataAtividadesHTML');
+    removeOptionsPro('selectReport_planos');
+    removeOptionsPro('selectReport_demandas');
     if (force) {
         arrayAtividadesPro = [];
         arrayAtividadesProcPro = [];
@@ -2621,7 +2694,9 @@ function changePanelHome(this_) {
         var viewModePanel = (getOptionsPro('panelAfastamentosView')) ? getOptionsPro('panelAfastamentosView') : 'Cronograma';
         $('#afastamentosProActions').find('button[data-value="'+viewModePanel+'"].btn').trigger('click');
     } else if (mode == 'Relatorio') {
-        getTabsRelatorio();
+        // getTabsRelatorio();
+        var viewModePanel = (getOptionsPro('panelRelatoriosView')) ? getOptionsPro('panelRelatoriosView') : 'Tabela';
+        $('#relatoriosProActions').find('button[data-value="'+viewModePanel+'"].btn').trigger('click');
     } else if (mode == 'Atividade') {
         updateAtividade();
         setTimeout(function(){ 
@@ -2695,8 +2770,13 @@ function getPanelRelatorio(this_) {
 }
 function getChartRelatorio(this_) {
     $('#chartRelatorioPanel').show();
+    $('#tableRelatorioPanel').hide();
+    if (checkOptionEntidade('painel_bi')) {
+        $('#chartRelatorioPanelBI').attr('src',getOptionEntidade('painel_bi'));
+    }
 }
 function getTabsRelatorio(this_) {
+    $('#chartRelatorioPanel').hide();
     var _this = $(this_);
     var panel = 'tableRelatorioPanel';
     var tabs = 'tabsPanelRelatorio'; //tabelaPanelScroll resizeObserve
@@ -3078,7 +3158,7 @@ function updateConfigServer(param) {
         arrayConfigAtividades[param.type][objIndexAtiv][param_key] = param.value;
     }
 
-    var action = 'config_update_'+param.type;
+    var action = checkCapacidade('config_update_self_'+param.type) ? 'config_update_self_'+param.type : 'config_update_'+param.type;
     if (checkCapacidade(action)) {
         param.action = action;
         getServerAtividades(param, action);
@@ -3093,7 +3173,7 @@ function updateServerTabConfig(data, param) {
     var table = $('#tabelaConfigPanel_'+param.type)
     var body = table.find('tbody');
         resetButtonTabConfig('.actionsConfig_'+param.type);
-
+        
     if (typeof data.refresh_page !== 'undefined' && data.refresh_page) {
         getTabConfig(param.type, 'get');
     } else {
@@ -3120,6 +3200,26 @@ function updateConfigCells(data, param, tr) {
         td.removeClass('editCellLoading').addClass('editCellLoadingError');
     } else {
         if (param.mode == 'disable') { tr.addClass('disabled') }
+        else if (param.mode == 'close') { 
+
+            if (moment() > moment(param.date_config, 'YYYY-MM-DD')) { tr.addClass('closed'); }
+            
+            var ids = (param.ids.length == 0) ? [param.id.toString()] : param.ids;
+            var type_id = (param.type == 'planos') ? 'id_plano' : false;
+            var date_config = param.date_config+' 23:59:59';
+            var listUpdate = [];
+            $.each(tableConfigList[param.type], function(i,v){
+                if ($.inArray(v[type_id].toString(), ids) !== -1) {
+                    listUpdate.push(v);
+                    tableConfigList[param.type][i][param_key] = date_config;
+                    td.text(moment(param.date_config, 'YYYY-MM-DD').format('DD/MM/YYYY')).attr('data-time-sorter', param.date_config);
+                }
+            });
+            if (listUpdate.length > 0) {
+                dialogUpdateCalcPlanos(listUpdate, 'update');
+            }
+            console.log(listUpdate, ids, data, param, tableConfigList.planos);
+        }
         else if (param.mode == 'approve') { tr.addClass('approve').removeClass('disapprove') }
         else if (param.mode == 'disapprove') { tr.addClass('disapprove').removeClass('approve') }
         else if (param.mode == 'reactive') { tr.removeClass('disabled') }
@@ -3257,6 +3357,145 @@ function dialogUpdateCalcPlanos(listUpdate = tableConfigList.planos, messageBox 
         }, time);
     });
 }
+function getMotivosPendenciasPlanos(plano) {
+    if (plano) {
+        var return_ = (plano.avaliacao_pendente) ? '<br>- Avalia\u00E7\u00E3o Pendente: Demandas do plano sem avalia\u00E7\u00E3o' : '';
+            return_ += (plano.entrega_insuficiente) ? '<br>- Entregas Insuficientes: Tempo entregue menor que a meta proporcional do plano' : '';
+            // return_ += (plano.execucao_parcial) ? '<br>- Execu\u00E7\u00E3o Parcial: Tempo homologado menor que a meta proporcional do plano' : '';
+            return_ += (plano.pactuacao_insuficiente) ? '<br>- Pactua\u00E7\u00E3o Insuficiente: Tempo pactuado menor que a meta proporcional do plano' : '';
+            return_ += (plano.produtividade_insuficiente) ? '<br>- Produtividade Insuficiente: Tempo despendido maior que o tempo pactuado' : '';
+            return return_;
+    } else {
+        return '';
+    }
+}
+function regularizaPlano(this_ = false, data_this = false) {
+    var _this = this_ ? $(this_) : false;
+    var data = _this ? _this.data() : data_this;
+    var id_plano = _this ? _this.closest('tr').data('id') : data.id_plano;
+        id_plano = (typeof id_plano === 'undefined') ? data.id_plano : id_plano;
+    var plano = (typeof id_plano !== 'undefined') ? jmespath.search(tableConfigList.planos, "[?id_plano==`"+id_plano+"`] | [0]") : null;
+        plano = (plano === null) ? jmespath.search(arrayConfigAtividades.planos, "[?id_plano==`"+id_plano+"`] | [0]") : plano;
+    var pendencias_plano = (plano !== null) ? plano.pendencias_plano[data.refplano] : false;
+    var action = 'config_update_planos';
+    var capacidade = checkCapacidade(action);
+
+    if (_this) {
+        var idTable = '#tableConfiguracoesPanel_planos';
+        var countSelected = $(idTable+' tr.infraTrMarcada').length;
+        if ($(idTable).is(':visible') && countSelected > 0) {
+            $(idTable).find('.lnkInfraCheck').data('index',1).trigger('click');
+        }
+        _this.closest('tr').find('td').eq(0).find('input[type="checkbox"]').trigger('click');
+    }
+    
+
+    if (pendencias_plano) {
+        var htmlBox =   '<div id="boxPlano" class="atividadeWork">'+
+                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
+                        '           <tr>'+
+                        '               <td colspan="3">'+
+                        '                   <i style="margin: 0 5px;" class="fas fa-exclamation-triangle vermelhoColor"></i> Existe pend\u00EAncias do '+(data.refplano == 'presente' ? 'plano vigente' : 'plano anterior')+' que necessitam de regulariza\u00E7\u00E3o ('+moment(pendencias_plano.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(pendencias_plano.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+')'+
+                        '               </td>'+
+                        '           </tr>'+
+                        '           <tr>'+
+                        '               <td colspan="3">'+
+                        '                   <div id="statusUserRegulariza"><canvas id="chartStatusUserRegulariza" width="500" height="70"></canvas></div>'+
+                        '               </td>'+
+                        '           </tr>'+
+                        (pendencias_plano.avaliacao_pendente ?
+                        '           <tr>'+
+                        '               <td style="vertical-align: bottom; text-align: left; width: 200px;" class="label">'+
+                        '                    <label><i class="iconPopup iconSwitch fas fa-star cinzaColor"></i>Avalia\u00E7\u00E3o Pendente</label>'+
+                        '                </td>'+
+                        '                <td style="text-align: left;">Demandas do plano sem avalia\u00E7\u00E3o cadastrada</td>'+
+                        '                <td style="text-align: left;"><i style="margin: 0 5px;" class="fas fa-exclamation-triangle vermelhoColor"></i> Solicite a avalia\u00E7\u00E3o pela chefia imediata '+(!capacidade ? 'com a chefia imediata': '')+'</td>'+
+                        '           </tr>'+
+                        '' : '')+
+                        (pendencias_plano.entrega_insuficiente ?
+                        '           <tr>'+
+                        '               <td style="vertical-align: bottom; text-align: left; width: 200px;" class="label">'+
+                        '                    <label><i class="iconPopup iconSwitch fas fa-inbox cinzaColor"></i>Entregas Insuficientes</label>'+
+                        '                </td>'+
+                        '                <td style="text-align: left;">Tempo entregue menor que a meta proporcional do plano</td>'+
+                        '                <td style="text-align: left;"><i style="margin: 0 5px;" class="fas fa-exclamation-circle laranjaColor"></i> Conclua demandas at\u00E9 a meta ou justifique a circunst\u00E2ncia '+(!capacidade ? 'com a chefia imediata': '')+'</td>'+
+                        '           </tr>'+
+                        '' : '')+
+                        (pendencias_plano.pactuacao_insuficiente ?
+                        '           <tr>'+
+                        '               <td style="vertical-align: bottom; text-align: left; width: 200px;" class="label">'+
+                        '                    <label><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Pactua\u00E7\u00E3o Insuficiente</label>'+
+                        '                </td>'+
+                        '                <td style="text-align: left;">Tempo pactuado menor que a meta proporcional do plano</td>'+
+                        '                <td style="text-align: left;"><i style="margin: 0 5px;" class="fas fa-exclamation-circle laranjaColor"></i> Conclua demandas at\u00E9 a meta ou justifique a circunst\u00E2ncia '+(!capacidade ? 'com a chefia imediata': '')+'</td>'+
+                        '           </tr>'+
+                        '' : '')+
+                        (pendencias_plano.produtividade_insuficiente ?
+                        '           <tr>'+
+                        '               <td style="vertical-align: bottom; text-align: left; width: 200px;" class="label">'+
+                        '                    <label><i class="iconPopup iconSwitch fas fa-chart-line cinzaColor"></i>Produtividade Insuficiente</label>'+
+                        '                </td>'+
+                        '                <td style="text-align: left;">Tempo despendido maior que o tempo pactuado</td>'+
+                        '                <td style="text-align: left;"><i style="margin: 0 5px;" class="fas fa-exclamation-circle laranjaColor"></i> Justifique a circunst\u00E2ncia '+(!capacidade ? 'com a chefia imediata': '')+'</td>'+
+                        '           </tr>'+
+                        '' : '')+
+                        (capacidade ?
+                        '           <tr>'+
+                        '               <td colspan="3">'+
+                        '                   <textarea id="comment_homologacao" style="height: 150px;" oninput="if ($(this).val().length > 100) {updateButtonConfirm(this, true)} else {updateButtonConfirm(this, false)}"></textarea>'+
+                        '               </td>'+
+                        '           </tr>'+
+                        '' : '')+
+                        '   </table>'+
+                        '</div>';
+
+            resetDialogBoxPro('dialogBoxPro');
+            dialogBoxPro = $('#dialogBoxPro')
+                .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+                .dialog({
+                    title: 'Regularizar plano de trabalho',
+                    width: 780,
+                    open: function() { 
+                        var element = $('#chartStatusUserRegulariza');
+                            var mostrar_notas = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+pendencias_plano.id_unidade+"`] | [0].config.planos.mostrar_notas");
+                            var apelido_display = (mostrar_notas !== null && mostrar_notas) ? 'apelido_avaliacao' : 'apelido';
+                            var chartStatusUser = getSingleChartTempoPlano(element, pendencias_plano, pendencias_plano[apelido_display]);
+                                chartStatusUser.options.scales.xAxes[0].ticks.display = false;
+                                // chartStatusUser.options.legend.display = false;
+                                // chartStatusUser.options.title = {display: true, text: unidade.nome_unidade+' - '+unidade.sigla_unidade};
+                                chartStatusUser.update();
+                    },
+                    close: function() { 
+                        $('#boxPlano').remove();
+                        resetDialogBoxPro('dialogBoxPro');
+                    },
+                    buttons: [{
+                        text: (capacidade ? 'Salvar' : 'Ok'),
+                        class: 'confirm',
+                        click: function(event) { 
+                            if (capacidade) {
+                                var comment_homologacao = $('#comment_homologacao').val();
+                                if (comment_homologacao.length < 100) {
+                                    alertaBoxPro('Error', 'exclamation-triangle', 'Justificativa curta.');
+                                } else {
+                                    var param = {
+                                        action: action,
+                                        id: pendencias_plano.id_plano,
+                                        type: 'planos',
+                                        key: comment_homologacao,
+                                        mode: 'homologacao'
+                                    };
+                                    getServerAtividades(param, action);
+                                }
+                            } else {
+                                $('#boxPlano').remove();
+                                resetDialogBoxPro('dialogBoxPro');
+                            }
+                        }
+                    }]
+                });
+    }
+}
 function getRowsTableTabConfig(type, mode, list = false, value = false) {
     var _return = '';
     var countUnidades = (list) ? uniqPro(jmespath.search(list, "[?sigla_unidade].sigla_unidade")) : null;
@@ -3264,7 +3503,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     if (type == 'atividades') {
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome d'+__.a_Atividade+'</th>'+
                             '              <th class="tituloControle tituloFilter">Tempo Pactuado (horas)</th>'+
                             '              <th class="tituloControle tituloFilter" style="width: 160px;">Dias de Planejamento</th>'+
@@ -3334,7 +3573,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     } else if (type == 'planos') {
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Respons\u00E1vel</th>'+
                             (countUnidades > 1 ?
                             '              <th class="tituloControle tituloFilter" style="width: 100px;">Unidade</th>'+
@@ -3343,8 +3582,8 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                             '              <th class="tituloControle tituloFilter" style="width: 100px;">Carga Hor\u00E1ria</th>'+
                             '              <th class="tituloControle tituloFilter" style="width: 150px;">Data de In\u00EDcio</th>'+
                             '              <th class="tituloControle tituloFilter" style="width: 150px;">Data de Encerramento</th>'+
-                            '              <th class="tituloControle tituloFilter" style="width: 250px;">Tempo Total Pactuado (horas)</th>'+
-                            '              <th class="tituloControle tituloFilter" style="width: 250px;">Tempo Pactuado Proporcional (horas)</th>'+
+                            '              <th class="tituloControle tituloFilter" style="width: 250px;">Meta Total do Plano (horas)</th>'+
+                            '              <th class="tituloControle tituloFilter" style="width: 250px;">Meta Proporcional do Plano (horas)</th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;" colspan="2">Op\u00E7\u00F5es</th>'+
                             (checkCapacidade('config_update_'+type) ? 
                             '              <th class="tituloControle" data-sorter="false" style="min-width: 120px;">A\u00E7\u00F5es</th>'+
@@ -3358,14 +3597,30 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                 var modalidade = jmespath.search(arrayConfigAtividades.tipos_modalidades,"[?id_tipo_modalidade==`"+value.id_tipo_modalidade+"`] | [0]");
                 var view_modelos = (modalidade !== null && modalidade.hasOwnProperty('config') && typeof modalidade.config !== 'undefined' && modalidade.config !== null && modalidade.config.hasOwnProperty('modelos')) ? modalidade.config.modelos : false;        
                 var assinatura = (typeof value.config !== 'undefined' && value.config !== null && typeof value.config.assinatura !== 'undefined' && value.config.hasOwnProperty('assinatura')) ? value.config.assinatura : false;
-                var btnAssinatura = (view_modelos) ? '<a class="newLink viewModelDoc" data-type="'+type+'" data-sign="true" data-user="'+value.id_user+'" data-id_reference="'+value.id_plano+'" data-icon="pencil-alt" data-action="view" data-mode="modelo_termo_adesao" data-title="Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\''+(assinatura ? 'Documento assinado eletronicamente por '+assinatura[0].nome_completo+', em '+moment(assinatura[0].datetime,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm') : 'Visualizar Termo de Ades\u00E3o para assinatura')+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature '+(assinatura ? 'azulColor' : 'cinzaColor')+'" style="font-size: 100%;"></i> <i class="fas fa-'+(assinatura ? 'user-edit azulColor' : 'pencil-alt cinzaColor')+'" style="font-size: 100%; margin-left: -10px;"></i></a>' : '';
+                var btnAssinatura = (view_modelos && value.vigencia) 
+                                ? '<a class="newLink viewModelDoc" data-type="'+type+'" data-sign="true" data-user="'+value.id_user+'" data-id_reference="'+value.id_plano+'" data-icon="pencil-alt" data-action="view" data-mode="modelo_termo_adesao" data-title="Termo de Ades\u00E3o" onclick="editModelConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\''+(assinatura ? 'Documento assinado eletronicamente por '+assinatura[0].nome_completo+', em '+moment(assinatura[0].datetime,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm') : 'Visualizar Termo de Ades\u00E3o para assinatura')+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature '+(assinatura ? 'azulColor' : 'cinzaColor')+'" style="font-size: 100%;"></i> <i class="fas fa-'+(assinatura ? 'user-edit azulColor' : 'pencil-alt cinzaColor')+'" style="font-size: 100%; margin-left: -10px;"></i></a>' 
+                                : '';
                     btnAssinatura = (classFuture && !assinatura) 
-                                    ? '<a class="newLink viewModelDoc" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\'Dispon\u00EDvel para assinatura ap\u00F3s iniciada a vig\u00EAncia do plano\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature cinzaColor" style="font-size: 100%;"></i> <i class="fas fa-pencil-alt cinzaColor" style="font-size: 100%; margin-left: -10px;"></i></a>' 
-                                    : btnAssinatura;
+                                ? '<a class="newLink viewModelDoc" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\'Dispon\u00EDvel para assinatura ap\u00F3s iniciada a vig\u00EAncia do plano\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature cinzaColor" style="font-size: 100%;"></i> <i class="fas fa-pencil-alt cinzaColor" style="font-size: 100%; margin-left: -10px;"></i></a>' 
+                                : btnAssinatura;
+                    btnAssinatura = (value.vigencia && value.pendencias_plano && value.pendencias_plano.presente && value.pendencias_plano.presente.plano_concomitante)
+                                ? '<a class="newLink" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\'Existe plano de trabalho concomitante nesta unidade para esse usu\u00E1rio ('+moment(value.pendencias_plano.presente.plano_concomitante.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(value.pendencias_plano.presente.plano_concomitante.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'). Desative um dos planos e tente novamente.\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature vermelhoColor" style="font-size: 100%;"></i><i class="fas fa-exclamation-triangle vermelhoColor" style="font-size: 100%; margin-left: -10px;"></i></a>'
+                                : btnAssinatura;
+                    btnAssinatura = (!assinatura && value.vigencia && value.pendencias_plano && value.pendencias_plano.anterior && !value.pendencias_plano.anterior.homologavel)
+                                ? '<a class="newLink" style="cursor: pointer; margin: 5px;display: inline-block;" onclick="regularizaPlano(this)" data-refplano="anterior" onmouseover="return infraTooltipMostrar(\'Existe pend\u00EAncias do plano anterior que necessitam de regulariza\u00E7\u00E3o ('+moment(value.pendencias_plano.anterior.data_inicio_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(value.pendencias_plano.anterior.data_fim_vigencia,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'). Clique para mais detalhes. '+getMotivosPendenciasPlanos(value.pendencias_plano.anterior)+' \');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-signature vermelhoColor" style="font-size: 100%;"></i><i class="fas fa-exclamation-triangle vermelhoColor" style="font-size: 100%; margin-left: -10px;"></i></a>'
+                                : btnAssinatura;
+
+                var homologacao = (typeof value.homologado !== 'undefined' && value.homologado !== null && value.homologado && typeof value.config !== 'undefined' && value.config !== null && typeof value.config.homologacao !== 'undefined' && value.config.hasOwnProperty('homologacao')) ? value.config.homologacao : false;
+                var btnHomologacao = (homologacao) 
+                                ? '<a class="newLink" style="cursor: pointer; margin: 5px;display: inline-block;" onmouseover="return infraTooltipMostrar(\''+value.config.homologacao.result+' em '+moment(value.config.homologacao.datetime,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY [\u00E0s] HH:mm')+(value.config.homologacao.type != 'system' ? '<br>- '+value.config.homologacao.comment : '')+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-check-double azulColor" style="font-size: 100%;"></i><i class="fas fa-'+(value.config.homologacao.type == 'system' ? 'cog' : 'user-tie')+' azulColor" style="font-size: 100%; margin-left: -10px;"></i></a>' 
+                                : !value.homologado && !value.em_execucao && value.vigencia && value.pendencias_plano && value.pendencias_plano.presente && !value.pendencias_plano.presente.homologavel
+                                    ? '<a class="newLink" style="cursor: pointer; margin: 5px;display: inline-block;" onclick="regularizaPlano(this)" data-refplano="presente" onmouseover="return infraTooltipMostrar(\'Plano de trabalho pendente de homologa\u00E7\u00E3o. Clique para mais detalhes. '+getMotivosPendenciasPlanos(value.pendencias_plano.presente)+' \');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-check-double vermelhoColor" style="font-size: 100%;"></i><i class="fas fa-exclamation-triangle vermelhoColor" style="font-size: 100%; margin-left: -10px;"></i></a>' 
+                                    : '';
+
                 var classAssinatura = (view_modelos && assinatura) ? 'alertAssinatura' : '';
                     _return =   '       <tr data-tagname="SemGrupo" data-type="'+type+'" data-rowindex="id_'+type.slice(0, -1)+'" data-id="'+value.id_plano+'"  data-idref="'+value.id_user+'" data-idreftype="id_user" class="'+classDisabled+(classClosed ? ' '+classClosed.name : (classFuture ? classFuture.name : ''))+'">'+
                                 '           <td align="center">'+
-                                '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_plano+'" name="configuracoesPro" value="'+value.id_plano+'" '+( (type == 'planos' && checkCapacidade('config_self_planos')) || checkCapacidade('config_update_'+type) ? '' : 'disabled')+'></td>'+
+                                '               <input type="checkbox" class="checkboxSelectConfiguracoes" onclick="followSelecionarItens(this)" id="configuracoesPro_'+value.id_plano+'" name="configuracoesPro" value="'+value.id_plano+'" '+( (type == 'planos' && checkCapacidade('config_update_self_planos')) || checkCapacidade('config_update_'+type) ? '' : 'disabled')+'></td>'+
                                 '           <td align="left" class="'+(checkCapacidade('config_update_'+type) ? 'editCellSelect' : '')+' '+classAssinatura+'" data-array="usuarios" data-key="id_user" data-value="nome_completo" data-new-item="false" data-text="'+(classClosed ? classClosed.text : (classFuture ? classFuture.text : '') )+'"><span>'+value.nome_completo+'</span></td>'+
                                 (countUnidades > 1 ?
                                 '           <td align="left" class="'+(checkCapacidade('config_update_'+type) ? 'editCellSelect' : '')+' '+classAssinatura+'" data-array="unidades" data-key="id_unidade" data-value="sigla_unidade" data-new-item="false">'+value.sigla_unidade+'</td>'+
@@ -3376,14 +3631,15 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                                 '           <td align="left" style="text-align:center;" class="'+(checkCapacidade('config_update_'+type) ? 'editCellDate' : '')+' '+classAssinatura+'" data-key="data_fim_vigencia" data-ref-limit="data_fim" data-label-limit="data_inicio" data-limit="min" data-time-sorter="'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')+'">'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</td>'+
                                 '           <td align="left" class="" data-key="tempo_total" style="text-align: center;">'+value.tempo_total+'</td>'+
                                 '           <td align="left" class="" data-key="tempo_proporcional" style="text-align: center;">'+value.tempo_proporcional+'</td>'+
-                                '           <td align="left" style="width: 100px;" data-time-sorter="'+(view_modelos && assinatura ? assinatura[0].datetime : (view_modelos ? '0000-00-00 00:00:00' : '') )+'">'+
-                                '               '+btnAssinatura+
+                                '           <td align="left" style="width: 140px;" data-time-sorter="'+(view_modelos && assinatura ? assinatura[0].datetime : (view_modelos ? '0000-00-00 00:00:00' : '') )+'">'+
+                                '               '+btnAssinatura+btnHomologacao+
                                 '           </td>'+
                                 (checkCapacidade('config_update_'+type) ? 
                                 '           <td align="left" style="width: 150px;">'+
                                 '               <a class="newLink followLinkTr '+(value.config && value.config !== null && (Object.keys(value.config).length > 0 || value.config.length > 0 ) ? 'newLink_selected' : '')+'" style="font-size: 10pt;" onclick="editConfigOptions(this, '+value.id_plano+')"><i class="fas fa-plus-circle" style="font-size: 100%;"></i>Op\u00E7\u00F5es</a>'+
                                 '           </td>'+
-                                '           <td align="right" data-key="action">'+
+                                '           <td align="right" data-key="action" style="width: 200px;">'+
+                                '               <a class="newLink followLinkTr" data-type="'+type+'" data-id="'+value.id_plano+'" data-mode="close" onclick="closeConfig(this)" onmouseover="return infraTooltipMostrar(\'Encerrar Antecipadamente\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-hourglass-end" style="font-size: 100%;"></i></a>'+
                                 '               <a class="newLink followLinkTr" data-type="'+type+'" data-id="'+value.id_plano+'" data-mode="disable" onclick="disableConfig(this)" onmouseover="return infraTooltipMostrar(\'Desativar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-times-circle" style="font-size: 100%;"></i></a>'+
                                 '               <a class="newLink followLinkTr" data-type="'+type+'" data-id="'+value.id_plano+'" data-mode="reactive" onclick="reactiveConfig(this)" onmouseover="return infraTooltipMostrar(\'Reativar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-undo-alt" style="font-size: 100%;"></i></a>'+
                                 (checkCapacidade('config_new_'+type) ? 
@@ -3410,7 +3666,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     } else if (type == 'programas') {
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             (countUnidades > 1 ?
                             '              <th class="tituloControle tituloFilter">Unidade</th>'+
                             '' : '')+
@@ -3465,7 +3721,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     } else if (type == 'users') {
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome Completo</th>'+
                             '              <th class="tituloControle tituloFilter" style="width: 150px;">Apelido</th>'+
                             '              <th class="tituloControle tituloFilter" style="width: 150px;">Matr\u00EDcula</th>'+
@@ -3538,7 +3794,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     } else if (type == 'unidades') {
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da Unidade</th>'+
                             '              <th class="tituloControle tituloFilter">Sigla da Unidade</th>'+
                             '              <th class="tituloControle tituloFilter">Depend\u00EAncia</th>'+
@@ -3595,7 +3851,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     } else if (type == 'cadeia_valor') {
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Processo</th>'+
                             '              <th class="tituloControle tituloFilter">Depend\u00EAncia</th>'+
                             '              <th class="tituloControle tituloFilter">Selecion\u00E1vel</th>'+
@@ -3653,7 +3909,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     } else if (type == 'entidades') {
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da Entidade</th>'+
                             '              <th class="tituloControle tituloFilter">Sigla da Entidade</th>'+
                             (checkCapacidade('config_update_'+type) ? 
@@ -3713,7 +3969,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
     
         if (mode == 'header') {
                 _return =   '          <tr class="tableHeader">'+
-                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck_'+type+'"></a></th>'+
+                            '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_'+type+'" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_'+type+'" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck_'+type+'"></a></th>'+
                             '              <th class="tituloControle tituloFilter" style="min-width: 250px;">'+param.name_head+'</th>'+
                             (checkCapacidade('config_update_'+type) ? 
                             '              <th class="tituloControle" data-sorter="false" style="width: 100px;">Op\u00E7\u00F5es</th>'+
@@ -3865,14 +4121,35 @@ function getTableTabConfig(type, listConfig) {
                     textExtraction: {
                         1: function (elem, table, cellIndex) {
                             var text = $(elem).find('span').text().trim();
-                            var td = $(elem).closest('tr');
-                            var priority = (td.hasClass('new')) ? '1 ' : '';
-                                priority = (td.hasClass('closed')) ? 'Z999 ' : '';
+                            var tr = $(elem).closest('tr');
+                            var priority = (tr.hasClass('new')) ? 'AAA ' : 'BBB ';
+                                priority = (tr.hasClass('closed')) ? 'YYY ' : 'BBB ';
+                                priority = (tr.hasClass('disabled')) ? 'ZZZ ' : 'BBB ';
                             return priority+text;
                         },
+                        2: function (elem, table, cellIndex) {
+                            return filterTextExtractDate(elem, table, cellIndex);
+                        },
+                        3: function (elem, table, cellIndex) {
+                            return filterTextExtractDate(elem, table, cellIndex);
+                        },
+                        4: function (elem, table, cellIndex) {
+                            return filterTextExtractDate(elem, table, cellIndex);
+                        },
+                        5: function (elem, table, cellIndex) {
+                            return filterTextExtractDate(elem, table, cellIndex);
+                        },
+                        6: function (elem, table, cellIndex) {
+                            return filterTextExtractDate(elem, table, cellIndex);
+                        },
+                        7: function (elem, table, cellIndex) {
+                            return filterTextExtractDate(elem, table, cellIndex);
+                        },
                         8: function (elem, table, cellIndex) {
-                            var text_date = $(elem).data('time-sorter');
-                            return text_date;
+                            return filterTextExtractDate(elem, table, cellIndex);
+                        },
+                        9: function (elem, table, cellIndex) {
+                            return filterTextExtractDate(elem, table, cellIndex);
                         }
                     },
                     widgets: ["saveSort", "filter"],
@@ -3891,7 +4168,11 @@ function getTableTabConfig(type, listConfig) {
                         2: { filter: true },
                         3: { filter: true },
                         4: { filter: true },
-                        5: { filter: true }
+                        5: { filter: true },
+                        6: { filter: true },
+                        7: { filter: true },
+                        8: { filter: true },
+                        9: { filter: true }
                     }
                 }).on("sortEnd", function (event, data) {
                     checkboxRangerSelectShift();
@@ -4074,7 +4355,7 @@ function getTableTabConfig(type, listConfig) {
             });
             setTimeout(function(){ 
 
-                var htmlFilterConfig =  '<div class="btn-group filterTablePro" role="group" style="right: 55px;top: -38px;z-index: 99;position: absolute;">'+
+                var htmlFilterConfig =  '<div class="btn-group filterTablePro" role="group" style="right: 55px;top: -31px;z-index: 99;position: absolute;">'+
                                         '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                         '       <span class="text">Baixar</span>'+
@@ -4093,6 +4374,7 @@ function getTableTabConfig(type, listConfig) {
                     observerFilterConfig.observe(filterConfig, {
                         attributes: true
                     });
+                    configTabela.find('.tablesorter-filter-row input.tablesorter-filter[aria-label*="Data"]').attr('type','date');
             }, 500);
         }
         
@@ -4127,9 +4409,11 @@ function getTableTabConfig(type, listConfig) {
             if (count_all > 0) {
                 $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_clone').show().find('.fa-layers-counter').text(count_all);
                 $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_recalc').show().find('.fa-layers-counter').text(count_all);
+                $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_close').show().find('.fa-layers-counter').text(count_all);
             } else {
                 $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_clone').hide();
                 $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_recalc').hide();
+                $('#configuracoesProActions .actionsConfig_'+type).find('.iconConfig_close').hide();
             }
         });
         setTimeout(function(){ 
@@ -4615,6 +4899,10 @@ function getConfigServerDoc(action, param) {
                 getAtividades();
                 var txtAlert = (action == 'sign_documento') ? 'Documento assinado' : 'Assinatura do documento cancelada';
                 alertaBoxPro('Sucess', 'check-circle', txtAlert+' com sucesso!');
+
+                if (typeof ativData.refresh_page !== 'undefined' && ativData.refresh_page && $('#tableConfiguracoesPanel_'+param.type).is(':visible')) {
+                    getTabConfig(param.type, 'get');
+                }
             }
 
         }
@@ -4697,7 +4985,7 @@ function updateCalcPlanos(this_) {
 
     confirmaFraseBoxPro('Tem certeza que deseja '+label+(countSelected > 1 ? 'os registros' : 'o registro')+(id == 0 ? (countSelected > 1 ? ' selecionados' : ' selecionado') : '')+'?', 'SIM', 
         function(){
-            var action = 'config_update_'+data_this.type;
+            var action = checkCapacidade('config_update_self_'+data_this.type) ? 'config_update_self_'+data_this.type : 'config_update_'+data_this.type;
             var listUpdate = [];
             if (checkCapacidade(action)) {
                 $.each(tableConfigList.planos, function(i,v){
@@ -4750,6 +5038,70 @@ function disableConfig(this_) {
                     type: data_this.type,
                     key: 'data_fim',
                     mode: 'disable'
+                };
+                getServerAtividades(param, action);
+            }
+        }, function() {
+            if (id != 0) {
+                if ($(idTable).is(':visible') && _this.closest('tr').hasClass('infraTrMarcada')) {
+                    $(idTable).find('.lnkInfraCheck').data('index',1).trigger('click');
+                }
+            }
+        }
+    );
+}
+function closeConfig(this_) {
+    var _this = $(this_);
+    var td = _this.closest('td');
+    var tr = _this.closest('tr');
+    var data = td.data();
+    var data_this = _this.data();
+    var id = data_this.id;
+    var data_tr = tr.data();
+        data_tr = (typeof data_tr !== 'undefined') ? tr.data() : data_this;
+    var ids = [];
+    var idTable = '#tableConfiguracoesPanel_'+data_tr.type;
+    var countSelected = $(idTable+' tr.infraTrMarcada').length;
+    if (id != 0) {
+        if ($(idTable).is(':visible') && countSelected > 0) {
+            $(idTable).find('.lnkInfraCheck').data('index',1).trigger('click');
+        }
+        _this.closest('tr').find('td').eq(0).find('input[type="checkbox"]').trigger('click');
+    } else {
+        ids = $(idTable).find('.checkboxSelectConfiguracoes:checked').map(function(){ if(!$(this).closest('tr').hasClass('disabled')) { return $(this).val() } }).get();
+    }
+    var typeText = (countSelected > 1) ? 'os registros' : 'o registro';
+    var inputText = '';
+
+    if (data_this.type == 'planos') {
+        typeText = (countSelected > 1) ? 'os planos de trabalho' : 'o plano de trabalho';
+        var dateMinMax = (id != 0) 
+                        ?   jmespath.search(tableConfigList[data_this.type], "[?id_plano==`"+id+"`]")
+                        :   $.map(tableConfigList[data_this.type],function(v){
+                                if($.inArray(v.id_plano.toString(), ids) !== -1) { return v }
+                            });
+        var dateInicio = jmespath.search(dateMinMax, "[*].data_inicio_vigencia");
+            dateInicio = (dateInicio == null) ? null : dateInicio.reduce(function (a, b) { return a > b ? a : b; });
+            dateInicio = (dateInicio == null) ? null : moment(dateInicio,'YYYY-MM-DD HH:mm:ss');
+        var dateFim = jmespath.search(dateMinMax, "[*].data_fim_vigencia");
+            dateFim = (dateFim == null) ? null : dateFim.reduce(function (a, b) { return a > b ? a : b; });
+            dateFim = (dateFim == null) ? null : moment(dateFim,'YYYY-MM-DD HH:mm:ss');
+        var inputText = (data_this.type == 'planos') ? '<br>Data de encerramento do plano: <input id="configClose_date" type="date" style="width: 200px;" min="'+dateInicio.format('YYYY-MM-DD')+'" value="'+(moment() > dateFim ? dateFim : moment().format('YYYY-MM-DD'))+'" max="'+dateFim.format('YYYY-MM-DD')+'">' : '';
+    }
+        typeText = typeText+(id == 0 ? (countSelected > 1 ? ' selecionados' : ' selecionado') : '');
+
+    confirmaFraseBoxPro('Tem certeza que deseja <b style="font-weight: bold;">ENCERRAR ANTECIPADAMENTE</b> '+typeText+'?'+inputText, 'ENCERRAR', 
+        function(){
+            var action = 'config_update_'+data_this.type;
+            if (checkCapacidade(action)) {
+                var param = {
+                    action: action,
+                    id: id,
+                    ids: ids,
+                    type: data_this.type,
+                    key: 'data_fim_vigencia',
+                    date_config: ($('#configClose_date').length ? $('#configClose_date').val() : false),
+                    mode: 'close'
                 };
                 getServerAtividades(param, action);
             }
@@ -5369,7 +5721,7 @@ function editConfigOptions(this_, id) {
                             '                               <table id="configBox_lista_atividades" data-format="obj_mult" data-key="lista_atividades" style="font-size: 8pt !important;width: 100%;" class="tableCheckboxConfig seiProForm tableDialog tableInfo tableZebra tableFollow tableAtividades">'+
                             '                                    <thead>'+
                             '                                        <tr class="tableHeader">'+
-                            '                                            <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck"></a></th>'+
+                            '                                            <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck"></a></th>'+
                             '                                            <th class="tituloControle">Nome d'+__.a_Atividade+'</th>'+
                             '                                            <th class="tituloControle">Tempo Pactuado</th>'+
                             '                                        </tr>'+
@@ -5752,6 +6104,15 @@ function editConfigOptions(this_, id) {
                             '                          <div class="onoffswitch" style="float: right;">'+
                             '                              <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="planos_mostrar_notas" tabindex="0" '+(config && typeof config.planos !== 'undefined' && typeof config.planos.mostrar_notas !== 'undefined' && config.planos.mostrar_notas  ? 'checked' : '')+'>'+
                             '                              <label class="onoffswitch-label" for="planos_mostrar_notas"></label>'+
+                            '                          </div>'+
+                            '                      </td>'+
+                            '                  </tr>'+
+                            '                  <tr style="height: 40px;">'+
+                            '                      <td style="text-align: left;"><i class="iconPopup fas fa-star cinzaColor"></i> Permitir a auto avalia\u00E7\u00E3o de '+__.demandas+'</td>'+
+                            '                      <td>'+
+                            '                          <div class="onoffswitch" style="float: right;">'+
+                            '                              <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="planos_permite_autoavaliacao" tabindex="0" '+(config && typeof config.planos !== 'undefined' && typeof config.planos.permite_autoavaliacao !== 'undefined' && config.planos.permite_autoavaliacao  ? 'checked' : '')+'>'+
+                            '                              <label class="onoffswitch-label" for="planos_permite_autoavaliacao"></label>'+
                             '                          </div>'+
                             '                      </td>'+
                             '                  </tr>'+
@@ -6292,15 +6653,21 @@ function editConfigOptions(this_, id) {
                         '                      </td>'+
                         '                  </tr>'+
                         '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;"><i class="iconPopup fab fa-chrome cinzaColor"></i> URL do extens\u00E3o (Google Chrome)</td>'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fab fa-chrome cinzaColor"></i> URL da extens\u00E3o (Google Chrome)</td>'+
                         '                      <td>'+
                         '                          <input type="text" class="singleOptionConfig" data-key="extensao_chrome" id="extensao_chrome" value="'+(config && typeof config.extensao_chrome !== 'undefined' && config.extensao_chrome != ''  ? config.extensao_chrome : '' )+'">'+
                         '                      </td>'+
                         '                  </tr>'+
                         '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;"><i class="iconPopup fab fa-firefox cinzaColor"></i> URL do extens\u00E3o (Mozilla Firefox)</td>'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fab fa-firefox cinzaColor"></i> URL da extens\u00E3o (Mozilla Firefox)</td>'+
                         '                      <td>'+
                         '                          <input type="text" class="singleOptionConfig" data-key="extensao_firefox" id="extensao_firefox" value="'+(config && typeof config.extensao_firefox !== 'undefined' && config.extensao_firefox != ''  ? config.extensao_firefox : '' )+'">'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-chart-line cinzaColor"></i> URL do Painel BI</td>'+
+                        '                      <td>'+
+                        '                          <input type="text" class="singleOptionConfig" data-key="painel_bi" id="painel_bi" value="'+(config && typeof config.painel_bi !== 'undefined' && config.painel_bi != ''  ? config.painel_bi : '' )+'">'+
                         '                      </td>'+
                         '                  </tr>'+
                         '               </table>'+
@@ -6342,6 +6709,21 @@ function editConfigOptions(this_, id) {
                         '                                  </td>'+
                         '                              </tr>'+
                         '                           </table>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-star-half-alt cinzaColor"></i> Exigir a avalia\u00E7\u00E3o antes do cadastramento de '+getNameGenre('demanda', 'novos', 'novas')+' '+__.demandas+'</td>'+
+                        '                      <td>'+
+                        '                          <div class="onoffswitch" style="float: right;">'+
+                        '                              <input type="checkbox" name="onoffswitch" data-key="checar_avaliacao" class="onoffswitch-checkbox singleOptionConfig" id="checar_avaliacao" tabindex="0" '+(config && typeof config.checar_avaliacao !== 'undefined' && config.checar_avaliacao ? 'checked' : '')+'>'+
+                        '                              <label class="onoffswitch-label" for="checar_avaliacao"></label>'+
+                        '                          </div>'+
+                        '                      </td>'+
+                        '                  </tr>'+
+                        '                  <tr style="height: 40px;">'+
+                        '                      <td style="text-align: left;"><i class="iconPopup fas fa-star cinzaColor"></i> Prazo para a avalia\u00E7\u00E3o de '+__.demandas+'</td>'+
+                        '                      <td>'+
+                        '                          <input type="number" style="width: 70px !important;" min="0" step="1" class="singleOptionConfig" data-key="prazo_avaliacao" id="prazo_avaliacao" value="'+(config && typeof config.prazo_avaliacao !== 'undefined' && config.prazo_avaliacao != ''  ? config.prazo_avaliacao : '40' )+'">'+
                         '                      </td>'+
                         '                  </tr>'+
                         '                  <tr style="height: 40px;">'+
@@ -6609,9 +6991,10 @@ function setParamEditorAtiv(mode, text, id_user = false) {
             user = (user == null) ? arrayConfigAtividades.perfil : user;
             
         var plano = jmespath.search(arrayConfigAtividades.planos, "[?id_user==`"+user.id_user+"`] | [0]");
-        var unidade = (plano !== null) ? jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+plano.id_unidade+"`] | [0]") : arrayConfigAtivUnidade.id_unidade;
+            plano = (plano !== null) ? plano : jmespath.search(tableConfigList.planos, "[?id_user==`"+user.id_user+"`] | [0]");
+        var unidade = (plano !== null) ? jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`"+plano.id_unidade+"`] | [0]") : arrayConfigAtivUnidade;
         var vigencia_plano = (plano !== null) ? moment(plano.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+' \u00E0 '+moment(plano.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY') : '';
-        var entidade = jmespath.search(arrayConfigAtividades.entidades, "[?id_entidade==`"+plano.id_entidade+"`] | [0]");
+        var entidade = (plano !== null) ? jmespath.search(arrayConfigAtividades.entidades, "[?id_entidade==`"+plano.id_entidade+"`] | [0]") : null;
         var data_comparecimento = (unidade.config.hasOwnProperty('planos')) ? unidade.config.planos.data_comparecimento : 'Dia';
         var prazo_comparecimento = (unidade.config.hasOwnProperty('planos')) ? parseInt(unidade.config.planos.prazo_comparecimento) : 1;
             prazo_comparecimento = (prazo_comparecimento > 1) ? prazo_comparecimento+' '+data_comparecimento+'s' : prazo_comparecimento+' '+data_comparecimento;
@@ -7209,6 +7592,7 @@ function extractOptionConfigUnidade(this_) {
                 envio_automatico: _parent.find('#atividades_envio_automatico').is(':checked').toString()
             },
             planos:{
+                permite_autoavaliacao: _parent.find('#planos_permite_autoavaliacao').is(':checked'),
                 duracao_padrao: parseInt(_parent.find('#planos_duracao_padrao').val()),
                 prazo_comparecimento: parseInt(_parent.find('#planos_prazo_comparecimento').val()),
                 data_comparecimento: _parent.find('#planos_data_comparecimento').val(),
@@ -7433,26 +7817,26 @@ function getTableRelatorioPanel(data, param) {
                                     '   <thead>'+
                                     '       <tr class="tableHeader" style="height: 30px;">'+  
                                     '           <th class="tituloControle" style="width: 50px;">ID</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Unidade</th>'+
-                                    '           <th class="tituloControle" style="width: 210px;">Processo</th>'+
-                                    '           <th class="tituloControle" style="width: 180px;">Requisi\u00E7\u00E3o</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Unidade <div class="filterResume" data-resumemod="dist" data-resumetype="sigla_unidade"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 210px;">Processo <div class="filterResume" data-resumemod="dist" data-resumetype="processo"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 180px;">Requisi\u00E7\u00E3o <div class="filterResume" data-resumemod="dist" data-resumetype="requisicao"></div></th>'+
                                     '           <th class="tituloControle" style="width: 400px;">'+__.Assunto+'</th>'+
-                                    '           <th class="tituloControle" style="width: 400px;">'+__.Atividade+'</th>'+
+                                    '           <th class="tituloControle" style="width: 400px;">'+__.Atividade+' <div class="filterResume" data-resumemod="dist" data-resumetype="nome_atividade"></div></th>'+
                                     '           <th class="tituloControle" style="width: 180px;">Etiquetas</th>'+
-                                    '           <th class="tituloControle" style="width: 180px;">Respons\u00E1vel</th>'+
-                                    '           <th class="tituloControle" style="width: 140px;">Tempo Planejado (horas)</th>'+
-                                    '           <th class="tituloControle" style="width: 120px;">Dias de Planejamento</th>'+
+                                    '           <th class="tituloControle" style="width: 180px;">Respons\u00E1vel <div class="filterResume" data-resumemod="dist" data-resumetype="responsavel"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 140px;">Tempo Planejado (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_planejado"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Dias de Planejamento <div class="filterResume" data-resumemod="avg" data-resumetype="dias_planejado"></div></th>'+
                                     '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Distribui\u00E7\u00E3o</th>'+
                                     '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Prazo de Entrega</th>'+
-                                    '           <th class="tituloControle" style="width: 140px;">Tempo Pactuado (horas)</th>'+
-                                    '           <th class="tituloControle" style="width: 120px;">Fator de '+__.Complexidade+'</th>'+
+                                    '           <th class="tituloControle" style="width: 140px;">Tempo Pactuado (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_pactuado"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Fator de '+__.Complexidade+' <div class="filterResume" data-resumemod="avg" data-resumetype="fator_complexidade"></div></th>'+
                                     '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de In\u00EDcio</th>'+
                                     '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Conclus\u00E3o</th>'+
                                     '           <th class="tituloControle" style="width: 210px;">Status Entrega</th>'+
-                                    '           <th class="tituloControle" style="width: 210px;">Documento Entregue</th>'+
-                                    '           <th class="tituloControle" style="width: 140px;">Tempo Despendido (horas)</th>'+
-                                    '           <th class="tituloControle" style="width: 120px;">Produtividade</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Nota Atribu\u00EDda</th>'+
+                                    '           <th class="tituloControle" style="width: 210px;">Documento Entregue <div class="filterResume" data-resumemod="dist" data-resumetype="documento_entregue"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 140px;">Tempo Despendido (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_despendido"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 120px;">Produtividade <div class="filterResume" data-resumemod="avg" data-resumetype="produtividade"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Nota Atribu\u00EDda <div class="filterResume" data-resumemod="avg" data-resumetype="nota_atribuida"></div></th>'+
                                     '           <th class="tituloControle" style="width: 120px;">Coment\u00E1rios</th>'+
                                     '           <th class="tituloControle" style="width: 120px;">Justificativas</th>'+
                                     '           <th class="tituloControle tituloFilter sorter-date-range-dmy" style="width: 100px;">Data de Avalia\u00E7\u00E3o</th>'+
@@ -7505,15 +7889,15 @@ function getTableRelatorioPanel(data, param) {
 
                 htmlTableRelatorios +=      '       <tr data-tagname="SemGrupo" data-index="'+index+'">'+
                                             '           <td align="center">'+value.id_demanda+'</td>'+
-                                            '           <td align="left">'+value.sigla_unidade+'</td>'+
-                                            '           <td align="left">'+processoHtml+'</td>'+
-                                            '           <td align="left">'+requisicaoHtml+'</td>'+
+                                            '           <td align="left" class="filterResume_sigla_unidade">'+value.sigla_unidade+'</td>'+
+                                            '           <td align="left" class="filterResume_processo">'+processoHtml+'</td>'+
+                                            '           <td align="left" class="filterResume_requisicao">'+requisicaoHtml+'</td>'+
                                             '           <td align="left">'+value.assunto+'</td>'+
-                                            '           <td align="left">'+value.nome_atividade+'</td>'+
+                                            '           <td align="left" class="filterResume_nome_atividade">'+value.nome_atividade+'</td>'+
                                             '           <td align="left">'+(value.etiquetas ? value.etiquetas.join('; ') : '')+'</td>'+
-                                            '           <td align="left">'+nameUser+'</td>'+
-                                            '           <td align="center">'+value.tempo_planejado+'</td>'+
-                                            '           <td align="center">'+value.dias_planejado+'</td>'+
+                                            '           <td align="left" class="filterResume_responsavel">'+nameUser+'</td>'+
+                                            '           <td align="center" class="filterResume_tempo_planejado">'+value.tempo_planejado+'</td>'+
+                                            '           <td align="center" class="filterResume_dias_planejado">'+value.dias_planejado+'</td>'+
                                             '           <td align="center">'+
                                             '               <span class="info_dates_fav" data-time-sorter="'+value.data_distribuicao+'">'+
                                             '                   '+(value.data_distribuicao == '0000-00-00 00:00:00' ? '' : moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
@@ -7524,8 +7908,8 @@ function getTableRelatorioPanel(data, param) {
                                             '                   '+(value.prazo_entrega == '0000-00-00 00:00:00' ? '' : moment(value.prazo_entrega, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
                                             '               </span>'+
                                             '           </td>'+
-                                            '           <td align="center">'+value.tempo_pactuado+'</td>'+
-                                            '           <td align="center">'+value.fator_complexidade+'</td>'+
+                                            '           <td align="center" class="filterResume_tempo_pactuado">'+value.tempo_pactuado+'</td>'+
+                                            '           <td align="center" class="filterResume_fator_complexidade">'+value.fator_complexidade+'</td>'+
                                             '           <td align="center">'+
                                             '               <span class="info_dates_fav" data-time-sorter="'+value.data_inicio+'">'+
                                             '                   '+(value.data_inicio == '0000-00-00 00:00:00' ? '' : moment(value.data_inicio, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'))+
@@ -7537,10 +7921,10 @@ function getTableRelatorioPanel(data, param) {
                                             '               </span>'+
                                             '           </td>'+
                                             '           <td align="left">'+statusAtividade+'</td>'+
-                                            '           <td align="left">'+documentoHtml+'</td>'+
-                                            '           <td align="center">'+value.tempo_despendido+'</td>'+
-                                            '           <td align="left">'+(value.produtividade == 0 ? '' : ((value.produtividade*100).toFixed(2)+'%'))+'</td>'+
-                                            '           <td align="center">'+(value.avaliacao == 0 ? '' : value.avaliacao.nota_atribuida)+'</td>'+
+                                            '           <td align="left" class="filterResume_documento_entregue">'+documentoHtml+'</td>'+
+                                            '           <td align="center" class="filterResume_tempo_despendido">'+value.tempo_despendido+'</td>'+
+                                            '           <td align="left" class="filterResume_produtividade">'+(value.produtividade == 0 ? '' : ((value.produtividade*100).toFixed(2)+'%'))+'</td>'+
+                                            '           <td align="center" class="filterResume_nota_atribuida">'+(value.avaliacao == 0 ? '' : value.avaliacao.nota_atribuida)+'</td>'+
                                             '           <td align="left">'+(value.avaliacao == 0 ? '' : value.avaliacao.comentarios)+'</td>'+
                                             '           <td align="left">'+(value.avaliacao == 0 ? '' : $.map(value.avaliacao.justificativas, function(v){ return v.nome_justificativa }).join(', '))+'</td>'+
                                             '           <td align="center">'+
@@ -7568,22 +7952,25 @@ function getTableRelatorioPanel(data, param) {
                                     '       <tr class="tableHeader" style="height: 30px;">'+  
                                     '           <th class="tituloControle" style="width: 50px;">ID</th>'+
                                     '           <th class="tituloControle" style="width: 80px;">Status</th>'+
-                                    '           <th class="tituloControle" style="width: 100px;">Unidade</th>'+
-                                    '           <th class="tituloControle" style="width: 210px;">Nome Completo</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Apelido</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Matr\u00EDcula</th>'+
-                                    '           <th class="tituloControle">Tipo de Modalidade</th>'+
-                                    '           <th class="tituloControle" style="width: 100px;">Carga Hor\u00E1ria</th>'+
+                                    '           <th class="tituloControle" style="width: 100px;">Unidade <div class="filterResume" data-resumemod="dist" data-resumetype="sigla_unidade"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 210px;">Nome Completo <div class="filterResume" data-resumemod="dist" data-resumetype="nome_completo"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Apelido <div class="filterResume" data-resumemod="dist" data-resumetype="apelido"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Matr\u00EDcula <div class="filterResume" data-resumemod="dist" data-resumetype="matricula"></div></th>'+
+                                    '           <th class="tituloControle">Tipo de Modalidade <div class="filterResume" data-resumemod="dist" data-resumetype="nome_modalidade"></div></th>'+
+                                    '           <th class="tituloControle" style="width: 100px;">Carga Hor\u00E1ria <div class="filterResume" data-resumemod="avg" data-resumetype="carga_horaria"><div></th>'+
                                     '           <th class="tituloControle" style="width: 150px;">Data de In\u00EDcio</th>'+
                                     '           <th class="tituloControle" style="width: 150px;">Data de Encerramento</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Tempo Pactuado Total (horas)</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Tempo Pactuado Parcial (horas)</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Tempo Homologado (horas)</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Tempo Despendido (horas)</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Execu\u00E7\u00E3o do Plano</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Produtividade do Plano</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Nota M\u00E9dia Atribu\u00EDda</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Total de Avalia\u00E7\u00F5es</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Meta Total do Plano (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_total"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Meta Parcial do Plano (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_proporcional"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Pactuado (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_entregue"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Entregue (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_entregue"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Homologado (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_homologado"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Despendido (horas) <div class="filterResume" data-resumemod="sum" data-resumetype="tempo_despendido"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Quantidade de demandas <div class="filterResume" data-resumemod="sum" data-resumetype="quantidade_demandas"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Execu\u00E7\u00E3o do Plano <div class="filterResume" data-resumemod="avg" data-resumetype="execucao_plano"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Produtividade do Plano <div class="filterResume" data-resumemod="avg" data-resumetype="produtividade_plano"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Nota M\u00E9dia Atribu\u00EDda <div class="filterResume" data-resumemod="avg" data-resumetype="nota_media"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Total de Avalia\u00E7\u00F5es <div class="filterResume" data-resumemod="sum" data-resumetype="total_avaliacoes"><div></th>'+
                                     '           <th class="tituloControle" style="">Assinatura</th>'+
                                     '           <th class="tituloControle" style="">Status Assinatura</th>'+
                                     '       </tr>'+
@@ -7613,22 +8000,25 @@ function getTableRelatorioPanel(data, param) {
                 htmlTableRelatorios +=  '       <tr data-tagname="SemGrupo" data-index="'+index+'">'+
                                         '           <td align="center">'+value.id_plano+'</td>'+
                                         '           <td align="center">'+status+'</td>'+
-                                        '           <td align="center">'+value.sigla_unidade+'</td>'+
-                                        '           <td align="left">'+value.nome_completo+'</td>'+
-                                        '           <td align="left">'+value.apelido+'</td>'+
-                                        '           <td align="left">'+value.matricula+'</td>'+
-                                        '           <td align="left">'+value.nome_modalidade+'</td>'+
-                                        '           <td align="left">'+value.carga_horaria+'</td>'+
+                                        '           <td align="center" class="filterResume_sigla_unidade">'+value.sigla_unidade+'</td>'+
+                                        '           <td align="left" class="filterResume_nome_completo">'+value.nome_completo+'</td>'+
+                                        '           <td align="left" class="filterResume_apelido">'+value.apelido+'</td>'+
+                                        '           <td align="left" class="filterResume_matricula">'+value.matricula+'</td>'+
+                                        '           <td align="left" class="filterResume_nome_modalidade">'+value.nome_modalidade+'</td>'+
+                                        '           <td align="left" class="filterResume_carga_horaria">'+value.carga_horaria+'</td>'+
                                         '           <td align="left" style="text-align:center;" data-time-sorter="'+moment(value.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')+'">'+moment(value.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</td>'+
                                         '           <td align="left" style="text-align:center;" data-time-sorter="'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')+'">'+moment(value.data_fim_vigencia, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY')+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_total.toFixed(2))+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_proporcional.toFixed(2))+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_homologado.toFixed(2))+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+parseFloat(value.tempo_despendido.toFixed(2))+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+execucao_plano+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+produtividade_plano+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+nota_media+'</td>'+
-                                        '           <td align="left" style="text-align: center;">'+total_avaliacoes+'</td>'+
+                                        '           <td align="left" class="filterResume_tempo_total" style="text-align: center;">'+parseFloat(value.tempo_total.toFixed(2))+'</td>'+
+                                        '           <td align="left" class="filterResume_tempo_proporcional" style="text-align: center;">'+parseFloat(value.tempo_proporcional.toFixed(2))+'</td>'+
+                                        '           <td align="left" class="filterResume_tempo_pactuado" style="text-align: center;">'+parseFloat(value.tempo_pactuado.toFixed(2))+'</td>'+
+                                        '           <td align="left" class="filterResume_tempo_entregue" style="text-align: center;">'+parseFloat(value.tempo_entregue.toFixed(2))+'</td>'+
+                                        '           <td align="left" class="filterResume_tempo_homologado" style="text-align: center;">'+parseFloat(value.tempo_homologado.toFixed(2))+'</td>'+
+                                        '           <td align="left" class="filterResume_tempo_despendido" style="text-align: center;">'+parseFloat(value.tempo_despendido.toFixed(2))+'</td>'+
+                                        '           <td align="left" class="filterResume_quantidade_demandas" style="text-align: center;">'+value.quantidade_demandas+'</td>'+
+                                        '           <td align="left" class="filterResume_execucao_plano" style="text-align: center;">'+execucao_plano+'</td>'+
+                                        '           <td align="left" class="filterResume_produtividade_plano" style="text-align: center;">'+produtividade_plano+'</td>'+
+                                        '           <td align="left" class="filterResume_nota_media" style="text-align: center;">'+nota_media+'</td>'+
+                                        '           <td align="left" class="filterResume_total_avaliacoes" style="text-align: center;">'+total_avaliacoes+'</td>'+
                                         '           <td align="left" style="text-align: center;">'+btnAssinatura+'</td>'+
                                         '           <td align="left" style="">'+statusAssinatura+'</td>'+
                                         '       </tr>';
@@ -7645,15 +8035,15 @@ function getTableRelatorioPanel(data, param) {
                                     '           <th class="tituloControle" style="width: 120px;">Macroatividade</th>'+
                                     '           <th class="tituloControle" style="width: 100px;">Sigla da Unidade</th>'+
                                     '           <th class="tituloControle" style="width: 120px;">Processo da Cadeia de Valor</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Tempo Pactuado</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Dias de Planejamento</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo Pactuado <div class="filterResume" data-resumemod="avg" data-resumetype="tempo_pactuado"><div></th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Dias de Planejamento <div class="filterResume" data-resumemod="avg" data-resumetype="dias_planejado"><div></th>'+
                                     '           <th class="tituloControle" style="width: 100px;">Entregas</th>'+
                                     '           <th class="tituloControle" style="width: 150px;">Par\u00E2metros</th>'+
                                     '           <th class="tituloControle" style="width: 150px;">'+__.Complexidade+'</th>'+
                                     '           <th class="tituloControle" style="width: 80px;">Data In\u00EDcio de Vig\u00EAncia</th>'+
                                     '           <th class="tituloControle" style="width: 80px;">Data Fim de Vig\u00EAncia</th>'+
                                     '           <th class="tituloControle" style="width: 80px;">Recalcula Prazo</th>'+
-                                    '           <th class="tituloControle" style="width: 80px;">Tempo M\u00EDnimo</th>'+
+                                    '           <th class="tituloControle" style="width: 80px;">Tempo M\u00EDnimo <div class="filterResume" data-resumemod="avg" data-resumetype="tempo_minimo"><div></th>'+
                                     '           <th class="tituloControle" style="width: 80px;">Tipos de Processos</th>'+
                                     '           <th class="tituloControle" style="width: 80px;">Homologado</th>'+
                                     '       </tr>'+
@@ -7687,15 +8077,15 @@ function getTableRelatorioPanel(data, param) {
                                         '           <td align="left">'+value.macroatividade+'</td>'+
                                         '           <td align="left">'+value.sigla_unidade+'</td>'+
                                         '           <td align="left">'+value.nome_processo+'</td>'+
-                                        '           <td align="center">'+value.tempo_pactuado+'</td>'+
-                                        '           <td align="center">'+value.dias_planejado+'</td>'+
+                                        '           <td align="center" class="filterResume_tempo_pactuado">'+value.tempo_pactuado+'</td>'+
+                                        '           <td align="center" class="filterResume_dias_planejado">'+value.dias_planejado+'</td>'+
                                         '           <td align="left">'+(entregas ? entregas : '')+'</td>'+
                                         '           <td align="left">'+(parametros ? parametros : '')+'</td>'+
                                         '           <td align="left">'+(complexidade ? complexidade : '')+'</td>'+
                                         '           <td align="left" style="text-align:center;" data-time-sorter="'+data_inicio+'">'+data_inicio_br+'</td>'+
                                         '           <td align="left" style="text-align:center;" data-time-sorter="'+data_fim+'">'+data_fim_br+'</td>'+
                                         '           <td align="center">'+(value.recalcula_prazo ? 'Sim' : '')+'</td>'+
-                                        '           <td align="center">'+(tempo_minimo ? tempo_minimo : '')+'</td>'+
+                                        '           <td align="center" class="filterResume_tempo_minimo">'+(tempo_minimo ? tempo_minimo : '')+'</td>'+
                                         '           <td align="left">'+(tipo_processo ? tipo_processo : '')+'</td>'+
                                         '           <td align="center">'+(value.homologado ? 'Sim' : '')+'</td>'+
                                         '       </tr>';
@@ -7712,8 +8102,9 @@ function getTableRelatorioPanel(data, param) {
         } else {
             if ($('#tableRelatorio_'+type+' caption.infraCaption a.cancel').is(':visible')) {
                 tabelaRelatorio.show();
-                $('#tableRelatorio_'+type).append(htmlTableRelatorios);
+                $('#tableRelatorio_'+type+' tbody').append(htmlTableRelatorios);
                 $('#tableRelatorio_'+type+' caption.infraCaption span.count').text(totalRegistros);
+                $('#tableRelatorio_'+type).trigger("updateAll");
             }
         }
         console.log('isInitOffset', isInitOffset, type, $('#tableRelatorio_'+type+' caption.infraCaption a.cancel').is(':visible'));
@@ -7731,21 +8122,38 @@ function getTableRelatorioPanel(data, param) {
         var relatorioTabela = $('#tableRelatorio_'+type);
             relatorioTabela.tablesorter({
                 textExtraction: {
-                    3: function (elem, table, cellIndex) {
-                        var text_date = $(elem).find('.info_dates_fav').data('time-sorter');
-                        return text_date;
-                    },
-                    4: function (elem, table, cellIndex) {
-                      var text_date = $(elem).find('.info_dates_fav').data('time-sorter');
-                      return text_date;
-                    }
+                    1 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    2 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    3 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    4 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    5 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    6 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    7 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    8 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    9 : function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    10: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    11: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    12: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    13: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    14: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    15: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    16: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    17: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    18: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    19: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    20: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    21: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    22: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    23: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    24: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) },
+                    25: function (elem, table, cellIndex) { return filterTextExtractDate(elem, table, cellIndex) }
                 },
                 widgets: ["saveSort", "filter"],
                 widgetOptions: {
-                    saveSort: true,
+                    saveSort: false,
                     filter_hideFilters: true,
                     filter_columnFilters: true,
-                    filter_saveFilters: true,
+                    filter_saveFilters: false,
                     filter_hideEmpty: true,
                     filter_excludeFilter: {}
                 },
@@ -7756,6 +8164,7 @@ function getTableRelatorioPanel(data, param) {
                     caption.text(tx.replace(/\d+/g, data.filteredRows));
                     $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
                     $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
+                    calcFilterResume(relatorioTabela);
             });
         
         if (typeof data.programas !== 'undefined' && data.programas !== null && data.programas.length > 0) {
@@ -7820,11 +8229,20 @@ function getTableRelatorioPanel(data, param) {
                         observerFilterRelatorio.observe(filterRelatorio, {
                             attributes: true
                         });
-
+                        calcFilterResume(relatorioTabela);
                         setSelectProgramas(data.programas, 'selectReportProgramas_'+type, 'selectReport_'+type);
-                    }, 500);
+
+                        $('div[id*="selectReport"]').on('click', function(){
+                            if ($(this).find('.chosen-drop').is(':visible')) {
+                                $(this).closest('.btn-group').css('z-index', '9999');
+                            } else {
+                                $(this).closest('.btn-group').css('z-index', '999');
+                            }
+                        });
+                }, 500);
             }
         }
+        relatorioTabela.find('.tablesorter-filter-row input.tablesorter-filter[aria-label*="Data"]').attr('type','date');
     } else {
         if (totalRegistros == 0) {
             removeOptionsPro('selectReport_'+type);
@@ -7850,7 +8268,7 @@ function getTableAfastamentoPanel(this_) {
                                 '   <caption class="infraCaption" style="text-align: left; margin-top: 10px;">'+countAfastamentos+'</caption>'+
                                 '   <thead>'+
                                 '       <tr class="tableHeader">'+
-                                '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_afastamentos" accesskey=";"></label><a id="lnkInfraCheck_afastamentos" class="lnkInfraCheck" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck"></a></th>'+
+                                '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_afastamentos" accesskey=";"></label><a id="lnkInfraCheck_afastamentos" class="lnkInfraCheck" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck"></a></th>'+
                                 '           <th class="tituloControle tituloFilter" data-filter-type="user">Usu\u00E1rio</th>'+
                                 '           <th class="tituloControle tituloFilter" data-filter-type="date" style="width: 25%;">Motivo do Afastamento</th>'+
                                 '           <th class="tituloControle tituloFilter sorter-date-range-dmy" data-filter-type="inicio" style="width: 160px;">In\u00EDcio do Afastamento</th>'+
@@ -8444,7 +8862,7 @@ function updateTempoProporcionalPlanos() {
         }
     });
     if (updatePlanos.length > 0) {
-        var action = 'update_planos';
+        var action = checkCapacidade('update_self_planos') ? 'update_self_planos' : 'update_planos';
         var param = {
             action: action,
             planos: updatePlanos
@@ -9731,10 +10149,12 @@ function setFilterGanttTag(this_) {
 function getChartAtividades(bar_class = false) {
     var panelChart = $('#chartAtivPanel');
         panelChart.show();
-        panelChart.find('select').chosen({
-            placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
-        });
+        if (typeof $().chosen === 'function') {
+            panelChart.find('select').chosen({
+                placeholder_text_single: ' ',
+                no_results_text: 'Nenhum resultado encontrado'
+            });
+        }
     if (panelChart.is(':visible')) { setTimeout(function(){ initGetChartDemandas() }, 500); }
 }
 function initGetChartDemandas(TimeOut = 9000) {
@@ -9810,11 +10230,15 @@ function setToolbarFunc(this_) {
                                     }
                                 } else if (mode.indexOf('send_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // send_atividade
                                     show = true;
-                                } else if (mode.indexOf('start_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_inicio == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') { // start_atividade
+                                } else if (mode.indexOf('start_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_inicio == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00') { // start_atividade
+                                    show = true;
+                                } else if (mode.indexOf('delete_atividade') !== -1 && checkCapacidade(action+'_all') ) { // delete_atividade_all
                                     show = true;
                                 } else if (mode.indexOf('archive_atividade') !== -1 && (action == 'none' || checkCapacidade(action)) && value.data_avaliacao != '0000-00-00 00:00:00' && value.data_envio != '0000-00-00 00:00:00') { // archive_atividade
                                     show = true;
                                 } else if (mode == 'none' && value.data_envio == '0000-00-00 00:00:00') {
+                                    show = true;
+                                } else if (action == 'rate_default_atividade' && moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_entrega == '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
                                     show = true;
                                 }
                                 if (action == 'type_atividade' && value.tempo_pactuado != 0) {
@@ -9822,9 +10246,7 @@ function setToolbarFunc(this_) {
                                 } else if (action == 'variation_atividade' && value.tempo_pactuado == 0) {
                                     show = false;
                                 }
-                                if (action == 'rate_default_atividade' && moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss') < moment() && value.data_entrega == '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00' && value.data_envio == '0000-00-00 00:00:00') {
-                                    show = true;
-                                }
+                                console.log(this, show, action, value, moment(value.prazo_entrega,'YYYY-MM-DD HH:mm:ss') < moment(), value.data_entrega == '0000-00-00 00:00:00', value.data_avaliacao == '0000-00-00 00:00:00', value.data_envio == '0000-00-00 00:00:00')
                             }
                         if (show) {
                             $(this).show();
@@ -9856,7 +10278,7 @@ function setToolbarFunc(this_) {
                     } else {
                         parent.saveAtividade(value.id_demanda);
                     }
-                } else if (action == 'delete_atividade') {
+                } else if (action == 'delete_atividade' || action == 'delete_atividade_all') {
                     parent.deleteAtividade_(value);
                 } else if (action == 'extend_atividade') {
                     parent.extendAtividade(value.id_demanda);
@@ -9889,235 +10311,238 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof $('.atividadeTagsPro').tagsInput !== 'undefined' && 
         typeof $('.tabelaPanelScroll').resizable !== 'undefined' && 
+        typeof $().tablesorter !== 'undefined' && 
         typeof $('.ui-autocomplete-input').autocomplete !== 'undefined') {
 
-        initChosenReplace('panel');
-
         var tabelaAtiv = $('#tabelaAtivPanel table.tableAtividades');
-
-        getAtividadeTagsPro(); 
-        initNewTabProcesso();
-
-        function getFilterTableAtiv(elem) {
-            var _this = $(elem);
-            var data = _this.data();
-            var _return = $(elem).text();
-            if (data.type == 'proc') {
-                var id = $(elem).find('.type-id').text().replace('#', '');
-                var target = $(elem).find('a').not('.followLink').eq(0);
-                var texttip_span = target.find('span').attr('onmouseover');
-                    texttip_span = (typeof texttip_span !== 'undefined') ? extractTooltip(texttip_span) : ''; 
-                var texttip_i = target.find('i').attr('onmouseover');
-                    texttip_i = (typeof texttip_i !== 'undefined') ? extractTooltip(texttip_i) : ''; 
-                    _return = id+' '+target.text().trim()+' '+texttip_span+' '+texttip_i;
-            } else if (data.type == 'date') {
-                var target = $(elem).find('.dateboxDisplay').eq(0);
-                var text_date = target.data('time-sorter');
-                    _return = text_date;
-            }
-            return _return;
-        }
         
-        tabelaAtiv.tablesorter({
-            textExtraction: {
-              1: function (elem, table, cellIndex) {
-                  return getFilterTableAtiv(elem);
-              },
-              2: function (elem, table, cellIndex) {
-                return getFilterTableAtiv(elem);
-              },
-              3: function (elem, table, cellIndex) {
-                return getFilterTableAtiv(elem);
-              },
-              4: function (elem, table, cellIndex) {
-                return getFilterTableAtiv(elem);
-              },
-              5: function (elem, table, cellIndex) {
-                return getFilterTableAtiv(elem);
-              },
-              6: function (elem, table, cellIndex) {
-                return getFilterTableAtiv(elem);
-              }
-            },
-            widgets: ["saveSort", "filter"],
-            widgetOptions: {
-                saveSort: true,
-                filter_hideFilters: true,
-                filter_columnFilters: true,
-                filter_saveFilters: true,
-                filter_hideEmpty: true,
-                filter_excludeFilter: {}
-            },
-            sortReset: true,
-            headers: {
-                0: { sorter: false, filter: false },
-                1: { filter: true },
-                2: { filter: true },
-                3: { filter: true },
-                4: { filter: true }
-            }
-        }).on("sortEnd", function (event, data) {
-            checkboxRangerSelectShift();
-            repareStickColumnsSortable(tabelaAtiv, true);
-        }).on("filterEnd", function (event, data) {
-            var caption = $(this).find("caption").eq(0);
-            var tx = caption.text();
-                caption.text(tx.replace(/\d+/g, data.filteredRows));
-                $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
-                $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
-        });
+        if (tabelaAtiv.length) {
+            initChosenReplace('panel');
+            getAtividadeTagsPro(); 
+            initNewTabProcesso();
 
-        var filterAtiv = tabelaAtiv.find('.tablesorter-filter-row').get(0);
-        if (typeof filterAtiv !== 'undefined') {
-            var observerFilterAtiv = new MutationObserver(function(mutations) {
+            function getFilterTableAtiv(elem) {
+                var _this = $(elem);
+                var data = _this.data();
+                var _return = $(elem).text();
+                if (data.type == 'proc') {
+                    var id = $(elem).find('.type-id').text().replace('#', '');
+                    var target = $(elem).find('a').not('.followLink').eq(0);
+                    var texttip_span = target.find('span').attr('onmouseover');
+                        texttip_span = (typeof texttip_span !== 'undefined') ? extractTooltip(texttip_span) : ''; 
+                    var texttip_i = target.find('i').attr('onmouseover');
+                        texttip_i = (typeof texttip_i !== 'undefined') ? extractTooltip(texttip_i) : ''; 
+                        _return = id+' '+target.text().trim()+' '+texttip_span+' '+texttip_i;
+                } else if (data.type == 'date') {
+                    var target = $(elem).find('.dateboxDisplay').eq(0);
+                    var text_date = target.data('time-sorter');
+                        _return = text_date;
+                }
+                return _return;
+            }
+            
+            tabelaAtiv.tablesorter({
+                textExtraction: {
+                1: function (elem, table, cellIndex) {
+                    return getFilterTableAtiv(elem);
+                },
+                2: function (elem, table, cellIndex) {
+                    return getFilterTableAtiv(elem);
+                },
+                3: function (elem, table, cellIndex) {
+                    return getFilterTableAtiv(elem);
+                },
+                4: function (elem, table, cellIndex) {
+                    return getFilterTableAtiv(elem);
+                },
+                5: function (elem, table, cellIndex) {
+                    return getFilterTableAtiv(elem);
+                },
+                6: function (elem, table, cellIndex) {
+                    return getFilterTableAtiv(elem);
+                }
+                },
+                widgets: ["saveSort", "filter"],
+                widgetOptions: {
+                    saveSort: true,
+                    filter_hideFilters: true,
+                    filter_columnFilters: true,
+                    filter_saveFilters: true,
+                    filter_hideEmpty: true,
+                    filter_excludeFilter: {}
+                },
+                sortReset: true,
+                headers: {
+                    0: { sorter: false, filter: false },
+                    1: { filter: true },
+                    2: { filter: true },
+                    3: { filter: true },
+                    4: { filter: true }
+                }
+            }).on("sortEnd", function (event, data) {
+                checkboxRangerSelectShift();
+                repareStickColumnsSortable(tabelaAtiv, true);
+            }).on("filterEnd", function (event, data) {
+                var caption = $(this).find("caption").eq(0);
+                var tx = caption.text();
+                    caption.text(tx.replace(/\d+/g, data.filteredRows));
+                    $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
+                    $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
+            });
+
+            var filterAtiv = tabelaAtiv.find('.tablesorter-filter-row').get(0);
+            if (typeof filterAtiv !== 'undefined') {
+                var observerFilterAtiv = new MutationObserver(function(mutations) {
+                    var _this = $(mutations[0].target);
+                    var _parent = _this.closest('table');
+                    var iconFilter = _parent.find('.filterTablePro button');
+                    var checkIconFilter = iconFilter.hasClass('active');
+                    var hideme = _this.hasClass('hideme');
+                    if (hideme && checkIconFilter) {
+                        iconFilter.removeClass('active');
+                    }
+                });
+                setTimeout(function(){ 
+                    var selectFilterTable = getSelectViewControl('tabelaAtivPanel');
+                    var topPosition = (jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | [0]") !== null) ? '140px' : '52px';
+                    var htmlFlashFilterTable =  '<div class="filterTablePro" style="position: absolute;top: '+topPosition+';text-align: right;right: 320px;">'+
+                                                '   <span class="info_dates_fav" style="margin: 0; margin-right: 20px;">'+
+                                                '       <span class="dateboxDisplay tag-remove filterTagClean" onclick="parent.filterTagView(this); $(this).closest(\'table\').trigger(\'filterReset\');" style="display:none; font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
+                                                '           <span class="dateBoxIcon">'+
+                                                '               <i class="fas fa-eraser" style="color: #9d9d9d; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
+                                                '           </span>'+
+                                                '           Limpar Filtros'+
+                                                '       </span>'+
+                                                '       <span class="dateboxDisplay tagTableText_date_noprazo" data-colortag="#eef4f9" data-tagname="date_noprazo" data-nametag="No prazo" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
+                                                '           <span class="dateBoxIcon">'+
+                                                '               <i class="far fa-clock" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
+                                                '           </span>'+
+                                                '           No prazo ('+tabelaAtiv.find('tbody tr.tagTableName_date_noprazo').length+')'+
+                                                '       </span>'+
+                                                '       <span class="dateboxDisplay tagTableText_date_atrasado" data-colortag="#f9e2e0" data-tagname="date_atrasado" data-nametag="Atrasada" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
+                                                '           <span class="dateBoxIcon">'+
+                                                '               <i class="fas fa-exclamation-triangle vermelhoColor" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
+                                                '           </span>'+
+                                                '           Atrasadas ('+tabelaAtiv.find('tbody tr.tagTableName_date_atrasado').length+')'+
+                                                '       </span>'+
+                                                '       <span class="dateboxDisplay tagTableText_date_entregue" data-colortag="#ddf1dd" data-tagname="date_entregue" data-nametag="Entregue" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
+                                                '           <span class="dateBoxIcon">'+
+                                                '               <i class="fas fa-check-circle verdeColor" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
+                                                '           </span>'+
+                                                '           Entregues ('+tabelaAtiv.find('tbody tr.tagTableName_date_entregue').length+')'+
+                                                '       </span>'+
+                                                '       <span class="dateboxDisplay tagTableText_date_avaliado" data-colortag="#f1ecdd" data-tagname="date_avaliado" data-nametag="Avaliada" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
+                                                '           <span class="dateBoxIcon">'+
+                                                '               <i class="fas fa-star starGold" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
+                                                '           </span>'+
+                                                '           Avaliadas ('+tabelaAtiv.find('tbody tr.tagTableName_date_avaliado').length+')'+
+                                                '       </span>'+
+                                                '   </span>'+
+                                                '   '+selectFilterTable+
+                                                '</div>';
+
+                    var htmlFilterAtiv =    '<div class="btn-group filterTablePro" role="group" style="right: 55px;top: '+topPosition+';z-index: 99;position: absolute;">'+
+                                            '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
+                                            '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                                            '       <span class="text">Baixar</span>'+
+                                            '   </button>'+
+                                            '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
+                                            '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                                            '       <span class="text">Copiar</span>'+
+                                            '   </button>'+
+                                            '   <button type="button" onclick="filterTablePro(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(tabelaAtiv.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
+                                            '       <i class="fas fa-search" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                                            '       Pesquisar'+
+                                            '   </button>'+
+                                            '</div>';
+                        tabelaAtiv.find('thead .filterTablePro').remove();
+                        tabelaAtiv.find('thead').prepend(htmlFlashFilterTable+htmlFilterAtiv);
+                        observerFilterAtiv.observe(filterAtiv, {
+                            attributes: true
+                        });
+                    if (typeof $().chosen !== 'undefined') {
+                        $('#selectViewControl_tabelaAtivPanel').chosen({
+                            placeholder_text_single: ' ',
+                            no_results_text: 'Nenhum resultado encontrado'
+                        });
+                        forcePlaceHoldChosen();
+                    }
+                }, 300);
+            }
+
+            var tagName = getOptionsPro('filterTag_atividades');
+            if (typeof tagName !== 'undefined' && tagName != '') {
+                setTimeout(function(){ 
+                    $('.tableAtividades .tagTableText_'+tagName).eq(0).trigger('click');
+                }, 500);
+            } else if (tagName == '' && (checkCapacidade('only_self_atividades') && !setOptionsPro('filterTag_removed') )) {
+                var tagName_thisUser = normalizeNameTag(arrayConfigAtividades.perfil.apelido);
+                setTimeout(function(){ 
+                    $('.tableAtividades .tagTableText_'+tagName_thisUser).eq(0).trigger('click');
+                }, 500);
+            }
+
+            var observerTableAtiv = new MutationObserver(function(mutations, observer) {
+                // observer.disconnect();
                 var _this = $(mutations[0].target);
                 var _parent = _this.closest('table');
-                var iconFilter = _parent.find('.filterTablePro button');
-                var checkIconFilter = iconFilter.hasClass('active');
-                var hideme = _this.hasClass('hideme');
-                if (hideme && checkIconFilter) {
-                    iconFilter.removeClass('active');
-                }
-            });
-            setTimeout(function(){ 
-                var selectFilterTable = getSelectViewControl('tabelaAtivPanel');
-                var topPosition = (jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+arrayConfigAtividades.perfil.id_user+"`] | [0]") !== null) ? '120px' : '52px';
-                var htmlFlashFilterTable =  '<div class="filterTablePro" style="position: absolute;top: '+topPosition+';text-align: right;right: 320px;">'+
-                                            '   <span class="info_dates_fav" style="margin: 0; margin-right: 20px;">'+
-                                            '       <span class="dateboxDisplay tag-remove filterTagClean" onclick="parent.filterTagView(this); $(this).closest(\'table\').trigger(\'filterReset\');" style="display:none; font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
-                                            '           <span class="dateBoxIcon">'+
-                                            '               <i class="fas fa-eraser" style="color: #9d9d9d; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                                            '           </span>'+
-                                            '           Limpar Filtros'+
-                                            '       </span>'+
-                                            '       <span class="dateboxDisplay tagTableText_date_noprazo" data-colortag="#eef4f9" data-tagname="date_noprazo" data-nametag="No prazo" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
-                                            '           <span class="dateBoxIcon">'+
-                                            '               <i class="far fa-clock" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                                            '           </span>'+
-                                            '           No prazo ('+tabelaAtiv.find('tbody tr.tagTableName_date_noprazo').length+')'+
-                                            '       </span>'+
-                                            '       <span class="dateboxDisplay tagTableText_date_atrasado" data-colortag="#f9e2e0" data-tagname="date_atrasado" data-nametag="Atrasada" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
-                                            '           <span class="dateBoxIcon">'+
-                                            '               <i class="fas fa-exclamation-triangle vermelhoColor" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                                            '           </span>'+
-                                            '           Atrasadas ('+tabelaAtiv.find('tbody tr.tagTableName_date_atrasado').length+')'+
-                                            '       </span>'+
-                                            '       <span class="dateboxDisplay tagTableText_date_entregue" data-colortag="#ddf1dd" data-tagname="date_entregue" data-nametag="Entregue" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
-                                            '           <span class="dateBoxIcon">'+
-                                            '               <i class="fas fa-check-circle verdeColor" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                                            '           </span>'+
-                                            '           Entregues ('+tabelaAtiv.find('tbody tr.tagTableName_date_entregue').length+')'+
-                                            '       </span>'+
-                                            '       <span class="dateboxDisplay tagTableText_date_avaliado" data-colortag="#f1ecdd" data-tagname="date_avaliado" data-nametag="Avaliada" data-type="date" onclick="parent.filterTagView(this)" style="font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">'+
-                                            '           <span class="dateBoxIcon">'+
-                                            '               <i class="fas fa-star starGold" style="color: #4285f4; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                                            '           </span>'+
-                                            '           Avaliadas ('+tabelaAtiv.find('tbody tr.tagTableName_date_avaliado').length+')'+
-                                            '       </span>'+
-                                            '   </span>'+
-                                            '   '+selectFilterTable+
-                                            '</div>';
-
-                var htmlFilterAtiv =    '<div class="btn-group filterTablePro" role="group" style="right: 55px;top: '+topPosition+';z-index: 99;position: absolute;">'+
-                                        '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
-                                        '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
-                                        '       <span class="text">Baixar</span>'+
-                                        '   </button>'+
-                                        '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
-                                        '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
-                                        '       <span class="text">Copiar</span>'+
-                                        '   </button>'+
-                                        '   <button type="button" onclick="filterTablePro(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(tabelaAtiv.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
-                                        '       <i class="fas fa-search" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
-                                        '       Pesquisar'+
-                                        '   </button>'+
-                                        '</div>';
-                    tabelaAtiv.find('thead .filterTablePro').remove();
-                    tabelaAtiv.find('thead').prepend(htmlFlashFilterTable+htmlFilterAtiv);
-                    observerFilterAtiv.observe(filterAtiv, {
-                        attributes: true
-                    });
-                if (typeof $().chosen !== 'undefined') {
-                    $('#selectViewControl_tabelaAtivPanel').chosen({
-                        placeholder_text_single: ' ',
-                        no_results_text: 'Nenhum resultado encontrado'
-                    });
-                    forcePlaceHoldChosen();
-                }
-            }, 300);
-        }
-
-        var tagName = getOptionsPro('filterTag_atividades');
-        if (typeof tagName !== 'undefined' && tagName != '') {
-            setTimeout(function(){ 
-                $('.tableAtividades .tagTableText_'+tagName).eq(0).trigger('click');
-            }, 500);
-        } else if (tagName == '' && (checkCapacidade('only_self_atividades') && !setOptionsPro('filterTag_removed') )) {
-            var tagName_thisUser = normalizeNameTag(arrayConfigAtividades.perfil.apelido);
-            setTimeout(function(){ 
-                $('.tableAtividades .tagTableText_'+tagName_thisUser).eq(0).trigger('click');
-            }, 500);
-        }
-
-        var observerTableAtiv = new MutationObserver(function(mutations, observer) {
-            // observer.disconnect();
-            var _this = $(mutations[0].target);
-            var _parent = _this.closest('table');
-            var idsSelected = _parent.find('tr.infraTrMarcada').map(function(){ return $(this).data('index') }).get();
-            var iconsCount = {start: [], complete: [], rate: [], send: []};
-            
-            $.each(arrayAtividadesPro, function(index, value){
-                if ($.inArray(value.id_demanda, idsSelected) !== -1 ) {
-                    if (checkPermissionAtiv(value) && value.data_inicio == '0000-00-00 00:00:00') {
-                        iconsCount.start.push({id:value.id_demanda, id_unidade: value.id_unidade});
-                    } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00') {
-                        iconsCount.complete.push({id:value.id_demanda, id_unidade: value.id_unidade});
-                    } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00') {
-                        iconsCount.rate.push({id:value.id_demanda, id_unidade: value.id_unidade});
-                    } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao != '0000-00-00 00:00:00') {
-                        iconsCount.send.push({id:value.id_demanda, id_unidade: value.id_unidade});
+                var idsSelected = _parent.find('tr.infraTrMarcada').map(function(){ return $(this).data('index') }).get();
+                var iconsCount = {start: [], complete: [], rate: [], send: []};
+                
+                $.each(arrayAtividadesPro, function(index, value){
+                    if ($.inArray(value.id_demanda, idsSelected) !== -1 ) {
+                        if (checkPermissionAtiv(value) && value.data_inicio == '0000-00-00 00:00:00') {
+                            iconsCount.start.push({id:value.id_demanda, id_unidade: value.id_unidade});
+                        } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega == '0000-00-00 00:00:00') {
+                            iconsCount.complete.push({id:value.id_demanda, id_unidade: value.id_unidade});
+                        } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao == '0000-00-00 00:00:00') {
+                            iconsCount.rate.push({id:value.id_demanda, id_unidade: value.id_unidade});
+                        } else if (checkPermissionAtiv(value) && value.data_inicio != '0000-00-00 00:00:00' && value.data_entrega != '0000-00-00 00:00:00' && value.data_avaliacao != '0000-00-00 00:00:00') {
+                            iconsCount.send.push({id:value.id_demanda, id_unidade: value.id_unidade});
+                        }
                     }
-                }
-            });
-            // console.log(iconsCount);
-
-            $('#atividadesProActions').find('.iconBoxAtividade').data('list',false).find('.fa-layers-counter').text('').hide();
-            $('#atividadesProActions').find('.iconBoxAtividade:visible').each(function(){
-                if ($(this).hasClass('iconAtividade_start') && iconsCount.start.length != 0) {
-                    $(this).data('list',iconsCount.start).find('.fa-layers-counter').text(iconsCount.start.length).show();
-                } else if ($(this).hasClass('iconAtividade_complete') && iconsCount.complete.length != 0) {
-                    $(this).data('list',iconsCount.complete).find('.fa-layers-counter').text(iconsCount.complete.length).show();
-                } else if ($(this).hasClass('iconAtividade_rate') && iconsCount.rate.length != 0) {
-                    $(this).data('list',iconsCount.rate).find('.fa-layers-counter').text(iconsCount.rate.length).show();
-                } else if ($(this).hasClass('iconAtividade_send') && iconsCount.send.length != 0) {
-                    $(this).data('list',iconsCount.send).find('.fa-layers-counter').text(iconsCount.send.length).show();
-                } else if ($(this).hasClass('iconAtividade_delete') && iconsCount.start.length != 0) {
-                    $(this).data('list',iconsCount.start).find('.fa-layers-counter').text(iconsCount.start.length).show();
-                } 
-            });
-            // console.log('observerTableAtiv');
-        });
-        setTimeout(function(){ 
-            if (tabelaAtiv.length > 0) {
-                observerTableAtiv.observe(tabelaAtiv[0], {
-                    attributes: true,
-                    childList: true,
-                    subtree: true
                 });
-                checkboxRangerSelectShift();
-            }
-            forcePlaceHoldChosen();
-            // dragColumnTable(tabelaAtiv);
-            if (getOptionsPro('panelSortColumnsPro')) {
-                dragColumnTable(tabelaAtiv);
-            }
-        }, 500);
+                // console.log(iconsCount);
 
-        initPanelResize('#atividadesProDiv .tabelaPanelScroll', 'atividadesPro');
-        getInsertIconAtividade();
-        checkboxRangerSelectShift();
+                $('#atividadesProActions').find('.iconBoxAtividade').data('list',false).find('.fa-layers-counter').text('').hide();
+                $('#atividadesProActions').find('.iconBoxAtividade:visible').each(function(){
+                    if ($(this).hasClass('iconAtividade_start') && iconsCount.start.length != 0) {
+                        $(this).data('list',iconsCount.start).find('.fa-layers-counter').text(iconsCount.start.length).show();
+                    } else if ($(this).hasClass('iconAtividade_complete') && iconsCount.complete.length != 0) {
+                        $(this).data('list',iconsCount.complete).find('.fa-layers-counter').text(iconsCount.complete.length).show();
+                    } else if ($(this).hasClass('iconAtividade_rate') && iconsCount.rate.length != 0) {
+                        $(this).data('list',iconsCount.rate).find('.fa-layers-counter').text(iconsCount.rate.length).show();
+                    } else if ($(this).hasClass('iconAtividade_send') && iconsCount.send.length != 0) {
+                        $(this).data('list',iconsCount.send).find('.fa-layers-counter').text(iconsCount.send.length).show();
+                    } else if ($(this).hasClass('iconAtividade_delete') && iconsCount.start.length != 0) {
+                        $(this).data('list',iconsCount.start).find('.fa-layers-counter').text(iconsCount.start.length).show();
+                    } 
+                });
+                // console.log('observerTableAtiv');
+            });
+            setTimeout(function(){ 
+                if (tabelaAtiv.length > 0) {
+                    observerTableAtiv.observe(tabelaAtiv[0], {
+                        attributes: true,
+                        childList: true,
+                        subtree: true
+                    });
+                    checkboxRangerSelectShift();
+                }
+                forcePlaceHoldChosen();
+                // dragColumnTable(tabelaAtiv);
+                if (getOptionsPro('panelSortColumnsPro')) {
+                    dragColumnTable(tabelaAtiv);
+                }
+            }, 500);
+
+            initPanelResize('#atividadesProDiv .tabelaPanelScroll', 'atividadesPro');
+            getInsertIconAtividade();
+            checkboxRangerSelectShift();
+        }
     } else {
         if (typeof $().tagsInput === 'undefined') { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
+        if (typeof $().tablesorter === 'undefined') { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
         setTimeout(function(){ 
             initFunctionsPanelAtiv(TimeOut - 100); 
             console.log('Reload initFunctionsPanelAtiv'); 
@@ -10545,7 +10970,7 @@ function saveAtividadeSimple(id_demanda = 0) {
                     notifyAtividade(id_demanda);
                 }
             });
-            if (checkCapacidade('delete_atividade')) {
+            if (checkCapacidade('delete_atividade') || checkCapacidade('delete_atividade_all')) {
                 btnDialogBoxPro.unshift({
                     text: 'Excluir',
                     icon: 'ui-icon-trash',
@@ -10644,14 +11069,24 @@ function changeSaveAtividade(type) {
         }
     }, 300);
 }
+function checkMaxDateAvaliacao() {
+    var daysMaxAvaliacao = (checkOptionEntidade('checar_avaliacao') && checkOptionEntidade('prazo_avaliacao')) ? getOptionEntidade('prazo_avaliacao') : 40;
+    var dateMaxAvaliacao = moment().add(-daysMaxAvaliacao,'day').format('YYYY-MM-DD HH:mm:ss');
+    var checkMaxAvaliacao = jmespath.search(arrayAtividadesPro,"[?data_entrega!='0000-00-00 00:00:00'] | [?id_avaliacao==`0`] | [?data_entrega < `"+dateMaxAvaliacao+"`]");
+    return (checkMaxAvaliacao === null || checkMaxAvaliacao.length == 0 || !checkOptionEntidade('checar_avaliacao')) ? true : false;
+}
 function saveAtividade(id_demanda = 0) {
-    if (
-            id_demanda == 0 &&
-            (getOptionsPro('formSaveAtividade') == 'simple' || (!getOptionsPro('formSaveAtividade') && checkOptionEntidade('cadastro_simplificado'))) 
-        ){
-        saveAtividadeSimple(id_demanda);
+    if (checkMaxDateAvaliacao()) {
+        if (
+                id_demanda == 0 &&
+                (getOptionsPro('formSaveAtividade') == 'simple' || (!getOptionsPro('formSaveAtividade') && checkOptionEntidade('cadastro_simplificado'))) 
+            ){
+            saveAtividadeSimple(id_demanda);
+        } else {
+            saveAtividadeFull(id_demanda);
+        }
     } else {
-        saveAtividadeFull(id_demanda);
+        alertaBoxPro('Error', 'exclamation-triangle', 'Existem demandas n\u00E3o avaliadas h\u00E1 mais de 40 dias. Solicite ao gestor que as avalie antes de prosseguir!');
     }
 }
 // BOX DE DEMANDA COMPLETA
@@ -11204,7 +11639,7 @@ function saveAtividadeFull(id_demanda = 0) {
                     notifyAtividade(id_demanda);
                 }
             });
-            if (checkCapacidade('delete_atividade')) {
+            if (checkCapacidade('delete_atividade') || checkCapacidade('delete_atividade_all')) {
                 btnDialogBoxPro.unshift({
                     text: 'Excluir',
                     icon: 'ui-icon-trash',
@@ -11735,274 +12170,279 @@ function multProcessRemove(this_) {
 function completeAtividade(id_demanda, confirmeBox = false) {
     var dadosIfrArvore = getIfrArvoreDadosProcesso();
     var value = getAtividadeData(id_demanda);
-    if (!checkSignDocsPlano(value)) {
-        alertSignDocsPlano(value);
+    var id_plano_check = checkRegularizaPlano(value);
+    if (id_plano_check) {
+        regularizaPlano(false, {id_plano: id_plano_check, refplano: 'anterior'});
     } else {
-        if (!confirmeBox && dadosIfrArvore && value.requisicao_sei == dadosIfrArvore.nr_sei) {
-            confirmaBoxPro('O documento de entrega selecionado \u00E9 igual ao documento de requisi\u00E7\u00E3o. Deseja continuar?', function(){ completeAtividade(id_demanda, true) }, 'Continuar...');
+        if (!checkSignDocsPlano(value)) {
+            alertSignDocsPlano(value);
         } else {
-            var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada == '0000-00-00 00:00:00') ? true : false;
-            if (check_ispaused) {
-                confirmaBoxPro(__.A_demanda+' est\u00E1 '+getNameGenre('demanda', 'paralisado', 'paralisada')+'. Deseja retom\u00E1-la agora?', function(){ pauseAtividade(id_demanda) }, __.Retomar+'...', cancelMoveKanbanItens);
+            if (!confirmeBox && dadosIfrArvore && value.requisicao_sei == dadosIfrArvore.nr_sei) {
+                confirmaBoxPro('O documento de entrega selecionado \u00E9 igual ao documento de requisi\u00E7\u00E3o. Deseja continuar?', function(){ completeAtividade(id_demanda, true) }, 'Continuar...');
             } else {
-                var check_isresumed = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada != '0000-00-00 00:00:00') ? true : false;
-                var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
-                var optionSelectDocumentos = ( arrayConfigAtividades.tipos_documentos.length > 0 ) ? $.map(arrayConfigAtividades.tipos_documentos, function(v,k){ return ( (value && v.id_tipo_documento == value.id_tipo_documento) || (dadosIfrArvore && dadosIfrArvore.nome_documento.indexOf(v.nome_documento) !== -1) ) ? '<option value="'+v.id_tipo_documento+'" selected>'+v.nome_documento+'</option>' : '<option value="'+v.id_tipo_documento+'">'+v.nome_documento+'</option>' }).join('') : '';
-                var selectDocumentos = '<select id="ativ_id_tipo_documento" onchange="checkThisAtivRequiredFields(this)" data-key="id_tipo_documento" required><option>&nbsp;</option>'+optionSelectDocumentos+'</select>';
-                    selectDocumentos = (checkOptionEntidade('dispensa_tipos_requisicao')) ? '<input type="hidden" id="ativ_id_tipo_documento" data-key="id_tipo_documento" data-param="id_tipo_documento" value="0">' : selectDocumentos;
+                var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada == '0000-00-00 00:00:00') ? true : false;
+                if (check_ispaused) {
+                    confirmaBoxPro(__.A_demanda+' est\u00E1 '+getNameGenre('demanda', 'paralisado', 'paralisada')+'. Deseja retom\u00E1-la agora?', function(){ pauseAtividade(id_demanda) }, __.Retomar+'...', cancelMoveKanbanItens);
+                } else {
+                    var check_isresumed = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada != '0000-00-00 00:00:00') ? true : false;
+                    var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
+                    var optionSelectDocumentos = ( arrayConfigAtividades.tipos_documentos.length > 0 ) ? $.map(arrayConfigAtividades.tipos_documentos, function(v,k){ return ( (value && v.id_tipo_documento == value.id_tipo_documento) || (dadosIfrArvore && dadosIfrArvore.nome_documento.indexOf(v.nome_documento) !== -1) ) ? '<option value="'+v.id_tipo_documento+'" selected>'+v.nome_documento+'</option>' : '<option value="'+v.id_tipo_documento+'">'+v.nome_documento+'</option>' }).join('') : '';
+                    var selectDocumentos = '<select id="ativ_id_tipo_documento" onchange="checkThisAtivRequiredFields(this)" data-key="id_tipo_documento" required><option>&nbsp;</option>'+optionSelectDocumentos+'</select>';
+                        selectDocumentos = (checkOptionEntidade('dispensa_tipos_requisicao')) ? '<input type="hidden" id="ativ_id_tipo_documento" data-key="id_tipo_documento" data-param="id_tipo_documento" value="0">' : selectDocumentos;
 
-                var dataInicio = moment(value.data_inicio, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
-                var dataEntrega = (value.data_entrega != '0000-00-00 00:00:00') 
-                                ? moment(value.data_entrega, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format)
-                                : (dadosIfrArvore && typeof dadosIfrArvore.data_documento !== 'undefined' && dadosIfrArvore.data_documento) 
-                                    ? moment(dadosIfrArvore.data_documento, 'DD/MM/YYYY HH:mm').format(config_unidade.hora_format)
-                                    : moment().format(config_unidade.hora_format);
-                                    // console.log(value.data_entrega, dadosIfrArvore, dadosIfrArvore.data_document);
-                var dataDistribuicao = moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
-                var inputAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`].{sigla_unidade: sigla_unidade, id_unidade: id_unidade, dias_planejado: dias_planejado, tempo_pactuado: tempo_pactuado, complexidade: config.complexidade, etiqueta: config.etiqueta.lista, tipo_processo: config.tipo_processo, desativa_produtividade: config.desativa_produtividade, observacao_gerencial: config.observacao_gerencial} | [0]");
-                    inputAtiv = (inputAtiv !== null) ? "<input type='hidden' id='ativ_id_atividade' data-key='id_atividade' data-param='id_atividade' data-config='"+JSON.stringify(inputAtiv)+"' value='"+value.id_atividade+"'>" : '';
-                var inputUser = jmespath.search(arrayConfigAtividades.planos, "[?id_user==`"+value.id_user+"`].{id_plano: id_plano, sigla_unidade: sigla_unidade, nome_modalidade: nome_modalidade, carga_horaria: carga_horaria} | [0]");
-                    inputUser = (inputUser !== null) ? "<input type='hidden' id='ativ_id_user' data-key='id_user' data-param='id_user' data-config='"+JSON.stringify(inputUser)+"' value='"+value.id_user+"'>" : '';
+                    var dataInicio = moment(value.data_inicio, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
+                    var dataEntrega = (value.data_entrega != '0000-00-00 00:00:00') 
+                                    ? moment(value.data_entrega, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format)
+                                    : (dadosIfrArvore && typeof dadosIfrArvore.data_documento !== 'undefined' && dadosIfrArvore.data_documento) 
+                                        ? moment(dadosIfrArvore.data_documento, 'DD/MM/YYYY HH:mm').format(config_unidade.hora_format)
+                                        : moment().format(config_unidade.hora_format);
+                                        // console.log(value.data_entrega, dadosIfrArvore, dadosIfrArvore.data_document);
+                    var dataDistribuicao = moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
+                    var inputAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`].{sigla_unidade: sigla_unidade, id_unidade: id_unidade, dias_planejado: dias_planejado, tempo_pactuado: tempo_pactuado, complexidade: config.complexidade, etiqueta: config.etiqueta.lista, tipo_processo: config.tipo_processo, desativa_produtividade: config.desativa_produtividade, observacao_gerencial: config.observacao_gerencial} | [0]");
+                        inputAtiv = (inputAtiv !== null) ? "<input type='hidden' id='ativ_id_atividade' data-key='id_atividade' data-param='id_atividade' data-config='"+JSON.stringify(inputAtiv)+"' value='"+value.id_atividade+"'>" : '';
+                    var inputUser = jmespath.search(arrayConfigAtividades.planos, "[?id_user==`"+value.id_user+"`].{id_plano: id_plano, sigla_unidade: sigla_unidade, nome_modalidade: nome_modalidade, carga_horaria: carga_horaria} | [0]");
+                        inputUser = (inputUser !== null) ? "<input type='hidden' id='ativ_id_user' data-key='id_user' data-param='id_user' data-config='"+JSON.stringify(inputUser)+"' value='"+value.id_user+"'>" : '';
 
-                var listAtividadesVinculadas = getAtividadesVinculadas(value, 'concluidas');
-                    
-                var htmlBox =   '<div id="boxAtividade" class="atividadeWork" data-demanda="'+(value && value.id_demanda ? value.id_demanda : 0)+'">'+
-                                '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                                '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'" class="label">'+
-                                '               <label for="ativ_id_tipo_documento"><i class="iconPopup iconSwitch fas fa-file-signature cinzaColor"></i>Documento:</label>'+
-                                '               '+inputAtiv+
-                                '               '+inputUser+
-                                '           </td>'+
-                                '           <td class="required" style="width: 230px; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'">'+
-                                '               '+selectDocumentos+
-                                '           </td>'+
-                                '           <td style="vertical-align: bottom;" class="label">'+
-                                '               <label class="'+(checkOptionEntidade('dispensa_tipos_requisicao') ? '' : 'last')+'" for="ativ_documento_sei"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>SEI n\u00BA:</label>'+
-                                '           </td>'+
-                                '           <td>'+
-                                '               <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')" id="ativ_documento_sei" onchange="changeProtocoloBoxAtiv(this)" maxlength="11" data-key="documento_sei" value="'+(value && value.documento_sei !== null && parseInt(value.documento_sei) != 0  ? value.documento_sei : (dadosIfrArvore && dadosIfrArvore.nr_sei ? dadosIfrArvore.nr_sei : '') )+'">'+
-                                '               <input type="hidden" id="ativ_id_documento_entregue" data-key="id_documento_entregue" data-param="id_documento_entregue" value="'+(value && value.id_documento_entregue !== null && value.id_documento_entregue != '0' ? value.id_documento_entregue : (dadosIfrArvore && dadosIfrArvore.id_documento ? dadosIfrArvore.id_documento : '') )+'">'+
-                                '           </td>'+
-                                '      </tr>'+
-                                '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '               <label for="ativ_numero_documento"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>Descri\u00E7\u00E3o do Documento:</label>'+
-                                '           </td>'+
-                                '           <td colspan="3">'+
-                                '               <input type="text" id="ativ_numero_documento" onchange="checkThisAtivRequiredFields(this)" maxlength="255" data-key="numero_documento" value="'+(value && value.numero_documento !== null ? value.numero_documento : (dadosIfrArvore && dadosIfrArvore.numero_documento ? dadosIfrArvore.numero_documento : '' ) )+'">'+
-                                '           </td>'+
-                                '      </tr>'+
-                                '      <tr class="hrForm"><td colspan="4"></td></tr>'+
-                                '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '               <label for="ativ_data_inicio"><i class="iconPopup iconSwitch fas fa-play-circle cinzaColor"></i>Data de In\u00EDcio:</label>'+
-                                '           </td>'+
-                                '           <td class="required date">'+
-                                '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" onchange="changeDadosTrabalho(this)" id="ativ_data_inicio" data-key="data_inicio" data-type="inicio" data-name="data de in\u00EDcio" value="'+dataInicio+'" min="'+dataDistribuicao+'" required>'+
-                                '           </td>'+
-                                '           <td style="vertical-align: bottom;" class="label">'+
-                                '               <label class="last" for="ativ_data_entrega"><i class="iconPopup iconSwitch fas fa-user-clock cinzaColor" style="float: initial;"></i>Data de Entrega:</label>'+
-                                '           </td>'+
-                                '           <td class="required date">'+
-                                '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" onchange="changeDadosTrabalho(this)" id="ativ_data_entrega" data-key="data_entrega" data-type="fim" data-name="data de entrega" value="'+dataEntrega+'" min="'+dataDistribuicao+'" required>'+
-                                '           </td>'+
-                                '      </tr>'+
-                                '      <tr '+(check_isresumed ? '': 'style="display:none"')+'>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '               <label for="ativ_tempo_pausado"><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i>Tempo '+__.Paralisado+':</label>'+
-                                '           </td>'+
-                                '           <td>'+
-                                '               <input type="number" min="0.1" step=".1" id="ativ_tempo_pausado" data-key="tempo_pausado" value="0" disabled>'+
-                                '           </td>'+
-                                '           <td style="vertical-align: middle;text-align: left;padding-left: 25px;" class="label" colspan="2">'+
-                                '               <button type="button" id="manPauseAtividade" '+(checkCapacidade('pause_atividade') ? '' : 'style="display:none"')+' class="confirm ui-button ui-corner-all ui-widget"><span class="ui-button-icon ui-icon ui-icon-calendar"></span><span class="ui-button-icon-space"> </span>Gerenciar Paralisa\u00E7\u00F5es</button>'+
-                                '           </td>'+
-                                '      </tr>'+
-                                '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '               <label for="ativ_tempo_despendido"><i class="iconPopup iconSwitch fas fa-hourglass-half cinzaColor"></i>Tempo Despendido:</label>'+
-                                '           </td>'+
-                                '           <td class="td_tempo_despendido" data-tempo="'+decimalHourToMinute(value && value.tempo_despendido ? value.tempo_despendido : '0')+'">'+
-                                '               <input type="number" min="0.1" step=".1" id="ativ_tempo_despendido" onchange="changeDadosTrabalho(this)" data-key="tempo_despendido" data-type="tempo" value="'+(value && value.tempo_despendido ? value.tempo_despendido : '0')+'" disabled>'+
-                                '           </td>'+
-                                '           <td style="vertical-align: bottom;" class="label">'+
-                                '               <label class="last" for="ativ_dias_despendido"><i class="iconPopup iconSwitch fas fa-calendar-alt cinzaColor" style="float: initial;"></i><span id="ativ_dias_despendido_label">Dias '+(config_unidade.count_dias_uteis ? '\u00FAteis' : '')+' Despendido</span>:</label>'+
-                                '           </td>'+
-                                '           <td class="required number">'+
-                                '               <input type="number" min="0" id="ativ_dias_despendido" onchange="changeDadosTrabalho(this)" data-key="dias_despendido" data-type="dias" value="'+(value && value.dias_despendido ? value.dias_despendido : '0')+'" required>'+
-                                '           </td>'+
-                                '      </tr>'+
-                                '      <tr>'+
-                                '          <td style="vertical-align: middle; text-align: left;" class="label">'+
-                                '               <label for="ativ_observacao_tecnica"><i class="iconPopup iconSwitch fas fa-comment-alt cinzaColor"></i>'+__.Observacao+' '+__.Tecnica+':</label>'+
-                                '           </td>'+
-                                '           <td colspan="3">'+
-                                '               <textarea type="text" id="ativ_observacao_tecnica" '+((value.data_entrega == '0000-00-00 00:00:00') ? 'oninput="checkboxAnotacoesProcessoAtiv(this)"' : '')+' data-key="observacao_tecnica" value="'+((value && value.observacao_tecnica !== null && value.observacao_tecnica != '') ? value.observacao_tecnica : '')+'"></textarea>'+
-                                ''+($('#ifrArvore').length > 0 ? 
-                                '               <table style="width: 100%;font-size: 10pt; display:none" id="tableAnotacoesProcessoAtiv">'+
-                                '                   <tbody>'+
-                                '                       <tr style="height: 40px;">'+
-                                '                           <td style="text-align: left;vertical-align: bottom;">'+
-                                '                               <label for="ativ_anotacoes_processo">'+
-                                '                                   <i class="iconPopup iconSwitch fas fa-sticky-note cinzaColor"></i>Adicionar '+__.observacao+' '+__.tecnica+' nas anota\u00E7\u00F5es do processo?</label>'+
-                                '                           </td>'+
-                                '                           <td>'+
-                                '                               <div class="onoffswitch" style="float: right;">'+
-                                '                                   <input type="checkbox" data-key="anotacoes_processo" name="onoffswitch" class="onoffswitch-checkbox" id="ativ_anotacoes_processo" tabindex="0">'+
-                                '                                   <label class="onoffswitch-label" for="ativ_anotacoes_processo"></label>'+
-                                '                               </div>'+
-                                '                           </td>'+
-                                '                       </tr>'+
-                                '                   </tbody>'+
-                                '               </table>'+
-                                '' : '')+
-                                '           </td>'+
-                                '      </tr>'+
-                                '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '               <label for="ativ_tempo_pactuado"><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Tempo Pactuado:</label>'+
-                                '           </td>'+
-                                '           <td colspan="3" style="text-align: left;">'+
-                                '               <span id="ativ_tempo_pactuado">'+getTagTempoPactuadoAtiv(value)+'</span>'+
-                                '           </td>'+
-                                '      </tr>'+
-                                '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '               <label for="ativ_produtividade"><i class="iconPopup iconSwitch fas fa-toolbox cinzaColor"></i>Produtividade:</label>'+
-                                '           </td>'+
-                                '           <td colspan="3" style="text-align: left;">'+
-                                '               <span id="ativ_produtividade">'+getInfoAtividadeProdutividade(value, true)+'</span>'+
-                                '           </td>'+
-                                '      </tr>'+
-                                (value.checklist && value.checklist.length > 0 ?
-                                '      <tr>'+
-                                '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '               <label for="ativ_produtividade"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Checklist:</label>'+
-                                '           </td>'+
-                                '           <td colspan="3" style="text-align: left;">'+
-                                '               '+getInfoAtividadeChecklist(value, 'actions')+
-                                '           </td>'+
-                                '      </tr>'+
-                                '' : '')+
-                                (listAtividadesVinculadas.length_check > 0 ? 
-                                '      <tr>'+
-                                '           <td colspan="4">'+
-                                '               '+listAtividadesVinculadas.input+
-                                '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
-                                '                  <tr style="height: 40px;">'+
-                                '                      <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                                '                           <label for="complete_others"><i class="iconPopup iconSwitch fas fa-check-circle cinzaColor"></i> '+(listAtividadesVinculadas.length_check > 1 ? 'Concluir '+getNameGenre('demanda', 'os outros', 'as outras')+' '+listAtividadesVinculadas.length_check+' '+__.demandas+' '+getNameGenre('demanda', 'vinculados', 'vinculadas') : 'Concluir '+__.a_outra_demanda_vinculada)+'?</label>'+
-                                '                      </td>'+
-                                '                      <td style="width: 50px;">'+
-                                '                          <div class="onoffswitch" style="float: right;">'+
-                                '                              <input type="checkbox" name="onoffswitch" data-target="#listCompleteOtherAtiv" onchange="changeOthersAtiv(this)" class="onoffswitch-checkbox singleOptionConfig" id="complete_others" data-key="complete_others" tabindex="0" checked>'+
-                                '                              <label class="onoffswitch-label" for="complete_others"></label>'+
-                                '                          </div>'+
-                                '                      </td>'+
-                                '                  </tr>'+
-                                '                  <tr style="height: auto;">'+
-                                '                      <td colspan="2">'+
-                                '                           '+listAtividadesVinculadas.html+
-                                '                      </td>'+
-                                '                  </tr>'+
-                                '               </table>'+
-                                '           </td>'+
-                                '      </tr>'+
-                                '' : '')+
-                                '   </table>'+
-                                '</div>';
+                    var listAtividadesVinculadas = getAtividadesVinculadas(value, 'concluidas');
+                        
+                    var htmlBox =   '<div id="boxAtividade" class="atividadeWork" data-demanda="'+(value && value.id_demanda ? value.id_demanda : 0)+'">'+
+                                    '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: bottom; text-align: left; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'" class="label">'+
+                                    '               <label for="ativ_id_tipo_documento"><i class="iconPopup iconSwitch fas fa-file-signature cinzaColor"></i>Documento:</label>'+
+                                    '               '+inputAtiv+
+                                    '               '+inputUser+
+                                    '           </td>'+
+                                    '           <td class="required" style="width: 230px; '+(checkOptionEntidade('dispensa_tipos_requisicao') ? 'display:none;' : '')+'">'+
+                                    '               '+selectDocumentos+
+                                    '           </td>'+
+                                    '           <td style="vertical-align: bottom;" class="label">'+
+                                    '               <label class="'+(checkOptionEntidade('dispensa_tipos_requisicao') ? '' : 'last')+'" for="ativ_documento_sei"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>SEI n\u00BA:</label>'+
+                                    '           </td>'+
+                                    '           <td>'+
+                                    '               <input type="text" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')" id="ativ_documento_sei" onchange="changeProtocoloBoxAtiv(this)" maxlength="11" data-key="documento_sei" value="'+(value && value.documento_sei !== null && parseInt(value.documento_sei) != 0  ? value.documento_sei : (dadosIfrArvore && dadosIfrArvore.nr_sei ? dadosIfrArvore.nr_sei : '') )+'">'+
+                                    '               <input type="hidden" id="ativ_id_documento_entregue" data-key="id_documento_entregue" data-param="id_documento_entregue" value="'+(value && value.id_documento_entregue !== null && value.id_documento_entregue != '0' ? value.id_documento_entregue : (dadosIfrArvore && dadosIfrArvore.id_documento ? dadosIfrArvore.id_documento : '') )+'">'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '               <label for="ativ_numero_documento"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>Descri\u00E7\u00E3o do Documento:</label>'+
+                                    '           </td>'+
+                                    '           <td colspan="3">'+
+                                    '               <input type="text" id="ativ_numero_documento" onchange="checkThisAtivRequiredFields(this)" maxlength="255" data-key="numero_documento" value="'+(value && value.numero_documento !== null ? value.numero_documento : (dadosIfrArvore && dadosIfrArvore.numero_documento ? dadosIfrArvore.numero_documento : '' ) )+'">'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '      <tr class="hrForm"><td colspan="4"></td></tr>'+
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '               <label for="ativ_data_inicio"><i class="iconPopup iconSwitch fas fa-play-circle cinzaColor"></i>Data de In\u00EDcio:</label>'+
+                                    '           </td>'+
+                                    '           <td class="required date">'+
+                                    '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" onchange="changeDadosTrabalho(this)" id="ativ_data_inicio" data-key="data_inicio" data-type="inicio" data-name="data de in\u00EDcio" value="'+dataInicio+'" min="'+dataDistribuicao+'" required>'+
+                                    '           </td>'+
+                                    '           <td style="vertical-align: bottom;" class="label">'+
+                                    '               <label class="last" for="ativ_data_entrega"><i class="iconPopup iconSwitch fas fa-user-clock cinzaColor" style="float: initial;"></i>Data de Entrega:</label>'+
+                                    '           </td>'+
+                                    '           <td class="required date">'+
+                                    '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" onchange="changeDadosTrabalho(this)" id="ativ_data_entrega" data-key="data_entrega" data-type="fim" data-name="data de entrega" value="'+dataEntrega+'" min="'+dataDistribuicao+'" required>'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '      <tr '+(check_isresumed ? '': 'style="display:none"')+'>'+
+                                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '               <label for="ativ_tempo_pausado"><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i>Tempo '+__.Paralisado+':</label>'+
+                                    '           </td>'+
+                                    '           <td>'+
+                                    '               <input type="number" min="0.1" step=".1" id="ativ_tempo_pausado" data-key="tempo_pausado" value="0" disabled>'+
+                                    '           </td>'+
+                                    '           <td style="vertical-align: middle;text-align: left;padding-left: 25px;" class="label" colspan="2">'+
+                                    '               <button type="button" id="manPauseAtividade" '+(checkCapacidade('pause_atividade') ? '' : 'style="display:none"')+' class="confirm ui-button ui-corner-all ui-widget"><span class="ui-button-icon ui-icon ui-icon-calendar"></span><span class="ui-button-icon-space"> </span>Gerenciar Paralisa\u00E7\u00F5es</button>'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '               <label for="ativ_tempo_despendido"><i class="iconPopup iconSwitch fas fa-hourglass-half cinzaColor"></i>Tempo Despendido:</label>'+
+                                    '           </td>'+
+                                    '           <td class="td_tempo_despendido" data-tempo="'+decimalHourToMinute(value && value.tempo_despendido ? value.tempo_despendido : '0')+'">'+
+                                    '               <input type="number" min="0.1" step=".1" id="ativ_tempo_despendido" onchange="changeDadosTrabalho(this)" data-key="tempo_despendido" data-type="tempo" value="'+(value && value.tempo_despendido ? value.tempo_despendido : '0')+'" disabled>'+
+                                    '           </td>'+
+                                    '           <td style="vertical-align: bottom;" class="label">'+
+                                    '               <label class="last" for="ativ_dias_despendido"><i class="iconPopup iconSwitch fas fa-calendar-alt cinzaColor" style="float: initial;"></i><span id="ativ_dias_despendido_label">Dias '+(config_unidade.count_dias_uteis ? '\u00FAteis' : '')+' Despendido</span>:</label>'+
+                                    '           </td>'+
+                                    '           <td class="required number">'+
+                                    '               <input type="number" min="0" id="ativ_dias_despendido" onchange="changeDadosTrabalho(this)" data-key="dias_despendido" data-type="dias" value="'+(value && value.dias_despendido ? value.dias_despendido : '0')+'" required>'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: middle; text-align: left;" class="label">'+
+                                    '               <label for="ativ_observacao_tecnica"><i class="iconPopup iconSwitch fas fa-comment-alt cinzaColor"></i>'+__.Observacao+' '+__.Tecnica+':</label>'+
+                                    '           </td>'+
+                                    '           <td colspan="3">'+
+                                    '               <textarea type="text" id="ativ_observacao_tecnica" '+((value.data_entrega == '0000-00-00 00:00:00') ? 'oninput="checkboxAnotacoesProcessoAtiv(this)"' : '')+' data-key="observacao_tecnica" value="'+((value && value.observacao_tecnica !== null && value.observacao_tecnica != '') ? value.observacao_tecnica : '')+'"></textarea>'+
+                                    ''+($('#ifrArvore').length > 0 ? 
+                                    '               <table style="width: 100%;font-size: 10pt; display:none" id="tableAnotacoesProcessoAtiv">'+
+                                    '                   <tbody>'+
+                                    '                       <tr style="height: 40px;">'+
+                                    '                           <td style="text-align: left;vertical-align: bottom;">'+
+                                    '                               <label for="ativ_anotacoes_processo">'+
+                                    '                                   <i class="iconPopup iconSwitch fas fa-sticky-note cinzaColor"></i>Adicionar '+__.observacao+' '+__.tecnica+' nas anota\u00E7\u00F5es do processo?</label>'+
+                                    '                           </td>'+
+                                    '                           <td>'+
+                                    '                               <div class="onoffswitch" style="float: right;">'+
+                                    '                                   <input type="checkbox" data-key="anotacoes_processo" name="onoffswitch" class="onoffswitch-checkbox" id="ativ_anotacoes_processo" tabindex="0">'+
+                                    '                                   <label class="onoffswitch-label" for="ativ_anotacoes_processo"></label>'+
+                                    '                               </div>'+
+                                    '                           </td>'+
+                                    '                       </tr>'+
+                                    '                   </tbody>'+
+                                    '               </table>'+
+                                    '' : '')+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '               <label for="ativ_tempo_pactuado"><i class="iconPopup iconSwitch fas fa-handshake cinzaColor"></i>Tempo Pactuado:</label>'+
+                                    '           </td>'+
+                                    '           <td colspan="3" style="text-align: left;">'+
+                                    '               <span id="ativ_tempo_pactuado">'+getTagTempoPactuadoAtiv(value)+'</span>'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '               <label for="ativ_produtividade"><i class="iconPopup iconSwitch fas fa-toolbox cinzaColor"></i>Produtividade:</label>'+
+                                    '           </td>'+
+                                    '           <td colspan="3" style="text-align: left;">'+
+                                    '               <span id="ativ_produtividade">'+getInfoAtividadeProdutividade(value, true)+'</span>'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    (value.checklist && value.checklist.length > 0 ?
+                                    '      <tr>'+
+                                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '               <label for="ativ_produtividade"><i class="iconPopup iconSwitch fas fa-check-double cinzaColor"></i>Checklist:</label>'+
+                                    '           </td>'+
+                                    '           <td colspan="3" style="text-align: left;">'+
+                                    '               '+getInfoAtividadeChecklist(value, 'actions')+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '' : '')+
+                                    (listAtividadesVinculadas.length_check > 0 ? 
+                                    '      <tr>'+
+                                    '           <td colspan="4">'+
+                                    '               '+listAtividadesVinculadas.input+
+                                    '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                                    '                  <tr style="height: 40px;">'+
+                                    '                      <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                                    '                           <label for="complete_others"><i class="iconPopup iconSwitch fas fa-check-circle cinzaColor"></i> '+(listAtividadesVinculadas.length_check > 1 ? 'Concluir '+getNameGenre('demanda', 'os outros', 'as outras')+' '+listAtividadesVinculadas.length_check+' '+__.demandas+' '+getNameGenre('demanda', 'vinculados', 'vinculadas') : 'Concluir '+__.a_outra_demanda_vinculada)+'?</label>'+
+                                    '                      </td>'+
+                                    '                      <td style="width: 50px;">'+
+                                    '                          <div class="onoffswitch" style="float: right;">'+
+                                    '                              <input type="checkbox" name="onoffswitch" data-target="#listCompleteOtherAtiv" onchange="changeOthersAtiv(this)" class="onoffswitch-checkbox singleOptionConfig" id="complete_others" data-key="complete_others" tabindex="0" checked>'+
+                                    '                              <label class="onoffswitch-label" for="complete_others"></label>'+
+                                    '                          </div>'+
+                                    '                      </td>'+
+                                    '                  </tr>'+
+                                    '                  <tr style="height: auto;">'+
+                                    '                      <td colspan="2">'+
+                                    '                           '+listAtividadesVinculadas.html+
+                                    '                      </td>'+
+                                    '                  </tr>'+
+                                    '               </table>'+
+                                    '           </td>'+
+                                    '      </tr>'+
+                                    '' : '')+
+                                    '   </table>'+
+                                    '</div>';
 
-                var btnDialogBoxPro =   [{
-                    text: (value.data_entrega != '0000-00-00 00:00:00') ? 'Editar Conclus\u00E3o' : 'Concluir',
-                    class: 'confirm',
-                    click: function(event) { 
-                        if (checkSigleInputDateAtiv_(this)) {
-                            if (checkAtivRequiredFields(this, 'mark')) {
-                                if (checkAtivProdutividade(this, value)) {
-                                    if (checkAtivChecklist(this, value)) {
-                                        sendCompleteAtividade(this, value);
+                    var btnDialogBoxPro =   [{
+                        text: (value.data_entrega != '0000-00-00 00:00:00') ? 'Editar Conclus\u00E3o' : 'Concluir',
+                        class: 'confirm',
+                        click: function(event) { 
+                            if (checkSigleInputDateAtiv_(this)) {
+                                if (checkAtivRequiredFields(this, 'mark')) {
+                                    if (checkAtivProdutividade(this, value)) {
+                                        if (checkAtivChecklist(this, value)) {
+                                            sendCompleteAtividade(this, value);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                }];
-                if (value.data_entrega != '0000-00-00 00:00:00') {
-                    btnDialogBoxPro.unshift({
-                        text: 'Gerar Notifica\u00E7\u00E3o',
-                        icon: "ui-icon-mail-closed",
-                        click: function(event) { 
-                            notifyAtividade(id_demanda);
-                        }
-                    });
-                    if (checkCapacidade('complete_cancel_atividade')) {
+                    }];
+                    if (value.data_entrega != '0000-00-00 00:00:00') {
                         btnDialogBoxPro.unshift({
-                            text: 'Cancelar Conclus\u00E3o',
+                            text: 'Gerar Notifica\u00E7\u00E3o',
+                            icon: "ui-icon-mail-closed",
+                            click: function(event) { 
+                                notifyAtividade(id_demanda);
+                            }
+                        });
+                        if (checkCapacidade('complete_cancel_atividade')) {
+                            btnDialogBoxPro.unshift({
+                                text: 'Cancelar Conclus\u00E3o',
+                                icon: "ui-icon-close",
+                                click: function(event) { 
+                                    completeCancelAtividade(id_demanda);
+                                }
+                            });
+                        }
+                    } else {
+                        var checkConfigAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`] | [0].config.desativa_produtividade");
+                        if (!checkConfigAtiv && checkCapacidade('pause_atividade')) {
+                            var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada == '0000-00-00 00:00:00') ? true : false;
+                            btnDialogBoxPro.unshift({
+                                text: (check_ispaused ? __.Retomar+' '+__.Demanda : 'Inserir '+__.Paralisacao),
+                                icon: 'ui-icon-'+(check_ispaused ? 'play' : 'pause'),
+                                click: function(event) { 
+                                    pauseAtividade(id_demanda);
+                                }
+                            });
+                        }
+                        if (checkCapacidade('extend_atividade')) {
+                            btnDialogBoxPro.unshift({
+                                text: __.Prorrogar+' Prazo',
+                                icon: "ui-icon-refresh",
+                                click: function(event) { 
+                                    extendAtividade(id_demanda);
+                                }
+                            });
+                        }
+                        if (checkCapacidade('variation_atividade') || checkCapacidade('type_atividade')) {
+                            btnDialogBoxPro.unshift({
+                                text: (value.tempo_pactuado == 0 ? 'Atribuir '+__.Atividade : 'Alterar '+__.Complexidade),
+                                icon: (value.tempo_pactuado == 0 ? 'ui-icon-arrowreturnthick-1-n' : 'ui-icon-transferthick-e-w'),
+                                click: function(event) { 
+                                    variationAtividade(id_demanda);
+                                }
+                            });
+                        }
+                        btnDialogBoxPro.unshift({
+                            text: 'Cancelar In\u00EDcio',
                             icon: "ui-icon-close",
                             click: function(event) { 
-                                completeCancelAtividade(id_demanda);
+                                startCancelAtividade(id_demanda);
                             }
                         });
                     }
-                } else {
-                    var checkConfigAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`] | [0].config.desativa_produtividade");
-                    if (!checkConfigAtiv && checkCapacidade('pause_atividade')) {
-                        var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada == '0000-00-00 00:00:00') ? true : false;
-                        btnDialogBoxPro.unshift({
-                            text: (check_ispaused ? __.Retomar+' '+__.Demanda : 'Inserir '+__.Paralisacao),
-                            icon: 'ui-icon-'+(check_ispaused ? 'play' : 'pause'),
-                            click: function(event) { 
-                                pauseAtividade(id_demanda);
-                            }
+                    if (checkCapacidade('complete_atividade')) {
+                        resetDialogBoxPro('dialogBoxPro');
+                        dialogBoxPro = $('#dialogBoxPro')
+                            .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+                            .dialog({
+                                title: 'Concluir '+__.Demanda+': '+getTitleDialogBox(value),
+                                width: 780,
+                                open: function() { 
+                                    updateButtonConfirm(this, true);
+                                    $('#ativ_data_entrega').trigger('change');
+                                },
+                                close: function() { 
+                                    $('#boxAtividade').remove();
+                                    cancelMoveKanbanItens();
+                                    cancelSelectedItensAtiv(id_demanda);
+                                    resetDialogBoxPro('dialogBoxPro');
+                                },
+                                buttons: btnDialogBoxPro
                         });
+                        if (check_isresumed) { getPausasAtividade(id_demanda) }
                     }
-                    if (checkCapacidade('extend_atividade')) {
-                        btnDialogBoxPro.unshift({
-                            text: __.Prorrogar+' Prazo',
-                            icon: "ui-icon-refresh",
-                            click: function(event) { 
-                                extendAtividade(id_demanda);
-                            }
-                        });
-                    }
-                    if (checkCapacidade('variation_atividade') || checkCapacidade('type_atividade')) {
-                        btnDialogBoxPro.unshift({
-                            text: (value.tempo_pactuado == 0 ? 'Atribuir '+__.Atividade : 'Alterar '+__.Complexidade),
-                            icon: (value.tempo_pactuado == 0 ? 'ui-icon-arrowreturnthick-1-n' : 'ui-icon-transferthick-e-w'),
-                            click: function(event) { 
-                                variationAtividade(id_demanda);
-                            }
-                        });
-                    }
-                    btnDialogBoxPro.unshift({
-                        text: 'Cancelar In\u00EDcio',
-                        icon: "ui-icon-close",
-                        click: function(event) { 
-                            startCancelAtividade(id_demanda);
-                        }
-                    });
-                }
-                if (checkCapacidade('complete_atividade')) {
-                    resetDialogBoxPro('dialogBoxPro');
-                    dialogBoxPro = $('#dialogBoxPro')
-                        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
-                        .dialog({
-                            title: 'Concluir '+__.Demanda+': '+getTitleDialogBox(value),
-                            width: 780,
-                            open: function() { 
-                                updateButtonConfirm(this, true);
-                                $('#ativ_data_entrega').trigger('change');
-                            },
-                            close: function() { 
-                                $('#boxAtividade').remove();
-                                cancelMoveKanbanItens();
-                                cancelSelectedItensAtiv(id_demanda);
-                                resetDialogBoxPro('dialogBoxPro');
-                            },
-                            buttons: btnDialogBoxPro
-                    });
-                    if (check_isresumed) { getPausasAtividade(id_demanda) }
                 }
             }
         }
@@ -12309,213 +12749,218 @@ function sendAtividadesEnviarProcesso() {
 function startAtividade(id_demanda = 0) {
     var dadosIfrArvore = getIfrArvoreDadosProcesso();
     var value = getAtividadeData(id_demanda);
-    if (!checkSignDocsPlano(value)) {
-        alertSignDocsPlano(value);
+    var id_plano_check = checkRegularizaPlano(value);
+    if (id_plano_check) {
+        regularizaPlano(false, {id_plano: id_plano_check, refplano: 'anterior'});
     } else {
-        var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
-        var dataInicio = (dadosIfrArvore) 
-                            ? (dadosIfrArvore.versao) 
-                                ? moment(dadosIfrArvore.versao, 'DD/MM/YYYY HH:mm').format(config_unidade.hora_format)
-                                : moment().format(config_unidade.hora_format)
-                            : moment().format(config_unidade.hora_format);
-            dataInicio = (moment(dataInicio, config_unidade.hora_format) < moment(dataDistribuicao, config_unidade.hora_format)) 
-                            ? (moment(dataDistribuicao, config_unidade.hora_format) < moment()) ? moment().format(config_unidade.hora_format) : dataDistribuicao
-                            : dataInicio;
-        var prazoEntrega = (value.recalcula_prazo == 1) 
-                            ? getRecalculaPrazo(dataInicio, config_unidade.hora_format, value.dias_planejado, config_unidade)
-                            : '';
-
-        var listAtividadesVinculadas = getAtividadesVinculadas(value, 'iniciadas');
-
-        var listAtividadesIniciadas = (value.id_user != 0) ? jmespath.search(arrayAtividadesPro, "[?data_inicio!='0000-00-00 00:00:00'] | [?data_entrega=='0000-00-00 00:00:00'] | [?data_retomada==null || data_retomada!='0000-00-00 00:00:00'] | [?id_user==`"+value.id_user+"`]") : null;
-            listAtividadesIniciadas = (listAtividadesIniciadas !== null) ? listAtividadesIniciadas : false;
-        if (listAtividadesIniciadas && listAtividadesIniciadas.length > 0) {
-            var htmlTableAtividades = $.map(listAtividadesIniciadas, function(v,k){ 
-                                        var datesAtivHtml = getDatesPreview(getConfigDateAtiv(v));
-                                            datesAtivHtml = (datesAtivHtml != '') ? $(datesAtivHtml).find('.dateBoxIcon')[0].outerHTML : '';
-                                            datesAtivHtml = (datesAtivHtml != '') ? '<span class="dateboxDisplay" onclick="actionsAtividade('+v.id_demanda+')">'+datesAtivHtml+'</span>' : '';
-                                                        return '<div style="margin: 5px 0; display: inline-block; width: 100%;" data-value="'+v.id_demanda+'" title="'+getTitleDialogBox(v, true)+'">'+datesAtivHtml+getTitleDialogBox(v)+'</div>'
-                                    }).join('');
-                htmlTableAtividades =   '<div id="listPauseOtherAtiv" style="max-height: 300px;overflow-y: scroll;display: none;font-size: 10pt;position: initial;">'+
-                                        '   '+htmlTableAtividades+
-                                        '</div>'; 
-            var inputPauseOthers = jmespath.search(listAtividadesIniciadas,"[*].{id: id_demanda, id_unidade: id_unidade}");
-                inputPauseOthers = (inputPauseOthers !== null) ? "<input type='hidden' id='lista_pause_others' data-key='lista_pause_others' data-param='lista_pause_others' value='"+JSON.stringify(inputPauseOthers)+"'>" : '';
+        if (!checkSignDocsPlano(value)) {
+            alertSignDocsPlano(value);
         } else {
-            var inputPauseOthers = '';
-            var htmlTableAtividades = '';
-        }
+            var config_unidade = getConfigDadosUnidade(value.sigla_unidade);
+            var dataInicio = (dadosIfrArvore) 
+                                ? (dadosIfrArvore.versao) 
+                                    ? moment(dadosIfrArvore.versao, 'DD/MM/YYYY HH:mm').format(config_unidade.hora_format)
+                                    : moment().format(config_unidade.hora_format)
+                                : moment().format(config_unidade.hora_format);
+                dataInicio = (moment(dataInicio, config_unidade.hora_format) < moment(dataDistribuicao, config_unidade.hora_format)) 
+                                ? (moment(dataDistribuicao, config_unidade.hora_format) < moment()) ? moment().format(config_unidade.hora_format) : dataDistribuicao
+                                : dataInicio;
+            var prazoEntrega = (value.recalcula_prazo == 1) 
+                                ? getRecalculaPrazo(dataInicio, config_unidade.hora_format, value.dias_planejado, config_unidade)
+                                : '';
 
-        var dataDistribuicao_vinculadas = (listAtividadesVinculadas.length_check > 0) ? jmespath.search(arrayAtividadesPro, "reverse(sort_by([?id_vinculacao=='"+value.id_vinculacao+"'] | [?data_inicio=='0000-00-00 00:00:00'], &data_distribuicao)) | [*].data_distribuicao | [0]") : null;
-        var dataDistribuicao = (dataDistribuicao_vinculadas !== null) ? moment(dataDistribuicao_vinculadas, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format) : moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
+            var listAtividadesVinculadas = getAtividadesVinculadas(value, 'iniciadas');
 
-        var optionSelectResponsavel = '';
-        if (checkCapacidade('select_user_atividade') && value.id_user == 0) {
-            var arrayResp = jmespath.search(arrayConfigAtividades.planos, "[?sigla_unidade=='"+value.sigla_unidade+"']");
-            optionSelectResponsavel += getOptionsSelectResp(arrayResp, value);
-        }
-        // console.log(checkCapacidade('select_user_atividade'), value.id_user, optionSelectResponsavel);
-        var htmlSelectResponsavel = (optionSelectResponsavel != '')
-                ?   '      <tr>'+
-                    '          <td style="vertical-align: bottom; text-align: left; width: 140px;" class="label">'+
-                    '               <label for="ativ_id_user"><i class="iconPopup iconSwitch fas fa-user-tie cinzaColor"></i>Respons\u00E1vel:</label>'+
-                    '           </td>'+
-                    '           <td class="required date">'+
-                    '               <select id="ativ_id_user" data-key="id_user" onchange="" required><option>&nbsp;</option>'+optionSelectResponsavel+'</select>'+
-                    '           </td>'+
-                    '      </tr>'
-                : '';
+            var listAtividadesIniciadas = (value.id_user != 0) ? jmespath.search(arrayAtividadesPro, "[?data_inicio!='0000-00-00 00:00:00'] | [?data_entrega=='0000-00-00 00:00:00'] | [?data_retomada==null || data_retomada!='0000-00-00 00:00:00'] | [?id_user==`"+value.id_user+"`]") : null;
+                listAtividadesIniciadas = (listAtividadesIniciadas !== null) ? listAtividadesIniciadas : false;
+            if (listAtividadesIniciadas && listAtividadesIniciadas.length > 0) {
+                var htmlTableAtividades = $.map(listAtividadesIniciadas, function(v,k){ 
+                                            var datesAtivHtml = getDatesPreview(getConfigDateAtiv(v));
+                                                datesAtivHtml = (datesAtivHtml != '') ? $(datesAtivHtml).find('.dateBoxIcon')[0].outerHTML : '';
+                                                datesAtivHtml = (datesAtivHtml != '') ? '<span class="dateboxDisplay" onclick="actionsAtividade('+v.id_demanda+')">'+datesAtivHtml+'</span>' : '';
+                                                            return '<div style="margin: 5px 0; display: inline-block; width: 100%;" data-value="'+v.id_demanda+'" title="'+getTitleDialogBox(v, true)+'">'+datesAtivHtml+getTitleDialogBox(v)+'</div>'
+                                        }).join('');
+                    htmlTableAtividades =   '<div id="listPauseOtherAtiv" style="max-height: 300px;overflow-y: scroll;display: none;font-size: 10pt;position: initial;">'+
+                                            '   '+htmlTableAtividades+
+                                            '</div>'; 
+                var inputPauseOthers = jmespath.search(listAtividadesIniciadas,"[*].{id: id_demanda, id_unidade: id_unidade}");
+                    inputPauseOthers = (inputPauseOthers !== null) ? "<input type='hidden' id='lista_pause_others' data-key='lista_pause_others' data-param='lista_pause_others' value='"+JSON.stringify(inputPauseOthers)+"'>" : '';
+            } else {
+                var inputPauseOthers = '';
+                var htmlTableAtividades = '';
+            }
 
-        var htmlBox =   '<div id="boxAtividade" class="atividadeWork" data-demanda="'+(value && value.id_demanda ? value.id_demanda : 0)+'">'+
-                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                        '      '+htmlSelectResponsavel+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="ativ_data_inicio"><i class="iconPopup iconSwitch fas fa-play-circle cinzaColor"></i>Data de In\u00EDcio '+__.da_Demanda+':</label>'+
+            var dataDistribuicao_vinculadas = (listAtividadesVinculadas.length_check > 0) ? jmespath.search(arrayAtividadesPro, "reverse(sort_by([?id_vinculacao=='"+value.id_vinculacao+"'] | [?data_inicio=='0000-00-00 00:00:00'], &data_distribuicao)) | [*].data_distribuicao | [0]") : null;
+            var dataDistribuicao = (dataDistribuicao_vinculadas !== null) ? moment(dataDistribuicao_vinculadas, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format) : moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format(config_unidade.hora_format);
+
+            var optionSelectResponsavel = '';
+            if (checkCapacidade('select_user_atividade') && value.id_user == 0) {
+                var arrayResp = jmespath.search(arrayConfigAtividades.planos, "[?sigla_unidade=='"+value.sigla_unidade+"']");
+                optionSelectResponsavel += getOptionsSelectResp(arrayResp, value);
+            }
+            // console.log(checkCapacidade('select_user_atividade'), value.id_user, optionSelectResponsavel);
+            var htmlSelectResponsavel = (optionSelectResponsavel != '')
+                    ?   '      <tr>'+
+                        '          <td style="vertical-align: bottom; text-align: left; width: 140px;" class="label">'+
+                        '               <label for="ativ_id_user"><i class="iconPopup iconSwitch fas fa-user-tie cinzaColor"></i>Respons\u00E1vel:</label>'+
                         '           </td>'+
                         '           <td class="required date">'+
-                        '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" onchange="checkSigleInputDateAtiv(this); updateRecalculaPrazo(this);" id="ativ_data_inicio" data-key="data_inicio" data-type="inicio" data-name="data de in\u00EDcio" data-name-min="data de distribui\u00E7\u00E3o" value="'+dataInicio+'" min="'+dataDistribuicao+'" required>'+
+                        '               <select id="ativ_id_user" data-key="id_user" onchange="" required><option>&nbsp;</option>'+optionSelectResponsavel+'</select>'+
                         '           </td>'+
-                        '      </tr>'+
-                        (listAtividadesIniciadas && listAtividadesIniciadas.length > 0 ? 
-                        '      <tr>'+
-                        '           <td colspan="2">'+
-                        '               '+inputPauseOthers+
-                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td style="text-align: left;">'+
-                        '                           <label><i class="iconPopup fas fa-pause-circle cinzaColor"></i> '+(listAtividadesIniciadas.length > 1 ? __.Paralisar+' '+getNameGenre('demanda', 'os', 'as')+' '+listAtividadesIniciadas.length+' '+__.demandas+' j\u00E1 '+getNameGenre('demanda', 'iniciados', 'iniciadas') : __.Paralisar+' '+__.a_demanda+' j\u00E1 '+getNameGenre('demanda', 'iniciado', 'iniciada'))+' '+(arrayConfigAtividades.perfil.id_user != value.id_user ? 'por '+value.apelido : 'por mim')+'?</label>'+
-                        '                      </td>'+
-                        '                      <td>'+
-                        '                          <div class="onoffswitch" style="float: right;">'+
-                        '                              <input type="checkbox" name="onoffswitch" data-target="#listPauseOtherAtiv" onchange="changeOthersAtiv(this)" class="onoffswitch-checkbox singleOptionConfig" id="pause_others" data-key="pause_others" tabindex="0">'+
-                        '                              <label class="onoffswitch-label" for="pause_others"></label>'+
-                        '                          </div>'+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '                  <tr style="height: auto;">'+
-                        '                      <td colspan="2">'+
-                        '                           '+htmlTableAtividades+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '               </table>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '' : '')+
-                        (value.recalcula_prazo == 1 ? 
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="ativ_prazo_entrega"><i class="iconPopup iconSwitch fas fa-business-time cinzaColor"></i>Prazo de Entrega (Recalculado):</label>'+
-                        '           </td>'+
-                        '           <td class="required date">'+
-                        '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" id="ativ_prazo_entrega" data-dias-planejado="'+value.dias_planejado+'" data-dias-uteis="'+config_unidade.count_dias_uteis+'" data-format-date="'+config_unidade.hora_format+'" data-key="prazo_entrega" value="'+prazoEntrega+'" required disabled>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '' : '')+
-                        (listAtividadesVinculadas.length_check > 0 ? 
-                        '      <tr>'+
-                        '           <td colspan="2">'+
-                        '               '+listAtividadesVinculadas.input+
-                        '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
-                        '                  <tr style="height: 40px;">'+
-                        '                      <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '                           <label for="init_others"><i class="iconPopup fas fa-play-circle cinzaColor"></i> '+(listAtividadesVinculadas.length_check > 1 ? 'Iniciar '+getNameGenre('demanda', 'os outros', 'as outras')+' '+listAtividadesVinculadas.length_check+' '+__.demandas+' '+getNameGenre('demanda', 'vinculados', 'vinculadas') : 'Iniciar '+__.a_outra_demanda_vinculada)+'?</label>'+
-                        '                      </td>'+
-                        '                      <td style="width: 50px;">'+
-                        '                          <div class="onoffswitch" style="float: right;">'+
-                        '                              <input type="checkbox" name="onoffswitch" data-target="#listInitOtherAtiv" data-id_demanda="'+value.id_demanda+'" onchange="changeOthersAtiv(this)" class="onoffswitch-checkbox singleOptionConfig" id="init_others" data-key="init_others" tabindex="0" checked>'+
-                        '                              <label class="onoffswitch-label" for="init_others"></label>'+
-                        '                          </div>'+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '                  <tr style="height: auto;">'+
-                        '                      <td colspan="2">'+
-                        '                           '+listAtividadesVinculadas.html+
-                        '                      </td>'+
-                        '                  </tr>'+
-                        '               </table>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '' : '')+
-                        '   </table>'+
-                        '</div>';
+                        '      </tr>'
+                    : '';
 
-        var btnDialogBoxPro =   [{
-            text: 'Iniciar',
-            class: 'confirm',
-            click: function(event) { 
-                if (checkSigleInputDateAtiv_(this)) {
-                    if (checkAtivRequiredFields(this, 'mark')) {
-                        var _parent = $(this).closest('.ui-dialog');
-                        var data_inicio = moment(_parent.find('#ativ_data_inicio').val(), config_unidade.hora_format).format('YYYY-MM-DD HH:mm:ss');
-                        var prazo_entrega = (_parent.find('#ativ_prazo_entrega').length > 0) 
-                                            ? moment(_parent.find('#ativ_prazo_entrega').val(), config_unidade.hora_format).format('YYYY-MM-DD HH:mm:ss')
-                                            : false;
-                        var id_user = (checkCapacidade('select_user_atividade') && value.id_user == 0) 
-                                            ? _parent.find('#ativ_id_user').val() 
-                                            : (value.id_user == 0) 
-                                                ? parseInt(arrayConfigAtividades.perfil.id_user)
-                                                : value.id_user;
-                            id_user = (id_user == 0 || typeof id_user === 'undefined') ? parseInt(arrayConfigAtividades.perfil.id_user) : id_user;
+            var htmlBox =   '<div id="boxAtividade" class="atividadeWork" data-demanda="'+(value && value.id_demanda ? value.id_demanda : 0)+'">'+
+                            '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
+                            '      '+htmlSelectResponsavel+
+                            '      <tr>'+
+                            '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                            '               <label for="ativ_data_inicio"><i class="iconPopup iconSwitch fas fa-play-circle cinzaColor"></i>Data de In\u00EDcio '+__.da_Demanda+':</label>'+
+                            '           </td>'+
+                            '           <td class="required date">'+
+                            '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" onchange="checkSigleInputDateAtiv(this); updateRecalculaPrazo(this);" id="ativ_data_inicio" data-key="data_inicio" data-type="inicio" data-name="data de in\u00EDcio" data-name-min="data de distribui\u00E7\u00E3o" value="'+dataInicio+'" min="'+dataDistribuicao+'" required>'+
+                            '           </td>'+
+                            '      </tr>'+
+                            (listAtividadesIniciadas && listAtividadesIniciadas.length > 0 ? 
+                            '      <tr>'+
+                            '           <td colspan="2">'+
+                            '               '+inputPauseOthers+
+                            '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                            '                  <tr style="height: 40px;">'+
+                            '                      <td style="text-align: left;">'+
+                            '                           <label><i class="iconPopup fas fa-pause-circle cinzaColor"></i> '+(listAtividadesIniciadas.length > 1 ? __.Paralisar+' '+getNameGenre('demanda', 'os', 'as')+' '+listAtividadesIniciadas.length+' '+__.demandas+' j\u00E1 '+getNameGenre('demanda', 'iniciados', 'iniciadas') : __.Paralisar+' '+__.a_demanda+' j\u00E1 '+getNameGenre('demanda', 'iniciado', 'iniciada'))+' '+(arrayConfigAtividades.perfil.id_user != value.id_user ? 'por '+value.apelido : 'por mim')+'?</label>'+
+                            '                      </td>'+
+                            '                      <td>'+
+                            '                          <div class="onoffswitch" style="float: right;">'+
+                            '                              <input type="checkbox" name="onoffswitch" data-target="#listPauseOtherAtiv" onchange="changeOthersAtiv(this)" class="onoffswitch-checkbox singleOptionConfig" id="pause_others" data-key="pause_others" tabindex="0">'+
+                            '                              <label class="onoffswitch-label" for="pause_others"></label>'+
+                            '                          </div>'+
+                            '                      </td>'+
+                            '                  </tr>'+
+                            '                  <tr style="height: auto;">'+
+                            '                      <td colspan="2">'+
+                            '                           '+htmlTableAtividades+
+                            '                      </td>'+
+                            '                  </tr>'+
+                            '               </table>'+
+                            '           </td>'+
+                            '      </tr>'+
+                            '' : '')+
+                            (value.recalcula_prazo == 1 ? 
+                            '      <tr>'+
+                            '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                            '               <label for="ativ_prazo_entrega"><i class="iconPopup iconSwitch fas fa-business-time cinzaColor"></i>Prazo de Entrega (Recalculado):</label>'+
+                            '           </td>'+
+                            '           <td class="required date">'+
+                            '               <input type="'+(config_unidade.count_horas ? 'datetime-local' : 'date')+'" id="ativ_prazo_entrega" data-dias-planejado="'+value.dias_planejado+'" data-dias-uteis="'+config_unidade.count_dias_uteis+'" data-format-date="'+config_unidade.hora_format+'" data-key="prazo_entrega" value="'+prazoEntrega+'" required disabled>'+
+                            '           </td>'+
+                            '      </tr>'+
+                            '' : '')+
+                            (listAtividadesVinculadas.length_check > 0 ? 
+                            '      <tr>'+
+                            '           <td colspan="2">'+
+                            '               '+listAtividadesVinculadas.input+
+                            '               <table style="font-size: 10pt;width: 100%; margin: 10px 0;" class="seiProForm">'+
+                            '                  <tr style="height: 40px;">'+
+                            '                      <td style="vertical-align: bottom; text-align: left;" class="label">'+
+                            '                           <label for="init_others"><i class="iconPopup fas fa-play-circle cinzaColor"></i> '+(listAtividadesVinculadas.length_check > 1 ? 'Iniciar '+getNameGenre('demanda', 'os outros', 'as outras')+' '+listAtividadesVinculadas.length_check+' '+__.demandas+' '+getNameGenre('demanda', 'vinculados', 'vinculadas') : 'Iniciar '+__.a_outra_demanda_vinculada)+'?</label>'+
+                            '                      </td>'+
+                            '                      <td style="width: 50px;">'+
+                            '                          <div class="onoffswitch" style="float: right;">'+
+                            '                              <input type="checkbox" name="onoffswitch" data-target="#listInitOtherAtiv" data-id_demanda="'+value.id_demanda+'" onchange="changeOthersAtiv(this)" class="onoffswitch-checkbox singleOptionConfig" id="init_others" data-key="init_others" tabindex="0" checked>'+
+                            '                              <label class="onoffswitch-label" for="init_others"></label>'+
+                            '                          </div>'+
+                            '                      </td>'+
+                            '                  </tr>'+
+                            '                  <tr style="height: auto;">'+
+                            '                      <td colspan="2">'+
+                            '                           '+listAtividadesVinculadas.html+
+                            '                      </td>'+
+                            '                  </tr>'+
+                            '               </table>'+
+                            '           </td>'+
+                            '      </tr>'+
+                            '' : '')+
+                            '   </table>'+
+                            '</div>';
 
-                        var id_demandas_pause = (listAtividadesIniciadas && listAtividadesIniciadas.length > 0 && _parent.find('#pause_others').is(':checked')) 
-                                                ? JSON.parse(_parent.find('#lista_pause_others').val())
-                                                : [];
-                        var id_demandas_init = (listAtividadesVinculadas && listAtividadesVinculadas.length_check > 0 && _parent.find('#init_others').is(':checked')) 
-                                                ? JSON.parse(_parent.find('#lista_init_others').val())
-                                                : [];
-                        var action = 'start_atividade';
-                        var id_plano = jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+id_user+"`] | [0].id_plano");
-                            id_plano = (id_plano === null) ? 0 : id_plano;
-                            
-                        var param = {
-                                        id_demanda: value.id_demanda, 
-                                        id_demandas_pause: id_demandas_pause, 
-                                        id_demandas_init: id_demandas_init, 
-                                        id_user: id_user, 
-                                        id_plano: id_plano, 
-                                        id_unidade: value.id_unidade, 
-                                        data_inicio: data_inicio, 
-                                        prazo_entrega: prazo_entrega, 
-                                        action: action
-                                    };
-                        getServerAtividades(param, action);
+            var btnDialogBoxPro =   [{
+                text: 'Iniciar',
+                class: 'confirm',
+                click: function(event) { 
+                    if (checkSigleInputDateAtiv_(this)) {
+                        if (checkAtivRequiredFields(this, 'mark')) {
+                            var _parent = $(this).closest('.ui-dialog');
+                            var data_inicio = moment(_parent.find('#ativ_data_inicio').val(), config_unidade.hora_format).format('YYYY-MM-DD HH:mm:ss');
+                            var prazo_entrega = (_parent.find('#ativ_prazo_entrega').length > 0) 
+                                                ? moment(_parent.find('#ativ_prazo_entrega').val(), config_unidade.hora_format).format('YYYY-MM-DD HH:mm:ss')
+                                                : false;
+                            var id_user = (checkCapacidade('select_user_atividade') && value.id_user == 0) 
+                                                ? _parent.find('#ativ_id_user').val() 
+                                                : (value.id_user == 0) 
+                                                    ? parseInt(arrayConfigAtividades.perfil.id_user)
+                                                    : value.id_user;
+                                id_user = (id_user == 0 || typeof id_user === 'undefined') ? parseInt(arrayConfigAtividades.perfil.id_user) : id_user;
+
+                            var id_demandas_pause = (listAtividadesIniciadas && listAtividadesIniciadas.length > 0 && _parent.find('#pause_others').is(':checked')) 
+                                                    ? JSON.parse(_parent.find('#lista_pause_others').val())
+                                                    : [];
+                            var id_demandas_init = (listAtividadesVinculadas && listAtividadesVinculadas.length_check > 0 && _parent.find('#init_others').is(':checked')) 
+                                                    ? JSON.parse(_parent.find('#lista_init_others').val())
+                                                    : [];
+                            var action = 'start_atividade';
+                            var id_plano = jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+id_user+"`] | [0].id_plano");
+                                id_plano = (id_plano === null) ? 0 : id_plano;
+                                
+                            var param = {
+                                            id_demanda: value.id_demanda, 
+                                            id_demandas_pause: id_demandas_pause, 
+                                            id_demandas_init: id_demandas_init, 
+                                            id_user: id_user, 
+                                            id_plano: id_plano, 
+                                            id_unidade: value.id_unidade, 
+                                            data_inicio: data_inicio, 
+                                            prazo_entrega: prazo_entrega, 
+                                            action: action
+                                        };
+                            getServerAtividades(param, action);
+                        }
                     }
                 }
+            }];
+
+            if (checkCapacidade('edit_atividade')) {
+                btnDialogBoxPro.unshift({
+                    text: 'Editar '+__.Demanda,
+                    icon: 'ui-icon-pencil',
+                    click: function(event) { 
+                        saveAtividade(id_demanda);
+                    }
+                });
             }
-        }];
+            console.log('edit_atividade', btnDialogBoxPro);
 
-        if (checkCapacidade('edit_atividade')) {
-            btnDialogBoxPro.unshift({
-                text: 'Editar '+__.Demanda,
-                icon: 'ui-icon-pencil',
-                click: function(event) { 
-                    saveAtividade(id_demanda);
-                }
-            });
-        }
-        console.log('edit_atividade', btnDialogBoxPro);
-
-        if (checkCapacidade('start_atividade')) {
-            resetDialogBoxPro('dialogBoxPro');
-            dialogBoxPro = $('#dialogBoxPro')
-                .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
-                .dialog({
-                    title: 'Iniciar '+__.Demanda+': '+getTitleDialogBox(value),
-                    width: 550,
-                    open: function() { 
-                        updateButtonConfirm(this, true);
-                        checkSigleInputDateAtiv_(this);
-                        prepareFieldsReplace(this);
-                    },
-                    close: function() { 
-                        $('#boxAtividade').remove();
-                        cancelMoveKanbanItens();
-                        cancelSelectedItensAtiv(id_demanda);
-                        resetDialogBoxPro('dialogBoxPro');
-                    },
-                    buttons: btnDialogBoxPro
-            });
+            if (checkCapacidade('start_atividade')) {
+                resetDialogBoxPro('dialogBoxPro');
+                dialogBoxPro = $('#dialogBoxPro')
+                    .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+                    .dialog({
+                        title: 'Iniciar '+__.Demanda+': '+getTitleDialogBox(value),
+                        width: 550,
+                        open: function() { 
+                            updateButtonConfirm(this, true);
+                            checkSigleInputDateAtiv_(this);
+                            prepareFieldsReplace(this);
+                        },
+                        close: function() { 
+                            $('#boxAtividade').remove();
+                            cancelMoveKanbanItens();
+                            cancelSelectedItensAtiv(id_demanda);
+                            resetDialogBoxPro('dialogBoxPro');
+                        },
+                        buttons: btnDialogBoxPro
+                });
+            }
         }
     }
 }
@@ -12527,6 +12972,15 @@ function alertSignDocsPlano(value) {
             _this = $(_this).get(0);
             editModelConfigItem(_this);
     }, 'Visualizar Termo');
+}
+function checkRegularizaPlano(value) {
+    var plano = jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+value.id_user+"`] | [0]");
+    var assinatura = (typeof plano.config !== 'undefined' && plano.config !== null && typeof plano.config.assinatura !== 'undefined' && plano.config.hasOwnProperty('assinatura')) ? plano.config.assinatura : false;
+    if (!assinatura && plano.vigencia && plano.pendencias_plano && plano.pendencias_plano.anterior && !plano.pendencias_plano.anterior.homologavel) {
+        return plano.id_plano;
+    } else {
+        return false;
+    }
 }
 function checkSignDocsPlano(value) {
     var plano = jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+value.id_user+"`] | [0]");
@@ -12737,7 +13191,7 @@ function variationAtividade(id_demanda, alertAtividade = false) {
 
         var arrayOptionAtiv = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`].{sigla_unidade: sigla_unidade, id_unidade: id_unidade, dias_planejado: dias_planejado, tempo_pactuado: tempo_pactuado, complexidade: config.complexidade, etiqueta: config.etiqueta.lista, tipo_processo: config.tipo_processo} | [0]");
         var checkEmptyAtiv = (arrayOptionAtiv == null || arrayOptionAtiv.length == 0 || value.id_atividade == 0 || value.tempo_pactuado == 0) ? true : false;
-        if (checkEmptyAtiv) {
+        if (checkEmptyAtiv || checkCapacidade('type_atividade') ) {
             // alertaBoxPro('Error', 'exclamation-triangle', 'Atividade inativa ou inexistente. Reative-a para prosseguir.');
             var optionAtiv = '';
             var optionSelectComplexidade = '';
@@ -12884,6 +13338,7 @@ function variationAtividade(id_demanda, alertAtividade = false) {
                                 id_demanda: id_demanda,
                                 before_rate: ($('.setAtivBeforeRate').length > 0 ? true : false),
                                 id_atividade: parseInt(inpuData.id_atividade),
+                                changed_atividade: (action == 'variation_atividade' && parseInt(inpuData.id_atividade) != value.id_atividade ? true : false),
                                 fator_complexidade: parseFloat(inpuData.fator_complexidade),
                                 tempo_pactuado: parseFloat(inpuData.tempo_pactuado)
                             };                            
@@ -13430,8 +13885,6 @@ function getInfoAtividadeProdutividade(value, show = false) {
             ? jmespath.search(arrayConfigAtividades.avaliacao,"[?nota_atribuida==`"+value.avaliacao.nota_atribuida+"`].aceita_entrega | [0]")
             : false;
         ativNaoEntregue = (ativNaoEntregue == 0) ? true : false;
-
-        console.log(ativNaoEntregue, value.avaliacao.nota_atribuida, jmespath.search(arrayConfigAtividades.avaliacao,"[?nota_atribuida==`"+value.avaliacao.nota_atribuida+"`].aceita_entrega | [0]"))
     
     var configAtviTempoMin = jmespath.search(arrayConfigAtividades.atividades, "[?id_atividade==`"+value.id_atividade+"`] | [0].config.tempo_minimo");
         configAtviTempoMin = (configAtviTempoMin === null) 
@@ -13803,7 +14256,7 @@ function notifyAtividade(id_demanda = 0) {
     window.location.href = hrefMailto;
 }
 function deleteAtividade(id_demanda = 0) {
-    var action = 'delete_atividade';
+    var action = (checkCapacidade('delete_atividade_all')) ? 'delete_atividade_all' : 'delete_atividade';
     var id_unidade = (id_demanda == 0) ? $('#ativ_id_unidade').val() : arrayConfigAtivUnidade.id_unidade;
         id_unidade = (typeof id_unidade !== 'undefined') ? id_unidade : false;
 
@@ -14076,9 +14529,23 @@ function changeAtivEtiqueta() {
 function getConfigDadosEntidade() {
     return (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('entidades') && arrayConfigAtividades.entidades != 0) ? jmespath.search(arrayConfigAtividades.entidades,"[?id_entidade==`"+arrayConfigAtividades.perfil.id_entidade+"`] |[0].config") : null;
 }
+function getOptionEntidade(option) {
+    return (checkOptionEntidade(option)) ? getConfigDadosEntidade()[option] : false;
+}
 function checkOptionEntidade(option) {
     var config_entidade = getConfigDadosEntidade();
     return (config_entidade !== null && typeof config_entidade[option] !== 'undefined' && config_entidade[option] !== null && config_entidade[option]) ? true : false;
+}
+function getOptionUnidade(option, option2 = false) {
+    var _return = (checkOptionUnidade(option)) ? arrayConfigAtivUnidade['config'][option] : false;
+        _return = (option2 && _return && checkOptionUnidade(option, option2)) ? arrayConfigAtivUnidade['config'][option][option2] : false;
+    return _return;
+}
+function checkOptionUnidade(option, option2 = false) {
+    var config_unidade = arrayConfigAtivUnidade.config;
+    var _return = (config_unidade !== null && typeof config_unidade[option] !== 'undefined' && config_unidade[option] !== null && config_unidade[option]) ? true : false;
+        _return = (option2 && config_unidade && typeof config_unidade[option][option2] !== 'undefined' && config_unidade[option][option2] !== null && config_unidade[option][option2]) ? true : false;
+    return _return;
 }
 function getConfigDadosUnidade(sigla_unidade) {
     var config_entidade = getConfigDadosEntidade();
@@ -14153,10 +14620,11 @@ function changeDadosTrabalho_(this_, autotime = false) {
                                 })-1
                                 : moment(dtEnd, config_unidade.hora_format).diff(moment(dtStart, config_unidade.hora_format), 'days');
 	var nrDias = ( data.type == 'fim' ) ? nrDias_Contagem
-                                                 : diasWork.val();
+                                        : diasWork.val();
         nrDias = (nrDias < 0) ? 0 : nrDias;
 
         if ( data.type == 'fim' ) { diasWork.val(nrDias) }
+
         var dtEnd_hour = moment((moment(dtEnd, config_unidade.hora_format).format('YYYY-MM-DD')+'T'+moment(dataFim.val(), config_unidade.hora_format).format('HH:mm')), config_unidade.hora_format).format(config_unidade.hora_format);
         var dtStart_hour = moment((moment(dtStart, config_unidade.hora_format).format('YYYY-MM-DD')+'T'+moment(dataInicio.val(), config_unidade.hora_format).format('HH:mm')), config_unidade.hora_format).format(config_unidade.hora_format);
             dataFim.val(dtEnd_hour);
@@ -14976,7 +15444,7 @@ function rateAtividade(id_demanda = 0, omissaoAtividade = false) {
     if (value.id_atividade == 0 || value.tempo_pactuado == 0 || value.fator_complexidade == 0) {
         variationAtividade(id_demanda, true);
     } else {
-        var rateDisable = (value.avaliacao && value.avaliacao != 0 && value.avaliacao.nota_atribuida === false) || (value.id_user == arrayConfigAtividades.perfil.id_user) ? true : false;
+        var rateDisable = (value.avaliacao && value.avaliacao != 0 && value.avaliacao.nota_atribuida === false) || (value.id_user == arrayConfigAtividades.perfil.id_user && !checkOptionUnidade('planos','permite_autoavaliacao')) ? true : false;
         var htmlBox =   '<div id="ratingAtividade" class="ratingWork" data-demanda="'+value.id_demanda+'" data-tempo-decorrido="'+(omissaoAtividade ? getTempoDecorridoAtiv(value, true) : 0)+'">'+
                         '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
                         (omissaoAtividade 
@@ -15030,7 +15498,7 @@ function rateAtividade(id_demanda = 0, omissaoAtividade = false) {
                     text: (value.data_avaliacao == '0000-00-00 00:00:00') ? 'Avaliar' : 'Editar',
                     class: 'confirm',
                     click: function(event) {
-                        saveRatingWork(this);
+                        saveRatingWork(this, omissaoAtividade);
                     }
                 }];
         if (checkCapacidade('complete_cancel_atividade') && value.data_avaliacao == '0000-00-00 00:00:00' && !omissaoAtividade) {
@@ -15172,7 +15640,7 @@ function rateAtividadeBoxStars(value) {
     var starsHtml = ''; 
     if (value.avaliacao && value.avaliacao != 0 && value.avaliacao.nota_atribuida === false) {
         starsHtml +='<a class="newLink iconStarAtiv" style="font-size: 12pt; cursor: pointer;"><i class="fas fa-star-half-alt cinzaColor"></i> <span style="font-size: 11pt;">Avalia\u00E7\u00E3o Dispensada</span></a>';
-    } else if (value.id_user == arrayConfigAtividades.perfil.id_user) {
+    } else if (value.id_user == arrayConfigAtividades.perfil.id_user && !checkOptionUnidade('planos','permite_autoavaliacao')) {
         starsHtml +='<a class="newLink iconStarAtiv" style="font-size: 12pt; cursor: pointer;"><i class="fas fa-star-half-alt cinzaColor"></i> <span style="font-size: 11pt;">Auto Avalia\u00E7\u00E3o Indispon\u00EDvel</span></a>';
     } else {
         $.each(removeDuplicatesArray(starsArray, 'nota_atribuida'), function(index, value){
@@ -15230,7 +15698,7 @@ function rateAtividadeList(value) {
                 '                           </a>'+
                 '')+    
                 '                       </td>'+
-                '                       <td style="width: 200px;text-align: left;">'+
+                '                       <td style="width: 220px;text-align: left;">'+
                 '                           '+getInfoAtividadeProdutividade(value)+
                 '                           <div style="margin: 15px 0 0 0;">'+getTagTempoPactuadoAtiv(value)+'</div>'+
                 '                           <div style="margin: 5px 0 0 5px;">'+getTagTempoDespendidoAtiv(value, false)+'</div>'+
@@ -15238,7 +15706,7 @@ function rateAtividadeList(value) {
                 '                           <span class="info_dates_extend" style="margin-top: 10px;display: block;">'+
                 '                               <a class="newLink dateExtend" onclick="variationAtividade('+value.id_demanda+')" style="font-size: 9pt;cursor: pointer;">'+
                 '                                  <i class="fas fa-'+(value.tempo_pactuado == 0 ? 'clipboard-list' : 'graduation-cap')+' azulColor" style="padding-right: 3px;"></i>'+
-                '                                  Alterar '+__.complexidade+
+                '                                  Alterar '+__.Complexidade+(checkCapacidade('type_atividade') ? ' e '+__.atividade : '')+
                 '                               </a>'+
                 '                           </span>'+
                 '' : '')+
@@ -15271,7 +15739,7 @@ function rateCancelAtividade(id_demanda) {
     }
 }
 // SALVA AVALIACAO
-function saveRatingWork(this_) {
+function saveRatingWork(this_, omissaoAtividade = false) {
     var _this = $(this_);
     var _parent = _this.closest('.ui-dialog');
     var data = _this.find('.ratingWork').data();
@@ -15299,6 +15767,7 @@ function saveRatingWork(this_) {
                     aceita_entrega: data.aceitaEntrega,
                     comentarios: comentarios,
                     avaliacao_justificativa: data.whySelected,
+                    omissao_atividade: omissaoAtividade,
                     data_avaliacao: moment().format('YYYY-MM-DD HH:mm:ss')
                 }
     if (typeof data.notaSelected !== 'undefined' && ((typeof data.whySelected !== 'undefined' && data.whySelected.length > 0) || comentarios != '')) {
@@ -15519,7 +15988,7 @@ function selectAtividadeBox(mode) {
     } else if (mode == 'delete' && iconDelete.length > 0 && iconDelete.data('list').length > 0) {
         var id_demandas = iconDelete.data('list');
         confirmaFraseBoxPro('Tem certeza que deseja excluir '+(id_demandas.length > 1 ? __.as_demandas_selecionadas : __.a_demanda_selecionada)+'?', 'EXCLUIR', function(){
-            var action = 'delete_atividade';
+            var action = (checkCapacidade('delete_atividade_all')) ? 'delete_atividade_all' : 'delete_atividade';
             var param = {
                 id_demandas: id_demandas, 
                 id_demanda: -1, 
@@ -15557,6 +16026,9 @@ function selectAtividadeBox(mode) {
                             : listaAtividades;
             listaAtividades = (mode == 'delete' && checkCapacidade('delete_atividade')) 
                             ? jmespath.search(arrayAtividadesList, "[?data_entrega=='0000-00-00 00:00:00']")
+                            : listaAtividades;
+            listaAtividades = (mode == 'delete' && checkCapacidade('delete_atividade_all')) 
+                            ? jmespath.search(arrayAtividadesList, "[*]")
                             : listaAtividades;
 
         if (listaAtividades.length == 1) {
@@ -15710,6 +16182,9 @@ function getInsertIconAtividade(loop = true) {
                 appendIconAtividade('send');
             }
             if (checkCapacidade('delete_atividade') && jmespath.search(arrayAtividadesList, "[?data_inicio=='0000-00-00 00:00:00'] | length(@)") > 0) {
+                appendIconAtividade('delete');
+            }
+            if (checkCapacidade('delete_atividade_all') && jmespath.search(arrayAtividadesList, "[*] | length(@)") > 0) {
                 appendIconAtividade('delete');
             }
         }
@@ -16147,6 +16622,8 @@ function cleanAtivParams(initAtiv = true, reloadProfile = false) {
     sessionStorageRemovePro('googleUser');
     removeOptionsPro('panelHomeView');
     removeOptionsPro('panelAtividadesView');
+    removeOptionsPro('selectReport_planos');
+    removeOptionsPro('selectReport_demandas');
     perfilLoginAtiv = false;
     urlServerAtiv = false;
     userHashAtiv = '';
@@ -16179,6 +16656,64 @@ function signOutProfile() {
             });
     }
     resetDialogBoxPro('configBoxPro');
+}
+function getUpdateReports(url) {
+    if (typeof url !== 'undefined') {
+        $.get(url, function(data){
+            if (data.status == 1) {
+                getUpdateReports(data.redirect);
+                $('#progressLoopReports').progressbar({value: data.pg, max: data.total_pg});
+                $('#countLoopReports').text(nameReportsUpdate[indexReportUpdate]+' ('+data.pg+'/'+data.total_pg+')');
+            } else if (data.status == 2) {
+                indexReportUpdate++;
+                if (indexReportUpdate <= listReportsUpdate.length-1) {
+                    $('#progressLoopReports').progressbar({value: 0, max: 1000});
+                    $('#countLoopReports').text(nameReportsUpdate[indexReportUpdate]);
+                    getUpdateReports(urlServerAtiv+'report.php?action='+listReportsUpdate[indexReportUpdate]+'&output=save');
+                } else {
+                    loadingButtonConfirm(false);
+                    resetDialogBoxPro('alertBoxPro');
+                    indexReportUpdate = 0;
+                    sessionStorage.setItem('checkedUpdateReports', true);
+                    $(window).unbind('beforeunload');
+                }
+            }
+        });
+    }
+}
+function checkUpdateReports() {
+    if (!sessionStorage.getItem('checkedUpdateReports')) {
+        var url = urlServerAtiv+'report.php?action='+listReportsUpdate[indexReportUpdate]+'&output=check';
+            $.get(url, function(data){
+                if ((data.status == 1 || data.status == 2) && $('#countLoopReports').length == 0) {
+                    initUpdateReports();
+                    sessionStorage.setItem('checkedUpdateReports', true);
+                    $(window).bind("beforeunload", function() { 
+                        return confirm("Tem certeza que deseja fechar a janela?"); 
+                    });
+                } else if (data.status == 0) {
+                    indexReportUpdate++;
+                    if (indexReportUpdate <= listReportsUpdate.length-1) {
+                        checkUpdateReports();
+                    } else {
+                        $.get('https://governancadev.antaq.gov.br/fiscalizacao/index.php', function(data){
+                            indexReportUpdate = 0;
+                            sessionStorage.setItem('checkedUpdateReports', true);
+                        });
+                    }
+                }
+            });
+    }
+}
+function initUpdateReports() {
+    getUpdateReports(urlServerAtiv+'report.php?action='+listReportsUpdate[indexReportUpdate]+'&output=save');
+    $('#progressLoopReports').progressbar({
+        value: 0,
+        max: 1000
+    });
+
+    alertaBoxPro('Sucess', 'check-circle','Aguarde... Atualizando relat\u00F3rios de <span id="countLoopReports"></span> <div class="info_checklist" style="heigth:20px"><div id="progressLoopReports" class="checklist_progress" style="float:none; width:95%"></div></div>');
+    loadingButtonConfirm(true);
 }
 function chechHostPermission(TimeOut = 9000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }

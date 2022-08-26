@@ -304,6 +304,7 @@ a.newLink.iconBoxSlim .newIconTitle,
     border: none !important;
 }
 .seiSlim.seiSlim_view div#divInformacao,
+.seiSlim.seiSlim_view div#divArvoreInformacao,
 .seiSlim.seiSlim_view div#capaProcessoPro .infocapa {
     margin: 10px;
     padding: 5px 10px;
@@ -326,13 +327,14 @@ a.newLink.iconBoxSlim .newIconTitle,
     float: right;
 }
 .seiSlim.seiSlim_view.seiBtnRight.seiIconLabel #divArvoreAcoes {
-    width: 120px;
+    width: 120px !important;
 }
 .seiSlim.seiSlim_view.seiBtnRight .openNewTab {
-    right: 120px !important;
+    right: 160px !important;
 }
 .seiSlim.seiSlim_view.seiBtnRight #divArvoreHtml {
     width: calc(100% - 90px);
+    float: left;
 }
 .seiSlim.seiSlim_view.seiBtnRight.seiIconLabel #divArvoreHtml {
     width: calc(100% - 165px);
@@ -374,6 +376,10 @@ a.newLink.iconBoxSlim .newIconTitle,
     padding-top: 0 !important;
     padding-right: 20px;
 }
+.seiSlim #frmBlocoCadastro label, 
+.seiSlim #frmBlocoCadastro input, 
+.seiSlim #frmBlocoCadastro select, 
+.seiSlim #frmBlocoCadastro .infraImg, 
 .seiSlim #frmPesquisaProtocolo label, 
 .seiSlim #frmPesquisaProtocolo input, 
 .seiSlim #frmPesquisaProtocolo .infraSelect, 
@@ -381,10 +387,21 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim #frmPesquisaProtocolo .infraDivRadio, 
 .seiSlim #frmPesquisaProtocolo .infraDivCheckbox, 
 .seiSlim #frmPesquisaProtocolo img.infraImg, 
+.seiSlim img[id*="imgCalPeriodo"], 
+.seiSlim label[id*="lblPeriodo"], 
+.seiSlim input[id*="txtPeriodo"], 
 .seiSlim #frmPesquisaProtocolo select {
     position: initial !important;
     margin: 10px 0 !important;
     line-height: initial !important;
+}
+.seiSlim img[id*="imgCalPeriodo"], 
+.seiSlim label[id*="lblPeriodo"], 
+.seiSlim input[id*="txtPeriodo"] {
+    position: initial !important;
+    margin: 0 !important;
+    line-height: initial !important;
+    padding-right: 10px;
 }
 .seiSlim #frmPesquisaProtocolo .infraSelect {
     left: 0;
@@ -1053,7 +1070,11 @@ body.dark-mode,
     color: #fbfbfe;
     text-rendering: geometricPrecision;
 }
+.seiSlim.dark-mode .dz-preview .dz-progress {
+    background: #202123 !important;
+}
 .seiSlim.seiSlim_view div#divInformacao a,
+.seiSlim.seiSlim_view div#divArvoreInformacao a,
 .seiSlim.seiSlim_view div#capaProcessoPro .infocapa a {
     color: #202123 !important;
     background-color: #fbfbfe99 !important;
@@ -1097,6 +1118,7 @@ body.dark-mode,
 .seiSlim.dark-mode a.processoVisualizado,
 .seiSlim.dark-mode a.ancoraSigla,
 .seiSlim.dark-mode #divInformacao a.ancoraSigla,
+.seiSlim.dark-mode #divArvoreInformacao a.ancoraSigla,
 .seiSlim.dark-mode div#capaProcessoPro .infocapa a.ancoraSigla,
 .seiSlim.dark-mode div.infraArvore a,
 .seiSlim.dark-mode .infraAreaDados a.ancoraPadraoPreta,
@@ -1111,6 +1133,9 @@ body.dark-mode,
 .seiSlim.dark-mode .infoDadosArvore .kanban-item .newLink, 
 .seiSlim.dark-mode .titlePanel {
     color: #fbfbfe;
+}
+.seiSlim.dark-mode .processoVisitado {
+    color: #0c67fe !important;
 }
 .seiSlim.dark-mode .addControlePrazo span, 
 .seiSlim.dark-mode input[type="checkbox"], 
@@ -1303,6 +1328,7 @@ body.dark-mode,
 .seiSlim.dark-mode .SfxMenu-root *,
 .seiSlim.dark-mode .SfxSelect-root,
 .seiSlim.dark-mode .SfxMenuItem-root,
+.seiSlim.dark-mode .dz-size,
 .seiSlim.dark-mode .ui-dialog-titlebar {
     background: #2A2A2D !important;
     text-shadow: none;
@@ -1344,7 +1370,8 @@ body.dark-mode,
 .seiSlim.dark-mode .inlineAlert,
 .seiSlim.dark-mode .alertaBoxDisplay,
 .seiSlim.dark-mode.seiSlim_view div#capaProcessoPro .infocapa,
-.seiSlim.dark-mode.seiSlim_view div#divInformacao {
+.seiSlim.dark-mode.seiSlim_view div#divInformacao,
+.seiSlim.dark-mode.seiSlim_view div#divArvoreInformacao {
     background: linear-gradient(#a9802d, #836830);
     color: #fbfbfe;
 }
@@ -1566,6 +1593,8 @@ body.dark-mode,
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"],
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"],
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("],
+.seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"],
+.seiSlim a.botaoSEI[onclick*="listarCredenciais("],
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("],
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"],
 .seiSlim a.botaoSEI[href*="?acao=documento_mover"],
@@ -1591,6 +1620,7 @@ body.dark-mode,
 .seiSlim td:last-child a[href*="acao=rel_bloco_protocolo_listar"],
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"],
 .seiSlim a[href*="acao=contato_consultar"],
+.seiSlim a[href*="acao=usuario_externo_consultar"],
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"],
 .seiSlim a[href*="acao=protocolo_modelo_alterar"],
 .seiSlim a[href*="acao=acompanhamento_alterar"],
@@ -1603,10 +1633,12 @@ body.dark-mode,
 .seiSlim a[onclick*="infraTransportarItem("],
 .seiSlim a[onclick*="acaoAlterar("],
 .seiSlim a[onclick*="acaoDesativar("],
+.seiSlim a[onclick*="acaoReativar("],
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("],
 .seiSlim a[onclick*="acaoDisponibilizar("],
 .seiSlim a[onclick*="acaoExcluir("],
 .seiSlim a[onclick*="acaoConcluir("],
+span.tagUserColorPro[data-color],
 a[href*="andamento_marcador_gerenciar"][data-color],
 .dd-container a.dd-option[data-color],
 .dd-container a.dd-selected[data-color],
@@ -1727,6 +1759,10 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"] img:hover,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("] img,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("] img:hover,
+.seiSlim a.botaoSEI[onclick*="listarCredenciais("] img,
+.seiSlim a.botaoSEI[onclick*="listarCredenciais("] img:hover,
+.seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"] img,
+.seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"] img:hover,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("] img,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"] img,
@@ -1777,6 +1813,8 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"] img:hover,
 .seiSlim a[href*="acao=contato_consultar"] img,
 .seiSlim a[href*="acao=contato_consultar"] img:hover,
+.seiSlim a[href*="acao=usuario_externo_consultar"] img,
+.seiSlim a[href*="acao=usuario_externo_consultar"] img:hover,
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"] img,
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"] img:hover,
 .seiSlim a[href*="acao=protocolo_modelo_alterar"] img,
@@ -1801,6 +1839,8 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a[onclick*="acaoAlterar("] img:hover,
 .seiSlim a[onclick*="acaoDesativar("] img,
 .seiSlim a[onclick*="acaoDesativar("] img:hover,
+.seiSlim a[onclick*="acaoReativar("] img,
+.seiSlim a[onclick*="acaoReativar("] img:hover,
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("] img,
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("] img:hover,
 .seiSlim a[onclick*="acaoDisponibilizar("] img,
@@ -1817,6 +1857,8 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 #frmMarcadorLista td:nth-child(2) a[href][data-color] img:hover,
 a[href*="andamento_marcador_gerenciar"][data-color] img,
 a[href*="andamento_marcador_gerenciar"][data-color] img:hover,
+span.tagUserColorPro[data-color] img,
+span.tagUserColorPro[data-color] img:hover,
 .seiSlim a[onclick*="acaoAssinar("] img,
 .seiSlim a[onclick*="acaoAssinar("] img:hover,
 .seiSlim a#lnkInfraCheck img,
@@ -1904,6 +1946,8 @@ a[href*="andamento_marcador_gerenciar"][data-color] img:hover,
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"]:before,
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"]:before,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("]:before,
+.seiSlim a.botaoSEI[onclick*="listarCredenciais("]:before,
+.seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"]:before,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("]:before,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"]:before,
 .seiSlim a.botaoSEI[href*="?acao=documento_mover"]:before,
@@ -1962,6 +2006,9 @@ a[href*="andamento_marcador_gerenciar"][data-color] img:hover,
     font-weight: 900;
     text-align: center;
 }
+.seiSlim a.botaoSEI.iconBoxSlim.iconLabel::after {
+    top: 15px !important;
+}
 .seiSlim a[id*="anchorImg"][data-img]:before,
 .seiSlim span.infraImgPro[data-img]:before,
 .seiSlim a[href*="javascript:alert('Assinado por:"]:before,
@@ -1977,6 +2024,7 @@ a[href*="andamento_marcador_gerenciar"][data-color] img:hover,
 .seiSlim td:last-child a[href*="acao=rel_bloco_protocolo_listar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"]:before,
 .seiSlim a[href*="acao=contato_consultar"]:before,
+.seiSlim a[href*="acao=usuario_externo_consultar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"]:before,
 .seiSlim a[href*="acao=protocolo_modelo_alterar"]:before,
 .seiSlim a[href*="acao=acompanhamento_alterar"]:before,
@@ -1989,6 +2037,7 @@ a[href*="andamento_marcador_gerenciar"][data-color] img:hover,
 .seiSlim a[onclick*="infraTransportarItem("]:before,
 .seiSlim a[onclick*="acaoAlterar("]:before,
 .seiSlim a[onclick*="acaoDesativar("]:before,
+.seiSlim a[onclick*="acaoReativar("]:before,
 .seiSlim a[onclick*="acaoCancelarDisponibilizacao("]:before,
 .seiSlim a[onclick*="acaoDisponibilizar("]:before,
 .seiSlim a[onclick*="acaoExcluir("]:before,
@@ -1996,9 +2045,13 @@ a[href*="andamento_marcador_gerenciar"][data-color] img:hover,
 .dd-container a.dd-option[data-color]:before,
 .dd-container a.dd-selected[data-color]:before,
 #frmMarcadorLista td:nth-child(2) a[href][data-color]:before,
+span.tagUserColorPro[data-color]:before,
 a[href*="andamento_marcador_gerenciar"][data-color]:before,
+#btnLiberarMarcador[data-color]:before,
 .seiSlim a[onclick*="acaoAssinar("]:before,
 .seiSlim a#lnkInfraCheck:before,
+.seiSlim a[href*="?acao=grupo_acompanhamento_alterar"]:before,
+.seiSlim a[href*="?acao=usuario_externo_alterar"]:before,
 .seiSlim a[onclick*="setSelectAllTr"]:before,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"]:before,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before {
@@ -2011,15 +2064,36 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before,
 }
 .dd-container a.dd-option[data-color]:before,
 .dd-container a.dd-selected[data-color]:before,
+span.tagUserColorPro[data-color]:before,
 #frmMarcadorLista td:nth-child(2) a[href][data-color]:before,
 a[href*="andamento_marcador_gerenciar"][data-color]:before {
     font-family: 'Font Awesome 5 Free' !important;
 }
 .seiSlim .dd-container a.dd-option[data-color]:before,
 .seiSlim .dd-container a.dd-selected[data-color]:before,
+.seiSlim span.tagUserColorPro[data-color]:before,
 .seiSlim #frmMarcadorLista td:nth-child(2) a[href][data-color]:before,
 .seiSlim a[href*="andamento_marcador_gerenciar"][data-color]:before {
     font-family: 'Font Awesome 5 Pro' !important;
+}
+.seiSlim #btnLiberarMarcador sup {
+    position: absolute;
+    margin: -5px;
+}
+.seiSlim #divMeusProcessos a,
+.seiSlim #divVerPorMarcadores a, 
+.seiSlim #btnLiberarMarcador, 
+.seiSlim #divTipoVisualizacao a {
+    line-height: 2.2em;
+    margin-bottom: 10px !important;
+}
+#topmenu a[href*="andamento_marcador_gerenciar"][data-color]::before {
+    top: 10px;
+}
+#btnLiberarMarcador[data-color]::before {
+    margin: initial;
+    top: -9px !important;
+    position: relative;
 }
 .seiSlim .tableInfo a[href*="?acao=anotacao_registrar"]:before,
 .seiSlim .infraTable a[href*="?acao=anotacao_registrar"]:before {
@@ -2031,9 +2105,21 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f002";
     color: #4285f4;
 }
+.seiSlim span.infraImgPro[data-img*="/calendario."]:before {
+    content: "\f073";
+    color: #4285f4;
+    top: 0;
+}
+.seiSlim a[href*="?acao=grupo_acompanhamento_alterar"]:before,
+.seiSlim a[href*="?acao=usuario_externo_alterar"]:before,
 .seiSlim span.infraImgPro[data-img*="/alterar"]:before {
     content: "\f044";
     color: #9CB639;
+}
+.seiSlim a[href*="?acao=grupo_acompanhamento_alterar"]::before,
+.seiSlim a[href*="?acao=usuario_externo_alterar"]::before {
+    left: initial !important;
+    top: inherit !important;
 }
 .seiSlim span.infraImgPro[data-img*="/mais"]:before {
     content: "\f055";
@@ -2054,10 +2140,15 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f0aa";
     color: #4285f4;
 }
+.seiSlim span.infraImgPro[data-img*="/grupo."]:before {
+    content: "\f0c0";
+    color: #4285f4;
+}
 .seiSlim span.infraImgPro[data-img*="/seta_abaixo_select."]:before {
     content: "\f0ab";
     color: #4285f4;
 }
+.seiSlim span.infraImgPro[data-img*="/sei_documento_interno."]:before,
 .seiSlim a[id*="anchorImg"][data-img*="/sei_documento_interno."]:before {
     content: "\f15b";
     color: #7ccafc;
@@ -2076,6 +2167,11 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 }
 .seiSlim a[id*="anchorImg"][data-img*="/sei_documento_movido."]:before {
     content: "\f348";
+    color: #e46e64;
+}
+.seiSlim span.infraImgPro[data-img*="/sei_recuperar_versao."]:before,
+.seiSlim a[id*="anchorImg"][data-img*="/sei_recuperar_versao."]:before {
+    content: "\f0e2";
     color: #e46e64;
 }
 .seiSlim a[id*="anchorImg"][data-img*="/ods."]:before,
@@ -2368,6 +2464,22 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f02d";
     color: #4285f4;
 }
+.seiSlim a.botaoSEI[onclick*="listarCredenciais("]:after{
+    content: "\10f502";
+    color: #dec20f;
+}
+.seiSlim a.botaoSEI[onclick*="listarCredenciais("]:before {
+    content: "\f502";
+    color: #dec20f;
+}
+.seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"]:after{
+    content: "\10f024";
+    color: #9cb639;
+}
+.seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"]:before {
+    content: "\f024";
+    color: #9cb639;
+}
 .seiSlim a.botaoSEI[href*="?acao=protocolo_modelo_cadastrar"]:after,
 .seiSlim a.botaoSEI[href*="?acao=protocolo_modelo_cadastrar"]:before {
     content: "\f005";
@@ -2500,11 +2612,16 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 }
 .dd-container a.dd-option[data-color]:before,
 .dd-container a.dd-selected[data-color]:before,
+span.tagUserColorPro[data-color]:before,
 #frmMarcadorLista td:nth-child(2) a[href][data-color]:before,
+#btnLiberarMarcador[data-color]:before,
 a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f02b";
     color: currentColor;
     top: 0;
+}
+#tblMarcadores span.tagUserColorPro[data-color]:before {
+    top: 0 !important;
 }
 .dd-container a.dd-option[data-color]::before,
 .dd-container a.dd-selected[data-color]::before {
@@ -2554,6 +2671,11 @@ a[data-shadow="true"]:before {
     color: #7562d8;
     top: 0;
 }
+.seiSlim a[onclick*="acaoReativar("]:before {
+    content: "\f058";
+    color: #4285f4;
+    top: 0;
+}
 .seiSlim a[href*="acao=protocolo_modelo_alterar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"]:before,
 .seiSlim a[onclick*="acaoAlterar("]:before,
@@ -2590,6 +2712,7 @@ a[data-shadow="true"]:before {
     transform: scaley(-1);
 }
 .seiSlim a[href*="acao=contato_consultar"]:before,
+.seiSlim a[href*="acao=usuario_externo_consultar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"]:before {
     content: "\f002";
     color: #4285f4;
@@ -2849,6 +2972,7 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__textcolor_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__bgcolor_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__copy_style_pro_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__batch_quality_pro_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__copy_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__cut_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__pastefromword_icon,
@@ -3048,6 +3172,10 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__copy_style_pro_icon:before {
     content: "\f55d";
     color: #d8a63a;
+}
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__batch_quality_pro_icon:before {
+    content: "\f78c";
+    color: #4285f4;
 }
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__copy_icon:before {
     content: "\f0c5";
@@ -3285,6 +3413,10 @@ select.cke_dialog_ui_input_select {
 .seiSlim.dark-mode #ImageEditorPro .FIE_carousel-next-button {
     filter: invert(1) contrast(0.75);
 }
+.cke_combopanel {
+    height: calc(100vh - 100px) !important;
+    width: 750px !important; 
+}
 #ImageEditorPro div.FIE_text-size-option,
 #ImageEditorPro div.SfxInput-root,
 #ImageEditorPro div[class*="FIE_resize-"] {
@@ -3328,6 +3460,10 @@ div#capaProcessoPro {
     background: radial-gradient(circle, white 0%, #f9f9f9 95%);
     display: table;
 }
+div#capaProcessoPro.newSEI_capaProcessoPro {
+    border: none !important;
+    background: none !important;
+}
 div#capaProcessoPro .field {
     margin: 15px 0;
     max-width: 60%;
@@ -3363,4 +3499,77 @@ div#capaProcessoPro .infocapa {
     font-size: 11pt;
     display: block;
     margin-right: 0 !important;
+}
+div[id*="selectReport"] {
+    z-index: 99999 !important;
+}
+tr.urgentePro {
+    background-color: #fff1f0 !important;
+}
+a.urgentePro {
+    background-color: #e46e644a !important;
+    display: inline-flex;
+    padding: 5px 8px;
+    border-radius: 5px;
+    line-height: 20px;
+    width: max-content;
+}
+div.urgentePro {
+	display: inline-block;
+    margin: 0 5px;
+    background: #e46e64;
+    vertical-align: sub;
+	border-radius: 50%;
+	height: 20px;
+	width: 20px;
+
+	box-shadow: 0 0 0 0 rgba(228, 110, 100, 1);
+	transform: scale(1);
+	animation: pulser 2s infinite;
+}
+div.urgentePro:after {
+    content: "\f12a";
+    font-family: 'Font Awesome 5 Free';
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    width: 20px;
+    position: absolute;
+    height: 100%;
+}
+.seiSlim div.urgentePro:after {
+    font-family: 'Font Awesome 5 Pro' !important;
+}
+a.urgentePro[target="ifrVisualizacao"] {
+    background: #f6d4d1;
+    display: inline-block;
+    border-radius: 5px;
+    margin: 0 0px 0 5px;
+    height: 24px;
+    padding: 0 5px 0px 0px;
+}
+.urgentePro .infraArvoreNoSelecionado {
+    background-color: #e46e64 !important;
+}
+.infraAreaDados .urgentePro {
+    font-size: 120%;
+    line-height: 20px;
+    cursor: pointer;
+    margin-top: 5px;
+    right: 10%;
+    position: absolute;
+}
+@keyframes pulser {
+	0% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(228, 110, 100, 0.7);
+	}
+	70% {
+		transform: scale(1);
+		box-shadow: 0 0 0 10px rgba(228, 110, 100, 0);
+	}
+	100% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(228, 110, 100, 0);
+	}
 }

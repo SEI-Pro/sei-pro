@@ -11,6 +11,33 @@ function loadAPIGooglePro() {
         $(htmlScript).appendTo('head');
     }
 }
+/*
+function loadAPIGooglePro(client_id) {
+    $('[data-script-name="googleapi"]').remove();
+    var tagScriptApi = '<script data-script-name="googleapi" src="https://apis.google.com/js/api.js" async defer></script>';
+    var tagScriptLogin = '<script data-script-name="googleapi" src="https://accounts.google.com/gsi/client" async defer></script>';
+    var metaLogin = '<div class="sheetsLoginPro" style="display: inline-block;vertical-align: middle;">'+
+                    '   <div id="g_id_onload" '+
+                    '       data-callback="handleClientLoadPro" '+
+                    '       data-client_id="444596184286-2g4m3ktqc2neuntba0a3j9eh5rk5r4c8.apps.googleusercontent.com"'+
+                    '       data-context="use"'+
+                    '       data-ux_mode="popup"'+
+                    '       data-auto_prompt="true"'+
+                    '       data-auto_select="true"'+
+                    '   ></div>'+
+                    '   <div class="g_id_signin" '+
+                    '       data-type="icon"'+
+                    '       data-shape="circle"'+
+                    '       data-theme="outline"'+
+                    '       data-text="$ {button.text}"'+
+                    '       data-size="large"'+
+                    '   ></div>'+
+                    '</div>';
+    $('.sheetsLoginPro').remove();
+    $(tagScriptApi+tagScriptLogin).appendTo('head');
+    $('#divInfraBarraSistemaD').prepend(metaLogin);
+}
+*/
 function divIconsLoginPro() {
     var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'
                             +'  <a id="authorizeButtonPro" href="#" data-tippy-content="Conectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-off brancoColor"></i></a>'
@@ -125,7 +152,7 @@ function loadDataBaseSheetsProjetosPro(dataValues) {
             $(scriptText).appendTo('head');
 
     if ( typeof dataPerfil.spreadsheetId !== 'undefined' ) {
-            loadAPIGooglePro();
+            loadAPIGooglePro(CLIENT_ID_PRO);
             $.getScript(getUrlExtension("js/sei-gantt.js"));
         } else {
             console.log('loadDataBaseSheetsProjetosPro','ERROR!!!');
@@ -152,7 +179,7 @@ function loadDataBaseSheetsFormulariosPro(dataValues) {
             $(scriptText).appendTo('head');
 
     if ( typeof dataPerfil.spreadsheetId !== 'undefined' ) {
-            loadAPIGooglePro();
+            loadAPIGooglePro(CLIENT_ID_PRO);
             $.getScript(getUrlExtension("js/sei-forms.js"));
         } else {
             console.log('loadDataBaseSheetsFormulariosPro','ERROR!!!');
@@ -179,7 +206,7 @@ function loadDataBaseSheetsProcessosPro(dataValues) {
             $(scriptText).appendTo('head');
 
     if ( typeof dataPerfil.spreadsheetId !== 'undefined' ) {
-            loadAPIGooglePro();
+            loadAPIGooglePro(CLIENT_ID_PRO);
             $.getScript(getUrlExtension("js/sei-sync-processos.js"));
         } else {
             console.log('loadDataBaseSheetsProcessosPro','ERROR!!!');

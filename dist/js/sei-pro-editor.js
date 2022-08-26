@@ -50,6 +50,7 @@ function htmlButton(status) {
     var icon16baseNatJus = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALDSURBVDjLpZNLTBNRFIb/6RMqtEDBFopFXiFGIERYmKgJUXBFQly4gI1LXbghcYPiI/JYmbhxLQvC3hjjQkSL4SnvYCRUCNJCSwSq0OnMdObeud6ZBIzB6MJJTiZz7/m/c89/5gqMMfzPY/tXwkYkUmkRhOuU0nJCyKvs7OyXPp+PHu4LfzvBSjh83+PxPM5wOs1vSZKQTCbjsizX1NXV7ZmLBuBPMbOw0LsVjzNVVZmiKIwLGQewRCLB5ufnv49NTGQYeZY/VQ6Nj/d5vd67BV4vOAC8IjjEqA673Y4stzuHi28buccAoVCoJ+D3dwZ8PqTTaRPAewf3wHwfHBwgx+OBRkjnMcDq4GB3FaX3TrvdZkVDfCg0QtM0c52birSm5f0G2O7q6vY7HF0FNhtofz/02VlTbIgM8ZORdvS+v4bME04kRRGpVCp8BFhtb7+ZUVralcF7JpOTIJEIhIEBYGjoV2Wiojj/DDpeNOHT8hJSothkjnEsGHT6W1qUYGsrtOlpkFgMOh/Xw+Y1MKpCZRQqhxTlVaK2+CI+fn2Hxc0pppC0+8OdhGhLWq0lRQ4HGDeHRKPQueOUB9FVNFffAGU6qE6hgyG2H0VN8QWIqizMRkb2a3ssebYfsqzK8Tj0RAKU93YIMI5siDf2vkDTuYm6Bo1qOEgnUXfqEkRNskytj+5ZdkRxI7y4uJRcXmb2wkLQVMoMhSgglMDnDsLvLkGhpwx2ayYKsgOYi45hbG10R1LRYP7Kz3Jz8+srKuYqq6r8mYzZpc1N3GqLQuFjVHkrMlFZef5Z4XzZVcxExjEcfrOtElyJ9bHPR3fhaVZW7kmX6/m5QKDRIwhuhRsZkyQ9Kkmtbbu7r6t7LKmG4GVXKDy8peqmeOXYZXrkcAgeq7U+02JppIytqbr+tkNRksZe2QMhRXWrS9Zp2bc+tn6o+QkxLL87j8znVAAAAABJRU5ErkJggg==';
     var icon16baseAutoSave = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJFSURBVDjLpZPNS1RhFMZ/5733zkzjR/ZBCUpoJdUiBCkll4m0CUKJIGpVSLjyL2gntDFop6shAolWbcSNIW0ircHBUHCloo3VjNY0jjP3831bWA5ai8Bnfc7vPOfhHDHGcBjZAENji7N1cSj7IcdqY2zkKoiC2qSFNsKPYoXpTPbBynj/4j8BlbLL9c4L3OqoZWLmM4/vXdpX9OJtHq0lBXQdBIgxhvtPZmZ7ui+yspZrjwKfWExxtMbh66YLAgj4geZnyd2YzmT7Vsb75/c5UEqwDLgVl55r57hxuYY3c18Y6mtDgO1KSBBETMwV0VpeA2f3ARKOwvUCcgWX9bzH0NhqvC4Okx9zBzNpPdGQ4OHIrJnOZLtWxvs/2AChNnhRiFIKy8j/ZjILiALYLgc4YnO8zsJSIWUv4Pt2CMBU+tteoxtC0YN8wUdEV1eItMHCIdSagru5l0kQaZ4OdqC1wQAWhqQNnudR3PGrANu2aGmE9FJATSxJwinhegHDr1ZRAmGk0ZHGAMYYMJB0dh0ogOVs6VNqcoGtosYv1+9lYikHERvBQsQCozBGCMIQ3w+rDtKjvQMAd4bfL59vFqYzQasjNoM36wi1vzvHgBFNwo4x8nKNreJOFfBHy9nSXGpyoSPSYOGgqZCae8TJ5BkERb68zsDVZygSlD3/b0B6tPf2byempRFO127T095JQ6wJFBTcJk7VhCRjYItUT/mgrgxOvWtrPtLdEG8gYdcT6gDRGjERWsosrS2TKwbMP78rcth3/gX/0SEvLZFG1QAAAABJRU5ErkJggg==';
     var icon16baseSEILegis = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAZJQTFRFAAAA////////////////////8/jozuKi+fvz////+Pz+p9vzdMfrbMPrhs7uueL1+v3+5vDQlb838vfm9fv+Na3jAJfb4/T7////teH0esns3PH6wOX2d8js6/f8////v+X2SbXm4vP7/////////////v//X77pB5rcYb/p2fD6////////wOb3FJ/eEJ7dCJvcptvy////////I6bgc8br/f7/teH1J6fhDJzd8fr9+/3/AZjbktLw////////zuv42O/6////Oa7jBprccsbr1+/5gczuF6Df+fz+////1+/5KajhHaPfweb2////////9vv+l9XwKKjhMqzi6fb8////+fv06vPX3+7W/P35/////////////f7/h8/uitDv////9Pv+PrDkV7vo/v//zOr4P7Hkh87ur970b8TrltTw////////t+L11e75yur4Q7Pl8fn9////////3fH6CpvdGKHf8fn9////2/D6rd70lNPwm9bxx+j3/v//////////0u35l9Xx3vL7////T5fsgAAAAIZ0Uk5TACFMVDwP8P/PGLn//////Jv7/9u9///YDv7/5vn/1gn8/+F9YEiu////6Vg1+P////9Tp///yvv//8nC//9vLPLjl/////D//7sf7P//+D0kv////9sG0v//so+Le7///zm+//+d9P//////MQv/6fT/yAEC5///x5Hk////9p8RS/D/5jRwoQdUAAAA20lEQVR4nGNgYGBgZGJmYQXSbOzs7BwMDJxc3Dy8fPwCDAyCQkJCwgwMIqJiICAOE5CQFBOTkpaRlYMJyCuIiSkqKauowrWoqYuJaWhqacMEdHT1xPTFxAwMjaACxiZipmbmFmKWVlABaxsxWzt7BzExR6iAk7OYi6ubu5iHJ1TAy9sH5AxfP3+YLQGBQcFiYiGhYQzhEZERUQwM0TGxcfFiYgmJDEnJYimpDAxp6RmZWWJi2Tm5eUCt+QwMBWCvFBYVl5SWiZVXMDBUVlXX1NbVNzAwNDY1t7QCAG4cKfQLuoXsAAAAAElFTkSuQmCC';
+    var icon16baseBatchImgQuality = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAInSURBVDjLhZPda9NQHIbzVwlWryzthpWuIpWOieKYZXO2q1vC0KFr9aZM3Yr40QunspU2TVYmYhVRvNErwQtR3E0JTq3G2o80mc0Ql9dzTr/SYdnFA8k5yft78nLCjcxJNwKzsuoOiZoj2GKsi3NS1I7y4hIA7n9wgQvyz4KiWLphwNgyoRMq+jZ+MUyo1ToOR6Ra3wA6ua4b8F/2gL830WF8YRGB2VX4hBwOBEWrnxl3kGzQyXzyLJbfLuL+uwQevr+Jk7EsiBn2MmMBdbJ58UEEKx9vYfVDE89MBtTsTVjA53iiy/XbeD4XRaluwhWSNRZQIYmeay6cSsYxfCmFwfMpEGW4wjk4gxm4J7IECd6IhOW7z/AlkYRaawXQbyuTtCOJAQzPp/bU9gtrLOBHrUECJI3bP5bWypoJx7l9cE+tMO0TsTuIpl90uCq+xJnoEtP2hUV8Cp7G90orwMECGthQd5gynRxLPUWuoOOR8huPN//gyde/iMuvmLZvKgtlfBTFdsBgSNwslavQiOIACaCF0ofzRQv5bzsd6BrV9obSyI8EUCw34JwkAcd4aWFoWn5N00ihFi30+HwaM5LCmM4UGH5SLtX28uvMtlg2mwH2U9UuNHBlDUKu2ANdo9pDwjqqpNQSOwdyrSegXeih0Rh7wQ5da2lbdDI5RBqxT/Qa2ArdUK1ddLV7/gX7jb1QzdhGjVAl10262n0D7IXSSbtpa9vf+QeB6/JTIb6VuwAAAABJRU5ErkJggg==';
 
     var htmlButtonTable =   '   <div class="divQuickTable" style="display:none;"></div>'+
                             '   <a class="getQuickTableButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Tabela R\u00E1pida" hidefocus="true">'+
@@ -60,6 +61,11 @@ function htmlButton(status) {
                             '      <span class="cke_button_icon cke_button__tablestyles_icon" style="background: url(\''+icon16baseTable+'\');">&nbsp;</span>'+
                             '      <span class="cke_button_label" aria-hidden="false">Adicionar estilo a tabela</span>'+
                             '   </a>';
+
+    var htmlButtonAfterImage =  '   <a class="getBatchImgQualityButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Reduzir qualidade das imagens" hidefocus="true">'+
+                                '      <span class="cke_button_icon cke_button__batch_quality_pro_icon" style="background: url(\''+icon16baseBatchImgQuality+'\');">&nbsp;</span>'+
+                                '      <span class="cke_button_label" aria-hidden="false">Reduzir qualidade das imagens</span>'+
+                                '   </a>';
 
     var htmlButtonBeforeCut =   '   <a class="getCopyStyleButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Copiar formata\u00E7\u00E3o" hidefocus="true">'+
                                 '      <span class="cke_button_icon cke_button__copy_style_pro_icon" style="background: url(\''+icon16baseCopyStyle+'\');">&nbsp;</span>'+
@@ -184,7 +190,16 @@ function htmlButton(status) {
                             '   </a>'+
                             '</span>';
 
-    return {default: htmlButton, tables: htmlButtonTable, beforeCut: htmlButtonBeforeCut, afterletters: htmlButtonAfterLetters, beforeList: htmlButtonBeforeList, afterSave: htmlButtonAfterSave, newBlock: htmlButtonLegis};
+    return {
+        default: htmlButton, 
+        tables: htmlButtonTable, 
+        beforeCut: htmlButtonBeforeCut, 
+        afterletters: htmlButtonAfterLetters, 
+        beforeList: htmlButtonBeforeList, 
+        afterSave: htmlButtonAfterSave, 
+        newBlock: htmlButtonLegis,
+        afterImage: htmlButtonAfterImage
+    };
 }
 function addButton(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -199,6 +214,7 @@ function addButton(TimeOut = 9000) {
                         $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('').afterletters);
                         $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('').beforeCut);
                         $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('').beforeList);
+                        $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('').afterImage);
                         // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('').afterSave);
                         $(this).find('span.cke_toolbox').append(htmlButton('').newBlock);
                         insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
@@ -208,6 +224,7 @@ function addButton(TimeOut = 9000) {
                         $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('disable').afterletters);
                         $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('disable').beforeCut);
                         $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('disable').beforeList);
+                        $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('disable').afterImage);
                         // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('disable').afterSave);
                         $(this).find('span.cke_toolbox').append(htmlButton('disable').newBlock);
                     }
@@ -235,6 +252,7 @@ function addButton(TimeOut = 9000) {
                 $('.getPageBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPageBreak(this) } });
                 $('.getSessionBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSessionBreak(this) } });
                 $('.getLatexButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
+                $('.getBatchImgQualityButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogBatchImgQuality(this) } });
                 $('.getProcessoPublicoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
                 $('.getMinutaWatermarkButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
                 $('.getMarkSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
@@ -290,7 +308,7 @@ function addStyleIframes(TimeOut = 9000) {
                                                +"   span.tooltips { position: absolute; text-align: left; background: #fffbc9; text-indent: 0; border-left: 3px solid #ffe52a; margin: -46px 0px 0px -7px; width: 500px; font-size: 10pt; padding: 5px; color: #636363; height: 36px; }"
                                                +"   span.tooltips .ignoretext { background: #ecdc89; padding: 3px 5px; margin: 3px; font-size: 8pt; text-transform: uppercase; border-radius: 5px; float: right; }"
                                                +'   span.sigiloSEI { background-color: #ececec; border-bottom: 2px solid #d79d23; } \n'
-                                               +'   span.sigiloSEI::before { content: "\\f023"; font-family: "Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'"; color: #d79d23; margin: 0 5px; font-size: 80%; } \n'
+                                               +'   span.sigiloSEI::before { content: "\\f023"; font-family: "Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'"; color: #d79d23; margin: 0 5px; font-size: 80%; font-weight: 600; } \n'
                                                +'   html.dark-mode .pageBreakPro, html.dark-mode .sessionBreakPro { background: #6f7071; height: 15px; } \n'
                                                +'   .pageBreakPro, .sessionBreakPro { background: #f1f1f1; height: 15px; } \n'
                                                +'   .pageBreakPro::before, .sessionBreakPro::before { border-bottom: 2px dashed #bfbfbf; display: block; content: \'\'; height: 7px; } \n'
@@ -380,6 +398,9 @@ function setCKEDITOR_instances() {
                 $('#cke_'+idEditor).find('.cke_iconPro').removeClass('cke_button_disabled');
             }
             if (checkConfigValue('editarimagens')) editImgPro(oEditor);
+            loadResizeImg();
+            insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
+            if (checkConfigValue('teclasatalho')) stylesEditorKeystroke();
         });
     }
 }
@@ -834,7 +855,18 @@ function getDialogSigilo() {
          };
       } );
 }
-
+function setChosenInCke() {
+    if (verifyConfigValue('substituiselecao')) {
+        $('div.cke_dialog_ui_input_select').css({'position':'absolute', 'max-width': '500px', 'min-width': '200px'});
+        $('span.cke_dialog_ui_labeled_content').css({'height':'27px', 'display': 'flex'});
+        $('select.cke_dialog_ui_input_select').each(function(){
+            initChosenReplace('box_init',this);
+        });
+        setTimeout(function(){ 
+            $('.cke_dialog_ui_labeled_content .chosen-container-single').css({'max-width': '500px', 'min-width': '200px'});
+        }, 800);
+    }
+}
 function hasSelection(editor) {
     var sel = editor.getSelection();
     var ranges = sel.getRanges();
@@ -958,6 +990,80 @@ function menuCopyStyle( editor ) {
                 actionCopyStyle(editor);
             }
         });
+    }
+}
+function stylesEditorKeystroke() {
+    if (getOptionsPro('stylesEditor')) {
+        $.each(getOptionsPro('stylesEditor'), function(i, v){
+            oEditor.addCommand(v, {
+                exec: function( editor ) {
+                    var select = editor.getSelection().getStartElement();
+                    var element = $(select.$);
+                    if (element.is('p')) {
+                        element.attr('class',v);
+                    } 
+                }
+            });
+            if (i < 36) {
+                var key = (i <= 9) ? 48+i : 55+i;
+                    if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_1') {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.ALT + CKEDITOR.SHIFT + key, v);
+                    } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_2') {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.SHIFT + key, v);
+                    } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_3') {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.ALT + key, v);
+                    } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_4') {
+                        oEditor.setKeystroke(CKEDITOR.ALT + CKEDITOR.SHIFT + key, v);
+                    } else {
+                        oEditor.setKeystroke(CKEDITOR.CTRL + CKEDITOR.ALT + CKEDITOR.SHIFT + key, v);
+                    }
+            }
+        });
+        if (getOptionsPro('stylesEditor')) {
+            $('a.cke_combo_button[href*="Estilos de Format"]').on('click',function(){
+                var ckePanel = $('iframe[class="cke_panel_frame"]').contents();
+                var style = '<style type="text/css" data-style="seipro-styleeditor">'+
+                            '   .cke_panel_listItem a p {'+
+                            '       overflow: hidden;'+
+                            '   }'+
+                            '   .cke_panel_listItem a {'+
+                            '       padding-right: 160px;'+
+                            '       position: relative;'+
+                            '   }'+
+                            '   sup {'+
+                            '       position: absolute;'+
+                            '       right: 10px;'+
+                            '       font-family: monospace;'+
+                            '       background: #ccc;'+
+                            '       padding: 3px 5px;'+
+                            '       border-radius: 5px;'+
+                            '       opacity: 0.5;'+
+                            '       top: calc(50% - 10px);'+
+                            '   }'+
+                            '</style>';
+                if (ckePanel.find('style[data-style="seipro-styleeditor"]').length == 0) {
+                    ckePanel.find('head').append(style);
+                }
+                    ckePanel.find('sup').remove();
+                    var isMac = navigator.platform.toUpperCase().indexOf('MAC') !== -1 ? true : false;
+                    $.each(getOptionsPro('stylesEditor'), function(i, v){
+                        if (i < 36) {
+                            var key = (i <= 9) ? 48+i : 55+i;
+                            var combinacaoteclas = isMac ? 'CMD + OPTION + SHIFT' : 'CTRL + ALT + SHIFT';
+                            if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_1') {
+                                combinacaoteclas = isMac ? 'CMD + OPTION + SHIFT' : 'CTRL + ALT + SHIFT';
+                            } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_2') {
+                                combinacaoteclas = isMac ? 'CMD + SHIFT' : 'CTRL + SHIFT';
+                            } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_3') {
+                                combinacaoteclas = isMac ? 'CMD + OPTION' : 'CTRL + ALT';
+                            } else if (getConfigValue('combinacaoteclas') == 'combinacaoteclas_4') {
+                                combinacaoteclas = isMac ? 'OPTION + SHIFT' : 'ALT + SHIFT';
+                            }
+                            ckePanel.find('li.cke_panel_listItem a[title="'+v+'"]').prepend('<sup>'+combinacaoteclas+' + <strong>'+String.fromCharCode(key)+'</strong></sup>');
+                        }
+                    });
+            });
+        }
     }
 }
 function editImgPro( editor ) {
@@ -1189,6 +1295,9 @@ function getDialogSyleTable() {
          htmlEstilo +=  '<div style="padding: 10px 0;">Selecione a largura da tabela: '+
                         '   <input type="number" id="addEstiloTableWidth" style="background: #f5f5f5; padding: 5px; border-radius: 5px; width: 50px; border: 1px solid #ccc;" max="100" step="5" min="5"> %'+
                         '</div>';
+         htmlEstilo +=  '<div style="padding: 10px 0;">'+
+                        '   <input type="checkbox" id="addEstiloTableHeader" checked> <label for="addEstiloTableHeader">Determinar a primeira linha como cabe\u00E7alho da tabela</label>'+
+                        '</div>';
     
     CKEDITOR.dialog.add( 'TabelaSEI', function ( editor )
       {
@@ -1271,6 +1380,10 @@ function setSyleTable(value) {
     elementTable.find('span[style*="background-color"],tr[style*="background-color"],td[style*="background-color"]').each(function(){
         setBgTableColor(this);
     });
+    if ($('#addEstiloTableHeader').is(':checked')) {
+        $('<thead></thead>').prependTo(elementTable).append(elementTable.find('tr:first'));
+    }
+
 }
 
 //// INSERE LINK DE NORMAS
@@ -1554,6 +1667,7 @@ function getDialogLegisSEI() {
                 var inputAno = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'anoNorma')._.inputId;
                     $('#'+inputNumero).attr('type', 'number');
                     $('#'+inputAno).attr('type', 'number');
+                    setChosenInCke();
             },
             contents :
             [
@@ -1626,7 +1740,7 @@ function getDialogLegisSEI() {
              			label: 'Autoridade Signat\u00E1ria',
                         labelLayout: 'horizontal',
                         width: '200px',
-             			items: [ [''], [ 'ANTAQ', 'Antaq' ], [ 'Cade', 'Cade' ], [ 'PRF', 'PRF' ] ],
+             			items: [ [''], [ 'ANTAQ', 'Antaq' ], [ 'Cade', 'Cade' ], [ 'PRF', 'PRF' ] , [ 'TSE', 'Tse' ]  , [ 'TRE RR', 'Trerr' ] ],
              			'default': ''
              		},{
              			type: 'select',
@@ -1634,7 +1748,7 @@ function getDialogLegisSEI() {
              			label: 'Tipo de Legisla\u00E7\u00E3o',
                         labelLayout: 'horizontal',
                         width: '200px',
-             			items: [ [''], [ 'Resolu\u00E7\u00E3o Normativa', 'rn' ], [ 'Resolu\u00E7\u00E3o', 'res' ], [ 'Resolu\u00E7\u00E3o Conjunta', 'resconj' ], [ 'S\u00FAmula Administrativa', 'sum' ], [ 'Portaria', 'port' ], [ 'Portaria Conjunta', 'portconj' ], [ 'Portaria Interministerial', 'portinter' ], [ 'Instru\u00E7\u00E3o Normativa', 'in' ] ],
+             			items: [ [''], [ 'Resolu\u00E7\u00E3o Normativa', 'rn' ], [ 'Resolu\u00E7\u00E3o', 'res' ], [ 'Resolu\u00E7\u00E3o Conjunta', 'resconj' ], [ 'S\u00FAmula Administrativa', 'sum' ], [ 'Portaria', 'port' ], [ 'Portaria Conjunta', 'portconj' ], [ 'Portaria Interministerial', 'portinter' ], [ 'Instru\u00E7\u00E3o Normativa', 'in' ] , [ 'Provimento', 'prov' ] ],
              			'default': ''
              		},{
                         type: 'text',
@@ -1821,6 +1935,9 @@ function getDialogCitacaoDocumento() {
             minWidth : 500,
             minHeight : 80,
             buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
+            onShow: function() {
+                setChosenInCke();
+            },
             onOk: function(event, a, b) {
                 var id_protocolo = this.getContentElement( 'tab1', 'listDocumento' ).getValue();
                 if ( id_protocolo != '' ) {
@@ -2471,6 +2588,7 @@ function getDialogDadosEditor() {
                                 '</label>';
                 $('#tabReplaceTag_result').show().html(resultDiv);
                 $('#tabNewDynamicField_alert').hide().html('');
+                setChosenInCke();
             },
             contents :
             [
@@ -2482,7 +2600,7 @@ function getDialogDadosEditor() {
                     {
                         type: 'select',
                         id: 'listDados',
-                        labelLayout: 'horizontal',
+                        // labelLayout: 'horizontal',
                         inputStyle: 'max-width: 560px',
                         label: 'Dados do Processo',
                         items: dadosEditorArray,
@@ -2803,6 +2921,7 @@ function getDialogSumarioDocumento() {
                 updateSelectDialog(this.getContentElement( 'tab1', 'listStyle1' )._.inputId, arrayStyles);
                 updateSelectDialog(this.getContentElement( 'tab1', 'listStyle2' )._.inputId, arrayStyles);
                 updateSelectDialog(this.getContentElement( 'tab1', 'listStyle3' )._.inputId, arrayStyles);
+                setChosenInCke();
             },
             contents :
             [
@@ -3089,6 +3208,7 @@ function getDialogQrCode() {
 						}
 					});
 				}, 100);
+                setChosenInCke();
             },
             contents :
             [
@@ -3340,6 +3460,53 @@ function getDialogLinkPro() {
              			label: 'URL',
 						required : true,
              			'default': ''
+             		}
+                  ]
+               }
+            ]
+         };
+      } );
+}
+function openDialogBatchImgQuality(this_) {
+    setParamEditor(this_);
+    oEditor.openDialog('batchImgQuality');
+}
+function getDialogBatchImgQuality() {
+      CKEDITOR.dialog.add( 'batchImgQuality', function ( editor )
+      {
+         return {
+            title : 'Reduzir qualidade das imagens',
+            minWidth : 400,
+            minHeight : 80,
+            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
+            onOk: function(event, a, b) {
+                var qualityImg = this.getContentElement( 'tab1', 'quality' ).getValue();
+                if ( qualityImg != '' ) {
+                    iframeEditor.find('img').each(function(){
+                        qualityImages(this, this, qualityImg*0.01);
+                        
+                    })
+                    event.data.hide = true;
+                } else {
+                    alert('Digite um valor');
+					event.data.hide = false;
+				}
+            },
+            onShow : function() {
+                this.getContentElement("tab1", "quality").getInputElement().setAttribute('type','range').setAttribute('max','100').setAttribute('min','1');
+            },
+            contents :
+            [
+               {
+                  id : 'tab1',
+                  label : 'Qualidade',
+                  elements :
+                  [
+                    {
+             			type: 'text',
+             			id: 'quality',
+             			label: 'Qualidade da Imagem',
+             			'default': qualidadeImagens
              		}
                   ]
                }
@@ -3624,6 +3791,9 @@ function getDialogUploadImgBase64() {
                         css.push(attr[k][1].replace(/#/g, cssvalue));
                     }
                 }
+                if (attrvalue == 'none') {
+                    newImg.removeAttribute(k);
+                }
             }
             if (css.length > 0) newImg.setAttribute("style", css.join(""));
             if (newImg.getAttribute('maxwidth')) {
@@ -3634,7 +3804,7 @@ function getDialogUploadImgBase64() {
             }
             /* Insert new image */
             if (!selectedImg) editor.insertElement(newImg);
-            if (qualidadeImagens > 0 && !$(newImg).attr('quality')) {
+            if (qualidadeImagens > 0) {
                 newImg.setAttribute("quality",quality);
                 qualityImages(newImg.$, newImg.$, quality);
             }
@@ -3778,7 +3948,7 @@ function getDialogUploadImgBase64() {
                 selectedImg = editor.getSelection().getSelectedElement();;
                 if (selectedImg && selectedImg.getName() == "img") {
                     // selectedImg = selectedImg.getSelectedElement();
-                    this.getContentElement("tab-properties", "quality").disable();
+                    // this.getContentElement("tab-properties", "quality").disable();
                     if (typeof(selectedImg.getAttribute("src")) == "string") {
                         var srcSelectedImg = selectedImg.getAttribute("src");
                         var base64strImg = srcSelectedImg.substring(srcSelectedImg.indexOf(',') + 1)
@@ -3789,7 +3959,7 @@ function getDialogUploadImgBase64() {
                 }
                 if (!selectedImg || selectedImg.getName() !== "img") {
                     selectedImg = null;
-                    this.getContentElement("tab-properties", "quality").enable();
+                    // this.getContentElement("tab-properties", "quality").enable();
                     this.getContentElement("tab-properties", "imglength").getElement().setHtml("");
                 }
                 /* Set input values */
@@ -3834,7 +4004,11 @@ function getDialogUploadImgBase64() {
                     if (typeof(selectedImg.getAttribute("maxwidth")) == "string") t.setValueOf("tab-properties", "maxwidth", selectedImg.getAttribute("maxwidth"));
                     if (typeof(selectedImg.getAttribute("maxheight")) == "string") t.setValueOf("tab-properties", "maxheight", selectedImg.getAttribute("maxheight"));
                     if (typeof(selectedImg.getAttribute("filter")) == "string") t.setValueOf("tab-properties", "filter", selectedImg.getAttribute("filter"));
-                    if (typeof(selectedImg.getAttribute("quality")) == "string") t.setValueOf("tab-properties", "quality", parseInt(selectedImg.getAttribute("quality")*100));
+                    if (typeof(selectedImg.getAttribute("quality")) == "string") {
+                        var qualitySelectedImg = parseInt(selectedImg.getAttribute("quality")*100);
+                            t.setValueOf("tab-properties", "quality", qualitySelectedImg);
+                            t.getContentElement("tab-properties", "quality").getInputElement().setAttribute('type','number').setAttribute('max',qualitySelectedImg).setAttribute('min','1');
+                    }
                     if (typeof(selectedImg.getAttribute("align")) == "string") {
                         switch(selectedImg.getAttribute("align")) {
                             case "top":
@@ -4141,7 +4315,7 @@ function importDocPro(this_) {
 function getDialogImportDocPro() {
     var htmlImportFile =    '<label class="cke_dialog_ui_labeled_label">Importar documento HTML</label>'+
                             '<div class="cke_dialog_ui_labeled_content cke_dialog_ui_input_file">'+
-                            '   <input style="width:100%" id="fileInputImportHTML" type="file">'+
+                            '   <input style="width:95%" id="fileInputImportHTML" type="file">'+
                             '</div>';
     var tipsDocs = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se o documento est\u00E1 acess\u00EDvel por qualquer<br>pessoa na internet. <a href="https://sei-pro.github.io/sei-pro/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
     var tipsSheets = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se a planilha est\u00E1 publicada na web.<br> Aten\u00E7\u00E3o: O URL publicado na web \u00E9 diferente do URL da planilha. <br><a href="https://sei-pro.github.io/sei-pro/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
@@ -4955,6 +5129,23 @@ function getMinutaWatermark(this_) {
             minutaAncora_new.get(0).scrollIntoView();
     }
 }
+function repairSaveButtonBug() {
+    if ($('.cke_button.cke_button__save').hasClass('cke_button_off')) {
+        for (var i in CKEDITOR.instances) {
+            var edit = CKEDITOR.instances[i];
+            if (!edit.readOnly) {
+                edit.on('saveSnapshot', habilitaSalvar);
+                edit.on('key', habilitaSalvar);
+                edit.on('afterCommandExec', habilitaSalvar);
+                edit.on('tableResize', habilitaSalvar);
+            } else {
+                edit.document.$.body.style.background=readOnlyColor;
+            }
+        }
+        redimensionar();
+        console.log('reparSaveButtonBug');
+    }
+}
 function initFunctions() {
     getDialogLegisSEI();
     getDialogNatJusSEI();
@@ -4969,6 +5160,7 @@ function initFunctions() {
     getDialogLatex();
     getDialogProcessoPublicoPro();
     getDialogSigilo();
+    getDialogBatchImgQuality();
     initDialogImageEditorPro();
 	loadResizeImg();
     updateDialogDefinitionPro();
@@ -4979,6 +5171,8 @@ function initFunctions() {
     setDocCertidao();
     checkAutoSave();
     initDropImages();
+    getStylesOnEditor();
+    repairSaveButtonBug();
 	
 	// RETORNA DADOS DO PROCESSO
 	var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;

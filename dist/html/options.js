@@ -203,6 +203,9 @@ function restore_options() {
         if (jmespath.search(dataValuesConfig, "[?name=='citacaodoc'].value | [0]") !== null) { 
             $('#itemConfigGeral_citacaodoc').val(jmespath.search(dataValuesConfig, "[?name=='citacaodoc'].value | [0]"));
         }
+        if (jmespath.search(dataValuesConfig, "[?name=='combinacaoteclas'].value | [0]") !== null) { 
+            $('#itemConfigGeral_combinacaoteclas').val(jmespath.search(dataValuesConfig, "[?name=='combinacaoteclas'].value | [0]"));
+        }
         if (jmespath.search(dataValuesConfig, "[?name=='salvamentoautomatico'].value | [0]") !== null) { 
             $('#itemConfigGeral_salvamentoautomatico').val(jmespath.search(dataValuesConfig, "[?name=='salvamentoautomatico'].value | [0]"));
         }
@@ -379,6 +382,9 @@ function setNamePage() {
     $('a.manual').each(function(){
         $(this).attr('href', URLPages_SPRO+$(this).attr('href'));
     });
+    if (NAMESPACE_SPRO == 'SEI Pro Lab') {
+        $('body').addClass('SEIPro_lab');
+    }
 }
 $('#options-functions').find('input[type="text"]').on("keyup", function () {
     if ($(this).val() != '') {

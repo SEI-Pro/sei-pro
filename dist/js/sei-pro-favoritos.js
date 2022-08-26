@@ -826,19 +826,19 @@ function setPanelFavorites(mode) {
     var checkMaps = (jmespath.search(storeFavorites, "length([?not_null(latlng)])") > 0) ? true : false;
 
     if (listFavorite !== null && listFavorite.length > 0) {
-        var htmlTableFavorites =    '<table class="tableInfo tableZebra tableFollow tableFavoritos tabelaControle" data-name-table="Favoritos" data-tabletype="favoritos" id="favoriteTablePro">'+
+        var htmlTableFavorites =    '<table class="tableInfo tableZebra infraTable tableFollow tableFavoritos tabelaControle" data-name-table="Favoritos" data-tabletype="favoritos" id="favoriteTablePro">'+
                                     '   <caption class="infraCaption" style="text-align: left;">'+countFavorite+'</caption>'+
                                     '   <thead>'+
                                     '       <tr class="tableHeader">'+
-                                    '           <th class="tituloControle" style="width: 50px;" align="center"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
-                                    '           <th class="tituloControle" style="width: 210px;">Processo</th>'+
-                                    '           <th class="tituloControle tituloFilter" data-filter-type="date" style="width: 150px;">Prazo</th>'+
-                                    '           <th class="tituloControle tituloFilter" data-filter-type="etiqueta" style="width: 150px;">Etiqueta</th>'+
-                                    '           <th class="tituloControle tituloFilter" data-filter-type="etiqueta" style="width: 80px;">Mapa</th>'+
-                                    '           <th class="tituloControle">Especifica\u00E7\u00E3o</th>'+
-                                    '           <th class="tituloControle">Tipo de Processo</th>'+
-                                    '           <th class="tituloControle">Categoria</th>'+
-                                    '           <th class="tituloControle" style="width: 50px;" align="center"><i class="fas fa-sort-numeric-up"></i></th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" style="width: 50px;" align="center"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" style="width: 210px;">Processo</th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+' tituloFilter" data-filter-type="date" style="width: 150px;">Prazo</th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+' tituloFilter" data-filter-type="etiqueta" style="width: 150px;">Etiqueta</th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+' tituloFilter" data-filter-type="etiqueta" style="width: 80px;">Mapa</th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'">Especifica\u00E7\u00E3o</th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'">Tipo de Processo</th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'">Categoria</th>'+
+                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" style="width: 50px;" align="center"><i class="fas fa-sort-numeric-up"></i></th>'+
                                     '       </tr>'+
                                     '   </thead>'+
                                     '   <tbody>';
@@ -930,8 +930,8 @@ function setPanelFavorites(mode) {
                                 '   <div class="infraBarraLocalizacao titlePanelHome">'+
                                 '       <i class="fas fa-star starGold" style="margin: 0 5px; font-size: 1.1em;"></i>'+
                                 '       Favoritos'+
-                                '       <a class="newLink" id="favoritesProDiv_showIcon" onclick="toggleTablePro(\'favoritesProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
-                                '       <a class="newLink" id="favoritesProDiv_hideIcon" onclick="toggleTablePro(\'favoritesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="favoritesProDiv_showIcon" onclick="toggleTablePro(\'#favoritesProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="favoritesProDiv_hideIcon" onclick="toggleTablePro(\'#favoritesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
                                 '   </div>'+
                                 '   <div id="favoritesProDiv" class="panelHome" style="width: 98%; '+statusView+'">'+
                                 '   	<div id="favoritosProActions" style="top:0; position: absolute; z-index: 9999; left: 190px; width: calc(100% - 230px)">'+
@@ -1247,6 +1247,8 @@ function initFunctionsPanelFav(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
+            if (typeof $().tagsInput === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
+            if (typeof $().tablesorter === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initFunctionsPanelFav(TimeOut - 100); 
             console.log('Reload initFunctionsPanelFav'); 
         }, 500);

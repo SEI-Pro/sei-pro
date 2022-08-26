@@ -69,6 +69,9 @@ function loadStyleDesign() {
             body.classList.add("dark-mode");
         }
     }
+    if (parent.isNewSEI) {
+        body.classList.add("newSEI");
+    }
 }
 loadStyleDesign();
 loadFontIcons('head');

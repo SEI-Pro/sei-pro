@@ -349,13 +349,13 @@
                 <tr>
                     <td>
                         <p>
-                            <i class="iconPopup fa fa-bars azulColor"></i><span class="info">Menu Suspenso</span>
+                            <i class="iconPopup fa fa-bars cinzaColor"></i><span class="info">Menu Suspenso</span>
                             <a class="manual" href="/pages/MENUSUSPENSO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
                     </td>
                     <td>
                            <div class="onoffswitch">
-                               <input type="checkbox" data-name="menususpenso" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_menususpenso" tabindex="0" checked>
+                               <input type="checkbox" data-name="menususpenso" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_menususpenso" tabindex="0">
                                <label class="onoffswitch-label" for="itemConfigGeral_menususpenso"></label>
                            </div>
                     </td>
@@ -552,7 +552,7 @@
                         </table>
                     </td>
                 </tr>
-                <tr>
+                <tr style="display:none">
                     <td colspan="2" style="padding: 0;">
                         <table>
                             <tr>
@@ -565,6 +565,41 @@
                                 <td style="width: 20%; text-align: right;">
                                     <input type="number" step="1" id="itemConfigGeral_salvamentoautomatico" max="360" min="1" data-name="salvamentoautomatico" value="5">
                                    </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr class="lab">
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-keyboard azulColor"></i><span class="info">Adicionar teclas de atalhos no editor de documentos</span>
+                            <a href="/pages/TECLASATALHO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="teclasatalho" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_teclasatalho" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_teclasatalho"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding: 0;">
+                        <table>
+                            <tr>
+                                <td style="width: 40%;">
+                                    <span>
+                                        <i class="iconPopup fa fa-grip-horizontal azulColor"></i><span class="info">Combina&ccedil;&atilde;o de teclas de atalho para o editor de documentos</span>
+                                    </span>
+                                </td>
+                                <td style="width: 60%; text-align: right;">
+                                    <select id="itemConfigGeral_combinacaoteclas" data-name="combinacaoteclas">
+                                        <option value="combinacaoteclas_1">CTRL + ALT + SHIFT</option>
+                                        <option value="combinacaoteclas_2">CTRL + SHIFT</option>
+                                        <option value="combinacaoteclas_3">CTRL + ALT</option>
+                                        <option value="combinacaoteclas_4">ALT + SHIFT</option>
+                                    </select>
+                                </td>
                             </tr>
                         </table>
                     </td>

@@ -236,6 +236,7 @@ a.newLink {
     padding: 5px;
     border-radius: 5px;
     cursor: pointer;
+    word-break: break-word;
 }
 span.bLink,
 i.bLink,
@@ -450,7 +451,7 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
     background-clip: border-box; 
     border: 1px solid rgba(0, 0, 0, 0.125); 
     border-radius: 0.75rem; 
-    min-height: 320px;
+    min-height: 450px !important;
 }
 .gantt .today-highlight {
     fill: #fbf2c3;
@@ -1378,7 +1379,7 @@ i.iconSwitch {
 }
 .tabelaPanelScroll tr.tableHeader th {
     position: sticky;
-    z-index: 99;
+    z-index: 999;
     top: 0;
 }
 .tableAtividades th[data-filter-type="action"] {
@@ -1393,6 +1394,14 @@ i.iconSwitch {
 }
 #tabelaAtivPanel .tableAtividades.tablesorter-default thead tr th.ui-draggable-dragging .tablesorter-header-inner {
     color: #fff !important;
+}
+.filterResume {
+    font-size: 80%;
+    text-align: center;
+    margin-top: 10px;
+}
+.filterResume sup {
+    opacity: 0.5;
 }
 .followLink.followLinkTags,
 .followLink.followLinkNewtab,
@@ -2153,8 +2162,10 @@ span.action-doc:hover i {
     color: #dcdcdc;
 }
 .tablesorter-default .header,
-.tablesorter-default .tablesorter-header {
-    background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
+table.infraTable tr > th.infraTh.header,
+.tablesorter-default .tablesorter-header,
+table.infraTable tr > th.infraTh.tablesorter-header {
+    background-image: url('data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==');
     background-position: center right;
     background-repeat: no-repeat;
     cursor: pointer;
@@ -2162,19 +2173,33 @@ span.action-doc:hover i {
     background-color: #e0e0de;
     border-radius: 5px;
 }
+.newSEI table.infraTable tr > th.infraTh.header.tablesorter-headerUnSorted:not(.sorter-false),
+.newSEI table.infraTable tr > th.infraTh.tablesorter-header.tablesorter-headerUnSorted:not(.sorter-false) {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAJCAYAAADdA2d2AAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAC5JREFUeJxjYCAS3Ll0/j+xaok2EIapbiBVDMZmIFVdTDVAM5fSzOs0C0tSDAQAnxdvgTvrysgAAAAASUVORK5CYII=');
+}
 .tablesorter-default thead .headerSortUp,
+table.infraTable tr > th.infraTh.headerSortUp,
 .tablesorter-default thead .tablesorter-headerAsc,
-.tablesorter-default thead .tablesorter-headerSortUp {
-    background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7);
+table.infraTable tr > th.infraTh.tablesorter-headerAsc,
+.tablesorter-default thead .tablesorter-headerSortUp,
+table.infraTable tr > th.infraTh.tablesorter-headerSortUp {
+    background-image: url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7');
     background-color: #ddebef !important;
     border-radius: 5px;
 }
 .tablesorter-default thead .headerSortDown,
+table.infraTable tr > th.infraTh.headerSortDown,
 .tablesorter-default thead .tablesorter-headerDesc,
-.tablesorter-default thead .tablesorter-headerSortDown {
-    background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7);
+table.infraTable tr > th.infraTh.tablesorter-headerDesc,
+.tablesorter-default thead .tablesorter-headerSortDown,
+table.infraTable tr > th.infraTh.tablesorter-headerSortDown {
+    background-image: url('data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7');
     background-color: #ddebef !important;
     border-radius: 5px;
+}
+.newSEI #panelHomePro table.infraTable.tabelaControle.tablesorter-default thead th.infraTh.tablesorter-headerAsc,
+.newSEI #panelHomePro table.infraTable.tabelaControle.tablesorter-default thead th.infraTh.tablesorter-headerDesc {
+    background-color: var(--blue-40) !important;
 }
 .tablesorter-header-inner,
 .tablesorter-header.sorter-false {
@@ -2198,6 +2223,19 @@ span.action-doc:hover i {
     border: none !important;
     border-radius: 0 !important;
 }
+.newSEI table.infraTable tr > th.infraTh.tablesorter-header {
+    background-color: var(--color-primary-default) !important;
+}
+.newSEI .tabelaControle th.tablesorter-header:first-child .tablesorter-header-inner {
+    display: table;
+}
+.newSEI table.infraTable tr > th.infraTh.tablesorter-header .tablesorter-header-inner {
+    color: var(--color-secondary-03) !important;
+}
+.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo i,
+.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo span {
+    color: var(--pure-0) !important;
+}
 .tabelaControle .tablesorter-header-inner,
 #tabelaAtivPanel table.tableAtividades .tablesorter-header-inner,
 #boxHistory table.tableAtividades .tablesorter-header-inner,
@@ -2207,6 +2245,7 @@ span.action-doc:hover i {
     color: #000 !important;
     font-weight: bold !important;
     text-align: center !important;
+    padding: 0 20px 0 0;
 }
 .tablesorter-default .filtered,
 .tablesorter-default input.tablesorter-filter.disabled {
@@ -2228,6 +2267,14 @@ table tr.hideme {
     width: 100%;
     padding: 5px;
     font-size: 1em;
+}
+.tablesorter-default input.tablesorter-filter[type="date"] {
+    margin: 0 !important;
+    padding: 2px 5px !important;
+    width: 90%;
+}
+.tableInfo .tablesorter-default input.tablesorter-filter[type="date"] {
+    padding: 4px !important;
 }
 table.tabelaControle.tablesorter-default thead .tablesorter-headerDesc,
 table.tabelaControle.tablesorter-default thead .tablesorter-headerAsc,
@@ -2934,13 +2981,19 @@ div.infraTooltipTexto i.far {
     max-height: 640px;
     overflow-y: scroll;
 }
+#printBoxPro,
 #view_doc.readOnly {
     border: none;
 }
+#printBoxPro table,
+#printBoxPro table span.todo-list__label__description,
 #view_doc.readOnly table,
 #view_doc.readOnly table span.todo-list__label__description {
     font-size: 10pt;
 }
+#printBoxPro .input-form-field,
+#printBoxPro select.form-field,
+#printBoxPro input.form-field,
 #view_doc.readOnly .input-form-field,
 #view_doc.readOnly select.form-field,
 #view_doc.readOnly input.form-field {
@@ -2949,6 +3002,29 @@ div.infraTooltipTexto i.far {
     margin: 3px 0;
     padding: 3px 5px;
     background: #f5f5f5;
+}
+@media print {
+    #printBoxPro.hidePrint {
+        background-color: white;
+        height: 100%;
+        width: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+        margin: 0;
+        padding: 15px;
+        font-size: 14px;
+        line-height: 18px;
+        z-index: 9999999;
+        display: block !important;
+    }
+    .divBoxPro {
+        display: block !important;
+    }
+    .infraAreaGlobal.hidePrint,
+    div[role="dialog"].ui-dialog.hidePrint {
+        display: none !important;
+    }
 }
 .seiProForm .signed,
 .editorBoxProDiv .signed {
@@ -2982,6 +3058,18 @@ div.infraTooltipTexto i.far {
     padding: 4px 20px 4px 5px !important;
     border-radius: 5px;
     height: auto !important;
+}
+.cke_dialog .chosen-container-single a.chosen-single span {
+    line-height: inherit;
+}
+.cke_dialog .chosen-container-single .chosen-drop .chosen-search {
+    display: flex;
+}
+.cke_dialog .chosen-container-single .chosen-drop {
+    width: calc(100% - 2px);
+}
+.cke_dialog .chosen-container-single .chosen-search input[type="text"] {
+    width: 95%;
 }
 .chosen-container .chosen-results li.highlighted em {
     background: #f9efad;
@@ -3092,11 +3180,11 @@ div#divInfraTooltip {
 .kanban-title-card .newLink_active {
     background: #eef4f9;
 }
-.g-signin2{
+.ag-signin2{
     transform: scale(1.3) !important;
     margin-top: 20px !important;
 }
-.g_id_signin {
+.ag_id_signin {
     margin: 0 calc(50% - 150px);
     margin-top: 20px;
 }
@@ -3191,6 +3279,7 @@ table.tabInfraTooltip {
 div.infraTooltipTexto {
     font-size: 9pt !important; 
     padding:.1em;
+    word-break: break-word;
 }
 div.infraTooltipTexto b {
     font-weight:bold;
@@ -3203,4 +3292,45 @@ td.prazoBoxDisplay {
 }
 .chosen-container .chosen-results li.disabled-result {
     color: #a2a2a2 !important;
+}
+#chartRelatorioPanelBI {
+    width: 100%;
+    height: 100vh;
+    border: none;
+}
+td.prazoBoxDisplay {
+    min-width: 150px !important;
+}
+.displayNone {
+    display: none !important;
+}
+.displayInitial {
+    display: initial !important;
+}
+.newSEI a.newLinksMenuPro {
+    padding-left: 5px !important;
+}
+.newSEI .botaoSEI.iconPro_Observe i {
+    color: var(--color-primary-default) !important;
+    font-size: 2.5em !important;
+}
+.newSEI #divRecebidos.tagintable {
+    max-width: 100% !important;
+}
+.onoffswitch-label::before {
+    height: inherit;
+}
+.newSEI .dz-preview span {
+    margin: 0 !important;
+    vertical-align: sub !important;
+}
+.newSEI .dz-preview a[target="ifrVisualizacao"] {
+    vertical-align: text-top;
+}
+.newSEI .dz-preview span.dz-remove,
+.newSEI .dz-preview span.dz-error-mark,
+.newSEI .dz-preview span.dz-progress-mark,
+.newSEI .dz-preview span.dz-error-message,
+.newSEI .dz-preview span.dz-size {
+    vertical-align: super !important;
 }

@@ -35,6 +35,8 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
                 $.ajax({  method: 'POST', data: param, url: href });
             }
             ifrView.find('div.paginas').after($html.find('div.paginas')).remove();
+            startQuickViewSearch();
+            console.log('startQuickViewSearch');
         });
     }
 }
@@ -74,7 +76,7 @@ function initRangerSelectShift(TimeOut = 9000) {
 function initHideMenuSistemaView(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof getOptionsPro !== 'undefined' && typeof hideMenuSistemaView !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined') { 
-        if (checkConfigValue('menususpenso')) {
+        if (verifyConfigValue('menususpenso')) {
             hideMenuSistemaView();
         }
     } else {
@@ -107,6 +109,7 @@ function initTableSorter(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
+            if (typeof $().tablesorter === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initTableSorter(TimeOut - 100); 
             console.log('Reload initTableSorter'); 
         }, 500);
@@ -124,13 +127,13 @@ function initInsertNewLinksMenu(TimeOut = 9000) {
     }
 }
 function insertNewLinksMenu() {
-    if ($('#divInfraAreaTelaE #main-menu').find('.newLinksMenuPro').length == 0) {
-        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" onclick="initBoxSearchProtocoloSEI()">Pesquisar Link Permanente</a></li>';
+    if ($(idMenu).find('.newLinksMenuPro').length == 0) {
+        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" onclick="initBoxSearchProtocoloSEI()">'+(isNewSEI ? '<i class="fas fa-history" style="font-size: 1.5em;margin-right: 5px;"></i>' : '')+'<span>Pesquisar Link Permanente</span></a></li>';
 
         if (checkConfigValue('historicoproc')) {
-            newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()">Hist\u00F3rico de Processos Visitados</a></li>';
+            newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()">'+(isNewSEI ? '<i class="fas fa-link" style="font-size: 1.5em;margin-right: 5px;"></i>' : '')+'<span>Hist\u00F3rico de Processos Visitados</span></a></li>';
         }
-            $('#divInfraAreaTelaE #main-menu').append(newLinkMenu);
+            $(idMenu).append(newLinkMenu);
     }
 }
 function setTableSorter() {
@@ -144,13 +147,14 @@ function setTableSorter() {
             iconFilter.removeClass('active');
         }
     });
-    var tableSorter = $('#divInfraAreaTabela table.infraTable').not('.tabelaControle, #tblTipoProcedimento');
+    var tableSorter = $('#divInfraAreaTabela table.infraTable, #frmEstatisticas table.infraTable').not('.tabelaControle, #tblTipoProcedimento');
     if (tableSorter.length > 0) {
         tableSorter.each(function(){
             if (typeof $(this).attr('id') === 'undefined') {
                 $(this).attr('id','infraTable_'+randomString(4));
             }
         });
+
         tableSorter.each(function(){
             if ($(this).find('table').hasClass('infraTableOrdenacao')) { 
                 $('#divInfraAreaTabela table.infraTable table.infraTableOrdenacao').each(function(){
@@ -158,10 +162,10 @@ function setTableSorter() {
                 });
             }
             corrigeTableSEI(this);
-            $(this).css('background-color','#ccc').find("thead th:eq(0)").data("sorter", false);
+            if (!$('#frmEstatisticas').length) $(this).css('background-color','#ccc').find("thead th:eq(0)").data("sorter", false);
             $(this).find('thead th').each(function(){
-                if ($(this).text().trim() == 'Data/Hora') { $(this).attr('data-date-format','mmddyyyy') }
-            })
+                if ($(this).text().trim().toLowerCase().indexOf('data') !== -1) { $(this).attr('data-date-format','mmddyyyy') }
+            });
 
             var headerTdCheck = ($('#lnkInfraCheck').length > 0) ? { 0: { sorter: false, filter: false } } : null;
             var textExtraction = ($('#tblProcessosDetalhado').length > 0) ? 
@@ -176,9 +180,45 @@ function setTableSorter() {
                                 text_return += prioridade+' '+texttip;
                             });
                             return (text_return == '') ? '3' : text_return;
-                        } 
+                        },
+                        2: function (elem, table, cellIndex) {
+                            var text = $(elem).text();
+                            console.log(elem, table, cellIndex, text);
+                            return text;
+                        }
                     }
-                : null;
+                : {
+                    0: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    1: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    2: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    3: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    4: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    5: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    6: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    7: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    8: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    },
+                    9: function (elem, table, cellIndex) {
+                        return filterTextExtractDate(elem, table, cellIndex);
+                    }
+                };
 
             $(this).tablesorter({
                 widgets: ["saveSort", "filter"],
@@ -294,36 +334,39 @@ function getTablePesquisaDownload(this_, mode){
 function copyTablePesquisa(this_, table){
     var _this = $(this_);
     var data = _this.data();
-    copyToClipboardHTML(table);
-    _this.find('.text').text('Copiado...');
-    _this.find('i').attr('class','fas fa-thumbs-up');
-    setTimeout(function(){ 
-        _this.find('.text').text(data.value);
-        _this.find('i').attr('class',data.icon);
-    }, 1500);
+        copyToClipboardHTML(table);
+        _this.find('.text').text('Copiado...');
+        _this.find('i').attr('class','fas fa-thumbs-up');
+        setTimeout(function(){ 
+            _this.find('.text').text(data.value);
+            _this.find('i').attr('class',data.icon);
+        }, 1500);
 }
 function downloadTablePesquisa(this_, table){
     var _this = $(this_);
     var data = _this.data();
-    downloadTableCSV(table, 'Pesquisa_SEIPro');
-    _this.find('.text').text('Baixado...');
-    _this.find('i').attr('class','fas fa-thumbs-up');
-    setTimeout(function(){ 
-        _this.find('.text').text(data.value);
-        _this.find('i').attr('class',data.icon);
-    }, 1500);
+        downloadTableCSV(table, 'Pesquisa_SEIPro');
+        _this.find('.text').text('Baixado lista...');
+        _this.find('i').attr('class','fas fa-thumbs-up');
+        setTimeout(function(){ 
+            _this.find('.text').text(data.value);
+            _this.find('i').attr('class',data.icon);
+        }, 1500);
 
 }
 function setTablePesquisaDownload() {
     var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="right: 0;top: -40px;z-index: 999;position: absolute;">'+
-                        '   <button type="button" onclick="getTablePesquisaDownload(this, \'download\')" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
+                        '   <button type="button" onclick="getTablePesquisaDownload(this, \'download\')" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Lista" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
-                        '       <span class="text">Baixar</span>'+
+                        '       <span class="text">Baixar Lista</span>'+
                         '   </button>'+
                         '   <button type="button" onclick="getTablePesquisaDownload(this, \'copy\')" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                         '       <span class="text">Copiar</span>'+
                         '   </button>'+
+                        '   <button type="button" onclick="downloadAllDocsSearch(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Documentos" class="btn btn-sm btn-light">'+
+                        '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                        '       <span class="text">Baixar Documentos</span>'+
                         '   </button>'+
                         '</div>';
 
@@ -415,6 +458,8 @@ function initReplaceSelectAll(TimeOut = 12000) {
         if (parent.verifyConfigValue('substituiselecao') && $('#frmDocumentoGeracaoMultiplo').length == 0 ) { 
             $('select')
                 .not('[multiple]')
+                .not('#selStaIcone')
+                .not('#selMarcador')
                 .filter(function() { 
                     return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') 
                 })
@@ -424,6 +469,7 @@ function initReplaceSelectAll(TimeOut = 12000) {
                     no_results_text: 'Nenhum resultado encontrado'
                 });
             chosenReparePosition();
+            console.log('@@@@ initReplaceSelectAll');
         }
     } else {
         if (typeof $().chosen === 'undefined') { 
@@ -511,6 +557,82 @@ function initPagesInfiniteSearch(TimeOut = 9000) {
             console.log('Reload initPagesInfiniteSearch', TimeOut); 
         }, 500);
     }
+}
+function initQuickViewSearch(TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof verifyConfigValue !== 'undefined') {
+        if ($('#frmPesquisaProtocolo').length > 0) {
+            startQuickViewSearch();
+        }
+    } else {
+        setTimeout(function(){ 
+            initQuickViewSearch(TimeOut - 100); 
+            console.log('Reload initQuickViewSearch', TimeOut); 
+        }, 500);
+    }
+}
+function markQuickViewSearch(this_) {
+    var _this = $(this_);
+    $('#conteudo .resultado tr.infraTrAcessada').removeClass('infraTrAcessada');
+    _this.closest('tr').addClass('infraTrAcessada');
+}
+function startQuickViewSearch() {
+    $('a.quickview').remove();
+    $('#conteudo .resultado a[href*="controlador.php?acao=documento_visualizar"').each(function(){
+        var nrSEI = $(this).closest('tr').find('td.resTituloDireita').text().trim();
+        var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openSEINrPro(this, \''+nrSEI+'\')"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
+        $(this).after(html);
+    });
+    $('#conteudo .resultado a[href*="controlador.php?acao=documento_download_anexo"').each(function(){
+        var href = $(this).attr('href');
+        var text = $(this).text();
+        var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openDialogAnexo(this)" data-url="'+href+'" data-title="'+text+'"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
+        $(this).after(html);
+    });
+}
+function downloadAllDocsSearch(this_) {
+    var _this = $(this_);
+    var data = _this.data();
+        _this.find('.text').text('Baixado documentos...');
+        _this.find('i').attr('class','fas fa-thumbs-up');
+        setTimeout(function(){ 
+            _this.find('.text').text(data.value);
+            _this.find('i').attr('class',data.icon);
+        }, 1500);
+
+    $('tr:not(.infraDocBaixado) a.downloadview').remove();
+    $('#conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_visualizar"], #conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_download_anexo"]').each(function(index){
+        var text = $(this).text().trim();
+        var href = $(this).attr('href');
+        var nrSEI = $(this).closest('tr').find('td.resTituloDireita').text().trim();
+        var html = '<a class="downloadview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Baixando documento...\');" onmouseout="return infraTooltipOcultar();"><i style="margin: 0 3px;" class="fas fa-hourglass-half roxoColor"></i></a>';
+        $(this).after(html);
+        var _this = $(this).closest('td').find('.downloadview');
+        setTimeout(function(){
+            if (typeof href !== 'undefined' && href.indexOf('?acao=documento_visualizar') !== -1) {
+                getIDProtocoloSEI(nrSEI,  
+                    function(html){
+                        let $html = $(html);
+                        var param = getParamsUrlPro($html.find('#ifrArvore').attr('src'));
+                            console.log(param);
+                            openDialogDoc(param, true, _this);
+                    }, 
+                    function(){
+                        _this.attr('onmouseover','return infraTooltipMostrar(\'Erro ao baixar documento\')').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor');
+                    }
+                );
+            } else if (typeof href !== 'undefined' && href.indexOf('?acao=documento_download_anexo') !== -1) {
+                var link = document.createElement('a');
+                link.href = href;
+                link.download = text;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                _this.attr('onmouseover','return infraTooltipMostrar(\'Documento baixado\')').find('i').attr('class', 'fas fa-download verdeColor');
+                _this.closest('tr').addClass('infraTrAcessada').addClass('infraDocBaixado');
+            }
+        }, index*2000);
+    });
 }
 function initObserveUrlPage(TimeOut = 9000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }
@@ -609,10 +731,24 @@ function setMarcadorUserColor() {
     } else if ($('#frmGerenciarMarcador').length) {
         replaceColorsIcons($('#selMarcador a.dd-option'));
         replaceColorsIcons($('#selMarcador a.dd-selected'));
+    } else if ($('#frmProcedimentoControlar #tblMarcadores').length) {
+        $('span.infraImgPro[data-img*="/marcador_"]').each(function() { 
+            var titleMarcador = $(this).closest('td').next().text().trim();
+            $(this).addClass('tagUserColorPro').attr('data-color',true).find('img').attr('title',titleMarcador);
+            $(this).closest('td').next().text(titleMarcador.replace(extractHexColor(titleMarcador),''));
+        });
+        replaceColorsIcons($('.tagUserColorPro[data-color="true"]'));        
     } else if ($('#frmMarcadorLista').length) {
         replaceColorsIcons($('#frmMarcadorLista td:nth-child(2) a[href="#"]'));
     } else {
         replaceColorsIcons($('a[href*="andamento_marcador_gerenciar"]'));
+        if ($('#btnLiberarMarcador').length) {
+            $('#btnLiberarMarcador').each(function() { 
+                var titleMarcador = $(this).attr('title');
+                $(this).addClass('tagUserColorPro').attr('data-color',true).find('img').attr('title',titleMarcador);
+            });
+            replaceColorsIcons($('#btnLiberarMarcador[data-color="true"]'));
+        }
     }
 }
 function changeMarcadorUserColor(this_) {
@@ -665,7 +801,7 @@ function initSeiProAll() {
     initInfraImg();
     checkPageParent();
     initMarcadorUserColor();
-    appendIconEntidade();
+    // appendIconEntidade();
     appendVersionSEIPro();
     initTableSorter();
     repairLnkControleProcesso();
@@ -679,6 +815,7 @@ function initSeiProAll() {
     // initReplaceNewIconsBar();
     initRemovePaginacaoAll();
     initPagesInfiniteSearch();
+    initQuickViewSearch();
     // observeIfrArvore();
     initObserveUrlPage();
     initSlimPro();

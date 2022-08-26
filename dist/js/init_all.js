@@ -1,4 +1,6 @@
-$.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if ($('#frmEditor').length == 0)  {
+    $.getScript(getUrlExtension("js/sei-functions-pro.js")); 
+}
 
 function getUrlExtension(url) {
     if (typeof browser === "undefined") {
@@ -121,6 +123,7 @@ function divDialogsPro() {
                             +'  <div id="configBoxPro" style="display: none;"></div>'
                             +'  <div id="iframeBoxPro" style="display: none;"></div>'
                             +'  <div id="editorBoxPro" style="display: none;"></div>'
+                            +'  <div id="printBoxPro" class="ck-content" style="display: none;"></div>'
                             +'</div>';
     $('.divBoxPro').remove();
     $('body').append(html_box);

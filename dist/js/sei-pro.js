@@ -33,6 +33,7 @@ function handleClientLoadPro(TimeOut = 3000) {
 
 //// Agrupamento de lista de processos
 function getListTypes(acaoType) {
+    var orderbyTableGroup = getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc';
     var arrayTag = [''];
     if (acaoType == 'tags' || acaoType == 'deadline') {
     	var acaoType_ = 'acao=andamento_marcador_gerenciar';
@@ -112,36 +113,36 @@ function getListTypes(acaoType) {
                         dataRecebido =  (acaoType == 'deadline') ? $(this).closest('tr').find('td.prazoBoxDisplay .dateboxDisplay').data('time-sorter') : dataRecebido;
                         dataRecebido = (typeof dataRecebido !== 'undefined' && dataRecebido != '') ? moment(dataRecebido,'YYYY-MM-DD HH:mm:ss') : '';
                         
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateWeek, endDateWeek) ) { tag = 'l.Essa semana'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastWeek, endDateLastWeek) ) { tag = 'k.Semana passada'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastWeek, endDate2LastWeek) ) { tag = 'j.Duas semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastWeek, endDate3LastWeek) ) { tag = 'i.Tr\u00EAs semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate4LastWeek, endDate4LastWeek) ) { tag = 'h.Quatro semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate5LastWeek, endDate5LastWeek) ) { tag = 'g.Cinco semana atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastMonth, endDateLastMonth) ) { tag = 'f.Um m\u00EAs atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastMonth, endDate2LastMonth) ) { tag = 'e.Dois meses atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastMonth, endDate3LastMonth) ) { tag = 'd.Tr\u00EAs meses atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastQuarter, endDateLastQuarter) ) { tag = 'c.Seis meses atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastYear, endDateLastYear) ) { tag = 'b.Um ano atr\u00E1s'; }
-                    if (dataRecebido != '' && dataRecebido < endDateLastYear ) { tag = 'a.Maior que um ano atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateWeek, endDateWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'l' : 'k')+'.Essa semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastWeek, endDateLastWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'k' : 'r')+'.Semana passada'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastWeek, endDate2LastWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'j' : 's')+'.Duas semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastWeek, endDate3LastWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'i' : 't')+'.Tr\u00EAs semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate4LastWeek, endDate4LastWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'h' : 'u')+'.Quatro semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate5LastWeek, endDate5LastWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'g' : 'v')+'.Cinco semana atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastMonth, endDateLastMonth) ) { tag = (orderbyTableGroup == 'asc' ? 'f' : 'w')+'.Um m\u00EAs atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2LastMonth, endDate2LastMonth) ) { tag = (orderbyTableGroup == 'asc' ? 'e' : 'x')+'.Dois meses atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3LastMonth, endDate3LastMonth) ) { tag = (orderbyTableGroup == 'asc' ? 'd' : 'y')+'.Tr\u00EAs meses atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastQuarter, endDateLastQuarter) ) { tag = (orderbyTableGroup == 'asc' ? 'c' : 'za')+'.Seis meses atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateLastYear, endDateLastYear) ) { tag = (orderbyTableGroup == 'asc' ? 'b' : 'zb')+'.Um ano atr\u00E1s'; }
+                    if (dataRecebido != '' && dataRecebido < endDateLastYear ) { tag = (orderbyTableGroup == 'asc' ? 'a' : 'zc')+'.Maior que um ano atr\u00E1s'; }
 
-                    if (dataRecebido != '' && dataRecebido > endDateNextYear ) { tag = 'zc.Maior que um ano'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextYear, endDateNextYear) ) { tag = 'zb.Em um ano'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextQuarter, endDateNextQuarter) ) { tag = 'za.Em seis meses'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3NextMonth, endDate3NextMonth) ) { tag = 'y.Em tr\u00EAs meses'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2NextMonth, endDate2NextMonth) ) { tag = 'x.Em dois meses'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextMonth, endDateNextMonth) ) { tag = 'w.Em um m\u00EAs'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate5NextWeek, endDate5NextWeek) ) { tag = 'v.Em cinco semana'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate4NextWeek, endDate4NextWeek) ) { tag = 'u.Em quatro semana'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3NextWeek, endDate3NextWeek) ) { tag = 't.Em tr\u00EAs semana'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2NextWeek, endDate2NextWeek) ) { tag = 's.Em duas semana'; }
-                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextWeek, endDateNextWeek) ) { tag = 'r.Semana quem vem'; }
+                    if (dataRecebido != '' && dataRecebido > endDateNextYear ) { tag = (orderbyTableGroup == 'asc' ? 'zc' : 'a')+'.Maior que um ano'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextYear, endDateNextYear) ) { tag = (orderbyTableGroup == 'asc' ? 'zb' : 'b')+'.Em um ano'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextQuarter, endDateNextQuarter) ) { tag = (orderbyTableGroup == 'asc' ? 'za' : 'c')+'.Em seis meses'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3NextMonth, endDate3NextMonth) ) { tag = (orderbyTableGroup == 'asc' ? 'y' : 'd')+'.Em tr\u00EAs meses'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2NextMonth, endDate2NextMonth) ) { tag = (orderbyTableGroup == 'asc' ? 'x' : 'e')+'.Em dois meses'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextMonth, endDateNextMonth) ) { tag = (orderbyTableGroup == 'asc' ? 'w' : 'f')+'.Em um m\u00EAs'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate5NextWeek, endDate5NextWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'v' : 'g')+'.Em cinco semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate4NextWeek, endDate4NextWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'u' : 'h')+'.Em quatro semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate3NextWeek, endDate3NextWeek) ) { tag = (orderbyTableGroup == 'asc' ? 't' : 'i')+'.Em tr\u00EAs semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDate2NextWeek, endDate2NextWeek) ) { tag = (orderbyTableGroup == 'asc' ? 's' : 'j')+'.Em duas semana'; }
+                    if (dataRecebido != '' && dataRecebido.isBetween(startDateNextWeek, endDateNextWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'r' : 'k')+'.Semana quem vem'; }
 
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDate1Tomorrow.format('YYYY-MM-DD') ) { tag = 'q.Depois de amanh\u00E3'; } 
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateTomorrow.format('YYYY-MM-DD') ) { tag = 'p.Amanh\u00E3'; } 
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateNow.format('YYYY-MM-DD') ) { tag = 'o.Hoje'; }
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateYesterday.format('YYYY-MM-DD') ) { tag = 'n.Ontem'; } 
-                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDate1Yesterday.format('YYYY-MM-DD') ) { tag = 'm.Anteontem'; } 
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDate1Tomorrow.format('YYYY-MM-DD') ) { tag = (orderbyTableGroup == 'asc' ? 'q' : 'l')+'.Depois de amanh\u00E3'; } 
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateTomorrow.format('YYYY-MM-DD') ) { tag = (orderbyTableGroup == 'asc' ? 'p' : 'm')+'.Amanh\u00E3'; } 
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateNow.format('YYYY-MM-DD') ) { tag = (orderbyTableGroup == 'asc' ? 'o' : 'n')+'.Hoje'; }
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDateYesterday.format('YYYY-MM-DD') ) { tag = (orderbyTableGroup == 'asc' ? 'n' : 'o')+'.Ontem'; } 
+                    if (dataRecebido != '' && dataRecebido.format('YYYY-MM-DD') == startDate1Yesterday.format('YYYY-MM-DD') ) { tag = (orderbyTableGroup == 'asc' ? 'm' : 'p')+'.Anteontem'; } 
 
                     /*
                     var datas = [
@@ -173,13 +174,14 @@ function getListTypes(acaoType) {
     return uniqPro(arrayTag).sort();
 }
 function appendGerados(type) {
+    var orderbyDesc = (getOptionsPro('orderbyTableGroup') == 'desc') ? true : false;
     $('#divGerados table tr').not('.tablesorter-filter-row').each(function(index){
         if ( $(this).find('th').length == 0 ) {
             var outerHTML = $('<div>').append($(this).clone().addClass('typeGerados')).html();
             $('#divRecebidos').find('table tbody').append(outerHTML);
         }
     });
-    $('#divGerados').hide();
+    $('#divGerados').addClass('displayNone');
     $('#divRecebidos').addClass('tagintable');
     $('#divRecebidosAreaTabela').addClass('tabelaPanelScroll');
     
@@ -190,12 +192,19 @@ function appendGerados(type) {
             dataRecebido = (dataRecebido != '' && type == 'acessdate') ? moment(dataRecebido.datetime, 'YYYY-MM-DD HH:mm:ss').unix() : dataRecebido;
             dataRecebido = (dataRecebido != '' && type == 'createdate') ? moment(dataRecebido.datageracao, 'YYYY-MM-DD HH:mm:ss').unix() : dataRecebido;
             dataRecebido = (dataRecebido != '' && (type == 'senddate' || type == 'senddate')) ? moment(dataRecebido.datesend, 'YYYY-MM-DD HH:mm:ss').unix() : dataRecebido;
-        if (dataRecebido != '' && !isNaN(dataRecebido)) { $(this).data('order', dataRecebido) }
-
+        if (dataRecebido != '' && !isNaN(dataRecebido)) { $(this).attr('data-order', dataRecebido) }
     }).sort(function(a, b) {
       var tda = $(a).data('order');
       var tdb = $(b).data('order');
-      return (type == 'arrivaldate' || type == 'senddate' || type == 'senddepart' || type == 'createdate') ? tda > tdb ? -1 : tda < tdb ? 1 : 0 : tda > tdb ? 1 : tda < tdb ? -1 : 0;
+      return (type == 'arrivaldate' || type == 'senddate' || type == 'senddepart' || type == 'createdate') 
+                ? tda > tdb 
+                    ? (orderbyDesc ? 1 : -1) 
+                    : tda < tdb 
+                        ? (orderbyDesc ? -1 : 1) : 0 
+                : tda > tdb 
+                    ? (orderbyDesc ? -1 : 1) 
+                    : tda < tdb 
+                        ? (orderbyDesc ? 1 : -1) : 0;
     }).appendTo(tbody);
     initPanelResize('#divRecebidosAreaTabela.tabelaPanelScroll', 'recebidosPro');
     if ($('#divRecebidosAreaPaginacaoInferior a').length == 0) { $('#divRecebidosAreaPaginacaoInferior').hide() }
@@ -274,7 +283,7 @@ function updateTipSelectAll(this_) {
 function replaceSelectAll() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     if ( tableProc.length > 0 ) {
-        tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" class="infraImg"></a>').remove();
+        tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>').remove();
     }
 }
 function cleanConfigDataRecebimento() {
@@ -306,9 +315,11 @@ function removeAllTags() {
     if($('#divRecebidosAreaTabela').find('.ui-resizable-handle.ui-resizable-s').length > 0 && typeof $('#divRecebidosAreaTabela').resizable !== 'undefined') { $('#divRecebidosAreaTabela').resizable().resizable('destroy') }
 	$('#divRecebidos').removeClass('tagintable').find('caption').show();
 	$('#divRecebidos .newRowControle').remove();
-	$('#divGerados').show();
+	$('#divGerados').removeClass('displayNone');
 	$('#divRecebidos thead').show();
     $('table tr.tablesorter-headerRow').show();
+    $('#orderbyTableGroup').remove();
+    if (isNewSEI) $('#divTabelaProcesso').removeClass('displayInitial');
 
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado')
         .trigger('filterReset')
@@ -321,9 +332,10 @@ function getUniqueTableTag(i, tagName, type) {
 	var tagName_ = (typeof tagName !== 'undefined' && tagName != '' ) ? removeAcentos(tagName).replace(/\ /g, '') : 'SemGrupo' ;
 		tagName = (typeof tagName === 'undefined' && tagName == '' ) ? ' ' : tagName;
         tagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
+        tagName = ( type == 'tags' && tagName.indexOf('#') !== -1 ) ? tagName.replace(extractHexColor(tagName),'') : tagName;
 	var tbRecebidos = $('#divRecebidos table');
 	var countTd = tbRecebidos.find('tr:not(.tablesorter-headerRow)').eq(1).find('td').length;
-	var iconSelect = '<label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \''+tagName_+'\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck" class="infraImg"></a></th>';
+	var iconSelect = '<label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \''+tagName_+'\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg"></a></th>';
 	var tagCount = $('#divRecebidos table tbody').find('tr[data-tagname="'+tagName_+'"]:visible').length;
     var collapseBtn =   '<span class="tagintable">'+
                         '   <a class="controleTableTag newLink" data-htagname="'+tagName_+'" onclick="toggleGroupTablePro(this)" data-action="show" onmouseover="return infraTooltipMostrar(\'Mostrar Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? '' : 'display:none;' )+'">'+
@@ -335,8 +347,8 @@ function getUniqueTableTag(i, tagName, type) {
                         '</span>';
 	var htmlBody = '<tr class="infraCaption tagintable"><td colspan="'+(countTd+3)+'"><span '+actionTest+'>'+tagCount+' registros:</span></td></tr>'
 					+'<tr data-htagname="'+tagName_+'" class="tagintable tableHeader">'
-					+'<th class="tituloControle" width="5%" align="center">'+iconSelect+'</th>'
-					+'<th class="tituloControle" colspan="'+(countTd+2)+'">'+tagName+collapseBtn+'</th>'
+					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" width="5%" align="center">'+iconSelect+'</th>'
+					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" colspan="'+(countTd+2)+'">'+tagName+collapseBtn+'</th>'
 					+'</tr>';
 		$(htmlBody).appendTo('#divRecebidos table tbody');
 		if ( i == 0 ) { 
@@ -397,9 +409,9 @@ function getTableOnTag(type) {
         tbody.find('tr[data-tagname="SemGrupo"]:not(.infraTrClara)').eq(0).hide();
     }
     if (type == 'all') {
-        var newColumns =    '<th class="tituloControle newRowControle" style="text-align: center;">Especifica\u00E7\u00E3o</th>'+
+        var newColumns =    '<th class="tituloControle newRowControle '+(isNewSEI ? 'infraTh' : '')+'" style="text-align: center;">Especifica\u00E7\u00E3o</th>'+
                             // '<th class="tituloControle newRowControle" style="text-align: center;">Tipo</th>'+
-                            (checkConfigValue('gerenciarprazos') ? '<th class="tituloControle newRowControle" style="text-align: center;">Prazo</th>' : '');
+                            (checkConfigValue('gerenciarprazos') ? '<th class="tituloControle newRowControle '+(isNewSEI ? 'infraTh' : '')+'" style="text-align: center;">Prazos</th>' : '');
         var titleCaption = $('#tblProcessosRecebidos').find('tbody').find('.tableHeader, .infraCaption').text();
             titleCaption = (titleCaption !== '') ? ' <span class="newRowControle">(Agrupados: '+titleCaption+')</span>' : '';
         $('#tblProcessosRecebidos').find('caption.infraCaption').show().append(titleCaption);
@@ -408,6 +420,25 @@ function getTableOnTag(type) {
         $('#tblProcessosRecebidos').find('thead').find('.prazoBoxDisplay').remove();
         tableHomeDestroy(true);
     }
+    if (type != '' && type != 'all') {
+        var orderbyTableGroup = getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc';
+        $('#processoToCSV').after('<a class="newLink" data-order="'+orderbyTableGroup+'" onclick="orderbyTableGroup(this)" id="orderbyTableGroup" onmouseover="return infraTooltipMostrar(\'Classificar dados pela ordem '+(orderbyTableGroup == 'asc' ? 'decrescente' : 'crescente')+'\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-sort-numeric-'+(orderbyTableGroup == 'asc' ? 'up' : 'down')+' cinzaColor"></i></a>');
+    }
+    if (isNewSEI && type != '') {
+        $('#divTabelaProcesso').addClass('displayInitial');
+    } else if (isNewSEI) {
+        $('#divTabelaProcesso').removeClass('displayInitial');
+    }
+}
+function orderbyTableGroup(this_) {
+    var _this = $(this_);
+    var data = _this.data();
+    var setOrder = data.order == 'asc' ? 'desc' : 'asc';
+        setOptionsPro('orderbyTableGroup',setOrder);
+        _this.attr('data-order',setOrder);
+        _this.find('i').attr('class','fas fa-sort-numeric-'+data.order == 'asc' ? 'down' : 'up');
+        infraTooltipOcultar();
+        updateGroupTable($('#selectGroupTablePro'));
 }
 function getArrayProcessoRecebido(href) {
     var storeRecebimento = ( typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
@@ -598,7 +629,29 @@ function initTableTag(type = '') {
     initNewTabProcesso();
     setTimeout(function(){ 
         forcePlaceHoldChosen();
+        urgenteProMoveOnTop();
+        if (type != '' && type != 'all' && $('#tblProcessosRecebidos tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').length > 0) {
+            $('#tblProcessosRecebidos tr.tagintable[data-htagname="(URGENTE)"').remove();
+            $('#tblProcessosRecebidos tr.urgentePro').show().attr('data-tagname','(URGENTE)');
+            var colspan = $('#tblProcessosRecebidos tr:not(.tableHeader)').eq(1).find('td').length;
+                colspan = (typeof colspan !== 'undefined' && colspan > 0) ? colspan+2 : 7;
+            var htmlHeadUrgente =   '<tr data-htagname="(URGENTE)" class="tagintable tableHeader">'+
+                                    '   <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" width="5%" align="center">'+
+                                    '       <label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label>'+
+                                    '       <a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'(URGENTE)\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();">'+
+                                    '           <img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg">'+
+                                    '       </a>'+
+                                    '   </th>'+
+                                    '   <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" colspan="'+colspan+'">(URGENTE)</th>'+
+                                    '</tr>';
+            $("#tblProcessosRecebidos tbody").prepend(htmlHeadUrgente);
+        }
     }, 1000);
+}
+function urgenteProMoveOnTop() {
+    $("#tblProcessosRecebidos tbody").prepend($('#tblProcessosRecebidos tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').closest('tr'));
+    $("#tblProcessosGerados tbody").prepend($('#tblProcessosGerados tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').closest('tr'));
+    $("#tblProcessosDetalhado tbody").prepend($('#tblProcessosDetalhado tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').closest('tr'));
 }
 function getFilterTableHome(this_) {
     if (tableHomePro.length > 0 && $('.filterTableProcessos').length > 0) {
@@ -872,7 +925,8 @@ function initNewTabProcesso() {
     }, 500);
 }
 function openListNewTab(this_) {
-    var listNewTag = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('.infraCheckbox:checked').map(function(){ return $(this).val() }).get();
+    var elemCheckbox = isNewSEI ? '.infraCheckboxInput' : '.infraCheckbox';
+    var listNewTag = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find(elemCheckbox+':checked').map(function(){ return $(this).val() }).get();
     if (listNewTag.length > 0) {
         $.each(listNewTag, function(index, value){
             var url = url_host+'?acao=procedimento_trabalhar&id_procedimento='+value;
@@ -939,21 +993,26 @@ function orderDivPanel(html, idOrder, name) {
     }
 }
 function insertDivPanelControleProc() {
-    var statusView = ( getOptionsPro('frmProcedimentoControlar') == 'hide' ) ? 'none' : 'initial';
-    var statusIconShow = ( getOptionsPro('frmProcedimentoControlar') == 'hide' ) ? '' : 'display:none;';
-    var statusIconHide = ( getOptionsPro('frmProcedimentoControlar') == 'hide' ) ? 'display:none;' : '';
+    var elementControleProc = isNewSEI ? 'collapseTabelaProcesso' : 'frmProcedimentoControlar';
+    var statusView = ( getOptionsPro(elementControleProc) == 'hide' ) ? 'none' : 'initial';
+    var statusIconShow = ( getOptionsPro(elementControleProc) == 'hide' ) ? '' : 'display:none;';
+    var statusIconHide = ( getOptionsPro(elementControleProc) == 'hide' ) ? 'display:none;' : '';
+    var idControleProc = isNewSEI ? '.'+elementControleProc : '#'+elementControleProc;
     var idOrder = (getOptionsPro('orderPanelHome') && typeof jmespath !== 'undefined' && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | [0]") : '';
     var htmlIconTable =     '<i class="controleProcPro '+(localStorage.getItem('seiSlim') ? 'fad fa-folders' : 'fas fa-folder-open')+' cinzaColor" style="margin: 0 10px 0 0; font-size: 1.1em;"></i>';
-    var htmlToggleTable =   '<a class="controleProcPro newLink" id="frmProcedimentoControlar_showIcon" onclick="toggleTablePro(\'frmProcedimentoControlar\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
-                            '<a class="controleProcPro newLink" id="frmProcedimentoControlar_hideIcon" onclick="toggleTablePro(\'frmProcedimentoControlar\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>';
+    var htmlToggleTable =   '<a class="controleProcPro newLink" id="'+elementControleProc+'_showIcon" onclick="toggleTablePro(\''+idControleProc+'\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
+                            '<a class="controleProcPro newLink" id="'+elementControleProc+'_hideIcon" onclick="toggleTablePro(\''+idControleProc+'\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>';
     var htmlDivPanel = '<div class="controleProcPro panelHomePro" style="display: inline-block; width: 100%;" id="processosSEIPro" data-order="'+idOrder+'"></div>';
     
+    if (isNewSEI) $('#divFiltro, #collapseControle, #newFiltro, #divTabelaProcesso').addClass('collapseTabelaProcesso');
+
     if ($('.controleProcPro').length == 0) {
         $('#divInfraBarraLocalizacao').css('width', '100%').addClass('titlePanelHome').append(htmlToggleTable).prepend(htmlIconTable);
-        $('#frmProcedimentoControlar').css({'width': '100%', 'display': statusView});
+        $(idControleProc).css({'width': '100%', 'display': statusView});
         $('#panelHomePro').append(htmlDivPanel);
         $('#frmProcedimentoControlar').moveTo('#processosSEIPro');
         $('#divInfraBarraLocalizacao').moveTo('#processosSEIPro');
+        if (isNewSEI && getOptionsPro(elementControleProc) == 'hide') $(idControleProc).addClass('displayNone');
     }
 }
 function insertDivPanel() {
@@ -1093,6 +1152,7 @@ function initTableSorterHome(TimeOut = 1000) {
         }
     } else {
         setTimeout(function(){ 
+            if (typeof $().tablesorter === 'undefined' && TimeOut == 1000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initTableSorterHome(TimeOut - 100); 
             console.log('Reload initTableSorterHome'); 
         }, 500);
@@ -1131,6 +1191,18 @@ function setTableSorterHome() {
                         }
                     });
                     */
+                   if (isNewSEI) {
+                        tableSorterHome.find('th:nth-child(2)').each(function(){
+                            var _this = $(this);
+                            if (_this.attr('colspan') == 3) {
+                                    _this.removeAttr('colspan');
+                                var beforeTh = _this.clone().text('');
+                                var aftereTh = _this.clone().text('');
+                                    _this.before(beforeTh);
+                                    _this.after(aftereTh);
+                            }
+                        });
+                   }
                     
                     var elemID = $(this).attr('id');
                     var _this = $('#'+$(this).attr('id'));
@@ -1158,29 +1230,16 @@ function setTableSorterHome() {
                                 var processo = $(elem).find('a').eq(0);
                                 var nrProc = processo.text().trim();
                                 var texttip = processo.attr('onmouseover');
-                                    texttip = (typeof texttip !== 'undefined') ? extractTooltip(texttip) : ''; 
+                                    texttip = (typeof texttip !== 'undefined') ? extractTooltip(texttip) : '';
+                                var urgente = (texttip != '' && texttip.toLowerCase().indexOf('(urgente)') !== -1) ? '0 ' : '';
                                     // console.log(texttip);
-                                return nrProc+' '+texttip;
+                                return urgente+nrProc+' '+texttip;
                             },
                             4: function (elem, table, cellIndex) {
                               var target = $(elem).find('.dateboxDisplay').eq(0);
-                              var text_date = target.data('time-sorter');
+                              var text_date = (typeof target !== 'undefined' && target.length > 0) ? target.data('time-sorter') : $(elem).text().trim();
                               return text_date;
                             }
-                            /*,
-                            4: function (elem, table, cellIndex) {
-                                var text_return = '';
-                                var prazo_entrega = '';
-                                if ($('.dateboxDisplay').length > 0) {
-                                    prazo_entrega = $('.dateboxDisplay').map(function(){ return $(this).data('prazo-entrega') }).get().sort()[0];
-                                    $(elem).find('.dateboxDisplay').each(function(){
-                                        var texttip = $(this).find('.dateBoxIcon').attr('onmouseover');
-                                            texttip = (typeof texttip !== 'undefined') ? extractTooltip(texttip) : ''; 
-                                        text_return += texttip;
-                                    });
-                                }
-                                return prazo_entrega+' '+text_return;
-                            }*/
                         },
                         widgets: ["saveSort", "filter"],
                         widgetOptions: {
@@ -1198,10 +1257,11 @@ function setTableSorterHome() {
                         sortLocaleCompare: true,
                         headers: {
                             0: { sorter: false, filter: false },
-                            1: { filter: true },
-                            2: { filter: true },
-                            3: { filter: true },
-                            4: { filter: true }
+                            1: { sorter: true, filter: true },
+                            2: { sorter: true, filter: true },
+                            3: { sorter: true, filter: true },
+                            4: { sorter: true, filter: true },
+                            4: { sorter: true, filter: true }
                         }
                     };
                     
@@ -1222,7 +1282,7 @@ function setTableSorterHome() {
                     var filter = _this.find('.tablesorter-filter-row').get(0);
                     if (typeof filter !== 'undefined') {
                         setTimeout(function(){ 
-                            var htmlFilter =    '<a class="newLink filterTableProcessos '+(_this.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'newLink_active')+'" onclick="filterTableProcessos(this)" onmouseover="return infraTooltipMostrar(\'Pesquisar na tabela\');" onmouseout="return infraTooltipOcultar();" style="right: -50px; top: 0; position: absolute;">'+
+                            var htmlFilter =    '<a class="newLink filterTableProcessos '+(_this.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'newLink_active')+'" onclick="filterTableProcessos(this)" onmouseover="return infraTooltipMostrar(\'Pesquisar na tabela\');" onmouseout="return infraTooltipOcultar();" style="left: 0; top: -20px; position: absolute;">'+
                                                 '   <i class="fas fa-search cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
                                                 '</a>';
                             _this.find('thead .filterTableProcessos').remove();
@@ -1230,6 +1290,7 @@ function setTableSorterHome() {
                             observerFilterHome.observe(filter, {
                                 attributes: true
                             });
+                            tableSorterHome.find('.tablesorter-filter-row input.tablesorter-filter[aria-label*="Prazos"]').attr('type','date');
                         }, 500);
                     }
                 }
@@ -1425,7 +1486,9 @@ function addControlePrazo(this_ = false) {
     var textTag = '';
     var textControle = 'Adicionar';
     var form = $('#frmProcedimentoControlar');
-    var href = $('#divComandos a[onclick*="andamento_marcador_gerenciar"]').attr('onclick');
+    var href = isNewSEI
+            ? $('#divComandos a[onclick*="andamento_marcador_cadastrar"]').attr('onclick') 
+            : $('#divComandos a[onclick*="andamento_marcador_gerenciar"]').attr('onclick');
         href = (typeof href !== 'undefined') ? href.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
         href = (href && href !== null && href.length > 0 && href[0] != '') ? href[0] : false;
     if (this_) {
@@ -1449,7 +1512,7 @@ function addControlePrazo(this_ = false) {
             _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
             _parent.find('input[type="checkbox"]').trigger('click');
             textTag = (typeof _data.timeSorter !== 'undefined') ? textTag.replace(moment(_data.timeSorter, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm'), '').replace('Ate ', '').trim() : textTag;
-            textTag = (typeof textTag !== 'undefined') ? textTag.replace(/\\n/g, "") : '';
+            textTag = (typeof textTag !== 'undefined' && textTag !== null && textTag != '') ? textTag.replace(/\\n/g, "") : '';
     }
     var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     
@@ -1474,7 +1537,7 @@ function addControlePrazo(this_ = false) {
                     '          <td class="input" style="position:relative">'+
                     '               <span class="newLink_active" style="margin: 0px;padding: 5px 8px;border-radius: 5px;position: absolute;top: 10px;'+(dueSetDate ? 'display:block;' : 'display:none;')+'">At\u00E9</span>'+
                     '               <input type="date" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
-                    '               <input type="time" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_time" value="'+timeRef+'" style="width:70px; float: right;">'+
+                    '               <input type="time" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_time" value="'+timeRef+'" style="width:80px; float: right;">'+
                     '           </td>'+
                     '      </tr>'+
                     '      <tr style="height: 40px;">'+
@@ -1520,7 +1583,8 @@ function addControlePrazo(this_ = false) {
             width: 550,
             open: function() {
                 var listaMarcadores = getOptionsPro('listaMarcadores');
-                if (listaMarcadores) {
+                var listaMarcadores_unidade = getOptionsPro('listaMarcadores_unidade');
+                if (listaMarcadores && listaMarcadores_unidade == $('#selInfraUnidades').val()) {
                     var htmlOptions = $.map(listaMarcadores, function(v){
                                         var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                         return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
@@ -1576,7 +1640,7 @@ function setPrazoMarcador(mode, this_, form, href) {
         var _dateTo = ($('#configDatesBox_duesetdate').is(':checked')) ? _dateRef : false;
         
         if (href && href != '') {
-            tblProcessos.find('tr.infraTrMarcada td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin azulColor"></i>');
+            tblProcessos.find('tr.infraTrMarcada td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin '+(isNewSEI ? 'brancoColor' : 'azulColor')+'"></i>');
             $.ajax({ 
                 method: 'POST',
                 data: param,
@@ -1584,7 +1648,7 @@ function setPrazoMarcador(mode, this_, form, href) {
             }).done(function (html) {
                 var $html = $(html);
                 var xhr = new XMLHttpRequest();
-                var formTag = $html.find('#frmGerenciarMarcador');
+                var formTag = isNewSEI ? $html.find('#frmAndamentoMarcadorCadastro') : $html.find('#frmGerenciarMarcador');
                 var hrefTag = formTag.attr('action');
                 var dateSubmit = (_dateTo) ? 'Ate '+moment(_dateTo, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : moment(_dateRef, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
                     dateSubmit = dateSubmit+_textTag;
@@ -1592,7 +1656,6 @@ function setPrazoMarcador(mode, this_, form, href) {
                 var selectTags = optionsMarcadores.array;
                 var indexSelected = optionsMarcadores.indexSelected;
                 // var tagSelected = (typeof selectTags[indexSelected] !== 'undefined') ? selectTags[indexSelected].value : selectTags[0].value;
-                    // console.log(tagSelected, indexSelected, selectTags);
 
                 var paramTag = {};
                     formTag.find("input[type=hidden], textarea, button").map(function () {
@@ -1609,7 +1672,7 @@ function setPrazoMarcador(mode, this_, form, href) {
                         var valor = (k!='txaTexto') ? paramTag[k] : escapeComponent(paramTag[k]);
                             postDataTag = postDataTag + k + '=' + valor;
                     }
-                    console.log(postDataTag);
+                    // console.log(postDataTag);
 
                 if (hrefTag && hrefTag != '') {
                     $.ajax({ 
@@ -1691,7 +1754,10 @@ function getListaMarcadores(html) {
                             return {name: $(this).text().trim(), value: $(this).val(), img: $(this).attr('data-imagesrc') } 
                         } 
                     }).get();
-        if (selectTags.length > 0) setOptionsPro('listaMarcadores',selectTags);
+        if (selectTags.length > 0) {
+            setOptionsPro('listaMarcadores',selectTags);
+            setOptionsPro('listaMarcadores_unidade',$('#selInfraUnidades').val());
+        }
     return {array: selectTags, indexSelected: indexSelected};
 }
 function configDatesSwitchChangePrazo(this_) {
@@ -1733,10 +1799,10 @@ function setControlePrazo(force = false) {
             tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="prazoBoxDisplay" style="text-align: center;"></td>');
 
         if ( tblProcessos.find('thead').length > 0 ) {
-            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header prazoBoxDisplay" style="width: 140px;min-width: 140px;"> Prazos</th>');
+            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(isNewSEI ? 'infraTh' : '')+'" style="width: 140px;min-width: 140px;"> Prazos</th>');
         } else {
             $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.prazoBoxDisplay').remove();
-            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay" style="width: 140px;min-width: 140px;"> Prazos</th>');
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(isNewSEI ? 'infraTh' : '')+'" style="width: 140px;min-width: 140px;"> Prazos</th>');
         }
     }
     tblProcessos.find('tbody tr').each(function(){
@@ -1833,6 +1899,14 @@ function initAllMarcadoresHome(TimeOut = 9000) {
         }, 500);
     }
 }
+function initUrgentePro() {
+    $('a div.urgentePro').remove();
+    $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]')
+        .prepend('<div class="urgentePro"></div>')
+        .addClass('urgentePro')
+        .closest('tr')
+        .addClass('urgentePro');
+}
 function initSeiPro() {
 	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
         $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
@@ -1850,6 +1924,7 @@ function initSeiPro() {
         initReplaceNewIcons();
         initControlePrazo();
         initAllMarcadoresHome();
+        initUrgentePro();
 	} else if ( $("#ifrArvore").length > 0 ) {
         initDadosProcesso();
         initObserveUrlChange();
