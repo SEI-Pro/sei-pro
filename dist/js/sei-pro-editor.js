@@ -860,7 +860,14 @@ function setChosenInCke() {
         $('div.cke_dialog_ui_input_select').css({'position':'absolute', 'max-width': '500px', 'min-width': '200px'});
         $('span.cke_dialog_ui_labeled_content').css({'height':'27px', 'display': 'flex'});
         $('select.cke_dialog_ui_input_select').each(function(){
-            initChosenReplace('box_init',this);
+            if ($('#'+$(this).attr('id')+'_chosen').length == 0) { 
+                initChosenReplace('box_init',this);
+            } else {
+                $(this).chosen("destroy").chosen({
+                    placeholder_text_single: ' ',
+                    no_results_text: 'Nenhum resultado encontrado'
+                });
+            }
         });
         setTimeout(function(){ 
             $('.cke_dialog_ui_labeled_content .chosen-container-single').css({'max-width': '500px', 'min-width': '200px'});
@@ -2324,6 +2331,37 @@ function setDocCertidao() {
             }
         }
         */
+    }
+}
+function setDocAutomatico() {
+    var dadosDocAutomatico = sessionStorageRestorePro('dadosDocAutomatico');
+    var nomeDocAutomatico = sessionStorageRestorePro('nomeDocAutomatico');
+    var param = getParamsUrlPro(window.location.href);
+    if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_automatico' && dadosDocAutomatico && nomeDocAutomatico) {
+        setCKEDITOR_instances();
+        initAddButtonTarjaSigilo();
+        var elemIframe = $('iframe').filter(function(){ return $(this).contents().find('body').attr('contenteditable') == 'true' }).eq(0)
+        if (elemIframe.length > 0) {
+            var iframe = elemIframe.contents();
+            if (elemIframe.attr('title').indexOf(',') !== -1) {
+                var idEditor = elemIframe.attr('title').split(',')[1].trim();
+                $('#idEditor').val(idEditor);
+                oEditor = CKEDITOR.instances[idEditor];
+                if (typeof oEditor !== 'undefined') {
+                    oEditor.focus();
+                    oEditor.fire('saveSnapshot');
+                    iframe.find('body').html(dadosDocAutomatico);
+                    actionsMarkSigilo(undefined, 'apply');
+                    enableButtonSavePro();
+                    
+                    var $form = oEditor.element.$.form;
+                    if ($form) $form.submit();
+
+                    sessionStorageRemovePro('dadosDocAutomatico');
+                    sessionStorageRemovePro('nomeDocAutomatico');
+                }
+            }
+        }
     }
 }
 // SUBSTITUI CAMPOS PERSONALIZADOS
@@ -5169,6 +5207,7 @@ function initFunctions() {
     insertFontIcon('head');
     reloadModalLink();
     setDocCertidao();
+    setDocAutomatico();
     checkAutoSave();
     initDropImages();
     getStylesOnEditor();

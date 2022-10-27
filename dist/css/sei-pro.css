@@ -385,7 +385,9 @@ a.newLink_confirm:hover i {
     font-weight: bold;
 }
 #ganttAfastamentoPanel .seiProForm input[type="date"],
-#ganttAfastamentoPanel .seiProForm input[type="time"] {
+#ganttHistoryPainel .seiProForm input[type="date"],
+#ganttAfastamentoPanel .seiProForm input[type="time"],
+#ganttHistoryPainel .seiProForm input[type="time"] {
     font-size: 1em;
 }
 span.tagState {
@@ -470,6 +472,7 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #projetosGanttDiv .popup-wrapper,
 #ganttRecorrenciaPanel .popup-wrapper,
 #ganttAfastamentoPanel .popup-wrapper,
+#ganttHistoryPainel .popup-wrapper,
 #ganttAtivPanel .popup-wrapper {
     background: #fff;
     display: none;
@@ -482,12 +485,14 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #projetosGanttDiv .popup-wrapper h5, p,
 #ganttRecorrenciaPanel .popup-wrapper h5, p,
 #ganttAfastamentoPanel .popup-wrapper h5, p,
+#ganttHistoryPainel .popup-wrapper h5, p,
 #ganttAtivPanel .popup-wrapper h5, p {
     margin: 0;
 }
 #projetosGanttDiv .popup-wrapper h5,
 #ganttRecorrenciaPanel .popup-wrapper h5,
 #ganttAfastamentoPanel .popup-wrapper h5,
+#ganttHistoryPainel .popup-wrapper h5,
 #ganttAtivPanel .popup-wrapper h5 {
     font-size: 12px;
     font-weight: bold;
@@ -497,6 +502,7 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #projetosGanttDiv .popup-wrapper a,
 #ganttRecorrenciaPanel .popup-wrapper a,
 #ganttAfastamentoPanel .popup-wrapper a,
+#ganttHistoryPainel .popup-wrapper a,
 #ganttAtivPanel .popup-wrapper a {
     text-decoration: underline;
     color: #0000cc;
@@ -504,6 +510,7 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #projetosGanttDiv .popup-wrapper p,
 #ganttRecorrenciaPanel .popup-wrapper p,
 #ganttAfastamentoPanel .popup-wrapper p,
+#ganttHistoryPainel .popup-wrapper p,
 #ganttAtivPanel .popup-wrapper p {
     font-size: 12px;
     margin-bottom: 6px;
@@ -512,46 +519,64 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #projetosGanttDiv .popup-wrapper p:last-child,
 #ganttRecorrenciaPanel .popup-wrapper p:last-child,
 #ganttAfastamentoPanel .popup-wrapper p:last-child,
+#ganttHistoryPainel .popup-wrapper p:last-child,
 #ganttAtivPanel .popup-wrapper p:last-child {
     margin-bottom: 0;
 }
 #projetosGanttDiv .popup-wrapper .pointer,
 #ganttRecorrenciaPanel .popup-wrapper .pointer,
 #ganttAfastamentoPanel .popup-wrapper .pointer,
+#ganttHistoryPainel .popup-wrapper .pointer,
 #ganttAtivPanel .popup-wrapper .pointer {
     border-color: #ccc transparent transparent !important;
 }
 #projetosGanttDiv .popup-wrapper .hide,
 #ganttRecorrenciaPanel .popup-wrapper .hide,
 #ganttAfastamentoPanel .popup-wrapper .hide,
+#ganttHistoryPainel .popup-wrapper .hide,
 #ganttAtivPanel .popup-wrapper .hide
 {
     display: none;
 }
+#ganttHistoryPainel .bar-ongoing .bar,
 #projetosGanttDiv .bar-ongoing .bar {
     fill: #dae3e8;
 }
+#ganttHistoryPainel .bar-ongoing .bar-progress,
 #projetosGanttDiv .bar-ongoing .bar-progress {
     fill: #2490ef !important;
 }
+#ganttHistoryPainel .bar-delay .bar,
 #projetosGanttDiv .bar-delay .bar {
     fill: #e8dadd;
 }
+#ganttHistoryPainel .bar-delay .bar-progress,
 #projetosGanttDiv .bar-delay .bar-progress {
     fill: #ef2440 !important;
 }
-#projetosGanttDiv .bar-inday .bar, #projetosGanttDiv .bar-complete .bar {
+#ganttHistoryPainel .bar-inday .bar, 
+#ganttHistoryPainel .bar-complete .bar,
+#projetosGanttDiv .bar-inday .bar, 
+#projetosGanttDiv .bar-complete .bar {
     fill: #e6eae8;
 }
-#projetosGanttDiv .bar-inday .bar-progress, #projetosGanttDiv .bar-complete .bar-progress {
+#ganttHistoryPainel .bar-inday .bar-progress, 
+#ganttHistoryPainel .bar-complete .bar-progress,
+#projetosGanttDiv .bar-inday .bar-progress, 
+#projetosGanttDiv .bar-complete .bar-progress {
     fill: #77cc51 !important;
 }
+#ganttHistoryPainel .gantt .grid-row:nth-child(2n),
+#ganttHistoryPainel .gantt .grid-row:nth-child(2n),
+#projetosGanttDiv .gantt .grid-row:nth-child(2n),
 #projetosGanttDiv .gantt .grid-row:nth-child(2n) {
     fill: #f5f5f5 !important;
 }
+#ganttHistoryPainel .gantt .bar-label,
 #projetosGanttDiv .gantt .bar-label {
     fill: #666 !important;
 }
+#ganttHistoryPainel .gantt .bar,
 #projetosGanttDiv .gantt .bar {
     stroke: #ccc;
     stroke-width: 0;
@@ -561,27 +586,33 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #ganttAtivPanel .bar-em-execucao .bar,
 #ganttRecorrenciaPanel .bar-em-execucao .bar,
 #ganttAfastamentoPanel .bar-em-execucao .bar,
+#ganttHistoryPainel .bar-em-execucao .bar,
 #ganttAtivPanel .bar-iniciado .bar,
-#ganttAfastamentoPanel .bar-iniciado .bar {
+#ganttAfastamentoPanel .bar-iniciado .bar,
+#ganttHistoryPainel .bar-iniciado .bar {
     fill: #B8C2CB !important;
 }
 #ganttRecorrenciaPanel .bar-fora-execucao .bar,
 #ganttAfastamentoPanel .bar-fora-execucao .bar,
+#ganttHistoryPainel .bar-fora-execucao .bar,
 #ganttAtivPanel .bar-fora-execucao .bar {
     fill: #cacaca !important;
 }
 #ganttRecorrenciaPanel .bar-iniciado .bar-progress,
 #ganttAfastamentoPanel .bar-iniciado .bar-progress,
+#ganttHistoryPainel .bar-iniciado .bar-progress,
 #ganttAtivPanel .bar-iniciado .bar-progress {
     fill: #2490ef !important;
 }
 #ganttRecorrenciaPanel .bar-concluido-noprazo .bar,
 #ganttAfastamentoPanel .bar-concluido-noprazo .bar,
+#ganttHistoryPainel .bar-concluido-noprazo .bar,
 #ganttAtivPanel .bar-concluido-noprazo .bar {
     fill: #e6eae8 !important;
 }
 #ganttRecorrenciaPanel .bar-concluido-noprazo .bar-progress,
 #ganttAfastamentoPanel .bar-concluido-noprazo .bar-progress,
+#ganttHistoryPainel .bar-concluido-noprazo .bar-progress,
 #ganttAtivPanel .bar-concluido-noprazo .bar-progress {
     fill: #77CC49 !important;
 }
@@ -593,62 +624,80 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #ganttRecorrenciaPanel .bar-ematraso .bar,
 #ganttAfastamentoPanel .bar-nao-iniciado .bar,
 #ganttAfastamentoPanel .bar-concluido-foraprazo .bar,
-#ganttAfastamentoPanel .bar-ematraso .bar {
+#ganttAfastamentoPanel .bar-ematraso .bar,
+#ganttHistoryPainel .bar-nao-iniciado .bar,
+#ganttHistoryPainel .bar-concluido-foraprazo .bar,
+#ganttHistoryPainel .bar-ematraso .bar {
     fill: #e8dadd !important;
 }
 #ganttAfastamentoPanel .bar-concluido-foraprazo .bar-progress,
+#ganttHistoryPainel .bar-concluido-foraprazo .bar-progress,
 #ganttRecorrenciaPanel .bar-concluido-foraprazo .bar-progress,
 #ganttAtivPanel .bar-concluido-foraprazo .bar-progress {
     fill: #ef8624 !important;
 }
 #ganttAfastamentoPanel .bar-ematraso .bar-progress,
+#ganttHistoryPainel .bar-ematraso .bar-progress,
 #ganttRecorrenciaPanel .bar-ematraso .bar-progress,
 #ganttAtivPanel .bar-ematraso .bar-progress {
     fill: #ef2440 !important;
 }
 #ganttAfastamentoPanel .bar-wrapper .handle-group,
+#ganttHistoryPainel .bar-wrapper .handle-group,
 #ganttRecorrenciaPanel .bar-wrapper .handle-group,
 #ganttAtivPanel .bar-wrapper .handle-group {
     display: none;
 }
 #ganttAfastamentoPanel .popup-wrapper td,
+#ganttHistoryPainel .popup-wrapper td,
 #ganttRecorrenciaPanel .popup-wrapper td,
 #ganttAtivPanel .popup-wrapper td {
     vertical-align: middle;
 }
 #ganttAfastamentoPanel .popup-wrapper,
+#ganttHistoryPainel .popup-wrapper,
 #ganttRecorrenciaPanel .popup-wrapper {
     width: 400px!important;
 }
 #ganttAtivPanel .popup-wrapper {
     width: 550px!important;
 }
+#ganttHistoryPainel .gantt .bar-wrapper,
 #projetosGanttDiv .gantt .bar-wrapper {
     cursor: pointer;
 }
+#ganttHistoryPainel .gantt .edit-task.bar-wrapper:hover .bar,
 #projetosGanttDiv .gantt .edit-task.bar-wrapper:hover .bar { 
     stroke-width: 2 !important;
 }
+#ganttHistoryPainel .gantt .edit-task.bar-wrapper:hover .bar .handle,
 #projetosGanttDiv .gantt .edit-task.bar-wrapper:hover .bar .handle {
     visibility: visible;
     opacity: 1;
 }
+#ganttHistoryPainel .gantt .handle.right,
+#ganttHistoryPainel .gantt .handle.left,
 #projetosGanttDiv .gantt .handle.right,
 #projetosGanttDiv .gantt .handle.left {
     fill: #b1b1b1 !important;
 }
+#ganttHistoryPainel .gantt .edit-task.bar-wrapper.active .bar,
 #projetosGanttDiv .gantt .edit-task.bar-wrapper.active .bar {
     stroke-width: 2 !important;
 }
+#ganttHistoryPainel .gantt .arrow,
 #projetosGanttDiv .gantt .arrow {
     stroke: #ccc !important;
 }
+#ganttHistoryPainel .gantt .handle,
 #projetosGanttDiv .gantt .handle {
     fill: #666 !important;
 }
+#ganttHistoryPainel .gantt .bar-wrapper.active .bar,
 #projetosGanttDiv .gantt .bar-wrapper.active .bar {
     fill: rgb(169, 181, 193) !important;
 }
+#ganttHistoryPainel .bar-complete .handle-group .handle.progress,
 #projetosGanttDiv .bar-complete .handle-group .handle.progress {
 	display: none;
 }
@@ -2502,6 +2551,9 @@ td.editCellLoadingError:after {
 .tableFollow tr.closed td:nth-child(2):before {
     content: "ENCERRADO" !important;
 }
+.tableFollow tr.closed:has(td div.chosen-container) {
+    opacity: 1 !important;
+}
 .tableFollow tr.disabled td:nth-child(2):before {
     content: "DESATIVADO" !important;
     background: #dedede;
@@ -2662,7 +2714,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
     font-size: 14pt;
     width: -webkit-fill-available;
     width: -moz-available;
-    margin-right: 70px;
+    margin-right: 40px;
 }
 .stickDadosArvore .actionsNew {
     position: absolute;
@@ -3301,10 +3353,10 @@ td.prazoBoxDisplay {
 td.prazoBoxDisplay {
     min-width: 150px !important;
 }
-.displayNone {
+.displayNone, #divInfraAreaTelaD .displayNone {
     display: none !important;
 }
-.displayInitial {
+.displayInitial, #divInfraAreaTelaD .displayInitial {
     display: initial !important;
 }
 .newSEI a.newLinksMenuPro {
@@ -3333,4 +3385,25 @@ td.prazoBoxDisplay {
 .newSEI .dz-preview span.dz-error-message,
 .newSEI .dz-preview span.dz-size {
     vertical-align: super !important;
+}
+input[type="currency"]{
+    padding: 10px;
+}
+.newSEI #iconsActions .newLink i {
+    font-size: 2em;
+}
+.newSEI #topmenu .urgentePro,
+.newSEI #divArvore .urgentePro {
+    vertical-align: baseline;
+}
+.newSEI #topmenu .iconFavoritePro {
+    vertical-align: super;
+}
+.newSEI #topmenu .noVisitado[title*="(URGENTE)"],
+.newSEI #divArvore .noVisitado[title*="(URGENTE)"] {
+    background: transparent;
+}
+.newSEI #iconsActions .newLink .fa-layers-counter {
+    font-size: 1.5em;
+    color: #fff;
 }

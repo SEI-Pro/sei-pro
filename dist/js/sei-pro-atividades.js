@@ -683,9 +683,11 @@ function appendDataConfigOnLocalArray(arrayServer) {
                             arrayConfigAtividades[propertyName]['lista'].push(v);
                             // console.log(propertyName, 'PUSH', v);  
                         }   
+                        /*
                         if (typeof arrayLocal  !== 'undefined' &&  arrayLocal.length > 0 ) {
                             updateTempoProporcionalPlanos();
-                        }       
+                        }    
+                        */   
                     });
                 } else {
                     if (arrayServer[propertyName].length > 0) {
@@ -8293,6 +8295,8 @@ function getTableAfastamentoPanel(this_) {
                 tagColor = (tagColor !== null) ? tagColor : { "icontag": "luggage-cart", "colortag": "#bfd5e11", "textcolor": "black"};
             var horas_afastamento = jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+value.id_tipo_motivo+"`] | [0].config.horas_afastamento");
                 horas_afastamento = (horas_afastamento) ? true : false;
+            var integracao_interna = jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+value.id_tipo_motivo+"`] | [0].config.integracao_interna");
+                integracao_interna = (integracao_interna) ? true : false;
             var dia_inteiro = (moment(value.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00' && (moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '23:59:59' || moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00')) ? true : false;
             var format_sys = (horas_afastamento) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
             var format_display = (!dia_inteiro) ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
@@ -8336,10 +8340,10 @@ function getTableAfastamentoPanel(this_) {
                                         '               </div>'+
                                         '           </td>'+
                                         '           <td align="right">'+
-                                        (checkPermissionAfast(value, 'edit_afastamento')  ?
+                                        (checkPermissionAfast(value, 'edit_afastamento') && !integracao_interna  ?
                                         '               <a class="newLink followLinkTr" onclick="saveAfastamento(this,'+value.id_afastamento+')" onmouseover="return infraTooltipMostrar(\'Editar afastamento\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                         '' : '')+
-                                        (checkPermissionAfast(value, 'delete_afastamento') ?
+                                        (checkPermissionAfast(value, 'delete_afastamento') && !integracao_interna ?
                                         '               <a class="newLink followLinkTr" onclick="removeAfastamento(this, '+value.id_afastamento+')" onmouseover="return infraTooltipMostrar(\'Excluir afastamento\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash" style="font-size: 100%;"></i></a>'+
                                         '' : '')+
                                         '           </td>'+
@@ -8504,6 +8508,8 @@ function getGanttAfastamento(bar_class = false) {
                     var optionSelectUser = $.map(arrayConfigAtividades.usuarios, function(v){ if (v.id_user == value.id_user) { return '<option value="'+v.id_user+'" selected>'+v.apelido+'</option>' } else { return '<option value="'+v.id_user+'">'+v.apelido+'</option>' } }).join('');
                     var horas_afastamento = jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+value.id_tipo_motivo+"`] | [0].config.horas_afastamento");
                         horas_afastamento = (horas_afastamento) ? true : false;
+                    var integracao_interna = jmespath.search(arrayConfigAtividades.afastamentos.tipos_motivos,"[?id_tipo_motivo==`"+value.id_tipo_motivo+"`] | [0].config.integracao_interna");
+                        integracao_interna = (integracao_interna) ? true : false;
                     var format_sys = (horas_afastamento) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
                     var dia_inteiro = (moment(value.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00' && (moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '23:59:59' || moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00')) ? true : false;
                     var format_display = (!dia_inteiro) ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
@@ -8556,13 +8562,13 @@ function getGanttAfastamento(bar_class = false) {
                                 '           <td class="td_view" style="vertical-align: middle; padding: 0 10px;" colspan="2">'+
                                 '               <p>'+
                                 '                   <span class="boxInfo">'+
-                                (checkPermissionAfast(value, 'delete_afastamento') ?
+                                (checkPermissionAfast(value, 'delete_afastamento') && !integracao_interna ?
                                 '                       <a class="ui-button ui-corner-all ui-widget" style="color: #2b2b2b; text-decoration: none; float: left;" onclick="removeAfastamento(this, '+value.id_afastamento+')">'+
                                 '                           <i style="margin-right: 3px; color: #e46e64;" class="fas fa-trash"></i>'+
                                 '                           Excluir'+
                                 '                       </a>'+
                                 '' : '')+
-                                (checkPermissionAfast(value, 'edit_afastamento') ?
+                                (checkPermissionAfast(value, 'edit_afastamento') && !integracao_interna ?
                                 '                       <a class="ui-button ui-corner-all ui-widget" style="color: #2b2b2b; text-decoration: none; float: right;" onclick="editAfastamento(this)">'+
                                 '                           <i style="margin-right: 3px; color: #8a8a8a;" class="fas fa-pencil-alt"></i>'+
                                 '                           Editar'+
@@ -8578,7 +8584,7 @@ function getGanttAfastamento(bar_class = false) {
                                 '                           <i style="margin-right: 3px; color: #8a8a8a;" class="fas fa-times"></i>'+
                                 '                           Cancelar'+
                                 '                       </a>'+
-                                (checkCapacidade('edit_afastamento') ?
+                                (checkCapacidade('edit_afastamento') && !integracao_interna ?
                                 '                       <a class="ui-button ui-corner-all ui-widget confirm" style="color: #2b2b2b; text-decoration: none; float: right;" onclick="editAfastamento(this, '+value.id_afastamento+')">'+
                                 '                           <i style="margin-right: 3px; color: #8a8a8a;" class="fas fa-save"></i>'+
                                 '                           Salvar'+
@@ -11087,6 +11093,7 @@ function saveAtividade(id_demanda = 0) {
         }
     } else {
         alertaBoxPro('Error', 'exclamation-triangle', 'Existem demandas n\u00E3o avaliadas h\u00E1 mais de 40 dias. Solicite ao gestor que as avalie antes de prosseguir!');
+        updateAtividade_(false);
     }
 }
 // BOX DE DEMANDA COMPLETA
@@ -12975,8 +12982,8 @@ function alertSignDocsPlano(value) {
 }
 function checkRegularizaPlano(value) {
     var plano = jmespath.search(arrayConfigAtividades.planos,"[?id_user==`"+value.id_user+"`] | [0]");
-    var assinatura = (typeof plano.config !== 'undefined' && plano.config !== null && typeof plano.config.assinatura !== 'undefined' && plano.config.hasOwnProperty('assinatura')) ? plano.config.assinatura : false;
-    if (!assinatura && plano.vigencia && plano.pendencias_plano && plano.pendencias_plano.anterior && !plano.pendencias_plano.anterior.homologavel) {
+    var assinatura = (value.id_user != 0 && typeof plano.config !== 'undefined' && plano.config !== null && typeof plano.config.assinatura !== 'undefined' && plano.config.hasOwnProperty('assinatura')) ? plano.config.assinatura : false;
+    if (value.id_user != 0 && !assinatura && plano.vigencia && plano.pendencias_plano && plano.pendencias_plano.anterior && !plano.pendencias_plano.anterior.homologavel) {
         return plano.id_plano;
     } else {
         return false;
@@ -16676,13 +16683,14 @@ function getUpdateReports(url) {
                     indexReportUpdate = 0;
                     sessionStorage.setItem('checkedUpdateReports', true);
                     $(window).unbind('beforeunload');
+                    setReportRotinas();
                 }
             }
         });
     }
 }
 function checkUpdateReports() {
-    if (!sessionStorage.getItem('checkedUpdateReports')) {
+    if (!sessionStorage.getItem('checkedUpdateReports') || sessionStorage.getItem('checkedUpdateReports') != 'true') {
         var url = urlServerAtiv+'report.php?action='+listReportsUpdate[indexReportUpdate]+'&output=check';
             $.get(url, function(data){
                 if ((data.status == 1 || data.status == 2) && $('#countLoopReports').length == 0) {
@@ -16696,14 +16704,24 @@ function checkUpdateReports() {
                     if (indexReportUpdate <= listReportsUpdate.length-1) {
                         checkUpdateReports();
                     } else {
-                        $.get('https://governancadev.antaq.gov.br/fiscalizacao/index.php', function(data){
-                            indexReportUpdate = 0;
-                            sessionStorage.setItem('checkedUpdateReports', true);
-                        });
+                        indexReportUpdate = 0;
+                        sessionStorage.setItem('checkedUpdateReports', true);
                     }
                 }
             });
     }
+}
+function setReportRotinas() {
+    $.ajax({
+        type: "POST",
+        url: 'https://governanca.antaq.gov.br/fiscalizacao/index.php?action=rotina',
+        dataType: "json",
+        data: {action: 'rotinas'},
+        success: function(data){
+            indexReportUpdate = 0;
+            sessionStorage.setItem('checkedUpdateReports', true);
+        }
+    });
 }
 function initUpdateReports() {
     getUpdateReports(urlServerAtiv+'report.php?action='+listReportsUpdate[indexReportUpdate]+'&output=save');

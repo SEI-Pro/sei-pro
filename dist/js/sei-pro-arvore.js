@@ -29,6 +29,7 @@ function initToolbarDocs(TimeOut = 9000) {
         setToolbarDocs();
     } else {
         setTimeout(function(){ 
+            if (TimeOut == 9000) $.getScript((parent.URL_SPRO+"js/lib/jquery.toolbar.min.js"));
             initToolbarDocs(TimeOut - 100); 
             console.log('Reload initToolbarDocs'); 
         }, 500);
@@ -382,11 +383,15 @@ function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = f
             a.show();
         } else if (a.text() == 'Assinatura externa' && listLinks.filter(function(v){ return v.indexOf('assinatura_externa_gerenciar') !== -1 }).length > 0 ) {
             a.show();
+        } else if (a.text() == 'Excluir' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('protocolo_excluir') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_excluir') !== -1 }).length > 0 ) {
+            a.show();
         } else if (a.text() == 'Excluir documento' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_lixeira') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_excluir') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Editar Conte\u00FAdo' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('documento_editar_conteudo') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('editor_montar') !== -1 }).length > 0 ) {
             a.show();
         } else if (a.text() == 'Editar documento' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_editar_conteudo') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('editor_montar') !== -1 }).length > 0 ) {
             a.show();
-        } else if (a.text() == 'Assinar documento' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_assinar') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_assinar') !== -1 }).length > 0 ) {
+        } else if (a.text() == 'Assinar documento' && (!checkIconsView || listIconsView.filter(function(v){ return (v.indexOf('sei_assinar') !== -1 || v.indexOf('documento_assinar') !== -1) }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_assinar') !== -1 }).length > 0 ) {
             a.show();
         } else if (a.text() == 'Adicionar aos favoritos' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_documento_modelo') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('protocolo_modelo_cadastrar') !== -1 }).length > 0 ) {
             a.show();
@@ -432,7 +437,7 @@ function getLinksArvore() {
                     if (val.indexOf('"') !== -1) {
                         var id_documento = (val.indexOf('id_documento') !== -1) ? val.match(/id_documento=([^&]*)/)[1] : false;
                         if (id_documento) {
-                            val.split('"').filter(function(i){ return i.indexOf('imagens/') !== -1}).map(function(j){
+                            val.split('"').filter(function(i){ return i.indexOf(parent.isNewSEI ? 'svg/' :  'imagens/') !== -1}).map(function(j){
                                 arrayIconsAcoes.push(j);
                             });
                             arrayIconsView.push({id_documento: parseInt(id_documento), icones: arrayIconsAcoes});
@@ -1168,6 +1173,7 @@ function getInfoArvoreLastDoc(dataResult, urlParent) {
                         .find('span').text(arrayArvore[11]).attr('span'+param.id_documento);
                     elem.find('a#anchorImgID').attr('id', 'anchorImg'+param.id_documento)
                         .find('img').attr('src', arrayArvore[15]).attr('id', 'icon'+param.id_documento);
+                    parent.scrollToElementArvore(param.id_documento);
 
                 $(containerUpload).data('index', indexUpload+1 );
                 if (arvoreDropzone.getQueuedFiles().length == 0) {
@@ -1228,7 +1234,7 @@ function dropzoneCancelInfo(e) {
     return false;
 }
 function dropzoneNormalizeImg(file) {
-    var urlIcon = parent.isNewSEI ? 'svg/documento_pdf.svg' : '/infra_css/imagens/pdf.gif' +'pdf.gif';
+    var urlIcon = parent.isNewSEI ? 'svg/documento_pdf.svg' : '/infra_css/imagens/pdf.gif';
         urlIcon = (file.type.indexOf('image/') !== -1) ? (parent.isNewSEI ? 'svg/documento_imagem.svg' : '/infra_css/imagens/imagem.gif') : urlIcon;
         urlIcon = (file.type.indexOf('video/') !== -1) ? (parent.isNewSEI ? 'svg/documento_video.svg' : '/infra_css/imagens/video.gif') : urlIcon;
         urlIcon = (file.type.indexOf('audio/') !== -1) ? (parent.isNewSEI ? 'svg/documento_audio.svg' : '/infra_css/imagens/audio.gif') : urlIcon;
@@ -1582,15 +1588,17 @@ function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
                         '       </a>'+
                         '   </div>'+
                         '   <div class="actions">'+
-                        '       <i class="fas fa-edit azulColor editStickNote" style="cursor: pointer;" onclick="sticknoteEdit(this)" onmouseover="return infraTooltipMostrar(\'Editar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '       <i class="fas fa-save azulColor saveStickNote" style="cursor: pointer; display:none" onclick="sticknoteSave(this)" onmouseover="return infraTooltipMostrar(\'Salvar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
                         '       <span class="countLimit" style="font-size: 8pt; color: #666;"></span>'+
-                        '       <i class="fas fa-trash-alt removeStickNote" style="margin-top: 2px; cursor: pointer;float: right;font-size: 90%;" onclick="sticknoteRemove(this)" onmouseover="return infraTooltipMostrar(\'Remover Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '       <i class="fas fa-times-circle cancelStickNote" style="cursor: pointer;float: right;font-size: 90%; display:none;" onclick="sticknoteCancel(this)" onmouseover="return infraTooltipMostrar(\'Cancelar Edi\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '       <i class="fas fa-calendar-plus azulColor setDateStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknoteSetDate(this)" onmouseover="return infraTooltipMostrar(\'Inserir Data\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                        '       <span class="setDateStickNote_input" style="display:none"><input onkeypress="sticknoteSetDateKey(event, this)" type="date"></span>'+
-                        '       <span style="cursor: pointer;float: right;margin: -2px 10px 0 0; display:none;" class="checkStickNote" onclick="sticknoteCheck(this)"><i class="fas fa-check-square azulColor" style="font-size: 90%;"></i> <span  class="checkListStickNote" style="font-size: 80%;">Checklist</span></span>'+
-                        '       <i class="fas fa-exclamation-circle priorityStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknotePriority(this)" onmouseover="return infraTooltipMostrar(\'Prioridade\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '       <div>'+
+                        '           <i class="fas fa-edit azulColor editStickNote" style="cursor: pointer;" onclick="sticknoteEdit(this)" onmouseover="return infraTooltipMostrar(\'Editar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '           <i class="fas fa-save azulColor saveStickNote" style="cursor: pointer; display:none" onclick="sticknoteSave(this)" onmouseover="return infraTooltipMostrar(\'Salvar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '           <i class="fas fa-trash-alt removeStickNote" style="margin-top: 2px; cursor: pointer;float: right;font-size: 90%;" onclick="sticknoteRemove(this)" onmouseover="return infraTooltipMostrar(\'Remover Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '           <i class="fas fa-times-circle cancelStickNote" style="cursor: pointer;float: right;font-size: 90%; display:none;" onclick="sticknoteCancel(this)" onmouseover="return infraTooltipMostrar(\'Cancelar Edi\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '           <i class="fas fa-calendar-plus azulColor setDateStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknoteSetDate(this)" onmouseover="return infraTooltipMostrar(\'Inserir Data\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '           <span class="setDateStickNote_input" style="display:none"><input onkeypress="sticknoteSetDateKey(event, this)" type="date"></span>'+
+                        '           <span style="cursor: pointer;float: right;margin: -2px 10px 0 0; display:none;" class="checkStickNote" onclick="sticknoteCheck(this)"><i class="fas fa-check-square azulColor" style="font-size: 90%;"></i> <span  class="checkListStickNote" style="font-size: 80%;">Checklist</span></span>'+
+                        '           <i class="fas fa-exclamation-circle priorityStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknotePriority(this)" onmouseover="return infraTooltipMostrar(\'Prioridade\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '       </div>'+
                         '   </div>'+
                         '</div>';
     $('.stickDadosArvore').remove();
@@ -1794,7 +1802,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
     var linkPrazo = htmlMarcador.prazo;
     var dataMarcador = htmlMarcador.data;
 
-    if (prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1) {
+    if (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1) {
         $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').addClass('urgentePro').find('div.urgentePro').remove().end().prepend('<div class="urgentePro"></div>');
     } else {
         $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').removeClass('urgentePro').find('div.urgentePro').remove();
@@ -2148,7 +2156,7 @@ function initStylePanelArvore(TimeOut = 9000) {
     if (
         typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
         selectedItensPanelArvore.length > 0 && 
-        (!parent.userHashAtiv || (parent.userHashAtiv && parent.checkLoadAtividadesProcPro)) &&
+        // (!parent.userHashAtiv || (parent.userHashAtiv && typeof parent.arrayAtividadesPro !== 'undefined' && parent.arrayAtividadesPro.length)) &&
         typeof parent.__ !== 'undefined'
     ) {
         if (!getOptionsPro('optionsFlashMenu_panelinfo') || getOptionsPro('optionsFlashMenu_panelinfo') == 'enabled') { 

@@ -283,7 +283,7 @@ function updateTipSelectAll(this_) {
 function replaceSelectAll() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     if ( tableProc.length > 0 ) {
-        tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>').remove();
+        tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(typeof isNewSEI !== 'undefined' && isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>').remove();
     }
 }
 function cleanConfigDataRecebimento() {
@@ -718,7 +718,8 @@ function selectFilterTableHome() {
 
     var html =  '<select id="filterTableHome" class="selectPro" style="width:250px;margin-right:20px !important;" onchange="getFilterTableHome(this)" data-placeholder="Filtrar processos...">'+
                 '   <option value="" data-type="clean">&nbsp;</option>'+
-                '   <option value="all" data-type="clean">Todos os processos</option>';
+                '   <option value="all" data-type="clean">Todos os processos</option>'+
+                '   <option value="(N\u00E3o visualizado)" data-type="proc">Processos n\u00E3o visualizados</option>';
 
         if (users.length > 0) {
             html += '   <optgroup label="Por atribui\u00E7\u00E3o">'+
@@ -1059,6 +1060,7 @@ function getTableProcessosCSV() {
                     '           <th>Data_Envio_Descricao</th>'+
                     '           <th>Unidade_Envio</th>'+
                     '           <th>Documento_Incluido</th>'+
+                    '           <th>Observacoes</th>'+
                     '       </tr>'+
                     '   </thead>'+
                     '   <tbody>';
@@ -1089,6 +1091,7 @@ function getTableProcessosCSV() {
             var data_envio = (typeof info_array.datesend !== 'undefined' && info_array.datesend != '') ? moment(info_array.datesend, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm:ss') : '-';
             var desc_envio = (typeof info_array.descricaosend !== 'undefined') ? info_array.descricaosend.replaceAll(';','') : '-';
             var unidade_envio = (typeof info_array.unidadesend !== 'undefined') ? info_array.unidadesend : '-';
+            var observacoes = (typeof info_array.observacoes !== 'undefined' && info_array.observacoes != '') ? $.map(info_array.observacoes, function(v){ if(v.unidade != '') return v.unidade+': '+v.observacao }) : '-';
 
                 htmlTable +=    '       <tr>'+
                                 '           <td>'+id_protocolo+'</td>'+
@@ -1110,6 +1113,7 @@ function getTableProcessosCSV() {
                                 '           <td>'+desc_envio+'</td>'+
                                 '           <td>'+unidade_envio+'</td>'+
                                 '           <td>'+doc_incluido+'</td>'+
+                                '           <td>'+observacoes+'</td>'+
                                 '       </tr>';
             //console.log(id_protocolo, nr_processo, etiqueta_array, anotacao_array, descricao_array, atribuicao, data_visita, data_geracao, data_recebimento, data_envio, unidade_envio);
         });
@@ -1899,6 +1903,13 @@ function initAllMarcadoresHome(TimeOut = 9000) {
         }, 500);
     }
 }
+function initNaoVisualizadoPro() {
+    $('.processoNaoVisualizado').each(function(){
+        var tooltip = $(this).attr('onmouseover');
+            tooltip = typeof tooltip !== 'undefined' ? tooltip.replace("return infraTooltipMostrar('","return infraTooltipMostrar('(N\u00E3o Visualizado) ") : false;
+        if (tooltip) $(this).attr('onmouseover',tooltip);
+    });
+}
 function initUrgentePro() {
     $('a div.urgentePro').remove();
     $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]')
@@ -1925,6 +1936,7 @@ function initSeiPro() {
         initControlePrazo();
         initAllMarcadoresHome();
         initUrgentePro();
+        initNaoVisualizadoPro();
 	} else if ( $("#ifrArvore").length > 0 ) {
         initDadosProcesso();
         initObserveUrlChange();

@@ -1413,11 +1413,6 @@ function refreshDeleteEtapaGantt(rowTask, arrayDadosEtapa) {
 	ganttProject[id].hide_popup();
 	ganttProject[id].refresh(ganttProject[id].tasks);
 }
-function closeAllPopups() {
-    for (i = 0; i < ganttProject.length; i++) {
-    	ganttProject[i].hide_popup();
-    }
-}
 function refreshEtapaGantt(rowTask, arrayDadosEtapa) {
 	var ID_Projeto = '';
 	var id = ''; 
