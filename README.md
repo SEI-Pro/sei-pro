@@ -45,7 +45,7 @@
 - [Anotação diretamente pela árvore do processo](./pages/NOTAARVORE.md)
 - [Remover paginação de processos](./pages/REMOVEPAGINACAO.md)
 - [Dividir as informações do documento na árvore do processo em duas linhas](./pages/DIVIDIRLINHASARVORE.md)
-- [Redimensionar automaticamente a árvore do processo pela sua largura total](./pages/RESIZEARVORE.md),
+- [Redimensionar automaticamente a árvore do processo pela sua largura total](./pages/RESIZEARVORE.md)
 - [Utilizar caixas de seleção inteligentes](./pages/SUBSTITUIRSELECAO.md)
 - [Ações em Lote](./pages/ACOESEMLOTE.md)
 - [Rolagem infinita na pesquisa de processos](./pages/ROLAGEMINFINITA.md)
