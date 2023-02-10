@@ -21,4 +21,4 @@ A cópia do documento inserida na certidão fica bloqueada para edição pelo se
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Enviar múltiplas imagens, formatar e editar opções avançadas](../pages/EDITARIMAGENS.md)
