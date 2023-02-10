@@ -2,7 +2,7 @@
 
 ## Agrupar lista de processos por data de recebimento, autuação, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio
 
-Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle ou unidade de envio.
+Essa funcionalidade adiciona à página inicial do SEI o agrupamento de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle, unidade de envio ou acompanhamento especial.
 
 > ![Tela Agrupar lista de processos](../img/tela-agrupamento.gif) 
 
