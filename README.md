@@ -56,6 +56,7 @@
 - [Gerar Certidão de Documento Oficial com Sigilo (LGPD)](./pages/CERTIDAOSIGILO.md)
 - [Enviar múltiplas imagens, formatar e editar opções avançadas](./pages/EDITARIMAGENS.md)
 - [Reduzir a qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
+- [Adicionar teclas de atalhos no editor de documentos](.pages/TECLASATALHO.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
