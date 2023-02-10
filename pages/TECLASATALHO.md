@@ -4,9 +4,12 @@
 
 Essa funcionalidade permite a utilização de combinações do teclado para acionar estilos de parágrafo no editor de documentos do SEI.
 
+> ![Tela Teclas Atalho](../img/tela-teclasatalho.gif) 
+
 Ainda, é possível escolher as combinações de teclas que deseja utilizar: `Control + Alt + Shift`, `Control + Shift`, `Control + Alt` ou `Alt + Shift`
 
-
+> ![Tela Teclas Atalho](../img/tela-teclasatalho2.gif) 
+> 
 ## Próximo item
 
 > [PAGE](../pages/PAGE.md)
