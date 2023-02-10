@@ -58,6 +58,8 @@ Consulte condições de precificação da plataforma em: [https://openai.com/api
 10. Copie sua chave secreta de API, pois ela será necessária para fazer chamadas à API. 
 Cole-a na caixa de texto que aparecerá ao clicar no ícone [Ferramentas IA](../img/icon-ferramentasia.png).
 
+> **ATENÇÃO: Os dados são processados pelo serviço OpenAI. Não envie informações restritas ou sigilosas.**
+
 > 
 ## Próximo item
 
