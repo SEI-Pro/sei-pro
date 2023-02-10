@@ -7,7 +7,7 @@
 - [Gerenciar processos favoritos](./pages/FAVORITOS.md)
 - [Controle de Prazos](./pages/PRAZOS.md)
 - [Enumerar Normas (Legística)](./pages/LEGISTICA.md)
-- [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](./pages/AGRUPAR.md)
+- [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle, unidade de envio e acompanhamento especial](./pages/AGRUPAR.md)
 - [Inserir documento externo (HTML, Google Docs e Google Planilhas)](./pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](./pages/LINKLEGIS.md)
