@@ -9,4 +9,4 @@ Essa ferramenta alerta ao usuário sobre documentos não assinados naquela unida
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Permitir cores personalizadas em Marcadores](../pages/CORESMARCADORES.md)
