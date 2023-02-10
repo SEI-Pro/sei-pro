@@ -58,7 +58,7 @@
 - [Reduzir a qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
 - [Adicionar teclas de atalhos no editor de documentos](./pages/TECLASATALHO.md)
 - [Adicionar referências internas](./pages/REFERENCIAINTERNA.md)
-- [Ferramentas de Inteligência Artificial](./pages/FERRAMENTASIA.md)
+- [Ferramentas de Inteligência Artificial (ChatGPT)](./pages/FERRAMENTASIA.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
