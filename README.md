@@ -57,6 +57,7 @@
 - [Enviar múltiplas imagens, formatar e editar opções avançadas](./pages/EDITARIMAGENS.md)
 - [Reduzir a qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
 - [Adicionar teclas de atalhos no editor de documentos](.pages/TECLASATALHO.md)
+- [Adicionar referências internas](./pages/REFERENCIAINTERNA.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
