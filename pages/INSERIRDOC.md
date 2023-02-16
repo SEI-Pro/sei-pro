@@ -19,7 +19,7 @@ Erros com caracteres não indentificados? Antes do envio, marque a opção **Cor
 
 Importe documentos diretamente do Google Docs, sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
 
-> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml3-1.gif)
+> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml3-1_.gif)
 
 Antes de importar, confira se o documento está acessível por qualquer pessoa na internet.
 
