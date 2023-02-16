@@ -27,7 +27,7 @@ Antes de importar, confira se o documento está acessível por qualquer pessoa n
 
 Função em fase experimental (Beta), algumas formatações do documento podem não refletir fielmente ao documento original no Google Docs.
 
-Caso tenha identificado alguma consistência, envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:seipro.app@gmail.com).
+Caso tenha identificado alguma consistência, envie um e-mail para [seipro.app@gmail.com](mailto:seipro.app@gmail.com).
 
 ## Importando do Google Planilhas
 
@@ -43,7 +43,7 @@ Antes de importar, confira se o documento está **[Publicado na Web](https://sup
 
 Função em fase experimental (Beta), algumas formatações do documento podem não refletir fielmente ao documento original no Google Docs.
 
-Caso tenha identificado alguma consistência, envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:seipro.app@gmail.com).
+Caso tenha identificado alguma consistência, envie um e-mail para [seipro.app@gmail.com](mailto:seipro.app@gmail.com).
 
 ## Próximo item
 
