@@ -10,7 +10,6 @@
 - Adicionado a [Redução da qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
 - Adicionado as [Teclas de atalhos no editor de documentos](./pages/TECLASATALHO.md)
 - Adicionado as [Referências internas](./pages/REFERENCIAINTERNA.md) (Sugestão Hélio Oliveira e Roberto Balata)
-- Adicionado as [Ferramentas de Inteligência Artificial (ChatGPT)](./pages/FERRAMENTASIA.md)
 
 ### Versão 1.0
 15/06/2022
