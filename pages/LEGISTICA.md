@@ -12,7 +12,7 @@ Adicionou um novo artigo bem no meio do documento? Não se preocupe, fazemos a e
 
 No editor de textos do SEI, ative a enumeração automática do **SEI Legis §!** no botão ![icone](/img/icon-cke.png) 
 
-![Tela 1](../img/tela-legistica1.gif) 
+![Tela 1](../img/tela-legistica1_.gif) 
 
 As enumerações digitadas manualmente serão convertidas em referências dinâmicas.
 
