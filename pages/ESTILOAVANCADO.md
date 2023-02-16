@@ -4,7 +4,7 @@
 
 Essa ferramenta adiciona ao SEI a possibilidade de alterar o seu layout padrão, alterando o seu estilo com ferramentas avançadas.
 
-> ![Tela Estilo Avançado](../img/tela-estiloavancado.gif)
+> ![Tela Estilo Avançado](../img/tela-estiloavancado_.gif)
 
 Escolhe qualquer cor que desejar para o tema do SEI, adicione legenda nos ícones, ative o modo noturno (mode black) 
 e ainda adicione a barra de botões do processo na vertical.
