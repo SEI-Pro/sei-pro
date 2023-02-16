@@ -8,7 +8,7 @@ Essa funcionalidade adiciona ao editor de texto do SEI a importação de documen
 
 Converta seus documentos Word em formato HTML. Importe sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
 
-> ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml2.gif) 
+> ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml2_.gif) 
 
 Erros com caracteres não indentificados? Antes do envio, marque a opção **Corrigir erros de codificação de documentos Word**:
 
