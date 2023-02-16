@@ -98,9 +98,7 @@ Participe do laboratorio de ideias sobre inovações para o SEI, automações e 
 
 Receba em primeira mão sobre novidades e atualizações do SEI Pro. 
 
-Inscreva-se na nossa Lista de e-mail: [http://eepurl.com/hjHh45](http://eepurl.com/hjHh45) ou
-
-Siga-me no Instagram [@phsoares_adv](https://www.instagram.com/phsoares_adv/)
+Inscreva-se na nossa Lista de e-mail: [http://eepurl.com/hjHh45](http://eepurl.com/hjHh45)
 
 ## Histórico de versões
 
