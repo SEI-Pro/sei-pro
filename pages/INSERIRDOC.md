@@ -27,13 +27,13 @@ Antes de importar, confira se o documento está acessível por qualquer pessoa n
 
 Função em fase experimental (Beta), algumas formatações do documento podem não refletir fielmente ao documento original no Google Docs.
 
-Caso tenha identificado alguma consistência, envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com).
+Caso tenha identificado alguma consistência, envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:seipro.app@gmail.com).
 
 ## Importando do Google Planilhas
 
 Importe documentos diretamente do Google Planilhas, sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
 
-> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml5.gif)
+> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml5_.gif)
 
 Antes de importar, confira se o documento está **[Publicado na Web](https://support.google.com/docs/answer/183965?hl=pt-BR)**.
 
