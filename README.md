@@ -5,7 +5,7 @@
 **Compatível com a versão 4.0 so SEI**
 
 - [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](./pages/ESTILOAVANCADO.md)
-- [Gerenciar projetos](./pages/PROJETOS.md)
+- [Gerenciar projetos](./pages/PROJETOS.md) [MOMENTANEAMENTE DESCONTINUADA]
 - [Gerenciar processos favoritos](./pages/FAVORITOS.md)
 - [Controle de Prazos](./pages/PRAZOS.md)
 - [Enumerar Normas (Legística)](./pages/LEGISTICA.md)
