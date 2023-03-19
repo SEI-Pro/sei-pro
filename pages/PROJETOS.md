@@ -2,6 +2,8 @@
 
 ## ![SEI Pro Estilo Tabela](../img/icon-projetos.png) Gerenciar projetos
 
+ [MOMENTANEAMENTE DESCONTINUADA] A API do Google utilizada pela ferramenta está descontinuada. Em breve retomaremos o projeto com solução alternativa.
+
 Essa funcionalidade adiciona à página inicial do SEI um gestor de projetos utilizando o [Diagrama de Gantt](https://pt.wikipedia.org/wiki/Diagrama_de_Gantt)
 
 > ![Tela Estilo de Tabelas](../img/tela-projetos.gif) 
