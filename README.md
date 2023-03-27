@@ -68,15 +68,17 @@ Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md)
 
 ## Como começar?
 
-Instale a extensão para o Google Chrome em:
+Instale a extensão para seu navegador preferido:
+
+<img src="https://edent.github.io/SuperTinyIcons/images/svg/chrome.svg" width="24" title="Chrome"> Google Chrome em:
 
 > [https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj](https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj)
 
-Microsoft Edge em:
+<img src="https://edent.github.io/SuperTinyIcons/images/svg/edge.svg" width="24" title="Edge"> Microsoft Edge em:
 
 > [https://microsoftedge.microsoft.com/addons/detail/sei-pro/gkhfbbbminanojfklpfmloaglckmlfne](https://microsoftedge.microsoft.com/addons/detail/sei-pro/gkhfbbbminanojfklpfmloaglckmlfne)
 
-Mozilla Firefox em:
+<img src="https://edent.github.io/SuperTinyIcons/images/svg/firefox.svg" width="24" title="Firefox"> Mozilla Firefox em:
 
 > [https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/](https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/)
 
