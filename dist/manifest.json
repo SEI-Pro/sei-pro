@@ -1,15 +1,15 @@
 {
-  "manifest_version": 2,
-  "name": "SEI Pro",
-  "short_name": "SEI Pro",
+  "manifest_version": 3,
+  "name": "SEI Pro Lab",
+  "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "1.1.1",
+  "version": "1.3.9",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
-    "16": "icons/icon-16.png",
-    "48": "icons/icon-48.png",
-    "128": "icons/icon-128.png"
+    "16": "icons/lab/icon-16.png",
+    "48": "icons/lab/icon-48.png",
+    "128": "icons/lab/icon-128.png"
   },
   "options_page": "html/options.html",
   "options_ui": {
@@ -19,17 +19,6 @@
   "permissions": [
     "storage"
   ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "pedrohsoares.adv@gmail"
-    }
-  },
-  "applications": {
-    "gecko": {
-      "id": "pedrohsoares.adv@gmail",
-      "strict_min_version": "52.0"
-    }
-  },
   "content_scripts": [
     {
       "js": [
@@ -62,7 +51,6 @@
         "*://sip-sei.ans.gov.br/*"
       ],
       "exclude_matches": [
-        "*://sei.antaq.gov.br/*",
         "*://*.br/*login.php*",
         "*://*.br/sip/*controlador.php*",
         "*://*.br/sei/*controlador_externo.php*",
@@ -85,12 +73,9 @@
         "*://*.br/sip/*login.php*",
         "*://*.br/sei/*",
         "*://*.br/login.php*sigla_sistema=SEI*",
-        "*://sip-sei.ans.gov.br/sip/login.php*",
+        "*://sip-sei.ans.br/sip/login.php*",
         "*://sip-sei.ans.gov.br/*",
         "*://sip-sei.ans.gov.br/login.php*sigla_sistema=SEI*"
-      ],
-      "exclude_matches": [
-        "*://sei.antaq.gov.br/*"
       ]
     },
     {
@@ -136,9 +121,6 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=bloco_reuniao_listar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=bloco_assinatura_listar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=acompanhamento_listar*"
-      ],
-      "exclude_matches": [
-        "*://sei.antaq.gov.br/*"
       ]
     },
     {
@@ -152,9 +134,6 @@
       "matches": [
         "*://*.br/*controlador.php?acao=procedimento_controlar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_controlar*"
-      ],
-      "exclude_matches": [
-        "*://sei.antaq.gov.br/*"
       ]
     },
     {
@@ -171,9 +150,6 @@
       "matches": [
         "*://*.br/*controlador.php?acao=procedimento_visualizar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_visualizar*"
-      ],
-      "exclude_matches": [
-        "*://sei.antaq.gov.br/*"
       ]
     },
     {
@@ -185,9 +161,6 @@
       "matches": [
         "*://*.br/*controlador.php?acao=arvore_visualizar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_visualizar*"
-      ],
-      "exclude_matches": [
-        "*://sei.antaq.gov.br/*"
       ]
     },
     {
@@ -199,9 +172,6 @@
       "matches": [
         "*://*.br/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*"
-      ],
-      "exclude_matches": [
-        "*://sei.antaq.gov.br/*"
       ]
     },
     {
@@ -225,125 +195,132 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=editor_montar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=texto_padrao_interno_alterar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=texto_padrao_interno_cadastrar*"
-      ],
-      "exclude_matches": [
-        "*://sei.antaq.gov.br/*"
       ]
     }
   ],
-  "browser_action": {
+  "action": {
     "default_title": "SEI Pro",
     "default_popup": "html/options.html"
   },
   "web_accessible_resources": [
-    "js/lib/jquery-3.4.1.min.js",
-    "js/lib/jquery-ui.min.js",
-    "js/lib/jmespath.min.js",
-    "js/lib/moment.min.js",
-    "js/lib/moment-weekday-calc.js",
-    "js/lib/moment-duration-format.min.js",
-    "js/lib/jquery-qrcode-0.18.0.min.js",
-    "js/lib/crypto-js.min.js",
-    "js/lib/chart.min.js",
-    "js/lib/chosen.jquery.min.js",
-    "js/lib/jquery.toolbar.min.js",
-    "js/lib/frappe-gantt.js",
-    "js/lib/jkanban.min.js",
-    "js/lib/dropzone.min.js",
-    "js/lib/jquery.tagsinput-revisited.js",
-    "js/lib/jquery.tablesorter.combined.min.js",
-    "js/lib/jquery-table-edit.min.js",
-    "js/lib/ckeditor/ckeditor.js",
-    "js/lib/ckeditor/tableselection.js",
-    "js/lib/ckeditor/tableselection.css",
-    "js/lib/jquery.maskedinput.min.js",
-    "js/lib/leaflet.js",
-    "js/lib/leaflet-geocoder.js",
-    "js/lib/filerobot-image-editor.min.js",
-    "js/lib/jszip.min.js",
-    "js/lib/jszip-utils.min.js",
-    "js/sei-functions-pro.js",
-    "js/sei-gantt.js",
-    "js/sei-forms.js",
-    "js/sei-sync-processos.js",
-    "js/sei-pro-atividades.js",
-    "js/sei-pro.js",
-    "js/sei-pro-all.js",
-    "js/sei-pro-editor.js",
-    "js/sei-pro-arvore.js",
-    "js/sei-pro-visualizacao.js",
-    "js/sei-pro-favoritos.js",
-    "js/sei-pro-icons.js",
-    "js/sei-legis.js",
-    "https://apis.google.com/js/api.js",
-    "https://accounts.google.com/gsi/client",
-    "css/sei-pro.css",
-    "css/frappe-gantt.css",
-    "css/jkanban.min.css",
-    "css/dropzone.min.css",
-    "css/jquery-ui.css",
-    "css/images/ui-icons_444444_256x240.png",
-    "css/images/ui-icons_777777_256x240.png",
-    "css/images/ui-icons_555555_256x240.png",
-    "css/images/ui-icons_ffffff_256x240.png",
-    "css/images/ui-icons_cc0000_256x240.png",
-    "css/images/ui-icons_777620_256x240.png",
-    "css/fontawesome.pro.min.css",
-    "css/fontawesome.min.css",
-    "css/jquery.toolbar.css",
-    "css/chart.min.css",
-    "css/chosen.min.css",
-    "css/leaflet.css",
-    "webfonts/pro/fa-light-300.svg",
-    "webfonts/pro/fa-light-300.eot",
-    "webfonts/pro/fa-light-300.woff2",
-    "webfonts/pro/fa-light-300.woff",
-    "webfonts/pro/fa-light-300.ttf",
-    "webfonts/pro/fa-duotone-900.svg",
-    "webfonts/pro/fa-duotone-900.eot",
-    "webfonts/pro/fa-duotone-900.woff2",
-    "webfonts/pro/fa-duotone-900.woff",
-    "webfonts/pro/fa-duotone-900.ttf",
-    "webfonts/pro/fa-brands-400.svg",
-    "webfonts/pro/fa-brands-400.eot",
-    "webfonts/pro/fa-brands-400.woff2",
-    "webfonts/pro/fa-brands-400.woff",
-    "webfonts/pro/fa-brands-400.ttf",
-    "webfonts/pro/fa-regular-400.svg",
-    "webfonts/pro/fa-regular-400.eot",
-    "webfonts/pro/fa-regular-400.woff2",
-    "webfonts/pro/fa-regular-400.woff",
-    "webfonts/pro/fa-regular-400.ttf",
-    "webfonts/pro/fa-solid-900.svg",
-    "webfonts/pro/fa-solid-900.eot",
-    "webfonts/pro/fa-solid-900.woff2",
-    "webfonts/pro/fa-solid-900.woff",
-    "webfonts/pro/fa-solid-900.ttf",
-    "webfonts/fa-regular-400.svg",
-    "webfonts/fa-regular-400.eot",
-    "webfonts/fa-regular-400.woff2",
-    "webfonts/fa-regular-400.woff",
-    "webfonts/fa-regular-400.ttf",
-    "webfonts/fa-solid-900.svg",
-    "webfonts/fa-solid-900.eot",
-    "webfonts/fa-solid-900.woff2",
-    "webfonts/fa-solid-900.woff",
-    "webfonts/fa-solid-900.ttf",
-    "webfonts/fa-brands-400.svg",
-    "webfonts/fa-brands-400.eot",
-    "webfonts/fa-brands-400.woff2",
-    "webfonts/fa-brands-400.woff",
-    "webfonts/fa-brands-400.ttf",
-    "icons/addestilotabela.png",
-    "icons/copiarformatacao.png",
-    "icons/duplicartabela.png",
-    "icons/editarimagem.png",
-    "icons/formatarimagem.png",
-    "css/images/layers-2x.png",
-    "css/images/layers.png",
-    "css/images/marker-icon-2x.png",
-    "css/images/marker-icon.png",
-    "css/images/marker-shadow.png",
-    "config_hosts.json"
+    {
+      "resources": [
+        "js/lib/jquery-3.4.1.min.js",
+        "js/lib/jquery-ui.min.js",
+        "js/lib/jmespath.min.js",
+        "js/lib/moment.min.js",
+        "js/lib/moment-weekday-calc.js",
+        "js/lib/moment-duration-format.min.js",
+        "js/lib/jquery-qrcode-0.18.0.min.js",
+        "js/lib/crypto-js.min.js",
+        "js/lib/chart.min.js",
+        "js/lib/chosen.jquery.min.js",
+        "js/lib/jquery.toolbar.min.js",
+        "js/lib/frappe-gantt.js",
+        "js/lib/jkanban.min.js",
+        "js/lib/dropzone.min.js",
+        "js/lib/jquery.tagsinput-revisited.js",
+        "js/lib/jquery.tablesorter.combined.min.js",
+        "js/lib/jquery-table-edit.min.js",
+        "js/lib/ckeditor/ckeditor.js",
+        "js/lib/ckeditor/tableselection.js",
+        "js/lib/ckeditor/tableselection.css",
+        "js/lib/jquery.maskedinput.min.js",
+        "js/lib/leaflet.js",
+        "js/lib/leaflet-geocoder.js",
+        "js/lib/filerobot-image-editor.min.js",
+        "js/lib/jszip.min.js",
+        "js/lib/jszip-utils.min.js",
+        "js/lib/google_api.js",
+        "js/sei-functions-pro.js",
+        "js/sei-gantt.js",
+        "js/sei-forms.js",
+        "js/sei-sync-processos.js",
+        "js/sei-pro-atividades.js",
+        "js/sei-pro.js",
+        "js/sei-pro-all.js",
+        "js/sei-pro-editor.js",
+        "js/sei-pro-arvore.js",
+        "js/sei-pro-visualizacao.js",
+        "js/sei-pro-favoritos.js",
+        "js/sei-pro-icons.js",
+        "js/sei-legis.js",
+        "js/sei-pro-visualizacao-chosen.js",
+        "https://accounts.google.com/gsi/client",
+        "css/sei-pro.css",
+        "css/frappe-gantt.css",
+        "css/jkanban.min.css",
+        "css/dropzone.min.css",
+        "css/jquery-ui.css",
+        "css/images/ui-icons_444444_256x240.png",
+        "css/images/ui-icons_777777_256x240.png",
+        "css/images/ui-icons_555555_256x240.png",
+        "css/images/ui-icons_ffffff_256x240.png",
+        "css/images/ui-icons_cc0000_256x240.png",
+        "css/images/ui-icons_777620_256x240.png",
+        "css/fontawesome.pro.min.css",
+        "css/fontawesome.min.css",
+        "css/jquery.toolbar.css",
+        "css/chart.min.css",
+        "css/chosen.min.css",
+        "css/leaflet.css",
+        "webfonts/pro/fa-light-300.svg",
+        "webfonts/pro/fa-light-300.eot",
+        "webfonts/pro/fa-light-300.woff2",
+        "webfonts/pro/fa-light-300.woff",
+        "webfonts/pro/fa-light-300.ttf",
+        "webfonts/pro/fa-duotone-900.svg",
+        "webfonts/pro/fa-duotone-900.eot",
+        "webfonts/pro/fa-duotone-900.woff2",
+        "webfonts/pro/fa-duotone-900.woff",
+        "webfonts/pro/fa-duotone-900.ttf",
+        "webfonts/pro/fa-brands-400.svg",
+        "webfonts/pro/fa-brands-400.eot",
+        "webfonts/pro/fa-brands-400.woff2",
+        "webfonts/pro/fa-brands-400.woff",
+        "webfonts/pro/fa-brands-400.ttf",
+        "webfonts/pro/fa-regular-400.svg",
+        "webfonts/pro/fa-regular-400.eot",
+        "webfonts/pro/fa-regular-400.woff2",
+        "webfonts/pro/fa-regular-400.woff",
+        "webfonts/pro/fa-regular-400.ttf",
+        "webfonts/pro/fa-solid-900.svg",
+        "webfonts/pro/fa-solid-900.eot",
+        "webfonts/pro/fa-solid-900.woff2",
+        "webfonts/pro/fa-solid-900.woff",
+        "webfonts/pro/fa-solid-900.ttf",
+        "webfonts/fa-regular-400.svg",
+        "webfonts/fa-regular-400.eot",
+        "webfonts/fa-regular-400.woff2",
+        "webfonts/fa-regular-400.woff",
+        "webfonts/fa-regular-400.ttf",
+        "webfonts/fa-solid-900.svg",
+        "webfonts/fa-solid-900.eot",
+        "webfonts/fa-solid-900.woff2",
+        "webfonts/fa-solid-900.woff",
+        "webfonts/fa-solid-900.ttf",
+        "webfonts/fa-brands-400.svg",
+        "webfonts/fa-brands-400.eot",
+        "webfonts/fa-brands-400.woff2",
+        "webfonts/fa-brands-400.woff",
+        "webfonts/fa-brands-400.ttf",
+        "icons/addestilotabela.png",
+        "icons/copiarformatacao.png",
+        "icons/blockedition.png",
+        "icons/ferramentasia.png",
+        "icons/duplicartabela.png",
+        "icons/editarimagem.png",
+        "icons/formatarimagem.png",
+        "css/images/layers-2x.png",
+        "css/images/layers.png",
+        "css/images/marker-icon-2x.png",
+        "css/images/marker-icon.png",
+        "css/images/marker-shadow.png",
+        "config_hosts.json"
+      ],
+      "matches": [
+        "*://*.br/*"
+      ]
+    }
   ]
 }

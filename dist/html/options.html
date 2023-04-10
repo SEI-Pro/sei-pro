@@ -56,6 +56,7 @@
                                 <option value="atividades">Atividades</option>
                                 <option value="formularios">Formul&aacute;rios</option>
                                 <option value="processos">Processos</option>
+                                <option value="openai">Open AI (Chat GPT)</option>
                             </select>
                         </td>
                     </tr>
@@ -192,7 +193,7 @@
                            </div>
                     </td>
                 </tr>
-                <tr class="lab">
+                <tr class="lab" style="display:none">
                     <td>
                         <p>
                             <i class="iconPopup fas fa-folder-open azulColor"></i><span class="info">Sincronizar Base de Processos</span>
@@ -203,6 +204,20 @@
                            <div class="onoffswitch">
                                <input type="checkbox" data-name="sincronizarprocessos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_sincronizarprocessos" tabindex="0" checked>
                                <label class="onoffswitch-label" for="itemConfigGeral_sincronizarprocessos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr class="lab">
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-robot azulColor"></i><span class="info">Ferramentas de Intelig&ecirc;ncia Artificial</span>
+                            <a class="manual" href="/pages/FERRAMENTASIA.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="ferramentasia" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_ferramentasia" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_ferramentasia"></label>
                            </div>
                     </td>
                 </tr>
@@ -246,6 +261,51 @@
                                <input type="checkbox" data-name="acoesemlote" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_acoesemlote" tabindex="0" checked>
                                <label class="onoffswitch-label" for="itemConfigGeral_acoesemlote"></label>
                            </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-user-edit azulColor"></i><span class="info">Revis&atilde;o de texto no editor de documentos</span>
+                            <a class="manual" href="/pages/REVISARDOC.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="revisaotexto" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_revisaotexto" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_revisaotexto"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-stopwatch cinzaColor"></i><span class="info">Reabertura programada de processos</span>
+                            <a class="manual" href="/pages/REABRIRPROCESSOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="reaberturaprogramada" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_reaberturaprogramada" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_reaberturaprogramada"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr id="reaberturaProgram_periodo">
+                    <td colspan="2" style="padding: 0;">
+                        <table>
+                            <tr>
+                                <td style="width: 80%;">
+                                    <span>
+                                        <i class="iconPopup far fa-stopwatch azulColor"></i><span class="info">Peridiocidade de verifica&ccedil;&atilde;o de procesos (em horas)</span>
+                                        <a class="manual" href="/pages/REABRIRPROCESSOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                                    </span>
+                                </td>
+                                <td style="width: 20%; text-align: right;">
+                                    <input type="number" step="1" id="itemConfigGeral_reaberturaprogramada_periodo" max="36000" min="1" data-name="reaberturaprogramada_periodo" value="24">
+                                   </td>
+                            </tr>
+                        </table>
                     </td>
                 </tr>
                 <tr>
@@ -433,6 +493,20 @@
                 <tr>
                     <td>
                         <p>
+                            <i class="iconPopup fa fa-sort-numeric-down cinzaColor"></i><span class="info">Numerar documentos na &aacute;rvore do processo</span>
+                            <a class="manual" href="/pages/NUMERARDOCSARVORE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="numerar_documentos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_numerar_documentos" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_numerar_documentos"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
                             <i class="iconPopup far fa-hand-point-up cinzaColor"></i><span class="info">Utilizar caixas de sele&ccedil;&atilde;o inteligentes</span>
                             <a class="manual" href="/pages/SUBSTITUIRSELECAO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
@@ -569,11 +643,11 @@
                         </table>
                     </td>
                 </tr>
-                <tr class="lab">
+                <tr>
                     <td>
                         <p>
                             <i class="iconPopup fas fa-keyboard azulColor"></i><span class="info">Adicionar teclas de atalhos no editor de documentos</span>
-                            <a href="/pages/TECLASATALHO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                            <a class="manual" href="/pages/TECLASATALHO.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
                     </td>
                     <td>

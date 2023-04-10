@@ -1237,6 +1237,7 @@ body.dark-mode,
 .seiSlim.dark-mode #ImageEditorPro div[class*="-option-triggerer"]:hover *,
 .seiSlim.dark-mode #ImageEditorPro div[class*="-tool-button"]:hover *,
 .seiSlim.dark-mode #capaProcessoPro .data a.newLink:hover,
+.seiSlim.dark-mode .alertaErrorPro .errorReport,
 .seiSlim.dark-mode select option:checked {
     color: #202123 !important;
 }
@@ -1251,6 +1252,7 @@ body.dark-mode,
 .seiSlim.dark-mode .dd-options a,
 .seiSlim.dark-mode .chosen-container,
 .seiSlim.dark-mode .chosen-container .chosen-single,
+.seiSlim.dark-mode .chosen-container .search-choice,
 .seiSlim.dark-mode .chosen-container .chosen-drop,
 .seiSlim.dark-mode div.infraAjaxAutoCompletar,
 .seiSlim.dark-mode .ui-dialog-titlebar,
@@ -1297,6 +1299,8 @@ body.dark-mode,
 .seiSlim.dark-mode .dd-options a,
 .seiSlim.dark-mode .chosen-container,
 .seiSlim.dark-mode .chosen-container .chosen-single,
+.seiSlim.dark-mode .chosen-container .search-choice,
+.seiSlim.dark-mode .chosen-container .chosen-choices,
 .seiSlim.dark-mode .chosen-container .chosen-drop,
 .seiSlim.dark-mode div.infraAjaxAutoCompletar,
 .seiSlim.dark-mode .ui-button,
@@ -1338,7 +1342,8 @@ body.dark-mode,
     text-shadow: none;
     box-shadow: none;
 }
-.seiSlim.dark-mode .chosen-container .chosen-single {
+.seiSlim.dark-mode .chosen-container .chosen-single,
+.seiSlim.dark-mode .chosen-container .search-choice {
     background: #2A2A2D !important;
 }
 .seiSlim.dark-mode .tool-container.tool-bottom .arrow {
@@ -1361,6 +1366,7 @@ body.dark-mode,
 .seiSlim.dark-mode div.tituloProcessoDocumento,
 .seiSlim.dark-mode .ui-tabs .ui-tabs-nav li,
 .seiSlim.dark-mode .content_edit [contenteditable="true"],
+.seiSlim.dark-mode .chosen-container .chosen-choices,
 .seiSlim.dark-mode .ui-tabs-nav .ui-tabs-anchor {
     border-color: #494c50 !important;
     color: #fbfbfe;
@@ -1391,6 +1397,7 @@ body.dark-mode,
 .seiSlim.dark-mode .content_desc div,
 .seiSlim.dark-mode .tool-container .tool-item .info,
 .seiSlim.dark-mode div.chosen-container a.chosen-single span,
+.seiSlim.dark-mode div.chosen-container .search-choice span,
 .seiSlim.dark-mode div.infraAjaxAutoCompletar li a,
 .seiSlim.dark-mode .newLink_active.content_btnsave i,
 .seiSlim.dark-mode .info_tags_pacto .tag_text i,
@@ -1581,6 +1588,8 @@ body.dark-mode,
 }
 .seiSlim a.botaoSEI[href*="?acao=procedimento_enviar"],
 .seiSlim a.botaoSEI[onclick*="?acao=procedimento_enviar"],
+.seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"],
+.seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"],
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atualizar_andamento"],
 .seiSlim a.botaoSEI[onclick*="?acao=procedimento_atualizar_andamento"],
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atribuicao_cadastrar"],
@@ -1592,6 +1601,7 @@ body.dark-mode,
 .seiSlim a.botaoSEI[href*="?acao=andamento_marcador_gerenciar"],
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"],
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"],
+.seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"],
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("],
 .seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"],
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("],
@@ -1620,10 +1630,16 @@ body.dark-mode,
 .seiSlim td:last-child a[href*="acao=rel_bloco_protocolo_listar"],
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"],
 .seiSlim a[href*="acao=contato_consultar"],
+.seiSlim a[href*="acao=grupo_unidade_consultar"],
+.seiSlim a[href*="acao=grupo_contato_consultar"],
+.seiSlim a[href*="acao=grupo_email_consultar"],
 .seiSlim a[href*="acao=usuario_externo_consultar"],
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"],
 .seiSlim a[href*="acao=protocolo_modelo_alterar"],
 .seiSlim a[href*="acao=acompanhamento_alterar"],
+.seiSlim a[href*="acao=grupo_unidade_alterar"],
+.seiSlim a[href*="acao=grupo_contato_alterar"],
+.seiSlim a[href*="acao=grupo_email_alterar"],
 .seiSlim a[href*="acao=marcador_alterar"],
 .seiSlim a[href*="acao=bloco_reuniao_alterar"],
 .seiSlim a[href*="acao=bloco_interno_alterar"],
@@ -1660,6 +1676,7 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick*="?acao=documento_gerar_multiplo"],
 .seiSlim a.botaoSEI[onclick="removerSobrestamentoProcesso();"],
 .seiSlim a.botaoSEI[onclick="cienciaProcesso();"],
+.seiSlim a.botaoSEI[onclick="renunciarCredencial();"],
 .seiSlim a.botaoSEI[onclick="cienciaDocumento();"],
 .seiSlim a.botaoSEI[onclick="assinarDocumento();"],
 .seiSlim a.botaoSEI[onclick="enviarEmailProcedimento();"],
@@ -1677,9 +1694,13 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick*="saveAtividade("],
 .seiSlim a.botaoSEI[onclick*="selectAtividadeBox("],
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("],
+.seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("],
+.seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("],
+.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("],
 .seiSlim a.botaoSEI[onclick*="openListNewTab("],
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("],
 .seiSlim a.botaoSEI[onclick*="getDosimetria("],
+.seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("],
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("],
 .seiSlim a[id*="anchorImg"][data-img],
 .seiSlim span.infraImgPro[data-img],
@@ -1689,6 +1710,7 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim #topmenu a.clipboard[id*="anchorImg"],
 .seiSlim a[href*="javascript:alert('Acesso Restrito"],
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"],
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"],
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"] {
     position: relative;
     border: none;
@@ -1700,6 +1722,8 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick="removerSobrestamentoProcesso();"] img:hover,
 .seiSlim a.botaoSEI[onclick="cienciaProcesso();"] img,
 .seiSlim a.botaoSEI[onclick="cienciaProcesso();"] img:hover,
+.seiSlim a.botaoSEI[onclick="renunciarCredencial();"] img,
+.seiSlim a.botaoSEI[onclick="renunciarCredencial();"] img:hover,
 .seiSlim a.botaoSEI[onclick="assinarDocumento();"] img,
 .seiSlim a.botaoSEI[onclick="assinarDocumento();"] img:hover,
 .seiSlim a.botaoSEI[onclick="enviarEmailProcedimento();"] img,
@@ -1730,12 +1754,20 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick*="selectAtividadeBox("] img:hover,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("] img,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("] img:hover,
+.seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("] img,
+.seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("] img:hover,
+.seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("] img,
+.seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("] img:hover,
+.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("] img,
+.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("] img:hover,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("] img,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("] img:hover,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("] img,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("] img:hover,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("] img,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("] img:hover,
+.seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("] img,
+.seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("] img:hover,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("] img,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atribuicao_cadastrar"] img,
@@ -1754,12 +1786,18 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[href*="?acao=andamento_marcador_gerenciar"] img:hover,
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"] img,
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"] img:hover,
+.seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"] img,
+.seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"] img:hover,
+.seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"] img,
+.seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atualizar_andamento"] img,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atualizar_andamento"] img:hover,
 .seiSlim a.botaoSEI[onclick*="?acao=procedimento_atualizar_andamento"] img,
 .seiSlim a.botaoSEI[onclick*="?acao=procedimento_atualizar_andamento"] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"] img,
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"] img:hover,
+.seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"] img,
+.seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"] img:hover,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("] img,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("] img:hover,
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("] img,
@@ -1816,6 +1854,12 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"] img:hover,
 .seiSlim a[href*="acao=contato_consultar"] img,
 .seiSlim a[href*="acao=contato_consultar"] img:hover,
+.seiSlim a[href*="acao=grupo_unidade_consultar"] img,
+.seiSlim a[href*="acao=grupo_unidade_consultar"] img:hover,
+.seiSlim a[href*="acao=grupo_contato_consultar"] img,
+.seiSlim a[href*="acao=grupo_contato_consultar"] img:hover,
+.seiSlim a[href*="acao=grupo_email_consultar"] img,
+.seiSlim a[href*="acao=grupo_email_consultar"] img:hover,
 .seiSlim a[href*="acao=usuario_externo_consultar"] img,
 .seiSlim a[href*="acao=usuario_externo_consultar"] img:hover,
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"] img,
@@ -1824,6 +1868,12 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a[href*="acao=protocolo_modelo_alterar"] img:hover,
 .seiSlim a[href*="acao=acompanhamento_alterar"] img,
 .seiSlim a[href*="acao=acompanhamento_alterar"] img:hover,
+.seiSlim a[href*="acao=grupo_unidade_alterar"] img,
+.seiSlim a[href*="acao=grupo_unidade_alterar"] img:hover,
+.seiSlim a[href*="acao=grupo_contato_alterar"] img,
+.seiSlim a[href*="acao=grupo_contato_alterar"] img:hover,
+.seiSlim a[href*="acao=grupo_email_alterar"] img,
+.seiSlim a[href*="acao=grupo_email_alterar"] img:hover,
 .seiSlim a[href*="acao=marcador_alterar"] img,
 .seiSlim a[href*="acao=marcador_alterar"] img:hover,
 .seiSlim a[href*="acao=bloco_reuniao_alterar"] img,
@@ -1912,6 +1962,8 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a[href*="javascript:alert('Acesso Restrito"] img:hover,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"] img,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"] img:hover,
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"] img,
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"] img:hover,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"] img,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"] img:hover {
     opacity: 0 !important;
@@ -1919,6 +1971,7 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a.botaoSEI[onclick="cienciaDocumento();"]:before,
 .seiSlim a.botaoSEI[onclick="removerSobrestamentoProcesso();"]:before,
 .seiSlim a.botaoSEI[onclick="cienciaProcesso();"]:before,
+.seiSlim a.botaoSEI[onclick="renunciarCredencial();"]:before,
 .seiSlim a.botaoSEI[onclick="assinarDocumento();"]:before,
 .seiSlim a.botaoSEI[onclick="enviarEmailProcedimento();"]:before,
 .seiSlim a.botaoSEI[onclick="enviarEmailDocumento();"]:before,
@@ -1934,10 +1987,16 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a.botaoSEI[onclick*="saveAtividade("]:before,
 .seiSlim a.botaoSEI[onclick*="selectAtividadeBox("]:before,
 .seiSlim a.botaoSEI[onclick*="addControlePrazo("]:before,
+.seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("]:before,
+.seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:before,
+.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:before,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:before,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("]:before,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("]:before,
+.seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("]:before,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("]:before,
+.seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"]:before,
+.seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"]:before,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atualizar_andamento"]:before,
 .seiSlim a.botaoSEI[onclick*="?acao=procedimento_atualizar_andamento"]:before,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atribuicao_cadastrar"]:before,
@@ -1949,6 +2008,7 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=andamento_marcador_gerenciar"]:before,
 .seiSlim a.botaoSEI[onclick*="?acao=andamento_marcador_gerenciar"]:before,
 .seiSlim a.botaoSEI[href*="?acao=assinatura_externa_gerenciar"]:before,
+.seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"]:before,
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("]:before,
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("]:before,
 .seiSlim a.botaoSEI[onclick*="acao=andamento_situacao_gerenciar"]:before,
@@ -2025,13 +2085,19 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a[href*="alert('Retorno Programado:"]:before,
 .seiSlim a[href*="&abrir_pastas=1"]:before,
 .seiSlim a[href*="&fechar_pastas=1"]:before,
-.seiSlim td:last-child a[href*="acao=rel_bloco_protocolo_listar"]:before,
+.seiSlim table:not(#tblHistorico) td:last-child a[href*="acao=rel_bloco_protocolo_listar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"]:before,
 .seiSlim a[href*="acao=contato_consultar"]:before,
+.seiSlim a[href*="acao=grupo_unidade_consultar"]:before,
+.seiSlim a[href*="acao=grupo_contato_consultar"]:before,
+.seiSlim a[href*="acao=grupo_email_consultar"]:before,
 .seiSlim a[href*="acao=usuario_externo_consultar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"]:before,
 .seiSlim a[href*="acao=protocolo_modelo_alterar"]:before,
 .seiSlim a[href*="acao=acompanhamento_alterar"]:before,
+.seiSlim a[href*="acao=grupo_unidade_alterar"]:before,
+.seiSlim a[href*="acao=grupo_contato_alterar"]:before,
+.seiSlim a[href*="acao=grupo_email_alterar"]:before,
 .seiSlim a[href*="acao=marcador_alterar"]:before,
 .seiSlim a[href*="acao=bloco_reuniao_alterar"]:before,
 .seiSlim a[href*="acao=bloco_interno_alterar"]:before,
@@ -2058,6 +2124,7 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before,
 .seiSlim a[href*="?acao=usuario_externo_alterar"]:before,
 .seiSlim a[onclick*="setSelectAllTr"]:before,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"]:before,
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"]:before,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before {
     position: absolute;
     font-family: 'Font Awesome 5 Pro';
@@ -2100,6 +2167,7 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     position: relative;
 }
 .seiSlim .tableInfo a[href*="?acao=anotacao_registrar"]:before,
+.seiSlim .kanban-content a[href*="?acao=anotacao_registrar"]:before,
 .seiSlim .infraTable a[href*="?acao=anotacao_registrar"]:before {
     padding: 0 !important;
     top: 0 !important;
@@ -2316,6 +2384,11 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f164";
     color: #34caef;
 }
+.seiSlim a.botaoSEI[onclick="renunciarCredencial();"]:after,
+.seiSlim a.botaoSEI[onclick="renunciarCredencial();"]:before {
+    content: "\e073";
+    color: #e46e64;
+}
 .seiSlim a.botaoSEI[onclick="assinarDocumento();"]:after,
 .seiSlim a.botaoSEI[onclick="assinarDocumento();"]:before {
     content: "\f305";
@@ -2379,6 +2452,11 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f662";
     color: #34caef;
 }
+.seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("]:after,
+.seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("]:before {
+    content: "\f65b";
+    color: #7562d8;
+}
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("]:after,
 .seiSlim a.botaoSEI[onclick*="reabrirProcesso("]:before {
     content: "\f07c";
@@ -2419,10 +2497,40 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f017";
     color: #4285f4;
 }
+.seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:after,
+.seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:before {
+    content: "\f574";
+    color: #7562d8;
+}
+.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:after,
+.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:before {
+    content: "\e053";
+    color: #7562d8;
+}
+.seiSlim a.botaoSEI.iconLoading:after,
+.seiSlim a.botaoSEI.iconLoading:before {
+    content: "\f110" !important;
+    animation: fa-spin 2s linear infinite;
+}
+.seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("]:after,
+.seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("]:before {
+    content: "\f05a";
+    color: #4285f4;
+}
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:after,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:before {
     content: "\f35d";
     color: #4285f4;
+}
+.seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"]:after,
+.seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"]:before {
+    content: "\f509";
+    color: #4285f4;
+}
+.seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"]:after,
+.seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"]:before {
+    content: "\f4ff";
+    color: #7562d8;
 }
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atualizar_andamento"]:after,
 .seiSlim a.botaoSEI[onclick*="?acao=procedimento_atualizar_andamento"]:after,
@@ -2465,6 +2573,11 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f573";
     color: #dec20f;
 }
+.seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"]:after,
+.seiSlim a.botaoSEI[href*="?acao=publicacao_agendar"]:before {
+    content: "\f1ea";
+    color: #dec20f;
+}
 .seiSlim a.botaoSEI[onclick*="acaoBlocoProcessar("]:after,
 .seiSlim a.botaoSEI[onclick*="incluirEmBloco("]:after,
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"]:after {
@@ -2476,6 +2589,9 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 .seiSlim a.botaoSEI[href*="?acao=bloco_escolher"]:before {
     content: "\f02d";
     color: #4285f4;
+}
+.seiSlim a.verdeColor.botaoSEI[onclick*="incluirEmBloco("]:before {
+    color: #9cb639 !important;
 }
 .seiSlim a.botaoSEI[onclick*="listarCredenciais("]:after{
     content: "\10f502";
@@ -2594,6 +2710,10 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f032";
     color: #4285f4;
 }
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"]:before {
+    content: "\f06e";
+    color: #4285f4;
+}
 .seiSlim a[href*="&abrir_pastas=1"]:before {
     content: "\f055";
     color: #9cb639;
@@ -2610,6 +2730,9 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f362";
     color: #d8a63a;
     margin-left: 3px;
+}
+.seiSlim select.infraSelect[multiple="multiple"] {
+    min-height: 100px;
 }
 .seiSlim a[href*="(atrasado "]:before {
     color: #e46e64 !important;
@@ -2693,6 +2816,9 @@ a[data-shadow="true"]:before {
 .seiSlim a[href*="acao=texto_padrao_interno_alterar"]:before,
 .seiSlim a[onclick*="acaoAlterar("]:before,
 .seiSlim a[href*="acao=acompanhamento_alterar"]:before,
+.seiSlim a[href*="acao=grupo_unidade_alterar"]:before,
+.seiSlim a[href*="acao=grupo_contato_alterar"]:before,
+.seiSlim a[href*="acao=grupo_email_alterar"]:before,
 .seiSlim a[href*="acao=marcador_alterar"]:before,
 .seiSlim a[href*="acao=bloco_reuniao_alterar"]:before,
 .seiSlim a[href*="acao=bloco_interno_alterar"]:before,
@@ -2725,13 +2851,16 @@ a[data-shadow="true"]:before {
     transform: scaley(-1);
 }
 .seiSlim a[href*="acao=contato_consultar"]:before,
+.seiSlim a[href*="acao=grupo_unidade_consultar"]:before,
+.seiSlim a[href*="acao=grupo_contato_consultar"]:before,
+.seiSlim a[href*="acao=grupo_email_consultar"]:before,
 .seiSlim a[href*="acao=usuario_externo_consultar"]:before,
 .seiSlim a[href*="acao=texto_padrao_interno_consultar"]:before {
     content: "\f002";
     color: #4285f4;
     top: 0;
 }
-.seiSlim td:last-child a[href*="acao=rel_bloco_protocolo_listar"]:before {
+.seiSlim table:not(#tblHistorico) td:last-child a[href*="acao=rel_bloco_protocolo_listar"]:before {
     content: "\f022";
     color: #4285f4;
     top: 0;
@@ -2898,6 +3027,7 @@ a[data-shadow="true"]:before {
     top: 0;
     margin-left: 40px !important;
     counter-increment: seipro_counter;
+    line-height: initial !important;
 }
 .linhaNumerada:after {
     counter-increment: seipro_counter !important;
@@ -2994,6 +3124,8 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__linklegis_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__citacaodoc_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__notarodape_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__refinterna_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__openai_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__sumario_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__dadosprocesso_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__tinyurl_icon,
@@ -3004,6 +3136,8 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__processopublico_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__watermark_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__boxsigilo_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__ctr_review_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__review_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__natjus_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__tablestyles_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__quicktable_icon,
@@ -3222,6 +3356,14 @@ td .linhaNumerada:after {
     content: "\f4a3";
     color: #34caef;
 }
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__refinterna_icon:before {
+    content: "\f079";
+    color: #E46E64;
+}
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__openai_icon:before {
+    content: "\f544";
+    color: #7562D8;
+}
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__sumario_icon:before {
     content: "\f022";
     color: #7562D8;
@@ -3266,6 +3408,14 @@ td .linhaNumerada:after {
 }
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__boxsigilo_icon:before {
     content: "\e058";
+    color: #4285f4;
+}
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__ctr_review_icon:before {
+    content: "\f086";
+    color: #4285f4;
+}
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__review_icon:before {
+    content: "\f4ff";
     color: #4285f4;
 }
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__natjus_icon:before {
@@ -3596,4 +3746,118 @@ div#capaProcessoPro .data a.newLink.newLink_confirm:hover {
 a.newLink_confirm i,
 a.newLink_confirm:hover i {
     color: #fff !important;
+}
+.seiSlim form[id*="frmGrupo"] .infraImgPro[data-img*="/lupa.gif"] {
+    position: relative !important;
+    top: -20px;
+}
+.seiSlim form[id*="frmGrupo"] .infraImgPro[data-img*="/remover.gif"] {
+    position: relative !important;
+    top: 0;
+}
+.seiSlim form[id*="frmGrupo"] .infraSelect[multiple="multiple"] {
+    top: 20px !important;
+    position: relative !important;
+    margin: 0 !important;
+}
+.seiSlim form[id*="frmGrupo"] .infraLabelObrigatorio,
+.seiSlim form[id*="frmGrupo"] .infraText,
+.seiSlim form[id*="frmGrupo"] .infraLabelOpcional,
+.seiSlim form[id*="frmGrupo"] .infraTextArea,
+.seiSlim form[id*="frmGrupo"] .infraImgPro,
+.seiSlim form[id*="frmGrupo"] .infraSelect {
+    position: initial !important;
+    display: inline-block;
+}
+.seiSlim select.infraText[multiple="multiple"] {
+    margin: 20px 0 0 0 !important;
+}
+#divArvoreConteudo {
+    overflow-y: auto !important;
+}
+.linkDisplayPro, 
+.reviewDisplayPro { 
+    user-select: none; 
+    position: initial;
+    display: block !important;
+    margin: 15px 10px !important;
+    padding: 10px !important;
+    border: 1px solid #ccc !important;
+    background: #fff; 
+    border-radius: 8px; 
+    text-align: left; 
+    text-indent: initial; 
+    font-size: 12pt; 
+    text-transform: initial; 
+    font-weight: initial; 
+    letter-spacing: initial; 
+    text-decoration: initial; 
+    white-space: nowrap; 
+}
+.linkDisplayPro a, 
+.reviewDisplayPro a { 
+    cursor: pointer; 
+    text-decoration: underline; 
+    color:#1155cc; 
+}
+.reviewDisplayPro span.action { 
+    font-size: 100% !important;
+}
+html.dark-mode .linkDisplayPro, 
+html.dark-mode .reviewDisplayPro { 
+    background-color:#3D3D3D !important; 
+}
+html.dark-mode .linkDisplayPro a, 
+html.dark-mode .reviewDisplayPro a { 
+    color:#fbfbfe !important; 
+}
+.reviewDisplayPro s {
+    text-decoration: line-through;
+    font-size: 11pt;
+}
+.reviewDisplayPro u {
+    text-decoration: underline;
+    font-size: 11pt;
+}
+.reviewSeiPro.reviewHighlights {
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: rgba(60, 64, 67, 0.35) 0px 1px 3px 1px;
+    opacity: 0.8;
+}
+strong.title-reviewtip {
+    font-weight: 100;
+}
+.reviewDisplayPro .textReview,
+.reviewDisplayPro .textReview span,
+.reviewDisplayPro .textReview u,
+.reviewDisplayPro .textReview s,
+.reviewDisplayPro .textReview b,
+.reviewDisplayPro .textReview strong,
+.reviewDisplayPro .textReview em,
+.reviewDisplayPro .textReview i,
+.reviewDisplayPro .textReview a {
+    font-size: 11pt !important;
+}
+.reviewDisplayPro .textReview {
+    cursor:pointer;
+    display: block;
+    margin: 10px 0 15px 0;
+    white-space: normal;
+}
+#frmArvore span.numericDocsPro:before {
+    content: attr(data-count);
+    display: inline-block;
+    margin: 0 10px 0 5px;
+    vertical-align: initial;
+    opacity: 0.6;
+}
+.seiSlim_arvore #frmArvore span.numericDocsPro:before {
+    vertical-align: super !important;
+}
+.seiSlim #uploadListPro a[id*="anchorImg"][data-img]::before {
+    top: 0;
+}
+#uploadListPro .dz-preview.dz-file-preview {
+    margin: 10px;
 }

@@ -175,6 +175,11 @@ function restore_options() {
         } else {
             $('#uploadDoc_sortBefore').hide();
         }
+        if(jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada'].value | [0]") === null) {
+            $('#reaberturaProgram_periodo').show();
+        } else {
+            $('#reaberturaProgram_periodo').hide();
+        }
         if(jmespath.search(dataValuesConfig, "[?name=='certidaosigilo'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='certidaosigilo'].value | [0]") === null) {
             $('#getDocCertidao_docName').show();
         } else {
@@ -211,6 +216,9 @@ function restore_options() {
         }
         if (jmespath.search(dataValuesConfig, "[?name=='qualidadeimagens'].value | [0]") !== null) { 
             $('#itemConfigGeral_qualidadeimagens').val(jmespath.search(dataValuesConfig, "[?name=='qualidadeimagens'].value | [0]"));
+        }
+        if (jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada_periodo'].value | [0]") !== null) { 
+            $('#itemConfigGeral_reaberturaprogramada_periodo').val(jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada_periodo'].value | [0]"));
         }
         if (jmespath.search(dataValuesConfig, "[?name=='newdocsigilo'].value | [0]") !== null) { 
             var valueNewDocSigilo = jmespath.search(dataValuesConfig, "[?name=='newdocsigilo'].value | [0]");
@@ -317,12 +325,17 @@ function changeConfigGeral() {
             arrayShowItensMenu.push({name: $(this).attr('data-name'), value: $(this).val()});
         }
     });
-    if ($('#itemConfigGeral_newdocdefault').is(':checked')) { $('#newdocDefault_table').show(); } else { $('#newdocDefault_table').hide(); }
+    if ($('#itemConfigGeral_newdocdefault').is(':checked')) { $('#newdocDefault_table').show(); } else { $('#newdocDefault_table').hide(); } 
     if ($('#itemConfigGeral_uploaddocsexternos').is(':checked')) { 
         $('#uploadDoc_sortBefore').show(); 
     } else { 
         $('#uploadDoc_sortBefore').hide(); 
         $('#itemConfigGeral_sortbeforeupload').prop('checked',false); 
+    }
+    if ($('#itemConfigGeral_reaberturaprogramada').is(':checked')) { 
+        $('#reaberturaProgram_periodo').show(); 
+    } else { 
+        $('#reaberturaProgram_periodo').hide(); 
     }
     if ($('#itemConfigGeral_certidaosigilo').is(':checked')) { 
         $('#getDocCertidao_docName').show(); 
@@ -384,6 +397,10 @@ function setNamePage() {
     });
     if (NAMESPACE_SPRO == 'SEI Pro Lab') {
         $('body').addClass('SEIPro_lab');
+    } else if (NAMESPACE_SPRO == 'ANTAQ Pro') {
+        $('body').addClass('ANTAQ_Pro');
+    } else if (NAMESPACE_SPRO == 'ANTT Pro') {
+        $('body').addClass('ANTAQ_Pro');
     }
 }
 $('#options-functions').find('input[type="text"]').on("keyup", function () {

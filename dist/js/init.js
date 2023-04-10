@@ -5,12 +5,6 @@ $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
-function loadAPIGooglePro() {
-    if ( $('head').find('script[data-config="config-apigoogle-seipro"]').length == 0 ) {
-        var htmlScript = "<script data-config='config-apigoogle-seipro' async defer src=\"https://apis.google.com/js/api.js\" onload=\"this.onload=function(){};handleClientLoadPro()\" onreadystatechange=\"if (this.readyState === 'complete') this.onload()\"></script>";
-        $(htmlScript).appendTo('head');
-    }
-}
 /*
 function loadAPIGooglePro(client_id) {
     $('[data-script-name="googleapi"]').remove();
@@ -91,6 +85,7 @@ function loadScriptDataBasePro(dataValues) {
     var dataValues_ProjetosSheets = jmespath.search(dataValues, "[?baseTipo=='projetos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_FormulariosSheets = jmespath.search(dataValues, "[?baseTipo=='formularios'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_ProcessosSheets = jmespath.search(dataValues, "[?baseTipo=='processos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
+    var dataValues_OpenAI = jmespath.search(dataValues, "[?baseTipo=='openai'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
     var dataValues_AtividadesAPI = jmespath.search(dataValues, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']");
     // console.log(dataValues, dataValues_ProjetosSheets);
     if (dataValues_ProjetosSheets.length > 0 && checkConfigValue('gerenciarprojetos')) {
@@ -113,6 +108,25 @@ function loadScriptDataBasePro(dataValues) {
     } else {
         removeLocalStorageAtividades();
     }
+    if (dataValues_OpenAI.length > 0 && checkConfigValue('ferramentasia')) {
+        loadDataBaseApiOpenAIPro(dataValues_OpenAI);
+    } else {
+        removeLocalStorageOpenAI();
+    }
+}
+function removeLocalStorageOpenAI() { 
+    localStorageRemovePro('configBasePro_openai');
+}
+function loadDataBaseApiOpenAIPro(dataValues) { 
+    var perfilSelected = (getOptionsPro('configBaseSelectedPro_openai') && getOptionsPro('configBaseSelectedPro_openai') <= dataValues.length) ? getOptionsPro('configBaseSelectedPro_openai') : 0;
+    var perfil = (dataValues && dataValues !== null && dataValues.length > 0 && typeof dataValues[perfilSelected] !== 'undefined' &&  typeof dataValues[perfilSelected].hasOwnProperty('KEY_USER')) 
+                    ? dataValues[perfilSelected] 
+                    : false;
+    if (perfil && checkConfigValue('ferramentasia')) {
+        localStorage.setItem('configBasePro_openai', JSON.stringify({URL_API: perfil.URL_API, KEY_USER: perfil.KEY_USER}));
+    } else {
+        removeLocalStorageOpenAI();
+    }
 }
 function removeLocalStorageAtividades() { 
     localStorageRemovePro('configBasePro_atividades');
@@ -134,85 +148,61 @@ function loadDataBaseApiAtividadesPro(dataValues) {
 }
 function loadDataBaseSheetsProjetosPro(dataValues) { 
             // dataValues = ( jmespath.search(dataValues, "[?baseTipo=='projetos'] | length(@)") > 0 ) ? jmespath.search(dataValues, "[?baseTipo=='projetos']") : dataValues;
-        var dataPerfil = [];
-        var perfilSelected = (getOptionsPro('configBaseSelectedPro')) ? getOptionsPro('configBaseSelectedPro') : 0;
-        for (var i = 0; i < dataValues.length; i++) {
-            if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
-        }
+    var dataPerfil = [];
+    var perfilSelected = (getOptionsPro('configBaseSelectedPro')) ? getOptionsPro('configBaseSelectedPro') : 0;
+    for (var i = 0; i < dataValues.length; i++) {
+        if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
+    }
 
-        var spreadsheetIdProjetos_Pro = ( typeof dataPerfil.spreadsheetId !== 'undefined' ) ? "'"+dataPerfil.spreadsheetId+"'" : 'false';
-        var CLIENT_ID_PRO = ( typeof dataPerfil.CLIENT_ID !== 'undefined' ) ? "'"+dataPerfil.CLIENT_ID+"'" : 'false';
-        var API_KEY_PRO = ( typeof dataPerfil.API_KEY !== 'undefined' ) ? "'"+dataPerfil.API_KEY+"'" : 'false';
-
-            var scriptText =    "<script data-config='base-projetos-seipro'>\n"+
-                                "   var CLIENT_ID_PRO = "+CLIENT_ID_PRO+";\n"+
-                                "   var API_KEY_PRO = "+API_KEY_PRO+";\n"+
-                                "   var spreadsheetIdProjetos_Pro = "+spreadsheetIdProjetos_Pro+";\n"+
-                                "</script>";
-            $(scriptText).appendTo('head');
-
-    if ( typeof dataPerfil.spreadsheetId !== 'undefined' ) {
-            loadAPIGooglePro(CLIENT_ID_PRO);
+    if (    typeof dataPerfil.spreadsheetId !== 'undefined' &&
+            typeof dataPerfil.CLIENT_ID !== 'undefined' &&
+            typeof dataPerfil.API_KEY !== 'undefined' ) {
+            setSessionGoogle(dataPerfil.baseTipo, {CLIENT_ID_PRO: dataPerfil.CLIENT_ID, API_KEY_PRO: dataPerfil.API_KEY, spreadsheetIdProjetos_Pro: dataPerfil.spreadsheetId});
             $.getScript(getUrlExtension("js/sei-gantt.js"));
-        } else {
-            console.log('loadDataBaseSheetsProjetosPro','ERROR!!!');
-            localStorage.removeItem('loadEtapasSheet');
-            removeOptionsPro('configBaseSelectedPro');
-        }
+    } else {
+        console.log('loadDataBaseSheetsProjetosPro','ERROR!!!');
+        localStorage.removeItem('loadEtapasSheet');
+        removeOptionsPro('configBaseSelectedPro');
+    }
 }
 function loadDataBaseSheetsFormulariosPro(dataValues) { 
-        var dataPerfil = [];
-        var perfilSelected = (getOptionsPro('configBaseSelectedFormPro')) ? getOptionsPro('configBaseSelectedFormPro') : 0;
-        for (var i = 0; i < dataValues.length; i++) {
-            if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
-        }
+    var dataPerfil = [];
+    var perfilSelected = (getOptionsPro('configBaseSelectedFormPro')) ? getOptionsPro('configBaseSelectedFormPro') : 0;
+    for (var i = 0; i < dataValues.length; i++) {
+        if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
+    }
 
-        var spreadsheetIdFormularios_Pro = ( typeof dataPerfil.spreadsheetId !== 'undefined' ) ? "'"+dataPerfil.spreadsheetId+"'" : 'false';
-        var CLIENT_ID_PRO = ( typeof dataPerfil.CLIENT_ID !== 'undefined' ) ? "'"+dataPerfil.CLIENT_ID+"'" : 'false';
-        var API_KEY_PRO = ( typeof dataPerfil.API_KEY !== 'undefined' ) ? "'"+dataPerfil.API_KEY+"'" : 'false';
-
-            var scriptText =    "<script data-config='base-formularios-seipro'>\n"+
-                                "   var CLIENT_ID_PRO = "+CLIENT_ID_PRO+";\n"+
-                                "   var API_KEY_PRO = "+API_KEY_PRO+";\n"+
-                                "   var spreadsheetIdFormularios_Pro = "+spreadsheetIdFormularios_Pro+";\n"+
-                                "</script>";
-            $(scriptText).appendTo('head');
-
-    if ( typeof dataPerfil.spreadsheetId !== 'undefined' ) {
-            loadAPIGooglePro(CLIENT_ID_PRO);
+    if (    typeof dataPerfil.spreadsheetId !== 'undefined' &&
+            typeof dataPerfil.CLIENT_ID !== 'undefined' &&
+            typeof dataPerfil.API_KEY !== 'undefined' ) {
+            setSessionGoogle(dataPerfil.baseTipo, {CLIENT_ID_PRO: dataPerfil.CLIENT_ID, API_KEY_PRO: dataPerfil.API_KEY, spreadsheetIdFormularios_Pro: dataPerfil.spreadsheetId});
             $.getScript(getUrlExtension("js/sei-forms.js"));
-        } else {
-            console.log('loadDataBaseSheetsFormulariosPro','ERROR!!!');
-            localStorage.removeItem('loadFormulariosSheet');
-            removeOptionsPro('configBaseSelectedFormPro');
-        }
+    } else {
+        console.log('loadDataBaseSheetsFormulariosPro','ERROR!!!');
+        localStorage.removeItem('loadFormulariosSheet');
+        removeOptionsPro('configBaseSelectedFormPro');
+    }
 }
 function loadDataBaseSheetsProcessosPro(dataValues) { 
-        var dataPerfil = [];
-        var perfilSelected = (getOptionsPro('configBaseSelectedProcessosPro')) ? getOptionsPro('configBaseSelectedProcessosPro') : 0;
-        for (var i = 0; i < dataValues.length; i++) {
-            if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
-        }
+    var dataPerfil = [];
+    var perfilSelected = (getOptionsPro('configBaseSelectedProcessosPro')) ? getOptionsPro('configBaseSelectedProcessosPro') : 0;
+    for (var i = 0; i < dataValues.length; i++) {
+        if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
+    }
 
-        var spreadsheetIdSyncProcessos_Pro = ( typeof dataPerfil.spreadsheetId !== 'undefined' ) ? "'"+dataPerfil.spreadsheetId+"'" : 'false';
-        var CLIENT_ID_PRO = ( typeof dataPerfil.CLIENT_ID !== 'undefined' ) ? "'"+dataPerfil.CLIENT_ID+"'" : 'false';
-        var API_KEY_PRO = ( typeof dataPerfil.API_KEY !== 'undefined' ) ? "'"+dataPerfil.API_KEY+"'" : 'false';
-
-            var scriptText =    "<script data-config='base-processos-seipro'>\n"+
-                                "   var CLIENT_ID_PRO = "+CLIENT_ID_PRO+";\n"+
-                                "   var API_KEY_PRO = "+API_KEY_PRO+";\n"+
-                                "   var spreadsheetIdSyncProcessos_Pro = "+spreadsheetIdSyncProcessos_Pro+";\n"+
-                                "</script>";
-            $(scriptText).appendTo('head');
-
-    if ( typeof dataPerfil.spreadsheetId !== 'undefined' ) {
-            loadAPIGooglePro(CLIENT_ID_PRO);
+    if (    typeof dataPerfil.spreadsheetId !== 'undefined' &&
+            typeof dataPerfil.CLIENT_ID !== 'undefined' &&
+            typeof dataPerfil.API_KEY !== 'undefined' ) {
+            setSessionGoogle(dataPerfil.baseTipo, {CLIENT_ID_PRO: dataPerfil.CLIENT_ID, API_KEY_PRO: dataPerfil.API_KEY, spreadsheetIdSyncProcessos_Pro: dataPerfil.spreadsheetId});
             $.getScript(getUrlExtension("js/sei-sync-processos.js"));
-        } else {
-            console.log('loadDataBaseSheetsProcessosPro','ERROR!!!');
-            localStorage.removeItem('loadSyncProcessosSheet');
-            removeOptionsPro('configBaseSelectedFormPro');
-        }
+    } else {
+        console.log('loadDataBaseSheetsProcessosPro','ERROR!!!');
+        localStorage.removeItem('loadSyncProcessosSheet');
+        removeOptionsPro('configBaseSelectedFormPro');
+    }
+}
+function setSessionGoogle(type, param) {
+    localStorage.setItem('SEIPro_google_'+type,  JSON.stringify(param));
 }
 function loadDataBaseProStorage(items) { 
     if ( typeof items.dataValues !== 'undefined' && items.dataValues != '' && typeof getParamsUrlPro(window.location.href).acao_pro === 'undefined') {
@@ -289,32 +279,6 @@ function loadFilesUI() {
     $.getScript(getUrlExtension('js/lib/jquery-ui.min.js'));
     loadStylePro(getUrlExtension('css/jquery-ui.css'), 'head');
 }
-function loadScriptArvorePro() {
-    if ( $('#ifrArvore').length ) {
-        $('#ifrArvore').on("load", function() {
-            var iframeObjArvore = $('#ifrArvore').contents().find('head');
-            var scriptArvore =  "<script data-config='config-seipro-arvore'>"+
-                                "   $(document).ready(function () { \n"+
-                                "       function initLoadSeiProArvore(TimeOut = 1000) { \n"+
-                                "           if (TimeOut <= 0) { return; } \n"+
-                                "           if (typeof initSeiProArvore !== 'undefined' ) {  \n"+
-                                "               parent.execArvorePro(initSeiProArvore); \n"+
-                                "           } else { \n"+
-                                "               setTimeout(function(){  \n"+
-                                "                   initLoadSeiProArvore(TimeOut - 100);  \n"+
-                                "                   console.log('Reload initLoadSeiProArvore');  \n"+
-                                "               }, 500); \n"+
-                                "           } \n"+
-                                "       } \n"+
-                                "       initLoadSeiProArvore(); \n"+
-                                "   });\n"+
-                                // "   parent.execArvorePro(initSeiProArvore);\n"+
-                                "</script>";
-            $(scriptArvore).prependTo(iframeObjArvore);
-        });
-    }
-}
-
 function loadStyleDesign(body = $('body'), secondClass = false) {
     if (localStorage.getItem('seiSlim')) {
         body.addClass("seiSlim");
@@ -325,21 +289,6 @@ function loadStyleDesign(body = $('body'), secondClass = false) {
     }
 }
 loadStyleDesign();
-function loadScriptVisualizacaoPro() {
-    if ( $('#ifrVisualizacao').length ) {
-        $('#ifrVisualizacao').on("load", function() {
-            var iframeObjVisualizacao = $('#ifrVisualizacao').contents().find('head');
-            var scriptVisualizacao =    "<script data-config='config-seipro-visualizacao'>"+
-                                        "   parent.checkPageVisualizacao();\n"+
-                                        "   parent.checkPageAtividadesVisualizacao();\n"+
-                                        "   parent.checkPageFavoritosVisualizacao();\n"+
-                                        "</script>";
-            $(scriptVisualizacao).prependTo(iframeObjVisualizacao);
-            loadStyleDesign($('#ifrVisualizacao').contents().find('body'), 'view');
-            loadFontIcons('head', $('#ifrVisualizacao').contents());
-        });
-    }
-}
 function pathExtensionSEIPro() {
     var URL_SPRO = getUrlExtension("js/sei-pro.js");
         URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
@@ -352,13 +301,6 @@ function getPathExtensionPro() {
         var VERSION_SPRO = manifest.version;
         var NAMESPACE_SPRO = manifest.short_name;
         var URLPAGES_SPRO = manifest.homepage_url;
-        var scriptText =    "<script data-config='config-seipro'>\n"+
-                            "   var URL_SPRO = '"+URL_SPRO+"';\n"+
-                            "   var VERSION_SPRO = '"+VERSION_SPRO+"';\n"+
-                            "   var NAMESPACE_SPRO = '"+NAMESPACE_SPRO+"';\n"+
-                            "   var URLPAGES_SPRO = '"+URLPAGES_SPRO+"';\n"+
-                            "</script>";
-        $(scriptText).appendTo('head');
         setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, URLPAGES_SPRO: URLPAGES_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
     }
 }
@@ -385,8 +327,6 @@ function loadScriptPro() {
         $.getScript(getUrlExtension("js/sei-pro.js"));
         $(document).ready(function () {
             loadConfigPro();
-            loadScriptArvorePro();
-            loadScriptVisualizacaoPro();
             $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             // $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
             $.getScript(getUrlExtension("js/sei-pro-favoritos.js"));

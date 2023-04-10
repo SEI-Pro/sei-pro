@@ -22,10 +22,33 @@ function initCSSArvore() {
             +"</style>");
     }
 }
+function dropzoneCancelInfo(e) {
+    if (typeof e !== 'undefined'){
+        e.stopImmediatePropagation();
+    }
+    $(containerUpload).removeClass('dz-drag-hover');
+    return false;
+}
+function encodeUrlUploadArvore(response, params) {
+    var id = response[0];
+    var nome = response[1];
+    var dthora = response[4];
+    var tamanho = response[3];
+    var tamanho_formatado = infraFormatarTamanhoBytes(parseInt(tamanho));
+    var plus = '\u00B1';
+    var hdnAnexos = id+plus+nome+plus+dthora+plus+tamanho+plus+tamanho_formatado+plus+params.userUnidade.user+plus+params.userUnidade.unidade;
+        hdnAnexos = (hdnAnexos.indexOf(' ') !== -1) ? hdnAnexos.replace(/ /g,'+') : hdnAnexos;
+        hdnAnexos = encodeURIComponent(hdnAnexos);
+        hdnAnexos = (hdnAnexos.indexOf('%C2') !== -1) ? hdnAnexos.replace(/%C2/g,'') : hdnAnexos;
+        hdnAnexos = (hdnAnexos.indexOf('%2B') !== -1) ? hdnAnexos.replace(/%2B/g,'+') : hdnAnexos;
 
+        console.log(hdnAnexos);
+
+    return hdnAnexos;
+}
 function initToolbarDocs(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof jmespath !== 'undefined') { 
+    if (typeof jmespath !== 'undefined' && typeof typeof $().toolbar !== 'undefined') { 
         setToolbarDocs();
     } else {
         setTimeout(function(){ 
@@ -36,10 +59,10 @@ function initToolbarDocs(TimeOut = 9000) {
     }
 }
 function setToolbarDocs() {
-    var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? localStorageRestorePro('configViewFlashMenuPro') : [['Copiar n\u00FAmero do processo'],['Copiar link do processo'],['Enviar Documento Externo'],['A\u00E7\u00F5es em lote'],['Atribuir Processo']];
+    var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? localStorageRestorePro('configViewFlashMenuPro') : [['Copiar n\u00FAmero do processo'],['Copiar link do processo'],['Enviar Documento Externo'],['A\u00E7\u00F5es em lote'],['Atribuir Processo'],['Add/Remover Urg\u00EAncia']];
     var selectedItensDocMenu = ( typeof localStorageRestorePro('configViewFlashDocMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocMenuPro')) ) ? localStorageRestorePro('configViewFlashDocMenuPro') : [['Copiar n\u00FAmero SEI'],['Copiar nome do documento'],['Copiar link do documento'],['Duplicar documento'],['Copiar para...']];
     var selectedItensDocArvore = ( typeof localStorageRestorePro('configViewFlashDocArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocArvorePro')) ) ? localStorageRestorePro('configViewFlashDocArvorePro') : [["Copiar n\u00FAmero SEI"],["Copiar link do documento"],["Duplicar documento"]];
-        selectedItensPanelArvore = ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) ) ? localStorageRestorePro('configViewFlashPanelArvorePro') : [["Anota\u00E7\u00F5es"],["Marcador"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
+        selectedItensPanelArvore = ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) ) ? localStorageRestorePro('configViewFlashPanelArvorePro') : [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
     
     var htmlToolbarProc =   '<div id="toolbar-options-proc" class="hidden">';
         if (getOptionsPro('optionsFlashMenu_menuproc') != 'disabled') {
@@ -89,7 +112,7 @@ function getLinksPage() {
             $.each($(this).text().split('\n'), function(ind, val){
                 if (val.indexOf('Nos[0].acoes = ') !== -1) {
                     var barraControle = val.trim().replace("Nos[0].acoes = '",'').slice(0,-2);
-                    $('<div>'+barraControle+'</div>').find('a.botaoSEI').each(function(){ 
+                    $('<div>'+barraControle+'</div>').find(parent.isNewSEI ? 'a[href*="controlador.php?acao="]' : 'a.botaoSEI').each(function(){ 
                         if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href') != '#') { 
                             links.push({name: $(this).find('img').attr('title'), url: $(this).attr('href')}); 
                         }
@@ -138,6 +161,9 @@ function actionToolbarPro(this_, triggerButton) {
         } else if ( button_txt == 'Copiar para...' ) {
             button_clicktxt = 'Abrindo...';
             callActionsArvore(doc, 'copyto');
+        } else if ( button_txt == 'Adicionar ou Remover Urg\u00EAncia' ) {
+            button_clicktxt = 'Aguarde...';
+            parent.addUrgenteProcessoPro();
         } else if ( button_txt == 'Duplicar documento' ) {
             button_clicktxt = 'Duplicando...';
             callActionsArvore(doc, 'clone');
@@ -160,6 +186,9 @@ function actionToolbarPro(this_, triggerButton) {
         } else if ( button_txt == 'Visualizar em nova aba' ) {
             callActionsArvore(doc, 'view');
             button_clicktxt = 'Abrindo...';
+        } else if ( button_txt == 'Baixar documento' ) {
+            callActionsArvore(doc, 'download');
+            button_clicktxt = 'Baixando...';
         } else if ( button_txt == 'Consultar documento' ) {
             callActionsArvore(doc, 'doc_view');
             button_clicktxt = 'Abrindo...';
@@ -245,7 +274,7 @@ function getToolbarPro(click) {
             actionToolbarPro($(this), triggerButton);
         });
         if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
-            if ($('a.clipboard').length == 0) {
+            if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)) {
                 $('a[id*="anchorImg"]').each(function(){ $(this).addClass('clipboard') });
             }
             $('.clipboard').not(':first').toolbar({
@@ -341,16 +370,21 @@ function getLinksArvorePasta(nomePasta) {
 }
 function getLinksInText(text) {
     var array = [];
+    var index = 0;
     text.split("'").filter(function(el) { return el.indexOf('controlador.php') !== -1 }).map(function(v){
         if (v.indexOf('\"') !== -1) {
             v.split('"').filter(function(i){ return i.indexOf('controlador.php') !== -1}).map(function(j){
                 var link = j.replace(/[\\"]/g, '');
-                array.push(link);
+                var ldownload = (link.indexOf('documento_download_anexo') !== -1 && link.indexOf('arvore=1') === -1 && typeof parent.getParamsUrlPro !== 'undefined' && typeof parent.getParamsUrlPro(array[index-2]).id_documento !== 'undefined') ? '#&_fake_acao=documento_visualizar&_id_documento='+parent.getParamsUrlPro(array[index-2]).id_documento : '';
+                array.push(link+ldownload);
+                index++;
             });
             return false;
         } else {
             var link = v.replace(/[\\"]/g, '');
-            array.push(link);
+            var ldownload = (link.indexOf('documento_download_anexo') !== -1 && link.indexOf('arvore=1') === -1 && typeof parent.getParamsUrlPro !== 'undefined' &&  typeof parent.getParamsUrlPro(array[index-2]).id_documento !== 'undefined') ? '#&_fake_acao=documento_visualizar&_id_documento='+parent.getParamsUrlPro(array[index-2]).id_documento : '';
+            array.push(link+ldownload);
+            index++;
             return false;
         }
     });
@@ -368,6 +402,8 @@ function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = f
         toolbar.find('.tool-item').each(function(){
         var a = $(this);
         if (a.text() == 'Imprimir Web' && listLinks.filter(function(v){ return v.indexOf('documento_imprimir_web') !== -1 }).length > 0 ) {
+            a.show();
+        } else if (a.text() == 'Baixar documento' && listLinks.filter(function(v){ return v.indexOf('documento_visualizar') !== -1 }).length > 0 ) {
             a.show();
         } else if (a.text() == 'Visualizar em nova aba' && listLinks.filter(function(v){ return v.indexOf('documento_visualizar') !== -1 }).length > 0 ) {
             a.show();
@@ -460,6 +496,7 @@ function getLinksArvore() {
         if (parent.checkConfigValue('acoesemlote')) {
             linksArvore.push(parent.iconsFlashMenu[4]); 
         }
+        linksArvore.push(parent.iconsFlashMenu[5]); 
     }
     return linksArvore;
 }
@@ -485,7 +522,7 @@ function addIconActionsArvore(param) {
         var id_documento = getParamsUrlPro($(this).attr('href')).id_documento;  
         id_documento = (typeof id_documento !== 'undefined') ? id_documento : $(this).attr('id').replace('anchor', '');
         id_documento = (typeof id_documento !== 'undefined') ? id_documento : false;
-        var iconDoc = (id_documento && $('#icon'+id_documento).attr('src').indexOf('sei_documento_interno') !== -1) ? true : false;
+        var iconDoc = (id_documento && $('#icon'+id_documento).attr('src').indexOf('documento_interno') !== -1) ? true : false;
         var newDocLink = jmespath.search(arrayLinksPage, "[?name=='Incluir Documento'] | [0].url");
         var checkThisDocumento = (id_documento && typeof $('#anchorImg'+id_documento).find('img').attr('src') !== 'undefined' && $('#anchorImg'+id_documento).find('img').attr('src').indexOf('procedimento') !== -1) ? false : true;
         if (
@@ -533,7 +570,6 @@ function callActionsArvore(doc, mode) {
         // console.log(doc, id_documento);
     } else if (mode == 'copyto') {
         parent.dialogCopyNewDoc(doc);
-        // console.log('dialogCopyNewDoc');
     } else if (mode == 'copy') {
         copyToClipboard(nr_sei);
     } else if (mode == 'name') {
@@ -561,6 +597,21 @@ function callActionsArvore(doc, mode) {
         var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_visualizar') !== -1) });
         if (link.length > 0 && link[0] !== '') {
             parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
+        }
+    } else if (mode == 'download') {
+        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_visualizar') !== -1) });
+        if (link.length > 0 && link[0] !== '') {
+            var urlLink = link[0];
+            var alink = document.createElement('a');
+                alink.href = urlLink;
+                if (urlLink.indexOf('documento_download_anexo') === -1) {
+                    alink.download =  $('#anchor'+id_documento).text().trim()+'.html';
+                } else {
+                    alink.download =  $('#anchor'+id_documento).text().trim();
+                }
+                    document.body.appendChild(alink);
+                    alink.click();
+                    document.body.removeChild(alink);
         }
     } else if (mode == 'doc_view') {
         var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_alterar') !== -1) });
@@ -875,7 +926,7 @@ function loadUploadArvore() {
         timeout: 900000,
         paramName: 'filArquivo',
         renameFile: function (file) {
-            return parent.removeAcentos(file.name);
+            return parent.removeAcentos(file.name).replace(/[&\/\\#+()$~%'":*?<>{}]/g,'_');
         },
         previewTemplate:    '<div class="dz-preview dz-file-preview">'+
                             '   <div class="dz-details">'+
@@ -913,7 +964,7 @@ function loadUploadArvore() {
         if (verifyConfigValue('sortbeforeupload') && arvoreDropzone.getQueuedFiles().length > 1) {
             sortUploadArvore();
         } else {
-            sendUploadArvore('upload');
+            sendUploadArvore('upload', false);
         }
     }).on("addedfile", function(file) {
         // console.log('Files', file);
@@ -923,7 +974,7 @@ function loadUploadArvore() {
     }).on('success', function(result) {
         var params = arvoreDropzone.options.params;
         var response = result.xhr.response.split('#');
-            params.paramsForm.hdnAnexos = encodeUrlUploadArvore(response, params);
+            params.paramsForm.hdnAnexos = parent.parent.encodeUrlUploadArvore(response, params);
 
         var postData = '';
         for (var k in params.paramsForm) {
@@ -973,27 +1024,13 @@ function sortUploadArvore() {
         }
     }).after(htmlUpload);
 }
-function encodeUrlUploadArvore(response, params) {
-    var id = response[0];
-    var nome = response[1];
-    var dthora = response[4];
-    var tamanho = response[3];
-    var tamanho_formatado = infraFormatarTamanhoBytes(parseInt(tamanho));
-    var plus = '\u00B1';
-    var hdnAnexos = id+plus+nome+plus+dthora+plus+tamanho+plus+tamanho_formatado+plus+params.userUnidade.user+plus+params.userUnidade.unidade;
-        hdnAnexos = (hdnAnexos.indexOf(' ') !== -1) ? hdnAnexos.replace(/ /g,'+') : hdnAnexos;
-        hdnAnexos = encodeURIComponent(hdnAnexos);
-        hdnAnexos = (hdnAnexos.indexOf('%C2') !== -1) ? hdnAnexos.replace(/%C2/g,'') : hdnAnexos;
-        hdnAnexos = (hdnAnexos.indexOf('%2B') !== -1) ? hdnAnexos.replace(/%2B/g,'+') : hdnAnexos;
+function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+    var indexUpload = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
+    var elem = _containerUpload.find('.dz-preview').eq(indexUpload);
+        elem = (elem.length == 0) ? $('.dz-preview', parent.parent.document).eq(indexUpload) : elem;
+    var queuedFiles = (typeof arrayDropzone.getQueuedFiles === 'function') ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
 
-        console.log(hdnAnexos);
-
-    return hdnAnexos;
-}
-function sendUploadArvore(mode, result = false) {
-    var indexUpload = parseInt($(containerUpload).data('index'));
-    var elem = $('.dz-preview').eq(indexUpload);
-    if (mode == 'upload' && arvoreDropzone.getQueuedFiles().length > 0) {
+    if (mode == 'upload' && queuedFiles.length > 0) {
         var href = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
         if (href !== null) {
             $.ajax({ url: href }).done(function (html) {
@@ -1046,22 +1083,23 @@ function sendUploadArvore(mode, result = false) {
                                 }
                             });
                         if (extUpload.length > 0) {
-                            arvoreDropzone.options.acceptedFiles = extUpload.join(',');
-                            parent.localStorageStorePro('arvoreDropzone_acceptedFiles', extUpload.join(','));
+                            // console.log('arrayDropzone.options',arrayDropzone.options);
+                            arrayDropzone.options.acceptedFiles = extUpload.join(',');
+                            parent.parent.localStorageStorePro('arvoreDropzone_acceptedFiles', extUpload.join(','));
                         }
 
-                        var nexFileQueued = arvoreDropzone.getQueuedFiles()[0];
+                        var nexFileQueued = queuedFiles[0];
                         var txtDataElaboracao = (typeof nexFileQueued !== 'undefined' && typeof nexFileQueued.lastModifiedDate !== 'undefined') 
                                                 ? moment(nexFileQueued.lastModifiedDate).format('DD/MM/YYYY')
                                                 : moment().format('DD/MM/YYYY');
                         var nameFile = nexFileQueued.name;
-                        var nameFile_reg = parent.removeAcentos(nameFile.trim().toLowerCase().replace(/_|:/g, ' '));
+                        var nameFile_reg = parent.parent.removeAcentos(nameFile.trim().toLowerCase().replace(/_|:/g, ' '));
                         var valueSerie = false;
                         var tipoDoc = [];
                             form.find('#selSerie option').each(function (v) { 
                                 if ($(this).text().trim() != '') { 
                                     var nameOption = $(this).text().trim().toLowerCase().replace(/_|:/g, ' ');
-                                    var nameOptionReg = escapeRegExp(parent.removeAcentos(nameOption));
+                                    var nameOptionReg = escapeRegExp(parent.parent.removeAcentos(nameOption));
                                     var reg = new RegExp('^\\b'+nameOptionReg, "igm");
                                     tipoDoc.push({name: nameOption, value: $(this).val()}) 
                                     if (reg.test(nameFile_reg)) { 
@@ -1090,7 +1128,7 @@ function sendUploadArvore(mode, result = false) {
                             nameDoc = (nameDoc.length > 50) ? nameDoc.replace(/^(.{50}[^\s]*).*/, "$1") : nameDoc;
                             nameDoc = (nameDoc.length > 50) ? nameDoc.substring(0,49) : nameDoc;
 
-                        var valueSigilo = parent.getConfigValue('newdocsigilo');
+                        var valueSigilo = parent.parent.getConfigValue('newdocsigilo');
                             valueSigilo = (valueSigilo != '' && valueSigilo.indexOf('|') !== -1) ? valueSigilo.split('|') : false;
 
                         var valueNivelAcesso = (checkConfigValue('newdocnivel')) 
@@ -1103,26 +1141,26 @@ function sendUploadArvore(mode, result = false) {
                             ? form.find('input[name="rdoNivelAcesso"]:checked').val() 
                             : valueNivelAcesso;
                         param.hdnStaNivelAcessoLocal = param.rdoNivelAcesso; //
-                        param.rdoFormato = (parent.checkConfigValue('newdocformat') && parent.getConfigValue('newdocformat') && parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1) ? "D": "N";
+                        param.rdoFormato = (parent.parent.checkConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1) ? "D": "N";
                         param.hdnFlagDocumentoCadastro = "2";
                         // param.hdnIdHipoteseLegal = param.selHipoteseLegal;
                         param.hdnIdHipoteseLegal = (valueSigilo) ? valueSigilo[0] : param.selHipoteseLegal;
                         param.selHipoteseLegal = param.hdnIdHipoteseLegal;
-                        param.selTipoConferencia = (parent.checkConfigValue('newdocformat') && parent.getConfigValue('newdocformat') && parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1 && parent.getConfigValue('newdocformat').indexOf('_') !== -1) ? getConfigValue('newdocformat').split('_')[1] : "";
+                        param.selTipoConferencia = (parent.parent.checkConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1 && parent.parent.getConfigValue('newdocformat').indexOf('_') !== -1) ? parent.parent.getConfigValue('newdocformat').split('_')[1] : "";
                         param.hdnIdTipoConferencia = param.selTipoConferencia;
                         param.txaObservacoes = "";
                         param.txtDataElaboracao = txtDataElaboracao;
                         param.txtNumero = escapeComponent(nameDoc);
                         // console.log(parent.checkConfigValue('newdocformat'), parent.getConfigValue('newdocformat'), param.rdoFormato, param.hdnIdTipoConferencia);
-                        arvoreDropzone.options.url = urlUpload;
-                        arvoreDropzone.options.params = {
+                        arrayDropzone.options.url = urlUpload;
+                        arrayDropzone.options.params = {
                                                             urlForm: hrefForm,
                                                             paramsForm: param,
                                                             userUnidade: userUnidade,
                                                         };
-                        arvoreDropzone.processQueue();
+                        arrayDropzone.processQueue();
 
-                        // console.log('param###', param, nameDoc, nameFile, selSerieSelected, selSerie, tipoDoc);
+                        // console.log('param###', arrayDropzone.options, param, nameDoc, nameFile, selSerieSelected, selSerie, tipoDoc);
                     });
                 } else {
                     elem.addClass("dz-error").find('.dz-error-message span').text('Link para upload n\u00E3o encontrado');
@@ -1146,17 +1184,19 @@ function sendUploadArvore(mode, result = false) {
         }).done(function (htmlResult) {
             var status = (xhr.responseURL.indexOf('acao=arvore_visualizar&acao_origem=documento_receber') !== -1) ? true : false;
             if (status) {
-                sendUploadArvore('upload');
-                getInfoArvoreLastDoc(htmlResult, xhr.responseURL);
+                sendUploadArvore('upload', false, arrayDropzone, _containerUpload);
+                getInfoArvoreLastDoc(htmlResult, xhr.responseURL, arrayDropzone, _containerUpload);
             } else {
                 elem.addClass("dz-error").find('.dz-error-message span').text('N\u00E3o foi poss\u00EDvel fazer o upload do arquivo');
             }
         });
     }
 }
-function getInfoArvoreLastDoc(dataResult, urlParent) {
-    var indexUpload = parseInt($(containerUpload).data('index'));
+function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+    var indexUpload = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
     var param = getParamsUrlPro(urlParent);
+    var queuedFiles = (typeof arrayDropzone.getQueuedFiles === 'function') ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
+
     $.each(dataResult.split('\n'), function(index, value) {
         if (value.indexOf("atualizarArvore('controlador.php?acao=procedimento_visualizar&acao_origem=arvore_visualizar&id_procedimento="+param.id_procedimento+"&id_documento="+param.id_documento) !== -1) {
             urlArvore = value.split("'")[1];
@@ -1168,17 +1208,18 @@ function getInfoArvoreLastDoc(dataResult, urlParent) {
                         return false;
                     }
                 });
-                var elem = $('.dz-preview').eq(indexUpload);
+                var elem = _containerUpload.find('.dz-preview').eq(indexUpload);
                     elem.find('a[target="ifrVisualizacao"]').attr('href', arrayArvore[7]).attr('id', 'anchor'+param.id_documento)
                         .find('span').text(arrayArvore[11]).attr('span'+param.id_documento);
                     elem.find('a#anchorImgID').attr('id', 'anchorImg'+param.id_documento)
                         .find('img').attr('src', arrayArvore[15]).attr('id', 'icon'+param.id_documento);
-                    parent.scrollToElementArvore(param.id_documento);
+                    parent.parent.scrollToElementArvore(param.id_documento);
 
-                $(containerUpload).data('index', indexUpload+1 );
-                if (arvoreDropzone.getQueuedFiles().length == 0) {
+                _containerUpload.data('index', indexUpload+1 );
+                if (queuedFiles.length == 0) {
                     dropzoneAlertBoxInfo();
                     setTimeout(function(){ window.location.reload(); }, 500);
+                    if (typeof parent.parent.nextUploadFilesInProcess === 'function') parent.parent.nextUploadFilesInProcess();
                 }
             });
             return false;
@@ -1186,38 +1227,40 @@ function getInfoArvoreLastDoc(dataResult, urlParent) {
     });
 }
 function dropzoneAlertBoxInfo() {
-    var accepted = arvoreDropzone.getAcceptedFiles();
-    var rejected = arvoreDropzone.getRejectedFiles();
-    var html = '';
-    var htmlRejected =  (rejected.length > 0)
-                            ?   '<div style="margin: 10px 0;"><i class="fas fa-exclamation-triangle vermelhoColor" style="margin-right: 5px;"></i>'+
-                                rejected.length+' '+(rejected.length == 1 ? 'arquivo rejeitado' : 'arquivos rejeitados')+' pelo SEI:'+
-                                $.map(arvoreDropzone.getRejectedFiles(), function(value){ return '<div style="font-size: 9pt; background: #eaeaea; border-radius: 5px; padding: 5px; margin: 8px 5px;"><i class="fas fa-file cinzaColor" style="margin-right: 5px;"></i>'+value.name+'<span style="background: #fff0f0;display: block;margin-top: 5px;padding: 3px 5px;border-radius: 5px;color: #f54040;">'+($(value.previewElement.children).find('.dz-error-message span').text())+'</span></div>' }).join('')+
-                                '</div>'
-                                : '';
-    var htmlNotify =    '<div>'+
-                        '   <span id="no_notify" class="no_notifyPro" data-notify="upload" style="font-size: 8pt; margin: 10px 0; display: block;">'+
-                        '       <input onchange="noNotifyPro(this)" type="checkbox" id="no_notifyPro_input">'+
-                        '       <label class="txt_cinza" id="no_notifyPro_label" for="no_notifyPro_input">'+
-                        '           Ok, n\u00E3o avisar novamente.'+
-                        '       </label>'+
-                        '   </span>'+
-                        '</div>';
+    if (typeof arvoreDropzone.getAcceptedFiles === 'function') {
+        var accepted = arvoreDropzone.getAcceptedFiles();
+        var rejected = arvoreDropzone.getRejectedFiles();
+        var html = '';
+        var htmlRejected =  (rejected.length > 0)
+                                ?   '<div style="margin: 10px 0;"><i class="fas fa-exclamation-triangle vermelhoColor" style="margin-right: 5px;"></i>'+
+                                    rejected.length+' '+(rejected.length == 1 ? 'arquivo rejeitado' : 'arquivos rejeitados')+' pelo SEI:'+
+                                    $.map(arvoreDropzone.getRejectedFiles(), function(value){ return '<div style="font-size: 9pt; background: #eaeaea; border-radius: 5px; padding: 5px; margin: 8px 5px;"><i class="fas fa-file cinzaColor" style="margin-right: 5px;"></i>'+value.name+'<span style="background: #fff0f0;display: block;margin-top: 5px;padding: 3px 5px;border-radius: 5px;color: #f54040;">'+($(value.previewElement.children).find('.dz-error-message span').text())+'</span></div>' }).join('')+
+                                    '</div>'
+                                    : '';
+        var htmlNotify =    '<div>'+
+                            '   <span id="no_notify" class="no_notifyPro" data-notify="upload" style="font-size: 8pt; margin: 10px 0; display: block;">'+
+                            '       <input onchange="noNotifyPro(this)" type="checkbox" id="no_notifyPro_input">'+
+                            '       <label class="txt_cinza" id="no_notifyPro_label" for="no_notifyPro_input">'+
+                            '           Ok, n\u00E3o avisar novamente.'+
+                            '       </label>'+
+                            '   </span>'+
+                            '</div>';
 
-    if (accepted.length > 0) {
-        html = accepted.length+' '+(accepted.length == 1 ? 'arquivo enviado' : 'arquivos enviados')+' com sucesso!';
-        html = (rejected.length > 0) ? html+htmlRejected: html+htmlNotify;
-        if (!getOptionsPro('noNotify_upload') || rejected.length > 0) {
-            parent.alertaBoxPro('Sucess', 'check-circle', html);
+        if (accepted.length > 0) {
+            html = accepted.length+' '+(accepted.length == 1 ? 'arquivo enviado' : 'arquivos enviados')+' com sucesso!';
+            html = (rejected.length > 0) ? html+htmlRejected: html+htmlNotify;
+            if (!getOptionsPro('noNotify_upload') || rejected.length > 0) {
+                parent.alertaBoxPro('Sucess', 'check-circle', html);
+            }
+        } else {
+            parent.alertaBoxPro('Error', 'exclamation-triangle', html);
         }
-    } else {
-        parent.alertaBoxPro('Error', 'exclamation-triangle', html);
     }
 }
 function dropzoneDivInfoHover() {
 var html =  '<div id="dz-infoupload" class="dz-infoupload">'+
             '   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>'+
-            '   <span class="cancel" onclick="dropzoneCancelInfo(event); return false;">'+
+            '   <span class="cancel" onclick="parent.parent.dropzoneCancelInfo(event); return false;">'+
             '       <i class="far fa-times-circle icon"></i>'+
             '       <span class="label">CANCELAR</span>'+
             '   </span>'+
@@ -1225,13 +1268,6 @@ var html =  '<div id="dz-infoupload" class="dz-infoupload">'+
     if ($(containerUpload).find('.dz-infoupload').length == 0) {
         $(containerUpload).prepend(html).data('index', 0);
     }
-}
-function dropzoneCancelInfo(e) {
-    if (typeof e !== 'undefined'){
-        e.stopImmediatePropagation();
-    }
-    $(containerUpload).removeClass('dz-drag-hover');
-    return false;
 }
 function dropzoneNormalizeImg(file) {
     var urlIcon = parent.isNewSEI ? 'svg/documento_pdf.svg' : '/infra_css/imagens/pdf.gif';
@@ -1268,7 +1304,7 @@ function initUploadArvore(TimeOut = 9000) {
 }
 function initDadosProcessoArvoreSession() {
     var dadosProcesso = parent.getDadosProcessoSession();
-    if (dadosProcesso ) {
+    if (dadosProcesso.propProcesso) {
         setDadosProcessoArvore(dadosProcesso);
         parent.updateTitlePage('processo',dadosProcesso);
     }
@@ -1588,15 +1624,15 @@ function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
                         '       </a>'+
                         '   </div>'+
                         '   <div class="actions">'+
-                        '       <span class="countLimit" style="font-size: 8pt; color: #666;"></span>'+
                         '       <div>'+
+                        '           <span class="countLimit" style="font-size: 8pt;position: absolute;color: #666;left: 30px;margin-top: 5px;"></span>'+
                         '           <i class="fas fa-edit azulColor editStickNote" style="cursor: pointer;" onclick="sticknoteEdit(this)" onmouseover="return infraTooltipMostrar(\'Editar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
                         '           <i class="fas fa-save azulColor saveStickNote" style="cursor: pointer; display:none" onclick="sticknoteSave(this)" onmouseover="return infraTooltipMostrar(\'Salvar Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
                         '           <i class="fas fa-trash-alt removeStickNote" style="margin-top: 2px; cursor: pointer;float: right;font-size: 90%;" onclick="sticknoteRemove(this)" onmouseover="return infraTooltipMostrar(\'Remover Anota\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
                         '           <i class="fas fa-times-circle cancelStickNote" style="cursor: pointer;float: right;font-size: 90%; display:none;" onclick="sticknoteCancel(this)" onmouseover="return infraTooltipMostrar(\'Cancelar Edi\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"></i>'+
                         '           <i class="fas fa-calendar-plus azulColor setDateStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknoteSetDate(this)" onmouseover="return infraTooltipMostrar(\'Inserir Data\');" onmouseout="return infraTooltipOcultar();"></i>'+
                         '           <span class="setDateStickNote_input" style="display:none"><input onkeypress="sticknoteSetDateKey(event, this)" type="date"></span>'+
-                        '           <span style="cursor: pointer;float: right;margin: -2px 10px 0 0; display:none;" class="checkStickNote" onclick="sticknoteCheck(this)"><i class="fas fa-check-square azulColor" style="font-size: 90%;"></i> <span  class="checkListStickNote" style="font-size: 80%;">Checklist</span></span>'+
+                        '           <span style="cursor: pointer;float: right;margin: -2px 10px 0 0; display:none;font-size: 100%;" class="checkStickNote" onclick="sticknoteCheck(this)"><i class="fas fa-check-square azulColor" style="font-size: 90%;"></i> <span  class="checkListStickNote" style="font-size: 80%;">Checklist</span></span>'+
                         '           <i class="fas fa-exclamation-circle priorityStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknotePriority(this)" onmouseover="return infraTooltipMostrar(\'Prioridade\');" onmouseout="return infraTooltipOcultar();"></i>'+
                         '       </div>'+
                         '   </div>'+
@@ -1782,165 +1818,212 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
         id_procedimento = (typeof id_procedimento !== 'undefined') ? id_procedimento : false;
 
     var prop = (dadosProcessoPro) ? dadosProcessoPro.propProcesso : parent.dadosProcessoPro.propProcesso;
-    var processoAberto = (jmespath.search(arrayLinksArvore, "[?name=='Consultar/Alterar Processo'] | [0]") !== null) ? true : false;
-    var txtDescricao = typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao ? prop.txtDescricao : false;
-    var htmlDescricao =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="descricao">'+
-                                '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
-                                '      <i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>'+
-                                '      Especifica\u00E7\u00E3o:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
-                                '   </label>'+
-                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'display:none' : '')+'">'+
-                                '       <a class="newLink '+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? 'urgentePro' : '')+'" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? '<div class="urgentePro"></div>' : '')+(txtDescricao ? txtDescricao : '')+'</a>'+
-                                (processoAberto ?
-                                '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
-                                '' : '')+
-                                '   </div>'+
-                                '</div>';
-    var htmlMarcador = parent.getHtmlMarcador(id_procedimento, processoAberto);
-    var iconMarcador = htmlMarcador.icon;
-    var linkPrazo = htmlMarcador.prazo;
-    var dataMarcador = htmlMarcador.data;
+    if (typeof prop !== 'undefined') {
+        var processoAberto = (jmespath.search(arrayLinksArvore, "[?name=='Consultar/Alterar Processo'] | [0]") !== null) ? true : false;
+        var txtDescricao = typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao ? prop.txtDescricao : false;
+        var htmlDescricao =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="descricao">'+
+                                    '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                    '      <i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>'+
+                                    '      Especifica\u00E7\u00E3o:'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '   </label>'+
+                                    '   <div class="infoDadosArvore" style="position: relative;min-height: 60px;'+(getOptionsPro('panelDadosArvorePro_descricao') == 'hide' ? 'display:none' : '')+'">'+
+                                    '       <a class="newLink '+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? 'urgentePro' : '')+'" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+(txtDescricao && txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? '<div class="urgentePro"></div>' : '')+(txtDescricao ? txtDescricao : '')+'</a>'+
+                                    (processoAberto ?
+                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '       <a class="newLink" maxlength="100" data-mode="descricao" style="cursor:pointer;float: right;position: absolute;right: 0;top: 30px;" onclick="parent.addUrgenteProcessoPro(this)" onmouseover="return infraTooltipMostrar(\'Clique para Adicionar/Remover Urg\u00EAncia no Processo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-exclamation-circle"></i></a>'+
+                                    '' : '')+
+                                    '   </div>'+
+                                    '</div>';
+        var htmlMarcador = parent.getHtmlMarcador(id_procedimento, processoAberto);
+        var iconMarcador = htmlMarcador.icon;
+        var linkPrazo = htmlMarcador.prazo;
+        var dataMarcador = htmlMarcador.data;
 
-    if (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1) {
-        $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').addClass('urgentePro').find('div.urgentePro').remove().end().prepend('<div class="urgentePro"></div>');
-    } else {
-        $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').removeClass('urgentePro').find('div.urgentePro').remove();
-    }
-    /*
-    var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
-    var dataMarcador = (id_procedimento && listMarcadores) ? jmespath.search(listMarcadores, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : null;
-        dataMarcador = (dataMarcador !== null) ? dataMarcador : false;
-    var iconMarcador = (processoAberto) ? '<i class="fas fa-spinner fa-spin"></i>' : '';
-    var linkPrazo = '';
-    if (dataMarcador) {
-        var regex = /(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-        var time = (typeof dataMarcador.name !== 'undefined' && dataMarcador.name !== null) ? dataMarcador.name.match(/(\d{1,2}:\d{2})/img) : null;
-            time = (time !== null) ? ' '+time[0] : '';
-        var regexDue = /(ate )(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-        var checkDateDue = (typeof dataMarcador.name !== 'undefined') ? regexDue.exec(removeAcentos(dataMarcador.name.trim()).toLowerCase().replaceAll('  ',' ')) : null;
-            datePrazoDue = (checkDateDue !== null) ? moment(checkDateDue[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-        var checkDate = (typeof dataMarcador.name !== 'undefined') ? regex.exec(removeAcentos(dataMarcador.name.trim())) : null;
-            datePrazo = (checkDateDue === null && checkDate !== null) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-            iconPrazo = (datePrazo) ? parent.getDatesPreview({date: datePrazo}) : false;
-            iconPrazo = (datePrazoDue) ? parent.getDatesPreview({date: datePrazoDue}) : iconPrazo;
-            linkPrazo = (iconPrazo) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconPrazo+'</a>' : '';
-            iconMarcador = (typeof dataMarcador.icon !== 'undefined') ? '<img src="'+dataMarcador.icon+'" class="imagemStatus"> '+dataMarcador.tag+(dataMarcador.name ? ': '+dataMarcador.name.replace(/\\r\\n/g, "<br>") : '') : 'Nenhum marcador';
-    }
-    */
-    var htmlMarcador =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="marcador">'+
-                                '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
-                                '      <i class="fas fa-tags azulColor iconDadosProcesso"></i>'+
-                                '      Marcador:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
-                                '   </label>'+
-                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'display:none' : '')+'">'+
-                                '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconMarcador+'</a>'+linkPrazo+
-                                (processoAberto ?
-                                '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
-                                '' : '')+
-                                '   </div>'+
-                                '</div>';
-        htmlMarcador = ($.inArray("Marcador",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlMarcador : '';
+        if (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' && prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1) {
+            $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').addClass('urgentePro').find('div.urgentePro').remove().end().prepend('<div class="urgentePro"></div>');
+        } else {
+            $('#topmenu a[target="ifrVisualizacao"][href*="controlador.php?acao=arvore_visualizar"]').removeClass('urgentePro').find('div.urgentePro').remove();
+        }
+        /*
+        var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+        var dataMarcador = (id_procedimento && listMarcadores) ? jmespath.search(listMarcadores, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : null;
+            dataMarcador = (dataMarcador !== null) ? dataMarcador : false;
+        var iconMarcador = (processoAberto) ? '<i class="fas fa-spinner fa-spin"></i>' : '';
+        var linkPrazo = '';
+        if (dataMarcador) {
+            var regex = /(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
+            var time = (typeof dataMarcador.name !== 'undefined' && dataMarcador.name !== null) ? dataMarcador.name.match(/(\d{1,2}:\d{2})/img) : null;
+                time = (time !== null) ? ' '+time[0] : '';
+            var regexDue = /(ate )(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
+            var checkDateDue = (typeof dataMarcador.name !== 'undefined') ? regexDue.exec(removeAcentos(dataMarcador.name.trim()).toLowerCase().replaceAll('  ',' ')) : null;
+                datePrazoDue = (checkDateDue !== null) ? moment(checkDateDue[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
+            var checkDate = (typeof dataMarcador.name !== 'undefined') ? regex.exec(removeAcentos(dataMarcador.name.trim())) : null;
+                datePrazo = (checkDateDue === null && checkDate !== null) ? moment(checkDate[0]+time, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
+                iconPrazo = (datePrazo) ? parent.getDatesPreview({date: datePrazo}) : false;
+                iconPrazo = (datePrazoDue) ? parent.getDatesPreview({date: datePrazoDue}) : iconPrazo;
+                linkPrazo = (iconPrazo) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconPrazo+'</a>' : '';
+                iconMarcador = (typeof dataMarcador.icon !== 'undefined') ? '<img src="'+dataMarcador.icon+'" class="imagemStatus"> '+dataMarcador.tag+(dataMarcador.name ? ': '+dataMarcador.name.replace(/\\r\\n/g, "<br>") : '') : 'Nenhum marcador';
+        }
+        */
+        var htmlMarcador =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="marcador">'+
+                                    '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                    '      <i class="fas fa-tags azulColor iconDadosProcesso"></i>'+
+                                    '      Marcador:'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '   </label>'+
+                                    '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'display:none' : '')+'">'+
+                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconMarcador+'</a>'+linkPrazo+
+                                    (processoAberto ?
+                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '' : '')+
+                                    '   </div>'+
+                                    '</div>';
+            htmlMarcador = ($.inArray("Marcador",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlMarcador : '';
 
-    var htmlTipoProcedimento =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="tipo_procedimento">'+
-                                '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
-                                '      <i class="fas fa-inbox azulColor iconDadosProcesso"></i>'+
-                                '      Tipo de Procedimento:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
-                                '   </label>'+
-                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'display:none' : '')+'">'+
-                                '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnNomeTipoProcedimento+'</a>'+
-                                (processoAberto ?
-                                '       <a class="newLink" data-mode="tipo_procedimento" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
-                                '' : '')+
-                                '   </div>'+
-                                '</div>';
-        htmlTipoProcedimento = ($.inArray("Tipo de Procedimento",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlTipoProcedimento : '';
-    
-    var hipoteseLegal = (prop.rdoNivelAcesso == '1') ? jmespath.search(prop.selHipoteseLegal_select, "[?id=='"+prop.selHipoteseLegal+"'] | [0].name") : null;
-        hipoteseLegal = (hipoteseLegal == null) ? '' :  hipoteseLegal;
-    var dataNivelAcesso = (prop.rdoNivelAcesso == '0') ? {name: 'P\u00FAblico', icon: 'fas fa-globe-americas'} : false;
-        dataNivelAcesso = (prop.rdoNivelAcesso == '1') ? {name: 'Restrito: '+hipoteseLegal, icon: 'fas fa-lock'} : dataNivelAcesso;
-        dataNivelAcesso = (prop.rdoNivelAcesso == '2') ? {name: 'Sigiloso', icon: 'fas fa-user-slash'} : dataNivelAcesso;
+        var storeAcompEsp = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+        var dataAcompEsp = (storeAcompEsp !== null) ? jmespath.search(storeAcompEsp, "[?id_protocolo=='"+id_procedimento+"'] | [0]") : null;
+            dataAcompEsp = dataAcompEsp ? dataAcompEsp : false;                     
+        var txtAcompEsp = (dataAcompEsp) ? dataAcompEsp.observacoes+(dataAcompEsp.grupo != '' ? ' ('+dataAcompEsp.grupo+')' : '') : '';
+
+        var iconReabertura = (dataAcompEsp && dataAcompEsp.config && dataAcompEsp.config.hasOwnProperty('Reabertura')) ? parent.getDatesPreview({date: moment(dataAcompEsp.config.Reabertura, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') }) : false;
+            iconReabertura = (iconReabertura) ? '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">Reabertura: '+dataAcompEsp.config.Reabertura+iconReabertura+'</a>' : '';
+
+        var htmlAcompEsp =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="acompanhamento_especial">'+
+                                    '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                    '      <i class="fas fa-eye azulColor iconDadosProcesso"></i>'+
+                                    '      Acompanhamento Especial:'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_acompanhamento_especial') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '   </label>'+
+                                    '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_acompanhamento_especial') == 'hide' ? 'display:none' : '')+'">'+
+                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+txtAcompEsp+'</a>'+iconReabertura+
+                                    '       <a class="newLink" maxlength="100" data-mode="acompanhamento_especial" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '   </div>'+
+                                    '</div>';
+            htmlAcompEsp = ($.inArray("Acompanhamento Especial",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlAcompEsp : '';
+
+        var htmlTipoProcedimento =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="tipo_procedimento">'+
+                                    '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                    '      <i class="fas fa-inbox azulColor iconDadosProcesso"></i>'+
+                                    '      Tipo de Procedimento:'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '   </label>'+
+                                    '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'display:none' : '')+'">'+
+                                    '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnNomeTipoProcedimento+'</a>'+
+                                    (processoAberto ?
+                                    '       <a class="newLink" data-mode="tipo_procedimento" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '' : '')+
+                                    '   </div>'+
+                                    '</div>';
+            htmlTipoProcedimento = ($.inArray("Tipo de Procedimento",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlTipoProcedimento : '';
         
-    var htmlNivelAcesso =   '<div class="panelDadosArvorePro panelDadosArvore" data-type="nivel_acesso">'+
-                            '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
-                            '      <i class="'+dataNivelAcesso.icon+' azulColor iconDadosProcesso"></i>'+
-                            '      N\u00EDvel de Acesso:'+
-                            '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
-                            '   </label>'+
-                            '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'display:none' : '')+'">'+
-                            '      <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+dataNivelAcesso.name+'</a>'+
-                            (processoAberto ?
-                            '       <a class="newLink" data-mode="nivel_acesso" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
-                            '' : '')+
-                            '   </div>'+
-                            '</div>';
-        htmlNivelAcesso = ($.inArray("N\u00EDvel de Acesso",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlNivelAcesso : '';
-    
-    var htmlInteressados =      '<div class="panelDadosArvorePro panelDadosArvore" data-type="interessados">'+
+        var hipoteseLegal = (prop.rdoNivelAcesso == '1') ? jmespath.search(prop.selHipoteseLegal_select, "[?id=='"+prop.selHipoteseLegal+"'] | [0].name") : null;
+            hipoteseLegal = (hipoteseLegal == null) ? '' :  hipoteseLegal;
+        var dataNivelAcesso = (prop.rdoNivelAcesso == '0') ? {name: 'P\u00FAblico', icon: 'fas fa-globe-americas'} : false;
+            dataNivelAcesso = (prop.rdoNivelAcesso == '1') ? {name: 'Restrito: '+hipoteseLegal, icon: 'fas fa-lock'} : dataNivelAcesso;
+            dataNivelAcesso = (prop.rdoNivelAcesso == '2') ? {name: 'Sigiloso', icon: 'fas fa-user-slash'} : dataNivelAcesso;
+            
+        var htmlNivelAcesso =   '<div class="panelDadosArvorePro panelDadosArvore" data-type="nivel_acesso">'+
                                 '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
-                                '      <i class="fas fa-users azulColor iconDadosProcesso"></i>'+
-                                '      Interessados:'+
-                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_interessados') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '      <i class="'+dataNivelAcesso.icon+' azulColor iconDadosProcesso"></i>'+
+                                '      N\u00EDvel de Acesso:'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
                                 '   </label>'+
-                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_interessados') == 'hide' ? 'display:none' : '')+'">'+
-                                        $.map(prop.selInteressadosProcedimento_list, function(v, i){ 
-                                            var return_ = ((prop.selInteressadosProcedimento_list.length-1) != i && prop.selInteressadosProcedimento_list.length > 1) ? '<div style="border-bottom: 1px solid #ececec;" class="dadosInteressados">' : '<div class="dadosInteressados">';
-                                            if (v.name.indexOf('(') !== -1) {
-                                                return_ += $.map(v.name.split('('), function(int){
-                                                                return '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+int.trim().replace(')','')+'</a>';
-                                                            }).join('');
-                                            } else {
-                                                return_ += '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.name+'</a>';
-                                            }
-                                                return_ +=  '<a class="newLink interessadosProcesso" style="cursor:pointer;float: right;" data-interessado="'+v.value+'" data-tramite-unidade="'+(getOptionsPro('panelDadosArvoreInteressados_tramiteUnidade') ? 'true' : 'false' )+'" data-tipo-procedimento="'+prop.hdnIdTipoProcedimento+'" data-mesma-natureza="'+(getOptionsPro('panelDadosArvoreInteressados_mesmaNatureza') ? 'true' : 'false' )+'" onclick="getDadosInteressadosArvore(this)" onmouseover="return infraTooltipMostrar(\'Pesquisar processos relacionados\');" onmouseout="return infraTooltipOcultar();">'+
-                                                            '   <i class="fas fa-folder-open azulColor iconInteressadosProcesso"></i><i class="fas fa-search azulColor" style="margin-left: -10px;"></i>'+
-                                                            '</a>';
-                                                return_ +=  '<div class="dadosInteressados_result" style="display:none;"></div>'+
-                                                            '</div>';
-                                            return return_;
-                                        }).join('')+
+                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_nivel_acesso') == 'hide' ? 'display:none' : '')+'">'+
+                                '      <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+dataNivelAcesso.name+'</a>'+
+                                (processoAberto ?
+                                '       <a class="newLink" data-mode="nivel_acesso" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                '' : '')+
                                 '   </div>'+
-                                '   </div>';
-        htmlInteressados = ($.inArray("Interessados",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlInteressados : '';
-    
-    var htmlAssuntos =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="assuntos">'+
-                        '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
-                        '      <i class="fas fa-bookmark azulColor iconDadosProcesso"></i>'+
-                        '      Assuntos:'+
-                        '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_assuntos') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
-                        '   </label>'+
-                        '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_assuntos') == 'hide' ? 'display:none' : '')+'">'+
-                               $.map(prop.selAssuntos_select, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v+'</a></div>' }).join('')+
-                        '   </div>'+
-                        '</div>';
-        htmlAssuntos = ($.inArray("Assuntos",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlAssuntos : '';
-    
-    var htmlObservacoes =   '<div class="panelDadosArvorePro panelDadosArvore" data-type="observacoes">'+
+                                '</div>';
+            htmlNivelAcesso = ($.inArray("N\u00EDvel de Acesso",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlNivelAcesso : '';
+
+        var checkBlocoInterno = ($.inArray("Bloco Interno",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? true : false;
+        var blocoProcesso = checkBlocoInterno ? parent.initBlocoProcessoHistorico() : false;
+        var dadosProcessoP = typeof parent.getDadosProcessoSession() !== 'undefined' ? parent.getDadosProcessoSession() : false;
+        var descBlocoInterno = (typeof blocoProcesso !== 'undefined' && blocoProcesso !== null) 
+                            ? (blocoProcesso.length > 0 && typeof blocoProcesso[0].descricao !== 'undefined') ? blocoProcesso[0].descricao : '<i class="fas fa-spinner fa-spin"></i>'
+                            : '<i class="fas fa-spinner fa-spin"></i>';
+            descBlocoInterno = (typeof blocoProcesso !== 'undefined' && blocoProcesso !== null && blocoProcesso.length == 0 && typeof dadosProcessoP.listAndamento !== 'undefined' && dadosProcessoP.listAndamento.historico_completo) ? 'Nenhum bloco localizado' : descBlocoInterno;
+
+        var htmlBlocoInterno =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="'+(blocoProcesso ? 'bloco_interno': 'bloco_interno_loading')+'">'+
+                                '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                '      <i class="fas fa-book azulColor iconDadosProcesso"></i>'+
+                                '      Bloco Interno:'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_bloco_interno') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '   </label>'+
+                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_bloco_interno') == 'hide' ? 'display:none' : '')+'">'+
+                                '      <a class="newLink infoDadosArvore_bloco_interno" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+descBlocoInterno+'</a>'+
+                                // (processoAberto ?
+                                // '       <a class="newLink" data-mode="bloco_interno" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                // '' : '')+
+                                '   </div>'+
+                                '</div>';
+            htmlBlocoInterno = (checkBlocoInterno) ? htmlBlocoInterno : '';
+        
+        var htmlInteressados =      '<div class="panelDadosArvorePro panelDadosArvore" data-type="interessados">'+
+                                    '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                    '      <i class="fas fa-users azulColor iconDadosProcesso"></i>'+
+                                    '      Interessados:'+
+                                    '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_interessados') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                    '   </label>'+
+                                    '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_interessados') == 'hide' ? 'display:none' : '')+'">'+
+                                            $.map(prop.selInteressadosProcedimento_list, function(v, i){ 
+                                                var return_ = ((prop.selInteressadosProcedimento_list.length-1) != i && prop.selInteressadosProcedimento_list.length > 1) ? '<div style="border-bottom: 1px solid #ececec;" class="dadosInteressados">' : '<div class="dadosInteressados">';
+                                                if (v.name.indexOf('(') !== -1) {
+                                                    return_ += $.map(v.name.split('('), function(int){
+                                                                    return '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+int.trim().replace(')','')+'</a>';
+                                                                }).join('');
+                                                } else {
+                                                    return_ += '<a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.name+'</a>';
+                                                }
+                                                    return_ +=  '<a class="newLink interessadosProcesso" style="cursor:pointer;float: right;" data-interessado="'+v.value+'" data-tramite-unidade="'+(getOptionsPro('panelDadosArvoreInteressados_tramiteUnidade') ? 'true' : 'false' )+'" data-tipo-procedimento="'+prop.hdnIdTipoProcedimento+'" data-mesma-natureza="'+(getOptionsPro('panelDadosArvoreInteressados_mesmaNatureza') ? 'true' : 'false' )+'" onclick="getDadosInteressadosArvore(this)" onmouseover="return infraTooltipMostrar(\'Pesquisar processos relacionados\');" onmouseout="return infraTooltipOcultar();">'+
+                                                                '   <i class="fas fa-folder-open azulColor iconInteressadosProcesso"></i><i class="fas fa-search azulColor" style="margin-left: -10px;"></i>'+
+                                                                '</a>';
+                                                    return_ +=  '<div class="dadosInteressados_result" style="display:none;"></div>'+
+                                                                '</div>';
+                                                return return_;
+                                            }).join('')+
+                                    '   </div>'+
+                                    '   </div>';
+            htmlInteressados = ($.inArray("Interessados",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlInteressados : '';
+        
+        var htmlAssuntos =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="assuntos">'+
                             '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
-                            '      <i class="fas fa-comment-alt azulColor iconDadosProcesso"></i>'+
-                            '      Observa\u00E7\u00F5es:'+
-                            '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_observacoes') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                            '      <i class="fas fa-bookmark azulColor iconDadosProcesso"></i>'+
+                            '      Assuntos:'+
+                            '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_assuntos') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
                             '   </label>'+
-                            '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_observacoes') == 'hide' ? 'display:none' : '')+'">'+
-                                    $.map(prop.txaObservacoes, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.unidade+': '+v.observacao+'</a></div>' }).join('')+
+                            '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_assuntos') == 'hide' ? 'display:none' : '')+'">'+
+                                $.map(prop.selAssuntos_select, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v+'</a></div>' }).join('')+
                             '   </div>'+
                             '</div>';
-        htmlObservacoes = ($.inArray("Observa\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlObservacoes : '';
+            htmlAssuntos = ($.inArray("Assuntos",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlAssuntos : '';
+        
+        var htmlObservacoes =   '<div class="panelDadosArvorePro panelDadosArvore" data-type="observacoes">'+
+                                '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
+                                '      <i class="fas fa-comment-alt azulColor iconDadosProcesso"></i>'+
+                                '      Observa\u00E7\u00F5es:'+
+                                '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_observacoes') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
+                                '   </label>'+
+                                '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_observacoes') == 'hide' ? 'display:none' : '')+'">'+
+                                        $.map(prop.txaObservacoes, function(v){ return '<div><a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.unidade+': '+v.observacao+'</a></div>' }).join('')+
+                                '   </div>'+
+                                '</div>';
+            htmlObservacoes = ($.inArray("Observa\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlObservacoes : '';
 
-    $('.panelDadosArvorePro').remove();
-    $('#frmArvore').append(htmlMarcador+htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes);  
-    parent.forceOnLoadBodyPage();  
-    if (!dataMarcador && processoAberto) {
-        getDataMarcadorProcesso();
-    }
-    if (typeof parent.setCapaProcesso === 'function') {
-        parent.setCapaProcesso();
-    }
-    if (typeof replaceColorsIcons !== 'undefined' && checkConfigValue('coresmarcadores')) {
-        replaceColorsIcons($('a[href*="andamento_marcador_gerenciar"], .tagUserColorPro'));
+        $('.panelDadosArvorePro').remove();
+        $('#frmArvore').append(htmlBlocoInterno+htmlMarcador+htmlAcompEsp+htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes);  
+        parent.forceOnLoadBodyPage();  
+        if (!dataMarcador && processoAberto) {
+            getDataMarcadorProcesso();
+        }
+        if (typeof parent.setCapaProcesso === 'function') {
+            parent.setCapaProcesso();
+        }
+        if (typeof replaceColorsIcons !== 'undefined' && checkConfigValue('coresmarcadores')) {
+            replaceColorsIcons($('a[href*="andamento_marcador_gerenciar"], .tagUserColorPro'));
+        }
     }
 }
 function getDataMarcadorProcesso() {
@@ -1956,7 +2039,7 @@ function getDataMarcadorProcesso() {
                 tag: $html.find('#selMarcador').find('option:selected').text(),
                 name: $html.find('#txaTexto').val()
             }
-            console.log(marcador);
+            
             var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
                 listMarcadores = (listMarcadores) ? listMarcadores : [];
                 listMarcadores.push(marcador);
@@ -2032,20 +2115,24 @@ function getAtividadesProcessoArvore() {
     var htmlInfoAtividades = '';
     if (parent.arrayAtividadesProcPro.length > 0) {
         $.each(parent.arrayAtividadesProcPro,function(index, value){
-            var htmlActionsAtividade = parent.actionsAtividade(value.id_demanda, 'icon');
-            var kanbanItem = parent.getKanbanItem(value);
-            
-                htmlInfoAtividades +=   '<div class="kanban-item '+kanbanItem.class.join(' ')+'" data-eid="_id_'+value.id_demanda+'">'+
-                                        '   '+kanbanItem.title+
-                                        (htmlActionsAtividade.action == 'info' ? '' :
-                                        '   <span class="info_dates_fav" style="display: block;padding: 0;margin: 10px 0 0 0;">'+
-                                        '       <a class="newLink" onclick="parent.actionsAtividade('+value.id_demanda+')">'+
-                                        '           <i style="margin-right: 3px;" class="'+htmlActionsAtividade.icon+' azulColor"></i>'+
-                                        '           '+htmlActionsAtividade.name+
-                                        '       </a>'+
-                                        '   </span>'+
-                                        '')+
-                                        '</div>';
+            var params_url = getParamsUrlPro($('a[target="ifrVisualizacao"]').attr('href'));
+            var id_procedimento = params_url.id_procedimento;
+            if (value.id_procedimento == parseInt(id_procedimento)) {
+                var htmlActionsAtividade = parent.actionsAtividade(value.id_demanda, 'icon');
+                var kanbanItem = parent.getKanbanItem(value);
+                
+                    htmlInfoAtividades +=   '<div class="kanban-item '+kanbanItem.class.join(' ')+'" data-eid="_id_'+value.id_demanda+'">'+
+                                            '   '+kanbanItem.title+
+                                            (htmlActionsAtividade.action == 'info' ? '' :
+                                            '   <span class="info_dates_fav" style="display: block;padding: 0;margin: 10px 0 0 0;">'+
+                                            '       <a class="newLink" onclick="parent.actionsAtividade('+value.id_demanda+')">'+
+                                            '           <i style="margin-right: 3px;" class="'+htmlActionsAtividade.icon+' azulColor"></i>'+
+                                            '           '+htmlActionsAtividade.name+
+                                            '       </a>'+
+                                            '   </span>'+
+                                            '')+
+                                            '</div>';
+            }
         });
     
         htmlAtividades =    '<div class="panelDadosArvore panelDadosArvore_atividades" data-type="atividades">'+
@@ -2200,7 +2287,7 @@ function initBreakDocTwoLines(TimeOut = 9000) {
         }, 500);
     }
 }
-function loadStyleDesign() {
+function loadStyleDesign(loop = 3) {
     if (localStorage.getItem('seiSlim')) {
         var body = document.body;
         body.classList.add("seiSlim");
@@ -2209,7 +2296,57 @@ function loadStyleDesign() {
             body.classList.add("dark-mode");
         }
         initAnchorImg();
-        initOnClickPasta();
+        // initOnClickPasta();
+        if (loop > 0) {
+            setTimeout(function(){ 
+                loadStyleDesign(false);
+                console.log('reload loadStyleDesign', loop);
+            }, 1500);
+        }
+    }
+}
+function initNumericDocsPro(loop = true) {
+    var sumP = getSumDocsPasta(loop);
+    $('.numericDocsPro').remove();
+    var folderDiv = $('.infraArvore[id*="divPASTA"]');
+    if (folderDiv.length) {
+        folderDiv.each(function(){
+            var _this = $(this);
+            var folder = _this.attr('id');
+                folder = (typeof folder !== 'undefined') ? folder.replace('divPASTA', '') : false;
+                folder = (folder) ? parseInt(folder) : false;
+            var initCount = (folder * sumP) - sumP;
+            _this.find('a.clipboard[id*="anchorImg"]').each(function(i){
+                var count = initCount+i+1;
+                $(this).before('<span class="numericDocsPro" data-count="'+count+'"></span>');
+            });
+        });
+    } else {
+        $('#container a.clipboard[id*="anchorImg"]').each(function(i){
+            $(this).before('<span class="numericDocsPro" data-count="'+(i+1)+'"></span>');
+        });
+    }
+}
+function getSumDocsPasta(loop) {
+    if (parent.getOptionsPro('sumDocsPasta')) {
+        return parent.getOptionsPro('sumDocsPasta');
+    } else {
+        var defaultSumPasta = 10;
+        var sumDocsPasta = ($('#anchorImgPASTA2').length) 
+            ? arrayMax($('.infraArvore[id*="divPASTA"]').map(function(){ if( $(this).find('a.clipboard[id*="anchorImg"]').length) { return $(this).find('a.clipboard[id*="anchorImg"]').length } }).get())
+            : defaultSumPasta;
+        if (sumDocsPasta != defaultSumPasta && loop) {
+            parent.setOptionsPro('sumDocsPasta',sumDocsPasta);
+            initNumericDocsPro(false);
+        }
+        
+        return sumDocsPasta;
+    }
+}
+function checkProcessoSigiloso() {
+    if ($('a[id*="anchorNA"] img[src*="_sigiloso"]').length > 0) {
+        var id_protocolo = getParamsUrlPro(window.location.href).id_procedimento;
+        sessionStorageStorePro('processo_sigiloso_'+id_protocolo,true);
     }
 }
 function initAnchorImg() {
@@ -2224,13 +2361,25 @@ function initAnchorImg() {
         return ($(this).closest('.anchorSpacePro').length == 0) ? '<span class="anchorSpacePro" data-img="'+$(this).attr('src')+'"></span>' : false;
     });
 }
+/*
 function initOnClickPasta() {
-    $('a[id*="ancjoinPASTA"], a[id*="anchorImgPASTA"]').on('click', function(){
+    $('a[id*="ancjoinPASTA"]').on('click', function(){
         initAnchorImg();
+        console.log('initOnClickPasta');
+    });
+    $('a[id*="anchorImgPASTA"]').on('click', function(){
+        initAnchorImg();
+        console.log('initOnClickPasta');
+    });
+    $('a[id*="anchorPASTA"]').on('click', function(){
+        initAnchorImg();
+        console.log('initOnClickPasta');
     });
 }
+*/
 function initSeiProArvore(loop = true) {
     loadStyleDesign();
+    checkProcessoSigiloso();
     arrayLinksArvore = getLinksArvore();
     arrayLinksPage = getLinksPage();
     parent.linksArvore = getLinksPage();
@@ -2251,6 +2400,9 @@ function initSeiProArvore(loop = true) {
     }
     if (typeof resizeArvoreMaxWidth === "function" && typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('resizearvore') ) { 
         parent.resizeArvoreMaxWidth();
+    }
+    if (typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('numerar_documentos') ) { 
+        initNumericDocsPro();
     }
     if (
         (typeof parent.initAtividadesProcesso === 'function' || typeof parent.initAtividadesProcesso !== 'undefined') && 
@@ -2292,8 +2444,8 @@ function initSeiProArvore(loop = true) {
 
     setTimeout(function(){ 
         var arrayCheckActions = $('a[id*="anchor"][target="ifrVisualizacao"]').map(function(){ if (typeof $(this).data('arvore-pro') === 'undefined') return true ; }).get();
-        if (loop && typeof arrayCheckActions !== 'undefined' && arrayCheckActions.length > 0) {
-            initSeiProArvore(false);
+        if (typeof parent.execArvorePro !== 'undefined' && loop && typeof arrayCheckActions !== 'undefined' && arrayCheckActions.length > 0) {
+            parent.execArvorePro(initSeiProArvore);
             console.log('Reload initSeiProArvore Loop');
         } 
     }, 500);

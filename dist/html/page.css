@@ -215,6 +215,12 @@ i.laranjaColor {
 .SEIPro_lab tr.lab {
     display: table-row;
 }
+.ANTAQ_Pro tr.lab {
+    display: none;
+}
+.ANTAQ_Pro tr.notatq {
+    display: none;
+}
 @media only screen and (max-width: 1115px) {
     .button-flat .btn_text {
         display: none;

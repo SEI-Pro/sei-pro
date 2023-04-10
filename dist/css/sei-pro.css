@@ -1717,6 +1717,12 @@ table.moreInfoBox td:first-child,
     background: #f4f5f5;
     border-radius: 10px;
 }
+.kanban-container .kanban-board .kanban-item .followLinkNewtab {
+    visibility: hidden;
+}
+.kanban-container .kanban-board .kanban-item:hover .followLinkNewtab {
+    visibility: visible;
+}
 .kanban-container .kanban-board {
     border-radius: 15px;
     margin-bottom: 20px;
@@ -1729,6 +1735,20 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_niniciadas"] .kanban-board-header {
     background: #e2e4e6;
+}
+.kanban-container .kanban-board .kanban-collapse {
+    position: absolute;
+    top: 18px;
+    right: 50px;
+    cursor: pointer;
+}
+.kanban-board[data-collapse="true"] .kanban-drag {
+    display: none;
+    transition: all 0.3s ease-in 0s; 
+}
+.kanban-container .kanban-board .kanban-title-board {
+    padding: 0 60px 0 0;
+    display: inline-block;
 }
 .kanban-container .kanban-board[data-id="_niniciadas"] .kanban-title-board::before {
     content: "\f017";
@@ -1745,6 +1765,16 @@ table.moreInfoBox td:first-child,
     font-family: 'Font Awesome 5 Free';
     padding-right: 10px;
     color: #4285f4;
+}
+.kanban-container .kanban-board[data-id="_pausadas"],
+.kanban-container .kanban-board[data-id="_pausadas"] .kanban-board-header {
+    background: #e2e4e6;
+}
+.kanban-container .kanban-board[data-id="_pausadas"] .kanban-title-board::before {
+    content: "\f28b";
+    font-family: 'Font Awesome 5 Free';
+    padding-right: 10px;
+    color: #989898;
 }
 .kanban-container .kanban-board[data-id="_concluidas"],
 .kanban-container .kanban-board[data-id="_concluidas"] .kanban-board-header {
@@ -1776,6 +1806,50 @@ table.moreInfoBox td:first-child,
     padding-right: 10px;
     color: #989898;
 }
+.seiSlim .kanban-container .kanban-board .kanban-title-board::before {
+    font-family: 'Font Awesome 5 Pro' !important;
+}
+#processosKanban .kanban-container .kanban-board-header {
+    background-color: #e2e4e6;
+}
+#processosKanban .kanban-container .kanban-board .kanban-title-board::before {
+    font-family: 'Font Awesome 5 Free';
+    padding-right: 10px;
+    color: #747474;
+}
+.kanban-container .kanban-board .proc_tags .kanban-title-board::before {
+    content: "\f02b";
+}
+.kanban-container .kanban-board .proc_types .kanban-title-board::before {
+    content: "\f01c";
+}
+.kanban-container .kanban-board .proc_acessdate .kanban-title-board::before {
+    content: "\f1da";
+}
+.kanban-container .kanban-board .proc_senddate .kanban-title-board::before {
+    content: "\f658";
+}
+.kanban-container .kanban-board .proc_arrivaldate .kanban-title-board::before {
+    content: "\f4bd";
+}
+.kanban-container .kanban-board .proc_createdate .kanban-title-board::before {
+    content: "\f5bf";
+}
+.kanban-container .kanban-board .proc_deadline .kanban-title-board::before {
+    content: "\f017";
+}
+.kanban-container .kanban-board .proc_checkpoints .kanban-title-board::before {
+    content: "\f024";
+}
+.kanban-container .kanban-board .proc_senddepart .kanban-title-board::before {
+    content: "\f0b1";
+}
+.kanban-container .kanban-board .proc_acompanhamentoesp .kanban-title-board::before {
+    content: "\f06e";
+}
+.kanban-container .kanban-board .proc_users .kanban-title-board::before {
+    content: "\f007";
+}
 .kanban-board header .kanban-title-board:after {
     content: attr(data-count);
     right: 10px;
@@ -1791,6 +1865,7 @@ table.moreInfoBox td:first-child,
     top: 10px;
 }
 .kanban-container .kanban-item.tagKanName_urgente,
+.kanban-container .kanban-item[data-class="urgente"],
 .urgenteBoxDisplay {
     background: #f9e2e0;
 }
@@ -1840,7 +1915,8 @@ table.moreInfoBox td:first-child,
 .kanban-container .kanban-item.tagKanban_notmove .item_handle.drag_handler {
     display: none;
 }
-.kanban-container .kanban-item sub {
+.kanban-container .kanban-item sub,
+.kanban-container .kanban-item span.sub {
     display: inline-block;
     font-size: 90%;
     color: #717171;
@@ -1867,11 +1943,23 @@ table.moreInfoBox td:first-child,
 .kanban-container.view_full .kanban-item .kanban-actions {
     display: block !important;
 }
+.kanban-item:hover .info_dates_fav {
+    display: none !important;
+}
 .kanban-item .kanban-title-card .info {
     font-size: 12pt;
     margin: -6px 0 5px 0;
     font-family: Calibri;
     font-weight: 100;
+}
+#processosKanban .kanban-description span.sub {
+    display: block;
+    padding: 0;
+    margin: 5px 0;
+}
+#processosKanban .kanban-title-card .info a {
+    font-size: 11pt;
+    text-decoration: none;
 }
 .filterGanttTag {
     text-align: right;
@@ -2023,8 +2111,12 @@ table.moreInfoBox td:first-child,
     color: #017FFF;
     background: rgb(255 255 255 / 75%);
 }
+.seiSlim.seiSlim_parent.dz-drag-hover:before,
 .seiSlim.seiSlim_arvore.dz-drag-hover:before {
     font-family: 'Font Awesome 5 Pro';
+}
+.seiSlim.seiSlim_parent.dz-drag-hover::before {
+    padding: calc(25% - 40px) 0;
 }
 .dz-size {
     background: #eaeaea;
@@ -2349,6 +2441,7 @@ a.newLink.filterTableProcessos.newLink_active i {
 }
 .infraTable.tablesorter.hasFilters {
     position: relative;
+    margin-top: 30px;
 }
 .atividadeWork span.ativProcessos {
     padding: 3px 5px;
@@ -2368,6 +2461,28 @@ a.newLink.filterTableProcessos.newLink_active i {
     padding-left: 10px;
     border-left: 2px solid #ccc;
     display: inline-block;
+}
+#atividadesPro.minView .modulesActions {
+    position: absolute;
+    left: -170px;
+    top: 40px;
+}
+#atividadesPro #tabelaAtivPanel .filterTableAtivStatus {
+    right: 320px;
+}
+#atividadesPro.minView #tabelaAtivPanel .filterTableAtivStatus {
+    right: 170px !important;
+}
+#atividadesPro #tabelaAtivPanel .filterTablePro span.text,
+#atividadesPro .atividadesBtnPanel .text { 
+    display: inline;
+}
+#atividadesPro.minView #tabelaAtivPanel .filterTablePro span.text,
+#atividadesPro.minView .atividadesBtnPanel .text  { 
+    display: none;
+}
+#atividadesPro.minView .modulesActions:has(.iconLabel) {
+    margin-top: 20px;
 }
 #divInfraAreaTelaD {
     position: relative;
@@ -2551,8 +2666,13 @@ td.editCellLoadingError:after {
 .tableFollow tr.closed td:nth-child(2):before {
     content: "ENCERRADO" !important;
 }
+.tableFollow tr.future:has(td div.chosen-container),
 .tableFollow tr.closed:has(td div.chosen-container) {
     opacity: 1 !important;
+}
+.tableFollow tr.future td[data-text] div.chosen-container,
+.tableFollow tr.closed td[data-text] div.chosen-container {
+    max-width: 60%;
 }
 .tableFollow tr.disabled td:nth-child(2):before {
     content: "DESATIVADO" !important;
@@ -2620,7 +2740,7 @@ td.inEdit:hover:after {
 }
 .infraAreaTelaE.menuSuspenso {
     position: absolute;
-    z-index: 999;
+    z-index: 9999;
     box-shadow: 3px 3px 5px 0px #8686868a;
     background: #fff;
 }
@@ -2706,6 +2826,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
 }
 .stickDadosArvore {
     transition: all 300ms linear;
+    min-width: 360px;
 }
 .stickDadosArvore .actions {
     position: absolute;
@@ -3077,6 +3198,9 @@ div.infraTooltipTexto i.far {
     div[role="dialog"].ui-dialog.hidePrint {
         display: none !important;
     }
+    .tabelaPanelScroll  {
+        height: fit-content !important;
+    }
 }
 .seiProForm .signed,
 .editorBoxProDiv .signed {
@@ -3216,6 +3340,10 @@ div#divInfraTooltip {
     border-radius: 5px;
     text-align: left;
     min-height: 35px;
+}
+.inlineAlert a {
+    font-size: 100%;
+    color: #00c;
 }
 #tabelaAtivPanel .inlineAlert {
     min-height: 25px;
@@ -3406,4 +3534,211 @@ input[type="currency"]{
 .newSEI #iconsActions .newLink .fa-layers-counter {
     font-size: 1.5em;
     color: #fff;
+}
+.ui-dialog .ui-dialog-buttonset button.ui-state-active .ui-button-icon {
+    filter: brightness(4);
+}
+.newSEI #divTabelaProcesso {
+    overflow-y: initial !important;
+}
+.tableIDInfo tbody td:first-child:after {
+    content: "#"attr(data-id);
+    font-size: 9px;
+    font-family: monospace;
+    color: #888;
+    vertical-align: super;
+}
+.blinker {
+    opacity: 1;
+    margin-bottom: -2px;
+    height: 15px;
+    margin-left: -5px;
+    border-left: 7px solid #9e9e9e !important;
+    animation: blinker 0.9s steps(2, start) infinite;
+}
+  
+@keyframes blinker {
+    to { 
+        visibility: hidden; 
+    }
+}
+.hrTempoDir {
+    width: 100px;
+    position: absolute;
+    height: 2px;
+    background: #ccc;
+    transform: rotate(45deg);
+    margin: -6px 0px 0px -28px;
+}
+.hrTempoEsq {
+    width: 100px;
+    position: absolute;
+    height: 2px;
+    background: #ccc;
+    transform: rotate(-45deg);
+    margin: -6px 0px 0px -28px;
+}
+.ck-body-wrapper {
+    position: relative;
+    z-index: 99999;
+}
+.chosen-container.chosen-repair-firefox {
+    position: absolute;
+    top: 5px;
+}
+.contatoPanelPro .unidade {
+    margin: 15px 0 0;
+    font-size: 14pt;
+    font-family: Calibri;
+}
+.contatoPanelPro .separator {
+    margin-left: 50px;
+}
+.contatoPanelPro .unidade .count {
+    height: 20px;
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    font-size: 9pt;
+    padding: 0;
+    line-height: 20px;
+    background-color: #e1e1e1;
+    color: #898989;
+    margin: 0 10px;
+    border-radius: 50%;
+}
+.contatoPanelPro .unidade .toggle {
+    font-size: 12pt;
+    margin: 0;
+    cursor: pointer;
+}
+.contatoPanelPro .contatos.separator_1 {
+    margin-left: 50px;
+}
+.contatoPanelPro .contatos.separator_2 {
+    margin-left: 100px;
+}
+.contatoPanelPro .contatos.separator_3 {
+    margin-left: 150px;
+}
+.contatoPanelPro .contatos.separator_4 {
+    margin-left: 200px;
+}
+.contatoPanelPro .contatos.separator_5 {
+    margin-left: 250px;
+}
+.contatoPanelPro .contatos {
+    display: none;
+    background-color: #f4f5f5;
+    border-radius: 10px;
+    margin: 10px;
+    padding: 10px;
+}
+.contatoPanelPro .contato {
+    padding: 10px;
+    margin: 10px;
+    display: inline-grid;
+    font-size: 10pt;
+    border-radius: 5px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
+    background-color: #fff;
+    min-height: 100px;
+}
+.contatoPanelPro .contato:hover {
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 4px 6px 5px;
+    transform: scale3d(1.05, 1.05, 1.05);
+    transition: all 100ms linear;
+}
+.contatoPanelPro .contato span.nome {
+    padding: 5px 0;
+}
+.contatoPanelPro .contato span.modalidade {
+    font-style: italic;
+}
+.contatoPanelPro .contato:hover span.celular {
+    display: initial;
+}
+.contatoPanelPro .contato span.celular {
+    display: none;
+}
+.contatoPanelPro .contato span.celular,
+.contatoPanelPro .contato span.email,
+.contatoPanelPro .contato span.modalidade,
+.contatoPanelPro .contato span.motivo_afastamento {
+    font-size: 8pt;
+}
+.contatoPanelPro .contato span.celular a,
+.contatoPanelPro .contato span.email a,
+.contatoPanelPro .contato span.modalidade a,
+.contatoPanelPro .contato span.motivo_afastamento a {
+    text-decoration: none;
+    color: #999;
+    margin: 0 !important;
+}
+.dz-infoupload-home {
+    display: inline-block;
+    padding: 0;
+    position: initial;
+    margin: 0 0 20px 0;
+    height: 150px;
+    background: #f9f9f9;
+    width: calc(100% - 30px);
+    border-radius: 10px;
+    border: 3px dashed #e4e9e9;
+}
+.dz-infoupload-home .text {
+    background: transparent !important;
+    margin-top: 20px;
+}
+.dz-infoupload-home .cancel {
+    border-radius: 10px;
+    margin: 0;
+}
+.dot-flashing {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #4285F4;
+    color: #4285F4;
+    animation: dot-flashing 1s infinite linear alternate;
+    animation-delay: 0.5s;
+}
+.dot-flashing::before, .dot-flashing::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+}
+.dot-flashing::before {
+    left: -13px;
+    width: 7px;
+    height: 7px;
+    border-radius: 5px;
+    background-color: #4285F4;
+    color: #4285F4;
+    animation: dot-flashing 1s infinite alternate;
+    animation-delay: 0s;
+}
+.dot-flashing::after {
+    left: 13px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #4285F4;
+    color: #4285F4;
+    animation: dot-flashing 1s infinite alternate;
+    animation-delay: 1s;
+}
+
+@keyframes dot-flashing {
+    0% {
+        background-color: #4285F4;
+    }
+    50%, 100% {
+        background-color: rgba(152, 128, 255, 0.2);
+    }
+}
+.cke_dialog_ui_labeled_content:has(select.cke_dialog_ui_input_select) {
+    min-height: 30px;
 }

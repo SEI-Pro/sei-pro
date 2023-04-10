@@ -174,6 +174,25 @@ function observeAcaoPro() {
             };
             // console.log(data);
             getOptionsSEIPro(data);
+        } else if (param.base == 'openai') {
+            var data = { 
+                type: "NEW_BASE", 
+                mode: param.mode, 
+                base: param.base, 
+                alert: true, 
+                newItem: {
+                    "baseName": "Open AI (Chat GPT)",
+                    "baseTipo": "openai",
+                    "conexaoTipo": "api",
+                    "CLIENT_ID": "",
+                    "API_KEY": "",
+                    "spreadsheetId": "",
+                    "URL_API": param.url,
+                    "KEY_USER": param.token
+                }
+            };
+            // console.log(data);
+            getOptionsSEIPro(data);
         }
     } else if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_database' && typeof param.client_id !== 'undefined') {
         if (param.base == 'projetos') {
@@ -200,6 +219,24 @@ function observeAcaoPro() {
         setOptionsSEIPro(param.option_key, param.option_value);
     }
 }
+function pathExtensionSEIPro() {
+    var URL_SPRO = getUrlExtension("js/sei-pro.js");
+        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
+    return URL_SPRO;
+}
+function getPathExtensionPro() {
+    if ($('script[data-config="config-seipro"]').length == 0) {
+        var URL_SPRO = pathExtensionSEIPro();
+        var manifest = getManifestExtension();
+        var VERSION_SPRO = manifest.version;
+        var NAMESPACE_SPRO = manifest.short_name;
+        var URLPAGES_SPRO = manifest.homepage_url;
+        setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, URLPAGES_SPRO: URLPAGES_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
+    }
+}
+function setSessionNameSpace(param) {
+    sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
+}
 function getManifestExtension() {
     if (typeof browser === "undefined") {
         return chrome.runtime.getManifest();
@@ -211,48 +248,19 @@ function loadScriptProDB() {
     observeAcaoPro();
     changeBasePro();
     getConfigHost(appendIconEntidadeLogin);
+    getPathExtensionPro();
 }
 if (getManifestExtension().short_name == 'SPro') {
     setTimeout(function(){ 
         if (sessionStorage.getItem('new_extension') === null){
             loadScriptProDB();
         } else {
-            console.log('######### new_extension');
             chrome.storage.sync.get({
                 dataValues: ''
             }, function(items) {
                 var dataValues = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];  
                 console.log(dataValues); 
                 sessionStorage.setItem('config_transition',  JSON.stringify(dataValues));
-                // $.getScript(getUrlExtension("js/sei-pro-db-transition.js"));
-                /*
-                if (data.mode == 'insert') {
-                    for (i = 0; i < dataValues.length; i++) {
-                        if ( dataValues[i]['baseTipo'] == data.base) {
-                            dataValues.splice(i,1);
-                            i--;
-                        }
-                    }
-                }
-                dataValues.push(newItem);
-                console.log(dataValues);
-                chrome.storage.sync.set({
-                    dataValues: JSON.stringify(dataValues)
-                }, function() {
-                    if (data.alert) { alert('Configura\u00e7\u00f5es carregadas com sucesso!'); }
-                    if (typeof window.jQuery !== 'undefined') {
-                        var urlHome = $('#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
-                        if (typeof urlHome !== 'undefined') {
-                            // localStorage.setItem('configBasePro_atividades', JSON.stringify({URL_API: newItem.url, KEY_USER: newItem.token}));
-                            console.log({URL_API: newItem.url, KEY_USER: newItem.token});
-                            setTimeout(function(){ 
-                                console.log('saved OptionsSEIPro'); 
-                                window.location.href = urlHome;
-                            }, 1500);
-                        }
-                    }
-                });
-                */
             });
         }
     }, 1000);

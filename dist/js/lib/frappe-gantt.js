@@ -1,3 +1,6 @@
+// Frappe Gantt - A simple, interactive, modern gantt chart library for the web
+// https://github.com/frappe/gantt/tree/master
+
 var Gantt = (function () {
 'use strict';
 

@@ -27,18 +27,22 @@ var fileSystemPro = false;
 var fileSystemContentPro = false;
 var delayCrash = false;
 var unidade = isNewSEI ? $('#lnkInfraUnidade').text() : $('#selInfraUnidades').find('option:selected').text().trim();
+var isProcUrgente = false;
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var divInformacao = isNewSEI ? '#divArvoreInformacao' : '#divInformacao';
 var mainMenu = isNewSEI ? '#infraMenu' : '#main-menu';
 var ancoraArvoreDownload = isNewSEI ? 'a.ancoraVisualizacaoArvore' : 'a.ancoraArvoreDownload';
 var idMenu = isNewSEI ? '#divInfraSidebarMenu '+mainMenu : '#divInfraAreaTelaE '+mainMenu;
 var nameDocInterno = isNewSEI ? 'documento_interno.svg' : 'sei_documento_interno.gif';
+var dialogIsDraggable = false;
+var tableHomeTimeout = 3000;
 var iconsFlashMenu = [
                     {name: 'Copiar n\u00FAmero do processo', icon: 'fas fa-copyright', alt: ''},
                     {name: 'Copiar somente o n\u00FAmero', icon: 'fab fa-cuttlefish', alt: ''},
                     {name: 'Copiar link do processo', icon: 'fas fa-link', alt: ''},
                     {name: 'Enviar Documento Externo', icon: 'fa-upload', alt: ''},
                     {name: 'A\u00E7\u00F5es em lote', icon: 'fa-cogs', alt: ''},
+                    {name: 'Adicionar ou Remover Urg\u00EAncia', icon: 'fa-exclamation-circle', alt: 'Add/Remover Urg\u00EAncia'},
                     {name: 'Incluir Documento', icon: 'fas fa-file-alt', alt: 'Incluir Novo Documento'},
                     {name: 'Consultar/Alterar Processo', icon: 'fa-file-signature', alt: ''},
                     {name: 'Iniciar Processo Relacionado', icon: 'fa-sync-alt', alt: 'Iniciar Proc. Relacionado'},
@@ -71,6 +75,7 @@ var iconsFlashDocMenu = [
                     {name: 'Copiar para...', icon: 'fa-share', alt: '', show: true},
                     {name: 'Imprimir Web', icon: 'fa-print', alt: '', show: false},
                     {name: 'Visualizar em nova aba', icon: 'fa-window-restore', alt: '', show: false},
+                    {name: 'Baixar documento', icon: 'fa-download', alt: '', show: false},
                     {name: 'Consultar documento', icon: 'fa-users', alt: '', show: false},
                     {name: 'Incluir em bloco', icon: 'fa-book', alt: '', show: false},
                     {name: 'Cancelar documento', icon: 'fa-ban', alt: '', show: false},
@@ -95,7 +100,8 @@ var iconsFlashDocArvore = [
                     {name: 'Duplicar documento', icon: 'far fa-copy', alt: '', mode: 'clone'},
                     {name: 'Copiar para...', icon: 'fas fa-share', alt: 'Copiar documento para outro processo', mode: 'copyto'},
                     {name: 'Copiar n\u00FAmero com link', icon: 'fab fa-creative-commons-sa', alt: '', mode: 'numberlink'},
-                    {name: 'Copiar nome com link', icon: 'fas fa-external-link-alt', alt: '', mode: 'namelink'}
+                    {name: 'Copiar nome com link', icon: 'fas fa-external-link-alt', alt: '', mode: 'namelink'},
+                    {name: 'Visualizar em nova aba', icon: 'fas fa-window-restore', alt: '', mode: 'view'},
                 ];
 var iconsFlashPanelArvore = [
                     {name: 'Anota\u00E7\u00F5es', icon: 'fas fa-sticky-note', alt: 'Anota\u00E7\u00F5es'},
@@ -105,7 +111,9 @@ var iconsFlashPanelArvore = [
                     {name: 'N\u00EDvel de Acesso', icon: 'fas fa-lock', alt: 'N\u00EDvel de Acesso'},
                     {name: 'Interessados', icon: 'fas fa-users', alt: 'Interessados'},
                     {name: 'Assuntos', icon: 'fas fa-bookmark', alt: 'Assuntos'},
-                    {name: 'Observa\u00E7\u00F5es', icon: 'fas fa-comment-alt', alt: 'Observa\u00E7\u00F5es'}
+                    {name: 'Observa\u00E7\u00F5es', icon: 'fas fa-comment-alt', alt: 'Observa\u00E7\u00F5es'},
+                    {name: 'Bloco Interno', icon: 'fas fa-book', alt: 'Bloco Interno'},
+                    {name: 'Acompanhamento Especial', icon: 'fas fa-eye', alt: 'Acompanhamento Especial'}
                 ];
 var rangeProjetosPro = "Projetos";
 var rangeEtapasPro = "Etapas";
@@ -117,6 +125,17 @@ var userSEI = $('#hdnInfraPrefixoCookie').val();
     userSEI = (userSEI) ? userSEI[userSEI.length-1] : false;
     userSEI = (userSEI) ? userSEI.toLowerCase() : false;
 
+var URL_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P().URL_SPRO;
+var NAMESPACE_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P().NAMESPACE_SPRO;
+var URLPAGES_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P().URLPAGES_SPRO;
+var VERSION_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P().VERSION_SPRO;
+var ICON_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P().ICON_SPRO;
+
+var CLIENT_ID_PRO = _G() ? _G().CLIENT_ID_PRO : false;
+var API_KEY_PRO = _G() ? _G().API_KEY_PRO : false;
+var spreadsheetIdProjetos_Pro = _G() ? _G().spreadsheetIdProjetos_Pro : false;
+var spreadsheetIdFormularios_Pro = _G() ? _G().spreadsheetIdFormularios_Pro : false;
+var spreadsheetIdSyncProcessos_Pro = _G() ? _G().spreadsheetIdSyncProcessos_Pro : false;
 
 var sortListSaved = (typeof localStorageRestorePro('tablesorter-savesort') !== 'undefined' && localStorageRestorePro('tablesorter-savesort') !== null) ? localStorageRestorePro('tablesorter-savesort')[window.location.pathname] : false;
 
@@ -127,6 +146,85 @@ var html_initContentPro = '<div class="sheetsUpdate seiProForm" id="sheetsComple
 if ( $('#sheetsCompleteEtapaForm').length == 0 ) { $('#divInfraBarraSistema').append(html_initContentPro) }
 
 
+/**
+     * Copyright 2012, Digital Fusion
+     * Licensed under the MIT license.
+     * http://teamdf.com/jquery-plugins/license/
+     *
+     * @author Sam Sehnert
+     * @desc A small plugin that checks whether elements are within
+     *       the user visible viewport of a web browser.
+     *       can accounts for vertical position, horizontal, or both
+     */
+!function(t){var i=t(window);t.fn.visible=function(t,e,o){if(!(this.length<1)){var r=this.length>1?this.eq(0):this,n=r.get(0),f=i.width(),h=i.height(),o=o?o:"both",l=e===!0?n.offsetWidth*n.offsetHeight:!0;if("function"==typeof n.getBoundingClientRect){var g=n.getBoundingClientRect(),u=g.top>=0&&g.top<h,s=g.bottom>0&&g.bottom<=h,c=g.left>=0&&g.left<f,a=g.right>0&&g.right<=f,v=t?u||s:u&&s,b=t?c||a:c&&a;if("both"===o)return l&&v&&b;if("vertical"===o)return l&&v;if("horizontal"===o)return l&&b}else{var d=i.scrollTop(),p=d+h,w=i.scrollLeft(),m=w+f,y=r.offset(),z=y.top,B=z+r.height(),C=y.left,R=C+r.width(),j=t===!0?B:z,q=t===!0?z:B,H=t===!0?R:C,L=t===!0?C:R;if("both"===o)return!!l&&p>=q&&j>=d&&m>=L&&H>=w;if("vertical"===o)return!!l&&p>=q&&j>=d;if("horizontal"===o)return!!l&&m>=L&&H>=w}}}}(jQuery);
+
+function _P() { // get  Session Name Space
+    return JSON.parse(sessionStorage.getItem('new_extension'));
+}
+
+function _G() { // get  Session Google Name Space
+    var _return = localStorage.getItem('SEIPro_google_projetos');
+        _return = (_return === null) ? localStorage.getItem('SEIPro_google_processos') : _return;
+        _return = (_return === null) ? localStorage.getItem('SEIPro_google_formularios') : _return;
+        _return = (_return === null) ? false : _return;
+
+    return _return ? JSON.parse(_return) : false;
+}
+function loadAPIGooglePro() {
+    if (!!URL_SPRO) $.getScript(URL_SPRO+"js/lib/google_api.js");
+    /*
+    if ( $('head').find('script[data-config="config-apigoogle-seipro"]').length == 0 ) {
+        var htmlScript = "<script data-config='config-apigoogle-seipro' async defer src=\"https://apis.google.com/js/api.js\" onload=\"this.onload=function(){};handleClientLoadPro()\" onreadystatechange=\"if (this.readyState === 'complete') this.onload()\"></script>";
+        $(htmlScript).appendTo('head');
+        console.log('****loadAPIGooglePro');
+    }
+    */
+}
+function setCaretPosition(elem, caretPos) {
+    if (elem != null) {
+        if (elem.createTextRange) {
+            var range = elem.createTextRange();
+            range.move('character', caretPos);
+            range.select();
+        } else {
+            if(elem.selectionStart) {
+                elem.focus();
+                elem.setSelectionRange(caretPos, caretPos);
+            } else {
+                elem.focus();
+            }
+        }
+    }
+}
+function getIsProcUrgente() {
+    isProcUrgente = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.txtDescricao !== 'undefined' ? dadosProcessoPro.propProcesso.txtDescricao : false;
+    isProcUrgente = typeof isProcUrgente !== 'undefined' && isProcUrgente && isProcUrgente.toLowerCase().indexOf('(urgente)') !== -1 ? true : false;
+    return isProcUrgente;
+}
+function dropzoneCancelInfo(e) {
+    if (typeof e !== 'undefined'){
+        e.stopImmediatePropagation();
+    }
+    $(containerUpload).removeClass('dz-drag-hover');
+    return false;
+}
+function encodeUrlUploadArvore(response, params) {
+    var id = response[0];
+    var nome = response[1];
+    var dthora = response[4];
+    var tamanho = response[3];
+    var tamanho_formatado = infraFormatarTamanhoBytes(parseInt(tamanho));
+    var plus = '\u00B1';
+    var hdnAnexos = id+plus+nome+plus+dthora+plus+tamanho+plus+tamanho_formatado+plus+params.userUnidade.user+plus+params.userUnidade.unidade;
+        hdnAnexos = (hdnAnexos.indexOf(' ') !== -1) ? hdnAnexos.replace(/ /g,'+') : hdnAnexos;
+        hdnAnexos = encodeURIComponent(hdnAnexos);
+        hdnAnexos = (hdnAnexos.indexOf('%C2') !== -1) ? hdnAnexos.replace(/%C2/g,'') : hdnAnexos;
+        hdnAnexos = (hdnAnexos.indexOf('%2B') !== -1) ? hdnAnexos.replace(/%2B/g,'+') : hdnAnexos;
+
+        console.log(hdnAnexos);
+
+    return hdnAnexos;
+}
 function getConfigHost(callback = false, callback_else = false) {
     var hosts = URL_SPRO+"config_hosts.json";
         fetch(hosts)
@@ -167,10 +265,13 @@ function calcFilterResume(table) {
         $(this).html(result);
     })
 }
-function checkProcessoSigiloso() {
-    var check = $('script').map(function(v){ if(typeof $(this).attr('src') == 'undefined' && $(this).html().indexOf('usuario_validar_acesso') !== -1) { return true; } }).get();
+function checkProcessoSigiloso(content = $('html')) {
+    var id_protocolo = getParamsUrlPro(window.location.href).id_procedimento;
+    var check = content.find('script').map(function(v){ if(typeof $(this).attr('src') == 'undefined' && $(this).html().indexOf('usuario_validar_acesso') !== -1) { return true; } }).get();
         check = check.length ? check[0] : false;
-    return check;
+    var checkSession = (typeof id_protocolo !== 'undefined' && sessionStorageRestorePro('processo_sigiloso_'+id_protocolo) !== null) ? true : false;
+    var _return = (checkSession || check) ? true : false;
+    return _return;
 }
 function getStylesOnEditor() {
     var styles = false;
@@ -336,6 +437,9 @@ function extractCPFs(text) {
 function extractHexColor(text) {
     return text.match(/#[0-9a-f]{6}|#[0-9a-f]{3}/gi);
 }
+function arrayMax(arr) {
+    return arr.reduce(function (p, v) { return ( p > v ? p : v ) });
+}
 function getChartLabelItemStore(idElem, chartObj){
     if (getOptionsPro(idElem+'_canvas')){
         var arrayLabels = getOptionsPro(idElem+'_canvas');
@@ -354,6 +458,25 @@ function getChartLabelItemStore(idElem, chartObj){
             });
             chartObj.update();
     }
+}
+function replaceTextToProcessoSEI(text) {
+    var Rexp = /(\d{5}\.?\d{6}\/?\d{4}\-?\d{2})/igm;
+    var urlSEI = url_host.replace('controlador.php','');
+    return text.replace(Rexp, "<a href='"+urlSEI+"#$1' target='_blank'>$1</a>");
+}
+function replaceTextToUrl(text) {
+    // Put the URL to variable $1 and Domain name
+    // to $3 after visiting the URL
+    var Rexp = /(\b(https?|ftp|file):\/\/([-A-Z0-9+&@#%?=~_|!:,.;]*)([-A-Z0-9+&@#%?\/=~_|!:,.;]*)[-A-Z0-9+&@#\/%=~_|])/ig;
+     
+    // Replacing the RegExp content by HTML element
+    return text.replace(Rexp, "<a href='$1' target='_blank'>$3</a>");
+}
+function maskCNPJ(text) {
+    return text.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+}
+function maskPEN(text) {
+    return text.replace(/^(\d{5})(\d{6})(\d{4})(\d{2})/, "$1.$2/$3-$4");
 }
 function setChartLabelItemStore(e, legendItem){
     var ci = this.chart;
@@ -852,6 +975,17 @@ function addAlpha(color, opacity) {
     var _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
     return color + _opacity.toString(16).toUpperCase();
 }
+function arrayMin(arr) {
+    return arr.reduce(function (p, v) {
+        return ( p < v ? p : v );
+    });
+}
+
+function arrayMax(arr) {
+    return arr.reduce(function (p, v) {
+        return ( p > v ? p : v );
+    });
+}
 function getHashTagsPro(inputText) {  
     var regex = /(?:^|\s)(?:#)([a-zA-Z+-§\d]+)/gm;
     var matches = [];
@@ -873,6 +1007,13 @@ function joinAnd(a) {
 function getBrightnessColor(value) {
     var rgb = hexToRgb(value);
     return Math.round(((parseInt(rgb.r) * 299) + (parseInt(rgb.g) * 587) + (parseInt(rgb.b) * 114)) / 1000);
+}
+function setIconLoadinBtnSEI(elem, display = true) {
+    if (display) {
+        elem.find('img').css('opacity','0').end().append('<span class="botaoSEI_iconBox botaoSEI_loading infraCorBarraSistema" style="margin: 0px 0 0 5px; border: 0.1em solid white;"><i class="fas fa-spin fa-spinner" style="font-size: 17pt; color: #fff;"></i></span>'); 
+    } else {
+        elem.find('img').css('opacity','1').end().find('.botaoSEI_loading').remove();
+    }
 }
 function removeDuplicatesArray(list, ref) {
     var result = [];
@@ -1057,6 +1198,15 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
                     placeholder_text_single: ' ',
                     no_results_text: 'Nenhum resultado encontrado'
             });
+        } else if (mode == 'box_multiple') {
+            _parent.find('select')
+                .filter(function() { 
+                    return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') || force
+                })
+                .chosen({
+                    placeholder_text_single: ' ',
+                    no_results_text: 'Nenhum resultado encontrado'
+            });
         } else if (mode == 'box_refresh') {
             _parent.find('select')
                 .not('[multiple]')
@@ -1080,7 +1230,6 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
     } else {
         if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') { 
             $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-            console.log('@load chosen');
         }
         setTimeout(function(){ 
             initChosenReplace(mode, this_, force, TimeOut - 100); 
@@ -1205,10 +1354,11 @@ function scrollToElement(container, scrollToElem, stick = 0) {
 }
 function scrollToElementArvore(id_documento) {
     var ifrArvore = $('#ifrArvore').contents();
+    if (ifrArvore.length) {
         ifrArvore.find('html').animate({
             scrollTop: ifrArvore.find('#anchor'+id_documento).offset().top
         });
-
+    }
 }
 function resetDialogBoxPro(elementBox) {
     if (elementBox == 'alertBoxPro' && alertBoxPro) { 
@@ -1233,6 +1383,14 @@ function resetDialogBoxPro(elementBox) {
         $('.editorBoxProDiv').remove();
     }
     infraTooltipOcultar();
+    dialogIsDraggable = false;
+}
+function isDialogDraggable() {
+    $('.ui-dialog:visible').draggable({
+        stop: function() {
+            dialogIsDraggable = true;
+        }
+    });
 }
 function updateDadosProcesso(idElement, value, callback = false) {
     if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
@@ -1344,21 +1502,24 @@ function openCamposDinamicosForm() {
     });
 }
 
-function editDadosArvorePro(this_, TimeOut = 9000) {
+function editDadosArvorePro(this_, parse = false, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof $().chosen !== 'undefined' && typeof URL_SPRO !== 'undefined') { 
-        editDadosArvorePro_(this_);
+        editDadosArvorePro_(this_, parse);
     } else {
         if (TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
         setTimeout(function(){ 
-            editDadosArvorePro(this_, TimeOut - 100); 
+            editDadosArvorePro(this_, parse, TimeOut - 100); 
             console.log('Reload editDadosArvorePro'); 
         }, 500);
     }
 }
-function editDadosArvorePro_(this_) {
-    var _this = $(this_);
-    var data = _this.data();
+function editDadosArvorePro_AcompEsp() {
+    editDadosArvorePro(false, {mode: 'acompanhamento_especial', force: true});
+}
+function editDadosArvorePro_(this_ = false, parse = false) {
+    var _this = this_ ? $(this_) : false;
+    var data = _this ? _this.data() : parse;
     var prop = dadosProcessoPro.propProcesso;
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
@@ -1400,6 +1561,62 @@ function editDadosArvorePro_(this_) {
                         '       <option value="0">Carregando lista...</option>'+
                         '   </select>'+
                         '</div>';
+    } else if (data.mode == 'acompanhamento_especial') {
+        var textTitle = 'Editar acompanhamento especial';
+        var storeAcompEsp = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+        var dataAcompEsp = (storeAcompEsp !== null) ? jmespath.search(storeAcompEsp, "[?id_protocolo=='"+id_procedimento+"'] | [0]") : null;
+            dataAcompEsp = dataAcompEsp ? dataAcompEsp : false;
+        var force = (typeof data.force !== 'undefined' && data.force) ? true : false;
+        
+        var configAcomp = (dataAcompEsp && dataAcompEsp.config) ? dataAcompEsp.config : false;
+        var dataReabertura = (configAcomp && configAcomp.hasOwnProperty('Reabertura')) ? moment(configAcomp.Reabertura, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
+        var txtAcompEsp = (dataAcompEsp) ? dataAcompEsp.observacoes : prop.txtDescricao;
+        var txtGroup = (dataAcompEsp) ? dataAcompEsp.grupo : false;
+
+        var textBox =   '<div class="dialogBoxDiv seiProForm">'+
+                        '   <table style="font-size: 10pt;width: 100%;">'+
+                        (verifyConfigValue('reaberturaprogramada') ? 
+                        '      <tr style="height: 40px;">'+
+                        '          <td style="vertical-align: bottom;width: 200px;">'+
+                        '               <i class="iconPopup iconSwitch far fa-clock '+(force || configAcomp ? 'azulColor' : 'cinzaColor')+'"></i> '+
+                        '               Reabertura programada?'+
+                        '          </td>'+
+                        '          <td>'+
+                        '              <div class="onoffswitch" style="float: right;">'+
+                        '                  <input type="checkbox" onchange="configDatesSwitchChangeReabertura(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_setreopen" data-type="setdate" tabindex="0" '+(force || configAcomp ? 'checked' : '')+'>'+
+                        '                  <label class="onoffswitch-label" for="configDatesBox_setreopen"></label>'+
+                        '              </div>'+
+                        '          </td>'+
+                        '      </tr>'+
+                        '      <tr style="height: 40px;'+(force || configAcomp ? '' : 'display:none')+'" class="configDates_setreopen">'+
+                        '          <td class="label" style="vertical-align: bottom;">'+
+                        '               <i class="iconPopup fas fa-clock azulColor"></i> <span>Data de Reabertura</span>'+
+                        '          </td>'+
+                        '          <td class="input" style="position:relative">'+
+                        '               <input type="datetime-local" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+(dataReabertura ? dataReabertura : moment().format('YYYY-MM-DD'))+'" style="float: right;width: calc(100% - 16px);">'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '': '')+
+                        '      <tr style="height: 40px;">'+
+                        '          <td class="label" style="vertical-align: bottom;">'+
+                        '               <i class="iconPopup fas fa-layer-group azulColor"></i> <span>Grupo</span>'+
+                        '          </td>'+
+                        '          <td>'+
+                        '               <select id="configDatesBox_acompesp" style="float: right;margin: 0 !important; width: 100%;">'+
+                        '               </select>'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '      <tr style="height: 40px;">'+
+                        '          <td class="label" style="vertical-align: bottom;">'+
+                        '               <i class="iconPopup fas fa-comment-alt azulColor"></i> <span>Texto</span>'+
+                        '          </td>'+
+                        '          <td>'+
+                        '               <input type="text" id="configDatesBox_text" style="float: right;width: calc(100% - 16px);" value="'+txtAcompEsp+'">'+
+                        '           </td>'+
+                        '      </tr>'+
+                        '   </table>'+
+                        '</div>';
+
     } else if (data.mode == 'marcador') {
         var textTitle = 'Editar marcador';
         var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
@@ -1494,11 +1711,162 @@ function editDadosArvorePro_(this_) {
                         '</div>';
     }
 
+    var btnDialogBoxPro =   [{
+                                text: "Editar",
+                                class: 'confirm ui-state-active',
+                                click: function() {
+                                    loadingButtonConfirm(true);
+                                    var dadosProcessoPro = pullDadosProcessoSession();
+                                    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
+                                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
+                                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
+                                    
+                                    if (data.mode == 'descricao') {
+                                        var new_text = $('#dialogBoxProcesso').val().trim();
+                                        updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', new_text, id_procedimento, function(){ 
+                                            dadosProcessoPro.propProcesso.txtDescricao = new_text;
+                                            // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+                                            setSessionProcessosPro(dadosProcessoPro);
+                                            resetDialogBoxPro('dialogBoxPro');
+                                            alertaBoxPro('Sucess', 'check-circle', 'Especifica\u00E7\u00E3o do processo alterada com sucesso!');
+                                        });
+                                    } else if (data.mode == 'tipo_procedimento') {
+                                        var new_id = $('#dialogBoxProcesso').val().trim();
+                                        var new_text = $('#dialogBoxProcesso').find('option:selected').text().trim();
+                                        updateDadosArvore('Consultar/Alterar Processo', 'selTipoProcedimento', new_id, id_procedimento, function(){ 
+                                            dadosProcessoPro.propProcesso.selTipoProcedimento = new_id;
+                                            dadosProcessoPro.propProcesso.hdnIdTipoProcedimento = new_id;
+                                            dadosProcessoPro.propProcesso.hdnNomeTipoProcedimento = new_text;
+                                            // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+                                            setSessionProcessosPro(dadosProcessoPro);
+                                            resetDialogBoxPro('dialogBoxPro');
+                                            alertaBoxPro('Sucess', 'check-circle', 'Tipo de procedimento alterado com sucesso!');
+                                        });
+                                    } else if (data.mode == 'nivel_acesso') {
+                                        var new_id = $('#dialogBoxProcesso').val().trim();
+                                        var new_id_hipoteses = $('#dialogBoxProcesso_hipoteses').val() !== null ? $('#dialogBoxProcesso_hipoteses').val().trim() : false;
+                                        var elementOption = (new_id == '0') ? 'optPublico' : false;
+                                            elementOption = (new_id == '2') ? 'optSigiloso' : elementOption;
+                                            elementOption = (new_id == '1') ? 'optRestrito' : elementOption;
+                                        updateDadosArvore('Consultar/Alterar Processo', elementOption, new_id_hipoteses, id_procedimento, function(){ 
+                                            dadosProcessoPro.propProcesso.rdoNivelAcesso = new_id;
+                                            dadosProcessoPro.propProcesso.selHipoteseLegal = new_id_hipoteses;
+                                            // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+                                            setSessionProcessosPro(dadosProcessoPro);
+                                            resetDialogBoxPro('dialogBoxPro');
+                                            alertaBoxPro('Sucess', 'check-circle', 'N\u00EDvel de sigilo alterado com sucesso!');
+                                        });
+                                    } else if (data.mode == 'responsaveis') {
+                                        var new_id = $('#dialogBoxProcesso').val().trim();
+                                            new_id = (new_id == '') ? 'null' : new_id;
+                                        console.log('Atribuir Processo', 'selAtribuicao', new_id, id_procedimento);
+                                        updateDadosArvore('Atribuir Processo', 'selAtribuicao', new_id, id_procedimento, function(){ 
+                                            resetDialogBoxPro('dialogBoxPro');
+                                            alertaBoxPro('Sucess', 'check-circle', 'Atribui\u00E7\u00E3o de processo alterada com sucesso!');
+                                        });
+                                    } else if (data.mode == 'acompanhamento_especial') {
+                                        var dataReabertura = ($('#configDatesBox_setreopen').is(':checked')) ? moment($('#configDatesBox_date').val(), 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : false;
+                                        var groupAcompEsp = $('#configDatesBox_acompesp').val();
+                                        var textObservacao = $('#configDatesBox_text').val();
+                                        var observacao = textObservacao+(dataReabertura ? ' ["Reabertura": "'+dataReabertura+'"]' : '');
+                                        var configAcomp = (dataReabertura) ? {"Reabertura": dataReabertura} : false;
+
+                                        var valuesIframe = [
+                                            {element: 'selGrupoAcompanhamento', value: groupAcompEsp},
+                                            {element: 'txaObservacao', value: observacao}
+                                        ];
+                                        
+                                        updateDadosArvoreMult('Acompanhamento Especial', valuesIframe, id_procedimento, function(){ 
+                                            var listAcompEsp = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+                                            var objIndexDoc = (!listAcompEsp) ? -1 : listAcompEsp.findIndex((obj => obj.id_protocolo == String(id_procedimento)));
+                                            if (objIndexDoc !== -1) {
+                                                listAcompEsp[objIndexDoc]['grupo'] = $('#configDatesBox_acompesp').find('option:selected').text();
+                                                listAcompEsp[objIndexDoc]['observacoes'] = textObservacao;
+                                                listAcompEsp[objIndexDoc]['config'] = configAcomp;
+                                                localStorageStorePro('dadosAcompanhamentoEspProcessoPro',listAcompEsp);
+                                            }
+                                            console.log(listAcompEsp, objIndexDoc, String(id_procedimento));
+                                            resetDialogBoxPro('dialogBoxPro');
+                                            alertaBoxPro('Sucess', 'check-circle', 'Acompanhamento especial alterado com sucesso!');
+                                        });
+                                    } else if (data.mode == 'marcador') {
+                                        var _dateRef = $('#configDatesBox_date').val();
+                                        var _timeRef = $('#configDatesBox_time').val();
+                                        var _tagSelected = $('#configDatesBox_tag').val();
+                                        var _textTag = $('#configDatesBox_text').val();
+                                            _textTag = (_textTag != '') ? '\n'+_textTag : '';
+                                            _dateRef = _dateRef+' '+(_timeRef != '' ? _timeRef : '23:59');
+                                        var _dateTo = ($('#configDatesBox_duesetdate').is(':checked')) ? _dateRef : false;
+                                        var dateSubmit = (_dateTo) ? 'Ate '+moment(_dateTo, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : moment(_dateRef, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
+                                            dateSubmit = ($('#configDatesBox_setdate').is(':checked')) ? dateSubmit+_textTag : _textTag;
+                                        if (_dateRef == '') {
+                                            alertaBoxPro('Error', 'exclamation-triangle', 'Selecione uma data!');
+                                        } else {
+                                            var valuesIframe = [
+                                                {element: 'txaTexto', value: dateSubmit},
+                                                {element: 'hdnIdMarcador', value: _tagSelected}
+                                            ];
+                                            updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
+                                                var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+                                                var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
+                                                if (objIndexDoc !== -1) {
+                                                    listMarcadores[objIndexDoc] = {
+                                                        id_procedimento: listMarcadores[objIndexDoc].id_procedimento,
+                                                        icon: $('#configDatesBox_tag').find('option:selected').data('img-src'),
+                                                        tag: $('#configDatesBox_tag').find('option:selected').text(),
+                                                        name: dateSubmit
+                                                    }
+                                                    sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
+                                                }
+                                                // console.log(listMarcadores[objIndexDoc]);
+                                                resetDialogBoxPro('dialogBoxPro');
+                                                alertaBoxPro('Sucess', 'check-circle', 'Marcador alterado com sucesso!');
+                                            });
+                                        }
+                                    }
+                                }
+                            }];
+    
+        if (data.mode == 'marcador') {
+            btnDialogBoxPro.unshift({
+                text: 'Remover Marcador',
+                icon: 'ui-icon-closethick',
+                click: function(event) { 
+                    loadingButtonConfirm(true);
+                    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
+                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
+                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
+                    var valuesIframe = [
+                        {element: 'txaTexto', value: ''},
+                        {element: 'hdnIdMarcador', value: ''}
+                    ];
+                    updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
+                        var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+                        var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
+                        if (objIndexDoc !== -1) {
+                            listMarcadores.splice(objIndexDoc,1);
+                            sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
+                            resetDialogBoxPro('dialogBoxPro');
+                            alertaBoxPro('Sucess', 'check-circle', 'Marcador removido com sucesso!');
+                        }
+                    });
+                }
+            });
+        } else if (data.mode == 'descricao') {
+            btnDialogBoxPro.unshift({
+                text: (getIsProcUrgente() ? 'Remover' : 'Adicionar')+' Urg\u00EAncia',
+                icon: 'ui-icon-notice',
+                click: function(event) { 
+                    addUrgenteProcessoPro();
+                }
+            });
+        }
+
     resetDialogBoxPro('dialogBoxPro');
     dialogBoxPro = $('#dialogBoxPro')
         .html('<div class="dialogBoxDiv"> '+textBox+'</span>')
         .dialog({
-            width: (data.mode == 'marcador' ? 570 : 450),
+            width: (data.mode == 'marcador' || data.mode == 'acompanhamento_especial' ? 570 : 450),
             title: textTitle,
         	open: function(){
                 if ($('#dialogBoxProcesso').is('select') && typeof $().chosen !== 'undefined') {
@@ -1526,6 +1894,40 @@ function editDadosArvorePro_(this_) {
                             no_results_text: 'Nenhum resultado encontrado'
                         }).trigger('chosen:updated');
                     });
+                } else if (data.mode == 'acompanhamento_especial') {
+                    var listaGruposAcompEsp = getOptionsPro('listaGruposAcompEsp');
+                    var listaGruposAcompEsp_unidade = getOptionsPro('listaGruposAcompEsp_unidade');
+                    if (listaGruposAcompEsp && listaGruposAcompEsp_unidade == $('#selInfraUnidades').val()) {
+                        var htmlOptions = $.map(listaGruposAcompEsp, function(v){
+                                            var selected = (txtGroup && txtGroup == v.name) ? 'selected' : '';
+                                            return '<option value="'+v.value+'" '+selected+'>'+v.name+'</option>';
+                                        }).join('');
+                        $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
+                            placeholder_text_single: ' ',
+                            no_results_text: 'Nenhum resultado encontrado'
+                        }).trigger('chosen:updated');
+                    } else {
+                        var ifrArvore = $('#ifrArvore');
+                        var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
+                            arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
+                        var href = jmespath.search(arrayLinksArvore, "[?name=='Acompanhamento Especial'].url");
+                        if (href !== null) {
+                            $.ajax({ 
+                                url: href
+                            }).done(function (html) {
+                                var $html = $(html);
+                                    listaGruposAcompEsp = getListaGruposAcompEsp($html).array;
+                                var htmlOptions = $.map(listaGruposAcompEsp, function(v){
+                                                    var selected = (tagName && tagName == v.name) ? 'selected' : '';
+                                                    return '<option value="'+v.value+'" '+selected+'>'+v.name+'</option>';
+                                                }).join('');
+                                $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
+                                    placeholder_text_single: ' ',
+                                    no_results_text: 'Nenhum resultado encontrado'
+                                }).trigger('chosen:updated');
+                            });
+                        }
+                    }
                 } else if (data.mode == 'marcador') {
                     var listaMarcadores = getOptionsPro('listaMarcadores');
                     var listaMarcadores_unidade = getOptionsPro('listaMarcadores_unidade');
@@ -1556,95 +1958,82 @@ function editDadosArvorePro_(this_) {
                     }
                 }
             },
-            buttons: [{
-                text: "Editar",
-                class: 'confirm ui-state-active',
-                click: function() {
-                    loadingButtonConfirm(true);
-                    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
-                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
-                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
-                    
-                    if (data.mode == 'descricao') {
-                        var new_text = $('#dialogBoxProcesso').val().trim();
-                        updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', new_text, id_procedimento, function(){ 
-                            dadosProcessoPro.propProcesso.txtDescricao = new_text;
-                            setSessionProcessosPro(dadosProcessoPro);
-                            resetDialogBoxPro('dialogBoxPro');
-                            alertaBoxPro('Sucess', 'check-circle', 'Especifica\u00E7\u00E3o do processo alterada com sucesso!');
-                        });
-                    } else if (data.mode == 'tipo_procedimento') {
-                        var new_id = $('#dialogBoxProcesso').val().trim();
-                        var new_text = $('#dialogBoxProcesso').find('option:selected').text().trim();
-                        updateDadosArvore('Consultar/Alterar Processo', 'selTipoProcedimento', new_id, id_procedimento, function(){ 
-                            dadosProcessoPro.propProcesso.selTipoProcedimento = new_id;
-                            dadosProcessoPro.propProcesso.hdnIdTipoProcedimento = new_id;
-                            dadosProcessoPro.propProcesso.hdnNomeTipoProcedimento = new_text;
-                            setSessionProcessosPro(dadosProcessoPro);
-                            resetDialogBoxPro('dialogBoxPro');
-                            alertaBoxPro('Sucess', 'check-circle', 'Tipo de procedimento alterado com sucesso!');
-                        });
-                    } else if (data.mode == 'nivel_acesso') {
-                        var new_id = $('#dialogBoxProcesso').val().trim();
-                        var new_id_hipoteses = $('#dialogBoxProcesso_hipoteses').val() !== null ? $('#dialogBoxProcesso_hipoteses').val().trim() : false;
-                        var elementOption = (new_id == '0') ? 'optPublico' : false;
-                            elementOption = (new_id == '2') ? 'optSigiloso' : elementOption;
-                            elementOption = (new_id == '1') ? 'optRestrito' : elementOption;
-                        updateDadosArvore('Consultar/Alterar Processo', elementOption, new_id_hipoteses, id_procedimento, function(){ 
-                            dadosProcessoPro.propProcesso.rdoNivelAcesso = new_id;
-                            dadosProcessoPro.propProcesso.selHipoteseLegal = new_id_hipoteses;
-                            setSessionProcessosPro(dadosProcessoPro);
-                            resetDialogBoxPro('dialogBoxPro');
-                            alertaBoxPro('Sucess', 'check-circle', 'N\u00EDvel de sigilo alterado com sucesso!');
-                        });
-                    } else if (data.mode == 'responsaveis') {
-                        var new_id = $('#dialogBoxProcesso').val().trim();
-                        console.log('Atribuir Processo', 'selAtribuicao', new_id, id_procedimento);
-                        updateDadosArvore('Atribuir Processo', 'selAtribuicao', new_id, id_procedimento, function(){ 
-                            resetDialogBoxPro('dialogBoxPro');
-                            alertaBoxPro('Sucess', 'check-circle', 'Atribui\u00E7\u00E3o de processo alterada com sucesso!');
-                        });
-                    } else if (data.mode == 'marcador') {
-                        var _dateRef = $('#configDatesBox_date').val();
-                        var _timeRef = $('#configDatesBox_time').val();
-                        var _tagSelected = $('#configDatesBox_tag').val();
-                        var _textTag = $('#configDatesBox_text').val();
-                            _textTag = (_textTag != '') ? '\n'+_textTag : '';
-                            _dateRef = _dateRef+' '+(_timeRef != '' ? _timeRef : '23:59');
-                        var _dateTo = ($('#configDatesBox_duesetdate').is(':checked')) ? _dateRef : false;
-                        var dateSubmit = (_dateTo) ? 'Ate '+moment(_dateTo, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : moment(_dateRef, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
-                            dateSubmit = ($('#configDatesBox_setdate').is(':checked')) ? dateSubmit+_textTag : _textTag;
-                        if (_dateRef == '') {
-                            alertaBoxPro('Error', 'exclamation-triangle', 'Selecione uma data!');
-                        } else {
-                            var valuesIframe = [
-                                {element: 'txaTexto', value: dateSubmit},
-                                {element: 'hdnIdMarcador', value: _tagSelected}
-                            ];
-                            updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
-                                var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
-                                var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
-                                if (objIndexDoc !== -1) {
-                                    listMarcadores[objIndexDoc] = {
-                                        id_procedimento: listMarcadores[objIndexDoc].id_procedimento,
-                                        icon: $('#configDatesBox_tag').find('option:selected').data('img-src'),
-                                        tag: $('#configDatesBox_tag').find('option:selected').text(),
-                                        name: dateSubmit
-                                    }
-                                    sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
-                                }
-                                // console.log(listMarcadores[objIndexDoc]);
-                                resetDialogBoxPro('dialogBoxPro');
-                                alertaBoxPro('Sucess', 'check-circle', 'Marcador alterado com sucesso!');
-                            });
-                        }
-                    }
-                }
-            }]
+            buttons: btnDialogBoxPro
     });
 }
-function getSelectAtribuicaoProcesso(callback = false) {
-    var ifrArvore = $('#ifrArvore');
+function getAjaxListaAtribuicao() {
+    if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
+    var url = $('a.processoVisualizado[href*="acao=procedimento_trabalhar"]').eq(0).attr('href');
+    if (!!url) {
+        $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
+            var ifrArvore = $('#frmCheckerProcessoPro').contents().find('#ifrArvore');
+            
+            getSelectAtribuicaoProcesso(false, ifrArvore);
+        });
+    }
+}
+function getAjaxListaMarcador() {
+    var href = isNewSEI
+            ? $('#divComandos a[onclick*="andamento_marcador_cadastrar"]').attr('onclick') 
+            : $('#divComandos a[onclick*="andamento_marcador_gerenciar"]').attr('onclick');
+        href = (typeof href !== 'undefined') ? href.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
+        href = (href && href !== null && href.length > 0 && href[0] != '') ? href[0] : false;
+    if (href) {
+        var param = {};
+            $('#frmProcedimentoControlar').find("input[type=hidden]").map(function () {
+                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                    param[$(this).attr('name')] = $(this).val(); 
+                }
+            });
+            param.hdnRecebidosItensSelecionados = $('input[name*="chkRecebidosItem"]').eq(0).val();
+            param[$('input[name*="chkRecebidosItem"]').eq(0).attr('name')] = $('input[name*="chkRecebidosItem"]').eq(0).val();
+        $.ajax({ 
+            method: 'POST',
+            data: param,
+            url: href
+        }).done(function (html) {
+            getListaMarcadores($(html));
+        });
+    }
+}
+function editFieldProc(this_) {
+    var _this = $(this_);
+    var _content_desc = _this.closest('.tagintable');
+    var _info = _content_desc.find('span.info');
+    var data = _content_desc.data();
+    var value = _info.text();
+
+    if (_info.is("[contentEditable='true']")) {
+        _content_desc.removeClass('info_noclick');
+        _content_desc.find('.content_btnsave').toggleClass('newLink_active newLink_confirm').find('i').toggleClass('fa-thumbs-up fa-edit');
+        _info.prop('contenteditable',false).unbind();
+        if (data.old != value) {
+            var id_protocolo = _this.closest('tr').attr('id');
+                id_protocolo = (typeof id_protocolo !== 'undefined') ? parseInt(id_protocolo.replace('P','')) : false;
+            if (id_protocolo) {
+                _info.after('<i class="fas fa-check azulColor sucessEdit" style="margin-left:10px;"></i>');
+                updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', value, id_protocolo, function(){ 
+                    _content_desc.find('.sucessEdit').remove();
+                    _info.after('<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>');
+                    setTimeout(function(){ _content_desc.find('.sucessEdit').remove(); }, 2000);
+
+                });
+            }
+        }
+    } else {
+        _content_desc.addClass('info_noclick').data('old', value);
+        _info.prop('contenteditable',true).focus().on('keypress',function(e) {
+            if(e.which == 13) {
+                _content_desc.find('.content_btnsave').trigger('click');
+                _info.text(_info.text());
+            }
+        });
+        _content_desc.find('.content_btnsave').toggleClass('newLink_active newLink_confirm').find('i').toggleClass('fa-thumbs-up fa-edit');
+    }
+
+}
+function getSelectAtribuicaoProcesso(callback = false, iframe = false) {
+    var ifrArvore = iframe ? iframe : $('#ifrArvore');
     var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
         arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
     var href = jmespath.search(arrayLinksArvore, "[?name=='Atribuir Processo'].url");
@@ -1652,10 +2041,26 @@ function getSelectAtribuicaoProcesso(callback = false) {
         $.ajax({ url: href }).done(function (html) {
             var $html = $(html);
             var selectAtribuicao = $html.find('#selAtribuicao option').map(function(){ if($(this).text().trim() != '') { return {name: $(this).text().trim(), value: $(this).val()} } }).get();
+                setOptionsPro('arrayListUsersSEI',selectAtribuicao);
             if (selectAtribuicao.length && typeof callback === 'function') {
                 callback(selectAtribuicao);
             }
         });
+    }
+}
+function getListaAtribuicaoProcesso(iframe, mode) {
+    if (mode == 'processo' || mode == 'editor') {
+        getSelectAtribuicaoProcesso(function(html_result){
+            var select_result = $.map(html_result, function(v, i){
+                var username = (v.name.indexOf('-') !== -1) ? v.name.split('-')[0].trim() : false;
+                var name = (v.name.indexOf('-') !== -1) ? v.name.split('-')[1].trim() : false;
+                return {value: v.name, username: username, name: name};
+            });
+            var dadosProcessoPro = pullDadosProcessoSession();
+                dadosProcessoPro.listAtribuicaoProcesso = select_result;
+                // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+                setSessionProcessosPro(dadosProcessoPro); 
+        }, iframe);
     }
 }
 function getLinhaNumerada() {
@@ -1757,8 +2162,8 @@ function updateDadosArvore(nameLink, idElement, value, idProcedimento, callback 
     }
 }
 function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback) {
-    var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
-        arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
+    var arrayLinksArvore = (typeof ifrArvore[0] !== 'undefined') ? ifrArvore[0].contentWindow.arrayLinksArvore : false;
+        arrayLinksArvore = (typeof arrayLinksArvore === 'undefined' || !arrayLinksArvore) ? parent.linksArvore : arrayLinksArvore;
     if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
     var url = jmespath.search(arrayLinksArvore, "[?name=='"+nameLink+"'].url");
     if (typeof url !== 'undefined' && url != '') {
@@ -1898,7 +2303,13 @@ function getActionsOnSendProcess() {
                         '   <span style="margin: 0 10px;display: inline-block;">'+
                         '      <input type="checkbox" id="chkSinRemoverAtribuicao" name="chkSinRemoverAtribuicao" class="infraCheckbox" tabindex="0">'+
                         '     <label id="lblSinRemoverAtribuicao" for="chkSinRemoverAtribuicao" accesskey="" class="infraLabelCheckbox">Remover atribui\u00E7\u00E3o</label>'+
-                        '   </span>'
+                        '   </span>'+
+                        (verifyConfigValue('reaberturaprogramada') ? 
+                        '   <span style="margin: 0 10px;display: inline-block;">'+
+                        '      <input type="checkbox" onclick="parent.editDadosArvorePro_AcompEsp();" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'+
+                        '     <label id="lblSinReabrirProcesso" for="chkSinReabrirProcesso" accesskey="" class="infraLabelCheckbox">Reabrir processo em data certa</label>'+
+                        '   </span>'+
+                        '': '')+
                         '</span>';
     ifrVisualizacao.find('#divSinRemoveAttributes').remove();
     ifrVisualizacao.find('#divSinRemoverAnotacoes').append(htmlBoxActions);
@@ -1926,6 +2337,240 @@ function getAutomaticActions() {
                 parent.window.sendAutomaticActions === undefined;
             }
     }
+}
+function getListAcompanhamentoEspecial(force = false) {
+    var href = $(mainMenu).find('li a').map(function () { if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=acompanhamento_listar') !== -1) { return $(this).attr('href') } }).get().join();
+    if (href !== null) {
+        $.ajax({ url: href }).done(function (html) {
+            var $html = $(html);
+            var arrayAcompanhamento = $html.find('#frmAcompanhamentoLista #divInfraAreaTabela table tbody tr').map(function(){ 
+                    var _this = $(this);
+                    var _td = _this.find('td');
+                    var link = _td.eq(2).find('a[href*="procedimento_trabalhar"]');
+                    var id_protocolo = getParamsUrlPro(link.attr('href')).id_procedimento;
+                    var observacoes = _td.eq(6).text().trim();
+                    var config = (observacoes.indexOf('[') !== -1 && observacoes.indexOf(']') !== -1) ? observacoes.match(RegExp(/([^[]+(?=]))/, 'g')) : false;
+                        config = (config) ? JSON.parse('{'+config+'}') : false;
+                        observacoes = (observacoes.indexOf('[') !== -1 && observacoes.indexOf(']') !== -1) ? observacoes.split('[')[0].trim() : observacoes;
+                    if (typeof id_protocolo !== 'undefined') {
+                        return {
+                            id_protocolo: getParamsUrlPro(link.attr('href')).id_procedimento,
+                            url: link.attr('href'),
+                            processo: link.text().trim(),
+                            usuario: {name: _td.eq(3).find('a').attr('title'), user: _td.eq(3).find('a').text().trim() },
+                            data_hora: _td.eq(4).text().trim(),
+                            grupo: _td.eq(5).text().trim(),
+                            observacoes: observacoes,
+                            acoes: _td.eq(7).find('a').map(function(){ return $(this).attr('href') }).get(),
+                            icones: _td.eq(1).html(),
+                            config: config
+                        }
+                    }
+                }).get();
+            localStorageStorePro('dadosAcompanhamentoEspProcessoPro',arrayAcompanhamento);
+            setOptionsPro('lastcheck_AcompEsp',moment().format('YYYY-MM-DD HH:mm:ss'));
+            if (force) initNewBtnHome();
+
+            var listReabertura = checkReaberturaProcesso();
+            if (listReabertura && listReabertura.length) {
+                dialogReaberturaProcesso(listReabertura);
+            }
+        });
+    }
+}
+function checkDadosAcompEspecial(force = false) {
+    if (verifyConfigValue('reaberturaprogramada')) {
+        var lastCheck = getOptionsPro('lastcheck_AcompEsp');
+        if ( force ||
+                (
+                    verifyConfigValue('reaberturaprogramada_periodo') && 
+                    (
+                        (lastCheck && moment().add(-Math.abs(parseInt(getConfigValue('reaberturaprogramada_periodo'))), 'h') > moment(lastCheck, 'YYYY-MM-DD HH:mm:ss')) || 
+                        !lastCheck
+                    )
+                )
+            ) {
+            getListAcompanhamentoEspecial(force);
+            if (force) {
+                removeOptionsPro('hideDialogReaberturaProcesso');
+                if ($('body').hasClass('seiSlim')) {
+                    $('#divComandos .iconReaberturaPro').addClass('iconLoading');
+                } else {
+                    setIconLoadinBtnSEI($('.iconReaberturaPro'),true);
+                }
+            }
+        }
+    }
+}
+function goReaberturaProcesso(index = 0) {
+    var listReabertura = checkReaberturaProcesso();
+    var selectReabertura = $('#listReaberturaProcessos input[type="checkbox"]:checked').map(function(){ return $(this).val() }).get();
+    var id_protocolo = (listReabertura && typeof listReabertura[index] !== 'undefined') ? listReabertura[index].id_protocolo : false;
+    if (id_protocolo && $.inArray(id_protocolo, selectReabertura) !== -1){
+        var td = $('#listReaberturaProcessos tr[data-id="'+id_protocolo+'"] td').eq(2);
+            td.append('<i class="fas fa-spinner fa-spin azulColor" style="margin-left:10px;"></i>');
+
+        reopenProcessAjax(id_protocolo, function(){
+            var next = index+1;
+                goReaberturaProcesso(next);
+
+                td.find('.sucessEdit').remove();
+                td.append('<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>');
+                setTimeout(function(){ td.find('.sucessEdit').remove(); }, 2000);
+
+            if (next == listReabertura.length) {
+                alertaBoxPro('Sucess', 'check-circle', (listReabertura.length > 1 ? 'Processos reabertos': 'Processo reaberto')+' com sucesso!', function(){ window.location.reload() });
+                loadingButtonConfirm(false);
+            }
+            console.log(listReabertura[index], next, listReabertura.length);
+        });
+    } else if (index == 0) {
+        alertaBoxPro('Error', 'exclamation-triangle', 'Nenhum processo dispon\u00EDvel para abertura.');
+        loadingButtonConfirm(false);
+    }
+}
+function dialogReaberturaProcesso(listReabertura) {
+    var hideDialog = getOptionsPro('hideDialogReaberturaProcesso');
+    if (!hideDialog || (hideDialog && moment() > moment(hideDialog, 'YYYY-MM-DD HH:mm:ss').add(1, 'd')) ) {
+        var listaProcessoUnidade = getOptionsPro('listaProcessoUnidade');
+        var htmlBox =   '<div id="listReaberturaProcessos" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
+                        '   <table id="reaberturaTablePro" style="margin-top: 35px; font-size: 8pt !important;width: 100%;" class="seiProForm tableAtividades tableDialog tableInfo tableZebra">'+
+                        '        <thead>'+
+                        '            <tr class="tableHeader" onmouseout="infraTooltipOcultar();">'+
+                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
+                        '                <th class="tituloControle" style="text-align: center; width: 180px;">Processo</th>'+
+                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Observa\u00E7\u00F5es</th>'+
+                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Reabertura</th>'+
+                        '            </tr>'+
+                        '        </thead>'+
+                        '        <tbody>';
+
+            if (listReabertura){
+                $.each(listReabertura, function(i, v){
+                    if (listaProcessoUnidade && $.inArray(v.processo, listaProcessoUnidade) == -1 && moment() >= moment(v.reabertura, 'DD/MM/YYYY HH:mm')) {
+                        htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo" data-id="'+v.id_protocolo+'">'+
+                                    '       <td style="text-align: center;">'+
+                                    '           <input type="checkbox" onclick="followSelecionarItens(this)" name="actionsPro" value="'+v.id_protocolo+'">'+
+                                    '       </td>'+
+                                    '       <td>'+
+                                    '           <a style="margin-left: 5px;" href="'+url_host+'?acao=procedimento_trabalhar&id_procedimento='+v.id_protocolo+'" target="_blank">'+
+                                    '               <span class="bLink">'+
+                                    '                   '+v.processo+
+                                    '                   <i class="fas fa-external-link-alt bLink" style="font-size: 90%; text-decoration: underline;"></i>'+
+                                    '               </span>'+
+                                    '           </a>'+
+                                    '       </td>'+
+                                    '       <td>'+v.observacoes+'</td>'+
+                                    '       <td data-time-sorter="'+v.reabertura+'">'+v.reabertura+'<td>'+
+                                    '   </tr>';
+                    }
+                });
+            }
+            htmlBox +=          '   </table>'+
+                                '</div>';
+        
+            resetDialogBoxPro('alertBoxPro');
+            alertBoxPro = $('#alertaBoxPro')
+                .html('<div>'+htmlBox+'</div>')
+                .dialog({
+                    title: "Reabertura Programada de Processos",
+                    width: 980,
+                    open: function(){
+                        $('#reaberturaTablePro a#lnkInfraCheck').trigger('click');
+                    },
+                    buttons: [{
+                        text: "Ocultar hoje",
+                        click: function() {
+                            setOptionsPro('hideDialogReaberturaProcesso', moment().format('YYYY-MM-DD HH:mm:ss'));
+                            resetDialogBoxPro('alertBoxPro');
+                        }
+                    },{
+                        text: "Reabrir",
+                        class: 'confirm ui-state-active',
+                        click: function() {
+                            goReaberturaProcesso();
+                            loadingButtonConfirm(true);
+                        }
+                    }]
+            });
+    }
+}
+function checkReaberturaProcesso() {
+    var listaProcessoUnidade = getOptionsPro('listaProcessoUnidade');
+    var arrayAcompanhamento = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+    var configAcompEsp = (arrayAcompanhamento !== null) ? jmespath.search(arrayAcompanhamento, "[?config]") : false;
+    if (configAcompEsp && configAcompEsp !== null && configAcompEsp.length > 0) {
+        var reabertura = $.map(configAcompEsp,function(v){
+            if (v.config.hasOwnProperty('Reabertura') && listaProcessoUnidade && $.inArray(v.processo, listaProcessoUnidade) == -1 && moment() >= moment(v.config.Reabertura, 'DD/MM/YYYY HH:mm')) {
+                return {
+                    id_protocolo: v.id_protocolo,
+                    processo: v.processo,
+                    observacoes: v.observacoes,
+                    reabertura: v.config.Reabertura
+                };
+            }
+        });
+        return (reabertura.length) ? reabertura : false;
+    }
+    return false;
+}
+function reopenProcessAjax(id_procedimento, callback = false) {
+    var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(id_procedimento);
+    if (href !== null) {
+        $.ajax({ url: href }).done(function (html) {
+            var $html = $(html);
+            var urlArvore = $html.find("#ifrArvore").attr('src');
+            $.ajax({ url: urlArvore }).done(function (htmlArvore) {
+                var urlVisualizacao = $.map(htmlArvore.split('\n'), function(substr, i) {
+                        return (substr.indexOf('?acao=arvore_visualizar&acao_origem=procedimento_visualizar&id_procedimento='+id_procedimento+'&infra_sistema=') !== -1) ? substr : null;
+                    }).join('');
+                    urlVisualizacao = (urlVisualizacao.indexOf('new infraArvoreNo("PROCESSO"') !== -1) ? urlVisualizacao.split('"')[5] : false;
+                    if(urlVisualizacao) {
+                        $.ajax({ url: urlVisualizacao }).done(function (htmlVisualizacao) {
+                            var urlReabertura = $.map(htmlVisualizacao.split('\n'), function(substr, i) {
+                                    return (substr.indexOf('?acao=procedimento_reabrir') !== -1) ? substr : null;
+                                }).join('');
+                            urlReabertura = (urlReabertura != '') ? urlReabertura.split("'")[1] : false;
+                            console.log(urlReabertura);
+                            if (urlReabertura) {
+                                $.ajax({ url: urlReabertura }).done(function (htmlReabertura) {
+                                    if (typeof callback === 'function') {
+                                        callback();
+                                    } else {
+                                        alertaBoxPro('Sucess', 'check-circle', 'Processo reaberto com sucesso!');
+                                    }
+                                });
+                            } else { alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao reabrir o processo.') }
+                        });
+                    } else { alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao reabrir o processo.') }
+            });
+        });
+    } else { alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao reabrir o processo.') }
+}
+function configDatesSwitchChangeReabertura(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest('.ui-dialog');
+    if (_this.is(':checked')) {
+        _parent.find('.configDates_setreopen').show();
+        _this.closest('tr').find('.iconSwitch').addClass('azulColor');
+    } else {
+        _parent.find('.configDates_setreopen').hide();
+        _this.closest('tr').find('.iconSwitch').removeClass('azulColor');
+    }
+}
+function getListaGruposAcompEsp(html) {
+    var indexSelected = 0;
+    var selectGroup = html.find('#selGrupoAcompanhamento').find('option').map(function(i, v){ 
+                        if ($(this).is(':selected')) indexSelected = i-1;
+                        if ($(this).text().trim() != '') { 
+                            return {name: $(this).text().trim(), value: $(this).val() } 
+                        } 
+                    }).get();
+        if (selectGroup.length > 0) {
+            setOptionsPro('listaGruposAcompEsp',selectGroup);
+            setOptionsPro('listaGruposAcompEsp_unidade',$('#selInfraUnidades').val());
+        }
+    return {array: selectGroup, indexSelected: indexSelected};
 }
 // INICIA O REDIMENSIONAMENTO AUTOMATICO DE IMAGENS NO VISUALIZADOR DE DOCUMENTOS
 function initDocImagemPro() {
@@ -2185,7 +2830,7 @@ function initDocVideoPro() {
 function insertIconNewTab() {
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
     var ifrArvore = $('#ifrArvore');
-    var arrayLinksArvoreAll = ifrArvore[0].contentWindow.arrayLinksArvoreAll;
+    var arrayLinksArvoreAll = (typeof ifrArvore[0] !== 'undefined') ? ifrArvore[0].contentWindow.arrayLinksArvoreAll : [];
     var docSelected = ifrArvore.contents().find('.infraArvoreNoSelecionado');
     var id_documento = getParamsUrlPro(docSelected.closest('a').attr('href')).id_documento;
     
@@ -2276,19 +2921,25 @@ function formControlerAlterarProcesso(ifrVisualizacao) {
         var _this = $(this);
         var _parent = _this.closest('body');
         var oldText = _parent.find('#txtDescricao').attr('data-oldtext');
+        var newTipoProc = _parent.find('#selTipoProcedimento').val();
+        var newNameTipoProc = _parent.find('#selTipoProcedimento option:selected').text();
         var newText = _parent.find('#txtDescricao').val();
         var checkAddUrgencia = (typeof oldText !== 'undefined' && oldText.toLowerCase().indexOf('(urgente)') === -1 && typeof newText !== 'undefined' && newText.toLowerCase().indexOf('(urgente)') !== -1 ) ? true : false;
         var checkRemoveUrgencia = (typeof oldText !== 'undefined' && oldText.toLowerCase().indexOf('(urgente)') !== -1 && typeof newText !== 'undefined' && newText.toLowerCase().indexOf('(urgente)') === -1 ) ? true : false;
         var methodSend = checkAddUrgencia ? 'add' : false;
             methodSend = checkRemoveUrgencia ? 'remove' : methodSend;
         var checkSend = (checkAddUrgencia || checkRemoveUrgencia) ? true : false;
-        if ($('#ifrVisualizacao')[0].contentWindow.OnSubmitForm()) {
+        if (typeof $('#ifrVisualizacao')[0].contentWindow.OnSubmitForm !== 'undefined' && $('#ifrVisualizacao')[0].contentWindow.OnSubmitForm()) {
             if (typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso === 'undefined' && typeof getDadosProcessoSession() !== 'undefined' && getDadosProcessoSession().propProcesso !== 'undefined' ) {
                 dadosProcessoPro.propProcesso = getDadosProcessoSession().propProcesso;
             }
 
             if (typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.txtDescricao !== 'undefined') {
                 dadosProcessoPro.propProcesso.txtDescricao = newText;
+                dadosProcessoPro.propProcesso.selTipoProcedimento = newTipoProc;
+                dadosProcessoPro.propProcesso.hdnIdTipoProcedimento = newTipoProc;
+                dadosProcessoPro.propProcesso.hdnNomeTipoProcedimento = newNameTipoProc;
+                // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
                 setSessionProcessosPro(dadosProcessoPro);
             }
             
@@ -2378,15 +3029,15 @@ function followSelecionarItens(this_) {
 }
 function waitLoadPro(Obj, ElemRaiz, Elem, func, TimeOut = 6000) {
   if (TimeOut <= 0) { 
-      //console.log("Script não executado: TIMEOUT"); 
+    //   console.log("Script não executado: TIMEOUT"); 
       return; 
   }
   setTimeout(function () {
     if (Obj.find(ElemRaiz).find(Elem).length == 0) {
-      //console.log(ElemRaiz + ": find -> " + Elem + " : carregando...");
+    //   console.log(ElemRaiz + ": find -> " + Elem + " : carregando...");
       waitLoadPro(Obj, ElemRaiz, Elem, func, TimeOut - 100);
     } else {
-      //console.log(ElemRaiz + " : Script executado.");
+    //   console.log(ElemRaiz + " : Script executado.");
       func();
     }
   }, 100);
@@ -2412,7 +3063,7 @@ function execArvorePro(func) {
     //   console.log(idPasta + " -> evento click adicionado.");
       Obj.find("#ancjoin" + idPasta).on('click', function () {
         waitLoadPro(Obj, "#div" + idPasta, "a[target='ifrVisualizacao']", func);
-        // console.log(idPasta + " -> evento click adicionado2.");
+        // console.log(idPasta + " -> evento click adicionado2."); 
         $('#ifrArvore')[0].contentWindow.getLinksArvorePasta(idPasta);
         $(this).off("click");
       });
@@ -2429,7 +3080,7 @@ function arrayIDProcedimentos() {
 }
 function setArrayIDProcedimentos(newArray) {
     localStorageStorePro('arrayIDProcedimentos', newArray);
-    if(typeof newArray !== 'undefined' && newArray.length > 0) { console.log('setArrayIDProcedimentos', 'count->'+newArray.length, 'time->'+totalSecondsTestText) }
+    if(typeof newArray !== 'undefined' && newArray.length > 0) { console.log('setArrayIDProcedimentos', '->', window.name, '->', 'count->'+newArray.length, 'time->'+totalSecondsTestText) }
     parent.updateCountnewFiltro(newArray);
 }
 function updateCountnewFiltro(newArray) {
@@ -2489,12 +3140,18 @@ function initCheckDadosProcesso() {
 }
 function initCheckDadosProcedimentos() {   
     var acao_pro = getParamsUrlPro(window.location.href).acao_pro;
-    
+
     if (typeof acao_pro === 'undefined' && arrayIDProcedimentos().length > 0) {
         if (!getOptionsPro('newTabSearchProcedimentos')) {
             if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
             var href = window.location.href+'#&acao_pro=pesquisa_agrupamento';
-            $('#frmCheckerProcessoPro').attr('src', href).unbind();
+            $('#frmCheckerProcessoPro').attr('src', href).unbind().on('load', function(){
+                if (isNewSEI) {
+                    this.contentWindow.statusPesquisaDadosProcedimentos = true;
+                    this.contentWindow.initCheckDadosProcedimentos();
+                    $(this).unbind();
+                }
+            });
         } else {
             observeNewTabDados();
         }
@@ -2544,7 +3201,7 @@ function updateProcessGroupTable() {
     }
 }
 function setProcessGroupTable() {
-    var progressoBar =  '<div id="newFiltroProgress" style="display: inline-block;position: absolute;margin: 50px 0 0 0; z-index: 99; width: '+($('#selectGroupTablePro').width()+50)+'px">'+
+    var progressoBar =  '<div id="newFiltroProgress" style="display: inline-block;position: absolute;margin: 50px 0 0 0; z-index: 99; width: '+($('#selectGroupTablePro').width()+50)+'px;right: 220px;">'+
                         '    <span id="newFiltroCounter" class="azulColor" style="float: left;margin: -4px 8px 0 0; color: #777"></span>'+
                         '    <i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: -4px 8px 0 0;"></i>'+
                         '    <i id="newFiltroCancel" onclick="breakDadosProcedimentosControlar()" class="fas fa-times-circle cinzaColor" style="float: right;margin: -4px;padding-left: 10px;cursor: pointer;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Cancelar pesquisa\')"></i>'+
@@ -2628,34 +3285,64 @@ function getDadosHistoricoPro(listProc, fullHistory = false, callback = false) {
             var urlArvore = $html.find("#ifrArvore").attr('src');
             //loopIDProcedimentos();
             $.ajax({ url: urlArvore }).done(function (htmlArvore) {
+                var acompanhamentoEsp = getLinksAcompanhamento(htmlArvore);
                 var urlHistorico = $.map(htmlArvore.split('\n'), function(substr, i) {
                         return (substr.indexOf('?acao=procedimento_consultar_historico') !== -1) ? substr : null;
                     }).join('');
                     urlHistorico = urlHistorico.split("'")[3];
-                    getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory, callback);
+                    getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory, callback, acompanhamentoEsp);
             });
         });
     }
 }
-function getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory = false, callback = false) {
+function getLinksArvoreAjax(htmlArvore) {
+    var links = [];
+    if (htmlArvore.indexOf('Nos[0].acoes = ') !== -1) {
+        $.each(htmlArvore.split('\n'), function(ind, val){
+            if (val.indexOf('Nos[0].acoes = ') !== -1) {
+                var barraControle = val.trim().replace("Nos[0].acoes = '",'').slice(0,-2);
+                $('<div>'+barraControle+'</div>').find('a.botaoSEI').each(function(){ 
+                    if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href') != '#') { 
+                        links.push({name: $(this).find('img').attr('title'), url: $(this).attr('href')}); 
+                    }
+                });
+            }
+        });
+    }
+    return links;
+}
+function getLinksAcompanhamento(htmlArvore) {
+    var _return = '';
+    if (htmlArvore.indexOf('NosAcoes[0] = new infraArvoreAcao("ACOMPANHAMENTO"') !== -1) {
+        $.each(htmlArvore.split('\n'), function(ind, val){
+            if (val.indexOf('NosAcoes[0] = new infraArvoreAcao("ACOMPANHAMENTO"') !== -1) {
+                var param = val.trim().replace("NosAcoes[0] = new infraArvoreAcao(",'').slice(0,-2);
+                    param = param.split('"');
+                _return = param[11].split('\\n')[1];
+            }
+        });
+    }
+    return _return;
+}
+function getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory = false, callback = false, acompanhamentoEsp = '') {
     $.ajax({ url: urlHistorico }).done(function (htmlHistorico) {
         if($(htmlHistorico).find('.infraAreaPaginacao').html().trim() != '') {
             var pg = ($(htmlHistorico).find('#selInfraPaginacaoSuperior').length > 0) ? $(htmlHistorico).find('#selInfraPaginacaoSuperior option').length-1 : 1;
             if (fullHistory) {
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, pg, fullHistory, callback);
+                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, pg, fullHistory, callback, acompanhamentoEsp);
             } else {
                 andamentoPaginacaoTemp = getArrayHistorico($(htmlHistorico));
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 1, pg, fullHistory, callback);
+                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 1, pg, fullHistory, callback, acompanhamentoEsp);
             }
         } else {
             if (fullHistory) {
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, 1, fullHistory, callback);
+                getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, 1, fullHistory, callback, acompanhamentoEsp);
             } else {
                 var andamento = getArrayHistorico($(htmlHistorico));
                 var listAndamento = {historico_completo: false, processo: listProc.processo, id_procedimento: listProc.id_procedimento, andamento: andamento};
                 if (!callback) {
                     loopIDProcedimentos();
-                    getDataRecebimentoPro(listAndamento);
+                    getDataRecebimentoPro(listAndamento, listProc, acompanhamentoEsp);
                 } else if (typeof callback === 'function') {
                     callback(listAndamento);
                 }
@@ -2682,12 +3369,12 @@ function getArrayHistorico(htmlHistorico) {
     });
     return andamento;
 }
-function getDadosHistoricoPaginacao(html, listProc, index, max, fullHistory = false, callback = false) {
+function getDadosHistoricoPaginacao(html, listProc, index, max, fullHistory = false, callback = false, acompanhamentoEsp = '') {
     if (index > max) {
         var listAndamento = {historico_completo: false, processo: listProc.processo, id_procedimento: listProc.id_procedimento, andamento: andamentoPaginacaoTemp};
         if (!callback) {
             loopIDProcedimentos();
-            getDataRecebimentoPro(listAndamento);
+            getDataRecebimentoPro(listAndamento, false, acompanhamentoEsp);
         } else if (typeof callback === 'function') {
             callback(listAndamento);
         }
@@ -2711,7 +3398,7 @@ function getDadosHistoricoPaginacao(html, listProc, index, max, fullHistory = fa
         }).done(function (htmlHistorico) {
             var andamento = getArrayHistorico($(htmlHistorico));
                 $.merge(andamentoPaginacaoTemp, andamento);
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, index+1, max, fullHistory, callback);
+                getDadosHistoricoPaginacao($(htmlHistorico), listProc, index+1, max, fullHistory, callback, acompanhamentoEsp);
         });
     }
 }
@@ -2767,6 +3454,50 @@ function getTablePaginacao(ifrView, formID, tableID, index) {
         }
     }
 }
+function initBlocoProcessoHistorico() {
+    var listHistoryProc = getDadosProcessoSession();
+        listHistoryProc = listHistoryProc && typeof listHistoryProc.listAndamento !== 'undefined' ? listHistoryProc.listAndamento : dadosProcessoPro.listAndamento;
+
+        if (typeof listHistoryProc !== 'undefined' && typeof listHistoryProc.historico_completo !== 'undefined' && listHistoryProc.historico_completo) {
+            return getBlocoProcessoHistorico();
+        } else if (!delayCrash) {
+            delayCrash = true;
+            setTimeout(function(){ delayCrash = false }, 6000);
+            mergeAllAndamentosProcesso(function() { 
+                getBlocoProcessoHistorico();
+                if ($('#ifrArvore').contents().find('.panelDadosArvorePro[data-type="bloco_interno"]').length == 0) {
+                    $('#ifrArvore')[0].contentWindow.setDadosProcessoArvore();
+                }
+            });
+            return false;
+        }
+}
+function getBlocoProcessoHistorico() {
+    var listHistoryProc = getDadosProcessoSession();
+        listHistoryProc = listHistoryProc && typeof listHistoryProc.listAndamento !== 'undefined'  ? listHistoryProc.listAndamento : dadosProcessoPro.listAndamento;
+    var retiradoBlocoProcesso = (typeof listHistoryProc !== 'undefined' && typeof listHistoryProc.andamento !== 'undefined' && listHistoryProc.andamento.length) ? jmespath.search(listHistoryProc.andamento, "[?unidade=='"+unidade+"'] | [?contains(descricao, 'Processo retirado do bloco')]") : null;
+        retiradoBlocoProcesso = retiradoBlocoProcesso !== null && retiradoBlocoProcesso.length ? retiradoBlocoProcesso : false;
+    var blocoProcesso = (typeof listHistoryProc !== 'undefined' && typeof listHistoryProc.andamento !== 'undefined' && listHistoryProc.andamento.length) ? jmespath.search(listHistoryProc.andamento, "[?unidade=='"+unidade+"'] | [?contains(descricao, 'Processo inserido no bloco')]") : null;
+        blocoProcesso = blocoProcesso === null ? false : blocoProcesso;
+        blocoProcesso = !retiradoBlocoProcesso
+                    ? blocoProcesso 
+                    : blocoProcesso && blocoProcesso.length > 0 && moment(blocoProcesso[0].datahora,'YYYY-MM-DD HH:mm') >= moment(retiradoBlocoProcesso[0].datahora,'YYYY-MM-DD HH:mm') ? blocoProcesso : false;
+
+        // console.log('getBlocoProcessoHistorico',blocoProcesso, retiradoBlocoProcesso);
+
+    if (typeof blocoProcesso !== 'undefined' && blocoProcesso !== null && blocoProcesso.length > 0) {
+        setTimeout(function(){
+            var ifrVisualizacao = $('#ifrVisualizacao').contents();
+                ifrVisualizacao.find('a[onclick*="incluirEmBloco"]').addClass('verdeColor').attr('onmouseover', 'return infraTooltipMostrar(\''+blocoProcesso[0].descricao+'\')');
+                $('#ifrArvore').contents().find('.panelDadosArvorePro[data-type*="bloco_interno"] .infoDadosArvore_bloco_interno').text(blocoProcesso[0].descricao);
+        }, 1500);
+    } else if (typeof blocoProcesso !== 'undefined' && blocoProcesso !== null && blocoProcesso.length == 0) {
+        setTimeout(function(){
+            $('#ifrArvore').contents().find('.panelDadosArvorePro[data-type="bloco_interno_loading"] .infoDadosArvore_bloco_interno').text('Nenhum bloco localizado');
+        }, 1500);
+    }
+    return blocoProcesso;
+}
 function initGanttHistoryProc() {
     alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Pesquisando hist\u00F3rico do processo');
     var listHistoryProc = getDadosProcessoSession();
@@ -2780,6 +3511,7 @@ function initGanttHistoryProc() {
 }
 function getGanttHistoryProc(listHistoryProc = false) {
     if (!listHistoryProc) {
+        // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
         setSessionProcessosPro(dadosProcessoPro);
     }
     var proc = listHistoryProc ? listHistoryProc.andamento : dadosProcessoPro.listAndamento.andamento;
@@ -3090,6 +3822,9 @@ function setPanelResize(element, name) {
     if (getOptionsPro('panelHeight_'+name) != '') {
         $(element).css('height',getOptionsPro('panelHeight_'+name)+'px');
     }
+    if (isNewSEI && $('#divRecebidosAreaPaginacaoInferior').is(':visible')) {
+        $(element).find('.ui-resizable-handle.ui-resizable-s').css('bottom','-30px');
+    }
     $(element)
         .find('.ui-resizable-handle.ui-resizable-s')
         .dblclick(function() {
@@ -3261,25 +3996,27 @@ function selectIconEtiqueta(this_, tagName, mode) {
                 : $('.kanbanAtividade, .atividadeInfo')
             : $('.tableFavoritos tbody');
         table = ($('#ifrVisualizacao').contents().find('.favoritosLabelOptions').length > 0) ? $('#ifrVisualizacao').contents().find('.favoritosLabelOptions table') : table;
+        table = (mode == 'options') ? $('#dialogBoxPro') : table;
     var icon = $(this_).find('.iconListTxt').text();
     var value = table.find('.tag_text.tagTableText_'+tagName).data('colortag');
-    table.find('.tag_text.tagTableText_'+tagName).data('icontag', icon).find('i.tagicon').attr('class', 'fas fa-'+icon);
-    table.find('.tag.tagTableText_'+tagName).data('icontag', icon).find('i.tagFavEditIcon').data('icontag', icon).attr('class', 'tagFavEditIcon fas fa-'+icon);
+    table.find('.tag_text.tagTableText_'+tagName).attr('data-icontag', icon).data('icontag', icon).find('i.tagicon').attr('class', 'fas fa-'+icon);
+    table.find('.tag.tagTableText_'+tagName).attr('data-icontag', icon).data('icontag', icon).find('i.tagFavEditIcon').attr('data-icontag', icon).data('icontag', icon).attr('class', 'tagFavEditIcon fas fa-'+icon);
     resetDialogBoxPro('alertBoxPro');
     $('#listIconsFontAwesome').remove();
-    saveConfigEtiqueta(tagName, value, icon, mode);
+    if (mode != 'options') saveConfigEtiqueta(tagName, value, icon, mode);
 }
 function changeColorEtiqueta(this_, mode) {
     var value = $(this_).val();
     var textColour = (getBrightnessColor(value) > 125) ? 'black' : 'white';
-    var tagNamed = removeAcentos($(this_).closest('.tag').find('.tag-text').text()).replace(/\ /g, '').toLowerCase();
+    var tagNamed = (mode == 'options') ? 'afastamento' : removeAcentos($(this_).closest('.tag').find('.tag-text').text()).replace(/\ /g, '').toLowerCase();
     var tagName = 'tagTableText_'+tagNamed;
     var index = parseInt($(this_).closest('tr').data('index'));
     var icon = $(this_).closest('.tag').find('.tagFavEditIcon').data('icontag');
-        $(this_).closest('tbody').find('.'+tagName).data('colortag',value).css({'background-color': value, 'color': textColour}).find('.tag-text').css('color', textColour).find('.tagicon').css('color', textColour);
-        $(this_).closest('tbody').find('.'+tagName).find('.tagicon').css('color', textColour);
-        $(this_).closest('tbody').find('.'+tagName+' .tagFavAddColorInput').val(value);
-        saveConfigEtiqueta(tagNamed, value, icon, mode);
+    var table = (mode == 'options') ? $(this_).closest('.seiProForm') : $(this_).closest('tbody');
+        table.find('.'+tagName).attr('data-colortag',value).attr('data-textcolor',textColour).data('colortag',value).data('textcolor',textColour).css({'background-color': value, 'color': textColour}).find('.tag-text').css('color', textColour).find('.tagicon').css('color', textColour);
+        table.find('.'+tagName).find('.tagicon').css('color', textColour);
+        table.find('.'+tagName+' .tagFavAddColorInput').val(value);
+        if (mode != 'options') saveConfigEtiqueta(tagNamed, value, icon, mode);
 }
 function saveConfigEtiqueta(name, value, icon, mode) {
     var storeEtiqueta = (mode == 'ativ') 
@@ -3611,10 +4348,10 @@ function configFlashMenuTrPro(value, color, state, mode) {
             '        </tr>';
 }
 function configFlashMenuPro(arrayLinksArvore) { 
-    var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? localStorageRestorePro('configViewFlashMenuPro') : [['Incluir Documento'],['Consultar/Alterar Processo'],['Enviar Documento Externo'],['Atribuir Processo']];
+    var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? localStorageRestorePro('configViewFlashMenuPro') : [['Incluir Documento'],['Consultar/Alterar Processo'],['Enviar Documento Externo'],['Atribuir Processo'],['Add/Remover Urg\u00EAncia']];
     var selectedItensDocMenu = ( typeof localStorageRestorePro('configViewFlashDocMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocMenuPro')) ) ? localStorageRestorePro('configViewFlashDocMenuPro') : [['Copiar n\u00FAmero SEI'],['Copiar nome do documento'],['Copiar link do documento']];
     var selectedItensDocArvore = ( typeof localStorageRestorePro('configViewFlashDocArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocArvorePro')) ) ? localStorageRestorePro('configViewFlashDocArvorePro') : [["Copiar n\u00FAmero SEI"],["Copiar link do documento"],["Duplicar documento"]];
-    var selectedItensPanelArvore = ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) ) ? localStorageRestorePro('configViewFlashPanelArvorePro') : [["Anota\u00E7\u00F5es"],["Marcador"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
+    var selectedItensPanelArvore = ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) ) ? localStorageRestorePro('configViewFlashPanelArvorePro') : [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
 
     var textBox =   '<div id="flashMenu_tabs" style="border: none; min-height: 300px; margin: 0;">'+
                     '   <ul style="font-size: 10px;">'+
@@ -3828,6 +4565,24 @@ function changeFlashMenuPro(this_, mode) {
     console.log(configView, arrayShowItensMenu);
     localStorageStorePro(configView, arrayShowItensMenu);
 }
+function addUrgenteProcessoPro() {
+    var id_procedimento = dadosProcessoPro.propProcesso.hdnIdProcedimento;
+    var new_text = dadosProcessoPro.propProcesso.txtDescricao;
+        new_text = typeof new_text !== 'undefined' && new_text.toLowerCase().indexOf('(urgente)') === -1 
+                        ? new_text+' (URGENTE)' 
+                        : (typeof new_text !== 'undefined' && new_text.toLowerCase().indexOf('(urgente)') !== -1) ? new_text.replace(/\(urgente\)/ig,'').trim() : false; 
+    var checkUrgencia = typeof new_text !== 'undefined' && new_text && new_text.toLowerCase().indexOf('(urgente)') !== -1 ? true : false;
+    var modeUrgencia = checkUrgencia ? 'Adicionada' : 'Removida';
+    var txtUrgencia = modeUrgencia+' marca de urg\u00EAncia no processo';
+
+    updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', new_text, id_procedimento, function(){ 
+        dadosProcessoPro.propProcesso.txtDescricao = new_text;
+        // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+        setSessionProcessosPro(dadosProcessoPro);
+        resetDialogBoxPro('dialogBoxPro');
+        alertaBoxPro('Sucess', 'check-circle', txtUrgencia); 
+    });
+}
 function dialogCopyNewDoc(doc) {
     var textBox =   '<div>Digite o n\u00FAmero do processo que deseja copiar o documento <span style="display: inline-block; padding: 3px 5px; margin: 3px 5px;background: #eaeaea; border-radius: 5px; color: #666;">'+doc.text().trim()+'</span></div>'+
                     '<div class="dialogBoxDiv seiProForm">'+
@@ -3880,6 +4635,13 @@ function verifyConfigValue(name) {
         return true;
     } else {
         return false;
+    }
+}
+function restrictConfigValue(name) {
+    if (NAMESPACE_SPRO == 'ANTAQ Pro' || NAMESPACE_SPRO == 'ANTT Pro' || NAMESPACE_SPRO == 'SEI Pro') {
+        return false;
+    } else {
+        return checkConfigValue(name);
     }
 }
 function checkConfigValue(name) {
@@ -4188,7 +4950,7 @@ function confirmaBoxPro(text, func, titBtn = 'OK', cancel) {
             }]
         });
 }
-function alertaBoxPro(status, icon, text) {
+function alertaBoxPro(status, icon, text, func_ok = false) {
     resetDialogBoxPro('alertBoxPro');
     alertBoxPro = $('#alertaBoxPro')
         .html('<strong class="alerta'+status+'Pro dialogBoxDiv"><i class="fas fa-'+icon+'" style="margin-right: 5px;"></i> '+text+'</strong>')
@@ -4204,6 +4966,7 @@ function alertaBoxPro(status, icon, text) {
                 class: "confirm",
                 click: function() {
                     $(this).dialog('close');
+                    if (typeof func_ok === 'function') func_ok();
                 }
             }]
         });
@@ -4270,6 +5033,17 @@ function toggleTablePro(idTable, mode) {
 		$('#'+elemTable+'_showIcon').hide();
         setOptionsPro(elemTable, 'show');
 	}
+}
+function toogleByID(this_) {
+    var _this = $(this_);
+    var _ref = _this.data('ref');
+    var elem = $('#'+_ref);
+    if (elem.is(':visible')) {
+        elem.hide();
+    } else {
+        elem.show();
+    }
+
 }
 function getColorID() {
 	var colorID = {
@@ -4683,7 +5457,7 @@ function encodeJSON_toHex(str){
     return result
 }
 function unicodeToChar(text) {
-    if (text != '') {
+    if (typeof text !== 'undefined' && text !== null && text != '') {
         return text.replace(/\\u[\dA-F]{4}/gi, 
             function (match) {
                     return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16));
@@ -4693,7 +5467,16 @@ function unicodeToChar(text) {
     }
  }
 function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+    // return string.charAt(0).toUpperCase() + string.slice(1);        string = string.toLowerCase();
+    var excetWords = ['a', 'à', 'algo', 'alguém', 'algum', 'alguma', 'algumas', 'alguns', 'ao', 'aos', 'aquela', 'aquelas', 'aquele', 'aqueles', 'aquilo', 'as', 'às', 'cada', 'certa', 'certas', 'certo', 'certos', 'com', 'comigo', 'como', 'conosco', 'consigo', 'contigo', 'convosco', 'cuja', 'cujas', 'cujo', 'cujos', 'da', 'das', 'de', 'dessa', 'dessas', 'desse', 'desses', 'desta', 'destas', 'do', 'dos', 'dum', 'duma', 'dumas', 'duns', 'e', 'é', 'ela', 'elas', 'ele', 'eles', 'em', 'entre', 'essa', 'essas', 'esse', 'esses', 'esta', 'estas', 'este', 'estes', 'eu', 'isso', 'isto', 'la', 'las', 'lhe', 'lhes', 'lo', 'los', 'me', 'mesma', 'mesmas', 'mesmo', 'mesmos', 'meu', 'meus', 'mim', 'minha', 'minhas', 'muita', 'muitas', 'muito', 'muitos', 'na', 'nada', 'não', 'nas', 'nenhum', 'nenhuma', 'nenhumas', 'nenhuns', 'ninguém', 'no', 'nos', 'nós', 'nossa', 'nossas', 'nosso', 'nossos', 'num', 'numa', 'numas', 'nuns', 'o', 'onde', 'os', 'ou', 'outra', 'outras', 'outrem', 'outro', 'outros', 'para', 'pela', 'pelas', 'pelo', 'por', 'pouca', 'poucas', 'pouco', 'poucos', 'quais', 'quaisquer', 'qual', 'qualquer', 'quando', 'quanta', 'quantas', 'quanto', 'quantos', 'que', 'quem', 'são', 'se', 'seja', 'sem', 'seu', 'seus', 'si', 'sob', 'sobre', 'sua', 'suas', 'tanta', 'tantas', 'tanto', 'tantos', 'te', 'teu', 'teus', 'ti', 'toda', 'todas', 'todo', 'todos', 'tu', 'tua', 'tuas', 'tudo', 'um', 'uma', 'umas', 'uns', 'vária', 'várias', 'vário', 'vários', 'você', 'vocês', 'vos', 'vós', 'vossa', 'vossas', 'vosso', 'vossos']
+    var _return = ( string.indexOf(' ') === -1 ) ? string[0].toUpperCase() + string.substring(1).toLowerCase() : string.split(' ').map((s, index) => {
+            if (excetWords.includes(s.toLowerCase()) && index != 0 ) {
+                return s.toLowerCase()
+            } else {
+                return s[0].toUpperCase() + s.substring(1).toLowerCase()
+            }
+        }).join(' ');
+    return _return;
 }
 function randomString(length) {
     var result = '';
@@ -4742,6 +5525,18 @@ function getProcessoUnidadePro(selected = false, obj = false) {
         return getOptionsPro('listaProcessoUnidade');
     }
 }
+function initListTypesSEI(callback = false, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof arrayListTypesSEI.selectTipoProc !== 'undefined' ) { 
+        if (typeof callback === 'function') callback();
+    } else {
+        setTimeout(function(){ 
+            if (TimeOut == 9000) getListTypesSEI();
+            initListTypesSEI(callback, TimeOut - 100); 
+            console.log('Reload initListTypesSEI'); 
+        }, 500);
+    }
+}
 function getListTypesSEI() {
     var hrefConsulta = $(mainMenu).find('a[href*="protocolo_pesquisa"]').attr('href');
     if (typeof hrefConsulta !== 'undefined' && hrefConsulta != '') {
@@ -4762,18 +5557,19 @@ function getCheckerProcessoPro() {
         frameborder: 0,
         style: (checkBrowser() == 'Firefox') 
             ? 'width: 1px; height: 1px; position: absolute; top: -100px;' 
+            // : 'width: 100%; height: 500px;',
             : 'width: 1px; height: 1px; position: absolute; top: -100px; display: none;',
         tableindex: '-1',
         scrolling: 'no'
     }).appendTo('body');
 }
 function getDadosIframeProcessoPro(idProcedimento, mode) {
-    if (typeof idProcedimento !== 'undefined' && idProcedimento != '' ) {
+    if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && !checkProcessoSigiloso() ) {
         if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
         var url = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento;
         if (!checkProcessoSigiloso()) {
             $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
-            checkDadosIframeProcessoPro(mode);
+                checkDadosIframeProcessoPro(mode);
             });
         }
     }
@@ -4782,20 +5578,26 @@ function checkDadosIframeProcessoPro(mode) {
     var iframe = $('#frmCheckerProcessoPro').contents();  
     var ifrVisualizacao = iframe.find('#ifrVisualizacao').contents();
     var ifrArvore = iframe.find('#ifrArvore').contents();  
-    setTimeout(function () { 
-        if ( ifrVisualizacao.find('#divArvoreAcoes').length > 0) {
-            getDadosProcessoPro(ifrVisualizacao, mode);
-            getLinksProcessoPro(ifrVisualizacao);
-            getLinksArvorePro(ifrArvore);
-            getDadosPesquisaPro(iframe, mode);
-            unidade = iframe.find('#selInfraUnidades').find('option:selected').text().trim();
-        } else {
-            checkDadosIframeProcessoPro(mode);
-        }
-    }, 500);
+    var ifrArvoreElem = iframe.find('#ifrArvore');  
+    if (!checkProcessoSigiloso(iframe)) {
+        setTimeout(function () { 
+            if ( ifrVisualizacao.find('#divArvoreAcoes').length > 0) {
+                getDadosProcessoPro(ifrVisualizacao, ifrArvore, mode);
+                getLinksProcessoPro(ifrVisualizacao);
+                getLinksArvorePro(ifrArvore);
+                getDadosPesquisaPro(iframe, mode);
+                getListaAtribuicaoProcesso(ifrArvoreElem, mode);
+                unidade = iframe.find('#selInfraUnidades').find('option:selected').text().trim();
+            } else {
+                checkDadosIframeProcessoPro(mode);
+            }
+        }, 500);
+    } else {
+        $('#frmCheckerProcessoPro, .sparkling-modal-container, #divInfraModalFundo').remove();
+    }
 }
 function getDadosPesquisaPro(iframe, mode) {
-    var href = iframe.find(mainMenu).find('li a').map(function () { if ($(this).attr('href').indexOf('acao=protocolo_pesquisar') !== -1) { return $(this).attr('href') } }).get().join();
+    var href = iframe.find(mainMenu).find('li a').map(function () { if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=protocolo_pesquisar') !== -1) { return $(this).attr('href') } }).get().join();
     if (href != '') {
         var tiposDocumentos = [];
         $.ajax({ url: href }).done(function (html) {
@@ -4809,12 +5611,16 @@ function getDadosPesquisaPro(iframe, mode) {
         });
     }
 }
-function getDadosProcessoPro(ifrVisualizacao, mode) {
+function getDadosProcessoPro(ifrVisualizacao, ifrArvore, mode) {
     var processo = {};
+
+    var acompEsp = ifrArvore.find('a[target="ifrVisualizacao"][href*="controlador.php?acao=acompanhamento_cadastrar"]');
+    var arrayAcompEsp = (acompEsp.length > 0) ? {url: acompEsp.attr('href'), title: acompEsp.find('img').attr('title').split(/\r?\n|\r|\n/g)[1]} : '';
+
     ifrVisualizacao.find('#divArvoreAcoes a').each(function(index){
         var href = $(this).attr('href');
         if ((href.indexOf('acao=procedimento_alterar') !== -1) || (href.indexOf('acao=procedimento_consultar') !== -1)) {
-            ajaxDadosProcessoPro(href, mode);
+            ajaxDadosProcessoPro(href, mode, arrayAcompEsp);
         } else if (href.indexOf('acao=procedimento_gerar_pdf') !== -1) {
             ajaxDadosDocumentosPro(href, mode);
         }
@@ -4849,29 +5655,33 @@ function getLinksArvorePro(ifrArvore) {
 }
 function getDadosAndamentoPro(href) {
     //var andamento = [];
-    $.ajax({ url: href }).done(function (html) {
-        let $html = $(html);
-            /*
-            $html.find("#tblHistorico").find('tr').each(function(){
-                var datahora = $(this).find('td').eq(0).text().trim();
-                    datahora = moment(datahora,'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-                var unidade = $(this).find('td').eq(1).text();
-                var usuario = $(this).find('td').eq(2).text();
-                var descricao = $(this).find('td').eq(3).text();
-                var descricao_alt = $(this).find('td').eq(3).find('a').attr('alt');
-                if ( unidade != '' ) { andamento.push({datahora: datahora, unidade: unidade, usuario: usuario, descricao: descricao, descricao_alt: descricao_alt}) }
-            });
-            */
-        var andamento = getArrayHistorico($html);
-        var processo = $html.find('#divInfraBarraLocalizacao').text().trim().split(' ');
-            processo = processo[processo.length-1];
-        var id_procedimento = $html.find('#frmProcedimentoHistorico').attr('action'); 
-            id_procedimento = (typeof id_procedimento !== 'undefined' && id_procedimento != '') ? getParamsUrlPro(id_procedimento).id_procedimento : '';
-            
-        var listAndamento = {historico_completo: false, processo: processo, id_procedimento: id_procedimento, andamento: andamento};
-            dadosProcessoPro.listAndamento = listAndamento;
-            getDataRecebimentoPro(listAndamento);
-    });
+        $.ajax({ url: href }).done(function (html) {
+            let $html = $(html);
+                /*
+                $html.find("#tblHistorico").find('tr').each(function(){
+                    var datahora = $(this).find('td').eq(0).text().trim();
+                        datahora = moment(datahora,'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                    var unidade = $(this).find('td').eq(1).text();
+                    var usuario = $(this).find('td').eq(2).text();
+                    var descricao = $(this).find('td').eq(3).text();
+                    var descricao_alt = $(this).find('td').eq(3).find('a').attr('alt');
+                    if ( unidade != '' ) { andamento.push({datahora: datahora, unidade: unidade, usuario: usuario, descricao: descricao, descricao_alt: descricao_alt}) }
+                });
+                */
+            var andamento = getArrayHistorico($html);
+            var processo = $html.find('#divInfraBarraLocalizacao').text().trim().split(' ');
+                processo = processo[processo.length-1];
+            var id_procedimento = $html.find('#frmProcedimentoHistorico').attr('action'); 
+                id_procedimento = (typeof id_procedimento !== 'undefined' && id_procedimento != '') ? getParamsUrlPro(id_procedimento).id_procedimento : '';
+                
+            var listAndamento = {historico_completo: false, processo: processo, id_procedimento: id_procedimento, andamento: andamento};
+            if (typeof dadosProcessoPro.listAndamento !== 'undefined' && typeof dadosProcessoPro.listAndamento.historico_completo !== 'undefined' && dadosProcessoPro.listAndamento.historico_completo) {
+                console.log('Ignore getDataRecebimentoPro');
+            } else {
+                dadosProcessoPro.listAndamento = listAndamento;
+                getDataRecebimentoPro(listAndamento);
+            }
+        });
 }
 function randomDate(start, end, startHour, endHour) {
   var date = new Date(+start + Math.random() * (end - start));
@@ -4879,16 +5689,19 @@ function randomDate(start, end, startHour, endHour) {
   date.setHours(hour);
   return moment(date).format('YYYY-MM-DD HH:mm:ss');
 }
-function getDataRecebimentoPro(listAndamento) {
+function getDataRecebimentoPro(listAndamento, listProc = false, acompanhamentoEsp = '') {
     var dataRecebimento = [];
     var unidade = isNewSEI ? $('#lnkInfraUnidade').text() : $('#selInfraUnidades').find('option:selected').text().trim();
     var datesend = '',
         descricaosend = '',
+        acompanhamentoesp = acompanhamentoEsp,
         unidadesend = '',
         unidadesendfull = '',
         datageracao = '',
         observacoes = typeof dadosProcessoPro !== 'undefined' &&typeof dadosProcessoPro.propProcesso !== 'undefined' &&typeof dadosProcessoPro.propProcesso.txaObservacoes !== 'undefined' ? dadosProcessoPro.propProcesso.txaObservacoes : '',
         descricaodatageracao = '';
+
+        // console.log('##',dadosProcessoPro.propProcesso.acompanhamentoEsp);
 
     $.each(listAndamento.andamento,function(k, g){
         if (g.descricao.indexOf('Processo p\u00FAblico gerado') !== -1 || g.descricao.indexOf('Processo restrito gerado') !== -1 ) {
@@ -4910,10 +5723,10 @@ function getDataRecebimentoPro(listAndamento) {
         //var datevisit = randomDate(new Date(2020, 0, 1), new Date(), 0, 24);
         var datevisit = moment().format('YYYY-MM-DD HH:mm:ss');
         if (unidade == v.unidade && (v.descricao == 'Processo recebido na unidade' || v.descricao == 'Reabertura do processo na unidade')) {
-            dataRecebimento.push({id_procedimento: listAndamento.id_procedimento, processo: listAndamento.processo, datahora: v.datahora, unidade: v.unidade, descricao: v.descricao, datetime: datevisit, datesend: datesend, descricaosend: descricaosend, unidadesend: unidadesend, unidadesendfull: unidadesendfull, datageracao: datageracao, descricaodatageracao: descricaodatageracao, observacoes: observacoes});
+            dataRecebimento.push({id_procedimento: listAndamento.id_procedimento, processo: listAndamento.processo, datahora: v.datahora, unidade: v.unidade, descricao: v.descricao, datetime: datevisit, datesend: datesend, descricaosend: descricaosend, unidadesend: unidadesend, unidadesendfull: unidadesendfull, datageracao: datageracao, descricaodatageracao: descricaodatageracao, observacoes: observacoes, acompanhamentoesp: acompanhamentoesp});
             return false;
         } else if (unidade == v.unidade && (v.descricao == 'Processo p\u00FAblico gerado' || v.descricao.indexOf('Processo restrito gerado') !== -1 )) {
-            dataRecebimento.push({id_procedimento: listAndamento.id_procedimento, processo: listAndamento.processo, datahora: v.datahora, unidade: v.unidade, descricao: v.descricao, datetime: datevisit, datesend: datesend, descricaosend: descricaosend, unidadesend: unidadesend, unidadesendfull: unidadesendfull, datageracao: datageracao, descricaodatageracao: descricaodatageracao, observacoes: observacoes});
+            dataRecebimento.push({id_procedimento: listAndamento.id_procedimento, processo: listAndamento.processo, datahora: v.datahora, unidade: v.unidade, descricao: v.descricao, datetime: datevisit, datesend: datesend, descricaosend: descricaosend, unidadesend: unidadesend, unidadesendfull: unidadesendfull, datageracao: datageracao, descricaodatageracao: descricaodatageracao, observacoes: observacoes, acompanhamentoesp: acompanhamentoesp});
             return false;
         }
     });
@@ -4991,12 +5804,13 @@ function ajaxDadosDocumentosPro(href, mode, callback = false) {
         if (typeof callback === 'function') callback(documentos);
     });
 }
-function ajaxDadosProcessoPro(href, mode) {
+function ajaxDadosProcessoPro(href, mode, arrayAcompEsp) {
     var processo = {};
     var unidade = isNewSEI ? $('#lnkInfraUnidade').text() : $('#selInfraUnidades').find('option:selected').text().trim();
     $.ajax({ url: href }).done(function (html) {
         let $html = $(html);
         processo.action = $html.find("#frmProcedimentoCadastro").attr('action');
+        processo.acompanhamentoEsp = arrayAcompEsp;
         processo.selAssuntos_select = $html.find("#selAssuntos option").map(function () { return $(this).text(); }).get();
         processo.selTipoProcedimento_select = $html.find("#selTipoProcedimento option").map(function () { return {id: $(this).val(), name: $(this).text() }; }).get();
         processo.selHipoteseLegal_select = $html.find("#selHipoteseLegal option").map(function () { return {id: $(this).val(), name: $(this).text() }; }).get();
@@ -5146,7 +5960,9 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
     getListDocumentosArvore(ifrArvore);
     if (mode == 'editor') { 
         getDialogCitacaoDocumento();
-        getDialogDadosEditor();
+        setTimeout(function(){ 
+            getDialogDadosEditor();
+        }, 1000);
         insertAutomaticMinutaWatermark();
     } else if (mode == 'gantt') { 
         updateSelectConcluirEtapa();
@@ -5157,6 +5973,8 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
     } else if (mode == 'dados') {
         //loopIDProcedimentos();
     }
+    var dadosProcessoPro = pullDadosProcessoSession();
+    // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
     setSessionProcessosPro(dadosProcessoPro);
     if ($('#actionsTablePro').length) {
         getDocumentosActions();
@@ -5164,6 +5982,7 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
 }
 function getListDocumentosArvore(ifrArvore) {
     var processo = [];
+    var dadosProcessoPro = pullDadosProcessoSession();
     ifrArvore.find('#divArvore a[target=ifrVisualizacao]').each(function(index){
         var txt = $(this).text().trim();
         var text = txt.split(' ');
@@ -5173,7 +5992,7 @@ function getListDocumentosArvore(ifrArvore) {
             nr_sei = (nr_sei.indexOf('(') !== -1) ? nr_sei.replace(')','').replace('(','') : nr_sei;
         var assinatura = (ifrArvore.find('#anchorA'+id_protocolo).length) ? ifrArvore.find('#anchorA'+id_protocolo+' img').attr('title').replace('Assinado por:','').trim() : '';
         var sigilo = (ifrArvore.find('#iconNA'+id_protocolo).length) ? ifrArvore.find('#iconNA'+id_protocolo+'').attr('title').trim() : '';
-        var data_assinatura =   (!$.isEmptyObject(dadosProcessoPro.listDocumentosAssinados) && jmespath.search(dadosProcessoPro.listDocumentosAssinados, "[?id_documento=='"+id_protocolo+"'].data_assinatura | length(@)") > 0)
+        var data_assinatura =   (typeof dadosProcessoPro.listDocumentosAssinados !== 'undefined' && !$.isEmptyObject(dadosProcessoPro.listDocumentosAssinados) && jmespath.search(dadosProcessoPro.listDocumentosAssinados, "[?id_documento=='"+id_protocolo+"'].data_assinatura | length(@)") > 0)
                                 ? jmespath.search(dadosProcessoPro.listDocumentosAssinados, "[?id_documento=='"+id_protocolo+"'].data_assinatura | [0]")
                                 : '';
         var nativo = (ifrArvore.find('#anchorImg'+id_protocolo+' img[src*="'+nameDocInterno+'"]').length) ? true : false;
@@ -5181,8 +6000,9 @@ function getListDocumentosArvore(ifrArvore) {
             processo.push({ id_protocolo: id_protocolo, nr_sei: nr_sei, documento: documento, assinatura: assinatura, data_documento: (data_assinatura && data_assinatura != '' ? moment(data_assinatura, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss') : false), data_assinatura: data_assinatura, sigilo: sigilo, nativo: nativo });
         }
     });
-    dadosProcessoPro.listDocumentos = processo;
-    setSessionProcessosPro(dadosProcessoPro);
+        dadosProcessoPro.listDocumentos = processo;
+        // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+        setSessionProcessosPro(dadosProcessoPro); 
 }
 function getHistoryProcessosPro() {
     $('#divInfraBarraSistemaE.barSuspenso').trigger('click');
@@ -5237,6 +6057,7 @@ function getHistoryProcessosPro() {
     setTimeout(function(){ 
         var historyTable = $('#historyTablePro');
             historyTable.tablesorter({
+                sortLocaleCompare : true,
                 sortList: [[2,1]],
                 textExtraction: {
                     2: function (elem, table, cellIndex) {
@@ -5321,6 +6142,17 @@ function getAllLinksFolder() {
         });
         _ifrArvore[0].contentWindow.getLinksArvore();
 }
+function initMergeAllAndamentosProcesso(callback, TimeOut = 9000) {
+    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (typeof dadosProcessoPro !== 'undefined') {
+        mergeAllAndamentosProcesso(callback);
+    } else {
+        setTimeout(function(){ 
+            initMergeAllAndamentosProcesso(callback, TimeOut - 100); 
+            console.log('Reload initMergeAllAndamentosProcesso', TimeOut); 
+        }, 500);
+    }
+}
 function mergeAllAndamentosProcesso(callback = false) {
     // if (typeof dadosProcessoPro.listAndamento !== 'undefined' && typeof dadosProcessoPro.listAndamento.historico_completo !== 'undefined' && dadosProcessoPro.listAndamento.historico_completo) {
         // if (typeof callback === 'function') callback();
@@ -5334,31 +6166,35 @@ function mergeAllAndamentosProcesso(callback = false) {
         if (linkHistorico.length > 0) {
             var listProc = {processo: processo, id_procedimento: id_procedimento};
             getDadosHistoricoUrlPro(linkHistorico[0], listProc, true, function(andamento){
-                dadosProcessoPro.listAndamento = andamento;
-                $.each(dadosProcessoPro.listDocumentos, function(index, value){
-                    var data_documento = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].datahora");
-                        data_documento = (data_documento !== null) ? data_documento : false;
-                    var assinatura = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Assinado')||contains(descricao, 'assinatura')]");
-                    var data_assinatura = (assinatura !== null) ? assinatura : false;
-                        data_assinatura = (data_assinatura && data_assinatura.length > 0 && typeof data_assinatura[0].descricao !== 'undefined' && data_assinatura[0].descricao.indexOf('Assinado Documento') !== -1) 
-                            ? data_assinatura[0].datahora 
-                            : dadosProcessoPro.listDocumentos[index]['data_assinatura'];
-                        data_assinatura = (data_assinatura && data_assinatura.length > 0 && typeof data_assinatura[0].descricao !== 'undefined' && data_assinatura[0].descricao.indexOf('Cancelamento de assinatura') !== -1) 
-                            ? false 
-                            : data_assinatura;
-                    var assinado = (assinatura && assinatura !== null && assinatura.length > 0 && typeof assinatura[0].descricao !== 'undefined' && assinatura[0].descricao.indexOf('Assinado Documento') !== -1) ? true : false;
-                    var unidade = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].unidade");
-                        unidade = (unidade !== null) ? unidade : false;
-                        
-                    dadosProcessoPro.listDocumentos[index]['unidade'] = unidade;
-                    dadosProcessoPro.listDocumentos[index]['data_assinatura'] = data_assinatura;
-                    dadosProcessoPro.listDocumentos[index]['data_documento'] = data_documento;
-                    dadosProcessoPro.listDocumentos[index]['assinado'] = assinado;
-                    // console.log(index, value.id_protocolo, unidade, dadosProcessoPro.listDocumentos);
-                });
-                dadosProcessoPro.listAndamento.historico_completo = true;
-                setSessionProcessosPro(dadosProcessoPro);
-                if (typeof callback === 'function') callback();
+                var dadosProcessoPro = (typeof getDadosProcessoSession().listAndamento !== 'undefined') ? getDadosProcessoSession() : dadosProcessoPro;
+                    dadosProcessoPro = (typeof dadosProcessoPro !== 'undefined') ? dadosProcessoPro : {};
+                    dadosProcessoPro.listAndamento = andamento;
+                    
+                    $.each(dadosProcessoPro.listDocumentos, function(index, value){
+                        var data_documento = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].datahora");
+                            data_documento = (data_documento !== null) ? data_documento : false;
+                        var assinatura = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Assinado')||contains(descricao, 'assinatura')]");
+                        var data_assinatura = (assinatura !== null) ? assinatura : false;
+                            data_assinatura = (data_assinatura && data_assinatura.length > 0 && typeof data_assinatura[0].descricao !== 'undefined' && data_assinatura[0].descricao.indexOf('Assinado Documento') !== -1) 
+                                ? data_assinatura[0].datahora 
+                                : dadosProcessoPro.listDocumentos[index]['data_assinatura'];
+                            data_assinatura = (data_assinatura && data_assinatura.length > 0 && typeof data_assinatura[0].descricao !== 'undefined' && data_assinatura[0].descricao.indexOf('Cancelamento de assinatura') !== -1) 
+                                ? false 
+                                : data_assinatura;
+                        var assinado = (assinatura && assinatura !== null && assinatura.length > 0 && typeof assinatura[0].descricao !== 'undefined' && assinatura[0].descricao.indexOf('Assinado Documento') !== -1) ? true : false;
+                        var unidade = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].unidade");
+                            unidade = (unidade !== null) ? unidade : false;
+                            
+                        dadosProcessoPro.listDocumentos[index]['unidade'] = unidade;
+                        dadosProcessoPro.listDocumentos[index]['data_assinatura'] = data_assinatura;
+                        dadosProcessoPro.listDocumentos[index]['data_documento'] = data_documento;
+                        dadosProcessoPro.listDocumentos[index]['assinado'] = assinado;
+                        // console.log(index, value.id_protocolo, unidade, dadosProcessoPro.listDocumentos);
+                    });
+                    dadosProcessoPro.listAndamento.historico_completo = true;
+                    // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+                    setSessionProcessosPro(dadosProcessoPro);
+                    if (typeof callback === 'function') callback();
             });
         }
     // }
@@ -5530,6 +6366,7 @@ function getBatchActionsPro(this_) {
     var arrayLinksArvoreAll = _ifrArvore[0].contentWindow.arrayLinksArvoreAll;
     var arrayIconsView = _ifrArvore[0].contentWindow.arrayIconsView;
     var doc = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('acao=arvore_visualizar') !== -1 && v.indexOf('id_documento='+id_documento) !== -1) });
+
     if (doc.length > 0) {
             var tr = _table.find('tr[data-index="'+id_documento+'"]');
                 td_doc = tr.find('td.documento');
@@ -5546,14 +6383,27 @@ function getBatchActionsPro(this_) {
                         listIconsView = (listIconsView === null) ? [] : listIconsView;
                     var checkIconView = listIconsView.filter(function(v){ return v.indexOf(btnData.icon) !== -1 });
 
-                    if (btnData.action !== 'documento_alterar' && btnData.action !== 'documento_assinar' && btnData.action !== 'documento_duplicar' && linkAction.length > 0 && checkIconView.length > 0) {
+                    /*
+                    console.log({
+                        id_documento: id_documento, 
+                        select_id_documento: arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1) }), 
+                        action: arrayLinksArvoreAll.filter(function(v){ return (v.indexOf(btnData.action) !== -1) }), 
+                        btnData:btnData, 
+                        linkAction:linkAction, 
+                        arrayLinksArvoreAll:arrayLinksArvoreAll, 
+                        checkIconView:checkIconView
+                    });
+                    */
+
+                    if (btnData.action != 'documento_visualizar' && btnData.action != 'documento_alterar' && btnData.action != 'documento_assinar' && btnData.action != 'documento_duplicar' && linkAction.length > 0 && checkIconView.length > 0) {
                         $.ajax({ url: linkAction }).done(function (htmlArvore) {
+                            var dadosProcessoPro = pullDadosProcessoSession();
                             var id_documento = loopActionsPro.list[loopActionsPro.index];
                             tr.removeClass('infraTrMarcada').find('i.batchLoading').remove();
                             tr.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
                             tr.find('input').prop('checked',false);
                             if (btnData.action == 'documento_excluir') {
-                                dadosProcessoPro.listDocumentos
+                                dadosProcessoPro.listDocumentos;
                                 tr.removeClass('documento_excluir').find('input').prop('disabled', true);
                                 tr.find('td.icons').html('');
                                 ifrArvore.find('#anchorImg'+id_documento).prev().remove().end().prev().remove();
@@ -5573,6 +6423,7 @@ function getBatchActionsPro(this_) {
                                     dadosProcessoPro.listDocumentos[objIndexDoc].data_assinatura = '';
                                 }
                             }
+                            // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
                             setSessionProcessosPro(dadosProcessoPro);
 
                             loopActionsPro.index = loopActionsPro.index+1;
@@ -5585,7 +6436,7 @@ function getBatchActionsPro(this_) {
                                 initAppendIconsDocumentosActions();
                             }
                         });
-                    } else if (btnData.action === 'documento_duplicar' && checkIconView.length > 0) {
+                    } else if (btnData.action == 'documento_duplicar' && checkIconView.length > 0) {
                         var id_documento = loopActionsPro.list[loopActionsPro.index];
 
                         function resetDocsActions(){
@@ -5623,7 +6474,7 @@ function getBatchActionsPro(this_) {
                         } else if (typeof id_documento === 'undefined' || typeof loopActionsPro.list[loopActionsPro.index+1] === 'undefined') {
                             resetDocsActions();
                         }
-                    } else if (btnData.action === 'documento_assinar' && linkAction.length > 0 && checkIconView.length > 0) {
+                    } else if (btnData.action == 'documento_assinar' && linkAction.length > 0 && checkIconView.length > 0) {
                         var orgao = loopActionsPro.assinatura.orgao;
                         var contexto = loopActionsPro.assinatura.contexto;
                         var cargo = loopActionsPro.assinatura.cargo;
@@ -5672,11 +6523,13 @@ function getBatchActionsPro(this_) {
                                     tr.find('td.data_assinatura').html(data_assinatura);
                                     tr.find('input').prop('checked',false);
 
+                                    var dadosProcessoPro = pullDadosProcessoSession();
                                     var objIndexDoc = (typeof dadosProcessoPro.listDocumentos === 'undefined' || dadosProcessoPro.listDocumentos.length == 0) ? -1 : dadosProcessoPro.listDocumentos.findIndex((obj => obj.id_protocolo == id_documento));
                                     if (objIndexDoc !== -1) {
                                         dadosProcessoPro.listDocumentos[objIndexDoc].assinatura = assinatura;
                                         dadosProcessoPro.listDocumentos[objIndexDoc].data_assinatura = data_assinatura;
                                     }
+                                    // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
                                     setSessionProcessosPro(dadosProcessoPro);
 
                                     loopActionsPro.index = loopActionsPro.index+1;
@@ -5693,7 +6546,42 @@ function getBatchActionsPro(this_) {
                                 }
                             });
                         });
-                    } else if (btnData.action === 'documento_alterar' && linkAction.length > 0 && checkIconView.length > 0) {
+                    } else if (btnData.action == 'documento_visualizar' && linkAction.length > 0 && checkIconView.length > 0) {
+
+                        var id_documento = loopActionsPro.list[loopActionsPro.index];
+                        if (typeof id_documento !== 'undefined') {
+                            console.log('*****', loopActionsPro);
+                            var urlLink = linkAction[0];
+                            var link = document.createElement('a');
+                                link.href = urlLink;
+                                
+                                if (urlLink.indexOf('documento_download_anexo') === -1) {
+                                    link.download =  ifrArvore.find('#anchor'+id_documento).text().trim()+'.html';
+                                } else {
+                                    link.download =  ifrArvore.find('#anchor'+id_documento).text().trim();
+                                }
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+
+
+                            tr.removeClass('infraTrMarcada').find('i.batchLoading').remove();
+                            tr.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
+                            tr.find('input').prop('checked',false);
+
+                            loopActionsPro.index = loopActionsPro.index+1;
+                            if (typeof loopActionsPro.list[loopActionsPro.index] !== 'undefined') {
+                                getBatchActionsPro(this_);
+                            } else {
+                                window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
+                                $(this_).find('i').attr('class', $(this_).data('lastclass'));
+                            }
+
+                        } else if (typeof id_documento === 'undefined' || typeof loopActionsPro.list[loopActionsPro.index+1] === 'undefined') {
+                            resetDocsActions();
+                        }
+
+                    } else if (btnData.action == 'documento_alterar' && linkAction.length > 0 && checkIconView.length > 0) {
                         var idElement = loopActionsPro.sigilo.element;
                         var hipotese = loopActionsPro.sigilo.hipotese;
                         var text_hipotese = loopActionsPro.sigilo.text;
@@ -5718,10 +6606,12 @@ function getBatchActionsPro(this_) {
                             tr.find('td.sigilo').html(text_hipotese);
                             tr.find('input').prop('checked',false);
 
+                            var dadosProcessoPro = pullDadosProcessoSession();
                             var objIndexDoc = (typeof dadosProcessoPro.listDocumentos === 'undefined' || dadosProcessoPro.listDocumentos.length == 0) ? -1 : dadosProcessoPro.listDocumentos.findIndex((obj => obj.id_protocolo == id_documento));
                             if (objIndexDoc !== -1) {
                                 dadosProcessoPro.listDocumentos[objIndexDoc].sigilo = text_hipotese;
                             }
+                            // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
                             setSessionProcessosPro(dadosProcessoPro);
 
                             loopActionsPro.index = loopActionsPro.index+1;
@@ -5757,6 +6647,12 @@ function getDocumentosActions() {
                         '   <a class="newLink documento_ciencia" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ci\u00EAncia\')" data-action="documento_ciencia" data-icon="'+(isNewSEI ? 'ciencia' : 'sei_ciencia')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-thumbs-up azulColor"></i>'+
+                        '           <span class="fa-layers-counter" style="display:none">1</span>'+
+                        '       </span>'+
+                        '   </a>'+
+                        '   <a class="newLink documento_visualizar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento\')" data-action="documento_visualizar" data-icon="'+(isNewSEI ? 'consultar_alterar_protocolo' : 'sei_consultar_alterar_protocolo')+'">'+
+                        '       <span class="fa-layers fa-fw">'+
+                        '           <i class="fas fa-download azulColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
@@ -5833,7 +6729,7 @@ function getDocumentosActions() {
         .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
         .dialog({
             title: 'A\u00E7\u00F5es em lote',
-            width: 1100,
+            width: $('body').width()-300,
             height: 650,
             open: function() { 
                 if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
@@ -5877,6 +6773,7 @@ function getDocumentosActions() {
     setTimeout(function(){ 
         var actionsTable = $('#actionsTablePro');
             actionsTable.tablesorter({
+                sortLocaleCompare : true,
                 textExtraction: {
                     4: function (elem, table, cellIndex) {
                         var text_date = $(elem).text() != '' ? moment($(elem).text(), 'DD/MM/YYYY').format('YYYY-MM-DD') : false;
@@ -5944,6 +6841,7 @@ function getDocumentosActions() {
                         $('#iconsActions').find('.'+class_icon).find('.fa-layers-counter').hide();
                     }
                 }
+                updateCountIcon(_parent, 'documento_visualizar');
                 updateCountIcon(_parent, 'documento_ciencia');
                 updateCountIcon(_parent, 'documento_excluir');
                 updateCountIcon(_parent, 'documento_alterar');
@@ -6023,6 +6921,10 @@ function setAppendIconsDocumentosActions() {
                 htmlIcon += ' <a class="newLink" onclick="batchActionsSinglePro(this)" data-action="documento_ciencia" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ci\u00EAncia\')" style="margin: 0;padding: 5px 0;"><i class="fas fa-thumbs-up azulColor"></i></a>';
                 classIcon += 'documento_ciencia ';
             }
+            if (iconList.filter(function(v){ return v.indexOf('consultar') !== -1 }).length > 0) {
+                htmlIcon += ' <a class="newLink" onclick="batchActionsSinglePro(this)" data-action="documento_visualizar" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento\')" style="margin: 0;padding: 5px 0;"><i class="fas fa-download azulColor"></i></a>';
+                classIcon += 'documento_visualizar ';
+            }
             if (iconList.filter(function(v){ return (v.indexOf('sei_consultar_alterar_protocolo') !== -1 || v.indexOf('documento_alterar') !== -1) }).length > 0) {
                 htmlIcon += ' <a class="newLink" onclick="batchActionsSinglePro(this)" data-action="documento_alterar" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Alterar sigilo\')" style="margin: 0;padding: 5px 0;"><i class="fas fa-key laranjaColor"></i></a>';
                 classIcon += 'documento_alterar ';
@@ -6077,6 +6979,14 @@ function setCapaProcesso(loop = true) {
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '1') ? {name: 'Restrito: '+hipoteseLegal, icon: 'fas fa-lock'} : dataNivelAcesso;
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '2') ? {name: 'Sigiloso', icon: 'fas fa-user-slash'} : dataNivelAcesso;
     var htmlInfoProc = ifrVisualizacao.find(divInformacao).html();
+
+    var checkBlocoInterno = (typeof $('#ifrArvore')[0] !== 'undefined' && typeof $('#ifrArvore')[0].contentWindow.selectedItensPanelArvore !== 'undefined' && $.inArray("Bloco Interno",jmespath.search($('#ifrArvore')[0].contentWindow.selectedItensPanelArvore,"[]")) !== -1) ? true : false;
+    var blocoProcesso = checkBlocoInterno ? initBlocoProcessoHistorico() : false;
+    var dadosProcessoP = typeof getDadosProcessoSession() !== 'undefined' ? getDadosProcessoSession() : false;
+    var descBlocoInterno = (typeof blocoProcesso !== 'undefined' && blocoProcesso !== null) 
+                        ? (typeof blocoProcesso !== 'undefined' && blocoProcesso.length > 0 && typeof blocoProcesso[0].descricao !== 'undefined') ? blocoProcesso[0].descricao : false
+                        : false;
+        descBlocoInterno = (typeof blocoProcesso !== 'undefined' && blocoProcesso !== null && blocoProcesso.length == 0 && typeof dadosProcessoP.listAndamento !== 'undefined' && dadosProcessoP.listAndamento.historico_completo) ? 'Nenhum bloco localizado' : descBlocoInterno;
 
     var htmlMarcador = getHtmlMarcador(id_procedimento, false);
     var iconMarcador = htmlMarcador.icon;
@@ -6160,6 +7070,14 @@ function setCapaProcesso(loop = true) {
                 '')+
                 '           </div>'+
                 '      </div>'+
+                (descBlocoInterno ? 
+                '      <div class="field">'+
+                '         <div class="label txt_cinza"><i class="fas fa-book azulColor iconDadosProcesso"></i>Bloco Interno:</div>'+
+                '         <div class="data">'+
+                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+descBlocoInterno+'</a>'+
+                '         </div>'+
+                '      </div>'+
+                '' : '')+
                 '      <div class="field">'+
                 '         <div class="label txt_cinza"><i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>Observa\u00E7\u00F5es:</div>'+
                 '         <div class="data">'+
@@ -6167,7 +7085,7 @@ function setCapaProcesso(loop = true) {
                 $.map(prop.txaObservacoes, function(v){ return '<div><a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.unidade+': '+v.observacao+'</a></div>' }).join('') :
                 // '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.txtDescricao+'</a>' : 
                 '')+
-                '           </div>'+
+                '         </div>'+
                 '      </div>'+
                 '</div>';
 
@@ -6378,15 +7296,21 @@ function setResizeIfrArvore() {
         console.log(ifrArvore.width(), ifrVisualizacao.width());
     }
 }
+function _infraTooltipMostrar(_this, text) {
+    if (!$(_this).find('.text').is(':visible')) {
+        infraTooltipMostrar(text);
+    }
+}
 function setResizeAreaTelaD() {
     if ($('.panelHomePro').is(':visible')) {
         var width = $('.panelHomePro:visible').width() - ( $('.panelHomePro:visible').width()*0.02 );
         $('.resizeObserve:visible').css('width', width);
     }
     if ($('#atividadesProActions').length > 0 && $('#atividadesProActions').is(':visible')) {
-        $('.atividadesBtnPanel .text').show();
+        $('#atividadesPro').removeClass('minView');
+
         if ($('#atividadesProActions').height() > 40) {
-            $('.atividadesBtnPanel .text').hide();
+            $('#atividadesPro').addClass('minView');
         }
     }
 }
@@ -6530,7 +7454,9 @@ function filterTablePro(this_) {
         filter.removeClass('hideme');
         _this.addClass('active');
         setTimeout(function(){ 
-            filter.find('input:visible').eq(0).focus();
+            filter.find('input:visible').map(function(){
+                if ($(this).visible(false, true)) { return this }
+            }).eq(0).focus();
         },500);
     }
 }
@@ -6575,6 +7501,9 @@ function setHistoryProcessosPro(dadosProcessoPro) {
 
     localStorageStorePro('dadosHistoricoProcessoPro', dadosHistoricoProcessoPro);
 }
+function pullDadosProcessoSession() {
+    return getDadosProcessoSession() ? getDadosProcessoSession() : dadosProcessoPro;
+}
 function getDadosProcessoSession() {
     var id_procedimento = getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento;
     var dadosSessionProcessoPro = sessionStorageRestorePro('dadosSessionProcessoPro');
@@ -6585,7 +7514,7 @@ function setSessionProcessosPro(dadosProcessoPro) {
     var dadosProcessoPro_push = dadosProcessoPro;
     var dadosSessionProcessoPro = sessionStorageRestorePro('dadosSessionProcessoPro');
 
-    var id_procedimento = (typeof dadosProcessoPro_push.propProcesso !== 'undefined' && typeof dadosProcessoPro_push.propProcesso.hdnIdProcedimento !== 'undefined') ? dadosProcessoPro_push.propProcesso.hdnIdProcedimento : getParamsUrlPro(window.location.href).id_procedimento;
+    var id_procedimento = (typeof dadosProcessoPro_push.propProcesso !== 'undefined' && typeof dadosProcessoPro_push.propProcesso.hdnIdProcedimento !== 'undefined') ? dadosProcessoPro_push.propProcesso.hdnIdProcedimento : (getParamsUrlPro(window.location.href).id_procedimento ? getParamsUrlPro(window.location.href).id_procedimento : undefined);
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
     /*
@@ -6603,9 +7532,9 @@ function setSessionProcessosPro(dadosProcessoPro) {
         for (i = 0; i < dadosSessionProcessoPro.length; i++) {
             if( i > 500 || 
                     (
-                        typeof dadosSessionProcessoPro[i].propProcesso !== 'undefined' && 
-                        typeof dadosSessionProcessoPro[i].propProcesso.hdnIdProcedimento !== 'undefined' && 
-                        dadosSessionProcessoPro[i].propProcesso.hdnIdProcedimento == id_procedimento
+                        (typeof dadosSessionProcessoPro[i].propProcesso !== 'undefined' && typeof dadosSessionProcessoPro[i].propProcesso.hdnIdProcedimento !== 'undefined' && dadosSessionProcessoPro[i].propProcesso.hdnIdProcedimento == id_procedimento)
+                        || 
+                        (typeof dadosSessionProcessoPro[i].listAndamento !== 'undefined' && dadosSessionProcessoPro[i].listAndamento.id_procedimento == id_procedimento)
                     )
             ) {
                 dadosSessionProcessoPro.splice(i,1);
@@ -6619,7 +7548,6 @@ function setSessionProcessosPro(dadosProcessoPro) {
     } else {
         dadosSessionProcessoPro = [dadosProcessoPro_push];
     }
-
     sessionStorageStorePro('dadosSessionProcessoPro', dadosSessionProcessoPro);
 }
 function updateTitlePage(mode, dadosProcesso = false) {
@@ -7663,8 +8591,9 @@ function openEditorViewDoc(paramData, paramTarget, dataResult) {
                     updateButtonConfirm(this, true);
                     var textEncode = (is_html(paramData.text)) ? paramData.text : $("<div/>").html(paramData.text).text();
                     if (paramData.reference == 'modelo' && paramTarget.return_sign) {
-                        var user = (typeof paramTarget.return_user !== 'undefined' && paramTarget.return_user) ? paramTarget.return_user : false
-                        textEncode = setParamEditorAtiv(paramData.mode, textEncode, user);
+                        var user = (typeof paramTarget.return_user !== 'undefined' && paramTarget.return_user) ? paramTarget.return_user : false;
+                        var id_reference = (typeof paramTarget.id_reference !== 'undefined' && paramTarget.id_reference) ? paramTarget.id_reference : false;
+                        textEncode = setParamEditorAtiv(paramData.mode, textEncode, user, id_reference);
                     }
                     $('#view_doc').html(textEncode);
                     if (paramTarget.return_sign) {
@@ -7678,7 +8607,7 @@ function openEditorViewDoc(paramData, paramTarget, dataResult) {
     }
 }
 function printDocumento() {
-    var htmlPrint = $('#view_doc').html()+$('.signed')[0].outerHTML;
+    var htmlPrint = ($('.signed').length) ? $('#view_doc').html()+$('.signed')[0].outerHTML : $('#view_doc').html();
 
         $('#printBoxPro').addClass('hidePrint').html(htmlPrint);
         $('.infraAreaGlobal').addClass('hidePrint');
@@ -7768,9 +8697,16 @@ function loadFunctionEditorView(this_) {
     });
     if (typeof $.mask !== 'undefined') {
         if (_parent.find("input[data-key='tel_celular']").length > 0) {
-            _parent.find("input[data-key='tel_celular']").mask("(99) 99999-999?9", {completed: function () { 
+            _parent.find("input[data-key='tel_celular']").mask("+99 (99) 99999-999?9", {placeholder: '+55 (__) _____-____', completed: function () { 
                 this.removeClass('requiredNull');
-             }});
+            }}).on('focus', function(){
+                setTimeout(() => {
+                    console.log($(this).val(),'focus');
+                    if ($(this).val() == '+55 (__) _____-____') {
+                        setCaretPosition(this, 5);
+                    }
+                }, 1000);
+            });
         }
         if (_parent.find("input[data-key='tel_residencial']").length > 0) {
             _parent.find("input[data-key='tel_residencial']").mask("(99) 9999-9999");
@@ -8083,11 +9019,13 @@ function updateDialogDefinitionPro() {
     });
 }
 function centralizeDialogBox(el) {
-    $(document).ready(function() {
-        if (el) {
-            el.dialog({ position: { my: "center", at: "center", of: window } });
-        }
-    });
+    if (!dialogIsDraggable) {
+        $(document).ready(function() {
+            if (el) {
+                el.dialog({ position: { my: "center", at: "center", of: window } });
+            }
+        });
+    }
 }
 function selectTextPro(el) {
     var sel, range;
@@ -8302,7 +9240,6 @@ function getHolidayBetweenDates(date, dateTo, addHolidays = false){
     }
     return datesHoliday;
 }
-
 function noNotifyPro(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.no_notifyPro');
@@ -8384,8 +9321,14 @@ function setNewDocDefault() {
     }
 }
 function formControlerAlterarDocumento(ifrVisualizacao) {
-    ifrVisualizacao.find('button[name="btnSalvar"]').unbind().removeAttr('onclick').on('click', function() {
-        var _this = $(this);
+    ifrVisualizacao.find('#frmDocumentoCadastro').attr('onsubmit', 'return OnSubmitForm();parent.confirmaDadosUrgencia(this);');
+}
+function confirmaDadosUrgencia(_this) {
+    if (delayCrash) return false;
+        delayCrash = true;
+        setTimeout(function(){ delayCrash = false }, 300);
+
+        var _this = $(_this);
         var contentW = $('#ifrVisualizacao')[0].contentWindow;
         var _parent = _this.closest('body');
         var oldText = _parent.find('#txtNumero').attr('data-oldtext');
@@ -8398,8 +9341,8 @@ function formControlerAlterarDocumento(ifrVisualizacao) {
         var nrSEI = $('#ifrArvore').contents().find('.infraArvoreNoSelecionado').eq(0);
             nrSEI = (typeof nrSEI !== 'undefined' && nrSEI !== null) ? getNrSei(nrSEI.text().trim()) : '';
 
-        if (contentW.OnSubmitForm()) { 
-            contentW.submeter();
+        if (typeof contentW !== 'undefined' && typeof contentW.OnSubmitForm === 'function' && contentW.OnSubmitForm()) { 
+            // contentW.submeter();
             var sendAutomaticActions = [];
             sendAutomaticActions[0] = {name: 'urgencia_documento', method: methodSend, send: checkSend, value: nrSEI, run: false, index: 0};
             parent.window.sendAutomaticActions = sendAutomaticActions;
@@ -8416,7 +9359,7 @@ function formControlerAlterarDocumento(ifrVisualizacao) {
             }
             */
         }
-    });
+
 }
 function insertIconBatchActions() {
     waitLoadPro($('#ifrVisualizacao').contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconBatchActions);
@@ -8564,12 +9507,12 @@ function setReplaceSelectAllVisualizacao() {
         var target = $('#ifrVisualizacao').contents();
         if (typeof $().chosen !== 'undefined') {
             target.find('select').chosen('destroy');
-            target.find('select').not('[multiple]').not('[size]').filter(function() { 
+            target.find('select').not('[multiple]').not('#selSerie').not('[size]').filter(function() { 
                     return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') 
                 }).chosen({
                     placeholder_text_single: ' ',
                     no_results_text: 'Nenhum resultado encontrado'
-                });
+                })
             chosenReparePosition(target);
             target.find('.infraAreaDados').css('overflow','initial');
             target.find('select').not('[multiple]').eq(0).trigger('chosen:activate');
@@ -8577,18 +9520,14 @@ function setReplaceSelectAllVisualizacao() {
     }
 }
 function replaceSelectAllVisualizacao(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof $().chosen !== 'undefined') {
-        setReplaceSelectAllVisualizacao();
-    } else {
-        if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') { 
-            $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-            console.log('@load chosen');
-        }
-        setTimeout(function(){ 
-            replaceSelectAllVisualizacao(TimeOut - 100); 
-            console.log('Reload replaceSelectAllVisualizacao'); 
-        }, 500);
+    var ifrVisualizacao = $('#ifrVisualizacao')[0];
+    var ifrVisualizacaoWindow = ifrVisualizacao.contentWindow;
+    if (typeof ifrVisualizacaoWindow !== 'undefined' && typeof ifrVisualizacaoWindow.$().chosen === 'undefined' ) {
+        getScriptIframe(ifrVisualizacao, URL_SPRO+"js/lib/chosen.jquery.min.js", function(){
+            getScriptIframe(ifrVisualizacao, URL_SPRO+"js/sei-pro-visualizacao-chosen.js", function(){
+                if (typeof ifrVisualizacaoWindow.replaceSelectOnVisualizacao !== 'undefined') ifrVisualizacaoWindow.replaceSelectOnVisualizacao();
+            });
+        });
     }
 }
 function insertActionHipoteseLegal() {
@@ -9338,47 +10277,48 @@ if (verifyConfigValue('menususpenso')) {
         infraTooltipOcultar();
 
         if (bolInicializar){
-        //le do cookie
-        if (infraLerCookie(prefixoCookie+'_menu_mostrar')!='N'){
-            tamanhoDados = document.getElementById("divInfraAreaTelaD").offsetWidth/document.getElementById("divInfraAreaTela").offsetWidth;
-            tamanhoDados = Math.floor(tamanhoDados*Math.pow(10,2));
-            infraCriarCookie(prefixoCookie+'_menu_tamanho_dados',tamanhoDados,1);
-            title = 'Ocultar';
-        } else {
-            title = 'Exibir';
-        }
-        } else {
-        if (tipo == undefined || tipo == null) {
-            if (document.getElementById('divInfraAreaTelaE').style.display == ''){
-            tipo = 'Ocultar';
+            //le do cookie
+            if (infraLerCookie(prefixoCookie+'_menu_mostrar')!='N'){
+                tamanhoDados = document.getElementById("divInfraAreaTelaD").offsetWidth/document.getElementById("divInfraAreaTela").offsetWidth;
+                tamanhoDados = Math.floor(tamanhoDados*Math.pow(10,2));
+                infraCriarCookie(prefixoCookie+'_menu_tamanho_dados',tamanhoDados,1);
+                title = 'Ocultar';
             } else {
-            tipo = 'Exibir';
+                title = 'Exibir';
             }
-        }
-        if (tipo == 'Ocultar' || (getOptionsPro('panelMenuSistemaView') !== false && !$('#divInfraBarraSistemaE').hasClass('barSuspenso'))) {
-            document.getElementById('divInfraAreaTelaE').style.display='none';
-            document.getElementById('divInfraAreaTelaD').style.width = '99%';
-            infraCriarCookie(prefixoCookie+'_menu_mostrar','N',1);
-            title = 'Exibir';
-            if ($('#divInfraBarraSistemaE').hasClass('barSuspenso')) removeOptionsPro('panelMenuSistemaView');
-            if (getOptionsPro('panelMenuSistemaView')) setMenuSistemaView();
         } else {
-            setMenuSistemaView(true);
-            removeOptionsPro('panelMenuSistemaView');
+            if (tipo == undefined || tipo == null) {
+                if (document.getElementById('divInfraAreaTelaE').style.display == ''){
+                    tipo = 'Ocultar';
+                } else {
+                    tipo = 'Exibir';
+                }
+            }
+            if (tipo == 'Ocultar' || (getOptionsPro('panelMenuSistemaView') !== false && !$('#divInfraBarraSistemaE').hasClass('barSuspenso'))) {
+                document.getElementById('divInfraAreaTelaE').style.display='none';
+                document.getElementById('divInfraAreaTelaD').style.width = '99%';
+                infraCriarCookie(prefixoCookie+'_menu_mostrar','N',1);
+                title = 'Exibir';
+                if ($('#divInfraBarraSistemaE').hasClass('barSuspenso')) removeOptionsPro('panelMenuSistemaView');
+                if (getOptionsPro('panelMenuSistemaView')) setMenuSistemaView();
+            } else {
+                setMenuSistemaView(true);
+                removeOptionsPro('panelMenuSistemaView');
 
-            tamanhoDados = infraLerCookie(prefixoCookie+'_menu_tamanho_dados');
-            document.getElementById('divInfraAreaTelaE').style.display='';
+                tamanhoDados = infraLerCookie(prefixoCookie+'_menu_tamanho_dados');
+                document.getElementById('divInfraAreaTelaE').style.display='';
 
-            if (tamanhoDados == null) tamanhoDados = infraClientWidth() * 0.80;
+                if (tamanhoDados == null) tamanhoDados = infraClientWidth() * 0.80;
 
-            document.getElementById('divInfraAreaTelaD').style.width = tamanhoDados+'%';
-            infraCriarCookie(prefixoCookie+'_menu_mostrar','S',1);
-            title = 'Ocultar';
+                document.getElementById('divInfraAreaTelaD').style.width = tamanhoDados+'%';
+                infraCriarCookie(prefixoCookie+'_menu_mostrar','S',1);
+                title = 'Ocultar';
+            }
+            if (tipo == 'Ocultar') setOptionsPro('panelMenuSistemaView', 'active');
+                infraResize();
+                checkMenuSistemaView();
         }
-        if (tipo == 'Ocultar') setOptionsPro('panelMenuSistemaView', 'active');
-            infraResize();
-            checkMenuSistemaView();
-        }
+        // console.log('***** infraMenuSistemaEsquema',bolInicializar, tipo, prefixoCookie, tamanhoDados, window.name);
     }
 }
 function setInfraImg(target = $('html')) {
@@ -9398,6 +10338,24 @@ function initModalNewSEISigiloso(TimeOut = 1000) {
     }
 }
 function fnJqueryPro() {
+    if (typeof $.tablesorter !== 'undefined') {
+        $.tablesorter.characterEquivalents = {
+            'a' : '\u00e1\u00e0\u00e2\u00e3\u00e4\u0105\u00e5', // áàâãäąå
+            'A' : '\u00c1\u00c0\u00c2\u00c3\u00c4\u0104\u00c5', // ÁÀÂÃÄĄÅ
+            'c' : '\u00e7\u0107\u010d', // çćč
+            'C' : '\u00c7\u0106\u010c', // ÇĆČ
+            'e' : '\u00e9\u00e8\u00ea\u00eb\u011b\u0119', // éèêëěę
+            'E' : '\u00c9\u00c8\u00ca\u00cb\u011a\u0118', // ÉÈÊËĚĘ
+            'i' : '\u00ed\u00ec\u0130\u00ee\u00ef\u0131', // íìİîïı
+            'I' : '\u00cd\u00cc\u0130\u00ce\u00cf', // ÍÌİÎÏ
+            'o' : '\u00f3\u00f2\u00f4\u00f5\u00f6\u014d', // óòôõöō
+            'O' : '\u00d3\u00d2\u00d4\u00d5\u00d6\u014c', // ÓÒÔÕÖŌ
+            'ss': '\u00df', // ß (s sharp)
+            'SS': '\u1e9e', // ẞ (Capital sharp s)
+            'u' : '\u00fa\u00f9\u00fb\u00fc\u016f', // úùûüů
+            'U' : '\u00da\u00d9\u00db\u00dc\u016e' // ÚÙÛÜŮ
+        };
+    }
     $.fn.wrapInTag = function (opts) {
         function getText(obj) {
             return obj.textContent ? obj.textContent : obj.innerText;
@@ -9474,3 +10432,70 @@ function fnJqueryPro() {
     initModalNewSEISigiloso();
 }
 $(document).ready(function () { fnJqueryPro() });
+
+
+function loadStyleDesign(body = $('body'), secondClass = false) {
+    if (localStorage.getItem('seiSlim')) {
+        body.addClass("seiSlim");
+        if (secondClass) body.addClass("seiSlim_"+secondClass);
+        if (localStorage.getItem('darkModePro')) {
+            body.addClass("dark-mode");
+        }
+    }
+}
+function loadScriptVisualizacaoPro() {
+    if ( $('#ifrVisualizacao').length ) {
+        $('#ifrVisualizacao').on("load", function() {
+            var ifrVisualizacao = $('#ifrVisualizacao').contents();
+            /*
+            if (ifrVisualizacao.find('script[data-config="config-seipro-visualizacao"]').length == 0) {
+                var iframeObjVisualizacao = ifrVisualizacao.find('head');
+                var scriptVisualizacao =    "<script data-config='config-seipro-visualizacao'>"+
+                                            "   parent.checkPageVisualizacao();\n"+
+                                            "   parent.checkPageAtividadesVisualizacao();\n"+
+                                            "   parent.checkPageFavoritosVisualizacao();\n"+
+                                            "</script>";
+                $(scriptVisualizacao).prependTo(iframeObjVisualizacao);
+            }
+            */
+            if (typeof loadStyleDesign === 'function') loadStyleDesign(ifrVisualizacao.find('body'), 'view');
+            if (typeof loadFontIcons === 'function') loadFontIcons('head', ifrVisualizacao);
+            if (typeof checkPageVisualizacao === 'function') checkPageVisualizacao();
+            if (typeof checkPageAtividadesVisualizacao === 'function') checkPageAtividadesVisualizacao();
+            if (typeof checkPageFavoritosVisualizacao === 'function') checkPageFavoritosVisualizacao();
+        });
+    }
+}
+
+function loadScriptArvorePro() {
+    if ( $('#ifrArvore').length ) {
+        $('#ifrArvore').on("load", function() {
+            initLoadSeiProArvore();
+        });
+    }
+}
+function initLoadSeiProArvore(TimeOut = 1000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof $('#ifrArvore')[0].contentWindow.initSeiProArvore !== 'undefined' ) {
+        execArvorePro($('#ifrArvore')[0].contentWindow.initSeiProArvore);
+    } else {
+        setTimeout(function(){
+            initLoadSeiProArvore(TimeOut - 100);
+            console.log('Reload initLoadSeiProArvore');
+        }, 500);
+    }
+}
+function loadScriptPro() {
+	if ( $('#frmEditor').length || $('#divEditores').length ) {
+	} else {
+        $(document).ready(function () {
+            loadScriptVisualizacaoPro();
+            loadScriptArvorePro();
+
+            setTimeout(function(){
+                if (CLIENT_ID_PRO) loadAPIGooglePro();
+            }, 1000);
+        });
+    }
+}
+loadScriptPro();

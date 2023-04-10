@@ -92,18 +92,14 @@ function getPathExtensionPro() {
         var VERSION_SPRO = manifest.version;
         var NAMESPACE_SPRO = manifest.short_name;
         var URLPAGES_SPRO = manifest.homepage_url;
-        var scriptText =    "<script data-config='config-seipro'>\n"+
-                            "   var URL_SPRO = '"+URL_SPRO+"';\n"+
-                            "   var VERSION_SPRO = '"+VERSION_SPRO+"';\n"+
-                            "   var NAMESPACE_SPRO = '"+NAMESPACE_SPRO+"';\n"+
-                            "   var URLPAGES_SPRO = '"+URLPAGES_SPRO+"';\n"+
-                            "</script>";
-        $(scriptText).appendTo('head');
         setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, URLPAGES_SPRO: URLPAGES_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
     }
 }
 function setSessionNameSpace(param) {
     sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
+}
+function _P() { // get  Session Name Space
+    return JSON.parse(sessionStorage.getItem('new_extension'));
 }
 function loadStyleDesign() {
     var body = document.body;
@@ -145,9 +141,7 @@ if (getManifestExtension().short_name == 'SPro') {
     setTimeout(function(){ 
         if (sessionStorage.getItem('new_extension') === null){
             loadScriptProAll();
-            console.log('@@@ LOADING SPRO ALL');
         } else {
-            console.log('&&&&&&& RECUSE SPRO ALL');
             var URL_SPRO = pathExtensionSEIPro();
             var manifest = getManifestExtension();
             var VERSION_SPRO = manifest.version;

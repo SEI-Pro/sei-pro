@@ -90,7 +90,7 @@ function initHideMenuSistemaView(TimeOut = 9000) {
 function initSetMomentPtBr(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     else if (TimeOut < 7000) { 
-        $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
+        if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
     }
     if (typeof moment !== 'undefined' && typeof setMomentPtBr !== 'undefined') { 
         setMomentPtBr();
@@ -110,7 +110,7 @@ function initTableSorter(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
-            if (typeof $().tablesorter === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
+            if (typeof $().tablesorter === 'undefined' && TimeOut == 9000 && typeof URL_SPRO !== 'undefined') { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initTableSorter(TimeOut - 100); 
             console.log('Reload initTableSorter'); 
         }, 500);
@@ -222,6 +222,7 @@ function setTableSorter() {
                 };
 
             $(this).tablesorter({
+                sortLocaleCompare : true,
                 widgets: ["saveSort", "filter"],
                 widgetOptions: {
                     saveSort: true,
@@ -382,7 +383,7 @@ function setTablePesquisaDownload() {
     var tablePesquisa = $(frmPesquisaProtocolo).find('#conteudo');
         tablePesquisa.css('position','relative').find('.filterIfraTable').remove();
         tablePesquisa.prepend(htmlFilter);
-        $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
+        if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
 }
 function initTablePesquisaDownload() {
     var resultado = $(frmPesquisaProtocolo).find('#conteudo table.resultado');
@@ -427,6 +428,20 @@ function setAppendIconFavorites() {
             var iconStar = (id_procedimento) ? htmlIconFavorites(id_procedimento, 'left') : '';
                 td.find('.iconFavoritePro').remove();
                 td.prepend(iconStar);
+        });
+    }
+}
+function setOnClickExcluirProcBloco() {
+    var table = $('#frmRelBlocoProtocoloLista .infraTable');
+    if (table.length > 0) {
+        table.find('a[onclick*="acaoExcluir("]').on('click', function(event){
+            var id_procedimento = $(event.currentTarget).attr('href').split('-')[1];
+            var listProcessos = sessionStorageRestorePro('dadosSessionProcessoPro');
+            var objIndexDoc = (!listProcessos) ? -1 : listProcessos.findIndex((obj => obj.listAndamento.id_procedimento == String(id_procedimento)));
+            if (objIndexDoc !== -1) {
+                listProcessos[objIndexDoc].listAndamento.historico_completo = false;
+                sessionStorageStorePro('dadosSessionProcessoPro', listProcessos);
+            }
         });
     }
 }
@@ -478,12 +493,10 @@ function initReplaceSelectAll(TimeOut = 12000) {
                     no_results_text: 'Nenhum resultado encontrado'
                 });
             chosenReparePosition();
-            console.log('@@@@ initReplaceSelectAll');
         }
     } else {
         if (typeof $().chosen === 'undefined') { 
-            $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-            console.log('@load chosen');
+            if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
         }
         setTimeout(function(){ 
             initReplaceSelectAll(TimeOut - 100); 
@@ -493,7 +506,7 @@ function initReplaceSelectAll(TimeOut = 12000) {
 }
 function appendVersionSEIPro() {
     var logoSEI = $('#divInfraBarraSistemaE img[src*="sei_logo"]');
-    if (!logoSEI.hasClass('versionSEIPro')) {
+    if (typeof NAMESPACE_SPRO !== 'undefined' && !logoSEI.hasClass('versionSEIPro')) {
         logoSEI.attr('title', logoSEI.attr('title', )+' ('+NAMESPACE_SPRO+': Vers\u00E3o '+VERSION_SPRO+')').addClass('versionSEIPro');
     }
 }
@@ -802,7 +815,7 @@ function initInfraImg(TimeOut = 9000) {
     }
 }
 function initQRCodeLib() {
-    if ($('#ifrArvore').length > 0 && typeof $().qrcode !== 'function' ) {
+    if ($('#ifrArvore').length > 0 && typeof $().qrcode !== 'function' && typeof URL_SPRO !== 'undefined') {
         $.getScript(URL_SPRO+"js/lib/jquery-qrcode-0.18.0.min.js");
     }
 }
@@ -831,6 +844,7 @@ function initSeiProAll() {
     //checkBlankPageSEI();
     initCheckLoadJqueryUI();
     initQRCodeLib();
+    setOnClickExcluirProcBloco();
     console.log('initSeiProAll');
 }
 $(document).ready(function () { initSeiProAll() });
