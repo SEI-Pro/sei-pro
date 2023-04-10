@@ -8,4 +8,4 @@ Essa ferramenta permite a seleção de cores personalizadas para os marcadores d
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Visualizar parágrafos numerados no visualizador de documentos](../pages/PARAGRAFOSNUMERADOS.md)

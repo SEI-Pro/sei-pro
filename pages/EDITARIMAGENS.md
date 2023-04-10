@@ -37,4 +37,4 @@ Selecione a opção **Editar Imagem** (botão direito) para cortar, girar, inver
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Reduzir a qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)

@@ -2,12 +2,14 @@
 
 **SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
-- [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](.pages/ESTILOAVANCADO.md)
-- [Gerenciar projetos](./pages/PROJETOS.md)
+**Compatível com a versão 4.0 so SEI**
+
+- [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](./pages/ESTILOAVANCADO.md)
+- [Gerenciar projetos](./pages/PROJETOS.md) [MOMENTANEAMENTE DESCONTINUADA]
 - [Gerenciar processos favoritos](./pages/FAVORITOS.md)
 - [Controle de Prazos](./pages/PRAZOS.md)
 - [Enumerar Normas (Legística)](./pages/LEGISTICA.md)
-- [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](./pages/AGRUPAR.md)
+- [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle, unidade de envio e acompanhamento especial](./pages/AGRUPAR.md)
 - [Inserir documento externo (HTML, Google Docs e Google Planilhas)](./pages/INSERIRDOC.md)
 - [Adicionar estilo a tabela](./pages/ESTILOTABELA.md)
 - [Adicionar link de legislação](./pages/LINKLEGIS.md)
@@ -35,7 +37,7 @@
 - [Reproduzir vídeo na visualização de documentos](./pages/PLAYVIDEO.md)
 - [Exportar informações de processos em planilha CSV](./pages/LISTAPROCESSOS.md)
 - [Adicionar marca d'água de minuta ao documento](./pages/MARCAMINUTA.md)
-- [Adicionar marca de sigilo e tarjas pretas de confidencialidade](./pages/SIGILODOC.md)
+- [Adicionar marca de sigilo e tarjas pretas de confidencialidade (LGPD)](./pages/SIGILODOC.md)
 - [Duplicar documentos com 1 click](./pages/DUPLICARDOC.md)
 - [Enviar múltiplos documentos externos](./pages/UPLOADDOCS.md)
 - [Menu Suspenso](./pages/MENUSUSPENSO.md)
@@ -45,7 +47,7 @@
 - [Anotação diretamente pela árvore do processo](./pages/NOTAARVORE.md)
 - [Remover paginação de processos](./pages/REMOVEPAGINACAO.md)
 - [Dividir as informações do documento na árvore do processo em duas linhas](./pages/DIVIDIRLINHASARVORE.md)
-- [Redimensionar automaticamente a árvore do processo pela sua largura total](./pages/RESIZEARVORE.md),
+- [Redimensionar automaticamente a árvore do processo pela sua largura total](./pages/RESIZEARVORE.md)
 - [Utilizar caixas de seleção inteligentes](./pages/SUBSTITUIRSELECAO.md)
 - [Ações em Lote](./pages/ACOESEMLOTE.md)
 - [Rolagem infinita na pesquisa de processos](./pages/ROLAGEMINFINITA.md)
@@ -53,10 +55,12 @@
 - [Alertar sobre documentos não assinados ao enviar um processo](./pages/DOCSNAOASSINADOS.md)
 - [Permitir cores personalizadas em Marcadores](./pages/CORESMARCADORES.md)
 - [Visualizar parágrafos numerados no visualizador de documentos](./pages/PARAGRAFOSNUMERADOS.md)
-- [Gerar Certidão de Documento Oficial com Sigilo](./pages/CERTIDAOSIGILO.md)
+- [Gerar Certidão de Documento Oficial com Sigilo (LGPD)](./pages/CERTIDAOSIGILO.md)
 - [Enviar múltiplas imagens, formatar e editar opções avançadas](./pages/EDITARIMAGENS.md)
 - [Reduzir a qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
-- [Salvar documentos automaticamente](./pages/SALVAMENTOAUTOMATICO.md)
+- [Adicionar teclas de atalhos no editor de documentos](./pages/TECLASATALHO.md)
+- [Adicionar referências internas](./pages/REFERENCIAINTERNA.md)
+- [Ferramentas de Inteligência Artificial (ChatGPT)](./pages/FERRAMENTASIA.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
@@ -64,11 +68,17 @@ Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md)
 
 ## Como começar?
 
-Instale a extensão para o Google Chrome em:
+Instale a extensão para seu navegador preferido:
+
+<img src="https://edent.github.io/SuperTinyIcons/images/svg/chrome.svg" width="24" title="Chrome"> Google Chrome em:
 
 > [https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj](https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj)
 
-Ou para o Mozilla Firefox em:
+<img src="https://edent.github.io/SuperTinyIcons/images/svg/edge.svg" width="24" title="Edge"> Microsoft Edge em:
+
+> [https://microsoftedge.microsoft.com/addons/detail/sei-pro/gkhfbbbminanojfklpfmloaglckmlfne](https://microsoftedge.microsoft.com/addons/detail/sei-pro/gkhfbbbminanojfklpfmloaglckmlfne)
+
+<img src="https://edent.github.io/SuperTinyIcons/images/svg/firefox.svg" width="24" title="Firefox"> Mozilla Firefox em:
 
 > [https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/](https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/)
 
@@ -76,8 +86,6 @@ Ou para o Mozilla Firefox em:
 ## Encontrou um erro?
 
 Caso deseja reportar um erro, acesse [Issue](https://github.com/pedrohsoaresadv/sei-pro/issues) no [Projeto GitHub](https://github.com/pedrohsoaresadv/sei-pro/) e adicione sua requisição.
-
-Ou envie um e-mail para [pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com)
 
 ## Deseja contribuir?
 
@@ -90,13 +98,12 @@ Participe do laboratorio de ideias sobre inovações para o SEI, automações e 
 
 > <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/whatsapp.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/whatsapp.png" width="16"/> [http://bit.ly/SEI_Lab](http://bit.ly/SEI_Lab)
 
+
 ## Novidades e dicas
 
 Receba em primeira mão sobre novidades e atualizações do SEI Pro. 
 
-Inscreva-se na nossa Lista de e-mail: [http://eepurl.com/hjHh45](http://eepurl.com/hjHh45) ou
-
-Siga-me no Instagram [@phsoares_adv](https://www.instagram.com/phsoares_adv/)
+Inscreva-se na nossa Lista de e-mail: [http://eepurl.com/hjHh45](http://eepurl.com/hjHh45)
 
 ## Histórico de versões
 

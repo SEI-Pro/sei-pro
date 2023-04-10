@@ -2,6 +2,15 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+
+### Versão 1.2
+10/02/2023
+
+- Correções e melhorias
+- Adicionado a [Redução da qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
+- Adicionado as [Teclas de atalhos no editor de documentos](./pages/TECLASATALHO.md)
+- Adicionado as [Referências internas](./pages/REFERENCIAINTERNA.md) (Sugestão Hélio Oliveira e Roberto Balata)
+
 ### Versão 1.0
 15/06/2022
 
@@ -9,7 +18,6 @@
 - Adicionado a [Alteração do layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
 - Adicionado a [Envio de múltiplas imagens, formatação e editação de opções avançadas](../pages/EDITARIMAGENS.md)
 - Adicionado a [Redução da qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)
-- Adicionado a [Salvamento de documentos automaticamente](../pages/SALVAMENTOAUTOMATICO.md)
 - Adicionado a [Enumeração de Normas (Legística)](../pages/LEGISTICA.md) (Migrado do projeto [SEI Legis](https://github.com/SEI-Pro/sei-legis))
 - Adicionado o [Controle de Prazos](../pages/PRAZOS.md)  (Sugestão de Bruno Crescenti)
 - Adicionado as [Caixas de seleção inteligentes](../pages/SUBSTITUIRSELECAO.md)

@@ -10,4 +10,4 @@ Essa funcionalidade não vem ativada por padrão no **SEI Pro**, sendo necessár
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Gerar Certidão de Documento Oficial com Sigilo (LGPD)](../pages/CERTIDAOSIGILO.md)

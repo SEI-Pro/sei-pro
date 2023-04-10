@@ -4,7 +4,7 @@
 
 Essa funcionalidade adiciona ao editor de texto do SEI a conversão da primeira letra do texto selecionado em letra maiúscula, exceto para os artigos e preposições.
 
-> ![Tela Letras Maiúsculas](../img/tela-letramaiusc.gif) 
+> ![Tela Letras Maiúsculas](../img/tela-letramaiusc_.gif) 
 
 Atualmente são excetuados os seguintes artigos e preposições:
 

@@ -6,7 +6,9 @@ Essa funcionalidade adiciona à página inicial do SEI um gestor de processos fa
 
 > ![Tela Favoritos](../img/tela-favoritos.gif) 
 
-Para que você possa favoritar seus processos.
+Para que você possa favoritar seus processos, o SEI Pro utiliza o sistema de arquivos local (FileSystem API). 
+
+**ATENÇÃO: A falta de permissão do usuário na utilização desse recurso poderá ocasionar a perda de dados dos processos favoritos, caso o dados de cache do navegador sejam apagados.**
 
 ## 1. Adicionando Etiquetas
 
