@@ -877,6 +877,21 @@ div.selectProgressoBar {
     background: #4285F4 !important;
     border: 1px solid #365ea0 !important;
 }
+div.progressPrescricao {
+    height: 8px !important;
+    border: none !important;
+    margin: 10px 0;
+    width: 95%;
+    background: #ccc;
+}
+.progressPrescricao .ui-progressbar-value {
+    background: #9ece4e !important;
+    border: 1px solid #78a135 !important;
+}
+.progressPrescricao.urgente .ui-progressbar-value {
+    background: #e46e65 !important;
+    border: 1px solid #b44c44 !important;
+}
 div.atividadesProgressoBar {
     height: 4px !important;
     border: none !important;
@@ -1817,6 +1832,9 @@ table.moreInfoBox td:first-child,
     padding-right: 10px;
     color: #747474;
 }
+#processosKanban .kanban-description span.sub[data-type="especificacao"] {
+    font-size: 11pt;
+}
 .kanban-container .kanban-board .proc_tags .kanban-title-board::before {
     content: "\f02b";
 }
@@ -2483,6 +2501,9 @@ a.newLink.filterTableProcessos.newLink_active i {
 }
 #atividadesPro.minView .modulesActions:has(.iconLabel) {
     margin-top: 20px;
+}
+#atividadesPro.minView .panelInfoHome:not(.panelInfoHomeAtividade) {
+    margin-top: 50px;
 }
 #divInfraAreaTelaD {
     position: relative;
@@ -3741,4 +3762,43 @@ input[type="currency"]{
 }
 .cke_dialog_ui_labeled_content:has(select.cke_dialog_ui_input_select) {
     min-height: 30px;
+}
+i.fas.fa-spinner.fa-spin.fa-pulse {
+    height: 13px;
+    padding: 0 !important;
+}
+.tabelaControle a[href*="acao=procedimento_trabalhar"] {
+    white-space: nowrap;
+}
+.dialogBoxDiv .ui-accordion .ui-accordion-header {
+    text-indent: 20px;
+}
+h3.ui-accordion-header span.counter {
+    width: 18px;
+    border-radius: 50%;
+    text-indent: initial;
+    height: 18px;
+    background-color: #e4e9e9;
+    float: right;
+    color: #666;
+    font-size: 80%;
+    text-align: center;
+}
+div[id*="boxConfiguracoes"] .tag-input {
+    height: 22px !important;
+}
+#configEntidade_acoes_dados_externos td,
+#configEntidade_acoes_dados_externos tr {
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.tableOptionConfig .editCellSelect.inEdit .chosen-container {
+    width: calc(100% - 30px) !important;
+}
+#cache_demandas_time_chosen {
+    width: 40% !important;
+}
+.fa-spinner:before {
+    content: "\f110" !important;
 }

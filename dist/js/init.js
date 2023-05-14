@@ -217,7 +217,7 @@ function loadDataBaseProStorage(items) {
     }
 }
 function loadFontIcons(elementTo, target = $('html')) {
-    var iconBoxSlim = (localStorage.getItem('seiSlim')) ? true : false;
+    var iconBoxSlim = (localStorage.getItem('seiSlim') || localStorage.getItem('seiSlim_editor')) ? true : false;
     var pathExtension = pathExtensionSEIPro();
     if (target.find('link[data-style="seipro-fonticon"]').length == 0 && target.find('style[data-style="seipro-fonticon"]').length == 0) {
         $("<link/>", {

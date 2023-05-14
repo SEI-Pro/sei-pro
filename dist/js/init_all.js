@@ -1,3 +1,5 @@
+var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
+
 if ($('#frmEditor').length == 0)  {
     $.getScript(getUrlExtension("js/sei-functions-pro.js")); 
 }
@@ -103,7 +105,7 @@ function _P() { // get  Session Name Space
 }
 function loadStyleDesign() {
     var body = document.body;
-    if (localStorage.getItem('seiSlim')) {
+    if (localStorage.getItem('seiSlim') && !isNewSEI) {
         body.classList.add("seiSlim");
         body.classList.add("seiSlim_parent");
         if (document.getElementById("divInfraAreaTelaE") === null) body.classList.add("seiSlim_view");

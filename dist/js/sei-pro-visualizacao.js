@@ -22,6 +22,9 @@ function initSeiProVisualizacao() {
     if (typeof parent.insertIconDocCertidao === 'function' && typeof parent.linksArvore !== 'undefined') {
         parent.insertIconDocCertidao();
     }
+    if (typeof parent.setTipoPrescricaoProcesso === 'function' && parent.checkTipoPrescricaoProcesso()) {
+        parent.appendIconCtrPrescricao();
+    }
     if (typeof parent.insertIconBatchActions === 'function' && parent.checkConfigValue('acoesemlote')) {
         parent.insertIconBatchActions();
     }

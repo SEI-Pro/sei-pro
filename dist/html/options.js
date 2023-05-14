@@ -389,9 +389,11 @@ function getManifestExtension() {
 function setNamePage() {
     var manifest = getManifestExtension();
     var NAMESPACE_SPRO = manifest.short_name;
+    var ICONSPACE_SPRO = manifest.icons['32'];
     var URLPages_SPRO = manifest.homepage_url;
     // var title = 'Configura\u00E7\u00F5es Gerais | '+NAMESPACE_SPRO;
     $('.title .name-space').text(NAMESPACE_SPRO);
+    $('.icon-space').attr('src','../'+ICONSPACE_SPRO);
     $('a.manual').each(function(){
         $(this).attr('href', URLPages_SPRO+$(this).attr('href'));
     });
@@ -402,6 +404,7 @@ function setNamePage() {
     } else if (NAMESPACE_SPRO == 'ANTT Pro') {
         $('body').addClass('ANTAQ_Pro');
     }
+    console.log(manifest);
 }
 $('#options-functions').find('input[type="text"]').on("keyup", function () {
     if ($(this).val() != '') {

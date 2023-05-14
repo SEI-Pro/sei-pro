@@ -1219,7 +1219,7 @@ function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropz
                 if (queuedFiles.length == 0) {
                     dropzoneAlertBoxInfo();
                     setTimeout(function(){ window.location.reload(); }, 500);
-                    if (typeof parent.parent.nextUploadFilesInProcess === 'function') parent.parent.nextUploadFilesInProcess();
+                    if (typeof parent.parent.nextUploadFilesInProcess === 'function' && parent.parent.arvoreDropzone) parent.parent.nextUploadFilesInProcess();
                 }
             });
             return false;
@@ -2349,6 +2349,46 @@ function checkProcessoSigiloso() {
         sessionStorageStorePro('processo_sigiloso_'+id_protocolo,true);
     }
 }
+function initPanelPrescricaoProcesso() {
+    var prescData = parent.arrayPrescricoesProcPro;
+    var tipos_prescricao = typeof jmespath !== 'undefined' ? jmespath.search(prescData,"[*].id_tipo_prescricao") : null;
+    if (typeof prescData !== 'undefined' && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0) {
+        $.each(tipos_prescricao, function(i, v){
+            var value_prescricao = typeof parent.arrayConfigAtividades.tipos_prescricoes !== 'undefined' ? jmespath.search(parent.arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`"+v+"`] | [0]") : null;
+                value_prescricao = value_prescricao !== null ? value_prescricao : false;
+            var prescricao = jmespath.search(prescData,"[?id_tipo_prescricao==`"+v+"`]");
+                prescricao = prescricao !== null ? prescricao : false;
+            var vigente = jmespath.search(prescricao, "[?data_fim=='0000-00-00 00:00:00'] | [0]");
+                vigente = vigente !== null ? vigente : false;
+            var prazo = value_prescricao ? value_prescricao.prazo : false;
+            var config = value_prescricao ? value_prescricao.config : false;
+
+            if (prazo) {
+                var decorrido = moment().diff(moment(vigente.data_inicio, 'YYYY-MM-DD HH:mm:ss'),'days');
+                var porcentagem = parseFloat(((decorrido/prazo)*100).toFixed(2));
+                var nivel_critico = config && typeof config.nivel_critico !== 'undefined' ? config.nivel_critico : 75;
+                var urgencia_nivel_critico = config && typeof config.urgencia_nivel_critico !== 'undefined' ? config.urgencia_nivel_critico : false;
+                var classUrgente = porcentagem >= nivel_critico ? 'urgente' : '';
+                var txtTip = 'Decorrido: '+decorrido+' dias ('+porcentagem+'%) <br> In\u00EDcio: '+vigente.descricao+' ('+moment(vigente.data_inicio).format('DD/MM/YYYY HH:mm')+')<br>Prazo: '+prazo+' dias\',\''+value_prescricao.nome_prescricao;
+
+                $('#progressPrescricao').remove();
+                $('#topmenu').append('<div id="progressPrescricao" onmouseover="return infraTooltipMostrar(\''+txtTip+'\');" onmouseout="return infraTooltipOcultar();"  class="progressPrescricao '+classUrgente+'"></div>');
+                $('#progressPrescricao').progressbar({
+                    value: decorrido,
+                    max: prazo
+                });
+                $('#container').css('margin-top','35px');
+
+                setTimeout(function(){ 
+                    if (typeof parent.dadosProcessoPro.propProcesso !== 'undefined' && parent.dadosProcessoPro.propProcesso.txtDescricao.toLowerCase().indexOf('(urgente)') === -1 && porcentagem >= nivel_critico && urgencia_nivel_critico) {
+                        parent.addUrgenteProcessoPro();
+                    }
+                }, 4000);
+                console.log(value_prescricao, vigente, prazo, decorrido, porcentagem, nivel_critico, urgencia_nivel_critico, parent.dadosProcessoPro);
+            }
+        })
+    }
+}
 function initAnchorImg() {
     $('a[id*="anchorImg"], a[id*="anchorA"], a[id*="ancjoinPASTA"]').each(function(){
         var img = $(this).find('img').attr('src');
@@ -2380,6 +2420,7 @@ function initOnClickPasta() {
 function initSeiProArvore(loop = true) {
     loadStyleDesign();
     checkProcessoSigiloso();
+    initPanelPrescricaoProcesso();
     arrayLinksArvore = getLinksArvore();
     arrayLinksPage = getLinksPage();
     parent.linksArvore = getLinksPage();

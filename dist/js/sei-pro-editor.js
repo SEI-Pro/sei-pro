@@ -4,9 +4,13 @@ var idEditor,
     txaEditor = ($('#frmEditor').length > 0) ? 'div[id^=cke_txaEditor_]' : 'div#cke_txaConteudo',
     iframeEditor,
     autoSaveEditor,
-    perfilOpenAI;
+    perfilOpenAI,
+    langs,
+    wsDialogHtml,
+    CKWebSpeechHandler;
 
 var loadInlineOpenAI = false;
+var CKWebSpeech = false;
 
 var autoSaveInterval = (checkConfigValue('salvamentoautomatico')) ? getConfigValue('salvamentoautomatico') : 5;
 var isIntervalInProgress = false;
@@ -57,6 +61,7 @@ function htmlButton(status) {
     var icon16baseRefInterna = 'data:image/webp;base64,UklGRjYBAABXRUJQVlA4WAoAAAAQAAAADwAADwAAQUxQSHYAAAABcBvbdhPdGdWhQiiHDhSuCSFab1LXgjL1oQ7I1qYMmRx8WoiICWB6oZjpbxPauE8oTyOVDdMtoG0QbgAThFcAF0Lo9oB/Ur6G/t8ArFUtVGuA5t8PL8qnB/ZdCMEV1yA0wCYIrQZaga0oTyMfZzTjN89MtRAAVlA4IJoAAACQAgCdASoQABAAAkA4JZgCdAadxnI1a7DIeunxQAD+fox+Q69q3S+frDjKT9m5NGxEmBAie9GvAP0VzC5xraY8/8N8XfSX8f8+jH1Rr/Cy7nkgzHjrN0jr/qs/Jbu1nWTcTRSDOwYuHhVgyXN5msvqWfaKeOir71MvrUL62ATEuGvdh8hjUUdOL1qTy6OH38O1V2vZ3dZ28wAA';
     var icon16baseReview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALTSURBVDjLpZN9LBRgHMf1R/NPuo7Uam0aaV7G2uSvYki6c4hhWZe3mJw6i9FxnMj7RUNeIzYvnUtLuXKGXDV2yMm9JK10iDHlvOTuvN6369Zs1kZbf3y2Z8/2+ezZ8zw/PQB6/8NfG1H2B1n5JMPlAsoBsEkEsFyISqqdccY/Ba7ZGTJKvYiaygBDVGi570tEtjsBMY77NRRbo7RdA2UUAmq0IlsrZVN+Q0SmhzHinQ1xxY6wuGsg23Ef2sqSMclno7cqBtFOxoh1PYLr500RcYa4Vpvgqb9joDLIZE498wmLPWWY6rgHMfc25C9zoZCLwIk0Wxxttr800hCAz88zMfTQDeIS66BtgSKqVbei/xFmB5qgGuJoadStFSIO+BkWX6e7GFiQvAB+TmFe8gTCPNLMlnyY0rDX/GxULYd+GisDVVDLmnWo3jdAwLbFd2nK5uq3Fky/vguV9Ck2xrohrYlQ62Rjd46+EamedozUCdnEMrhJXmhM8tTRnucChYyFTVU3VKM3MNdPx8e6MEgqA3/0F/mc1DMic/cYuHFDTDy6MTypQv0kECsDaH1AVocACmkiNtVCKL8EQz1BxdIwE/IKpxlRvusp3SVa+1Z7u/qx0dS7gXIxQBdqECnQIJXzDNPvGH/kIKjHL2NRlgRZoRtiIyJTt15hMNliY5aXgOJqHkL4QFgrwKrjQdp2S3vst1DLw7AyEYgF7UlGSi5gtiUewjjLta2AmGWpUbTfQUBEDTI6lIgr4uBDKxNifgEm+/yhlFMxN5QASakPAsNLMd+Zjn6GlWYrIK2lJ4oSzddDQ7PW7UMEeJx7Dlgaw8gDP3Qxj6KnnAx+DhkuflWghzOVgym2K1onfdtHkjfSDFKYGUbHvXnlaeE2WBUWY7WvEH2Zzqi/agYHcq7ixMWW9pvRqYfGuTSDHafR34Gozg62WH+VQ17vzHd5w2PYmO40zr8A5dG3M3vHNHcAAAAASUVORK5CYII=';
     var icon16baseCtrReview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJ5SURBVDjLfZJtSFNRGMenRkgY1BKiL30yEkqJrCjrgxBB5Qtmyy3NcGoUuqD5skEm+ZZizpTUmZEw33ML06lzGoQKtRRETXM2Z1LOTBs6LNNw9/w7d+IiuevAj3vO4fx/z+E5lweAtxVRvp5Pqaf8psAF3RQfngtBa1OvCet2Bq5Ge/80K5nkCntR7AwhsP0imF8msCwRfF4k+GQlmFxgYF7YEKerDJzV90vKexwHZm0EX2hw6juBaZ6B8RuDsa8MRiwbggL1IP57A7b6NK36kYbH5xiM0vCwhRXYHYKMmnd/gwlH+dvunPTOehy623ZLlrfO9oCVbA72JsMzjEPK2QP5Gb5UGewJxcXtKBLsQ2JKBkR5OkfHq/QfnKKlH2uONd0f/ecVioM8OzXyC+hRRKFAeBC3A3dAfHwn7ob71tCD5rnFlc3gKiVjM+cUlEbsqZ4xqLE81IT3Lx6gXyXDUMsjpGQqRip1Y2zwJ0W6tWfOyZUQQepEYxpZHW8FTFqsGdvRX5dORLlaKw0mcP0vTsHekAYPXkDFE3VxNplU3cREXQrMdRKoCnOI+5Gycu9zlR4uBbvON7l5nNbkykunGL0VkGvfQqo2QFJtwLNhIDHfZHc/UZvpFVThxik4FfEwNS2nDc+NBMkDwI0+4LoeiNQAV+sJcrsIxMnNJDD0noxTMFt4CAPqUiSp5xHbAcRoCIQ1BBFVBGFPAYFiAYPNSkxl+4JTYFYGv6mVxyBU2oe4LiC+GxDrKPR7rQU4G9eBl/ejMVEW1sspMDUk8V+VxPsHRDZkHbjcZvGL7lrxj+pe8xN2rviEa63HLlUVvS6JPWxqlPC5BH8A3ojcdBpMJSoAAAAASUVORK5CYII=';
+    var icon16baseNewStyle = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALqSURBVDjLjVPbS9NRHN9T/0BWFBQUVIQKXigCpVIyygcDJUrnZdNEc5hlmZc0TdSF0bxszs3LvM3pXE6Xa3NL0TJTl7pcTY1Ec5rX/WxqCrHhp7NBPaRGD5+Xw/lczud8vzQAtJ0wWhLp+4kbUThSFGrQFwTrB59dE+ryA/3+vreNOMaPOmLkMeUT4mTMaoph1klh7pPApOLAUH4LPTn+X7qzLwXsKDDGj0wy8hibM+oCrI9pYTWGA0ZnWEd8sWZQYvXDC5g0XAzyo6BJP5f/R2C89OYeErlquiUPP9vogNgF1iYfbH10B0zxRMQFC4oszMsz8F3XBOqdBKqUs7a2B6fdHAIkMnu6le1w3WrwBLrjHSKWrhhYh72w2kVHjTIIae3eKFJexkp/I0YlKWhJdKsgZIanoTjMtlHPxSY9BD/YgbA2eGPteRjmWzOJazrmZKl4rL4AQT8TD4nIfPMjzKgKIUtwNtJIyxXftISclICN3GxYfHyw3FEEy1ALLIPNsOhkWGzLw5umCHCUflBLr2O29i4WXgnQwDpB0YY5NyapASmoxlxQrGAsFrAIWQ6D6Da0GecxXBaLFfLmuHI+TgrkCBCIYKqIwVKHEHWxxzZp758GbTrc9AqYu4WYb8kkRcnsLcPejzL5DKi3dfAQSEFX9RKRZkzxQklKIaqjD4PW9+QqVy+IxmdpOkwvOaB6xVjpa8QQOSMtY4DHAPW6GuLSVFwprUJxSQYWlRyMS9JQGXlw3PELZDB8OzN9c0hkdXua1/pYfTKonloHkeoWYVachCkuHZNFwZhrTMeCmov2rIsoY+wL2TaJJLKr4r6HzUyIpso4R9yp4mB8LWFgScPHtJyNjhx/CCOcCnccZTua77jKRkiJy51lmKlJxJK2lJBLoOMxiet+myDcKWXXXbBDGn/KTcI6brO7TUgzMcBl4Pk9d3tkhSB8r+s/l+k36mKOJpKW10VRh/TlzAOFJLLnTvd2Ffhf/AKfTM1hskDhXAAAAABJRU5ErkJggg==';
 
     var htmlButtonTable =   '   <div class="divQuickTable" style="display:none;"></div>'+
                             '   <a class="getQuickTableButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Tabela R\u00E1pida" hidefocus="true">'+
@@ -141,7 +146,7 @@ function htmlButton(status) {
                         '      <span class="cke_button_icon cke_button__notarodape_icon" style="background: url(\''+icon16baseNotaRodape+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir nota de rodap\u00E9</span>'+
                         '   </a>'+
-                        '   <a class="getRefInternaButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir refer\u00EAncia intena" hidefocus="true">'+
+                        '   <a class="getRefInternaButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir refer\u00EAncia interna" hidefocus="true">'+
                         '      <span class="cke_button_icon cke_button__refinterna_icon" style="background: url(\''+icon16baseRefInterna+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir refer\u00EAncia interna</span>'+
                         '   </a>'+
@@ -165,9 +170,9 @@ function htmlButton(status) {
                         '      <span class="cke_button_icon cke_button__pagebreak_icon" style="background: url(\''+icon16basePageBreak+'\') '+(isSeiSlim ? '' : '!important')+';">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir Quebra de P\u00E1gina</span>'+
                         '   </a>'+
-                        '   <a class="getSessionBreakButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Quebra de Sess\u00E3o" hidefocus="true">'+
+                        '   <a class="getSessionBreakButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Quebra de Se\u00E7\u00E3o" hidefocus="true">'+
                         '      <span class="cke_button_icon cke_button__sessionbreak_icon" style="background: url(\''+icon16baseSessionBreak+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir Quebra de Sess\u00E3o</span>'+
+                        '      <span class="cke_button_label" aria-hidden="false">Inserir Quebra de Se\u00E7\u00E3o</span>'+
                         '   </a>'+
                         '   <a class="getLatexButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Equa\u00E7\u00E3o" hidefocus="true">'+
                         '      <span class="cke_button_icon cke_button__latex_icon" style="background: url(\''+icon16baseLatex+'\');">&nbsp;</span>'+
@@ -184,7 +189,7 @@ function htmlButton(status) {
                         '</span>';
 
     var htmlButtonReview =  checkConfigValue('revisaotexto') ? 
-                            '<span id="cke_legis" class="cke_toolgroup  '+classStatus+'" role="presentation">'+
+                            '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
                             '   <a class="getReviewButton cke_button cke_button_off" href="#" title="Ativar revis\u00E3o de texto" hidefocus="true">'+
                             '      <span class="cke_button_icon cke_button__review_icon" style="background: url(\''+icon16baseReview+'\');">&nbsp;</span>'+
                             '      <span class="cke_button_label" aria-hidden="false">Ativar revis\u00E3o de texto</span>'+
@@ -196,7 +201,29 @@ function htmlButton(status) {
                             '</span>'
                             : '';
 
-    var htmlButtonSigilo =   '<span id="cke_legis" class="cke_toolgroup  '+classStatus+'" role="presentation">'+
+    var htmlButtonDitado =  checkConfigValue('ditado') ? 
+                            '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
+                            '   <a class="getDitadoButton cke_button cke_button_off" href="#" title="Ativar ditado de texto" hidefocus="true">'+
+                            '      <span class="cke_button_icon cke_button__ditado_icon" style="background: url(\''+URL_SPRO+'icons/editor/webspeech.png\');">&nbsp;</span>'+
+                            '      <span class="cke_button_label" aria-hidden="false">Ativar ditado de texto</span>'+
+                            '   </a>'+
+                            '   <a class="getCtrDitadoButton cke_button cke_button_off" href="#" title="Gerenciar configura\u00E7\u00F5es do ditado" hidefocus="true">'+
+                            '      <span class="cke_button_icon cke_button__ctr_ditado_icon" style="background: url(\''+URL_SPRO+'icons/editor/webspeech-settings.png\');">&nbsp;</span>'+
+                            '      <span class="cke_button_label" aria-hidden="false">Gerenciar configura\u00E7\u00F5es do ditado</span>'+
+                            '   </a>'+
+                            '</span>'
+                            : '';
+
+    var htmlButtonNewStyle =  isNewSEI ? 
+                            '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
+                            '   <a class="getNewStyleButton cke_button '+(localStorage.getItem('seiSlim_editor') ? 'cke_button_on' : 'cke_button_off')+'" href="#" title="Ativar estilo avan\u00E7ado" hidefocus="true">'+
+                            '      <span class="cke_button_icon cke_button__newstyle_icon" style="background: url(\''+icon16baseNewStyle+'\');">&nbsp;</span>'+
+                            '      <span class="cke_button_label" aria-hidden="false">Ativar estilo avan\u00E7ado</span>'+
+                            '   </a>'+
+                            '</span>'
+                            : '';
+
+    var htmlButtonSigilo =   '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
                             '   <a class="getMarkSigiloButton cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Adicionar / Remover marca de sigilo no texto" hidefocus="true">'+
                             '      <span class="cke_button_icon cke_button__mark_sigilo_pro_icon" style="background: url(\''+icon16baseMarkSigilo+'\');">&nbsp;</span>'+
                             '      <span class="cke_button_label" aria-hidden="false">Adicionar / Remover marca de sigilo no texto</span>'+
@@ -225,7 +252,7 @@ function htmlButton(status) {
         afterletters: htmlButtonAfterLetters, 
         beforeList: htmlButtonBeforeList, 
         afterSave: htmlButtonAfterSave, 
-        newBlock: htmlButtonSigilo+htmlButtonReview+htmlButtonLegis,
+        newBlock: htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonNewStyle,
         afterImage: htmlButtonAfterImage
     };
 }
@@ -288,6 +315,9 @@ function addButton(TimeOut = 9000) {
                 $('.getBoxSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
                 $('.getReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxReview(this) } });
                 $('.getCtrReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrReview(this) } });
+                $('.getDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxDitado(this) } });
+                $('.getCtrDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrDitado(this) } });
+                $('.getNewStyleButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxStyleEditor(this) } });
                 // $('.getAutoSaveButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getAutoSave(this) } });
                 $('.getLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { initLegis(this) } });
                 // $('.getUploadImgBase64Buttom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogUploadImgBase64(this) } });
@@ -348,7 +378,7 @@ function addStyleIframes(TimeOut = 9000) {
                                                +'   .pageBreakPro, .sessionBreakPro { background: #f1f1f1; height: 15px; } \n'
                                                +'   .pageBreakPro::before, .sessionBreakPro::before { border-bottom: 2px dashed #bfbfbf; display: block; content: \'\'; height: 7px; } \n'
                                                +'   .pageBreakPro::after, .sessionBreakPro::after { content: \'\u21B3 Quebra de p\u00E1gina\'; font-family: Calibri; text-align: center; display: block; margin-top: -10px; color: #585858; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; font-size: 10pt; font-style: italic; } \n'
-                                               +'   .sessionBreakPro::after { content: \'\u21B3 Quebra de sess\u00E3o\' !important; } \n'
+                                               +'   .sessionBreakPro::after { content: \'\u21B3 Quebra de se\u00E7\u00E3o\' !important; } \n'
                                                +'   .linkDisplayPro, .reviewDisplayPro { user-select: none; position: absolute; display: inline-block; padding: 8px; box-shadow: 0 1px 3px 1px rgba(60,64,67,.35); background: #fff; border-color: #dadce0; border-radius: 8px; margin-top: 16px; text-align: left; text-indent: initial; font-size: 12pt; text-transform: initial; font-weight: initial; letter-spacing: initial; text-decoration: initial; white-space: nowrap; } \n'
                                                +'   .linkDisplayPro a, .reviewDisplayPro a { padding: 0 8px; cursor: pointer; text-decoration: underline; color:#1155cc; } \n'
                                                +'   html.dark-mode .linkDisplayPro, html.dark-mode .reviewDisplayPro { background-color:#3D3D3D !important; } \n'
@@ -431,7 +461,7 @@ function setBgTableColor(this_) {
 }
 function setCKEDITOR_instances() {
     for(var id in CKEDITOR.instances) {
-        CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere º no mac (option+0)
+        CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere \u00BA no mac (option+0)
         CKEDITOR.instances[id].on('focus', function(e) {
             // Fill some global var here
             idEditor = e.editor.name;
@@ -445,6 +475,7 @@ function setCKEDITOR_instances() {
             loadResizeImg();
             insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
             if (checkConfigValue('teclasatalho')) stylesEditorKeystroke();
+            instanceDitadoPro(oEditor);
         });
     }
 }
@@ -761,7 +792,7 @@ function htmlTabSigiloResult() {
     $('#tabSigilo1_result').show().html(result);
 }
 function getDialogSigilo() {
-    CKEDITOR.dialog.add( 'SigiloSEI', function ( editor )
+    CKEDITOR.dialog.add( 'SigiloSEI', function(editor)
       {
          return {
             title : 'Gerenciar marcas de sigilo do documento',
@@ -1033,7 +1064,7 @@ function menuCopyStyle( editor ) {
         editor.addMenuGroup( 'copystyleGroup', -10 * 3 );
         editor.addMenuItem( 'copystyle', {
             label: 'Copiar formata\u00E7\u00E3o',
-            icon: URL_SPRO+'icons/copiarformatacao.png',
+            icon: URL_SPRO+'icons/editor/copiarformatacao.png',
             command: 'copystyle',
             group: 'copystyleGroup'
         });
@@ -1054,7 +1085,7 @@ function menuBlockEdition( editor ) {
         editor.addMenuGroup( 'blockGroup', -10 * 3 );
         editor.addMenuItem( 'blockedition', {
             label: 'Bloquear Edi\u00E7\u00E3o',
-            icon: URL_SPRO+'icons/blockedition.png',
+            icon: URL_SPRO+'icons/editor/blockedition.png',
             command: 'blockedition',
             group: 'blockGroup'
         });
@@ -1174,7 +1205,7 @@ function editImgPro( editor ) {
         editor.addMenuGroup( 'base64imageGroup', 30);
         editor.addMenuItem( 'base64imageItem', {
             label: 'Formatar Imagem',
-            icon: URL_SPRO+'icons/formatarimagem.png',
+            icon: URL_SPRO+'icons/editor/formatarimagem.png',
             command: 'base64imageDialog',
             group: 'base64imageGroup'
         });
@@ -1193,7 +1224,7 @@ function editImgPro( editor ) {
 
         editor.addMenuItem( 'ImageEditorPro', {
             label: 'Editar Imagem',
-            icon: URL_SPRO+'icons/editarimagem.png',
+            icon: URL_SPRO+'icons/editor/editarimagem.png',
             command: 'ImageEditorPro',
             group: 'base64imageGroup'
         });
@@ -1396,7 +1427,7 @@ function getDialogSyleTable() {
                         '   <input type="checkbox" id="addEstiloTableHeader" checked> <label for="addEstiloTableHeader">Determinar a primeira linha como cabe\u00E7alho da tabela</label>'+
                         '</div>';
     
-    CKEDITOR.dialog.add( 'TabelaSEI', function ( editor )
+    CKEDITOR.dialog.add( 'TabelaSEI', function(editor)
       {
          return {
             title : 'Inserir estilo \u00E0 tabela',
@@ -1635,7 +1666,7 @@ function getSearchLegis(this_) {
 	});
 }
 function getDialogLegisSEI() {
-      CKEDITOR.dialog.add( 'LegisSEI', function ( editor )
+      CKEDITOR.dialog.add( 'LegisSEI', function(editor)
       {
          return {
             title : 'Adicionar Link de Legisla\u00E7\u00E3o',
@@ -1860,7 +1891,7 @@ function convertFirstLetter(this_) {
 
 function getCitacaoDocumento(this_, TimeOut = 9000) {
     if (checkProcessoSigiloso()) {
-        CKEDITOR.dialog.add( 'CitaSEI', function ( editor ) { return getDialogNaoDisponivel('Inserir refer\u00EAncia de documento do processo') } );
+        CKEDITOR.dialog.add( 'CitaSEI', function(editor) { return getDialogNaoDisponivel('Inserir refer\u00EAncia de documento do processo') } );
         setParamEditor(this_);
         oEditor.openDialog('CitaSEI');
     } else {
@@ -1886,7 +1917,7 @@ function getDialogCitacaoDocumento() {
             if ( value.documento != '' ) { listDocumentos.push([select_text, select_value]) }
         });
 
-        CKEDITOR.dialog.add( 'CitaSEI', function ( editor )
+        CKEDITOR.dialog.add( 'CitaSEI', function(editor)
         {
             return {
                 title : 'Inserir refer\u00EAncia de documento do processo',
@@ -1963,7 +1994,7 @@ function getNotaRodape(this_) {
     oEditor.openDialog('NtRodapeSEI');
 }
 function getDialogNotaRodape() {
-      CKEDITOR.dialog.add( 'NtRodapeSEI', function ( editor )
+      CKEDITOR.dialog.add( 'NtRodapeSEI', function(editor)
       {
          return {
             title : 'Inserir nota de rodap\u00E9',
@@ -2535,7 +2566,7 @@ function arrayDadosEditor() {
 }
 function getDadosEditor(this_, TimeOut = 9000) {
     if (checkProcessoSigiloso()) {
-        CKEDITOR.dialog.add( 'DadosSEI', function ( editor ) { return getDialogNaoDisponivel('Dados do Processo') } );
+        CKEDITOR.dialog.add( 'DadosSEI', function(editor) { return getDialogNaoDisponivel('Dados do Processo') } );
         setParamEditor(this_);
         oEditor.openDialog('DadosSEI');
     } else {
@@ -2594,7 +2625,7 @@ function getDialogDadosEditor() {
                 tableNewDynamicField += ' </tbody>'+
                                         '</table>';
         
-        CKEDITOR.dialog.add( 'DadosSEI', function ( editor )
+        CKEDITOR.dialog.add( 'DadosSEI', function(editor)
         {
             return {
                 title : 'Dados do Processo',
@@ -2923,7 +2954,7 @@ function updateSelectDialog(element, array) {
 }
 function getDialogSumarioDocumento() {
     var arrayStyles = getListStylesDocumento();
-    CKEDITOR.dialog.add( 'SumarioSEI', function ( editor )
+    CKEDITOR.dialog.add( 'SumarioSEI', function(editor)
       {
          return {
             title : 'Inserir sum\u00E1rio',
@@ -3012,7 +3043,7 @@ function getTinyUrl(this_) {
     oEditor.openDialog('TinyUrlSEI');
 }
 function getDialogTinyUrl() {
-      CKEDITOR.dialog.add( 'TinyUrlSEI', function ( editor )
+      CKEDITOR.dialog.add( 'TinyUrlSEI', function(editor)
       {
          return {
             title : 'Gerar link curto do TinyURL',
@@ -3192,7 +3223,7 @@ function getDialogQrCode() {
 						'	</table>'+
 						'</div>';
 	
-      CKEDITOR.dialog.add( 'QrCodeSEI', function ( editor )
+      CKEDITOR.dialog.add( 'QrCodeSEI', function(editor)
       {
          return {
             title : 'Gerar C\u00F3digo QR',
@@ -3380,7 +3411,7 @@ function loadResizeImg() {
 		}
 	});
 }
-//// Insere o texto selecionado no documento no campo 'Texto visível' do janela de propriedades do link
+//// Insere o texto selecionado no documento no campo 'Texto vis\u00EDvel' do janela de propriedades do link
 function insertTextTotLink(idEditor) {
     var selectTxt = oEditor.getSelection().getSelectedText();
     if ( isValidHttpUrl(selectTxt) ) {
@@ -3435,7 +3466,7 @@ function editLinkPro(idEditor) {
     oEditor.openDialog('editLinkPro');
 }
 function getDialogLinkPro() {
-      CKEDITOR.dialog.add( 'editLinkPro', function ( editor )
+      CKEDITOR.dialog.add( 'editLinkPro', function(editor)
       {
          return {
             title : 'Editar link',
@@ -3500,7 +3531,7 @@ function openDialogBatchImgQuality(this_) {
     oEditor.openDialog('batchImgQuality');
 }
 function getDialogBatchImgQuality() {
-      CKEDITOR.dialog.add( 'batchImgQuality', function ( editor )
+      CKEDITOR.dialog.add( 'batchImgQuality', function(editor)
       {
          return {
             title : 'Reduzir qualidade das imagens',
@@ -4245,7 +4276,7 @@ function getDialogImageEditorPro() {
         var hScreen = $('body').height()-10;
             hScreen = hScreen > 900 ? 900 : hScreen
 
-        CKEDITOR.dialog.add( 'ImageEditorPro', function ( editor ) {
+        CKEDITOR.dialog.add( 'ImageEditorPro', function(editor) {
             return {
                 title : 'Editar Imagem',
                 minWidth : wScreen,
@@ -4348,7 +4379,7 @@ function getDialogImportDocPro() {
     var tipsDocs = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se o documento est\u00E1 acess\u00EDvel por qualquer<br>pessoa na internet. <a href="https://sei-pro.github.io/sei-pro/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
     var tipsSheets = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se a planilha est\u00E1 publicada na web.<br> Aten\u00E7\u00E3o: O URL publicado na web \u00E9 diferente do URL da planilha. <br><a href="https://sei-pro.github.io/sei-pro/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
     
-      CKEDITOR.dialog.add( 'importDocPro', function ( editor )
+      CKEDITOR.dialog.add( 'importDocPro', function(editor)
       {
          return {
             title : 'Inserir conte\u00FAdo externo',
@@ -4634,7 +4665,7 @@ function openDialogLatex(this_) {
 function getDialogLatex() {
     var htmlLatexPreview =  '<div id="latexPreview" style="text-align: center;margin: 20px;"></div>'+
                             '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Consulte o <a href="https://pt.wikipedia.org/wiki/Ajuda:Guia_de_edi%C3%A7%C3%A3o/F%C3%B3rmulas_TeX" target="_blank" class="linkDialog" style="font-style: italic;">Guia de edi\u00E7\u00E3o/F\u00F3rmulas TeX</a> para utilizar a liguagem LaTeX. <br>Se preferir, utilize um <a href="https://editor.codecogs.com/" target="_blank" class="linkDialog" style="font-style: italic;">editor visual de equa\u00E7\u00F5es LaTeX</a>. </label>';
-    CKEDITOR.dialog.add( 'latexDialog', function ( editor )
+    CKEDITOR.dialog.add( 'latexDialog', function(editor)
       {
          return {
             title : 'Inserir Equa\u00E7\u00E3o',
@@ -4695,13 +4726,13 @@ function tableSorterPro( editor ) {
         editor.addMenuGroup( 'tablesorterGroup' );
         editor.addMenuItem( 'addestilo', {
             label: 'Adicionar Estilo',
-            icon: URL_SPRO+'icons/addestilotabela.png',
+            icon: URL_SPRO+'icons/editor/addestilotabela.png',
             command: 'addestilo',
             group: 'tableproGroup'
         });
         editor.addMenuItem( 'clonetable', {
             label: 'Duplicar Tabela',
-            icon: URL_SPRO+'icons/duplicartabela.png',
+            icon: URL_SPRO+'icons/editor/duplicartabela.png',
             command: 'clonetable',
             group: 'tableproGroup'
         });
@@ -4807,7 +4838,13 @@ function tableSorterPro( editor ) {
         }
     }
 }
-function initContextMenuPro() { 
+function initContextMenuPro() {
+    $(txaEditor).each(function(){ 
+        var idEditor_ = $(this).attr('id').replace('cke_', '');
+        if ($('iframe[title*="'+idEditor_+'"]').length == 0) {
+            $(this).find('iframe').attr('title', 'Editor de Rich Text, '+idEditor_);
+        }
+    });
     setTimeout(function () {
         $(txaEditor).each(function(index){ 
             var idEditor_ = $(this).attr('id').replace('cke_', '');
@@ -4901,7 +4938,7 @@ function openDialogProcessoPublicoPro(this_) {
     oEditor.openDialog('processoPublico');
 }
 function getDialogProcessoPublicoPro() {
-    CKEDITOR.dialog.add( 'processoPublico', function ( editor )
+    CKEDITOR.dialog.add( 'processoPublico', function(editor)
       {
          return {
             title : 'Adicionar Link de Documento P\u00FAblico',
@@ -5185,7 +5222,11 @@ function repairSaveButtonBug(loop = true) {
 // INSERE ChatGPT
 function getOpenAI(this_) {
     setParamEditor(this_);
-    oEditor.openDialog('openAI');
+    if (!getOptionsPro('consentimentoIA')) {
+        oEditor.openDialog('openAI_disclaimer');
+    } else {
+        oEditor.openDialog('openAI');
+    }
 }
 function getDialogNaoDisponivel(title) {
     return {
@@ -5211,177 +5252,231 @@ function getDialogNaoDisponivel(title) {
 }
 function getDialogOpenAI() {
     if (checkProcessoSigiloso()) {
-        CKEDITOR.dialog.add( 'openAI', function ( editor ) { return getDialogNaoDisponivel('Inserir texto de intelig\u00EAncia artificial (ChatGPT)') } );
+        CKEDITOR.dialog.add( 'openAI', function(editor) { return getDialogNaoDisponivel('Inserir texto de intelig\u00EAncia artificial (ChatGPT)') } );
     } else {
-      CKEDITOR.dialog.add( 'openAI', function ( editor )
-      {
-         return {
-            title : 'Inserir texto de intelig\u00EAncia artificial (ChatGPT)',
-            minWidth : 800,
-            minHeight : 80,
-            buttons: [],
-            onShow : function() {
-                $('#openAI_load').hide();
-                if ($('#openAI_result').is(':visible')) {
-                    this.move(this.getPosition().x, (this.getPosition().y+125));
-                    $('#openAI_result').html('').hide();
-                }
-                var selectedText = oEditor.getSelection().getSelectedText();
-                if (selectedText !== '') {
-                    this.setValueOf("tab_ia", "textPrompt", selectedText);
-                }
-                $('textarea.cke_dialog_ui_input_textarea').css('white-space','break-spaces')
-                if (verifyConfigValue('substituiselecao')) {
-                    $('textarea.cke_dialog_ui_input_textarea').closest('div.cke_dialog_ui_textarea').css('margin-top','30px');
-                    setChosenInCke(false, '900px');
-                }
-
-				if (perfilOpenAI) {
-                    var idKeyword = this.getContentElement( 'tab_ia_options', 'keyword' )._.inputId;
-                    var idModeInline = this.getContentElement( 'tab_ia_options', 'mode_inline' ).domId;
-                    var elemKeyword = $('#'+idKeyword);
-                    var elemInline = $('#'+idModeInline+' input');
-
-                        elemKeyword.on('change', function(){
-                            setOptionsPro('setKeywordInlineOpenAI', $(this).val());
-                            $('.wordGpt').text($(this).val());
-                        });
-                        elemInline.prop('checked', getOptionsPro('setInlineOpenAI')).on('change', function(){
-                            getInlineOpenAI(this);
-                            console.log('change');
-                        });
-                }
-            },
-            contents :
-            [
-               (!perfilOpenAI) 
-                ? {
-                    id : 'tab_ia',
-                    label : 'Cadastro de Token',
-                    elements :
-                    [
-                      {
-                        type: 'html',
-                        html:   '<div id="openAI_info" style="white-space: break-spaces;color: #616161;">'+
-                                '   <div class="alertaAttencionPro dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">'+
-                                '       <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>'+
-                                '   </div>'+
-                                '   <div class="alertaAttencionPro dialogBoxDiv" style="margin-left:20px;font-size: 11pt;line-height: 12pt;color: #616161;">'+
-                                '       1. Acesse o site do OpenAI (<a href="https://beta.openai.com/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://beta.openai.com/</a>) e clique em "Sign Up" no canto superior direito da tela.<br><br>'+
-                                '       2. Preencha o formul\u00E1rio de cadastro com seus dados pessoais e crie uma senha. <br><span style="margin-left: 17px;"></span>\u00C9 poss\u00EDvel logar com sua conta Google ou Microsoft.<br><br>'+
-                                '       3. Verifique seu e-mail e clique no link de confirma\u00E7\u00E3o enviado pela OpenAI.<br><br>'+
-                                '       4. Verifique seu celular e adicione o c\u00F3digo de verifica\u00E7\u00E3o enviado por SMS.<br><br>'+
-                                '       5. Fa\u00E7a login na sua conta OpenAI.<br><br>'+
-                                '       6. Clique em "<i class="fas fa-bolt verdeColor"></i> Upgrade" no menu do lado direito da tela ou acesse o endere\u00E7o <a href="https://beta.openai.com/account/billing/overview" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://beta.openai.com/account/billing/overview</a>.<br><br>'+
-                                '       7. Selecione a op\u00E7\u00E3o "USER > Create API Key".<br><br>'+
-                                '       8. Clique em "Create new secret key" para gerar sua chave de API.<br><br>'+
-                                '       9. Ser\u00E1 adicionado um cr\u00E9dito promocional de $18, para utiliza\u00E7\u00E3o em at\u00E9 4 (quatro) meses. <br><span style="margin-left: 17px;"></span>Caso deseje prosseguir ap\u00F3s isso, adicione suas informa\u00E7\u00F5es de pagamento no menu "Billing". <br><span style="margin-left: 17px;"></span>Consulte condi\u00E7\u00F5es de precifica\u00E7\u00E3o da plataforma em: <a href="https://openai.com/api/pricing/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://openai.com/api/pricing/</a><br><br>'+
-                                '       10. Copie sua chave secreta de API, pois ela ser\u00E1 necess\u00E1ria para fazer chamadas \u00E0 API. Cole-a no campo abaixo:<br><br>'+
-                                '   </div>'+
-                                '   <table role="presentation" class="cke_dialog_ui_hbox">'+
-                                '    <tbody>'+
-                                '        <tr class="cke_dialog_ui_hbox">'+
-                                '            <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px">'+
-                                '                <input tabindex="3" placeholder="Insira o valor para a chave secreta" class="cke_dialog_ui_input_text" id="cke_inputSecretKey_textInput" type="password" aria-labelledby="cke_inputSecretKey_label">'+
-                                '            </td>'+
-                                '            <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">'+
-                                '               <a style="user-select: none;" onclick="saveTokenOpenAI(this)" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="openAI_label" id="openAI_uiElement">'+
-                                '                   <span id="openAI_label" class="cke_dialog_ui_button">Salvar</span>'+
-                                '               </a>'+
-                                '             <i id="openAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>'+
-                                '            </td>'+
-                                '        </tr>'+
-                                '    </tbody>'+
-                                '   </table>'+
-                                '   <div id="openAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;" class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>'+NAMESPACE_SPRO+' n\u00E3o fomenta ou recebe financiamento para a utiliza\u00E7\u00E3o dos produtos da OpenAI. Recomenda-se o seu uso meramente did\u00E1tico.</div>'+
-                                '</div>'
-                       }
-                    ]
-                }
-                : {
-                    id : 'tab_ia',
-                    label : 'ChatGPT',
-                    elements :
-                        [
+        CKEDITOR.dialog.add( 'openAI_disclaimer', function(editor) {
+                var htmlConcentimento = '<table role="presentation" cellspacing="0" border="0" style="width:100%;float:none;" align="left">'+
+                                        '   <tbody>'+
+                                        '       <tr>'+
+                                        '           <td role="presentation" class="cke_dialog_ui_vbox_child">'+
+                                        '               <div id="cke_382_uiElement" class="cke_dialog_ui_text editorTextDisclaimer">'+
+                                        '                   <p>1. N\u00E3o utilize o ChatGPT para contextos complexos, envolvendo informa\u00E7\u00F5es sigilosas, restritas ou que possa impactar decis\u00F5es cr\u00EDticas.</p>'+
+                                        '                   <p>2. \u00C9 importante sempre uma verifica\u00E7\u00E3o humana das respostas geradas automaticamente.</p>'+
+                                        '                   <p>3. A assinatura de documentos gerados com o aux\u00EDlio de IA s\u00E3o de inteira resposabilidade do signat\u00E1rio.</p>'+
+                                        '                   <p>4. A ferramenta foi alimentada com diferentes conte\u00FAdos da Internet. Quando o contexto n\u00E3o s\u00E3o bem definidos, as respostas poder\u00E3o n\u00E3o ser \u00FAteis e poder\u00E3o levar a tomada de decis\u00E3o equivocada.</p>'+
+                                        '                   <p>5. Fique atento \u00E0s suas limita\u00E7\u00F5es para n\u00E3o incorrer em situa\u00E7\u00F5es de erro, quebra de seguran\u00E7a ou quest\u00F5es legais.</p>'+
+                                        '                   <p>6. Antes de utilizar a ferramenta, verifique a adequa\u00E7\u00E3o do ChatGPT ao ato normativo sobre o uso seguro de computa\u00E7\u00E3o em nuvem do seu \u00F3rg\u00E3o.</p>'+
+                                        '               </div>'+ 
+                                        '           </td>'+
+                                        '       </tr>'+
+                                        '       <tr>'+
+                                        '           <td role="presentation" class="cke_dialog_ui_vbox_child">'+
+                                        '               <span id="cke_383_uiElement" class="cke_dialog_ui_checkbox">'+
+                                        '                   <input class="cke_dialog_ui_checkbox_input" type="checkbox" aria-labelledby="cke_381_label" id="ciente_disclaimer">'+
+                                        '                   <label id="cke_381_label" for="ciente_disclaimer">Estou ciente e entendo os riscos</label>'+
+                                        '               </span>'+
+                                        '           </td>'+
+                                        '       </tr>'+
+                                        '   </tbody>'+
+                                        '</table>';
+                    return {
+                        title : 'Intelig\u00EAncia artificial (ChatGPT): Consentimento',
+                        minWidth : 500,
+                        minHeight : 200,
+                        buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
+                        onOk: function(event, a, b) {
+                            if($('#ciente_disclaimer').is(':checked')) {
+                                event.data.hide = true;
+                                setOptionsPro('consentimentoIA', true);
+                                setTimeout(() => {
+                                    oEditor.openDialog('openAI');
+                                }, 1000);
+                            } else {
+                                alert('\u00C9 necess\u00E1rio consentimento antes de prosseguir!');
+                                event.data.hide = false;
+                            }
+                        },
+                        contents : [
                             {
-                                type: 'select',
-                                id: 'selectPrompt',
-                                label: 'Tipo de Integra\u00E7\u00E3o',
-                                width: '100%',
-                                items: [ 
-                                    ['Discorra sobre '], 
-                                    ['Resuma em linguagem simples o seguinte trecho: '], 
-                                    ['Reescreva o seguinte trecho: '], 
-                                    ['Descubra a base legal para o seguinte tema: '], 
-                                    ['Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: '], 
-                                    ['Traduza para portugu\u00EAs a frase: '], 
-                                    ['Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: '], 
-                                    ['Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: '],
-                                    ['Conclua o seguinte texto: '],
-                                    ['Extraia as palavras-chave deste texto: '],
-                                    ['Converta minha nota curta em uma ata de reuni\u00E3o: '],
-                                    ['Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: '],
-                                    ['Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: '],
-                                    ['Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: '],
-                                    ['Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: '],
-                                    ['-'] 
-                                ],
-                                'default': 'Discorra sobre '
-                            },{
-                                type: 'textarea',
-                                label: 'Texto de Entrada',
-                                id: 'textPrompt',
-                                'default': ''
-                            },{
-                                type: 'html',
-                                html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                                    ' <tbody>'+
-                                    '     <tr class="cke_dialog_ui_hbox">'+
-                                    '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="padding:0px;text-align: right;">'+
-                                    '             <a onclick="exampleTextOpenAI(this)" class="linkDialog" style="float:left;" target="_blank">Adicionar texto de exemplo</a>'+
-                                    '             <a style="user-select: none;" onclick="getParamOpenAI(this)" title="Enviar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="openAI_label" id="openAI_uiElement">'+
-                                    '                 <span id="openAI_label" class="cke_dialog_ui_button">Enviar</span>'+
-                                    '             </a>'+
+                            id : 'tab1',
+                            label : 'Consentimento',
+                            elements :
+                            [
+                                {
+                                    type: 'html',
+                                    html: htmlConcentimento
+                                }
+                            ]
+                            }
+                        ]
+                    };
+        });
+        CKEDITOR.dialog.add( 'openAI', function(editor) {
+            return {
+                title : 'Inserir texto de intelig\u00EAncia artificial (ChatGPT)',
+                minWidth : 800,
+                minHeight : 80,
+                buttons: [],
+                onShow : function() {
+                    $('#openAI_load').hide();
+                    if ($('#openAI_result').is(':visible')) {
+                        this.move(this.getPosition().x, (this.getPosition().y+125));
+                        $('#openAI_result').html('').hide();
+                    }
+                    var selectedText = oEditor.getSelection().getSelectedText();
+                    if (selectedText !== '') {
+                        this.setValueOf("tab_ia", "textPrompt", selectedText);
+                    }
+                    $('textarea.cke_dialog_ui_input_textarea').css('white-space','break-spaces')
+                    if (verifyConfigValue('substituiselecao')) {
+                        $('textarea.cke_dialog_ui_input_textarea').closest('div.cke_dialog_ui_textarea').css('margin-top','30px');
+                        setChosenInCke(false, '900px');
+                    }
+
+                    if (perfilOpenAI) {
+                        var idKeyword = this.getContentElement( 'tab_ia_options', 'keyword' )._.inputId;
+                        var idModeInline = this.getContentElement( 'tab_ia_options', 'mode_inline' ).domId;
+                        var elemKeyword = $('#'+idKeyword);
+                        var elemInline = $('#'+idModeInline+' input');
+
+                            elemKeyword.on('change', function(){
+                                setOptionsPro('setKeywordInlineOpenAI', $(this).val());
+                                $('.wordGpt').text($(this).val());
+                            });
+                            elemInline.prop('checked', getOptionsPro('setInlineOpenAI')).on('change', function(){
+                                getInlineOpenAI(this);
+                                console.log('change');
+                            });
+                    }
+                },
+                contents :[
+                (!perfilOpenAI) 
+                    ? {
+                        id : 'tab_ia',
+                        label : 'Cadastro de Token',
+                        elements :
+                        [
+                        {
+                            type: 'html',
+                            html:   '<div id="openAI_info" style="white-space: break-spaces;color: #616161;">'+
+                                    '   <div class="alertaAttencionPro dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">'+
+                                    '       <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>'+
+                                    '   </div>'+
+                                    '   <div class="alertaAttencionPro dialogBoxDiv" style="margin-left:20px;font-size: 11pt;line-height: 12pt;color: #616161;">'+
+                                    '       1. Acesse o site do OpenAI (<a href="https://beta.openai.com/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://beta.openai.com/</a>) e clique em "Sign Up" no canto superior direito da tela.<br><br>'+
+                                    '       2. Preencha o formul\u00E1rio de cadastro com seus dados pessoais e crie uma senha. <br><span style="margin-left: 17px;"></span>\u00C9 poss\u00EDvel logar com sua conta Google ou Microsoft.<br><br>'+
+                                    '       3. Verifique seu e-mail e clique no link de confirma\u00E7\u00E3o enviado pela OpenAI.<br><br>'+
+                                    '       4. Verifique seu celular e adicione o c\u00F3digo de verifica\u00E7\u00E3o enviado por SMS.<br><br>'+
+                                    '       5. Fa\u00E7a login na sua conta OpenAI.<br><br>'+
+                                    '       6. Clique em "<i class="fas fa-bolt verdeColor"></i> Upgrade" no menu do lado direito da tela ou acesse o endere\u00E7o <a href="https://beta.openai.com/account/billing/overview" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://beta.openai.com/account/billing/overview</a>.<br><br>'+
+                                    '       7. Selecione a op\u00E7\u00E3o "USER > Create API Key".<br><br>'+
+                                    '       8. Clique em "Create new secret key" para gerar sua chave de API.<br><br>'+
+                                    '       9. Ser\u00E1 adicionado um cr\u00E9dito promocional de $18, para utiliza\u00E7\u00E3o em at\u00E9 4 (quatro) meses. <br><span style="margin-left: 17px;"></span>Caso deseje prosseguir ap\u00F3s isso, adicione suas informa\u00E7\u00F5es de pagamento no menu "Billing". <br><span style="margin-left: 17px;"></span>Consulte condi\u00E7\u00F5es de precifica\u00E7\u00E3o da plataforma em: <a href="https://openai.com/api/pricing/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://openai.com/api/pricing/</a><br><br>'+
+                                    '       10. Copie sua chave secreta de API, pois ela ser\u00E1 necess\u00E1ria para fazer chamadas \u00E0 API. Cole-a no campo abaixo:<br><br>'+
+                                    '   </div>'+
+                                    '   <table role="presentation" class="cke_dialog_ui_hbox">'+
+                                    '    <tbody>'+
+                                    '        <tr class="cke_dialog_ui_hbox">'+
+                                    '            <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px">'+
+                                    '                <input tabindex="3" placeholder="Insira o valor para a chave secreta" class="cke_dialog_ui_input_text" id="cke_inputSecretKey_textInput" type="password" aria-labelledby="cke_inputSecretKey_label">'+
+                                    '            </td>'+
+                                    '            <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">'+
+                                    '               <a style="user-select: none;" onclick="saveTokenOpenAI(this)" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="openAI_label" id="openAI_uiElement">'+
+                                    '                   <span id="openAI_label" class="cke_dialog_ui_button">Salvar</span>'+
+                                    '               </a>'+
                                     '             <i id="openAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>'+
-                                    '         </td>'+
-                                    '     </tr>'+
-                                    ' </tbody>'+
-                                    '</table>'+
-                                    '<div id="openAI_result" style="display:none; white-space: break-spaces;"></div>'+
-                                    '<div id="openAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;"><span class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>Os dados s\u00E3o processados pelo servi\u00E7o <a href="https://openAI.com" class="linkDialog" style="font-style: italic;" target="_blank">OpenAI</a>. N\u00E3o envie informa\u00E7\u00F5es restritas ou sigilosas.</span></div>'
-                            }
+                                    '            </td>'+
+                                    '        </tr>'+
+                                    '    </tbody>'+
+                                    '   </table>'+
+                                    '   <div id="openAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;" class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>'+NAMESPACE_SPRO+' n\u00E3o fomenta ou recebe financiamento para a utiliza\u00E7\u00E3o dos produtos da OpenAI. Recomenda-se o seu uso meramente did\u00E1tico.</div>'+
+                                    '</div>'
+                        }
                         ]
-               }, {
-                    id : 'tab_ia_options',
-                    label : 'Op\u00E7\u00F5es',
-                    elements :
-                        [
-                            {
-                                type: "checkbox",
-                                id: "mode_inline",
-                                style: "margin-top:5px",
-                                label: "Ativar o modo de escrita interativa"
-                            },{
-                                type: 'select',
-                                id: 'keyword',
-                                label: 'Palavra de gatilho',
-                                items: [ 
-                                    ['+gpt'], 
-                                    [':gpt'], 
-                                    ['/gpt'], 
-                                    ['.gpt'], 
-                                    ['-gpt']
-                                ],
-                                'default': '+gpt'
-                            },{
-                                type: 'html',
-                                html:  '<span style="display: block;margin: 5px;font-style: italic;color: #666;">Digite <span class="wordGpt">'+(getOptionsPro('setKeywordInlineOpenAI') ? getOptionsPro('setKeywordInlineOpenAI') : '+gpt')+'</span> em qualquer parte do documento, seguido do seu prompt. Pressione ENTER e veja a magia acontecer \uD83E\uDDD9\u200D\u2642\uFE0F</span>'
-                            }
-                        ]
-               }
-            ]
-         };
-      } );
+                    }
+                    : {
+                        id : 'tab_ia',
+                        label : 'ChatGPT',
+                        elements :
+                            [
+                                {
+                                    type: 'select',
+                                    id: 'selectPrompt',
+                                    label: 'Tipo de Integra\u00E7\u00E3o',
+                                    width: '100%',
+                                    items: [ 
+                                        ['Discorra sobre '], 
+                                        ['Resuma em linguagem simples o seguinte trecho: '], 
+                                        ['Reescreva o seguinte trecho: '], 
+                                        ['Descubra a base legal para o seguinte tema: '], 
+                                        ['Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: '], 
+                                        ['Traduza para portugu\u00EAs a frase: '], 
+                                        ['Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: '], 
+                                        ['Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: '],
+                                        ['Conclua o seguinte texto: '],
+                                        ['Extraia as palavras-chave deste texto: '],
+                                        ['Converta minha nota curta em uma ata de reuni\u00E3o: '],
+                                        ['Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: '],
+                                        ['Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: '],
+                                        ['Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: '],
+                                        ['Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: '],
+                                        ['-'] 
+                                    ],
+                                    'default': 'Discorra sobre '
+                                },{
+                                    type: 'textarea',
+                                    label: 'Texto de Entrada',
+                                    id: 'textPrompt',
+                                    'default': ''
+                                },{
+                                    type: 'html',
+                                    html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
+                                        ' <tbody>'+
+                                        '     <tr class="cke_dialog_ui_hbox">'+
+                                        '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="padding:0px;text-align: right;">'+
+                                        '             <a onclick="exampleTextOpenAI(this)" class="linkDialog" style="float:left;" target="_blank">Adicionar texto de exemplo</a>'+
+                                        '             <a style="user-select: none;" onclick="getParamOpenAI(this)" title="Enviar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="openAI_label" id="openAI_uiElement">'+
+                                        '                 <span id="openAI_label" class="cke_dialog_ui_button">Enviar</span>'+
+                                        '             </a>'+
+                                        '             <i id="openAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>'+
+                                        '         </td>'+
+                                        '     </tr>'+
+                                        ' </tbody>'+
+                                        '</table>'+
+                                        '<div id="openAI_result" style="display:none; white-space: break-spaces;"></div>'+
+                                        '<div id="openAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;"><span class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>Os dados s\u00E3o processados pelo servi\u00E7o <a href="https://openAI.com" class="linkDialog" style="font-style: italic;" target="_blank">OpenAI</a>. N\u00E3o envie informa\u00E7\u00F5es restritas ou sigilosas.</span></div>'
+                                }
+                            ]
+                },{
+                        id : 'tab_ia_options',
+                        label : 'Op\u00E7\u00F5es',
+                        elements :
+                            [
+                                {
+                                    type: "checkbox",
+                                    id: "mode_inline",
+                                    style: "margin-top:5px",
+                                    label: "Ativar o modo de escrita interativa"
+                                },{
+                                    type: 'select',
+                                    id: 'keyword',
+                                    label: 'Palavra de gatilho',
+                                    items: [ 
+                                        ['+gpt'], 
+                                        [':gpt'], 
+                                        ['/gpt'], 
+                                        ['.gpt'], 
+                                        ['-gpt']
+                                    ],
+                                    'default': '+gpt'
+                                },{
+                                    type: 'html',
+                                    html:  '<span style="display: block;margin: 5px;font-style: italic;color: #666;">Digite <span class="wordGpt">'+(getOptionsPro('setKeywordInlineOpenAI') ? getOptionsPro('setKeywordInlineOpenAI') : '+gpt')+'</span> em qualquer parte do documento, seguido do seu prompt. Pressione ENTER e veja a magia acontecer \uD83E\uDDD9\u200D\u2642\uFE0F</span>'
+                                }
+                            ]
+                }]
+            };
+        });
     }
 }
 function getParamOpenAI(this_) {
@@ -5440,15 +5535,13 @@ function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
 
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-            // console.log(xhr.status);
-            // console.log(xhr.responseText);
+            console.log(xhr.status);
+            console.log(xhr.responseText);
 
             open_ai_response = xhr.responseText;
             open_ai_response = JSON.parse(open_ai_response);
 
-            var container = (inline) ? $(oEditor.getSelection().getStartElement().$).closest('p') : $('#openAI_result .result .text');
-
-            // console.log(open_ai_response);
+            console.log(open_ai_response);
             
             var responseText = open_ai_response.choices[0].message.content;
             var btnInsertText = '<span onclick="insertTextEditorSEI(this)" style="float: right; background: #e7effd; padding: 3px 5px; color: #4285f4; border-radius: 5px; margin-left: 10px; cursor: pointer;">'+
@@ -5463,26 +5556,31 @@ function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
 
             if (!inline) {
                 $('#openAI_load').hide();
-                $('#openAI_result').html(htmlResult).show(); 
+                $('#openAI_result').html(htmlResult).show()
+                $('#openAI_result .result .text').data('text',responseText);
                 dialog.move(dialog.getPosition().x, (dialog.getPosition().y-125));
             }
 
             // type code
             var i = 0, isTag, text;
             (function type() {
-                text = responseText.slice(0, ++i);
+                
+                var container = (inline) ? $(oEditor.getSelection().getStartElement().$).closest('p') : $('#openAI_result .result .text');
+                    text = responseText.slice(0, ++i);
                 if (text === responseText) return;
-                container.html(text + (!inline ? '<span class="blinker">&#32;</span>' : ''));
-                if (!inline) container[0].scrollTop = container[0].scrollHeight;
+                    container.html(text + (!inline ? '<span class="blinker">&#32;</span>' : ''));
+                    if (!inline) container[0].scrollTop = container[0].scrollHeight;
                 var char = text.slice(-1);
                 if (char === "<") isTag = true;
                 if (char === ">") isTag = false;
                 if (isTag) return type();
                 setTimeout(type, (!inline ? 40 : 10));
+
             })();
+
         } else if (xhr.status >= 400) {
-            // console.log(xhr.status);
-            // console.log(xhr.responseText);
+            console.log(xhr.status);
+            console.log(xhr.responseText);
 
             open_ai_response = xhr.responseText;
             open_ai_response = JSON.parse(open_ai_response);
@@ -5552,7 +5650,8 @@ function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
     }
 }
 function insertTextEditorSEI(this_) {
-    var text = $('<div>').append($(this_).closest('.result').find('.text').clone()).text();
+    var _this = $(this_);
+    var text = (_this.closest('.result').find('.text').data('text') !== 'undefined') ? _this.closest('.result').find('.text').data('text') : $('<div>').append(_this.closest('.result').find('.text').clone()).text();
 
     var select = oEditor.getSelection().getStartElement();
     var pElement = $(select.$).closest('p');
@@ -5621,7 +5720,7 @@ function menuOpenAI( editor ) {
         editor.addMenuGroup( 'openaiGroup', -10 * 3 );
         editor.addMenuItem( 'openai', {
             label: 'Intelig\u00EAncia artificial',
-            icon: URL_SPRO+'icons/ferramentasia.png',
+            icon: URL_SPRO+'icons/editor/ferramentasia.png',
             command: 'openai',
             group: 'openaiGroup'
         });
@@ -5668,7 +5767,7 @@ function getRefInterna(this_) {
     oEditor.openDialog('openRefInterna');
 }
 function getDialogRefInterna() {
-      CKEDITOR.dialog.add( 'openRefInterna', function ( editor )
+      CKEDITOR.dialog.add( 'openRefInterna', function(editor)
       {
          return {
             title : 'Inserir refer\u00EAncia interna',
@@ -6232,7 +6331,7 @@ function getBoxCtrReview(this_) {
     setParamEditor(this_);
     oEditor.openDialog('ReviewSEI');
 }
-function contentDialogReview(alertText = '<span style="font-size: 12pt;"><i class="fas fa-info-circle laranjaColor" style="margin-right: 5px;"></i>Nenhuma revis\u00E7\u00E3o identificada</span>') {
+function contentDialogReview(alertText = '<span style="font-size: 12pt;"><i class="fas fa-info-circle laranjaColor" style="margin-right: 5px;"></i>Nenhuma revis\u00E3o identificada</span>') {
     var listReviews = $('iframe[title*="txaEditor_"]').map(function(v, i){ 
         var _this = $(this);
         var body = _this.contents().find('body');
@@ -6266,7 +6365,7 @@ function contentDialogReview(alertText = '<span style="font-size: 12pt;"><i clas
 }
 function getDialogReview() {
     var htmlReview =   '<div style="padding-bottom: 10px;overflow: auto;max-height: 400px;text-align: center;" id="boxReviews"></div>';
-    CKEDITOR.dialog.add( 'ReviewSEI', function ( editor )
+    CKEDITOR.dialog.add( 'ReviewSEI', function(editor)
       {
          return {
             title : 'Gerenciar Revis\u00F5es',
@@ -6318,7 +6417,494 @@ function initStyleReview() {
     console.log(window.loadedStyleReview,'window.loadedStyleReview');
 }
 
+// CKWebSpeech
+// CKWebSpeech is a speech recognition plugin to CKEditor, it type out voice ideas into CKEdtior, with support for 32 languages from 62 culture variants.
+// https://github.com/ultranaco/ckwebspeech
+
+function instanceDitadoPro(oEditor) {
+    if (typeof oEditor.ckWebSpeech === 'undefined') {
+        oEditor.addCommand( 'webspeechDialog', new CKEDITOR.dialogCommand( 'webspeechDialog' ) );
+
+        oEditor.addCommand('webspeechToogle', {
+            exec: function( oEditor ) {
+                //console.log(oEditor.ckWebSpeech);
+                oEditor.ckWebSpeech.toogleSpeech();
+            }
+        });
+
+        var culture = typeof (oEditor.config.ckwebspeech) === "undefined" 
+                    ? undefined : typeof oEditor.config.ckwebspeech.culture === "undefined"
+                        ?undefined : oEditor.config.ckwebspeech.culture;
+
+            oEditor['ckWebSpeech'] = new CKWebSpeech(langs, culture, oEditor);
+
+            oEditor.config.ckwebspeech = {
+                'culture' : 'pt-BR',
+                'commandvoice' : 'ok', // trigger command listener
+                'commands': [            // action list
+                    {'vai': 'openai'},
+                    {'newline': 'nova linha'},
+                    {'newparagraph': 'novo par\u00E1grafo'},
+                    {'undo': 'desfazer'},
+                    {'redo': 'refazer'}
+                ]
+            };
+
+        if ( oEditor.contextMenu && typeof oEditor.getMenuItem('webSpeechEnabled') === 'undefined' ) {
+            oEditor.addMenuGroup( 'webSpeech', -10 * 3 );
+            oEditor.addMenuItem( 'webSpeechEnabled',
+                {
+                    label : 'Ditado',
+                    icon : URL_SPRO + 'icons/editor/webspeech.png',
+                    command : 'webspeechToogle',
+                    group : 'webSpeech'
+                });
+            oEditor.contextMenu.addListener( function( element ) {
+                // if ( hasSelection(oEditor) ) {
+                    return { webSpeechEnabled: CKEDITOR.TRISTATE_OFF};
+                // }
+            });
+        }
+    }
+}
+function getBoxDitado(this_) {
+    var btn = $('.getDitadoButton');
+	if ( btn.hasClass('cke_button_off') ) {
+        btn.addClass('cke_button_on').removeClass('cke_button_off');
+	} else {
+        btn.addClass('cke_button_off').removeClass('cke_button_on');
+	}
+    oEditor.execCommand('webspeechToogle');
+}
+function getBoxCtrDitado(this_) {
+    setParamEditor(this_);
+    oEditor.openDialog('webspeechDialog');
+}
+function initDitadoPro() {
+    langs =
+	[
+	['Afrikaans', 			['af-ZA']],
+	['Bahasa Indonesia',	['id-ID']],
+	['Bahasa Melayu', 		['ms-MY']],
+	['Catal\u00E0', 		['ca-ES']],
+	['\u010Ce\u0161tina', 	['cs-CZ']],
+	['Deutsch',         	['de-DE']],
+	['English',         	['en-AU', 'Australia'],
+							['en-CA', 'Canada'],
+							['en-IN', 'India'],
+							['en-NZ', 'New Zealand'],
+							['en-ZA', 'South Africa'],
+							['en-GB', 'United Kingdom'],
+							['en-US', 'United States']],
+	['Espa\u00F1ol',        ['es-AR', 'Argentina'],
+							['es-BO', 'Bolivia'],
+							['es-CL', 'Chile'],
+							['es-CO', 'Colombia'],
+							['es-CR', 'Costa Rica'],
+							['es-EC', 'Ecuador'],
+							['es-SV', 'El Salvador'],
+							['es-ES', 'Espa\u00F1a'],
+							['es-US', 'Estados Unidos'],
+							['es-GT', 'Guatemala'],
+							['es-HN', 'Honduras'],
+							['es-MX', 'M\u00E9xico'],
+							['es-NI', 'Nicaragua'],
+							['es-PA', 'Panam\u00E1'],
+							['es-PY', 'Paraguay'],
+							['es-PE', 'Per\u00FA'],
+							['es-PR', 'Puerto Rico'],
+							['es-DO', 'Rep\u00FAblica Dominicana'],
+							['es-UY', 'Uruguay'],
+							['es-VE', 'Venezuela']],
+	['Euskara',         	['eu-ES']],
+	['Fran\u00E7ais',       ['fr-FR']],
+	['Galego',          	['gl-ES']],
+	['Hrvatski',        	['hr_HR']],
+	['IsiZulu',         	['zu-ZA']],
+	['\u00CDslenska',        ['is-IS']],
+	['Italiano',        	['it-IT', 'Italia'],
+							['it-CH', 'Svizzera']],
+	['Magyar',          	['hu-HU']],
+	['Nederlands',      	['nl-NL']],
+	['Norsk bokm\u00E5l',   ['nb-NO']],
+	['Polski',          	['pl-PL']],
+	['Portugu\u00EAs',      ['pt-BR', 'Brasil'],
+							['pt-PT', 'Portugal']],
+	['Rom\u00E2n\u0103',    ['ro-RO']],
+	['Sloven\u010Dina',     ['sk-SK']],
+	['Suomi',           	['fi-FI']],
+	['Svenska',         	['sv-SE']],
+	['T\u00FCrk\u00E7e',    ['tr-TR']],
+	['\u0431\u044A\u043B\u0433\u0430\u0440\u0441\u043A\u0438',       	['bg-BG']],
+	['P\u0443\u0441\u0441\u043A\u0438\u0439',         					['ru-RU']],
+	['\u0421\u0440\u043F\u0441\u043A\u0438',          					['sr-RS']],
+	['\uD55C\uAD6D\uC5B4',            									['ko-KR']],
+	['\u4E2D\u6587',             										['cmn-Hans-CN', '\u666E\u901A\u8BDD (\u4E2D\u56FD\u5927\u9646)'],
+							['cmn-Hans-HK', '\u666E\u901A\u8BDD (\u9999\u6E2F)'],
+							['cmn-Hant-TW', '\u4E2D\u6587 (\u53F0\u7063)'],
+							['yue-Hant-HK', '\u7CB5\u8A9E (\u9999\u6E2F)']],
+	['\u65E5\u672C\u8A9E',  ['ja-JP']],
+	['Lingua lat\u012Bna',  ['la']]
+	];
+
+    CKWebSpeechHandler = function(oEditor) {
+        this._editor = oEditor;
+        this._currentCulture = {val: 'pt-BR', langVal: 19};
+        this._elmtPlugIcon;
+        this._plugPath;
+        this._recognizing;
+        this._recognition;
+        this._ignoreOnend;
+        this._start_timestamp;
+        this._working;
+        this.CKWebSpeechHandler();
+    }
+
+    CKWebSpeechHandler.prototype.CKWebSpeechHandler = function() {
+        this._recognition;
+        this._plugPath = URL_SPRO;
+        this._recognizing = false;
+        this._ignoreOnend = false;
+        this._working = false;
+        this.getElementPluginIcon();
+        this.initServiceSpeech();
+    }
+    CKWebSpeechHandler.prototype.isUnlockedService = function() {
+        if (!('webkitSpeechRecognition' in window)) 
+            return false;  
+        return true;
+    }
+    CKWebSpeechHandler.prototype.getElementPluginIcon = function() {
+        var obj = this; var cont =0;
+
+        var listener = setInterval(function(){
+            cont++;
+            var element;
+            try
+                {element = document.getElementById(obj._editor.ui.instances.Webspeech._.id);}
+            catch(err)
+                {element = null;}
+            
+            if(element !== null) {
+                obj._elmtPlugIcon = element.getElementsByClassName('cke_button__webspeech_icon')[0];
+                clearInterval(listener);
+            }
+            if(cont == 500) clearInterval(listener);
+        }, 1);
+    }
+
+    CKWebSpeechHandler.prototype.updateIcons = function() {
+        console.log('Ditado_recognizing: ', this._recognizing);
+        if(this._recognizing){
+            $('.cke_button__ditado_icon').css('background','url(\''+URL_SPRO+'icons/editor/webspeech-enable.gif\')');
+            $('.getDitadoButton').addClass('cke_button_on').removeClass('cke_button_off');
+            
+        }else{
+            $('.cke_button__ditado_icon').css('background','url(\''+URL_SPRO+'icons/editor/webspeech.png\')');
+            $('.getDitadoButton').addClass('cke_button_off').removeClass('cke_button_on');
+        }
+    }
+
+    CKWebSpeechHandler.prototype.initServiceSpeech = function() {
+        if(this.isUnlockedService())
+        {
+            this._recognition = new webkitSpeechRecognition();
+            this._recognition.continuous = true; 
+            this._recognition.interimResults = false;
+            
+            var self = this
+            this._recognition.onstart = function(){ self.onStart() };
+            this._recognition.onerror = function(event){ self.onError(event) };
+            this._recognition.onend = function(){ self.onEnd() };
+            this._recognition.onresult = function(event){ self.onResult(event) };
+            this._recognition.onspeechstart = function(event){self.onSpeech()};
+            this._recognition.onspeechend = function(event){self.onSpeechEnd()};
+        }
+    }
+
+    CKWebSpeechHandler.prototype.onStart = function() {
+        //console.log(this)
+        this._recognizing = true;
+        this.updateIcons();
+    }
+
+    CKWebSpeechHandler.prototype.onError = function(event) {
+        if (event.error == 'no-speech') {
+            //start_img.src = '/media/images-webspeech/mic.gif
+            //console.log('info_no_speech');
+            this._ignore_onend = true;
+        }
+        if (event.error == 'audio-capture') {
+            //start_img.src = '/media/images-webspeech/mic.gif';
+            //showInfo('info_no_microphone');
+            //console.log('auddio_capture');
+            this._ignore_onend = true;
+        }
+        if (event.error == 'not-allowed') {
+            if (event.timeStamp - this._start_timestamp < 100) {
+                //console.log('info_blocked');//showInfo('info_blocked');
+            } else {
+                //console.log('info_denied');//showInfo('info_denied');
+            }
+            this._ignore_onend = true;
+        }
+        this.updateIcons();
+    }
+
+    CKWebSpeechHandler.prototype.onEnd = function() {
+        this._recognizing = false;
+        if (this._ignoreOnend) return;
+        this.updateIcons();
+    }
+    CKWebSpeechHandler.prototype.onSpeech = function(event)  {
+        // this._elmtPlugIcon.style.backgroundImage = 'url(' +  this._plugPath 
+                // + 'icons/editor/speech.gif)';
+    }
+
+    CKWebSpeechHandler.prototype.onSpeechEnd = function(event) {
+        this.updateIcons();
+    }
+
+    CKWebSpeechHandler.prototype.onResult = function(event) {
+        if (typeof(event.results) == 'undefined') {
+            this._recognizing = false;
+            this._recognition.onend = null;
+            this._recognition.stop();
+            this.updateIcons();
+        //upgrade();
+            return;
+        }
+        for (var i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                var t = ' '+event.results[i][0].transcript+' ';
+
+                if (t.match(/.* nova linha .*/) || t.match(/.* ponto final .*/) || t.match(/.* novo par\u00E1grafo .*/)) {
+                    var l = (t.match(/.* nova linha .*/)) ? t.trim().split('nova linha') : t;
+                        l = (t.match(/.* ponto final .*/)) ? t.trim().split('ponto final') : l;
+                        l = (t.match(/.* novo par\u00E1grafo .*/)) ? t.trim().split('novo par\u00E1grafo') : l;
+                        l = l.filter( n => n);
+                    if (l.length > 0) {
+                        var _this = this;
+                        $.each(l, function(i, v){
+                            if (v.trim() != '') {
+                                var ponto = (i < l.length-1) ? '.' : '';
+                                    v = _this.replaceTranscript(v);
+                                    _this._editor.insertText(v+ponto);
+                                    if (ponto != '') oEditor.execCommand('enter');
+                            }
+                        });
+                    } else {
+                        oEditor.execCommand('enter');
+                    }
+                } else if (t.trim().toLocaleLowerCase() == 'desfazer') {
+                    oEditor.execCommand('undo');
+                } else if (t.trim().toLocaleLowerCase() == 'refazer') {
+                    oEditor.execCommand('redo');
+                } else {
+                    t = this.replaceTranscript(t);
+                    this._editor.insertText(t);
+                }
+                console.log(event.results[i][0].transcript, t);
+            }
+        }
+    }
+
+    CKWebSpeechHandler.prototype.replaceTranscript = function(t) {
+        t = (t.match(/.* abre par\u00EAnteses .*/)) ? t.replace(/ abre par\u00EAnteses /, '(') : t;
+        t = (t.match(/.* fecha par\u00EAnteses .*/)) ? t.replace(/ fecha par\u00EAnteses /, ')') : t;
+        t = (t.match(/.* abre colchete .*/)) ? t.replace(/ abre colchetes /, '[') : t;
+        t = (t.match(/.* fecha colchete .*/)) ? t.replace(/ fecha colchete /, ']') : t;
+        t = (t.match(/.* abre aspas .*/)) ? t.replace(/ abre aspas /, '"') : t;
+        t = (t.match(/.* fecha aspas .*/)) ? t.replace(/ fecha aspas /, '"') : t;
+        t = (t.match(/.* espa\u00E7o .*/)) ? t.replace(/ espa\u00E7o /, ' ') : t;
+        t = (t.match(/.* aspas .*/)) ? t.replace(/ aspas /, '"') : t;
+        t = (t.match(/.* travess\u00E3o .*/)) ? t.replace(/ travess\u00E3o /, ' \u2013 ') : t;
+        t = (t.match(/.* tra\u00E7o .*/)) ? t.replace(/ tra\u00E7o /, '- ') : t;
+        t = (t.match(/.* ponto e v\u00EDrgula .*/)) ? t.replace(/ ponto e v\u00EDrgula /, '; ') : t;
+        t = (t.match(/.* dois pontos .*/)) ? t.replace(/ dois pontos /, ': ') : t;
+        t = (t.match(/.* 2 pontos .*/)) ? t.replace(/ 2 pontos /, ': ') : t;
+        t = (t.match(/.* ponto .*/)) ? t.replace(/ ponto /, '. ') : t;
+        t = (t.match(/.* v\u00EDrgula .*/)) ? t.replace(/ v\u00EDrgula /, ', ') : t;
+
+        var iStr = Array.from(t.trim())[0];
+        var space = (iStr == ',' || iStr == ';' || iStr == ':' || iStr == '-' || iStr == '.') ? '' : ' ';
+        return space+t.trim();
+    }
+    CKWebSpeechHandler.prototype.toogleSpeech = function() {
+        if(!this._recognizing){
+                this._recognition.lang = this._currentCulture.val;
+                this._recognition.start();
+                this._ignore_onend = false;
+                this._start_timestamp = new Date().getTime();
+            }
+        else
+            {this._recognition.stop();}
+    }
+
+    CKWebSpeech = function(langs, culture, oEditor){
+        CKWebSpeechHandler.call(this, oEditor);
+        this._langs = langs;
+        this.CKWebSpeech(culture);
+    }
+
+    CKWebSpeech.prototype = Object.create( CKWebSpeechHandler.prototype );
+
+    CKWebSpeech.prototype.CKWebSpeech = function(_culture){
+        if(typeof _culture !== "undefined")
+            this.setDialectByCulture(_culture);
+    }
+
+    CKWebSpeech.prototype.setDialectByCulture = function(_culture) {
+        for (var i = 0; i < this._langs.length; i++) {
+            for (var j = 1; j < this._langs[i].length; j++) {
+                if(this._langs[i][j][0].toLowerCase() == _culture.toLowerCase())
+                {
+                    this._currentCulture ={val: this._langs[i][j][0], langVal: i};
+                    return this._currentCulture;
+                }//FALTA COLOCAR EN COOKIE
+            };
+        };
+        return this._currentCulture;
+    }
+
+    CKWebSpeech.prototype.setDialectByLanguage = function(_langVal) {
+        this.setDialectByCulture(this._langs[_langVal][1][0]);
+    }
+
+    CKWebSpeech.prototype.getLanguages = function() {
+        var _languages = new Array();
+        for (var i = 0; i < this._langs.length; i++) {
+            _languages.push(new Array(this._langs[i][0], i));
+        };
+        return _languages;
+    }
+
+    CKWebSpeech.prototype.getCultures = function(_langVal) {
+
+        if(typeof _langVal === "undefined")
+            _langVal = this._currentCulture.langVal;
+
+        var _cultures = new Array();
+        for (var i = 1; i < this._langs[_langVal].length; i++) {
+            _cultures.push( new Array(this._langs[_langVal][i][0]));
+        };
+        return  _cultures;
+    }
+    var extern;
+
+    wsDialogHtml = function() {
+        this.updateCulturesSelect = function(elmtCulture, options)
+        {
+            var select_dialect = document.getElementById(elmtCulture._.inputId);
+            
+            for (var i = select_dialect.options.length - 1; i >= 0; i--) {
+                select_dialect.remove(i);
+            }
+            
+            for (var i = 0; i < options.length; i++) {
+                select_dialect.options.add(new Option(options[i], options[i]));
+            }
+            
+        }
+    }
+}
+function getDialogDitado() {
+    if (checkConfigValue('revisaotexto')) {
+        initDitadoPro();
+        CKEDITOR.dialog.add( 'webspeechDialog', function ( oEditor ) {
+            var wsDialogDom = new wsDialogHtml();
+            var selectCulture = oEditor.ckWebSpeech._currentCulture.val;
+
+            return {
+                title: 'Configura\u00E7\u00F5es do Ditado',
+                minWidth: 400,
+                minHeight: 200,
+                contents: [
+                    {
+                        id: 'tab-basic',
+                        label: 'Configura\u00E7\u00F5es b\u00E1sicas',
+                        elements: [
+                            {
+                                type: 'select',
+                                id: 'wslanguages',
+                                label: 'Idioma',
+                                items: oEditor.ckWebSpeech.getLanguages(),
+                                'default': oEditor.ckWebSpeech._currentCulture.langVal,
+                                onChange: function( api ) {
+                                    var dialog = CKEDITOR.dialog.getCurrent();
+                                    var selCultures = dialog.getContentElement('tab-basic', 'wscultures');
+                                    var options = oEditor.ckWebSpeech.getCultures(api.data.value);
+                                    selCultures.setup({selCultures : selCultures, options : options});
+                                    selCultures.fire('change', {value : options[0][0]}, oEditor);
+                                },
+                                onShow: function(data) {
+                                    var dialog = CKEDITOR.dialog.getCurrent();
+                                    var selLanguages = dialog.getContentElement('tab-basic', 'wslanguages');
+                                    document.getElementById(selLanguages._.inputId).value = 
+                                        oEditor.ckWebSpeech._currentCulture.langVal;
+                                }
+                            },
+                            {
+                                type: 'select',
+                                id: 'wscultures',
+                                label: 'Cultura',
+                                items: oEditor.ckWebSpeech.getCultures(),
+                                'default': oEditor.ckWebSpeech._currentCulture.val,
+                                onChange: function( api ) {
+                                    selectCulture = api.data.value;                            
+                                },
+                                setup: function(data) {
+                                    wsDialogDom.updateCulturesSelect(data.selCultures, data.options);
+                                },
+                                onShow: function(data) {
+                                    var dialog = CKEDITOR.dialog.getCurrent();
+                                    var selCultures = dialog.getContentElement('tab-basic', 'wscultures');
+                                    //console.log(selCultures);
+                                    document.getElementById(selCultures._.inputId).value = 
+                                        oEditor.ckWebSpeech._currentCulture.val;
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: 'tab-adv',
+                        label: 'Advanced Settings',
+                        elements: [
+
+                        ]
+                    }
+                ],
+                onOk: function() {
+                    oEditor.ckWebSpeech.setDialectByCulture(selectCulture);
+                }
+            };
+        });
+    }
+}
+function getBoxStyleEditor(this_) {
+    var btn = $('.getNewStyleButton');
+	if ( btn.hasClass('cke_button_off') ) {
+        btn.addClass('cke_button_on').removeClass('cke_button_off');
+        updateStyleEditor('set');
+	} else {
+        btn.addClass('cke_button_off').removeClass('cke_button_on');
+        updateStyleEditor('remove');
+	}
+}
+function updateStyleEditor(mode) {
+    if (mode == 'set') {
+        localStorage.setItem('seiSlim_editor', true);
+        $('head').find('link[data-style="seipro-fonticon"]').remove();
+        $('head').find('style[data-style="seipro-fonticon"]').remove();
+        insertFontIcon('head');
+        $('body').addClass('seiSlim seiSlim_parent seiSlim_view');
+    } else {
+        localStorage.removeItem('seiSlim_editor');
+        $('body').attr('class','');
+    }
+}
 function initFunctions() {
+    initContextMenuPro();
     getDialogLegisSEI();
     getDialogNotaRodape();
     initOpenAI();
@@ -6334,12 +6920,12 @@ function initFunctions() {
     getDialogProcessoPublicoPro();
     getDialogSigilo();
     getDialogReview();
+    getDialogDitado();
     getDialogBatchImgQuality();
     initDialogImageEditorPro();
 	loadResizeImg();
     updateDialogDefinitionPro();
     loadPasteImgToBase64();
-    initContextMenuPro();
     insertFontIcon('head');
     reloadModalLink();
     setDocCertidao();

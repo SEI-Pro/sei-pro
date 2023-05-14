@@ -459,9 +459,9 @@ function orderbyTableGroup(this_) {
         updateGroupTable($('#selectGroupTablePro'));
 }
 function getArrayProcessoRecebido(href) {
-    var storeRecebimento = ( typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
-    var id_procedimento = String(getParamsUrlPro(href).id_procedimento);
-    var dadosRecebido = (jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
+    var storeRecebimento = (typeof localStorageRestorePro !== 'undefined' && typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
+    var id_procedimento = (typeof getParamsUrlPro !== 'undefined') ? String(getParamsUrlPro(href).id_procedimento) : false;
+    var dadosRecebido = (typeof jmespath !== 'undefined' && jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
     return dadosRecebido;
 }
 function updateGroupTablePro(valueSelect, mode) {
@@ -913,7 +913,18 @@ function initNewBtnHome() {
     $('#divComandos').find('.iconReaberturaPro').remove();
     $('#divComandos').append(htmlBtn);
 }
-function initNewTabProcesso() { 
+function initNewTabProcesso(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof verifyConfigValue !== 'undefined') { 
+        getNewTabProcesso();
+    } else {
+        setTimeout(function(){ 
+            initNewTabProcesso(TimeOut - 100); 
+            console.log('Reload initNewTabProcesso'); 
+        }, 500);
+    }
+}
+function getNewTabProcesso() { 
     if (verifyConfigValue('reaberturaprogramada')) initNewBtnHome();
 
     var iconLabel = localStorage.getItem('iconLabel');
@@ -983,6 +994,18 @@ function initNewTabProcesso() {
                             '</a>'
                             : '';
 
+        var htmlBtnNaoLido =  (checkConfigValue('marcar_naolido')) ? 
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Marcar como n\u00E3o visualizado\')"')+' onclick="getProcessoNaoLido()" style="position: relative; margin-left: -3px;">'+
+                            '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Marcar como n\u00E3o visualizado">'+
+                            '    <span class="botaoSEI_iconBox">'+
+                            '       <i class="far fa-eye-slash" style="font-size: 17pt; color: #fff;"></i>'+
+                            '    </span>'+
+                            (iconLabel ?
+                            '    <span class="newIconTitle">Marcar como n\u00E3o visualizado</span>'+
+                            '' : '')+
+                            '</a>'
+                            : '';
+
         htmlBtn =   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPro_newtab" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Abrir Processos em Nova Aba\')"')+' onclick="openListNewTab(this)" style="position: relative; margin-left: -3px;">'+
                     '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Abrir Processos em Nova Aba">'+
                     '    <span class="botaoSEI_iconBox">'+
@@ -991,7 +1014,9 @@ function initNewTabProcesso() {
                     (iconLabel ?
                     '    <span class="newIconTitle">Abrir Processos em Nova Aba</span>'+
                     '' : '')+
-                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload;
+
+                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnNaoLido;
+                    
         $('#divComandos').find('.iconPro_Observe').remove();
         $('#divComandos').append(htmlBtn);
     }, 500);
@@ -1773,8 +1798,8 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
                                 '       </span>'+
                                 '   </div>'+
                                 '   <div class="kanban-description">'+
-                                '       <span class="sub info_noclick" data-type="tipo">'+value.tipo+'</span>'+
                                 '       <span class="sub info_noclick" data-type="especificacao">'+value.especificacao+'</span>'+
+                                '       <span class="sub info_noclick" data-type="tipo">'+value.tipo+'</span>'+
                                 '       <span class="sub info_noclick" data-type="atribuicao">'+value.html_atribuicao+'</span>'+
                                 '       <span class="sub info_noclick" data-type="icons">'+value.html_icons+'</span>'+
                                 '       <span class="sub info_noclick" data-type="prazo">'+value.html_prazo+'</span>'+
@@ -2671,7 +2696,7 @@ function sortUploadArvore() {
     }).after(htmlUpload);
 }
 function storeLinkUsuarioSistema() {
-    setOptionsPro('usuarioSistema',$('#lnkUsuarioSistema').attr('title'));
+    if (typeof setOptionsPro !== 'undefined') setOptionsPro('usuarioSistema',$('#lnkUsuarioSistema').attr('title'));
 }
 function initSeiPro() {
 	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
@@ -2694,7 +2719,7 @@ function initSeiPro() {
         initUrgentePro();
         initNaoVisualizadoPro();
         storeLinkUsuarioSistema();
-        checkDadosAcompEspecial();
+        if (typeof checkDadosAcompEspecial !== 'undefined') checkDadosAcompEspecial();
 	} else if ( $("#ifrArvore").length > 0 ) {
         initDadosProcesso();
         initObserveUrlChange();

@@ -1,6 +1,9 @@
 var pagesInfiniteSearch = [];
 var frmPesquisaProtocolo = ($('#seiSearch').length) ? '#seiSearch' : '#frmPesquisaProtocolo';
+var divPaginas = isNewSEI ? 'div.pesquisaPaginas' : 'div.paginas';
+
 function getTableInfiniteSearch(ifrView, formID, tableID, index) {
+    console.log(pagesInfiniteSearch, index, pagesInfiniteSearch);
     if (pagesInfiniteSearch.length == 0 || $.inArray(index, pagesInfiniteSearch) === -1) {
         var form = ifrView.find(formID);
         var href = form.attr('action');
@@ -18,7 +21,8 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
             });
             param['hdnInicio'] = index;
             pagesInfiniteSearch.push(index);
-            ifrView.find('div.paginas').append('<label class="loadRemovePag"><i class="fas fa-sync fa-spin"></i></label>');
+            ifrView.find(divPaginas).append('<label class="loadRemovePag"><i class="fas fa-sync fa-spin"></i></label>');
+            console.log(param, href);
 
         $.ajax({ 
             method: 'POST',
@@ -35,23 +39,23 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
                 param['hdnInicio'] = 0;
                 $.ajax({  method: 'POST', data: param, url: href });
             }
-            ifrView.find('div.paginas').after($html.find('div.paginas')).remove();
+            ifrView.find(divPaginas).after($html.find(divPaginas)).remove();
             startQuickViewSearch();
             console.log('startQuickViewSearch');
         });
     }
 }
 function getInfiniteSearch() {
-    var nrPage = parseInt($('div.paginas b').text()+'0');
-    if ($('div.paginas span.pequeno').last().text() == 'Pr\u00F3xima') {
-        getTableInfiniteSearch($('#divInfraAreaTela'), frmPesquisaProtocolo, 'table.resultado', nrPage);
+    var nrPage = parseInt($(isNewSEI ? 'div.pesquisaPaginas .pesquisaPaginaSelecionada' : 'div.paginas b').text()+'0');
+    if ($(isNewSEI ? 'div.pesquisaPaginas a' : 'div.paginas span.pequeno').last().text() == 'Pr\u00F3xima') {
+        getTableInfiniteSearch($('#divInfraAreaTela'), frmPesquisaProtocolo, isNewSEI ? 'table.pesquisaResultado' : 'table.resultado', nrPage);
     }  
 }
 function startPagesInfiniteSearch(index = false) {
-    $(window).scroll(function () { 
+    $(isNewSEI ? '#divInfraAreaTelaD' :  window).scroll(function () { 
        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 120) {
             getInfiniteSearch();
-       }
+        }
     });
 }
 function repairLnkControleProcesso() {
