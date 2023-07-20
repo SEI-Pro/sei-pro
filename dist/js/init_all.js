@@ -136,6 +136,7 @@ function loadScriptProAll() {
         $.getScript(getUrlExtension("js/lib/moment.min.js"));
         $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
         $.getScript(getUrlExtension("js/lib/chosen.jquery.min.js"));
+        $.getScript(getUrlExtension("js/lib/favico-0.3.10.min.js"));
         $.getScript(getUrlExtension("js/sei-pro-all.js"));
     }
 }

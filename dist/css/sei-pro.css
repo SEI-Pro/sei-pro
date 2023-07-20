@@ -2812,10 +2812,14 @@ div#divInfraBarraSistemaE.barSuspenso:before {
 .ui-state-active .ui-tabs-anchor i {
     color: #fff !important;
 }
-.stickNotePro div {
+.stickNotePro div  {
     color: rgb(97, 97, 97);
     text-align: justify;
     white-space: pre-wrap;
+}
+.stickNotePro div a {
+    color: rgb(97, 97, 97);
+    font-size: 11pt;
 }
 .stickNotePro {
     background: linear-gradient(rgb(249, 239, 175), rgb(247, 233, 141));
@@ -3053,7 +3057,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
     max-width: 30%;
     float: right;
 }
-.info_checklist .info_checklist_item .label_item {
+.info_checklist .info_checklist_item .label_item * {
     display: inline-block;
     max-width: 70%;
     font-size: 10pt;
@@ -3801,4 +3805,13 @@ div[id*="boxConfiguracoes"] .tag-input {
 }
 .fa-spinner:before {
     content: "\f110" !important;
+}
+div[id*="_addTag"]:has(.tag-input) {
+    display: flex;
+}
+#frmPesquisaProtocolo {
+    max-width: initial !important;
+}
+.especifProc {
+    text-align: center;
 }

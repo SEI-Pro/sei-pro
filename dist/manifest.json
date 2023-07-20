@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "1.4.11",
+  "version": "1.4.18",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -234,6 +234,8 @@
         "js/lib/jszip-utils.min.js",
         "js/lib/google_api.js",
         "js/lib/jquery-visible.min.js",
+        "js/lib/html2canvas.min.js",
+        "js/lib/favico-0.3.10.min.js",
         "js/sei-functions-pro.js",
         "js/sei-gantt.js",
         "js/sei-forms.js",

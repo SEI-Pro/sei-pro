@@ -1,3 +1,5 @@
+var logBackup = console.log;
+var logMessages = [];
 var pagesInfiniteSearch = [];
 var frmPesquisaProtocolo = ($('#seiSearch').length) ? '#seiSearch' : '#frmPesquisaProtocolo';
 var divPaginas = isNewSEI ? 'div.pesquisaPaginas' : 'div.paginas';
@@ -310,30 +312,52 @@ function getTablePesquisaDownload(this_, mode){
                     '    </thead>'+
                     '    <tbody>';
 
-    $(frmPesquisaProtocolo).find('#conteudo table.resultado').each(function(){
-        var tr = $(this).find('tr');
+    $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo table.pesquisaResultado tr' : '#conteudo table.resultado').each(function(i){
+        var tr = isNewSEI ? $(this) : $(this).find('tr');
         var urlArvore = tr.eq(0).find('a.arvore').attr('href');
         var params = (typeof urlArvore !== 'undefined') ? getParamsUrlPro(url_host.replace('controlador.php','')+urlArvore) : false;
         var urlTable = (params) ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+params.id_procedimento+'&id_documento='+params.id_documento : false;
-        var nomeProcesso = (urlTable) ? '<a href="'+urlTable+'" target="_blank">'+tr.eq(0).find('td').eq(0).text().trim()+'</a>' : tr.eq(0).find('td').eq(0).text().trim();
-        htmlTable +=    '       <tr>'+
-                        '           <td>'+nomeProcesso+'</td>'+
-                        ''+(!modePesquisaDProc ?
-                        '           <td>'+tr.eq(0).find('td').eq(1).text().trim()+'</td>'+
-                        '           <td>'+tr.eq(1).find('td').eq(0).text().trim().replace(/\n|\r/g, " ")+'</td>'+
-                        '           <td>'+tr.eq(2).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(0).find('a').text().trim()+'</td>'+
-                        '           <td>'+tr.eq(2).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(1).find('a').text().trim()+'</td>'+
-                        '           <td>'+tr.eq(2).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(2).text().replace('Data:', '').trim()+'</td>'+
-                        '' : 
-                        '           <td>'+tr.eq(1).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(0).find('a').text().trim()+'</td>'+
-                        '           <td>'+tr.eq(1).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(1).find('a').text().trim()+'</td>'+
-                        '           <td>'+tr.eq(1).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(2).text().replace('Data:', '').trim()+'</td>'+
-                        '')+
-                        ($('#seiSearch').length ? 
-                        '            <td>'+window.location.href.split('md_')[0]+tr.eq(0).find('a').first().attr('href')+'</td>'+
-                        '            <td>'+window.location.href.split('md_')[0]+tr.eq(0).find('a').eq(2).attr('href')+'</td>'+
-                        '' : '')+
-                        '       </tr>';
+        if (isNewSEI && i % 3 == 0) {
+            var nomeProcesso = (urlTable) ? '<a href="'+urlTable+'" target="_blank">'+tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim()+'</a>' : tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim();
+                htmlTable +=    '       <tr>'+
+                                '           <td>'+nomeProcesso+'</td>'+
+                                ''+(!modePesquisaDProc ?
+                                '           <td>'+tr.find('td.pesquisaTituloDireita').text().trim()+'</td>'+
+                                '           <td>'+tr.next().find('td.pesquisaSnippet').text().trim().replace(/\n|\r/g, " ").replace(/;/g, ',')+'</td>'+
+                                '           <td>'+tr.next().next().find('td.pesquisaMetatag').eq(0).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.next().next().find('td.pesquisaMetatag').eq(1).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.next().next().find('td.pesquisaMetatag').eq(2).text().replace('Inclus\u00E3o:', '').trim()+'</td>'+
+                                '' : 
+                                '           <td>'+tr.next().next().find('td.pesquisaMetatag').eq(0).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.next().next().find('td.pesquisaMetatag').eq(1).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.next().next().find('td.pesquisaMetatag').eq(2).text().replace('Inclus\u00E3o:', '').trim()+'</td>'+
+                                '')+
+                                ($('#seiSearch').length ? 
+                                '            <td>'+window.location.href.split('md_')[0]+tr.find('td.pesquisaTituloEsquerda a.arvore').attr('href')+'</td>'+
+                                '            <td>'+window.location.href.split('md_')[0]+tr.find('td.pesquisaTituloEsquerda a.protocoloNormal').eq(1).attr('href')+'</td>'+
+                                '' : '')+
+                                '       </tr>';
+        } else if (!isNewSEI) {
+            var nomeProcesso = (urlTable) ? '<a href="'+urlTable+'" target="_blank">'+tr.eq(0).find('td').eq(0).text().trim()+'</a>' : tr.eq(0).find('td').eq(0).text().trim();
+                htmlTable +=    '       <tr>'+
+                                '           <td>'+nomeProcesso+'</td>'+
+                                ''+(!modePesquisaDProc ?
+                                '           <td>'+tr.eq(0).find('td').eq(1).text().trim()+'</td>'+
+                                '           <td>'+tr.eq(1).find('td').eq(0).text().trim().replace(/\n|\r/g, " ").replace(/;/g, ',')+'</td>'+
+                                '           <td>'+tr.eq(2).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(0).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.eq(2).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(1).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.eq(2).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(2).text().replace('Data:', '').trim()+'</td>'+
+                                '' : 
+                                '           <td>'+tr.eq(1).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(0).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.eq(1).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(1).find('a').text().trim()+'</td>'+
+                                '           <td>'+tr.eq(1).find('td').eq(0).find('table').find('tr').eq(0).find('td').eq(2).text().replace('Data:', '').trim()+'</td>'+
+                                '')+
+                                ($('#seiSearch').length ? 
+                                '            <td>'+window.location.href.split('md_')[0]+tr.eq(0).find('a').first().attr('href')+'</td>'+
+                                '            <td>'+window.location.href.split('md_')[0]+tr.eq(0).find('a').eq(2).attr('href')+'</td>'+
+                                '' : '')+
+                                '       </tr>';
+        }
     });
 
     htmlTable +=    '    </tbody>'+
@@ -369,7 +393,7 @@ function downloadTablePesquisa(this_, table){
 
 }
 function setTablePesquisaDownload() {
-    var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="right: 0;top: -40px;z-index: 999;position: absolute;">'+
+    var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="'+(isNewSEI ? 'right: 220px;top: 10px;z-index: 999;position: absolute;' : 'right: 0;top: -40px;z-index: 999;position: absolute;')+'">'+
                         '   <button type="button" onclick="getTablePesquisaDownload(this, \'download\')" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Lista" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                         '       <span class="text">Baixar Lista</span>'+
@@ -384,16 +408,16 @@ function setTablePesquisaDownload() {
                         '   </button>'+
                         '</div>';
 
-    var tablePesquisa = $(frmPesquisaProtocolo).find('#conteudo');
+    var tablePesquisa = $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo .pesquisaBarra' : '#conteudo');
         tablePesquisa.css('position','relative').find('.filterIfraTable').remove();
         tablePesquisa.prepend(htmlFilter);
         if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
 }
 function initTablePesquisaDownload() {
-    var resultado = $(frmPesquisaProtocolo).find('#conteudo table.resultado');
+    var resultado = $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo table.pesquisaResultado' : '#conteudo table.resultado');
     if (resultado.length > 0) {
         setTablePesquisaDownload();
-        initScrollToElement();
+        if (!isNewSEI) initScrollToElement();
     }
 }
 function initScrollToElement(TimeOut = 9000) {
@@ -403,7 +427,7 @@ function initScrollToElement(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initScrollToElement(TimeOut - 100); 
-            console.log('Reload initScrollToElement', TimeOut); 
+            console.log('Reload initScrollToElement => '+TimeOut); 
         }, 500);
     }
 }
@@ -417,7 +441,7 @@ function initAppendIconFavorites(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initAppendIconFavorites(TimeOut - 100); 
-            console.log('Reload initAppendIconFavorites', TimeOut); 
+            console.log('Reload initAppendIconFavorites => '+TimeOut); 
         }, 500);
     }
 }
@@ -476,7 +500,7 @@ function initGetConfigHost(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initGetConfigHost(TimeOut - 100); 
-            console.log('Reload initIconEntidade', TimeOut); 
+            console.log('Reload initIconEntidade => '+TimeOut); 
         }, 500);
     }
 }
@@ -504,7 +528,7 @@ function initReplaceSelectAll(TimeOut = 12000) {
         }
         setTimeout(function(){ 
             initReplaceSelectAll(TimeOut - 100); 
-            console.log('Reload initReplaceSelectAll', TimeOut); 
+            console.log('Reload initReplaceSelectAll => '+TimeOut); 
         }, 500);
     }
 }
@@ -567,7 +591,7 @@ function initRemovePaginacaoAll(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initRemovePaginacaoAll(TimeOut - 100); 
-            console.log('Reload initRemovePaginacaoAll', TimeOut); 
+            console.log('Reload initRemovePaginacaoAll => '+TimeOut); 
         }, 500);
     }
 }
@@ -580,7 +604,7 @@ function initPagesInfiniteSearch(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initPagesInfiniteSearch(TimeOut - 100); 
-            console.log('Reload initPagesInfiniteSearch', TimeOut); 
+            console.log('Reload initPagesInfiniteSearch => '+TimeOut); 
         }, 500);
     }
 }
@@ -593,7 +617,7 @@ function initQuickViewSearch(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initQuickViewSearch(TimeOut - 100); 
-            console.log('Reload initQuickViewSearch', TimeOut); 
+            console.log('Reload initQuickViewSearch => '+TimeOut); 
         }, 500);
     }
 }
@@ -602,14 +626,14 @@ function markQuickViewSearch(this_) {
     $('#conteudo .resultado tr.infraTrAcessada').removeClass('infraTrAcessada');
     _this.closest('tr').addClass('infraTrAcessada');
 }
-function startQuickViewSearch() {
+function startQuickViewSearch() { 
     $('a.quickview').remove();
-    $('#conteudo .resultado a[href*="controlador.php?acao=documento_visualizar"').each(function(){
-        var nrSEI = $(this).closest('tr').find('td.resTituloDireita').text().trim();
+    $(isNewSEI ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_visualizar"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_visualizar"]').each(function(){
+        var nrSEI = isNewSEI ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
         var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openSEINrPro(this, \''+nrSEI+'\')"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
         $(this).after(html);
     });
-    $('#conteudo .resultado a[href*="controlador.php?acao=documento_download_anexo"').each(function(){
+    $(isNewSEI ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_download_anexo"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_download_anexo"]').each(function(){
         var href = $(this).attr('href');
         var text = $(this).text();
         var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openDialogAnexo(this)" data-url="'+href+'" data-title="'+text+'"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
@@ -627,13 +651,17 @@ function downloadAllDocsSearch(this_) {
         }, 1500);
 
     $('tr:not(.infraDocBaixado) a.downloadview').remove();
-    $('#conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_visualizar"], #conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_download_anexo"]').each(function(index){
+    $(isNewSEI 
+            ? '#conteudo tr:not(.infraDocBaixado) .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_visualizar"], #conteudo tr:not(.infraDocBaixado) .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_download_anexo"]' 
+            : '#conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_visualizar"], #conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_download_anexo"]'
+        ).each(function(index){
         var text = $(this).text().trim();
         var href = $(this).attr('href');
-        var nrSEI = $(this).closest('tr').find('td.resTituloDireita').text().trim();
+        var nrSEI = isNewSEI ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
         var html = '<a class="downloadview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Baixando documento...\');" onmouseout="return infraTooltipOcultar();"><i style="margin: 0 3px;" class="fas fa-hourglass-half roxoColor"></i></a>';
         $(this).after(html);
         var _this = $(this).closest('td').find('.downloadview');
+        console.log(text, href, nrSEI);
         setTimeout(function(){
             if (typeof href !== 'undefined' && href.indexOf('?acao=documento_visualizar') !== -1) {
                 getIDProtocoloSEI(nrSEI,  
@@ -667,7 +695,7 @@ function initObserveUrlPage(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initObserveUrlPage(TimeOut - 100); 
-            console.log('Reload initObserveUrlPage', TimeOut); 
+            console.log('Reload initObserveUrlPage => '+TimeOut); 
         }, 500);
     }
 }
@@ -850,5 +878,23 @@ function initSeiProAll() {
     initQRCodeLib();
     setOnClickExcluirProcBloco();
     console.log('initSeiProAll');
+
+    console.log = function() {
+        logMessages.push.apply(logMessages, arguments);
+        logBackup.apply(console, arguments);
+    };
+    
+    window.onerror = function(a, b, c, d, e) {
+        debugScreen = true;
+        appendDebugReport();
+        console.log({
+            message: a,
+            source: b,
+            lineno: c,
+            colno: d,
+            error: e.message,
+            stack: e.stack.replace(/(?:\r\n|\r|\n)/g, "<br>"+"&emsp;".repeat(24))
+        });
+    };
 }
 $(document).ready(function () { initSeiProAll() });

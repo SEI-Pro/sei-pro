@@ -313,6 +313,7 @@ function cleanConfigDataRecebimento() {
     localStorageStorePro('configDataRecebimentoPro', storeRecebimento);
 }
 function removeAllTags() {
+    $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('.especifProc').remove();
 	$('#divRecebidos table tbody').find('.tagintable').remove();
 	$('#divRecebidos table tbody tr').each(function(index){ 
 	    if ( $(this).hasClass('typeGerados') ) { 
@@ -336,6 +337,7 @@ function removeAllTags() {
         .trigger('update')
         .find('.filterTableProcessos').removeClass('newLink_active');
     initControlePrazo();
+    initViewEspecifacaoProcesso();
     addAcompanhamentoEspIcon();
     tableHomeDestroy(true);
 }
@@ -348,6 +350,7 @@ function getTagName(tagName, type) {
 }
 function getUniqueTableTag(i, tagName, type) {
 	var tagName_ = getTagName(tagName, type);
+    var txtTagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
 	var tbRecebidos = $('#divRecebidos table');
 	var countTd = tbRecebidos.find('tr:not(.tablesorter-headerRow)').eq(1).find('td').length;
 	var iconSelect = '<label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \''+tagName_+'\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg"></a></th>';
@@ -363,7 +366,7 @@ function getUniqueTableTag(i, tagName, type) {
 	var htmlBody = '<tr class="infraCaption tagintable"><td colspan="'+(countTd+3)+'"><span '+actionTest+'>'+tagCount+' registros:</span></td></tr>'
 					+'<tr data-htagname="'+tagName_+'" class="tagintable tableHeader">'
 					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" width="5%" align="center">'+iconSelect+'</th>'
-					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" colspan="'+(countTd+2)+'">'+tagName+collapseBtn+'</th>'
+					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" colspan="'+(countTd+2)+'">'+txtTagName+collapseBtn+'</th>'
 					+'</tr>';
 		$(htmlBody).appendTo('#divRecebidos table tbody');
 		if ( i == 0 ) { 
@@ -837,6 +840,7 @@ function getProcessosPaginacao(this_, index, tipo) {
                 getProcessosPaginacao(this_, index+1, tipo);
                 if (checkConfigValue('gerenciarfavoritos')) appendStarOnProcess();
                 initControlePrazo(true);
+                initViewEspecifacaoProcesso();
                 addAcompanhamentoEspIcon();
             } else {
                 param['hdn'+tipo+'PaginaAtual'] = 0;
@@ -1199,7 +1203,7 @@ function initSortDivPanel(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initSortDivPanel(TimeOut - 100); 
-            console.log('Reload initSortDivPanel', TimeOut); 
+            console.log('Reload initSortDivPanel => '+TimeOut); 
             if (TimeOut == 9000) fnJqueryPro();
         }, 500);
     }
@@ -1494,7 +1498,7 @@ function setTableSorterHome() {
             }, 1000);
         }
 }
-function tableHomeDestroy(reload = false, Timeout = 3000) {
+function tableHomeDestroy(reload = false, tableHomeTimeout = 3000) {
     if (tableHomePro.length > 0) {
         $.each(tableHomePro, function(i){
             tableHomePro[i].trigger("destroy");
@@ -1503,7 +1507,7 @@ function tableHomeDestroy(reload = false, Timeout = 3000) {
         window.tableHomePro = [];
         if (reload && tableHomeTimeout > 0) {
             initTableSorterHome();
-            console.log('reload initTableSorterHome', tableHomeTimeout);
+            console.log('reload initTableSorterHome => '+tableHomeTimeout);
             setTimeout(function(){ 
                 forceTableHomeDestroy(tableHomeTimeout-500);
             }, 1000);
@@ -1512,7 +1516,7 @@ function tableHomeDestroy(reload = false, Timeout = 3000) {
         initTableSorterHome();
     }
 }
-function forceTableHomeDestroy(Timeout) {
+function forceTableHomeDestroy(Timeout = 3000) {
     if (Timeout <= 0) { return; }
     var force = false;
     $.each(tableHomePro, function(i){
@@ -1522,7 +1526,7 @@ function forceTableHomeDestroy(Timeout) {
     });
     if (force && Timeout > 0 && $('#tblProcessosGerados').is(':visible')) {
         tableHomeDestroy(true, Timeout-1000);
-        console.log('Reload forceTableHomeDestroy', Timeout);
+        console.log('Reload forceTableHomeDestroy => '+TimeOut);
     }
 }
 function forceOnLoadBody() {
@@ -1585,6 +1589,45 @@ function initReplaceSticknoteHome(TimeOut = 9000) {
         }, 500);
     }
 }
+function initFullnameAtribuicao(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof checkConfigValue !== 'undefined') { 
+        if (verifyConfigValue('nomesusuarios')) {
+            fullnameAtribuicao();
+        }
+    } else {
+        setTimeout(function(){ 
+            initFullnameAtribuicao(TimeOut - 100); 
+            console.log('Reload initFullnameAtribuicao');  
+        }, 500);
+    }
+}
+function initViewEspecifacaoProcesso(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof checkConfigValue !== 'undefined') { 
+        if (verifyConfigValue('especificaprocesso')) {
+            viewEspecifacaoProcesso();
+        }
+    } else {
+        setTimeout(function(){ 
+            initViewEspecifacaoProcesso(TimeOut - 100); 
+            console.log('Reload initViewEspecifacaoProcesso'); 
+        }, 500);
+    }
+}
+function initFaviconNrProcesso(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof Favico !== 'undefined') { 
+        if (checkConfigValue('contadoricone')) {
+            getFaviconNrProcesso();
+        }
+    } else {
+        setTimeout(function(){ 
+            initFaviconNrProcesso(TimeOut - 100); 
+            console.log('Reload initFaviconNrProcesso'); 
+        }, 500);
+    }
+}
 function initReloadModalLink(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof reloadModalLink !== 'undefined') { 
@@ -1603,7 +1646,7 @@ function initReplaceNewIcons(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initReplaceNewIcons(TimeOut - 100); 
-            console.log('Reload initReplaceNewIcons', TimeOut); 
+            console.log('Reload initReplaceNewIcons => '+TimeOut); 
         }, 500);
     }
 }
@@ -1614,7 +1657,7 @@ function initObserveUrlChange(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initObserveUrlChange(TimeOut - 100); 
-            console.log('Reload initObserveUrlChange', TimeOut); 
+            console.log('Reload initObserveUrlChange => '+TimeOut); 
         }, 500);
     }
 }
@@ -1659,7 +1702,7 @@ function selectPanelKanbanHome() {
     var type = storeGroupTablePro();
         type = (!type || type == 'all' || type == '') ? false : true;
         type = true;
-    var html =  '<div id="processosProActions" class="panelHome panelHomeProcessos" style="'+(type ? '' : 'display:none;')+' position: absolute;z-index: 999;left: 0;width: calc(100% - 30px);margin: 15px 0 0 0;">'+
+    var html =  '<div id="processosProActions" class="panelHome panelHomeProcessos" style="'+(type ? '' : 'display:none;')+' position: absolute;z-index: 999;right: 0;width: auto;margin: 15px 0 0 0;">'+
                 '    <div class="btn-group processosBtnPanel" role="group" style="float: right;margin-right: 10px;">'+
                 '       <button type="button" onclick="getPanelProc(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelProcessosView') == 'Tabela' || !getOptionsPro('panelProcessosView') ? 'active' : '')+'"><i class="fas fa-table" style="color: #888;"></i> <span class="text">Tabela</span></button>'+
                 '       <button type="button" onclick="getPanelProc(this)" title="D\u00EA um duplo clique para atualizar o quadro" ondblclick="removeDataPanelProc(this)" data-value="Quadro" class="btn btn-sm btn-light '+(getOptionsPro('panelProcessosView') == 'Quadro' ? 'active' : '')+'"><i class="fas fa-project-diagram" style="color: #888;"></i> <span class="text">Quadro</span></button>'+
@@ -1711,7 +1754,12 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
             if (getOptionsPro('arrayListUsersSEI') && getOptionsPro('arrayListUsersSEI').length > 0) {
                 $('#processosProActions [data-value="Quadro"] i').attr('class','fas fa-project-diagram');
                 var itensKanban = $.map(getOptionsPro('arrayListUsersSEI'),function(v){
-                    return (v.name.indexOf('-') !== -1) ? v.name.split('-')[0].trim() : v.name;
+                    var nameuser = (checkConfigValue('nomesusuarios') && v.name.indexOf('-') !== -1) 
+                        ? v.name.split('-')[1].trim().split(/(\s).+\s/).join("") 
+                        : (v.name.indexOf('-') !== -1) 
+                            ? v.name.split('-')[0].trim() 
+                            : v.name
+                    return nameuser;
                 });
                 itensKanban.unshift('');
             } else if (loop > 0) {
@@ -2714,6 +2762,9 @@ function initSeiPro() {
         initReplaceSticknoteHome();
         initReplaceNewIcons();
         initControlePrazo();
+        initViewEspecifacaoProcesso(); 
+        initFullnameAtribuicao();
+        initFaviconNrProcesso();
         addAcompanhamentoEspIcon();
         initAllMarcadoresHome();
         initUrgentePro();

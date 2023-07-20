@@ -104,6 +104,13 @@ function setToolbarDocs() {
     $('body').prepend(htmlToolbarProc+htmlToolbarDoc);
     var click = ( jmespath.search(selectedItensDocMenu, "[?[0]=='Ativar menu ao clicar'] | length(@)") > 0 ) ? true : false;
     getToolbarPro(click); 
+    getTooltipOnSign();
+}
+function getTooltipOnSign() {
+    $('img[id*="iconA"], img[id*="iconCD"], img[id*="iconNA"]').each(function(){ 
+        var title = (typeof $(this).attr('title') !== 'undefined') ? $(this).attr('title').replace(/(\r\n|\n|\r)/gm, "<br>") : false;
+        if (title) $(this).attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()').removeAttr('title');
+    });
 }
 function getLinksPage() {
     var links = [];
@@ -1167,7 +1174,7 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
                 }
             });
         } else {
-            elem.addClass("dz-error").find('.dz-error-message span').text('Link para incluir documento n\u00E3o encontrado');
+            elem.addClass("dz-error").find('.dz-error-message span').text('Link para incluir documento n\u00E3o encontrado. Processo est\u00E1 aberto na unidade?');
         }
     } else if (mode == 'save' && result) {
         var href = result.urlForm;
@@ -1298,7 +1305,7 @@ function initUploadArvore(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initUploadArvore(TimeOut - 100); 
-            console.log('Reload initUploadArvore', TimeOut); 
+            console.log('Reload initUploadArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -1321,7 +1328,7 @@ function initDadosProcessoArvore(TimeOut = 1000) {
     } else {
         setTimeout(function(){ 
             initDadosProcessoArvore(TimeOut - 100); 
-            console.log('Reload initDadosProcessoArvore', TimeOut); 
+            console.log('Reload initDadosProcessoArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -1592,7 +1599,7 @@ function formatDadosAnotacao(value, type, paste = false) {
                         check = (v.indexOf('[X]') !== -1) ? ' class="stickNoteCheck stickNoteChecked"' : check;
                     var text = (v.indexOf('[ ]') !== -1) ? v.replace('[ ]','').trim() : v;
                         text = (v.indexOf('[X]') !== -1) ? v.replace('[X]','').trim() : text;
-                    result += '<div'+check+'>'+text+'</div>';
+                    result += '<div'+check+'>'+replaceTextToProcessoSEI(text)+'</div>';
                 } else if (i != 0 || i != value.length-1) {
                     result += '<div><br></div>';
                 }
@@ -1603,7 +1610,7 @@ function formatDadosAnotacao(value, type, paste = false) {
                     check = (value.indexOf('[X]') !== -1) ? ' class="stickNoteCheck stickNoteChecked"' : check;
                 var text = (value.indexOf('[ ]') !== -1) ? value.replace('[ ]','').trim() : value;
                     text = (value.indexOf('[X]') !== -1) ? value.replace('[X]','').trim() : text;
-                result = '<div'+check+'>'+text+'</div>';
+                result = '<div'+check+'>'+replaceTextToProcessoSEI(text)+'</div>';
             }
         }
     }
@@ -2150,7 +2157,7 @@ function getAtividadesProcessoArvore() {
     }
     return htmlAtividades;
 }
-function stylePanelArvore() {
+function stylePanelArvore() { 
     if ($('.iconDadosProcesso').length == 0) {
         $('#divConsultarAndamento').css({'border-top': '1px solid #dadada'}).find('a').addClass('newLink').prepend('<i class="fas fa-search azulColor iconDadosProcesso"></i>').find('img').remove();
         $('#divRelacionados').addClass('panelDadosArvore').find('label').addClass('newLink').prepend('<i class="fas fa-retweet azulColor iconDadosProcesso"></i>');
@@ -2255,7 +2262,7 @@ function initStylePanelArvore(TimeOut = 9000) {
                 parent.initNameConst();
             }
             initStylePanelArvore(TimeOut - 100); 
-            console.log('Reload initStylePanelArvore', TimeOut); 
+            console.log('Reload initStylePanelArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -2283,7 +2290,7 @@ function initBreakDocTwoLines(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initBreakDocTwoLines(TimeOut - 100); 
-            console.log('Reload initBreakDocTwoLines', TimeOut); 
+            console.log('Reload initBreakDocTwoLines => '+TimeOut); 
         }, 500);
     }
 }

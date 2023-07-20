@@ -326,7 +326,7 @@ function addButton(TimeOut = 9000) {
                 addStyleIframes(); 
         } else {
             addButton(TimeOut - 100);
-            console.log('addButton Reload',TimeOut);
+            console.log('addButton Reload => '+TimeOut);
         }
     }, 500);
 }
@@ -404,7 +404,7 @@ function addStyleIframes(TimeOut = 9000) {
             
         } else {
             addStyleIframes(TimeOut - 100);
-            console.log('addStyleIframes Reload',TimeOut);
+            console.log('addStyleIframes Reload => '+TimeOut);
         }
     }, 500);
 }
@@ -1933,14 +1933,14 @@ function getDialogCitacaoDocumento() {
                         var list_protocolo = $.map(selectMult,function(e){
                             if (e.value != '') return e.value
                         });
-                        console.log(list_protocolo);
+                        // console.log(list_protocolo);
                         if ($.isArray(list_protocolo) && list_protocolo.length > 0) {
                             $.each(list_protocolo, function(index, id_protocolo){
-                                console.log(index, id_protocolo);
+                                // console.log(index, id_protocolo);
                                 if (id_protocolo != '') {
-                                    insertCitacaoDocumento(id_protocolo);
-                                    if (index < list_protocolo.length-2) oEditor.insertText(', ');
-                                    if (index == list_protocolo.length-2) oEditor.insertText(' e ');
+                                    var insert = insertCitacaoDocumento(id_protocolo);
+                                    if (insert && index < list_protocolo.length-2) oEditor.insertText(', ');
+                                    if (insert && index == list_protocolo.length-2) oEditor.insertText(' e ');
                                 }
                             });
                             event.data.hide = true;
@@ -1975,7 +1975,7 @@ function getDialogCitacaoDocumento() {
 }
 function insertCitacaoDocumento(id_protocolo) {
     var dataValue = jmespath.search(dadosProcessoPro.listDocumentos, "[?id_protocolo=='"+id_protocolo+"'] | [0]");
-    console.log(dataValue, id_protocolo);
+    // console.log(dataValue, id_protocolo);
     if ( typeof dataValue !== 'undefined' && dataValue !== null && dataValue.documento ) {
         var nrSei = ( dataValue.nr_sei != '' ) ? dataValue.nr_sei : dataValue.documento;
         var citacaoDoc = getCitacaoDoc();
@@ -1985,6 +1985,9 @@ function insertCitacaoDocumento(id_protocolo) {
         oEditor.fire('saveSnapshot');
         oEditor.insertHtml(citacaoDocumento);
         oEditor.fire('saveSnapshot');
+        return true;
+    } else {
+        return false;
     }
 }
 

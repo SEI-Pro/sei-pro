@@ -345,9 +345,9 @@ if (getManifestExtension().short_name == 'SPro') {
     setTimeout(function(){ 
         if (sessionStorage.getItem('new_extension') === null){
             loadScriptPro();
-            console.log('@@@ LOADING SPRO');
+            // console.log('@@@ LOADING SPRO');
         } else {
-            console.log('&&&&&&& RECUSE SPRO');
+            // console.log('&&&&&&& RECUSE SPRO');
             var URL_SPRO = pathExtensionSEIPro();
             var manifest = getManifestExtension();
             var VERSION_SPRO = manifest.version;

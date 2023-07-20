@@ -34,7 +34,7 @@ function initIconEntidade(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initIconEntidade(TimeOut - 100); 
-            console.log('Reload initIconEntidade', TimeOut); 
+            console.log('Reload initIconEntidade => '+TimeOut); 
         }, 500);
     }
 }

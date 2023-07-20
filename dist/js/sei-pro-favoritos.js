@@ -4,6 +4,7 @@ var markers = [];
 var markersLayer = false;
 var locationUser = false;
 var current_position = false;
+var fav_loopServer = 0;
 // ADICIONA ACOMPANHAMENTO DE PROCESSOS
 function getOptionsConfigDate(index) {
     var storeFavorites = getStoreFavoritePro();
@@ -193,7 +194,7 @@ function openBoxConfigDates(this_) {
                     '          <td colspan="2">'+
                     '               <select id="configDatesBox_listnewdoc" onchange="configDatesDocsChange(this)">'+
                     '                   <option value="0">Qualquer tipo de documento</option>';
-        if (storeFavorites['config']['tiposdocs'].length > 0) {
+        if (typeof storeFavorites['config']['tiposdocs'] !== 'undefined' && storeFavorites['config']['tiposdocs'].length > 0) {
             $.each(storeFavorites['config']['tiposdocs'], function(i,value){
                 htmlBox +=   (value.name == '') ? '' : '                   <option value="'+value.id+'" >'+value.name+'</option>';
             });
@@ -271,6 +272,13 @@ function openBoxConfigDates(this_) {
                 width: 500,
                 close: function() { $('#configDatesBox').remove() },
                 buttons: [{
+                    text: "Remover",
+                    icon: 'ui-icon-trash',
+                    click: function() {
+                        removeConfigDatesFav(this_);
+                        $(this).dialog('close');
+                    }
+                },{
                     text: "Ok",
                     click: function() {
                         saveConfigDatesFav(this_);
@@ -456,6 +464,31 @@ function saveConfigDatesFav(this_) {
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao cadastrar!');
     }
 }
+function removeConfigDatesFav(this_) {
+    var _this = $(this_);
+    var config = getConfigDatesFav();
+    var storeFavorites = getStoreFavoritePro();
+    var id_procedimento = parseInt($('#configDatesBox_id_procedimento').val().trim());
+    var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
+    if (favoriteIndex >=0 && typeof storeFavorites['favorites'][favoriteIndex] !== undefined && typeof getConfigDatesFav() !== undefined) {
+        //console.log(config);
+        var trFavorite = _this.closest('table').find('tr[data-id_procedimento="'+id_procedimento+'"]');
+        
+        if ($(this_).closest('#frmAtividadeListar').length == 0) {
+            trFavorite.find('.info_dates_fav').html('').show().closest('td').find('.info_dates_fav_txt').hide();
+            trFavorite.find('.followLinkDatesEdit').show();
+        }
+        $('#configDatesBox').remove();
+        trFavorite.find('.favoriteDatesPro').val('');
+        storeFavorites['favorites'][favoriteIndex]['configdate'] = null;
+        localStorageStorePro('configDataFavoritesPro', storeFavorites);
+        alertaBoxPro('Sucess', 'check-circle', 'Contagem de tempo removida com sucesso!');
+        resetDialogBoxPro('iframeBoxPro');
+        saveConfigFav();
+    } else {
+        alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao cadastrar!');
+    }
+}
 function getConfigDatesFav() {
     var countdown = $('#configDatesBox_countdown').is(':checked');
     var countdays = $('#configDatesBox_countdays').is(':checked');
@@ -624,7 +657,7 @@ function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
         setTimeout(function(){ 
             var target = (this_) ? $(this_) : $('#ifrArvore').contents().find('#iconFavoritePro_'+id_procedimento);
             target.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-            console.log('Reload checkDataFavoritePro', TimeOut); 
+            console.log('Reload checkDataFavoritePro => '+TimeOut); 
             if (TimeOut == 9000 && mode == 'add') {
                 getDadosIframeProcessoPro(id_procedimento, 'favorites');
             }
@@ -1046,35 +1079,40 @@ function checkFileRemoteFav(mode, data = false) {
     }
 }
 function checkFileLocalFav() {
-    getLocalFilePro();
-    setTimeout(function(){ 
-        if (fileSystemPro && fileSystemContentPro && typeof fileSystemContentPro === 'object' && typeof moment().isoWeekdayCalc === 'function' && fileSystemContentPro.hasOwnProperty('favorites') && fileSystemContentPro.favorites.length > 0 ) {
-            console.log('ok');
-            localStorageStorePro('configDataFavoritesPro', fileSystemContentPro);
-            saveConfigFav();
-            initPanelFavorites();
-            console.log('backup setPanelFavorites');
-        } else if (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null) {
-            getRemoteFileFav();
-            if (typeof moment().isoWeekdayCalc !== 'function') $.getScript(URL_SPRO+"js/lib/moment-weekday-calc.js");
-        }
-    }, 500);
+        getLocalFilePro();
+        setTimeout(function(){ 
+            if (fileSystemPro && fileSystemContentPro && typeof fileSystemContentPro === 'object' && typeof moment().isoWeekdayCalc === 'function' && fileSystemContentPro.hasOwnProperty('favorites') && fileSystemContentPro.favorites.length > 0 ) {
+                console.log('ok');
+                localStorageStorePro('configDataFavoritesPro', fileSystemContentPro);
+                saveConfigFav();
+                initPanelFavorites();
+                console.log('backup setPanelFavorites');
+            } else if (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null) {
+                getRemoteFileFav();
+                if (typeof moment().isoWeekdayCalc !== 'function') $.getScript(URL_SPRO+"js/lib/moment-weekday-calc.js");
+            }
+        }, 500);
 }
 function getRemoteFileFav() {
-    var action = 'get_favoritos';
-    var param = {
-        action: action
-    };
-    getServerAtividades(param, action);
+    if (fav_loopServer < 5) {
+        var action = 'get_favoritos';
+        var param = {
+            action: action
+        };
+        getServerAtividades(param, action);
+        fav_loopServer++;
+    }
 }
 function restoreFavServer(data) {
     var storeFavorites = getStoreFavoritePro();
+    if (typeof storeFavorites !== 'undefined' && typeof storeFavorites.favorites !== 'undefined' && typeof data !== 'undefined' && typeof data.favorites !== 'undefined' && typeof data.config.colortags !== 'undefined') {
         storeFavorites.favorites = data.favorites;
         storeFavorites.config.colortags = data.config.colortags;
         localStorageStorePro('configDataFavoritesPro', storeFavorites);
         setLocalFilePro(storeFavorites);
         initPanelFavorites();
         console.log('backup setPanelFavorites');
+    }
 }
 function keyDatesFav(e) {
     if(e.which == 13) {
@@ -1210,7 +1248,7 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             });
             checkboxRangerSelectShift();
             checkFileRemoteFav('get');
-            console.log('initFunctionsPanelFav',TimeOut);
+            console.log('initFunctionsPanelFav => '+TimeOut);
         }, 500);
 
         var filterFav = tableFavorites.find('.tablesorter-filter-row').get(0);

@@ -515,6 +515,11 @@ function extractAllTextBetweenQuotes(str){
     ? result
     : [str];
 }
+function appendDebugReport() {
+    var htmlIconDebug = '<i onclick="dialogDebugScreen()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Notificar bug\')" class="fas fa-bug brancoColor iconDebugScreen" style="float: right;font-size: 16pt;margin-left:15px;cursor: pointer;animation: 2s ease 0s infinite normal none running whitepulser;border-radius: 50%;"></i>';
+    $('.iconDebugScreen').remove();
+    $('#controlSlimPro').prepend(htmlIconDebug);
+}
 function userTyped(this_) {
     $(this_).data('user-typed', ($(this_).val().trim() == '' ? false : true));
 }
@@ -1969,7 +1974,6 @@ function getAjaxListaAtribuicao() {
     if (!!url) {
         $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
             var ifrArvore = $('#frmCheckerProcessoPro').contents().find('#ifrArvore');
-            
             getSelectAtribuicaoProcesso(false, ifrArvore);
         });
     }
@@ -2204,7 +2208,28 @@ function updateDadosArvoreIframe(nameLink, idElement, value, ifrArvore, callback
     }
     
 }
-
+function viewEspecifacaoProcesso() {
+    setTimeout(() => {
+    var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+        tableProc.find('.especifProc').remove();
+        if (typeof storeGroupTablePro() === 'undefined' || !storeGroupTablePro()) {
+            tableProc.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').each(function(){
+                var especifProc = extractTooltipToArray($(this).attr('onmouseover'));
+                    especifProc = (especifProc) ? especifProc[0] : false;
+                    if (especifProc) $(this).before('<div class="especifProc">'+especifProc+'</div>');
+            });
+        }
+        console.log(storeGroupTablePro());
+    }, 100);
+}
+function fullnameAtribuicao() {
+    var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+        tableProc.find('a[href*="controlador.php?acao=procedimento_atribuicao_listar"]').each(function(){
+            var username = $(this).attr('title');
+                username = (typeof username !== 'undefined') ? username.replace('Atribu\u00EDdo para','').trim().split(/(\s).+\s/).join("") : false;
+            if (username) $(this).text(username);
+        });
+}
 function getProcessoNaoLido() {
     var listId = getListIdProtocoloSelected();
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
@@ -2348,6 +2373,7 @@ function getProcessoNaoLido() {
                                                 tr.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').attr('class', 'processoNaoVisualizado');
                                                 tr.find(elemCheckbox+':checked').trigger('click');
                                                 initNaoVisualizadoPro();
+                                                initFaviconNrProcesso();
                                                 setTimeout(() => {
                                                     getProcessoNaoLido();
                                                 }, 500);
@@ -2469,16 +2495,25 @@ function getActionsOnSendProcess() {
     });
     htmlBoxActions =    '<span id="divSinRemoveAttributes" style="margin: 0 10px;display: inline-block;">'+
                         '   <span style="margin: 0 10px;display: inline-block;">'+
-                        '      <input type="checkbox" id="chkSinRemoverMarcadores" name="chkSinRemoverMarcadores" class="infraCheckbox" tabindex="0">'+
+                        (isNewSEI ? 
+                        '      <div class="infraCheckboxDiv "><input type="checkbox" id="chkSinRemoverMarcadores" name="chkSinRemoverMarcadores" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinRemoverMarcadores"></label></div>' : 
+                        '      <input type="checkbox" id="chkSinRemoverMarcadores" name="chkSinRemoverMarcadores" class="infraCheckbox" tabindex="0">'
+                        )+
                         '     <label id="lblSinRemoverMarcadores" for="chkSinRemoverMarcadores" accesskey="" class="infraLabelCheckbox">Remover marcadores</label>'+
                         '   </span>'+
                         '   <span style="margin: 0 10px;display: inline-block;">'+
-                        '      <input type="checkbox" id="chkSinRemoverAtribuicao" name="chkSinRemoverAtribuicao" class="infraCheckbox" tabindex="0">'+
+                        (isNewSEI ? 
+                        '      <div class="infraCheckboxDiv "><input type="checkbox" id="chkSinRemoverAtribuicao" name="chkSinRemoverAtribuicao" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinRemoverAtribuicao"></label></div>' : 
+                        '      <input type="checkbox" id="chkSinRemoverAtribuicao" name="chkSinRemoverAtribuicao" class="infraCheckbox" tabindex="0">'
+                        )+
                         '     <label id="lblSinRemoverAtribuicao" for="chkSinRemoverAtribuicao" accesskey="" class="infraLabelCheckbox">Remover atribui\u00E7\u00E3o</label>'+
                         '   </span>'+
                         (verifyConfigValue('reaberturaprogramada') ? 
                         '   <span style="margin: 0 10px;display: inline-block;">'+
-                        '      <input type="checkbox" onclick="parent.editDadosArvorePro_AcompEsp();" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'+
+                        (isNewSEI ? 
+                        '      <div class="infraCheckboxDiv "><input onchange="if ($(this).is(\':checked\')) { parent.editDadosArvorePro_AcompEsp() }" type="checkbox" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinReabrirProcesso"></label></div>' : 
+                        '      <input type="checkbox" onclick="parent.editDadosArvorePro_AcompEsp();" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'
+                        )+
                         '     <label id="lblSinReabrirProcesso" for="chkSinReabrirProcesso" accesskey="" class="infraLabelCheckbox">Reabrir processo em data certa</label>'+
                         '   </span>'+
                         '': '')+
@@ -2489,6 +2524,24 @@ function getActionsOnSendProcess() {
     if (checkConfigValue('naoassinados') && $('div.ui-dialog[aria-describedby="dialogBoxPro"]').length == 0) {
         initCheckNaoAssinados();
     }
+}
+function getFaviconNrProcesso() {
+    setTimeout(() => {
+        var nrProcNVisualizados = $('a.processoNaoVisualizado').length;
+        if (nrProcNVisualizados > 0) {
+            window.favicon = new Favico({
+                animation : 'none'
+            });
+            favicon.badge(nrProcNVisualizados);
+            
+            if (isNewSEI) {
+                setTimeout(() => {
+                    var icon = $('link[rel="shortcut icon"]').attr('href');
+                    $('link[rel="icon"]').attr('href',icon);
+                }, 500);
+            }
+        }
+    }, 1000);
 }
 function getAutomaticActions() {
     var arrayAutomatic = parent.window.sendAutomaticActions;
@@ -3377,7 +3430,7 @@ function updateProcessGroupTable() {
     }
 }
 function setProcessGroupTable() {
-    var progressoBar =  '<div id="newFiltroProgress" style="display: inline-block;position: absolute;margin: 50px 0 0 0; z-index: 99; width: '+($('#selectGroupTablePro').width()+50)+'px;right: 220px;">'+
+    var progressoBar =  '<div id="newFiltroProgress" style="display: inline-block;position: absolute;margin: 50px 0 0 0; z-index: 99; width: '+($('#selectGroupTablePro').width())+'px;right: 220px;">'+
                         '    <span id="newFiltroCounter" class="azulColor" style="float: left;margin: -4px 8px 0 0; color: #777"></span>'+
                         '    <i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: -4px 8px 0 0;"></i>'+
                         '    <i id="newFiltroCancel" onclick="breakDadosProcedimentosControlar()" class="fas fa-times-circle cinzaColor" style="float: right;margin: -4px;padding-left: 10px;cursor: pointer;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Cancelar pesquisa\')"></i>'+
@@ -4209,7 +4262,7 @@ function saveConfigEtiqueta(name, value, icon, mode) {
         storeEtiqueta['config']['colortags'].push({name: name, value: value, icon: icon});
     }
     
-    if (mode == 'ativ') {
+    if (mode == 'ativ' || mode == 'tipo_ativ') {
         if (typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined' && arrayConfigAtivUnidade.config.hasOwnProperty('etiquetas')) {
             arrayConfigAtivUnidade.config.etiquetas.config = storeEtiqueta.config;
         } else {
@@ -4242,17 +4295,32 @@ function saveFollowEtiqueta() {
                 $('.tableAtividades tbody tr[data-index="'+index+'"] td.tdfav_tags .info_tags_follow').html(tagsHtml);
             }
             getServerAtividades({action: 'edit_etiqueta', id: index, etiquetas: tags}, 'edit_etiqueta');
-            $.each(tags, function(i,value){
-                if (value != '' && $.inArray(value, arrayConfigAtividades['etiquetas']['list']) == -1) {
-                    arrayConfigAtividades['etiquetas']['list'].push(value);
-                }
-            });
+            if (typeof arrayConfigAtividades.etiquetas !== 'undefined' && typeof arrayConfigAtividades.etiquetas.list !== 'undefined') {
+                $.each(tags, function(i,value){
+                    if (value != '' && $.inArray(value, arrayConfigAtividades['etiquetas']['list']) == -1) {
+                        arrayConfigAtividades['etiquetas']['list'].push(value);
+                    }
+                });
+            }
             var demandaIndex = arrayAtividades.findIndex((obj => obj.id_demanda == index));
             if (demandaIndex != -1) {
                 arrayAtividades[demandaIndex].etiquetas = tags;
                 arrayAtividadesPro[demandaIndex].etiquetas = tags;
             }
-                
+        } else if (mode == 'tipo_ativ') {
+            console.log(index, tags);
+            getServerAtividades({action: 'edit_etiqueta_atividades', id: index, etiquetas: tags}, 'edit_etiqueta_atividades');
+            if (typeof arrayConfigAtividades.etiquetas !== 'undefined' && typeof arrayConfigAtividades.etiquetas.list !== 'undefined') {
+                $.each(tags, function(i,value){
+                    if (value != '' && $.inArray(value, arrayConfigAtividades['etiquetas']['list']) == -1) {
+                        arrayConfigAtividades['etiquetas']['list'].push(value);
+                    }
+                });
+            }
+            var atividadeIndex = tableConfigList.atividades.findIndex((obj => obj.id_atividade == index));
+            if (atividadeIndex != -1) {
+                tableConfigList.atividades[atividadeIndex].etiquetas = tags;
+            }
         } else if (mode == 'fav') {
             var storeFavorites = getStoreFavoritePro();
             var id_procedimento = parseInt($(this).closest('tr').data('id_procedimento'));
@@ -5494,7 +5562,11 @@ function sessionStorageRestorePro(item) {
     return JSON.parse(sessionStorage.getItem(item));
 }
 function sessionStorageStorePro(item, result) {
-    sessionStorage.setItem(item, JSON.stringify(result));
+    try {
+        sessionStorage.setItem(item, JSON.stringify(result));
+    } catch (e) {
+        console.log("Local Storage is full:", item);
+    }
 }
 function sessionStorageRemovePro(item) {
     sessionStorage.removeItem(item);
@@ -6327,7 +6399,7 @@ function initMergeAllAndamentosProcesso(callback, TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initMergeAllAndamentosProcesso(callback, TimeOut - 100); 
-            console.log('Reload initMergeAllAndamentosProcesso', TimeOut); 
+            console.log('Reload initMergeAllAndamentosProcesso => '+TimeOut); 
         }, 500);
     }
 }
@@ -7069,7 +7141,7 @@ function initAppendIconsDocumentosActions(TimeOut = 3000) {
     } else {
         setTimeout(function(){ 
             initAppendIconsDocumentosActions(TimeOut - 100); 
-            console.log('Reload initAppendIconsDocumentosActions', TimeOut); 
+            console.log('Reload initAppendIconsDocumentosActions => '+TimeOut); 
         }, 500);
     }
 }
@@ -8596,7 +8668,7 @@ function ImgToBase64(iframeDoc, TimeOut = 1000) {
     });
     setTimeout(function(){ 
         if (!validarTagsPro()) { 
-            console.log('RELOAD', TimeOut);
+            console.log('RELOAD => '+TimeOut);
             ImgToBase64(iframeDoc, TimeOut - 200); 
         }
     }, 1000);
@@ -9201,7 +9273,8 @@ function centralizeDialogBox(el) {
     if (!dialogIsDraggable) {
         $(document).ready(function() {
             if (el) {
-                el.dialog({ position: { my: "center", at: "center", of: window } });
+                var paramPos = $(window).height() > $(el).outerHeight() ? { my: "center", at: "center", of: window } : { my: "top", at: "top", of: window }
+                el.dialog({ position: paramPos });
             }
         });
     }
@@ -9475,18 +9548,18 @@ function setNewDocDefault() {
             }
         } else if (form.attr('action').indexOf('controlador.php?acao=documento_receber&acao_origem=documento_receber&arvore=1') !== -1) {
             // ifrVisualizacao.find('#optNato').trigger('click'); 
-            if (checkConfigValue('newdocformat') && getConfigValue('newdocformat').indexOf('digitalizado') !== -1) { 
+            if (typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocformat') && getConfigValue('newdocformat').indexOf('digitalizado') !== -1) { 
                 ifrVisualizacao.find('#optDigitalizado').trigger('click');
                 var tipoConferencia = parseInt(getConfigValue('newdocformat').split('_')[1]);
                 ifrVisualizacao.find('#selTipoConferencia').val(tipoConferencia);
             } else { 
-                ifrVisualizacao.find('#optNato').trigger('click') 
+                ifrVisualizacao.find('#optNato').trigger('click');
             }
-            if (checkConfigValue('newdocnivel')) { ifrVisualizacao.find('#optPublico').trigger('click') }
-            if (checkConfigValue('newdoctoday')) { ifrVisualizacao.find('#txtDataElaboracao').val(now) }
-            if (getConfigValue('newdocname') && ifrVisualizacao.find('#txtNumero').is(':visible')) { ifrVisualizacao.find('#txtNumero').val(getConfigValue('newdocname')) }
-            if (getConfigValue('newdocobs')) { ifrVisualizacao.find('#txaObservacoes').val(getConfigValue('newdocobs')) }
-            if (checkConfigValue('newdocsigilo')) { 
+            if (typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocnivel')) { ifrVisualizacao.find('#optPublico').trigger('click') }
+            if (typeof checkConfigValue !== 'undefined' && checkConfigValue('newdoctoday')) { ifrVisualizacao.find('#txtDataElaboracao').val(now) }
+            if (typeof getConfigValue !== 'undefined' && getConfigValue('newdocname') && ifrVisualizacao.find('#txtNumero').is(':visible')) { ifrVisualizacao.find('#txtNumero').val(getConfigValue('newdocname')) }
+            if (typeof getConfigValue !== 'undefined' && getConfigValue('newdocobs')) { ifrVisualizacao.find('#txaObservacoes').val(getConfigValue('newdocobs')) }
+            if (typeof checkConfigValue !== 'undefined' && checkConfigValue('newdocsigilo')) { 
                 var valueNewDocSigilo = getConfigValue('newdocsigilo');
                     valueNewDocSigilo = (valueNewDocSigilo != '' && valueNewDocSigilo.indexOf('|') !== -1) ? valueNewDocSigilo.split('|') : false;
                     if (valueNewDocSigilo) {
@@ -9559,18 +9632,20 @@ function appendIconBatchActions(loop = true) {
     }
 }
 function appendIconCtrPrescricao(loop = true) {
-    var ifrVisualizacao = $('#ifrVisualizacao').contents();
-    var base64IconCtrPrescricao = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAABFJJREFUeJztmG9MG2UYwFeyaTZwcSwx2WzLBjNxGx/mvuAHiYl+WGCML/uDMZWVAHPqNJsxS8acY1sy/DMzQRNzxj8fNNEYPxmTJc4P6jelQLtCS0t71/ZKodcrEOjd296fPr7vXTsKQgbxrsbIk/zy3uV67/3yXNvned9NmzZiI/4D0dba99Khvec+r7e/QhnBQdtZqssx0GiYYHPjFcpe1QH2KqchWCtPwwvH3jtjmGBT41WKTGrTwA+pxLLauH7IHNbKdmg79q5xgq3P91K1O7uhrrpIJ9Tt6FoXtYRqMpJ7O6H9xAfGCc7xcoUkJzfTKamfTskQSKgwEsmvC3eB0ajyBp9UKgiGCRYjzClUmJPBP7l+wSL3oso5w8WMFVT/x4KJKf+nbMILEdYFweDPmLsQmFgb5LPkHob985IpcjmVrxATH1/N0j2Agp0guqyAXLvxuFZ2gTCIR/adblMEScjpO/sRcwVQ+CIII4dAcNnwQ9dGZtAKmeH6lMx/v800QZTntiD2w7sofBlE3wksuEd78IPkRCLoqoGM78ht0+SKIfLf7kbx/l9E+nIeYUlxsOaBmcwM1Sli4PgXIv/VTtMFSSD+xxox9v5PiHk7I461gDD0ZEHGvixzOLsjB+YFf/OXmYU79rLIFUPKTmzPcV8/i2I3f0fhN0EcbcKiTywKDu0T0L2G78TIxcNZObRdgbSlrIJ54C0oz2zJpr55DE0OdKPo9UkxeAZEz9MgeBsjC4GTbRL9+iN5NWUhlFWuNOK8spXm5CN0Ev3GTo3JsekIMHxuMMLnGhJz0kP/mhi/IFtiXG4Pw0mf4AozTypMkRAGS3Ohabk3GFceL7sck5KraE7qwzJsqVgpPtzxeGIquKMq62Wla/RktjzZjKZQJZa7iSXkleUUGE8oWmul119St9WsN5a7wKSkh00XZLhcP40lVsvcOM6ce8VGQYVRVnrLVLnErLqVTkppehU5AnmtK3cyCngiii+eVjebJsgklaMri0mYHCTYX2F84g9wMwoMR+S/ZZDgjalPmSfIKTdCqwjGp8ZgIfAazLibYCzkwTLLBXW8MdlhmmCIk6hSMfKqQykJ2KlxEOnrIPhPauVubrgBfGG/9lr1zJU2rLKZHbVMLc9cdDoG85EByIZ7cIfThusvqcdW4DwvgjccLkiWSRD/eil6SQZnIMPcBkSaWIzgP6W1VsV6nHa3gIeZXZJFjxmLptm0rNVShpNv4f9AIDBJAWbYHwAxlzA9+ohfMelgRJfeA5Ix7ruBJTOapFv/Dp6fS4OFYJhg63PXKG3BvqNbX4iTBXh1Bz4+jXHCvkd19PN2vDh3LKGu2gl78WK9trCAJ3M4jt8ybuHe/EwvZStsfVgL6OftYLt/jNnWUbjuvM/iNYJT2/YwfG/mKBbU9lYM2jyyGS14qqXPUW9/9bOD9rPUP8ZGeJnqcnxk3PZbRkhbCIZNuBEbsRh/AXsKOj5cMZb5AAAAAElFTkSuQmCC';    
-    var htmlIconCtrPrescricao =  '<a href="#" id="iconCtrPrescicao" onclick="parent.getCtrPrescricao();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Gerenciar Prescri\u00E7\u00F5es\')"  tabindex="452" class="botaoSEI">'+
-                                '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconCtrPrescricao+'" alt="Gerenciar Prescri\u00E7\u00F5es" title="Gerenciar Prescri\u00E7\u00F5es">'+
-                                '</a>';
-    if (ifrVisualizacao.find('#iconCtrPrescicao').length == 0) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconCtrPrescricao);
-    }
-    if (loop) {
-        setTimeout(function () {
-            appendIconCtrPrescricao();
-        },1500);
+    if (checkConfigValue('view_prescricoes')) {
+        var ifrVisualizacao = $('#ifrVisualizacao').contents();
+        var base64IconCtrPrescricao = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAABFJJREFUeJztmG9MG2UYwFeyaTZwcSwx2WzLBjNxGx/mvuAHiYl+WGCML/uDMZWVAHPqNJsxS8acY1sy/DMzQRNzxj8fNNEYPxmTJc4P6jelQLtCS0t71/ZKodcrEOjd296fPr7vXTsKQgbxrsbIk/zy3uV67/3yXNvned9NmzZiI/4D0dba99Khvec+r7e/QhnBQdtZqssx0GiYYHPjFcpe1QH2KqchWCtPwwvH3jtjmGBT41WKTGrTwA+pxLLauH7IHNbKdmg79q5xgq3P91K1O7uhrrpIJ9Tt6FoXtYRqMpJ7O6H9xAfGCc7xcoUkJzfTKamfTskQSKgwEsmvC3eB0ajyBp9UKgiGCRYjzClUmJPBP7l+wSL3oso5w8WMFVT/x4KJKf+nbMILEdYFweDPmLsQmFgb5LPkHob985IpcjmVrxATH1/N0j2Agp0guqyAXLvxuFZ2gTCIR/adblMEScjpO/sRcwVQ+CIII4dAcNnwQ9dGZtAKmeH6lMx/v800QZTntiD2w7sofBlE3wksuEd78IPkRCLoqoGM78ht0+SKIfLf7kbx/l9E+nIeYUlxsOaBmcwM1Sli4PgXIv/VTtMFSSD+xxox9v5PiHk7I461gDD0ZEHGvixzOLsjB+YFf/OXmYU79rLIFUPKTmzPcV8/i2I3f0fhN0EcbcKiTywKDu0T0L2G78TIxcNZObRdgbSlrIJ54C0oz2zJpr55DE0OdKPo9UkxeAZEz9MgeBsjC4GTbRL9+iN5NWUhlFWuNOK8spXm5CN0Ev3GTo3JsekIMHxuMMLnGhJz0kP/mhi/IFtiXG4Pw0mf4AozTypMkRAGS3Ohabk3GFceL7sck5KraE7qwzJsqVgpPtzxeGIquKMq62Wla/RktjzZjKZQJZa7iSXkleUUGE8oWmul119St9WsN5a7wKSkh00XZLhcP40lVsvcOM6ce8VGQYVRVnrLVLnErLqVTkppehU5AnmtK3cyCngiii+eVjebJsgklaMri0mYHCTYX2F84g9wMwoMR+S/ZZDgjalPmSfIKTdCqwjGp8ZgIfAazLibYCzkwTLLBXW8MdlhmmCIk6hSMfKqQykJ2KlxEOnrIPhPauVubrgBfGG/9lr1zJU2rLKZHbVMLc9cdDoG85EByIZ7cIfThusvqcdW4DwvgjccLkiWSRD/eil6SQZnIMPcBkSaWIzgP6W1VsV6nHa3gIeZXZJFjxmLptm0rNVShpNv4f9AIDBJAWbYHwAxlzA9+ohfMelgRJfeA5Ix7ruBJTOapFv/Dp6fS4OFYJhg63PXKG3BvqNbX4iTBXh1Bz4+jXHCvkd19PN2vDh3LKGu2gl78WK9trCAJ3M4jt8ybuHe/EwvZStsfVgL6OftYLt/jNnWUbjuvM/iNYJT2/YwfG/mKBbU9lYM2jyyGS14qqXPUW9/9bOD9rPUP8ZGeJnqcnxk3PZbRkhbCIZNuBEbsRh/AXsKOj5cMZb5AAAAAElFTkSuQmCC';    
+        var htmlIconCtrPrescricao =  '<a href="#" id="iconCtrPrescicao" onclick="parent.getCtrPrescricao();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Gerenciar Prescri\u00E7\u00F5es\')"  tabindex="452" class="botaoSEI">'+
+                                    '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconCtrPrescricao+'" alt="Gerenciar Prescri\u00E7\u00F5es" title="Gerenciar Prescri\u00E7\u00F5es">'+
+                                    '</a>';
+        if (ifrVisualizacao.find('#iconCtrPrescicao').length == 0) {
+            ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconCtrPrescricao);
+        }
+        if (loop) {
+            setTimeout(function () {
+                appendIconCtrPrescricao();
+            },1500);
+        }
     }
 }
 function checkTipoPrescricaoProcesso() {
@@ -10104,7 +10179,7 @@ function loopIDProtocoloSEI(protocoloSEI, index, TimeOut = 200) {
             function(){
                 setTimeout(function(){ 
                     loopIDProtocoloSEI(arrayProtocoloSEI[index], index, TimeOut - 100); 
-                    console.log('ERROR', 'Reload loopIDProtocoloSEI', TimeOut); 
+                    console.log('ERROR', 'Reload loopIDProtocoloSEI => '+TimeOut); 
                 }, 500);
             });
     } else {
