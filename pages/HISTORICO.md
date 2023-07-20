@@ -40,7 +40,7 @@
 
 - Correções e melhorias
 - Adicionado o [Menu Suspenso](../pages/MENUSUSPENSO.md)
-- Adicionada função de [Filtrar e ordenar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
+- Adicionada função de [Filtrar e ordenar tabelas ao clicar no seu cabeçalho](../pages/ORDENARTABELA.md)
 - Adicionada função [Histórico de processos visitados](../pages/HISTORICOPROC.md) (Sugestão Leonardo Rafaele)
 - Adicionada função [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
 - Adicionada função de [Anotação diretamente pela árvore do processo](../pages/NOTAARVORE.md)
