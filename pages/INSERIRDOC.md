@@ -4,11 +4,11 @@
 
 Essa funcionalidade adiciona ao editor de texto do SEI a importação de documento externo, anexando um arquivo em formato HTML (linguagem de marcação utilizada na construção de páginas na Web) ou um link do Google Docs ou Google Planilhas.
 
-> ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml_.gif) 
+> ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml.gif) 
 
 Converta seus documentos Word em formato HTML. Importe sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
 
-> ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml2_.gif) 
+> ![Tela Inserir Documento Externo (HTML)](../img/tela-inserirhtml2.gif) 
 
 Erros com caracteres não indentificados? Antes do envio, marque a opção **Corrigir erros de codificação de documentos Word**:
 
@@ -19,7 +19,7 @@ Erros com caracteres não indentificados? Antes do envio, marque a opção **Cor
 
 Importe documentos diretamente do Google Docs, sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
 
-> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml3-1_.gif)
+> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml3-1.gif)
 
 Antes de importar, confira se o documento está acessível por qualquer pessoa na internet.
 
@@ -33,7 +33,7 @@ Caso tenha identificado alguma consistência, envie um e-mail para [seipro.app@g
 
 Importe documentos diretamente do Google Planilhas, sem perder a formatação original e dentro dos padrões exigidos pelo SEI.
 
-> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml5_.gif)
+> ![Tela Inserir Documento Externo (Google Docs)](../img/tela-inserirhtml5.gif)
 
 Antes de importar, confira se o documento está **[Publicado na Web](https://support.google.com/docs/answer/183965?hl=pt-BR)**.
 
