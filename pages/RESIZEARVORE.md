@@ -1,6 +1,6 @@
-# [![Home](../img/home.png)](../) |  ANTAQ Pro ![Icone](../img/icon-32.png)
+# [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![ANTAQ Redimensionar automaticamente a árvore do processo pela sua largura total](../img/icon-resizearvore.png)  Redimensionar automaticamente a árvore do processo pela sua largura total
+## ![SEI Redimensionar automaticamente a árvore do processo pela sua largura total](../img/icon-resizearvore.png) Redimensionar automaticamente a árvore do processo pela sua largura total
 
 Essa funcionalidade redimensiona automaticamente a árvore do processo pela sua largura total
 
