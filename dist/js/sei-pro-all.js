@@ -76,7 +76,7 @@ function initRangerSelectShift(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initRangerSelectShift(TimeOut - 100); 
-            console.log('Reload initRangerSelectShift'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initRangerSelectShift'); 
         }, 500);
     }
 }
@@ -89,7 +89,7 @@ function initHideMenuSistemaView(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initHideMenuSistemaView(TimeOut - 100); 
-            console.log('Reload initHideMenuSistemaView'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initHideMenuSistemaView'); 
         }, 500);
     }
 }
@@ -103,7 +103,7 @@ function initSetMomentPtBr(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initSetMomentPtBr(TimeOut - 100); 
-            console.log('Reload initSetMomentPtBr'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initSetMomentPtBr'); 
         }, 500);
     }
 }
@@ -112,13 +112,12 @@ function initTableSorter(TimeOut = 9000) {
     if (typeof corrigeTableSEI !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined' && typeof $().tablesorter !== 'undefined') { 
         if (checkConfigValue('ordernartabela') && $(frmPesquisaProtocolo).length == 0) {
             setTableSorter();
-            console.log('initTableSorter'); 
         }
     } else {
         setTimeout(function(){ 
             if (typeof $().tablesorter === 'undefined' && TimeOut == 9000 && typeof URL_SPRO !== 'undefined') { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initTableSorter(TimeOut - 100); 
-            console.log('Reload initTableSorter'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initTableSorter'); 
         }, 500);
     }
 }
@@ -129,16 +128,16 @@ function initInsertNewLinksMenu(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initInsertNewLinksMenu(TimeOut - 100); 
-            console.log('Reload initInsertNewLinksMenu'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initInsertNewLinksMenu'); 
         }, 500);
     }
 }
 function insertNewLinksMenu() {
     if ($(idMenu).find('.newLinksMenuPro').length == 0) {
-        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" onclick="initBoxSearchProtocoloSEI()">'+(isNewSEI ? '<i class="fas fa-history" style="font-size: 1.5em;margin-right: 5px;"></i>' : '')+'<span>Pesquisar Link Permanente</span></a></li>';
+        var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" onclick="initBoxSearchProtocoloSEI()"><span>Pesquisar Link Permanente</span></a></li>';
 
         if (checkConfigValue('historicoproc')) {
-            newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()">'+(isNewSEI ? '<i class="fas fa-link" style="font-size: 1.5em;margin-right: 5px;"></i>' : '')+'<span>Hist\u00F3rico de Processos Visitados</span></a></li>';
+            newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()"><span>Hist\u00F3rico de Processos Visitados</span></a></li>';
         }
             $(idMenu).append(newLinkMenu);
     }
@@ -427,7 +426,7 @@ function initScrollToElement(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initScrollToElement(TimeOut - 100); 
-            console.log('Reload initScrollToElement => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initScrollToElement => '+TimeOut); 
         }, 500);
     }
 }
@@ -441,7 +440,7 @@ function initAppendIconFavorites(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initAppendIconFavorites(TimeOut - 100); 
-            console.log('Reload initAppendIconFavorites => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initAppendIconFavorites => '+TimeOut); 
         }, 500);
     }
 }
@@ -500,7 +499,7 @@ function initGetConfigHost(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initGetConfigHost(TimeOut - 100); 
-            console.log('Reload initIconEntidade => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initIconEntidade => '+TimeOut); 
         }, 500);
     }
 }
@@ -528,7 +527,7 @@ function initReplaceSelectAll(TimeOut = 12000) {
         }
         setTimeout(function(){ 
             initReplaceSelectAll(TimeOut - 100); 
-            console.log('Reload initReplaceSelectAll => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initReplaceSelectAll => '+TimeOut); 
         }, 500);
     }
 }
@@ -591,7 +590,7 @@ function initRemovePaginacaoAll(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initRemovePaginacaoAll(TimeOut - 100); 
-            console.log('Reload initRemovePaginacaoAll => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initRemovePaginacaoAll => '+TimeOut); 
         }, 500);
     }
 }
@@ -604,7 +603,7 @@ function initPagesInfiniteSearch(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initPagesInfiniteSearch(TimeOut - 100); 
-            console.log('Reload initPagesInfiniteSearch => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initPagesInfiniteSearch => '+TimeOut); 
         }, 500);
     }
 }
@@ -617,7 +616,7 @@ function initQuickViewSearch(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initQuickViewSearch(TimeOut - 100); 
-            console.log('Reload initQuickViewSearch => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initQuickViewSearch => '+TimeOut); 
         }, 500);
     }
 }
@@ -695,7 +694,7 @@ function initObserveUrlPage(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initObserveUrlPage(TimeOut - 100); 
-            console.log('Reload initObserveUrlPage => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initObserveUrlPage => '+TimeOut); 
         }, 500);
     }
 }
@@ -737,7 +736,7 @@ function initSlimPro() {
                         '           <i onclick="openStyleBoxSlimPro()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Escolher cor principal' : 'Ativar estilo avan\u00E7ado')+'\')" class="fas fa-palette brancoColor" style="float: right;font-size: 16pt;cursor: pointer;"></i> '+
                         '       </div>';
     $('#controlSlimPro').remove();
-    $('#divInfraBarraSistemaD').append(htmlSlimPro);
+    $(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(htmlSlimPro);
     initStyleBoxSlimPro();
 }
 function initStyleBoxSlimPro(TimeOut = 9000) {
@@ -753,7 +752,7 @@ function initStyleBoxSlimPro(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initStyleBoxSlimPro(TimeOut - 100); 
-            console.log('Reload initStyleBoxSlimPro'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initStyleBoxSlimPro'); 
         }, 500);
     }
 }
@@ -766,7 +765,7 @@ function initMarcadorUserColor(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initMarcadorUserColor(TimeOut - 100); 
-            console.log('Reload initMarcadorUserColor'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initMarcadorUserColor'); 
         }, 500);
     }
 }
@@ -842,7 +841,7 @@ function initInfraImg(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initInfraImg(TimeOut - 100); 
-            console.log('Reload initInfraImg'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initInfraImg'); 
         }, 500);
     }
 }
@@ -877,24 +876,25 @@ function initSeiProAll() {
     initCheckLoadJqueryUI();
     initQRCodeLib();
     setOnClickExcluirProcBloco();
-    console.log('initSeiProAll');
 
-    console.log = function() {
-        logMessages.push.apply(logMessages, arguments);
-        logBackup.apply(console, arguments);
-    };
-    
-    window.onerror = function(a, b, c, d, e) {
-        debugScreen = true;
-        appendDebugReport();
-        console.log({
-            message: a,
-            source: b,
-            lineno: c,
-            colno: d,
-            error: e.message,
-            stack: e.stack.replace(/(?:\r\n|\r|\n)/g, "<br>"+"&emsp;".repeat(24))
-        });
-    };
+    if (NAMESPACE_SPRO != 'SEI Pro Lab') {
+        console.log = function() { 
+            logMessages.push.apply(logMessages, arguments);
+            logBackup.apply(console, arguments);
+        };
+        
+        window.onerror = function(a, b, c, d, e) {
+            debugScreen = true;
+            appendDebugReport();
+            console.log({
+                message: a,
+                source: b,
+                lineno: c,
+                colno: d,
+                error: e.message,
+                stack: e.stack.replace(/(?:\r\n|\r|\n)/g, "<br>"+"&emsp;".repeat(24))
+            });
+        };
+    }
 }
 $(document).ready(function () { initSeiProAll() });

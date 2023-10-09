@@ -31,6 +31,18 @@ function loadStyleDesign() {
         }
     }
 }
+function verifyConfigValue(name) {
+    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
+    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
+        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
+        dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
+    
+    if (dataValuesConfig == true ) {
+        return true;
+    } else {
+        return false;
+    }
+}
 function initLinhaNumerada(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof parent.parent.getLinhaNumerada !== 'undefined') { 
@@ -38,7 +50,7 @@ function initLinhaNumerada(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initLinhaNumerada(TimeOut - 100); 
-            console.log('Reload initLinhaNumerada'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initLinhaNumerada'); 
         }, 500);
     }
 }
@@ -49,7 +61,7 @@ function initRepareBgTableColor(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initRepareBgTableColor(TimeOut - 100); 
-            console.log('Reload repareBgTableColor'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload repareBgTableColor'); 
         }, 500);
     }
 }

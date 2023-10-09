@@ -127,6 +127,8 @@ caption.infraCaption {
     border-color: #bdbdbd !important;
 }
 #divRecebidos.tagintable .infraCaption td {
+    border-top: none;
+    background: #fff;
     border-bottom: .1em solid #bdbdbd;
     font-size: 1em;
     text-align: right;
@@ -140,7 +142,7 @@ caption.infraCaption {
     margin-bottom: 20px;
 }
 #divRecebidos.tagintable table.infraTable td:nth-child(3) {
-    width: 150px;
+    min-width: 150px;
 }
 #divRecebidos.tagintable table{
     width: 98%;
@@ -463,10 +465,12 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
     display: inline-table;
     width: 100%;
 }
-#projetosGanttTabs {
+#projetosGanttTabs,
+#projetosTabs {
     border: none;
 }
-#projetosGanttTabs .ui-tabs-panel {
+#projetosGanttTabs .ui-tabs-panel,
+#projetosTabs .ui-tabs-panel {
     padding: 10px 5px;
 }
 #projetosGanttDiv .popup-wrapper,
@@ -545,6 +549,9 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #ganttHistoryPainel .bar-ongoing .bar-progress,
 #projetosGanttDiv .bar-ongoing .bar-progress {
     fill: #2490ef !important;
+}
+#projetosGanttDiv .bar-executed .bar-progress {
+    fill: #55daf5 !important;
 }
 #ganttHistoryPainel .bar-delay .bar,
 #projetosGanttDiv .bar-delay .bar {
@@ -645,6 +652,7 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #ganttAfastamentoPanel .bar-wrapper .handle-group,
 #ganttHistoryPainel .bar-wrapper .handle-group,
 #ganttRecorrenciaPanel .bar-wrapper .handle-group,
+#projetosGanttDiv .bar-wrapper .handle-group,
 #ganttAtivPanel .bar-wrapper .handle-group {
     display: none;
 }
@@ -883,6 +891,15 @@ div.progressPrescricao {
     margin: 10px 0;
     width: 95%;
     background: #ccc;
+    cursor: pointer;
+}
+div.progressPrescricao:before {
+    content: attr(data-percent);
+    display: inline-block;
+    position: absolute;
+    margin: -1px 5px;
+    right: 0;
+    font-size: 80%;
 }
 .progressPrescricao .ui-progressbar-value {
     background: #9ece4e !important;
@@ -891,6 +908,10 @@ div.progressPrescricao {
 .progressPrescricao.urgente .ui-progressbar-value {
     background: #e46e65 !important;
     border: 1px solid #b44c44 !important;
+}
+.progressPrescricao.suspenso .ui-progressbar-value {
+    background: #ef8624 !important;
+    border: 1px solid #ef8624 !important;
 }
 div.atividadesProgressoBar {
     height: 4px !important;
@@ -1064,10 +1085,12 @@ span.info[contentEditable="true"] {
 	color: #fff;
 	border-radius: 5px;
 }
-.info_tags_follow_txt .tagsinput .tag .tag-text {
+.info_tags_follow_txt .tagsinput .tag .tag-text,
+#boxProjeto .tagsinput .tag .tag-text {
     float: left;
 }
-.info_tags_follow_txt .tagsinput .tag {
+.info_tags_follow_txt .tagsinput .tag,
+#boxProjeto .tagsinput .tag {
     height: 20px;
     margin-top: 5px;
 }
@@ -1501,6 +1524,7 @@ i.iconSwitch {
   }
 }
 .SeiPro_pesquisa_agrupamento #divInfraBarraSuperior,
+.SeiPro_pesquisa_agrupamento #divInfraBarraSistemaPadrao,
 .SeiPro_pesquisa_agrupamento #divInfraBarraSistema,
 .SeiPro_pesquisa_agrupamento #divInfraAreaTelaE,
 .SeiPro_pesquisa_agrupamento #divInfraBarraLocalizacao,
@@ -1628,48 +1652,59 @@ table.moreInfoBox td:first-child,
     margin-right: 20px;
 }
 #boxAtividade .tagsinput .tag .tag-remove::before, 
-#boxAtividade .tagsinput .tag .tag-remove::after {
+#boxAtividade .tagsinput .tag .tag-remove::after,
+#boxProjeto .tagsinput .tag .tag-remove::before, 
+#boxProjeto .tagsinput .tag .tag-remove::after {
     top: 14px;
 }
-#boxAtividade .seiProForm .tagsinput .tag .tag-remove {
+#boxAtividade .seiProForm .tagsinput .tag .tag-remove,
+#boxProjeto .tagsinput .tag .tag-remove {
     height: 30px !important;
 }
-#boxAtividade .seiProForm .tagsinput .tag .tagicon {
+#boxAtividade .seiProForm .tagsinput .tag .tagicon,
+#boxProjeto .tagsinput .tag .tagicon {
     margin-right: 5px;
 }
-#boxAtividade .seiProForm .tagsinput .tag {
+#boxAtividade .seiProForm .tagsinput .tag,
+#boxProjeto .tagsinput .tag {
     padding-top: 7px;
     display: table;
     margin: 0 5px 5px;
     height: 30px;
 }
 #boxAtividade .seiProForm #ativ_etiquetas_tag, 
-#boxAtividade .seiProForm .tag-input {
+#boxAtividade .seiProForm .tag-input,
+#boxProjeto .tag-input {
     height: 30px !important;
     border: 1px solid #ccc;
     padding: 0.5em !important;
 }
 #boxAtividade .seiProForm #ativ_etiquetas_addTag,
 #tabelaAtivPanel .tagsinput div,
-#boxAtividade .seiProForm .tagsinput div {
+#boxAtividade .seiProForm .tagsinput div,
+#boxProjeto .tagsinput div {
     max-width: 100%;
     display: flex;
 }
-#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag {
+#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag,
+#boxProjeto .tagsinput .tag {
     display: block !important;
 }
 #tabelaAtivPanel .tagsinput .tag {
     margin: 5px;
 }
 #boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavAddColor,
-#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavEditIcon {
+#boxProjeto .tagsinput .tag .tagFavAddColor,
+#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavEditIcon,
+#boxProjeto .tagsinput .tag .tagFavEditIcon {
     height: 30px !important;
     margin-top: -7px !important;
     font-size: 90%;
     padding-top: 10px;
 }
 #boxAtividade .seiProForm .info_tags_follow_txt #infoAtivTagsPro_tag,
-.info_tags_follow_txt .tag-input {
+.info_tags_follow_txt .tag-input,
+#boxProjeto .tag-input {
     max-width: 130px !important;
     display: inline-block;
 }
@@ -2502,7 +2537,8 @@ a.newLink.filterTableProcessos.newLink_active i {
 #atividadesPro.minView .modulesActions:has(.iconLabel) {
     margin-top: 20px;
 }
-#atividadesPro.minView .panelInfoHome:not(.panelInfoHomeAtividade) {
+#atividadesPro.minView .panelInfoHome:not(.panelInfoHomeAtividade),
+#atividadesPro.minView .chartAtividade {
     margin-top: 50px;
 }
 #divInfraAreaTelaD {
@@ -2759,19 +2795,23 @@ td.editCellSelect.editCellLoading:after {
 td.inEdit:hover:after {
     display: none !important;
 }
-.infraAreaTelaE.menuSuspenso {
+.infraAreaTelaE.menuSuspenso,
+.divInfraAreaTelaE.menuSuspenso {
     position: absolute;
     z-index: 9999;
     box-shadow: 3px 3px 5px 0px #8686868a;
     background: #fff;
 }
+div#divInfraBarraSistemaPadraoE.barSuspenso_show::before,
 div#divInfraBarraSistemaE.barSuspenso_show::before {
     transform: rotate(90deg);
     transition: all 300ms linear;
 }
+div#divInfraBarraSistemaPadraoE.barSuspenso,
 div#divInfraBarraSistemaE.barSuspenso {
     cursor: pointer;
 }
+div#divInfraBarraSistemaPadraoE.barSuspenso:before,
 div#divInfraBarraSistemaE.barSuspenso:before {
     content: "\f0c9";
     font-family: 'Font Awesome 5 Free';
@@ -3313,6 +3353,7 @@ div.infraTooltipTexto i.far {
 #lblSelGrupoAcompanhamento {
     position: inherit !important;
 }
+#divInfraBarraSistemaPadrao,
 #divInfraBarraSistema {
     min-height: 50px;
     overflow: inherit;
@@ -3814,4 +3855,80 @@ div[id*="_addTag"]:has(.tag-input) {
 }
 .especifProc {
     text-align: center;
+}
+#projetosGanttDiv i.iconPopup {
+    margin-top: 7px;
+    height: auto;
+}
+#projetosGanttDiv .popup-wrapper p {
+    line-height: 30px;
+}
+#projetosGanttTabs ul.ui-tabs-nav:has(.dataFallback),
+#projetosTabs ul.ui-tabs-nav:has(.dataFallback) {
+    background: #fff;
+    border: none;
+}
+.chosen-container.chosen-container-multi ul.chosen-choices {
+    border-radius: 5px !important;
+    border-color: #cccccc !important;
+    background: transparent !important;
+}
+.chosen-container.chosen-container-multi li.search-choice {
+    background: #f4f5f5 !important;
+    border-color: #ccc !important;
+}
+.chosen-container-multi .chosen-choices li.search-field {
+    width: 100%;
+}
+.newSEI .infraCheckboxDiv input {
+    height: initial;
+    width: inherit;
+    position: inherit;
+    top: initial;
+    left: inherit;
+    opacity: 1;
+    z-index: inherit;
+    scale: 1.4;
+}
+.newSEI .infraCheckboxDiv label {
+    display: none !important;
+}
+div#dialogBoxDocLote p {
+    margin: 10px 0;
+    display: inline-block;
+    width: 100%;
+}
+.chosen-container-single.chosenLoading .chosen-single span:before {
+    content: "\f2f1";
+    font-family: 'Font Awesome 5 Free';
+    margin: 0 10px;
+    color: #007fff;
+    animation: fa-spin 2s linear infinite;
+    font-weight: bold;
+    display: inline-block;
+}
+.seiSlim .chosen-container-single.chosenLoading .chosen-single span:before {
+    font-family: 'Font Awesome 5 Pro' !important;
+}
+.cardButton {
+    text-align: center;
+    max-width: 25%;
+    padding: 1em !important;
+    height: 7em !important;
+    vertical-align: top;
+    background-color: #f9f9f9;
+}
+.cardButton i {
+    display: block;
+    font-size: 300%;
+    margin-bottom: 0.5em;
+}
+#atividadesProDiv ul {
+    background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+#tabChartAtivPanel .chartAtivPanelDiv {
+    padding: 20px 0;
 }

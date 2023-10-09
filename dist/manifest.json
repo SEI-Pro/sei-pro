@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "1.4.18",
+  "version": "1.5.3.1",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -63,6 +63,7 @@
     {
       "js": [
         "js/lib/jquery-3.4.1.min.js",
+        "js/lib/jmespath.min.js",
         "js/init_db.js"
       ],
       "css": [
@@ -192,9 +193,11 @@
       "matches": [
         "*://*.br/*controlador.php?acao=editor_montar*",
         "*://*.br/*controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://*.br/*controlador.php?acao=secao_modelo_alterar*",
         "*://*.br/*controlador.php?acao=texto_padrao_interno_cadastrar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=editor_montar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=secao_modelo_alterar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=texto_padrao_interno_cadastrar*"
       ]
     }
@@ -232,15 +235,15 @@
         "js/lib/filerobot-image-editor.min.js",
         "js/lib/jszip.min.js",
         "js/lib/jszip-utils.min.js",
-        "js/lib/google_api.js",
         "js/lib/jquery-visible.min.js",
         "js/lib/html2canvas.min.js",
         "js/lib/favico-0.3.10.min.js",
+        "js/lib/papaparse.js",
+        "js/lib/jschardet.min.js",
         "js/sei-functions-pro.js",
-        "js/sei-gantt.js",
-        "js/sei-forms.js",
-        "js/sei-sync-processos.js",
         "js/sei-pro-atividades.js",
+        "js/sei-pro-projetos.js",
+        "js/sei-pro-prescricoes.js",
         "js/sei-pro.js",
         "js/sei-pro-all.js",
         "js/sei-pro-editor.js",
@@ -250,7 +253,7 @@
         "js/sei-pro-icons.js",
         "js/sei-legis.js",
         "js/sei-pro-visualizacao-chosen.js",
-        "https://accounts.google.com/gsi/client",
+        "js/sei-pro-docs-lote.js",
         "icons/lab/icon-32.png",
         "css/sei-pro.css",
         "css/frappe-gantt.css",

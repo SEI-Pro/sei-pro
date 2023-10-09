@@ -3,42 +3,16 @@ $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
 $.getScript(getUrlExtension("js/lib/moment.min.js"));
 $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
+$.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
 $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
-/*
-function loadAPIGooglePro(client_id) {
-    $('[data-script-name="googleapi"]').remove();
-    var tagScriptApi = '<script data-script-name="googleapi" src="https://apis.google.com/js/api.js" async defer></script>';
-    var tagScriptLogin = '<script data-script-name="googleapi" src="https://accounts.google.com/gsi/client" async defer></script>';
-    var metaLogin = '<div class="sheetsLoginPro" style="display: inline-block;vertical-align: middle;">'+
-                    '   <div id="g_id_onload" '+
-                    '       data-callback="handleClientLoadPro" '+
-                    '       data-client_id="444596184286-2g4m3ktqc2neuntba0a3j9eh5rk5r4c8.apps.googleusercontent.com"'+
-                    '       data-context="use"'+
-                    '       data-ux_mode="popup"'+
-                    '       data-auto_prompt="true"'+
-                    '       data-auto_select="true"'+
-                    '   ></div>'+
-                    '   <div class="g_id_signin" '+
-                    '       data-type="icon"'+
-                    '       data-shape="circle"'+
-                    '       data-theme="outline"'+
-                    '       data-text="$ {button.text}"'+
-                    '       data-size="large"'+
-                    '   ></div>'+
-                    '</div>';
-    $('.sheetsLoginPro').remove();
-    $(tagScriptApi+tagScriptLogin).appendTo('head');
-    $('#divInfraBarraSistemaD').prepend(metaLogin);
-}
-*/
 function divIconsLoginPro() {
     var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'
                             +'  <a id="authorizeButtonPro" href="#" data-tippy-content="Conectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-off brancoColor"></i></a>'
                             +'  <a id="signoutButtonPro" href="#" data-tippy-content="Desconectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectado! Clique para desconectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-on brancoColor"></i></a>'
                             +'</div>';
-    if ($('#divInfraBarraSistemaD').length > 0) {
-        $('#divInfraBarraSistemaD').append(html_initLogin);
+    if ($(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').length > 0) {
+        $(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(html_initLogin);
     } else if ($('#divInfraBarraSistemaPadraoD').length > 0) {
         $('#divInfraBarraSistemaPadraoD').append(html_initLogin);
     }
@@ -89,7 +63,7 @@ function loadScriptDataBasePro(dataValues) {
     var dataValues_AtividadesAPI = jmespath.search(dataValues, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']");
     // console.log(dataValues, dataValues_ProjetosSheets);
     if (dataValues_ProjetosSheets.length > 0 && checkConfigValue('gerenciarprojetos')) {
-        loadDataBaseSheetsProjetosPro(dataValues_ProjetosSheets);
+        // loadDataBaseSheetsProjetosPro(dataValues_ProjetosSheets);
     } else {
         localStorageRemovePro('loadEtapasSheet');
     }
@@ -146,7 +120,7 @@ function loadDataBaseApiAtividadesPro(dataValues) {
         removeLocalStorageAtividades();
     }
 }
-function loadDataBaseSheetsProjetosPro(dataValues) { 
+/* function loadDataBaseSheetsProjetosPro(dataValues) { 
             // dataValues = ( jmespath.search(dataValues, "[?baseTipo=='projetos'] | length(@)") > 0 ) ? jmespath.search(dataValues, "[?baseTipo=='projetos']") : dataValues;
     var dataPerfil = [];
     var perfilSelected = (getOptionsPro('configBaseSelectedPro')) ? getOptionsPro('configBaseSelectedPro') : 0;
@@ -203,7 +177,7 @@ function loadDataBaseSheetsProcessosPro(dataValues) {
 }
 function setSessionGoogle(type, param) {
     localStorage.setItem('SEIPro_google_'+type,  JSON.stringify(param));
-}
+} */
 function loadDataBaseProStorage(items) { 
     if ( typeof items.dataValues !== 'undefined' && items.dataValues != '' && typeof getParamsUrlPro(window.location.href).acao_pro === 'undefined') {
         divIconsLoginPro();
@@ -330,14 +304,18 @@ function loadScriptPro() {
             $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             // $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
             $.getScript(getUrlExtension("js/sei-pro-favoritos.js"));
+            // if (getManifestExtension().short_name == 'ANTAQ Pro' || getManifestExtension().short_name == 'ANTT Pro') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
             $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
+            $.getScript(getUrlExtension("js/sei-pro-projetos.js"));
+            $.getScript(getUrlExtension("js/sei-pro-prescricoes.js"));
             $.getScript(getUrlExtension("js/lib/frappe-gantt.js"));
             $.getScript(getUrlExtension("js/lib/jkanban.min.js"));
             $.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));
             $.getScript(getUrlExtension("js/lib/jquery.tagsinput-revisited.js"));
             $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
             $.getScript(getUrlExtension("js/lib/chart.min.js"));
-            console.log('loadScriptPro', getManifestExtension().short_name);
+            $.getScript(getUrlExtension("js/lib/jquery-visible.min.js"));
+            // console.log('loadScriptPro', getManifestExtension().short_name);
         });
     }
 }

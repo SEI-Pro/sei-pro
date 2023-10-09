@@ -60,6 +60,18 @@ function loadFontIcons(elementTo, target = $('html')) {
         target.find('head').append(htmlStyleFont);
     }
 }
+function verifyConfigValue(name) {
+    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
+    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
+        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
+        dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
+    
+    if (dataValuesConfig == true ) {
+        return true;
+    } else {
+        return false;
+    }
+}
 function initNewIcons(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof parent.insertNewIcons !== 'undefined' ) { 
@@ -67,7 +79,7 @@ function initNewIcons(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initNewIcons(TimeOut - 100); 
-            console.log('Reload initNewIcons', typeof parent.insertNewIcons); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initNewIcons', typeof parent.insertNewIcons); 
         }, 500);
     }
 }

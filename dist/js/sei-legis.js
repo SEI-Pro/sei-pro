@@ -25,10 +25,10 @@ var romanToInt = function(s) {
     }
     return result;
 }
+/*
 function removeAcentos(str) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
-/*
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }

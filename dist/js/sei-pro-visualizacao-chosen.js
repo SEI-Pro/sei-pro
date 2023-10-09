@@ -10,7 +10,7 @@ function replaceSelectOnVisualizacao(TimeOut = 9000) {
         }
         setTimeout(function(){ 
             replaceSelectOnVisualizacao(TimeOut - 100); 
-            console.log('Reload replaceSelectOnVisualizacao'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload replaceSelectOnVisualizacao'); 
         }, 500);
     }
 }

@@ -1,15 +1,17 @@
 var idEditor,
     oEditor, 
     imgEditor, 
+    bookmark,
     txaEditor = ($('#frmEditor').length > 0) ? 'div[id^=cke_txaEditor_]' : 'div#cke_txaConteudo',
     iframeEditor,
     autoSaveEditor,
     perfilOpenAI,
     langs,
     wsDialogHtml,
+    indexDisplayPro = 0,
     CKWebSpeechHandler;
 
-var loadInlineOpenAI = false;
+var loadOnKeyEditor = false;
 var CKWebSpeech = false;
 
 var autoSaveInterval = (checkConfigValue('salvamentoautomatico')) ? getConfigValue('salvamentoautomatico') : 5;
@@ -347,7 +349,7 @@ function addStyleIframes(TimeOut = 9000) {
                 if ( iframe.find('head').find('style[data-style="seipro"]').length == 0 ) {
                     iframe.find('head').append('<style type="text/css" data-style="seipro"> \n'
                                                +(localStorage.getItem('darkModePro') ? '   * { color: #fbfbfe; } \n' : '')
-                                               +'   p .ancoraSei { background: #e4e4e4; } \n'
+                                                +'   p .ancoraSei { background: #e4e4e4; } \n'
                                                +'   html.dark-mode body[contenteditable="false"], \n'
                                                +'   html.dark-mode p.Texto_Fundo_Cinza_Maiusculas_Negrito, \n'
                                                +'   html.dark-mode p.Texto_Fundo_Cinza_Negrito, \n'
@@ -381,6 +383,9 @@ function addStyleIframes(TimeOut = 9000) {
                                                +'   .sessionBreakPro::after { content: \'\u21B3 Quebra de se\u00E7\u00E3o\' !important; } \n'
                                                +'   .linkDisplayPro, .reviewDisplayPro { user-select: none; position: absolute; display: inline-block; padding: 8px; box-shadow: 0 1px 3px 1px rgba(60,64,67,.35); background: #fff; border-color: #dadce0; border-radius: 8px; margin-top: 16px; text-align: left; text-indent: initial; font-size: 12pt; text-transform: initial; font-weight: initial; letter-spacing: initial; text-decoration: initial; white-space: nowrap; } \n'
                                                +'   .linkDisplayPro a, .reviewDisplayPro a { padding: 0 8px; cursor: pointer; text-decoration: underline; color:#1155cc; } \n'
+                                               +'   .linkDisplayPro ul { margin: 0;padding: 0;max-height: 207px;overflow-y: scroll; } \n'
+                                               +'   .linkDisplayPro li { padding: 5px; cursor:pointer; } \n'
+                                               +'   .linkDisplayPro li.highlighted, .linkDisplayPro li:hover { background-color: #3875d7; background-image: linear-gradient(#3875d7 20%, #2a62bc 90%); color: #ffffff; } \n'
                                                +'   html.dark-mode .linkDisplayPro, html.dark-mode .reviewDisplayPro { background-color:#3D3D3D !important; } \n'
                                                +'   html.dark-mode .linkDisplayPro a, html.dark-mode .reviewDisplayPro a { color:#fbfbfe !important; } \n'
                                                +'   span.reviewSeiPro[data-comment][data-review="delete"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
@@ -390,6 +395,7 @@ function addStyleIframes(TimeOut = 9000) {
                                                +'</style>\n');
                     if (localStorage.getItem('darkModePro')) iframe.find('html').addClass('dark-mode');
                     repareBgTableColor(iframe);
+                    repairBugChrome116(iframe);
                 }
                 setOnBodyActs(iframe);
             });
@@ -408,6 +414,17 @@ function addStyleIframes(TimeOut = 9000) {
         }
     }, 500);
 }
+function repairBugChrome116(iframe) {
+    if (!!window.chrome) {
+        iframe.find('p').each(function(){
+            var className = $(this).attr('class');
+            if (typeof className !== 'undefined') {
+                $(this).attr('class','_'+className);
+                $(this).attr('class',className);
+            }
+        });
+    }
+}
 function setOnBodyActs(iframe) {
     iframe.find('body').on('mousedown', function(e) { 
         if ( typeof e.target.href !== 'undefined' && e.target.href.indexOf('http')  !== -1 && checkConfigValue('editarlinks')) { 
@@ -420,7 +437,7 @@ function setOnBodyActs(iframe) {
         }
         hideQuickTable();
         setTimeout(() => {
-            setInlineOpenAI();
+            setOnKeyEditor();
         }, 1000);
     }).on('mouseup', function(e) { 
         applyCopyStyle();
@@ -1903,7 +1920,7 @@ function getCitacaoDocumento(this_, TimeOut = 9000) {
             setTimeout(function(){ 
                 getCitacaoDocumento(this_, TimeOut - 100); 
                 $(this_).fadeOut(200).fadeIn(200);
-                console.log('Reload getCitacaoDocumento'); 
+                if(verifyConfigValue('debugpage')) console.log('Reload getCitacaoDocumento'); 
             }, 500);
         }
     }
@@ -2225,7 +2242,7 @@ function initAddButtonTarjaSigilo(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initAddButtonTarjaSigilo(TimeOut - 100); 
-            console.log('Reload initAddButtonTarjaSigilo'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initAddButtonTarjaSigilo'); 
         }, 500);
     }
 }
@@ -2373,54 +2390,6 @@ function setDocAutomatico() {
         }
     }
 }
-// SUBSTITUI CAMPOS PERSONALIZADOS
-function sumTagValue(value) {
-    var return_ = value;
-    var prop = dadosProcessoPro.propProcesso;
-    var docs = dadosProcessoPro.listDocumentos;
-    var i = parseInt(value.replace(/[^0-9\.]+/g, ''));
-        i = (value.indexOf('-') !== -1) ? (i*-1) : i;
-        i = i-1;
-
-    if (value.indexOf('hoje') !== -1) {
-        return_ = '<span class="ancoraSei dynamicField">'+moment().add(i+1, 'd').format('LL')+'</span>';
-    } else if (value.indexOf('assunto') !== -1) {
-        var index = ((i+1) > prop.selAssuntos_select.length) ? (prop.selAssuntos_select.length-1) : i;
-        return_ = '<span class="ancoraSei dynamicField">'+prop.selAssuntos_select[index]+'</span>';
-    } else if (value.indexOf('interessado') !== -1) {
-        var index = ((i+1) > prop.selInteressadosProcedimento.length) ? (prop.selInteressadosProcedimento.length-1) : i;
-        return_ = '<span class="ancoraSei dynamicField">'+prop.selInteressadosProcedimento[index]+'</span>';
-    } else if (value.indexOf('observacao') !== -1) {
-        var index = ((i+1) > prop.txaObservacoes.length) ? (prop.txaObservacoes.length-1) : i;
-        return_ = '<span class="ancoraSei dynamicField">'+prop.txaObservacoes[index].unidade+': '+prop.txaObservacoes[index].observacao+'</span>';
-    } else if (value.indexOf('documento') !== -1) {
-        var docValue = '';
-        if (value.indexOf('+') !== -1 || value.indexOf('-') !== -1) {
-            var indexDoc = 0;
-            $.each(docs, function(i, v) { 
-                if (v.id_protocolo == getParamsUrlPro(window.location.href).id_documento) { 
-                    return indexDoc; 
-                } indexDoc++; 
-            });
-            var iDoc = indexDoc+(i+1);
-                iDoc = (docs.length <= iDoc) ? (docs.length-1) : iDoc;
-                iDoc = (value.indexOf('-') !== -1 && value.split('-')[1] == 'ultimo') ? (docs.length-1) : iDoc;
-            docValue = getHtmlListDocumentos(docs[iDoc]);
-        } else if (hasNumber(value)) {
-            docValue = getHtmlListDocumentos(docs[i]);
-        }
-        return_ = '<span class="ancoraSei dynamicField">'+docValue+'</span>';
-    }
-    return return_;
-}
-function getHtmlListDocumentos(value) {
-    if (typeof value !== 'undefined') { 
-        var nrSei = ( value.nr_sei != '' ) ? value.nr_sei : value.documento;
-        var citacaoDoc = getCitacaoDoc();
-        var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+value.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
-        return ( value.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? value.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
-    } else { return '' }
-}
 function replaceDadosEditor(this_) {
     var arrayTags = uniqPro(getHashTagsPro(iframeEditor.find('p').map(function(){ return $(this).text().replace(/\u00A0/gm, " ") }).get().join(' ')));
     var delimitLine = false;
@@ -2430,56 +2399,7 @@ function replaceDadosEditor(this_) {
     var tagField = iframeEditor.find('body').find('span.hashField');
     if (tagField.length > 0) { tagField.after(tagField.html()).remove() }
 
-    var processo = (typeof prop.txtProtocoloExibir === 'undefined') ? prop.hdnProtocoloFormatado : prop.txtProtocoloExibir;
-        processo = (typeof processo !== 'undefined') ? '<span contenteditable="false" data-cke-linksei="1" style="text-indent:0px;"><a id="lnkSei'+prop.hdnIdProcedimento+'" class="ancoraSei" style="text-indent:0px;">'+processo+'</a></span>' : null;
-        processo = (processo !== null && $.inArray('processo_texto', arrayTags) !== -1) ? '<span class="ancoraSei dynamicField">'+(prop.hdnProtocoloFormatado || prop.txtProtocoloExibir)+'</span>' : processo;
-    var autuacao = (typeof prop.txtDtaGeracaoExibir === 'undefined') ? prop.hdnDtaGeracao : prop.txtDtaGeracaoExibir;
-        autuacao = (typeof autuacao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+autuacao+'</span>' : null;
-    var tipo = (typeof prop.hdnNomeTipoProcedimento !== 'undefined') ? '<span class="ancoraSei dynamicField">'+prop.hdnNomeTipoProcedimento+'</span>' : null;
-    var especificacao = (typeof prop.txtDescricao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+prop.txtDescricao+'</span>' : null;
-    var hoje = '<span class="ancoraSei dynamicField">'+moment().format('LL')+'</span>';
-    var interessados = (typeof prop.selInteressadosProcedimento !== 'undefined') 
-                            ? ($.inArray('interessados_lista', arrayTags) !== -1) 
-                                    ? $.map(prop.selInteressadosProcedimento, function(substr, i){ return '<span class="ancoraSei dynamicField">'+substr+'</span><br>' }).join('')
-                                    : '<span class="ancoraSei dynamicField">'+joinAnd(prop.selInteressadosProcedimento)+'</span>' 
-                            : null;
-    var assuntos = (typeof prop.selAssuntos_select !== 'undefined') 
-                            ? ($.inArray('assuntos_lista', arrayTags) !== -1) 
-                                    ? $.map(prop.selAssuntos_select, function(substr, i){ return '<span class="ancoraSei dynamicField">'+substr+'</span><br>' }).join('')
-                                    : '<span class="ancoraSei dynamicField">'+joinAnd(prop.selAssuntos_select)+'</span>' 
-                            : null;
-    
-    var unidadeObs = jmespath.search(dadosProcessoPro.propProcesso.txaObservacoes, "[?unidade=='"+unidade+"'] | [0]");
-    var observacao = (typeof prop.txaObservacoes !== 'undefined' && prop.txaObservacoes.length > 0 && unidadeObs !== null && unidadeObs.observacao != '')
-                        ? '<span class="ancoraSei dynamicField">'+unidadeObs.unidade+': '+unidadeObs.observacao+'</span>' : null;
-
-    var observacoes = (typeof prop.txaObservacoes !== 'undefined' && prop.txaObservacoes.length > 0) 
-                        ? ($.inArray('observacoes_lista', arrayTags) !== -1) 
-                            ? $.map(prop.txaObservacoes, function(value, i){
-                                  return value.unidade+': '+value.observacao+'<br>';
-                              }).join('')
-                            : joinAnd($.map(prop.txaObservacoes, function(value, i){
-                                  return value.unidade+': '+value.observacao;
-                              }))
-                        : null;
-        observacoes = (observacoes !== null) ? '<span class="ancoraSei dynamicField">'+observacoes+'</span>' : observacoes;
-    var acesso = (typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == 0) ? '<span class="ancoraSei dynamicField">&#127760;&nbsp; <span>P\u00FAblico</span></span>' : null;
-        acesso = (acesso !== null && prop.rdoNivelAcesso == 1) ? '<span class="ancoraSei dynamicField">&#128274;&nbsp; <span>Restrito</span></span>' : acesso;
-        acesso = (acesso !== null && prop.rdoNivelAcesso == 2) ? '<span class="ancoraSei dynamicField">&#9940;&nbsp; <span>Sigiloso</span></span>' : acesso;
-        acesso = (acesso !== null && $.inArray('acesso_texto', arrayTags) !== -1) ? $(acesso).find('span').text() : acesso;
-    var documentos = (typeof docs !== 'undefined') 
-                            ? ($.inArray('documentos_lista', arrayTags) !== -1) 
-                                    ? $.map(docs, function(value, i){
-                                            return getHtmlListDocumentos(value)+'<br>';
-                                      }).join('')
-                                    : joinAnd($.map(docs, function(value, i){
-                                            return getHtmlListDocumentos(value);
-                                      }))
-                            : null;
-        documentos = (documentos !== null) ? '<span class="ancoraSei dynamicField">'+documentos+'</span>' : documentos;
-    var totaldocumentos = (typeof docs !== 'undefined' && docs !== null && $.inArray('totaldocumentos', arrayTags) !== -1) ? '<span class="ancoraSei dynamicField">'+docs.length+'</span>' : null;
-
-    var dadosProcesso = {processo: processo, autuacao: autuacao, tipo: tipo, especificacao: especificacao, hoje: hoje, interessados: interessados, assuntos: assuntos, acesso: acesso, documentos: documentos, totaldocumentos: totaldocumentos, observacoes: observacoes, observacao: observacao};
+    var dadosProcesso = camposDinamicosProcesso(arrayTags);
     var dadosTags = [];
         $.each(prop.txaTagsObservacoes, function (index, valueTag) {
             if (valueTag.unidade != unidade) {
@@ -2529,7 +2449,7 @@ function arrayDadosEditor() {
         setMomentPtBr();
     var listaDadosEditor = [['']];
     var prop = dadosProcessoPro.propProcesso;
-    var processo = (typeof prop.txtProtocoloExibir === 'undefined') ? prop.hdnProtocoloFormatado : prop.txtProtocoloExibir;
+    var processo = (typeof prop !== 'undefined' && typeof prop.txtProtocoloExibir === 'undefined') ? prop.hdnProtocoloFormatado : prop.txtProtocoloExibir;
     var dataGeracao = (typeof prop.txtDtaGeracaoExibir === 'undefined') ? prop.hdnDtaGeracao : prop.txtDtaGeracaoExibir;
     var htmlProcesso = '<span contenteditable="false" data-cke-linksei="1" style="text-indent:0px;"><a id="lnkSei'+prop.hdnIdProcedimento+'" class="ancoraSei" style="text-indent:0px;">'+processo+'</a></span>';
         listaDadosEditor.push(['Processo: '+processo,htmlProcesso]);
@@ -2584,7 +2504,7 @@ function getDadosEditor(this_, TimeOut = 9000) {
                 }
                 getDadosEditor(this_, TimeOut - 100); 
                 $(this_).fadeOut(200).fadeIn(200);
-                console.log('Reload getDadosEditor'); 
+                if(verifyConfigValue('debugpage')) console.log('Reload getDadosEditor'); 
             }, 500);
         }
     }
@@ -5338,13 +5258,18 @@ function getDialogOpenAI() {
 
                     if (perfilOpenAI) {
                         var idKeyword = this.getContentElement( 'tab_ia_options', 'keyword' )._.inputId;
+                        var idModel = this.getContentElement( 'tab_ia_options', 'model' )._.inputId;
                         var idModeInline = this.getContentElement( 'tab_ia_options', 'mode_inline' ).domId;
                         var elemKeyword = $('#'+idKeyword);
+                        var elemModel = $('#'+idModel);
                         var elemInline = $('#'+idModeInline+' input');
 
                             elemKeyword.on('change', function(){
                                 setOptionsPro('setKeywordInlineOpenAI', $(this).val());
                                 $('.wordGpt').text($(this).val());
+                            });
+                            elemModel.on('change', function(){
+                                setOptionsPro('setModelOpenAI', $(this).val());
                             });
                             elemInline.prop('checked', getOptionsPro('setInlineOpenAI')).on('change', function(){
                                 getInlineOpenAI(this);
@@ -5456,6 +5381,21 @@ function getDialogOpenAI() {
                         elements :
                             [
                                 {
+                                    type: 'select',
+                                    id: 'model',
+                                    label: 'Modelo de IA',
+                                    items: [ 
+                                        ['gpt-4'], 
+                                        ['gpt-4-0613'], 
+                                        ['gpt-4-32k'], 
+                                        ['gpt-4-32k-0613'], 
+                                        ['gpt-3.5-turbo'], 
+                                        ['gpt-3.5-turbo-0613'], 
+                                        ['gpt-3.5-turbo-16k'], 
+                                        ['gpt-3.5-turbo-16k-0613']
+                                    ],
+                                    'default': 'gpt-4'
+                                },{
                                     type: "checkbox",
                                     id: "mode_inline",
                                     style: "margin-top:5px",
@@ -5521,135 +5461,139 @@ function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
 
     async function openai_test() {
     
-    var url = perfilOpenAI.URL_API;
+        var url = perfilOpenAI.URL_API;
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
+        // var modelGPT = 'gpt-3.5-turbo';
+        var modelGPT = getOptionsPro('setModelOpenAI');
+            modelGPT = (modelGPT) ? modelGPT : 'gpt-4';
 
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Authorization", "Bearer "+perfilOpenAI.KEY_USER);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url);
+
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Authorization", "Bearer "+perfilOpenAI.KEY_USER);
 
 
-    if (inline) {
-        setTimeout(() => { 
-            $(oEditor.getSelection().getStartElement().$).closest('p').html('<span class="dot-flashing" contenteditable="false" style="margin: 0 20px;display: inline-block;">&nbsp;</span>') 
-        }); 
-    }
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            console.log(xhr.status);
-            console.log(xhr.responseText);
-
-            open_ai_response = xhr.responseText;
-            open_ai_response = JSON.parse(open_ai_response);
-
-            console.log(open_ai_response);
-            
-            var responseText = open_ai_response.choices[0].message.content;
-            var btnInsertText = '<span onclick="insertTextEditorSEI(this)" style="float: right; background: #e7effd; padding: 3px 5px; color: #4285f4; border-radius: 5px; margin-left: 10px; cursor: pointer;">'+
-                                '  <i class="fas fa-pen azulColor" style="font-size: 90%; cursor: pointer;"></i>'+
-                                '  Adicionar'+
-                                '</span>';
-            var htmlResult =    '<div class="result" style="padding-top: 15px;">'+btnInsertText+
-                                '   <span class="text" style="white-space: break-spaces;font-size: 10pt;font-family: system-ui;text-align: justify;line-height: 14pt;overflow-y: scroll;height: 300px !important;display: block;"><span class="blinker">&#32;</span></span>'+
-                                '</div>';
-            
-            var dialog = CKEDITOR.dialog.getCurrent();
-
-            if (!inline) {
-                $('#openAI_load').hide();
-                $('#openAI_result').html(htmlResult).show()
-                $('#openAI_result .result .text').data('text',responseText);
-                dialog.move(dialog.getPosition().x, (dialog.getPosition().y-125));
-            }
-
-            // type code
-            var i = 0, isTag, text;
-            (function type() {
-                
-                var container = (inline) ? $(oEditor.getSelection().getStartElement().$).closest('p') : $('#openAI_result .result .text');
-                    text = responseText.slice(0, ++i);
-                if (text === responseText) return;
-                    container.html(text + (!inline ? '<span class="blinker">&#32;</span>' : ''));
-                    if (!inline) container[0].scrollTop = container[0].scrollHeight;
-                var char = text.slice(-1);
-                if (char === "<") isTag = true;
-                if (char === ">") isTag = false;
-                if (isTag) return type();
-                setTimeout(type, (!inline ? 40 : 10));
-
-            })();
-
-        } else if (xhr.status >= 400) {
-            console.log(xhr.status);
-            console.log(xhr.responseText);
-
-            open_ai_response = xhr.responseText;
-            open_ai_response = JSON.parse(open_ai_response);
-
-            $('#openAI_load').hide();
-            $('#openAI_result').html('<strong class="alertaErrorPro dialogBoxDiv" style="white-space: break-spaces;background-color: #fff1f0;padding: 10px;margin: 10px 0;border-radius: 8px;"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+open_ai_response.error.message+'</strong>').show(); 
+        if (inline) {
+            setTimeout(() => { 
+                $(oEditor.getSelection().getStartElement().$).closest('p').html('<span class="dot-flashing" contenteditable="false" style="margin: 0 20px;display: inline-block;">&nbsp;</span>') 
+            }); 
         }
-    };
 
-    var data = (prompt_select == 'Conclua o seguinte texto: ')
-            ? `{
-                "model": "gpt-3.5-turbo",
-                "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                "temperature": 0.4,
-                "max_tokens": 640,
-                "top_p": 1,
-                "frequency_penalty": 0,
-                "presence_penalty": 0
-            }`
-            : `{
-                "model": "gpt-3.5-turbo",
-                "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                "temperature": 0.9,
-                "max_tokens": 2000,
-                "top_p": 1,
-                "frequency_penalty": 0,
-                "presence_penalty": 0.6
-            }`;
-    data = (prompt_select == 'Extraia as palavras-chave deste texto: ')
-            ? `{
-                "model": "gpt-3.5-turbo",
-                "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                "temperature": 0.5,
-                "max_tokens": 60,
-                "top_p": 1,
-                "frequency_penalty": 0.8,
-                "presence_penalty": 0
-            }`
-            : data;
-        data = (prompt_select == 'Converta minha nota curta em uma ata de reuni\u00E3o: ')
-            ? `{
-                "model": "gpt-3.5-turbo",
-                "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                "temperature": 0,
-                "max_tokens": 900,
-                "top_p": 1,
-                "frequency_penalty": 0,
-                "presence_penalty": 0
-            }`
-            : data;
-        data = (
-                prompt_select == 'Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: ' ||
-                prompt_select == 'Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: ' ||
-                prompt_select == 'Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: ')
-            ? `{
-                "model": "gpt-3.5-turbo",
-                "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                "temperature": 1,
-                "max_tokens": 3000,
-                "top_p": 1,
-                "frequency_penalty": 0,
-                "presence_penalty": 0
-              }`
-            : data;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                console.log(xhr.status);
+                console.log(xhr.responseText);
 
-    xhr.send(data);
+                open_ai_response = xhr.responseText;
+                open_ai_response = JSON.parse(open_ai_response);
+
+                console.log(open_ai_response);
+                
+                var responseText = open_ai_response.choices[0].message.content;
+                var btnInsertText = '<span onclick="insertTextEditorSEI(this)" style="float: right; background: #e7effd; padding: 3px 5px; color: #4285f4; border-radius: 5px; margin-left: 10px; cursor: pointer;">'+
+                                    '  <i class="fas fa-pen azulColor" style="font-size: 90%; cursor: pointer;"></i>'+
+                                    '  Adicionar'+
+                                    '</span>';
+                var htmlResult =    '<div class="result" style="padding-top: 15px;">'+btnInsertText+
+                                    '   <span class="text" style="white-space: break-spaces;font-size: 10pt;font-family: system-ui;text-align: justify;line-height: 14pt;overflow-y: scroll;height: 300px !important;display: block;"><span class="blinker">&#32;</span></span>'+
+                                    '</div>';
+                
+                var dialog = CKEDITOR.dialog.getCurrent();
+
+                if (!inline) {
+                    $('#openAI_load').hide();
+                    $('#openAI_result').html(htmlResult).show()
+                    $('#openAI_result .result .text').data('text',responseText);
+                    dialog.move(dialog.getPosition().x, (dialog.getPosition().y-125));
+                }
+
+                // type code
+                var i = 0, isTag, text;
+                (function type() {
+                    
+                    var container = (inline) ? $(oEditor.getSelection().getStartElement().$).closest('p') : $('#openAI_result .result .text');
+                        text = responseText.slice(0, ++i);
+                    if (text === responseText) return;
+                        container.html(text + (!inline ? '<span class="blinker">&#32;</span>' : ''));
+                        if (!inline) container[0].scrollTop = container[0].scrollHeight;
+                    var char = text.slice(-1);
+                    if (char === "<") isTag = true;
+                    if (char === ">") isTag = false;
+                    if (isTag) return type();
+                    setTimeout(type, (!inline ? 40 : 10));
+
+                })();
+
+            } else if (xhr.status >= 400) {
+                console.log(xhr.status);
+                console.log(xhr.responseText);
+
+                open_ai_response = xhr.responseText;
+                open_ai_response = JSON.parse(open_ai_response);
+
+                $('#openAI_load').hide();
+                $('#openAI_result').html('<strong class="alertaErrorPro dialogBoxDiv" style="white-space: break-spaces;background-color: #fff1f0;padding: 10px;margin: 10px 0;border-radius: 8px;"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+open_ai_response.error.message+'</strong>').show(); 
+            }
+        };
+
+        var data = (prompt_select == 'Conclua o seguinte texto: ')
+                ? `{
+                    "model": "${modelGPT}",
+                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
+                    "temperature": 0.4,
+                    "max_tokens": 640,
+                    "top_p": 1,
+                    "frequency_penalty": 0,
+                    "presence_penalty": 0
+                }`
+                : `{
+                    "model": "${modelGPT}",
+                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
+                    "temperature": 0.9,
+                    "max_tokens": 2000,
+                    "top_p": 1,
+                    "frequency_penalty": 0,
+                    "presence_penalty": 0.6
+                }`;
+        data = (prompt_select == 'Extraia as palavras-chave deste texto: ')
+                ? `{
+                    "model": "${modelGPT}",
+                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
+                    "temperature": 0.5,
+                    "max_tokens": 60,
+                    "top_p": 1,
+                    "frequency_penalty": 0.8,
+                    "presence_penalty": 0
+                }`
+                : data;
+            data = (prompt_select == 'Converta minha nota curta em uma ata de reuni\u00E3o: ')
+                ? `{
+                    "model": "${modelGPT}",
+                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
+                    "temperature": 0,
+                    "max_tokens": 900,
+                    "top_p": 1,
+                    "frequency_penalty": 0,
+                    "presence_penalty": 0
+                }`
+                : data;
+            data = (
+                    prompt_select == 'Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: ' ||
+                    prompt_select == 'Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: ' ||
+                    prompt_select == 'Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: ')
+                ? `{
+                    "model": "${modelGPT}",
+                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
+                    "temperature": 1,
+                    "max_tokens": 3000,
+                    "top_p": 1,
+                    "frequency_penalty": 0,
+                    "presence_penalty": 0
+                }`
+                : data;
+
+        xhr.send(data);
     }
 }
 function insertTextEditorSEI(this_) {
@@ -5714,7 +5658,7 @@ function initOpenAI(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initPerfilLogin(TimeOut - 100); 
-            console.log('Reload initOpenAI', typeof localStorageRestorePro,  typeof localStorageRestorePro('configBasePro_openai')); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initOpenAI', typeof localStorageRestorePro,  typeof localStorageRestorePro('configBasePro_openai')); 
         }, 500);
     }
 }
@@ -5742,26 +5686,177 @@ function menuOpenAI( editor ) {
 function getInlineOpenAI(this_) {
     var check = $(this_).is(':checked');
     setOptionsPro('setInlineOpenAI', check);
-    setInlineOpenAI(!check);
+    setOnKeyEditor(!check);
 }
-function setInlineOpenAI(destroy = false) {
-    if (!loadInlineOpenAI && !destroy) {
+function setOnKeyEditor(destroy = false) {
+    if (!loadOnKeyEditor && !destroy) {
             oEditor.on('key', function (evt) {
-                if (evt.data.keyCode == 13 && getOptionsPro('setInlineOpenAI')) {
-                    var keyword = getOptionsPro('setKeywordInlineOpenAI');
-                        keyword = (keyword) ? keyword : '+gpt';
-                    var select = oEditor.getSelection().getStartElement();
-                    var pElement = $(select.$).closest('p');
-                    var textP = pElement.text();
-                    if (textP.indexOf(keyword) !== -1) {
-                        var prompt_text = textP.split(keyword)[1].trim();
-                        sendRequestOpenAI('', prompt_text, true);
-                    }
-                }
+                var self = this;
+                var event = evt;
+                keyActionEditor(event, self);
+                setTimeout(function() {
+                    evtInlineOpenAI(event);
+                    keyupActionEditor(event, self);
+                }, 10);
             });
-            loadInlineOpenAI = true;
+            loadOnKeyEditor = true;
     } else if (destroy) {
         removeOptionsPro('setInlineOpenAI');
+    }
+}
+function evtInlineOpenAI(evt) {
+    if (evt.data.keyCode == 13 && getOptionsPro('setInlineOpenAI')) {
+        var keyword = getOptionsPro('setKeywordInlineOpenAI');
+            keyword = (keyword) ? keyword : '+gpt';
+        var select = oEditor.getSelection().getStartElement();
+        var pElement = $(select.$).closest('p');
+        var textP = pElement.text();
+        if (textP.indexOf(keyword) !== -1) {
+            var prompt_text = textP.split(keyword)[1].trim();
+            sendRequestOpenAI('', prompt_text, true);
+        }
+    }
+}
+function keyupActionEditor(evt, self) {
+    var pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
+    if (verifyConfigValue('escrivainterativa') && (evt.data.keyCode == 2228275 || pElement.find('.linkDisplayPro').length || pElement.text().indexOf('#') !== -1)) {
+        showTagsTips(pElement[0], $(oEditor.container.$).find('iframe').contents());
+    }
+}
+function keyActionEditor(evt, self) {
+    var pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
+    if (verifyConfigValue('escrivainterativa')) {
+        if ((evt.data.keyCode == 40 || evt.data.keyCode == 38) && pElement.find('.linkDisplayPro').length) {
+            evt.cancel();
+            evt.stop();
+            indexDisplayPro = evt.data.keyCode == 40 ? indexDisplayPro+1 : indexDisplayPro;
+            indexDisplayPro = evt.data.keyCode == 38 ? indexDisplayPro-1 : indexDisplayPro;
+            indexDisplayPro = indexDisplayPro < 0 ? 0 : indexDisplayPro;
+        } else if ((evt.data.keyCode == 13 || evt.data.keyCode == 9) && pElement.find('.linkDisplayPro').length) {
+            evt.cancel();
+            evt.stop();
+            pElement.find('.linkDisplayPro li.highlighted').trigger('click');
+            return false;
+        }
+    }
+    console.log(evt.data.keyCode, verifyConfigValue('escrivainterativa'));
+}
+function getTextTagTip() {
+    var range = oEditor.getSelection().getRanges()[ 0 ],
+        startNode = range.startContainer;
+    var textP = startNode.getText().substring(0,range.startOffset);
+        textP = (textP.indexOf('#') !== -1) ? textP.split('#')[1].trim() : false;
+    return textP;
+}
+function showTagsTips(this_, iframeDoc) {
+    var textTip = getTextTagTip();
+    var index = 0;
+    var listDocumentos = $.map(dadosProcessoPro.listDocumentos, function (v) {
+                            var select_text = ( v.nr_sei != '' ) ? v.documento+' ('+v.nr_sei+')' : v.documento;
+                            var citacaoDoc = getCitacaoDoc();
+                            var nrSei = ( v.nr_sei != '' ) ? v.nr_sei : v.documento;
+                            var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+v.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
+                            var citacaoDocumento = ( v.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? v.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
+                        
+                            if ( v.documento != '' ) { return [[select_text, citacaoDocumento]] }
+                        });
+    var listDadosProcesso = arrayDadosEditor();
+    var listTagTip = listDadosProcesso.concat(listDocumentos);
+    var htmlTips = $.map(listTagTip, function(v){ 
+                        var txtTag = !!v[0] ? removeAcentos(v[0]).replace(/[^\x00-\x7F]/g, '').toLowerCase() : false;
+                        var txtTip = !!v[0] ? removeAcentos(textTip).replace(/[^\x00-\x7F]/g, '').toLowerCase() : false;
+                        var checkTag = txtTag && txtTip ? txtTag.includes(txtTip) : false;
+                        if (!!v[1] && (!textTip || textTip == '' || checkTag) ) { 
+                            index++; 
+                            return "<li contenteditable='false' data-text='"+v[1]+"' data-index='"+index+"' data-texttip='"+textTip+"' class='"+(indexDisplayPro == index-1 ? 'highlighted' : '')+"' onmouseover='parent.hoverTapTip(this)' onclick='parent.setTagTip(this)'>"+v[0]+"</li>" 
+                        } 
+                    }).join('');
+        htmlTips = htmlTips == "" ? "<li contenteditable='false' style='padding: 5px; cursor:pointer'>Nenhum resultado encontrado</li>" : htmlTips;
+    var html =  '<div class="linkDisplayPro" unselectable="on" contenteditable="false">'+
+                '  <ul>'+
+                '    '+htmlTips+
+                '  </ul>'+
+                '</div>'; 
+
+            iframeDoc.find('.linkDisplayPro').remove();
+            $(this_).append(html);
+            replaceTextOnEditor('#','<a name="tagtip"></a></span>#');
+
+        var boxDisplayLink = $(this_).find('.linkDisplayPro');
+        var boxDisplayLink_offset = $(this_).find('a[name="tagtip"]').offset();
+        if (typeof boxDisplayLink_offset !== 'undefined') {
+            var boxDisplayLink_left = boxDisplayLink_offset.left;
+            var boxDisplayLink_top = boxDisplayLink_offset.top;
+            var boxDisplayLink_width = boxDisplayLink.width();
+            var windowWidth = $(window).width();
+            var heightBody = $('iframe[title*="'+oEditor.name+'"]').contents().find('body').height();
+            var marginLeft = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-(boxDisplayLink_left+boxDisplayLink_width+45) : 0;
+            var marginTop = (boxDisplayLink_top + 223) > heightBody ? '-240px' : '15px';
+                boxDisplayLink.css({'margin-left': marginLeft, 'margin-top': marginTop, 'left': boxDisplayLink_left, top: boxDisplayLink_offset.top});
+                $(this_).find('a[name="tagtip"]').remove();
+            if (!$(this_).find('.linkDisplayPro ul li.highlighted').length) {
+                $(this_).find('.linkDisplayPro ul li').eq(0).addClass('highlighted');
+                indexDisplayPro = 0;
+            }
+            if (indexDisplayPro > 6) $(this_).find('.linkDisplayPro ul').scrollTop(29.5*(indexDisplayPro-6));
+        }
+}
+function hoverTapTip(this_) {
+    var _this = $(this_);
+    _this.closest('ul').find('li.highlighted').removeClass('highlighted');
+    _this.addClass('highlighted');
+    indexDisplayPro = _this.data('index');
+}
+function setTagTip(this_) {
+    var _this = $(this_);
+    var textTip = getTextTagTip();
+    var textTip = _this.data('texttip');
+    var textReplace = _this.data('text');
+    var select = oEditor.getSelection().getStartElement();
+    var pElement = $(select.$).closest('p');
+        $(oEditor.getSelection().getStartElement().$).closest('p').find('.linkDisplayPro').remove();
+        replaceTextOnEditor('#'+textTip, textReplace);
+        indexDisplayPro = 0;
+}   
+var storeCursorLocation = function( oEditor ) {
+    bookmark = oEditor.getSelection().createBookmarks( true );
+};
+var restoreCursorLocation = function( oEditor ) {
+    oEditor.getSelection().selectBookmarks( bookmark );
+};
+function replaceTextOnEditor(findString, replaceString) {
+    oEditor.focus(); 
+    storeCursorLocation(oEditor);
+    var sel = oEditor.getSelection();
+    var element = sel.getStartElement();
+    var data = element.getHtml();
+    var replaced_text = data.replace(findString, replaceString);
+        element.setHtml(replaced_text);
+        restoreCursorLocation(oEditor);
+}
+function selectTextOnEditor(findString) {
+    try {
+        var sel = oEditor.getSelection();
+        var element = sel.getStartElement();
+        var pElement = $(element.$).closest('p');
+            pElement.html(pElement.html().replace(/^\n|\n$/g, ''));
+            sel.selectElement(element);
+
+        var ranges = oEditor.getSelection().getRanges();
+        var startIndex = element.getHtml().indexOf(findString);
+        if (startIndex != -1) {
+            ranges[0].setStart(element.getFirst(), startIndex);
+            ranges[0].setEnd(element.getFirst(), startIndex + findString.length);
+            console.log([ranges[0]]);
+            sel.selectRanges([ranges[0]]);
+
+            var range = sel.getRanges()[0];
+                range.deleteContents();
+                range.select();
+        }
+    } catch (e) {
+        console.log(e);
+        return false;
     }
 }
 // INSERE REFERENCIA INTERNA
@@ -5794,8 +5889,6 @@ function getDialogRefInterna() {
                 CKEDITOR.dialog.okButton
              ],
             onOk: function(event, a, b) {
-                // var valueSelect = this.getContentElement('tab_refint', 'selectRef').getValue();
-                    // valueSelect = (valueSelect.indexOf('-') !== -1) ? valueSelect.split('-') : false;
                 var valuePrefixo = this.getContentElement('tab_refint', 'prefixo').getValue();
 
                 if (verifyConfigValue('substituiselecao')) {

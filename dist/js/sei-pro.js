@@ -33,7 +33,7 @@ function handleClientLoadPro(TimeOut = 3000) {
     } else {
         setTimeout(function(){ 
             handleClientLoadPro(TimeOut - 100); 
-            console.log('Reload handleClientLoadPro'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload handleClientLoadPro'); 
         }, 500);
     }
 }
@@ -573,7 +573,7 @@ function insertGroupTable(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             insertGroupTable(TimeOut - 100); 
-            console.log('Reload insertGroupTable'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload insertGroupTable'); 
         }, 500);
     }
 }
@@ -591,7 +591,7 @@ function initChosenFilterHome(TimeOut = 9000) {
         }
         setTimeout(function(){ 
             initChosenFilterHome(TimeOut - 100); 
-            console.log('Reload initChosenFilterHome'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initChosenFilterHome'); 
         }, 500);
     }
 }
@@ -660,12 +660,12 @@ function initTableTag(type = '') {
 		appendGerados(type);
 		getTableTag(type);
 		getTableOnTag(type);
-        checkboxRangerSelectShift();
 	}
     initNewTabProcesso();
     setTimeout(function(){ 
         forcePlaceHoldChosen();
         urgenteProMoveOnTop();
+        checkboxRangerSelectShift();
         if (type != '' && type != 'all' && $('#tblProcessosRecebidos tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').length > 0) {
             $('#tblProcessosRecebidos tr.tagintable[data-htagname="(URGENTE)"').remove();
             $('#tblProcessosRecebidos tr.urgentePro').show().attr('data-tagname','(URGENTE)');
@@ -797,7 +797,7 @@ function initDadosProcesso(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initDadosProcesso(TimeOut - 100); 
-            console.log('Reload initDadosProcesso'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initDadosProcesso'); 
         }, 500);
     }
 }
@@ -911,7 +911,8 @@ function initNewBtnHome() {
     var lastCheck = getOptionsPro('lastcheck_AcompEsp');
         lastCheck = (lastCheck) ? ' <br>(\u00DAltima verifica\u00E7\u00E3o em: '+moment(lastCheck, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+')' : false;
     var title = 'Reabertura Programada de Processos'+lastCheck;
-    var htmlBtn =   '<a tabindex="451" class="botaoSEI iconReaberturaPro iconPro_reopen" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+title+'\')" onclick="checkDadosAcompEspecial(true);" style="position: relative; margin-left: -3px;">'+
+    var iconBoxSlim = localStorage.getItem('seiSlim');
+    var htmlBtn =   '<a tabindex="451" class="botaoSEI iconReaberturaPro '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_reopen" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+title+'\')" onclick="checkDadosAcompEspecial(true);" style="position: relative; margin-left: -3px;">'+
                     '    <img class="infraCorBarraSistema" src="'+base64IconReaberturaPro+'" title="'+title+'">'+
                     '</a>';
     $('#divComandos').find('.iconReaberturaPro').remove();
@@ -924,7 +925,7 @@ function initNewTabProcesso(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initNewTabProcesso(TimeOut - 100); 
-            console.log('Reload initNewTabProcesso'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initNewTabProcesso'); 
         }, 500);
     }
 }
@@ -1117,13 +1118,13 @@ function initPanelFavorites(TimeOut = 9000) {
         if (checkConfigValue('gerenciarfavoritos') && typeof getStoreFavoritePro() !== 'undefined' && getStoreFavoritePro().hasOwnProperty('favorites')) {
             setTimeout(function(){ 
                 setPanelFavorites('insert');
-                console.log('setPanelFavorites');
+                if(verifyConfigValue('debugpage')) console.log('setPanelFavorites');
             }, 500);
         }
     } else {
         setTimeout(function(){ 
             initPanelFavorites(TimeOut - 100); 
-            console.log('Reload initPanelFavorites'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initPanelFavorites'); 
         }, 500);
     }
 }
@@ -1141,7 +1142,7 @@ function checkLoadConfigSheets(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             checkLoadConfigSheets(TimeOut - 100); 
-            console.log('Reload checkLoadConfigSheets'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload checkLoadConfigSheets'); 
         }, 500);
     }
 }
@@ -1203,7 +1204,7 @@ function initSortDivPanel(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initSortDivPanel(TimeOut - 100); 
-            console.log('Reload initSortDivPanel => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initSortDivPanel => '+TimeOut); 
             if (TimeOut == 9000) fnJqueryPro();
         }, 500);
     }
@@ -1334,7 +1335,7 @@ function initTableSorterHome(TimeOut = 1000) {
         setTimeout(function(){ 
             if (typeof $().tablesorter === 'undefined' && TimeOut == 1000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initTableSorterHome(TimeOut - 100); 
-            console.log('Reload initTableSorterHome'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initTableSorterHome'); 
         }, 500);
     }
 }
@@ -1357,20 +1358,6 @@ function setTableSorterHome() {
 
                 if (!$(this).hasClass('infraTableOrdenacao')) {
                     corrigeTableSEI(this);
-                    /*
-                    $('#txtPesquisaRapida').attr('data-column','all').unbind().on('keypress',function(e) {
-                        if (tableHomePro.length > 0) {
-                            $.each(tableHomePro, function(i){
-                                $.tablesorter.filter.bindSearch( tableHomePro[i][0], $('#txtPesquisaRapida'), false);
-                            });
-                        }
-                        if(e.which == 13) {
-                            $('#frmProtocoloPesquisaRapida').submit();
-                            tableSorterHome.trigger('filterReset');
-                            $('#txtPesquisaRapida').val('');
-                        }
-                    });
-                    */
                    if (isNewSEI) {
                         tableSorterHome.find('th:nth-child(2)').each(function(){
                             var _this = $(this);
@@ -1413,8 +1400,9 @@ function setTableSorterHome() {
                                 var texttip = processo.attr('onmouseover');
                                     texttip = (typeof texttip !== 'undefined') ? extractTooltip(texttip) : '';
                                 var urgente = (texttip != '' && texttip.toLowerCase().indexOf('(urgente)') !== -1) ? '0 ' : '';
-                                    // console.log(texttip);
-                                return urgente+nrProc+' '+texttip;
+                                var prescricao = $(elem).find('.progressPrescricao').attr('aria-percent'); 
+                                    prescricao = typeof prescricao !== 'undefined' ? ' '+prescricao+' ' : ' 0 ';
+                                return urgente+prescricao+nrProc+' '+texttip;
                             },
                             4: function (elem, table, cellIndex) {
                               var target = $(elem).find('.dateboxDisplay').eq(0);
@@ -1483,7 +1471,7 @@ function setTableSorterHome() {
             setTimeout(function(){ 
                 if ($('.filterTableProcessos').length == 0) {
                     setTimeout(function(){ 
-                        console.log('Reload tableHomeDestroy *****');
+                        if(verifyConfigValue('debugpage')) console.log('Reload tableHomeDestroy *****');
                         tableHomeDestroy(true);
                     }, 1000);
                 }
@@ -1507,7 +1495,7 @@ function tableHomeDestroy(reload = false, tableHomeTimeout = 3000) {
         window.tableHomePro = [];
         if (reload && tableHomeTimeout > 0) {
             initTableSorterHome();
-            console.log('reload initTableSorterHome => '+tableHomeTimeout);
+            if(verifyConfigValue('debugpage')) console.log('Reload initTableSorterHome => '+tableHomeTimeout);
             setTimeout(function(){ 
                 forceTableHomeDestroy(tableHomeTimeout-500);
             }, 1000);
@@ -1526,7 +1514,7 @@ function forceTableHomeDestroy(Timeout = 3000) {
     });
     if (force && Timeout > 0 && $('#tblProcessosGerados').is(':visible')) {
         tableHomeDestroy(true, Timeout-1000);
-        console.log('Reload forceTableHomeDestroy => '+TimeOut);
+        if(verifyConfigValue('debugpage')) console.log('Reload forceTableHomeDestroy => '+TimeOut);
     }
 }
 function forceOnLoadBody() {
@@ -1540,7 +1528,7 @@ function observeAreaTela(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             observeAreaTela(TimeOut - 100); 
-            console.log('Reload observeAreaTela'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload observeAreaTela'); 
         }, 500);
     }
 }
@@ -1585,7 +1573,7 @@ function initReplaceSticknoteHome(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initReplaceSticknoteHome(TimeOut - 100); 
-            console.log('Reload initReplaceSticknoteHome'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initReplaceSticknoteHome'); 
         }, 500);
     }
 }
@@ -1598,7 +1586,7 @@ function initFullnameAtribuicao(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initFullnameAtribuicao(TimeOut - 100); 
-            console.log('Reload initFullnameAtribuicao');  
+            if(verifyConfigValue('debugpage')) console.log('Reload initFullnameAtribuicao');  
         }, 500);
     }
 }
@@ -1611,7 +1599,7 @@ function initViewEspecifacaoProcesso(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initViewEspecifacaoProcesso(TimeOut - 100); 
-            console.log('Reload initViewEspecifacaoProcesso'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initViewEspecifacaoProcesso'); 
         }, 500);
     }
 }
@@ -1624,7 +1612,7 @@ function initFaviconNrProcesso(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initFaviconNrProcesso(TimeOut - 100); 
-            console.log('Reload initFaviconNrProcesso'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initFaviconNrProcesso'); 
         }, 500);
     }
 }
@@ -1635,18 +1623,19 @@ function initReloadModalLink(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initReloadModalLink(TimeOut - 100); 
-            console.log('Reload initReloadModalLink'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initReloadModalLink'); 
         }, 500);
     }
 }
 function initReplaceNewIcons(TimeOut = 9000) {
+    if (typeof isNewSEI !== 'undefined' && isNewSEI) $('#divComandos a').addClass('botaoSEI');
     if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
     if (typeof replaceNewIcons === 'function') {
-        replaceNewIcons($('.infraBarraComandos a.botaoSEI'));
+        replaceNewIcons(isNewSEI ? $('.barraBotoesSEI a.botaoSEI') : $('.infraBarraComandos a.botaoSEI'));
     } else {
         setTimeout(function(){ 
             initReplaceNewIcons(TimeOut - 100); 
-            console.log('Reload initReplaceNewIcons => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initReplaceNewIcons => '+TimeOut); 
         }, 500);
     }
 }
@@ -1657,7 +1646,7 @@ function initObserveUrlChange(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initObserveUrlChange(TimeOut - 100); 
-            console.log('Reload initObserveUrlChange => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initObserveUrlChange => '+TimeOut); 
         }, 500);
     }
 }
@@ -2364,7 +2353,7 @@ function setPrazoMarcador(mode, this_, form, href, param = false, callback = fal
                                 });
                                 if (this_) tblProcessos.find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
                                 setTimeout(function(){ 
-                                    console.log('Reload tableHomeDestroy');
+                                    if(verifyConfigValue('debugpage')) console.log('Reload tableHomeDestroy');
                                     tableHomeDestroy(true);
                                 }, 500);
                             }
@@ -2491,7 +2480,7 @@ function initControlePrazo(force = false, TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initControlePrazo(force, TimeOut - 100); 
-            console.log('Reload initControlePrazo'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initControlePrazo'); 
         }, 500);
     }
 }
@@ -2525,7 +2514,7 @@ function initAllMarcadoresHome(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initAllMarcadoresHome(TimeOut - 100); 
-            console.log('Reload initAllMarcadoresHome'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initAllMarcadoresHome'); 
         }, 500);
     }
 }
@@ -2779,7 +2768,7 @@ function initSeiPro() {
 	}
     initReloadModalLink();
     if (typeof isNewSEI !== 'undefined' && isNewSEI) {
-        localStorageRemovePro('seiSlim');
+        // localStorageRemovePro('seiSlim');
         
         //  Força o reestabelecimento de funcionalidades nativas do SEI 4.0
         $('#ancLiberarMeusProcessos').click(function() {

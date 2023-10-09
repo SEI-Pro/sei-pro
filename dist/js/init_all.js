@@ -105,7 +105,8 @@ function _P() { // get  Session Name Space
 }
 function loadStyleDesign() {
     var body = document.body;
-    if (localStorage.getItem('seiSlim') && !isNewSEI) {
+    if (localStorage.getItem('seiSlim')) {
+    // if (localStorage.getItem('seiSlim') && !isNewSEI) {
         body.classList.add("seiSlim");
         body.classList.add("seiSlim_parent");
         if (document.getElementById("divInfraAreaTelaE") === null) body.classList.add("seiSlim_view");

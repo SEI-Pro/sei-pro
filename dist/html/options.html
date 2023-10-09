@@ -35,6 +35,8 @@
                     <tr>
                         <td colspan="2">
                             <i id="sca-removeProfile-0" class="option-ref removeProfile fas fa-trash-alt"></i>
+                            <i id="sca-downProfile-0" class="option-ref removeProfile fas fa-arrow-down" style="margin-right: 20px;"></i>
+                            <i id="sca-upProfile-0" class="option-ref removeProfile fas fa-arrow-up" style="margin-right: 10px;"></i>
                             <h2>Base de Dados</h2>
                         </td>
                     </tr>
@@ -52,10 +54,10 @@
                         </th>
                         <td>
                             <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;" required>
-                                <option value="projetos">Projetos</option>
+                                <!-- <option value="projetos">Projetos</option> -->
                                 <option value="atividades">Atividades</option>
-                                <option value="formularios">Formul&aacute;rios</option>
-                                <option value="processos">Processos</option>
+                                <!-- <option value="formularios">Formul&aacute;rios</option> -->
+                                <!-- <option value="processos">Processos</option> -->
                                 <option value="openai">Open AI (Chat GPT)</option>
                             </select>
                         </td>
@@ -136,21 +138,17 @@
                 <tr>
                     <td>
                         <p>
-                            <i class="iconPopup fa fa-stethoscope cinzaColor"></i><span class="info">Pesquisa NatJus</span>
-                            <a class="manual" href="/pages/NAJUS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                            <i class="iconPopup fa fa-check-circle azulColor"></i><span class="info">Gerenciar Atividades</span>
+                            <a href="https://bit.ly/Guia-SEI-Pro-Atividades" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
                     </td>
                     <td>
                            <div class="onoffswitch">
-                               <input type="checkbox" data-name="natjus" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_natjus" tabindex="0">
-                               <label class="onoffswitch-label" for="itemConfigGeral_natjus"></label>
+                               <input type="checkbox" data-name="gerenciaratividades" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciaratividades" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciaratividades"></label>
                            </div>
                     </td>
                 </tr>
-            </table>
-        </div>
-        <div id="options-functions">
-            <table class="tableZebra">
                 <tr>
                     <td>
                         <p>
@@ -168,18 +166,32 @@
                 <tr>
                     <td>
                         <p>
-                            <i class="iconPopup fa fa-check-circle azulColor"></i><span class="info">Gerenciar Atividades</span>
-                            <a href="https://bit.ly/Guia-SEI-Pro-Atividades" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                            <i class="iconPopup fa fa-hourglass-half azulColor"></i><span class="info">Gerenciar Prescri&ccedil;&otilde;es Processuais</span>
+                            <a class="manual" href="/pages/PRESCRICOES.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
                     </td>
                     <td>
                            <div class="onoffswitch">
-                               <input type="checkbox" data-name="gerenciaratividades" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciaratividades" tabindex="0" checked>
-                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciaratividades"></label>
+                               <input type="checkbox" data-name="gerenciarprescricoes" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_gerenciarprescricoes" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_gerenciarprescricoes"></label>
                            </div>
                     </td>
                 </tr>
                 <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-bug cinzaColor"></i><span class="info">Ativar debug</span>
+                            <a class="manual" href="/pages/DEBUGPAGE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="debugpage" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_debugpage" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_debugpage"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr class="lab" style="display:none">
                     <td>
                         <p>
                             <i class="iconPopup fas fa-clipboard-list azulColor"></i><span class="info">Gerenciar Formul&aacute;rios</span>
@@ -207,6 +219,24 @@
                            </div>
                     </td>
                 </tr>
+                <tr class="lab" style="display:none">
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-stethoscope cinzaColor"></i><span class="info">Pesquisa NatJus</span>
+                            <a class="manual" href="/pages/NAJUS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="natjus" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_natjus" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_natjus"></label>
+                           </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="options-functions">
+            <table class="tableZebra">
                 <tr class="notatq">
                     <td>
                         <p>
@@ -224,7 +254,7 @@
                 <tr>
                     <td>
                         <p>
-                            <i class="iconPopup fa fa-star azulColor"></i><span class="info">Gerenciar Processos Favoritos</span>
+                            <i class="iconPopup fa fa-star azulColor"></i><span class="info">Processos Favoritos</span>
                             <a class="manual" href="/pages/FAVORITOS.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
                     </td>
@@ -266,6 +296,20 @@
                 <tr>
                     <td>
                         <p>
+                            <i class="iconPopup fa fa-object-ungroup azulColor"></i><span class="info">Documentos em Lote</span>
+                            <a class="manual" href="/pages/DOCUMENTOSEMLOTE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="documentosemlote" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_documentosemlote" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_documentosemlote"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
                             <i class="iconPopup fa fa-user-edit azulColor"></i><span class="info">Revis&atilde;o de texto no editor de documentos</span>
                             <a class="manual" href="/pages/REVISARDOC.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
                         </p>
@@ -274,6 +318,20 @@
                            <div class="onoffswitch">
                                <input type="checkbox" data-name="revisaotexto" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_revisaotexto" tabindex="0" checked>
                                <label class="onoffswitch-label" for="itemConfigGeral_revisaotexto"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-hashtag cinzaColor"></i><span class="info">Escrita interativa no editor de documentos (digite # para ativar menu r&aacute;pido)</span>
+                            <a class="manual" href="/pages/ESCRITAINTERATIVA.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="escrivainterativa" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_escrivainterativa" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_escrivainterativa"></label>
                            </div>
                     </td>
                 </tr>
@@ -656,6 +714,7 @@
                                 <td style="width: 40%; text-align: right;">
                                     <select id="itemConfigGeral_citacaodoc" data-name="citacaodoc">
                                         <option value="citacaodoc_1">Documento (SEI n&ordm; 0000)</option>
+                                        <option value="citacaodoc_5">Documento (Doc. SEI n&ordm; 0000)</option>
                                         <option value="citacaodoc_2">Documento (SEI 0000)</option>
                                         <option value="citacaodoc_3">Documento (0000)</option>
                                         <option value="citacaodoc_4">0000</option>
@@ -777,6 +836,34 @@
                                    </td>
                             </tr>
                         </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fas fa-key cinzaColor"></i><span class="info">Autopreencher senha no login (SEI >= 4.0)</span>
+                            <a class="manual" href="/pages/AUTOPREENCHERSENHA.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="autopreenchersenha" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_autopreenchersenha" tabindex="0">
+                               <label class="onoffswitch-label" for="itemConfigGeral_autopreenchersenha"></label>
+                           </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <i class="iconPopup fa fa-trash-alt azulColor"></i><span class="info">Mover &iacute;cone de excluir documentos para o final da lista</span>
+                            <a class="manual" href="/pages/MOVERICONE.html" target="_blank" style="float: right;"><i class="iconPopup fa fa-info-circle" style="color: #C0C0C0 !important;"></i></a>
+                        </p>
+                    </td>
+                    <td>
+                           <div class="onoffswitch">
+                               <input type="checkbox" data-name="movericone" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_movericone" tabindex="0" checked>
+                               <label class="onoffswitch-label" for="itemConfigGeral_movericone"></label>
+                           </div>
                     </td>
                 </tr>
                 <tr>

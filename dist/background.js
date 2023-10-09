@@ -13,9 +13,9 @@ function handleInstalled(details) {
     browser.storage.local.set(item);
 
     if (item.CheckTypes == undefined) {
-      //browser.tabs.create({ url: "https://pedrohsoaresadv.github.io/sei-pro/" });
+      browser.tabs.create({ url: "https://sei-pro.github.io/sei-pro/" });
     } else if (item.CheckTypes.indexOf("hidemsgupdate") == -1) {
-      //browser.tabs.create({ url: "https://pedrohsoaresadv.github.io/sei-pro/pages/HISTORICO.html" });
+      browser.tabs.create({ url: "https://sei-pro.github.io/sei-pro/pages/HISTORICO.html" });
     }
   }
 

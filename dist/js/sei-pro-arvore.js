@@ -54,7 +54,7 @@ function initToolbarDocs(TimeOut = 9000) {
         setTimeout(function(){ 
             if (TimeOut == 9000) $.getScript((parent.URL_SPRO+"js/lib/jquery.toolbar.min.js"));
             initToolbarDocs(TimeOut - 100); 
-            console.log('Reload initToolbarDocs'); 
+            if(verifyConfigValue('debugpage')) if(verifyConfigValue('debugpage')) console.log('Reload initToolbarDocs'); 
         }, 500);
     }
 }
@@ -1121,8 +1121,7 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
                             selSerieDefault = (typeof selSerieDefault !== 'undefined') 
                                 ? selSerieDefault 
                                 : $.map(tipoDoc, function(value){ if (value.name.indexOf('anexo') !== -1) { return value } })[0];
-
-                        // console.log(getConfigValue('newdocname'), selSerieDefault, tipoDoc);
+                            selSerieDefault = (typeof selSerieDefault === 'undefined') ? tipoDoc[0] : selSerieDefault;
 
                         var selSerie = (valueSerie) ? valueSerie : selSerieDefault.value;
                         var selSerieSelected = $.map(tipoDoc, function(value){ if (value.value == valueSerie) { return value } })[0];
@@ -1305,7 +1304,7 @@ function initUploadArvore(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initUploadArvore(TimeOut - 100); 
-            console.log('Reload initUploadArvore => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initUploadArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -1328,7 +1327,7 @@ function initDadosProcessoArvore(TimeOut = 1000) {
     } else {
         setTimeout(function(){ 
             initDadosProcessoArvore(TimeOut - 100); 
-            console.log('Reload initDadosProcessoArvore => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initDadosProcessoArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -1879,10 +1878,11 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '      Marcador:'+
                                     '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
                                     '   </label>'+
-                                    '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'display:none' : '')+'">'+
+                                    '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'display:none' : 'position: relative;min-height: 60px;')+'">'+
                                     '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconMarcador+'</a>'+linkPrazo+
                                     (processoAberto ?
                                     '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
+                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;position: absolute;right: 0;top: 30px;" onclick="parent.getRemoverMarcador()" onmouseover="return infraTooltipMostrar(\'Clique para remover o marcador\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash"></i></a>'+
                                     '' : '')+
                                     '   </div>'+
                                     '</div>';
@@ -1912,7 +1912,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
         var htmlTipoProcedimento =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="tipo_procedimento">'+
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
                                     '      <i class="fas fa-inbox azulColor iconDadosProcesso"></i>'+
-                                    '      Tipo de Procedimento:'+
+                                    '      Tipo de Processo:'+
                                     '      <i class="fas fa-chevron-'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'right' : 'down')+' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>'+
                                     '   </label>'+
                                     '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_tipo_procedimento') == 'hide' ? 'display:none' : '')+'">'+
@@ -2031,6 +2031,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
         if (typeof replaceColorsIcons !== 'undefined' && checkConfigValue('coresmarcadores')) {
             replaceColorsIcons($('a[href*="andamento_marcador_gerenciar"], .tagUserColorPro'));
         }
+        if (typeof parent.getDadosCorporativo === 'function' ) parent.getDadosCorporativo();
     }
 }
 function getDataMarcadorProcesso() {
@@ -2069,7 +2070,7 @@ function initAtividadesProcesso(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
-            if (TimeOut == 9000) { parent.getAtividades(); }
+            if (typeof parent.getAtividades === 'function' && TimeOut == 9000) { parent.getAtividades(); }
             initAtividadesProcesso(TimeOut - 100); 
         }, 500);
     }
@@ -2233,7 +2234,7 @@ function stylePanelArvore() {
                     max: $(this).data('max')
                 });
             });
-            parent.getInsertIconAtividade();
+            if (typeof parent.getInsertIconAtividade === 'function') parent.getInsertIconAtividade();
         }
         parent.forceOnLoadBodyPage();
 
@@ -2262,7 +2263,7 @@ function initStylePanelArvore(TimeOut = 9000) {
                 parent.initNameConst();
             }
             initStylePanelArvore(TimeOut - 100); 
-            console.log('Reload initStylePanelArvore => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initStylePanelArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -2290,7 +2291,7 @@ function initBreakDocTwoLines(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initBreakDocTwoLines(TimeOut - 100); 
-            console.log('Reload initBreakDocTwoLines => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initBreakDocTwoLines => '+TimeOut); 
         }, 500);
     }
 }
@@ -2307,7 +2308,7 @@ function loadStyleDesign(loop = 3) {
         if (loop > 0) {
             setTimeout(function(){ 
                 loadStyleDesign(false);
-                console.log('reload loadStyleDesign', loop);
+                if(verifyConfigValue('debugpage')) console.log('Reload loadStyleDesign', loop);
             }, 1500);
         }
     }
@@ -2338,13 +2339,16 @@ function getSumDocsPasta(loop) {
     if (parent.getOptionsPro('sumDocsPasta')) {
         return parent.getOptionsPro('sumDocsPasta');
     } else {
-        var defaultSumPasta = 10;
+        var defaultSumPasta = 20;
         var sumDocsPasta = ($('#anchorImgPASTA2').length) 
-            ? arrayMax($('.infraArvore[id*="divPASTA"]').map(function(){ if( $(this).find('a.clipboard[id*="anchorImg"]').length) { return $(this).find('a.clipboard[id*="anchorImg"]').length } }).get())
+            ? $('.infraArvore[id*="divPASTA"]:not(:last-child)').map(function(){ if( $(this).find('a.clipboard[id*="anchorImg"]').length) { return $(this).find('a.clipboard[id*="anchorImg"]').length } }).get()
             : defaultSumPasta;
-        if (sumDocsPasta != defaultSumPasta && loop) {
+        var sumDocsPasta = $.isArray(sumDocsPasta) && !$.isEmptyObject(sumDocsPasta) ? arrayMax(sumDocsPasta) : sumDocsPasta;
+        if (sumDocsPasta > defaultSumPasta && loop) {
             parent.setOptionsPro('sumDocsPasta',sumDocsPasta);
             initNumericDocsPro(false);
+        } else {
+            sumDocsPasta = defaultSumPasta;
         }
         
         return sumDocsPasta;
@@ -2359,7 +2363,8 @@ function checkProcessoSigiloso() {
 function initPanelPrescricaoProcesso() {
     var prescData = parent.arrayPrescricoesProcPro;
     var tipos_prescricao = typeof jmespath !== 'undefined' ? jmespath.search(prescData,"[*].id_tipo_prescricao") : null;
-    if (typeof prescData !== 'undefined' && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0) {
+        tipos_prescricao = tipos_prescricao !== null ? parent.uniqPro(tipos_prescricao) : null;
+    if (typeof prescData !== 'undefined' && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0 && checkConfigValue('gerenciarprescricoes')) {
         $.each(tipos_prescricao, function(i, v){
             var value_prescricao = typeof parent.arrayConfigAtividades.tipos_prescricoes !== 'undefined' ? jmespath.search(parent.arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`"+v+"`] | [0]") : null;
                 value_prescricao = value_prescricao !== null ? value_prescricao : false;
@@ -2369,18 +2374,33 @@ function initPanelPrescricaoProcesso() {
                 vigente = vigente !== null ? vigente : false;
             var prazo = value_prescricao ? value_prescricao.prazo : false;
             var config = value_prescricao ? value_prescricao.config : false;
+            var suspensao_prazo = config && config.suspensao_prazo ? true : false;
 
             if (prazo) {
-                var decorrido = moment().diff(moment(vigente.data_inicio, 'YYYY-MM-DD HH:mm:ss'),'days');
+                if (suspensao_prazo) {
+                    var decorrido = jmespath.search(prescData,"[?!suspensao]");
+                        decorrido = decorrido.map(function(v){ 
+                            var data_fim = v.data_fim == '0000-00-00 00:00:00' ? moment() : moment(v.data_fim, 'YYYY-MM-DD HH:mm:ss');
+                            var prazo = data_fim.diff(moment(v.data_inicio, 'YYYY-MM-DD HH:mm:ss'),'days');
+                            return prazo
+                        }).reduce((b, a) => b + a, 0);
+                } else {
+                    var decorrido = moment().diff(moment(vigente.data_inicio, 'YYYY-MM-DD HH:mm:ss'),'days');
+                }
                 var porcentagem = parseFloat(((decorrido/prazo)*100).toFixed(2));
                 var nivel_critico = config && typeof config.nivel_critico !== 'undefined' ? config.nivel_critico : 75;
                 var urgencia_nivel_critico = config && typeof config.urgencia_nivel_critico !== 'undefined' ? config.urgencia_nivel_critico : false;
-                var classUrgente = porcentagem >= nivel_critico ? 'urgente' : '';
-                var txtTip = 'Decorrido: '+decorrido+' dias ('+porcentagem+'%) <br> In\u00EDcio: '+vigente.descricao+' ('+moment(vigente.data_inicio).format('DD/MM/YYYY HH:mm')+')<br>Prazo: '+prazo+' dias\',\''+value_prescricao.nome_prescricao;
+                var classProgress = porcentagem >= nivel_critico ? 'urgente' : '';
+                    classProgress = vigente.suspensao ? 'suspenso' : classProgress;
+                var txtTip =    'Prazo: '+prazo+' dias<br>'+
+                                'Decorrido: '+decorrido+' dias ('+porcentagem+'%) <br>'+
+                                'Documento: '+vigente.documento_relacionado+' ('+moment(vigente.data_inicio).format('DD/MM/YYYY HH:mm')+')'+
+                                '\',\''+
+                                (vigente.suspensao ? '(SUSPENSO) ' : '')+value_prescricao.nome_prescricao;
 
-                $('#progressPrescricao').remove();
-                $('#topmenu').append('<div id="progressPrescricao" onmouseover="return infraTooltipMostrar(\''+txtTip+'\');" onmouseout="return infraTooltipOcultar();"  class="progressPrescricao '+classUrgente+'"></div>');
-                $('#progressPrescricao').progressbar({
+                $('#progressPrescricao_'+v).remove();
+                $('#topmenu').append('<div id="progressPrescricao_'+v+'" onmouseover="return infraTooltipMostrar(\''+txtTip+'\');" onmouseout="return infraTooltipOcultar();" onclick="parent.getCtrPrescricao();" class="progressPrescricao '+classProgress+'"></div>');
+                $('#progressPrescricao_'+v).progressbar({
                     value: decorrido,
                     max: prazo
                 });
@@ -2391,7 +2411,7 @@ function initPanelPrescricaoProcesso() {
                         parent.addUrgenteProcessoPro();
                     }
                 }, 4000);
-                console.log(value_prescricao, vigente, prazo, decorrido, porcentagem, nivel_critico, urgencia_nivel_critico, parent.dadosProcessoPro);
+                // console.log(value_prescricao, vigente, prazo, decorrido, porcentagem, nivel_critico, urgencia_nivel_critico, parent.dadosProcessoPro);
             }
         })
     }
@@ -2427,7 +2447,7 @@ function initOnClickPasta() {
 function initSeiProArvore(loop = true) {
     loadStyleDesign();
     checkProcessoSigiloso();
-    initPanelPrescricaoProcesso();
+    if (typeof parent.checkCapacidade !== 'undefined' && parent.checkCapacidade('view_prescricoes') && parent.checkConfigValue('gerenciarprescricoes')) initPanelPrescricaoProcesso();
     arrayLinksArvore = getLinksArvore();
     arrayLinksPage = getLinksPage();
     parent.linksArvore = getLinksPage();
@@ -2494,7 +2514,7 @@ function initSeiProArvore(loop = true) {
         var arrayCheckActions = $('a[id*="anchor"][target="ifrVisualizacao"]').map(function(){ if (typeof $(this).data('arvore-pro') === 'undefined') return true ; }).get();
         if (typeof parent.execArvorePro !== 'undefined' && loop && typeof arrayCheckActions !== 'undefined' && arrayCheckActions.length > 0) {
             parent.execArvorePro(initSeiProArvore);
-            console.log('Reload initSeiProArvore Loop');
+            if(verifyConfigValue('debugpage')) console.log('Reload initSeiProArvore Loop');
         } 
     }, 500);
 }

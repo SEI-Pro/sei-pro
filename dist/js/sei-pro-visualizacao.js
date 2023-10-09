@@ -28,6 +28,12 @@ function initSeiProVisualizacao() {
     if (typeof parent.insertIconBatchActions === 'function' && parent.checkConfigValue('acoesemlote')) {
         parent.insertIconBatchActions();
     }
+    if (typeof parent.initMoveIconDeleteToEnd === 'function' && parent.checkConfigValue('movericone')) {
+        parent.initMoveIconDeleteToEnd();
+    }
+    if (typeof parent.insertIconBatchDocs === 'function' && parent.checkConfigValue('documentosemlote')) {
+        parent.insertIconBatchDocs();
+    }
     if (typeof parent.insertNewIcons === 'function' && typeof parent.insertNewIcons !== 'undefined') {
         parent.insertNewIcons();
     }

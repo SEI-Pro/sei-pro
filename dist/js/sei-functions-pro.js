@@ -33,6 +33,7 @@ var divInformacao = isNewSEI ? '#divArvoreInformacao' : '#divInformacao';
 var mainMenu = isNewSEI ? '#infraMenu' : '#main-menu';
 var ancoraArvoreDownload = isNewSEI ? 'a.ancoraVisualizacaoArvore' : 'a.ancoraArvoreDownload';
 var idMenu = isNewSEI ? '#divInfraSidebarMenu '+mainMenu : '#divInfraAreaTelaE '+mainMenu;
+var infraBarraS = isNewSEI ? '#divInfraBarraSistemaPadraoE' : '#divInfraBarraSistemaE';
 var nameDocInterno = isNewSEI ? 'documento_interno.svg' : 'sei_documento_interno.gif';
 var dialogIsDraggable = false;
 var tableHomeTimeout = 3000;
@@ -131,11 +132,13 @@ var URLPAGES_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P()
 var VERSION_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P().VERSION_SPRO;
 var ICON_SPRO = (typeof parent._P === 'undefined') ? undefined : parent._P().ICON_SPRO;
 
-var CLIENT_ID_PRO = _G() ? _G().CLIENT_ID_PRO : false;
-var API_KEY_PRO = _G() ? _G().API_KEY_PRO : false;
-var spreadsheetIdProjetos_Pro = _G() ? _G().spreadsheetIdProjetos_Pro : false;
-var spreadsheetIdFormularios_Pro = _G() ? _G().spreadsheetIdFormularios_Pro : false;
-var spreadsheetIdSyncProcessos_Pro = _G() ? _G().spreadsheetIdSyncProcessos_Pro : false;
+// var CLIENT_ID_PRO = _G() ? _G().CLIENT_ID_PRO : false;
+// var API_KEY_PRO = _G() ? _G().API_KEY_PRO : false;
+// var spreadsheetIdProjetos_Pro = _G() ? _G().spreadsheetIdProjetos_Pro : false;
+// var spreadsheetIdFormularios_Pro = _G() ? _G().spreadsheetIdFormularios_Pro : false;
+// var spreadsheetIdSyncProcessos_Pro = _G() ? _G().spreadsheetIdSyncProcessos_Pro : false;
+var CLIENT_ID_PRO = false;
+var API_KEY_PRO = false;
 
 var sortListSaved = (typeof localStorageRestorePro('tablesorter-savesort') !== 'undefined' && localStorageRestorePro('tablesorter-savesort') !== null) ? localStorageRestorePro('tablesorter-savesort')[window.location.pathname] : false;
 
@@ -143,29 +146,33 @@ var iconSeiPro = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABc
 var listIconsFontAwesome = ["ad","address-book","address-card","adjust","air-freshener","align-center","align-justify","align-left","align-right","allergies","ambulance","american-sign-language-interpreting","anchor","angle-double-down","angle-double-left","angle-double-right","angle-double-up","angle-down","angle-left","angle-right","angle-up","angry","ankh","apple-alt","archive","archway","arrow-alt-circle-down","arrow-alt-circle-left","arrow-alt-circle-right","arrow-alt-circle-up","arrow-circle-down","arrow-circle-left","arrow-circle-right","arrow-circle-up","arrow-down","arrow-left","arrow-right","arrow-up","arrows-alt","arrows-alt-h","arrows-alt-v","assistive-listening-systems","asterisk","at","atlas","atom","audio-description","award","baby","baby-carriage","backspace","backward","bacon","bacteria","bacterium","bahai","balance-scale","balance-scale-left","balance-scale-right","ban","band-aid","barcode","bars","baseball-ball","basketball-ball","bath","battery-empty","battery-full","battery-half","battery-quarter","battery-three-quarters","bed","beer","bell","bell-slash","bezier-curve","bible","bicycle","biking","binoculars","biohazard","birthday-cake","blender","blender-phone","blind","blog","bold","bolt","bomb","bone","bong","book","book-dead","book-medical","book-open","book-reader","bookmark","border-all","border-none","border-style","bowling-ball","box","box-open","box-tissue","boxes","braille","brain","bread-slice","briefcase","briefcase-medical","broadcast-tower","broom","brush","bug","building","bullhorn","bullseye","burn","bus","bus-alt","business-time","calculator","calendar","calendar-alt","calendar-check","calendar-day","calendar-minus","calendar-plus","calendar-times","calendar-week","camera","camera-retro","campground","candy-cane","cannabis","capsules","car","car-alt","car-battery","car-crash","car-side","caravan","caret-down","caret-left","caret-right","caret-square-down","caret-square-left","caret-square-right","caret-square-up","caret-up","carrot","cart-arrow-down","cart-plus","cash-register","cat","certificate","chair","chalkboard","chalkboard-teacher","charging-station","chart-area","chart-bar","chart-line","chart-pie","check","check-circle","check-double","check-square","cheese","chess","chess-bishop","chess-board","chess-king","chess-knight","chess-pawn","chess-queen","chess-rook","chevron-circle-down","chevron-circle-left","chevron-circle-right","chevron-circle-up","chevron-down","chevron-left","chevron-right","chevron-up","child","church","circle","circle-notch","city","clinic-medical","clipboard","clipboard-check","clipboard-list","clock","clone","closed-captioning","cloud","cloud-download-alt","cloud-meatball","cloud-moon","cloud-moon-rain","cloud-rain","cloud-showers-heavy","cloud-sun","cloud-sun-rain","cloud-upload-alt","cocktail","code","code-branch","coffee","cog","cogs","coins","columns","comment","comment-alt","comment-dollar","comment-dots","comment-medical","comment-slash","comments","comments-dollar","compact-disc","compass","compress","compress-alt","compress-arrows-alt","concierge-bell","cookie","cookie-bite","copy","copyright","couch","credit-card","crop","crop-alt","cross","crosshairs","crow","crown","crutch","cube","cubes","cut","database","deaf","democrat","desktop","dharmachakra","diagnoses","dice","dice-d20","dice-d6","dice-five","dice-four","dice-one","dice-six","dice-three","dice-two","digital-tachograph","directions","disease","divide","dizzy","dna","dog","dollar-sign","dolly","dolly-flatbed","donate","door-closed","door-open","dot-circle","dove","download","drafting-compass","dragon","draw-polygon","drum","drum-steelpan","drumstick-bite","dumbbell","dumpster","dumpster-fire","dungeon","edit","egg","eject","ellipsis-h","ellipsis-v","envelope","envelope-open","envelope-open-text","envelope-square","equals","eraser","ethernet","euro-sign","exchange-alt","exclamation","exclamation-circle","exclamation-triangle","expand","expand-alt","expand-arrows-alt","external-link-alt","external-link-square-alt","eye","eye-dropper","eye-slash","fan","fast-backward","fast-forward","faucet","fax","feather","feather-alt","female","fighter-jet","file","file-alt","file-archive","file-audio","file-code","file-contract","file-csv","file-download","file-excel","file-export","file-image","file-import","file-invoice","file-invoice-dollar","file-medical","file-medical-alt","file-pdf","file-powerpoint","file-prescription","file-signature","file-upload","file-video","file-word","fill","fill-drip","film","filter","fingerprint","fire","fire-alt","fire-extinguisher","first-aid","fish","fist-raised","flag","flag-checkered","flag-usa","flask","flushed","folder","folder-minus","folder-open","folder-plus","font","football-ball","forward","frog","frown","frown-open","funnel-dollar","futbol","gamepad","gas-pump","gavel","gem","genderless","ghost","gift","gifts","glass-cheers","glass-martini","glass-martini-alt","glass-whiskey","glasses","globe","globe-africa","globe-americas","globe-asia","globe-europe","golf-ball","gopuram","graduation-cap","greater-than","greater-than-equal","grimace","grin","grin-alt","grin-beam","grin-beam-sweat","grin-hearts","grin-squint","grin-squint-tears","grin-stars","grin-tears","grin-tongue","grin-tongue-squint","grin-tongue-wink","grin-wink","grip-horizontal","grip-lines","grip-lines-vertical","grip-vertical","guitar","h-square","hamburger","hammer","hamsa","hand-holding","hand-holding-heart","hand-holding-medical","hand-holding-usd","hand-holding-water","hand-lizard","hand-middle-finger","hand-paper","hand-peace","hand-point-down","hand-point-left","hand-point-right","hand-point-up","hand-pointer","hand-rock","hand-scissors","hand-sparkles","hand-spock","hands","hands-helping","hands-wash","handshake","handshake-alt-slash","handshake-slash","hanukiah","hard-hat","hashtag","hat-cowboy","hat-cowboy-side","hat-wizard","hdd","head-side-cough","head-side-cough-slash","head-side-mask","head-side-virus","heading","headphones","headphones-alt","headset","heart","heart-broken","heartbeat","helicopter","highlighter","hiking","hippo","history","hockey-puck","holly-berry","home","horse","horse-head","hospital","hospital-alt","hospital-symbol","hospital-user","hot-tub","hotdog","hotel","hourglass","hourglass-end","hourglass-half","hourglass-start","house-damage","house-user","hryvnia","i-cursor","ice-cream","icicles","icons","id-badge","id-card","id-card-alt","igloo","image","images","inbox","indent","industry","infinity","info","info-circle","italic","jedi","joint","journal-whills","kaaba","key","keyboard","khanda","kiss","kiss-beam","kiss-wink-heart","kiwi-bird","landmark","language","laptop","laptop-code","laptop-house","laptop-medical","laugh","laugh-beam","laugh-squint","laugh-wink","layer-group","leaf","lemon","less-than","less-than-equal","level-down-alt","level-up-alt","life-ring","lightbulb","link","lira-sign","list","list-alt","list-ol","list-ul","location-arrow","lock","lock-open","long-arrow-alt-down","long-arrow-alt-left","long-arrow-alt-right","long-arrow-alt-up","low-vision","luggage-cart","lungs","lungs-virus","magic","magnet","mail-bulk","male","map","map-marked","map-marked-alt","map-marker","map-marker-alt","map-pin","map-signs","marker","mars","mars-double","mars-stroke","mars-stroke-h","mars-stroke-v","mask","medal","medkit","meh","meh-blank","meh-rolling-eyes","memory","menorah","mercury","meteor","microchip","microphone","microphone-alt","microphone-alt-slash","microphone-slash","microscope","minus","minus-circle","minus-square","mitten","mobile","mobile-alt","money-bill","money-bill-alt","money-bill-wave","money-bill-wave-alt","money-check","money-check-alt","monument","moon","mortar-pestle","mosque","motorcycle","mountain","mouse","mouse-pointer","mug-hot","music","network-wired","neuter","newspaper","not-equal","notes-medical","object-group","object-ungroup","oil-can","om","otter","outdent","pager","paint-brush","paint-roller","palette","pallet","paper-plane","paperclip","parachute-box","paragraph","parking","passport","pastafarianism","paste","pause","pause-circle","paw","peace","pen","pen-alt","pen-fancy","pen-nib","pen-square","pencil-alt","pencil-ruler","people-arrows","people-carry","pepper-hot","percent","percentage","person-booth","phone","phone-alt","phone-slash","phone-square","phone-square-alt","phone-volume","photo-video","piggy-bank","pills","pizza-slice","place-of-worship","plane","plane-arrival","plane-departure","plane-slash","play","play-circle","plug","plus","plus-circle","plus-square","podcast","poll","poll-h","poo","poo-storm","poop","portrait","pound-sign","power-off","pray","praying-hands","prescription","prescription-bottle","prescription-bottle-alt","print","procedures","project-diagram","pump-medical","pump-soap","puzzle-piece","qrcode","question","question-circle","quidditch","quote-left","quote-right","quran","radiation","radiation-alt","rainbow","random","receipt","record-vinyl","recycle","redo","redo-alt","registered","remove-format","reply","reply-all","republican","restroom","retweet","ribbon","ring","road","robot","rocket","route","rss","rss-square","ruble-sign","ruler","ruler-combined","ruler-horizontal","ruler-vertical","running","rupee-sign","sad-cry","sad-tear","satellite","satellite-dish","save","school","screwdriver","scroll","sd-card","search","search-dollar","search-location","search-minus","search-plus","seedling","server","shapes","share","share-alt","share-alt-square","share-square","shekel-sign","shield-alt","shield-virus","ship","shipping-fast","shoe-prints","shopping-bag","shopping-basket","shopping-cart","shower","shuttle-van","sign","sign-in-alt","sign-language","sign-out-alt","signal","signature","sim-card","sink","sitemap","skating","skiing","skiing-nordic","skull","skull-crossbones","slash","sleigh","sliders-h","smile","smile-beam","smile-wink","smog","smoking","smoking-ban","sms","snowboarding","snowflake","snowman","snowplow","soap","socks","solar-panel","sort","sort-alpha-down","sort-alpha-down-alt","sort-alpha-up","sort-alpha-up-alt","sort-amount-down","sort-amount-down-alt","sort-amount-up","sort-amount-up-alt","sort-down","sort-numeric-down","sort-numeric-down-alt","sort-numeric-up","sort-numeric-up-alt","sort-up","spa","space-shuttle","spell-check","spider","spinner","splotch","spray-can","square","square-full","square-root-alt","stamp","star","star-and-crescent","star-half","star-half-alt","star-of-david","star-of-life","step-backward","step-forward","stethoscope","sticky-note","stop","stop-circle","stopwatch","stopwatch-20","store","store-alt","store-alt-slash","store-slash","stream","street-view","strikethrough","stroopwafel","subscript","subway","suitcase","suitcase-rolling","sun","superscript","surprise","swatchbook","swimmer","swimming-pool","synagogue","sync","sync-alt","syringe","table","table-tennis","tablet","tablet-alt","tablets","tachometer-alt","tag","tags","tape","tasks","taxi","teeth","teeth-open","temperature-high","temperature-low","tenge","terminal","text-height","text-width","th","th-large","th-list","theater-masks","thermometer","thermometer-empty","thermometer-full","thermometer-half","thermometer-quarter","thermometer-three-quarters","thumbs-down","thumbs-up","thumbtack","ticket-alt","times","times-circle","tint","tint-slash","tired","toggle-off","toggle-on","toilet","toilet-paper","toilet-paper-slash","toolbox","tools","tooth","torah","torii-gate","tractor","trademark","traffic-light","trailer","train","tram","transgender","transgender-alt","trash","trash-alt","trash-restore","trash-restore-alt","tree","trophy","truck","truck-loading","truck-monster","truck-moving","truck-pickup","tshirt","tty","tv","umbrella","umbrella-beach","underline","undo","undo-alt","universal-access","university","unlink","unlock","unlock-alt","upload","user","user-alt","user-alt-slash","user-astronaut","user-check","user-circle","user-clock","user-cog","user-edit","user-friends","user-graduate","user-injured","user-lock","user-md","user-minus","user-ninja","user-nurse","user-plus","user-secret","user-shield","user-slash","user-tag","user-tie","user-times","users","users-cog","users-slash","utensil-spoon","utensils","vector-square","venus","venus-double","venus-mars","vest","vest-patches","vial","vials","video","video-slash","vihara","virus","virus-slash","viruses","voicemail","volleyball-ball","volume-down","volume-mute","volume-off","volume-up","vote-yea","vr-cardboard","walking","wallet","warehouse","water","wave-square","weight","weight-hanging","wheelchair","wifi","wind","window-close","window-maximize","window-minimize","window-restore","wine-bottle","wine-glass","wine-glass-alt","won-sign","wrench","x-ray","yen-sign","yin-yang"];
 
 var html_initContentPro = '<div class="sheetsUpdate seiProForm" id="sheetsCompleteEtapaForm" style="display:none"></div>';
-if ( $('#sheetsCompleteEtapaForm').length == 0 ) { $('#divInfraBarraSistema').append(html_initContentPro) }
+if ( $('#sheetsCompleteEtapaForm').length == 0 ) { $(isNewSEI ? '#divInfraBarraSistemaPadrao' : '#divInfraBarraSistema').append(html_initContentPro) }
 
-function _G() { // get  Session Google Name Space
+
+var setSeiVersionPro = () => {
+    const logoSeiTitle = $(`img[title^=Sistema]`).attr('title')
+    const version = logoSeiTitle.substring(logoSeiTitle.lastIndexOf(" ") + 1, logoSeiTitle.length);
+    localStorage.setItem('versaoSei', version);
+}
+
+var getSeiVersionPro = () => {
+return localStorage.getItem('versaoSei');
+}
+
+/* function _G() { // get  Session Google Name Space
     var _return = localStorage.getItem('SEIPro_google_projetos');
         _return = (_return === null) ? localStorage.getItem('SEIPro_google_processos') : _return;
         _return = (_return === null) ? localStorage.getItem('SEIPro_google_formularios') : _return;
         _return = (_return === null) ? false : _return;
 
     return _return ? JSON.parse(_return) : false;
-}
+} */
 function _P() { // get  Session Name Space
     return JSON.parse(sessionStorage.getItem('new_extension'));
 }
-function loadAPIGooglePro() {
+/* function loadAPIGooglePro() {
     if (!!URL_SPRO) $.getScript(URL_SPRO+"js/lib/google_api.js");
-    /*
-    if ( $('head').find('script[data-config="config-apigoogle-seipro"]').length == 0 ) {
-        var htmlScript = "<script data-config='config-apigoogle-seipro' async defer src=\"https://apis.google.com/js/api.js\" onload=\"this.onload=function(){};handleClientLoadPro()\" onreadystatechange=\"if (this.readyState === 'complete') this.onload()\"></script>";
-        $(htmlScript).appendTo('head');
-        console.log('****loadAPIGooglePro');
-    }
-    */
-}
+} */
 function getIsNewSEI() {
     var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
     if (isNewSEI) setOptionsPro('isNewSEI', true);
@@ -405,6 +412,10 @@ function tryParseJSONObject(jsonString){
     catch (e) { }
     return false;
 }
+function trycatch(func, fail) {
+    try { return func() }
+    catch(e) { return fail }
+}
 function avgArray(array) {
     var sum = 0;
     for( var i = 0; i < array.length; i++ ){
@@ -442,6 +453,21 @@ function extractHexColor(text) {
 function arrayMax(arr) {
     return arr.reduce(function (p, v) { return ( p > v ? p : v ) });
 }
+function validaCPF(cpf){
+    cpf = cpf.replace(/\D/g, '');
+    if(cpf.toString().length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    var result = true;
+    [9,10].forEach(function(j){
+        var soma = 0, r;
+        cpf.split(/(?=)/).splice(0,j).forEach(function(e, i){
+            soma += parseInt(e) * ((j+2)-(i+1));
+        });
+        r = soma % 11;
+        r = (r <2)?0:11-r;
+        if(r != cpf.substring(j, j+1)) result = false;
+    });
+    return result;
+}
 function getChartLabelItemStore(idElem, chartObj){
     if (getOptionsPro(idElem+'_canvas')){
         var arrayLabels = getOptionsPro(idElem+'_canvas');
@@ -475,7 +501,10 @@ function replaceTextToUrl(text) {
     return text.replace(Rexp, "<a href='$1' target='_blank'>$3</a>");
 }
 function maskCNPJ(text) {
-    return text.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+    return !!text ? text.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5") : text;
+}
+function maskCPF(text) {
+    return !!text ? text.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : text;
 }
 function maskPEN(text) {
     return text.replace(/^(\d{5})(\d{6})(\d{4})(\d{2})/, "$1.$2/$3-$4");
@@ -499,7 +528,7 @@ function setChartLabelItemStore(e, legendItem){
         var meta = (is_line) ? ci.getDatasetMeta(i) : ci.getDatasetMeta(0).data[i];
         arrayMetaChart.push({index: i, hidden: meta.hidden});
     });
-    console.log(arrayMetaChart);
+    // console.log(arrayMetaChart);
 
     ci.update();
     setOptionsPro($(this.chart.canvas).attr('id'), arrayMetaChart);
@@ -722,7 +751,7 @@ function getLocalFilePro() {
         if (fileSystemPro) { 
             fileSystemLoadFile('configPro.json'); 
             setTimeout(function(){ 
-                console.log(fileSystemPro, fileSystemContentPro);
+                // console.log(fileSystemPro, fileSystemContentPro);
             }, 100);
         }
     }, 10);
@@ -732,7 +761,7 @@ function setLocalFilePro(content) {
     setTimeout(function(){ 
         if (fileSystemPro) { 
             fileSystemUpdateFile('configPro.json', JSON.stringify(content)); 
-            console.log('setLocalFilePro', content);
+            // console.log('setLocalFilePro', content);
         }
     }, 10);
     setTimeout(function(){ 
@@ -748,7 +777,7 @@ function initDownloadLocalFilePro(this_, TimeOut = 9000) {
         if (TimeOut == 9000) fileSystemLoadFile('configPro.json');
         setTimeout(function(){ 
             initDownloadLocalFilePro(this_, TimeOut - 100); 
-            console.log('Reload initDownloadLocalFilePro'); 
+            if(verifyConfigValue('debugpage')) if(verifyConfigValue('debugpage')) console.log('Reload initDownloadLocalFilePro'); 
         }, 500);
     }
 }
@@ -1240,7 +1269,7 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
         }
         setTimeout(function(){ 
             initChosenReplace(mode, this_, force, TimeOut - 100); 
-            console.log('Reload initChosenReplace'); 
+            if(verifyConfigValue('debugpage')) if(verifyConfigValue('debugpage')) console.log('Reload initChosenReplace'); 
         }, 500);
     }
 }
@@ -1259,6 +1288,7 @@ function chosenReparePosition(target = $('body')) {
         });
 }
 function setMenuSistemaView(force = false) {
+    /*
     var checkMenu = $('#divInfraAreaTelaE').is(':visible');
     $('#divInfraAreaTelaD').css('width',(checkMenu ? '79%' : '99%'));
     if (checkMenu || force) {
@@ -1270,8 +1300,10 @@ function setMenuSistemaView(force = false) {
         $('#divInfraAreaTelaE').addClass('menuSuspenso');
         $('#divInfraBarraSistemaE').addClass('barSuspenso');
     }
+    */
 }
 function hideMenuSistemaView() {
+    /*
     if ($('#divInfraAreaTelaE').length > 0) {
         $('#lnkInfraMenuSistema').unbind().on("click", function () {
             setMenuSistemaView();
@@ -1304,6 +1336,7 @@ function hideMenuSistemaView() {
             }
         });
     }
+    */
 }
 function checkMenuSistemaView() {
     if ($('#divInfraAreaTelaE').is(':visible')) {
@@ -1314,7 +1347,7 @@ function checkMenuSistemaView() {
 }
 function checkboxRangerSelectShift(elemSelect = false) {
     var elem = (elemSelect) ? $(elemSelect) : $('body');
-    var $chkboxes = $('input[type="checkbox"]');
+    var $chkboxes = $('input[type="checkbox"]'); 
     var lastChecked = null;
     $chkboxes.unbind().on('click',function(e) {
         if (!lastChecked) {
@@ -1354,7 +1387,7 @@ function rememberScroll(elementScroll, nameScroll, animated = true) {
     }
 }
 function scrollToElement(container, scrollToElem, stick = 0) {
-    console.log(scrollToElem[0], scrollToElem.offset().top, container.offset(), container.scrollTop());
+    // console.log(scrollToElem[0], scrollToElem.offset().top, container.offset(), container.scrollTop());
     container.animate({
         scrollTop: scrollToElem.offset().top - container.offset().top + container.scrollTop() - stick
     });
@@ -1508,7 +1541,6 @@ function openCamposDinamicosForm() {
             }]
     });
 }
-
 function editDadosArvorePro(this_, parse = false, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof $().chosen !== 'undefined' && typeof URL_SPRO !== 'undefined') { 
@@ -1517,7 +1549,7 @@ function editDadosArvorePro(this_, parse = false, TimeOut = 9000) {
         if (TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
         setTimeout(function(){ 
             editDadosArvorePro(this_, parse, TimeOut - 100); 
-            console.log('Reload editDadosArvorePro'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload editDadosArvorePro'); 
         }, 500);
     }
 }
@@ -1839,24 +1871,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                 text: 'Remover Marcador',
                 icon: 'ui-icon-closethick',
                 click: function(event) { 
-                    loadingButtonConfirm(true);
-                    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
-                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
-                        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
-                    var valuesIframe = [
-                        {element: 'txaTexto', value: ''},
-                        {element: 'hdnIdMarcador', value: ''}
-                    ];
-                    updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
-                        var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
-                        var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
-                        if (objIndexDoc !== -1) {
-                            listMarcadores.splice(objIndexDoc,1);
-                            sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
-                            resetDialogBoxPro('dialogBoxPro');
-                            alertaBoxPro('Sucess', 'check-circle', 'Marcador removido com sucesso!');
-                        }
-                    });
+                    getRemoverMarcador();
                 }
             });
         } else if (data.mode == 'descricao') {
@@ -1880,7 +1895,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                     $('#dialogBoxProcesso').chosen({
                         placeholder_text_single: ' ',
                         no_results_text: 'Nenhum resultado encontrado'
-                    });
+                    }).trigger('chosen:activate');
                 }
                 if (data.mode == 'nivel_acesso' && (prop.rdoNivelAcesso == '1' || prop.rdoNivelAcesso == '2')) {
                     getSelectHipoteseLegal($('#dialogBoxProcesso_hipoteses'), prop.rdoNivelAcesso);
@@ -1899,7 +1914,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         elementSelect.chosen('destroy').chosen({
                             placeholder_text_single: ' ',
                             no_results_text: 'Nenhum resultado encontrado'
-                        }).trigger('chosen:updated');
+                        }).trigger('chosen:updated').trigger('chosen:activate');
                     });
                 } else if (data.mode == 'acompanhamento_especial') {
                     var listaGruposAcompEsp = getOptionsPro('listaGruposAcompEsp');
@@ -1912,7 +1927,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
                             placeholder_text_single: ' ',
                             no_results_text: 'Nenhum resultado encontrado'
-                        }).trigger('chosen:updated');
+                        }).trigger('chosen:updated').trigger('chosen:activate');
                     } else {
                         var ifrArvore = $('#ifrArvore');
                         var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
@@ -1931,7 +1946,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                 $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
                                     placeholder_text_single: ' ',
                                     no_results_text: 'Nenhum resultado encontrado'
-                                }).trigger('chosen:updated');
+                                }).trigger('chosen:updated').trigger('chosen:activate');
                             });
                         }
                     }
@@ -1943,7 +1958,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                             var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                             return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
                                         }).join('');
-                        $('#configDatesBox_tag').html(htmlOptions).chosenImage();
+                        $('#configDatesBox_tag').html(htmlOptions).chosenImage().trigger('chosen:activate');
                     } else {
                         var ifrArvore = $('#ifrArvore');
                         var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
@@ -1959,13 +1974,33 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                                     var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                                     return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
                                                 }).join('');
-                                $('#configDatesBox_tag').html(htmlOptions).chosenImage();
+                                $('#configDatesBox_tag').html(htmlOptions).chosenImage().trigger('chosen:activate');
                             });
                         }
                     }
                 }
             },
             buttons: btnDialogBoxPro
+    });
+}
+function getRemoverMarcador() {
+    loadingButtonConfirm(true);
+    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
+        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
+        id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
+    var valuesIframe = [
+        {element: 'txaTexto', value: ''},
+        {element: 'hdnIdMarcador', value: ''}
+    ];
+    updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
+        var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+        var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
+        if (objIndexDoc !== -1) {
+            listMarcadores.splice(objIndexDoc,1);
+            sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
+            resetDialogBoxPro('dialogBoxPro');
+            alertaBoxPro('Sucess', 'check-circle', 'Marcador removido com sucesso!');
+        }
     });
 }
 function getAjaxListaAtribuicao() {
@@ -2219,8 +2254,44 @@ function viewEspecifacaoProcesso() {
                     if (especifProc) $(this).before('<div class="especifProc">'+especifProc+'</div>');
             });
         }
-        console.log(storeGroupTablePro());
+        // console.log(storeGroupTablePro());
     }, 100);
+}
+function addNewItemSelect(_this) {
+    if ($(_this).val().toString() == '0') {
+    var textBox =   'Digite o nome do novo item:'+
+                    '<br><br><span class="seiProForm" style="text-align: center; display: block; font-size: 9pt;">'+
+                    '   <input type="text" style="width: 90% !important;" class="required infraText txtsheetsSelect" value="" id="nomeNovoItem">'+
+                    '</span>';
+
+        resetDialogBoxPro('alertBoxPro');
+        alertBoxPro = $('#alertaBoxPro')
+            .html('<div class="dialogBoxDiv"> '+textBox+'</span>')
+            .dialog({
+                width: 400,
+                title: 'Adicionar novo item',
+                open: function() { 
+                    setTimeout(() => { $('#nomeNovoItem').focus() }, 500);
+                },
+                buttons: [{
+                    text: "Ok",
+                    class: 'confirm',
+                    click: function() {
+                        saveNewItemSelect(_this);
+                    }
+                }]
+        });
+    }
+}
+function saveNewItemSelect(_this) {
+    var value = $('#nomeNovoItem').val();
+    if ( value != '' ) {
+        resetDialogBoxPro('alertBoxPro');
+        $(_this).prepend('<option selected>'+value+'</option>').val(value).change().chosen("destroy").chosen({
+            placeholder_text_single: ' ',
+            no_results_text: 'Nenhum resultado encontrado'
+        });
+    }
 }
 function fullnameAtribuicao() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
@@ -2958,7 +3029,7 @@ function checkDocImagemPro(ifrVisualizacao, TimeOut = 9000) {
     } else { // caso nao encontrada a imagem, reinicia a funcao com o timeout decrescido
         setTimeout(function(){ 
             checkDocImagemPro(ifrVisualizacao, TimeOut - 100); 
-            console.log('Reload checkDocImagemPro'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload checkDocImagemPro'); 
         }, 500);
     }
 }
@@ -2994,7 +3065,7 @@ function checkDocZipPro(ifrVisualizacao, TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             checkDocZipPro(ifrVisualizacao, TimeOut - 100); 
-            console.log('Reload checkDocZipPro'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload checkDocZipPro'); 
         }, 500);
     }
 }
@@ -3188,7 +3259,7 @@ function checkDocVideoPro(ifrVisualizacao, TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             checkDocVideoPro(ifrVisualizacao, TimeOut - 100); 
-            console.log('Reload checkDocVideoPro'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload checkDocVideoPro'); 
         }, 500);
     }
 }
@@ -3398,6 +3469,7 @@ function initCheckDadosProcedimentos() {
 function cleanPageProgress() {
     $('#divInfraBarraSuperior').remove();
     $('#divInfraBarraSistema').hide();
+    $('#divInfraBarraSistemaPadrao').hide();
     $('#divInfraAreaTelaE').remove();
     $('#divInfraBarraLocalizacao').remove();
     $('#divComandos').remove();
@@ -3448,7 +3520,7 @@ function setProcessGroupTable() {
 }
 function cleanTimeTest() {
     clearInterval(timerTest);
-    console.log('###FIM cleanTimeTest', totalSecondsTestText);
+    // console.log('###FIM cleanTimeTest', totalSecondsTestText);
     totalSecondsTest = 0;
     totalSecondsTestText = '';
 }
@@ -4035,7 +4107,7 @@ function initPanelResize(element, name, TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initPanelResize(element, name, TimeOut - 100); 
-            console.log('Reload initPanelResize'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initPanelResize'); 
         }, 500);
     }
 }
@@ -4332,7 +4404,7 @@ function saveFollowEtiqueta() {
     }
 }
 function normalizeNameTag(tag) {
-    return removeAcentos(tag).replace(/\ /g, '').toLowerCase().replace(/[^a-z0-9]/gi,'');
+    return removeAcentos(tag).replace(/\ /g, '').toLowerCase().replace(/[^a-z0-9]/gi,'').replace(/[\u200B-\u200D\uFEFF]/g, '');
 }
 function sugestEtiquetaPro(mode) {
     return (mode == 'ativ') 
@@ -4883,10 +4955,98 @@ function verifyConfigValue(name) {
 }
 function restrictConfigValue(name) {
     if (NAMESPACE_SPRO == 'ANTAQ Pro' || NAMESPACE_SPRO == 'ANTT Pro') {
-        return false;
+        if (typeof checkUnidadeFuncBeta === 'function' && checkUnidadeFuncBeta()) {
+            return checkConfigValue(name);
+        } else {
+            return false;
+        }
     } else {
         return checkConfigValue(name);
     }
+}
+function initNameConst(type = 'get') {
+    if (getOptionsPro('nomeVariaveisPro') && type == 'get') {
+        window.__ = getOptionsPro('nomeVariaveisPro');
+    } else {
+        setNameConst();
+    }
+}
+function setNameConst() {
+    var __demanda = getName('demanda', 'demanda', true, false, false);
+    var __Demanda = getName('demanda', 'Demanda', true, false, true);
+    var __demandas = getName('demanda', 'demandas', false, false, false);
+    var __as_demandas = getName('demanda', 'as demandas', false, true, false);
+    var __atividade = getName('atividade', 'atividade', true, false, true);
+    var __Atividade = getName('atividade', 'Atividade', true, false, true);
+    var __ = {
+        demanda: __demanda,
+        a_demanda: getName('demanda', 'a demanda', true, true, false),
+        a_demanda_selecionada: getName('demanda', 'a demanda', true, true, false)+' '+getNameGenre('demanda', 'selecionado', 'selecionada'),
+        A_demanda: getNameGenre('demanda', 'O', 'A')+' '+__demanda,
+        As_demandas: getNameGenre('demanda', 'O', 'A')+'s '+__demandas,
+        da_demanda: getNameGenre('demanda', 'do', 'da')+' '+__demanda,
+        esta_demanda: getNameGenre('demanda', 'este', 'esta')+' '+__demanda,
+        a_outra_demanda_vinculada: getNameGenre('demanda', 'o outro', 'a outra')+' '+__demanda+' '+getNameGenre('demanda', 'vinculado', 'vinculada'),
+        nova_demanda: getNameGenre('demanda', 'novo', 'nova')+' '+__demanda,
+        iniciada_a_demanda: getNameGenre('demanda', 'iniciado', 'iniciada')+' '+getName('demanda', 'a demanda', true, true, false),
+        demanda_programada: __demanda+' '+getNameGenre('demanda', 'programado', 'programada'),
+        demandas: getName('demanda', 'demandas', false, false, false),
+        das_demandas: getNameGenre('demanda', 'dos', 'das')+' '+__demandas,
+        minhas_demandas: getNameGenre('demanda', 'meus', 'minhas')+' '+__demandas,
+        demandas_programadas: __demandas+' '+getNameGenre('demanda', 'programados', 'programadas'),
+        Demanda: __Demanda,
+        da_Demanda: getNameGenre('demanda', 'do', 'da')+' '+__Demanda,
+        a_Demanda: getNameGenre('demanda', 'o', 'a')+' '+__Demanda,
+        Nova_Demanda: getNameGenre('demanda', 'Novo', 'Nova')+' '+__Demanda,
+        as_demandas: __as_demandas,
+        as_demandas_selecionadas: __as_demandas+' '+getNameGenre('demanda', 'selecionados', 'selecionadas'),
+        Demandas: getName('demanda', 'Demanda', false, false, true),
+        arquivar: getName('arquivar', 'arquivar', true, false, false),
+        Arquivar: getName('arquivar', 'Arquivar', true, false, true),
+        arquivamento: getName('arquivamento', 'arquivamento', true, false, false),
+        Arquivamento: getName('arquivamento', 'Arquivamento', true, false, true),
+        arquivado: getName('arquivado', 'arquivado', true, false, false),
+        Arquivado: getName('arquivado', 'Arquivado', true, false, true),
+        arquivados: getName('arquivado', 'arquivados', false, false, false),
+        arquivada: getName('arquivada', 'arquivada', true, false, false),
+        Arquivada: getName('arquivada', 'Arquivada', true, false, true),
+        Arquivadas: getName('arquivada', 'Arquivadas', false, false, true),
+        arquivadas: getName('arquivada', 'arquivadas', false, false, false),
+        paralisar: getName('paralisar', 'paralisar', true, false, false),
+        Paralisar: getName('paralisar', 'Paralisar', true, false, true),
+        paralisada: getName('paralisada', 'paralisada', true, false, false),
+        Paralisado: getName('paralisado', 'Paralisado', true, false, true),
+        Paralisada: getName('paralisada', 'Paralisada', true, false, true),
+        paralisacao: getName('paralisacao', 'paralisa\u00E7\u00E3o', true, false, false),
+        Paralisacao: getName('paralisacao', 'Paralisa\u00E7\u00E3o', true, false, true),
+        prescricao: getName('prescricao', 'prescri\u00E7\u00E3o', true, false, false),
+        Prescricao: getName('prescricao', 'Prescri\u00E7\u00E3o', true, false, true),
+        Prescricoes: getName('prescricao', 'Prescri\u00E7\u00F5es', false, false, true),
+        retomada: getName('retomada', 'retomada', true, false, false),
+        Retomada: getName('retomada', 'Retomada', true, false, true),
+        retomar: getName('retomar', 'retomar', true, false, false),
+        Retomar: getName('retomar', 'Retomar', true, false, true),
+        Prorrogar: getName('prorrogar', 'Prorrogar', true, false, true),
+        complexidade: getName('complexidade', 'complexidade', true, false, false),
+        Complexidade: getName('complexidade', 'Complexidade', true, false, true),
+        assunto: getName('assunto', 'assunto', true, false, false),
+        Assunto: getName('assunto', 'Assunto', true, false, true),
+        observacao: getName('observacao', 'observa\u00E7\u00E3o', true, false, false),
+        Observacao: getName('observacao', 'Observa\u00E7\u00E3o', true, false, true),
+        Observacoes: getName('observacao', 'Observa\u00E7\u00F5es', false, false, true),
+        gerencial: getName('gerencial', 'gerencial', true, false, true),
+        Gerencial: getName('gerencial', 'Gerencial', true, false, true),
+        tecnica: getName('tecnica', 't\u00E9cnica', true, false, true),
+        Tecnica: getName('tecnica', 'T\u00E9cnica', true, false, true),
+        atividade: __atividade,
+        Atividade: __Atividade,
+        a_atividade: getName('atividade', 'a atividade', true, true, false),
+        a_Atividade: getName('atividade', 'a Atividade', true, true, true),
+        atividades: getName('atividade', 'atividades', false, false, false),
+        Atividades: getName('atividade', 'Atividades', false, false, true),
+    }
+    window.__ = __;
+    setOptionsPro('nomeVariaveisPro', __);
 }
 function checkConfigValue(name) {
     var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
@@ -4939,7 +5099,7 @@ function execConcluirReabrirProcessoPro(url) {
     }
 }
 //Initializes the API client library and sets up sign-in state listeners.
-function initClientPro() {
+/* function initClientPro() {
     if ( typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdAtividades_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined'  || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' ) {
 
         gapi.client.init({
@@ -4953,8 +5113,6 @@ function initClientPro() {
             if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
             if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
             if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
-            /*
-            */
             gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatusPro);
 
             // Handle the initial sign-in state.
@@ -5016,7 +5174,7 @@ function logoutSheetPro() {
     removeOptionsPro('configBaseSelectedPro');
     removeOptionsPro('configBaseSelectedFormPro');
     removeOptionsPro('projetosGanttActiveTabs');
-}
+} */
 function uniqPro(a) {
     return a.sort().filter(function(item, pos, ary) {
         return !pos || item != ary[pos - 1];
@@ -5104,6 +5262,7 @@ function arraySheetToJSON_WithRow(array) {
 function getCitacaoDoc() {
     var citacaoDoc = 'SEI n\u00BA ';
         citacaoDoc = (getConfigValue('citacaodoc') == 'citacaodoc_2') ? 'SEI ' : citacaoDoc;
+        citacaoDoc = (getConfigValue('citacaodoc') == 'citacaodoc_5') ? 'Doc. SEI n\u00BA ' : citacaoDoc;
         citacaoDoc = (getConfigValue('citacaodoc') == 'citacaodoc_3' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? '' : citacaoDoc;
     return citacaoDoc;
 }
@@ -5748,9 +5907,11 @@ function getProcessoUnidadePro(selected = false, obj = false) {
                     processo_sei = (typeof processo_sei !== 'undefined') ? processo_sei : false;
                 var id_procedimento = getParamsUrlPro(a.attr('href')).id_procedimento;
                     id_procedimento = (typeof id_procedimento !== 'undefined') ? id_procedimento : false;
+                var especificacao = extractTooltipToArray(a.attr('onmouseover'));
+                    especificacao = (especificacao) ? especificacao[0] : false;
                 if (processo_sei && id_procedimento) { 
                     var _return = (obj) 
-                                    ? {processo_sei: processo_sei, id_procedimento: id_procedimento}
+                                    ? {processo_sei: processo_sei, id_procedimento: id_procedimento, especificacao: especificacao}
                                     : processo_sei;
                     processosUnidade.push(_return); 
                 }
@@ -5781,7 +5942,7 @@ function initListTypesSEI(callback = false, TimeOut = 9000) {
         setTimeout(function(){ 
             if (TimeOut == 9000) getListTypesSEI();
             initListTypesSEI(callback, TimeOut - 100); 
-            console.log('Reload initListTypesSEI'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initListTypesSEI'); 
         }, 500);
     }
 }
@@ -6149,7 +6310,7 @@ function ajaxDadosProcessoPro(href, mode, arrayAcompEsp) {
             updateTitlePage(mode);
             if (typeof setTipoPrescricaoProcesso === 'function') setTipoPrescricaoProcesso();
         }, 500);
-        if (mode == 'editor' || mode == 'gantt' || mode == 'dados' || mode == 'processo') { 
+        if (mode == 'editor' || mode == 'gantt' || mode == 'projeto' || mode == 'dados' || mode == 'processo') { 
             checkDadosIframeDocumentosPro(mode);
         }
         if (mode == 'processo') { 
@@ -6215,6 +6376,8 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
         insertAutomaticMinutaWatermark();
     } else if (mode == 'gantt') { 
         updateSelectConcluirEtapa();
+    } else if (mode == 'projeto') { 
+        updateSelectConcluirProjetoEtapa();
     } else if (mode == 'favorites') {
         parent.updateSelectFavorites();
         parent.initAppendIconFavorites();
@@ -6254,7 +6417,7 @@ function getListDocumentosArvore(ifrArvore) {
         setSessionProcessosPro(dadosProcessoPro); 
 }
 function getHistoryProcessosPro() {
-    $('#divInfraBarraSistemaE.barSuspenso').trigger('click');
+    $(infraBarraS+'.barSuspenso').trigger('click');
     var dadosHistoricoProcessoPro = localStorageRestorePro('dadosHistoricoProcessoPro');
         var htmlBox =       '<div id="boxHistory" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
                             '   <table id="historyTablePro" style="margin-top: 35px; font-size: 8pt !important;width: 100%;" class="seiProForm tableAtividades tableDialog tableInfo tableZebra">'+
@@ -6399,7 +6562,7 @@ function initMergeAllAndamentosProcesso(callback, TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initMergeAllAndamentosProcesso(callback, TimeOut - 100); 
-            console.log('Reload initMergeAllAndamentosProcesso => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initMergeAllAndamentosProcesso => '+TimeOut); 
         }, 500);
     }
 }
@@ -7141,7 +7304,7 @@ function initAppendIconsDocumentosActions(TimeOut = 3000) {
     } else {
         setTimeout(function(){ 
             initAppendIconsDocumentosActions(TimeOut - 100); 
-            console.log('Reload initAppendIconsDocumentosActions => '+TimeOut); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initAppendIconsDocumentosActions => '+TimeOut); 
         }, 500);
     }
 }
@@ -7212,6 +7375,7 @@ function copyLinkProcesso(this_) {
     copyToClipboard(linkProc);
     _this.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 }
+/*
 function verifyMenuSistemaView() {
     var prefixoCookie = $('#hdnInfraPrefixoCookie').val();
     if (infraLerCookie(prefixoCookie+'_menu_mostrar') == 'N' && $(mainMenu).is(':visible')) {
@@ -7219,6 +7383,7 @@ function verifyMenuSistemaView() {
     }
     checkMenuSistemaView();
 }
+*/
 function setCapaProcesso(loop = true) {
     var ifrArvore = $('#ifrArvore').contents();
     var ifrVisualizacao = $('#ifrVisualizacao').contents();
@@ -7253,7 +7418,7 @@ function setCapaProcesso(loop = true) {
                 '      </div>'+
                 '      <div class="field">'+
                 '         <div class="data" style="margin: 10px 0;">'+
-                '               <a class="newLink newLink_confirm" style="cursor:pointer;" onclick="parent.initGanttHistoryProc()"><i class="fas fa-history azulColor iconDadosProcesso"></i> Hist\u00F3rico de tramita\u00E7\u00E3o do processo</a> '+
+                '               <a class="newLink" style="margin: 0;cursor:pointer;" onclick="parent.initGanttHistoryProc()"><i class="fas fa-history azulColor iconDadosProcesso"></i> Hist\u00F3rico de tramita\u00E7\u00E3o do processo</a> '+
                 '         </div>'+
                 '      </div>'+
                 '      <div class="field">'+
@@ -7532,6 +7697,14 @@ function getDocCertidao(this_) {
         }
     }
 }
+function getUrlNewDocArvore() {
+    var ifrArvore = $('#ifrArvore');
+    var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
+        arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
+    var urlNewDoc = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
+        urlNewDoc = urlNewDoc !== null ? urlNewDoc : false;
+    return urlNewDoc;
+}
 function openWindowEditor(urlEditor, idUser) {
     var id_documento = getParamsUrlPro(urlEditor).id_documento
     var janelaEditor = infraAbrirJanela('', 'janelaEditor_'+idUser+'_'+id_documento, parent.infraClientWidth(), parent.infraClientHeight(), 'location=0,status=0,resizable=1,scrollbars=1', false);
@@ -7674,6 +7847,16 @@ function checkBrowser(){
     }
     return browser;
 }
+function updateDatesRange(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest('tr');
+    var _inicio = _parent.find('input[data-range="inicio"]');
+    var _fim = _parent.find('input[data-range="fim"]');
+    setTimeout(() => {
+        _fim.attr('min',_inicio.val());
+        _inicio.attr('max',_fim.val());
+    }, 1500);
+}
 function setSortLocaleCompare() {
     $.tablesorter.characterEquivalents = {
         'a' : '\u00e1\u00e0\u00e2\u00e3\u00e4\u0105\u00e5', // áàâãäąå
@@ -7700,7 +7883,7 @@ function filterTablePro(this_) {
     if (_this.hasClass('active')) {
         filter.addClass('hideme');
         _this.removeClass('active');
-        table.trigger('filterReset');
+        table.trigger('filterReset').trigger('updateAll');
     } else {
         filter.removeClass('hideme');
         _this.addClass('active');
@@ -7856,7 +8039,7 @@ function getIfrArvoreDadosProcesso() {
                                                 }).get(0) 
                         : '';
 
-        var usuarios = uniqPro(jmespath.search(arrayConfigAtividades.planos, "[*].apelido"));
+        var usuarios = typeof arrayConfigAtividades !== 'undefined' && typeof arrayConfigAtividades.planos !== 'undefined' ? uniqPro(jmespath.search(arrayConfigAtividades.planos, "[*].apelido")) : [];
             usuarios = usuarios.sort((a,b) => b.length - a.length);
 
         var usuario = (ifrVisualizacao.find('#ifrArvoreHtml').length > 0) 
@@ -7912,7 +8095,8 @@ function getIfrArvoreDadosProcesso() {
         
         var processoLnk = ifrArvore.find("a[target='ifrVisualizacao']").eq(0);
         var processo_sei = processoLnk.text().trim();
-        var tipo = processoLnk.find('span').attr('title').trim();
+        var tipo = processoLnk.find('span').attr('title');
+        var tipo = typeof tipo !== 'undefined' ? tipo.trim() : tipo;
         var id_procedimento = processoLnk.attr('href');
             id_procedimento = (typeof id_procedimento !== 'undefined' && id_procedimento.length > 0) ? getParamsUrlPro(id_procedimento).id_procedimento : false;
         var requisicaoLnk = ifrArvore.find('#container .infraArvoreNoSelecionado');
@@ -8668,7 +8852,7 @@ function ImgToBase64(iframeDoc, TimeOut = 1000) {
     });
     setTimeout(function(){ 
         if (!validarTagsPro()) { 
-            console.log('RELOAD => '+TimeOut);
+            if(verifyConfigValue('debugpage')) console.log('Reload => '+TimeOut);
             ImgToBase64(iframeDoc, TimeOut - 200); 
         }
     }, 1000);
@@ -8844,7 +9028,8 @@ function openEditorViewDoc(paramData, paramTarget, dataResult) {
                     if (paramData.reference == 'modelo' && paramTarget.return_sign) {
                         var user = (typeof paramTarget.return_user !== 'undefined' && paramTarget.return_user) ? paramTarget.return_user : false;
                         var id_reference = (typeof paramTarget.id_reference !== 'undefined' && paramTarget.id_reference) ? paramTarget.id_reference : false;
-                        textEncode = setParamEditorAtiv(paramData.mode, textEncode, user, id_reference);
+                        var type = (typeof paramTarget.type !== 'undefined' && paramTarget.type) ? paramTarget.type : false;
+                        textEncode = setParamEditorAtiv(paramData.mode, textEncode, user, id_reference, type);
                     }
                     $('#view_doc').html(textEncode);
                     if (paramTarget.return_sign) {
@@ -9505,7 +9690,7 @@ function noNotifyPro(this_) {
 function checkPageVisualizacao() {
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmDocumentoCadastro', "label#lblPublico", setNewDocDefault);
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmProcedimentoCadastro', "#divInfraBarraComandosSuperior", setHtmlProtocoloAlterar);
-    waitLoadPro($('#ifrVisualizacao').contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', ".infraBarraComandos", getActionsOnSendProcess);
+    waitLoadPro($('#ifrVisualizacao').contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', isNewSEI ? ".barraBotoesSEI" : ".infraBarraComandos", getActionsOnSendProcess);
     waitLoadPro($('#ifrVisualizacao').contents(), '#frmProcedimentoHistorico[action*="acao=procedimento_consultar_historico"]', ".infraAreaTabela", initTablePaginacaoHistorico);
     waitLoadPro($('#ifrVisualizacao').contents(), 'form', "select", replaceSelectAllVisualizacao);
     waitLoadPro($('#ifrVisualizacao').contents(), 'form', "#optRestrito", insertActionHipoteseLegal);
@@ -9631,11 +9816,77 @@ function appendIconBatchActions(loop = true) {
         },1500);
     }
 }
+function insertIconBatchDocs() {
+    waitLoadPro($('#ifrVisualizacao').contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconBatchDocs);
+}
+function appendIconBatchDocs(loop = true) {
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    var base64IconDynamicField = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAABphJREFUeJztl2tsU1UcwBkb4IiLXyQBjSgmBhAlUck0El5zRiPyiOEDYRoMM8SESDAxQhATEuSRRfYBBRIeAwbMsQ22jj363tZ313Zde9v13a7ttnZtt64PgYDs7/9c2rGVro/RfTE2+SXbvb2nv3vO+T/OnDn/5U/0/oM8JD8bfKFo/sBoqCCOY3gkX+8YnB3B0Uj09EgkGskGz1g4avQGokbPE5RWd5gp0VQK1Mb8nAviD15CIFv6A0EweAI0CosLWkXqx+0SzRmRxpxbyZkK+sIRMHtHJgsSxlHynFBtmv/cYrI+23y2nFrt9o92zESQ4AyM0YLKp4Ixyd4bfKV+QcYyJm/gddwze3G/VCAMHJTSOD332sRqMPQPzkiO4A1FAMcDyj0M0j47SPS2CRRmZ2XGgihXjlKP43uGgILwvIKBcBRsvlGYPO4k6rIQHNmED0RzLUhwj4zNXJDXTRXeaO9cdYsrOq51e++lE9Q7XMAQyLKisUsK9R0SGraKSi+oMbvmsGXUsnZx7/dt4t62v1iCyIXGdui2OCGd4IB/BChbf1ZoEZHeAkJEYXWlFsRkWYpSt9pE6gGSl0hU3eZJgQh2Uaa0gjPFPDyS2RJjeB+aFO40dwUqWpCl0KYVDGBuGx4LZY3FGwDdgA/6hvypBVlSzVKUGkuUvMRgQaNAnlZQZbLBtVZu1lxt4cKVFg40i5WpBTuUunxcYkGi4NUWHtRyhGkFfTgbDs9w1hjcHlDa3KB1edIHCQbHvkRBjGR8Ux4tNRt7cDAYyjzN8BX6IpSKTBasZQvhcjMLZCbH0wLvtMNNaStwHB1gGjODNzxK7yfbkDdr+lxDdARPnoCUeRCXuWGyYEMskhm9QjjrrIQy61ooNi2A94xzJlhrLoIyaiP8wj0Kl5h3oYbVOcFFZjMc5Z6C6yzulOtxbiLXmR3QIlVlJsiUakrjaYbQ1NkNh/iHYZ1+EcrkTRFL5H28v82yAhQjcvBjVA+EfLDHvhG2W1eANWinryVCqgmJ4L5MKwm3W7cQxSx0mhEpoFyzFX947pOZMr0E+2xfQbX9OlyRNYDIoQT5qBjqfVWwt/9TnNn59PfIDFd7/4AyezH9/3bbSrCF+pOXu9Gk5W56QcrmJMt8pUWkgv3qb2Ozlgebqbeh1cXDh/1Jg8Tp88N56ixsoBY/M7ObTW+BwKIEtcX+DLI+K10IEqpV6lrMlmqLf1UdHF9jLKDlvpZ/AReaW6HHPjBtFBtdA9CO+6hexoFiQ+EUwc/0b0KDnEvfT4SBq9Qk7AZ+b1/mgusNL7/8saHoPhl8l3YTVHNZdKCIDbaUacYVGoLvHCXPzGCqJcZ2LvtuBgc9RgZeY5wH1VIG3ObLaMH4WyYTJKkmvucyFSStf9btFg44F1GQgfdotsQiWQEXG5mYCnqmFZQ5emGHYl1S9sp3QqNEAG0S5RRaxAq6jBK4PfqMBRchPiJ4UnEyGm8aqpo50IB923SCzmE/9GA9zgax3gydWiON3OzIWHAZcg95/LvydC0RbBH2QHUrH24wO0E/6MtJqSM50DI8g5YfxRYi3yBlRzQ/voKCISJZwxRg18EFld2dsWBvsAcOu3fDOc8x8IQDU+4NBcPTyWV3JsGceIcI1nHEcLGJCSLMW5kKkmRNtsoO22pwhFxT7jn8wdwIYoezBwUf3cFIJoIclW5CUId5kTSq0/Gzaxct+EP/NhgOByeue8bC9JETRcaRR0m4lmqJX0U6ESkB86Fui+6df7ZQ78JOeSk0SWUTgmyZFrADSgpbqYYS4xJa8GDvPuDItfh9zX2eQqcSacyVYp21HBP/epRZmQieJBenElyVLJcVG16AA137oY4vplv0xMN2HJHOChyFDo6of5poIE7xzgxca+FVVTWzt2JvWZTx8mUq+KGh8OEJ5W/j1W18unklkYxHUbr0SbC68NR6uCtW0VFOjggn2v+Ej/Qv0s9+YCiow7Zq3nNJpRPc0Leov17S4athCeh9SM6xN1ld2Miy6QoT5zKD/bCi/cJQiWZp/Fk/sjxnckkEST1+SP7+RP8aHBdWwHkGgxYjhx1yHKhlix408KXqGnH7uS/1K0/id8OxZ6NIaU7lEgT/RnYj+5HIk+XKh1LqDTjQU06qzHiFsoIqo0oqi40LruJ9JzIee9aLbMy5XExweezty5C82LUNiBx5lKqjjlWgVmTJrMjFZApi5S4v4Xoh8jlSg5hiMkQqiGiQs7HZL5g1uf8/M/j8CzAqf70m4ouxAAAAAElFTkSuQmCC';
+    var htmlIconbatchDocs =  '<a href="#" id="iconBatchDocs" onclick="parent.initDocLoteModalSelecaoDoc();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Iniciar documentos em lote\')"  tabindex="452" class="botaoSEI">'+
+                                '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconDynamicField+'" alt="Iniciar documentos em lote" title="Iniciar documentos em lote">'+
+                                '</a>';
+    if (ifrVisualizacao.find('#iconBatchDocs').length == 0) {
+        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconbatchDocs);
+    }
+    if (loop) {
+        setTimeout(function () {
+            appendIconBatchDocs();
+        },1500);
+    }
+}
+function initDocLoteModalSelecaoDoc(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof $().chosen !== 'undefined' && typeof URL_SPRO !== 'undefined') { 
+        docLoteModalSelecaoDoc();
+    } else {
+        if (TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
+        setTimeout(function(){ 
+            initDocLoteModalSelecaoDoc(TimeOut - 100); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initDocLoteModalSelecaoDoc'); 
+        }, 500);
+    }
+}
+function setProgressBarOnProcesso() {
+    if (typeof arrayConfigAtividades !== 'undefined' && typeof arrayConfigAtividades.prescricoes !== 'undefined' && checkConfigValue('gerenciarprescricoes')) {
+        var tableProcesso = $('#tblProcessosGerados, #tblProcessosRecebidos, #tblProcessosDetalhado');
+        $.each(arrayConfigAtividades.prescricoes, function(i, v){
+            var value_prescricao = typeof arrayConfigAtividades.tipos_prescricoes !== 'undefined' ? jmespath.search(arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`"+v.id_tipo_prescricao+"`] | [0]") : null;
+                value_prescricao = value_prescricao !== null ? value_prescricao : false;
+            var config = value_prescricao ? value_prescricao.config : false;
+            var nivel_critico = config && typeof config.nivel_critico !== 'undefined' ? config.nivel_critico : 75;
+            var porcentagem = parseFloat(((v.tempo_decorrido/v.prazo)*100).toFixed(2));
+            var classProgress = porcentagem >= nivel_critico ? 'urgente' : '';
+                classProgress = v.suspensao ? 'suspenso' : classProgress;
+            var id_progress = v.id_procedimento ? v.id_procedimento : v.key_prescricao;
+            var elemProcesso = v.id_procedimento ? $('#P'+v.id_procedimento).find('a[href*="controlador.php?acao=procedimento_trabalhar"]') : tableProcesso.find("a[href*='controlador.php?acao=procedimento_trabalhar']:contains('"+v.processo_sei+"')");
+            var txtTip =    'Prazo: '+v.prazo+' dias<br>'+
+                            'Decorrido: '+v.tempo_decorrido+' dias ('+porcentagem+'%) <br>'+
+                            'Documento: '+v.documento_relacionado+' ('+moment(v.data_inicio).format('DD/MM/YYYY HH:mm')+')'+
+                            '\',\''+
+                            (v.suspensao ? '(SUSPENSO) ' : '')+v.nome_prescricao;
+            var progress =  '<div id="progressPrescricao_'+id_progress+'" style="margin: 5px 0 0 0;max-width: 300px;position:relative;" onmouseover="return infraTooltipMostrar(\''+txtTip+'\');" onmouseout="return infraTooltipOcultar();" class="progressPrescricao ui-progressbar ui-widget ui-widget-content ui-corner-all '+classProgress+'" role="progressbar" aria-valuemin="0" aria-valuemax="'+v.prazo+'" aria-percent="'+porcentagem+'" data-percent="'+porcentagem.toLocaleString('pt-BR')+'%" aria-valuenow="'+v.tempo_decorrido+'">'+
+                            '   <div class="ui-progressbar-value ui-widget-header ui-corner-left" style="width: '+porcentagem+'%;"></div>'+
+                            '</div>';
+            $('#progressPrescricao_'+id_progress).remove();
+            elemProcesso.after(progress);
+        });
+        tableProcesso.trigger('updateAll');
+    }
+}
 function appendIconCtrPrescricao(loop = true) {
-    if (checkConfigValue('view_prescricoes')) {
+    if (
+            typeof checkCapacidade !== 'undefined' 
+            && checkCapacidade('view_prescricoes') 
+            && typeof arrayConfigAtividades !== 'undefined' 
+            && typeof arrayConfigAtividades.tipos_prescricoes !== 'undefined' 
+            && $.map(arrayConfigAtividades.tipos_prescricoes, function(v){ if (checkListTipoPrescricaoInProcesso(v)) { return v }}).length
+            && checkConfigValue('gerenciarprescricoes')
+        ) {
         var ifrVisualizacao = $('#ifrVisualizacao').contents();
+        var iconLabel = localStorage.getItem('iconLabel');
+        var iconBoxSlim = localStorage.getItem('seiSlim');
         var base64IconCtrPrescricao = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAABFJJREFUeJztmG9MG2UYwFeyaTZwcSwx2WzLBjNxGx/mvuAHiYl+WGCML/uDMZWVAHPqNJsxS8acY1sy/DMzQRNzxj8fNNEYPxmTJc4P6jelQLtCS0t71/ZKodcrEOjd296fPr7vXTsKQgbxrsbIk/zy3uV67/3yXNvned9NmzZiI/4D0dba99Khvec+r7e/QhnBQdtZqssx0GiYYHPjFcpe1QH2KqchWCtPwwvH3jtjmGBT41WKTGrTwA+pxLLauH7IHNbKdmg79q5xgq3P91K1O7uhrrpIJ9Tt6FoXtYRqMpJ7O6H9xAfGCc7xcoUkJzfTKamfTskQSKgwEsmvC3eB0ajyBp9UKgiGCRYjzClUmJPBP7l+wSL3oso5w8WMFVT/x4KJKf+nbMILEdYFweDPmLsQmFgb5LPkHob985IpcjmVrxATH1/N0j2Agp0guqyAXLvxuFZ2gTCIR/adblMEScjpO/sRcwVQ+CIII4dAcNnwQ9dGZtAKmeH6lMx/v800QZTntiD2w7sofBlE3wksuEd78IPkRCLoqoGM78ht0+SKIfLf7kbx/l9E+nIeYUlxsOaBmcwM1Sli4PgXIv/VTtMFSSD+xxox9v5PiHk7I461gDD0ZEHGvixzOLsjB+YFf/OXmYU79rLIFUPKTmzPcV8/i2I3f0fhN0EcbcKiTywKDu0T0L2G78TIxcNZObRdgbSlrIJ54C0oz2zJpr55DE0OdKPo9UkxeAZEz9MgeBsjC4GTbRL9+iN5NWUhlFWuNOK8spXm5CN0Ev3GTo3JsekIMHxuMMLnGhJz0kP/mhi/IFtiXG4Pw0mf4AozTypMkRAGS3Ohabk3GFceL7sck5KraE7qwzJsqVgpPtzxeGIquKMq62Wla/RktjzZjKZQJZa7iSXkleUUGE8oWmul119St9WsN5a7wKSkh00XZLhcP40lVsvcOM6ce8VGQYVRVnrLVLnErLqVTkppehU5AnmtK3cyCngiii+eVjebJsgklaMri0mYHCTYX2F84g9wMwoMR+S/ZZDgjalPmSfIKTdCqwjGp8ZgIfAazLibYCzkwTLLBXW8MdlhmmCIk6hSMfKqQykJ2KlxEOnrIPhPauVubrgBfGG/9lr1zJU2rLKZHbVMLc9cdDoG85EByIZ7cIfThusvqcdW4DwvgjccLkiWSRD/eil6SQZnIMPcBkSaWIzgP6W1VsV6nHa3gIeZXZJFjxmLptm0rNVShpNv4f9AIDBJAWbYHwAxlzA9+ohfMelgRJfeA5Ix7ruBJTOapFv/Dp6fS4OFYJhg63PXKG3BvqNbX4iTBXh1Bz4+jXHCvkd19PN2vDh3LKGu2gl78WK9trCAJ3M4jt8ybuHe/EwvZStsfVgL6OftYLt/jNnWUbjuvM/iNYJT2/YwfG/mKBbU9lYM2jyyGS14qqXPUW9/9bOD9rPUP8ZGeJnqcnxk3PZbRkhbCIZNuBEbsRh/AXsKOj5cMZb5AAAAAElFTkSuQmCC';    
-        var htmlIconCtrPrescricao =  '<a href="#" id="iconCtrPrescicao" onclick="parent.getCtrPrescricao();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Gerenciar Prescri\u00E7\u00F5es\')"  tabindex="452" class="botaoSEI">'+
+        var htmlIconCtrPrescricao =  '<a href="#" id="iconCtrPrescicao" onclick="parent.getCtrPrescricao();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Gerenciar Prescri\u00E7\u00F5es\')"  tabindex="452" class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+'">'+
                                     '<img class="infraCorBarraSistema" tabindex="452" src="'+base64IconCtrPrescricao+'" alt="Gerenciar Prescri\u00E7\u00F5es" title="Gerenciar Prescri\u00E7\u00F5es">'+
                                     '</a>';
         if (ifrVisualizacao.find('#iconCtrPrescicao').length == 0) {
@@ -9729,6 +9980,18 @@ function appendIconNewDoc(loop = true) {
     if (loop) {
         setTimeout(function () {
             appendIconNewDoc();
+        },1500);
+    }
+}
+function initMoveIconDeleteToEnd() {
+    if (!isNewSEI) waitLoadPro($('#ifrVisualizacao').contents(), '#divArvoreAcoes', "a.botaoSEI", moveIconDeleteToEnd);
+}
+function moveIconDeleteToEnd(loop = true) {
+    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    ifrVisualizacao.find('a[onclick*="excluirDocumento("]').appendTo(ifrVisualizacao.find('#divArvoreAcoes'));
+    if (loop) {
+        setTimeout(function () {
+            moveIconDeleteToEnd();
         },1500);
     }
 }
@@ -9961,9 +10224,11 @@ function setColorSlimPro(backgroundColor) {
                         +"  .seiSlim #divInfraAreaTelaE #main-menu li a:before { \n"
                         +"      color: "+backgroundColor+" !important;\n"
                         +"  }\n"
+                        +"  .seiSlim.seiSlim_parent div#divInfraBarraSistemaPadrao, \n"
                         +"  .seiSlim.seiSlim_parent div#divInfraBarraSistema { \n"
                         +"      box-shadow: "+addAlpha(color,0.5)+" 0px -5px 6px -3px inset;\n"
                         +"  }\n"
+                        +"  .seiSlim.seiSlim_parent div#divInfraBarraSistemaPadrao, \n"
                         +"  .seiSlim.seiSlim_parent div#divInfraBarraSistema, \n"
                         +"  .seiSlim.seiSlim_parent div#divInfraBarraSuperior,\n"
                         +"  .seiSlim .infraAreaDados a.ancoraPadraoPreta:hover, \n"
@@ -9984,7 +10249,7 @@ function setColorSlimPro(backgroundColor) {
                         +"  .seiSlim #divComandos a.botaoSEI:hover:before,\n"
                         +"  .seiSlim .infraAreaDados a.ancoraPadraoPreta:hover,\n"
                         +"  .seiSlim .infraAreaDados a.ancoraPadraoPreta:hover:before,\n"
-                        +"  div#divInfraBarraSistemaE.barSuspenso::before {\n"
+                        +"  div"+infraBarraS+".barSuspenso::before {\n"
                         +"      color: "+color+" !important;\n"
                         +"      border-color: "+backgroundColor+" !important;\n"
                         +"  }\n"
@@ -10007,9 +10272,9 @@ function setColorSlimPro(backgroundColor) {
                         +"  }\n"
                         +"</style>");
     if (getBrightnessColor(backgroundColor) > 125) {
-        $('#divInfraBarraSistemaE').addClass('dark');
+        $(infraBarraS).addClass('dark');
     } else {
-        $('#divInfraBarraSistemaE').removeClass('dark');
+        $(infraBarraS).removeClass('dark');
     }
     setOptionsPro('colorSlimPro',backgroundColor);
 }
@@ -10032,14 +10297,22 @@ function setBtnRight(this_) {
 function initToolbarOnTop() {
     var toolbar = $('#divComandos');
     if (toolbar.length) {
+        var topWindow = isNewSEI ? 80 : 200;
         var topElement = toolbar.offset().top;
-        $(window).scroll(function(){
-            if ($(this).scrollTop() > topElement) {
+            topElement = topElement-topWindow;
+        $(isNewSEI ? '#divInfraAreaTelaD' : window).scroll(function(){
+            if ($(this).scrollTop() > topWindow) {
                 delayCrash = true;
                 setTimeout(function(){ delayCrash = false }, 300);
-                $('#divComandos').addClass('fixed');
+                // $('#divComandos').addClass('fixed');
+                if ($('#divComandos.fixed').length == 0) {
+                    $('#divComandos').before($('#divComandos').clone()).addClass('fixed');
+                }
             } else {
-                if (!delayCrash || $(this).scrollTop() == 0) $('#divComandos').removeClass('fixed');
+                if (!delayCrash || $(this).scrollTop() <= topWindow) {
+                    // $('#divComandos').removeClass('fixed');
+                    $('#divComandos.fixed').remove()
+                }
             }
         });
     }
@@ -10070,6 +10343,8 @@ function insertNewIcons() {
     }
 }
 function appendStyleNewIcons(ifrVisualizacao, backgroundColor) {
+    ifrVisualizacao.find('#divArvoreAcoes a').addClass('botaoSEI');
+
     if (ifrVisualizacao.find('style[data-style="seipro-styleicon"]').length == 0) {
         var color = (backgroundColor && getBrightnessColor(backgroundColor) > 125) ? '#515151' : '#ffffff';
         ifrVisualizacao.find('head').prepend("<style type='text/css' data-style='seipro-styleicon'>"
@@ -10098,7 +10373,7 @@ function appendNewIcons(loop = true) {
     var colorSlim = (getOptionsPro('colorSlimPro')) ? getOptionsPro('colorSlimPro') : rgbToHexString(ifrVisualizacao.find('.infraCorBarraSistema').css('background-color'));
     
     appendStyleNewIcons(ifrVisualizacao, colorSlim);
-    replaceNewIcons(ifrVisualizacao.find('.infraBarraComandos a.botaoSEI'));
+    replaceNewIcons(isNewSEI ? ifrVisualizacao.find('.barraBotoesSEI a.botaoSEI') : ifrVisualizacao.find('.infraBarraComandos a.botaoSEI'));
     if (loop) {
         setTimeout(function () {
             appendNewIcons(false);
@@ -10184,7 +10459,7 @@ function loopIDProtocoloSEI(protocoloSEI, index, TimeOut = 200) {
             });
     } else {
         setTimeout(function(){ 
-            alertaBoxPro('Sucess', 'check-circle', 'Protocolos pesquisados com sucesso!');
+            alertaBoxPro('Sucess', 'check-circle', 'Protocolos pesquisados com sucesso!', function(){ loadingButtonConfirm(false) });
             loadingButtonConfirm(false);
             $('.ui-dialog .ui-dialog-buttonset .confirm.ui-button').addClass('ui-state-active');
         }, 500);
@@ -10534,18 +10809,19 @@ if (localStorage.getItem('seiSlim')) {
   function setSizeIframePro(tLeft, saveSize = true) {
       $('head').find('style[data-style="seipro-sizeiframe"]').remove();
       $('head').prepend(  "<style type='text/css' data-style='seipro-sizeiframe'> "
-                          +"  .seiSlim iframe#ifrArvore {\n"
+                          +"  .seiSlim:not(.newSEI) iframe#ifrArvore {\n"
                           +"      width: "+(tLeft-6)+"px !important;\n"
                           +"  }\n"
-                          +"  .seiSlim.seiSlim_hidemenu iframe#ifrVisualizacao {\n"
+                          +"  .seiSlim.seiSlim_hidemenu:not(.newSEI) iframe#ifrVisualizacao {\n"
                           +"      width: calc(97vw - "+(tLeft-6)+"px) !important;\n"
                           +"  }\n"
-                          +"  .seiSlim iframe#ifrVisualizacao {\n"
+                          +"  .seiSlim:not(.newSEI) iframe#ifrVisualizacao {\n"
                           +"      width: calc(78vw - "+(tLeft-6)+"px) !important;\n"
                           +"  }\n"
                           +"</style>");
     if (saveSize) setOptionsPro('iframeSizeSlimPro',tLeft);
 }
+/*
 if (verifyConfigValue('menususpenso')) {
     function infraMenuSistemaEsquema(bolInicializar, tipo){
         var mostrarMenu = null;
@@ -10608,6 +10884,188 @@ if (verifyConfigValue('menususpenso')) {
         // console.log('***** infraMenuSistemaEsquema',bolInicializar, tipo, prefixoCookie, tamanhoDados, window.name);
     }
 }
+*/
+function infraMenuSistemaEsquema() {
+    return false;
+}
+function infraMenuSistemaEsquemaPro() {
+    if (!delayCrash) {
+        if (isNewSEI) {
+            if ($('#divInfraAreaTelaE').attr('style') == 'display: none;') {
+                showMenuSEIPro();
+            } else {
+                hideMenuSEIPro();
+            }
+        } else {
+            if ($('#divInfraAreaTelaE').is(':visible')) {
+                hideMenuSEIPro();
+            } else {
+                showMenuSEIPro();
+            }
+        }
+        delayCrash = true;
+        setTimeout(function(){ delayCrash = false }, 300);
+    }
+}
+function hideMenuSEIPro() {
+    if (verifyConfigValue('menususpenso') && !isNewSEI) {
+        $('#divInfraAreaTelaE').hide("slide", { direction: "left" }, 300, function(){ 
+                $(this).attr('style','display:none;');
+        });
+        $(infraBarraS).addClass('barSuspenso_hide').removeClass('barSuspenso_show');
+    } else {
+        $('#divInfraAreaTelaE').hide();
+        $('#divInfraAreaTelaD').css({'width': '99%'});
+        setOptionsPro('showMenuSEIPro',true);
+        $('body').addClass('seiSlim_hidemenu');
+        if (isNewSEI) {
+            $("#divInfraAreaTelaE").addClass("infraMenuAnimacao");
+            $("#divInfraAreaTelaE").addClass("text-truncate");
+            $("#divInfraAreaTelaE").removeClass("infraAreaTelaEExibeGrande");
+            $("#divInfraAreaTelaE").addClass("infraAreaTelaEEscondeGrande");
+            $("#divInfraAreaTelaE").removeClass("infraAreaTelaEExibePequeno")
+            $("#divInfraAreaTelaD").removeClass("infraAreaTelaDEscondePequeno");
+            $("#divInfraAreaTelaE").addClass("infraAreaTelaEEscondePequeno");
+            $("#divInfraSidebarMenu").css("overflow-x", "hidden");
+            if (verifyConfigValue('menususpenso')) $(infraBarraS).addClass('barSuspenso_hide').removeClass('barSuspenso_show');
+        }
+    }
+}
+function showMenuSEIPro() {
+    if (verifyConfigValue('menususpenso') && !isNewSEI) {
+        $('#divInfraAreaTelaE').show("slide", { direction: "left" }, 300, function(){ 
+                $(this).removeAttr('style'); 
+        });
+        $(infraBarraS).addClass('barSuspenso_show').removeClass('barSuspenso_hide');
+    } else {
+        $('#divInfraAreaTelaE').show();
+        $('#divInfraAreaTelaD').css({'width': '79%'});
+        setOptionsPro('showMenuSEIPro',false);
+        $('body').removeClass('seiSlim_hidemenu');
+        if (isNewSEI) {
+            $("#divInfraAreaTelaE").addClass("text-truncate");
+            $("#divInfraAreaTelaE").addClass("infraMenuAnimacao");
+            $("#divInfraAreaTelaE").addClass("infraAreaTelaEExibeGrande");
+            $("#divInfraAreaTelaE").removeClass("infraAreaTelaEEscondeGrande");
+            $("#divInfraAreaTelaE").addClass("infraAreaTelaEExibePequeno");
+            $("#divInfraAreaTelaD").addClass("infraAreaTelaDEscondePequeno");
+            $("#divInfraAreaTelaE").removeClass("infraAreaTelaEEscondePequeno");
+            if (verifyConfigValue('menususpenso')) $(infraBarraS).addClass('barSuspenso_show').removeClass('barSuspenso_hide');
+        }
+    }
+}
+function checkMenuSEIPro() {
+    $('#lnkInfraMenuSistema, #lnkInfraMenuSistema').attr('onclick','infraMenuSistemaEsquemaPro()');
+    if (getOptionsPro('showMenuSEIPro') && $('#divInfraAreaTelaE').is(':visible')) hideMenuSEIPro();
+    if (verifyConfigValue('menususpenso')) {
+        $('#divInfraAreaTelaE').addClass('menuSuspenso');
+        $(infraBarraS).addClass('barSuspenso').attr('onclick','infraMenuSistemaEsquemaPro()');
+    }
+}
+
+// SUBSTITUI CAMPOS PERSONALIZADOS
+function sumTagValue(value) {
+    var return_ = value;
+    var prop = dadosProcessoPro.propProcesso;
+    var docs = dadosProcessoPro.listDocumentos;
+    var i = parseInt(value.replace(/[^0-9\.]+/g, ''));
+        i = (value.indexOf('-') !== -1) ? (i*-1) : i;
+        i = i-1;
+
+    if (value.indexOf('hoje') !== -1) {
+        return_ = '<span class="ancoraSei dynamicField">'+moment().add(i+1, 'd').format('LL')+'</span>';
+    } else if (value.indexOf('assunto') !== -1) {
+        var index = ((i+1) > prop.selAssuntos_select.length) ? (prop.selAssuntos_select.length-1) : i;
+        return_ = '<span class="ancoraSei dynamicField">'+prop.selAssuntos_select[index]+'</span>';
+    } else if (value.indexOf('interessado') !== -1) {
+        var index = ((i+1) > prop.selInteressadosProcedimento.length) ? (prop.selInteressadosProcedimento.length-1) : i;
+        return_ = '<span class="ancoraSei dynamicField">'+prop.selInteressadosProcedimento[index]+'</span>';
+    } else if (value.indexOf('observacao') !== -1) {
+        var index = ((i+1) > prop.txaObservacoes.length) ? (prop.txaObservacoes.length-1) : i;
+        return_ = '<span class="ancoraSei dynamicField">'+prop.txaObservacoes[index].unidade+': '+prop.txaObservacoes[index].observacao+'</span>';
+    } else if (value.indexOf('documento') !== -1) {
+        var docValue = '';
+        if (value.indexOf('+') !== -1 || value.indexOf('-') !== -1) {
+            var indexDoc = 0;
+            $.each(docs, function(i, v) { 
+                if (v.id_protocolo == getParamsUrlPro(window.location.href).id_documento) { 
+                    return indexDoc; 
+                } indexDoc++; 
+            });
+            var iDoc = indexDoc+(i+1);
+                iDoc = (docs.length <= iDoc) ? (docs.length-1) : iDoc;
+                iDoc = (value.indexOf('-') !== -1 && value.split('-')[1] == 'ultimo') ? (docs.length-1) : iDoc;
+            docValue = getHtmlListDocumentos(docs[iDoc]);
+        } else if (hasNumber(value)) {
+            docValue = getHtmlListDocumentos(docs[i]);
+        }
+        return_ = '<span class="ancoraSei dynamicField">'+docValue+'</span>';
+    }
+    return return_;
+}
+function getHtmlListDocumentos(value) {
+    if (typeof value !== 'undefined') { 
+        var nrSei = ( value.nr_sei != '' ) ? value.nr_sei : value.documento;
+        var citacaoDoc = getCitacaoDoc();
+        var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+value.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
+        return ( value.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? value.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
+    } else { return '' }
+}
+function camposDinamicosProcesso(arrayTags) {
+    var prop = dadosProcessoPro.propProcesso;
+    var docs = dadosProcessoPro.listDocumentos;
+    var processo = (typeof prop.txtProtocoloExibir === 'undefined') ? prop.hdnProtocoloFormatado : prop.txtProtocoloExibir;
+        processo = (typeof processo !== 'undefined') ? '<span contenteditable="false" data-cke-linksei="1" style="text-indent:0px;"><a id="lnkSei'+prop.hdnIdProcedimento+'" class="ancoraSei" style="text-indent:0px;">'+processo+'</a></span>' : null;
+        processo = (processo !== null && $.inArray('processo_texto', arrayTags) !== -1) ? '<span class="ancoraSei dynamicField">'+(prop.hdnProtocoloFormatado || prop.txtProtocoloExibir)+'</span>' : processo;
+    var autuacao = (typeof prop.txtDtaGeracaoExibir === 'undefined') ? prop.hdnDtaGeracao : prop.txtDtaGeracaoExibir;
+        autuacao = (typeof autuacao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+autuacao+'</span>' : null;
+    var tipo = (typeof prop.hdnNomeTipoProcedimento !== 'undefined') ? '<span class="ancoraSei dynamicField">'+prop.hdnNomeTipoProcedimento+'</span>' : null;
+    var especificacao = (typeof prop.txtDescricao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+prop.txtDescricao+'</span>' : null;
+    var hoje = '<span class="ancoraSei dynamicField">'+moment().format('LL')+'</span>';
+    var interessados = (typeof prop.selInteressadosProcedimento !== 'undefined') 
+                            ? ($.inArray('interessados_lista', arrayTags) !== -1) 
+                                    ? $.map(prop.selInteressadosProcedimento, function(substr, i){ return '<span class="ancoraSei dynamicField">'+substr+'</span><br>' }).join('')
+                                    : '<span class="ancoraSei dynamicField">'+joinAnd(prop.selInteressadosProcedimento)+'</span>' 
+                            : null;
+    var assuntos = (typeof prop.selAssuntos_select !== 'undefined') 
+                            ? ($.inArray('assuntos_lista', arrayTags) !== -1) 
+                                    ? $.map(prop.selAssuntos_select, function(substr, i){ return '<span class="ancoraSei dynamicField">'+substr+'</span><br>' }).join('')
+                                    : '<span class="ancoraSei dynamicField">'+joinAnd(prop.selAssuntos_select)+'</span>' 
+                            : null;
+    
+    var unidadeObs = jmespath.search(dadosProcessoPro.propProcesso.txaObservacoes, "[?unidade=='"+unidade+"'] | [0]");
+    var observacao = (typeof prop.txaObservacoes !== 'undefined' && prop.txaObservacoes.length > 0 && unidadeObs !== null && unidadeObs.observacao != '')
+                        ? '<span class="ancoraSei dynamicField">'+unidadeObs.unidade+': '+unidadeObs.observacao+'</span>' : null;
+
+    var observacoes = (typeof prop.txaObservacoes !== 'undefined' && prop.txaObservacoes.length > 0) 
+                        ? ($.inArray('observacoes_lista', arrayTags) !== -1) 
+                            ? $.map(prop.txaObservacoes, function(value, i){
+                                  return value.unidade+': '+value.observacao+'<br>';
+                              }).join('')
+                            : joinAnd($.map(prop.txaObservacoes, function(value, i){
+                                  return value.unidade+': '+value.observacao;
+                              }))
+                        : null;
+        observacoes = (observacoes !== null) ? '<span class="ancoraSei dynamicField">'+observacoes+'</span>' : observacoes;
+    var acesso = (typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == 0) ? '<span class="ancoraSei dynamicField">&#127760;&nbsp; <span>P\u00FAblico</span></span>' : null;
+        acesso = (acesso !== null && prop.rdoNivelAcesso == 1) ? '<span class="ancoraSei dynamicField">&#128274;&nbsp; <span>Restrito</span></span>' : acesso;
+        acesso = (acesso !== null && prop.rdoNivelAcesso == 2) ? '<span class="ancoraSei dynamicField">&#9940;&nbsp; <span>Sigiloso</span></span>' : acesso;
+        acesso = (acesso !== null && $.inArray('acesso_texto', arrayTags) !== -1) ? $(acesso).find('span').text() : acesso;
+    var documentos = (typeof docs !== 'undefined') 
+                            ? ($.inArray('documentos_lista', arrayTags) !== -1) 
+                                    ? $.map(docs, function(value, i){
+                                            return getHtmlListDocumentos(value)+'<br>';
+                                      }).join('')
+                                    : joinAnd($.map(docs, function(value, i){
+                                            return getHtmlListDocumentos(value);
+                                      }))
+                            : null;
+        documentos = (documentos !== null) ? '<span class="ancoraSei dynamicField">'+documentos+'</span>' : documentos;
+    var totaldocumentos = (typeof docs !== 'undefined' && docs !== null && $.inArray('totaldocumentos', arrayTags) !== -1) ? '<span class="ancoraSei dynamicField">'+docs.length+'</span>' : null;
+
+    var dadosProcesso = {processo: processo, autuacao: autuacao, tipo: tipo, especificacao: especificacao, hoje: hoje, interessados: interessados, assuntos: assuntos, acesso: acesso, documentos: documentos, totaldocumentos: totaldocumentos, observacoes: observacoes, observacao: observacao};
+    return dadosProcesso;
+}
 function setInfraImg(target = $('html')) {
     target.find('img[src*="/infra_css/"], img.infraImg, img.InfraImg').wrap(function(){
         return ($(this).closest('.infraImgPro').length == 0 && $(this).closest('#tblAnexos').length == 0) ? '<span class="infraImgPro" data-img="'+$(this).attr('src')+'"></span>' : false;
@@ -10620,7 +11078,7 @@ function initModalNewSEISigiloso(TimeOut = 1000) {
     } else {
         setTimeout(function(){ 
             initModalNewSEISigiloso(TimeOut - 100); 
-            console.log('Reload initModalNewSEISigiloso'); 
+            if(verifyConfigValue('debugpage')) console.log('Reload initModalNewSEISigiloso'); 
         }, 500);
     }
 }
@@ -10723,10 +11181,10 @@ $(document).ready(function () { fnJqueryPro() });
 
 function loadStyleDesign(body = $('body'), secondClass = false) {
     if (localStorage.getItem('seiSlim')) {
-        body.addClass("seiSlim");
+        if (typeof body.addClass === 'function') body.addClass("seiSlim");
         if (secondClass) body.addClass("seiSlim_"+secondClass);
         if (localStorage.getItem('darkModePro')) {
-            body.addClass("dark-mode");
+            if (typeof body.addClass === 'function') body.addClass("dark-mode");
         }
     }
 }
@@ -10768,7 +11226,7 @@ function initLoadSeiProArvore(TimeOut = 1000) {
     } else {
         setTimeout(function(){
             initLoadSeiProArvore(TimeOut - 100);
-            console.log('Reload initLoadSeiProArvore');
+            if(verifyConfigValue('debugpage')) console.log('Reload initLoadSeiProArvore');
         }, 500);
     }
 }
@@ -10778,10 +11236,11 @@ function loadScriptPro() {
         $(document).ready(function () {
             loadScriptVisualizacaoPro();
             loadScriptArvorePro();
+            checkMenuSEIPro();
 
-            setTimeout(function(){
+            /* setTimeout(function(){
                 if (CLIENT_ID_PRO) loadAPIGooglePro();
-            }, 1000);
+            }, 1000); */
         });
     }
 }

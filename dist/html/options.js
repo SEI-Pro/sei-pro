@@ -238,6 +238,14 @@ function restore_options() {
     });
 }
 function actionRemoveProfile(idTable) {
+    $('#sca-upProfile-'+idTable).show().click(function() { 
+        var up = $(this).closest('table').prev();
+        if (typeof up !== 'undefined') $(this).closest('table').insertBefore(up).hide().fadeIn('slow').effect('highlight');
+    });
+    $('#sca-downProfile-'+idTable).show().click(function() { 
+        var down = $(this).closest('table').next();
+        if (typeof down !== 'undefined') $(this).closest('table').insertAfter(down).hide().fadeIn('slow').effect('highlight');
+    });
     $('#sca-removeProfile-'+idTable).show().click(function() { 
         $('#options-table-'+idTable).effect('highlight').delay(1).effect('highlight');
         if ( $('.removeProfile').length > 1 ) {
