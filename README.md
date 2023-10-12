@@ -109,5 +109,7 @@ Inscreva-se na nossa Lista de e-mail: [http://eepurl.com/hjHh45](http://eepurl.c
 
 Confira nosso [Histórico de versões](./pages/HISTORICO.md)
 
+## Licença
 
+AGPL-3.0
 
