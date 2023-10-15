@@ -82,7 +82,7 @@ Instale a extensão para seu navegador preferido:
 - ![Mover ícone de excluir](/img/icon-movericone.png) [Mover ícone de excluir documentos para o final da lista](./pages/MOVERICONE.md)
 - ![Autopreencher senha](/img/icon-autopreenchersenha.png) [Autopreencher senha no login (SEI >= 4.0)](./pages/AUTOPREENCHERSENHA.md)
 - ![Numerar documentos](/img/icon-numerardocsarvore.png) [Numerar documentos na árvore do processo](./pages/NUMERARDOCSARVORE.md)
-- ![Contador de processos não recebidos](/img/icon-autopreenchersenha.png) [Contador de processos não recebidos no ícone do SEI](./pages/CONTADORPROCESSOICONE.md)
+- ![Contador de processos não recebidos](/img/icon-contadorprocessoicone.png) [Contador de processos não recebidos no ícone do SEI](./pages/CONTADORPROCESSOICONE.md)
 - ![Mostrar especificação do processo](/img/icon-especificacaoprocesso.png) [Mostrar especificação do processo na tabela de controle de processos](./pages/ESPECIFICACAOPROCESSO.md)
 - ![Mostrar nomes de usuários](/img/icon-nomesusuarios.png) [Mostrar nomes de usuários na tabela de controle de processos](./pages/NOMESUSUARIOS.md)
 - ![Marcar processo não visualizado](/img/icon-naolido.png) [Permitir marcar processos como "Não Visualizado"](./pages/NAOLIDO.md)
