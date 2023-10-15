@@ -9,7 +9,6 @@ Devido a proximidade entre os botões de **Concluir Processo** e **Excluir Docum
 > ![Tela Mover ícone de excluir documentos](../img/tela-movericone.gif)
 
 
-
 ## Próximo item
 
 > [.](../pages/.md)
