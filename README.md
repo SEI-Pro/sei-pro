@@ -2,7 +2,7 @@
 
 **SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
-**Compatível com a versão 4.0 so SEI**
+**Compatível com a versão 4.0 do SEI**
 
 - ![Estilo Avançado](/img/icon-estiloavancado.png) [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](./pages/ESTILOAVANCADO.md)
 - ![Estilo Tabela](/img/icon-projetos.png) [Gerenciar projetos](./pages/PROJETOS.md) [MOMENTANEAMENTE DESCONTINUADA]
