@@ -3,7 +3,7 @@
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
 ### Versão 1.5.4
-18/10/2023
+23/10/2023
 
 - Correções e melhorias
 - Adicionado [Mover ícone de excluir documentos para o final da lista](./pages/MOVERICONE.md)
