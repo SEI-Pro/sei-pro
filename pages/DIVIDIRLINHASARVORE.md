@@ -1,6 +1,6 @@
-# [![Home](../img/home.png)](../) |  ANTAQ Pro ![Icone](../img/icon-32.png)
+# [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![ANTAQ Pro Dividir as informações do documento na árvore do processo em duas linhas](../img/icon-dividirinformacoes.png)  Dividir as informações do documento na árvore do processo em duas linhas
+## ![SEI Pro Dividir as informações do documento na árvore do processo em duas linhas](../img/icon-dividirinformacoes.png) Dividir as informações do documento na árvore do processo em duas linhas
 
 Essa funcionalidade divide as informações do documento na árvore do processo em duas linhas
 

@@ -2,7 +2,23 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.5.4
+23/10/2023
 
+- Correções e melhorias
+- Adicionado [Mover ícone de excluir documentos para o final da lista](./pages/MOVERICONE.md)
+- Adicionado o [Autopreencher senha no login (SEI >= 4.0)](./pages/AUTOPREENCHERSENHA.md)
+- Adicionado [Numerar documentos na árvore do processo](./pages/NUMERARDOCSARVORE.md)
+- Adicionado o [Contador de processos não recebidos no ícone do SEI](./pages/CONTADORPROCESSOICONE.md)
+- Adicionado [Mostrar especificação do processo na tabela de controle de processos](./pages/ESPECIFICACAOPROCESSO.md)
+- Adicionado [Mostrar nomes de usuários na tabela de controle de processos](./pages/NOMESUSUARIOS.md)
+- Adicionado [Permitir marcar processos como "Não Visualizado"](./pages/NAOLIDO.md)
+- Adicionado a [Comparador de Documentos](./pages/COMPARARDOCUMENTOS.md)
+- Adicionado a [Reabertura programada de processos](./pages/REABRIRPROCESSOS.md)
+- Adicionado o [Ditado no editor de documentos](./pages/DITADO.md)
+- Adicionado a [Escrita interativa no editor de documentos](./pages/ESCRITAINTERATIVA.md)
+- Adicionado a [Revisão de texto no editor de documentos](./pages/REVISARDOC.md)
+  
 ### Versão 1.2
 10/02/2023
 
