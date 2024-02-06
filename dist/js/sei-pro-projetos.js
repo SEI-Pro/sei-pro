@@ -1,7 +1,20 @@
+const loadProjetosPro = true;
 var taskSelect = {macroetapa: [], responsavel: [], grupo: []};
 
+function initProjetos(mode = 'insert', arrayProjetos = arrayConfigAtividades.projetos, query_id_projeto = false, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof Gantt !== 'undefined') {
+        setProjetos(mode, arrayProjetos, query_id_projeto);
+    } else {
+        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/frappe-gantt.js");
+        setTimeout(function(){ 
+            initProjetos(mode, arrayProjetos, query_id_projeto, TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initProjetos'); 
+        }, 500);
+    } 
+}
 function setProjetos(mode = 'insert', arrayProjetos = arrayConfigAtividades.projetos, query_id_projeto = false) {
-    if (checkUnidadeFuncBeta() && !$('#ifrArvore').length) {
+    if (!$('#ifrArvore').length) {
         var btnGroup = '<div class="btn-group" role="group" style="float: right;margin-right: 10px;">'+
                        '   <button type="button" data-value="Day" class="btn btn-sm btn-light">Dia</button>'+
                        '      <button type="button" data-value="Week" class="btn btn-sm btn-light">Semana</button>'+

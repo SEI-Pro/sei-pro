@@ -1,3 +1,4 @@
+const loadFavoritosPro = true;
 var statusLoadRemoteFile = true;
 var map;
 var markers = [];
@@ -316,7 +317,7 @@ function initDadosSelectDoc(id_procedimento, TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initDadosSelectDoc(id_procedimento, TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initDadosSelectDoc'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDadosSelectDoc'); 
         }, 500);
     }
 }
@@ -618,7 +619,7 @@ function actFavoritePro(this_, mode) {
     } else {
         var _this = false;
         var ifrArvore = $('#ifrArvore').contents(); 
-        var ifrVisualizacao = $('#ifrVisualizacao').contents(); 
+        var ifrVisualizacao = $($ifrVisualizacao).contents(); 
         var iconProc = ifrArvore.find('#topmenu a[target="ifrVisualizacao"]').eq(0);
         var id_procedimento = String(getParamsUrlPro(iconProc.attr('href')).id_procedimento);
     }
@@ -657,7 +658,7 @@ function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
         setTimeout(function(){ 
             var target = (this_) ? $(this_) : $('#ifrArvore').contents().find('#iconFavoritePro_'+id_procedimento);
             target.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-            if(verifyConfigValue('debugpage')) console.log('Reload checkDataFavoritePro => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload checkDataFavoritePro => '+TimeOut); 
             if (TimeOut == 9000 && mode == 'add') {
                 getDadosIframeProcessoPro(id_procedimento, 'favorites');
             }
@@ -676,9 +677,10 @@ function storeFavoritePro(mode, id_procedimento) {
     saveConfigFav();
     appendIconFavorites();
     if ($('#ifrArvore').length == 0) {
-        console.log('### addFavoritePro', mode, storeFavorites); 
+        // console.log('### addFavoritePro', mode, storeFavorites); 
         if ($('#favoritesPro').length == 0) {
                 setPanelFavorites('insert');
+                initAppendIconFavorites();
         } else {
             if (typeof storeFavorites.favorites === 'undefined' || storeFavorites.favorites === null || storeFavorites.favorites.length == 0) {
                 $('#favoritesPro').remove();
@@ -722,7 +724,7 @@ function removeFavoritePro(id_procedimento) {
     var storeFavorites = getStoreFavoritePro();
     for (i = 0; i < storeFavorites['favorites'].length; i++) {
         if( storeFavorites['favorites'][i]['id_procedimento'] == id_procedimento) {
-            console.log('notinclude', i, storeFavorites['favorites'][i]['id_procedimento'], storeFavorites['favorites'][i]['processo']);
+            // console.log('notinclude', i, storeFavorites['favorites'][i]['id_procedimento'], storeFavorites['favorites'][i]['processo']);
             storeFavorites['favorites'].splice(i,1);
             i--;
         }
@@ -1248,7 +1250,7 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             });
             checkboxRangerSelectShift();
             checkFileRemoteFav('get');
-            if(verifyConfigValue('debugpage')) console.log('initFunctionsPanelFav => '+TimeOut);
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('initFunctionsPanelFav => '+TimeOut);
         }, 500);
 
         var filterFav = tableFavorites.find('.tablesorter-filter-row').get(0);
@@ -1291,7 +1293,7 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             if (typeof $().tagsInput === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
             if (typeof $().tablesorter === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initFunctionsPanelFav(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initFunctionsPanelFav'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initFunctionsPanelFav'); 
         }, 500);
     }
 }
@@ -1381,7 +1383,7 @@ function showDatesFav(this_, mode) {
     }
 }
 function getFavoritesEnviarProcesso() {
-    var ifrVisualizacao = $('#ifrVisualizacao').contents();
+    var ifrVisualizacao = $($ifrVisualizacao).contents();
     var storeFavorites = getStoreFavoritePro();
     var id_procedimento = String(getParamsUrlPro(window.location.href).id_procedimento);
     var value = jmespath.search(storeFavorites.favorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
@@ -1476,7 +1478,7 @@ function loadScriptFavoriteTag(iFrame) {
     $(scriptText).appendTo(iFrame.find('head'));
 }
 function checkPageFavoritosVisualizacao() {
-    waitLoadPro($('#ifrVisualizacao').contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', isNewSEI ? ".barraBotoesSEI" : ".infraBarraComandos", getFavoritesEnviarProcesso);
+    waitLoadPro($($ifrVisualizacao).contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', isNewSEI ? ".barraBotoesSEI" : ".infraBarraComandos", getFavoritesEnviarProcesso);
 }
 function removeFav(this_) { 
     var storeFavorites = getStoreFavoritePro();
@@ -1689,7 +1691,8 @@ function setMultipleMap() {
         });
 
 
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+        // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 18,
             attribution: '<a href="https://seipro.app" target="_blank">'+NAMESPACE_SPRO+'</a> | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             id: 'mapbox/streets-v11',

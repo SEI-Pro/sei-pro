@@ -200,6 +200,11 @@ function restore_options() {
                 .val(jmespath.search(dataValuesConfig, "[?name=='newdocobs'].value | [0]"))
                 .closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
         }
+        if (jmespath.search(dataValuesConfig, "[?name=='newdocespec'].value | [0]") !== null) { 
+            $('#itemConfigGeral_newdocespec')
+                .val(jmespath.search(dataValuesConfig, "[?name=='newdocespec'].value | [0]"))
+                .closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+        }
         if (jmespath.search(dataValuesConfig, "[?name=='newdocformat'].value | [0]") !== null) { 
             $('#itemConfigGeral_newdocformat')
                 .val(jmespath.search(dataValuesConfig, "[?name=='newdocformat'].value | [0]"))
@@ -430,5 +435,9 @@ $('#new').click(function() { addProfile() });
 $(function(){
     restore_options();
     $('#options-tabs').tabs();
+    $('#accordion').accordion({
+        heightStyle: 'content',
+        collapsible: true
+      });
     setNamePage();
 });

@@ -9,6 +9,8 @@ var idEditor,
     langs,
     wsDialogHtml,
     indexDisplayPro = 0,
+    lastTextTip = false,
+    resultTextTip = false,
     CKWebSpeechHandler;
 
 var loadOnKeyEditor = false;
@@ -54,11 +56,13 @@ function htmlButton(status) {
     var icon16baseAlignJustify = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABjSURBVCjPY/zPgB8wMVCqgAVElP//x/AHDH+D4S8w/sWwl5GBgfE/MSYU/IfpheiEwTNEm5D6H9lmBLxFtAmR/3+h6YWY95xoE7z/o+uHwM9Em2D7/yeSzSAICdc/xJhAMLIA+V1VH3Z4v2kAAAAASUVORK5CYII=';
     var icon16baseDocPublico = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAANPSURBVBgZBcHdT1tlAMDh3zltORT6Ob4mtWDGMpgiU8LcEooJyiaEGbNkCkaNCVfeGP4Dr7zBG42J3hiVZInTeTMvFAPBYRhmGDBjEYaAMhhtVzraUjin5+M95/V5FCklAAAA4wtjfcCHwHmgAfADh8Ci9OSXn/d9+ysAAIAipQRgfGHMD0wC115PDmjxYANloxbDBuGaCHLMZqeEK9wZIdy3vh76/hhAkVIyvjAWAG731D/XeznZT9nUsLDZKitUSY0Dw0MKmyAGWWuepczSfeGIl79789ahCgBMdted6U0191BwbRxVQQiViqjCoIqCpbFvBtk7DNASeomek+1dtuXcAPAVL+2mgE/eOXPF97erk6VCxRMcmyEKVoCyCZvpIw51HS1+gBLd5GJ9B7Nrf566vji54rsw9uKnrzVf6FR8QbKqANnIU26I5ZyPiqmylj7Gqy6itf6DFdkk7xXxF10665Lq8sP1E37gfDKS4J6RIV+t8qyvDQ/Bzr6NaVaInpSUT0yz5ZXAksSExmbeYuCZbhxLPO8H6mr8tewYGfYtg3DNKUp2mGLRI9pg0hg3yLsvULZW0OQRR08OKJRqCAXDOLaI+aWUiiLBtspIkvgDLlN3HZRgiOyWQJURmhsqhI/6KKcdTJZw7G2QEiGE4neFVyjb5USdL0a4+hw7aQ9lZ502nvB0Yx3rd7LcpwNHFZzzVuloaSOTq2Zx/gGeJct+4Yi/HhZ2E6drksyk59H/OKY7mGBk5D10Xadtbw///CK6A++PXqO6KkA2m2V5eZloNm75ukbOHqzub789fDql3p6ZJb4f4sobV/nos6+4deM629v/0daSwDrM89vsLDd/vEnRyNLfd4nibimgfjP8w7RtOb9Mr/1O+CBINBwFIHZxCMO0GB0dJZVKMTQ0xODgIKZVwdduAhCLxlQ/gGM5785t3rtTT6SLfA4A4+5PKNJjYmKC2tpaAHRdR3qwMvXIGP6AmnQ6bSpSSgAGv3glbKTNnyP/xlOv9g4oiUSSgOojl8uxsbGBpmm0trbS1NSEI5zS3qM95ubmHitSSgAA2tvbfY399eOhx5GPmxubq7UqTVFQeKCsllyfu90pus4qKFiW5WYymbyu61f/B/q4pKqmYKY6AAAAAElFTkSuQmCC';
     var icon16baseWatermark = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJCSURBVDjLjZPNTxNBGIerBy/eOAgmYoz/gCYoJ/XgxZsxnrygFw8eJJGDiQc0MZEElFBL2igkoBBEFLUWaYNQiB+gKd1WbVKUCgVp2O3H2N3tfvYDf+5s7KbGNjLJc5r5PTPvm3ltNpttn0GTQfN/OGCwE4CtErqadF0XisXiVqlUQjWMfTidTkc1CV3NNCzLMhRFsRBFETzPI5VKmRKO4+ByuUyJt6dub3D0qG+ut8FuCugBTdOQz+ehqBoERYMkSRAEAel02hSoqgp6ycO+mwPR2asRMTGCWcdBxRLQcELUEE6qWGRlsKKCXC6HTCZjlaKKCfxg7NDIBD6PH8fL63sclsAoA1GiY35TxfuEjDAnW6UQQsBuRLH6sRN53guOaYHnRn3/+LX6XZaAEud1TK9LeL2WQ4hTzOZRCeG+Ih7ogp59hdSXC3jSvp8ZutJQZzWxLFjJavAs83B/yyIp5c1XiSSGtUC3GSZLF/Hm3gmcOrT7rJHb8Y/AHxcwFsnAvUTwkyQRDU9hefq88ewXEFcuG007jPTaJ/z5F38LYkTFcDiJwUUWUwEGfu8YfO77mBk4g5jvJIKPjmGVmTAvqioIbebQ92EDdl8Q3UPP4Z9fAJsIg1l4Cs/d04jO9Zs9qSnISLoRDqFjeBK93ghuPQ7iXMdbtPVMIsWuo1AomNQUUNpuP0Br1wgudT5DS/soWu/M4B3z3WxmmVqCX7XmoApbNFM5C0eMX6jQje2EjbMSHcBKQSOVbGOcy9DRbywLfgOaoblOxI0zHQAAAABJRU5ErkJggg==';
+    var icon16baseImagePage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJtSURBVDjLjZPfS1NhGMfPXfh3OG/E/yBImNkqrYGCzAthh+WNgXihwQYb2CoYukGwsdRLoYUWQbRAhqzc2Q91IrrVhlhLqznL5Tyb23m3s317z1szBzM68Lk47/N9Pud5XjgcAK7OVfM7/a2piE87HalRoLVHStrp1VKvLVi7fE9wns/WaXi58UgoH4kl/CxIyOZ/cyRKSKRFmF/tw/B4p3jl7utLFwp6baHiySnBxheZUkHkM8HKrgSpUsVGWsaDN/tQG/1PLxT02EIlRbBJBZtfZaztlSF8JEgdFqBMdnh8im7LSqWpYHJysqXHFiS5AkGMfi12UP0zRRm+D6fwxvPI0dWu3Q8QvV7f0iCgzQZKnl4WjqkgcVDDeyrYpqLoXoWtsbxTpLUyrlsFDA4O5vv7+w1MQBu7Z2dnEY1GcXsqjCwVJDM1JCixb1Vs0VXCdIoAXSVLBTcfhhEIBDA+Pg6NRtOtCLbpg0wmA7PZ/F8oWUEQMDAwsKsIiCzLUFhfX4coiv8kFAqhnh8bG6txFosFhBDG4uIiUqkUEzVDqc3Pz5/leZ4HZzKZkEgkGG63G8lkEn6/vylKxuFwnOU7OzvBTUxMwOfzMex2O+LxOJaWlpoSi8VgtVrP8u3t7eDoHvB6vQyXywV6Jwyj0YjR0VE2Zl9fH7q6uqBWq9lZPd/W1gZuZGSk6vF42IHSuPD8JZbfBpvybOEFOjo6WHZubg6tra3gDAbDzNDQ0LZOpwPvCqNYIjg6IfhBOcxJSGdL2PtewKeMiKJUBu8MQ6VSKc1bFFPDv8C7ItXhJ2sYdv/lDmOVodR4Z6R6vucXuxIEyKz+W40AAAAASUVORK5CYII=';
     var icon16baseMarkSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALvSURBVDjLZZJdSFNhGMf/5+zo2pyb5cdyxXRNW2WkhhJGXlReFEZEBV0UVARBIAiCXnojdFE3QUQR3k6iC6GIoK+LMDNBaVpOW04by/yYzuk8O9v57DnHJqteeM57zvue5/c+///zMpqmITv6+vpsqqp2KorSRLGDAhRxiiFZlu+2t7dv4J/BZAF+v7+OkvtdLpfHbreDZVnQN9LpNGKxGGZpEOh8V1dX4D8AJdto87PX660SRRHRaBQ8z+ung+M4OJ1O4+dgMDhNa4e6u7uFLIDTH7R4q7y8vEqSJIRCoRkq9wSt/dIBgiC4EonER4/H46qtFKqqmXBq+vlt8MvvwaTnrhoASmiyWq0Ih8MgyJm2trZITpWRnp6eFmbtbbChuhiWkitweOqRmPVh6nXvnSygVNecTCb199l/jbpc56+3ey7BXtSAeHgS+YyIQvtO2IrdDiYycF0bCvuwuGYxNJ+tGYFJk6ApMjRZJpPWUVTVDMeeU8jMP4GwwmDpWwpSWlxJCxtHOZCJFy8cBwMWjMlC82lAZcidbUjFhpFJBODwtiI99whsvow8WwXM/BhSfH5LY8ebEKefBGiQl5+CM5eAYWwEyMPCHClhVJQdPEfJD8HmyRDXPVgZHEWaX8LhjkmjnaxeJlS6C4qIxMQoEsERLEQmsRrPoKymFeJCL0z5GjLrFYgNfILz5DWoUmrLHwJI0GVoioQi314siSziCQskzY35L/dBVwl8fBeWB4ex3cuAK7BDk8QcAPVe0xSqQMLq1wDGxn/gwLGbMEc/IPRsEIFXcUy9fAfWtAaWU6laFXrOXwBotEgSiqor8X1mEeLEC3hqm1FQQN0Zn4LviJtOL6auiIbcXABnlENUVdY9mMBEaB73Hj9A475KWEvNaNrvIx9+QuKTKHRT+STKkJ0L0CWYd9+ApcIEf4vZaCHZTmCSJgpQhCQpzFChyqZfuvFbADGDmf5Ooyx9Q6dvhrw10w3bvFiKsvmug/6M39LTvtXHnYlaAAAAAElFTkSuQmCC';
     var icon16baseBoxSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALPSURBVDjLbVLdS1NhGP+d7bS5tcZYkzmzWmqKSSISpElEUEEkXfRxGRFBEA2MSC93o3TT6Ka/wECJQG+7CfrSLFLzIkd+TDsOjFg559nH2XvOe07Pe9Qy64XnfDzv8/ye3+/3vpJlWdhaQ0NDPtM0ezjnHRRBClCsUowbhvGwu7s7jx1L2gIYHBxspeaR6urqQ36/Hw6HA/QPTdOQyWSwRIuALvX29k7/A0DNPtr8VFdXV88YQzqdRqFQENMhyzLC4bBdnEwmFyjXEo/HS1sADvGg5O1IJFKv6zrm5uYWVVWN0rdLhPienZ1dEcDErp6kxLYzkMWDkh1erxepVArU1BWLxZRtNUpfX98ZRVGS0WjUrv0fQKXQTNPE99JOo0ROsBM1xLbyLw+Utzes8VQjvuc8tuaLzRNwWjosbsAyNkLXOQam22xTwxVZXNg3gcZbU9IGAzLxyuXTkMgOyemh93nApD25grbphLgObqiU6kG2mEV/VwILT9/9kSAmiULjxzPI7hAkyUcAuwBPgNImUMyBr89DY+uoCTXh2vAdxJmxDYAowhSTGNZmJknnbgSOnMDd548pz8AsDkb6I8EGNFUdh6oVcK/0HsVEUHpzf9UiAB1ChkVUA40NcLhC5IwJg5rPNl8HJxbc5DCJ5UoujaM1ncizEiaXX7OWfodLtgjdoilCa/bzNJxuPwItndAMZjcrP+ehmwYB6tCpZr2sonX/SeT1ovxhaVSzAYRWiyQEDkfh9O6l68UIQINB/oT9B6iZ22DfcssI+qowlR7DWGr0C1nRRgCMtJowDeHBDAHsASp8KBHAwHgCzCzbbGpDzWivPYePyihSsy+gcbSuPLDKNoCQ4K65Cc9BJySX2z7C4XY6CZoM0stLKk49uQrJ4UEm+xWJghPHHvHyximwMhZHemB7YV8cfTOM32+6Ycg7Vbxce4WRAt0YAby5fgEeKcjVvgWNOgAAAABJRU5ErkJggg==';
     var icon16baseAutoSave = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJFSURBVDjLpZPNS1RhFMZ/5733zkzjR/ZBCUpoJdUiBCkll4m0CUKJIGpVSLjyL2gntDFop6shAolWbcSNIW0ircHBUHCloo3VjNY0jjP3831bWA5ai8Bnfc7vPOfhHDHGcBjZAENji7N1cSj7IcdqY2zkKoiC2qSFNsKPYoXpTPbBynj/4j8BlbLL9c4L3OqoZWLmM4/vXdpX9OJtHq0lBXQdBIgxhvtPZmZ7ui+yspZrjwKfWExxtMbh66YLAgj4geZnyd2YzmT7Vsb75/c5UEqwDLgVl55r57hxuYY3c18Y6mtDgO1KSBBETMwV0VpeA2f3ARKOwvUCcgWX9bzH0NhqvC4Okx9zBzNpPdGQ4OHIrJnOZLtWxvs/2AChNnhRiFIKy8j/ZjILiALYLgc4YnO8zsJSIWUv4Pt2CMBU+tteoxtC0YN8wUdEV1eItMHCIdSagru5l0kQaZ4OdqC1wQAWhqQNnudR3PGrANu2aGmE9FJATSxJwinhegHDr1ZRAmGk0ZHGAMYYMJB0dh0ogOVs6VNqcoGtosYv1+9lYikHERvBQsQCozBGCMIQ3w+rDtKjvQMAd4bfL59vFqYzQasjNoM36wi1vzvHgBFNwo4x8nKNreJOFfBHy9nSXGpyoSPSYOGgqZCae8TJ5BkERb68zsDVZygSlD3/b0B6tPf2byempRFO127T095JQ6wJFBTcJk7VhCRjYItUT/mgrgxOvWtrPtLdEG8gYdcT6gDRGjERWsosrS2TKwbMP78rcth3/gX/0SEvLZFG1QAAAABJRU5ErkJggg==';
     var icon16baseSEILegis = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAZJQTFRFAAAA////////////////////8/jozuKi+fvz////+Pz+p9vzdMfrbMPrhs7uueL1+v3+5vDQlb838vfm9fv+Na3jAJfb4/T7////teH0esns3PH6wOX2d8js6/f8////v+X2SbXm4vP7/////////////v//X77pB5rcYb/p2fD6////////wOb3FJ/eEJ7dCJvcptvy////////I6bgc8br/f7/teH1J6fhDJzd8fr9+/3/AZjbktLw////////zuv42O/6////Oa7jBprccsbr1+/5gczuF6Df+fz+////1+/5KajhHaPfweb2////////9vv+l9XwKKjhMqzi6fb8////+fv06vPX3+7W/P35/////////////f7/h8/uitDv////9Pv+PrDkV7vo/v//zOr4P7Hkh87ur970b8TrltTw////////t+L11e75yur4Q7Pl8fn9////////3fH6CpvdGKHf8fn9////2/D6rd70lNPwm9bxx+j3/v//////////0u35l9Xx3vL7////T5fsgAAAAIZ0Uk5TACFMVDwP8P/PGLn//////Jv7/9u9///YDv7/5vn/1gn8/+F9YEiu////6Vg1+P////9Tp///yvv//8nC//9vLPLjl/////D//7sf7P//+D0kv////9sG0v//so+Le7///zm+//+d9P//////MQv/6fT/yAEC5///x5Hk////9p8RS/D/5jRwoQdUAAAA20lEQVR4nGNgYGBgZGJmYQXSbOzs7BwMDJxc3Dy8fPwCDAyCQkJCwgwMIqJiICAOE5CQFBOTkpaRlYMJyCuIiSkqKauowrWoqYuJaWhqacMEdHT1xPTFxAwMjaACxiZipmbmFmKWVlABaxsxWzt7BzExR6iAk7OYi6ubu5iHJ1TAy9sH5AxfP3+YLQGBQcFiYiGhYQzhEZERUQwM0TGxcfFiYgmJDEnJYimpDAxp6RmZWWJi2Tm5eUCt+QwMBWCvFBYVl5SWiZVXMDBUVlXX1NbVNzAwNDY1t7QCAG4cKfQLuoXsAAAAAElFTkSuQmCC';
     var icon16baseBatchImgQuality = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAInSURBVDjLhZPda9NQHIbzVwlWryzthpWuIpWOieKYZXO2q1vC0KFr9aZM3Yr40QunspU2TVYmYhVRvNErwQtR3E0JTq3G2o80mc0Ql9dzTr/SYdnFA8k5yft78nLCjcxJNwKzsuoOiZoj2GKsi3NS1I7y4hIA7n9wgQvyz4KiWLphwNgyoRMq+jZ+MUyo1ToOR6Ra3wA6ua4b8F/2gL830WF8YRGB2VX4hBwOBEWrnxl3kGzQyXzyLJbfLuL+uwQevr+Jk7EsiBn2MmMBdbJ58UEEKx9vYfVDE89MBtTsTVjA53iiy/XbeD4XRaluwhWSNRZQIYmeay6cSsYxfCmFwfMpEGW4wjk4gxm4J7IECd6IhOW7z/AlkYRaawXQbyuTtCOJAQzPp/bU9gtrLOBHrUECJI3bP5bWypoJx7l9cE+tMO0TsTuIpl90uCq+xJnoEtP2hUV8Cp7G90orwMECGthQd5gynRxLPUWuoOOR8huPN//gyde/iMuvmLZvKgtlfBTFdsBgSNwslavQiOIACaCF0ofzRQv5bzsd6BrV9obSyI8EUCw34JwkAcd4aWFoWn5N00ihFi30+HwaM5LCmM4UGH5SLtX28uvMtlg2mwH2U9UuNHBlDUKu2ANdo9pDwjqqpNQSOwdyrSegXeih0Rh7wQ5da2lbdDI5RBqxT/Qa2ArdUK1ddLV7/gX7jb1QzdhGjVAl10262n0D7IXSSbtpa9vf+QeB6/JTIb6VuwAAAABJRU5ErkJggg==';
+    var icon16baseInsertCheckboxQuality = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAANJQTFRFAAAAjo+P8/T09/j4+Pn59fb2rbO6yMzQm6fCc4eu29/k9PX1ys/Wy9DX7e7xUmuhPVuWuL/SzNHW4OLmrbjRP1uWYHip5+fo1Nnd3uLl1Njc8fP0WXKlQV2YusPY29zcxMnNyM/eoK7K7e7uuMHXQ1+aX3ep1dXW3uDhaoCuztTjYnmrRWGbtb/X3N3ezc/R3eHqQl6ZQ2CaXHSo9/n64eLixcjK6ezwh5q+RGCbRmKcrrnT5ubmysvM2trb3uLqiZq9jZ7A8fP27O3t6+vs6enq5QKsjwAAAEZ0Uk5TAP///////////////////////////////////////////////////////////////////////////////////////////4malW8AAACCSURBVHicY2DAAIzIACzABAHMLKxMUAE2EGDn4OTihgnw8PDw8vELCLIiBISERUTFxOFaJCSlpGVk5eRhAgqKSsoqqmrM6jABDU1ZLW0dXVY9mIC+gaGRjrEJkylMwMzcwtLKmoXVBiZga2fv4Ojk7OLKBHcpNwszN8i1jFj9QggAACIvCrMm33rtAAAAAElFTkSuQmCC';
     var icon16baseOpenAI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAKgSURBVDjLlZLrS1NxGMd90ZvovdEfEBEUEhZIb0xMjdyLIuyGkiHGUFKydFKKJiRegjIyFJRwojMxzfJSaVOYeTfxtpSNuZ1tXnY2z27nsss5334uWloG9uLD7/A7z/fzPPx4IgBE7ISl3qWyelUvu9JIueZqeOdUmcCMFDgcQ3fntjSK0j/rwx+csesIZ3jbL1j6EbCPIej5DpE3QRIoBJ3LEFb74BjIxkbXVYNdrTixS8Ca3h/y6pSTfloD0UcRjCS8BJGbRdA7QRgjd1pIfhruyeewKOMdm+rCw2GBV1tXKZh7SIEVoqAjpwVS0AlIvhBSkCGyeQRcPYDogO1DNixvrveFBa6ZCkuAmSe1OtJpFVLATkJboWCIAE3+GYngI6ENgnUK+hcxfFiw9fWRT+RWEWTHEeRmyPhaMvYCgu5ZEpgkbzCCgPszBNsr8NY8iF4Ky5WnpLDArs41+zYnSPdF8OYi0qEcTHc6mF45mJ4M2Ftl4C1lYPU34KerwFNTWKmO/j2BfbiwghmvJuPawZsUsNVHgTPlEx6ANcjJeR9r5QfhWUqEJOlhbc+FoV42FBY4R0sPbPbKlz2LLeQB9aCbYkJhzpIFlkoDZ8zDRk0kRHYYrm8d0JYeEyyduUd37QH9pTBqvSOV9iy0wtmZ+VNAOm+HOeM92JtlYDQN0JYcD1BtmTf/WqRtbJ/yTxtUt9fXGhPBq5MhriVBtMYhoLkMQ1Ek5sqi3eb2O4l7buIvhlRPkmsfZ/ibax+iruosnpacQUFOOq7Fn5TUypJz/1zlnRQr5JSypRVKZRvq6htR/ewlriTH03vV7ilQ5NwaHRgchM1GY3p6Bq+bmpEii9XtWzCgqkhLuXSBTUg4L8XFxUoXk2K57obirH0L/ocfNQ8V8wE+uE0AAAAASUVORK5CYII=';
     var icon16baseRefInterna = 'data:image/webp;base64,UklGRjYBAABXRUJQVlA4WAoAAAAQAAAADwAADwAAQUxQSHYAAAABcBvbdhPdGdWhQiiHDhSuCSFab1LXgjL1oQ7I1qYMmRx8WoiICWB6oZjpbxPauE8oTyOVDdMtoG0QbgAThFcAF0Lo9oB/Ur6G/t8ArFUtVGuA5t8PL8qnB/ZdCMEV1yA0wCYIrQZaga0oTyMfZzTjN89MtRAAVlA4IJoAAACQAgCdASoQABAAAkA4JZgCdAadxnI1a7DIeunxQAD+fox+Q69q3S+frDjKT9m5NGxEmBAie9GvAP0VzC5xraY8/8N8XfSX8f8+jH1Rr/Cy7nkgzHjrN0jr/qs/Jbu1nWTcTRSDOwYuHhVgyXN5msvqWfaKeOir71MvrUL62ATEuGvdh8hjUUdOL1qTy6OH38O1V2vZ3dZ28wAA';
     var icon16baseReview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALTSURBVDjLpZN9LBRgHMf1R/NPuo7Uam0aaV7G2uSvYki6c4hhWZe3mJw6i9FxnMj7RUNeIzYvnUtLuXKGXDV2yMm9JK10iDHlvOTuvN6369Zs1kZbf3y2Z8/2+ezZ8zw/PQB6/8NfG1H2B1n5JMPlAsoBsEkEsFyISqqdccY/Ba7ZGTJKvYiaygBDVGi570tEtjsBMY77NRRbo7RdA2UUAmq0IlsrZVN+Q0SmhzHinQ1xxY6wuGsg23Ef2sqSMclno7cqBtFOxoh1PYLr500RcYa4Vpvgqb9joDLIZE498wmLPWWY6rgHMfc25C9zoZCLwIk0Wxxttr800hCAz88zMfTQDeIS66BtgSKqVbei/xFmB5qgGuJoadStFSIO+BkWX6e7GFiQvAB+TmFe8gTCPNLMlnyY0rDX/GxULYd+GisDVVDLmnWo3jdAwLbFd2nK5uq3Fky/vguV9Ck2xrohrYlQ62Rjd46+EamedozUCdnEMrhJXmhM8tTRnucChYyFTVU3VKM3MNdPx8e6MEgqA3/0F/mc1DMic/cYuHFDTDy6MTypQv0kECsDaH1AVocACmkiNtVCKL8EQz1BxdIwE/IKpxlRvusp3SVa+1Z7u/qx0dS7gXIxQBdqECnQIJXzDNPvGH/kIKjHL2NRlgRZoRtiIyJTt15hMNliY5aXgOJqHkL4QFgrwKrjQdp2S3vst1DLw7AyEYgF7UlGSi5gtiUewjjLta2AmGWpUbTfQUBEDTI6lIgr4uBDKxNifgEm+/yhlFMxN5QASakPAsNLMd+Zjn6GlWYrIK2lJ4oSzddDQ7PW7UMEeJx7Dlgaw8gDP3Qxj6KnnAx+DhkuflWghzOVgym2K1onfdtHkjfSDFKYGUbHvXnlaeE2WBUWY7WvEH2Zzqi/agYHcq7ixMWW9pvRqYfGuTSDHafR34Gozg62WH+VQ17vzHd5w2PYmO40zr8A5dG3M3vHNHcAAAAASUVORK5CYII=';
@@ -78,6 +82,10 @@ function htmlButton(status) {
     var htmlButtonAfterImage =  '   <a class="getBatchImgQualityButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Reduzir qualidade das imagens" hidefocus="true">'+
                                 '      <span class="cke_button_icon cke_button__batch_quality_pro_icon" style="background: url(\''+icon16baseBatchImgQuality+'\');">&nbsp;</span>'+
                                 '      <span class="cke_button_label" aria-hidden="false">Reduzir qualidade das imagens</span>'+
+                                '   </a>'+
+                                '   <a class="getInsertCheckboxButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Inserir caixa de sele\u00E7\u00E3o" hidefocus="true">'+
+                                '      <span class="cke_button_icon cke_button__insert_checkbox_pro_icon" style="background: url(\''+icon16baseInsertCheckboxQuality+'\');">&nbsp;</span>'+
+                                '      <span class="cke_button_label" aria-hidden="false">Inserir caixa de sele\u00E7\u00E3o</span>'+
                                 '   </a>';
 
     var htmlButtonBeforeCut =   '   <a class="getCopyStyleButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Copiar formata\u00E7\u00E3o" hidefocus="true">'+
@@ -140,7 +148,7 @@ function htmlButton(status) {
                         '      <span class="cke_button_icon cke_button__linklegis_icon" style="background: url(\''+icon16baseLegis+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Adicionar link de legisla\u00E7\u00E3o</span>'+
                         '   </a>'+
-                        '   <a '+($('#frmEditor').length==0 ? 'style="display:none"' : '')+' class="getCitacaoDocumentoButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir refer\u00EAncia de documento do processo" hidefocus="true">'+
+                        '   <a '+(!$('#frmEditor').length ? 'style="display:none"' : '')+' class="getCitacaoDocumentoButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir refer\u00EAncia de documento do processo" hidefocus="true">'+
                         '      <span class="cke_button_icon cke_button__citacaodoc_icon" style="background: url(\''+icon16baseCitaDocumento+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Inserir refer\u00EAncia de documento do processo</span>'+
                         '   </a>'+
@@ -187,6 +195,10 @@ function htmlButton(status) {
                         '   <a class="getMinutaWatermarkButton cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar Marca D\'\u00E1gua de MINUTA/MODELO" hidefocus="true">'+
                         '      <span class="cke_button_icon cke_button__watermark_icon" style="background: url(\''+icon16baseWatermark+'\');">&nbsp;</span>'+
                         '      <span class="cke_button_label" aria-hidden="false">Adicionar Marca D\'\u00E1gua de MINUTA/MODELO</span>'+
+                        '   </a>'+
+                        '   <a class="pageImageBackgroundButtom cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o" hidefocus="true">'+
+                        '      <span class="cke_button_icon cke_button__pageimagebackground_icon" style="background: url(\''+icon16baseImagePage+'\');">&nbsp;</span>'+
+                        '      <span class="cke_button_label" aria-hidden="false">Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o</span>'+
                         '   </a>'+
                         '</span>';
 
@@ -302,7 +314,7 @@ function addButton(TimeOut = 9000) {
                 $('.getCitacaoDocumentoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getCitacaoDocumento(this) } });
                 $('.getNotaRodapeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNotaRodape(this) } });
                 $('.getRefInternaButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getRefInterna(this) } });
-                if (restrictConfigValue('ferramentasia')) $('.getOpenAIButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getOpenAI(this) } });
+                if (restrictConfigValue('ferramentasia')) $('.getOpenAIButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { loadOpenAI(this) } });
                 $('.getSumarioButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSumarioDocumento(this) } });
                 $('.getDadosProcessoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getDadosEditor(this) } });
                 $('.getTinyUrlButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
@@ -311,8 +323,10 @@ function addButton(TimeOut = 9000) {
                 $('.getSessionBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSessionBreak(this) } });
                 $('.getLatexButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
                 $('.getBatchImgQualityButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogBatchImgQuality(this) } });
+                $('.getInsertCheckboxButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getInsertCheckboxButtom(this) } });
                 $('.getProcessoPublicoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
                 $('.getMinutaWatermarkButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
+                $('.pageImageBackgroundButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { pageImageBackground(this) } });
                 $('.getMarkSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
                 $('.getBoxSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
                 $('.getReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxReview(this) } });
@@ -348,54 +362,57 @@ function addStyleIframes(TimeOut = 9000) {
                 var iframe = $(this).contents();
                 if ( iframe.find('head').find('style[data-style="seipro"]').length == 0 ) {
                     iframe.find('head').append('<style type="text/css" data-style="seipro"> \n'
-                                               +(localStorage.getItem('darkModePro') ? '   * { color: #fbfbfe; } \n' : '')
+                                                +(localStorage.getItem('darkModePro') ? '   * { color: #fbfbfe; } \n' : '')
+                                                +'   span.checkboxSEI {cursor: pointer;} \n'
                                                 +'   p .ancoraSei { background: #e4e4e4; } \n'
-                                               +'   html.dark-mode body[contenteditable="false"], \n'
-                                               +'   html.dark-mode p.Texto_Fundo_Cinza_Maiusculas_Negrito, \n'
-                                               +'   html.dark-mode p.Texto_Fundo_Cinza_Negrito, \n'
-                                               +'   html.dark-mode p .ancoraSei, \n'
-                                               +'   html.dark-mode p.Item_Nivel1 { \n'
-                                               +'       background-color: #e5e5e566 !important;  \n'
-                                               +'   } \n'
-                                               +'   html.dark-mode .dark-mode-color-black, \n'
-                                               +'   html.dark-mode .dark-mode-color-black * { \n'
-                                               +'       color: #000 !important;  \n'
-                                               +'   } \n'
-                                               +'   html.dark-mode .dark-mode-color-white, \n'
-                                               +'   html.dark-mode .dark-mode-color-white * { \n'
-                                               +'       color: #fff !important;  \n'
-                                               +'   } \n'
-                                               +'   .dot-flashing,.dot-flashing::after,.dot-flashing::before{width:7px;height:7px;background-color:#4285f4;color:#4285f4}.dot-flashing{position:relative;border-radius:50%;animation:1s linear .5s infinite alternate dot-flashing}.dot-flashing::after,.dot-flashing::before{content:"";display:inline-block;position:absolute;top:0}.dot-flashing::before{left:-13px;border-radius:5px;animation:1s infinite alternate dot-flashing}.dot-flashing::after{left:13px;border-radius:50%;animation:1s 1s infinite alternate dot-flashing}@keyframes dot-flashing{0%{background-color:#4285f4}100%,50%{background-color:rgba(152,128,255,.2)}} \n'
-                                               +'   p[contenteditable="false"] { background-color: #f3f3f3; position: relative; } \n'
-                                               +'   p[contenteditable="false"]::after { content: "\\f023"; font-family: "Font Awesome 5 Pro"; right: 0; position: absolute; color: #747474; opacity: 0.5;} \n'
-                                               +'   a.anchorRefInternaPro { cursor: pointer; } \n'
-                                               +'   p .legis { background: #f1f1f1; } \n'
-                                               +'   p .error { background-color: #ffd2d2; } \n'
-                                               +'   p .alert { cursor: pointer; background: #fffbc9; border-left: 3px solid #ffe52a; padding-left: 4px; } '
-                                               +'   span.tooltips { position: absolute; text-align: left; background: #fffbc9; text-indent: 0; border-left: 3px solid #ffe52a; margin: -46px 0px 0px -7px; width: 500px; font-size: 10pt; padding: 5px; color: #636363; height: 36px; }'
-                                               +'   span.tooltips .ignoretext { background: #ecdc89; padding: 3px 5px; margin: 3px; font-size: 8pt; text-transform: uppercase; border-radius: 5px; float: right; }'
-                                               +'   span.sigiloSEI { background-color: #ececec; border-bottom: 2px solid #d79d23; } \n'
-                                               +'   span.sigiloSEI::before { content: "\\f023"; font-family: "Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'"; color: #d79d23; margin: 0 5px; font-size: 80%; font-weight: 600; } \n'
-                                               +'   html.dark-mode .pageBreakPro, html.dark-mode .sessionBreakPro { background: #6f7071; height: 15px; } \n'
-                                               +'   .pageBreakPro, .sessionBreakPro { background: #f1f1f1; height: 15px; } \n'
-                                               +'   .pageBreakPro::before, .sessionBreakPro::before { border-bottom: 2px dashed #bfbfbf; display: block; content: \'\'; height: 7px; } \n'
-                                               +'   .pageBreakPro::after, .sessionBreakPro::after { content: \'\u21B3 Quebra de p\u00E1gina\'; font-family: Calibri; text-align: center; display: block; margin-top: -10px; color: #585858; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; font-size: 10pt; font-style: italic; } \n'
-                                               +'   .sessionBreakPro::after { content: \'\u21B3 Quebra de se\u00E7\u00E3o\' !important; } \n'
-                                               +'   .linkDisplayPro, .reviewDisplayPro { user-select: none; position: absolute; display: inline-block; padding: 8px; box-shadow: 0 1px 3px 1px rgba(60,64,67,.35); background: #fff; border-color: #dadce0; border-radius: 8px; margin-top: 16px; text-align: left; text-indent: initial; font-size: 12pt; text-transform: initial; font-weight: initial; letter-spacing: initial; text-decoration: initial; white-space: nowrap; } \n'
-                                               +'   .linkDisplayPro a, .reviewDisplayPro a { padding: 0 8px; cursor: pointer; text-decoration: underline; color:#1155cc; } \n'
-                                               +'   .linkDisplayPro ul { margin: 0;padding: 0;max-height: 207px;overflow-y: scroll; } \n'
-                                               +'   .linkDisplayPro li { padding: 5px; cursor:pointer; } \n'
-                                               +'   .linkDisplayPro li.highlighted, .linkDisplayPro li:hover { background-color: #3875d7; background-image: linear-gradient(#3875d7 20%, #2a62bc 90%); color: #ffffff; } \n'
-                                               +'   html.dark-mode .linkDisplayPro, html.dark-mode .reviewDisplayPro { background-color:#3D3D3D !important; } \n'
-                                               +'   html.dark-mode .linkDisplayPro a, html.dark-mode .reviewDisplayPro a { color:#fbfbfe !important; } \n'
-                                               +'   span.reviewSeiPro[data-comment][data-review="delete"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
-                                               +'   span.reviewSeiPro[data-comment][data-review="add"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
-                                               +'   html.dark-mode .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIiA/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZlcnNpb249IjEuMSIgd2lkdGg9IjEzLjY0MDMyODc0MzE5OTIzNCIgaGVpZ2h0PSIxNi4xMjAwMDAwMDAwMDAwMDUiIHZpZXdCb3g9IjMxNC42Njk2NzEyNTY4MDA3NyAzMTEuOTQgMTMuNjQwMzI4NzQzMTk5MjM0IDE2LjEyMDAwMDAwMDAwMDAwNSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxkZXNjPkNyZWF0ZWQgd2l0aCBGYWJyaWMuanMgNC42LjA8L2Rlc2M+CjxkZWZzPgo8L2RlZnM+CjxnIHRyYW5zZm9ybT0ibWF0cml4KDAuMDYgMCAwIDAuMDYgMzI0LjU3IDMyMCkiIGlkPSJ3MGQwNHhBNjhSaG1qYldBZWQyTmgiICA+CjxwYXRoIHN0eWxlPSJzdHJva2U6IG5vbmU7IHN0cm9rZS13aWR0aDogMTsgc3Ryb2tlLWRhc2hhcnJheTogbm9uZTsgc3Ryb2tlLWxpbmVjYXA6IGJ1dHQ7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2UtbGluZWpvaW46IG1pdGVyOyBzdHJva2UtbWl0ZXJsaW1pdDogNDsgZmlsbDogcmdiKDI1NSwyNTUsMjU1KTsgZmlsbC1ydWxlOiBldmVub2RkOyBvcGFjaXR5OiAxOyIgdmVjdG9yLWVmZmVjdD0ibm9uLXNjYWxpbmctc3Ryb2tlIiAgdHJhbnNmb3JtPSIgdHJhbnNsYXRlKC0xNTEsIC0xMjYpIiBkPSJNIDE3MCAxNCBMIDIwMC4wMDc1MzcgMTQgQyAyMDIuNzY5MDU3IDE0IDIwNSAxMS43NjM2NDkzIDIwNSA5LjAwNDk3MDkyIEwgMjA1IDQuOTk1MDI5MDggQyAyMDUgMi4yMzM4MjIxMiAyMDIuNzY0Nzk4IDAgMjAwLjAwNzUzNyAwIEwgMTAxLjk5MjQ2MyAwIEMgOTkuMjMwOTQzMSAwIDk3IDIuMjM2MzUwNjkgOTcgNC45OTUwMjkwOCBMIDk3IDkuMDA0OTcwOTIgQyA5NyAxMS43NjYxNzc5IDk5LjIzNTIwMTcgMTQgMTAxLjk5MjQ2MyAxNCBMIDEzMyAxNCBMIDEzMyAyMzggTCAxMDEuOTkyNDYzIDIzOCBDIDk5LjIzMDk0MzEgMjM4IDk3IDI0MC4yMzYzNTEgOTcgMjQyLjk5NTAyOSBMIDk3IDI0Ny4wMDQ5NzEgQyA5NyAyNDkuNzY2MTc4IDk5LjIzNTIwMTcgMjUyIDEwMS45OTI0NjMgMjUyIEwgMjAwLjAwNzUzNyAyNTIgQyAyMDIuNzY5MDU3IDI1MiAyMDUgMjQ5Ljc2MzY0OSAyMDUgMjQ3LjAwNDk3MSBMIDIwNSAyNDIuOTk1MDI5IEMgMjA1IDI0MC4yMzM4MjIgMjAyLjc2NDc5OCAyMzggMjAwLjAwNzUzNyAyMzggTCAxNzAgMjM4IEwgMTcwIDE0IFoiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgLz4KPC9nPgo8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLjA2IDAgMCAwLjA2IDMxOCAzMTkuNDgpIiBpZD0iNjlfbUZlWUc0MzlsTGM2X3FqUHlhIiAgPgo8cGF0aCBzdHlsZT0ic3Ryb2tlOiBub25lOyBzdHJva2Utd2lkdGg6IDE7IHN0cm9rZS1kYXNoYXJyYXk6IG5vbmU7IHN0cm9rZS1saW5lY2FwOiBidXR0OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlcjsgc3Ryb2tlLW1pdGVybGltaXQ6IDQ7IGZpbGw6IHJnYigyNTUsMjU1LDI1NSk7IGZpbGwtcnVsZTogZXZlbm9kZDsgb3BhY2l0eTogMTsiIHZlY3Rvci1lZmZlY3Q9Im5vbi1zY2FsaW5nLXN0cm9rZSIgIHRyYW5zZm9ybT0iIHRyYW5zbGF0ZSgtNDcuNTcsIC0xMTcuNzgpIiBkPSJNIDY1IDIyMi4yODA4MjkgQyA2MC42MTMxMTc2IDIyMi4yODA4MjkgNTYuMzc0MjE2MiAyMjIuMjgwODI4IDUyLjk5OTk5OTUgMjIyLjI4MDgyOCBMIDUzIDE3MCBMIDQyIDE3MCBMIDQyIDIyMi41NjA1OTMgQyAzOC42MTMwMjQ2IDIyMi41NjA1OTMgMzQuMzc2MzMwOCAyMjIuNTYwNTkzIDMwLjAwMDAwMDUgMjIyLjU2MDU5NCBMIDMwIDE3MCBMIDE5IDE3MCBMIDE5IDIyMi41NjA1OTUgQyAxNi4zMjQ4NjUgMjIyLjU2MDU5NSAxMy44NDYzMzY5IDIyMi41NjA1OTUgMTEuNzYxMjcyNSAyMjIuNTYwNTk2IEMgLTAuMzY5NTg2NDM4IDIyMi41NjA1OTkgMS4yODM4MTc0NiAyMTEuNTA5MzEzIDEuMjgzODE3NDYgMjExLjUwOTMxMyBDIDEuMjgzODE3NDYgMjExLjUwOTMxMyAwLjM4OTY4OTk0NCAxNzcuNzU2IDAuMzk2NTcxMjc3IDE1OCBMIDk0Ljc0MDgyMzIgMTU4IEMgOTQuNzM5MjczNiAxNzcuNzkzMDg5IDkzLjg1MzUzOTYgMjExLjIyOTU0OCA5My44NTM1Mzk2IDIxMS4yMjk1NDggQyA5My44NTM1Mzk2IDIxMS4yMjk1NDggOTUuNTA2OTQzNSAyMjIuMjgwODM0IDgzLjM3NjA4NDUgMjIyLjI4MDgzMSBDIDgxLjI1NTM3ODIgMjIyLjI4MDgzIDc4LjcyNzY0MTUgMjIyLjI4MDgzIDc2LjAwMDAwMDIgMjIyLjI4MDgzIEwgNzYgMTcwIEwgNjUgMTcwIEwgNjUgMjIyLjI4MDgyOSBaIE0gMC41NzQ1MzQwMzYgMTQ3IEMgMC41Nzk3NjgzODcgMTQ2Ljg5NjE0OSAwLjU4NTEzMTYzOCAxNDYuNzk0NzU1IDAuNTkwNjI1NTE0IDE0Ni42OTU4NjYgQyAxLjI4MzgxNzQ4IDEzNC4yMTg0MDkgLTAuNzk3MTEyMjg2IDEyMi40MzQxNDYgMTYuODc5MjgxNiAxMTYuMTk1NDIyIEMgMzQuNTU1Njc1NSAxMDkuOTU2Njk4IDI4LjY2NjI1MzYgMTA3LjUzMDUyMiAzMC4zOTc4NzkyIDk1Ljc0NjI1NzYgQyAzMi4xMjk1MDQ4IDgzLjk2MTk5MyAyNS44OTIxMjk4IDc4LjA2OTg2MyAyNS44OTIxMzE1IDQ0Ljc5NjY0OTYgQyAyNS44OTIxMzMgMTcuOTYwNzIwNiAzOC41MTY5NDY3IDEzLjkyMjAxNzMgNDUuNTIyMDkzOSAxMy4zNjM3NjE3IEMgNDUuNjA4OTgxNCAxMy4xMzQwNzI3IDQ1LjcwMDI1MDYgMTMuMDE2NDM5MSA0NS43OTYwNjMxIDEzLjAxNjQzOTEgQyA0OS44MzcyMDU2IDEzLjAxNjQzODkgNjkuMjQ1MjIzNyAxMS4yNDM2NzEzIDY5LjI0NTIyNTUgNDQuNTE2ODg0NyBDIDY5LjI0NTIyNzMgNzcuNzkwMDk4MiA2My4wMDc4NTIzIDgzLjY4MjIyODEgNjQuNzM5NDc3OCA5NS40NjY0OTI4IEMgNjYuNDcxMTAzNCAxMDcuMjUwNzU3IDYwLjU4MTY4MTUgMTA5LjY3NjkzMyA3OC4yNTgwNzU0IDExNS45MTU2NTcgQyA5NS45MzQ0NjkzIDEyMi4xNTQzODEgOTMuODUzNTM5NSAxMzMuOTM4NjQ0IDk0LjU0NjczMTUgMTQ2LjQxNjEwMSBDIDk0LjU1NzA1ODYgMTQ2LjYwMTk4OSA5NC41NjY5MjQyIDE0Ni43OTY3MjQgOTQuNTc2MzM5NyAxNDcgTCAwLjU3NDUzNDAzNiAxNDcgWiBNIDQ3LjUgNDEgQyA1Mi4xOTQ0MjA0IDQxIDU2IDM3LjE5NDQyMDQgNTYgMzIuNSBDIDU2IDI3LjgwNTU3OTYgNTIuMTk0NDIwNCAyNCA0Ny41IDI0IEMgNDIuODA1NTc5NiAyNCAzOSAyNy44MDU1Nzk2IDM5IDMyLjUgQyAzOSAzNy4xOTQ0MjA0IDQyLjgwNTU3OTYgNDEgNDcuNSA0MSBaIiBzdHJva2UtbGluZWNhcD0icm91bmQiIC8+CjwvZz4KPC9zdmc+") 12 1, auto !important; } \n'
-                                               +'   .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDIwNSAyNTIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+Y3Vyc29yPC90aXRsZT4KICAgIDxkZXNjPjwvZGVzYz4KICAgIDxkZWZzPjwvZGVmcz4KICAgIDxnIGlkPSJQYWdlLTQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJBcnRib2FyZC0xIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDkuMDAwMDAwLCAtMi4wMDAwMDApIiBmaWxsPSIjMDAwMDAwIj4KICAgICAgICAgICAgPGcgaWQ9ImN1cnNvciIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDkuMDAwMDAwLCAyLjAwMDAwMCkiPgogICAgICAgICAgICAgICAgPHBhdGggZD0iTTE3MCwxNCBMMjAwLjAwNzUzNywxNCBDMjAyLjc2OTA1NywxNCAyMDUsMTEuNzYzNjQ5MyAyMDUsOS4wMDQ5NzA5MiBMMjA1LDQuOTk1MDI5MDggQzIwNSwyLjIzMzgyMjEyIDIwMi43NjQ3OTgsMCAyMDAuMDA3NTM3LDAgTDEwMS45OTI0NjMsMCBDOTkuMjMwOTQzMSwwIDk3LDIuMjM2MzUwNjkgOTcsNC45OTUwMjkwOCBMOTcsOS4wMDQ5NzA5MiBDOTcsMTEuNzY2MTc3OSA5OS4yMzUyMDE3LDE0IDEwMS45OTI0NjMsMTQgTDEzMywxNCBMMTMzLDIzOCBMMTAxLjk5MjQ2MywyMzggQzk5LjIzMDk0MzEsMjM4IDk3LDI0MC4yMzYzNTEgOTcsMjQyLjk5NTAyOSBMOTcsMjQ3LjAwNDk3MSBDOTcsMjQ5Ljc2NjE3OCA5OS4yMzUyMDE3LDI1MiAxMDEuOTkyNDYzLDI1MiBMMjAwLjAwNzUzNywyNTIgQzIwMi43NjkwNTcsMjUyIDIwNSwyNDkuNzYzNjQ5IDIwNSwyNDcuMDA0OTcxIEwyMDUsMjQyLjk5NTAyOSBDMjA1LDI0MC4yMzM4MjIgMjAyLjc2NDc5OCwyMzggMjAwLjAwNzUzNywyMzggTDE3MCwyMzggTDE3MCwxNCBaIiBpZD0iQ29tYmluZWQtU2hhcGUiPjwvcGF0aD4KICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02NSwyMjIuMjgwODI5IEM2MC42MTMxMTc2LDIyMi4yODA4MjkgNTYuMzc0MjE2MiwyMjIuMjgwODI4IDUyLjk5OTk5OTUsMjIyLjI4MDgyOCBMNTMsMTcwIEw0MiwxNzAgTDQyLDIyMi41NjA1OTMgQzM4LjYxMzAyNDYsMjIyLjU2MDU5MyAzNC4zNzYzMzA4LDIyMi41NjA1OTMgMzAuMDAwMDAwNSwyMjIuNTYwNTk0IEwzMCwxNzAgTDE5LDE3MCBMMTksMjIyLjU2MDU5NSBDMTYuMzI0ODY1LDIyMi41NjA1OTUgMTMuODQ2MzM2OSwyMjIuNTYwNTk1IDExLjc2MTI3MjUsMjIyLjU2MDU5NiBDLTAuMzY5NTg2NDM4LDIyMi41NjA1OTkgMS4yODM4MTc0NiwyMTEuNTA5MzEzIDEuMjgzODE3NDYsMjExLjUwOTMxMyBDMS4yODM4MTc0NiwyMTEuNTA5MzEzIDAuMzg5Njg5OTQ0LDE3Ny43NTYgMC4zOTY1NzEyNzcsMTU4IEw5NC43NDA4MjMyLDE1OCBDOTQuNzM5MjczNiwxNzcuNzkzMDg5IDkzLjg1MzUzOTYsMjExLjIyOTU0OCA5My44NTM1Mzk2LDIxMS4yMjk1NDggQzkzLjg1MzUzOTYsMjExLjIyOTU0OCA5NS41MDY5NDM1LDIyMi4yODA4MzQgODMuMzc2MDg0NSwyMjIuMjgwODMxIEM4MS4yNTUzNzgyLDIyMi4yODA4MyA3OC43Mjc2NDE1LDIyMi4yODA4MyA3Ni4wMDAwMDAyLDIyMi4yODA4MyBMNzYsMTcwIEw2NSwxNzAgTDY1LDIyMi4yODA4MjkgWiBNMC41NzQ1MzQwMzYsMTQ3IEMwLjU3OTc2ODM4NywxNDYuODk2MTQ5IDAuNTg1MTMxNjM4LDE0Ni43OTQ3NTUgMC41OTA2MjU1MTQsMTQ2LjY5NTg2NiBDMS4yODM4MTc0OCwxMzQuMjE4NDA5IC0wLjc5NzExMjI4NiwxMjIuNDM0MTQ2IDE2Ljg3OTI4MTYsMTE2LjE5NTQyMiBDMzQuNTU1Njc1NSwxMDkuOTU2Njk4IDI4LjY2NjI1MzYsMTA3LjUzMDUyMiAzMC4zOTc4NzkyLDk1Ljc0NjI1NzYgQzMyLjEyOTUwNDgsODMuOTYxOTkzIDI1Ljg5MjEyOTgsNzguMDY5ODYzIDI1Ljg5MjEzMTUsNDQuNzk2NjQ5NiBDMjUuODkyMTMzLDE3Ljk2MDcyMDYgMzguNTE2OTQ2NywxMy45MjIwMTczIDQ1LjUyMjA5MzksMTMuMzYzNzYxNyBDNDUuNjA4OTgxNCwxMy4xMzQwNzI3IDQ1LjcwMDI1MDYsMTMuMDE2NDM5MSA0NS43OTYwNjMxLDEzLjAxNjQzOTEgQzQ5LjgzNzIwNTYsMTMuMDE2NDM4OSA2OS4yNDUyMjM3LDExLjI0MzY3MTMgNjkuMjQ1MjI1NSw0NC41MTY4ODQ3IEM2OS4yNDUyMjczLDc3Ljc5MDA5ODIgNjMuMDA3ODUyMyw4My42ODIyMjgxIDY0LjczOTQ3NzgsOTUuNDY2NDkyOCBDNjYuNDcxMTAzNCwxMDcuMjUwNzU3IDYwLjU4MTY4MTUsMTA5LjY3NjkzMyA3OC4yNTgwNzU0LDExNS45MTU2NTcgQzk1LjkzNDQ2OTMsMTIyLjE1NDM4MSA5My44NTM1Mzk1LDEzMy45Mzg2NDQgOTQuNTQ2NzMxNSwxNDYuNDE2MTAxIEM5NC41NTcwNTg2LDE0Ni42MDE5ODkgOTQuNTY2OTI0MiwxNDYuNzk2NzI0IDk0LjU3NjMzOTcsMTQ3IEwwLjU3NDUzNDAzNiwxNDcgWiBNNDcuNSw0MSBDNTIuMTk0NDIwNCw0MSA1NiwzNy4xOTQ0MjA0IDU2LDMyLjUgQzU2LDI3LjgwNTU3OTYgNTIuMTk0NDIwNCwyNCA0Ny41LDI0IEM0Mi44MDU1Nzk2LDI0IDM5LDI3LjgwNTU3OTYgMzksMzIuNSBDMzksMzcuMTk0NDIwNCA0Mi44MDU1Nzk2LDQxIDQ3LjUsNDEgWiIgaWQ9IkNvbWJpbmVkLVNoYXBlIj48L3BhdGg+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=") 12 1, auto !important; } \n'
-                                               +'</style>\n');
+                                                +'   html.dark-mode body[contenteditable="false"], \n'
+                                                +'   html.dark-mode p.Texto_Fundo_Cinza_Maiusculas_Negrito, \n'
+                                                +'   html.dark-mode p.Texto_Fundo_Cinza_Negrito, \n'
+                                                +'   html.dark-mode p .ancoraSei, \n'
+                                                +'   html.dark-mode p.Item_Nivel1 { \n'
+                                                +'       background-color: #e5e5e566 !important;  \n'
+                                                +'   } \n'
+                                                +'   html.dark-mode .dark-mode-color-black, \n'
+                                                +'   html.dark-mode .dark-mode-color-black * { \n'
+                                                +'       color: #000 !important;  \n'
+                                                +'   } \n'
+                                                +'   html.dark-mode .dark-mode-color-white, \n'
+                                                +'   html.dark-mode .dark-mode-color-white * { \n'
+                                                +'       color: #fff !important;  \n'
+                                                +'   } \n'
+                                                +'   .dot-flashing,.dot-flashing::after,.dot-flashing::before{width:7px;height:7px;background-color:#4285f4;color:#4285f4}.dot-flashing{position:relative;border-radius:50%;animation:1s linear .5s infinite alternate dot-flashing}.dot-flashing::after,.dot-flashing::before{content:"";display:inline-block;position:absolute;top:0}.dot-flashing::before{left:-13px;border-radius:5px;animation:1s infinite alternate dot-flashing}.dot-flashing::after{left:13px;border-radius:50%;animation:1s 1s infinite alternate dot-flashing}@keyframes dot-flashing{0%{background-color:#4285f4}100%,50%{background-color:rgba(152,128,255,.2)}} \n'
+                                                +'   p[contenteditable="false"] { background-color: #f3f3f3; position: relative; } \n'
+                                                +'   p[contenteditable="false"]::after { content: "\\f023"; font-family: "Font Awesome 5 Pro"; right: 0; position: absolute; color: #747474; opacity: 0.5;} \n'
+                                                +'   a.anchorRefInternaPro { cursor: pointer; } \n'
+                                                +'   p .legis { background: #f1f1f1; } \n'
+                                                +'   p .error { background-color: #ffd2d2; } \n'
+                                                +'   p .alert { cursor: pointer; background: #fffbc9; border-left: 3px solid #ffe52a; padding-left: 4px; } '
+                                                +'   span.tooltips { position: absolute; text-align: left; background: #fffbc9; text-indent: 0; border-left: 3px solid #ffe52a; margin: -46px 0px 0px -7px; width: 500px; font-size: 10pt; padding: 5px; color: #636363; height: 36px; }'
+                                                +'   span.tooltips .ignoretext { background: #ecdc89; padding: 3px 5px; margin: 3px; font-size: 8pt; text-transform: uppercase; border-radius: 5px; float: right; }'
+                                                +'   span.sigiloSEI { background-color: #ececec; border-bottom: 2px solid #d79d23; } \n'
+                                                +'   span.sigiloSEI::before { content: "\\f023"; font-family: "Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'"; color: #d79d23; margin: 0 5px; font-size: 80%; font-weight: 600; } \n'
+                                                +'   html.dark-mode .pageBreakPro, html.dark-mode .sessionBreakPro { background: #6f7071; height: 15px; } \n'
+                                                +'   .pageBreakPro, .sessionBreakPro { background: #f1f1f1; height: 15px; } \n'
+                                                +'   .pageBreakPro::before, .sessionBreakPro::before { border-bottom: 2px dashed #bfbfbf; display: block; content: \'\'; height: 7px; } \n'
+                                                +'   .pageBreakPro::after, .sessionBreakPro::after { content: \'\u21B3 Quebra de p\u00E1gina\'; font-family: Calibri; text-align: center; display: block; margin-top: -10px; color: #585858; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; font-size: 10pt; font-style: italic; } \n'
+                                                +'   .sessionBreakPro::after { content: \'\u21B3 Quebra de se\u00E7\u00E3o\' !important; } \n'
+                                                +'   .linkDisplayPro, .reviewDisplayPro { max-width: 90% !important; user-select: none; position: absolute; display: inline-block; padding: 8px; box-shadow: 0 1px 3px 1px rgba(60,64,67,.35); background: #fff; border-color: #dadce0; border-radius: 8px; margin-top: 16px; text-align: left; text-indent: initial; font-size: 12pt; text-transform: initial; font-weight: initial; letter-spacing: initial; text-decoration: initial; white-space: nowrap; } \n'
+                                                +'   .linkDisplayPro a, .reviewDisplayPro a { padding: 0 8px; cursor: pointer; text-decoration: underline; color:#1155cc; } \n'
+                                                +'   .linkDisplayPro strong.title-linktip { width: calc(100% - 160px); display: inline-flex; overflow: hidden; } \n'
+                                                +'   .linkDisplayPro ul { margin: 0;padding: 0;max-height: 207px;overflow-y: scroll; } \n'
+                                                +'   .linkDisplayPro li { padding: 5px; cursor:pointer; } \n'
+                                                +'   .linkDisplayPro li.highlighted, .linkDisplayPro li:hover { background-color: #3875d7; background-image: linear-gradient(#3875d7 20%, #2a62bc 90%); color: #ffffff; } \n'
+                                                +'   html.dark-mode .linkDisplayPro, html.dark-mode .reviewDisplayPro { background-color:#3D3D3D !important; } \n'
+                                                +'   html.dark-mode .linkDisplayPro a, html.dark-mode .reviewDisplayPro a { color:#fbfbfe !important; } \n'
+                                                +'   span.reviewSeiPro[data-comment][data-review="delete"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
+                                                +'   span.reviewSeiPro[data-comment][data-review="add"]:before { content: "\\f075";font-family: \'Font Awesome 5 '+(isSeiSlim ? 'Pro' : 'Free')+'\';color: #e9af68;font-size: 80%;font-weight: bold;margin: -8px 0px 0 -13px;position: absolute;transform: scale(-1, 1);} \n'
+                                                +'   html.dark-mode .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIiA/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZlcnNpb249IjEuMSIgd2lkdGg9IjEzLjY0MDMyODc0MzE5OTIzNCIgaGVpZ2h0PSIxNi4xMjAwMDAwMDAwMDAwMDUiIHZpZXdCb3g9IjMxNC42Njk2NzEyNTY4MDA3NyAzMTEuOTQgMTMuNjQwMzI4NzQzMTk5MjM0IDE2LjEyMDAwMDAwMDAwMDAwNSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxkZXNjPkNyZWF0ZWQgd2l0aCBGYWJyaWMuanMgNC42LjA8L2Rlc2M+CjxkZWZzPgo8L2RlZnM+CjxnIHRyYW5zZm9ybT0ibWF0cml4KDAuMDYgMCAwIDAuMDYgMzI0LjU3IDMyMCkiIGlkPSJ3MGQwNHhBNjhSaG1qYldBZWQyTmgiICA+CjxwYXRoIHN0eWxlPSJzdHJva2U6IG5vbmU7IHN0cm9rZS13aWR0aDogMTsgc3Ryb2tlLWRhc2hhcnJheTogbm9uZTsgc3Ryb2tlLWxpbmVjYXA6IGJ1dHQ7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2UtbGluZWpvaW46IG1pdGVyOyBzdHJva2UtbWl0ZXJsaW1pdDogNDsgZmlsbDogcmdiKDI1NSwyNTUsMjU1KTsgZmlsbC1ydWxlOiBldmVub2RkOyBvcGFjaXR5OiAxOyIgdmVjdG9yLWVmZmVjdD0ibm9uLXNjYWxpbmctc3Ryb2tlIiAgdHJhbnNmb3JtPSIgdHJhbnNsYXRlKC0xNTEsIC0xMjYpIiBkPSJNIDE3MCAxNCBMIDIwMC4wMDc1MzcgMTQgQyAyMDIuNzY5MDU3IDE0IDIwNSAxMS43NjM2NDkzIDIwNSA5LjAwNDk3MDkyIEwgMjA1IDQuOTk1MDI5MDggQyAyMDUgMi4yMzM4MjIxMiAyMDIuNzY0Nzk4IDAgMjAwLjAwNzUzNyAwIEwgMTAxLjk5MjQ2MyAwIEMgOTkuMjMwOTQzMSAwIDk3IDIuMjM2MzUwNjkgOTcgNC45OTUwMjkwOCBMIDk3IDkuMDA0OTcwOTIgQyA5NyAxMS43NjYxNzc5IDk5LjIzNTIwMTcgMTQgMTAxLjk5MjQ2MyAxNCBMIDEzMyAxNCBMIDEzMyAyMzggTCAxMDEuOTkyNDYzIDIzOCBDIDk5LjIzMDk0MzEgMjM4IDk3IDI0MC4yMzYzNTEgOTcgMjQyLjk5NTAyOSBMIDk3IDI0Ny4wMDQ5NzEgQyA5NyAyNDkuNzY2MTc4IDk5LjIzNTIwMTcgMjUyIDEwMS45OTI0NjMgMjUyIEwgMjAwLjAwNzUzNyAyNTIgQyAyMDIuNzY5MDU3IDI1MiAyMDUgMjQ5Ljc2MzY0OSAyMDUgMjQ3LjAwNDk3MSBMIDIwNSAyNDIuOTk1MDI5IEMgMjA1IDI0MC4yMzM4MjIgMjAyLjc2NDc5OCAyMzggMjAwLjAwNzUzNyAyMzggTCAxNzAgMjM4IEwgMTcwIDE0IFoiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgLz4KPC9nPgo8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLjA2IDAgMCAwLjA2IDMxOCAzMTkuNDgpIiBpZD0iNjlfbUZlWUc0MzlsTGM2X3FqUHlhIiAgPgo8cGF0aCBzdHlsZT0ic3Ryb2tlOiBub25lOyBzdHJva2Utd2lkdGg6IDE7IHN0cm9rZS1kYXNoYXJyYXk6IG5vbmU7IHN0cm9rZS1saW5lY2FwOiBidXR0OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlcjsgc3Ryb2tlLW1pdGVybGltaXQ6IDQ7IGZpbGw6IHJnYigyNTUsMjU1LDI1NSk7IGZpbGwtcnVsZTogZXZlbm9kZDsgb3BhY2l0eTogMTsiIHZlY3Rvci1lZmZlY3Q9Im5vbi1zY2FsaW5nLXN0cm9rZSIgIHRyYW5zZm9ybT0iIHRyYW5zbGF0ZSgtNDcuNTcsIC0xMTcuNzgpIiBkPSJNIDY1IDIyMi4yODA4MjkgQyA2MC42MTMxMTc2IDIyMi4yODA4MjkgNTYuMzc0MjE2MiAyMjIuMjgwODI4IDUyLjk5OTk5OTUgMjIyLjI4MDgyOCBMIDUzIDE3MCBMIDQyIDE3MCBMIDQyIDIyMi41NjA1OTMgQyAzOC42MTMwMjQ2IDIyMi41NjA1OTMgMzQuMzc2MzMwOCAyMjIuNTYwNTkzIDMwLjAwMDAwMDUgMjIyLjU2MDU5NCBMIDMwIDE3MCBMIDE5IDE3MCBMIDE5IDIyMi41NjA1OTUgQyAxNi4zMjQ4NjUgMjIyLjU2MDU5NSAxMy44NDYzMzY5IDIyMi41NjA1OTUgMTEuNzYxMjcyNSAyMjIuNTYwNTk2IEMgLTAuMzY5NTg2NDM4IDIyMi41NjA1OTkgMS4yODM4MTc0NiAyMTEuNTA5MzEzIDEuMjgzODE3NDYgMjExLjUwOTMxMyBDIDEuMjgzODE3NDYgMjExLjUwOTMxMyAwLjM4OTY4OTk0NCAxNzcuNzU2IDAuMzk2NTcxMjc3IDE1OCBMIDk0Ljc0MDgyMzIgMTU4IEMgOTQuNzM5MjczNiAxNzcuNzkzMDg5IDkzLjg1MzUzOTYgMjExLjIyOTU0OCA5My44NTM1Mzk2IDIxMS4yMjk1NDggQyA5My44NTM1Mzk2IDIxMS4yMjk1NDggOTUuNTA2OTQzNSAyMjIuMjgwODM0IDgzLjM3NjA4NDUgMjIyLjI4MDgzMSBDIDgxLjI1NTM3ODIgMjIyLjI4MDgzIDc4LjcyNzY0MTUgMjIyLjI4MDgzIDc2LjAwMDAwMDIgMjIyLjI4MDgzIEwgNzYgMTcwIEwgNjUgMTcwIEwgNjUgMjIyLjI4MDgyOSBaIE0gMC41NzQ1MzQwMzYgMTQ3IEMgMC41Nzk3NjgzODcgMTQ2Ljg5NjE0OSAwLjU4NTEzMTYzOCAxNDYuNzk0NzU1IDAuNTkwNjI1NTE0IDE0Ni42OTU4NjYgQyAxLjI4MzgxNzQ4IDEzNC4yMTg0MDkgLTAuNzk3MTEyMjg2IDEyMi40MzQxNDYgMTYuODc5MjgxNiAxMTYuMTk1NDIyIEMgMzQuNTU1Njc1NSAxMDkuOTU2Njk4IDI4LjY2NjI1MzYgMTA3LjUzMDUyMiAzMC4zOTc4NzkyIDk1Ljc0NjI1NzYgQyAzMi4xMjk1MDQ4IDgzLjk2MTk5MyAyNS44OTIxMjk4IDc4LjA2OTg2MyAyNS44OTIxMzE1IDQ0Ljc5NjY0OTYgQyAyNS44OTIxMzMgMTcuOTYwNzIwNiAzOC41MTY5NDY3IDEzLjkyMjAxNzMgNDUuNTIyMDkzOSAxMy4zNjM3NjE3IEMgNDUuNjA4OTgxNCAxMy4xMzQwNzI3IDQ1LjcwMDI1MDYgMTMuMDE2NDM5MSA0NS43OTYwNjMxIDEzLjAxNjQzOTEgQyA0OS44MzcyMDU2IDEzLjAxNjQzODkgNjkuMjQ1MjIzNyAxMS4yNDM2NzEzIDY5LjI0NTIyNTUgNDQuNTE2ODg0NyBDIDY5LjI0NTIyNzMgNzcuNzkwMDk4MiA2My4wMDc4NTIzIDgzLjY4MjIyODEgNjQuNzM5NDc3OCA5NS40NjY0OTI4IEMgNjYuNDcxMTAzNCAxMDcuMjUwNzU3IDYwLjU4MTY4MTUgMTA5LjY3NjkzMyA3OC4yNTgwNzU0IDExNS45MTU2NTcgQyA5NS45MzQ0NjkzIDEyMi4xNTQzODEgOTMuODUzNTM5NSAxMzMuOTM4NjQ0IDk0LjU0NjczMTUgMTQ2LjQxNjEwMSBDIDk0LjU1NzA1ODYgMTQ2LjYwMTk4OSA5NC41NjY5MjQyIDE0Ni43OTY3MjQgOTQuNTc2MzM5NyAxNDcgTCAwLjU3NDUzNDAzNiAxNDcgWiBNIDQ3LjUgNDEgQyA1Mi4xOTQ0MjA0IDQxIDU2IDM3LjE5NDQyMDQgNTYgMzIuNSBDIDU2IDI3LjgwNTU3OTYgNTIuMTk0NDIwNCAyNCA0Ny41IDI0IEMgNDIuODA1NTc5NiAyNCAzOSAyNy44MDU1Nzk2IDM5IDMyLjUgQyAzOSAzNy4xOTQ0MjA0IDQyLjgwNTU3OTYgNDEgNDcuNSA0MSBaIiBzdHJva2UtbGluZWNhcD0icm91bmQiIC8+CjwvZz4KPC9zdmc+") 12 1, auto !important; } \n'
+                                                +'   .cke_copyformatting_active { cursor: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjE2cHgiIGhlaWdodD0iMTZweCIgdmlld0JveD0iMCAwIDIwNSAyNTIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+Y3Vyc29yPC90aXRsZT4KICAgIDxkZXNjPjwvZGVzYz4KICAgIDxkZWZzPjwvZGVmcz4KICAgIDxnIGlkPSJQYWdlLTQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJBcnRib2FyZC0xIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDkuMDAwMDAwLCAtMi4wMDAwMDApIiBmaWxsPSIjMDAwMDAwIj4KICAgICAgICAgICAgPGcgaWQ9ImN1cnNvciIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDkuMDAwMDAwLCAyLjAwMDAwMCkiPgogICAgICAgICAgICAgICAgPHBhdGggZD0iTTE3MCwxNCBMMjAwLjAwNzUzNywxNCBDMjAyLjc2OTA1NywxNCAyMDUsMTEuNzYzNjQ5MyAyMDUsOS4wMDQ5NzA5MiBMMjA1LDQuOTk1MDI5MDggQzIwNSwyLjIzMzgyMjEyIDIwMi43NjQ3OTgsMCAyMDAuMDA3NTM3LDAgTDEwMS45OTI0NjMsMCBDOTkuMjMwOTQzMSwwIDk3LDIuMjM2MzUwNjkgOTcsNC45OTUwMjkwOCBMOTcsOS4wMDQ5NzA5MiBDOTcsMTEuNzY2MTc3OSA5OS4yMzUyMDE3LDE0IDEwMS45OTI0NjMsMTQgTDEzMywxNCBMMTMzLDIzOCBMMTAxLjk5MjQ2MywyMzggQzk5LjIzMDk0MzEsMjM4IDk3LDI0MC4yMzYzNTEgOTcsMjQyLjk5NTAyOSBMOTcsMjQ3LjAwNDk3MSBDOTcsMjQ5Ljc2NjE3OCA5OS4yMzUyMDE3LDI1MiAxMDEuOTkyNDYzLDI1MiBMMjAwLjAwNzUzNywyNTIgQzIwMi43NjkwNTcsMjUyIDIwNSwyNDkuNzYzNjQ5IDIwNSwyNDcuMDA0OTcxIEwyMDUsMjQyLjk5NTAyOSBDMjA1LDI0MC4yMzM4MjIgMjAyLjc2NDc5OCwyMzggMjAwLjAwNzUzNywyMzggTDE3MCwyMzggTDE3MCwxNCBaIiBpZD0iQ29tYmluZWQtU2hhcGUiPjwvcGF0aD4KICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik02NSwyMjIuMjgwODI5IEM2MC42MTMxMTc2LDIyMi4yODA4MjkgNTYuMzc0MjE2MiwyMjIuMjgwODI4IDUyLjk5OTk5OTUsMjIyLjI4MDgyOCBMNTMsMTcwIEw0MiwxNzAgTDQyLDIyMi41NjA1OTMgQzM4LjYxMzAyNDYsMjIyLjU2MDU5MyAzNC4zNzYzMzA4LDIyMi41NjA1OTMgMzAuMDAwMDAwNSwyMjIuNTYwNTk0IEwzMCwxNzAgTDE5LDE3MCBMMTksMjIyLjU2MDU5NSBDMTYuMzI0ODY1LDIyMi41NjA1OTUgMTMuODQ2MzM2OSwyMjIuNTYwNTk1IDExLjc2MTI3MjUsMjIyLjU2MDU5NiBDLTAuMzY5NTg2NDM4LDIyMi41NjA1OTkgMS4yODM4MTc0NiwyMTEuNTA5MzEzIDEuMjgzODE3NDYsMjExLjUwOTMxMyBDMS4yODM4MTc0NiwyMTEuNTA5MzEzIDAuMzg5Njg5OTQ0LDE3Ny43NTYgMC4zOTY1NzEyNzcsMTU4IEw5NC43NDA4MjMyLDE1OCBDOTQuNzM5MjczNiwxNzcuNzkzMDg5IDkzLjg1MzUzOTYsMjExLjIyOTU0OCA5My44NTM1Mzk2LDIxMS4yMjk1NDggQzkzLjg1MzUzOTYsMjExLjIyOTU0OCA5NS41MDY5NDM1LDIyMi4yODA4MzQgODMuMzc2MDg0NSwyMjIuMjgwODMxIEM4MS4yNTUzNzgyLDIyMi4yODA4MyA3OC43Mjc2NDE1LDIyMi4yODA4MyA3Ni4wMDAwMDAyLDIyMi4yODA4MyBMNzYsMTcwIEw2NSwxNzAgTDY1LDIyMi4yODA4MjkgWiBNMC41NzQ1MzQwMzYsMTQ3IEMwLjU3OTc2ODM4NywxNDYuODk2MTQ5IDAuNTg1MTMxNjM4LDE0Ni43OTQ3NTUgMC41OTA2MjU1MTQsMTQ2LjY5NTg2NiBDMS4yODM4MTc0OCwxMzQuMjE4NDA5IC0wLjc5NzExMjI4NiwxMjIuNDM0MTQ2IDE2Ljg3OTI4MTYsMTE2LjE5NTQyMiBDMzQuNTU1Njc1NSwxMDkuOTU2Njk4IDI4LjY2NjI1MzYsMTA3LjUzMDUyMiAzMC4zOTc4NzkyLDk1Ljc0NjI1NzYgQzMyLjEyOTUwNDgsODMuOTYxOTkzIDI1Ljg5MjEyOTgsNzguMDY5ODYzIDI1Ljg5MjEzMTUsNDQuNzk2NjQ5NiBDMjUuODkyMTMzLDE3Ljk2MDcyMDYgMzguNTE2OTQ2NywxMy45MjIwMTczIDQ1LjUyMjA5MzksMTMuMzYzNzYxNyBDNDUuNjA4OTgxNCwxMy4xMzQwNzI3IDQ1LjcwMDI1MDYsMTMuMDE2NDM5MSA0NS43OTYwNjMxLDEzLjAxNjQzOTEgQzQ5LjgzNzIwNTYsMTMuMDE2NDM4OSA2OS4yNDUyMjM3LDExLjI0MzY3MTMgNjkuMjQ1MjI1NSw0NC41MTY4ODQ3IEM2OS4yNDUyMjczLDc3Ljc5MDA5ODIgNjMuMDA3ODUyMyw4My42ODIyMjgxIDY0LjczOTQ3NzgsOTUuNDY2NDkyOCBDNjYuNDcxMTAzNCwxMDcuMjUwNzU3IDYwLjU4MTY4MTUsMTA5LjY3NjkzMyA3OC4yNTgwNzU0LDExNS45MTU2NTcgQzk1LjkzNDQ2OTMsMTIyLjE1NDM4MSA5My44NTM1Mzk1LDEzMy45Mzg2NDQgOTQuNTQ2NzMxNSwxNDYuNDE2MTAxIEM5NC41NTcwNTg2LDE0Ni42MDE5ODkgOTQuNTY2OTI0MiwxNDYuNzk2NzI0IDk0LjU3NjMzOTcsMTQ3IEwwLjU3NDUzNDAzNiwxNDcgWiBNNDcuNSw0MSBDNTIuMTk0NDIwNCw0MSA1NiwzNy4xOTQ0MjA0IDU2LDMyLjUgQzU2LDI3LjgwNTU3OTYgNTIuMTk0NDIwNCwyNCA0Ny41LDI0IEM0Mi44MDU1Nzk2LDI0IDM5LDI3LjgwNTU3OTYgMzksMzIuNSBDMzksMzcuMTk0NDIwNCA0Mi44MDU1Nzk2LDQxIDQ3LjUsNDEgWiIgaWQ9IkNvbWJpbmVkLVNoYXBlIj48L3BhdGg+CiAgICAgICAgICAgIDwvZz4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=") 12 1, auto !important; } \n'
+                                                +'</style>\n');
                     if (localStorage.getItem('darkModePro')) iframe.find('html').addClass('dark-mode');
                     repareBgTableColor(iframe);
                     repairBugChrome116(iframe);
+                    setActionCheckbox(iframe);
                 }
                 setOnBodyActs(iframe);
             });
@@ -413,6 +430,28 @@ function addStyleIframes(TimeOut = 9000) {
             console.log('addStyleIframes Reload => '+TimeOut);
         }
     }, 500);
+}
+function setActionCheckbox(iframe) {
+    iframe.find('.checkboxSEI').on('click',function(){
+        if (!delayCrash) {
+            delayCrash = true;
+            setTimeout(function(){ delayCrash = false }, 300);
+            oEditor.fire('saveSnapshot');
+            if ($(this).hasClass('checked')) {
+                $(this).html('&#9744;').removeClass('checked');
+            } else {
+                $(this).html('&#9745;').addClass('checked');
+            }
+            oEditor.fire('saveSnapshot');
+            console.log('click',delayCrash);
+        }
+    });
+}
+function getInsertCheckboxButtom() {
+    oEditor.focus();
+    oEditor.fire('saveSnapshot');
+    oEditor.insertHtml('<span class="ancoraSei checkboxSEI" data-id="'+randomString(16)+'" style="font-size: 1.5em;font-weight: bold;">&#9744;</span>');
+    oEditor.fire('saveSnapshot');
 }
 function repairBugChrome116(iframe) {
     if (!!window.chrome) {
@@ -436,6 +475,7 @@ function setOnBodyActs(iframe) {
             hideReviewTips(iframe);
         }
         hideQuickTable();
+        setActionCheckbox(iframe);
         setTimeout(() => {
             setOnKeyEditor();
         }, 1000);
@@ -493,7 +533,15 @@ function setCKEDITOR_instances() {
             insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
             if (checkConfigValue('teclasatalho')) stylesEditorKeystroke();
             instanceDitadoPro(oEditor);
+            checkHostLimitIcons();
         });
+    }
+}
+function checkHostLimitIcons() {
+    if (checkHostLimit()) {
+        var elemEditor = $('#cke_'+idEditor);
+            elemEditor.find('.getCitacaoDocumentoButtom').addClass('cke_button_disabled');
+            elemEditor.find('.getDadosProcessoButtom').addClass('cke_button_disabled');
     }
 }
 // Adiciona salvamento automatico
@@ -566,38 +614,48 @@ function getSessionBreak(this_) {
         oEditor.fire('saveSnapshot');
     }
 }
-
+function setNextElemEditor(element, callback = false) {
+    var editorIfm = $('iframe[title*="'+idEditor+'"]');
+    var selWin = editorIfm[0].contentWindow.getSelection();
+    var selEnd = $(selWin.anchorNode.parentNode);
+    
+    if (typeof callback === 'function') callback(element);
+    if (selEnd[0] != element[0]) setNextElemEditor(element.next(), callback);
+}
 // Altera o alinhamento do texto
 function setAlignText(this_, mode) {
     setParamEditor(this_);
     var select = oEditor.getSelection().getStartElement();
-    var element = $(select.$);
-    var p = element.closest('p').attr('class');
-    var newClass = '';
-    if ( p == 'Texto_Alinhado_Esquerda' || p == 'Texto_Centralizado' || p == 'Texto_Alinhado_Direita' || p == 'Texto_Justificado' ) {
-        if ( mode == 'left' ) { newClass = 'Texto_Alinhado_Esquerda' }
-        if ( mode == 'center' ) { newClass = 'Texto_Centralizado' }
-        if ( mode == 'right' ) { newClass = 'Texto_Alinhado_Direita' }
-        if ( mode == 'justify' ) { newClass = 'Texto_Justificado' }
-    } else if ( p == 'Tabela_Texto_Alinhado_Esquerda' || p == 'Tabela_Texto_Centralizado' || p == 'Tabela_Texto_Alinhado_Direita' || p == 'Tabela_Texto_Justificado' ) {
-        if ( mode == 'left' ) { newClass = 'Tabela_Texto_Alinhado_Esquerda' }
-        if ( mode == 'center' ) { newClass = 'Tabela_Texto_Centralizado' }
-        if ( mode == 'right' ) { newClass = 'Tabela_Texto_Alinhado_Direita' }
-        if ( mode == 'justify' ) { newClass = 'Tabela_Texto_Justificado' }
-    } else if ( p == 'Texto_Alinhado_Esquerda_Maiusc' || p == 'Texto_Centralizado_Maiusculas' || p == 'Texto_Alinhado_Direita_Maiusc' || p == 'Texto_Justificado_Maiusculas' ) {
-        if ( mode == 'left' ) { newClass = 'Texto_Alinhado_Esquerda_Maiusc' }
-        if ( mode == 'center' ) { newClass = 'Texto_Centralizado_Maiusculas' }
-        if ( mode == 'right' ) { newClass = 'Texto_Alinhado_Direita_Maiusc' }
-        if ( mode == 'justify' ) { newClass = 'Texto_Justificado_Maiusculas' }
-    }
-    oEditor.focus();
-    oEditor.fire('saveSnapshot');
-    if ( newClass != '' ) { 
-        element.closest('p').removeAttr('style').attr('class', newClass); 
-    } else {
-        element.closest('p').removeAttr('style').css('text-align', mode);
-    }
-    oEditor.fire('saveSnapshot');
+    var elementInit = $(select.$);
+    setNextElemEditor(elementInit, function(element){
+        var p = element.closest('p').attr('class');
+        var newClass = '';
+        if ( p == 'Texto_Alinhado_Esquerda' || p == 'Texto_Centralizado' || p == 'Texto_Alinhado_Direita' || p == 'Texto_Justificado' ) {
+            if ( mode == 'left' ) { newClass = 'Texto_Alinhado_Esquerda' }
+            if ( mode == 'center' ) { newClass = 'Texto_Centralizado' }
+            if ( mode == 'right' ) { newClass = 'Texto_Alinhado_Direita' }
+            if ( mode == 'justify' ) { newClass = 'Texto_Justificado' }
+        } else if ( p == 'Tabela_Texto_Alinhado_Esquerda' || p == 'Tabela_Texto_Centralizado' || p == 'Tabela_Texto_Alinhado_Direita' || p == 'Tabela_Texto_Justificado' ) {
+            if ( mode == 'left' ) { newClass = 'Tabela_Texto_Alinhado_Esquerda' }
+            if ( mode == 'center' ) { newClass = 'Tabela_Texto_Centralizado' }
+            if ( mode == 'right' ) { newClass = 'Tabela_Texto_Alinhado_Direita' }
+            if ( mode == 'justify' ) { newClass = 'Tabela_Texto_Justificado' }
+        } else if ( p == 'Texto_Alinhado_Esquerda_Maiusc' || p == 'Texto_Centralizado_Maiusculas' || p == 'Texto_Alinhado_Direita_Maiusc' || p == 'Texto_Justificado_Maiusculas' ) {
+            if ( mode == 'left' ) { newClass = 'Texto_Alinhado_Esquerda_Maiusc' }
+            if ( mode == 'center' ) { newClass = 'Texto_Centralizado_Maiusculas' }
+            if ( mode == 'right' ) { newClass = 'Texto_Alinhado_Direita_Maiusc' }
+            if ( mode == 'justify' ) { newClass = 'Texto_Justificado_Maiusculas' }
+        }
+        oEditor.focus();
+        oEditor.fire('saveSnapshot');
+        if ( newClass != '' ) { 
+            element.closest('p').removeAttr('style').attr('class', newClass); 
+        } else {
+            element.closest('p').removeAttr('style').css('text-align', mode);
+        }
+        oEditor.fire('saveSnapshot');
+        console.log('>> setAlignText ');
+    });
 }
 function openAlignText(this_) {
     if ($(this_).hasClass('cke_button_on')) {
@@ -1823,7 +1881,16 @@ function getDialogLegisSEI() {
              			label: 'Autoridade Signat\u00E1ria',
                         labelLayout: 'horizontal',
                         width: '200px',
-             			items: [ [''], [ 'ANTAQ', 'Antaq' ], [ 'Cade', 'Cade' ], [ 'PRF', 'PRF' ] , [ 'TSE', 'Tse' ]  , [ 'TRE RR', 'Trerr' ] ],
+             			items: [ 
+                            [''], 
+                            [ 'ANTAQ', 'Antaq' ], 
+                            [ 'Cade', 'Cade' ], 
+                            [ 'PRF', 'PRF' ] , 
+                            [ 'TSE', 'Tse' ], 
+                            [ 'TRE RR', 'Trerr' ],
+                            [ 'TJ RR', 'TJRR' ],
+                            [ 'CNJ', 'CNJ' ] 
+                        ],
              			'default': ''
              		},{
              			type: 'select',
@@ -1831,7 +1898,36 @@ function getDialogLegisSEI() {
              			label: 'Tipo de Legisla\u00E7\u00E3o',
                         labelLayout: 'horizontal',
                         width: '200px',
-             			items: [ [''], [ 'Resolu\u00E7\u00E3o Normativa', 'rn' ], [ 'Resolu\u00E7\u00E3o', 'res' ], [ 'Resolu\u00E7\u00E3o Conjunta', 'resconj' ], [ 'S\u00FAmula Administrativa', 'sum' ], [ 'Portaria', 'port' ], [ 'Portaria Conjunta', 'portconj' ], [ 'Portaria Interministerial', 'portinter' ], [ 'Instru\u00E7\u00E3o Normativa', 'in' ] , [ 'Provimento', 'prov' ] ],
+             			items: [ 
+                            [''], 
+                            [ 'Acordo/Plano/Ato/Nota', 'acord' ], 
+                            [ 'Ata e Certid\u00F5es de Julgamento', 'atas' ],
+                            [ 'Constitui\u00E7\u00E3o Estadual', 'ce' ], 
+                            [ 'Decreto Estadual', 'decest' ], 
+                            [ 'Edital', 'Edit' ], 
+                            [ 'Enunciado Administrativo', 'enumadm' ],
+                            [ 'Emenda Constitucional', 'ec' ], 
+                            [ 'Emenda Regimental', 'er' ], 
+                            [ 'Emendas', 'Emenda' ],
+                            [ 'Instru\u00E7\u00E3o Normativa', 'in' ], 
+                            [ 'Instru\u00E7\u00E3o Normativa Conjunta', 'resconj' ],
+                            [ 'Lei Complementar Estadual', 'lce' ], 
+                            [ 'Lei Estadual', 'leiest' ], 
+                            [ 'Lei Municipal', 'leimun' ], 
+                            [ 'Nota T\u00E9cnica', 'nt' ],
+                            [ 'Orienta\u00E7\u00E3o Normativa', 'on' ], 
+                            [ 'Portaria', 'port' ], 
+                            [ 'Portaria Conjunta', 'portconj' ], 
+                            [ 'Portaria Interministerial', 'portinter' ], 
+                            [ 'Portaria Interinstitucional', 'portinst' ],
+                            [ 'Provimento', 'prov' ], 
+                            [ 'Recomenda\u00E7\u00E3o', 'Rec' ], 
+                            [ 'Regimento Interno', 'regim' ],
+                            [ 'Resolu\u00E7\u00E3o Normativa', 'rn' ], 
+                            [ 'Resolu\u00E7\u00E3o', 'res' ], 
+                            [ 'Resolu\u00E7\u00E3o Conjunta', 'resconj' ], 
+                            [ 'S\u00FAmula Administrativa', 'sum' ]
+                        ],
              			'default': ''
              		},{
                         type: 'text',
@@ -1920,7 +2016,7 @@ function getCitacaoDocumento(this_, TimeOut = 9000) {
             setTimeout(function(){ 
                 getCitacaoDocumento(this_, TimeOut - 100); 
                 $(this_).fadeOut(200).fadeIn(200);
-                if(verifyConfigValue('debugpage')) console.log('Reload getCitacaoDocumento'); 
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload getCitacaoDocumento'); 
             }, 500);
         }
     }
@@ -2242,7 +2338,7 @@ function initAddButtonTarjaSigilo(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initAddButtonTarjaSigilo(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initAddButtonTarjaSigilo'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initAddButtonTarjaSigilo'); 
         }, 500);
     }
 }
@@ -2504,7 +2600,7 @@ function getDadosEditor(this_, TimeOut = 9000) {
                 }
                 getDadosEditor(this_, TimeOut - 100); 
                 $(this_).fadeOut(200).fadeIn(200);
-                if(verifyConfigValue('debugpage')) console.log('Reload getDadosEditor'); 
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload getDadosEditor'); 
             }, 500);
         }
     }
@@ -4156,6 +4252,7 @@ function hideLinkTips(iframeDoc) {
     if (iframeDoc.find('.linkDisplayPro:hover').length == 0) {
         iframeDoc.find('.linkDisplayPro').closest('a');
         iframeDoc.find('.linkDisplayPro').remove();
+        restoreIframeDisplayLink();
     }
 }
 function showLinkTips(this_, iframeDoc) {
@@ -4289,6 +4386,505 @@ function getDialogImageEditorPro() {
             };
         });
     }
+}
+function pageImageBackground(this_) {
+    setParamEditor(this_);
+    oEditor.openDialog('pageImageBackground');
+}
+function getDialogPageImageBackground() {
+    var htmlImportFile =    `<label class="cke_dialog_ui_labeled_label">Importar imagem (PNG, JPG ou SVG)</label>
+                            <div class="cke_dialog_ui_labeled_content cke_dialog_ui_input_file">
+                                <input style="width:95%" id="fileInputImportImage" type="file" accept="image/*">
+                            </div>`;
+
+      CKEDITOR.dialog.add( 'pageImageBackground', function(editor)
+      {
+         return {
+            title : 'Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o',
+            minWidth : 650,
+            minHeight : 80,
+            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
+            onOk: function(event, a, b) {
+                getImagePageBackground(true, function(src, config) { templateImagePageBackground(src, config) });
+                event.data.hide = false;
+            },
+            onShow : function() {
+                centralizeDialogBoxEditor();
+                $('#'+CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoEscala')._.inputId).attr('type', 'number').attr('step','10').addClass('tipoEscala');
+                $('#'+CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoCabecalho')._.inputId).addClass('textoCabecalho');
+                $('#'+CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoRodape')._.inputId).addClass('textoRodape');
+                $('.cke_dialog_page_contents').find('select').css('width','100%');
+                $('#fileInputImportImage, .cke_dialog_page_contents input, .cke_dialog_page_contents select').on('change',function(){
+                    let _this = $(this);
+                    let val = _this.val();
+                    let pageBox = $('#boxBgPreview');
+                    let imgBox = $('#imgBgPreview');
+
+                    getPreviewImagePageBackground();
+
+                    if (val == 'landscape') {
+                        pageBox.css({'width':'297px', 'height':'210px'});
+                    } else if (val == 'portrait') {
+                        pageBox.css({'height':'297px', 'width':'210px'});
+                    } else if (val == 'letter') {
+                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'279.4px', 'width':'215.9px'});
+                        else pageBox.css({'width':'279.4px', 'height':'215.9px'});
+                    } else if (val == 'legal') {
+                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'356px', 'width':'216px'});
+                        else pageBox.css({'width':'356px', 'height':'216px'});
+                    } else if (val == 'tabloid') {
+                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'432px', 'width':'279px'});
+                        else pageBox.css({'width':'432px', 'height':'279px'});
+                    } else if (val == 'A4') {
+                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'297px', 'width':'210px'});
+                        else pageBox.css({'width':'297px', 'height':'210px'});
+                    } else if (val == 'A5') {
+                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'210px', 'width':'148px'});
+                        else pageBox.css({'width':'210px', 'height':'148px'});
+                    } else if (val == 'A3') {
+                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'420px', 'width':'297px'});
+                        else pageBox.css({'width':'420px', 'height':'297px'});
+                    } else if (_this.hasClass('tipoEscala')) {
+                        pageBox.find('p').css({'font-size': val+'%'});
+                    } else if (_this.hasClass('tipoFonte')) {
+                        pageBox.find('p').css({'font-family':val});
+                    } else if (_this.hasClass('tipoPosicao')) {
+                        imgBox.css({'background-position':val});
+                    } else if (_this.hasClass('tipoDisposicao')) {
+                        imgBox.css({'background-size':val});
+                    } else if (_this.hasClass('tipoRepeticao')) {
+                        imgBox.css({'background-repeat':val});
+                    } else if (_this.hasClass('tipoUtilizacao')) {
+                        if (val == 'page_cover') pageBox.find('p').css({'visibility':'hidden'});
+                        else pageBox.find('p').css({'visibility':'visible'});
+                    } else if (_this.hasClass('tipoPadding')) {
+                        if (val == '3cm 2cm 3cm 2cm') {
+                            imgBox.css({'padding':'30px 20px'});
+                        } else if (val == '1cm 1cm 1cm 1cm') {
+                            imgBox.css({'padding':'10px'});
+                        } else {
+                            imgBox.css({'padding':'0'});
+                        }
+                    } else if (_this.hasClass('tipoMargem')) {
+                        if (val == '3cm 2cm 3cm 2cm') {
+                            imgBox.css({'margin':'30px 20px'});
+                        } else if (val == '1cm 1cm 1cm 1cm') {
+                            imgBox.css({'margin':'10px'});
+                        } else {
+                            imgBox.css({'margin':'0'});
+                        }
+                    }
+                    centralizeDialogBoxEditor();
+                });
+                if (verifyConfigValue('substituiselecao')) setChosenInCke();
+                setTimeout(function () {
+                    resetOptionsImgBg();
+                }, 100);
+            },
+            contents :
+            [
+               {
+                    id : 'tab1',
+                    label : 'Impress\u00E3o',
+                    elements :
+                    [
+                        {
+                            type: 'hbox',
+                            widths: ["100%"],
+                            style: "margin-top:10px;",
+                            children: [
+                                {
+                                    type: 'html',
+                                    html: htmlImportFile
+                                }
+                            ]
+                        },{
+                            type: 'hbox',
+                            widths: ["33%", "33%", "33%"],
+                            children: [
+                                {
+                                    type: 'select',
+                                    id: 'tipoLayout',
+                                    className: 'tipoLayout',
+                                    label: 'Layout',
+                                    width: '200px',
+                                    items: [ ['Paisagem', 'landscape'], [ 'Retrato', 'portrait' ] ],
+                                    'default': 'portrait'
+                                },{
+                                    type: 'select',
+                                    id: 'tipoPapel',
+                                    className: 'tipoPapel',
+                                    label: 'Tamanho do Papel',
+                                    width: '200px',
+                                    items: [ ['A5', 'A5'], ['A4', 'A4'], ['A3', 'A3'], ['Tabloid', 'tabloid'], ['Letter', 'letter'], ['Legal', 'legal'] ],
+                                    'default': 'A4'
+                                },{
+                                    type: 'text',
+                                    id: 'tipoEscala',
+                                    className: 'tipoEscala',
+                                    label: 'Escala (%)',
+                                    width: '200px',
+                                    'default': '100'
+                                }
+                            ]
+                        },{
+                            type: 'hbox',
+                            widths: ["33%", "33%", "33%"],
+                            children: [
+                                {
+                                    type: 'select',
+                                    id: 'tipoMargem',
+                                    className: 'tipoMargem',
+                                    label: 'Margens Externas',
+                                    width: '200px',
+                                    items: [ ['Padr\u00E3o (3cm 2cm)', '3cm 2cm 3cm 2cm'], ['Nenhuma (0cm)', '0cm'], ['M\u00EDnima (1cm)', '1cm 1cm 1cm 1cm'] ],
+                                    'default': '0cm'
+                                },{
+                                    type: 'select',
+                                    id: 'tipoPadding',
+                                    className: 'tipoPadding',
+                                    label: 'Margens Internas',
+                                    width: '200px',
+                                    items: [ ['Padr\u00E3o (3cm 2cm)', '3cm 2cm 3cm 2cm'], ['Nenhuma (0cm)', '0cm'], ['M\u00EDnima (1cm)', '1cm 1cm 1cm 1cm'] ],
+                                    'default': '3cm 2cm 3cm 2cm'
+                                },{
+                                    type: 'select',
+                                    id: 'tipoFonte',
+                                    className: 'tipoFonte',
+                                    label: 'Fonte',
+                                    width: '200px',
+                                    items: [ ['Helvetica'], ['Arial'], ['Arial Black'], ['Calibri'], ['Verdana'], ['Tahoma'], ['Trebuchet MS'], ['Impact'], ['Gill Sans'], ['Times New Roman'], ['Georgia'], ['Palatino'], ['Baskerville'], ['Andal\u00E9 Mono'], ['Courier'], ['Lucida'], ['Monaco'], ['Bradley Hand'], ['Brush Script MT'], ['Luminari'], ['Comic Sans MS'] ],
+                                    'default': 'Calibri'
+                                }
+                            ]
+                        },{
+                            type: 'hbox',
+                            widths: ["33%", "33%", "33%"],
+                            children: [
+                                {
+                                    type: 'select',
+                                    id: 'tipoPosicao',
+                                    className: 'tipoPosicao',
+                                    label: 'Posi\u00E7\u00E3o da Imagem',
+                                    width: '200px',
+                                    items: [ 
+                                        ['Topo Centralizada \u2238', 'top center'], 
+                                        ['Top Direito \u25F3', 'top right'],  
+                                        ['Top Esquerdo \u25F0', 'top left'],  
+                                        ['Inferior Centralizado \u2A66', 'bottom center'],  
+                                        ['Inferior Direito \u25F2', 'bottom right'],  
+                                        ['Inferior Esquerdo \u25F1', 'bottom left'],  
+                                        ['Meio Centralizada \u29C7'],  
+                                        ['Meio Direito \u27E5', 'center center'],  
+                                        ['Meio Esquerdo \u27E4', 'center left'] ],
+                                    'default': 'top center'
+                                },{
+                                    type: 'select',
+                                    id: 'tipoDisposicao',
+                                    className: 'tipoDisposicao',
+                                    label: 'Disposi\u00E7\u00E3o da Imagem',
+                                    width: '200px',
+                                    items: [ ['Capa (cover)', 'cover'], ['Contida (contain)', 'contain']],
+                                    'default': 'contain'
+                                },{
+                                    type: 'select',
+                                    id: 'tipoRepeticao',
+                                    className: 'tipoRepeticao',
+                                    label: 'Repeti\u00E7\u00E3o da Imagem',
+                                    width: '200px',
+                                    items: [ ['Sem repeti\u00E7\u00E3o', 'no-repeat'], ['Repeti\u00E7\u00E3o horizontal', 'repeat-x'], ['Repeti\u00E7\u00E3o vertical', 'repeat-y'], ['Repeti\u00E7\u00E3o vertical e horizontal', 'repeat'], ['Comprimida ou estivada', 'round'], ['Repeti\u00E7\u00E3o em corte', 'space']],
+                                    'default': 'no-repeat'
+                                }
+                            ]
+                        },{
+                            type: 'hbox',
+                            widths: ["33%", "33%", "33%"],
+                            children: [
+                                {
+                                    type: 'select',
+                                    id: 'tipoUtilizacao',
+                                    className: 'tipoUtilizacao',
+                                    label: 'Utiliza\u00E7\u00E3o da Imagem',
+                                    width: '200px',
+                                    items: [ ['Imagem de fundo', 'background'], ['Imagem como capa de livro', 'page_cover']],
+                                    'default': 'background'
+                                },{
+                                    type: 'text',
+                                    id: 'textoCabecalho',
+                                    className: 'textoCabecalho',
+                                    label: 'Texto do Cabe\u00E7alho',
+                                    width: '200px',
+                                    'default': ''
+                                },{
+                                    type: 'text',
+                                    id: 'textoRodape',
+                                    className: 'textoRodape',
+                                    label: 'Texto do Rodap\u00E9',
+                                    width: '200px',
+                                    'default': ''
+                                }
+                            ]
+                        },{
+                            type: 'hbox',
+                            widths: ["25%", "25%", "25%", "25%"],
+                            children: [
+                                {
+                                    type: 'checkbox',
+                                    id: 'visibleOnPrint',
+                                    className: 'visibleOnPrint',
+                                    'default': 'checked',
+                                    label: 'Vis\u00EDvel apenas ao imprimir'
+                                },{
+                                    type: 'checkbox',
+                                    id: 'onlyFirst',
+                                    className: 'onlyFirst',
+                                    'default': '',
+                                    label: 'Aplicar apenas na primeira p\u00E1gina'
+                                },{
+                                    type: 'checkbox',
+                                    id: 'reduceQualityImg',
+                                    className: 'reduceQualityImg',
+                                    'default': 'checked',
+                                    label: 'Reduzir qualidade da imagem'
+                                }
+                            ]
+                        },{
+                            type: "html",
+                            id: "imgpreview",
+                            html: new CKEDITOR.template(
+                                    `<div id="boxBgPreview" style="text-align: left; width: 210px; height: 297px; margin: 20px auto; border: 1px solid rgb(204, 204, 204); border-radius: 5px; box-shadow: rgb(219, 219, 219) 0px 6px 5px -5px; overflow: hidden; font-size: 100%;" class="cke_dialog_ui_html">
+                                        <div id="imgBgPreview" style="padding: 30px 20px;"><p style="font-family: Calibri; color: rgb(119, 119, 119); font-size: 100%; white-space: pre-line;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut mi lacus. Nulla et metus finibus, pretium enim at, ultrices dui. Aliquam ut mauris convallis, eleifend orci quis, pulvinar augue. Aenean ultrices malesuada ante, non tempor sem placerat in. Nunc ultrices odio ut lorem gravida volutpat. Praesent sed arcu sollicitudin, molestie urna eget, consectetur nulla. Ut sed orci mollis, consequat tortor sed, congue leo.
+                                        <br>Donec ac auctor libero, eu rutrum libero. Nunc sollicitudin felis tempor, convallis augue vitae, tincidunt elit. In quis volutpat erat. Phasellus feugiat purus porta libero vehicula sodales. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam porttitor, diam quis pulvinar finibus, dolor risus convallis sem, eu pellentesque odio enim a arcu. Phasellus sem turpis, malesuada eget efficitur ornare, tristique in odio. Proin molestie tempus odio nec scelerisque. Pellentesque id faucibus libero, vel semper augue.
+                                        <br>Sed convallis ante leo, eu rhoncus nisi dignissim a. Nullam convallis magna sed magna consectetur, nec gravida velit suscipit. Donec sit amet mi ut massa dapibus imperdiet nec quis eros. Vestibulum fringilla mattis metus at lobortis.</p>
+                                        </div>
+                                    </div>
+                                    <a onclick="resetOptionsImgBg(this)" class="linkDialog" style="float: right;margin-right: 20px;">Resetar configura\u00E7\u00F5es</a>`
+                                ).output()
+                        }
+                    ]
+                }
+            ]
+         };
+      } );
+}
+function getImagemBgOnEditor() {
+    let imgBgAncora = iframeEditor.find('.imgBgAncora');
+    let config = imgBgAncora.data();
+        config = typeof config !== 'undefined' ? config : false;
+    let src = imgBgAncora.find('style').text().match(/\((.*?)\)/);
+        src = typeof src !== 'undefined' && src !== null ? src[1].replace(/('|")/g,'') : false;
+    if (src) {
+        $('#imgBgPreview').css('background-image', 'url("'+src+'")');
+        $('#imgBgPreview').css('background-position', config.posicao);
+        $('#imgBgPreview').css('background-size', config.disposicao);
+        $('#imgBgPreview').css('background-repeat', config.repeticao);
+    } else {
+        $('#imgBgPreview').css('background-image', 'none');
+    }
+    return src;
+}
+function resetOptionsImgBg() {
+    let config = iframeEditor.find('.imgBgAncora').data();
+        config = typeof config !== 'undefined' ? config : false;
+    $('#fileInputImportImage').val('');
+    $('.cke_dialog_page_contents .tipoLayout').val(config ? config.layout : 'portrait').trigger('change');
+    $('.cke_dialog_page_contents .tipoPapel').val(config ? config.papel : 'A4').trigger('change');
+    $('.cke_dialog_page_contents .tipoEscala').val(config ? config.escala : '100').trigger('change');
+    $('.cke_dialog_page_contents .tipoMargem').val(config ? config.margem : '0cm').trigger('change');
+    $('.cke_dialog_page_contents .tipoPadding').val(config ? config.padding : '3cm 2cm 3cm 2cm').trigger('change');
+    $('.cke_dialog_page_contents .tipoFonte').val(config ? config.fonte : 'Calibri').trigger('change');
+    $('.cke_dialog_page_contents .tipoPosicao').val(config ? config.posicao : 'top center').trigger('change');
+    $('.cke_dialog_page_contents .tipoDisposicao').val(config ? config.disposicao : 'contain').trigger('change');
+    $('.cke_dialog_page_contents .textoCabecalho').val(config ? config.cabecalho : '').trigger('change');
+    $('.cke_dialog_page_contents .textoRodape').val(config ? config.rodape : '').trigger('change');
+    $('.cke_dialog_page_contents .visibleOnPrint').prop('checked',config ? config.visivel : true);
+    $('.cke_dialog_page_contents .onlyFirst').prop('checked',config ? config.primeirapg : false);
+    $('.cke_dialog_page_contents .reduceQualityImg').prop('checked',config ? config.reducao : true);
+    $('.cke_dialog_page_contents .tipoRepeticao').val(config ? config.repeticao : 'no-repeat').trigger('change');
+    $('.cke_dialog_page_contents .tipoUtilizacao').val(config ? config.utilizacao : 'background').trigger('change');
+    getImagemBgOnEditor();
+    setChosenInCke();
+    getPreviewImagePageBackground();
+}
+function getPreviewImagePageBackground() {
+    let elem = $('#imgBgPreview');
+    getImagePageBackground(false, function(src, config){
+        elem.css({
+            // 'font-family': config.fonte,
+            // 'background-position': config.posicao,
+            // 'background-size': config.disposicao,
+            // 'background-repeat': config.repeticao,
+            'background-image': 'url("'+src+'")'
+        });
+    });
+}
+function getImagePageBackground(insert = false, callback = false) {
+    var src = getImagemBgOnEditor();
+    var importImage = document.getElementById('fileInputImportImage').files;
+    var visibleOnPrint = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'visibleOnPrint').getValue();
+    var onlyFirst = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'onlyFirst').getValue();
+    var reduceQualityImg = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'reduceQualityImg').getValue();
+    var tipoLayout = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoLayout').getValue();
+    var tipoPapel = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoPapel').getValue();
+    var tipoMargem = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoMargem').getValue();
+    var tipoPadding = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoPadding').getValue();
+    var tipoEscala = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoEscala').getValue();
+    var tipoFonte = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoFonte').getValue();
+    var tipoPosicao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoPosicao').getValue();
+    var tipoDisposicao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoDisposicao').getValue();
+    var tipoRepeticao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoRepeticao').getValue();
+    var tipoUtilizacao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoUtilizacao').getValue();
+    var textoCabecalho = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoCabecalho').getValue();
+    var textoRodape = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoRodape').getValue();
+
+    if (importImage.length) {
+        loadImagePageBackground(importImage[0], {
+            primeirapg: onlyFirst, 
+            cabecalho: textoCabecalho, 
+            rodape: textoRodape, 
+            visivel: visibleOnPrint, 
+            reducao: reduceQualityImg, 
+            layout: tipoLayout, 
+            papel: tipoPapel, 
+            margem: tipoMargem, 
+            padding: tipoPadding, 
+            escala: tipoEscala, 
+            fonte: tipoFonte, 
+            posicao: tipoPosicao, 
+            disposicao: tipoDisposicao,
+            utilizacao: tipoUtilizacao,
+            repeticao: tipoRepeticao
+        }, callback);
+    } else if (insert && src) {
+        templateImagePageBackground(src, {
+            primeirapg: onlyFirst, 
+            cabecalho: textoCabecalho, 
+            rodape: textoRodape, 
+            visivel: visibleOnPrint, 
+            reducao: reduceQualityImg, 
+            layout: tipoLayout, 
+            papel: tipoPapel, 
+            margem: tipoMargem, 
+            padding: tipoPadding, 
+            escala: tipoEscala, 
+            fonte: tipoFonte, 
+            posicao: tipoPosicao, 
+            disposicao: tipoDisposicao,
+            utilizacao: tipoUtilizacao,
+            repeticao: tipoRepeticao
+        });
+    }
+}
+function loadImagePageBackground(item, config, callback = false) {
+    var reader = new FileReader();
+        reader.onload = function (evt) {
+            var element = oEditor.document.createElement('img', {
+                attributes: {
+                    src: evt.target.result,
+                    class: 'img-base64'
+                }
+            });
+            
+            if (qualidadeImagens > 0 && config.reducao) qualityImages(element.$, element.$);
+            // We use a timeout callback to prevent a bug where insertElement inserts at first caret position
+            setTimeout(function () {
+                var src = config.reducao ? $(element).attr('src') : evt.target.result;
+                if (typeof callback === 'function') callback(src, config);
+            }, 10);
+        };
+        reader.readAsDataURL(item);
+}
+function templateImagePageBackground(src, config){
+    var imgBgAncora = iframeEditor.find('.imgBgAncora');
+    var config_cabecalho = config.cabecalho == '' ? `` : `body:before {
+                                                            display: block;
+                                                            position: fixed;
+                                                            text-align: center;
+                                                            content: "${config.cabecalho}";
+                                                            top: 0.5cm;
+                                                            width: 100%;
+                                                            color: #717171;
+                                                            font-size: 8pt;
+                                                            font-family: Calibri;
+                                                        }`;
+    var config_rodape = config.rodape == '' ? `` : `body:after {
+                                                        display: block;
+                                                        position: fixed;
+                                                        text-align: center;
+                                                        content: "${config.rodape}";
+                                                        bottom: 0.5cm;
+                                                        width: 100%;
+                                                        color: #717171;
+                                                        font-size: 8pt;
+                                                        font-family: Calibri;
+                                                    }`;
+    var config_capa = config.utilizacao == 'page_cover' && config.papel == 'A4' && config.layout == 'landscape' ? 'padding-top: 21cm !important;' : '';
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A4' && config.layout == 'portrait' ? 'padding-top: 29.7cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'letter' && config.layout == 'landscape' ? 'padding-top: 21.59cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'letter' && config.layout == 'portrait' ? 'padding-top: 27.94cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'legal' && config.layout == 'landscape' ? 'padding-top: 21.6cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'legal' && config.layout == 'portrait' ? 'padding-top: 35.6cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'tabloid' && config.layout == 'landscape' ? 'padding-top: 27.9cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'tabloid' && config.layout == 'portrait' ? 'padding-top: 43.2cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A5' && config.layout == 'landscape' ? 'padding-top: 14.8cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A5' && config.layout == 'portrait' ? 'padding-top: 21cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A3' && config.layout == 'landscape' ? 'padding-top: 29.7cm !important;' : config_capa;
+        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A3' && config.layout == 'portrait' ? 'padding-top: 42cm !important;' : config_capa;
+    
+    var title = $('td[class*="cke_dialog_ui_hbox"]').map(function(){
+                    let input = $(this).find('select').length ? $(this).find('select option:selected').text() : '';
+                        input = $(this).find('input.cke_dialog_ui_input_text').length ? $(this).find('input.cke_dialog_ui_input_text').val() : input;
+                        input = $(this).find('input[type="checkbox"]').length ? ( $(this).find('input[type="checkbox"]').is(':checked') ? 'Sim' : 'N\u00E3o') : input;
+                        if (input != '') return $(this).find('label').text()+': '+input.trim();
+                }).get().join('\n');
+
+    var htmlBgPage = `<p class="Tabela_Texto_Alinhado_Esquerda">
+                        <span class="imgBgAncora" title="${title}" contenteditable="false" data-cabecalho="${config.cabecalho}" data-rodape="${config.rodape}" data-primeirapg="${config.primeirapg}" data-visivel="${config.visivel}" data-reducao="${config.reducao}" data-layout="${config.layout}" data-papel="${config.papel}" data-margem="${config.margem}" data-padding="${config.padding}" data-escala="${config.escala}" data-fonte="${config.fonte}" data-posicao="${config.posicao}" data-disposicao="${config.disposicao}" data-utilizacao="${config.utilizacao}" data-repeticao="${config.repeticao}">
+                            <a class="ancoraSei" contenteditable="false" style="text-indent:0;">
+                                <style data-style="seipro-imagebg-print" type="text/css">
+                                    .imgBgAncora { text-indent: 0; font-size: .8em; padding: 2px 5px; background: #e4e4e4; border-radius: 5px; font-weight: bold; color:#d45656; margin: 0 5px; }
+                                    html.dark-mode .imgBgAncora, html.dark-mode .imgBgAncora:after { background: #6f7071 !important; color: #f9f9f9 !important; }
+                                    body.cke_editable .imgBgAncora:after { content: " [delete isto para remover]"; color:#888; font-weight: normal; font-size: .85em; margin: 0 5px; }
+                                    @media print {
+                                        @page`+(config.primeirapg ? `:first` : ``)+` {
+                                                size: ${config.papel} ${config.layout};
+                                                margin: ${config.margem};
+                                            }
+                                        `+(config.visivel ? `` : `}`)+`
+                                            body p,
+                                            body p * {
+                                                font-size: ${config.escala}% !important;
+                                                font-family: ${config.fonte} !important;
+                                            }
+                                            .imgBgAncora { display: none; }
+                                            body {
+                                                padding: ${config.padding};
+                                                ${config_capa}
+                                                background-position: ${config.posicao};
+                                                background-size: ${config.disposicao};
+                                                background-repeat: ${config.repeticao};
+                                                background-image: url("${src}");
+                                            }
+                                            ${config_cabecalho}
+                                            ${config_rodape}
+                                        `+(config.visivel ? `}` : ``)+`
+                                </style>
+                                \uD83D\uDDA8\uFE0F * CONFIGURA\u00C7\u00D5ES DE IMPRESS\u00C3O
+                            </a>
+                        </span>
+                    </p>`;
+            oEditor.focus();
+            storeCursorLocation(oEditor);
+            oEditor.fire('saveSnapshot');
+            if (imgBgAncora.length) imgBgAncora.closest('p').remove();
+            iframeEditor.find('body').prepend(htmlBgPage);
+            oEditor.fire('saveSnapshot');
+            // restoreCursorLocation(oEditor);
+            enableButtonSavePro();
+
+        var imgBgAncora_new = iframeEditor.find('.imgBgAncora');
+            imgBgAncora_new.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+            imgBgAncora_new.get(0).scrollIntoView();
 }
 function importDocPro(this_) {
     setParamEditor(this_);
@@ -4557,7 +5153,8 @@ function readImageAsBase64(item, editor) {
         setTimeout(function () {
             editor.insertElement(element);
             var select = editor.getSelection().getStartElement();
-            $(select.$).closest('p').find('img[src*="http"]').not('.img-base64').remove();
+            var p = $(select.$).closest('p');
+                p.find('img[src*="http"]').not('.img-base64').remove();
         }, 10);
     };
     reader.readAsDataURL(file);
@@ -5081,19 +5678,19 @@ function insertMinutaWatermark(iframe, type, mode = 'minuta') {
         var textMinuta = ((nomeDocumento !== null && nomeDocumento.toLowerCase().indexOf('modelo')  !== -1) || mode == 'modelo') ? 'MODELO' : 'MINUTA';
     
         var htmlMinuta =    '<p class="Texto_Alinhado_Esquerda">\n'+
-                        '   <span contenteditable="false" class="minutaAncora" data-type="'+type+'">\n'+
-                        '      <a class="ancoraSei" contenteditable="false" style="text-indent:0;">\n'+
-                        '          <style type="text/css" data-style="seipro-watermark">\n'+
-                        '              body:after { content: "'+textMinuta+'"; font-size: 9em; color: rgb(167 167 167 / 20%); z-index: 999; display: flex; align-items: center; justify-content: center; position: fixed; transform: rotate(-45deg); top: 0; right: 0; left: 0; bottom: 0; pointer-events: none; user-select: none; font-family: Arial; }\n'+
-                        '              html.dark-mode .minutaAncora, html.dark-mode .minutaAncora:after { background: #6f7071 !important; color: #f9f9f9 !important; }\n'+
-                        '              .minutaAncora { text-indent: 0; font-size: .8em; padding: 2px 5px; background: #e4e4e4; border-radius: 5px; font-weight: bold; color:#d45656; margin: 0 5px; }\n'+
-                        '              body.cke_editable .minutaAncora:after { content: " [delete isto para remover a marca d\'agua]"; color:#888; font-weight: normal; font-size: .85em; margin: 0 5px; }\n'+
-                        '              body.cke_editable:after { width: fit-content; margin: 0 33%; overflow: hidden; }\n'+
-                        '          </style>\n'+
-                        '          * '+textMinuta+' DE DOCUMENTO'+
-                        '      </a>'+
-                        '   </span>&nbsp;&nbsp;\n'+
-                        '</p>\n';
+                            '   <span contenteditable="false" class="minutaAncora" data-type="'+type+'">\n'+
+                            '      <a class="ancoraSei" contenteditable="false" style="text-indent:0;">\n'+
+                            '          <style type="text/css" data-style="seipro-watermark">\n'+
+                            '              body:after { content: "'+textMinuta+'"; font-size: 9em; color: rgb(167 167 167 / 20%); z-index: 999; display: flex; align-items: center; justify-content: center; position: fixed; transform: rotate(-45deg); top: 0; right: 0; left: 0; bottom: 0; pointer-events: none; user-select: none; font-family: Arial; }\n'+
+                            '              html.dark-mode .minutaAncora, html.dark-mode .minutaAncora:after { background: #6f7071 !important; color: #f9f9f9 !important; }\n'+
+                            '              .minutaAncora { text-indent: 0; font-size: .8em; padding: 2px 5px; background: #e4e4e4; border-radius: 5px; font-weight: bold; color:#d45656; margin: 0 5px; }\n'+
+                            '              body.cke_editable .minutaAncora:after { content: " [delete isto para remover a marca d\'agua]"; color:#888; font-weight: normal; font-size: .85em; margin: 0 5px; }\n'+
+                            '              body.cke_editable:after { width: fit-content; margin: 0 33%; overflow: hidden; }\n'+
+                            '          </style>\n'+
+                            '          * '+textMinuta+' DE DOCUMENTO'+
+                            '      </a>'+
+                            '   </span>&nbsp;&nbsp;\n'+
+                            '</p>\n';
         oEditor.focus();
         oEditor.fire('saveSnapshot');
         iframe.find('body').prepend(htmlMinuta);
@@ -5143,6 +5740,18 @@ function repairSaveButtonBug(loop = true) {
 }
 
 // INSERE ChatGPT
+function loadOpenAI(this_, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof loadSEIProAI !== 'undefined') { 
+        getOpenAI(this_);
+    } else {
+        if (TimeOut == 9000) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
+        setTimeout(function(){ 
+            loadOpenAI(this_, TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initBoxAIActions'); 
+        }, 500);
+    }
+}
 function getOpenAI(this_) {
     setParamEditor(this_);
     if (!getOptionsPro('consentimentoIA')) {
@@ -5178,30 +5787,7 @@ function getDialogOpenAI() {
         CKEDITOR.dialog.add( 'openAI', function(editor) { return getDialogNaoDisponivel('Inserir texto de intelig\u00EAncia artificial (ChatGPT)') } );
     } else {
         CKEDITOR.dialog.add( 'openAI_disclaimer', function(editor) {
-                var htmlConcentimento = '<table role="presentation" cellspacing="0" border="0" style="width:100%;float:none;" align="left">'+
-                                        '   <tbody>'+
-                                        '       <tr>'+
-                                        '           <td role="presentation" class="cke_dialog_ui_vbox_child">'+
-                                        '               <div id="cke_382_uiElement" class="cke_dialog_ui_text editorTextDisclaimer">'+
-                                        '                   <p>1. N\u00E3o utilize o ChatGPT para contextos complexos, envolvendo informa\u00E7\u00F5es sigilosas, restritas ou que possa impactar decis\u00F5es cr\u00EDticas.</p>'+
-                                        '                   <p>2. \u00C9 importante sempre uma verifica\u00E7\u00E3o humana das respostas geradas automaticamente.</p>'+
-                                        '                   <p>3. A assinatura de documentos gerados com o aux\u00EDlio de IA s\u00E3o de inteira resposabilidade do signat\u00E1rio.</p>'+
-                                        '                   <p>4. A ferramenta foi alimentada com diferentes conte\u00FAdos da Internet. Quando o contexto n\u00E3o s\u00E3o bem definidos, as respostas poder\u00E3o n\u00E3o ser \u00FAteis e poder\u00E3o levar a tomada de decis\u00E3o equivocada.</p>'+
-                                        '                   <p>5. Fique atento \u00E0s suas limita\u00E7\u00F5es para n\u00E3o incorrer em situa\u00E7\u00F5es de erro, quebra de seguran\u00E7a ou quest\u00F5es legais.</p>'+
-                                        '                   <p>6. Antes de utilizar a ferramenta, verifique a adequa\u00E7\u00E3o do ChatGPT ao ato normativo sobre o uso seguro de computa\u00E7\u00E3o em nuvem do seu \u00F3rg\u00E3o.</p>'+
-                                        '               </div>'+ 
-                                        '           </td>'+
-                                        '       </tr>'+
-                                        '       <tr>'+
-                                        '           <td role="presentation" class="cke_dialog_ui_vbox_child">'+
-                                        '               <span id="cke_383_uiElement" class="cke_dialog_ui_checkbox">'+
-                                        '                   <input class="cke_dialog_ui_checkbox_input" type="checkbox" aria-labelledby="cke_381_label" id="ciente_disclaimer">'+
-                                        '                   <label id="cke_381_label" for="ciente_disclaimer">Estou ciente e entendo os riscos</label>'+
-                                        '               </span>'+
-                                        '           </td>'+
-                                        '       </tr>'+
-                                        '   </tbody>'+
-                                        '</table>';
+                var htmlConcentimento = consentAI;
                     return {
                         title : 'Intelig\u00EAncia artificial (ChatGPT): Consentimento',
                         minWidth : 500,
@@ -5241,6 +5827,7 @@ function getDialogOpenAI() {
                 minHeight : 80,
                 buttons: [],
                 onShow : function() {
+                    updateModelsOpenAI();
                     $('#openAI_load').hide();
                     if ($('#openAI_result').is(':visible')) {
                         this.move(this.getPosition().x, (this.getPosition().y+125));
@@ -5286,39 +5873,7 @@ function getDialogOpenAI() {
                         [
                         {
                             type: 'html',
-                            html:   '<div id="openAI_info" style="white-space: break-spaces;color: #616161;">'+
-                                    '   <div class="alertaAttencionPro dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">'+
-                                    '       <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>'+
-                                    '   </div>'+
-                                    '   <div class="alertaAttencionPro dialogBoxDiv" style="margin-left:20px;font-size: 11pt;line-height: 12pt;color: #616161;">'+
-                                    '       1. Acesse o site do OpenAI (<a href="https://beta.openai.com/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://beta.openai.com/</a>) e clique em "Sign Up" no canto superior direito da tela.<br><br>'+
-                                    '       2. Preencha o formul\u00E1rio de cadastro com seus dados pessoais e crie uma senha. <br><span style="margin-left: 17px;"></span>\u00C9 poss\u00EDvel logar com sua conta Google ou Microsoft.<br><br>'+
-                                    '       3. Verifique seu e-mail e clique no link de confirma\u00E7\u00E3o enviado pela OpenAI.<br><br>'+
-                                    '       4. Verifique seu celular e adicione o c\u00F3digo de verifica\u00E7\u00E3o enviado por SMS.<br><br>'+
-                                    '       5. Fa\u00E7a login na sua conta OpenAI.<br><br>'+
-                                    '       6. Clique em "<i class="fas fa-bolt verdeColor"></i> Upgrade" no menu do lado direito da tela ou acesse o endere\u00E7o <a href="https://beta.openai.com/account/billing/overview" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://beta.openai.com/account/billing/overview</a>.<br><br>'+
-                                    '       7. Selecione a op\u00E7\u00E3o "USER > Create API Key".<br><br>'+
-                                    '       8. Clique em "Create new secret key" para gerar sua chave de API.<br><br>'+
-                                    '       9. Ser\u00E1 adicionado um cr\u00E9dito promocional de $18, para utiliza\u00E7\u00E3o em at\u00E9 4 (quatro) meses. <br><span style="margin-left: 17px;"></span>Caso deseje prosseguir ap\u00F3s isso, adicione suas informa\u00E7\u00F5es de pagamento no menu "Billing". <br><span style="margin-left: 17px;"></span>Consulte condi\u00E7\u00F5es de precifica\u00E7\u00E3o da plataforma em: <a href="https://openai.com/api/pricing/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://openai.com/api/pricing/</a><br><br>'+
-                                    '       10. Copie sua chave secreta de API, pois ela ser\u00E1 necess\u00E1ria para fazer chamadas \u00E0 API. Cole-a no campo abaixo:<br><br>'+
-                                    '   </div>'+
-                                    '   <table role="presentation" class="cke_dialog_ui_hbox">'+
-                                    '    <tbody>'+
-                                    '        <tr class="cke_dialog_ui_hbox">'+
-                                    '            <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px">'+
-                                    '                <input tabindex="3" placeholder="Insira o valor para a chave secreta" class="cke_dialog_ui_input_text" id="cke_inputSecretKey_textInput" type="password" aria-labelledby="cke_inputSecretKey_label">'+
-                                    '            </td>'+
-                                    '            <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">'+
-                                    '               <a style="user-select: none;" onclick="saveTokenOpenAI(this)" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="openAI_label" id="openAI_uiElement">'+
-                                    '                   <span id="openAI_label" class="cke_dialog_ui_button">Salvar</span>'+
-                                    '               </a>'+
-                                    '             <i id="openAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>'+
-                                    '            </td>'+
-                                    '        </tr>'+
-                                    '    </tbody>'+
-                                    '   </table>'+
-                                    '   <div id="openAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;" class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>'+NAMESPACE_SPRO+' n\u00E3o fomenta ou recebe financiamento para a utiliza\u00E7\u00E3o dos produtos da OpenAI. Recomenda-se o seu uso meramente did\u00E1tico.</div>'+
-                                    '</div>'
+                            html:   disclaimerAI
                         }
                         ]
                     }
@@ -5384,16 +5939,7 @@ function getDialogOpenAI() {
                                     type: 'select',
                                     id: 'model',
                                     label: 'Modelo de IA',
-                                    items: [ 
-                                        ['gpt-4'], 
-                                        ['gpt-4-0613'], 
-                                        ['gpt-4-32k'], 
-                                        ['gpt-4-32k-0613'], 
-                                        ['gpt-3.5-turbo'], 
-                                        ['gpt-3.5-turbo-0613'], 
-                                        ['gpt-3.5-turbo-16k'], 
-                                        ['gpt-3.5-turbo-16k-0613']
-                                    ],
+                                    items: modelsOpenAI,
                                     'default': 'gpt-4'
                                 },{
                                     type: "checkbox",
@@ -5435,24 +5981,6 @@ function getParamOpenAI(this_) {
         $('#openAI_result').html('').hide();
     }
     sendRequestOpenAI(prompt_select, prompt_text);
-}
-function saveTokenOpenAI(token) {
-    var token = $('#cke_inputSecretKey_textInput').val();
-
-        $('#openAI_load').show();
-        if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
-
-        var href = window.location.href+'#&acao_pro=set_database&mode=insert&base=openai&token='+token+'&url=https%3A%2F%2Fapi.openai.com%2Fv1%2Fchat%2Fcompletions';
-        $('#frmCheckerProcessoPro').attr('src', href).unbind().on('load', function(){
-            var htmlSucess =    '<div class="alertaAttencionPro dialogBoxDiv" style="font-size: 11pt;line-height: 15pt;color: #616161;">'+
-                                '   <i class="fas fa-check-circle verdeColor" style="margin-right: 5px;"></i> '+
-                                '   Credenciais carregadas com sucesso! Recarregue a p\u00E1gina.'+
-                                '   <a style="user-select: none; margin-left:20px;" onclick="window.location.reload()" title="Recarregar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="openAI_label" id="openAI_uiElement">'+
-                                '       <span id="openAI_label" class="cke_dialog_ui_button">Recarregar</span>'+
-                                '   </a>';
-                                '   </div>'+
-            $('#openAI_info').html(htmlSucess);
-        });
 }
 function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
     let open_ai_response;
@@ -5537,45 +6065,50 @@ function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
             }
         };
 
+        let getTemperatureOpenAI = getOptionsPro('setTemperatureOpenAI') ? getOptionsPro('setTemperatureOpenAI') : '0.4';
+        let getMaxTokensOpenAI = getOptionsPro('setMaxTokensOpenAI') ? getOptionsPro('setMaxTokensOpenAI') : '640';
+        let getTopPOpenAI = getOptionsPro('setTopPOpenAI') ? getOptionsPro('setTopPOpenAI') : '1';
+        let getFrequencyPenaltyOpenAI = getOptionsPro('setFrequencyPenaltyOpenAI') ? getOptionsPro('setFrequencyPenaltyOpenAI') : '0';
+        let getPresencePenaltyOpenAI = getOptionsPro('setPresencePenaltyOpenAI') ? getOptionsPro('setPresencePenaltyOpenAI') : '0';
         var data = (prompt_select == 'Conclua o seguinte texto: ')
                 ? `{
                     "model": "${modelGPT}",
                     "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": 0.4,
-                    "max_tokens": 640,
-                    "top_p": 1,
-                    "frequency_penalty": 0,
-                    "presence_penalty": 0
+                    "temperature": ${getTemperatureOpenAI},
+                    "max_tokens": ${getMaxTokensOpenAI},
+                    "top_p": ${getTopPOpenAI},
+                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
+                    "presence_penalty": ${getPresencePenaltyOpenAI}
                 }`
                 : `{
                     "model": "${modelGPT}",
                     "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": 0.9,
-                    "max_tokens": 2000,
-                    "top_p": 1,
-                    "frequency_penalty": 0,
-                    "presence_penalty": 0.6
+                    "temperature": ${getTemperatureOpenAI},
+                    "max_tokens": ${getMaxTokensOpenAI},
+                    "top_p": ${getTopPOpenAI},
+                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
+                    "presence_penalty": ${getPresencePenaltyOpenAI}
                 }`;
         data = (prompt_select == 'Extraia as palavras-chave deste texto: ')
                 ? `{
                     "model": "${modelGPT}",
                     "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": 0.5,
-                    "max_tokens": 60,
-                    "top_p": 1,
-                    "frequency_penalty": 0.8,
-                    "presence_penalty": 0
+                    "temperature": ${getTemperatureOpenAI},
+                    "max_tokens": ${getMaxTokensOpenAI},
+                    "top_p": ${getTopPOpenAI},
+                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
+                    "presence_penalty": ${getPresencePenaltyOpenAI}
                 }`
                 : data;
             data = (prompt_select == 'Converta minha nota curta em uma ata de reuni\u00E3o: ')
                 ? `{
                     "model": "${modelGPT}",
                     "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": 0,
-                    "max_tokens": 900,
-                    "top_p": 1,
-                    "frequency_penalty": 0,
-                    "presence_penalty": 0
+                    "temperature": ${getTemperatureOpenAI},
+                    "max_tokens": ${getMaxTokensOpenAI},
+                    "top_p": ${getTopPOpenAI},
+                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
+                    "presence_penalty": ${getPresencePenaltyOpenAI}
                 }`
                 : data;
             data = (
@@ -5585,11 +6118,11 @@ function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
                 ? `{
                     "model": "${modelGPT}",
                     "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": 1,
-                    "max_tokens": 3000,
-                    "top_p": 1,
-                    "frequency_penalty": 0,
-                    "presence_penalty": 0
+                    "temperature": ${getTemperatureOpenAI},
+                    "max_tokens": ${getMaxTokensOpenAI},
+                    "top_p": ${getTopPOpenAI},
+                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
+                    "presence_penalty": ${getPresencePenaltyOpenAI}
                 }`
                 : data;
 
@@ -5657,8 +6190,8 @@ function initOpenAI(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
-            initPerfilLogin(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initOpenAI', typeof localStorageRestorePro,  typeof localStorageRestorePro('configBasePro_openai')); 
+            initOpenAI(TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initOpenAI', typeof localStorageRestorePro,  typeof localStorageRestorePro('configBasePro_openai')); 
         }, 500);
     }
 }
@@ -5689,7 +6222,7 @@ function getInlineOpenAI(this_) {
     setOnKeyEditor(!check);
 }
 function setOnKeyEditor(destroy = false) {
-    if (!loadOnKeyEditor && !destroy) {
+    if ((!loadOnKeyEditor || loadOnKeyEditor != oEditor.name) && !destroy) {
             oEditor.on('key', function (evt) {
                 var self = this;
                 var event = evt;
@@ -5699,7 +6232,7 @@ function setOnKeyEditor(destroy = false) {
                     keyupActionEditor(event, self);
                 }, 10);
             });
-            loadOnKeyEditor = true;
+            loadOnKeyEditor = oEditor.name;
     } else if (destroy) {
         removeOptionsPro('setInlineOpenAI');
     }
@@ -5719,9 +6252,13 @@ function evtInlineOpenAI(evt) {
 }
 function keyupActionEditor(evt, self) {
     var pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
-    if (verifyConfigValue('escrivainterativa') && (evt.data.keyCode == 2228275 || pElement.find('.linkDisplayPro').length || pElement.text().indexOf('#') !== -1)) {
+    if (verifyConfigValue('escrivainterativa') && (!pElement.find('.imgBgAncora').length || !pElement.find('.minutaAncora').length) && (evt.data.keyCode == 2228275 || (pElement.find('.linkDisplayPro').length && pElement.text().indexOf('#') !== -1) || pElement.text().indexOf('#') !== -1)) {
         showTagsTips(pElement[0], $(oEditor.container.$).find('iframe').contents());
+    } else if (verifyConfigValue('escrivainterativa') && (!pElement.find('.imgBgAncora').length || !pElement.find('.minutaAncora').length) && (evt.data.keyCode == 2228274 || (pElement.find('.linkDisplayPro').length && pElement.text().indexOf('@') !== -1) || pElement.text().indexOf('@') !== -1)) {
+        showInteressadosTips(pElement[0], $(oEditor.container.$).find('iframe').contents());
+        // console.log('@',pElement[0], $(oEditor.container.$).find('iframe').contents());
     }
+    // console.log(evt.data.keyCode, verifyConfigValue('escrivainterativa'), !pElement.find('.imgBgAncora').length, !pElement.find('.minutaAncora').length, evt.data.keyCode == 2228274, pElement.find('.linkDisplayPro').length, pElement.text().indexOf('@'));
 }
 function keyActionEditor(evt, self) {
     var pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
@@ -5739,14 +6276,56 @@ function keyActionEditor(evt, self) {
             return false;
         }
     }
-    console.log(evt.data.keyCode, verifyConfigValue('escrivainterativa'));
+    // console.log(evt.data.keyCode);
 }
-function getTextTagTip() {
-    var range = oEditor.getSelection().getRanges()[ 0 ],
+function getTextTagTip(keyCode = '#') {
+
+      
+    /* var range = oEditor.getSelection().getRanges()[0],
         startNode = range.startContainer;
-    var textP = startNode.getText().substring(0,range.startOffset);
-        textP = (textP.indexOf('#') !== -1) ? textP.split('#')[1].trim() : false;
+    var textP = startNode.getText().substring(0,range.startOffset); */
+
+    var e = oEditor;
+    var r = oEditor.getSelection().getRanges()[ 0 ];
+        r.collapse( 1 );
+        r.setStartAt( ( r.startPath().block || r.startPath().blockLimit ).getFirst(), CKEDITOR.POSITION_AFTER_START );
+    var docFr = r.cloneContents();
+    var textP = docFr.$.textContent;
+        textP = (textP.indexOf(keyCode) !== -1) ? textP.split(keyCode)[1].trim() : false;
+        textP = textP ? textP.replace(invisibleCharacters, "") : textP;
+        // console.log(textP); 
     return textP;
+}
+function showInteressadosTips(this_, iframeDoc) {
+    var textTip = getTextTagTip('@');
+    var index = 0;
+    // if (textTip && textTip !== '' && lastTextTip != textTip) {
+    if (textTip && textTip != '') {
+        lastTextTip = textTip;
+        getInteressadosProcesso(textTip, function(result){
+            resultTextTip = result;
+            renderTagsTips(this_, iframeDoc, textTip, result);
+        });
+    } else {
+        // if (lastTextTip && resultTextTip) renderTagsTips(this_, iframeDoc, lastTextTip, resultTextTip);
+    }
+}
+function renderTagsTips(this_, iframeDoc, textTip, result) {
+    var htmlTips = $.map(result, function(v, i){
+                        return "<li contenteditable='false' data-text='<span contenteditable=\"false\" style=\"text-indent:0px;\" class=\"ancoraSei interessadoSeiPro\" data-id=\""+v.id+"\">"+v.descricao+"</span>&nbsp;' data-id='"+v.id+"' data-keycode='@' data-index='"+i+"' data-texttip='"+textTip+"' class='"+(indexDisplayPro == i ? 'highlighted' : '')+"' onmouseover='parent.hoverTapTip(this)' onclick='parent.setTagTip(this)'>"+v.descricao+"</li>";
+                    }).join('');
+        htmlTips = htmlTips == "" ? "<li contenteditable='false' style='padding: 5px; cursor:pointer'>Nenhum resultado encontrado</li>" : htmlTips;
+
+    var html =  '<div class="linkDisplayPro" unselectable="on" contenteditable="false">'+
+                '  <ul>'+
+                '    '+htmlTips+
+                '  </ul>'+
+                '</div>'; 
+
+    iframeDoc.find('.linkDisplayPro').remove();
+    $(this_).append(html);
+    replaceTextOnEditor('@','<a name="tagtip"></a></span>@');
+    centralizeTapTip(this_);
 }
 function showTagsTips(this_, iframeDoc) {
     var textTip = getTextTagTip();
@@ -5768,7 +6347,7 @@ function showTagsTips(this_, iframeDoc) {
                         var checkTag = txtTag && txtTip ? txtTag.includes(txtTip) : false;
                         if (!!v[1] && (!textTip || textTip == '' || checkTag) ) { 
                             index++; 
-                            return "<li contenteditable='false' data-text='"+v[1]+"' data-index='"+index+"' data-texttip='"+textTip+"' class='"+(indexDisplayPro == index-1 ? 'highlighted' : '')+"' onmouseover='parent.hoverTapTip(this)' onclick='parent.setTagTip(this)'>"+v[0]+"</li>" 
+                            return "<li contenteditable='false' data-text='"+v[1]+"' data-keycode='#' data-index='"+index+"' data-texttip='"+textTip+"' class='"+(indexDisplayPro == index-1 ? 'highlighted' : '')+"' onmouseover='parent.hoverTapTip(this)' onclick='parent.setTagTip(this)'>"+v[0]+"</li>" 
                         } 
                     }).join('');
         htmlTips = htmlTips == "" ? "<li contenteditable='false' style='padding: 5px; cursor:pointer'>Nenhum resultado encontrado</li>" : htmlTips;
@@ -5781,25 +6360,45 @@ function showTagsTips(this_, iframeDoc) {
             iframeDoc.find('.linkDisplayPro').remove();
             $(this_).append(html);
             replaceTextOnEditor('#','<a name="tagtip"></a></span>#');
+            centralizeTapTip(this_);
+}
+function centralizeTapTip(this_) {
+    var boxDisplayLink = $(this_).find('.linkDisplayPro');
+    var boxDisplayLink_offset = $(this_).find('a[name="tagtip"]').offset();
+    if (typeof boxDisplayLink_offset !== 'undefined') {
+        var elemBody = $('iframe[title*="'+oEditor.name+'"]').contents().find('body');
+        var ckeContent = $('iframe[title*="'+oEditor.name+'"]').closest('.cke_contents');
+        var heightBody = elemBody.height();
+        var boxDisplayLink_left = boxDisplayLink_offset.left;
+        var boxDisplayLink_top = boxDisplayLink_offset.top;
+        var boxDisplayLink_width = boxDisplayLink.width();
+        var windowWidth = $(window).width();
+        // var marginLeft = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-(boxDisplayLink_left+boxDisplayLink_width+45) : 0;
+            // marginLeft = marginLeft < 0 ? 0 : marginLeft;
+        var marginTop = (boxDisplayLink_top + 223) > heightBody ? '-240px' : '15px';
 
-        var boxDisplayLink = $(this_).find('.linkDisplayPro');
-        var boxDisplayLink_offset = $(this_).find('a[name="tagtip"]').offset();
-        if (typeof boxDisplayLink_offset !== 'undefined') {
-            var boxDisplayLink_left = boxDisplayLink_offset.left;
-            var boxDisplayLink_top = boxDisplayLink_offset.top;
-            var boxDisplayLink_width = boxDisplayLink.width();
-            var windowWidth = $(window).width();
-            var heightBody = $('iframe[title*="'+oEditor.name+'"]').contents().find('body').height();
-            var marginLeft = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-(boxDisplayLink_left+boxDisplayLink_width+45) : 0;
-            var marginTop = (boxDisplayLink_top + 223) > heightBody ? '-240px' : '15px';
-                boxDisplayLink.css({'margin-left': marginLeft, 'margin-top': marginTop, 'left': boxDisplayLink_left, top: boxDisplayLink_offset.top});
-                $(this_).find('a[name="tagtip"]').remove();
-            if (!$(this_).find('.linkDisplayPro ul li.highlighted').length) {
-                $(this_).find('.linkDisplayPro ul li').eq(0).addClass('highlighted');
-                indexDisplayPro = 0;
-            }
-            if (indexDisplayPro > 6) $(this_).find('.linkDisplayPro ul').scrollTop(29.5*(indexDisplayPro-6));
+        var leftBox = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? undefined : boxDisplayLink_left;
+        var rightBox = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-boxDisplayLink_left - 40 : undefined;
+            rightBox = (windowWidth/3)*2 > boxDisplayLink_left && boxDisplayLink_left > (windowWidth/3) ? (windowWidth-boxDisplayLink_width)/2 : rightBox;
+
+        // console.log({boxDisplayLink_offset: boxDisplayLink_offset, boxDisplayLink_width: boxDisplayLink_width, windowWidth: windowWidth, mid: (windowWidth/3)*2 > boxDisplayLink_left && boxDisplayLink_left > (windowWidth/3)});
+        // console.log(windowWidth/3, (windowWidth/3)*2, boxDisplayLink_left, (windowWidth/3)*2 > boxDisplayLink_left, boxDisplayLink_left > (windowWidth/3) );
+
+        if (heightBody < 250) {
+            elemBody.css({'margin-bottom': '250px'});
+            ckeContent.addClass('resizeDisplayLink');
+            marginTop = boxDisplayLink_top > 250 ? marginTop : '15px';
         }
+
+            // boxDisplayLink.css({'margin-left': marginLeft, 'margin-top': marginTop, 'left': boxDisplayLink_left, top: boxDisplayLink_offset.top});
+            boxDisplayLink.css({'margin-top': marginTop, 'left': leftBox, 'right': rightBox, top: boxDisplayLink_offset.top});
+            $(this_).find('a[name="tagtip"]').remove();
+        if (!$(this_).find('.linkDisplayPro ul li.highlighted').length) {
+            $(this_).find('.linkDisplayPro ul li').eq(0).addClass('highlighted');
+            indexDisplayPro = 0;
+        }
+        if (indexDisplayPro > 6) $(this_).find('.linkDisplayPro ul').scrollTop(29.5*(indexDisplayPro-6));
+    }
 }
 function hoverTapTip(this_) {
     var _this = $(this_);
@@ -5812,12 +6411,26 @@ function setTagTip(this_) {
     var textTip = getTextTagTip();
     var textTip = _this.data('texttip');
     var textReplace = _this.data('text');
+    var keyCode = _this.data('keycode');
     var select = oEditor.getSelection().getStartElement();
     var pElement = $(select.$).closest('p');
         $(oEditor.getSelection().getStartElement().$).closest('p').find('.linkDisplayPro').remove();
-        replaceTextOnEditor('#'+textTip, textReplace);
+        replaceTextOnEditor(keyCode+textTip, textReplace);
         indexDisplayPro = 0;
-}   
+        lastTextTip = false;
+        resultTextTip = false;
+        restoreIframeDisplayLink();
+} 
+function restoreIframeDisplayLink() {
+    if (typeof oEditor !== 'undefined' && typeof oEditor.name !== 'undefined') {
+        var elemBody = $('iframe[title*="'+oEditor.name+'"]').contents().find('body');
+        var ckeContent = $('iframe[title*="'+oEditor.name+'"]').closest('.cke_contents');
+        if (ckeContent.hasClass('resizeDisplayLink')) {
+            elemBody.css({'margin-bottom': '0'});
+            ckeContent.removeClass('resizeDisplayLink');
+        }
+    }
+}
 var storeCursorLocation = function( oEditor ) {
     bookmark = oEditor.getSelection().createBookmarks( true );
 };
@@ -5830,7 +6443,7 @@ function replaceTextOnEditor(findString, replaceString) {
     var sel = oEditor.getSelection();
     var element = sel.getStartElement();
     var data = element.getHtml();
-    var replaced_text = data.replace(findString, replaceString);
+    var replaced_text = data.replace(invisibleCharacters, "").replace(findString, replaceString);
         element.setHtml(replaced_text);
         restoreCursorLocation(oEditor);
 }
@@ -7011,6 +7624,7 @@ function initFunctions() {
 	getDialogQrCode();
     getDialogLinkPro();
     getDialogImportDocPro();
+    getDialogPageImageBackground();
     initDialogUploadImgBase64();
     getDialogLatex();
     getDialogProcessoPublicoPro();
@@ -7034,6 +7648,7 @@ function initFunctions() {
 	
 	// RETORNA DADOS DO PROCESSO
 	var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
-	getDadosIframeProcessoPro(idProcedimento, 'editor');
+	if (!checkHostLimit()) getDadosIframeProcessoPro(idProcedimento, 'editor');
+    if (getOptionsPro('setKeywordInlineOpenAI')) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
 }
 addButton();

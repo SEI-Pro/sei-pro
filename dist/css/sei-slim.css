@@ -173,6 +173,55 @@ i.fa-laranjaColor {
 .seiSlim.seiSlim_view form .infraDivRadio {
     display: flex;
 }
+.seiSlim.seiSlim_view form .infraAreaDadosDinamica .infraDivRadio,
+.seiSlim.seiSlim_view form .infraAreaDadosDinamica .infraLabelObrigatorio, 
+.seiSlim.seiSlim_view form .infraAreaDadosDinamica .infraLabel, 
+.seiSlim.seiSlim_view form .infraAreaDadosDinamica .infraLabelOpcionals, 
+.seiSlim.seiSlim_view form .infraAreaDadosDinamica .infraLabelOpcional {
+    display: inline-block;
+}
+.seiSlim form #divRestricao,
+.seiSlim form #divUnidades,
+.seiSlim form #divDestinatarios,
+.seiSlim form #divBotao,
+.seiSlim.seiSlim_view #divNumero,
+.seiSlim.seiSlim_view #divNumeroNomeArvore,
+.seiSlim.seiSlim_view #divDescricao,
+.seiSlim.seiSlim_view #divArquivo,
+.seiSlim form #divRemetente {
+    position: relative !important;
+}
+.seiSlim.seiSlim_view #divDescricao .urgentePro,
+.seiSlim.seiSlim_view #divNumeroNomeArvore .urgentePro,
+.seiSlim.seiSlim_view #divNumero .urgentePro {
+    top: 30px !important;
+}
+body:not(.seiSlim) #divNumeroNomeArvore .urgentePro {
+    right: 48% !important;
+    top: 20px !important;
+}
+.seiSlim form#frmAtividadeListar span.infraImgPro[data-img*="/calendario."]::before,
+.seiSlim form#frmDocumentoCadastro span.infraImgPro[data-img*="/calendario."]::before {
+    margin-top: 10px;
+}
+.seiSlim form#frmDocumentoCadastro fieldset span.infraImgPro[data-img*="/ajuda."]::before {
+    margin-top: 0px;
+}
+.seiSlim fieldset span.infraImgPro[data-img*="/ajuda."]::before {
+    margin: -8px 0 0 0;
+}
+.seiSlim.seiSlim_view form#frmMdPetIntimacaoCadastro #sbmGravarUsuario {
+    margin: 25px 0 0 !important;
+}
+.seiSlim.seiSlim_view form#frmMdPetIntimacaoCadastro #imgAjudaUsuario {
+    margin: 0 !important;
+}
+.seiSlim.seiSlim_view form#frmMdPetIntimacaoCadastro #txtEmail {
+    width: -webkit-fill-available;
+}
+.seiSlim.seiSlim_view form#frmMdPetIntimacaoCadastro #lblEmail {
+    display: block;
+}
 .seiSlim.seiSlim_view form .infraText {
     float: left;
     display: inline-block;
@@ -230,7 +279,7 @@ i.fa-laranjaColor {
     top: 25px !important;
 }
 .seiSlim .infraAreaTelaD, 
-.seiSlim.dark-mode div.tituloProcessoDocumento label,
+.seiSlim.dark-mode div.tituloProcessoDocumento label, 
 .seiSlim.dark-mode .select2-results .select2-no-results,
 .seiSlim.dark-mode .select2-results .select2-searching {
     background: none !important;
@@ -541,8 +590,16 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim #newFiltro {
     width: auto !important;
 }
-.seiSlim #frmPesquisaProtocolo label:not(.infraLabelRadio):not(.infraLabelCheckbox) {
+.seiSlim #frmPesquisaProtocolo label:not(.infraLabelRadio):not(.infraLabelCheckbox):not(.infraCheckboxLabel):not(.infraRadioLabel) {
     width: 250px !important;
+}
+.seiSlim.newSEI #divPesquisar {
+    height: initial !important;
+}
+.seiSlim.newSEI.dark-mode .infraProcessando {
+    filter: invert(1);
+    background: #d6d6d6 url(../infra_css/svg/aguarde.svg) no-repeat scroll 100% 100% !important;
+    border-color: #a0a0a0 !important;
 }
 .seiSlim #frmPesquisaProtocolo div.ms-drop.bottom {
     width: calc(100% - 310px) !important;
@@ -659,6 +716,7 @@ a.newLink.iconBoxSlim .newIconTitle,
 }
 .seiSlim:not(.newSEI) iframe#ifrArvore,
 .seiSlim:not(.newSEI) iframe#ifrVisualizacao,
+.seiSlim:not(.newSEI) iframe#ifrConteudoVisualizacao,
 .seiSlim:not(.newSEI) div#divRedimensionar,
 .seiSlim:not(.newSEI) div#divConteudo {
     height: calc(100vh - 135px) !important;
@@ -666,10 +724,12 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim:not(.newSEI) div#divInfraAreaTela {
     height: calc(100vh - 165px) !important;
 }
-.seiSlim:not(.newSEI) iframe#ifrVisualizacao {
+.seiSlim:not(.newSEI) iframe#ifrVisualizacao,
+.seiSlim:not(.newSEI) iframe#ifrConteudoVisualizacao {
     width: calc(75% - 5px) !important;
 }
-.seiSlim:not(.newSEI) iframe#ifrVisualizacao {
+.seiSlim:not(.newSEI) iframe#ifrVisualizacao,
+.seiSlim:not(.newSEI) iframe#ifrConteudoVisualizacao {
     width: calc(75% - 5px) !important;
 }
 .seiSlim:not(.newSEI) iframe#ifrArvore {
@@ -677,6 +737,7 @@ a.newLink.iconBoxSlim .newIconTitle,
 }
 .seiSlim:not(.newSEI) iframe#ifrArvore,
 .seiSlim:not(.newSEI) iframe#ifrVisualizacao,
+.seiSlim:not(.newSEI) iframe#ifrConteudoVisualizacao,
 .seiSlim:not(.newSEI) div#divRedimensionar {
     overflow: hidden;
 }
@@ -854,6 +915,9 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim .infraBarraComandos button.infraButton {
     margin: 10px 0 !important;
 }
+#frmArvoreOrdenar .infraBarraComandos {
+    top: 30px !important;
+}
 .seiSlim button.infraButton:hover,
 .seiSlim input[type="submit"].infraButton:hover,
 .seiSlim #divFiltro a.ancoraPadraoPreta:hover,
@@ -891,7 +955,7 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim #divFiltro a.ancoraPadraoPreta,
 .seiSlim .infraAreaDados a.ancoraPadraoPreta {
     margin: 0 5px !important;
-    padding: 0 9px;
+    padding: 0 9px !important;
     font-size: 10pt;
     border-radius: 5px;    
     background-color: #f9f9f9;
@@ -909,6 +973,9 @@ a.newLink.iconBoxSlim .newIconTitle,
 }
 .seiSlim #divFiltro a.ancoraPadraoPreta[href*="&tipo_filtro=P"]:before {
     content: "\f07c";
+}
+.seiSlim #divFiltro a.ancoraPadraoPreta[href*="&tipo_filtro=R"]:before {
+    content: "\f12a";
 }
 .seiSlim #divFiltro a.ancoraPadraoPreta[href*="&tipo_filtro=M"]:before,
 .seiSlim .infraAreaDados a.ancoraPadraoPreta[href*="&ver_por_marcadores"]:before {
@@ -1075,6 +1142,11 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim .infraBarraSistemaPadraoD a#lnkInfraConfiguracaoSistema:before,
 .seiSlim .infraAcaoBarraSistema a#lnkConfiguracaoSistema:before {
     content: "\f013";
+}
+.seiSlim .infraBarraSistemaPadraoD a#lnkInfraAcessibilidadeSistema:before,
+.seiSlim .infraAcaoBarraSistema a#lnkInfraAcessibilidadeSistema:before {
+    content: "\f29a";
+    font-weight: 200;
 }
 .seiSlim .infraBarraSistemaPadraoD a#lnkInfraSairSistema:before,
 .seiSlim .infraAcaoBarraSistema a#lnkSairSistema:before {
@@ -1481,6 +1553,7 @@ body.dark-mode,
 .seiSlim.dark-mode .cke_dialog_footer,
 .seiSlim.dark-mode .cke_dialog_title,
 .seiSlim.dark-mode #infraCalendario,
+.seiSlim.dark-mode #divInfraCalendario,
 .seiSlim.dark-mode td.totalEstatisticas,
 .seiSlim.dark-mode #ImageEditorPro .FIE_resize-reset-button,
 .seiSlim.dark-mode #ImageEditorPro .FIE_annotation-controls-overlay,
@@ -1617,6 +1690,7 @@ body.dark-mode,
 .seiSlim.dark-mode .info_tags_user .tag_text,
 .seiSlim.dark-mode .ratingWhy span.answer,
 .seiSlim.dark-mode #infraCalendario td.calendar_week_column,
+.seiSlim.dark-mode #divInfraCalendario td.calendar_week_column,
 .seiSlim.dark-mode tr.tablesorter-filter-row td,
 .seiSlim.dark-mode .kanban-container .kanban-board[data-id="_niniciadas"],
 .seiSlim.dark-mode .kanban-container .kanban-board[data-id="_niniciadas"] .kanban-board-header,
@@ -1653,6 +1727,9 @@ body.dark-mode,
 .seiSlim.dark-mode .kanban-container .kanban-item {
     background: #3d4043;
 }
+.seiSlim.dark-mode #divInfraCalendario td {
+    border: none !important;
+}
 .seiSlim.dark-mode .txt_cinza,
 .seiSlim.dark-mode .content_desc div.txt_cinza,
 .seiSlim.dark-mode .stickDadosArvore .removeStickNote,
@@ -1673,6 +1750,8 @@ body.dark-mode,
 .seiSlim.dark-mode .btn-default:not(:disabled):not(.disabled).active, 
 .seiSlim.dark-mode #infraCalendario #bottomBar,
 .seiSlim.dark-mode #infraCalendario #todaysDateString,
+.seiSlim.dark-mode #divInfraCalendario #bottomBar,
+.seiSlim.dark-mode #divInfraCalendario #todaysDateString,
 .seiSlim.dark-mode .show > .btn-light.dropdown-toggle, .show > 
 .seiSlim.dark-mode .dropdown-toggle.btn-default {
     color: #fbfbfe !important;
@@ -1744,10 +1823,14 @@ body.dark-mode,
 .seiSlim a.botaoSEI.iconBoxSlim.iconLabel:before {
     top: 15px !important;
 }
+.seiSlim #divBotoesControleProcessos a.botaoSEI:after,
+.seiSlim #divBotoesControleProcessos a.botaoSEI:before,
 .seiSlim #divComandos a.botaoSEI:after,
 .seiSlim #divComandos a.botaoSEI:before {
     top: 10px !important;
 }
+.seiSlim.newSEI #divBotoesControleProcessos a.botaoSEI:after,
+.seiSlim.newSEI #divBotoesControleProcessos a.botaoSEI:before,
 .seiSlim.newSEI #divComandos a.botaoSEI:after,
 .seiSlim.newSEI #divComandos a.botaoSEI:before {
     top: 25px !important;
@@ -1889,7 +1972,9 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick*="getDosimetria("],
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("],
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("],
+.seiSlim a.botaoSEI[onclick*="initBoxAIActions("],
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("],
+.seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("],
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("],
 .seiSlim a[id*="anchorImg"][data-img],
 .seiSlim span.infraImgPro[data-img],
@@ -1961,8 +2046,12 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("] img:hover,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("] img,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("] img:hover,
+.seiSlim a.botaoSEI[onclick*="initBoxAIActions("] img,
+.seiSlim a.botaoSEI[onclick*="initBoxAIActions("] img:hover,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("] img,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("] img:hover,
+.seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("] img,
+.seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("] img:hover,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("] img,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("] img:hover,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_atribuicao_cadastrar"] img,
@@ -2223,7 +2312,9 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("]:before,
 .seiSlim a.botaoSEI[onclick*="dialogRelatoriosSFIS("]:before,
 .seiSlim a.botaoSEI[onclick*="getDocumentosActions("]:before,
+.seiSlim a.botaoSEI[onclick*="initBoxAIActions("]:before,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:before,
+.seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("]:before,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("]:before,
 .seiSlim a.botaoSEI[href*="?acao=procedimento_credencial_gerenciar"]:before,
 .seiSlim a.botaoSEI[href*="?acao=credencial_assinatura_gerenciar"]:before,
@@ -2297,6 +2388,7 @@ span.tagUserColorPro[data-color] img:hover,
     font-weight: bold;
 }
 .seiSlim #divArvoreAcoes a.botaoSEI:after,
+.seiSlim #divBotoesControleProcessos a.botaoSEI:after,
 .seiSlim #divComandos a.botaoSEI:after {
     font-family: 'Font Awesome 5 Duotone';
     color: #ffffff38 !important;
@@ -2420,6 +2512,13 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     top: 0 !important;
     font-size: 11pt !important;
 }
+.seiSlim span.infraImgPro[data-img]:before {
+    margin-left: 7px;
+}
+.seiSlim span.infraImgPro[data-img*="/ajuda."]:before {
+    content: "\f059";
+    color: #7562d8;
+}
 .seiSlim span.infraImgPro[data-img*="/lupa."]:before {
     content: "\f002";
     color: #4285f4;
@@ -2455,7 +2554,8 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f057";
     color: #E46E64;
 }
-.seiSlim span.infraImgPro[data-img*="/seta_acima_select."]:before {
+.seiSlim span.infraImgPro[data-img*="/seta_acima_select."]:before,
+.seiSlim span.infraImgPro[data-img*="/mover_acima."]:before {
     content: "\f0aa";
     color: #4285f4;
 }
@@ -2485,7 +2585,8 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f002";
     color: #4285f4;
 }
-.seiSlim span.infraImgPro[data-img*="/seta_abaixo_select."]:before {
+.seiSlim span.infraImgPro[data-img*="/seta_abaixo_select."]:before,
+.seiSlim span.infraImgPro[data-img*="/mover_abaixo."]:before {
     content: "\f0ab";
     color: #4285f4;
 }
@@ -2666,10 +2767,14 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     background: transparent !important;
     color: #fff !important;
 }
-.seiSlim.dark-mode.newSEI.seiSlim_view #divArvoreConteudo {
+.seiSlim.dark-mode.newSEI.seiSlim_view #divArvoreConteudo,
+.seiSlim.dark-mode.seiSlim_html #divArvoreConteudo,
+.seiSlim.dark-mode.newSEI.seiSlim_view #divArvoreConteudoIfr {
     background: #202123 !important;
 }
-.seiSlim.newSEI.seiSlim_view #divArvoreConteudo {
+.seiSlim.newSEI.seiSlim_view #divArvoreConteudo,
+.seiSlim.newSEI.seiSlim_html #divArvoreConteudo,
+.seiSlim.newSEI.seiSlim_view #divArvoreConteudoIfr {
     padding: 0 10px !important;
     box-shadow: rgb(219, 219, 219) 0px 0px 13px 0px !important;
 }
@@ -2754,10 +2859,20 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f085";
     color: #7562d8;
 }
+.seiSlim a.botaoSEI[onclick*="initBoxAIActions("]:after,
+.seiSlim a.botaoSEI[onclick*="initBoxAIActions("]:before {
+    content: "\f544";
+    color: #7562d8;
+}
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:after,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:before {
     content: "\f87e";
     color: #d8a63a;
+}
+.seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("]:after,
+.seiSlim a.botaoSEI[onclick*="initDialogCompareDocs("]:before {
+    content: "\f87f";
+    color: #7562d8;
 }
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("]:after,
 .seiSlim a.botaoSEI[onclick*="getCtrPrescricao("]:before {
@@ -2891,6 +3006,8 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f06e";
     color: #7562d8;
 }
+.seiSlim #divBotoesControleProcessos a.botaoSEI[onclick*="?acao=andamento_marcador_remover"]:after,
+.seiSlim #divBotoesControleProcessos a.botaoSEI[onclick*="?acao=andamento_marcador_cadastrar"]:after,
 .seiSlim #divComandos a.botaoSEI[onclick*="?acao=andamento_marcador_remover"]:after,
 .seiSlim #divComandos a.botaoSEI[onclick*="?acao=andamento_marcador_cadastrar"]:after {
     color: #7663d8 !important;
@@ -2901,9 +3018,11 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     -webkit-text-stroke-color: white;
     top: 33px !important;
 }
+.seiSlim #divBotoesControleProcessos a.botaoSEI[onclick*="?acao=andamento_marcador_remover"]:after,
 .seiSlim #divComandos a.botaoSEI[onclick*="?acao=andamento_marcador_remover"]:after {
     content: "\f068";
 }
+.seiSlim #divBotoesControleProcessos a.botaoSEI[onclick*="?acao=andamento_marcador_cadastrar"]:after,
 .seiSlim #divComandos a.botaoSEI[onclick*="?acao=andamento_marcador_cadastrar"]:after {
     content: "\f067";
 }
@@ -3517,6 +3636,7 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__bgcolor_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__copy_style_pro_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__batch_quality_pro_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__insert_checkbox_pro_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__copy_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__cut_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__pastefromword_icon,
@@ -3536,6 +3656,7 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__latex_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__processopublico_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__watermark_icon,
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__pageimagebackground_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__boxsigilo_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__ctr_review_icon,
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__review_icon,
@@ -3728,6 +3849,10 @@ td .linhaNumerada:after {
     content: "\f78c";
     color: #4285f4;
 }
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__insert_checkbox_pro_icon:before {
+    content: "\f14a";
+    color: #4285f4;
+}
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__copy_icon:before {
     content: "\f0c5";
     color: #4285f4;
@@ -3809,6 +3934,10 @@ td .linhaNumerada:after {
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__watermark_icon:before {
     content: "\f5ff";
     color: #9CB639;
+}
+.seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__pageimagebackground_icon:before {
+    content: "\f02f";
+    color: #7562D8;
 }
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__boxsigilo_icon:before {
     content: "\e058";
@@ -4153,7 +4282,6 @@ a.urgentePro[target="ifrVisualizacao"] {
     line-height: 20px;
     cursor: pointer;
     margin-top: 5px;
-    right: 10%;
     position: absolute;
 }
 @keyframes pulser {
@@ -4220,11 +4348,14 @@ a.newLink_confirm:hover i {
 .seiSlim select.infraText[multiple="multiple"] {
     margin: 20px 0 0 0 !important;
 }
-#divArvoreConteudo {
+#divArvoreConteudo,
+#divArvoreConteudoIfr {
     overflow-y: auto !important;
 }
 .seiSlim.seiSlim_view.seiBtnRight.newSEI #divArvoreConteudo,
-.seiSlim.seiSlim_view.seiBtnRight.newSEI #ifrArvoreHtml {
+.seiSlim.seiSlim_view.seiBtnRight.newSEI #divArvoreConteudoIfr,
+.seiSlim.seiSlim_view.seiBtnRight.newSEI #ifrArvoreHtml,
+.seiSlim.seiSlim_view.seiBtnRight.newSEI #ifrVisualizacao {
     height: inherit !important;
 }
 .seiSlim.seiSlim_view.seiBtnRight.newSEI #btnInfraTopo {
@@ -4251,6 +4382,12 @@ a.newLink_confirm:hover i {
     letter-spacing: initial; 
     text-decoration: initial; 
     white-space: nowrap; 
+    max-width: 90% !important;  
+}
+.linkDisplayPro strong.title-linktip {
+    width: calc(100% - 160px);
+    display: inline-flex;
+    overflow: hidden;
 }
 .linkDisplayPro a, 
 .reviewDisplayPro a { 
@@ -4325,8 +4462,12 @@ strong.title-reviewtip {
     width: 800px;
     white-space: break-spaces;
 }
+.seiSlim #divSelectTipoResposta,
 .seiSlim.newSEI div.caixaFiltroControle {
     position: relative;
+}
+.seiSlim.seiSlim_view form .infraFieldset.sizeFieldset {
+    margin-top: 40px !important;
 }
 .seiSlim.newSEI a.botaoFecharFiltro {
     line-height: 0.66em !important;
@@ -4335,4 +4476,48 @@ strong.title-reviewtip {
     top: 9px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+
+#divZip .explorer {
+    width: 90%;
+    display: block;
+    clear: both;
+    background: #f9f9f9;
+    height: inherit;
+    float: left;
+    margin: 20px;
+    border-radius: 10px;
+}
+#divZip li::marker {
+    color: #000 !important;
+}
+#divZip li:hover,
+#divZip li:hover span,
+#divZip li:hover a {
+    background: #4385f4;
+    color: #fff !important;
+}
+#divZip li {
+    list-style: decimal-leading-zero;
+    padding: 5px;
+    font-family: monospace;
+    font-size: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#divZip .size,
+#divZip .date {
+    float: right;
+    margin: 0 10px;
+    font-family: monospace;
+}
+#divZip div.loading {
+    text-align: center;
+    font-size: 18pt;
+}
+#divZip span.tab {
+    margin: 0 5px;
+}
+#divZip span.tab:last-child:before {
+    content: "↳";
 }

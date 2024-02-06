@@ -41,7 +41,7 @@ function initDialogDBTransition(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initDialogDBTransition(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initDialogDBTransition => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDialogDBTransition => '+TimeOut); 
         }, 500);
     }
 }

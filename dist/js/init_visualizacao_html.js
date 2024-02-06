@@ -50,7 +50,7 @@ function initLinhaNumerada(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initLinhaNumerada(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initLinhaNumerada'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initLinhaNumerada'); 
         }, 500);
     }
 }
@@ -61,7 +61,7 @@ function initRepareBgTableColor(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initRepareBgTableColor(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload repareBgTableColor'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload repareBgTableColor'); 
         }, 500);
     }
 }

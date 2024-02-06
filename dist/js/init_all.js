@@ -1,8 +1,6 @@
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 
-if ($('#frmEditor').length == 0)  {
-    $.getScript(getUrlExtension("js/sei-functions-pro.js")); 
-}
+if (!$('#frmEditor').length) $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function getUrlExtension(url) {
     if (typeof browser === "undefined") {
@@ -79,7 +77,7 @@ function loadStylePro(url, elementTo) {
     }
 }
 function loadFilesUI() {
-    $.getScript(getUrlExtension('js/lib/jquery-ui.min.js'));
+    if (typeof jQuery.ui === 'undefined') $.getScript(getUrlExtension('js/lib/jquery-ui.min.js'));
     loadStylePro(getUrlExtension('css/jquery-ui.css'), 'head');
 }
 function pathExtensionSEIPro() {
@@ -133,12 +131,12 @@ function loadScriptProAll() {
         divDialogsPro();
         loadFilesUI();
         loadFontIcons('head');
-        $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
-        $.getScript(getUrlExtension("js/lib/moment.min.js"));
-        $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
-        $.getScript(getUrlExtension("js/lib/chosen.jquery.min.js"));
-        $.getScript(getUrlExtension("js/lib/favico-0.3.10.min.js"));
-        $.getScript(getUrlExtension("js/sei-pro-all.js"));
+        if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+        if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
+        if (typeof $.tablesorter === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
+        if (typeof $().chosen === 'undefined') $.getScript(getUrlExtension("js/lib/chosen.jquery.min.js"));
+        if (typeof Favico === 'undefined') $.getScript(getUrlExtension("js/lib/favico-0.3.10.min.js"));
+        if (typeof loadSEIProAll === 'undefined') $.getScript(getUrlExtension("js/sei-pro-all.js"));
     }
 }
 if (getManifestExtension().short_name == 'SPro') {

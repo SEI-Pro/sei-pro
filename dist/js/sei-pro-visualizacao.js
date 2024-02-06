@@ -1,3 +1,4 @@
+const loadSEIProVisualizacao = true;
 function initSeiProVisualizacao() {
     if (typeof parent.insertIconIntegrity === 'function' || typeof parent.insertIconIntegrity !== 'undefined') {
         parent.insertIconIntegrity();
@@ -11,7 +12,7 @@ function initSeiProVisualizacao() {
     if (typeof parent.initDocVideoPro === 'function' || typeof parent.initDocVideoPro !== 'undefined' || typeof parent.initDocZipPro !== 'undefined') {
         parent.initDocVideoPro();
         parent.initDocImagemPro();
-        // parent.initDocZipPro();
+        if (parent.checkConfigValue('visualizarzip')) parent.initDocZipPro();
     }
     if (typeof parent.insertIconNewDoc === 'function' && typeof parent.linksArvore !== 'undefined') {
         parent.insertIconNewDoc();
@@ -25,17 +26,26 @@ function initSeiProVisualizacao() {
     if (typeof parent.setTipoPrescricaoProcesso === 'function' && parent.checkTipoPrescricaoProcesso()) {
         parent.appendIconCtrPrescricao();
     }
-    if (typeof parent.insertIconBatchActions === 'function' && parent.checkConfigValue('acoesemlote')) {
+    if (typeof parent.checkHostLimit !== 'undefined' && !parent.checkHostLimit() && typeof parent.insertIconBatchActions === 'function' && parent.checkConfigValue('acoesemlote')) {
         parent.insertIconBatchActions();
     }
     if (typeof parent.initMoveIconDeleteToEnd === 'function' && parent.checkConfigValue('movericone')) {
         parent.initMoveIconDeleteToEnd();
     }
-    if (typeof parent.insertIconBatchDocs === 'function' && parent.checkConfigValue('documentosemlote')) {
+    if (typeof parent.checkHostLimit !== 'undefined' && !parent.checkHostLimit() && typeof parent.insertIconBatchDocs === 'function' && parent.checkConfigValue('documentosemlote')) {
         parent.insertIconBatchDocs();
+    }
+    if (typeof parent.insertIconAIActions === 'function' && parent.restrictConfigValue('ferramentasia')) {
+        parent.insertIconAIActions();
+    }
+    if (typeof parent.insertIconCompareDocs === 'function' && parent.checkConfigValue('comparardocumentos')) {
+        parent.insertIconCompareDocs();
     }
     if (typeof parent.insertNewIcons === 'function' && typeof parent.insertNewIcons !== 'undefined') {
         parent.insertNewIcons();
+    }
+    if (typeof parent.insertActionInteressadosSend !== 'undefined') {
+        parent.insertActionInteressadosSend();
     }
     if (
         (typeof parent.insertIconAtividade === 'function' || typeof parent.insertIconAtividade !== 'undefined' ) && 

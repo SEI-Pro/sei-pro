@@ -34,7 +34,7 @@ function initIconEntidade(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initIconEntidade(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initIconEntidade => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initIconEntidade => '+TimeOut); 
         }, 500);
     }
 }

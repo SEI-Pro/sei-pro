@@ -1,3 +1,4 @@
+const loadSEIProArvore = true;
 var arrayLinksArvore = [];
 var arrayLinksArvoreAll = [];
 var arrayIconsView = [];
@@ -54,7 +55,7 @@ function initToolbarDocs(TimeOut = 9000) {
         setTimeout(function(){ 
             if (TimeOut == 9000) $.getScript((parent.URL_SPRO+"js/lib/jquery.toolbar.min.js"));
             initToolbarDocs(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) if(verifyConfigValue('debugpage')) console.log('Reload initToolbarDocs'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initToolbarDocs'); 
         }, 500);
     }
 }
@@ -70,7 +71,8 @@ function setToolbarDocs() {
                 var data = (typeof jmespath !== 'undefined') ? jmespath.search(arrayLinksArvore, "[?name=='"+value[0]+"'] | [0]") : null;
                 if ( data !== null ) {
                     var valueAlt = ( data.alt != '' ) ? data.alt : data.name;
-                    htmlToolbarProc +=  '   <a href="#" data-action="linksArvore" style="width: 175px;"><i class="fa '+data.icon+'"></i><span class="info" title="'+data.name+'" alt="'+valueAlt+'">'+valueAlt+'</span></a>';
+                    var icon = data.icon == '' ? jmespath.search(iconsFlashMenu, "[?name=='"+value[0]+"'] | [0].icon") : data.icon;
+                    htmlToolbarProc +=  '   <a href="#" data-action="linksArvore" style="width: 175px;"><i class="fa '+icon+'"></i><span class="info" title="'+data.name+'" alt="'+valueAlt+'">'+valueAlt+'</span></a>';
                 }
             });
         }
@@ -84,8 +86,9 @@ function setToolbarDocs() {
             var data = (typeof jmespath !== 'undefined') ? jmespath.search(iconsFlashDocMenu, "[?name=='"+value[0]+"'] | [0]") : null;
             if ( data !== null ) {
                 var valueAlt = ( data.alt != '' ) ? data.alt : data.name;
+                var icon = data.icon == '' ? jmespath.search(iconsFlashMenu, "[?name=='"+value[0]+"'] | [0].icon") : data.icon;
                 var show = (data.show) ? '' : 'display:none;';
-                htmlToolbarDoc +=  '   <a href="#" data-action="linksArvore" style="width: 175px;'+show+'"><i class="fa '+data.icon+'"></i><span class="info" title="'+data.name+'" alt="'+valueAlt+'">'+valueAlt+'</span></a>';
+                htmlToolbarDoc +=  '   <a href="#" data-action="linksArvore" style="width: 175px;'+show+'"><i class="fa '+icon+'"></i><span class="info" title="'+data.name+'" alt="'+valueAlt+'">'+valueAlt+'</span></a>';
             }
         });
         htmlToolbarDoc +=  '</div>';
@@ -95,7 +98,8 @@ function setToolbarDocs() {
         $.each(reverseArray(selectedItensDocArvore),function(index, value){
             var data = (typeof jmespath !== 'undefined') ? jmespath.search(iconsFlashDocArvore, "[?name=='"+value[0]+"'] | [0]") : null;
             if ( data !== null ) {
-                addIconActionsArvore({name: data.name, mode: data.mode, action: data.action, icon: data.icon, alt: data.alt});
+                var icon = data.icon == '' ? jmespath.search(iconsFlashMenu, "[?name=='"+value[0]+"'] | [0].icon") : data.icon;
+                addIconActionsArvore({name: data.name, mode: data.mode, action: data.action, icon: icon, alt: data.alt});
             }
         });
     }
@@ -572,7 +576,7 @@ function callActionsArvore(doc, mode) {
     var linkDoc = parent.url_host+'?acao=procedimento_trabalhar&id_procedimento='+id_procedimento+'&id_documento='+id_documento;
     var linkProc = parent.url_host+'?acao=procedimento_trabalhar&id_procedimento='+id_procedimento;
     if (mode == 'clone') {
-        setLoadingActionDoc(id_documento);
+        setLoadingActionDoc(id_documento); 
         getDadosDoc(doc);
         // console.log(doc, id_documento);
     } else if (mode == 'copyto') {
@@ -766,7 +770,7 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
         if (nameDoc && nameDoc != '') {
             var itemSelected = false;
             var nr_sei = getNrSei(nameDoc);
-            var href = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
+            var href = parent.jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
             // console.log('getDuplicateDoc === else', nameDoc, nr_sei, href, arrayLinksArvore);
             if (href !== null) {
                 $.ajax({ url: href }).done(function (html) {
@@ -775,6 +779,8 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
                         var text = $(this).data('desc').trim();
                         var value = $(this).find('input').val();
                         var urlDoc = $(this).find('a.ancoraOpcao').attr('href');
+                        var checkPost = $html.find('#tblSeries').find('a.ancoraOpcao').attr('href');
+                            checkPost = typeof checkPost !== 'undefined' && checkPost == '#' ? true : false;
                         if (text != '') {
                             var nameOption = escapeRegExp(text.replace(/_|:/g, ' '));
                                 nameDoc = nameDoc.replace(/_|:/g, ' ');
@@ -782,112 +788,12 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
                             if (reg.test(parent.removeAcentos(nameDoc.trim().toLowerCase()))) { 
                                 if (typeof urlDoc !== 'undefined' && text != 'externo') {
                                     itemSelected = true;
-                                    $.ajax({ url: urlDoc }).done(function (htmlDoc) {
-                                        var $htmlDoc = $(htmlDoc);
-                                        var form = $htmlDoc.find('#frmDocumentoCadastro');
-                                        var hrefForm = form.attr('action');
-                                        var param = {};
-                                            form.find("input[type=hidden]").each(function () {
-                                                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-                                                    param[$(this).attr('name')] = $(this).val(); 
-                                                }
-                                            });
-                                            form.find('input[type=text]').each(function () { 
-                                                if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
-                                                    param[$(this).attr('id')] = $(this).val();
-                                                }
-                                            });
-                                            form.find('select').each(function () { 
-                                                if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
-                                                    param[$(this).attr('id')] = $(this).val();
-                                                }
-                                            });
-                                            form.find('input[type=radio]').each(function () { 
-                                                if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
-                                                    param[$(this).attr('name')] = $(this).val();
-                                                }
-                                            });
-                                        param.selTextoPadrao = "0";
-                                        param.hdnFlagDocumentoCadastro = "2";
-                                        param.rdoTextoInicial = "D";
-                                        param.selTextoPadrao = null;
-                                        param.txtProtocoloDocumentoTextoBase = nr_sei;
-                                        param.selAssuntos = (paramDoc && typeof paramDoc.selAssuntos !== 'undefined') ? paramDoc.selAssuntos : param.selAssuntos;
-                                        param.hdnAssuntos = (paramDoc && typeof paramDoc.hdnAssuntos !== 'undefined') ? paramDoc.hdnAssuntos : param.hdnAssuntos;
-                                        param.selInteressados = (paramDoc && typeof paramDoc.selInteressados !== 'undefined') ? paramDoc.selInteressados : param.selInteressados;
-                                        param.hdnInteressados = (paramDoc && typeof paramDoc.hdnInteressados !== 'undefined') ? paramDoc.hdnInteressados : param.hdnInteressados;
-                                        param.txtNumero = (paramDoc && typeof paramDoc.txtNumero !== 'undefined' && !parent.isNumeric(paramDoc.txtNumero)) ? paramDoc.txtNumero : param.txtNumero;
-                                        param.txtDescricao = (paramDoc && typeof paramDoc.txtDescricao !== 'undefined') ? paramDoc.txtDescricao : param.txtDescricao;
-                                        param.txaObservacoes = (paramDoc && typeof paramDoc.txaObservacoes !== 'undefined') ? paramDoc.txaObservacoes : "";
-                                        param.rdoNivelAcesso = (paramDoc && typeof paramDoc.rdoNivelAcesso !== 'undefined') ? paramDoc.rdoNivelAcesso : param.rdoNivelAcesso;
-                                        param.selHipoteseLegal = (paramDoc && typeof paramDoc.selHipoteseLegal !== 'undefined') ? paramDoc.selHipoteseLegal : param.selHipoteseLegal;
-
-                                        // console.log({nr_sei: nr_sei, name: nameOption, value: value, url: urlDoc, param: param});
-
-                                        var postData = '';
-                                        for (var k in param) {
-                                            if (postData !== '') postData = postData + '&';
-                                            var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
-                                                valor = (k=='hdnInteressados') ? param[k] : valor;
-                                                valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
-                                                valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
-                                                postData = postData + k + '=' + valor;
-                                        }
-                                        // console.log(postData);
-
-                                        var xhr = new XMLHttpRequest();
-                                        $.ajax({
-                                            method: 'POST',
-                                            // data: param,
-                                            data: postData,
-                                            url: hrefForm,
-                                            contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
-                                            xhr: function() {
-                                                return xhr;
-                                            },
-                                        }).done(function (htmlResult) {
-                                            var status = (xhr.responseURL.indexOf('controlador.php?acao=arvore_visualizar&acao_origem=documento_gerar') !== -1) ? true : false;
-                                            var class_icon = '';
-                                            var text_icon = '';
-                                            if (status) {
-                                                // console.log(status);
-                                                class_icon = 'fas fa-check verdeColor';
-                                                text_icon = 'Documento duplicado com sucesso!';
-                                                var $htmlResult = $(htmlResult);
-                                                var urlEditor = [];
-                                                var idUser = false;
-                                                $.each($htmlResult.text().split('\n'), function(i, v){
-                                                    if (v.indexOf("atualizarArvore('") !== -1) {
-                                                        urlReload = v.split("'")[1];
-                                                    }
-                                                    if (v.indexOf("acao=editor_montar") !== -1) {
-                                                        urlEditor.push(v.split("'")[1]);
-                                                    }
-                                                    if (v.indexOf("janelaEditor_") !== -1) {
-                                                        idUser = v.split("_")[1];
-                                                    }
-                                                });
-                                                if (urlEditor.length > 0 && idUser && openEditor) {
-                                                    parent.openWindowEditor(urlEditor[0], idUser);
-                                                }
-                                                if (openEditor) {
-                                                    if (urlReload) {
-                                                        window.location.href = urlReload;
-                                                    } else {
-                                                        window.location.reload();
-                                                    }
-                                                }
-                                                if (typeof callback === 'function') callback();
-                                            } else {
-                                                class_icon = 'fas fa-exclamation-circle vermelhoColor';
-                                                text_icon = 'Erro ao duplicar o documento';
-                                                if (typeof callback_error === 'function') callback_error();
-                                            }
-                                            if (class_icon != '') {
-                                                $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\''+text_icon+'\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', class_icon);
-                                            }
-                                        });
-                                    });
+                                    // console.log('checkPost', checkPost, urlDoc, text, value);
+                                    if (checkPost) {
+                                        ajaxPostDuplicateArvore($html, value, nr_sei, paramDoc, openEditor, callback, callback_error);
+                                    } else {
+                                        ajaxGetDuplicateArvore(urlDoc, nr_sei, paramDoc, openEditor, callback, callback_error);
+                                    }
                                 }
                                 return false;
                             }
@@ -908,6 +814,139 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
             }
         }
     }
+}
+function ajaxPostDuplicateArvore($html, value, nr_sei, paramDoc, openEditor, callback, callback_error) {
+    var urlForm = $html.find('#frmDocumentoEscolherTipo').attr('action');
+    var param = {};
+        $html.find('#frmDocumentoEscolherTipo').find("input[type=hidden]").map(function () {
+            if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                param[$(this).attr('name')] = $(this).val(); 
+            }
+        });
+        param.hdnIdSerie = value;
+    $.ajax({ 
+        method: 'POST',
+        data: param,
+        url: urlForm
+    }).done(function (htmlDoc) {
+        saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error);
+    });
+}
+function ajaxGetDuplicateArvore(urlDoc, nr_sei, paramDoc, openEditor, callback, callback_error) {
+    $.ajax({ url: urlDoc }).done(function (htmlDoc) {
+        saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error);
+    });
+}
+function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error) {
+    var $htmlDoc = $(htmlDoc);
+    var form = $htmlDoc.find('#frmDocumentoCadastro');
+    var hrefForm = form.attr('action');
+    var param = {};
+        form.find("input[type=hidden]").each(function () {
+            if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                param[$(this).attr('name')] = $(this).val(); 
+            }
+        });
+        form.find('input[type=text]').each(function () { 
+            if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
+                param[$(this).attr('id')] = $(this).val();
+            }
+        });
+        form.find('select').each(function () { 
+            if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
+                param[$(this).attr('id')] = $(this).val();
+            }
+        });
+        form.find('input[type=radio]').each(function () { 
+            if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
+                param[$(this).attr('name')] = $(this).val();
+            }
+        });
+    param.selTextoPadrao = "0";
+    param.hdnFlagDocumentoCadastro = "2";
+    param.rdoTextoInicial = "D";
+    param.selTextoPadrao = null;
+    param.txtProtocoloDocumentoTextoBase = nr_sei;
+    param.selAssuntos = (paramDoc && typeof paramDoc.selAssuntos !== 'undefined') ? paramDoc.selAssuntos : param.selAssuntos;
+    param.hdnAssuntos = (paramDoc && typeof paramDoc.hdnAssuntos !== 'undefined') ? paramDoc.hdnAssuntos : param.hdnAssuntos;
+    param.selInteressados = (paramDoc && typeof paramDoc.selInteressados !== 'undefined') ? paramDoc.selInteressados : param.selInteressados;
+    param.hdnInteressados = (paramDoc && typeof paramDoc.hdnInteressados !== 'undefined') ? paramDoc.hdnInteressados : param.hdnInteressados;
+    param.txtNumero = (paramDoc && typeof paramDoc.txtNumero !== 'undefined' && !parent.isNumeric(paramDoc.txtNumero)) ? paramDoc.txtNumero : param.txtNumero;
+    param.txtDescricao = (paramDoc && typeof paramDoc.txtDescricao !== 'undefined') ? paramDoc.txtDescricao : param.txtDescricao;
+    param.txaObservacoes = (paramDoc && typeof paramDoc.txaObservacoes !== 'undefined') ? paramDoc.txaObservacoes : "";
+    param.rdoNivelAcesso = (paramDoc && typeof paramDoc.rdoNivelAcesso !== 'undefined') ? paramDoc.rdoNivelAcesso : param.rdoNivelAcesso;
+    param.selHipoteseLegal = (paramDoc && typeof paramDoc.selHipoteseLegal !== 'undefined') ? paramDoc.selHipoteseLegal : param.selHipoteseLegal;
+    // console.log({nr_sei: nr_sei, value: value, url: urlDoc, param: param});
+    var postData = '';
+    for (var k in param) {
+        if (postData !== '') postData = postData + '&';
+        var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
+            valor = (k=='hdnInteressados') ? param[k] : valor;
+            valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
+            valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
+            postData = postData + k + '=' + valor;
+    }
+    // console.log(postData);
+
+    var xhr = new XMLHttpRequest();
+    $.ajax({
+        method: 'POST',
+        // data: param,
+        data: postData,
+        url: hrefForm,
+        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+        xhr: function() {
+            return xhr;
+        },
+    }).done(function (htmlResult) {
+        // console.log('htmlResult', htmlResult);
+        var status = (xhr.responseURL.indexOf('controlador.php?acao=arvore_visualizar&acao_origem=documento_gerar') !== -1) ? true : false;
+        var class_icon = '';
+        var text_icon = '';
+        if (status) {
+            // console.log(status);
+            class_icon = 'fas fa-check verdeColor';
+            text_icon = 'Documento duplicado com sucesso!';
+            var $htmlResult = $(htmlResult);
+            var urlEditor = [];
+            var idUser = false;
+            $.each($htmlResult.text().split('\n'), function(i, v){
+                if (v.indexOf("var linkMontarArvoreProcessoDocumento") !== -1) {
+                    urlReload = v.split("'")[1];
+                }
+                if (v.indexOf("atualizarArvore('") !== -1) {
+                    urlReload = v.split("'")[1];
+                }
+                if (v.indexOf("acao=editor_montar") !== -1) {
+                    urlEditor.push(v.split("'")[1]);
+                }
+                if (v.indexOf("iniciarEditor(") !== -1) {
+                    idUser = v.split("'")[1];
+                }
+                if (v.indexOf("janelaEditor_") !== -1) {
+                    idUser = v.split("_")[1];
+                }
+            });
+            if (urlEditor.length > 0 && idUser && openEditor) {
+                parent.openWindowEditor(urlEditor[0], idUser);
+            }
+            if (openEditor) {
+                if (urlReload) {
+                    window.location.href = urlReload;
+                } else {
+                    window.location.reload();
+                }
+            }
+            if (typeof callback === 'function') callback();
+        } else {
+            class_icon = 'fas fa-exclamation-circle vermelhoColor';
+            text_icon = 'Erro ao duplicar o documento';
+            if (typeof callback_error === 'function') callback_error();
+        }
+        if (class_icon != '') {
+            $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\''+text_icon+'\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', class_icon);
+        }
+    });
 }
 function openAlertDuplicateDoc(textAlert) {
     if ($(containerUpload).find('.loading-action-doc').length > 0) {
@@ -1043,133 +1082,16 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
             $.ajax({ url: href }).done(function (html) {
                 let $html = $(html);
                 var urlDocExterno = $html.find('#tblSeries').find('a[href*="controlador.php?acao=documento_receber"]').attr('href');
+                var checkPost = $html.find('#tblSeries').find('a.ancoraOpcao').attr('href');
+                    checkPost = typeof checkPost !== 'undefined' && checkPost == '#' ? true : false;
                 if (typeof urlDocExterno !== 'undefined') {
-                    $.ajax({ url: urlDocExterno }).done(function (htmlAnexo) {
-                        var $htmlAnexo = $(htmlAnexo);
-                        var form = $htmlAnexo.find('#frmDocumentoCadastro');
-                        var hrefForm = form.attr('action');
-
-                        var urlUpload = '';
-                        var extUpload = [];
-                        var userUnidade = '';
-                            $.each(htmlAnexo.split('\n'), function(index, value) {
-                                if (value.indexOf("objUpload = new infraUpload") !== -1) {
-                                    urlUpload = value.split("'")[3];
-                                }
-                                if (value.indexOf("arrExt") !== -1) {
-                                    if (typeof value.split('"')[1] !== 'undefined') {
-                                        extUpload.push('.'+value.split('"')[1]);
-                                    }
-                                }
-                                if (value.indexOf("objTabelaAnexos.adicionar") !== -1) {
-                                    var regex = /\s*objTabelaAnexos\.adicionar\(\[arr\['nome_upload'\],arr\['nome'\],arr\['data_hora'\],arr\['tamanho'],infraFormatarTamanhoBytes\(arr\['tamanho'\]\),'(.+?)' ,'(.+?)']\);/gm
-                                    var paramV = regex.exec(value);
-                                    if (paramV === null) return null;
-                                    userUnidade = {user: paramV[1], unidade: paramV[2]};
-                                }
-                            });
-                        var param = {};
-                            form.find("input[type=hidden]").each(function () {
-                                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-                                    param[$(this).attr('name')] = $(this).val(); 
-                                }
-                            });
-                            form.find('input[type=text]').each(function () { 
-                                if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
-                                    param[$(this).attr('id')] = $(this).val();
-                                }
-                            });
-                            form.find('select').each(function () { 
-                                if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
-                                    param[$(this).attr('id')] = $(this).val();
-                                }
-                            });
-                            form.find('input[type=radio]').each(function () { 
-                                if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
-                                    param[$(this).attr('name')] = $(this).val();
-                                }
-                            });
-                        if (extUpload.length > 0) {
-                            // console.log('arrayDropzone.options',arrayDropzone.options);
-                            arrayDropzone.options.acceptedFiles = extUpload.join(',');
-                            parent.parent.localStorageStorePro('arvoreDropzone_acceptedFiles', extUpload.join(','));
-                        }
-
-                        var nexFileQueued = queuedFiles[0];
-                        var txtDataElaboracao = (typeof nexFileQueued !== 'undefined' && typeof nexFileQueued.lastModifiedDate !== 'undefined') 
-                                                ? moment(nexFileQueued.lastModifiedDate).format('DD/MM/YYYY')
-                                                : moment().format('DD/MM/YYYY');
-                        var nameFile = nexFileQueued.name;
-                        var nameFile_reg = parent.parent.removeAcentos(nameFile.trim().toLowerCase().replace(/_|:/g, ' '));
-                        var valueSerie = false;
-                        var tipoDoc = [];
-                            form.find('#selSerie option').each(function (v) { 
-                                if ($(this).text().trim() != '') { 
-                                    var nameOption = $(this).text().trim().toLowerCase().replace(/_|:/g, ' ');
-                                    var nameOptionReg = escapeRegExp(parent.parent.removeAcentos(nameOption));
-                                    var reg = new RegExp('^\\b'+nameOptionReg, "igm");
-                                    tipoDoc.push({name: nameOption, value: $(this).val()}) 
-                                    if (reg.test(nameFile_reg)) { 
-                                        valueSerie = $(this).val();
-                                        return false;
-                                    }
-                                }
-                            });
-                        var selSerieDefault = (getConfigValue('newdocname')) 
-                                ? $.map(tipoDoc, function(value){ if (value.name == getConfigValue('newdocname').trim().toLowerCase().replace(/_|:/g, ' ')) { return value } })[0]
-                                : $.map(tipoDoc, function(value){ if (value.name == 'anexo') { return value } })[0];
-                            selSerieDefault = (typeof selSerieDefault !== 'undefined') 
-                                ? selSerieDefault 
-                                : $.map(tipoDoc, function(value){ if (value.name.indexOf('anexo') !== -1) { return value } })[0];
-                            selSerieDefault = (typeof selSerieDefault === 'undefined') ? tipoDoc[0] : selSerieDefault;
-
-                        var selSerie = (valueSerie) ? valueSerie : selSerieDefault.value;
-                        var selSerieSelected = $.map(tipoDoc, function(value){ if (value.value == valueSerie) { return value } })[0];
-                            selSerieSelected = (typeof selSerieSelected !== 'undefined') ? selSerieSelected : selSerieDefault;
-                            
-                        var nameDoc = nameFile.normalize('NFC');
-                        var reg = new RegExp('^\\b'+selSerieSelected.name, "igm");
-                        if (reg.test(nameDoc)) { nameDoc = nameDoc.replace(reg, '').trim() }
-                            nameDoc = nameDoc.substring(0, nameDoc.lastIndexOf("."));
-                            nameDoc = (nameDoc.length > 50) ? nameDoc.replace(/^(.{50}[^\s]*).*/, "$1") : nameDoc;
-                            nameDoc = (nameDoc.length > 50) ? nameDoc.substring(0,49) : nameDoc;
-
-                        var valueSigilo = parent.parent.getConfigValue('newdocsigilo');
-                            valueSigilo = (valueSigilo != '' && valueSigilo.indexOf('|') !== -1) ? valueSigilo.split('|') : false;
-
-                        var valueNivelAcesso = (checkConfigValue('newdocnivel')) 
-                            ? "0" 
-                            : (valueSigilo) ? valueSigilo[1] : "0";
-
-                        param.selSerie = selSerie;
-                        param.hdnIdSerie = selSerie;
-                        param.rdoNivelAcesso = (form.find('input[name="rdoNivelAcesso"]:checked').length > 0) 
-                            ? form.find('input[name="rdoNivelAcesso"]:checked').val() 
-                            : valueNivelAcesso;
-                        param.hdnStaNivelAcessoLocal = param.rdoNivelAcesso; //
-                        param.rdoFormato = (parent.parent.checkConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1) ? "D": "N";
-                        param.hdnFlagDocumentoCadastro = "2";
-                        // param.hdnIdHipoteseLegal = param.selHipoteseLegal;
-                        param.hdnIdHipoteseLegal = (valueSigilo) ? valueSigilo[0] : param.selHipoteseLegal;
-                        param.selHipoteseLegal = param.hdnIdHipoteseLegal;
-                        param.selTipoConferencia = (parent.parent.checkConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1 && parent.parent.getConfigValue('newdocformat').indexOf('_') !== -1) ? parent.parent.getConfigValue('newdocformat').split('_')[1] : "";
-                        param.hdnIdTipoConferencia = param.selTipoConferencia;
-                        param.txaObservacoes = "";
-                        param.txtDataElaboracao = txtDataElaboracao;
-                        param.txtNumero = escapeComponent(nameDoc);
-                        // console.log(parent.checkConfigValue('newdocformat'), parent.getConfigValue('newdocformat'), param.rdoFormato, param.hdnIdTipoConferencia);
-                        arrayDropzone.options.url = urlUpload;
-                        arrayDropzone.options.params = {
-                                                            urlForm: hrefForm,
-                                                            paramsForm: param,
-                                                            userUnidade: userUnidade,
-                                                        };
-                        arrayDropzone.processQueue();
-
-                        // console.log('param###', arrayDropzone.options, param, nameDoc, nameFile, selSerieSelected, selSerie, tipoDoc);
-                    });
+                        ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload);
                 } else {
-                    elem.addClass("dz-error").find('.dz-error-message span').text('Link para upload n\u00E3o encontrado');
+                    if (checkPost) {
+                        ajaxPostUploadArvore($html, queuedFiles, mode, result, arrayDropzone, _containerUpload);
+                    } else {
+                        elem.addClass("dz-error").find('.dz-error-message span').text('Link para upload n\u00E3o encontrado');
+                    }
                 }
             });
         } else {
@@ -1192,11 +1114,156 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
             if (status) {
                 sendUploadArvore('upload', false, arrayDropzone, _containerUpload);
                 getInfoArvoreLastDoc(htmlResult, xhr.responseURL, arrayDropzone, _containerUpload);
+                // console.log('status',status);
             } else {
                 elem.addClass("dz-error").find('.dz-error-message span').text('N\u00E3o foi poss\u00EDvel fazer o upload do arquivo');
             }
         });
     }
+}
+function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+    var urlForm = $html.find('#frmDocumentoEscolherTipo').attr('action');
+    var param = {};
+        $html.find('#frmDocumentoEscolherTipo').find("input[type=hidden]").map(function () {
+            if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                param[$(this).attr('name')] = $(this).val(); 
+            }
+        });
+        param.hdnIdSerie = -1;
+    $.ajax({ 
+        method: 'POST',
+        data: param,
+        url: urlForm
+    }).done(function (htmlAnexo) {
+        submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
+    });
+}
+function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
+    $.ajax({ url: urlDocExterno }).done(function (htmlAnexo) {
+        submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
+    });
+}
+function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
+        var $htmlAnexo = $(htmlAnexo);
+        var form = $htmlAnexo.find('#frmDocumentoCadastro');
+        var hrefForm = form.attr('action');
+
+        var urlUpload = '';
+        var extUpload = [];
+        var userUnidade = '';
+            $.each(htmlAnexo.split('\n'), function(index, value) {
+                if (value.indexOf("objUpload = new infraUpload") !== -1) {
+                    urlUpload = value.split("'")[3];
+                }
+                if (value.indexOf("arrExt") !== -1) {
+                    if (typeof value.split('"')[1] !== 'undefined') {
+                        extUpload.push('.'+value.split('"')[1]);
+                    }
+                }
+                if (value.indexOf("objTabelaAnexos.adicionar") !== -1) {
+                    var regex = /\s*objTabelaAnexos\.adicionar\(\[arr\['nome_upload'\],arr\['nome'\],arr\['data_hora'\],arr\['tamanho'],infraFormatarTamanhoBytes\(arr\['tamanho'\]\),'(.+?)' ,'(.+?)']\);/gm
+                    var paramV = regex.exec(value);
+                    if (paramV === null) return null;
+                    userUnidade = {user: paramV[1], unidade: paramV[2]};
+                }
+            });
+        var param = {};
+            form.find("input[type=hidden]").each(function () {
+                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                    param[$(this).attr('name')] = $(this).val(); 
+                }
+            });
+            form.find('input[type=text]').each(function () { 
+                if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
+                    param[$(this).attr('id')] = $(this).val();
+                }
+            });
+            form.find('select').each(function () { 
+                if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
+                    param[$(this).attr('id')] = $(this).val();
+                }
+            });
+            form.find('input[type=radio]').each(function () { 
+                if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
+                    param[$(this).attr('name')] = $(this).val();
+                }
+            });
+        if (extUpload.length > 0) {
+            // console.log('arrayDropzone.options',arrayDropzone.options);
+            arrayDropzone.options.acceptedFiles = extUpload.join(',');
+            parent.parent.localStorageStorePro('arvoreDropzone_acceptedFiles', extUpload.join(','));
+        }
+
+        var nexFileQueued = queuedFiles[0];
+        var txtDataElaboracao = (typeof nexFileQueued !== 'undefined' && typeof nexFileQueued.lastModifiedDate !== 'undefined') 
+                                ? moment(nexFileQueued.lastModifiedDate).format('DD/MM/YYYY')
+                                : moment().format('DD/MM/YYYY');
+        var nameFile = nexFileQueued.name;
+        var nameFile_reg = parent.parent.removeAcentos(nameFile.trim().toLowerCase().replace(/_|:/g, ' '));
+        var valueSerie = false;
+        var tipoDoc = [];
+            form.find('#selSerie option').each(function (v) { 
+                if ($(this).text().trim() != '') { 
+                    var nameOption = $(this).text().trim().toLowerCase().replace(/_|:/g, ' ');
+                    var nameOptionReg = escapeRegExp(parent.parent.removeAcentos(nameOption));
+                    var reg = new RegExp('^\\b'+nameOptionReg, "igm");
+                    tipoDoc.push({name: nameOption, value: $(this).val()}) 
+                    if (reg.test(nameFile_reg)) { 
+                        valueSerie = $(this).val();
+                        return false;
+                    }
+                }
+            });
+        var selSerieDefault = (getConfigValue('newdocname')) 
+                ? $.map(tipoDoc, function(value){ if (value.name == getConfigValue('newdocname').trim().toLowerCase().replace(/_|:/g, ' ')) { return value } })[0]
+                : $.map(tipoDoc, function(value){ if (value.name == 'anexo') { return value } })[0];
+            selSerieDefault = (typeof selSerieDefault !== 'undefined') 
+                ? selSerieDefault 
+                : $.map(tipoDoc, function(value){ if (value.name.indexOf('anexo') !== -1) { return value } })[0];
+            selSerieDefault = (typeof selSerieDefault === 'undefined') ? tipoDoc[0] : selSerieDefault;
+
+        var selSerie = (valueSerie) ? valueSerie : selSerieDefault.value;
+        var selSerieSelected = $.map(tipoDoc, function(value){ if (value.value == valueSerie) { return value } })[0];
+            selSerieSelected = (typeof selSerieSelected !== 'undefined') ? selSerieSelected : selSerieDefault;
+            
+        var nameDoc = nameFile.normalize('NFC');
+        var reg = new RegExp('^\\b'+selSerieSelected.name, "igm");
+        if (reg.test(nameDoc)) { nameDoc = nameDoc.replace(reg, '').trim() }
+            nameDoc = nameDoc.substring(0, nameDoc.lastIndexOf("."));
+            nameDoc = (nameDoc.length > 50) ? nameDoc.replace(/^(.{50}[^\s]*).*/, "$1") : nameDoc;
+            nameDoc = (nameDoc.length > 50) ? nameDoc.substring(0,49) : nameDoc;
+
+        var valueSigilo = parent.parent.getConfigValue('newdocsigilo');
+            valueSigilo = (valueSigilo != '' && valueSigilo.indexOf('|') !== -1) ? valueSigilo.split('|') : false;
+
+        var valueNivelAcesso = (checkConfigValue('newdocnivel')) 
+            ? "0" 
+            : (valueSigilo) ? valueSigilo[1] : "0";
+
+            param.selSerie = selSerie;
+            param.hdnIdSerie = selSerie;
+            param.rdoNivelAcesso = (form.find('input[name="rdoNivelAcesso"]:checked').length > 0) 
+                ? form.find('input[name="rdoNivelAcesso"]:checked').val() 
+                : valueNivelAcesso;
+            param.hdnStaNivelAcessoLocal = param.rdoNivelAcesso; //
+            param.rdoFormato = (parent.parent.checkConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1) ? "D": "N";
+            param.hdnFlagDocumentoCadastro = "2";
+            param.hdnIdHipoteseLegal = (valueSigilo) ? valueSigilo[0] : param.selHipoteseLegal;
+            param.selHipoteseLegal = param.hdnIdHipoteseLegal;
+            param.selTipoConferencia = (parent.parent.checkConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat') && parent.parent.getConfigValue('newdocformat').indexOf('digitalizado') !== -1 && parent.parent.getConfigValue('newdocformat').indexOf('_') !== -1) ? parent.parent.getConfigValue('newdocformat').split('_')[1] : "";
+            param.hdnIdTipoConferencia = param.selTipoConferencia;
+            param.txaObservacoes = "";
+            param.txtDataElaboracao = txtDataElaboracao;
+            param.txtNumero = escapeComponent(nameDoc);
+            // console.log(parent.checkConfigValue('newdocformat'), parent.getConfigValue('newdocformat'), param.rdoFormato, param.hdnIdTipoConferencia);
+            arrayDropzone.options.url = urlUpload;
+            arrayDropzone.options.params = {
+                                                urlForm: hrefForm,
+                                                paramsForm: param,
+                                                userUnidade: userUnidade,
+                                            };
+            arrayDropzone.processQueue();
+        // console.log('param###', arrayDropzone.options, param, nameDoc, nameFile, selSerieSelected, selSerie, tipoDoc);
 }
 function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
     var indexUpload = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
@@ -1204,7 +1271,10 @@ function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropz
     var queuedFiles = (typeof arrayDropzone.getQueuedFiles === 'function') ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
 
     $.each(dataResult.split('\n'), function(index, value) {
-        if (value.indexOf("atualizarArvore('controlador.php?acao=procedimento_visualizar&acao_origem=arvore_visualizar&id_procedimento="+param.id_procedimento+"&id_documento="+param.id_documento) !== -1) {
+        if (
+            value.indexOf("atualizarArvore('controlador.php?acao=procedimento_visualizar&acao_origem=arvore_visualizar&id_procedimento="+param.id_procedimento+"&id_documento="+param.id_documento) !== -1
+            || value.indexOf("var linkMontarArvoreProcessoDocumento") !== -1
+            ) {
             urlArvore = value.split("'")[1];
             $.ajax({ url: urlArvore }).done(function (htmlArvore) {
                 var arrayArvore = [];
@@ -1304,7 +1374,7 @@ function initUploadArvore(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initUploadArvore(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initUploadArvore => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initUploadArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -1327,7 +1397,7 @@ function initDadosProcessoArvore(TimeOut = 1000) {
     } else {
         setTimeout(function(){ 
             initDadosProcessoArvore(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initDadosProcessoArvore => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initDadosProcessoArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -1705,7 +1775,7 @@ function setStickNoteCheck() {
 }
 function getDadosAnotacao() {
     var urlAnotacao = jmespath.search(arrayLinksPage,"[?name=='Anota\u00E7\u00F5es'] | [0].url");
-    if (urlAnotacao) {
+    if (urlAnotacao && !parent.checkHostLimit()) {
         $.ajax({ url: urlAnotacao }).done(function (html) {
             var $htmlAnotacao = $(html);
             var anotacaoTxt = $htmlAnotacao.find('#txaDescricao').val().trim();
@@ -1728,7 +1798,7 @@ function getDadosInteressadosArvore(this_) {
     var _this = $(this_);
     var data = _this.data();
     if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
-    var hrefConsulta = $('#main-menu a[href*="protocolo_pesquisar"]', parent.document.body).attr('href');
+    var hrefConsulta = $((parent.isNewSEI ? '#infraMenu' : '#main-menu')+' a[href*="protocolo_pesquisar"]', parent.document.body).attr('href');
     if (hrefConsulta) {
         _this.find('i.iconInteressadosProcesso').toggleClass('fa-folder-open fa-spinner').addClass('fa-spin');
         $('#frmCheckerProcessoPro').attr('src', hrefConsulta).unbind().on('load', function(){
@@ -1747,18 +1817,36 @@ function getDadosInteressadosArvore(this_) {
                     var conteudo = iframeResult.find('#conteudo');
                     var count = conteudo.find('.barra').text().trim();
                     var result = [];
-                        conteudo.find('table.resultado').each(function(){
-                            var _this = $(this);
-                            var unidadeElem = _this.find('.metatag table td').eq(0).find('a');
-                            var usuarioElem = _this.find('.metatag table td').eq(1).find('a');
-                            var param = {
-                                title: _this.find('.resTituloEsquerda').text(),
-                                url_proc: _this.find('.resTituloEsquerda a').eq(0).attr('href'),
-                                unidade: {sigla: unidadeElem.text(), nome: unidadeElem.attr('title')},
-                                usuario: {login: usuarioElem.text(), nome: usuarioElem.attr('title')},
-                                data: _this.find('.metatag table td').eq(2).text()
-                            };
-                            result.push(param);
+                        conteudo.find(isNewSEI ? 'table.pesquisaResultado tr' : 'table.resultado').each(function(i){
+                            var tr = isNewSEI ? $(this) : $(this).find('tr');
+                            var urlArvore = isNewSEI ? tr.find('a.protocoloNormal').attr('href') : tr.eq(0).find('a.arvore').attr('href');
+                            var paramsUrl = (typeof urlArvore !== 'undefined') ? getParamsUrlPro(url_host.replace('controlador.php','')+urlArvore) : false;
+                            var urlTable = (paramsUrl) ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+paramsUrl.id_procedimento+(typeof paramsUrl.id_documento !== 'undefined' ? '&id_documento='+paramsUrl.id_documento : '') : false;
+                            if (isNewSEI && i % 3 == 0) {
+                                var nomeProcesso = (urlTable) ? '<a href="'+urlTable+'" target="_blank">'+tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim()+'</a>' : tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim();
+                                var unidadeElem = tr.next().next().find('td.pesquisaMetatag').eq(0).find('a');
+                                var usuarioElem = tr.next().next().find('td.pesquisaMetatag').eq(1).find('a');
+                                var param = {
+                                    title: nomeProcesso,
+                                    url_proc: urlTable,
+                                    unidade: {sigla: unidadeElem.text(), nome: unidadeElem.attr('title')},
+                                    usuario: {login: usuarioElem.text(), nome: usuarioElem.attr('title')},
+                                    data: tr.next().next().find('td.pesquisaMetatag').eq(2).text().replace('Inclus\u00E3o:', '').trim()
+                                };
+                                result.push(param);
+                            } else if (!isNewSEI) {
+                                var _this = $(this);
+                                var unidadeElem = _this.find('.metatag table td').eq(0).find('a');
+                                var usuarioElem = _this.find('.metatag table td').eq(1).find('a');
+                                var param = {
+                                    title: _this.find('.resTituloEsquerda').text(),
+                                    url_proc: _this.find('.resTituloEsquerda a').eq(0).attr('href'),
+                                    unidade: {sigla: unidadeElem.text(), nome: unidadeElem.attr('title')},
+                                    usuario: {login: usuarioElem.text(), nome: usuarioElem.attr('title')},
+                                    data: _this.find('.metatag table td').eq(2).text()
+                                };
+                                result.push(param);
+                            }
                         });
                         var htmlResult =    '<div class="options_interessado">'+
                                             '   <a class="newLink" data-type="tramiteUnidade" onclick="optionSearchInteressado(this)">'+
@@ -1881,14 +1969,15 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   <div class="infoDadosArvore" style="'+(getOptionsPro('panelDadosArvorePro_marcador') == 'hide' ? 'display:none' : 'position: relative;min-height: 60px;')+'">'+
                                     '       <a class="newLink" style="cursor:pointer;max-width: calc(100% - 70px);" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconMarcador+'</a>'+linkPrazo+
                                     (processoAberto ?
+                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" onclick="parent.getRemoverMarcador()" onmouseover="return infraTooltipMostrar(\'Clique para remover o marcador\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash"></i></a>'+
                                     '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;" onclick="parent.editDadosArvorePro(this)" onmouseover="return infraTooltipMostrar(\'Clique para editar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit"></i></a>'+
-                                    '       <a class="newLink" maxlength="100" data-mode="marcador" style="cursor:pointer;float: right;position: absolute;right: 0;top: 30px;" onclick="parent.getRemoverMarcador()" onmouseover="return infraTooltipMostrar(\'Clique para remover o marcador\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash"></i></a>'+
                                     '' : '')+
                                     '   </div>'+
                                     '</div>';
             htmlMarcador = ($.inArray("Marcador",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlMarcador : '';
 
         var storeAcompEsp = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+            storeAcompEsp = storeAcompEsp === null ? parent.getListAcompanhamentoEspecial() : storeAcompEsp;               
         var dataAcompEsp = (storeAcompEsp !== null) ? jmespath.search(storeAcompEsp, "[?id_protocolo=='"+id_procedimento+"'] | [0]") : null;
             dataAcompEsp = dataAcompEsp ? dataAcompEsp : false;                     
         var txtAcompEsp = (dataAcompEsp) ? dataAcompEsp.observacoes+(dataAcompEsp.grupo != '' ? ' ('+dataAcompEsp.grupo+')' : '') : '';
@@ -2021,7 +2110,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
 
         $('.panelDadosArvorePro').remove();
         $('#frmArvore').append(htmlBlocoInterno+htmlMarcador+htmlAcompEsp+htmlDescricao+htmlTipoProcedimento+htmlNivelAcesso+htmlInteressados+htmlAssuntos+htmlObservacoes);  
-        parent.forceOnLoadBodyPage();  
+        if (typeof $(parent.document).find("#divIframeArvore").resizable !== 'undefined') parent.forceOnLoadBodyPage();  
         if (!dataMarcador && processoAberto) {
             getDataMarcadorProcesso();
         }
@@ -2222,7 +2311,12 @@ function stylePanelArvore() {
         var htmlAtividades = '<div class="panelDadosArvore panelDadosArvore_atividades" data-type="atividades"></div>';
         initAtividadesProcesso();
 
-        $('#frmArvore').append(htmlAtividades+htmlResponsaveis);
+        var disableQuery = `<div id="divConsultaExtras" style="border-top: 1px solid rgb(218, 218, 218);width: 99%;padding: 1em 0.2em 1em 0.2em;margin-top: 1em;">
+                                <a href="#" style="cursor:pointer;text-decoration: none;" onclick="enableConsultasExtras();" class="newLink" onmouseover="return infraTooltipMostrar(\'Clique para desativar\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-lock azulColor iconDadosProcesso"></i>&nbsp;Bloqueada consultas adicionais</a>
+                            </div>`;
+            disableQuery = checkHostLimit() ? disableQuery : '';
+
+        $('#frmArvore').append(htmlAtividades+htmlResponsaveis+disableQuery);
 
         initDadosProcessoArvore();
         initDadosProcessoArvoreSession();
@@ -2236,14 +2330,16 @@ function stylePanelArvore() {
             });
             if (typeof parent.getInsertIconAtividade === 'function') parent.getInsertIconAtividade();
         }
-        parent.forceOnLoadBodyPage();
+        if (typeof $(parent.document).find("#divIframeArvore").resizable !== 'undefined') parent.forceOnLoadBodyPage();
 
-        if ($.inArray("Anota\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) {
-            getDadosAnotacao();
-        }
-        if ($('#divRelacionados').text().trim() == '') {
-            $('#divRelacionados').hide();
-        }
+        if ($.inArray("Anota\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) getDadosAnotacao();
+
+        console.log('getDadosAnotacao', $.inArray("Anota\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1);
+
+        if ($('#divRelacionados').text().trim() == '') $('#divRelacionados').hide();
+
+    } else {
+        if (!$('.stickDadosArvore').length && $.inArray("Anota\u00E7\u00F5es",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) getDadosAnotacao();
     }
 }
 function initStylePanelArvore(TimeOut = 9000) {
@@ -2263,7 +2359,7 @@ function initStylePanelArvore(TimeOut = 9000) {
                 parent.initNameConst();
             }
             initStylePanelArvore(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initStylePanelArvore => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initStylePanelArvore => '+TimeOut); 
         }, 500);
     }
 }
@@ -2291,7 +2387,7 @@ function initBreakDocTwoLines(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initBreakDocTwoLines(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initBreakDocTwoLines => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initBreakDocTwoLines => '+TimeOut); 
         }, 500);
     }
 }
@@ -2308,7 +2404,7 @@ function loadStyleDesign(loop = 3) {
         if (loop > 0) {
             setTimeout(function(){ 
                 loadStyleDesign(false);
-                if(verifyConfigValue('debugpage')) console.log('Reload loadStyleDesign', loop);
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload loadStyleDesign', loop);
             }, 1500);
         }
     }
@@ -2364,7 +2460,7 @@ function initPanelPrescricaoProcesso() {
     var prescData = parent.arrayPrescricoesProcPro;
     var tipos_prescricao = typeof jmespath !== 'undefined' ? jmespath.search(prescData,"[*].id_tipo_prescricao") : null;
         tipos_prescricao = tipos_prescricao !== null ? parent.uniqPro(tipos_prescricao) : null;
-    if (typeof prescData !== 'undefined' && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0 && checkConfigValue('gerenciarprescricoes')) {
+    if (typeof prescData !== 'undefined' && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0 && typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('gerenciarprescricoes')) {
         $.each(tipos_prescricao, function(i, v){
             var value_prescricao = typeof parent.arrayConfigAtividades.tipos_prescricoes !== 'undefined' ? jmespath.search(parent.arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`"+v+"`] | [0]") : null;
                 value_prescricao = value_prescricao !== null ? value_prescricao : false;
@@ -2455,7 +2551,7 @@ function initSeiProArvore(loop = true) {
     if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('infoarvore') ) { 
         initStylePanelArvore();
     } else if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined'  && !parent.checkConfigValue('infoarvore')) {
-        parent.forceOnLoadBodyPage(); 
+        if (typeof $(parent.document).find("#divIframeArvore").resizable !== 'undefined') parent.forceOnLoadBodyPage(); 
         console.log('forceOnLoadBodyPage');
     }
     
@@ -2481,17 +2577,17 @@ function initSeiProArvore(loop = true) {
     }
     if (
         (typeof parent.insertIconFavorites === 'function' || typeof parent.insertIconFavorites !== 'undefined') && 
-        parent.checkConfigValue('gerenciarfavoritos')
+        typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('gerenciarfavoritos')
         ) {
         parent.insertIconFavorites();
     }
-    if (typeof parent.initCheckDadosProcesso === 'function' || typeof parent.initCheckDadosProcesso !== 'undefined') {
+    if (typeof parent.checkHostLimit !== 'undefined'  && !parent.checkHostLimit() && (typeof parent.initCheckDadosProcesso === 'function' || typeof parent.initCheckDadosProcesso !== 'undefined')) {
         parent.initCheckDadosProcesso();
     }
-    if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined'  && parent.checkConfigValue('uploaddocsexternos')) {
+    if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('uploaddocsexternos')) {
         initUploadArvore();
     }
-    if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined'  && parent.verifyConfigValue('menususpenso')) {
+    if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined' && parent.verifyConfigValue('menususpenso')) {
         parent.hideMenuSistemaView();
     }
     if (typeof parent.setClickUrlAmigavel !== 'undefined'  && parent.verifyConfigValue('urlamigavel')) {
@@ -2514,8 +2610,15 @@ function initSeiProArvore(loop = true) {
         var arrayCheckActions = $('a[id*="anchor"][target="ifrVisualizacao"]').map(function(){ if (typeof $(this).data('arvore-pro') === 'undefined') return true ; }).get();
         if (typeof parent.execArvorePro !== 'undefined' && loop && typeof arrayCheckActions !== 'undefined' && arrayCheckActions.length > 0) {
             parent.execArvorePro(initSeiProArvore);
-            if(verifyConfigValue('debugpage')) console.log('Reload initSeiProArvore Loop');
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initSeiProArvore Loop');
         } 
+        if (typeof parent.loadResizeIframeArvoreNewSEI !== 'undefined') parent.loadResizeIframeArvoreNewSEI();
+        if (typeof jmespath === 'undefined' && typeof parent.URL_SPRO !== 'undefined') $.getScript(parent.URL_SPRO+"js/lib/jmespath.min.js");
+
+        if (typeof parent.checkHostLimit !== 'undefined'  && parent.checkHostLimit() && typeof parent.getUrlAcaoPro !== 'undefined'  && parent.getUrlAcaoPro('duplicar_documento')) {
+            parent.initCheckDadosProcesso();
+            console.log('parent.getUrlAcaoPro(duplicar_documento)',parent.getUrlAcaoPro('duplicar_documento'));
+        }
     }, 500);
 }
 

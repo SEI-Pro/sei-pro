@@ -26,13 +26,14 @@ function setConfigHost(host, callback, callback_else){
         callback_else();
     }
 }
-function appendIconEntidadeLogin() {
+/* function appendIconEntidadeLogin() {
     if ($('#divAreaRestrita').length > 0 && $('#iconEntidade').length == 0) {
         $.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"));
-        $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+        if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
         $.getScript(getUrlExtension("js/sei-pro-icons.js"));
+
     }
-}
+} */
 function getParamsUrlPro(url) {
     var params = {};
     if (typeof url !== 'undefined' && url.indexOf('?') !== -1 && url.indexOf('&') !== -1) {
@@ -100,7 +101,7 @@ function getOptionsSEIPro(data) {
             }, function() {
                 if (data.alert) { alert('Configura\u00e7\u00f5es carregadas com sucesso!'); }
                 if (typeof window.jQuery !== 'undefined') {
-                    var urlHome = $('#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
+                    var urlHome = $(isNewSEI ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
                     if (typeof urlHome !== 'undefined') {
                         // localStorage.setItem('configBasePro_atividades', JSON.stringify({URL_API: newItem.url, KEY_USER: newItem.token}));
                         console.log({URL_API: newItem.url, KEY_USER: newItem.token});
@@ -271,9 +272,9 @@ function loadRepairPwdNewSei() {
 function loadScriptProDB() {
     observeAcaoPro();
     changeBasePro();
-    getConfigHost(appendIconEntidadeLogin);
+    // getConfigHost(appendIconEntidadeLogin);
     getPathExtensionPro();
-    loadRepairPwdNewSei();
+    // loadRepairPwdNewSei();
 }
 if (getManifestExtension().short_name == 'SPro') {
     setTimeout(function(){ 

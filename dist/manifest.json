@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "1.5.3.1",
+  "version": "1.5.5.7",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -75,6 +75,25 @@
         "*://*.br/sip/*login.php*",
         "*://*.br/sei/*",
         "*://*.br/login.php*sigla_sistema=SEI*",
+        "*://sip-sei.ans.br/sip/login.php*",
+        "*://sip-sei.ans.gov.br/*",
+        "*://sip-sei.ans.gov.br/controlador.php*",
+        "*://sip-sei.ans.gov.br/login.php*sigla_sistema=SEI*"
+      ]
+    },
+    {
+      "js": [
+        "js/lib/jquery-3.4.1.min.js",
+        "js/init_pwd.js"
+      ],
+      "all_frames": true,
+      "matches": [
+        "*://*.br/sip/*login.php*",
+        "*://*.br/sip/login.php*",
+        "*://*.br/sei/*",
+        "*://*.br/login.php*sigla_sistema=SEI*",
+        "*://*.br/*controlador.php?acao=documento_assinar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=documento_assinar*",
         "*://sip-sei.ans.br/sip/login.php*",
         "*://sip-sei.ans.gov.br/*",
         "*://sip-sei.ans.gov.br/login.php*sigla_sistema=SEI*"
@@ -173,6 +192,8 @@
       "all_frames": true,
       "matches": [
         "*://*.br/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*",
+        "*://*.br/*controlador.php?acao=arvore_processar_html*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_processar_html*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*"
       ]
     },
@@ -240,6 +261,7 @@
         "js/lib/favico-0.3.10.min.js",
         "js/lib/papaparse.js",
         "js/lib/jschardet.min.js",
+        "js/lib/diff2html.min.js",
         "js/sei-functions-pro.js",
         "js/sei-pro-atividades.js",
         "js/sei-pro-projetos.js",
@@ -254,6 +276,7 @@
         "js/sei-legis.js",
         "js/sei-pro-visualizacao-chosen.js",
         "js/sei-pro-docs-lote.js",
+        "js/sei-pro-ai.js",
         "icons/lab/icon-32.png",
         "css/sei-pro.css",
         "css/frappe-gantt.css",
@@ -329,7 +352,10 @@
         "css/images/marker-icon-2x.png",
         "css/images/marker-icon.png",
         "css/images/marker-shadow.png",
-        "config_hosts.json"
+        "config_hosts.json",
+        "html/options.html",
+        "html/options.js",
+        "html/page.css"
       ],
       "matches": [
         "*://*.br/*"

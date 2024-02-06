@@ -1,11 +1,12 @@
+const loadSEIProAll = true;
 var logBackup = console.log;
 var logMessages = [];
 var pagesInfiniteSearch = [];
 var frmPesquisaProtocolo = ($('#seiSearch').length) ? '#seiSearch' : '#frmPesquisaProtocolo';
-var divPaginas = isNewSEI ? 'div.pesquisaPaginas' : 'div.paginas';
+var divPaginas = typeof isNewSEI !== 'undefined' && isNewSEI ? 'div.pesquisaPaginas' : 'div.paginas';
 
 function getTableInfiniteSearch(ifrView, formID, tableID, index) {
-    console.log(pagesInfiniteSearch, index, pagesInfiniteSearch);
+    // console.log(pagesInfiniteSearch, index, pagesInfiniteSearch);
     if (pagesInfiniteSearch.length == 0 || $.inArray(index, pagesInfiniteSearch) === -1) {
         var form = ifrView.find(formID);
         var href = form.attr('action');
@@ -24,7 +25,7 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
             param['hdnInicio'] = index;
             pagesInfiniteSearch.push(index);
             ifrView.find(divPaginas).append('<label class="loadRemovePag"><i class="fas fa-sync fa-spin"></i></label>');
-            console.log(param, href);
+            // console.log(param, href);
 
         $.ajax({ 
             method: 'POST',
@@ -43,7 +44,7 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
             }
             ifrView.find(divPaginas).after($html.find(divPaginas)).remove();
             startQuickViewSearch();
-            console.log('startQuickViewSearch');
+            // console.log('startQuickViewSearch');
         });
     }
 }
@@ -76,7 +77,7 @@ function initRangerSelectShift(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initRangerSelectShift(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initRangerSelectShift'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initRangerSelectShift'); 
         }, 500);
     }
 }
@@ -89,7 +90,7 @@ function initHideMenuSistemaView(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initHideMenuSistemaView(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initHideMenuSistemaView'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initHideMenuSistemaView'); 
         }, 500);
     }
 }
@@ -103,7 +104,7 @@ function initSetMomentPtBr(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initSetMomentPtBr(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initSetMomentPtBr'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initSetMomentPtBr'); 
         }, 500);
     }
 }
@@ -117,7 +118,7 @@ function initTableSorter(TimeOut = 9000) {
         setTimeout(function(){ 
             if (typeof $().tablesorter === 'undefined' && TimeOut == 9000 && typeof URL_SPRO !== 'undefined') { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initTableSorter(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initTableSorter'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initTableSorter'); 
         }, 500);
     }
 }
@@ -128,7 +129,7 @@ function initInsertNewLinksMenu(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initInsertNewLinksMenu(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initInsertNewLinksMenu'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initInsertNewLinksMenu'); 
         }, 500);
     }
 }
@@ -136,10 +137,9 @@ function insertNewLinksMenu() {
     if ($(idMenu).find('.newLinksMenuPro').length == 0) {
         var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" onclick="initBoxSearchProtocoloSEI()"><span>Pesquisar Link Permanente</span></a></li>';
 
-        if (checkConfigValue('historicoproc')) {
-            newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()"><span>Hist\u00F3rico de Processos Visitados</span></a></li>';
-        }
-            $(idMenu).append(newLinkMenu);
+        if (checkConfigValue('historicoproc')) newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()"><span>Hist\u00F3rico de Processos Visitados</span></a></li>';
+        if (checkConfigValue('ordenarmenu')) initMenuSEISortable();
+        $(idMenu).append(newLinkMenu);
     }
 }
 function setTableSorter() {
@@ -313,9 +313,9 @@ function getTablePesquisaDownload(this_, mode){
 
     $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo table.pesquisaResultado tr' : '#conteudo table.resultado').each(function(i){
         var tr = isNewSEI ? $(this) : $(this).find('tr');
-        var urlArvore = tr.eq(0).find('a.arvore').attr('href');
-        var params = (typeof urlArvore !== 'undefined') ? getParamsUrlPro(url_host.replace('controlador.php','')+urlArvore) : false;
-        var urlTable = (params) ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+params.id_procedimento+'&id_documento='+params.id_documento : false;
+        var urlArvore = isNewSEI ? tr.find('a.protocoloNormal').attr('href') : tr.eq(0).find('a.arvore').attr('href');
+        var paramsUrl = (typeof urlArvore !== 'undefined') ? getParamsUrlPro(url_host.replace('controlador.php','')+urlArvore) : false;
+        var urlTable = (paramsUrl) ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+paramsUrl.id_procedimento+(typeof paramsUrl.id_documento !== 'undefined' ? '&id_documento='+paramsUrl.id_documento : '') : false;
         if (isNewSEI && i % 3 == 0) {
             var nomeProcesso = (urlTable) ? '<a href="'+urlTable+'" target="_blank">'+tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim()+'</a>' : tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim();
                 htmlTable +=    '       <tr>'+
@@ -413,7 +413,7 @@ function setTablePesquisaDownload() {
         if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
 }
 function initTablePesquisaDownload() {
-    var resultado = $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo table.pesquisaResultado' : '#conteudo table.resultado');
+    var resultado = $(frmPesquisaProtocolo).find(typeof isNewSEI !== 'undefined' && isNewSEI ? '#conteudo table.pesquisaResultado' : '#conteudo table.resultado');
     if (resultado.length > 0) {
         setTablePesquisaDownload();
         if (!isNewSEI) initScrollToElement();
@@ -426,7 +426,7 @@ function initScrollToElement(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initScrollToElement(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initScrollToElement => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initScrollToElement => '+TimeOut); 
         }, 500);
     }
 }
@@ -440,7 +440,7 @@ function initAppendIconFavorites(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initAppendIconFavorites(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initAppendIconFavorites => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initAppendIconFavorites => '+TimeOut); 
         }, 500);
     }
 }
@@ -499,7 +499,7 @@ function initGetConfigHost(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initGetConfigHost(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initIconEntidade => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initIconEntidade => '+TimeOut); 
         }, 500);
     }
 }
@@ -510,9 +510,11 @@ function initReplaceSelectAll(TimeOut = 12000) {
             $('select')
                 .not('[multiple]')
                 .not('#selStaIcone')
+                .not('#filterTableHome')
+                .not('#selectGroupTablePro')
                 .not('#selMarcador')
                 .filter(function() { 
-                    return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') 
+                    return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none' || typeof $(this).data('chosen') !== 'undefined')
                 })
                 .not('[name="selProcedimentos"]')
                 .chosen({
@@ -522,12 +524,10 @@ function initReplaceSelectAll(TimeOut = 12000) {
             chosenReparePosition();
         }
     } else {
-        if (typeof $().chosen === 'undefined') { 
-            if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-        }
+        if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
         setTimeout(function(){ 
             initReplaceSelectAll(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initReplaceSelectAll => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initReplaceSelectAll => '+TimeOut); 
         }, 500);
     }
 }
@@ -590,7 +590,7 @@ function initRemovePaginacaoAll(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initRemovePaginacaoAll(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initRemovePaginacaoAll => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initRemovePaginacaoAll => '+TimeOut); 
         }, 500);
     }
 }
@@ -603,7 +603,7 @@ function initPagesInfiniteSearch(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initPagesInfiniteSearch(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initPagesInfiniteSearch => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initPagesInfiniteSearch => '+TimeOut); 
         }, 500);
     }
 }
@@ -616,7 +616,7 @@ function initQuickViewSearch(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initQuickViewSearch(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initQuickViewSearch => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initQuickViewSearch => '+TimeOut); 
         }, 500);
     }
 }
@@ -694,7 +694,7 @@ function initObserveUrlPage(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initObserveUrlPage(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initObserveUrlPage => '+TimeOut); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initObserveUrlPage => '+TimeOut); 
         }, 500);
     }
 }
@@ -736,7 +736,7 @@ function initSlimPro() {
                         '           <i onclick="openStyleBoxSlimPro()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Escolher cor principal' : 'Ativar estilo avan\u00E7ado')+'\')" class="fas fa-palette brancoColor" style="float: right;font-size: 16pt;cursor: pointer;"></i> '+
                         '       </div>';
     $('#controlSlimPro').remove();
-    $(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(htmlSlimPro);
+    $(typeof isNewSEI !== 'undefined' && isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(htmlSlimPro);
     initStyleBoxSlimPro();
 }
 function initStyleBoxSlimPro(TimeOut = 9000) {
@@ -752,7 +752,7 @@ function initStyleBoxSlimPro(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initStyleBoxSlimPro(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initStyleBoxSlimPro'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initStyleBoxSlimPro'); 
         }, 500);
     }
 }
@@ -765,7 +765,8 @@ function initMarcadorUserColor(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initMarcadorUserColor(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initMarcadorUserColor'); 
+            //if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) 
+            console.log('Reload initMarcadorUserColor'); 
         }, 500);
     }
 }
@@ -814,7 +815,7 @@ function changeMarcadorUserColor(this_) {
 function checkBlankPageSEI() {
     var title = $('#divInfraBarraLocalizacao').text();
     var content = $('#divInfraAreaDados').text();
-    var urlHome = $('#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
+    var urlHome = $(isNewSEI ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
     setTimeout(function(){ 
         if (window.location.hash == '' && typeof title !== 'undefined' && typeof content !== 'undefined' && title.trim() == '' && content.trim() == '' && typeof urlHome !== 'undefined' && window.location.href.indexOf('controlador.php') === -1) {
             console.log('redirect checkBlankPageSEI'); 
@@ -824,7 +825,7 @@ function checkBlankPageSEI() {
 }
 function initCheckLoadJqueryUI() {
     setTimeout(function(){ 
-        checkLoadJqueryUI();
+        if (typeof checkLoadJqueryUI !== 'undefined') checkLoadJqueryUI();
     }, 2000);
 }
 function checkPageParent() {
@@ -841,7 +842,7 @@ function initInfraImg(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initInfraImg(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initInfraImg'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initInfraImg'); 
         }, 500);
     }
 }
@@ -850,11 +851,46 @@ function initQRCodeLib() {
         $.getScript(URL_SPRO+"js/lib/jquery-qrcode-0.18.0.min.js");
     }
 }
+function initNewProcDefault() {
+    if ($('form#frmProcedimentoCadastro').length) {
+        setNewProcDefault();
+    }
+}
+function initConfigSEIPro() {
+    if ($('form#frmInfraConfigurar').length) {
+        let ifrConfig = `<iframe id="ifrConfig" src="${URL_SPRO}html/options.html" style="border: 0;margin: 20px auto;display: block;height: 800px" width="800" frameborder="0" scrolling="yes"></iframe>`;
+        $('#ifrConfig').remove();
+        $('#frmInfraConfigurar').after(ifrConfig);
+        setTimeout(() => {
+            let height = $('#ifrConfig').offset().top + 20;
+            let cssHeigth = `calc(100vh - ${height}px)`;
+            if ($('body').height() - height > 600) $('#ifrConfig').css('height', cssHeigth);
+            console.log(height);
+        }, 500);
+    }
+}
+function initCaixaSelecaoUnidadesSEI(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('trocaunidade') && typeof getUnidadesPermissaoSEI === 'function') {
+        if (!$('#ifrArvore').length) { getUnidadesPermissaoSEI() }
+    } else {
+        setTimeout(function(){ 
+            initCaixaSelecaoUnidadesSEI(TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initCaixaSelecaoUnidadesSEI'); 
+        }, 500);
+    }
+}
 function initSeiProAll() {
+    if (typeof jmespath === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/jmespath.min.js");
+    if (typeof moment === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js");
+    if (typeof $.tablesorter === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js");
+    if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
+
+    if (typeof checkHostLimit !== 'undefined' && !checkHostLimit()) initCaixaSelecaoUnidadesSEI();
     initInfraImg();
     checkPageParent();
-    initMarcadorUserColor();
-    // appendIconEntidade();
+    setTimeout(() => { initMarcadorUserColor() }, 500);
+    initNewProcDefault();
     appendVersionSEIPro();
     initTableSorter();
     repairLnkControleProcesso();
@@ -867,7 +903,7 @@ function initSeiProAll() {
     initAppendIconFavorites();
     // initReplaceNewIconsBar();
     initRemovePaginacaoAll();
-    initPagesInfiniteSearch();
+    setTimeout(() => { initPagesInfiniteSearch() }, 1000);
     initQuickViewSearch();
     // observeIfrArvore();
     initObserveUrlPage();
@@ -876,8 +912,9 @@ function initSeiProAll() {
     initCheckLoadJqueryUI();
     initQRCodeLib();
     setOnClickExcluirProcBloco();
+    initConfigSEIPro();
 
-    if (NAMESPACE_SPRO != 'SEI Pro Lab') {
+    if (typeof NAMESPACE_SPRO !== 'undefined' && NAMESPACE_SPRO != 'SEI Pro Lab') {
         console.log = function() { 
             logMessages.push.apply(logMessages, arguments);
             logBackup.apply(console, arguments);

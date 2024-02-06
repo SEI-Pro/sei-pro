@@ -20,7 +20,7 @@ function loadFontIcons(elementTo, target = $('html')) {
             datastyle: "seipro-fonticon",
             href: getUrlExtension(iconBoxSlim ? "css/fontawesome.pro.min.css" : "css/fontawesome.min.css") 
         }).appendTo(target.find(elementTo));
-        
+
         var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="3">'+
                             '    @font-face {\n'+
                             '       font-family: "Font Awesome 5 '+(iconBoxSlim ? 'Pro' : 'Free')+'";\n'+
@@ -79,7 +79,7 @@ function initNewIcons(TimeOut = 9000) {
     } else {
         setTimeout(function(){ 
             initNewIcons(TimeOut - 100); 
-            if(verifyConfigValue('debugpage')) console.log('Reload initNewIcons', typeof parent.insertNewIcons); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initNewIcons', typeof parent.insertNewIcons); 
         }, 500);
     }
 }
@@ -101,6 +101,11 @@ function loadStyleDesign() {
     }
 }
 loadStyleDesign();
-loadFontIcons('head');
-$.getScript(getUrlExtension("js/sei-functions-pro.js"));
-$.getScript(getUrlExtension("js/sei-pro-visualizacao.js"));
+loadFontIcons('head'); 
+setTimeout(() => {
+    if ($('#ifrVisualizacao').length) {
+        loadFontIcons('head', $('#ifrVisualizacao').contents());
+    }
+}, 500);
+if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (typeof loadSEIProVisualizacao === 'undefined') $.getScript(getUrlExtension("js/sei-pro-visualizacao.js"));

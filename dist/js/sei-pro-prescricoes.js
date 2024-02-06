@@ -1,4 +1,4 @@
-
+const loadPrescricoesPro = true;
 function valuePrescricao(id_prescricao, arrayPrescricoes = arrayPrescricoesProcPro) {
     var value = (id_prescricao == 0) ? null : jmespath.search(arrayPrescricoes, "[?id_prescricao==`"+id_prescricao+"`] | [0]");
         value = value === null ? false : value;

@@ -344,7 +344,7 @@ function updateLegis(iframe) {
             text = text.replace(textSearch, resultAnex);
             $(this).html(text).attr('class',classParag);
             iAnex++;
-			iTit = 0; iCap = 0; iSec = 0; iArt = 0; iPar = 0; iInc = 0; iAlin = 0; letterAlin = '';
+			iTit = 0; iCap = 0; iSec = 0; iSub = 0; iArt = 0; iPar = 0; iInc = 0; iAlin = 0; letterAlin = '';
         }
         if ( textSearch.toLowerCase().indexOf('tit.') !== -1) {
             classParag = 'Texto_Centralizado';
@@ -356,7 +356,7 @@ function updateLegis(iframe) {
             text = text.replace(textSearch, resultTit);
             $(this).html(text).attr('class',classParag);
             iTit++;
-            iCap = 0; iSec = 0;
+            iCap = 0; iSec = 0; iSub = 0;
         }
         if ( textSearch.toLowerCase().indexOf('cap.') !== -1) {
             classParag = 'Texto_Centralizado';
@@ -369,7 +369,7 @@ function updateLegis(iframe) {
             text = text.replace(textSearch, resultCap);
             $(this).html(text).attr('class',classParag);
             iCap++;
-            iSec = 0;
+            iSec = 0; iSub = 0;
         }
         if ( textSearch.toLowerCase().indexOf('sec.') !== -1) {
             classParag = 'Texto_Centralizado';

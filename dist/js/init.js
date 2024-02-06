@@ -3,8 +3,9 @@ $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
 $.getScript(getUrlExtension("js/lib/moment.min.js"));
 $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
+$.getScript(getUrlExtension("js/lib/diff2html.min.js"));
 $.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
-$.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (typeof loadFunctionsPro === 'undefined' || window.name != '') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function divIconsLoginPro() {
     var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'
@@ -42,15 +43,19 @@ function loadConfigPro() {
         chrome.storage.sync.get({
             dataValues: ''
         }, function(items) {  
-            localStorage.setItem('configBasePro', items.dataValues);
-            loadDataBaseProStorage(items);
+            if (typeof items !== 'undefined') {
+                localStorage.setItem('configBasePro', items.dataValues);
+                loadDataBaseProStorage(items);
+            }
         });
     } else {
         browser.storage.sync.get({
             dataValues: ''
         }, function(items) {  
-            localStorage.setItem('configBasePro', items.dataValues);
-            loadDataBaseProStorage(items);
+            if (typeof items !== 'undefined') {
+                localStorage.setItem('configBasePro', items.dataValues);
+                loadDataBaseProStorage(items);
+            }
         });
     }
 }
@@ -250,7 +255,7 @@ function loadStylePro(url, elementTo) {
     }
 }
 function loadFilesUI() {
-    $.getScript(getUrlExtension('js/lib/jquery-ui.min.js'));
+    if (typeof jQuery.ui === 'undefined') $.getScript(getUrlExtension('js/lib/jquery-ui.min.js'));
     loadStylePro(getUrlExtension('css/jquery-ui.css'), 'head');
 }
 function loadStyleDesign(body = $('body'), secondClass = false) {
@@ -299,23 +304,22 @@ function loadScriptPro() {
         loadFilesUI();
         loadFontIcons('head');
         $.getScript(getUrlExtension("js/sei-pro.js"));
+
         $(document).ready(function () {
             loadConfigPro();
-            $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
+            if (typeof moment !== 'undefined' && typeof moment().isoAddWeekdaysFromSet === 'undefined') $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             // $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
-            $.getScript(getUrlExtension("js/sei-pro-favoritos.js"));
-            // if (getManifestExtension().short_name == 'ANTAQ Pro' || getManifestExtension().short_name == 'ANTT Pro') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
-            $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
-            $.getScript(getUrlExtension("js/sei-pro-projetos.js"));
-            $.getScript(getUrlExtension("js/sei-pro-prescricoes.js"));
-            $.getScript(getUrlExtension("js/lib/frappe-gantt.js"));
-            $.getScript(getUrlExtension("js/lib/jkanban.min.js"));
-            $.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));
-            $.getScript(getUrlExtension("js/lib/jquery.tagsinput-revisited.js"));
-            $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
-            $.getScript(getUrlExtension("js/lib/chart.min.js"));
-            $.getScript(getUrlExtension("js/lib/jquery-visible.min.js"));
-            // console.log('loadScriptPro', getManifestExtension().short_name);
+            if (typeof loadFavoritosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-favoritos.js"));
+            if (typeof loadAtividadesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
+            if (typeof loadProjetosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-projetos.js"));
+            if (typeof loadPrescricoesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-prescricoes.js"));
+            if (typeof Gantt === 'undefined') $.getScript(getUrlExtension("js/lib/frappe-gantt.js"));
+            if (typeof jKanban === 'undefined') $.getScript(getUrlExtension("js/lib/jkanban.min.js"));
+            if (typeof $().toolbar === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));
+            if (typeof $().tagsInput === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tagsinput-revisited.js"));
+            if (typeof $.tablesorter === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
+            if (typeof Chart === 'undefined') $.getScript(getUrlExtension("js/lib/chart.min.js"));
+            if (typeof $().visible === 'undefined') $.getScript(getUrlExtension("js/lib/jquery-visible.min.js"));
         });
     }
 }

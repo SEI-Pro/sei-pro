@@ -75,9 +75,10 @@ function loadStyleDesign() {
 }
 loadStyleDesign();
 loadFontIcons('head');
-$.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));
-$.getScript(getUrlExtension("js/lib/jmespath.min.js"));
-$.getScript(getUrlExtension("js/lib/dropzone.min.js"));
-$.getScript(getUrlExtension("js/lib/moment.min.js"));
-$.getScript(getUrlExtension("js/sei-functions-pro.js"));
-$.getScript(getUrlExtension("js/sei-pro-arvore.js"));
+if (typeof $().toolbar === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));
+if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+if (typeof Dropzone === 'undefined') $.getScript(getUrlExtension("js/lib/dropzone.min.js"));
+if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
+if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (typeof loadSEIProArvore === 'undefined') $.getScript(getUrlExtension("js/sei-pro-arvore.js"));
+
