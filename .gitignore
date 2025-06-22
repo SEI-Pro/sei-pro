@@ -42,6 +42,10 @@ dist/manifest_seipro_v2.json
 dist/manifest_v2.json
 dist/manifest_antt.json
 dist/manifest_antt_v2.json
+dist/manifest_cfq.json
+dist/manifest_cfq_v2.json
+dist/manifest_conab.json
+dist/manifest_conab_v2.json
 db-2023-07-27.sql
 old/sei-forms.js
 old/sei-gantt.js
@@ -49,8 +53,3 @@ old/sei-sync-processos.js
 /backend
 /seipro
 /whitelabels
-dist/manifest_cfq_v2.json
-dist/manifest_cfq_v2.json
-dist/manifest_conab.json
-dist/manifest_conab_v2.json
-dist/manifest_cfq.json
