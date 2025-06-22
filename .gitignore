@@ -46,3 +46,6 @@ db-2023-07-27.sql
 old/sei-forms.js
 old/sei-gantt.js
 old/sei-sync-processos.js
+/backend
+/seipro
+/whitelabels
