@@ -91,6 +91,7 @@ Instale a extensão para seu navegador preferido:
 - ![Ditado no editor de documentos](/img/icon-ditado.png) [Ditado no editor de documentos](./pages/DITADO.md)
 - ![Escrita interativa](/img/icon-escritainterativa.png) [Escrita interativa no editor de documentos](./pages/ESCRITAINTERATIVA.md)
 - ![Revisão de texto](/img/icon-revisardoc.png) [Revisão de texto no editor de documentos](./pages/REVISARDOC.md)
+- ![Documentos em Lote](/img/icon-acoeslote.png) [Documentos em Lote](./pages/DOCUMENTOSEMLOTE.md)
 
 
 Você ainda pode [Desativar funções da extensão](./pages/DESATIVARFUNCOES.md) que não deseja utilizar.
