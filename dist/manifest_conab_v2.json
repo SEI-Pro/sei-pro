@@ -363,7 +363,7 @@
     "js/lib/leaflet.js",
     "js/lib/leaflet-geocoder.js",
     "js/lib/filerobot-image-editor.min.js",
-    "js/lib/jszip.min.js",
+    "js/lib/jszip.min.js", 
     "js/lib/jszip-utils.min.js",
     "js/lib/jquery-visible.min.js",
     "js/lib/html2canvas.min.js",

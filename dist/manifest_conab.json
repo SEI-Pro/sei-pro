@@ -374,7 +374,7 @@
         "js/lib/jszip-utils.min.js",
         "js/lib/jquery-visible.min.js",
         "js/lib/html2canvas.min.js",
-        "js/lib/favico-0.3.10.min.js",
+        "js/lib/favico-0.3.10.min.js", 
         "js/lib/papaparse.js",
         "js/lib/jschardet.min.js",
         "js/lib/diff2html.min.js",
