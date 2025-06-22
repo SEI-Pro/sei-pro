@@ -36,7 +36,7 @@ i.fa-verdeColor {
 }
 i.fa-azulColor {
 	color: #4285F4 !important;
-	background: -webkit-gradient(linear, left top, left bottom, from(#4285F4), to(#3172da));
+	/* background: -webkit-gradient(linear, left top, left bottom, from(#4285F4), to(#3172da)); */
 }
 i.fa-rosaColor {
 	color: #ea48cc !important;
@@ -1068,6 +1068,12 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim .ck-editor__editable .todo-list .todo-list__label>input {
     padding: initial;
 }
+.seiEditor .seiProForm .label {
+    padding-top: 10px;
+}
+.seiEditor .seiProForm .label .iconPopup {
+    height: auto;
+}
 .seiSlim.seiSlim_view #divInfraAreaTelaD #frmPesquisaProtocolo div#divGeral.infraAreaDados {
     display: block !important;
 }
@@ -1087,7 +1093,7 @@ a.newLink.iconBoxSlim .newIconTitle,
     color: #484848 !important;
     background-color: #dae0e4 !important;
 }
-.seiSlim .infraBarraSistemaPadraoD #controlSlimPro {
+.seiSlim .infraBarraSistemaPadraoD div[data-ref="infraAcaoBarraSistema"] {
     margin: 15px 10px 0 0 !important;
 }
 .seiSlim .infraBarraSistemaPadraoD #lnkInfraUnidade {
@@ -1469,7 +1475,7 @@ body.dark-mode,
 .seiSlim.dark-mode #ImageEditorPro div[class*="-option-triggerer"]:hover *,
 .seiSlim.dark-mode #ImageEditorPro div[class*="-tool-button"]:hover *,
 .seiSlim.dark-mode #capaProcessoPro .data a.newLink:hover,
-.seiSlim.dark-mode .alertaErrorPro .errorReport,
+.seiSlim.dark-mode .errorReport,
 .seiSlim.dark-mode select option:checked {
     color: #202123 !important;
 }
@@ -1591,7 +1597,7 @@ body.dark-mode,
 .seiSlim.dark-mode a.cke_dialog_tab:hover,
 .seiSlim.dark-mode.seiSlim_parent.seiSlim_view a.cke_dialog_ui_button.cke_dialog_ui_button_ok,
 .seiSlim.dark-mode .ui-widget-content .ui-state-active .ui-tabs-anchor, 
-.seiSlim.dark-mode .onoffswitch-checkbox:checked + .onoffswitch-label, 
+.seiSlim.dark-mode .onoffswitch-checkbox:checked + .onoff-switch-label, 
 .seiSlim.dark-mode .ui-widget-header .ui-state-active  .ui-tabs-anchor {
     background-color: #007fff !important;
 }
@@ -1792,7 +1798,7 @@ body.dark-mode,
 .seiSlim.dark-mode .infraAreaDados a.ancoraPadraoPreta,
 .seiSlim.dark-mode .hashSpan,
 .seiSlim.dark-mode #frmPesquisaProtocolo .resultado tr.resTituloRegistro td,
-.seiSlim.dark-mode .onoffswitch-label {
+.seiSlim.dark-mode .onoff-switch-label {
     background-color: #494c50;
     border-color: #606060;
 }
@@ -1985,7 +1991,10 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a[href*="javascript:alert('Acesso Restrito"],
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"],
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"],
-.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"] {
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"],
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"],
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=acompanhamento_cadastrar"],
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=protocolo_ciencia_listar"] {
     position: relative;
     border: none;
     display: inline-block;
@@ -2281,7 +2290,13 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"] img,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"] img:hover,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"] img,
-.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"] img:hover {
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"] img:hover,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"] img,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"] img:hover,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=acompanhamento_cadastrar"] img,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=acompanhamento_cadastrar"] img:hover,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=protocolo_ciencia_listar"] img,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=protocolo_ciencia_listar"] img:hover {
     opacity: 0 !important;
 }
 .seiSlim a.botaoSEI[onclick="cienciaDocumento();"]:before,
@@ -2463,7 +2478,10 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before,
 .seiSlim a[onclick*="setSelectAllTr"]:before,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"]:before,
 .seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"]:before,
-.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before {
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"]:before,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=acompanhamento_cadastrar"]:before,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before {
     position: absolute;
     font-family: 'Font Awesome 5 Pro';
     top: 9px;
@@ -2476,7 +2494,7 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before,
 span.tagUserColorPro[data-color]:before,
 #frmMarcadorLista td:nth-child(2) a[href][data-color]:before,
 a[href*="andamento_marcador_gerenciar"][data-color]:before {
-    font-family: 'Font Awesome 5 Free' !important;
+    font-family: 'Font Awesome 5 Pro' !important;
 }
 .seiSlim .dd-container a.dd-option[data-color]:before,
 .seiSlim .dd-container a.dd-selected[data-color]:before,
@@ -2788,7 +2806,8 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 .seiSlim.newSEI.seiSlim_view #divInfraAreaTelaD {
     background: linear-gradient(0deg, rgba(249,249,249,1) 92%, rgba(255,255,255,1) 100%) !important;
 }
-.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before {
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=protocolo_ciencia_listar"]:before {
     content: "\f164";
     color: #d8a63a;
 }
@@ -2863,6 +2882,18 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 .seiSlim a.botaoSEI[onclick*="initBoxAIActions("]:before {
     content: "\f544";
     color: #7562d8;
+}
+@supports (-webkit-appearance:none) {
+    .seiSlim a#iconAIActions.botaoSEI[onclick*="initBoxAIActions("]::before {
+        content: url("chrome-extension://__MSG_@@extension_id__/icons/menu/botpro_icon.svg");
+        top: 5px !important;
+    }
+}
+@supports (-moz-appearance:none) {
+    .seiSlim a#iconAIActions.botaoSEI[onclick*="initBoxAIActions("]::before {
+        content: url("moz-extension://__MSG_@@extension_id__/icons/menu/botpro_icon.svg");
+        top: 5px !important;
+    }
 }
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:after,
 .seiSlim a.botaoSEI[onclick*="initDocLoteModalSelecaoDoc("]:before {
@@ -2953,6 +2984,9 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 .seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:before {
     content: "\e053";
     color: #7562d8;
+}
+.newSEI:not(.seiSlim) .iconReaberturaPro .botaoSEI_iconBox {
+    display: none;
 }
 .seiSlim a.botaoSEI.iconLoading:after,
 .seiSlim a.botaoSEI.iconLoading:before {
@@ -3199,11 +3233,13 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f1ce";
     color: #4285f4;
 }
-.seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"]:before {
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"]:before,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=base_conhecimento_listar_associadas"]:before {
     content: "\f032";
     color: #4285f4;
 }
-.seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"]:before {
+.seiSlim a[target="ifrVisualizacao"][href*="?acao=acompanhamento_cadastrar"]:before,
+.seiSlim a[target="ifrConteudoVisualizacao"][href*="?acao=acompanhamento_cadastrar"]:before {
     content: "\f06e";
     color: #4285f4;
 }
@@ -3523,12 +3559,16 @@ a[data-shadow="true"]:before {
 .seiSlim #divInfraAreaTelaE ul li a[href*="?acao=unidade_migrar"]:before {
     content: "\f074";
 }
-.seiSlim .fixed {
+.fixed {
     position: fixed; 
     top:0;
     z-index: 99999;
 }
-.seiSlim.newSEI .fixed {
+.isSEI_5 div.barraBotoesSEI.fixed {
+    top: 59px;
+}
+.seiSlim.newSEI .fixed,
+.isSEI_5.seiSlim.newSEI div.barraBotoesSEI.fixed {
     top: 116px;
 }
 div#divInfraBarraAcesso {
@@ -3846,7 +3886,7 @@ td .linhaNumerada:after {
     color: #d8a63a;
 }
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__batch_quality_pro_icon:before {
-    content: "\f78c";
+    content: "\f066";
     color: #4285f4;
 }
 .seiSlim.seiSlim_parent.seiSlim_view span.cke_button_icon.cke_button__insert_checkbox_pro_icon:before {
@@ -4255,7 +4295,7 @@ div.urgentePro {
 }
 div.urgentePro:after {
     content: "\f12a";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #fff;
     font-weight: bold;
     text-align: center;
@@ -4266,7 +4306,8 @@ div.urgentePro:after {
 .seiSlim div.urgentePro:after {
     font-family: 'Font Awesome 5 Pro' !important;
 }
-a.urgentePro[target="ifrVisualizacao"] {
+a.urgentePro[target="ifrVisualizacao"],
+a.urgentePro[target="ifrConteudoVisualizacao"] {
     background: #f6d4d1;
     display: inline-block;
     border-radius: 5px;
@@ -4283,6 +4324,14 @@ a.urgentePro[target="ifrVisualizacao"] {
     cursor: pointer;
     margin-top: 5px;
     position: absolute;
+}
+.animate-flicker {
+     animation: flicker_animation 2s infinite;
+ }
+@keyframes flicker_animation {
+    0%   { opacity:1; }
+    50%  { opacity:0; }
+    100% { opacity:1; }
 }
 @keyframes pulser {
 	0% {
@@ -4320,6 +4369,7 @@ div#capaProcessoPro .data a.newLink.newLink_confirm:hover {
     color: #fff !important;
 }
 a.newLink_confirm i,
+a.newLink_confirm sup,
 a.newLink_confirm:hover i {
     color: #fff !important;
 }
@@ -4355,7 +4405,8 @@ a.newLink_confirm:hover i {
 .seiSlim.seiSlim_view.seiBtnRight.newSEI #divArvoreConteudo,
 .seiSlim.seiSlim_view.seiBtnRight.newSEI #divArvoreConteudoIfr,
 .seiSlim.seiSlim_view.seiBtnRight.newSEI #ifrArvoreHtml,
-.seiSlim.seiSlim_view.seiBtnRight.newSEI #ifrVisualizacao {
+.seiSlim.seiSlim_view.seiBtnRight.newSEI #ifrVisualizacao,
+.seiSlim.seiSlim_view.seiBtnRight.newSEI #ifrConteudoVisualizacao {
     height: inherit !important;
 }
 .seiSlim.seiSlim_view.seiBtnRight.newSEI #btnInfraTopo {
@@ -4440,6 +4491,9 @@ strong.title-reviewtip {
     margin: 10px 0 15px 0;
     white-space: normal;
 }
+.newSEI span.numericDocsPro {
+    vertical-align: super;
+}
 #frmArvore span.numericDocsPro:before {
     content: attr(data-count);
     display: inline-block;
@@ -4476,6 +4530,10 @@ strong.title-reviewtip {
     top: 9px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+
+.newSEI button.ck-button i {
+    font-family: "Font Awesome 5 Pro" !important;
 }
 
 #divZip .explorer {
@@ -4520,4 +4578,48 @@ strong.title-reviewtip {
 }
 #divZip span.tab:last-child:before {
     content: "↳";
+}
+.newSEI .botaoSEI_iconBox {
+    padding-top: 6px;
+    color: #4285f4;
+}
+#tabsPanelConfig div.ui-tabs-panel {
+    position: relative;
+}
+.indeterminate-progress-bar {
+    background-color: #d1d5db;
+    border-radius: 9999px;
+    height: 0.5rem;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    width: -webkit-fill-available;
+    right: 0;
+}
+.indeterminate-progress-bar__progress {
+    /* Color */
+    background-color: #3b82f6;
+
+    /* Rounded border */
+    border-radius: 9999px;
+
+    /* Absolute position */
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    width: 50%;
+
+    /* Move the bar infinitely */
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-name: indeterminate-progress-bar;
+}
+
+@keyframes indeterminate-progress-bar {
+    from {
+        left: -50%;
+    }
+    to {
+        left: 100%;
+    }
 }

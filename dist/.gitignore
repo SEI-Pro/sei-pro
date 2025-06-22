@@ -1,0 +1,54 @@
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Arquivos de backup
+*.bak
+*.backup
+*~
+
+# Arquivos de IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos de build/distribuição (se houver)
+build/
+dist-temp/
+
+# Arquivos de configuração local
+config_local.json
+.env
+.env.local
+
+# Arquivos de dependências (se usar npm/yarn)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Arquivos de teste
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Arquivos de documentação temporária
+docs/temp/
+*.md.bak
+
+# Arquivos de desenvolvimento
+dev/
+development/
+
+# Arquivos de debug
+debug.log
+error.log 

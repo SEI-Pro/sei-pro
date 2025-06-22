@@ -96,7 +96,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChange(this); getDadosSelectDoc(this, \''+id_procedimento+'\')" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_selectdoc" data-type="selectdoc" tabindex="0" '+stateSelectDoc+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_selectdoc"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_selectdoc"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -120,7 +120,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_setdate" data-type="setdate" tabindex="0" '+stateSetDates+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_setdate"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_setdate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -149,7 +149,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_countdown" data-type="countdown" tabindex="0" '+stateCountDown+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_countdown"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_countdown"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -160,7 +160,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_countdays" data-type="countdays" tabindex="0" '+stateCountDays+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_countdays"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_countdays"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -171,7 +171,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchIcon(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_workday" data-type="workday" tabindex="0" '+stateWorkday+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_workday"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_workday"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -186,7 +186,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_newdoc" data-type="newdoc" tabindex="0" '+stateNewDoc+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_newdoc"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_newdoc"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -211,7 +211,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duedate" data-type="duedate" tabindex="0" '+stateDueDate+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_duedate"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_duedate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -238,7 +238,7 @@ function openBoxConfigDates(this_) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+stateDueSetDate+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_duesetdate"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_duesetdate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -600,7 +600,8 @@ function getStoreFavoritePro() {
     return ( typeof localStorageRestorePro('configDataFavoritesPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataFavoritesPro')) ) ? localStorageRestorePro('configDataFavoritesPro') : {favorites: [], config: {colortags: []} };
 }
 function insertIconFavorites() {
-    waitLoadPro($('#ifrArvore').contents(), '#topmenu', "a[target='ifrVisualizacao']", appendIconFavorites);
+    const target = isSEI_5 ? `a[target="ifrVisualizacao"]` : `a[target="${ifrVisualizacao_}"]`;
+    waitLoadPro($('#ifrArvore').contents(), '#topmenu', target, appendIconFavorites);
 }
 function appendIconFavorites() {
     var ifrArvore = $('#ifrArvore').contents(); 
@@ -658,7 +659,7 @@ function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
         setTimeout(function(){ 
             var target = (this_) ? $(this_) : $('#ifrArvore').contents().find('#iconFavoritePro_'+id_procedimento);
             target.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload checkDataFavoritePro => '+TimeOut); 
+            if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload checkDataFavoritePro => '+TimeOut); 
             if (TimeOut == 9000 && mode == 'add') {
                 getDadosIframeProcessoPro(id_procedimento, 'favorites');
             }
@@ -1478,7 +1479,7 @@ function loadScriptFavoriteTag(iFrame) {
     $(scriptText).appendTo(iFrame.find('head'));
 }
 function checkPageFavoritosVisualizacao() {
-    waitLoadPro($($ifrVisualizacao).contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', isNewSEI ? ".barraBotoesSEI" : ".infraBarraComandos", getFavoritesEnviarProcesso);
+    waitLoadPro($($ifrVisualizacao).contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', infraBarraComandos, getFavoritesEnviarProcesso);
 }
 function removeFav(this_) { 
     var storeFavorites = getStoreFavoritePro();

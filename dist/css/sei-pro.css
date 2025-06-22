@@ -239,6 +239,7 @@ a.newLink {
     border-radius: 5px;
     cursor: pointer;
     word-break: break-word;
+    user-select: none;
 }
 span.bLink,
 i.bLink,
@@ -256,6 +257,7 @@ a.newLink:hover {
 .newLink_active {
     background-color: #e8e8e8;
     color: #444;
+    text-decoration: none !important;
 }
 .starGold {
     -webkit-text-fill-color: #FED35B !important;
@@ -722,14 +724,14 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
     opacity: 0;
     pointer-events: none;
 }
-.onoffswitch-label {
+.onoff-switch-label {
     display: block; overflow: hidden; cursor: pointer;
     height: 21px; padding: 0; line-height: 21px;
     border: 2px solid #E3E3E3; border-radius: 21px;
     background-color: #E8E8E8;
     transition: background-color 0.3s ease-in;
 }
-.onoffswitch-label:before {
+.onoff-switch-label:before {
     content: "";
     display: block; width: 21px; margin: 0px;
     background: #FFFFFF;
@@ -738,13 +740,13 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
     border: 2px solid #E3E3E3; border-radius: 21px;
     transition: all 0.3s ease-in 0s; 
 }
-.onoffswitch-checkbox:checked + .onoffswitch-label {
+.onoffswitch-checkbox:checked + .onoff-switch-label {
     background-color: #007FFF;
 }
-.onoffswitch-checkbox:checked + .onoffswitch-label, .onoffswitch-checkbox:checked + .onoffswitch-label:before {
+.onoffswitch-checkbox:checked + .onoff-switch-label, .onoffswitch-checkbox:checked + .onoff-switch-label:before {
    border-color: #007FFF;
 }
-.onoffswitch-checkbox:checked + .onoffswitch-label:before {
+.onoffswitch-checkbox:checked + .onoff-switch-label:before {
     right: 0px; 
 }
 .seiProForm .trCinza,
@@ -1455,6 +1457,14 @@ i.iconSwitch {
     display: block !important;
     position: initial !important;
 }
+.dialogBoxDiv .tabelaPanelScroll {
+    overflow-y: scroll !important;
+    /* min-height: fit-content; */
+    max-height: 350px;
+    display: block !important;
+    position: initial !important;
+    width: 100%;
+}
 #divRecebidos .tabelaPanelScroll {
     padding-bottom: 20px;
 }
@@ -1560,6 +1570,9 @@ i.iconSwitch {
 .ratingWhy, 
 .moreCommentBoxDiv, 
 .moreCommentBoxText, 
+.appealCommentBoxDiv, 
+.appealCommentBoxText, 
+.appealAvaliadorBoxText, 
 .ratingQuestion {
     margin: 20px 10px;
     text-align: center;
@@ -1585,7 +1598,8 @@ i.iconSwitch {
     background-color: #017fff;
     color: #fff;
 }
-.moreCommentBoxDiv textarea {
+.moreCommentBoxDiv textarea,
+.appealCommentBoxDiv textarea {
     border-radius: 5px;
     border: 1px solid #ccc;
     color: #585858;
@@ -1593,7 +1607,9 @@ i.iconSwitch {
     padding: 5px;
     height: 70px;
 }
-.moreCommentBoxText .countLimit {
+.moreCommentBoxText .countLimit,
+.appealAvaliadorBoxText .countLimit,
+.appealCommentBoxText .countLimit {
     display: block;
     text-align: right;
     width: 80%;
@@ -1631,7 +1647,7 @@ table.moreInfoBox td:first-child,
 .atividadeWork .seiProForm input {
     width: -webkit-fill-available !important;
     width: -moz-available !important;
-    height: 15px !important;
+    height: auto !important;
 }
 .seiProForm tr.hrForm {
     height: 20px;
@@ -1803,7 +1819,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_niniciadas"] .kanban-title-board::before {
     content: "\f017";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     padding-right: 10px;
     color: #989898;
 }
@@ -1813,7 +1829,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_iniciadas"] .kanban-title-board::before {
     content: "\f144";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     padding-right: 10px;
     color: #4285f4;
 }
@@ -1823,7 +1839,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_pausadas"] .kanban-title-board::before {
     content: "\f28b";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     padding-right: 10px;
     color: #989898;
 }
@@ -1833,7 +1849,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_concluidas"] .kanban-title-board::before {
     content: "\f058";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     padding-right: 10px;
     color: #9cb639;
 }
@@ -1843,7 +1859,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_avaliadas"] .kanban-title-board::before {
     content: "\f005";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     padding-right: 10px;
     color: #fed35b;
 }
@@ -1853,7 +1869,7 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-board[data-id="_arquivadas"] .kanban-title-board::before {
     content: "\f187";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     padding-right: 10px;
     color: #989898;
 }
@@ -1864,7 +1880,7 @@ table.moreInfoBox td:first-child,
     background-color: #e2e4e6;
 }
 #processosKanban .kanban-container .kanban-board .kanban-title-board::before {
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     padding-right: 10px;
     color: #747474;
 }
@@ -1948,7 +1964,7 @@ table.moreInfoBox td:first-child,
 .kanban-container .kanban-item.tagKanName_date_pausado:before {
     content: "\f04c";
     position: absolute;
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     font-size: 60pt;
     text-align: center;
     color: #9898983d;
@@ -1975,6 +1991,7 @@ table.moreInfoBox td:first-child,
     font-size: 90%;
     color: #717171;
     padding: 5px 0;
+    line-height: revert;
 }
 .kanban-item:hover .kanban-actions {
     display: block;
@@ -2151,7 +2168,7 @@ table.moreInfoBox td:first-child,
 .dz-drag-hover:before {
     content: "\f093";
     font-size: 80px;
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     text-align: center;
     font-weight: 600;
     position: fixed;
@@ -2326,6 +2343,7 @@ span.action-doc {
     border-radius: 5px;
     text-align: center;
     min-width: 13px;
+    vertical-align: super;
 }
 span.action-doc:hover {
     background: #017fff;
@@ -2430,6 +2448,10 @@ table.infraTable tr > th.infraTh.tablesorter-headerSortDown {
 .newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo i,
 .newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo span {
     color: var(--pure-0) !important;
+}
+.newSEI #frmProcedimentoControlar.h-100,
+.newSEI #divControleProcessosConteudo.h-100 {
+    height: auto !important;
 }
 .tabelaControle .tablesorter-header-inner,
 #tabelaAtivPanel table.tableAtividades .tablesorter-header-inner,
@@ -2553,6 +2575,7 @@ a.newLink.filterTableProcessos.newLink_active i {
 }
 .panelHomePro span.titlePanel {
     font-weight: bold;
+    font-size: 1em;
 }
 tr .newLink.followLinkTr:hover i,
 .txt_cinza,
@@ -2634,7 +2657,7 @@ td.content_desc {
 td.editCellLoading:after {
     content: "\f2f1" !important;
     position: absolute;
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #017fff !important;
     animation: fa-spin 2s linear infinite;
     margin-left: 10px;
@@ -2643,7 +2666,7 @@ td.editCellLoading:after {
 td.editCellConfirm:after {
     content: "\f00c";
     position: absolute;
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #64e4a4;
     margin-left: 10px;
     font-weight: 600;
@@ -2651,14 +2674,14 @@ td.editCellConfirm:after {
 td.editCellLoadingError:after {
     content: "\f06a";
     position: absolute;
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #e46e64;
     margin-left: 10px;
     font-weight: 600;
 }
 .dataLoading:before {
     content: "\f2f1" !important;
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     width: 50px;
     height: 50px;
     padding: 0;
@@ -2706,6 +2729,7 @@ td.editCellLoadingError:after {
 .tableFollow tr.future td:nth-child(2):before,
 .tableFollow tr.approve td:nth-child(2):before,
 .tableFollow tr.closed td:nth-child(2):before,
+.tableFollow tr.rate td:nth-child(2):before,
 .tableFollow tr.clone td:nth-child(2):before {
     content: attr(data-text);
     background: #dedede;
@@ -2721,8 +2745,14 @@ td.editCellLoadingError:after {
 .tableFollow tr.approve td:nth-child(2):before {
     content: "HOMOLOGADO" !important;
 }
+.tableFollow tr.rate td:nth-child(2):before {
+    content: "AVALIADO" !important;
+}
 .tableFollow tr.closed td:nth-child(2):before {
     content: "ENCERRADO" !important;
+}
+.tableFollow tr.archived td:nth-child(2):before {
+    content: "ARQUIVADO" !important;
 }
 .tableFollow tr.future:has(td div.chosen-container),
 .tableFollow tr.closed:has(td div.chosen-container) {
@@ -2768,7 +2798,7 @@ td.editCellSEI:hover:after,
 td.editCellNew:hover:after,
 td.editCellSelect:hover:after {
     content: "\f303";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     margin-left: 10px;
     color: #d2d2d2;
     font-size: 1.3em;
@@ -2816,7 +2846,7 @@ div#divInfraBarraSistemaE.barSuspenso {
 div#divInfraBarraSistemaPadraoE.barSuspenso:before,
 div#divInfraBarraSistemaE.barSuspenso:before {
     content: "\f0c9";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #fff;
     font-size: 2em;
     margin: 7px 10px 0 0;
@@ -2831,21 +2861,21 @@ div#divInfraBarraSistemaE.barSuspenso:before {
 }
 .tableOptionConfig tr[data-key="tipo_processo"] td:first-child:before {
     content: "\f07c";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #017fff;
     margin-right: 10px;
     font-weight: 600;
 }
 .tableOptionConfig tr[data-key="etiquetas"] td:first-child:before {
     content: "\f02b";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #017fff;
     margin-right: 10px;
     font-weight: 600;
 }
 .tableOptionConfig tr[data-key="checklist"] td:first-child:before {
     content: "\f14a";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #017fff;
     margin-right: 10px;
     font-size: 12pt;
@@ -2942,7 +2972,7 @@ div#divInfraBarraSistemaE.barSuspenso:before {
 }
 .stickDadosArvore.priority .stickNotePro:before {
     content: "\f06a";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     color: #e46f642d;
     position: absolute;
     top: 10px;
@@ -3146,7 +3176,7 @@ div.infraTooltipTexto i.far {
 }
 .stickNotePro .stickNoteCheck:before {
     content: "\f0c8";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     position: absolute;
     margin-left: -25px;
     font-size: 13pt;
@@ -3190,7 +3220,7 @@ div.infraTooltipTexto i.far {
     box-shadow: rgb(0 0 0 / 10%) 0px 4px 6px;
     background: #fafcfd;
 }
-.alertaErrorPro .errorReport {
+.errorReport {
     display: none;
     width: 96%;
     background: #fcf0ef;
@@ -3330,6 +3360,10 @@ div.infraTooltipTexto i.far {
     width: 100% !important;
     max-width: 600px;
 }
+#ativ_id_entrega, 
+#ativ_id_entrega_chosen {
+    width: calc(100% - 50px) !important;
+}
 .panelHomePro .chosen-min,
 .ui-dialog .chosen-min {
     min-width: 150px;
@@ -3345,9 +3379,12 @@ div.infraTooltipTexto i.far {
 }
 .ui-dialog[aria-describedby="dialogBoxPro"],
 .ui-dialog[aria-describedby="dialogBoxPro"] .ui-dialog-content,
+.ui-dialog[aria-describedby="alertaBoxPro"],
+.ui-dialog[aria-describedby="alertaBoxPro"] .ui-dialog-content,
 .ui-dialog[aria-describedby="iframeBoxPro"],
 .ui-dialog[aria-describedby="iframeBoxPro"] .ui-dialog-content {
     overflow: initial !important;
+    font-size: 10px !important;
 }
 .infraAreaDados {
     overflow: inherit !important;
@@ -3440,7 +3477,13 @@ div#divInfraTooltip {
     color: #555;
     font-size: 9pt;
     font-family: monospace;
-    margin-bottom: 3px;
+    margin: 3px;
+}
+td.message-content,
+td.message-content * {
+    font-family: monospace;
+    font-size: 8pt;
+    padding: 3px 5px;
 }
 tr:hover td.prazoBoxDisplay a.addControlePrazo,
 tr.infraTrMarcada td.prazoBoxDisplay a.addControlePrazo {
@@ -3560,6 +3603,7 @@ td.prazoBoxDisplay {
 .newSEI a.newLinksMenuPro {
     padding-left: 5px !important;
 }
+.newSEI .botaoSEI.iconReaberturaPro i,
 .newSEI .botaoSEI.iconPro_Observe i {
     color: var(--color-primary-default) !important;
     font-size: 2.5em !important;
@@ -3567,14 +3611,15 @@ td.prazoBoxDisplay {
 .newSEI #divRecebidos.tagintable {
     max-width: 100% !important;
 }
-.onoffswitch-label::before {
+.onoff-switch-label::before {
     height: inherit;
 }
 .newSEI .dz-preview span {
     margin: 0 !important;
     vertical-align: sub !important;
 }
-.newSEI .dz-preview a[target="ifrVisualizacao"] {
+.newSEI .dz-preview a[target="ifrVisualizacao"],
+.newSEI .dz-preview a[target="ifrConteudoVisualizacao"] {
     vertical-align: text-top;
 }
 .newSEI .dz-preview span.dz-remove,
@@ -3850,7 +3895,8 @@ div[id*="boxConfiguracoes"] .tag-input {
 .tableOptionConfig .editCellSelect.inEdit .chosen-container {
     width: calc(100% - 30px) !important;
 }
-#cache_demandas_time_chosen {
+#cache_demandas_time_chosen,
+#recorrencia_time_dados_api_chosen {
     width: 40% !important;
 }
 .fa-spinner:before {
@@ -3909,7 +3955,7 @@ div#dialogBoxDocLote p {
 }
 .chosen-container-single.chosenLoading .chosen-single span:before {
     content: "\f2f1";
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     margin: 0 10px;
     color: #007fff;
     animation: fa-spin 2s linear infinite;
@@ -3966,11 +4012,84 @@ div#dialogBoxDocLote p {
 #frmInfraConfigurar #divInfraAreaDados {
     width: 800px;
 }
+.ui-dialog .ui-autocomplete.ui-front {
+    max-height: 300px;
+    overflow-y: scroll;
+    font-size: 9pt;
+}
+.dialogBoxAI #docAISelect_chosen:not(.prompt_personal) li:before,
+.dialogBoxAI #docAISelect_chosen.prompt_personal li:not([data-option-array-index="0"]):before {
+    content: "\f15b";
+    font-family: 'Font Awesome 5 Pro';
+    margin-right: 0.5em;
+    font-weight: 500;
+    color: #777;
+}
+.dialogBoxAI #docAISelect_chosen li[data-option-array-index="0"],
+.dialogBoxAI #docAISelect_chosen.prompt_personal li[data-option-array-index="1"] {
+    background-color: #ccf4ff;
+}
+.dialogBoxAI #docAISelect_chosen.prompt_personal li[data-option-array-index="0"] {
+    background-color: #ecfbff;
+}
+.dialogBoxAI #docAISelect_chosen:not(.prompt_personal) li[data-option-array-index="0"]:before,
+.dialogBoxAI #docAISelect_chosen.prompt_personal li[data-option-array-index="1"]:before {
+    content: "\f002";
+    font-family: 'Font Awesome 5 Pro';
+    margin-right: 0.5em;
+    font-weight: bold;
+    color: #777;
+}
+.dialogBoxAI #docAISelect_chosen:not(.prompt_personal):not(.prompt_editor_sei) li[data-option-array-index="1"]:before,
+.dialogBoxAI #docAISelect_chosen.prompt_personal:not(.prompt_editor_sei) li[data-option-array-index="2"]:before,
+.dialogBoxAI #docAISelect_chosen.prompt_personal.prompt_editor_sei li[data-option-array-index="2"]:before,
+.dialogBoxAI #docAISelect_chosen:not(.prompt_personal).prompt_editor_sei li[data-option-array-index="1"]:before {
+    content: "\f07c";
+    font-family: 'Font Awesome 5 Pro';
+    margin-right: 0.5em;
+    font-weight: 500;
+    color: #777;
+}
+.dialogBoxAI #docAISelect_chosen.prompt_personal.prompt_editor_sei li[data-option-array-index="3"]:before,
+.dialogBoxAI #docAISelect_chosen:not(.prompt_personal).prompt_editor_sei li[data-option-array-index="2"]:before {
+    content: "\f246";
+    font-family: 'Font Awesome 5 Pro';
+    margin-right: 0.5em;
+    font-weight: 500;
+    color: #777;
+}
+.dialogBoxAI #docAISelect_chosen.prompt_personal.prompt_editor_sei li[data-option-array-index="4"]:before,
+.dialogBoxAI #docAISelect_chosen:not(.prompt_personal).prompt_editor_sei li[data-option-array-index="3"]:before {
+    content: "\f893";
+    font-family: 'Font Awesome 5 Pro';
+    margin-right: 0.5em;
+    font-weight: 500;
+    color: #777;
+}
+.dialogBoxAI .suggestions{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 1em;
+}
+.dialogBoxAI #historyDialogAI {
+    text-align: center;
+    margin: 1em auto;
+    padding: 0.6em;
+    font-size: 1.3em;
+    color: #666;
+    background-color: #eaf0f6;
+    border-radius: 0.5em;
+    width: 100px;
+    cursor: pointer;
+}
 .dialogBoxAI .response_user,
 .dialogBoxAI .response_bot {
     margin: 10px;
     padding: 15px;
-    background-color: #eee;
     width: 80%;
     border-radius: 5px;
     color: #333;
@@ -3978,6 +4097,12 @@ div#dialogBoxDocLote p {
     font-size: 10pt;
     line-height: 15pt;
     position: relative;
+}
+.dialogBoxAI .response_user {
+    background: linear-gradient(to right, #f2f9ff 0%, #eaf0f6 100%);
+}
+.dialogBoxAI .response_bot {
+    background: linear-gradient(to left, #f2f9ff 0%, #eaf0f6 100%);
 }
 .dialogBoxAI .response_user {
     float: right;
@@ -3999,31 +4124,31 @@ div#dialogBoxDocLote p {
     top: 0;
 }
 .dialogBoxAI .response_bot:before {
-    border-color: transparent #eeeeee transparent transparent;
+    border-color: transparent #eaf0f6 transparent transparent;
     border-width: 0 20px 20px 0;
     left: -20px;
 }
+.dialogBoxAI .response_bot.error,
+.dialogBoxAI .response_bot.error:before {
+    background-color: #f7e6e6;
+    border-color: transparent #f7e6e6 transparent transparent;
+}
 .dialogBoxAI .response_user:before {
-    border-color: #eeeeee transparent transparent transparent;
+    border-color: #eaf0f6 transparent transparent transparent;
     border-width: 20px 20px 0 0;
     right: -20px;
 }
-.dialogBoxAI .response_user:after,
-.dialogBoxAI .response_bot:after {
+.dialogBoxAI .response_user:after{
     position: absolute;
     top: 0;
-    font-family: 'Font Awesome 5 Free';
+    font-family: 'Font Awesome 5 Pro';
     font-weight: 400;
-    color: #ccc;
+    color: #9bc4e0;
     font-size: 1.5em;
 }
 .seiSlim .dialogBoxAI .response_user:after,
 .seiSlim .dialogBoxAI .response_bot:after {
     font-family: 'Font Awesome 5 Pro' !important;
-}
-.dialogBoxAI .response_bot:after {
-    content: "\f544";
-    left: -40px;
 }
 .dialogBoxAI .response_user:after {
     content: "\f007";
@@ -4032,16 +4157,38 @@ div#dialogBoxDocLote p {
 .dialogBoxAI .response_bot.loading {
     padding: 5px 10px 0 15px;
 }
-.dialogBoxAI .response_bot .copy_response {
+.dialogBoxAI .response_user i,
+.dialogBoxAI .response_bot i {
+    color: #9bc4e0;
+}
+.dialogBoxAI .response_bot .copy_response_ai {
     position: absolute;
     right: -50px;
     top: 0px;
 }
+.dialogBoxAI .response_bot .add_doc_response_ai {
+    position: absolute;
+    right: -50px;
+    top: 80px;
+}
+.dialogBoxAI .response_bot .speech_response_ai {
+    position: absolute;
+    right: -50px;
+    top: 40px;
+}
+.dialogBoxAI .response_bot .create_doc_response_ai {
+    position: absolute;
+    right: -50px;
+    top: 80px;
+}
 .dialogBoxAI .welcome {
     text-align: center;
-    font-size: 2em;
+    background: linear-gradient(to right, #214F64 0%, #1C97CF 100%);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.2em;
     color: #777;
-    padding-top: 12%;
+    padding-top: 10vh;
 }
 .seiSlim .dialogBoxAI .welcome .fa-robot {
     font-weight: 400;
@@ -4049,18 +4196,118 @@ div#dialogBoxDocLote p {
 .dialogBoxAI .welcome .fa-robot {
     font-weight: 800;
 }
+.dialogBoxAI .suggestions .suggestion_actions {
+    color: #666;
+    max-width: 24%;
+    min-width: 24%;
+    padding: 1em;
+    background: linear-gradient(to left, #edf7ff 0%, #e3ecf5 100%);
+    border-radius: 0.5em;
+    border: 3px solid #e8f3ff;
+    font-size: 1.4em !important;
+    text-align: center;
+    margin: 1em;
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+}
+.dialogBoxAI .response_bot.loading:after {
+    content: attr(data-preload);
+    position: absolute;
+    right: 1em;
+    top: 1em;
+    color: #888;
+    font-family: arial,verdana,helvetica,sans-serif !important;
+}
+.dialogBoxAI .response_bot_content p {
+    margin: 0.7em 0;
+    display: block;
+}
+.dialogBoxAI #promptAIPersonal * {
+    color: rgb(102, 102, 102);
+}
+.dialogBoxAI #promptAIPersonal {
+    color: rgb(102, 102, 102);
+    font-size: 10pt;
+    width: calc(100% - 60px);
+    margin: 0;
+    position: absolute;
+    top: 55px;
+    left: 10px;
+    padding: 1em;
+    background: #fff;
+    border-radius: 0.5em;
+    line-height: 1.5em;
+    max-height: 200px;
+    overflow-y: scroll;
+}
+.dialogBoxAI span.prompt_ref_doc {
+    background-color: #eaeaea;
+    padding: 0.3em 0.6em;
+    border-radius: 5px;
+    margin: 0.3em;
+    color: #333;
+}
+.dialogBoxAI span.prompt_ref_doc:before {
+    content: "\f15b";
+    font-family: 'Font Awesome 5 Pro';
+    margin-right: 0.5em;
+    color: #333;
+}
+.dialogBoxAI span.prompt_ref_doc[data-id_documento="all"]:before {
+    content: "\f07c";
+}
+.dialogBoxAI span.prompt_ref_doc[data-id_documento="text_doc"]:before {
+    content: "\f893";
+}
+.dialogBoxAI span.prompt_ref_doc[data-id_documento="text_selected"]:before {
+    content: "\f246";
+}
+.dialogBoxAI .suggestion_actions[data-type="personalizado"] {
+    text-align: left !important;
+    max-height: 200px;
+    overflow-y: scroll;
+    line-height: 1.8em;
+}
+.dialogBoxAI .suggestion_actions .prompt_ref_doc {
+    white-space: break-spaces;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline;
+    margin: 0;
+}
+.dialogBoxAI #favoritePromptAI {
+    position: absolute;
+    right: 20px;
+    top: 70px;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+.dialogBoxAI strong {
+    font-weight: bold;
+}
+.dialogBoxAI em {
+    font-style: italic;
+}
 .dialogBoxAI .icon_ia {
     text-align: center;
     font-size: 3em;
+    height: 200px;
+    display: block;
+    width: 200px;
+    border-radius: 20px;
+    margin: 0 auto;
 }
 #boxAIActions {
     position: absolute;
     bottom: 10px;
-    background: #eeeeee;
+    background: #eaf0f6;
     padding: 10px;
     width: calc(100% - 60px);
     margin: 0;
     border-radius: 5px;
+    left: 20px;
 }
 
 @keyframes ldio-1 {
@@ -4123,4 +4370,22 @@ div#dialogBoxDocLote p {
     overflow: hidden;
     white-space: nowrap;
     max-width: 450px;
+}
+.actionsConfig_icons .fa-layers.fa-fw,
+.iconBoxAtividade .fa-layers.fa-fw {
+    font-size: 1em;
+}
+.onoff-switch-label::before {
+    box-sizing: initial;
+}
+.onoff-switch-label {
+    margin-bottom: initial;
+    box-sizing: initial;
+}
+.newSEI .editTableToggle .onoffswitch {
+    margin: 5px 5px 0 0;
+}
+.chosen-container .chosen-results li {
+    float: initial !important;
+    padding: 5px 6px !important;
 }

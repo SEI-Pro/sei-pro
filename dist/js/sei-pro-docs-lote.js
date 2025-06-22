@@ -81,7 +81,7 @@ var docsLote_detectEncodingCSV = () => {
             let csvResult = e.target.result.split(/\r|\n|\r\n/);
                 CSVEnconding = jschardet.detect(csvResult.toString()).encoding.toLowerCase();
             // $("#inputBD").attr('encoding', CSVEnconding);
-            console.log('encoding', CSVEnconding);
+            // console.log('encoding', CSVEnconding);
         }
         reader.readAsBinaryString(file);
     });
@@ -395,16 +395,17 @@ var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
     params.txaObservacoes = '';
     params.txtDescricao = '';
     params.txtProtocoloDocumentoTextoBase = selectedModel.numero;
+
     const regex = new RegExp(Object.keys(docsLote_normalChars).join('|'), 'g');
+    // let nomeArvore = forceNames ? data[dataDialog.docsNames].replace(regex, (match) => docsLote_normalChars[match]).substring(0, 50) : data[dataDialog.docsNames].substring(0, 50);
+    let nomeArvore = removeAcentos(data[dataDialog.docsNames].substring(0, 50)).trim();
 
     if (!numeroOpcional || forceNames) {
-        params.txtNumero = data[dataDialog.docsNames].replace(regex, (match) => docsLote_normalChars[match]).substring(0, 50);
+        params.txtNumero = nomeArvore;
     } else {
         params.txtNumero = '';
     }
-
-    // params.txtNomeArvore = (nomeOpcional && isNewSEI) ? data[dataDialog.docsNames].replace(regex, (match) => docsLote_normalChars[match]).substring(0, 50) : '';
-    params.txtNomeArvore = (nomeOpcional && isNewSEI) ? decodeURIComponent(escape(data[dataDialog.docsNames].substring(0, 50))) : '';
+    params.txtNomeArvore = (nomeOpcional && isNewSEI) ? decodeURIComponent(escape(nomeArvore)) : '';
     
     if (aborted) throw new Error("cancel");
     if (typeof urlConfirmDocData !== 'undefined') $('#progress span').text('\u2588\u2588\u2588\u2592\u2592\u2592');

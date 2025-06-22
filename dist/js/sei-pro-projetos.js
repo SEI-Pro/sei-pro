@@ -579,7 +579,7 @@ function openProjetoConfig() {
                     '       <td>'+
                     '           <div class="onoffswitch">'+
                     '               <input type="checkbox" onchange="changeVisualProjetos(this)" name="onoffswitch" class="onoffswitch-checkbox" id="editVisualProjetos" tabindex="0" '+stateVisualGantt+'>'+
-                    '               <label class="onoffswitch-label" for="editVisualProjetos"></label>'+
+                    '               <label class="onoff-switch-label" for="editVisualProjetos"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
@@ -588,7 +588,7 @@ function openProjetoConfig() {
                     '       <td>'+
                     '           <div class="onoffswitch">'+
                     '               <input type="checkbox" onchange="changeExecucaoProjetos(this)" name="onoffswitch" class="onoffswitch-checkbox" id="editExecucaoProjetos" tabindex="0" '+stateExecucaoGantt+'>'+
-                    '               <label class="onoffswitch-label" for="editExecucaoProjetos"></label>'+
+                    '               <label class="onoff-switch-label" for="editExecucaoProjetos"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
@@ -597,7 +597,7 @@ function openProjetoConfig() {
                     '       <td>'+
                     '           <div class="onoffswitch">'+
                     '               <input type="checkbox" onchange="viewProjetosArquivados(this)" name="onoffswitch" class="onoffswitch-checkbox" id="viewProjetosArquivados" tabindex="0" '+stateArquivadosGantt+'>'+
-                    '               <label class="onoffswitch-label" for="viewProjetosArquivados"></label>'+
+                    '               <label class="onoff-switch-label" for="viewProjetosArquivados"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
@@ -606,7 +606,7 @@ function openProjetoConfig() {
                     '       <td>'+
                     '           <div class="onoffswitch">'+
                     '               <input type="checkbox" onchange="changePanelSortPro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="panelSortPro" tabindex="0" '+statePanelSortPro+'>'+
-                    '               <label class="onoffswitch-label" for="panelSortPro"></label>'+
+                    '               <label class="onoff-switch-label" for="panelSortPro"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
@@ -1543,7 +1543,7 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                             '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
                             '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
                             '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="unidade" class="onoffswitch-checkbox switch_unidadeDefault switch_unidadeDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
-                            '                                      <label class="onoffswitch-label" for="changeItemConfig_unidades_'+i+'"></label>'+
+                            '                                      <label class="onoff-switch-label" for="changeItemConfig_unidades_'+i+'"></label>'+
                             '                                  </div>'+
                             '                               </td>'+
                             '                               <td style="width: 50px; text-align: center;">'+
@@ -1557,7 +1557,7 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                         '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
                         '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
                         '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="unidade" class="onoffswitch-checkbox switch_unidadeDefault switch_unidadeDefault_'+unidade_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+unidade_len+'" tabindex="0">'+
-                        '                                      <label class="onoffswitch-label" for="changeItemConfig_unidades_'+unidade_len+'"></label>'+
+                        '                                      <label class="onoff-switch-label" for="changeItemConfig_unidades_'+unidade_len+'"></label>'+
                         '                                  </div>'+
                         '                               </td>'+
                         '                               <td style="width: 50px; text-align: center;">'+
@@ -1602,7 +1602,7 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                             '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
                             '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
                             '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="usuario" class="onoffswitch-checkbox switch_usuarioDefault switch_usuarioDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
-                            '                                      <label class="onoffswitch-label" for="changeItemConfig_usuarios_'+i+'"></label>'+
+                            '                                      <label class="onoff-switch-label" for="changeItemConfig_usuarios_'+i+'"></label>'+
                             '                                  </div>'+
                             '                               </td>'+
                             '                               <td style="width: 50px; text-align: center;">'+
@@ -1616,7 +1616,7 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                         '                                <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
                         '                                   <div class="onoffswitch" style="transform: scale(0.8);">'+
                         '                                       <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="usuario" class="onoffswitch-checkbox switch_usuarioDefault switch_usuarioDefault_'+usuario_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+usuario_len+'" tabindex="0">'+
-                        '                                       <label class="onoffswitch-label" for="changeItemConfig_usuarios_'+usuario_len+'"></label>'+
+                        '                                       <label class="onoff-switch-label" for="changeItemConfig_usuarios_'+usuario_len+'"></label>'+
                         '                                   </div>'+
                         '                                </td>'+
                         '                                <td style="width: 50px; text-align: center;">'+

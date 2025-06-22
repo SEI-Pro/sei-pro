@@ -1,5 +1,12 @@
+const compareVersionNumbers_init = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+(\.\d+)*$/.test(v2) ? ((a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) { const n1 = +a[i] || 0, n2 = +b[i] || 0; if (n1 !== n2) return n1 > n2 ? 1 : -1; } return 0; })(v1.split('.'), v2.split('.')) : NaN;
+var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
+var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_init(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
+var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
+var frmEditor5Exists = $('html script[charset="utf-8"]').last().html().includes('INFRA_EDITOR_CONFIG');
+
 $.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"));
 $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+$.getScript(getUrlExtension("js/lib/purify.min.js"));
 $.getScript(getUrlExtension("js/lib/moment.min.js"));
 $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
@@ -19,9 +26,11 @@ function divIconsLoginPro() {
     }
 }
 function classBodyPro() {
-    var acao_pro = getParamsUrlPro(window.location.href).acao_pro;
-    if (typeof acao_pro !== 'undefined') {
-        $('body').addClass('SeiPro_'+acao_pro);
+    if (typeof getParamsUrlPro === 'function') {
+        var acao_pro = getParamsUrlPro(window.location.href).acao_pro;
+        if (typeof acao_pro !== 'undefined') {
+            $('body').addClass('SeiPro_'+acao_pro);
+        }
     }
 }
 function getUrlExtension(url) {
@@ -65,6 +74,7 @@ function loadScriptDataBasePro(dataValues) {
     var dataValues_FormulariosSheets = jmespath.search(dataValues, "[?baseTipo=='formularios'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_ProcessosSheets = jmespath.search(dataValues, "[?baseTipo=='processos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_OpenAI = jmespath.search(dataValues, "[?baseTipo=='openai'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
+    var dataValues_Gemini = jmespath.search(dataValues, "[?baseTipo=='gemini'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
     var dataValues_AtividadesAPI = jmespath.search(dataValues, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']");
     // console.log(dataValues, dataValues_ProjetosSheets);
     if (dataValues_ProjetosSheets.length > 0 && checkConfigValue('gerenciarprojetos')) {
@@ -88,23 +98,28 @@ function loadScriptDataBasePro(dataValues) {
         removeLocalStorageAtividades();
     }
     if (dataValues_OpenAI.length > 0 && checkConfigValue('ferramentasia')) {
-        loadDataBaseApiOpenAIPro(dataValues_OpenAI);
+        loadDataBaseApiPlataformAIPro(dataValues_OpenAI, 'openai');
     } else {
-        removeLocalStorageOpenAI();
+        removeLocalStoragePlataformAI('openai');
+    }
+    if (dataValues_Gemini.length > 0 && checkConfigValue('ferramentasia')) {
+        loadDataBaseApiPlataformAIPro(dataValues_Gemini, 'gemini');
+    } else {
+        removeLocalStoragePlataformAI('gemini');
     }
 }
-function removeLocalStorageOpenAI() { 
-    localStorageRemovePro('configBasePro_openai');
+function removeLocalStoragePlataformAI(plataform) { 
+    localStorageRemovePro('configBasePro_'+plataform);
 }
-function loadDataBaseApiOpenAIPro(dataValues) { 
-    var perfilSelected = (getOptionsPro('configBaseSelectedPro_openai') && getOptionsPro('configBaseSelectedPro_openai') <= dataValues.length) ? getOptionsPro('configBaseSelectedPro_openai') : 0;
+function loadDataBaseApiPlataformAIPro(dataValues, plataform = 'openai' ) { 
+    var perfilSelected = (getOptionsPro('configBaseSelectedPro_'+plataform) && getOptionsPro('configBaseSelectedPro_'+plataform) <= dataValues.length) ? getOptionsPro('configBaseSelectedPro_'+plataform) : 0;
     var perfil = (dataValues && dataValues !== null && dataValues.length > 0 && typeof dataValues[perfilSelected] !== 'undefined' &&  typeof dataValues[perfilSelected].hasOwnProperty('KEY_USER')) 
                     ? dataValues[perfilSelected] 
                     : false;
     if (perfil && checkConfigValue('ferramentasia')) {
-        localStorage.setItem('configBasePro_openai', JSON.stringify({URL_API: perfil.URL_API, KEY_USER: perfil.KEY_USER}));
+        localStorage.setItem('configBasePro_'+plataform, JSON.stringify({URL_API: perfil.URL_API, KEY_USER: perfil.KEY_USER}));
     } else {
-        removeLocalStorageOpenAI();
+        removeLocalStoragePlataformAI(plataform);
     }
 }
 function removeLocalStorageAtividades() { 
@@ -184,15 +199,17 @@ function setSessionGoogle(type, param) {
     localStorage.setItem('SEIPro_google_'+type,  JSON.stringify(param));
 } */
 function loadDataBaseProStorage(items) { 
-    if ( typeof items.dataValues !== 'undefined' && items.dataValues != '' && typeof getParamsUrlPro(window.location.href).acao_pro === 'undefined') {
-        divIconsLoginPro();
-        //localStorage.setItem('configBasePro', items.dataValues);
-
-        var dataValues = JSON.parse(items.dataValues);
+    if (typeof getParamsUrlPro === 'function') {
+        if ( typeof items.dataValues !== 'undefined' && items.dataValues != '' && typeof getParamsUrlPro(window.location.href).acao_pro === 'undefined') {
+            divIconsLoginPro();
+            //localStorage.setItem('configBasePro', items.dataValues);
+            
+            var dataValues = JSON.parse(items.dataValues);
             loadScriptDataBasePro(dataValues);
-    } else {
-        localStorageRemovePro('loadEtapasSheet');
-        removeLocalStorageAtividades();
+        } else {
+            localStorageRemovePro('loadEtapasSheet');
+            removeLocalStorageAtividades();
+        }
     }
 }
 function loadFontIcons(elementTo, target = $('html')) {
@@ -203,25 +220,25 @@ function loadFontIcons(elementTo, target = $('html')) {
             rel: "stylesheet",
             type: "text/css",
             datastyle: "seipro-fonticon",
-            href: getUrlExtension(iconBoxSlim ? "css/fontawesome.pro.min.css" : "css/fontawesome.min.css") 
+            href: getUrlExtension("css/fontawesome.pro.min.css") 
         }).appendTo(target.find(elementTo));
         
         var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="5">'+
                             '    @font-face {\n'+
-                            '       font-family: "Font Awesome 5 '+(iconBoxSlim ? 'Pro' : 'Free')+'";\n'+
+                            '       font-family: "Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 900;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
                             '   }\n'+
                             '   @font-face {\n'+
-                            '       font-family: \"Font Awesome 5 '+(iconBoxSlim ? 'Pro' : 'Free')+'";\n'+
+                            '       font-family: \"Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 400;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
                             '   }\n'+
                             (iconBoxSlim ?
                             '   @font-face { \n'+
@@ -286,9 +303,10 @@ function getPathExtensionPro() {
 function setSessionNameSpace(param) {
     sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
 }
+
 function loadScriptPro() {
     getPathExtensionPro();
-	if ( $('#frmEditor').length || $('#divEditores').length ) {
+	if ( frmEditor.length || $('#divEditores').length || frmEditor5Exists ) {
         setTimeout(function () {
         	$(document).ready(function () {
                 loadConfigPro();
@@ -297,6 +315,7 @@ function loadScriptPro() {
                 $.getScript(getUrlExtension("js/sei-pro-editor.js"));
                 $.getScript(getUrlExtension("js/sei-legis.js"));
                 console.log('loadScriptPro-Editor');
+                loadFilesUI();
         	});
 	    },500);
 	} else {

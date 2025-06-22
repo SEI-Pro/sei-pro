@@ -18,25 +18,25 @@ function loadFontIcons(elementTo, target = $('html')) {
             rel: "stylesheet",
             type: "text/css",
             datastyle: "seipro-fonticon",
-            href: getUrlExtension(iconBoxSlim ? "css/fontawesome.pro.min.css" : "css/fontawesome.min.css") 
+            href: getUrlExtension("css/fontawesome.pro.min.css") 
         }).appendTo(target.find(elementTo));
 
         var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="3">'+
                             '    @font-face {\n'+
-                            '       font-family: "Font Awesome 5 '+(iconBoxSlim ? 'Pro' : 'Free')+'";\n'+
+                            '       font-family: "Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 900;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
                             '   }\n'+
                             '   @font-face {\n'+
-                            '       font-family: \"Font Awesome 5 '+(iconBoxSlim ? 'Pro' : 'Free')+'";\n'+
+                            '       font-family: \"Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 400;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
                             '   }\n'+
                             (iconBoxSlim ?
                             '   @font-face { \n'+
@@ -103,8 +103,8 @@ function loadStyleDesign() {
 loadStyleDesign();
 loadFontIcons('head'); 
 setTimeout(() => {
-    if ($('#ifrVisualizacao').length) {
-        loadFontIcons('head', $('#ifrVisualizacao').contents());
+    if ($('#ifrConteudoVisualizacao, #ifrVisualizacao').length) {
+        loadFontIcons('head', $('#ifrConteudoVisualizacao, #ifrVisualizacao').contents());
     }
 }, 500);
 if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));

@@ -47,10 +47,10 @@ function initLinhaNumerada(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof parent.parent.getLinhaNumerada !== 'undefined') { 
         parent.parent.getLinhaNumerada();
-    } else {
+    } else if (parent.window.name != 'ifrConteudoVisualizacao') {
         setTimeout(function(){ 
             initLinhaNumerada(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initLinhaNumerada'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initLinhaNumerada'); 
         }, 500);
     }
 }

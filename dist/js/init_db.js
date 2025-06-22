@@ -80,13 +80,13 @@ function setOptionsSEIPro(option_key, option_value) {
 function getOptionsSEIPro(data) {
     if (data.type && (data.type == "NEW_BASE")) {
         var newItem = data.newItem;
-        console.log(newItem);
+        // console.log(newItem, data);
 
         chrome.storage.sync.get({
             dataValues: ''
         }, function(items) {
             var dataValues = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];  
-            if (data.mode == 'insert') {
+            if (data.mode == 'insert' || data.mode == 'remove') {
                 for (i = 0; i < dataValues.length; i++) {
                     if ( dataValues[i]['baseTipo'] == data.base) {
                         dataValues.splice(i,1);
@@ -94,12 +94,18 @@ function getOptionsSEIPro(data) {
                     }
                 }
             }
-            dataValues.push(newItem);
-            console.log(dataValues);
+            if (data.mode != 'remove') dataValues.push(newItem);
+            // console.log(dataValues);
             chrome.storage.sync.set({
                 dataValues: JSON.stringify(dataValues)
             }, function() {
-                if (data.alert) { alert('Configura\u00e7\u00f5es carregadas com sucesso!'); }
+                if (data.alert) { 
+                    if (data.mode == 'insert') {
+                        alert('Configura\u00e7\u00f5es carregadas com sucesso!'); 
+                    } else {
+                        alert('Configura\u00e7\u00f5es removidas com sucesso!\n\n Recarregue a p\u00E1gina.'); 
+                    }
+                }
                 if (typeof window.jQuery !== 'undefined') {
                     var urlHome = $(isNewSEI ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
                     if (typeof urlHome !== 'undefined') {
@@ -184,6 +190,25 @@ function observeAcaoPro() {
                 newItem: {
                     "baseName": "Open AI (Chat GPT)",
                     "baseTipo": "openai",
+                    "conexaoTipo": "api",
+                    "CLIENT_ID": "",
+                    "API_KEY": "",
+                    "spreadsheetId": "",
+                    "URL_API": param.url,
+                    "KEY_USER": param.token
+                }
+            };
+            // console.log(data);
+            getOptionsSEIPro(data);
+        } else if (param.base == 'gemini') {
+            var data = { 
+                type: "NEW_BASE", 
+                mode: param.mode, 
+                base: param.base, 
+                alert: true, 
+                newItem: {
+                    "baseName": "Gemini (Google)",
+                    "baseTipo": "gemini",
                     "conexaoTipo": "api",
                     "CLIENT_ID": "",
                     "API_KEY": "",

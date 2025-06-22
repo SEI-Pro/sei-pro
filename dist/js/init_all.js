@@ -1,6 +1,11 @@
+const compareVersionNumbers_initall = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+(\.\d+)*$/.test(v2) ? ((a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) { const n1 = +a[i] || 0, n2 = +b[i] || 0; if (n1 !== n2) return n1 > n2 ? 1 : -1; } return 0; })(v1.split('.'), v2.split('.')) : NaN;
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
+var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_initall(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
+var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
 
-if (!$('#frmEditor').length) $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (!frmEditor.length 
+    // && (!isNewSEI || (isNewSEI && typeof loadFunctionsPro === 'undefined'))
+) $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function getUrlExtension(url) {
     if (typeof browser === "undefined") {
@@ -24,25 +29,25 @@ function loadFontIcons(elementTo, target = $('html')) {
             rel: "stylesheet",
             type: "text/css",
             datastyle: "seipro-fonticon",
-            href: getUrlExtension(iconBoxSlim ? "css/fontawesome.pro.min.css" : "css/fontawesome.min.css") 
+            href: getUrlExtension("css/fontawesome.pro.min.css") 
         }).appendTo(target.find(elementTo));
         
         var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="1">'+
                             '    @font-face {\n'+
-                            '       font-family: "Font Awesome 5 '+(iconBoxSlim ? 'Pro' : 'Free')+'";\n'+
+                            '       font-family: "Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 900;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
                             '   }\n'+
                             '   @font-face {\n'+
-                            '       font-family: \"Font Awesome 5 '+(iconBoxSlim ? 'Pro' : 'Free')+'";\n'+
+                            '       font-family: \"Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 400;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts'+(iconBoxSlim ? "/pro/" : "/")+'fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot) !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
                             '   }\n'+
                             (iconBoxSlim ?
                             '   @font-face { \n'+
@@ -127,11 +132,12 @@ function divDialogsPro() {
 }
 function loadScriptProAll() {
     getPathExtensionPro();
-	if (!$('#frmEditor').length) {
-        divDialogsPro();
-        loadFilesUI();
+    divDialogsPro();
+    loadFilesUI();
+	if (!frmEditor.length) {
         loadFontIcons('head');
         if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+        if (typeof DOMPurify === 'undefined') $.getScript(getUrlExtension("js/lib/purify.min.js"));
         if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
         if (typeof $.tablesorter === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
         if (typeof $().chosen === 'undefined') $.getScript(getUrlExtension("js/lib/chosen.jquery.min.js"));

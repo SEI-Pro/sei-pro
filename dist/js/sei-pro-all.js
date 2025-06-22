@@ -728,15 +728,19 @@ function observeUrlPage() {
     }
 }
 function initSlimPro() {
-    var htmlSlimPro =   '       <div id="controlSlimPro" style="display: inline-block;float: right;margin:3px 10px 0 0">'+
+    var htmlSlimPro =   '       <div data-ref="infraAcaoBarraSistema" style="display: inline-block;float: right;margin:3px 10px 0 0">'+
                         '           <div class="onoffswitch" style="display:inline-block;transform:scale(0.7)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Desativar estilo avan\u00E7ado' : 'Ativar estilo avan\u00E7ado')+'\')">'+
                         '               <input type="checkbox" onchange="changeSlimPro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="changeSlimPro" tabindex="0" '+(localStorage.getItem('seiSlim') ? 'checked' : '')+'>'+
-                        '               <label class="onoffswitch-label" for="changeSlimPro" style="border-color: #ffffff7a;"></label>'+
+                        '               <label class="onoff-switch-label" for="changeSlimPro" style="border-color: #ffffff7a;"></label>'+
                         '           </div>'+
                         '           <i onclick="openStyleBoxSlimPro()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Escolher cor principal' : 'Ativar estilo avan\u00E7ado')+'\')" class="fas fa-palette brancoColor" style="float: right;font-size: 16pt;cursor: pointer;"></i> '+
                         '       </div>';
-    $('#controlSlimPro').remove();
+
+    var htmlDarkMode =   '           <i onclick="setDarkModePro(this)" id="iconDarkMode" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('darkModePro') ? 'Desativar modo noturno' : 'Ativar modo noturno')+'\')" class="fas fa-'+(localStorage.getItem('darkModePro') ? 'house-day' : 'house-night')+' brancoColor" style="font-size: 16pt;cursor: pointer;position: absolute;margin: 5px -35px;"></i> ';
+
+    $('div[data-ref="infraAcaoBarraSistema"]').remove();
     $(typeof isNewSEI !== 'undefined' && isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(htmlSlimPro);
+    $(typeof isNewSEI !== 'undefined' && isNewSEI && localStorage.getItem('seiSlim') ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').prepend(htmlDarkMode);
     initStyleBoxSlimPro();
 }
 function initStyleBoxSlimPro(TimeOut = 9000) {
@@ -851,9 +855,16 @@ function initQRCodeLib() {
         $.getScript(URL_SPRO+"js/lib/jquery-qrcode-0.18.0.min.js");
     }
 }
-function initNewProcDefault() {
-    if ($('form#frmProcedimentoCadastro').length) {
+function initNewProcDefault(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if ($('form#frmProcedimentoCadastro').length && typeof moment == 'function') {
         setNewProcDefault();
+    } else if (!$('#frmProcedimentoControlar').length) {
+        setTimeout(function(){ 
+            if (TimeOut == 9000 && typeof moment === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js");
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initInfraImg'); 
+            initNewProcDefault(TimeOut - 100); 
+        }, 500);
     }
 }
 function initConfigSEIPro() {
@@ -882,6 +893,7 @@ function initCaixaSelecaoUnidadesSEI(TimeOut = 9000) {
 }
 function initSeiProAll() {
     if (typeof jmespath === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/jmespath.min.js");
+    if (typeof DOMPurify === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/purify.min.js");
     if (typeof moment === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js");
     if (typeof $.tablesorter === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js");
     if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
@@ -890,7 +902,7 @@ function initSeiProAll() {
     initInfraImg();
     checkPageParent();
     setTimeout(() => { initMarcadorUserColor() }, 500);
-    initNewProcDefault();
+    if (!isNewSEI) initNewProcDefault();
     appendVersionSEIPro();
     initTableSorter();
     repairLnkControleProcesso();
@@ -901,18 +913,21 @@ function initSeiProAll() {
     initTablePesquisaDownload();
     initReplaceSelectAll();
     initAppendIconFavorites();
-    // initReplaceNewIconsBar();
-    initRemovePaginacaoAll();
-    setTimeout(() => { initPagesInfiniteSearch() }, 1000);
     initQuickViewSearch();
-    // observeIfrArvore();
     initObserveUrlPage();
     initSlimPro();
-    //checkBlankPageSEI();
     initCheckLoadJqueryUI();
     initQRCodeLib();
     setOnClickExcluirProcBloco();
     initConfigSEIPro();
+    setTimeout(() => { 
+        initRemovePaginacaoAll();
+        initPagesInfiniteSearch();
+    }, 1000);
+    // initReplaceNewIconsBar();
+    // observeIfrArvore();
+    //checkBlankPageSEI();
+    if (isSEI_5) $.getScript(URL_SPRO+"js/lib/modalLink.js");
 
     if (typeof NAMESPACE_SPRO !== 'undefined' && NAMESPACE_SPRO != 'SEI Pro Lab') {
         console.log = function() { 

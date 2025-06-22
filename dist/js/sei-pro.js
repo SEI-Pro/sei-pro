@@ -10,6 +10,8 @@ var arvoreDropzone = false;
 var contentW = false;
 var pathArvore = typeof isNewSEI !== 'undefined' && isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
 var elemCheckbox = typeof isNewSEI !== 'undefined' && isNewSEI ? '.infraCheckboxInput' : '.infraCheckbox';
+const objProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro(false, true) : false;
+const arrayProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro() : false;
 
 function setTimeTest() {
     ++totalSecondsTest;
@@ -230,7 +232,7 @@ function setSelectAllTr(this_, tagname = false) {
     var tagname_select = (tagname) ? 'tr[data-tagname="'+tagname+'"]:visible' : 'tr:visible';
     var listCheckbox = [];
     if (index < 1) {
-        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]');
+        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(.onoffswitch-checkbox)');
         var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : true;
         
         if (t) {
@@ -244,7 +246,7 @@ function setSelectAllTr(this_, tagname = false) {
         }
         $(this_).data('index',index+1);
     } else {
-        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:checked');
+        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(.onoffswitch-checkbox):checked');
         var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : false;
         
         if (t) {
@@ -480,9 +482,9 @@ function updateGroupTablePro(valueSelect, mode) {
     //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
     var selectGroup = localStorageRestorePro('selectGroupTablePro');
     if ($.isArray(selectGroup) && selectGroup.length > 0) {
-        if (jmespath.search(selectGroup, "[?unidade=='"+unidade+"'].unidade | length(@)") > 0) {
+        if (jmespath.search(selectGroup, "[?unidade=='"+siglaUnidadeAtual+"'].unidade | length(@)") > 0) {
             for (i = 0; i < selectGroup.length; i++) {
-                if(selectGroup[i]['unidade'] == unidade) {
+                if(selectGroup[i]['unidade'] == siglaUnidadeAtual) {
                     //console.log('unidade', i, selectGroup[i], unidade, mode);
                     if (mode == 'remove') {
                         selectGroup.splice(i,1);
@@ -493,7 +495,7 @@ function updateGroupTablePro(valueSelect, mode) {
                 }
             }
         } else if (valueSelect != '') {
-            selectGroup.push({unidade: unidade, selected: valueSelect});
+            selectGroup.push({unidade: siglaUnidadeAtual, selected: valueSelect});
         }
         localStorageStorePro('selectGroupTablePro', selectGroup);
         // console.log('selectGroup',selectGroup);
@@ -502,7 +504,7 @@ function updateGroupTablePro(valueSelect, mode) {
             localStorageRemovePro('selectGroupTablePro');
             console.log('localStorageRemovePro');
         } else {
-            localStorageStorePro('selectGroupTablePro', [{unidade: unidade, selected: valueSelect}]);
+            localStorageStorePro('selectGroupTablePro', [{unidade: siglaUnidadeAtual, selected: valueSelect}]);
             // console.log('selectGroup',[{unidade: unidade, selected: valueSelect}]);
             // console.log('NOT',{unidade: unidade, selected: valueSelect});
         }
@@ -512,10 +514,10 @@ function storeGroupTablePro() {
     if (typeof localStorageRestorePro !== "undefined" && localStorageRestorePro('selectGroupTablePro') != null) {
         //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
         var selectGroup = localStorageRestorePro('selectGroupTablePro');
-        if ($.isArray(selectGroup) && typeof jmespath !== 'undefined' && jmespath.search(selectGroup, "[?unidade=='"+unidade+"'].unidade | [0]") == unidade ) {
-            return jmespath.search(selectGroup, "[?unidade=='"+unidade+"'].selected | [0]");
+        if ($.isArray(selectGroup) && typeof jmespath !== 'undefined' && jmespath.search(selectGroup, "[?unidade=='"+siglaUnidadeAtual+"'].unidade | [0]") == siglaUnidadeAtual ) {
+            return jmespath.search(selectGroup, "[?unidade=='"+siglaUnidadeAtual+"'].selected | [0]");
         } else if (!$.isArray(selectGroup)) {
-            localStorageStorePro('selectGroupTablePro', [{unidade: unidade, selected: selectGroup}]);
+            localStorageStorePro('selectGroupTablePro', [{unidade: siglaUnidadeAtual, selected: selectGroup}]);
             // console.log('selectGroupTablePro', [{unidade: unidade, selected: selectGroup}]);
             return selectGroup;
         }
@@ -808,11 +810,11 @@ function selectFilterTableHome() {
 }
 function initDadosProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro !== 'undefined'  && typeof $("#ifrArvore").contents().find('#topmenu').find('a[target="ifrVisualizacao"]').eq(0).attr('href') !== 'undefined' ) { 
+    if (typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro !== 'undefined'  && typeof $("#ifrArvore").contents().find('#topmenu').find(`a[target="${ifrVisualizacao_}"]`).eq(0).attr('href') !== 'undefined' ) { 
         var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
             id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
             id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
-            // idProcedimento = (typeof idProcedimento !== 'undefined') ? idProcedimento : getParamsUrlPro($("#ifrArvore").contents().find('#topmenu').find('a[target="ifrVisualizacao"]').eq(0).attr('href')).id_procedimento;
+            // idProcedimento = (typeof idProcedimento !== 'undefined') ? idProcedimento : getParamsUrlPro($("#ifrArvore").contents().find('#topmenu').find(`a[target="${ifrVisualizacao_}"]`).eq(0).attr('href')).id_procedimento;
             // console.log(id_procedimento, 'processo');
             getDadosIframeProcessoPro(id_procedimento, 'processo');
     } else {
@@ -928,15 +930,14 @@ function observeHistoryBrowserPro() {
 }
 */
 function initNewBtnHome() { 
-    var base64IconReaberturaPro = 'data:image/png;base64,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';
     var lastCheck = getOptionsPro('lastcheck_AcompEsp');
         lastCheck = (lastCheck) ? ' <br>(\u00DAltima verifica\u00E7\u00E3o em: '+moment(lastCheck, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+')' : '';
     var title = 'Reabertura Programada de Processos'+lastCheck;
     var iconBoxSlim = localStorage.getItem('seiSlim');
-    var iconLabel = localStorage.getItem('iconLabel');
+    var iconLabel = localStorage.getItem('iconLabel'); 
 
     var htmlBtn =   '<a tabindex="451" class="botaoSEI iconReaberturaPro '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_reopen" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+title+'\')" onclick="checkDadosAcompEspecial(true);" style="position: relative; margin-left: -3px;">'+
-                    '    <img class="infraCorBarraSistema" src="'+base64IconReaberturaPro+'" title="'+title+'" alt="'+title+'">'+
+                    '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/reabertura.svg" alt="'+title+'">'+
                     '    <span class="botaoSEI_iconBox">'+
                     '       <i class="fas fa-folder-download" style="font-size: 17pt; color: #fff;"></i>'+
                     '    </span>'+
@@ -967,11 +968,11 @@ function getNewTabProcesso() {
         var _this = $(mutations[0].target);
         var _parent = _this.closest('table');
         if (_parent.find('tr.infraTrMarcada').length > 0) {
-            $(divComandos).find('.iconPro_Observe').removeClass('botaoSEI_hide');
+            $(`${divComandos}${infraBarraComandos}`).find('.iconPro_Observe').removeClass('botaoSEI_hide');
             removeDuplicateValue('#hdnRecebidosItensSelecionados');
             removeDuplicateValue('#hdnGeradosItensSelecionados');
         } else {
-            $(divComandos).find('.iconPro_Observe').addClass('botaoSEI_hide');
+            $(`${divComandos}${infraBarraComandos}`).find('.iconPro_Observe').addClass('botaoSEI_hide');
         }
     });
     setTimeout(function(){ 
@@ -984,7 +985,7 @@ function getNewTabProcesso() {
         ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+__.Nova_Demanda+'\')"')+' onclick="parent.saveAtividade()" style="position: relative; margin-left: -3px;">'+
             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="'+__.Nova_Demanda+'">'+
             '    <span class="botaoSEI_iconBox">'+
-            '       <i class="fas fa-user-check" style="font-size: 17pt; color: #fff;"></i>'+
+            '       <i class="fad fa-user-check" style="font-size: 17pt; color: #fff;"></i>'+
             '    </span>'+
             (iconLabel ?
             '    <span class="newIconTitle">'+__.Nova_Demanda+'</span>'+
@@ -996,7 +997,7 @@ function getNewTabProcesso() {
                             '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Alterar informa\u00E7\u00F5es do processso\')"')+' onclick="dialogChangeTypeProc()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Alterar informa\u00E7\u00F5es do processso">'+
                             '    <span class="botaoSEI_iconBox">'+
-                            '       <i class="fas fa-info-circle" style="font-size: 17pt; color: #fff;"></i>'+
+                            '       <i class="fad fa-info-circle" style="font-size: 17pt; color: #fff;"></i>'+
                             '    </span>'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Alterar informa\u00E7\u00F5es do processso</span>'+
@@ -1008,7 +1009,7 @@ function getNewTabProcesso() {
                             '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconUpload_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Enviar documentos em processos\')"')+' onclick="initUploadFilesInProcess()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Enviar documentos em processos">'+
                             '    <span class="botaoSEI_iconBox">'+
-                            '       <i class="fas fa-file-upload" style="font-size: 17pt; color: #fff;"></i>'+
+                            '       <i class="fad fa-file-upload" style="font-size: 17pt; color: #fff;"></i>'+
                             '    </span>'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Enviar documentos em processos</span>'+
@@ -1020,7 +1021,7 @@ function getNewTabProcesso() {
                             '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\')"')+' onclick="addControlePrazo()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Adicionar prazo">'+
                             '    <span class="botaoSEI_iconBox">'+
-                            '       <i class="far fa-clock" style="font-size: 17pt; color: #fff;"></i>'+
+                            '       <i class="fad fa-clock" style="font-size: 17pt; color: #fff;"></i>'+
                             '    </span>'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Adicionar prazo</span>'+
@@ -1032,7 +1033,7 @@ function getNewTabProcesso() {
                             '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Marcar como n\u00E3o visualizado\')"')+' onclick="getProcessoNaoLido()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Marcar como n\u00E3o visualizado">'+
                             '    <span class="botaoSEI_iconBox">'+
-                            '       <i class="far fa-eye-slash" style="font-size: 17pt; color: #fff;"></i>'+
+                            '       <i class="fad fa-eye-slash" style="font-size: 17pt; color: #fff;"></i>'+
                             '    </span>'+
                             (iconLabel ?
                             '    <span class="newIconTitle">Marcar como n\u00E3o visualizado</span>'+
@@ -1043,7 +1044,7 @@ function getNewTabProcesso() {
         htmlBtn =   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPro_newtab" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Abrir Processos em Nova Aba\')"')+' onclick="openListNewTab(this)" style="position: relative; margin-left: -3px;">'+
                     '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Abrir Processos em Nova Aba">'+
                     '    <span class="botaoSEI_iconBox">'+
-                    '       <i class="fas fa-external-link-alt" style="font-size: 17pt; color: #fff;"></i>'+
+                    '       <i class="fad fa-external-link-alt" style="font-size: 17pt; color: #fff;"></i>'+
                     '    </span>'+
                     (iconLabel ?
                     '    <span class="newIconTitle">Abrir Processos em Nova Aba</span>'+
@@ -1051,8 +1052,11 @@ function getNewTabProcesso() {
 
                     '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnNaoLido;
                     
-        $(divComandos).find('.iconPro_Observe').remove();
-        $(divComandos).append(htmlBtn);
+        $(`${divComandos}${infraBarraComandos}`).each(function(){
+            var _this = $(this);
+                _this.find('.iconPro_Observe').remove();
+                _this.append(htmlBtn);            
+        });
     }, 500);
 }
 function openListNewTab(this_) {
@@ -1412,6 +1416,18 @@ function setTableSorterHome() {
                                     _this.after(aftereTh);
                             }
                         });
+                       $('#ancLiberarMeusProcessos').click(function(){
+                           verMeusProcessos('T')
+                       });
+                       $('#ancLiberarMarcador').click(function(){
+                           filtrarMarcador(null);
+                       });
+                       $('#ancLiberarTipoProcedimento').click(function(){
+                           filtrarTipoProcedimento(null);
+                       });
+                       $('#ancLiberarTipoPrioridade').click(function(){
+                           filtrarTipoPrioridade(null);
+                       });
                    }
                     
                     var elemID = $(this).attr('id');
@@ -1562,7 +1578,13 @@ function forceTableHomeDestroy(Timeout = 3000) {
 }
 function forceOnLoadBody() {
     var onload = new Function($('body').attr('onload'));
-    onload();
+    if (isNewSEI && typeof $.modalLink === 'undefined' && !$('.sparkling-modal-frame').length) {
+        $.get($('script[src*="jquery.modalLink"]').attr('src'), function(){
+            onload();
+        });
+    } else {
+        onload();
+    }
 }
 function observeAreaTela(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -1674,7 +1696,7 @@ function initReplaceNewIcons(TimeOut = 9000) {
     if (typeof isNewSEI !== 'undefined' && isNewSEI) $(divComandos+' a').addClass('botaoSEI');
     if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
     if (typeof replaceNewIcons === 'function') {
-        replaceNewIcons(isNewSEI ? $('.barraBotoesSEI a.botaoSEI') : $('.infraBarraComandos a.botaoSEI'));
+        replaceNewIcons($(`${infraBarraComandos} a.botaoSEI`));
     } else {
         setTimeout(function(){ 
             initReplaceNewIcons(TimeOut - 100); 
@@ -1697,7 +1719,7 @@ function setObserveUrlChange() {
     if (parent.verifyConfigValue('urlamigavel')) {
         $(window).bind('hashchange', function() {
             var ifrArvore = $('#ifrArvore').contents();
-            var sourceLink = ifrArvore.find('.infraArvoreNoSelecionado').eq(0).closest('a[target="ifrVisualizacao"]');
+            var sourceLink = ifrArvore.find('.infraArvoreNoSelecionado').eq(0).closest(`a[target="${ifrVisualizacao_}"]`);
             var nrSEI = (typeof sourceLink !== 'undefined' && sourceLink !== null) ? getNrSei(sourceLink.text().trim()) : false;
                 nrSEI = (nrSEI == '') ? false : nrSEI;
             var nrSEI_URL = (window.location.hash.indexOf('@') !== -1) ? window.location.hash.replace('#','').split('@')[1] : false;
@@ -2196,7 +2218,7 @@ function addControlePrazo(this_ = false) {
                     '          <td>'+
                     '              <div class="onoffswitch" style="float: right;">'+
                     '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(dueSetDate ? 'checked' : '')+'>'+
-                    '                  <label class="onoffswitch-label" for="configDatesBox_duesetdate"></label>'+
+                    '                  <label class="onoff-switch-label" for="configDatesBox_duesetdate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -2463,6 +2485,276 @@ function configDatesSwitchChangeHome(this_) {
         _this.closest('tr').find('.iconSwitch').removeClass('azulColor');
     }
 }
+function getMapaControleProcesso() {
+    return $('#tblProcessosRecebidos').find('tbody tr').not('.tableHeader').not('.infraCaption').map(function(){
+        let _this = $(this);
+        let _td = _this.find('td');
+        let id_procedimento = _this.attr('id');
+            id_procedimento = typeof id_procedimento !== 'undefined' ? parseInt(id_procedimento.replace('P','')) : false;
+        let protocolo = _td.eq(2).text();
+        let link_atribuicao = _td.eq(3).find('a[href*="controlador.php?acao=procedimento_atribuicao_listar"]');
+        let nome_atribuicao = link_atribuicao.attr('title');
+            nome_atribuicao = typeof nome_atribuicao !== 'undefined' ? nome_atribuicao.replace('Atribuído para ','') : false;
+        let usuario_atribuicao = link_atribuicao.text().trim();
+        let descricao = _td.eq(4).text();
+        let tipo_processo = _td.eq(5).text();
+        
+        let _return = {
+            id_procedimento: id_procedimento,
+            protocolo: protocolo,
+            atribuicao : nome_atribuicao ? {nome: nome_atribuicao, usuario: usuario_atribuicao} : false,
+            descricao : descricao,
+            tipo_processo: tipo_processo
+           }
+        return _return;
+    }).get();
+}
+function updateCountIconDist() {
+    var counter = $('#distribAutTablePro').find('input[type="checkbox"]:checked').length;
+    if (counter > 0) {
+        $('.iconConfig_distrib').find('.fa-layers-counter').text(counter).show();
+    } else {
+        $('.iconConfig_distrib').find('.fa-layers-counter').hide();
+    }
+}
+
+/* txtPadrao_setConfig({
+    nome: 'DISTRIBUICAO_AUTOMATICA_SEIPRO',
+    descricao: `Configura\u00E7\u00F5es interna para distribui\u00E7\u00E3o autom\u00E1tica de processos (criado pelo SEI Pro)`,
+    conteudo: `<p>[{"tipo_processo": "Material: Baixa de Material de Consumo", "atribuicao": "Pedro.Soares"},{"tipo_processo": "Gest\u00E3o e Controle: Execu\u00E7\u00E3o de Auditoria Interna", "atribuicao": "Pedro.Soares"}]</p>`
+}); */
+
+// var conteudoDist = await txtPadrao_getConfig('DISTRIBUICAO_AUTOMATICA_SEIPRO');
+// console.log(conteudoDist);
+
+var txtPadrao_newLink = async () => {
+    var htmlTxtPadrao = await $.get(urlTxtPadrao);
+    var urlNew = $(htmlTxtPadrao).find('#btnNovo').attr('onclick');
+        urlNew = typeof urlNew !== 'undefined' && urlNew.indexOf("'") !== -1 ? urlNew.split("'")[1] : false;
+    return urlNew;
+}
+var txtPadrao_getConfig = async (idTxt) => {
+    var htmlTxtPadrao = await $.get(urlTxtPadrao);
+    var urlView = $(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td').eq(2).text() == '[_'+idTxt+']') return $(this).find('a[href*="acao=texto_padrao_interno_consultar"]').attr('href') }).get();
+        urlView = typeof urlView !== 'undefined' && urlView !== null && urlView.length ? urlView[0] : false;
+
+    if (urlView) {
+        var htmlTxtPadrao = await $.get(urlView);
+        var conteudoTxtPadrao = $(htmlTxtPadrao).find('#txaConteudo').val();
+            conteudoTxtPadrao = typeof conteudoTxtPadrao !== 'undefined' && conteudoTxtPadrao !== null && conteudoTxtPadrao.trim() != '' ? $(conteudoTxtPadrao).text() : false;
+            conteudoTxtPadrao = conteudoTxtPadrao && isJson(conteudoTxtPadrao) ? JSON.parse(conteudoTxtPadrao) : false;
+            conteudoTxtPadrao = conteudoTxtPadrao && $.isArray(conteudoTxtPadrao) ? conteudoTxtPadrao : false;
+        return conteudoTxtPadrao;
+    } else {
+        return false;
+    };
+}
+var txtPadrao_setConfig = async (data) => {
+    var htmlTxtPadrao = await $.get(urlTxtPadrao);
+    var urlEdit = $(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td').eq(2).text() == '[_'+data.nome+']') return $(this).find('a[href*="acao=texto_padrao_interno_alterar"]').attr('href') }).get();
+        urlEdit = typeof urlEdit !== 'undefined' && urlEdit !== null && urlEdit.length ? urlEdit[0] : false;
+    var urlPage = urlEdit ? urlEdit : await txtPadrao_newLink();
+    var htmlLink = await $.get(urlPage);
+    var form = $(htmlLink).find('#frmTextoPadraoInternoCadastro');
+    var urlForm = form.attr('action');
+    var createConfig = await txtPadrao_createConfig(form, urlForm, data);
+    return createConfig;
+}
+var txtPadrao_createConfig = async (form, urlForm, data) => {
+    let params = {};
+        form.find("input[type=hidden]").each(function () {
+            if ($(this).attr('name') && $(this).attr('id').includes('hdn')) {
+                params[$(this).attr('name')] = $(this).val();
+            }
+        });
+        form.find('input[type=text]').each(function () {
+            if ($(this).attr('id') && $(this).attr('id').includes('txt')) {
+                params[$(this).attr('id')] = $(this).val();
+            }
+        });
+        params.txtNome = '[_'+data.nome+']';
+        params.txtDescricao = data.descricao;
+        params.txaConteudo = '<p>'+JSON.stringify(data.conteudo)+'</p>';
+        params.sbmCadastrarTextoPadraoInterno = 'Salvar';
+        params.sbmAlterarTextoPadraoInterno = 'Salvar';
+    
+    var postData = '';
+    for (var k in params) {
+        if (postData !== '') postData = postData + '&';
+        var valor = (k=='txtDescricao' || k=='txaConteudo') ? escapeComponent(params[k]) : params[k];
+            postData = postData + k + '=' + valor;
+    }
+    
+    var htmlTxtPadraoCreated = await $.ajax({
+        method: 'POST',
+        url: urlForm,
+        data: postData,
+        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1'
+    });
+    return htmlTxtPadraoCreated;
+}
+var getTableDistribAutomatica = async () => {
+    var dadosDistribuicao = await txtPadrao_getConfig('DISTRIBUICAO_AUTOMATICA_SEIPRO');
+        window.dadosDistribuicaoAut = dadosDistribuicao;
+    var htmlBox =       '<div id="boxDistribAut" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
+                        '               <a class="newLink iconConfig_distrib" onclick="getAtribuicaoAutomatica(this)" onmouseover="return infraTooltipMostrar(\'Atribuir processos\');" onmouseout="return infraTooltipOcultar();" style="margin: 0px; font-size: 14pt;">'+
+                        '                   <span class="fa-layers fa-fw">'+
+                        '                       <i class="fas fa-user-friends"></i>'+
+                        '                       <span class="fa-layers-counter" style="display:none"></span>'+
+                        '                   </span>'+
+                        '                   <span style="font-size: 80%;">Atribuir Processos</span>'+
+                        '               </a>'+
+                        '               <a class="newLink iconConfig_distrib" onclick="setAtribuicaoAutomatica(this)" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es de atribui\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();" style="margin: 0px;font-size: 14pt;right: 280px;position: absolute;">'+
+                        '                   <i class="fas fa-cog"></i>'+
+                        '               </a>'+
+                        '   <table id="distribAutTablePro" style="margin-top: 5px; font-size: 9pt !important;width: 100%;" class="seiProForm tableAtividades tableDialog tableInfo tableZebra">'+
+                        '        <thead>'+
+                        '            <tr class="tableHeader">'+
+                        '                <th class="tituloControle " width="5%" align="center">'+
+                        '                   <label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label>'+
+                        '                   <a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'SemGrupo\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Todos\')" onmouseout="return infraTooltipOcultar();">'+
+                        '                       <img src="/infra_css/imagens/check.gif" id="imgRecebidosCheck" class="infraImg">'+
+                        '                   </a>'+
+                        '                </th>'+
+                        '                <th class="tituloControle" style="text-align: center; width: 180px;">Processo</th>'+
+                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Descri\u00E7\u00E3o</th>'+
+                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Tipo</th>'+
+                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Atualmente atribu\u00EDdo</th>'+
+                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Nova atribui\u00E7\u00E3o</th>'+
+                        '            </tr>'+
+                        '        </thead>'+
+                        '        <tbody>';
+        $.each(getMapaControleProcesso(),function(i, v){
+            let distribuicao = dadosDistribuicaoAut ? dadosDistribuicaoAut.filter(function(p){ return p.tipo_processo == v.tipo_processo }) : [];
+            let nova_atribuicao = distribuicao.length ? distribuicao[0] : false;
+            let atribuicao = v.atribuicao ? v.atribuicao.usuario : '';
+            htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo">'+
+                        '       <td class="tituloControle" style="text-align:center;">'+
+                        '           <input type="checkbox" onclick="updateCountIconDist()" id="chkDistrib_'+v.id_procedimento+'" '+(nova_atribuicao && nova_atribuicao.atribuicao != atribuicao ? 'checked' : '')+' '+(!nova_atribuicao ? 'disabled' : '')+' name="chkDistrib_'+v.id_procedimento+'" value="'+v.id_procedimento+'">'+
+                        '       </td>'+
+                        '       <td>'+
+                        '           <a style="margin-left: 5px;" href="'+url_host+'?acao=procedimento_trabalhar&id_procedimento='+v.id_procedimento+'" target="_blank">'+
+                        '               <span class="bLink">'+
+                        '                   '+v.protocolo+
+                        '                   <i class="fas fa-external-link-alt bLink" style="font-size: 90%; text-decoration: underline;"></i>'+
+                        '               </span>'+
+                        '           </a>'+
+                        '       </td>'+
+                        '       <td>'+v.tipo_processo+'</div>'+
+                        '       <td>'+v.descricao+'</div>'+
+                        '       <td>'+atribuicao+'</td>'+
+                        '       <td>'+(nova_atribuicao ? nova_atribuicao.atribuicao : '')+'</td>'+
+                        '   </tr>';
+        });
+        htmlBox +=      '   </table>'+
+                        '</div>';
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+        .dialog({
+            title: 'Distribui\u00E7\u00E3o Autom\u00E1tica de Processos',
+            width: $('body').width()-300,
+            height: 450,
+            open: function() { 
+                setTimeout(function(){ 
+                    var distribTable = $('#distribAutTablePro');
+                        distribTable.tablesorter({
+                            sortLocaleCompare : true,
+                            widgets: ["saveSort", "filter"],
+                            widgetOptions: {
+                                saveSort: true,
+                                filter_hideFilters: true,
+                                filter_columnFilters: true,
+                                filter_saveFilters: true,
+                                filter_hideEmpty: true,
+                                filter_excludeFilter: {}
+                            },
+                            sortReset: true,
+                            headers: {
+                                0: { sorter: false, filter: false },
+                                1: { filter: true },
+                                2: { filter: true },
+                                3: { filter: true },
+                                4: { filter: true },
+                                5: { filter: true }
+                            }
+                        }).on("filterEnd", function (event, data) {
+                            checkboxRangerSelectShift();
+                            var caption = $(this).find("caption").eq(0);
+                            var tx = caption.text();
+                                caption.text(tx.replace(/\d+/g, data.filteredRows));
+                                $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
+                                $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
+                        });
+                        initPanelResize('#boxDistribAut', 'distribPro');
+
+                    var filterDistrib = distribTable.find('.tablesorter-filter-row').get(0);
+                    if (typeof filterDistrib !== 'undefined') {
+                        var observerFilterDistrib = new MutationObserver(function(mutations) {
+                            var _this = $(mutations[0].target);
+                            var _parent = _this.closest('table');
+                            var iconFilter = _parent.find('.filterTableDistrib button');
+                            var checkIconFilter = iconFilter.hasClass('active');
+                            var hideme = _this.hasClass('hideme');
+                            if (hideme && checkIconFilter) {
+                                iconFilter.removeClass('active');
+                            }
+                            updateCountIconDist();
+                        });
+                        setTimeout(function(){ 
+                            var htmlfilterDistrib =    '<div class="btn-group filterTableDistrib" role="group" style="right: 45px;top: 18px;z-index: 999;position: absolute;">'+
+                                                        '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
+                                                        '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                                                        '       <span class="text">Baixar</span>'+
+                                                        '   </button>'+
+                                                        '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
+                                                        '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
+                                                        '       <span class="text">Copiar</span>'+
+                                                        '   </button>'+
+                                                        '   <button type="button" onclick="filterTablePro(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(distribTable.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
+                                                        '       <i class="fas fa-search" style="padding-right: 3px; cursor: pointer; font-size: 10pt;"></i>'+
+                                                        '       Pesquisar'+
+                                                        '   </button>'+
+                                                        '</div>';
+                                distribTable.find('thead .filterTableDistrib').remove();
+                                distribTable.find('thead').prepend(htmlfilterDistrib);
+                                observerFilterDistrib.observe(filterDistrib, {
+                                    attributes: true
+                                });
+                                distribTable.find('.tablesorter-filter-row input.tablesorter-filter').eq(2).attr('type','date');
+                                updateCountIconDist(filterDistrib);
+                        }, 500);
+                    }
+                }, 500);
+                if (typeof $().visible == 'undefined') $.getScript(URL_SPRO+"js/lib/jquery-visible.min.js");
+            },
+            close: function() { 
+                $('#boxDistribAut').remove();
+                resetDialogBoxPro('dialogBoxPro');
+            }
+    });
+
+}
+function setAtribuicaoAutomatica() {
+
+    var htmlBox =       '<div id="boxDistribAut" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
+                        '</div>';
+                        
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+        .dialog({
+            title: 'Distribui\u00E7\u00E3o Autom\u00E1tica de Processos',
+            width: $('body').width()-300,
+            height: 450,
+            open: function() { 
+            },
+            close: function() { 
+                $('#boxDistribAut').remove();
+                resetDialogBoxPro('dialogBoxPro');
+            }
+    });
+}
 function setControlePrazo(force = false) {
     var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     if (
@@ -2702,7 +2994,7 @@ function getUploadFilesInProcess() {
                             '           <img class="dz-link-icon" src="/infra_css/'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : 'imagens/pdf.gif')+'" align="absbottom" id="iconID">'+
                             '       </a>'+
                             '       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>'+
-                            '       <a id="anchorID" target="ifrVisualizacao" class="dz-filename">'+
+                            '       <a id="anchorID" target="'+ifrVisualizacao_+'" class="dz-filename">'+
                             '           <span data-dz-name title="" id="spanID"></span>'+
                             '       </a>'+
                             '       <span class="dz-size" data-dz-size></span>'+

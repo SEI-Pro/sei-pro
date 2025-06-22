@@ -35,11 +35,11 @@ function initSeiProVisualizacao() {
     if (typeof parent.checkHostLimit !== 'undefined' && !parent.checkHostLimit() && typeof parent.insertIconBatchDocs === 'function' && parent.checkConfigValue('documentosemlote')) {
         parent.insertIconBatchDocs();
     }
-    if (typeof parent.insertIconAIActions === 'function' && parent.restrictConfigValue('ferramentasia')) {
-        parent.insertIconAIActions();
-    }
     if (typeof parent.insertIconCompareDocs === 'function' && parent.checkConfigValue('comparardocumentos')) {
         parent.insertIconCompareDocs();
+    }
+    if (typeof parent.insertIconAIActions === 'function' && parent.restrictConfigValue('ferramentasia')) {
+        parent.insertIconAIActions();
     }
     if (typeof parent.insertNewIcons === 'function' && typeof parent.insertNewIcons !== 'undefined') {
         parent.insertNewIcons();
@@ -62,5 +62,6 @@ function initSeiProVisualizacao() {
     if (typeof parent.verifyMenuSistemaView === 'function') {
         parent.verifyMenuSistemaView();
     }
+    console.log('initSeiProVisualizacao', window.name);
 }
 $(document).ready(function () { initSeiProVisualizacao() });

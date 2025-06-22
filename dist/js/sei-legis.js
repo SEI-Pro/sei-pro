@@ -7,24 +7,6 @@ var alertText = {
     4: 'Itens dever ser terminadas com ponto final (.), dois pontos (:) ou ponto e u00EDrgula (;), sem espa\u00E7o antes da pontua\u00E7\u00E3o. ',
     5: 'Itens dever ser iniciados com letra min\u00FAscula.  '
 }
-var romanToInt = function(s) {
-    const mapRoman=new Map();
-    mapRoman.set('I', 1);
-    mapRoman.set('V', 5);
-    mapRoman.set('X', 10);
-    mapRoman.set('L', 50);
-    mapRoman.set('C', 100);
-    mapRoman.set('D', 500);
-    mapRoman.set('M', 1000);
-    var result=0;
-    if(s){
-        var s1=s.split('');
-        s1.forEach(function(e,i){
-            result += mapRoman.get(e) < mapRoman.get(s1[i+1]) ? -mapRoman.get(e) : mapRoman.get(e);
-        });
-    }
-    return result;
-}
 /*
 function removeAcentos(str) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -318,6 +300,7 @@ function updateLegis(iframe) {
         var text = this_.html();
         var textSearch = this_.text().trim().split(' ')[0];
         var textSearchFull = this_.text().trim();
+        var thisClassParag = $(this).attr('class');
 
         if ( textSearchFull.indexOf('@') !== -1) {
             var arrayTag = getATTags(textSearchFull);
@@ -334,7 +317,7 @@ function updateLegis(iframe) {
             });
         }
         if ( textSearch.toLowerCase().indexOf('anexo.') !== -1) {
-            classParag = 'Texto_Centralizado';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Centralizado';
             indexAnex = iAnex+1;
             randRef = randomString(16);
 //            ordAnex = ( iAnex == 0 ) ? '' : String.fromCharCode(97 + (iAnex-1)).toString().toUpperCase();
@@ -347,7 +330,7 @@ function updateLegis(iframe) {
 			iTit = 0; iCap = 0; iSec = 0; iSub = 0; iArt = 0; iPar = 0; iInc = 0; iAlin = 0; letterAlin = '';
         }
         if ( textSearch.toLowerCase().indexOf('tit.') !== -1) {
-            classParag = 'Texto_Centralizado';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Centralizado';
             indexTit = iTit+1;
             randRef = randomString(16);
             ordTit = romanizeNum(indexTit);
@@ -359,7 +342,7 @@ function updateLegis(iframe) {
             iCap = 0; iSec = 0; iSub = 0;
         }
         if ( textSearch.toLowerCase().indexOf('cap.') !== -1) {
-            classParag = 'Texto_Centralizado';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Centralizado';
             indexCap = iCap+1;
             randRef = randomString(16);
             ordCap = romanizeNum(indexCap);
@@ -372,7 +355,7 @@ function updateLegis(iframe) {
             iSec = 0; iSub = 0;
         }
         if ( textSearch.toLowerCase().indexOf('sec.') !== -1) {
-            classParag = 'Texto_Centralizado';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Centralizado';
             indexSec = iSec+1;
             randRef = randomString(16);
             ordSec = romanizeNum(indexSec);
@@ -385,7 +368,7 @@ function updateLegis(iframe) {
             iSec++;
         }
         if ( textSearch.toLowerCase().indexOf('sub.') !== -1) {
-            classParag = 'Texto_Centralizado';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Centralizado';
             indexSub = iSub+1;
             randRef = randomString(16);
             ordSub = romanizeNum(indexSub);
@@ -398,7 +381,7 @@ function updateLegis(iframe) {
             iSub++;
         }
         if ( textSearch.toLowerCase().indexOf('art.') !== -1) {
-            classParag = 'Texto_Justificado_Recuo_Primeira_Linha';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Justificado_Recuo_Primeira_Linha';
             indexArt = iArt+1;
             randRef = randomString(16);
             ordArt = ( indexArt < 10 ) ? indexArt+'\u00BA' : indexArt+'.';
@@ -411,9 +394,11 @@ function updateLegis(iframe) {
             $(this).html(text+spaceBlank).attr('class',classParag);
             iArt++;
             iPar = 0; iInc = 0; iAlin = 0; letterAlin = '';
+
+            console.log(thisClassParag, classParag);
         }
         if ( textSearch.toLowerCase().indexOf('\u00A7') !== -1) {
-            classParag = 'Texto_Justificado_Recuo_Primeira_Linha';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Justificado_Recuo_Primeira_Linha';
             indexPar = iPar+1;
             randRef = randomString(16);
             ordPar = ( indexPar < 10 ) ? indexPar+'\u00BA' : indexPar+'.';
@@ -428,7 +413,7 @@ function updateLegis(iframe) {
             iInc = 0; iAlin = 0; letterAlin = '';
         }
         if ( textSearch.toLowerCase().indexOf('inc.') !== -1) {
-            classParag = 'Texto_Justificado_Recuo_Primeira_Linha';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Justificado_Recuo_Primeira_Linha';
             indexInc = iInc+1;
             randRef = randomString(16);
             ordInc = romanizeNum(indexInc);
@@ -444,7 +429,7 @@ function updateLegis(iframe) {
             iAlin = 0; letterAlin = '';
         }
         if ( textSearch.toLowerCase().indexOf('alin.') !== -1) {
-            classParag = 'Texto_Justificado_Recuo_Primeira_Linha';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Justificado_Recuo_Primeira_Linha';
             indexAlin = iAlin+1;
             randRef = randomString(16);
             letteringNumAlin(indexAlin);
@@ -460,7 +445,7 @@ function updateLegis(iframe) {
             iItem = 0; letterAlin = '';
         }
         if ( textSearch.toLowerCase().indexOf('item.') !== -1) {
-            classParag = 'Texto_Justificado_Recuo_Primeira_Linha';
+            classParag = verifyConfigValue('estilolegistica') ? thisClassParag : 'Texto_Justificado_Recuo_Primeira_Linha';
             indexItem = iItem+1;
             randRef = randomString(16);
 			enumDisp = indexItem+'.';

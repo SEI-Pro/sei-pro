@@ -1,17 +1,23 @@
-var idEditor,
+
+var 
+    frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor'),
+    idEditor,
     oEditor, 
     imgEditor, 
     bookmark,
-    txaEditor = ($('#frmEditor').length > 0) ? 'div[id^=cke_txaEditor_]' : 'div#cke_txaConteudo',
+    txaEditor = (frmEditor.length) ? 'div[id^=cke_txaEditor_]' : 'div#cke_txaConteudo',
+    editorTitle = (frmEditor.length) ? 'iframe[title*="txaEditor_"]' : 'iframe[title*="txaConteudo"]',
     iframeEditor,
     autoSaveEditor,
-    perfilOpenAI,
     langs,
     wsDialogHtml,
     indexDisplayPro = 0,
     lastTextTip = false,
     resultTextTip = false,
     CKWebSpeechHandler;
+
+    txaEditor = isSEI_5 ? '.infra-editor__editor-completo' : txaEditor;
+
 
 var loadOnKeyEditor = false;
 var CKWebSpeech = false;
@@ -25,326 +31,463 @@ var qualidadeImagens = (checkConfigValue('qualidadeimagens')) ? getConfigValue('
     qualidadeImagens = (qualidadeImagens < 0) ? 0 : qualidadeImagens;
 
 function setParamEditor(this_) {
-    idEditor = $(this_).closest('div.cke').attr('id').replace('cke_', '');
-    oEditor = CKEDITOR.instances[idEditor];
-    iframeEditor = ($('#frmEditor').length > 0) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor).find('iframe[title*="txaConteudo"]').contents();
-    $('#idEditor').val(idEditor);
+    if (!isSEI_5) {
+        idEditor = $(this_).closest('div.cke').attr('id').replace('cke_', '');
+        oEditor = CKEDITOR.instances[idEditor];
+        iframeEditor = (frmEditor.length) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor).find('iframe[title*="txaConteudo"]').contents();
+        $('#idEditor').val(idEditor);
+    }
 }
 function htmlButton(status) {
    
     var classStatus = ( status == 'disable' ) ? 'cke_button_disabled' : '';
-    var icon16baseImport = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHdSURBVDjLjZNPaxNBGIdrLwURLznWgkcvIrQhRw9FGgy01IY0TVsQ0q6GFkT0kwjJId9AP4AHP4Q9FO2hJ7El2+yf7OzMbja7Sf0578QdNybFLjwszLu/Z2femZkDMEfI54FkRVL4Dw8l8zqXEawMBgM2HA6vR6MRZiHraDabH7KSrKBA4SAIEIahxvd9eJ6HbrerJKZpotVqaUkavkMC+iCKIsRxrN6EEAKMMViWpQT9fh/0k3a7PZZkBUPmqXAKCSjAOYdt21NLUj1JBYW7C6vi6BC8vKWKQXUXQcNA5Nh6KY7jqJl0Op1JwY/Hi7mLp/lT/uoA/OX2WLC3C9FoQBwfILKulIRmQv1wXfevwHmyuMPXS5Fv1MHrFSTmhSomnUvw/Spo3C+vg3/+pJZDPSGRFvilNV+8PUZvoziKvn+d3LZvJ/BelMDevIZXK2EQCiUhtMDM53bY5rOIGXtwjU3EVz/HM5Az8eplqPFKEfzLR91cOg8TPTgr3MudFx+d9owK7KMNVfQOtyQ1OO9qiHsWkiRRUHhKQLuwfH9+1XpfhVVfU0V3//k4zFwdzjIlSA/Sv8jTOZObBL9uugczuNaCP5K8bFBIhduE5bdC3d6MYIkkt7jOKXT1l34DkIu9e0agZjoAAAAASUVORK5CYII=';
-    var icon16baseTable = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJ6SURBVDjLpZNZSNRRGMV//2XGsjFrMg2z0so2K21xIFpepYUiAsGIICLffI8eWiBBeg3qQV+KwBYKLB8qpHUmrahcKLc0QsxldNSxdPz/79LD1ChBUXTh8sG93POdc75zDa01/7NsgGvPR09rzQmpVZZSCqlAKIWUCqk0QqoZWyKFRir1uvxIbsAGUFqXHQqkpP1L57M3Pm5MMJBKpQHUdF9BKIGQAlcJXOlOVykSdye3leO6MmkGQNyHw+uO/1X3bzGBK+S0B1IqAKqDg3986HeCZPffwvJtoNT7lOZLvUdtAPEDAKBkRzo3QwMUb89InN1uGGD3spdE214xe8MRUnM2MfppNW0Pqy7YAK5UKK2xLbhdP4hlmdxpGMQwwQT8ziNiI534c7cT6WrFazikzF2Eb8HS1IQEDdiWwcHAQmpehTkQSAcgNvSMiYFW5uUUMdV3HW+ywefGNqITJsbUUL75k4FWYJtQ+yaMZcXrk1ANk/33mbdiD7EvlRieETy+FJLkMFcjRRSW3emIAwiF1hqPBfu2LGSWbbA1uZ41SfWkrtxPrPcypsfFiWYzFGzGKTjFV28WEJeIUHETLdOgrmkI1VdHpCdEet5enP4qLK9mKrqMgedv6cyrAP+qxOTiUxAi7oEJi8frELoFoTLpa7nI/HQvscgSRt+0kV1SSW7qYtp7xrBMphm4Mi5h/VIfTcEq1u0oJaknSEdNiMYHET7UvcMpPEN31Ed7zxgASmk1I0g6dK66s8CRak5mVxjnfS05+TsZCw/T9baTx1nnGb47DrQksjE6HrsHYPz6nYt3+Sc3L8+wA2tz0J6pF5OD4WP7Kpq7f5fO79DfSxjdtCtDAAAAAElFTkSuQmCC';
-    var icon16baseLegis = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALZSURBVBgZBcFLiFVlAADg7zzuPLzjzDjOMINMitIie5gF+UAkIZSgRQuXLZIWrY021dYIggJdJURElJsoqlWRYA9GshGFCNQeOjoTk6bjeOd5zzn/f07flzRNA459ObcHJ3cM9+1fq2prVa2qa+uh7mAZ9xCxiAV8iu9zgDqEvU9ODOx//dkxALBa1kNrZT202I2TZcVyEd28t+Lb66uHcTwHqEMYH+xJwNyDqJUk8oQsp7eV2tqbytJUK+OpyX5bhtojH07Pv58CxKoabOeEmuUy0al4UNDp0umysM5/KxG8eWbW/u1tj4+2xnKAWFUjG3tSqwWr3ShNEzmyjDQjk8gSaiRxyYUbiy7PduZzgFiW40P9mc56sFY00rSRpaQxkaVkGlmGJnNnqXDq7N9LOJYDhLLcNj7Y0uk2AjRkMZE2iGQaeZOqG2IrCmXY/s1rB+6nALEstk0M9VotG0lKliRSpEjw+YUjPjq3RxkKoSjEsoiQwvMnvusXQ09vK1VGUg1qjVrUqDWKUJoc3emVj3dbWeuEUJZLkEMoyrF2u0+aUEPD19OHNXVQ1kEZgy2bHrZzYq/l7qr766/m3VC0ub+SQyyLDXm7R56SpYlYJ0JdOvzYy2JTi3VUa8x35jwxecBKue7S7E+dXW+nI/nB42dGcWLPI1vdXmrcvBO1++iGUmxqtxb+UtVBqCtVrCwVy3Y/dNBKtZb+OjO1kMeyfA4vXLo6Y3E9t1I0qtjo6goxGB/cKtRRbGr/dmaNDEy4PHfe+etTd8vgSB6r6ukXD+3qf+ulfQDg6OnCJ7+8p6xL3VDaMfqofTuOuHhryrk/fl4tokPz7zRX8lhVM7fvdXx29qrhgX7Dg32G271OHv3dxg09entSvXnqmXcHJGm/6Ru/ad89dmrm9AdXIK9D+GLq4rXJqYvXtmEzNmMTNmGor6fV6utr6YxWfvjzR0P/vDGTh7GvAP4H2uh1wse2x/0AAAAASUVORK5CYII=';
-    var icon16baseCapLetter = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAK/SURBVDjLY/j//z8DJRiFozbrLk/aqkc76/a8eDft2Ou/Ew69+lm/8/n7pMUPTsuXXlAgaAAIK/fe9Kg7/ubmsaff/h99/O2/48y7q+Tyz2vKZJ5hJGiAUucNRv0JNycuuvLho/WU24tytz67aNl5fZFM8mlhoryg0HAlcePNz7+06670y2aftaja8fy224SbW6SzL1lrNt+aY95776BJ593dJq13dpu13jqoWXptGUJz1WXVkp0vrs48/e6NTNoZM+n4kzpTDr5+7T/l9gHpzAvOyhU3J/vMe/w5e+OL/5lrXvzXKb2xTjz2QhncAKOWqzM3X//0Z97Jdx8mHHj1YsbB128P3Pz0P3bW3TNiXgfk9BturQ+Y9+ifU+/du4nLnvyXiD7fLBZ+lo0BGEAswACKXXLm3We/aXf2SoYejZQIPBws7ncwb+qeF29TZt+9LJlwNiNmydP/tm13LwNtdY+Y+/i/TNT5XnAYAANIL3vN40uTDrx6JRF0xBDmIlHPvepJM+5czJh174Hb5Pvv3SbceykWdd4aaGtQ5MyH/1UTLywDG9Cx8/n3aQdf/W/e+uxL8ozb20CCIu57jIN7bpxcdujN/+hJ9/4nLnnyXyzibC1YLuS0d/jU+/+1ky9swZoOkDHQuTHR8x//T1705H/MnIf/ffvu/Q+ffO9/ytyH/7XiLmwR9DoijFtz9Hkz6/qbl716736Tizo/XSTgZIGw34kc9ajz65JnPvivF3/+oIDbYQ2cBmhmX1qTMO/Rf7Hgk83C/ie4YOKCnkeCXSpvfNCLPn+A3+WgEoZGYCAZi4aeKXZvu/PBo+3OV6CtwUI+x1nBmj2OKAJtbXCrvPbVNufSYz6nA/EYBrh33v3k23f3v2/Pnf8+HXf+G6VdPAa0lRMkZ5Zy8aJXzY1/QPzfq/rGf/fyaz8ZKM3OABiskbcwY1E6AAAAAElFTkSuQmCC';
-    var icon16baseCitaDocumento = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALQSURBVBgZBcFfaJVlHADg532/bzvNo9MtY1oXRlRWsCREIlFXoaBmUEIkaH9uCsokEIK6qbtg4UVBIN0kFETQnVQ3FmXOxMwg1BApA9GdTdFJbLqzc87763lSRNjy/i+vDgw2dudkLe5AAgmRiKJbyj83r8eP6b+Zd44d3LEAkCLC9g+PH/ty39qHc07LgkoAEAHh2mzHV7/fNHWpfeuvs+eHJw7uaEMNuUqr++tq2bmrqpwSiSj0ouh2w+1Oz5MPLPH4g7WT5dqiKA/NjL313dDRT59pZ0gpLY6Iqr/K+jJ1ospUiZTIEoqVg/12rFvp3vsbA/Vg8xBkCBJk5EROSU5JTklOSa6S1o3bVi3ueGQ4ee2JO1V91QtQA0RQVyRJpKT0gpzUFf2R/X09LJSuUhZsvK8h1bkLNUQQqFMWQiDlJCEKUWX6ySUppRIyKYMaAgUpkSSBQBT6KkDKUi+JHAoigBpKlwgKEiIC5IyS1FUQiSAkvUKvADWUEiKCYL5927k/jpu8eMby4SFTV69b9/ROA0uGHDt8yMhdQ36dmTE0O1iPjb3brKFX6AWdhY4jh7/WiFkv79ltbm7O5cuX/Tbxrap/wM7nnlXXlVarpe/06frI+cEPaijdUCK8980xq69d9NKeXd7+6HOzF064e+UKo6OjWlf+deDAKZOtKevXrze2aaNLly69nqHb7en1qKfOGh5sgqde2W9+oWPXrl02bNhg27Zttm7d6la7440394GlS5c2aui2S+mWEnnpinS5dRL8dGhc9HrGx8c1m00wNzcnlfDJxwdiy+bN6cqVK/M1dOZ7083+avn+7WuaX3x2NE/8fNSLY4+yadT09LQLFy5oNBpWrVplZGREztnEiVO9ycnJqRQR1u39YW+3E88n8VhemF68/Mb3ffeMLEuNRp+EM3OrO920KNYs+rM/KdFuL5RWa3rm1uzMlv8B/jBGW3bkYMYAAAAASUVORK5CYII=';
-    var icon16baseNotaRodape = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGdSURBVDjLlZNLSwJhFIa1Rb8iIWhRQUlluuoftDEtC5TKSgINily1CmoT0kJBqwlSaBGBLVxItGgZQQQVFe3bKN7wOjqO2tucwRGvqAMPMzDf+8w5ZzgyADLhGhJQCWi6MCwwQBkJWVWg4jguVSqVKuVyGe0Q3sPtdruaJZJAQ+FcLgeWZWuk02kkk0lEIhFREg6H4fF4GiR0yUlABwqFAorFongnstksUqkUotGoKMjn86CPMAwjSloEFJYgAQUymQxisVhLS9WZyBsEQhu1A/RMfUutxONxsZJQKNRZ0Ey9hCqheSQSid4F9RJqh2ZCor4EBM/z4lxIQvQtoCp2HtexfW+CObAM062uu4BCElSBJWjEzc8Vrr8Y6L3zvQsoTKz6F+H7PAPz7oLRp8eodmSjp7/geDqG2b8Me9CK8zcnXK8O7AWsmDtUF9UHUw/1gr+2O8BzsPm3YLvbhPPlBI7nI6xc6jC9P/Gr3B0flHZhVpgyKwQ6LpPFtwaTdwmGCy0MpwsVWsD6ZVKQpNs6z9iV35PWsY/q6iso+w9crJoc0rRwaAAAAABJRU5ErkJggg==';
-    var icon16baseSumario = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAI6SURBVDjLpVNNaFNBEP5e8hJiSjVVTComsdYUMbRVUhSVgFawgqgo6FFBaMEeehQ8WAQFj57FCh4KVixCERXipQhCa6kaEz00uSQIghibNn++t7tv4+6mTU2bi3Rh+WZn95v5ZndWq1ar2MzQ1zuGHs85xwaPEIF9qz5uWbBW5vjIiY/Sd+n+qz5GKbT1CgRxnwCPmPPBHW5wLolcBTEJxfT7+RtccI5Fwg9RtdYU3Jwddgp4DVwfrXJrBpoNt87trwfmnCP2KYvU9z13ZObTB/04e7izoYRvFrP8qwspV45kMqlsxhj6u7uxd7u+q7V1KwK+NsTj8VoJIvsXn7O9Vx7K5rMgJkVpqQzTICjmSwrl+unQJDKZDMLhMLxerwqqC/IHr8PX29HSCcYZ/C1BhRVigHKKP1SgxTAx8QwyWaFQgGmaSl0qlYIuZFOmMRCLKCITh6lA0zIFkcJkZs1HmCL9e+mhUAj6g+ij6HDs2udypXLIZd+C7M8sfuVzDdJlSYyyBrK00+n02jNefX55gRgkyAo9I05ycmx5aRlTty/AMAxVKyEEuVwOiUQCkUgEgUBA+eqvIMg9IuNLe/H4V2arEeRwuVz1jG63Gx6PR01d1+FwODY20vm7U0ftNm1m8fciKCWidrqCNfti9IAKNv5mVvjpxlbWgB9yo2P3zqa9/+LdnLqPMwP9zf+ClC4zZgrFpgrafV7VWLG300qB9j+/sevKvSflcumUbOVtnraF9OTogLbZ7/wXRdt3lZxkvhIAAAAASUVORK5CYII=';
-    var icon16baseDadosProcesso = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIvSURBVDjLjZPLaxNRFIeriP+AO7Gg7nRXqo1ogoKCK0Fbig8QuxKhPop04SYLNYqlKpEmQlDBRRcFFWlBqqJYLVpbq6ktaRo0aWmamUxmJpN5ZvKoP++9mmlqWuzAt7jc+X2Hcy6nDkAdhXxbCI2Epv+wlbDeyVUJGm3bzpVKpcVyuYyVIPcIBAL3qiXVgiYaNgwDpmk6qKoKRVEgCAKT8DyPYDDoSCrhdYHrO9qzkdOQvp+E+O04hC+tED63gBs+QiDnhQgTWJYFWiQUCv2RUEH/g4YNXwdcT/VEJ6xkF8zEDRixq1CnriD94SikH08gikJNS2wmVLDwybONH3GbNt8DY+YMrDk/tGkvhOFmKPE+pxVJkpDJZMBx3JJAHN+/MTPq8amxdtj8fWjhwzB+diH5ag9y8V6QubDhUYmmaWwesiwvCYRRtyv9ca9oc37kk3egTbbBiPowP+iGOHGT0A1h7BrS43ehiXHous5EjoCEx3IzF6FMnYMcPgs95iOCW1DDXqTfnEBqsBnRR9shTvYibyhsiBRHwL13dabe7r797uHOx3Kkm1T2IDfhhTRyAfMDh5Aauox8Ns5aKRQKDNrSsiHSZ6SHoq1i9nkDuNfHkHi2D9loHwtSisUig4ZXFaSG2pB8cZBUPY+ila0JV1Mj8F/a3DHbfwDq3Mtlb12R/EuNoKN10ylLmv612h6swKIj+CvZRQZk0ou1hMm/OtveKkE9laxhnSvQ1a//DV9axd5NSHlCAAAAAElFTkSuQmCC';
-    var icon16baseTinyUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIhSURBVDjLY/j//z8DJZhhGBlgZ2fHnZWVVdra2vpu3rx5/2tqah7m5OSYA7EEkH0XJAaSA6kBqUUxwMjIiM3Hx6dr4sSJ/1+8ePH/7t27/w8ePPi/sbHxXnV19aGbN2/+AIkdOXLkP0gNSC1ID9wAQ0NDv+Li4g9Xr159FxERsc3b2/tPamrq/0mTJv2vrKz8D2KDxEByK1aseAhSC9KD7IKupqam75MnT0739/fnsre3/7x3797/586d+3/o0KH/a9eu/Z8xx+Jf6nzD/yA1ILUgPXADdHV1M9PT099PmzatJCgoaKejo+MvNze3/4GBgWAMYifMMPrfuDnqf/gMjf8gtSA9cAM0gcDX1/d6b2/v+1WrVr1dt27d//yltv9zF1n8T19g8j9pruH/mvWh/1ednvi/ZLX/f9c+iX+a2hpacAPU1NSYgc428PLyup+SkvIlOzv7e/Zi8/8bzk37v/bsFLDGFacn/J+wp+T/wuNd/zOWuv03bWf/rdvMyIgzfpOB/gVp7tuV/79zR/b/1m1p/xs2J/5v2pr+f8ah5v8xC2z+q9Yz/MRpQPRszf8rT034v/RE7/+Fx7r+zzvaATQk6//0Q03/05Z6/FesZbguXcnAidOAwOmKfz0nSv917hf9a93N/zduvtX/aQcb/ictdvsvX8twUbKSgZ2kpKzdzPg6fqHzf/lqhjNAzWwk5wWgk1/LVTP/F61kYEEWBwAP7or0z//OfQAAAABJRU5ErkJggg==';
-	var icon16baseQrCode = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAZQTFRFAAAAWVlZv8SjvQAAAAJ0Uk5TAP9bkSK1AAAANUlEQVR4nGNgYGCo3cfgqsQQuorBZRGIzcjAELGJQV+MgdGFoWYPg6sXQ+gaBlchhpovQLUABRUK5/bjcC8AAAAASUVORK5CYII=';
-	var icon16basePageBreak = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OTkxQjM5N0RFNjI4MTFFQUFBNzU5OEQxRjkxRTg4RkUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OTkxQjM5N0VFNjI4MTFFQUFBNzU5OEQxRjkxRTg4RkUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5OTFCMzk3QkU2MjgxMUVBQUE3NTk4RDFGOTFFODhGRSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5OTFCMzk3Q0U2MjgxMUVBQUE3NTk4RDFGOTFFODhGRSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsiipPkAAAH9SURBVHjajFPPa5NBEH37I4aECFZCtVBiJVJQD5UWG/DirYccvGvtUVAo1ZsieLCnglAiiJfS/6CXNDn02mMP9dCk4KEomkKh1JDYGPJ7ndl8+/ElhuLCY3dnZ9/MvNkVABKEawSBf8cp4acxpocLxv1Op9MkmG6366PVaplsNvuRzqcIkkgwCjzm3YV6vW5qtZqpVquGCZvNpsnn85bkvwj4ApMwgcuEicgnxVl4ZYoggXZ1SCnR6/XsHAqFUCqVUC6XEY1G+fiO52ZDCiEGtJkfrr3RaJhCoWDa7faALqO0GSBwQrJTsVi0a1cWa1OpVHxbLpezJDLYDkrNn7kUHp92N6GUsnt3rrVGOp1eoeW4r8GjtSUcn59R/RoPkvfwIrVk7d9/HeP9zjreLbyCVBKUjdUqFov1g3kl7K1tZfCjc4LbN29h/7CAo5MSNJHdpX2YIo6Fr+DtwkuQryWIRCKcWcon+HJ0gPXtz7h6I47kZAJSSGipoEQ//YNvX/H7Tw0bjz/YyNwpJuASTnnBxssPp2bj0xPPdCw8G1Ya4pLCTHIaIa1wPRJH5ulqv5feAwpuxBBYwRQrvph5bpY33/hdcuA9Z689EjOiG9aWGJvE6pPXvp1dXTf8DEa8b6eNCX4yt+aZHtk5+cyJoeDBLPiljV/wi7us318BBgDZbKOY1qZo6AAAAABJRU5ErkJggg==';
-	var icon16baseSessionBreak = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAJBQTFRFAAAAGhoaGBgYHx8fJCQkKCgoLCwsMTExNjY2PDw8QEBAICAgHh4eJiYmKioqLy8vMzMzOTk5Pz8/RERESEhIiLPtgq/r////hrLrgK7raKDjRHza////lrztl73tibToVJDdOGrTVZHecqfoa6LnVZHeMmTNyOD/YpzlYZvl////////////////////////YBj23gAAADB0Uk5TAP/4+Pj4+Pj4//jp1NTU1NTU1NzU1OX54NTVKQj////LKf/b1NYp/+jUxx61DpkEbZ1l9QAAAGlJREFUeJxjYCAOMDIxs7CysXNwckEFuHl4+fgFBIWERRgYRNFViIFExOGAgUFCUkqaQQYOGBhk5eQVFJWUlBggmIFBWUVVjUFdXR2KGRg0NLW0QVqgmIFBU0cX1RY9fTR3YHcpsjsIAgDdmQt3Mog0NQAAAABJRU5ErkJggg==';
-    var icon16baseLatex = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAACzSURBVCjPY/jPgB8yEKmg0aHxf93/6jPlR4vP5P/I+p9yFMOEuvP7/pedKerJ7cmYnNwTOx9DQaVB9/8J/3McILyw/VjcUFA//3/a/QQBPI5MOT/7f2QBHgWxCRHvg2bhVBAjEHY/8DaecAhd73/GswfCNvmPoSA4we+8x2kQywLoTP33aAqCDHzeu79xrLepN+83uq/3Xwvdm94Jrvsd9lvtN91vuF93v+Z+tX5S44ICBQA4egHkwuNCKQAAAABJRU5ErkJggg==';
-    var icon16baseQuickTable = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJySURBVBgZpcFNbNN1HMDhT//9d926NWRb65BtB8MWAZGwZIGRcNAZD2qA6E6cOKDhAjFmBzwYYzQeOXHHiwfFAOHAZScUEmeUAPFlWzMDyOtm27XdoF1/3xdZ0iYcvBCeJ+HuvIiYlm+vVD535yN1GzIz1EDMUDXUHFFD1BA1RBUVR81+jWkx9xNTe7I5nsMX3y/uimnpjW7mGn+fYa1RxtQwMUwFF2VdI37s2kvVU4gJosKn+74mBE3HPFW6MZncnHybdGaAzKadeBA8CNqsU1+Zp2f0KK8PvguJiLbHDSGIEvOUqw0PRZdJdR1Aqr8RdY6hWqJRKfBnOMTS7T1wu8izDo730RQlLl57o8PVPuzuHQWSWP0RxOuU78zQ9+rHTL5ymA3nZpeYmhigrVhrEESJTXXMxY6ls6O41CH5MoSASJK/CvNY4SsiWSfv3Vy6+h6SGiAVw/bBDM2gxC52urN/PFcvzWNidGRGwGLyQ2/RUyqgoUlt6Qb3XjrJO3tHiFIZNiw+qCFixCZ69vH9n3/6vX5oevdwmpXCRXLDbyKNCs0nRR7KNmrbP6Oa2MKFa6vEiVUM2LGlE8fA3XF3vjx7y8srZV88N+YPZt73ue/2eWXhB2+bub7stSfB2+b/qfiRU7Me0yJmrF3/hHRnH8uNPKXRU9yrZ+FmkSgBweDK3AptW/MdqBoxLZvtF0LtDsv9x5nYP8XlP4pM7szRdn72Xz6YyNO2cLdKMoKYlqr0kh0/TbZnhIflOlsHurj1aA1VQ815bbCDhbtVnmXmlnB3Nkx/M3dVgu5uqnUHUYIoKkZQQ1T4P5XVxsWEu/Mi/gPrlHrAGd9XNQAAAABJRU5ErkJggg==';
-    var icon16baseFonteSizeUp = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAaRQTFRFAAAAJWQhJWQhKmkkJmUiJmUiSoxFTY9IM3UuPoI4KVcpJmYjS41GfL92fsB5V5lRPoI4VIIsKGgjLG0nUJJLgMF6gsJ9bK1lRYw9SZJDQIfYQ4vYSY7aQ4nZQITYQYTYOnPTMmLMKGgjMXQsNnoxhcN+h8WBVZpOSZZEPoPXbKfikbzpj7rni7fncaTiQn7WL1zLPYI2icaCjMeFTJVFO33WVpbdc6njc6jhcaThPnfTMF/LQ4o8jsmHkcqKU55KPHnUcKbiR4jaQ37Wgq7kOm3PSpJCk8uLlcyOWaZQOHHRY5veXpbcNWnPNWnPfKniOmzRNWrQQoDXap/fNGbNL13JM2HMeabhRHrVJ0rCNmrPaJ3fUovaMV/LLlnHN2fNeqbhU4bYJUa/MmPMXpPbeafiSoPYOmrPOWjORXrVgajjVobZI0G+MF3LP3TTN2bMN2PMd6DfWonaIj67L1zKMF/LdaThWIzaLFLGJEW/J0jDa5bcYI/bIT+9Hji2OGjOXY/aYJDbUIPXK1DEI0K9Ij+8K03DQnHQUX7WTXzVMVXGHTm2xQFYYgAAAIx0Uk5TAAHJwwHR///OAQfb/////9gHu/f/////9rdAhZSPkJqKDQEB/////zhT3v////u2Cv////8cuvL195gI/////3f3raD/mf////8i4t9UgP+lA6r3ZgqI/9IGXPbRTiqg//INFer/07K12P/5GwGbmbH//yIKRP/sPRN///9UAq7+/+2NECqi6v//vTG9O0R8AAAAu0lEQVR4nGNgwASMTMwofBZWNnYOTgSfi5uHl49fQBAuICQsIiomLiEpJS0jKyevoMigpKyiqqauwaCppa2jq6dvAFRjaGRswsBgamZuYWllDdJkY2tnz8Dg4Ojk7OIKNsXN3cOTwcvbx9fPPwBudGBQcEhoWHhEJEwgKjomNi4+ITEJyk9OSU1Lz8jMys6B8HPz/POBVEFhUTGYX1JaVl7BwFBZVV1TWwcSqG9obGpuaW1r7+js6sbwOwC2BCZS1lMuNQAAAABJRU5ErkJggg==';
-    var icon16baseFonteSizeDown = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAaRQTFRFAAAAWaZQlcyOk8uLSpJCU55KkcqKjsmHQ4o8TJVFjMeFicaCPYI2SZZEVZpOh8WBhcN+NnoxMXQsKGgjQIfYQ4vYSY7aQ4nZQITYQYTYOnPTMmLMSZJDRYw9bK1lgsJ9gMF6UJJLLG0nKGgjPoPVbKfikbzpj7rni7fncaTiQn7WL1zLVIIsPoI4V5lRfsB5fL92S41GJmYjKVcpO33WVpbdc6njc6jhcaThPnfTMF/LPoI4M3UuTY9ISoxFJmUiJmUiPHnUcKbiR4jaQ37Wgq7kOm3PKmkkJWQhJWQhOHHRY5veXpbcNWnPNWnPfKniOmzRNWrQQoDXap/fNGbNL13JM2HMeabhRHrVJ0rCNmrPaJ3fUovaMV/LLlnHN2fNeqbhU4bYJUa/MmPMXpPbeafiSoPYOmrPOWjORXrVgajjVobZI0G+MF3LP3TTN2bMN2PMd6DfWonaIj67L1zKMF/LdaThWIzaLFLGJEW/J0jDa5bcYI/bIT+9Hji2OGjOXY/aYJDbUIPXK1DEI0K9Ij+8K03DQnHQUX7WTXzVMVXGHTm2bwG3mAAAAIx0Uk5TAP///////////////zj/////AQFAhZSPkJqKDbf2//////e7VN7////7tgoH2P/////bBxy68vX3mAgBzv//0QF3962g/5nDyQEi4t9UgP+lA6r3ZgqI/9IGXPbRTiqg//INFer/07K12P/5GwGbmbH//yIKRP/sPRN///9UAq7+/+2NECqi6v//vTFnsFgDAAAAtklEQVR4nGNgwASMTMwsKAKsbOwcKAKcXNw8yHxePn4BQSFhEVExcQlJKWkGGVk5eQVFJWUVVTV1DU0tbQYdXT19A0MjYxNTM3MLSyugFmsbWzt7BwZHJ2cXVzeIKe4engxe3j6+fv4BcJMDg4JDQsPCIyJhAlHRMbFx8QmJSVB+ckpqWnpGZlZ2DoSfm+efD6QKCouKwfyS0rLyCgaGyqrqmto6kEB9Q2NTc0trW3tHZ1c3ht8Bl6QmUrIsKYAAAAAASUVORK5CYII=';
-    var icon16baseCopyStyle = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA0lpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NzQ5QUE3RkUxQ0QwMTFFQjg3OUI4MEI5REMzQzc4NjAiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NzQ5QUE3RkQxQ0QwMTFFQjg3OUI4MEI5REMzQzc4NjAiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0iYWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOjBhNGQwZjAyLTE3NmEtOWY0Zi1iMDdjLWM5YzlmZGU1YjAyNSIgc3RSZWY6ZG9jdW1lbnRJRD0iYWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOjBhNGQwZjAyLTE3NmEtOWY0Zi1iMDdjLWM5YzlmZGU1YjAyNSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PvwNkokAAAKdSURBVHjahJPNSxRhHMe/zzPzzIu7627m22LbO/lSoGJBhwg6eOgPiA51KE9BZKfAIbyVzrEo6dahg4cIooggiFgihA4lWIikWeiarmvsms7usvPWb8ZcCM1+8J1hYD7f3/N7ediP9HkEYRe/ofbAJcwmL6Pn/SJQcRFhEizZBxosgGMjfmrXD5bFzdkYK2Ky0Cdjh7ACyCOtqmRARg4/11IRd7I6AzJ5oLTygu9kAJ8gj36Wgg92tLUsHjOVwcoSvJQjQ6bL2zEbj4CBEr4rPAmfpQM4E8CZZYSuSb1/i4ELgiv+VaL7wVgidLOluv0KF1PLf2CFsKJ/AY1itFqC79koIYJUVAwMpmrvo+Qcges1grOmBpWL75uZFSUDWTpOyCgcoHoCLtfCKXwe4J4/PNhZD5sSm18JiivIBfBCAItfkFg3HXKFyqP++NXhQNZaDD+fHnY/3UbOcTDc3YhbrbuBL0vAPMGqoLL5GjxvhQTohM6VAoPQw6Dqh6RYCtL0S4i397BMJlfaEzjWEgl6QjUGKREF81XSxljLNjh3xQh8PuRJNpT1GKLiBPy55/BejWDCquDJ2Vac6UrRUlSCnSAXxUY4HJLQwK3ITEzydahru6BYNXCFA13tQmRiDO2vH2KRTvKg9xB6O/cEGW/AdTx4LjYl9V2bfyrbcS2RbTvlaiXIlgphRcDiMWhT06hfqGC1ow1dzXHj0WTmLuwSZaf2+3aocAqFeNpgLkfTzOkBUEZXL0JQObLWAfljGof3Jo2x7h4TLOgXiUnVvalOIV/3xsg3jZtciUKUEpALGtVIjYrWGKK8ZoZ3Ypv46y5k9z0z1vHB5HO0gBqncbsGbaPpyso/r8uWVXamxo3yO96sXzxZhOWa+E/8FmAACfoIcOrzUHkAAAAASUVORK5CYII=';
-    var icon16baseAlignCenter = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAB8SURBVCjPY/zPgB8wMVCqgAVElP//x/AHDH+D4S8w/sWwl5GBgfE/MSYwMORk/54C0w2FOcemgmSIMyH1P7LNCHiLBDcEZ/+agqwXaFbOIxLc4P0f1e7fUPiZGDcw/AdD02z9/5r/Vf7L/Zf8L/Kf/z/3f/ZsiAwjxbEJAKUIVgAswNGVAAAAAElFTkSuQmCC';
-    var icon16baseAlignRight = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABjSURBVCjPY/zPgB8wMVCqgAVElP//x/AHDH+D4S8w/sWwl5GBgfE/MSZAQNL/31CdMHiGaBNS/yPbjIC3SHSD+3+EXoh5z4k2wfs/qt2/ofAziW7Q+v8brhsSrn+IMYFgZAEAE0hMH/VkcbsAAAAASUVORK5CYII=';
-    var icon16baseAlignLeft = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABjSURBVCjPY/zPgB8wMVCqgAVElP//x/AHDH+D4S8w/sWwl5GBgfE/MSYU/Ifphej8xbCLEaaAOBNS/yPbjIC3iHZD5P9faHqvk+gGbzQTYD76TLQbbP//hOqE6f5AvBsIRhYAysRMHy5Vf6kAAAAASUVORK5CYII=';
-    var icon16baseAlignJustify = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABjSURBVCjPY/zPgB8wMVCqgAVElP//x/AHDH+D4S8w/sWwl5GBgfE/MSYU/IfpheiEwTNEm5D6H9lmBLxFtAmR/3+h6YWY95xoE7z/o+uHwM9Em2D7/yeSzSAICdc/xJhAMLIA+V1VH3Z4v2kAAAAASUVORK5CYII=';
-    var icon16baseDocPublico = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAANPSURBVBgZBcHdT1tlAMDh3zltORT6Ob4mtWDGMpgiU8LcEooJyiaEGbNkCkaNCVfeGP4Dr7zBG42J3hiVZInTeTMvFAPBYRhmGDBjEYaAMhhtVzraUjin5+M95/V5FCklAAAA4wtjfcCHwHmgAfADh8Ci9OSXn/d9+ysAAIAipQRgfGHMD0wC115PDmjxYANloxbDBuGaCHLMZqeEK9wZIdy3vh76/hhAkVIyvjAWAG731D/XeznZT9nUsLDZKitUSY0Dw0MKmyAGWWuepczSfeGIl79789ahCgBMdted6U0191BwbRxVQQiViqjCoIqCpbFvBtk7DNASeomek+1dtuXcAPAVL+2mgE/eOXPF97erk6VCxRMcmyEKVoCyCZvpIw51HS1+gBLd5GJ9B7Nrf566vji54rsw9uKnrzVf6FR8QbKqANnIU26I5ZyPiqmylj7Gqy6itf6DFdkk7xXxF10665Lq8sP1E37gfDKS4J6RIV+t8qyvDQ/Bzr6NaVaInpSUT0yz5ZXAksSExmbeYuCZbhxLPO8H6mr8tewYGfYtg3DNKUp2mGLRI9pg0hg3yLsvULZW0OQRR08OKJRqCAXDOLaI+aWUiiLBtspIkvgDLlN3HZRgiOyWQJURmhsqhI/6KKcdTJZw7G2QEiGE4neFVyjb5USdL0a4+hw7aQ9lZ502nvB0Yx3rd7LcpwNHFZzzVuloaSOTq2Zx/gGeJct+4Yi/HhZ2E6drksyk59H/OKY7mGBk5D10Xadtbw///CK6A++PXqO6KkA2m2V5eZloNm75ukbOHqzub789fDql3p6ZJb4f4sobV/nos6+4deM629v/0daSwDrM89vsLDd/vEnRyNLfd4nibimgfjP8w7RtOb9Mr/1O+CBINBwFIHZxCMO0GB0dJZVKMTQ0xODgIKZVwdduAhCLxlQ/gGM5785t3rtTT6SLfA4A4+5PKNJjYmKC2tpaAHRdR3qwMvXIGP6AmnQ6bSpSSgAGv3glbKTNnyP/xlOv9g4oiUSSgOojl8uxsbGBpmm0trbS1NSEI5zS3qM95ubmHitSSgAA2tvbfY399eOhx5GPmxubq7UqTVFQeKCsllyfu90pus4qKFiW5WYymbyu61f/B/q4pKqmYKY6AAAAAElFTkSuQmCC';
-    var icon16baseWatermark = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJCSURBVDjLjZPNTxNBGIerBy/eOAgmYoz/gCYoJ/XgxZsxnrygFw8eJJGDiQc0MZEElFBL2igkoBBEFLUWaYNQiB+gKd1WbVKUCgVp2O3H2N3tfvYDf+5s7KbGNjLJc5r5PTPvm3ltNpttn0GTQfN/OGCwE4CtErqadF0XisXiVqlUQjWMfTidTkc1CV3NNCzLMhRFsRBFETzPI5VKmRKO4+ByuUyJt6dub3D0qG+ut8FuCugBTdOQz+ehqBoERYMkSRAEAel02hSoqgp6ycO+mwPR2asRMTGCWcdBxRLQcELUEE6qWGRlsKKCXC6HTCZjlaKKCfxg7NDIBD6PH8fL63sclsAoA1GiY35TxfuEjDAnW6UQQsBuRLH6sRN53guOaYHnRn3/+LX6XZaAEud1TK9LeL2WQ4hTzOZRCeG+Ih7ogp59hdSXC3jSvp8ZutJQZzWxLFjJavAs83B/yyIp5c1XiSSGtUC3GSZLF/Hm3gmcOrT7rJHb8Y/AHxcwFsnAvUTwkyQRDU9hefq88ewXEFcuG007jPTaJ/z5F38LYkTFcDiJwUUWUwEGfu8YfO77mBk4g5jvJIKPjmGVmTAvqioIbebQ92EDdl8Q3UPP4Z9fAJsIg1l4Cs/d04jO9Zs9qSnISLoRDqFjeBK93ghuPQ7iXMdbtPVMIsWuo1AomNQUUNpuP0Br1wgudT5DS/soWu/M4B3z3WxmmVqCX7XmoApbNFM5C0eMX6jQje2EjbMSHcBKQSOVbGOcy9DRbywLfgOaoblOxI0zHQAAAABJRU5ErkJggg==';
-    var icon16baseImagePage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJtSURBVDjLjZPfS1NhGMfPXfh3OG/E/yBImNkqrYGCzAthh+WNgXihwQYb2CoYukGwsdRLoYUWQbRAhqzc2Q91IrrVhlhLqznL5Tyb23m3s317z1szBzM68Lk47/N9Pud5XjgcAK7OVfM7/a2piE87HalRoLVHStrp1VKvLVi7fE9wns/WaXi58UgoH4kl/CxIyOZ/cyRKSKRFmF/tw/B4p3jl7utLFwp6baHiySnBxheZUkHkM8HKrgSpUsVGWsaDN/tQG/1PLxT02EIlRbBJBZtfZaztlSF8JEgdFqBMdnh8im7LSqWpYHJysqXHFiS5AkGMfi12UP0zRRm+D6fwxvPI0dWu3Q8QvV7f0iCgzQZKnl4WjqkgcVDDeyrYpqLoXoWtsbxTpLUyrlsFDA4O5vv7+w1MQBu7Z2dnEY1GcXsqjCwVJDM1JCixb1Vs0VXCdIoAXSVLBTcfhhEIBDA+Pg6NRtOtCLbpg0wmA7PZ/F8oWUEQMDAwsKsIiCzLUFhfX4coiv8kFAqhnh8bG6txFosFhBDG4uIiUqkUEzVDqc3Pz5/leZ4HZzKZkEgkGG63G8lkEn6/vylKxuFwnOU7OzvBTUxMwOfzMex2O+LxOJaWlpoSi8VgtVrP8u3t7eDoHvB6vQyXywV6Jwyj0YjR0VE2Zl9fH7q6uqBWq9lZPd/W1gZuZGSk6vF42IHSuPD8JZbfBpvybOEFOjo6WHZubg6tra3gDAbDzNDQ0LZOpwPvCqNYIjg6IfhBOcxJSGdL2PtewKeMiKJUBu8MQ6VSKc1bFFPDv8C7ItXhJ2sYdv/lDmOVodR4Z6R6vucXuxIEyKz+W40AAAAASUVORK5CYII=';
-    var icon16baseMarkSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALvSURBVDjLZZJdSFNhGMf/5+zo2pyb5cdyxXRNW2WkhhJGXlReFEZEBV0UVARBIAiCXnojdFE3QUQR3k6iC6GIoK+LMDNBaVpOW04by/yYzuk8O9v57DnHJqteeM57zvue5/c+///zMpqmITv6+vpsqqp2KorSRLGDAhRxiiFZlu+2t7dv4J/BZAF+v7+OkvtdLpfHbreDZVnQN9LpNGKxGGZpEOh8V1dX4D8AJdto87PX660SRRHRaBQ8z+ung+M4OJ1O4+dgMDhNa4e6u7uFLIDTH7R4q7y8vEqSJIRCoRkq9wSt/dIBgiC4EonER4/H46qtFKqqmXBq+vlt8MvvwaTnrhoASmiyWq0Ih8MgyJm2trZITpWRnp6eFmbtbbChuhiWkitweOqRmPVh6nXvnSygVNecTCb199l/jbpc56+3ey7BXtSAeHgS+YyIQvtO2IrdDiYycF0bCvuwuGYxNJ+tGYFJk6ApMjRZJpPWUVTVDMeeU8jMP4GwwmDpWwpSWlxJCxtHOZCJFy8cBwMWjMlC82lAZcidbUjFhpFJBODwtiI99whsvow8WwXM/BhSfH5LY8ebEKefBGiQl5+CM5eAYWwEyMPCHClhVJQdPEfJD8HmyRDXPVgZHEWaX8LhjkmjnaxeJlS6C4qIxMQoEsERLEQmsRrPoKymFeJCL0z5GjLrFYgNfILz5DWoUmrLHwJI0GVoioQi314siSziCQskzY35L/dBVwl8fBeWB4ex3cuAK7BDk8QcAPVe0xSqQMLq1wDGxn/gwLGbMEc/IPRsEIFXcUy9fAfWtAaWU6laFXrOXwBotEgSiqor8X1mEeLEC3hqm1FQQN0Zn4LviJtOL6auiIbcXABnlENUVdY9mMBEaB73Hj9A475KWEvNaNrvIx9+QuKTKHRT+STKkJ0L0CWYd9+ApcIEf4vZaCHZTmCSJgpQhCQpzFChyqZfuvFbADGDmf5Ooyx9Q6dvhrw10w3bvFiKsvmug/6M39LTvtXHnYlaAAAAAElFTkSuQmCC';
-    var icon16baseBoxSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALPSURBVDjLbVLdS1NhGP+d7bS5tcZYkzmzWmqKSSISpElEUEEkXfRxGRFBEA2MSC93o3TT6Ka/wECJQG+7CfrSLFLzIkd+TDsOjFg559nH2XvOe07Pe9Qy64XnfDzv8/ye3+/3vpJlWdhaQ0NDPtM0ezjnHRRBClCsUowbhvGwu7s7jx1L2gIYHBxspeaR6urqQ36/Hw6HA/QPTdOQyWSwRIuALvX29k7/A0DNPtr8VFdXV88YQzqdRqFQENMhyzLC4bBdnEwmFyjXEo/HS1sADvGg5O1IJFKv6zrm5uYWVVWN0rdLhPienZ1dEcDErp6kxLYzkMWDkh1erxepVArU1BWLxZRtNUpfX98ZRVGS0WjUrv0fQKXQTNPE99JOo0ROsBM1xLbyLw+Utzes8VQjvuc8tuaLzRNwWjosbsAyNkLXOQam22xTwxVZXNg3gcZbU9IGAzLxyuXTkMgOyemh93nApD25grbphLgObqiU6kG2mEV/VwILT9/9kSAmiULjxzPI7hAkyUcAuwBPgNImUMyBr89DY+uoCTXh2vAdxJmxDYAowhSTGNZmJknnbgSOnMDd548pz8AsDkb6I8EGNFUdh6oVcK/0HsVEUHpzf9UiAB1ChkVUA40NcLhC5IwJg5rPNl8HJxbc5DCJ5UoujaM1ncizEiaXX7OWfodLtgjdoilCa/bzNJxuPwItndAMZjcrP+ehmwYB6tCpZr2sonX/SeT1ovxhaVSzAYRWiyQEDkfh9O6l68UIQINB/oT9B6iZ22DfcssI+qowlR7DWGr0C1nRRgCMtJowDeHBDAHsASp8KBHAwHgCzCzbbGpDzWivPYePyihSsy+gcbSuPLDKNoCQ4K65Cc9BJySX2z7C4XY6CZoM0stLKk49uQrJ4UEm+xWJghPHHvHyximwMhZHemB7YV8cfTOM32+6Ycg7Vbxce4WRAt0YAby5fgEeKcjVvgWNOgAAAABJRU5ErkJggg==';
-    var icon16baseAutoSave = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJFSURBVDjLpZPNS1RhFMZ/5733zkzjR/ZBCUpoJdUiBCkll4m0CUKJIGpVSLjyL2gntDFop6shAolWbcSNIW0ircHBUHCloo3VjNY0jjP3831bWA5ai8Bnfc7vPOfhHDHGcBjZAENji7N1cSj7IcdqY2zkKoiC2qSFNsKPYoXpTPbBynj/4j8BlbLL9c4L3OqoZWLmM4/vXdpX9OJtHq0lBXQdBIgxhvtPZmZ7ui+yspZrjwKfWExxtMbh66YLAgj4geZnyd2YzmT7Vsb75/c5UEqwDLgVl55r57hxuYY3c18Y6mtDgO1KSBBETMwV0VpeA2f3ARKOwvUCcgWX9bzH0NhqvC4Okx9zBzNpPdGQ4OHIrJnOZLtWxvs/2AChNnhRiFIKy8j/ZjILiALYLgc4YnO8zsJSIWUv4Pt2CMBU+tteoxtC0YN8wUdEV1eItMHCIdSagru5l0kQaZ4OdqC1wQAWhqQNnudR3PGrANu2aGmE9FJATSxJwinhegHDr1ZRAmGk0ZHGAMYYMJB0dh0ogOVs6VNqcoGtosYv1+9lYikHERvBQsQCozBGCMIQ3w+rDtKjvQMAd4bfL59vFqYzQasjNoM36wi1vzvHgBFNwo4x8nKNreJOFfBHy9nSXGpyoSPSYOGgqZCae8TJ5BkERb68zsDVZygSlD3/b0B6tPf2byempRFO127T095JQ6wJFBTcJk7VhCRjYItUT/mgrgxOvWtrPtLdEG8gYdcT6gDRGjERWsosrS2TKwbMP78rcth3/gX/0SEvLZFG1QAAAABJRU5ErkJggg==';
-    var icon16baseSEILegis = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAZJQTFRFAAAA////////////////////8/jozuKi+fvz////+Pz+p9vzdMfrbMPrhs7uueL1+v3+5vDQlb838vfm9fv+Na3jAJfb4/T7////teH0esns3PH6wOX2d8js6/f8////v+X2SbXm4vP7/////////////v//X77pB5rcYb/p2fD6////////wOb3FJ/eEJ7dCJvcptvy////////I6bgc8br/f7/teH1J6fhDJzd8fr9+/3/AZjbktLw////////zuv42O/6////Oa7jBprccsbr1+/5gczuF6Df+fz+////1+/5KajhHaPfweb2////////9vv+l9XwKKjhMqzi6fb8////+fv06vPX3+7W/P35/////////////f7/h8/uitDv////9Pv+PrDkV7vo/v//zOr4P7Hkh87ur970b8TrltTw////////t+L11e75yur4Q7Pl8fn9////////3fH6CpvdGKHf8fn9////2/D6rd70lNPwm9bxx+j3/v//////////0u35l9Xx3vL7////T5fsgAAAAIZ0Uk5TACFMVDwP8P/PGLn//////Jv7/9u9///YDv7/5vn/1gn8/+F9YEiu////6Vg1+P////9Tp///yvv//8nC//9vLPLjl/////D//7sf7P//+D0kv////9sG0v//so+Le7///zm+//+d9P//////MQv/6fT/yAEC5///x5Hk////9p8RS/D/5jRwoQdUAAAA20lEQVR4nGNgYGBgZGJmYQXSbOzs7BwMDJxc3Dy8fPwCDAyCQkJCwgwMIqJiICAOE5CQFBOTkpaRlYMJyCuIiSkqKauowrWoqYuJaWhqacMEdHT1xPTFxAwMjaACxiZipmbmFmKWVlABaxsxWzt7BzExR6iAk7OYi6ubu5iHJ1TAy9sH5AxfP3+YLQGBQcFiYiGhYQzhEZERUQwM0TGxcfFiYgmJDEnJYimpDAxp6RmZWWJi2Tm5eUCt+QwMBWCvFBYVl5SWiZVXMDBUVlXX1NbVNzAwNDY1t7QCAG4cKfQLuoXsAAAAAElFTkSuQmCC';
-    var icon16baseBatchImgQuality = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAInSURBVDjLhZPda9NQHIbzVwlWryzthpWuIpWOieKYZXO2q1vC0KFr9aZM3Yr40QunspU2TVYmYhVRvNErwQtR3E0JTq3G2o80mc0Ql9dzTr/SYdnFA8k5yft78nLCjcxJNwKzsuoOiZoj2GKsi3NS1I7y4hIA7n9wgQvyz4KiWLphwNgyoRMq+jZ+MUyo1ToOR6Ra3wA6ua4b8F/2gL830WF8YRGB2VX4hBwOBEWrnxl3kGzQyXzyLJbfLuL+uwQevr+Jk7EsiBn2MmMBdbJ58UEEKx9vYfVDE89MBtTsTVjA53iiy/XbeD4XRaluwhWSNRZQIYmeay6cSsYxfCmFwfMpEGW4wjk4gxm4J7IECd6IhOW7z/AlkYRaawXQbyuTtCOJAQzPp/bU9gtrLOBHrUECJI3bP5bWypoJx7l9cE+tMO0TsTuIpl90uCq+xJnoEtP2hUV8Cp7G90orwMECGthQd5gynRxLPUWuoOOR8huPN//gyde/iMuvmLZvKgtlfBTFdsBgSNwslavQiOIACaCF0ofzRQv5bzsd6BrV9obSyI8EUCw34JwkAcd4aWFoWn5N00ihFi30+HwaM5LCmM4UGH5SLtX28uvMtlg2mwH2U9UuNHBlDUKu2ANdo9pDwjqqpNQSOwdyrSegXeih0Rh7wQ5da2lbdDI5RBqxT/Qa2ArdUK1ddLV7/gX7jb1QzdhGjVAl10262n0D7IXSSbtpa9vf+QeB6/JTIb6VuwAAAABJRU5ErkJggg==';
-    var icon16baseInsertCheckboxQuality = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAANJQTFRFAAAAjo+P8/T09/j4+Pn59fb2rbO6yMzQm6fCc4eu29/k9PX1ys/Wy9DX7e7xUmuhPVuWuL/SzNHW4OLmrbjRP1uWYHip5+fo1Nnd3uLl1Njc8fP0WXKlQV2YusPY29zcxMnNyM/eoK7K7e7uuMHXQ1+aX3ep1dXW3uDhaoCuztTjYnmrRWGbtb/X3N3ezc/R3eHqQl6ZQ2CaXHSo9/n64eLixcjK6ezwh5q+RGCbRmKcrrnT5ubmysvM2trb3uLqiZq9jZ7A8fP27O3t6+vs6enq5QKsjwAAAEZ0Uk5TAP///////////////////////////////////////////////////////////////////////////////////////////4malW8AAACCSURBVHicY2DAAIzIACzABAHMLKxMUAE2EGDn4OTihgnw8PDw8vELCLIiBISERUTFxOFaJCSlpGVk5eRhAgqKSsoqqmrM6jABDU1ZLW0dXVY9mIC+gaGRjrEJkylMwMzcwtLKmoXVBiZga2fv4Ojk7OLKBHcpNwszN8i1jFj9QggAACIvCrMm33rtAAAAAElFTkSuQmCC';
-    var icon16baseOpenAI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAKgSURBVDjLlZLrS1NxGMd90ZvovdEfEBEUEhZIb0xMjdyLIuyGkiHGUFKydFKKJiRegjIyFJRwojMxzfJSaVOYeTfxtpSNuZ1tXnY2z27nsss5334uWloG9uLD7/A7z/fzPPx4IgBE7ISl3qWyelUvu9JIueZqeOdUmcCMFDgcQ3fntjSK0j/rwx+csesIZ3jbL1j6EbCPIej5DpE3QRIoBJ3LEFb74BjIxkbXVYNdrTixS8Ca3h/y6pSTfloD0UcRjCS8BJGbRdA7QRgjd1pIfhruyeewKOMdm+rCw2GBV1tXKZh7SIEVoqAjpwVS0AlIvhBSkCGyeQRcPYDogO1DNixvrveFBa6ZCkuAmSe1OtJpFVLATkJboWCIAE3+GYngI6ENgnUK+hcxfFiw9fWRT+RWEWTHEeRmyPhaMvYCgu5ZEpgkbzCCgPszBNsr8NY8iF4Ky5WnpLDArs41+zYnSPdF8OYi0qEcTHc6mF45mJ4M2Ftl4C1lYPU34KerwFNTWKmO/j2BfbiwghmvJuPawZsUsNVHgTPlEx6ANcjJeR9r5QfhWUqEJOlhbc+FoV42FBY4R0sPbPbKlz2LLeQB9aCbYkJhzpIFlkoDZ8zDRk0kRHYYrm8d0JYeEyyduUd37QH9pTBqvSOV9iy0wtmZ+VNAOm+HOeM92JtlYDQN0JYcD1BtmTf/WqRtbJ/yTxtUt9fXGhPBq5MhriVBtMYhoLkMQ1Ek5sqi3eb2O4l7buIvhlRPkmsfZ/ibax+iruosnpacQUFOOq7Fn5TUypJz/1zlnRQr5JSypRVKZRvq6htR/ewlriTH03vV7ilQ5NwaHRgchM1GY3p6Bq+bmpEii9XtWzCgqkhLuXSBTUg4L8XFxUoXk2K57obirH0L/ocfNQ8V8wE+uE0AAAAASUVORK5CYII=';
-    var icon16baseRefInterna = 'data:image/webp;base64,UklGRjYBAABXRUJQVlA4WAoAAAAQAAAADwAADwAAQUxQSHYAAAABcBvbdhPdGdWhQiiHDhSuCSFab1LXgjL1oQ7I1qYMmRx8WoiICWB6oZjpbxPauE8oTyOVDdMtoG0QbgAThFcAF0Lo9oB/Ur6G/t8ArFUtVGuA5t8PL8qnB/ZdCMEV1yA0wCYIrQZaga0oTyMfZzTjN89MtRAAVlA4IJoAAACQAgCdASoQABAAAkA4JZgCdAadxnI1a7DIeunxQAD+fox+Q69q3S+frDjKT9m5NGxEmBAie9GvAP0VzC5xraY8/8N8XfSX8f8+jH1Rr/Cy7nkgzHjrN0jr/qs/Jbu1nWTcTRSDOwYuHhVgyXN5msvqWfaKeOir71MvrUL62ATEuGvdh8hjUUdOL1qTy6OH38O1V2vZ3dZ28wAA';
-    var icon16baseReview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALTSURBVDjLpZN9LBRgHMf1R/NPuo7Uam0aaV7G2uSvYki6c4hhWZe3mJw6i9FxnMj7RUNeIzYvnUtLuXKGXDV2yMm9JK10iDHlvOTuvN6369Zs1kZbf3y2Z8/2+ezZ8zw/PQB6/8NfG1H2B1n5JMPlAsoBsEkEsFyISqqdccY/Ba7ZGTJKvYiaygBDVGi570tEtjsBMY77NRRbo7RdA2UUAmq0IlsrZVN+Q0SmhzHinQ1xxY6wuGsg23Ef2sqSMclno7cqBtFOxoh1PYLr500RcYa4Vpvgqb9joDLIZE498wmLPWWY6rgHMfc25C9zoZCLwIk0Wxxttr800hCAz88zMfTQDeIS66BtgSKqVbei/xFmB5qgGuJoadStFSIO+BkWX6e7GFiQvAB+TmFe8gTCPNLMlnyY0rDX/GxULYd+GisDVVDLmnWo3jdAwLbFd2nK5uq3Fky/vguV9Ck2xrohrYlQ62Rjd46+EamedozUCdnEMrhJXmhM8tTRnucChYyFTVU3VKM3MNdPx8e6MEgqA3/0F/mc1DMic/cYuHFDTDy6MTypQv0kECsDaH1AVocACmkiNtVCKL8EQz1BxdIwE/IKpxlRvusp3SVa+1Z7u/qx0dS7gXIxQBdqECnQIJXzDNPvGH/kIKjHL2NRlgRZoRtiIyJTt15hMNliY5aXgOJqHkL4QFgrwKrjQdp2S3vst1DLw7AyEYgF7UlGSi5gtiUewjjLta2AmGWpUbTfQUBEDTI6lIgr4uBDKxNifgEm+/yhlFMxN5QASakPAsNLMd+Zjn6GlWYrIK2lJ4oSzddDQ7PW7UMEeJx7Dlgaw8gDP3Qxj6KnnAx+DhkuflWghzOVgym2K1onfdtHkjfSDFKYGUbHvXnlaeE2WBUWY7WvEH2Zzqi/agYHcq7ixMWW9pvRqYfGuTSDHafR34Gozg62WH+VQ17vzHd5w2PYmO40zr8A5dG3M3vHNHcAAAAASUVORK5CYII=';
-    var icon16baseCtrReview = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJ5SURBVDjLfZJtSFNRGMenRkgY1BKiL30yEkqJrCjrgxBB5Qtmyy3NcGoUuqD5skEm+ZZizpTUmZEw33ML06lzGoQKtRRETXM2Z1LOTBs6LNNw9/w7d+IiuevAj3vO4fx/z+E5lweAtxVRvp5Pqaf8psAF3RQfngtBa1OvCet2Bq5Ge/80K5nkCntR7AwhsP0imF8msCwRfF4k+GQlmFxgYF7YEKerDJzV90vKexwHZm0EX2hw6juBaZ6B8RuDsa8MRiwbggL1IP57A7b6NK36kYbH5xiM0vCwhRXYHYKMmnd/gwlH+dvunPTOehy623ZLlrfO9oCVbA72JsMzjEPK2QP5Gb5UGewJxcXtKBLsQ2JKBkR5OkfHq/QfnKKlH2uONd0f/ecVioM8OzXyC+hRRKFAeBC3A3dAfHwn7ob71tCD5rnFlc3gKiVjM+cUlEbsqZ4xqLE81IT3Lx6gXyXDUMsjpGQqRip1Y2zwJ0W6tWfOyZUQQepEYxpZHW8FTFqsGdvRX5dORLlaKw0mcP0vTsHekAYPXkDFE3VxNplU3cREXQrMdRKoCnOI+5Gycu9zlR4uBbvON7l5nNbkykunGL0VkGvfQqo2QFJtwLNhIDHfZHc/UZvpFVThxik4FfEwNS2nDc+NBMkDwI0+4LoeiNQAV+sJcrsIxMnNJDD0noxTMFt4CAPqUiSp5xHbAcRoCIQ1BBFVBGFPAYFiAYPNSkxl+4JTYFYGv6mVxyBU2oe4LiC+GxDrKPR7rQU4G9eBl/ejMVEW1sspMDUk8V+VxPsHRDZkHbjcZvGL7lrxj+pe8xN2rviEa63HLlUVvS6JPWxqlPC5BH8A3ojcdBpMJSoAAAAASUVORK5CYII=';
-    var icon16baseNewStyle = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALqSURBVDjLjVPbS9NRHN9T/0BWFBQUVIQKXigCpVIyygcDJUrnZdNEc5hlmZc0TdSF0bxszs3LvM3pXE6Xa3NL0TJTl7pcTY1Ec5rX/WxqCrHhp7NBPaRGD5+Xw/lczud8vzQAtJ0wWhLp+4kbUThSFGrQFwTrB59dE+ryA/3+vreNOMaPOmLkMeUT4mTMaoph1klh7pPApOLAUH4LPTn+X7qzLwXsKDDGj0wy8hibM+oCrI9pYTWGA0ZnWEd8sWZQYvXDC5g0XAzyo6BJP5f/R2C89OYeErlquiUPP9vogNgF1iYfbH10B0zxRMQFC4oszMsz8F3XBOqdBKqUs7a2B6fdHAIkMnu6le1w3WrwBLrjHSKWrhhYh72w2kVHjTIIae3eKFJexkp/I0YlKWhJdKsgZIanoTjMtlHPxSY9BD/YgbA2eGPteRjmWzOJazrmZKl4rL4AQT8TD4nIfPMjzKgKIUtwNtJIyxXftISclICN3GxYfHyw3FEEy1ALLIPNsOhkWGzLw5umCHCUflBLr2O29i4WXgnQwDpB0YY5NyapASmoxlxQrGAsFrAIWQ6D6Da0GecxXBaLFfLmuHI+TgrkCBCIYKqIwVKHEHWxxzZp758GbTrc9AqYu4WYb8kkRcnsLcPejzL5DKi3dfAQSEFX9RKRZkzxQklKIaqjD4PW9+QqVy+IxmdpOkwvOaB6xVjpa8QQOSMtY4DHAPW6GuLSVFwprUJxSQYWlRyMS9JQGXlw3PELZDB8OzN9c0hkdXua1/pYfTKonloHkeoWYVachCkuHZNFwZhrTMeCmov2rIsoY+wL2TaJJLKr4r6HzUyIpso4R9yp4mB8LWFgScPHtJyNjhx/CCOcCnccZTua77jKRkiJy51lmKlJxJK2lJBLoOMxiet+myDcKWXXXbBDGn/KTcI6brO7TUgzMcBl4Pk9d3tkhSB8r+s/l+k36mKOJpKW10VRh/TlzAOFJLLnTvd2Ffhf/AKfTM1hskDhXAAAAABJRU5ErkJggg==';
-
-    var htmlButtonTable =   '   <div class="divQuickTable" style="display:none;"></div>'+
-                            '   <a class="getQuickTableButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Tabela R\u00E1pida" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__quicktable_icon" style="background: url(\''+icon16baseQuickTable+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Tabela R\u00E1pida</span>'+
-                            '   </a>'+
-                            '   <a class="getTablestylesButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Adicionar estilo \u00E0 tabela" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__tablestyles_icon" style="background: url(\''+icon16baseTable+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Adicionar estilo a tabela</span>'+
-                            '   </a>';
-
-    var htmlButtonAfterImage =  '   <a class="getBatchImgQualityButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Reduzir qualidade das imagens" hidefocus="true">'+
-                                '      <span class="cke_button_icon cke_button__batch_quality_pro_icon" style="background: url(\''+icon16baseBatchImgQuality+'\');">&nbsp;</span>'+
-                                '      <span class="cke_button_label" aria-hidden="false">Reduzir qualidade das imagens</span>'+
-                                '   </a>'+
-                                '   <a class="getInsertCheckboxButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Inserir caixa de sele\u00E7\u00E3o" hidefocus="true">'+
-                                '      <span class="cke_button_icon cke_button__insert_checkbox_pro_icon" style="background: url(\''+icon16baseInsertCheckboxQuality+'\');">&nbsp;</span>'+
-                                '      <span class="cke_button_label" aria-hidden="false">Inserir caixa de sele\u00E7\u00E3o</span>'+
-                                '   </a>';
-
-    var htmlButtonBeforeCut =   '   <a class="getCopyStyleButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Copiar formata\u00E7\u00E3o" hidefocus="true">'+
-                                '      <span class="cke_button_icon cke_button__copy_style_pro_icon" style="background: url(\''+icon16baseCopyStyle+'\');">&nbsp;</span>'+
-                                '      <span class="cke_button_label" aria-hidden="false">Copiar formata\u00E7\u00E3o</span>'+
-                                '   </a>';
+    var icon16baseImport = URL_SPRO + 'icons/menu/import.png';
+    var icon16baseTable = URL_SPRO + 'icons/menu/table.png';
+    var icon16baseLegis = URL_SPRO + 'icons/menu/legis.png';
+    var icon16baseCapLetter = URL_SPRO + 'icons/menu/capletter.png';
+    var icon16baseCitaDocumento = URL_SPRO + 'icons/menu/citacao.png';
+    var icon16baseNotaRodape = URL_SPRO + 'icons/menu/notarodape.png';
+    var icon16baseSumario = URL_SPRO + 'icons/menu/sumario.png';
+    var icon16baseDadosProcesso = URL_SPRO + 'icons/menu/dadosprocesso.png';
+    var icon16baseTinyUrl = URL_SPRO + 'icons/menu/tinyurl.png';
+	var icon16baseQrCode = URL_SPRO + 'icons/menu/qrcode.png';
+	var icon16basePageBreak = URL_SPRO + 'icons/menu/pagebreak.png';
+	var icon16baseSessionBreak = URL_SPRO + 'icons/menu/sessionbreak.png';
+    var icon16baseLatex = URL_SPRO + 'icons/menu/latex.png';
+    var icon16baseQuickTable = URL_SPRO + 'icons/menu/quicktable.png';
+    var icon16baseFonteSizeUp = URL_SPRO + 'icons/menu/fontsizeup.png';
+    var icon16baseFonteSizeDown = URL_SPRO + 'icons/menu/fontsizedown.png';
+    var icon16baseCopyStyle = URL_SPRO + 'icons/menu/copystyle.png';
+    var icon16baseAlignCenter = URL_SPRO + 'icons/menu/aligncenter.png';
+    var icon16baseAlignRight = URL_SPRO + 'icons/menu/alignright.png';
+    var icon16baseAlignLeft = URL_SPRO + 'icons/menu/alignleft.png';
+    var icon16baseAlignJustify = URL_SPRO + 'icons/menu/alignjustify.png';
+    var icon16baseDocPublico = URL_SPRO + 'icons/menu/docpublico.png';
+    var icon16baseWatermark = URL_SPRO + 'icons/menu/watermark.png';
+    var icon16baseImagePage = URL_SPRO + 'icons/menu/imagepage.png';
+    var icon16baseMarkSigilo = URL_SPRO + 'icons/menu/marksigilo.png';
+    var icon16baseBoxSigilo = URL_SPRO + 'icons/menu/boxsigilo.png';
+    var icon16baseAutoSave = URL_SPRO + 'icons/menu/autosave.png';
+    var icon16baseSEILegis = URL_SPRO + 'icons/menu/seilegis.png';
+    var icon16baseBatchImgQuality = URL_SPRO + 'icons/menu/batchimgquality.png';
+    var icon16baseInsertCheckboxQuality = URL_SPRO + 'icons/menu/insertcheckbox.png';
+    var icon16baseOpenAI = URL_SPRO + 'icons/menu/openai.png';
+    var icon16baseRefInterna = URL_SPRO + 'icons/menu/refinterna.png';
+    var icon16baseReview = URL_SPRO + 'icons/menu/review.png';
+    var icon16baseCtrReview = URL_SPRO + 'icons/menu/ctrreview.png';
+    var icon16baseNewStyle = URL_SPRO + 'icons/menu/newstyle.png';
+/* 
     
-    var htmlButtonBeforeList =  '   <div class="divAlignText" style="display:none;">'+
-                                '       <a class="getAlignLeftButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto \u00E0 esquerda" hidefocus="true">'+
-                                '           <span class="cke_button_icon cke_button__align_left_pro_icon" style="background: url(\''+icon16baseAlignLeft+'\');">&nbsp;</span>'+
-                                '           <span class="cke_button_label" aria-hidden="false">Alinhar texto \u00E0 esquerda</span>'+
-                                '       </a>'+
-                                '       <a class="getAlignCenterButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto ao centro" hidefocus="true">'+
-                                '           <span class="cke_button_icon cke_button__align_center_pro_icon" style="background: url(\''+icon16baseAlignCenter+'\');">&nbsp;</span>'+
-                                '           <span class="cke_button_label" aria-hidden="false">Alinhar texto ao centro</span>'+
-                                '       </a>'+
-                                '       <a class="getAlignRightButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto \u00E0 direita" hidefocus="true">'+
-                                '           <span class="cke_button_icon cke_button__align_rigth_pro_icon" style="background: url(\''+icon16baseAlignRight+'\');">&nbsp;</span>'+
-                                '           <span class="cke_button_label" aria-hidden="false">Alinhar texto \u00E0 direita</span>'+
-                                '       </a>'+
-                                '       <a class="getAlignJustifyButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto justificadamente" hidefocus="true">'+
-                                '           <span class="cke_button_icon cke_button__align_justify_pro_icon" style="background: url(\''+icon16baseAlignJustify+'\');">&nbsp;</span>'+
-                                '           <span class="cke_button_label" aria-hidden="false">Alinhar texto justificadamente</span>'+
-                                '       </a>'+
-                                '   </div>'+
-                                '   <a class="getAlignButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Alinhar texto" hidefocus="true">'+
-                                '      <span class="cke_button_icon cke_button__align_pro_icon" style="background: url(\''+icon16baseAlignCenter+'\');">&nbsp;</span>'+
-                                '      <span class="cke_button_label" aria-hidden="false">Alinhar texto</span>'+
-                                '   </a>';
+ */
+    const htmlButtonTable = 
+        '<div class="divQuickTable" style="display:none;"></div>' +
+        htmlButtonPro(
+            'getQuickTableButtom',
+            'quicktable',
+            'Tabela R\u00E1pida',
+            isSEI_5 ? 'fab fa-bolt rosaColor' : icon16baseQuickTable
+        ) +
+        htmlButtonPro(
+            'getTablestylesButtom',
+            'tablestyles',
+            'Adicionar estilo \u00E0 tabela',
+            isSEI_5 ? 'fab fa-paint-brush rosaColor' : icon16baseTable
+        );
     
-    var htmlButtonAfterLetters =    '   <a class="getCapLetterButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)" hidefocus="true">'+
-                                    '      <span class="cke_button_icon cke_button__capletter_pro_icon" style="background: url(\''+icon16baseCapLetter+'\');">&nbsp;</span>'+
-                                    '      <span class="cke_button_label" aria-hidden="false">Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)</span>'+
-                                    '   </a>'+
-                                    '   <a class="getFontSizeUpButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Aumentar tamanho da fonte" hidefocus="true">'+
-                                    '      <span class="cke_button_icon cke_button__fontsize_up_pro_icon" style="background: url(\''+icon16baseFonteSizeUp+'\');">&nbsp;</span>'+
-                                    '      <span class="cke_button_label" aria-hidden="false">Aumentar tamanho da fonte</span>'+
-                                    '   </a>'+
-                                    '   <a class="getFontSizeDownButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Diminuir tamanho da fonte" hidefocus="true">'+
-                                    '      <span class="cke_button_icon cke_button__fontsize_down_pro_icon" style="background: url(\''+icon16baseFonteSizeDown+'\');">&nbsp;</span>'+
-                                    '      <span class="cke_button_label" aria-hidden="false">Diminuir tamanho da fonte</span>';
+    const htmlButtonAfterImage = 
+        htmlButtonPro(
+            'getBatchImgQualityButtom',
+            'batch_quality_pro',
+            'Reduzir qualidade das imagens',
+            isSEI_5 ? 'fab fa-compress azulColor' : icon16baseBatchImgQuality
+        ) +
+        htmlButtonPro(
+            'getInsertCheckboxButtom',
+            'insert_checkbox_pro',
+            'Inserir caixa de sele\u00E7\u00E3o',
+            isSEI_5 ? 'fab fa-check-square azulColor' : icon16baseInsertCheckboxQuality
+        );
     
-    var htmlButtonAfterSave =   '   <a class="getAutoSaveButtom cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Salvamento autom\u00E1tico ('+autoSaveInterval+' '+(autoSaveInterval == 1 ? 'minuto' : 'minutos')+')" hidefocus="true">'+
-                                '      <span class="cke_button_icon cke_button__autosave_pro_icon" style="background: url(\''+icon16baseAutoSave+'\');">&nbsp;</span>'+
-                                '      <span class="cke_button_label" aria-hidden="false">Salvamento autom\u00E1tico ('+autoSaveInterval+' '+autoSaveInterval+' '+(autoSaveInterval == 1 ? 'minuto' : 'minutos')+')</span>'+
-                                '   </a>';
+    const htmlButtonBeforeCut = 
+        htmlButtonPro(
+            'getCopyStyleButtom',
+            'copy_style_pro',
+            'Copiar formata\u00E7\u00E3o',
+            isSEI_5 ? 'fab fa-brush rosaColor' : icon16baseCopyStyle
+        );
     
-    var htmlButton =    '<span class="cke_iconPro cke_toolgroup '+classStatus+'" role="presentation">'+
-                        (restrictConfigValue('ferramentasia') ? 
-                        '   <a class="getOpenAIButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir texto de intelig\u00EAncia artificial" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__openai_icon" style="background: url(\''+icon16baseOpenAI+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir texto de intelig\u00EAncia artificial</span>'+
-                        '   </a>'+
-                        '': '')+
-                        '   <a class="importDocButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir conte&uacute;do externo" hidefocus="true">'+
-                        '       <span class="cke_button_icon cke_button__externalfile_icon" style="background: url(\''+icon16baseImport+'\');">&nbsp;</span>'+
-                        '       <span class="cke_button_label" aria-hidden="false">Inserir conte&uacute;do externo</span>'+
-                        '   </a>'+
-                        '   <a class="getLinkLegisButtom cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar link de legisla\u00E7\u00E3o" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__linklegis_icon" style="background: url(\''+icon16baseLegis+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Adicionar link de legisla\u00E7\u00E3o</span>'+
-                        '   </a>'+
-                        '   <a '+(!$('#frmEditor').length ? 'style="display:none"' : '')+' class="getCitacaoDocumentoButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir refer\u00EAncia de documento do processo" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__citacaodoc_icon" style="background: url(\''+icon16baseCitaDocumento+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir refer\u00EAncia de documento do processo</span>'+
-                        '   </a>'+
-                        '   <a class="getNotaRodapeButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir nota de rodap\u00E9" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__notarodape_icon" style="background: url(\''+icon16baseNotaRodape+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir nota de rodap\u00E9</span>'+
-                        '   </a>'+
-                        '   <a class="getRefInternaButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir refer\u00EAncia interna" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__refinterna_icon" style="background: url(\''+icon16baseRefInterna+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir refer\u00EAncia interna</span>'+
-                        '   </a>'+
-                        '   <a class="getSumarioButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir sum\u00E1rio" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__sumario_icon" style="background: url(\''+icon16baseSumario+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir sum\u00E1rio</span>'+
-                        '   </a>'+
-                        '   <a '+($('#frmEditor').length==0 ? 'style="display:none"' : '')+' class="getDadosProcessoButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir dados do processo" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__dadosprocesso_icon" style="background: url(\''+icon16baseDadosProcesso+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir dados do processo</span>'+
-                        '   </a>'+
-                        '   <a class="getTinyUrlButtom cke_button cke_buttonPro cke_button_off" href="#" title="Gerar link curto do TinyURL" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__tinyurl_icon" style="background: url(\''+icon16baseTinyUrl+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Gerar link curto do TinyURL</span>'+
-                        '   </a>'+
-                        '   <a class="getQrCodeButtom cke_button cke_buttonPro cke_button_off" href="#" title="Gerar C\u00F3digo QR" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__qrcode_icon" style="background: url(\''+icon16baseQrCode+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Gerar C\u00F3digo QR</span>'+
-                        '   </a>'+
-                        '   <a class="getPageBreakButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Quebra de P\u00E1gina" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__pagebreak_icon" style="background: url(\''+icon16basePageBreak+'\') '+(isSeiSlim ? '' : '!important')+';">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir Quebra de P\u00E1gina</span>'+
-                        '   </a>'+
-                        '   <a class="getSessionBreakButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Quebra de Se\u00E7\u00E3o" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__sessionbreak_icon" style="background: url(\''+icon16baseSessionBreak+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir Quebra de Se\u00E7\u00E3o</span>'+
-                        '   </a>'+
-                        '   <a class="getLatexButtom cke_button cke_buttonPro cke_button_off" href="#" title="Inserir Equa\u00E7\u00E3o" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__latex_icon" style="background: url(\''+icon16baseLatex+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Inserir Equa\u00E7\u00E3o</span>'+
-                        '   </a>'+
-                        '   <a class="getProcessoPublicoButton cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar Link de Documento P\u00FAblico" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__processopublico_icon" style="background: url(\''+icon16baseDocPublico+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Adicionar Link de Documento P\u00FAblico</span>'+
-                        '   </a>'+
-                        '   <a class="getMinutaWatermarkButton cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar Marca D\'\u00E1gua de MINUTA/MODELO" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__watermark_icon" style="background: url(\''+icon16baseWatermark+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Adicionar Marca D\'\u00E1gua de MINUTA/MODELO</span>'+
-                        '   </a>'+
-                        '   <a class="pageImageBackgroundButtom cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o" hidefocus="true">'+
-                        '      <span class="cke_button_icon cke_button__pageimagebackground_icon" style="background: url(\''+icon16baseImagePage+'\');">&nbsp;</span>'+
-                        '      <span class="cke_button_label" aria-hidden="false">Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o</span>'+
-                        '   </a>'+
-                        '</span>';
+    const htmlButtonBeforeList = 
+        '<div class="divAlignText" style="display:none;">' +
+            htmlButtonPro(
+                'getAlignLeftButtom',
+                'align_left_pro',
+                'Alinhar texto \u00E0 esquerda',
+                isSEI_5 ? 'fab fa-align-left roxoColor' : icon16baseAlignLeft
+            ) +
+            htmlButtonPro(
+                'getAlignCenterButtom',
+                'align_center_pro',
+                'Alinhar texto ao centro',
+                isSEI_5 ? 'fab fa-align-center roxoColor' : icon16baseAlignCenter
+            ) +
+            htmlButtonPro(
+                'getAlignRightButtom',
+                'align_right_pro',
+                'Alinhar texto \u00E0 direita',
+                isSEI_5 ? 'fab fa-align-right roxoColor' : icon16baseAlignRight
+            ) +
+            htmlButtonPro(
+                'getAlignJustifyButtom',
+                'align_justify_pro',
+                'Alinhar texto justificadamente',
+                isSEI_5 ? 'fab fa-align-justify roxoColor' : icon16baseAlignJustify
+            ) +
+        '</div>' +
+        htmlButtonPro(
+            'getAlignButtom',
+            'align_pro',
+            'Alinhar texto roxoColor',
+            isSEI_5 ? 'fab fa-align-left roxoColor' : icon16baseAlignCenter
+        );
 
-    var htmlButtonReview =  checkConfigValue('revisaotexto') ? 
-                            '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
-                            '   <a class="getReviewButton cke_button cke_button_off" href="#" title="Ativar revis\u00E3o de texto" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__review_icon" style="background: url(\''+icon16baseReview+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Ativar revis\u00E3o de texto</span>'+
-                            '   </a>'+
-                            '   <a class="getCtrReviewButton cke_button cke_button_off" href="#" title="Gerenciar revis\u00F5es de texto" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__ctr_review_icon" style="background: url(\''+icon16baseCtrReview+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Gerenciar revis\u00F5es de texto</span>'+
-                            '   </a>'+
-                            '</span>'
-                            : '';
+    const htmlButtonAfterLetters = 
+        htmlButtonPro(
+            'getCapLetterButtom', 
+            'capletter_pro', 
+            'Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)', 
+            isSEI_5 ? 'fab fa-font-case cianoColor' : icon16baseCapLetter
+        ) +
+        htmlButtonPro(
+            'getFontSizeUpButtom', 
+            'fontsize_up_pro', 
+            'Aumentar tamanho da fonte', 
+            isSEI_5 ? 'fab fa-sort-alpha-up cianoColor' : icon16baseFonteSizeUp
+        ) +
+        htmlButtonPro(
+            'getFontSizeDownButtom', 
+            'fontsize_down_pro', 
+            'Diminuir tamanho da fonte cianoColor', 
+            isSEI_5 ? 'fab fa-sort-alpha-down cianoColor' : icon16baseFonteSizeDown
+        );
 
-    var htmlButtonDitado =  checkConfigValue('ditado') ? 
-                            '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
-                            '   <a class="getDitadoButton cke_button cke_button_off" href="#" title="Ativar ditado de texto" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__ditado_icon" style="background: url(\''+URL_SPRO+'icons/editor/webspeech.png\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Ativar ditado de texto</span>'+
-                            '   </a>'+
-                            '   <a class="getCtrDitadoButton cke_button cke_button_off" href="#" title="Gerenciar configura\u00E7\u00F5es do ditado" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__ctr_ditado_icon" style="background: url(\''+URL_SPRO+'icons/editor/webspeech-settings.png\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Gerenciar configura\u00E7\u00F5es do ditado</span>'+
-                            '   </a>'+
-                            '</span>'
-                            : '';
+    const htmlButtonAfterSave = htmlButtonPro(
+        'getAutoSaveButtom',
+        'autosave',
+        `Salvamento autom\u00E1tico (${autoSaveInterval} ${autoSaveInterval === 1 ? 'minuto' : 'minutos'})`,
+        isSEI_5 ? '' : icon16baseAutoSave
+    );
 
-    var htmlButtonNewStyle =  isNewSEI ? 
-                            '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
-                            '   <a class="getNewStyleButton cke_button '+(localStorage.getItem('seiSlim_editor') ? 'cke_button_on' : 'cke_button_off')+'" href="#" title="Ativar estilo avan\u00E7ado" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__newstyle_icon" style="background: url(\''+icon16baseNewStyle+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Ativar estilo avan\u00E7ado</span>'+
-                            '   </a>'+
-                            '</span>'
-                            : '';
+    const htmlButton = 
+        (restrictConfigValue('ferramentasia') ? 
+            htmlButtonPro(
+                'getPlataformAIButtom',
+                'openai',
+                'Inserir texto de intelig\u00EAncia artificial',
+                isSEI_5 ? 'fab fa-robot roxoColor' : icon16baseOpenAI
+            ) : '') +
+        htmlButtonPro(
+            'importDocButtom',
+            'externalfile',
+            'Inserir conte\u00FAdo externo',
+            isSEI_5 ? 'fab fa-upload vermelhoColor' : icon16baseImport
+        ) +
+        htmlButtonPro(
+            'getLinkLegisButtom',
+            'linklegis',
+            'Adicionar link de legisla\u00E7\u00E3o',
+            isSEI_5 ? 'fab fa-balance-scale-right verdeColor' : icon16baseLegis
+        ) +
+        (frmEditor.length ? 
+            htmlButtonPro(
+                'getCitacaoDocumentoButtom',
+                'citacaodoc',
+                'Inserir refer\u00EAncia de documento do processo',
+                isSEI_5 ? 'fab fa-folder-tree amareloColor' : icon16baseCitaDocumento
+            ) : '') +
+        htmlButtonPro(
+            'getNotaRodapeButtom',
+            'notarodape',
+            'Inserir nota de rodap\u00E9',
+            isSEI_5 ? 'fab fa-comment-alt-dots cianoColor' : icon16baseNotaRodape
+        ) +
+        htmlButtonPro(
+            'getRefInternaButtom',
+            'refinterna',
+            'Inserir refer\u00EAncia interna',
+            isSEI_5 ? 'fab fa-retweet cianoColor' : icon16baseRefInterna
+        ) +
+        htmlButtonPro(
+            'getSumarioButtom',
+            'sumario',
+            'Inserir sum\u00E1rio',
+            isSEI_5 ? 'fab fa-list-alt roxoColor' : icon16baseSumario
+        ) +
+        (frmEditor.length == 0 ? '' : 
+            htmlButtonPro(
+                'getDadosProcessoButtom',
+                'dadosprocesso',
+                'Inserir dados do processo',
+                isSEI_5 ? 'fab fa-book-spells rosaColor' : icon16baseDadosProcesso
+            )
+        ) +
+        htmlButtonPro(
+            'getTinyUrlButtom',
+            'tinyurl',
+            'Gerar link curto do TinyURL',
+            isSEI_5 ? 'fab fa-compress-arrows-alt azulColor' : icon16baseTinyUrl
+        ) +
+        htmlButtonPro(
+            'getQrCodeButtom',
+            'qrcode',
+            'Gerar C\u00F3digo QR',
+            isSEI_5 ? 'fab fa-qrcode rosaColor' : icon16baseQrCode
+        ) +
+        htmlButtonPro(
+            'getPageBreakButtom',
+            'pagebreak',
+            'Inserir Quebra de P\u00E1gina',
+            isSEI_5 ? 'fab fa-page-break azulColor' : icon16basePageBreak,
+            '', 
+            isSeiSlim ? '' : '!important'
+        ) +
+        htmlButtonPro(
+            'getSessionBreakButtom',
+            'sessionbreak',
+            'Inserir Quebra de Se\u00E7\u00E3o',
+            isSEI_5 ? 'fab fa-page-break verdeColor' : icon16baseSessionBreak
+        ) +
+        htmlButtonPro(
+            'getLatexButtom',
+            'latex',
+            'Inserir Equa\u00E7\u00E3o',
+            isSEI_5 ? 'fab fa-sigma vermelhoColor' : icon16baseLatex
+        ) +
+        htmlButtonPro(
+            'getProcessoPublicoButton',
+            'processopublico',
+            'Adicionar Link de Documento P\u00FAblico',
+            isSEI_5 ? 'fab fa-globe-americas azulColor' : icon16baseDocPublico
+        ) +
+        htmlButtonPro(
+            'getMinutaWatermarkButton',
+            'watermark',
+            'Adicionar Marca D\'\u00E1gua de MINUTA/MODELO',
+            isSEI_5 ? 'fab fa-layer-plus verdeColor' : icon16baseWatermark
+        ) +
+        htmlButtonPro(
+            'pageImageBackgroundButtom',
+            'pageimagebackground',
+            'Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o',
+            isSEI_5 ? 'fab fa-print roxoColor' : icon16baseImagePage
+        );
 
-    var htmlButtonSigilo =   '<span id="cke_legis" class="cke_iconPro cke_toolgroup  '+classStatus+'" role="presentation">'+
-                            '   <a class="getMarkSigiloButton cke_iconPro cke_button cke_buttonPro cke_button_off '+classStatus+'" href="#" title="Adicionar / Remover marca de sigilo no texto" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__mark_sigilo_pro_icon" style="background: url(\''+icon16baseMarkSigilo+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Adicionar / Remover marca de sigilo no texto</span>'+
-                            '   </a>'+
-                            '   <a class="getBoxSigiloButton cke_button cke_buttonPro cke_button_off" href="#" title="Gerenciar marcas de sigilo do documento" hidefocus="true">'+
-                            '      <span class="cke_button_icon cke_button__boxsigilo_icon" style="background: url(\''+icon16baseBoxSigilo+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Gerenciar marcas de sigilo do documento</span>'+
-                            '   </a>'+
-                            '</span>';
+    const htmlButtonReview = checkConfigValue('revisaotexto') ? 
+        htmlButtonPro(
+            'getReviewButton',
+            'review',
+            'Ativar revis\u00E3o de texto',
+            isSEI_5 ? 'fab fa-user-edit azulColor' : icon16baseReview
+        ) + 
+        htmlButtonPro(
+            'getCtrReviewButton',
+            'ctr_review',
+            'Gerenciar revis\u00F5es de texto',
+            isSEI_5 ? 'fab fa-comments azulColor' : icon16baseCtrReview
+        ) : '';
+    
+    const htmlButtonDitado = checkConfigValue('ditado') ? 
+        htmlButtonPro(
+            'getDitadoButton',
+            'ditado',
+            'Ativar ditado de texto',
+            isSEI_5 ? 'fab fa-microphone-alt rosaColor' : URL_SPRO + 'icons/editor/webspeech.png'
+        ) + 
+        htmlButtonPro(
+            'getCtrDitadoButton',
+            'ctr_ditado',
+            'Gerenciar configura\u00E7\u00F5es do ditado',
+            isSEI_5 ? 'fab fa-cogs rosaColor' : URL_SPRO + 'icons/editor/webspeech-settings.png'
+        ) : '';
+    
+    const htmlButtonNewStyle = isNewSEI ? 
+        htmlButtonPro(
+            'getNewStyleButton',
+            'newstyle',
+            'Ativar estilo avan\u00E7ado',
+            isSEI_5 ? 'fab fa-palette azulColor' : icon16baseNewStyle,
+            '', 
+            localStorage.getItem('seiSlim_editor') ? 'cke_button_on' : 'cke_button_off'
+        ) : '';
+    
+    const htmlButtonSigilo = 
+        htmlButtonPro(
+            'getMarkSigiloButton',
+            'mark_sigilo_pro',
+            'Adicionar / Remover marca de sigilo no texto',
+            isSEI_5 ? 'fab fa-lock-open-alt azulColor' : icon16baseMarkSigilo
+        ) +
+        htmlButtonPro(
+            'getBoxSigiloButton',
+            'boxsigilo',
+            'Gerenciar marcas de sigilo do documento',
+            isSEI_5 ? 'fab fa-user-unlock azulColor' : icon16baseBoxSigilo
+        );
+    
+    const htmlButtonLegis = 
+        htmlButtonPro(
+            'getLegisButtom',
+            'legis',
+            'Enumerar norma',
+            isSEI_5 ? 'fab fa-pi azulColor' : icon16baseSEILegis
+        ) +
+        htmlButtonPro(
+            'helpLegisButtom',
+            'legis_help',
+            'Ajuda',
+            isSEI_5 ? 'fab fa-info-circle azulColor' : window.location.origin+'/sei/editor/ck/skins/moonocolor/icons.png',
+            isSEI_5 ? '' : ';background-position: 0 -168px;',
+            ''
+        );
+    const blockHtmlButton = isSEI_5
+        ? htmlButton
+        : `<span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">${htmlButton}</span>`;
 
-    var htmlButtonLegis =   '<span id="cke_legis" class="cke_toolgroup  '+classStatus+'" role="presentation">'+
-                            '   <a class="getLegisButtom cke_button cke_button_off" href="#" title="Enumerar norma" hidefocus="true">'+
-                            '      <span class="cke_button_icon" style="background: url(\''+icon16baseSEILegis+'\');">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Enumerar norma</span>'+
-                            '   </a>'+
-                            '   <a class="helpLegisButtom cke_button cke_button_off" href="'+URLPAGES_SPRO+'/pages/LEGISTICA.html" target="_blank" title="Ajuda" hidefocus="true">'+
-                            '      <span class="cke_button_icon" style="background-image: url(https://sei.antaq.gov.br/sei/editor/ck/skins/moonocolor/icons.png);background-position: 0 -168px;background-size:auto;">&nbsp;</span>'+
-                            '      <span class="cke_button_label" aria-hidden="false">Ajuda</span>'+
-                            '   </a>'+
-                            '</span>';
+    const htmlNewBlock = isSEI_5 
+        ? htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonNewStyle
+        : `
+            <span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">
+            ${htmlButtonSigilo}
+            ${htmlButtonReview}
+            ${htmlButtonLegis}
+            ${htmlButtonDitado}
+            ${htmlButtonNewStyle}
+            </span>
+        `;
 
     return {
-        default: htmlButton, 
+        default: blockHtmlButton, 
         tables: htmlButtonTable, 
         beforeCut: htmlButtonBeforeCut, 
         afterletters: htmlButtonAfterLetters, 
         beforeList: htmlButtonBeforeList, 
         afterSave: htmlButtonAfterSave, 
-        newBlock: htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonNewStyle,
+        newBlock: htmlNewBlock,
         afterImage: htmlButtonAfterImage
     };
 }
 function addButton(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     setTimeout(function(){ 
-        if ( $(txaEditor).length && !$('.cke_buttonPro').length ) {
-                if ( !$('#idEditor').length ) { $('#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
-                $(txaEditor).each(function(index){ 
-                    var idEditor = $(this).attr('id').replace('cke_', '');
-                    if ( $('iframe[title*="'+idEditor+'"]').contents().find('body').attr('contenteditable') == 'true' ) {
-                        $(this).find('span.cke_toolbox').append(htmlButton('').default);
-                        $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('').tables);
-                        $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('').afterletters);
-                        $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('').beforeCut);
-                        $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('').beforeList);
-                        $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('').afterImage);
-                        // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('').afterSave);
-                        $(this).find('span.cke_toolbox').append(htmlButton('').newBlock);
-                        insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
-                    } else {
-                        $(this).find('span.cke_toolbox').append(htmlButton('disable').default);
-                        $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('disable').tables);
-                        $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('disable').afterletters);
-                        $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('disable').beforeCut);
-                        $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('disable').beforeList);
-                        $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('disable').afterImage);
-                        // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('disable').afterSave);
-                        $(this).find('span.cke_toolbox').append(htmlButton('disable').newBlock);
-                    }
-                });
-                $('.getTablestylesButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getSyleSelectedTable(this) } });
-                $('.getQuickTableButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getQuickTable(this) } });
-                $('.importDocButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { importDocPro(this) } });
-                $('.getLinkLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getLegisSEI(this) } });
-                $('.getCapLetterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { convertFirstLetter(this) } });
-                $('.getFontSizeUpButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'up') } });
-                $('.getFontSizeDownButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'down') } });
-                $('.getCopyStyleButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setCopyStyle(this) } });
-                $('.getAlignButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { openAlignText(this) } });
-                $('.getAlignLeftButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'left') } });
-                $('.getAlignCenterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'center') } });
-                $('.getAlignRightButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'right') } });
-                $('.getAlignJustifyButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'justify') } });
-                $('.getCitacaoDocumentoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getCitacaoDocumento(this) } });
-                $('.getNotaRodapeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNotaRodape(this) } });
-                $('.getRefInternaButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getRefInterna(this) } });
-                if (restrictConfigValue('ferramentasia')) $('.getOpenAIButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { loadOpenAI(this) } });
-                $('.getSumarioButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSumarioDocumento(this) } });
-                $('.getDadosProcessoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getDadosEditor(this) } });
-                $('.getTinyUrlButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
-                $('.getQrCodeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getQrCode(this) } });
-                $('.getPageBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPageBreak(this) } });
-                $('.getSessionBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSessionBreak(this) } });
-                $('.getLatexButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
-                $('.getBatchImgQualityButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogBatchImgQuality(this) } });
-                $('.getInsertCheckboxButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getInsertCheckboxButtom(this) } });
-                $('.getProcessoPublicoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
-                $('.getMinutaWatermarkButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
-                $('.pageImageBackgroundButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { pageImageBackground(this) } });
-                $('.getMarkSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
-                $('.getBoxSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
-                $('.getReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxReview(this) } });
-                $('.getCtrReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrReview(this) } });
-                $('.getDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxDitado(this) } });
-                $('.getCtrDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrDitado(this) } });
-                $('.getNewStyleButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxStyleEditor(this) } });
-                // $('.getAutoSaveButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getAutoSave(this) } });
-                $('.getLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { initLegis(this) } });
-                // $('.getUploadImgBase64Buttom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogUploadImgBase64(this) } });
-                $('.cke_combo_button').on('click',function() { setDarkModeCkePanel(); });
-                initFunctions();
-                addStyleIframes(); 
+        if (isSEI_5) {
+            $('.ck.ck-toolbar__items').append(htmlButton('').default);
+            $('button[data-cke-tooltip-text="Inserir tabela"]').closest('.ck.ck-dropdown').after(htmlButton('').tables);
+            // $('button[data-cke-tooltip-text="Transformar o texto em MAI\u00DASCULO ou min\u00FAsculo"]').closest('.ck.ck-dropdown').append(htmlButton('').afterletters);
+            // $('button.copiar-formatacao__toolbar-button').before(htmlButton('').beforeCut);
+            $('button[data-cke-tooltip-text="Lista numerada"]').closest('.ck.ck-dropdown').after(htmlButton('').beforeList);
+            $('span.ck-file-dialog-button').after(htmlButton('').afterImage);
+            $('.ck.ck-toolbar__items').append(htmlButton('').newBlock);
+            setClickButtons();
+            initFunctions();
         } else {
-            addButton(TimeOut - 100);
-            console.log('addButton Reload => '+TimeOut);
+            if ( $(txaEditor).length && !$('.cke_buttonPro').length ) {
+                    if ( !$('#idEditor').length ) { $(isSEI_5 ? 'body' : '#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
+                        $(txaEditor).each(function(index){ 
+                            var idEditor = $(this).attr('id').replace('cke_', '');
+                            if ( $('iframe[title*="'+idEditor+'"]').contents().find('body').attr('contenteditable') == 'true' ) {
+                                $(this).find('span.cke_toolbox').append(htmlButton('').default);
+                                $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('').tables);
+                                $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('').afterletters);
+                                $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('').beforeCut);
+                                $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('').beforeList);
+                                $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('').afterImage);
+                                // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('').afterSave);
+                                $(this).find('span.cke_toolbox').append(htmlButton('').newBlock);
+                                insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
+                            } else {
+                                $(this).find('span.cke_toolbox').append(htmlButton('disable').default);
+                                $(this).find('span.cke_toolgroup .cke_button__table').before(htmlButton('disable').tables);
+                                $(this).find('span.cke_toolgroup .cke_button__minuscula').after(htmlButton('disable').afterletters);
+                                $(this).find('span.cke_toolgroup .cke_button__cut').before(htmlButton('disable').beforeCut);
+                                $(this).find('span.cke_toolgroup .cke_button__numberedlist').before(htmlButton('disable').beforeList);
+                                $(this).find('span.cke_toolgroup .cke_button__base64image').after(htmlButton('disable').afterImage);
+                                // $(this).find('span.cke_toolgroup .cke_button__save').after(htmlButton('disable').afterSave);
+                                $(this).find('span.cke_toolbox').append(htmlButton('disable').newBlock);
+                            }
+                        });
+                    setClickButtons();
+                    initFunctions();
+                    addStyleIframes(); 
+            } else {
+                addButton(TimeOut - 100);
+                console.log('addButton Reload => '+TimeOut);
+            }
         }
     }, 500);
+}
+const htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = '', important = '') => {
+    const htmlButton = isSEI_5
+    ? `
+        <button class="ck ck-button ck-off cke_iconPro cke_buttonPro ${classClick}" type="button" style="${extraStyle} ${important}" aria-labelledby="ck-editor__aria-label_${classClick}" tabindex="-1" aria-pressed="false" data-cke-tooltip-text="${title}" data-cke-tooltip-position="s">
+            <i class="${icon}"></i>
+            <span class="ck ck-button__label" id="ck-editor__aria-label_${classClick}">${title}</span>
+        </button>
+    `
+    : `
+        <a class="${classClick} cke_iconPro cke_button cke_buttonPro cke_button_off" href="#" title="${title}" hidefocus="true">
+            <span class="cke_button_icon cke_button__${cke_class}_icon" style="background: url('${icon}') ${extraStyle} ${important}">&nbsp;</span>
+            <span class="cke_button_label" aria-hidden="false">${title}</span>
+        </a>`;
+    return htmlButton;
+};
+const setClickButtons = () => {
+    $('.getTablestylesButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getSyleSelectedTable(this) } });
+    $('.getQuickTableButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { getQuickTable(this) } });
+    $('.importDocButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { importDocPro(this) } });
+    $('.getLinkLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getLegisSEI(this) } });
+    $('.getCapLetterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { convertFirstLetter(this) } });
+    $('.getFontSizeUpButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'up') } });
+    $('.getFontSizeDownButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { changeFontSize(this, 'down') } });
+    $('.getCopyStyleButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setCopyStyle(this) } });
+    $('.getAlignButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { openAlignText(this) } });
+    $('.getAlignLeftButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'left') } });
+    $('.getAlignCenterButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'center') } });
+    $('.getAlignRightButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'right') } });
+    $('.getAlignJustifyButtom').on('click',function() { if (!$(this).hasClass('cke_button_disabled')) { setAlignText(this, 'justify') } });
+    $('.getCitacaoDocumentoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getCitacaoDocumento(this) } });
+    $('.getNotaRodapeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNotaRodape(this) } });
+    $('.getRefInternaButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getRefInterna(this) } });
+    if (restrictConfigValue('ferramentasia')) $('.getPlataformAIButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { loadPlataformAI(this) } });
+    $('.getSumarioButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSumarioDocumento(this) } });
+    $('.getDadosProcessoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getDadosEditor(this) } });
+    $('.getTinyUrlButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
+    $('.getQrCodeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getQrCode(this) } });
+    $('.getPageBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getPageBreak(this) } });
+    $('.getSessionBreakButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSessionBreak(this) } });
+    $('.getLatexButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogLatex(this) } });
+    $('.getBatchImgQualityButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogBatchImgQuality(this) } });
+    $('.getInsertCheckboxButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getInsertCheckboxButtom(this) } });
+    $('.getProcessoPublicoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogProcessoPublicoPro(this) } });
+    $('.getMinutaWatermarkButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMinutaWatermark(this) } });
+    $('.pageImageBackgroundButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { pageImageBackground(this) } });
+    $('.getMarkSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getMarkSigilo(this) } });
+    $('.getBoxSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxSigilo(this) } });
+    $('.getReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxReview(this) } });
+    $('.getCtrReviewButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrReview(this) } });
+    $('.getDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxDitado(this) } });
+    $('.getCtrDitadoButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxCtrDitado(this) } });
+    $('.getNewStyleButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getBoxStyleEditor(this) } });
+    // $('.getAutoSaveButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getAutoSave(this) } });
+    $('.getLegisButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { initLegis(this) } });
+    // $('.getUploadImgBase64Buttom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { openDialogUploadImgBase64(this) } });
+    $('.cke_combo_button').on('click',function() { setDarkModeCkePanel(); });
+}
+function removeDataCkeSavedImg() {
+    $(editorTitle).each(function(){
+        var iframe = $(this).contents();
+        if ( iframe.find('body').attr('contenteditable') == 'true' ) {
+            iframe.find('img').removeAttr('data-cke-saved-src');
+        }
+    });
 }
 function addStyleIframes(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -356,7 +499,6 @@ function addStyleIframes(TimeOut = 9000) {
                 $(this).attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()').removeAttr('title');
             }
         });
-        var editorTitle = ($('#frmEditor').length > 0) ? 'iframe[title*="txaEditor_"]' : 'iframe[title*="txaConteudo"]';
         if ( $(editorTitle).eq(0).contents().find('head').find('style[data-style="seipro"]').length == 0 ) {
             $(editorTitle).each(function(){
                 var iframe = $(this).contents();
@@ -474,15 +616,14 @@ function setOnBodyActs(iframe) {
             hideLinkTips(iframe);
             hideReviewTips(iframe);
         }
+        removeDataCkeSavedImg();
         hideQuickTable();
         setActionCheckbox(iframe);
         setTimeout(() => {
             setOnKeyEditor();
         }, 1000);
     }).on('mouseup', function(e) { 
-        applyCopyStyle();
-        activeIconsSelectedText();
-        closeAlignText();
+        initCKEDITOR_SEIPRO(e);
     }).on('blur', function(e) { 
         hideLinkTips(iframe);
         hideReviewTips(iframe);
@@ -490,6 +631,23 @@ function setOnBodyActs(iframe) {
         removeCopyStyle();
         closeAlignText();
     });
+}
+function initCKEDITOR_SEIPRO(e, TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    if (typeof oEditor !== 'undefined') { 
+        applyCopyStyle();
+        activeIconsSelectedText();
+        closeAlignText();
+    } else {
+        if (TimeOut == 9000) {
+            var force = CKEDITOR.instances[$(e.currentTarget).attr('data-editor')];
+            setCKEDITOR_instances(force || false);
+        }
+        setTimeout(function(){ 
+            initCKEDITOR_SEIPRO(e, TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initCKEDITOR_SEIPRO'); 
+        }, 500);
+    }
 }
 function setDarkModeCkePanel() {
     var iframeCkePanel = $('iframe.cke_panel_frame').contents();
@@ -516,26 +674,156 @@ function setBgTableColor(this_) {
         $(this_).addClass('dark-mode-color-'+textColour);
     }
 }
-function setCKEDITOR_instances() {
+function extrairTextoComNumeracao(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const paragrafos = doc.querySelectorAll('p');
+    const resultado = [];
+
+    const counters = {
+        'item-n1': 0,
+        'item-n2': 0,
+        'item-n3': 0,
+        'item-n4': 0,
+        'paragrafo-n1': 0,
+        'paragrafo-n2': 0,
+        'paragrafo-n3': 0,
+        'paragrafo-n4': 0,
+        'romano_maiusculo': 0,
+        'letra_minuscula': 0,
+    };
+
+    const toRoman = (num) => {
+        const romans = ['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+        const values = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+        let result = '', i = 0;
+        while (num > 0) {
+            while (num >= values[i]) {
+                result += romans[i];
+                num -= values[i];
+            }
+            i++;
+        }
+        return result;
+    };
+
+    const toLetter = (num) => {
+        let result = '', n = num;
+        while (n > 0) {
+            n--;
+            result = String.fromCharCode(97 + (n % 26)) + result;
+            n = Math.floor(n / 26);
+        }
+        return result;
+    };
+
+    paragrafos.forEach(p => {
+        const cls = p.className;
+        let prefixo = '';
+
+        if (cls.includes('Item_Nivel1')) {
+            counters['item-n1']++;
+            counters['item-n2'] = counters['item-n3'] = counters['item-n4'] = 0;
+            prefixo = `${counters['item-n1']}.`;
+
+        } else if (cls.includes('Item_Nivel2')) {
+            counters['item-n2']++;
+            counters['item-n3'] = counters['item-n4'] = 0;
+            prefixo = `${counters['item-n1']}.${counters['item-n2']}.`;
+
+        } else if (cls.includes('Item_Nivel3')) {
+            counters['item-n3']++;
+            counters['item-n4'] = 0;
+            prefixo = `${counters['item-n1']}.${counters['item-n2']}.${counters['item-n3']}.`;
+
+        } else if (cls.includes('Item_Nivel4')) {
+            counters['item-n4']++;
+            prefixo = `${counters['item-n1']}.${counters['item-n2']}.${counters['item-n3']}.${counters['item-n4']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel1')) {
+            counters['paragrafo-n1']++;
+            counters['paragrafo-n2'] = counters['paragrafo-n3'] = counters['paragrafo-n4'] = 0;
+            prefixo = `${counters['paragrafo-n1']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel2')) {
+            counters['paragrafo-n2']++;
+            counters['paragrafo-n3'] = counters['paragrafo-n4'] = 0;
+            prefixo = `${counters['paragrafo-n1']}.${counters['paragrafo-n2']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel3')) {
+            counters['paragrafo-n3']++;
+            counters['paragrafo-n4'] = 0;
+            prefixo = `${counters['paragrafo-n1']}.${counters['paragrafo-n2']}.${counters['paragrafo-n3']}.`;
+
+        } else if (cls.includes('Paragrafo_Numerado_Nivel4')) {
+            counters['paragrafo-n4']++;
+            prefixo = `${counters['paragrafo-n1']}.${counters['paragrafo-n2']}.${counters['paragrafo-n3']}.${counters['paragrafo-n4']}.`;
+
+        } else if (cls.includes('Item_Inciso_Romano')) {
+            counters['romano_maiusculo']++;
+            counters['letra_minuscula'] = 0;
+            prefixo = `${toRoman(counters['romano_maiusculo'])} -`;
+
+        } else if (cls.includes('Item_Alinea_Letra')) {
+            counters['letra_minuscula']++;
+            prefixo = `${toLetter(counters['letra_minuscula'])})`;
+        }
+
+        const texto = p.textContent.trim();
+        resultado.push(prefixo ? `${prefixo} ${texto}` : texto);
+    });
+
+    return resultado.join('\n');
+}
+function getAllTextEditor(extract_number = false) {
+    let textEditor = '';
+
+    for (var id in CKEDITOR.instances) {
+        textEditor += extract_number 
+            ? extrairTextoComNumeracao(CKEDITOR.instances[id].getData())
+            : $('<div>').html(CKEDITOR.instances[id].getData()).text();
+    }
+return textEditor
+}
+function getSelectedHtmlFromCKEditor() {
+    const selection = oEditor.getSelection();
+    const range = selection && selection.getRanges()[0];
+
+    if (range) {
+        const fragment = range.clone().cloneContents();
+        const container = new CKEDITOR.dom.element('div');
+        container.append(fragment);
+        return container.getHtml();
+    }
+
+    return '';
+}
+function setCKEDITOR_instances(force = false) {
     for(var id in CKEDITOR.instances) {
         CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere \u00BA no mac (option+0)
         CKEDITOR.instances[id].on('focus', function(e) {
-            // Fill some global var here
-            idEditor = e.editor.name;
-            oEditor = CKEDITOR.instances[idEditor];
-            iframeEditor = ($('#frmEditor').length > 0) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor);
-            $('#idEditor').val(idEditor);
-            if ( iframeEditor.find('body').attr('contenteditable') == 'true' || $('#frmEditor').length == 0) {
-                $('#cke_'+idEditor).find('.cke_iconPro').removeClass('cke_button_disabled');
-            }
-            if (checkConfigValue('editarimagens')) editImgPro(oEditor);
-            loadResizeImg();
-            insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
-            if (checkConfigValue('teclasatalho')) stylesEditorKeystroke();
-            instanceDitadoPro(oEditor);
-            checkHostLimitIcons();
+            setCKEDITOR_SEIPRO(e);
         });
     }
+    if (force) {
+        setCKEDITOR_SEIPRO({editor: force});
+    }
+}
+function setCKEDITOR_SEIPRO(e) {
+    // Fill some global var here
+    idEditor = e.editor.name;
+    oEditor = CKEDITOR.instances[idEditor];
+    iframeEditor = (frmEditor.length) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor);
+    $('#idEditor').val(idEditor);
+    if ( iframeEditor.find('body').attr('contenteditable') == 'true' || frmEditor.length == 0) {
+        $('#cke_'+idEditor).find('.cke_iconPro').removeClass('cke_button_disabled');
+    }
+    if (checkConfigValue('editarimagens')) editImgPro(oEditor);
+    loadResizeImg();
+    insertFontIcon('head',$('iframe[title*="'+idEditor+'"]').contents());
+    if (checkConfigValue('teclasatalho')) stylesEditorKeystroke();
+    instanceDitadoPro(oEditor);
+    checkHostLimitIcons();
 }
 function checkHostLimitIcons() {
     if (checkHostLimit()) {
@@ -585,10 +873,10 @@ function getPageBreak(this_) {
     var htmlBreakPage = '<div class="pageBreakPro" style="page-break-after: always"></div>';
     var select = oEditor.getSelection().getStartElement();
     var pElement = $(select.$).closest('p');
-    if ( pElement.length > 0 ) {
+    if ( pElement.length ) {
         oEditor.focus();
         oEditor.fire('saveSnapshot');
-        if ($('#frmEditor').length > 0) {
+        if (frmEditor.length) {
             iframeEditor.find(pElement).before(htmlBreakPage);
         } else {
             pElement.before(htmlBreakPage);
@@ -603,10 +891,10 @@ function getSessionBreak(this_) {
     var htmlSessionPage = '<p class="sessionBreakPro" style="counter-reset: paragrafo-n1 paragrafo-n2 paragrafo-n3 paragrafo-n4 romano_maiusculo letra_minuscula item-n1 item-n2 item-n3 item-n4 "></p>';
     var select = oEditor.getSelection().getStartElement();
     var pElement = $(select.$).closest('p');
-    if ( pElement.length > 0 ) {
+    if ( pElement.length ) {
         oEditor.focus();
         oEditor.fire('saveSnapshot');
-        if ($('#frmEditor').length > 0) {
+        if (frmEditor.length) {
             iframeEditor.find(pElement).before(htmlSessionPage);
         } else {
             pElement.before(htmlSessionPage);
@@ -744,7 +1032,7 @@ function actionsMarkSigilo(this_, mode, text = false, increment = false) {
             var i = 0;
             var displayResult = '';
             var tagSigilo = iframeEditor.find('p:contains("'+textFind+'") span.sigiloSEI');
-            if (tagSigilo.length > 0) { tagSigilo.after(tagSigilo.html()).remove() }
+            if (tagSigilo.length) { tagSigilo.after(tagSigilo.html()).remove() }
             var matches = iframeEditor.find('p').map(function(){ return $(this).text() }).get().join(' ').match(new RegExp('\\b'+textFind+'\\b', 'igm'));
                 i = matches ? matches.length : 0;
             if (i > 0) {
@@ -822,11 +1110,11 @@ function actionsMarkSigilo(this_, mode, text = false, increment = false) {
         oEditor.focus();
         $('#tabSigilo2_result').html('');
         var arrayEmails = extractEmails(iframeEditor.text());
-            arrayEmails = (arrayEmails.length > 0) ? uniqPro(arrayEmails) : [];
+            arrayEmails = (arrayEmails.length) ? uniqPro(arrayEmails) : [];
         var arrayCPFs = extractCPFs(iframeEditor.text());
-            arrayCPFs = (arrayCPFs.length > 0) ? uniqPro(arrayCPFs) : [];
+            arrayCPFs = (arrayCPFs.length) ? uniqPro(arrayCPFs) : [];
         var arrayDadosSensiveis = $.merge(arrayCPFs, arrayEmails);
-            if (arrayDadosSensiveis.length > 0) {
+            if (arrayDadosSensiveis.length) {
                 $.each(arrayDadosSensiveis, function(i,v){
                     actionsMarkSigilo(this_, 'replace', v, true);
                 });
@@ -1416,7 +1704,7 @@ function quickTableClick(this_) {
         htmlTable += '</table>';
     var select = oEditor.getSelection().getStartElement();
     var pElement = $(select.$).closest('p');
-    if ( pElement.length > 0 ) {
+    if ( pElement.length ) {
         oEditor.focus();
         oEditor.fire('saveSnapshot');
         iframeEditor.find(pElement).after(htmlTable);
@@ -1443,7 +1731,7 @@ function detectSyleSelectedTable() {
     return tableElement;
 }
 function activeIconsSelectedText() {
-    if ( detectSyleSelectedTable().length > 0 ) {
+    if ( detectSyleSelectedTable().length ) {
         $('#cke_'+idEditor).find('.getTablestylesButtom').removeClass('cke_button_disabled');
     } else {
         $('#cke_'+idEditor).find('.getTablestylesButtom').addClass('cke_button_disabled');
@@ -1460,10 +1748,10 @@ function activeIconsSelectedText() {
 }
 function getSyleSelectedTable(this_) {
     setParamEditor(this_);
-    if ( detectSyleSelectedTable().length > 0 ) {
+    if ( detectSyleSelectedTable().length ) {
             oEditor.openDialog('TabelaSEI');
     } else {
-        alert('Clique na tabela que deseja aplicar o estilo!');
+        alertaBoxPro('Error', 'exclamation-triangle', 'Clique na tabela que deseja aplicar o estilo!');
     }
 }
 function changeColorTable(this_) {
@@ -1573,7 +1861,7 @@ function setSyleTable(value) {
 				styleTd = ( index_td == 0 && index_tr != 0 ) ? arrayStyle.td_first : arrayStyle.td;
 				styleTd = ( index_tr == 0 ) ? arrayStyle.td_head : styleTd;
 				$(this).attr('style', styleTd);
-				if ( $(this).find('p').length > 0 ) {
+				if ( $(this).find('p').length ) {
 					$(this).find('p').attr('class', classTdP);
 				} else {
 					$(this).html('<p class="'+classTdP+'">'+$(this).html()+'</p>');
@@ -1599,10 +1887,10 @@ function sendLegisSEI(nomeLegis) {
 		data: { norma: [nomeLegis] },
 		success: function(legisData){
             if (  legisData[0].status == 0 ) {
-                alert('Nenhuma legisla\u00E7\u00E3o encontrada');
+                alertaBoxPro('Error', 'exclamation-triangle', 'Nenhuma legisla\u00E7\u00E3o encontrada');
             } else {
-                var nomeLegis = ( legisData.length > 0 && legisData[0].NomeNorma ) ? '&nbsp;('+legisData[0].NomeNorma+')' : '';
-                var htmlLegis = ( legisData.length > 0 ) ? '<a class="ancoraSei legisSeiPro" data-norma="'+legisData[0].SiglaNorma+'" data-normafull="'+legisData[0].DescNormaFull+'" data-index="0" href="'+legisData[0].Link+'" target="_blank">'+legisData[0].DescNormaFull+nomeLegis.trim()+'</a>' : '';
+                var nomeLegis = ( legisData.length && legisData[0].NomeNorma ) ? '&nbsp;('+legisData[0].NomeNorma+')' : '';
+                var htmlLegis = ( legisData.length ) ? '<a class="ancoraSei legisSeiPro" data-norma="'+legisData[0].SiglaNorma+'" data-normafull="'+legisData[0].DescNormaFull+'" data-index="0" href="'+legisData[0].Link+'" target="_blank">'+legisData[0].DescNormaFull+nomeLegis.trim()+'</a>' : '';
                 oEditor.focus();
                 oEditor.fire('saveSnapshot');
                 oEditor.insertHtml(htmlLegis);
@@ -1687,7 +1975,7 @@ function getSearchLegis(this_) {
 		success: function(legisData){
             if (  legisData.status == 0 ) {
                 $('#searchLegis_load').hide();
-                alert('Erro interno do servidor :( Tente novamente mais tarde');
+                alertaBoxPro('Error', 'exclamation-triangle', 'Erro interno do servidor :( Tente novamente mais tarde');
             } else {
                 var htmlResult =      '<table>'+
                                       ' <tbody>';
@@ -1998,20 +2286,19 @@ function convertFirstLetter(this_) {
         var text = capitalizeFirstLetter(selectTxt);
         oEditor.insertHtml(text);
     } else {
-        alert('Selecione um texto para convers\u00E3o');
+        alertaBoxPro('Error', 'exclamation-triangle', 'Selecione um texto para convers\u00E3o');
     }
 }
 
 function getCitacaoDocumento(this_, TimeOut = 9000) {
     if (checkProcessoSigiloso()) {
-        CKEDITOR.dialog.add( 'CitaSEI', function(editor) { return getDialogNaoDisponivel('Inserir refer\u00EAncia de documento do processo') } );
+        alertaBoxPro('Error', 'exclamation-triangle', ' N\u00E3o dispon\u00EDvel para processos sigilosos');
         setParamEditor(this_);
-        oEditor.openDialog('CitaSEI');
     } else {
         if (TimeOut <= 0) { return; }
         if (typeof dadosProcessoPro.listDocumentos !== 'undefined') { 
             setParamEditor(this_);
-            oEditor.openDialog('CitaSEI');
+            getDialogCitacaoDocumento();
         } else {
             setTimeout(function(){ 
                 getCitacaoDocumento(this_, TimeOut - 100); 
@@ -2023,67 +2310,62 @@ function getCitacaoDocumento(this_, TimeOut = 9000) {
 }
 function getDialogCitacaoDocumento() {
     if (!checkProcessoSigiloso()) {
-        var listDocumentos = [['']];
-        $.each(dadosProcessoPro.listDocumentos, function (index, value) {
-            var select_value = value.id_protocolo;
+        var listDocumentos = $.map(dadosProcessoPro.listDocumentos, function (value) {
             var select_text = ( value.nr_sei != '' ) ? value.documento+' ('+value.nr_sei+')' : value.documento;
-            if ( value.documento != '' ) { listDocumentos.push([select_text, select_value]) }
-        });
+            if ( value.documento != '' ) { return `<option value="${value.id_protocolo}">${select_text}</option>`; }
+        }).join('');
 
-        CKEDITOR.dialog.add( 'CitaSEI', function(editor)
-        {
-            return {
+        const htmlBox = sanitizeHTML(`
+            <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+                <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                    <tr>
+                        <td style="vertical-align: bottom; text-align: left;" class="label">
+                            <label for="selectCitacaoDocumento"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>Documentos do processo:</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select multiple="multiple" id="selectCitacaoDocumento">
+                            ${listDocumentos}
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        `);
+
+        resetDialogBoxPro('dialogBoxPro');
+        dialogBoxPro = $('#dialogBoxPro')
+            .html(htmlBox)
+            .dialog({
                 title : 'Inserir refer\u00EAncia de documento do processo',
-                minWidth : 600,
-                minHeight : 120,
-                buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-                onShow: function() {
-                    if (verifyConfigValue('substituiselecao')) setChosenInCke(true);
+                width : 600,
+                height : 220,
+                open: function () {
+                    initChosenReplace('box_multiple', this, true);
+                    $('#selectCitacaoDocumento').on('change', function() { resizeHeigthDialogBox(dialogBoxPro) });
                 },
-                onOk: function(event, a, b) {
-                    if (verifyConfigValue('substituiselecao')) {
-                        var selectMult = $('.cke_dialog_ui_input_select select[multiple="multiple"] option:checked');
+                buttons: [{
+                    text: 'Inserir',
+                    class: 'confirm ui-state-active',
+                    click: function(event) { 
+                        var selectMult = $('#selectCitacaoDocumento option:checked');
                         var list_protocolo = $.map(selectMult,function(e){
                             if (e.value != '') return e.value
                         });
-                        // console.log(list_protocolo);
-                        if ($.isArray(list_protocolo) && list_protocolo.length > 0) {
+                        if ($.isArray(list_protocolo) && list_protocolo.length) {
                             $.each(list_protocolo, function(index, id_protocolo){
-                                // console.log(index, id_protocolo);
                                 if (id_protocolo != '') {
                                     var insert = insertCitacaoDocumento(id_protocolo);
                                     if (insert && index < list_protocolo.length-2) oEditor.insertText(', ');
                                     if (insert && index == list_protocolo.length-2) oEditor.insertText(' e ');
                                 }
                             });
-                            event.data.hide = true;
-                        }
-                    } else {
-                        var id_protocolo = this.getContentElement('tab1', 'listDocumento').getValue();
-                        if (id_protocolo != '') {
-                            insertCitacaoDocumento(id_protocolo);
+                            resetDialogBoxPro('dialogBoxPro');
                         }
                     }
-                },
-                contents :
-                [
-                {
-                    id : 'tab1',
-                    label : 'Refer\u00EAncia de documento do processo',
-                    elements :
-                    [
-                        {
-                            type: 'select',
-                            id: 'listDocumento',
-                            label: 'Documentos do Processo',
-                            items: listDocumentos,
-                            'default': ''
-                        }
-                    ]
-                }
-                ]
-            };
-        } );
+                }]
+            });
     }
 }
 function insertCitacaoDocumento(id_protocolo) {
@@ -2319,7 +2601,7 @@ function reorderNtRodape(iframeEditor) {
         var dataRef = $(this).attr('data-ntrodape-ref');
         var ntRodapeId = parseInt($(this).attr('data-ntrodape'));
         var htmlFooter = $(this).closest('p')[0].outerHTML;
-        if ( iframeEditor.find('.ntRodape_item[data-ntrodape-ref='+dataRef+']').length > 0 ) {
+        if ( iframeEditor.find('.ntRodape_item[data-ntrodape-ref='+dataRef+']').length ) {
             arrayFooters.push({id:ntRodapeId, html: htmlFooter});
         }
         $(this).closest('p').remove();
@@ -2333,7 +2615,7 @@ function reorderNtRodape(iframeEditor) {
 }
 function initAddButtonTarjaSigilo(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if ($('.getMarkSigiloButton').length > 0) { 
+    if ($('.getMarkSigiloButton').length) { 
         addButtonTarjaSigilo()
     } else {
         setTimeout(function(){ 
@@ -2343,7 +2625,7 @@ function initAddButtonTarjaSigilo(TimeOut = 9000) {
     }
 }
 function addButtonTarjaSigilo() {
-    var icon16baseTarjaSigilo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAeBQTFRFAAAApaWlo6OjoKCgnZ2dmpqal5eXlJSUkJCQpKSkoqKivLy8ysrKzMzMwsLCra2tjIyMiYmJpKSkoaGhxMTEvr6+oaGhlpaWk5OTl5eXrq6uhISEgYGBoaGhurq6v7+/mJiYlJSUkZGRjo6OioqKh4eHqKios6R72KVX27GF0J1G0ZUrnZ2dk5OTgoKCqZlk6L538NK0//Pl79Ksx4xJmZmZxsbGlJSUj4+P3bIm69N++eOy58CL9tOu/ODE059m4cNhqKCIkZGRjo6O3Lla37hV3rVR3bFN3rA/7tR8/fbE9t1s7cpt16Nj0ptdyZJP4cJg/PPJ/fPL/vbU//bX//TY//jg9eOp7tN5/ffH9dxf9+Jb8tZ63pg+zI1C4L9c/PPI+d91/eaJ/+eV/+Wa5sp56Mt39dxe9+Fa8dR73plI1o0o37tY/PHH+dxv7btW771h5sZx1rhy/fbC999j+OJd8NN525dD9dyo1Ige3rdT/PDG+Nlq/eJ82bdj1bZ60beQ5MlV9d9b7dB43JdB7bpE+ee204MY3bJO++/D+NZl7LZMqolD//Lg2JpUvnoaxZhJxYU23psz775C+eW00n4TAAAAhWcs+ceU+cmRyYVBQigMWkETiWEps4FFMicSJ8ijcQAAAKB0Uk5TAAyBuszMuoEMMN7//////94wDNv/////////2wl1///dHwUFH+X//////5muKSn///////3D//8IZP///////////////////////////TL//////////////////zf//////////////////////////////////////////////////////////////////////////////////////41iaEMAAADYSURBVHicY2BgYGBkYmZhZWPnYIACTi5uHl4ePn4BQQhfSFhEVExcQlJKSloGLCArJ6+gqKSsoqqmrqGppc3AoCMipguS0NM3MDQyNmFgMDUztwAJWFpZ29ja2TM4ODo5u7i6uXt4enn7+Pr5MwQEBgWHhIaFR0RGRcfExjEwxCckJiWnpKZFpmdkZmUDtebk5uUXFBYVl5SWlVdUAgWqqmtq6+obGpuaW1rb2oECHZ1d3T29ff0TJk6aPGUqUGAaEEyfMXPW7GkQABaYM3fe/GnIAsgAQwAAnahR/kU9cZYAAAAASUVORK5CYII=';
+    var icon16baseTarjaSigilo = URL_SPRO + 'icons/menu/tarjasigilo.png';
     var htmlButtonAfterLetters =    '   <a class="getTarjaSigiloButton cke_iconPro cke_button cke_buttonPro cke_button_off" href="#" title="Adicionar tarja de sigilo no texto" hidefocus="true">'+
                                     '      <span class="cke_button_icon" style="background: url(\''+icon16baseTarjaSigilo+'\');">&nbsp;</span>'+
                                     '      <span class="cke_button_label" aria-hidden="false">Adicionar tarja de sigilo no texto</span>'+
@@ -2396,7 +2678,7 @@ function setDocCertidao() {
                             '<p class="Texto_Alinhado_Esquerda"><br></p>';
                             
             var elemIframe = $('iframe').filter(function(){ return $(this).contents().find('body').attr('contenteditable') == 'true' }).eq(0)
-            if (elemIframe.length > 0) {
+            if (elemIframe.length) {
                 var iframe = elemIframe.contents();
                 if (elemIframe.attr('title').indexOf(',') !== -1) {
                     var idEditor = elemIframe.attr('title').split(',')[1].trim();
@@ -2460,7 +2742,7 @@ function setDocAutomatico() {
         setCKEDITOR_instances();
         initAddButtonTarjaSigilo();
         var elemIframe = $('iframe').filter(function(){ return $(this).contents().find('body').attr('contenteditable') == 'true' }).eq(0)
-        if (elemIframe.length > 0) {
+        if (elemIframe.length) {
             var iframe = elemIframe.contents();
             if (elemIframe.attr('title').indexOf(',') !== -1) {
                 var idEditor = elemIframe.attr('title').split(',')[1].trim();
@@ -2493,12 +2775,12 @@ function replaceDadosEditor(this_) {
     var docs = dadosProcessoPro.listDocumentos;
 
     var tagField = iframeEditor.find('body').find('span.hashField');
-    if (tagField.length > 0) { tagField.after(tagField.html()).remove() }
+    if (tagField.length) { tagField.after(tagField.html()).remove() }
 
     var dadosProcesso = camposDinamicosProcesso(arrayTags);
     var dadosTags = [];
         $.each(prop.txaTagsObservacoes, function (index, valueTag) {
-            if (valueTag.unidade != unidade) {
+            if (valueTag.unidade != siglaUnidadeAtual) {
                 $.each(valueTag.tags, function (i, v) {
                     var isRegex = new RegExp(v.value, 'i').test(undefined);
                     dadosProcesso[v.name] = '<span class="ancoraSei dynamicField">'+v.value+'</span>';
@@ -2507,7 +2789,7 @@ function replaceDadosEditor(this_) {
             }
         });
         $.each(prop.txaTagsObservacoes, function (index, valueTag) {
-            if (valueTag.unidade == unidade) {
+            if (valueTag.unidade == siglaUnidadeAtual) {
                 $.each(valueTag.tags, function (i, v) {
                     dadosProcesso[v.name] = '<span class="ancoraSei dynamicField">'+v.value+'</span>';
                     dadosTags.push(v.name);
@@ -2570,6 +2852,8 @@ function arrayDadosEditor() {
             listaDadosEditor.push(['Observa\u00E7\u00E3o ('+value.unidade+'): '+valueObs,value.observacao]);
         });
         listaDadosEditor.push(['Hoje: '+moment().format('LL'),moment().format('LL')]);
+        listaDadosEditor.push(['Ano: '+moment().format('Y'),moment().format('Y')]);
+        listaDadosEditor.push(['QRCode do Processo',getQRProcesso()]);
         $.each(prop.txaTagsObservacoes, function (index, valueTag) {
             $.each(valueTag.tags, function (i, v) {
                 var vObs = ( v.value.length > 100 ) ? v.value.replace(/^(.{100}[^\s]*).*/, "$1")+'...' : v.value;
@@ -2590,7 +2874,7 @@ function getDadosEditor(this_, TimeOut = 9000) {
         oEditor.openDialog('DadosSEI');
     } else {
         if (TimeOut <= 0) { return; }
-        if (typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.listDocumentos !== 'undefined' && arrayDadosEditor().length > 0) { 
+        if (typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.listDocumentos !== 'undefined' && arrayDadosEditor().length) { 
             setParamEditor(this_);
             oEditor.openDialog('DadosSEI');
         } else {
@@ -2609,7 +2893,7 @@ function getDialogDadosEditor() {
     if (!checkProcessoSigiloso()) {
         var tableNewDynamicField = '';
         var dadosEditorArray = arrayDadosEditor();
-        var tagsArray = jmespath.search(dadosProcessoPro.propProcesso.txaTagsObservacoes, "[?unidade=='"+unidade+"'] | [0]");
+        var tagsArray = jmespath.search(dadosProcessoPro.propProcesso.txaTagsObservacoes, "[?unidade=='"+siglaUnidadeAtual+"'] | [0]");
         tagsArray = (tagsArray === null) ? jmespath.search(dadosProcessoPro.propProcesso.txaTagsObservacoes, "[?unidade==''] | [0]") : tagsArray;
             tableNewDynamicField =        '<table role="presentation" class="cke_dialog_ui_hbox tableZebra">'+
                                         ' <thead>'+
@@ -2788,6 +3072,8 @@ function getDialogDadosEditor() {
                                 '                       '+getDialogDadosEditor_htmlListTag('totaldocumentos', 'N\u00FAmero de documentos do processo</em>')+
                                 '                       '+getDialogDadosEditor_htmlListTag('documentos_lista', 'Lista de todos os documentos do processo (em formato de lista)</em>')+
                                 '                       '+getDialogDadosEditor_htmlListTag('hoje', 'Data de hoje <em>(em formato [dia] de [m\u00EAs] de [ano])</em>')+
+                                '                       '+getDialogDadosEditor_htmlListTag('ano', 'Ano corrente <em>(em formato de 4 d\u00EDgitos [YYYY])</em>')+
+                                '                       '+getDialogDadosEditor_htmlListTag('qrcode', 'QRCode do link para acesso ao processo (SEI Interno)</em>')+
                                 '                   </tbody>'+
                                 '                  </table>'+
                                 '                  <label class="cke_dialog_ui_labeled_label" style="margin-top: 15px; display: block;"><span style="font-size: 10pt;"><i class="fas fa-user-ninja roxoColor" style="font-size: 12pt;"></i> Fun\u00E7\u00F5es Avan\u00E7adas</span></label>'+
@@ -2908,17 +3194,17 @@ function updateDynamicField() {
         $('#tabNewDynamicField_result').find('table tbody tr').each(function(index, value){
             var name = $(this).find('td').eq(0).find('b').text().trim().replace('#', '');
             var value = $(this).find('td').eq(1).find('em').text().trim();
-            $('#'+selectId).append('<option value="'+value+'">Personalizado ('+unidade+') #'+name+': '+value+'</option>');
+            $('#'+selectId).append('<option value="'+value+'">Personalizado ('+siglaUnidadeAtual+') #'+name+': '+value+'</option>');
             arrayNewDynamicField.push({name: name, value: value});
             txtObsDynamicField += '#'+name+': '+value+'\n';
         });
     
         $.each(dadosProcessoPro.propProcesso.txaTagsObservacoes, function(index, value){
-            if (value.unidade == unidade) {
+            if (value.unidade == siglaUnidadeAtual) {
                 dadosProcessoPro.propProcesso.txaTagsObservacoes[index].tags = arrayNewDynamicField;
             }
         });
-    var txaObservacoes = jmespath.search(dadosProcessoPro.propProcesso.txaObservacoes, "[?unidade=='"+unidade+"'].observacao | [0]")
+    var txaObservacoes = jmespath.search(dadosProcessoPro.propProcesso.txaObservacoes, "[?unidade=='"+siglaUnidadeAtual+"'].observacao | [0]")
         txtObsDynamicField = (txaObservacoes !== null) ? txtObsDynamicField+txaObservacoes : txtObsDynamicField;
         updateDadosProcesso('txaObservacoes', txtObsDynamicField);
         console.log('arrayNewDynamicField', arrayNewDynamicField, txtObsDynamicField);
@@ -2941,7 +3227,7 @@ function insertDadosEditor(value) {
 }
 function getSumarioDocumento(this_) {
     setParamEditor(this_);
-    oEditor.openDialog('SumarioSEI');
+    getDialogSumarioDocumento();
 }
 function getListStylesDocumento() {
     var arrayStylesDoc = [];
@@ -2957,11 +3243,10 @@ function getListStylesDocumento() {
     });
     arrayStylesDoc = uniqPro(arrayStylesDoc);
 
-    var arrayStyles = [['','']];
-    $.each(arrayStylesDoc, function (index, value) {
-        arrayStyles.push([value, '.'+value]);
-    });
-    return arrayStyles;
+    var optionsStyles = $.map(arrayStylesDoc, function (value) {
+        if (value) return `<option value=".${value}">${value}</option>`;
+    }).join('');
+    return optionsStyles;
 }
 function updateSelectDialog(element, array) {
     if ( $('select#'+element).length ) {
@@ -2972,6 +3257,74 @@ function updateSelectDialog(element, array) {
     }
 }
 function getDialogSumarioDocumento() {
+    var optionsStyles = getListStylesDocumento();
+    const htmlBox = sanitizeHTML(`
+        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="listStyle1"><i class="iconPopup iconSwitch fas fa-h1 cinzaColor"></i>Estilo do T\u00EDtulo 1 (obrigat\u00F3rio):</label>
+                    </td>
+                    <td>
+                        <select id="listStyle1" style="width: 350px;">
+                            ${optionsStyles}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="listStyle2"><i class="iconPopup iconSwitch fas fa-h2 cinzaColor"></i>Estilo do T\u00EDtulo 2:</label>
+                    </td>
+                    <td>
+                        <select id="listStyle2" style="width: 350px;">
+                            ${optionsStyles}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="listStyle3"><i class="iconPopup iconSwitch fas fa-h3 cinzaColor"></i>Estilo do T\u00EDtulo 3:</label>
+                    </td>
+                    <td>
+                        <select id="listStyle3" style="width: 350px;">
+                            ${optionsStyles}
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    `);
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html(htmlBox)
+        .dialog({
+            title : 'Inserir sum\u00E1rio',
+            width : 650,
+            height : 250,
+            open: function () {
+                initChosenReplace('box_init', this, true);
+            },
+            buttons: [{
+                text: 'Inserir',
+                class: 'confirm ui-state-active',
+                click: function(event) { 
+                    var arrayStylesUser = [];
+                    var id_style1 = $('#listStyle1' ).val();
+                    var id_style2 = $('#listStyle2' ).val();
+                    var id_style3 = $('#listStyle3' ).val();
+                    if ( id_style1 != '' ) { arrayStylesUser.push(id_style1); }
+                    if ( id_style2 != '' ) { arrayStylesUser.push(id_style2); }
+                    if ( id_style3 != '' ) { arrayStylesUser.push(id_style3); }
+                    if ( arrayStylesUser.length ) { 
+                        insertSumarioDocumento(arrayStylesUser);
+                        resetDialogBoxPro('dialogBoxPro');
+                    }
+                }
+            }]
+        });
+}
+function getDialogSumarioDocumento_() {
     var arrayStyles = getListStylesDocumento();
     CKEDITOR.dialog.add( 'SumarioSEI', function(editor)
       {
@@ -2988,7 +3341,7 @@ function getDialogSumarioDocumento() {
                 if ( id_style1 != '' ) { arrayStylesUser.push(id_style1); }
                 if ( id_style2 != '' ) { arrayStylesUser.push(id_style2); }
                 if ( id_style3 != '' ) { arrayStylesUser.push(id_style3); }
-                if ( arrayStylesUser.length > 0 ) { 
+                if ( arrayStylesUser.length ) { 
                     insertSumarioDocumento(arrayStylesUser);
                     event.data.hide = true;
                 }
@@ -3048,7 +3401,7 @@ function insertSumarioDocumento(arrayStylesUser) {
         });
     var select = oEditor.getSelection().getStartElement();
     var pElement = $(select.$).closest('p');
-    if ( pElement.length > 0 ) {
+    if ( pElement.length ) {
         oEditor.focus();
         oEditor.fire('saveSnapshot');
         iframeEditor.find(pElement).after(htmlSumario);
@@ -3059,48 +3412,56 @@ function insertSumarioDocumento(arrayStylesUser) {
 // GERA LINK CURTO
 function getTinyUrl(this_) {
     setParamEditor(this_);
-    oEditor.openDialog('TinyUrlSEI');
-}
-function getDialogTinyUrl() {
-      CKEDITOR.dialog.add( 'TinyUrlSEI', function(editor)
-      {
-         return {
+    const htmlBox = sanitizeHTML(`
+        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="urlTiny"><i class="iconPopup iconSwitch fas fa-compress-arrows-alt cinzaColor"></i>Insira o link que deseja encurtar:</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" id="urlTiny">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="aliasTiny"><i class="iconPopup iconSwitch fas fa-audio-description cinzaColor"></i>Insira um Nome Personalizado para o link (opcional):</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" id="aliasTiny">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label" id="tinyResult" colspan="2">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    `);
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html(htmlBox)
+        .dialog({
             title : 'Gerar link curto do TinyURL',
-            minWidth : 400,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-				var regex = /^[0-9A-Za-z\-]+$/;
-                var url_Tiny = this.getContentElement( 'tab1', 'urlTiny' ).getValue();
-                var alias_Tiny = this.getContentElement( 'tab1', 'aliasTiny' ).getValue();
-                if ( url_Tiny != '' && isValidHttpUrl(url_Tiny) && ( ( alias_Tiny != '' && regex.test(alias_Tiny) ) || alias_Tiny == '' ) ) {
-                    ajaxTinyUrl(url_Tiny, alias_Tiny, 'insert');
-                    event.data.hide = false;
-                } else {
-					if ( url_Tiny == '' || !isValidHttpUrl(url_Tiny) ) {
-						alert('Digite um link v\u00E1lido!');
-					} else if ( alias_Tiny != '' && !regex.test(alias_Tiny) ) {
-						alert('O nome personalizado deve conter apenas letras, n\u00FAmeros e travess\u00F5es!');
-					} else if ( alias_Tiny.length < 5 ) {
-                        alert('O nome personalizado deve ter mais de 4 (quatro) caracteres')
-					} else {
-						alert('Digite um link v\u00E1lido!');
-					}
-					event.data.hide = false;
-				}
-            },
-            onShow : function() {
+            width : 600,
+            height : 300,
+            open: function () {
+                initChosenReplace('box_multiple', this, true);
 				var selectTxt = oEditor.getSelection().getSelectedText();
-				var idInputUrl = this.getContentElement( 'tab1', 'urlTiny' )._.inputId;
-				var idInputAlias = this.getContentElement( 'tab1', 'aliasTiny' )._.inputId;
 				setTimeout(function(){ 
-					$('#tinyResult').html('');							
+					$('#tinyResult').html('');	
+                    $('#urlTiny').focus();						
 					if ( selectTxt != '' && isValidHttpUrl(selectTxt) ) {
-						$('.cke_dialog #'+idInputUrl).val(selectTxt);
+						$('#urlTiny').val(selectTxt);
 					}
-					$('.cke_dialog #'+idInputAlias).unbind('keyup').keyup(function() {
+					$('#aliasTiny').unbind('keyup').keyup(function() {
 						$('#tinyResult').html('');
-						var alias = $('.cke_dialog #'+idInputAlias).val();
+						var alias = $('#aliasTiny').val();
 						if ( alias != '' ) {
 							var regex = /^[0-9A-Za-z\-]+$/;
 							var htmlTinyResult = ( regex.test(alias) ) ? 'Resultado: <a class="linkDialog" style="cursor: auto;">https://tinyurl.com/'+alias+'</a>' : '<strong style="color:red;">O nome personalizado deve conter apenas letras, n\u00FAmeros e travess\u00F5es.</strong>';
@@ -3109,43 +3470,31 @@ function getDialogTinyUrl() {
 					});
 				}, 100);
             },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Gerar link curto do TinyURL',
-                  elements :
-                  [
-                    {
-             			type: 'text',
-             			id: 'urlTiny',
-             			label: 'Insira o link que deseja encurtar',
-						required : true,
-             			'default': ''
-             		},{
-             			type: 'text',
-             			id: 'aliasTiny',
-             			label: 'Insira um Nome Personalizado para o link (opcional)',
-						width: '150px',
-             			'default': '',
-						commit : function( element )
-						{
-							var regex = /^[0-9A-Za-z\-]+$/;
-							var text = this.getValue();
-							if (!regex.test(text)) {
-								alert("O nome personalizado deve conter apenas letras, n\u00FAmeros e travess\u00F5es.");
-								return false;
-							}
-						} 
-             		},{
-						type: 'html',
-						html: '<div id="tinyResult"></div>'
-					}
-                  ]
-               }
-            ]
-         };
-      } );
+            buttons: [{
+                text: 'Inserir',
+                class: 'confirm ui-state-active',
+                click: function(event) { 
+                    var regex = /^[0-9A-Za-z\-]+$/;
+                    var url_Tiny = $('#urlTiny' ).val();
+                    var alias_Tiny =  $('#aliasTiny' ).val();
+                    if ( url_Tiny != '' && isValidHttpUrl(url_Tiny) && ( ( alias_Tiny != '' && regex.test(alias_Tiny) ) || alias_Tiny == '' ) ) {
+                        ajaxTinyUrl(url_Tiny, alias_Tiny, 'insert');
+                        resetDialogBoxPro('dialogBoxPro');
+                    } else {
+                        if ( url_Tiny == '' || !isValidHttpUrl(url_Tiny) ) {
+                            alertaBoxPro('Error', 'exclamation-triangle', 'Digite um link v\u00E1lido!');
+                        } else if ( alias_Tiny != '' && !regex.test(alias_Tiny) ) {
+                            alertaBoxPro('Error', 'exclamation-triangle', 'O nome personalizado deve conter apenas letras, n\u00FAmeros e travess\u00F5es!');
+                        } else if ( alias_Tiny.length < 5 ) {
+                            alertaBoxPro('Error', 'exclamation-triangle', 'O nome personalizado deve ter mais de 4 (quatro) caracteres')
+                        } else {
+                            alertaBoxPro('Error', 'exclamation-triangle', 'Digite um link v\u00E1lido!');
+                        }
+                        resetDialogBoxPro('dialogBoxPro');
+                    }
+                }
+            }]
+        });
 }
 function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
 	var url = "https://tinyurl.com/api-create.php";
@@ -3163,7 +3512,7 @@ function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
                         oEditor.fire('saveSnapshot');
                         oEditor.insertHtml(htmlUrl);
                         oEditor.fire('saveSnapshot');
-                        CKEDITOR.dialog.getCurrent().hide();
+                        // CKEDITOR.dialog.getCurrent().hide();
 				} else if ( mode == 'setinput' ) {
 					setInputTinyUrl(dataUrl);
 				}
@@ -3171,9 +3520,9 @@ function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
 		},
 		complete: function(xhr, textStatus) {
 			if ( xhr.status == 400 ) {
-				alert('Erro: Nenhuma link gerado');
+				alertaBoxPro('Error', 'exclamation-triangle', 'Erro: Nenhuma link gerado');
 			} else if ( xhr.status == 422 ) {
-				alert('Erro: O nome personalizado j\u00E1 existe. Insira outro.');
+				alertaBoxPro('Error', 'exclamation-triangle', 'Erro: O nome personalizado j\u00E1 existe. Insira outro.');
 			}
 		}
 	});
@@ -3462,7 +3811,7 @@ function openLinkPro(linkRef, idEditor) {
     if (win) {
         win.focus();
     } else {
-        alert('Por favor, permita popups para essa p\u00E1gina');
+        alertaBoxPro('Error', 'exclamation-triangle', 'Por favor, permita popups para essa p\u00E1gina');
     }
 }
 function removeLinkPro(linkRef, idEditor) {
@@ -3503,7 +3852,7 @@ function getDialogLinkPro() {
                         iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]').attr('href', urlLink).attr('data-cke-saved-href', urlLink).text(nomeLink);
                     event.data.hide = true;
                 } else {
-                    alert('Digite um link');
+                    alertaBoxPro('Error', 'exclamation-triangle', 'Digite um link');
 					event.data.hide = false;
 				}
             },
@@ -3513,7 +3862,7 @@ function getDialogLinkPro() {
                 var linkRef = aElement.attr('data-reflinkpro');
                 var idInputUrl = this.getContentElement( 'tab1', 'urlLink' )._.inputId;
                 var idInputNome = this.getContentElement( 'tab1', 'nomeLink' )._.inputId;
-                if ( aElement.length > 0 ) {
+                if ( aElement.length ) {
                     setTimeout(function(){ 
                         $('.cke_dialog #'+idInputUrl).val(aElement.attr('href'));
                         $('.cke_dialog #'+idInputNome).val(aElement.text()).after('<input style="display:none" type="hidden" value="'+linkRef+'" id="refLinkProForm">');
@@ -3562,11 +3911,10 @@ function getDialogBatchImgQuality() {
                 if ( qualityImg != '' ) {
                     iframeEditor.find('img').each(function(){
                         qualityImages(this, this, qualityImg*0.01);
-                        
                     })
                     event.data.hide = true;
                 } else {
-                    alert('Digite um valor');
+                    alertaBoxPro('Error', 'exclamation-triangle', 'Digite um valor');
 					event.data.hide = false;
 				}
             },
@@ -3725,7 +4073,7 @@ function getDialogUploadImgBase64() {
                 var fileI = t.getContentElement("tab-source", "file");
                 var n = null;
                 try { n = fileI.getInputElement().$; } catch(e) { n = null; }
-                if (n && "files" in n && n.files && n.files.length > 0 && n.files[0]) {
+                if (n && "files" in n && n.files && n.files.length && n.files[0]) {
                     if ("type" in n.files[0] && !n.files[0].type.match("image.*")) return;
                     if (!FileReader) return;
                     imgLoading.getElement().setHtml("Carregando...");
@@ -3873,7 +4221,7 @@ function getDialogUploadImgBase64() {
                     newImg.removeAttribute(k);
                 }
             }
-            if (css.length > 0) newImg.setAttribute("style", css.join(""));
+            if (css.length) newImg.setAttribute("style", css.join(""));
             if (newImg.getAttribute('maxwidth')) {
                 newImg.removeAttribute('height');
             }
@@ -4111,7 +4459,7 @@ function getDialogUploadImgBase64() {
             },
             onOk : function(){
                 var imgs = CKEDITOR.document.getElementsByTag("img").$;
-                if (typeof imgs !== 'undefined' && imgs.length > 0) {
+                if (typeof imgs !== 'undefined' && imgs.length) {
                     $.each(imgs, function(i, img){
                         var src = $(img).attr('src');
                         if (!isValidHttpUrl(src)) {
@@ -4222,7 +4570,7 @@ function getDialogUploadImgBase64() {
                                     type: "text",
                                     width: "80px",
                                     id: "quality",
-                                    label: "Qualidade da Imagem"
+                                    label: "Qualidade da Imagem (1 = baixa / 100 = alta)"
                                 },{
                                     type: "select",
                                     id: "filter",
@@ -4888,111 +5236,160 @@ function templateImagePageBackground(src, config){
 }
 function importDocPro(this_) {
     setParamEditor(this_);
-    oEditor.openDialog('importDocPro');
-}
-function getDialogImportDocPro() {
-    var htmlImportFile =    '<label class="cke_dialog_ui_labeled_label">Importar documento HTML</label>'+
-                            '<div class="cke_dialog_ui_labeled_content cke_dialog_ui_input_file">'+
-                            '   <input style="width:95%" id="fileInputImportHTML" type="file">'+
-                            '</div>';
     var tipsDocs = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se o documento est\u00E1 acess\u00EDvel por qualquer<br>pessoa na internet. <a href="https://sei-pro.github.io/sei-pro/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
     var tipsSheets = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se a planilha est\u00E1 publicada na web.<br> Aten\u00E7\u00E3o: O URL publicado na web \u00E9 diferente do URL da planilha. <br><a href="https://sei-pro.github.io/sei-pro/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
     
-      CKEDITOR.dialog.add( 'importDocPro', function(editor)
-      {
-         return {
+    const htmlBox = sanitizeHTML(`
+        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+            <div id="tabDialog" style="border: none;margin: 0;">
+                <ul style="font-size: 0.8em;">
+                   <li><a href="#tabDialog-tab1"><i class="fas fa-upload cinzaColor" style="margin-right: 5px;"></i> Documento HTML ou Word (docx)</a></li>
+                   <li><a href="#tabDialog-tab2"><i class="fas fa-file-alt cinzaColor" style="margin-right: 5px;"></i> Google Docs</a></li>
+                   <li><a href="#tabDialog-tab3"><i class="fas fa-file-spreadsheet cinzaColor" style="margin-right: 5px;"></i> Google Planilhas</a></li>
+                </ul>
+                <div id="tabDialog-tab1">
+                    <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                        <tr>
+                            <td style="vertical-align: bottom; text-align: left;" class="label">
+                                <label for="selectCitacaoDocumento"><i class="iconPopup iconSwitch fas fa-upload cinzaColor"></i>Importar documento HTML ou Word (docx):</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input style="width:95%" id="fileInputImportHTMLDocx" type="file" accept=".docx,.html">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="display: flex;">
+                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="importWord" tabindex="0">
+                                        <label class="onoff-switch-label" for="importWord"></label>
+                                    </div>
+                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="importWord">Corrigir erros de codifica\u00E7\u00E3o de documentos Word</label>
+                                </div>
+                                <div style="display: flex;">
+                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceText" tabindex="0" checked>
+                                        <label class="onoff-switch-label" for="replaceText"></label>
+                                    </div>
+                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceText">Substituir todo o documento pelo conte\u00FAdo externo</label>
+                                </div>
+                                <div style="display: flex;">
+                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceTags" tabindex="0" checked>
+                                        <label class="onoff-switch-label" for="replaceTags"></label>
+                                    </div>
+                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceTags">Substituir campos din\u00E2micos no documento (se dispon\u00EDvel)</label>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="tabDialog-tab2">
+                    <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                        <tr>
+                            <td style="vertical-align: bottom; text-align: left;" class="label">
+                                <label for="urlGDocs"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i>URL do Google Docs:</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input style="width:95%" id="urlGDocs" type="text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="display: flex;">
+                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceTextDocs" tabindex="0" checked>
+                                        <label class="onoff-switch-label" for="replaceTextDocs"></label>
+                                    </div>
+                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceTextDocs">Substituir todo o documento pelo conte\u00FAdo externo</label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label style="font-style: italic;color: #616161;margin-top: 15px;display: block;">
+                                    <i class="fas fa-info-circle" style="color: #007fff;"></i> 
+                                    Antes de importar, confira se o documento est\u00E1 acess\u00EDvel por qualquer<br>pessoa na internet. 
+                                    <a href="https://sei-pro.github.io/sei-pro/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
+                                </label>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="tabDialog-tab3">
+                    <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                        <tr>
+                            <td style="vertical-align: bottom; text-align: left;" class="label">
+                                <label for="urlGSheets"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i>URL do Google Planilhas (Publicar na Web)</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input style="width:95%" id="urlGSheets" type="text">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="display: flex;">
+                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceTextSheets" tabindex="0" checked>
+                                        <label class="onoff-switch-label" for="replaceTextSheets"></label>
+                                    </div>
+                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceTextSheets">Substituir todo o documento pelo conte\u00FAdo externo</label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label style="font-style: italic;color: #616161;margin-top: 15px;display: block;">
+                                    <i class="fas fa-info-circle" style="color: #007fff;"></i> 
+                                    Antes de importar, confira se a planilha est\u00E1 publicada na web.<br> Aten\u00E7\u00E3o: O URL publicado na web \u00E9 diferente do URL da planilha. 
+                                    <br><a href="https://sei-pro.github.io/sei-pro/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
+                                </label>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `);
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html(htmlBox)
+        .dialog({
             title : 'Inserir conte\u00FAdo externo',
-            minWidth : 400,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var importHTML = document.getElementById('fileInputImportHTML').files
-                var urlGDocs = this.getContentElement( 'tab2', 'urlGDocs' ).getValue();
-                var urlGSheets = this.getContentElement( 'tab3', 'urlGSheets' ).getValue();
-                if ( importHTML.length > 0 ) {
-                    loadFileImport(importHTML);
-                } else if ( urlGDocs != '' ) {
-                    getGoogleDocs(urlGDocs);
-                } else if ( urlGSheets != '' ) {
-                    getGoogleSheets(urlGSheets);
-                }
-                event.data.hide = false;
-            },
-            onShow : function() {
+            width : 600,
+            height : 400,
+            open: function () {
+                $.getScript(URL_SPRO+"js/lib/mammoth.browser.min.js");
+                $('#tabDialog').tabs();
+                initChosenReplace('box_multiple', this, true);
                 setTimeout(function () {
-                    $('#fileInputImportHTML').val('');                    
+                    $('#fileInputImportHTMLDocx').val('');                    
                 }, 500);
             },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Documento HTML',
-                  elements :
-                  [
-                    {
-						type: 'html',
-						html: htmlImportFile
-             		},{
-                        type: 'checkbox',
-                        id: 'importWord',
-                        label: 'Corrigir erros de codifica\u00E7\u00E3o de documentos Word'
-             		},{
-                        type: 'checkbox',
-                        id: 'replaceText',
-                        'default': 'checked',
-                        label: 'Substituir todo o documento pelo conte\u00FAdo externo'
-             		},{
-                        type: 'checkbox',
-                        id: 'replaceTags',
-                        'default': 'checked',
-                        label: 'Substituir campos din\u00E2micos no documento (se dispon\u00EDvel)'
-             		}
-                  ]
-               },{
-                  id : 'tab2',
-                  label : 'Google Docs',
-                  elements :
-                  [
-                    {
-             			type: 'text',
-             			id: 'urlGDocs',
-             			label: 'URL do Google Docs',
-             			'default': ''
-             		},{
-						type: 'html',
-						html: tipsDocs
-             		},{
-                        type: 'checkbox',
-                        id: 'replaceTextDocs',
-                        'default': 'checked',
-                        label: 'Substituir todo o documento pelo conte\u00FAdo externo'
-             		}
-                  ]
-               },{
-                  id : 'tab3',
-                  label : 'Google Planilhas',
-                  elements :
-                  [
-                    {
-             			type: 'text',
-             			id: 'urlGSheets',
-             			label: 'URL do Google Planilhas (Publicar na Web)',
-             			'default': ''
-             		},{
-						type: 'html',
-						html: tipsSheets
-             		},{
-                        type: 'checkbox',
-                        id: 'replaceTextSheets',
-                        'default': 'checked',
-                        label: 'Substituir todo o documento pelo conte\u00FAdo externo'
-             		}
-                  ]
-               }
-            ]
-         };
-      } );
+            buttons: [{
+                text: 'Inserir',
+                class: 'confirm ui-state-active',
+                click: function(event) { 
+                    var inputFile = document.getElementById('fileInputImportHTMLDocx').files
+                    var urlGDocs = $('#urlGDocs').val();
+                    var urlGSheets = $('#urlGSheets' ).val();
+                    if ( inputFile.length ) {
+                        handleFileImport(inputFile);
+                    } else if ( urlGDocs != '' ) {
+                        getGoogleDocs(urlGDocs);
+                    } else if ( urlGSheets != '' ) {
+                        getGoogleSheets(urlGSheets);
+                    }
+                }
+            }]
+        });
 }
 function getGoogleDocs(url) {
     var regex = "\\/d\\/(.*?)(\\/|$)";
@@ -5001,7 +5398,7 @@ function getGoogleDocs(url) {
         var urlDocs = 'https://docs.google.com/feeds/download/documents/export/Export?id='+regDocs[1]+'&exportFormat=html';
         loadGoogleDocs(urlDocs, iframeEditor, 'docs');
     } else {
-        alert('Url do documento inv\u00E1lido!');
+        alertaBoxPro('Error', 'exclamation-triangle', 'Url do documento inv\u00E1lido!');
     }
 }
 function getGoogleSheets(url) {
@@ -5011,58 +5408,98 @@ function getGoogleSheets(url) {
         var urlSheets = 'https://docs.google.com/spreadsheets/d/e/'+regSheets[1]+'/pubhtml';
         loadGoogleDocs(urlSheets, iframeEditor, 'sheets');
     } else {
-        alert('Url do documento inv\u00E1lido!');
+        alertaBoxPro('Error', 'exclamation-triangle', 'Url do documento inv\u00E1lido!');
     }
 }
-function loadFileImport(files) {
+function handleFileImport(inputFile) {
+    const file = inputFile[0];
+    if (!file) return;
+  
+    const ext = file.name.split('.').pop().toLowerCase();
+  
+    if (ext === "docx") {
+      converterDocxParaHtml(inputFile);
+    } else if (ext === "html" || ext === "htm") {
+      loadFileImportHTML(inputFile);
+    } else {
+      alertaBoxPro('Error', 'exclamation-triangle', "Formato não suportado. Use um arquivo .docx ou .html");
+    }
+}
+async function converterDocxParaHtml(inputFile) {
+    try {
+      const file = inputFile[0];
+      if (!file) throw new Error("Nenhum arquivo .docx selecionado.");
+  
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+  
+        var r = (!$('#replaceText').is(':checked')) 
+            ? true
+            : confirm("Deseja substituir o conte\u00FAdo atual pelo arquivo importado?");
+        if (r == true) { 
+            loadFileImportEditor(result.value);
+        }
+  
+      if (result.messages.length > 0) {
+        console.warn("Mensagens da conversão:", result.messages);
+      }
+    } catch (erro) {
+      console.error("Erro ao converter .docx:", erro);
+    }
+}
+function loadFileImportHTML(files) {
     if (files.length <= 0) { return false; }
     
     var fr = new FileReader();
     fr.onload = function(e) { 
         var result = e.target.result;  
-        if ( $('iframe[title*="'+idEditor+'"]').length > 0 ) {
-            var r = (CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'replaceText').getValue() == false) 
+        if ( $('iframe[title*="'+idEditor+'"]').length ) {
+            var r = (!$('#replaceText').is(':checked')) 
                     ? true
                     : confirm("Deseja substituir o conte\u00FAdo atual pelo arquivo importado?");
             if (r == true) { 
-                    oEditor.focus();
-                    oEditor.fire('saveSnapshot');
-                    if ( $('#frmEditor').length > 0 ) {
-                        if ( CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'replaceText').getValue() == true ) {
-                            iframeEditor.find('body').html(result);
-                        } else {
-                            var select = oEditor.getSelection().getStartElement();
-                            var pElement = $(select.$).closest('p');
-                            if ( pElement.length > 0 ) {
-                                iframeEditor.find(pElement).before(result);
-                            }
-                        }
-                    } else {
-                        if ( CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'replaceText').getValue() == true ) {
-                            iframeEditor.html(result);
-                        } else {
-                            var select = oEditor.getSelection().getStartElement();
-                            var pElement = $(select.$).closest('p');
-                            if ( pElement.length > 0 ) {
-                                pElement.before(result);
-                            }
-                        }
-                    }
-                    wordToSEI(iframeEditor);
-                    oEditor.fire('saveSnapshot');
-                    enableButtonSavePro();
+                loadFileImportEditor(result);
             }
         }
     }
-    if ( CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'importWord').getValue() == true ) {
+    if ( $('#importWord').val() == true ) {
         fr.readAsText(files.item(0), "cP1252");
     } else {
         fr.readAsText(files.item(0));
     }
     // console.log(CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'replaceTags').getValue());
-    if ( CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'replaceTags').getValue() == true ) {
+    if ( $('#replaceTags').val() == true ) {
         setTimeout(function(){ replaceDadosEditor() }, 500);
     }
+}
+function loadFileImportEditor(result) {
+    oEditor.focus();
+    oEditor.fire('saveSnapshot');
+    if ( frmEditor.length ) {
+        if ( $('#replaceText').is(':checked') ) {
+            iframeEditor.find('body').html(result);
+        } else {
+            var select = oEditor.getSelection().getStartElement();
+            var pElement = $(select.$).closest('p');
+            if ( pElement.length ) {
+                iframeEditor.find(pElement).before(result);
+            }
+        }
+    } else {
+        if ( $('#replaceText').is(':checked') ) {
+            iframeEditor.html(result);
+        } else {
+            var select = oEditor.getSelection().getStartElement();
+            var pElement = $(select.$).closest('p');
+            if ( pElement.length ) {
+                pElement.before(result);
+            }
+        }
+    }
+    wordToSEI(iframeEditor);
+    oEditor.fire('saveSnapshot');
+    enableButtonSavePro();
+    resetDialogBoxPro('dialogBoxPro');
 }
 function wordToSEI(iframe) {
     iframe.find('body link').remove();
@@ -5170,17 +5607,84 @@ function loadPasteImgToBase64() {
 	});
 }
 function updatePreviewLatex() {
-    var mathTextValue = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'MathText').getValue();
+    resizeHeigthDialogBox(dialogBoxPro);
+    var mathTextValue = $('#MathText').val();
     if ( mathTextValue != '' ) { 
         $('#latexPreview').html('<img src="https://latex.codecogs.com/png.latex?'+encodeURI(mathTextValue)+'">');
         getBase64Image($('#latexPreview').find('img'));
+        setTimeout(() => {
+            resizeHeigthDialogBox(dialogBoxPro);
+        }, 500);
     } else {
         $('#latexPreview').html('');
     }
+    resizeHeigthDialogBox(dialogBoxPro);
 }
 function openDialogLatex(this_) {
     setParamEditor(this_);
-    oEditor.openDialog('latexDialog');
+    const htmlBox = sanitizeHTML(`
+        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="MathText"><i class="iconPopup iconSwitch fas fa-sigma cinzaColor"></i>Digite a equa\u00E7\u00E3o no formato LaTeX/Mathematics:</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <textarea id="MathText" style="width: 100%;height: 100px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <div id="latexPreview" style="text-align: center;margin: 20px;"></div>
+                        <label style="font-style: italic;color: #616161;">
+                            <i class="fas fa-info-circle" style="color: #007fff;"></i> Consulte o <a href="https://pt.wikipedia.org/wiki/Ajuda:Guia_de_edi%C3%A7%C3%A3o/F%C3%B3rmulas_TeX" target="_blank" class="linkDialog" style="font-style: italic;">Guia de edi\u00E7\u00E3o/F\u00F3rmulas TeX</a> para utilizar a liguagem LaTeX. <br>Se preferir, utilize um <a href="https://editor.codecogs.com/" target="_blank" class="linkDialog" style="font-style: italic;">editor visual de equa\u00E7\u00F5es LaTeX</a>.
+                        </label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    `);
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html(htmlBox)
+        .dialog({
+            title : 'Inserir Equa\u00E7\u00E3o',
+            width : 600,
+            height : 350,
+            open: function () {
+                initChosenReplace('box_multiple', this, true);
+				var selectTxt = oEditor.getSelection().getSelectedText();
+				var mathText = $('#MathText');
+				setTimeout(function(){ 
+					$('#latexPreview').html('');							
+					if ( mathText != '' ) {
+						mathText.val(selectTxt);
+						updatePreviewLatex();
+					}
+					mathText.unbind('change').on('input change',function() {
+						updatePreviewLatex();
+					});
+				}, 100);
+            },
+            buttons: [{
+                text: 'Inserir',
+                class: 'confirm ui-state-active',
+                click: function(event) { 
+                    var mathText = $('#MathText').val();
+                    var imgMath = $('#latexPreview').find('img');
+                    if ( mathText != '' && imgMath.length ) {
+                        oEditor.focus();
+                        oEditor.fire('saveSnapshot');
+                        oEditor.insertHtml($('#latexPreview').html());
+                        oEditor.fire('saveSnapshot');
+                        resetDialogBoxPro('dialogBoxPro');
+                    }
+                }
+            }]
+        });
 }
 function getDialogLatex() {
     var htmlLatexPreview =  '<div id="latexPreview" style="text-align: center;margin: 20px;"></div>'+
@@ -5193,9 +5697,9 @@ function getDialogLatex() {
             minHeight : 200,
             buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
             onOk: function(event, a, b) {
-                var mathText_input = this.getContentElement( 'tab1', 'MathText' ).getValue();
+                var mathText = this.getContentElement( 'tab1', 'MathText' ).getValue();
                 var imgMath = $('#latexPreview').find('img');
-                if ( mathText_input != '' && imgMath.length > 0 ) {
+                if ( mathText != '' && imgMath.length ) {
                     oEditor.focus();
                     oEditor.fire('saveSnapshot');
                     oEditor.insertHtml($('#latexPreview').html());
@@ -5205,14 +5709,14 @@ function getDialogLatex() {
             },
             onShow : function() {
 				var selectTxt = oEditor.getSelection().getSelectedText();
-				var mathText_input = this.getContentElement( 'tab1', 'MathText' )._.inputId;
+				var mathText = this.getContentElement( 'tab1', 'MathText' )._.inputId;
 				setTimeout(function(){ 
 					$('#latexPreview').html('');							
-					if ( mathText_input != '' ) {
-						$('.cke_dialog #'+mathText_input).val(selectTxt);
+					if ( mathText != '' ) {
+						$('.cke_dialog #'+mathText).val(selectTxt);
 						updatePreviewLatex();
 					}
-					$('.cke_dialog #'+mathText_input).unbind('change').on('input change',function() {
+					$('.cke_dialog #'+mathText).unbind('change').on('input change',function() {
 						updatePreviewLatex();
 					});
 				}, 100);
@@ -5359,28 +5863,32 @@ function tableSorterPro( editor ) {
     }
 }
 function initContextMenuPro() {
-    $(txaEditor).each(function(){ 
-        var idEditor_ = $(this).attr('id').replace('cke_', '');
-        if ($('iframe[title*="'+idEditor_+'"]').length == 0) {
-            $(this).find('iframe').attr('title', 'Editor de Rich Text, '+idEditor_);
-        }
-    });
-    setTimeout(function () {
-        $(txaEditor).each(function(index){ 
+    if (isSEI_5) {
+
+    } else {
+        $(txaEditor).each(function(){ 
             var idEditor_ = $(this).attr('id').replace('cke_', '');
-            var iframe_ = $('iframe[title*="'+idEditor_+'"]').contents();
-            if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-                var oEditor_ = CKEDITOR.instances[idEditor_];
-                    tableSorterPro(oEditor_);
-                    menuCopyStyle(oEditor_);
-                    menuBlockEdition(oEditor_);
-                    if (restrictConfigValue('ferramentasia')) menuOpenAI(oEditor_);
-                    if (checkConfigValue('editarimagens')) {
-                        editImgPro(oEditor_);
-                    }
+            if ($('iframe[title*="'+idEditor_+'"]').length == 0) {
+                $(this).find('iframe').attr('title', 'Editor de Rich Text, '+idEditor_);
             }
         });
-    }, 2000);
+        setTimeout(function () {
+            $(txaEditor).each(function(index){ 
+                var idEditor_ = $(this).attr('id').replace('cke_', '');
+                var iframe_ = $('iframe[title*="'+idEditor_+'"]').contents();
+                if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
+                    var oEditor_ = CKEDITOR.instances[idEditor_];
+                        tableSorterPro(oEditor_);
+                        menuCopyStyle(oEditor_);
+                        menuBlockEdition(oEditor_);
+                        if (restrictConfigValue('ferramentasia')) menuPlataformAI(oEditor_);
+                        if (checkConfigValue('editarimagens')) {
+                            editImgPro(oEditor_);
+                        }
+                }
+            });
+        }, 2000);
+    }
 }
 // INSERE FUNCAO ARRASTA E SOLTA PARA IMAGENS
 function initDropImages() {
@@ -5441,6 +5949,7 @@ function qualityImages( src, dst, quality, type) {
                 return;
 
             tmp.src = dst.src;
+            setTimeout(() => { removeDataCkeSavedImg() }, 500);
         }
 }
 // INSERE LINK DE DOCUMENTO PUBLICO
@@ -5455,88 +5964,112 @@ function getCheckerProcessoPublicoPro() {
 }
 function openDialogProcessoPublicoPro(this_) {
     setParamEditor(this_);
-    oEditor.openDialog('processoPublico');
-}
-function getDialogProcessoPublicoPro() {
-    CKEDITOR.dialog.add( 'processoPublico', function(editor)
-      {
-         return {
+    const htmlBox = sanitizeHTML(`
+        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="processoPub"><i class="iconPopup iconSwitch fas fa-folder-open cinzaColor"></i>Processo:</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" id="processoPub">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="captchaPub"><i class="iconPopup iconSwitch fas fa-hashtag cinzaColor"></i>Digite o c\u00F3digo:</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" id="captchaPub" style="width: 70%;" autocomplete="off">
+                        <a id="searchPub_search" class="newLink newLink_active" style="user-select: none;padding-right: 20px;margin: 0 5px;"">
+                            <i class="fas fa-search cinzaColor"></i>
+                            <span class="txt_cinza" style="font-size: 80%;vertical-align: text-top;">Pesquisar</span>
+                        </a>
+                        <i id="searchPub_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="searchPub_captcha" style="margin-bottom: 8px;"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="searchPub_result" style="display:none; margin-top: 10px;"></div>
+                    </td>
+                </tr>
+                <tr class="trListDocPublico" style="display:none;">
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="selectDocPublico"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>Documentos:</label>
+                    </td>
+                </tr>
+                <tr class="trListDocPublico" style="display:none;">
+                    <td class="label">
+                        <select id="selectDocPublico" style="width: 100%;"></select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    `);
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html(htmlBox)
+        .dialog({
             title : 'Adicionar Link de Documento P\u00FAblico',
-            minWidth : 400,
-            minHeight : 215,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var selectDocPublico = $('#selectDocPublico option:selected');
-                var url = selectDocPublico.attr('data-url');
-                var doc = selectDocPublico.attr('data-documento');
-                var htmlUrl = (url=='') ? doc : '<a class="ancoraSei" href="'+url+'" target="_blank">'+doc+'</a>';
-                if ( typeof selectDocPublico !== 'undefined' != '' && selectDocPublico.length > 0 ) {
-                    editor.focus();
-                    editor.fire('saveSnapshot');
-                    editor.insertHtml(htmlUrl); 
-                    editor.fire('saveSnapshot');
-                    event.data.hide = true;
-                }
-            },
-            onShow : function() {
+            width : 600,
+            height : 450,
+            open: function () {
+                initChosenReplace('box_multiple', this, true);
+
+                $(document).off('click', '#searchPub_search').on('click', '#searchPub_search', function(event) {
+                    event.preventDefault();
+                    loadListaProcessoPublicoPro();
+                });
+
+                $(document).off('keypress', '#captchaPub').on('keypress', '#captchaPub', function(event) {
+                    event.preventDefault();
+                    if (event.which == 13) {
+                        loadListaProcessoPublicoPro();
+                    }
+                });
+                
+                getDadosIframeProcessoPublicoPro();
                 $('#searchPub_result').html('').hide();
                 $('#searchPub_load').hide();
-                getDadosIframeProcessoPublicoPro();
                 var processo = (typeof dadosProcessoPro.listAndamento !== 'undefined' && typeof dadosProcessoPro.listAndamento.processo !== 'undefined') ? dadosProcessoPro.listAndamento.processo : '';
-                var processoPub_input = this.getContentElement( 'tab1', 'processoPub' )._.inputId;
-                var captchaPub_input = this.getContentElement( 'tab1', 'captchaPub' )._.inputId;
-                $('.cke_dialog #'+processoPub_input).val(processo); 
-                $('.cke_dialog #'+captchaPub_input).focus().attr('autocomplete','off');
+                $('#processoPub' ).val(processo); 
             },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Adicionar Link de Documento P\u00FAblico',
-                  elements :
-                  [
-             		{
-                        type: 'text',
-                        label: 'Processo*',
-                        id: 'processoPub',
-            			width: '190px',
-                        labelLayout: 'horizontal'
- 					},{
-                        type: 'text',
-                        label: 'Digite o c\u00F3digo*',
-                        id: 'captchaPub',
-            			width: '190px',
-                        labelLayout: 'horizontal'
- 					},{
-                        type: 'html',
-                        html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                              ' <tbody>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                              '             <div id="searchPub_captcha" style="margin-bottom: 8px;"></div>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                              '             <a style="user-select: none;" onclick="loadListaProcessoPublicoPro(this)" title="Pesquisar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="searchPub_label" id="searchPub_uiElement">'+
-                              '                 <span id="searchPub_label" class="cke_dialog_ui_button">Pesquisar</span>'+
-                              '             </a>'+
-                              '             <i id="searchPub_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              ' </tbody>'+
-                              '</table>'+
-                              '<div id="searchPub_result" style="display:none; margin-top: 10px;"></div>'
-					}
-                  ]
-               }
-            ]
-         };
-      } );
+            buttons: [{
+                text: 'Inserir',
+                class: 'confirm ui-state-active',
+                click: function(event) { 
+                    var selectDocPublico = $('#selectDocPublico option:selected');
+                    var url = selectDocPublico.attr('data-url');
+                    var doc = selectDocPublico.attr('data-documento');
+                    var htmlUrl = (url=='') ? doc : '<a class="ancoraSei" href="'+url+'" target="_blank">'+doc+'</a>';
+                    if ( typeof selectDocPublico !== 'undefined' != '' && selectDocPublico.length ) {
+                        oEditor.focus();
+                        oEditor.fire('saveSnapshot');
+                        oEditor.insertHtml(htmlUrl); 
+                        oEditor.fire('saveSnapshot');
+                        resetDialogBoxPro('dialogBoxPro');
+                    }
+                }
+            }]
+        });
+}
+async function resolveCapchaProcessoPublico() {
+    if (typeof perfilGemini !== 'undefined' && perfilGemini.KEY_USER && !$('.trListDocPublico').is(':visible') && !delayCrash) {
+        const base64ImgCaptcha = await getImageBase64FromImgElement($('#searchPub_captcha img')[0]);
+        const captchaResolve = await resolveCaptchaAI("Quais os caracteres da imagem? Responsa apenas com os caracteres, sem espaço entre eles", base64ImgCaptcha);
+        $('#captchaPub').val(captchaResolve);
+        if ($('#processoPub').val() != '') loadListaProcessoPublicoPro();
+    }
 }
 function getDadosIframeProcessoPublicoPro() {
     if ( $('#frmCheckerProcessoPublicoPro').length == 0 ) { getCheckerProcessoPublicoPro(); }
@@ -5548,13 +6081,13 @@ function getDadosIframeProcessoPublicoPro() {
 function checkDadosIframeProcessoPublicoPro(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     var ifrPublico = $('#frmCheckerProcessoPublicoPro').contents();
-    if ( ifrPublico.find('#seiSearch').length > 0 ) {
+    if ( ifrPublico.find('#seiSearch').length ) {
         var captcha = ifrPublico.find('#lblCaptcha').find('img').attr('src');
         var htmlCaptcha =   '<img src="'+captcha+'"> <i onclick="getDadosIframeProcessoPublicoPro()" class="fas fa-redo" style="color: #969696; cursor: pointer; padding: 3px 8px;"></i>';
         $('#searchPub_captcha').html(htmlCaptcha);
         $('#searchPub_load').hide();
-        var captchaPub_input = CKEDITOR.dialog.getCurrent().getContentElement( 'tab1', 'captchaPub' )._.inputId;
-            $('.cke_dialog #'+captchaPub_input).val('').focus(); 
+        $('#captchaPub').val('').focus(); 
+        resolveCapchaProcessoPublico();
     } else {
         setTimeout(function () { 
             checkDadosIframeProcessoPublicoPro(TimeOut - 100);
@@ -5563,10 +6096,9 @@ function checkDadosIframeProcessoPublicoPro(TimeOut = 9000) {
     }
 }
 function loadListaProcessoPublicoPro() {
-        var processoPub_input = CKEDITOR.dialog.getCurrent().getContentElement( 'tab1', 'processoPub' )._.inputId;
-        var captchaPub_input = CKEDITOR.dialog.getCurrent().getContentElement( 'tab1', 'captchaPub' )._.inputId;
-        var processo = $('.cke_dialog #'+processoPub_input).val(); 
-        var captcha = $('.cke_dialog #'+captchaPub_input).val(); 
+    delayCrash = true;
+    var processo = $('#processoPub').val(); 
+    var captcha = $('#captchaPub').val(); 
     if (processo != '' && captcha != '') {
         $('#searchPub_load').show();
         var ifrPublico = $('#frmCheckerProcessoPublicoPro').contents();
@@ -5577,7 +6109,8 @@ function loadListaProcessoPublicoPro() {
                 waitLoadPro($('#frmCheckerProcessoPublicoPro').contents(), '#conteudo', "a.protocoloNormal", getListaProcessoPublicoPro);
             }, 800);
     } else {
-        alert('Digite os campos obrigat\u00F3rios!');
+        alertaBoxPro('Error', 'exclamation-triangle', 'Digite os campos obrigat\u00F3rios!');
+        delayCrash = false;
     }
 }
 function getListaProcessoPublicoPro(){
@@ -5596,6 +6129,7 @@ function getListaProcessoPublicoPro(){
                 $('#searchPub_load').hide();
             }
         }
+        delayCrash = false;
 }
 function getLinksProcessoPublicoPro(href) {
     $.ajax({ url: href }).done(function (html) {
@@ -5617,27 +6151,16 @@ function getLinksProcessoPublicoPro(href) {
                 optionSelectDocumentos += '<option data-url="'+urlDocumento+'" data-documento="'+value.data[2]+'&nbsp;('+citacaoDoc+value.data[1]+')">'+value.data[2]+' ('+citacaoDoc+value.data[1]+') '+descDocumento+'</option>';
             });
             optionSelectDocumentos += '<option data-url="'+href+'" data-documento="'+processoDoc+'">'+processoDoc+'</option>';
-        var htmlSelectDocumentos = '<select style="width: 95%; height: auto; margin: 0 !important; padding: 5px !important;" class="cke_dialog_ui_input_select" id="selectDocPublico">'+optionSelectDocumentos+'</select>';
-        var htmlDialog =  '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                          ' <tbody>'+
-                          '     <tr class="cke_dialog_ui_hbox">'+
-                          '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px; vertical-align: middle;">'+
-                          '             <label class="cke_dialog_ui_labeled_label" id="selectDocPublico_label" for="selectDocPublico">Documentos</label>'+
-                          '         </td>'+
-                          '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                          '             <span class="cke_dialog_ui_labeled_content" id="selectDocPublico">'+
-                          '                 <div class="cke_dialog_ui_input_select" role="presentation" style="width:200px">'+
-                          '                     '+htmlSelectDocumentos+
-                          '                 </div>'+
-                          '             </span>'+
-                          '         </td>'+
-                          '     </tr>'+
-                          ' </tbody>'+
-                          '</table>';
-        $('#searchPub_result').show().html(htmlDialog);
-        setTimeout(function(){ 
-            $('#selectDocPublico').focus();
-        }, 800);
+
+        $('.trListDocPublico').show();
+        $('#selectDocPublico').html(optionSelectDocumentos).chosen("destroy").chosen({
+            placeholder_text_single: ' ',
+            no_results_text: 'Nenhum resultado encontrado'
+        }).trigger('chosen:updated').trigger('chosen:activate');
+
+        setTimeout(() => {
+            $('#selectDocPublico').focus().trigger('chosen:open');
+        }, 2000);
     });
 }
 function insertAutomaticMinutaWatermark() {
@@ -5739,488 +6262,550 @@ function repairSaveButtonBug(loop = true) {
     }
 }
 
-// INSERE ChatGPT
-function loadOpenAI(this_, TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof loadSEIProAI !== 'undefined') { 
-        getOpenAI(this_);
-    } else {
-        if (TimeOut == 9000) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
-        setTimeout(function(){ 
-            loadOpenAI(this_, TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initBoxAIActions'); 
-        }, 500);
-    }
-}
-function getOpenAI(this_) {
-    setParamEditor(this_);
-    if (!getOptionsPro('consentimentoIA')) {
-        oEditor.openDialog('openAI_disclaimer');
-    } else {
-        oEditor.openDialog('openAI');
-    }
-}
-function getDialogNaoDisponivel(title) {
-    return {
-        title : title,
-        minWidth : 500,
-        minHeight : 80,
+// ### FERRAMENTA DE INTELIGÊNCIA ARTIFICIAL NO EDITOR DE TEXTOS ###
+// Aprimorado em 2025-04-17
+    // CARREGAMENTO DINÂMICO DO SCRIPT DE IA, COM RECURSIVIDADE E TIMEOUT
+    const loadPlataformAI = (this_, TimeOut = 9000) => {
+        if (TimeOut <= 0) return;
+        if (typeof loadSEIProAI !== 'undefined') {
+            // getPlataformAI(this_);
+            loadBoxAIActions();
+        } else {
+            if (TimeOut === 9000) $.getScript(URL_SPRO + 'js/sei-pro-ai.js');
+            setTimeout(() => {
+                loadPlataformAI(this_, TimeOut - 100);
+                if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) {
+                    console.log('Reload initBoxAIActions');
+                }
+            }, 500);
+        }
+    };
+
+    // FUNÇÃO PARA EXIBIÇÃO DE DIÁLOGOS DE IA
+    const getPlataformAI = this_ => {
+        setParamEditor(this_);
+        if (!getOptionsPro('consentimentoIA')) {
+            oEditor.openDialog('plataformAI_disclaimer');
+        } else {
+            oEditor.openDialog('plataformAI');
+        }
+    };
+
+    // DIÁLOGO DE RESTRIÇÃO PARA PROCESSOS SIGILOSOS
+    const getDialogNaoDisponivel = title => ({
+        title,
+        minWidth: 500,
+        minHeight: 80,
         buttons: [],
-        contents :
-        [
-           {
-              id : 'tab1',
-              label : 'Info',
-              elements :
-              [
-                {
-                     type: 'html',
-                     html: '<div style="padding: 20px;text-align: center;"><i class="fas fa-exclamation-triangle laranjaColor"></i> N\u00E3o dispon\u00EDvel para processos sigilosos</div>'
-                 }
-              ]
-           }
+        contents: [
+            {
+                id: 'tab1',
+                label: 'Info',
+                elements: [
+                    {
+                        type: 'html',
+                        html: sanitizeHTML('<div style="padding: 20px;text-align: center;"><i class="fas fa-exclamation-triangle laranjaColor"></i> N\u00E3o dispon\u00EDvel para processos sigilosos</div>')
+                    }
+                ]
+            }
         ]
-     }
-}
-function getDialogOpenAI() {
-    if (checkProcessoSigiloso()) {
-        CKEDITOR.dialog.add( 'openAI', function(editor) { return getDialogNaoDisponivel('Inserir texto de intelig\u00EAncia artificial (ChatGPT)') } );
-    } else {
-        CKEDITOR.dialog.add( 'openAI_disclaimer', function(editor) {
-                var htmlConcentimento = consentAI;
-                    return {
-                        title : 'Intelig\u00EAncia artificial (ChatGPT): Consentimento',
-                        minWidth : 500,
-                        minHeight : 200,
-                        buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-                        onOk: function(event, a, b) {
-                            if($('#ciente_disclaimer').is(':checked')) {
-                                event.data.hide = true;
-                                setOptionsPro('consentimentoIA', true);
-                                setTimeout(() => {
-                                    oEditor.openDialog('openAI');
-                                }, 1000);
-                            } else {
-                                alert('\u00C9 necess\u00E1rio consentimento antes de prosseguir!');
-                                event.data.hide = false;
-                            }
-                        },
-                        contents : [
-                            {
-                            id : 'tab1',
-                            label : 'Consentimento',
-                            elements :
-                            [
-                                {
-                                    type: 'html',
-                                    html: htmlConcentimento
-                                }
-                            ]
-                            }
-                        ]
-                    };
-        });
-        CKEDITOR.dialog.add( 'openAI', function(editor) {
-            return {
-                title : 'Inserir texto de intelig\u00EAncia artificial (ChatGPT)',
-                minWidth : 800,
-                minHeight : 80,
+    });
+
+    // DIÁLOGOS PRINCIPAIS DE CONSENTIMENTO E ENVIO DE PROMPT PARA A IA
+    const getDialogPlataformAI = () => {
+        if (checkProcessoSigiloso()) {
+            CKEDITOR.dialog.add('plataformAI', editor =>
+                getDialogNaoDisponivel(`Inserir texto de intelig\u00EAncia artificial (${currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini'})`)
+            );
+        } else {
+            CKEDITOR.dialog.add('plataformAI_disclaimer', editor => ({
+                title: `Intelig\u00EAncia artificial (${currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini'}): Consentimento`,
+                minWidth: 500,
+                minHeight: 200,
+                buttons: [CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton],
+                onOk: event => {
+                    if ($('#ciente_disclaimer').is(':checked')) {
+                        event.data.hide = true;
+                        setOptionsPro('consentimentoIA', true);
+                        setTimeout(() => oEditor.openDialog('plataformAI'), 1000);
+                    } else {
+                        alertaBoxPro('Error', 'exclamation-triangle', '\u00C9 necess\u00E1rio consentimento antes de prosseguir!');
+                        event.data.hide = false;
+                    }
+                },
+                contents: [{
+                    id: 'tab1',
+                    label: 'Consentimento',
+                    elements: [{
+                        type: 'html',
+                        html: sanitizeHTML(consentAI)
+                    }]
+                }]
+            }));
+
+            CKEDITOR.dialog.add('plataformAI', editor => ({
+                title: `Inserir texto de intelig\u00EAncia artificial (${currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini'})`,
+                minWidth: 800,
+                minHeight: 80,
                 buttons: [],
-                onShow : function() {
-                    updateModelsOpenAI();
-                    $('#openAI_load').hide();
-                    if ($('#openAI_result').is(':visible')) {
-                        this.move(this.getPosition().x, (this.getPosition().y+125));
-                        $('#openAI_result').html('').hide();
+                onShow() {
+                    updateModelsAI();
+                    $('#plataformAI_load').hide();
+
+                    if ($('#plataformAI_result').is(':visible')) {
+                        this.move(this.getPosition().x, this.getPosition().y + 125);
+                        $('#plataformAI_result').html('').hide();
                     }
-                    var selectedText = oEditor.getSelection().getSelectedText();
+
+                    const selectedText = oEditor.getSelection().getSelectedText();
                     if (selectedText !== '') {
-                        this.setValueOf("tab_ia", "textPrompt", selectedText);
+                        this.setValueOf('tab_ia', 'textPrompt', selectedText);
                     }
-                    $('textarea.cke_dialog_ui_input_textarea').css('white-space','break-spaces')
+
+                    $('textarea.cke_dialog_ui_input_textarea').css('white-space', 'break-spaces');
+
                     if (verifyConfigValue('substituiselecao')) {
-                        $('textarea.cke_dialog_ui_input_textarea').closest('div.cke_dialog_ui_textarea').css('margin-top','30px');
+                        $('textarea.cke_dialog_ui_input_textarea')
+                            .closest('div.cke_dialog_ui_textarea')
+                            .css('margin-top', '30px');
                         setChosenInCke(false, '900px');
                     }
 
-                    if (perfilOpenAI) {
-                        var idKeyword = this.getContentElement( 'tab_ia_options', 'keyword' )._.inputId;
-                        var idModel = this.getContentElement( 'tab_ia_options', 'model' )._.inputId;
-                        var idModeInline = this.getContentElement( 'tab_ia_options', 'mode_inline' ).domId;
-                        var elemKeyword = $('#'+idKeyword);
-                        var elemModel = $('#'+idModel);
-                        var elemInline = $('#'+idModeInline+' input');
+                    if (perfilPlataform) {
+                        const idKeyword = this.getContentElement('tab_ia_options', 'keyword')._.inputId;
+                        const idModel = this.getContentElement('tab_ia_options', 'model')._.inputId;
+                        const idModeInline = this.getContentElement('tab_ia_options', 'mode_inline').domId;
 
-                            elemKeyword.on('change', function(){
-                                setOptionsPro('setKeywordInlineOpenAI', $(this).val());
-                                $('.wordGpt').text($(this).val());
-                            });
-                            elemModel.on('change', function(){
-                                setOptionsPro('setModelOpenAI', $(this).val());
-                            });
-                            elemInline.prop('checked', getOptionsPro('setInlineOpenAI')).on('change', function(){
-                                getInlineOpenAI(this);
-                                console.log('change');
-                            });
+                        const elemKeyword = $(`#${idKeyword}`);
+                        const elemModel = $(`#${idModel}`);
+                        const elemInline = $(`#${idModeInline} input`);
+
+                        elemKeyword.on('change', function () {
+                            setOptionsPro('setKeywordInlineAI', $(this).val());
+                            $('.wordGpt').text($(this).val());
+                        });
+
+                        elemModel.on('change', function () {
+                            setOptionsPro('setModelOpenAI', $(this).val());
+                        });
+
+                        elemInline.prop('checked', getOptionsPro('setInlineAI')).on('change', function () {
+                            getInlineAI(this);
+                        });
                     }
+
+                    // DELEGAÇÃO DE EVENTOS PARA FUNCIONALIDADES DE ENVIO E EXEMPLO
+                    $(document).on('click', '.sendPrompt', e => {
+                        e.preventDefault();
+                        getParamAI(e.currentTarget);
+                    });
+                    $(document).on('click', '.exampleTextAI', e => {
+                        e.preventDefault();
+                        exampleTextAI(e.currentTarget);
+                    });
                 },
-                contents :[
-                (!perfilOpenAI) 
-                    ? {
-                        id : 'tab_ia',
-                        label : 'Cadastro de Token',
-                        elements :
-                        [
-                        {
+                contents: [
+                    !perfilPlataform ? {
+                        id: 'tab_ia',
+                        label: 'Cadastro de Token',
+                        elements: [{
                             type: 'html',
-                            html:   disclaimerAI
-                        }
+                            html: sanitizeHTML(disclaimerAI)
+                        }]
+                    } : {
+                        id: 'tab_ia',
+                        label: currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini',
+                        elements: [
+                            {
+                                type: 'select',
+                                id: 'selectPrompt',
+                                label: 'Tipo de Integra\u00E7\u00E3o',
+                                width: '100%',
+                                items: [
+                                    ['Discorra sobre '],
+                                    ['Resuma em linguagem simples o seguinte trecho: '],
+                                    ['Reescreva o seguinte trecho: '],
+                                    ['Descubra a base legal para o seguinte tema: '],
+                                    ['Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: '],
+                                    ['Traduza para portugu\u00EAs a frase: '],
+                                    ['Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: '],
+                                    ['Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: '],
+                                    ['Conclua o seguinte texto: '],
+                                    ['Extraia as palavras-chave deste texto: '],
+                                    ['Converta minha nota curta em uma ata de reuni\u00E3o: '],
+                                    ['Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: '],
+                                    ['Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: '],
+                                    ['Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: '],
+                                    ['Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: '],
+                                    ['-']
+                                ],
+                                default: 'Discorra sobre '
+                            },
+                            {
+                                type: 'textarea',
+                                label: 'Texto de Entrada',
+                                id: 'textPrompt',
+                                default: ''
+                            },
+                            {
+                                type: 'html',
+                                html: sanitizeHTML(`
+                                    <table role="presentation" class="cke_dialog_ui_hbox">
+                                        <tbody>
+                                            <tr class="cke_dialog_ui_hbox">
+                                                <td class="cke_dialog_ui_hbox_last" role="presentation" style="padding:0px;text-align: right;">
+                                                    <a class="linkDialog exampleTextAI" style="float:left;" target="_blank">Adicionar texto de exemplo</a>
+                                                    <a title="Enviar" class="cke_dialog_ui_button cke_dialog_ui_button_cancel sendPrompt" role="button" aria-labelledby="plataformAI_label">
+                                                        <span id="plataformAI_label" class="cke_dialog_ui_button">\u0045nviar</span>
+                                                    </a>
+                                                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="plataformAI_result" style="display:none; white-space: break-spaces;"></div>
+                                    <div id="plataformAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;">
+                                        <span class="alertaAttencionPro dialogBoxDiv">
+                                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
+                                            Os dados s\u00E3o processados pelo servi\u00E7o 
+                                            <a href="${currentPlataform === 'openai' ? 'https://openai.com/' : 'https://gemini.google.com/app'}" class="linkDialog" style="font-style: italic;" target="_blank">${currentPlataform === 'openai' ? 'OpenAI' : 'Google'}</a>.
+                                            N\u00E3o envie informa\u00E7\u00F5es restritas ou sigilosas.
+                                        </span>
+                                    </div>
+                                `)
+                            }
+                        ]
+                    },
+                    {
+                        id: 'tab_ia_options',
+                        label: 'Op\u00E7\u00F5es',
+                        elements: [
+                            {
+                                type: 'select',
+                                id: 'model',
+                                label: 'Modelo de IA',
+                                items: currentPlataform === 'openai' ? modelsOpenAI : modelsGemini,
+                                default: currentPlataform === 'openai' ? 'gpt-4' : 'gemini-1.5-pro'
+                            },
+                            {
+                                type: 'checkbox',
+                                id: 'mode_inline',
+                                style: 'margin-top:5px',
+                                label: 'Ativar o modo de escrita interativa'
+                            },
+                            {
+                                type: 'select',
+                                id: 'keyword',
+                                label: 'Palavra de gatilho',
+                                items: [['+gpt'], [':gpt'], ['/gpt'], ['.gpt'], ['-gpt']],
+                                default: '+gpt'
+                            },
+                            {
+                                type: 'html',
+                                html: `<span style="display: block;margin: 5px;font-style: italic;color: #666;">
+                                        Digite <span class="wordGpt">${getOptionsPro('setKeywordInlineAI') || '+gpt'}</span> em qualquer parte do documento, seguido do seu prompt. 
+                                        Pressione ENTER e veja a magia acontecer \uD83E\uDDD9\u200D\u2642\uFE0F
+                                    </span>`
+                            }
                         ]
                     }
-                    : {
-                        id : 'tab_ia',
-                        label : 'ChatGPT',
-                        elements :
-                            [
-                                {
-                                    type: 'select',
-                                    id: 'selectPrompt',
-                                    label: 'Tipo de Integra\u00E7\u00E3o',
-                                    width: '100%',
-                                    items: [ 
-                                        ['Discorra sobre '], 
-                                        ['Resuma em linguagem simples o seguinte trecho: '], 
-                                        ['Reescreva o seguinte trecho: '], 
-                                        ['Descubra a base legal para o seguinte tema: '], 
-                                        ['Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: '], 
-                                        ['Traduza para portugu\u00EAs a frase: '], 
-                                        ['Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: '], 
-                                        ['Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: '],
-                                        ['Conclua o seguinte texto: '],
-                                        ['Extraia as palavras-chave deste texto: '],
-                                        ['Converta minha nota curta em uma ata de reuni\u00E3o: '],
-                                        ['Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: '],
-                                        ['Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: '],
-                                        ['Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: '],
-                                        ['Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: '],
-                                        ['-'] 
-                                    ],
-                                    'default': 'Discorra sobre '
-                                },{
-                                    type: 'textarea',
-                                    label: 'Texto de Entrada',
-                                    id: 'textPrompt',
-                                    'default': ''
-                                },{
-                                    type: 'html',
-                                    html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                                        ' <tbody>'+
-                                        '     <tr class="cke_dialog_ui_hbox">'+
-                                        '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="padding:0px;text-align: right;">'+
-                                        '             <a onclick="exampleTextOpenAI(this)" class="linkDialog" style="float:left;" target="_blank">Adicionar texto de exemplo</a>'+
-                                        '             <a style="user-select: none;" onclick="getParamOpenAI(this)" title="Enviar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="openAI_label" id="openAI_uiElement">'+
-                                        '                 <span id="openAI_label" class="cke_dialog_ui_button">Enviar</span>'+
-                                        '             </a>'+
-                                        '             <i id="openAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>'+
-                                        '         </td>'+
-                                        '     </tr>'+
-                                        ' </tbody>'+
-                                        '</table>'+
-                                        '<div id="openAI_result" style="display:none; white-space: break-spaces;"></div>'+
-                                        '<div id="openAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;"><span class="alertaAttencionPro dialogBoxDiv"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>Os dados s\u00E3o processados pelo servi\u00E7o <a href="https://openAI.com" class="linkDialog" style="font-style: italic;" target="_blank">OpenAI</a>. N\u00E3o envie informa\u00E7\u00F5es restritas ou sigilosas.</span></div>'
-                                }
-                            ]
-                },{
-                        id : 'tab_ia_options',
-                        label : 'Op\u00E7\u00F5es',
-                        elements :
-                            [
-                                {
-                                    type: 'select',
-                                    id: 'model',
-                                    label: 'Modelo de IA',
-                                    items: modelsOpenAI,
-                                    'default': 'gpt-4'
-                                },{
-                                    type: "checkbox",
-                                    id: "mode_inline",
-                                    style: "margin-top:5px",
-                                    label: "Ativar o modo de escrita interativa"
-                                },{
-                                    type: 'select',
-                                    id: 'keyword',
-                                    label: 'Palavra de gatilho',
-                                    items: [ 
-                                        ['+gpt'], 
-                                        [':gpt'], 
-                                        ['/gpt'], 
-                                        ['.gpt'], 
-                                        ['-gpt']
-                                    ],
-                                    'default': '+gpt'
-                                },{
-                                    type: 'html',
-                                    html:  '<span style="display: block;margin: 5px;font-style: italic;color: #666;">Digite <span class="wordGpt">'+(getOptionsPro('setKeywordInlineOpenAI') ? getOptionsPro('setKeywordInlineOpenAI') : '+gpt')+'</span> em qualquer parte do documento, seguido do seu prompt. Pressione ENTER e veja a magia acontecer \uD83E\uDDD9\u200D\u2642\uFE0F</span>'
-                                }
-                            ]
-                }]
-            };
-        });
-    }
-}
-function getParamOpenAI(this_) {
-    var prompt_text = CKEDITOR.dialog.getCurrent().getContentElement('tab_ia', 'textPrompt').getValue();
-        prompt_text = prompt_text.replace(/['"]+/g, '').replace(/\n/g, "\\n").trim();
-    var prompt_select = CKEDITOR.dialog.getCurrent().getContentElement('tab_ia', 'selectPrompt').getValue();
-        prompt_select = (prompt_select == '-') ? '' : prompt_select;
-    var dialog = CKEDITOR.dialog.getCurrent();
+                ]
+            }));
+        }
+    };
 
-    $('#openAI_load').show();
-    if ($('#openAI_result').is(':visible')) {
-        dialog.move(dialog.getPosition().x, (dialog.getPosition().y+125));
-        $('#openAI_result').html('').hide();
-    }
-    sendRequestOpenAI(prompt_select, prompt_text);
-}
-function sendRequestOpenAI(prompt_select, prompt_text, inline = false) {
-    let open_ai_response;
+    // FUNÇÃO PRINCIPAL PARA OBTER PARÂMETROS E ENVIAR REQUISIÇÃO À IA
+    const getParamAI = (this_) => {
+        // OBTÉM O DIÁLOGO ATUAL DO CKEDITOR
+        const dialog = CKEDITOR.dialog.getCurrent();
 
-    openai_test();
+        // OBTÉM E TRATA O TEXTO DO PROMPT
+        let prompt_text = dialog.getContentElement('tab_ia', 'textPrompt').getValue();
+        prompt_text = prompt_text
+            .replace(/['"]+/g, '') // REMOVE ASPAS SIMPLES E DUPLAS
+            .replace(/\n/g, '\\n') // SUBSTITUI QUEBRAS DE LINHA
+            .trim();
 
-    async function openai_test() {
-    
-        var url = perfilOpenAI.URL_API;
+        // OBTÉM O VALOR SELECIONADO E TRATA
+        let prompt_select = dialog.getContentElement('tab_ia', 'selectPrompt').getValue();
+        prompt_select = (prompt_select === '-') ? '' : prompt_select;
 
-        // var modelGPT = 'gpt-3.5-turbo';
-        var modelGPT = getOptionsPro('setModelOpenAI');
-            modelGPT = (modelGPT) ? modelGPT : 'gpt-4';
+        // MOSTRA A ÁREA DE LOADING
+        $('#plataformAI_load').show();
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", url);
-
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("Authorization", "Bearer "+perfilOpenAI.KEY_USER);
-
-
-        if (inline) {
-            setTimeout(() => { 
-                $(oEditor.getSelection().getStartElement().$).closest('p').html('<span class="dot-flashing" contenteditable="false" style="margin: 0 20px;display: inline-block;">&nbsp;</span>') 
-            }); 
+        // SE O RESULTADO ESTIVER VISÍVEL, LIMPA E ESCONDE, AJUSTANDO POSIÇÃO DO DIÁLOGO
+        if ($('#plataformAI_result').is(':visible')) {
+            const position = dialog.getPosition();
+            dialog.move(position.x, (position.y + 125));
+            $('#plataformAI_result').html('').hide();
         }
 
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                console.log(xhr.status);
-                console.log(xhr.responseText);
+        // ENVIA A REQUISIÇÃO PARA A IA
+        sendRequestAI(prompt_select, prompt_text);
+    };
 
-                open_ai_response = xhr.responseText;
-                open_ai_response = JSON.parse(open_ai_response);
+    const sendRequestAI = (prompt_select, prompt_text, inline = false) => {
+        let ai_response_editor;
 
-                console.log(open_ai_response);
-                
-                var responseText = open_ai_response.choices[0].message.content;
-                var btnInsertText = '<span onclick="insertTextEditorSEI(this)" style="float: right; background: #e7effd; padding: 3px 5px; color: #4285f4; border-radius: 5px; margin-left: 10px; cursor: pointer;">'+
-                                    '  <i class="fas fa-pen azulColor" style="font-size: 90%; cursor: pointer;"></i>'+
-                                    '  Adicionar'+
-                                    '</span>';
-                var htmlResult =    '<div class="result" style="padding-top: 15px;">'+btnInsertText+
-                                    '   <span class="text" style="white-space: break-spaces;font-size: 10pt;font-family: system-ui;text-align: justify;line-height: 14pt;overflow-y: scroll;height: 300px !important;display: block;"><span class="blinker">&#32;</span></span>'+
-                                    '</div>';
-                
-                var dialog = CKEDITOR.dialog.getCurrent();
+        openai_test();
 
-                if (!inline) {
-                    $('#openAI_load').hide();
-                    $('#openAI_result').html(htmlResult).show()
-                    $('#openAI_result .result .text').data('text',responseText);
-                    dialog.move(dialog.getPosition().x, (dialog.getPosition().y-125));
-                }
+        // FUNÇÃO PRINCIPAL RESPONSÁVEL POR ENVIAR A SOLICITAÇÃO PARA A API
+        async function openai_test() {
+            const model = currentPlataform === 'openai'
+                ? getOptionsPro('setModelOpenAI') || 'gpt-4'
+                : getOptionsPro('setModelGemini') || 'gemini-1.5-pro';
 
-                // type code
-                var i = 0, isTag, text;
-                (function type() {
-                    
-                    var container = (inline) ? $(oEditor.getSelection().getStartElement().$).closest('p') : $('#openAI_result .result .text');
-                        text = responseText.slice(0, ++i);
-                    if (text === responseText) return;
-                        container.html(text + (!inline ? '<span class="blinker">&#32;</span>' : ''));
-                        if (!inline) container[0].scrollTop = container[0].scrollHeight;
-                    var char = text.slice(-1);
-                    if (char === "<") isTag = true;
-                    if (char === ">") isTag = false;
-                    if (isTag) return type();
-                    setTimeout(type, (!inline ? 40 : 10));
+            const url = currentPlataform === 'openai'
+                ? `${perfilPlataform.URL_API}v1/chat/completions`
+                : `${perfilPlataform.URL_API}v1/models/${model}:generateContent?key=${perfilPlataform.KEY_USER}`;
 
-                })();
-
-            } else if (xhr.status >= 400) {
-                console.log(xhr.status);
-                console.log(xhr.responseText);
-
-                open_ai_response = xhr.responseText;
-                open_ai_response = JSON.parse(open_ai_response);
-
-                $('#openAI_load').hide();
-                $('#openAI_result').html('<strong class="alertaErrorPro dialogBoxDiv" style="white-space: break-spaces;background-color: #fff1f0;padding: 10px;margin: 10px 0;border-radius: 8px;"><i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i> '+open_ai_response.error.message+'</strong>').show(); 
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            if (currentPlataform === 'openai') {
+                xhr.setRequestHeader('Authorization', `Bearer ${perfilPlataform.KEY_USER}`);
             }
-        };
 
-        let getTemperatureOpenAI = getOptionsPro('setTemperatureOpenAI') ? getOptionsPro('setTemperatureOpenAI') : '0.4';
-        let getMaxTokensOpenAI = getOptionsPro('setMaxTokensOpenAI') ? getOptionsPro('setMaxTokensOpenAI') : '640';
-        let getTopPOpenAI = getOptionsPro('setTopPOpenAI') ? getOptionsPro('setTopPOpenAI') : '1';
-        let getFrequencyPenaltyOpenAI = getOptionsPro('setFrequencyPenaltyOpenAI') ? getOptionsPro('setFrequencyPenaltyOpenAI') : '0';
-        let getPresencePenaltyOpenAI = getOptionsPro('setPresencePenaltyOpenAI') ? getOptionsPro('setPresencePenaltyOpenAI') : '0';
-        var data = (prompt_select == 'Conclua o seguinte texto: ')
-                ? `{
-                    "model": "${modelGPT}",
-                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": ${getTemperatureOpenAI},
-                    "max_tokens": ${getMaxTokensOpenAI},
-                    "top_p": ${getTopPOpenAI},
-                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
-                    "presence_penalty": ${getPresencePenaltyOpenAI}
-                }`
-                : `{
-                    "model": "${modelGPT}",
-                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": ${getTemperatureOpenAI},
-                    "max_tokens": ${getMaxTokensOpenAI},
-                    "top_p": ${getTopPOpenAI},
-                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
-                    "presence_penalty": ${getPresencePenaltyOpenAI}
-                }`;
-        data = (prompt_select == 'Extraia as palavras-chave deste texto: ')
-                ? `{
-                    "model": "${modelGPT}",
-                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": ${getTemperatureOpenAI},
-                    "max_tokens": ${getMaxTokensOpenAI},
-                    "top_p": ${getTopPOpenAI},
-                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
-                    "presence_penalty": ${getPresencePenaltyOpenAI}
-                }`
-                : data;
-            data = (prompt_select == 'Converta minha nota curta em uma ata de reuni\u00E3o: ')
-                ? `{
-                    "model": "${modelGPT}",
-                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": ${getTemperatureOpenAI},
-                    "max_tokens": ${getMaxTokensOpenAI},
-                    "top_p": ${getTopPOpenAI},
-                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
-                    "presence_penalty": ${getPresencePenaltyOpenAI}
-                }`
-                : data;
-            data = (
-                    prompt_select == 'Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: ' ||
-                    prompt_select == 'Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: ' ||
-                    prompt_select == 'Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: ')
-                ? `{
-                    "model": "${modelGPT}",
-                    "messages": [{"role": "user", "content": "${prompt_select+prompt_text}"}],
-                    "temperature": ${getTemperatureOpenAI},
-                    "max_tokens": ${getMaxTokensOpenAI},
-                    "top_p": ${getTopPOpenAI},
-                    "frequency_penalty": ${getFrequencyPenaltyOpenAI},
-                    "presence_penalty": ${getPresencePenaltyOpenAI}
-                }`
-                : data;
+            if (inline) {
+                setTimeout(() => {
+                    $(oEditor.getSelection().getStartElement().$).closest('p').html(
+                        '<span class="dot-flashing" contenteditable="false" style="margin: 0 20px;display: inline-block;">\u00A0</span>'
+                    );
+                });
+            }
 
-        xhr.send(data);
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log(xhr.status);
+                    console.log(xhr.responseText);
+
+                    ai_response_editor = JSON.parse(xhr.responseText);
+
+                    console.log(ai_response_editor);
+
+                    const responseText = currentPlataform === 'openai'
+                        ? ai_response_editor.choices[0].message.content.replace(/(?:\r\n|\r|\n)/g, '<br>')
+                        : ai_response_editor.candidates[0].content.parts[0].text.replace(/(?:\r\n|\r|\n)/g, '<br>');
+
+                    const btnInsertText = `
+                        <span class="btn-insert-text" style="float: right; background: #e7effd; padding: 3px 5px; color: #4285f4; border-radius: 5px; margin-left: 10px; cursor: pointer;">
+                            <i class="fas fa-pen azulColor" style="font-size: 90%; cursor: pointer;"></i>
+                            Adicionar
+                        </span>`;
+
+                    const htmlResult = `
+                        <div class="result" style="padding-top: 15px;">
+                            ${btnInsertText}
+                            <span class="text" style="white-space: break-spaces;font-size: 10pt;font-family: system-ui;text-align: justify;line-height: 14pt;overflow-y: scroll;height: 300px !important;display: block;">
+                                <span class="blinker">\u0020</span>
+                            </span>
+                        </div>`;
+
+                    const dialog = CKEDITOR.dialog.getCurrent();
+
+                    if (!inline) {
+                        $('#plataformAI_load').hide();
+                        // SANITIZA O HTML ANTES DE INSERIR
+                        $('#plataformAI_result').html(sanitizeHTML(htmlResult)).show();
+                        $('#plataformAI_result .result .text').data('text', responseText);
+                        dialog.move(dialog.getPosition().x, (dialog.getPosition().y - 125));
+                    }
+
+                    // EFEITO DE "DIGITAÇÃO" DO TEXTO DE RESPOSTA
+                    let i = 0;
+                    let isTag;
+                    let text;
+
+                    (function type() {
+                        const container = inline
+                            ? $(oEditor.getSelection().getStartElement().$).closest('p')
+                            : $('#plataformAI_result .result .text');
+
+                        text = responseText.slice(0, ++i);
+                        if (text === responseText) return;
+
+                        container.html(text + (!inline ? '<span class="blinker">\u0020</span>' : ''));
+                        if (!inline) container[0].scrollTop = container[0].scrollHeight;
+
+                        const char = text.slice(-1);
+                        if (char === '<') isTag = true;
+                        if (char === '>') isTag = false;
+                        if (isTag) return type();
+
+                        setTimeout(type, 10);
+                    })();
+
+                    // DELEGAÇÃO DE EVENTOS APÓS CARGA DINÂMICA
+                    $(document).on('click', '.result .text', (e) => {
+                        insertTextEditorSEI(e.currentTarget);
+                    });
+
+                } else if (xhr.status >= 400) {
+                    console.log(xhr.status);
+                    console.log(xhr.responseText);
+
+                    ai_response_editor = JSON.parse(xhr.responseText);
+
+                    $('#plataformAI_load').hide();
+                    $('#plataformAI_result').html(
+                        `<strong class="alertaErrorPro dialogBoxDiv" style="white-space: break-spaces;background-color: #fff1f0;padding: 10px;margin: 10px 0;border-radius: 8px;">
+                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
+                            ${ai_response_editor.error.message}
+                        </strong>`
+                    ).show();
+                }
+            };
+
+            // DADOS DO CORPO DA REQUISIÇÃO
+            const temperature = getOptionsPro('setTemperatureAI') || '0.4';
+            const maxTokens = getOptionsPro('setMaxTokensAI') || '6400';
+            const topP = getOptionsPro('setTopPAI') || '1';
+            const frequencyPenalty = getOptionsPro('setFrequencyPenaltyAI') || '0';
+            const presencePenalty = getOptionsPro('setPresencePenaltyAI') || '0';
+
+            const data = currentPlataform === 'openai'
+                ? JSON.stringify({
+                    model,
+                    messages: [{ role: 'user', content: prompt_select + prompt_text }],
+                    temperature: parseFloat(temperature),
+                    max_tokens: parseInt(maxTokens),
+                    top_p: parseFloat(topP),
+                    frequency_penalty: parseFloat(frequencyPenalty),
+                    presence_penalty: parseFloat(presencePenalty)
+                })
+                : JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt_select + prompt_text }]
+                    }]
+                });
+
+            xhr.send(data);
+        }
+
+        // DELEGAÇÃO DE EVENTO PARA O BOTÃO "ADICIONAR"
+        $(document).on('click', '.btn-insert-text', function () {
+            insertTextEditorSEI(this);
+        });
     }
-}
-function insertTextEditorSEI(this_) {
-    var _this = $(this_);
-    var text = (_this.closest('.result').find('.text').data('text') !== 'undefined') ? _this.closest('.result').find('.text').data('text') : $('<div>').append(_this.closest('.result').find('.text').clone()).text();
 
-    var select = oEditor.getSelection().getStartElement();
-    var pElement = $(select.$).closest('p');
-    if ( pElement.length > 0 ) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        if ($('#frmEditor').length > 0) {
-            var classP = iframeEditor.find(pElement).attr('class');
+    // INSERE TEXTO NO EDITOR SEI
+    const insertTextEditorSEI = (this_) => {
+        const _this = $(this_);
+        const textData = _this.closest('.result').find('.text').data('text');
+        const text = (textData !== 'undefined')
+            ? textData
+            : $('<div>').append(_this.closest('.result').find('.text').clone()).text();
 
-            var pText = text.indexOf('\n') !== -1 ? text.split('\n') : [text];
-                pText = pText 
-                        ? $.map(pText, function(v, i){
-                            return (v == '') ? '<p class="Citacao"><br></p>' : '<p class="'+classP+'">'+v+'</p>';
-                        }) 
-                        : pText;
+        const select = oEditor.getSelection().getStartElement();
+        const pElement = $(select.$).closest('p');
+
+        if (pElement.length) {
+            oEditor.focus();
+            oEditor.fire('saveSnapshot');
+
+            if (frmEditor.length) {
+                const classP = iframeEditor.find(pElement).attr('class');
+                const pText = text.includes('\n')
+                    ? text.split('\n').map(v =>
+                        (v === '')
+                            ? '<p class="Citacao"><br></p>'
+                            : `<p class="${classP}">${sanitizeHTML(v)}</p>`)
+                    : [`<p class="${classP}">${sanitizeHTML(text)}</p>`];
 
                 iframeEditor.find(pElement).after(pText);
                 CKEDITOR.dialog.getCurrent().hide();
-        } else {
-            pElement.before(html);
-        }
-        oEditor.fire('saveSnapshot');
-    }
-}
-function exampleTextOpenAI() {
-    var dialog = CKEDITOR.dialog.getCurrent();
-    var promptSelect = dialog.getContentElement('tab_ia', 'selectPrompt').getValue();
-    var exampleText = false;
-        exampleText = (promptSelect == 'Discorra sobre ') ? 'o poder de pol\u00EDcia administrativo' : exampleText;
-        exampleText = (promptSelect == 'Resuma em linguagem simples o seguinte trecho: ') ? 'N\u00E3o sendo ela, de modo nenhum, pass\u00EDvel de compara\u00E7\u00E3o com qualquer ep\u00EDteto quinquagen\u00E1rio, ou mito gerado por qualquer estrat\u00E9gia mercadol\u00F3gica ou interesse de m\u00EDdia "hollywoodiana", distor\u00E7\u00E3o que resta, evidentemente, imperdo\u00E1vel. Tal afirma\u00E7\u00E3o queima exposta a luz da imperativa e facilmente constat\u00E1vel modernidade de que se reveste a mesma, a quem fica, intrinsecamente, atribu\u00EDdo ox\u00EDmoro j\u00E1 mil vezes reverberado, de ef\u00EAmera personalidade.' : exampleText;
-        exampleText = (promptSelect == 'Reescreva o seguinte trecho: ') ? 'Muitos s\u00E3o os princ\u00EDpios que regem a seara trabalhista, al\u00E9m do princ\u00EDpio da prote\u00E7\u00E3o que se divide em outros subprinc\u00EDpios, temos o princ\u00EDpio da continuidade da rela\u00E7\u00E3o de emprego, da primazia da realidade, da irrenunciabilidade dos direitos trabalhistas, da irredutibilidade salarial, dentre outros de suma import\u00E2ncia para a estrutura do Direito do Trabalho. ' : exampleText;
-        exampleText = (promptSelect == 'Descubra a base legal para o seguinte tema: ') ? 'restri\u00E7\u00E3o \u00E0 fragmenta\u00E7\u00E3o de despesas p\u00FAblicas' : exampleText;
-        exampleText = (promptSelect == 'Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: ') ? 'art. 5\u00BA, inc. X da CF' : exampleText;
-        exampleText = (promptSelect == 'Traduza para portugu\u00EAs a frase: ') ? 'A Perspective on the Sources of the Brazilian Law' : exampleText;
-        exampleText = (promptSelect == 'Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: ') ? 'porte de armas' : exampleText;
-        exampleText = (promptSelect == 'Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: ') ? 'retumbante' : exampleText;
-        exampleText = (promptSelect == 'Conclua o seguinte texto: ') ? 'O direito ao sil\u00EAncio ou direito a n\u00E3o autoincrimina\u00E7\u00E3o \u00E9 dos direitos fundamentais elencados pela nossa constitui\u00E7\u00E3o.' : exampleText;
-        exampleText = (promptSelect == 'Extraia as palavras-chave deste texto: ') ? 'Pontes Miranda adota a teoria bipartida, segundo a qual s\u00F3 existem impostos e taxas. Jos\u00E9 Afonso da Silva arrola impostos, taxas e contribui\u00E7\u00F5es como esp\u00E9cies tribut\u00E1rias, ou seja, uma classifica\u00E7\u00E3o tripartida. Luciano Amaro, por sua vez, lista quatro esp\u00E9cies tribut\u00E1rias: Impostos, taxas, contribui\u00E7\u00E3o de melhoria e empr\u00E9stimo compuls\u00F3rio, caracterizando ent\u00E3o, a ado\u00E7\u00E3o de uma teoria quadripartida. Ademais, Ives Gandra Martins vai al\u00E9m e nomeia cinco esp\u00E9cies tribut\u00E1rias, ou seja, uma classifica\u00E7\u00E3o quinquipartida, s\u00E3o elas: impostos, taxas, contribui\u00E7\u00E3o de melhoria, empr\u00E9stimos compuls\u00F3rios e contribui\u00E7\u00F5es especiais.' : exampleText;
-        exampleText = (promptSelect == 'Converta minha nota curta em uma ata de reuni\u00E3o: ') ? 'Pedro: Lucros de at\u00E9 50% Tiago: Novos servidores est\u00E3o online Helio: Precisa de mais tempo para consertar o software Renata: Feliz em ajudar Paulo: Teste beta quase pronto' : exampleText;
-        exampleText = (promptSelect == 'Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: ') ? 'O cidad\u00E3o que exerce uma cidadania ativa, se compromete e se envolve em todos os assuntos da comunidade em que vive, exemplo da luta cotidiana por direitos individuais e coletivos. A mesma necessita de uma participa\u00E7\u00E3o p\u00FAblica e deve ter como base o respeito em rela\u00E7\u00E3o \u00E0s diferen\u00E7as e a supera\u00E7\u00E3o das desigualdades sociais que assolam a nossa sociedade, buscando sempre um consenso em que privilegie a maioria dos envolvidos.' : exampleText;
-        exampleText = (promptSelect == 'Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: ') ? 'servi\u00E7o p\u00FAblico adequado e modicidade tarif\u00E1ria no transporte p\u00FAblico' : exampleText;
-        exampleText = (promptSelect == 'Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: ') ? 'A Corte de Contas cuida do progresso da governan\u00E7a na administra\u00E7\u00E3o p\u00FAblica, cabendo ao \u00F3rg\u00E3os e gestore executar as devidas etapas e corre\u00E7\u00F5es, devendo entender o prop\u00F3sito da governan\u00E7a, buscando o aprimoramento constante.' : exampleText;
-        exampleText = (promptSelect == 'Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: ') ? 'O aborto e a microcefalia' : exampleText;
+            } else {
+                pElement.before(sanitizeHTML(text));
+            }
 
-    if (exampleText) dialog.setValueOf("tab_ia", "textPrompt", exampleText);
-}
-function initOpenAI(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof checkConfigValue !== 'undefined' && typeof localStorageRestorePro !== 'undefined' ) { 
-        if (restrictConfigValue('ferramentasia')) {
-            setTimeout(function(){ 
-                perfilOpenAI = localStorageRestorePro('configBasePro_openai');
-                perfilOpenAI = (typeof perfilOpenAI !== 'undefined' && perfilOpenAI !== null) ? perfilOpenAI : false;
-                getDialogOpenAI();
+            oEditor.fire('saveSnapshot');
+        }
+    };
+
+    // SELECIONA TEXTO DE EXEMPLO COM BASE NA OPÇÃO ESCOLHIDA
+    const exampleTextAI = () => {
+        const dialog = CKEDITOR.dialog.getCurrent();
+        const promptSelect = dialog.getContentElement('tab_ia', 'selectPrompt').getValue();
+
+        let exampleText = false;
+
+        exampleText = (promptSelect === 'Discorra sobre ') ? 'o poder de pol\u00EDcia administrativo' : exampleText;
+        exampleText = (promptSelect === 'Resuma em linguagem simples o seguinte trecho: ') ? 'N\u00E3o sendo ela, de modo nenhum, pass\u00EDvel de compara\u00E7\u00E3o com qualquer ep\u00EDteto quinquagen\u00E1rio, ou mito gerado por qualquer estrat\u00E9gia mercadol\u00F3gica ou interesse de m\u00EDdia "hollywoodiana", distor\u00E7\u00E3o que resta, evidentemente, imperdo\u00E1vel. Tal afirma\u00E7\u00E3o queima exposta a luz da imperativa e facilmente constat\u00E1vel modernidade de que se reveste a mesma, a quem fica, intrinsecamente, atribu\u00EDdo ox\u00EDmoro j\u00E1 mil vezes reverberado, de ef\u00EAmera personalidade.' : exampleText;
+        exampleText = (promptSelect === 'Reescreva o seguinte trecho: ') ? 'Muitos s\u00E3o os princ\u00EDpios que regem a seara trabalhista, al\u00E9m do princ\u00EDpio da prote\u00E7\u00E3o que se divide em outros subprinc\u00EDpios, temos o princ\u00EDpio da continuidade da rela\u00E7\u00E3o de emprego, da primazia da realidade, da irrenunciabilidade dos direitos trabalhistas, da irredutibilidade salarial, dentre outros de suma import\u00E2ncia para a estrutura do Direito do Trabalho. ' : exampleText;
+        exampleText = (promptSelect === 'Descubra a base legal para o seguinte tema: ') ? 'restri\u00E7\u00E3o \u00E0 fragmenta\u00E7\u00E3o de despesas p\u00FAblicas' : exampleText;
+        exampleText = (promptSelect === 'Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: ') ? 'art. 5\u00BA, inc. X da CF' : exampleText;
+        exampleText = (promptSelect === 'Traduza para portugu\u00EAs a frase: ') ? 'A Perspective on the Sources of the Brazilian Law' : exampleText;
+        exampleText = (promptSelect === 'Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: ') ? 'porte de armas' : exampleText;
+        exampleText = (promptSelect === 'Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: ') ? 'retumbante' : exampleText;
+        exampleText = (promptSelect === 'Conclua o seguinte texto: ') ? 'O direito ao sil\u00EAncio ou direito a n\u00E3o autoincrimina\u00E7\u00E3o \u00E9 dos direitos fundamentais elencados pela nossa constitui\u00E7\u00E3o.' : exampleText;
+        exampleText = (promptSelect === 'Extraia as palavras-chave deste texto: ') ? 'Pontes Miranda adota a teoria bipartida, segundo a qual s\u00F3 existem impostos e taxas. Jos\u00E9 Afonso da Silva arrola impostos, taxas e contribui\u00E7\u00F5es como esp\u00E9cies tribut\u00E1rias, ou seja, uma classifica\u00E7\u00E3o tripartida. Luciano Amaro, por sua vez, lista quatro esp\u00E9cies tribut\u00E1rias: Impostos, taxas, contribui\u00E7\u00E3o de melhoria e empr\u00E9stimo compuls\u00F3rio, caracterizando ent\u00E3o, a ado\u00E7\u00E3o de uma teoria quadripartida. Ademais, Ives Gandra Martins vai al\u00E9m e nomeia cinco esp\u00E9cies tribut\u00E1rias, ou seja, uma classifica\u00E7\u00E3o quinquipartida, s\u00E3o elas: impostos, taxas, contribui\u00E7\u00E3o de melhoria, empr\u00E9stimos compuls\u00F3rios e contribui\u00E7\u00F5es especiais.' : exampleText;
+        exampleText = (promptSelect === 'Converta minha nota curta em uma ata de reuni\u00E3o: ') ? 'Pedro: Lucros de at\u00E9 50% Tiago: Novos servidores est\u00E3o online Helio: Precisa de mais tempo para consertar o software Renata: Feliz em ajudar Paulo: Teste beta quase pronto' : exampleText;
+        exampleText = (promptSelect === 'Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: ') ? 'O cidad\u00E3o que exerce uma cidadania ativa, se compromete e se envolve em todos os assuntos da comunidade em que vive, exemplo da luta cotidiana por direitos individuais e coletivos. A mesma necessita de uma participa\u00E7\u00E3o p\u00FAblica e deve ter como base o respeito em rela\u00E7\u00E3o \u00E0s diferen\u00E7as e a supera\u00E7\u00E3o das desigualdades sociais que assolam a nossa sociedade, buscando sempre um consenso em que privilegie a maioria dos envolvidos.' : exampleText;
+        exampleText = (promptSelect === 'Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: ') ? 'servi\u00E7o p\u00FAblico adequado e modicidade tarif\u00E1ria no transporte p\u00FAblico' : exampleText;
+        exampleText = (promptSelect === 'Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: ') ? 'A Corte de Contas cuida do progresso da governan\u00E7a na administra\u00E7\u00E3o p\u00FAblica, cabendo ao \u00F3rg\u00E3os e gestore executar as devidas etapas e corre\u00E7\u00F5es, devendo entender o prop\u00F3sito da governan\u00E7a, buscando o aprimoramento constante.' : exampleText;
+        exampleText = (promptSelect === 'Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: ') ? 'O aborto e a microcefalia' : exampleText;
+
+        if (exampleText) {
+            dialog.setValueOf('tab_ia', 'textPrompt', exampleText);
+        }
+    };
+
+    // INICIALIZAÇÃO AUTOMÁTICA DA PLATAFORMA COM RETENTATIVAS
+    const initPlataformAI = (TimeOut = 9000) => {
+        if (TimeOut <= 0) return;
+
+        if (typeof checkConfigValue !== 'undefined' && typeof localStorageRestorePro !== 'undefined') {
+            if (restrictConfigValue('ferramentasia')) {
+                setTimeout(() => {
+                    let perfilPlataform = localStorageRestorePro('configBasePro_openai');
+                    perfilPlataform = (typeof perfilPlataform !== 'undefined' && perfilPlataform !== null) ? perfilPlataform : false;
+                    getDialogPlataformAI();
+                }, 500);
+            }
+        } else {
+            setTimeout(() => {
+                initPlataformAI(TimeOut - 100);
+                if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) {
+                    console.log('Reload initPlataformAI', typeof localStorageRestorePro, typeof localStorageRestorePro('configBasePro_openai'));
+                }
             }, 500);
         }
-    } else {
-        setTimeout(function(){ 
-            initOpenAI(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initOpenAI', typeof localStorageRestorePro,  typeof localStorageRestorePro('configBasePro_openai')); 
-        }, 500);
-    }
-}
-function menuOpenAI( editor ) {
-    if ( editor.contextMenu && typeof editor.getMenuItem('openai') === 'undefined' ) {
-        editor.addMenuGroup( 'openaiGroup', -10 * 3 );
-        editor.addMenuItem( 'openai', {
-            label: 'Intelig\u00EAncia artificial',
-            icon: URL_SPRO+'icons/editor/ferramentasia.png',
-            command: 'openai',
-            group: 'openaiGroup'
-        });
-        editor.contextMenu.addListener( function( element ) {
-            if ( hasSelection(editor) ) {
-                return { openai: CKEDITOR.TRISTATE_OFF};
-            }
-        });
-        editor.addCommand( 'openai', {
-            exec: function( editor ) {
-                editor.openDialog('openAI');
-            }
-        });
-    }
-}
-function getInlineOpenAI(this_) {
-    var check = $(this_).is(':checked');
-    setOptionsPro('setInlineOpenAI', check);
-    setOnKeyEditor(!check);
-}
+    };
+
+    // FUNÇÃO PARA ADICIONAR MENU DE INTELIGÊNCIA ARTIFICIAL NO CKEDITOR
+    const menuPlataformAI = (editor) => {
+        if (editor.contextMenu && typeof editor.getMenuItem('plataform_ai') === 'undefined') {
+            editor.addMenuGroup('openaiGroup', -10 * 3);
+            editor.addMenuItem('plataform_ai', {
+                label: 'Intelig\u00EAncia artificial',
+                icon: `${URL_SPRO}icons/editor/ferramentasia.png`,
+                command: 'plataform_ai',
+                group: 'openaiGroup'
+            });
+
+            // ADICIONA OPÇÃO AO MENU DE CONTEXTO SOMENTE SE HOUVER SELEÇÃO
+            editor.contextMenu.addListener((element) => {
+                if (hasSelection(editor)) {
+                    return { plataform_ai: CKEDITOR.TRISTATE_OFF };
+                }
+            });
+
+            // COMANDO PARA ABRIR O DIÁLOGO DE IA
+            editor.addCommand('plataform_ai', {
+                exec: (editor) => {
+                    editor.openDialog('plataformAI');
+                }
+            });
+        }
+    };
+
+    // FUNÇÃO PARA ALTERAR OPÇÕES DE IA INLINE
+    const getInlineAI = (this_) => {
+        const check = $(this_).is(':checked');
+        setOptionsPro('setInlineAI', check);
+        setOnKeyEditor(!check);
+    };
+
 function setOnKeyEditor(destroy = false) {
     if ((!loadOnKeyEditor || loadOnKeyEditor != oEditor.name) && !destroy) {
             oEditor.on('key', function (evt) {
@@ -6234,19 +6819,19 @@ function setOnKeyEditor(destroy = false) {
             });
             loadOnKeyEditor = oEditor.name;
     } else if (destroy) {
-        removeOptionsPro('setInlineOpenAI');
+        removeOptionsPro('setInlineAI');
     }
 }
 function evtInlineOpenAI(evt) {
-    if (evt.data.keyCode == 13 && getOptionsPro('setInlineOpenAI')) {
-        var keyword = getOptionsPro('setKeywordInlineOpenAI');
+    if (evt.data.keyCode == 13 && getOptionsPro('setInlineAI')) {
+        var keyword = getOptionsPro('setKeywordInlineAI');
             keyword = (keyword) ? keyword : '+gpt';
         var select = oEditor.getSelection().getStartElement();
         var pElement = $(select.$).closest('p');
         var textP = pElement.text();
         if (textP.indexOf(keyword) !== -1) {
             var prompt_text = textP.split(keyword)[1].trim();
-            sendRequestOpenAI('', prompt_text, true);
+            sendRequestAI('', prompt_text, true);
         }
     }
 }
@@ -6475,110 +7060,114 @@ function selectTextOnEditor(findString) {
 // INSERE REFERENCIA INTERNA
 function getRefInterna(this_) {
     setParamEditor(this_);
-    oEditor.openDialog('openRefInterna');
-}
-function getDialogRefInterna() {
-      CKEDITOR.dialog.add( 'openRefInterna', function(editor)
-      {
-         return {
-            title : 'Inserir refer\u00EAncia interna',
-            minWidth : 800,
-            minHeight : 150,
-            buttons: [
-                {
-                    type: 'button',
-                    id: 'updateaRefInterna',
-                    label: 'Atualizar refer\u00EAncias',
-                    title: 'Atualizar refer\u00EAncias',
-                    onClick: function() {
-                        var valuePrefixo = CKEDITOR.dialog.getCurrent().getContentElement('tab_refint', 'prefixo').getValue();
-                        // this = CKEDITOR.ui.dialog.button
-                        updateRefsInternas(valuePrefixo);
-                        clickScroolToRef();
-                        CKEDITOR.dialog.getCurrent().hide();
-                        alert( 'Refer\u00EAncias atualizadas com sucesso');
-                    }
-                },
-                CKEDITOR.dialog.okButton
-             ],
-            onOk: function(event, a, b) {
-                var valuePrefixo = this.getContentElement('tab_refint', 'prefixo').getValue();
 
-                if (verifyConfigValue('substituiselecao')) {
-                    var selectMult = $('.cke_dialog_ui_input_select select[multiple="multiple"] option:checked');
-                    var list_refs = $.map(selectMult,function(e){
+    let listP = getNiveisParagrafos();
+        listP = (listP) ? $.map(listP, function(v){ return '<option value="'+v.ref+'-'+v.item+'">'+v.item+'. '+v.text.replace(/^(.{50}[^\s]*).*/, "$1")+'...'+'</option>'; }).join('') : false;
+
+    const htmlBox = sanitizeHTML(`
+        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="prefixo"><i class="iconPopup iconSwitch fas fa-text-size cinzaColor"></i>Prefixo:</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" id="prefixo" style="width:70%">
+                        <div style="float: right;">
+                            <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="hidePrefix" tabindex="0">
+                                <label class="onoff-switch-label" for="hidePrefix"></label>
+                            </div>
+                            <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="hidePrefix">N\u00E3o utilizar prefixo</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom; text-align: left;" class="label">
+                        <label for="selectRef"><i class="iconPopup iconSwitch fas fa-sort-numeric-down cinzaColor"></i>Par\u00E1grafo numerado:</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <select multiple="multiple" id="selectRef">
+                        ${listP}
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    `);
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html(htmlBox)
+        .dialog({
+            title : 'Inserir refer\u00EAncia interna',
+            width : 600,
+            height : 300,
+            open: function () {
+                initChosenReplace('box_multiple', this, true);
+                $('#selectRef').on('change', function() { resizeHeigthDialogBox(dialogBoxPro) });
+            },
+            buttons: [{
+                text: 'Atualizar refer\u00EAncias',
+                class: 'confirm',
+                click: function(event) { 
+                    let valuePrefixo = $('#prefixo').val();
+                    let hidePrefix = $('#hidePrefix').is(':checked');
+                        hidePrefix = valuePrefixo == '' ? true : hidePrefix;
+                    updateRefsInternas(valuePrefixo, hidePrefix);
+                    clickScroolToRef();
+                    alertaBoxPro('Sucess', 'check-circle',  'Refer\u00EAncias atualizadas com sucesso');
+                    // resetDialogBoxPro('dialogBoxPro');
+                }
+            },{
+                text: 'Inserir',
+                class: 'confirm ui-state-active',
+                click: function(event) { 
+                    const valuePrefixo = $('#prefixo').val();
+                    const selectMult = $('#selectRef option:checked');
+                    const list_refs = $.map(selectMult,function(e){
                         if (e.value != '') return e.value
                     });
-                    console.log(list_refs);
-                    var htmlRefInterna = '';
-
-                    if ($.isArray(list_refs) && list_refs.length > 0) {
+                    let hidePrefix = $('#hidePrefix').is(':checked');
+                        hidePrefix = valuePrefixo == '' ? true : hidePrefix;
+                    let htmlRefInterna = '';
+                    if ($.isArray(list_refs) && list_refs.length) {
                         $.each(list_refs, function(i, v){
-                            var valueSelect = (v.indexOf('-') !== -1) ? v.split('-') : false;
-                            var refInterna = (valueSelect) ? ' <a href="#RefPro_'+valueSelect[0]+'" class="ancoraSei refInternaPro anchorRefInternaPro" contenteditable="false">['+valuePrefixo+' '+valueSelect[1]+']</a> ' : false;
+                            let valueSelect = (v.indexOf('-') !== -1) ? v.split('-') : false;
+                            let refInterna = (valueSelect) ? ' <a href="#RefPro_'+valueSelect[0]+'" class="ancoraSei refInternaPro anchorRefInternaPro" contenteditable="false">['+valuePrefixo+' '+valueSelect[1]+']</a> ' : false;
                             if (refInterna) htmlRefInterna += refInterna;
                             if (i < list_refs.length-2) htmlRefInterna += ', ';
                             if (i == list_refs.length-2) htmlRefInterna += ' e ';
                         });
                     }
-                } else {
-                    var valueSelect = this.getContentElement('tab_refint', 'selectRef').getValue();
-                        valueSelect = (valueSelect.indexOf('-') !== -1) ? valueSelect.split('-') : false;
-                        htmlRefInterna = (valueSelect != '') ?  ' <a href="#RefPro_'+valueSelect[0]+'" class="ancoraSei refInternaPro anchorRefInternaPro" contenteditable="false">['+valuePrefixo+' '+valueSelect[1]+']</a> ' : '';
+                    oEditor.focus();
+                    oEditor.fire('saveSnapshot');
+                    oEditor.insertHtml(htmlRefInterna);
+                    oEditor.fire('saveSnapshot');
+                    updateRefsInternas(valuePrefixo, hidePrefix);
+                    clickScroolToRef();
+                    resetDialogBoxPro('dialogBoxPro');
                 }
-                oEditor.focus();
-                oEditor.fire('saveSnapshot');
-                oEditor.insertHtml(htmlRefInterna);
-                oEditor.fire('saveSnapshot');
-
-                updateRefsInternas(valuePrefixo);
-                clickScroolToRef();
-            },
-            onShow : function() {
-				var IDSelect = this.getContentElement( 'tab_refint', 'selectRef' )._.inputId;
-                var listP = getNiveisParagrafos();
-                    listP = (listP) ? $.map(listP, function(v){ return '<option value="'+v.ref+'-'+v.item+'">'+v.item+'. '+v.text.replace(/^(.{50}[^\s]*).*/, "$1")+'...'+'</option>'; }).join('') : false;
-                    if (listP) $('#'+IDSelect).html('<option value="">&nbsp;<option>'+listP);
-                    if (verifyConfigValue('substituiselecao')) setChosenInCke(true);
-            },
-            contents :
-            [
-               {
-                  id : 'tab_refint',
-                  label : 'Refer\u00EAncia interna',
-                  elements :
-                  [
-                    {
-                        type: 'text',
-                        label: 'Prefixo',
-                        id: 'prefixo',
-            			width: '200px',
-                        'default': 'ITEM'
- 					},{
-                        type: 'select',
-                        id: 'selectRef',
-                        label: 'Par\u00E1grafo numerado',
-                        width: '100%',
-                        items: [ ]
-                    }
-                  ]
-               }
-            ]
-         };
-      } );
+            }]
+        });
 }
-function updateRefsInternas(valuePrefixo) {
-    var iframe_ = $('iframe[title*="'+idEditor+'"]').contents();
+function updateRefsInternas(valuePrefixo, hidePrefix = false) {
+    const iframe_ = $('iframe[title*="'+idEditor+'"]').contents();
+    const textPrefixo = hidePrefix ? '' : valuePrefixo+' ';
     if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-        var listRefs = getNiveisParagrafos();
+        const listRefs = getNiveisParagrafos();
         if (listRefs) {
             iframe_.find('.refInternaPro').each(function(){
-                var _this = $(this);
-                var ref_this = _this.attr('href');
+                const _this = $(this);
+                let ref_this = _this.attr('href');
                     ref_this = (ref_this.indexOf('_') !== -1) ? ref_this.split('_')[1] : false;
-                var item = (ref_this) ? jmespath.search(listRefs, "[?ref=='"+ref_this+"'] | [0].item ") : false;
+                let item = (ref_this) ? jmespath.search(listRefs, "[?ref=='"+ref_this+"'] | [0].item ") : false;
                     item = (item && item !== null) ? item : false;
-                if (item) _this.text('['+valuePrefixo+' '+item+']');
+                if (item) _this.text('['+textPrefixo+item+']');
             })
         }
     }
@@ -7151,7 +7740,7 @@ function instanceDitadoPro(oEditor) {
                 'culture' : 'pt-BR',
                 'commandvoice' : 'ok', // trigger command listener
                 'commands': [            // action list
-                    {'vai': 'openai'},
+                    {'vai': 'plataform_ai'},
                     {'newline': 'nova linha'},
                     {'newparagraph': 'novo par\u00E1grafo'},
                     {'undo': 'desfazer'},
@@ -7392,7 +7981,7 @@ function initDitadoPro() {
                         l = (t.match(/.* ponto final .*/)) ? t.trim().split('ponto final') : l;
                         l = (t.match(/.* novo par\u00E1grafo .*/)) ? t.trim().split('novo par\u00E1grafo') : l;
                         l = l.filter( n => n);
-                    if (l.length > 0) {
+                    if (l.length) {
                         var _this = this;
                         $.each(l, function(i, v){
                             if (v.trim() != '') {
@@ -7616,18 +8205,18 @@ function initFunctions() {
     initContextMenuPro();
     getDialogLegisSEI();
     getDialogNotaRodape();
-    initOpenAI();
-    getDialogRefInterna();
-    getDialogSumarioDocumento();
+    initPlataformAI();
+    // getDialogRefInterna();
+    // getDialogSumarioDocumento();
     getDialogSyleTable();
-	getDialogTinyUrl();
+	// getDialogTinyUrl();
 	getDialogQrCode();
     getDialogLinkPro();
-    getDialogImportDocPro();
+    // getDialogImportDocPro();
     getDialogPageImageBackground();
     initDialogUploadImgBase64();
-    getDialogLatex();
-    getDialogProcessoPublicoPro();
+    // getDialogLatex();
+    // getDialogProcessoPublicoPro();
     getDialogSigilo();
     getDialogReview();
     getDialogDitado();
@@ -7645,10 +8234,15 @@ function initFunctions() {
     getStylesOnEditor();
     repairSaveButtonBug();
     clickScroolToRef();
+    checkLoadJqueryUI();
 	
 	// RETORNA DADOS DO PROCESSO
 	var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
 	if (!checkHostLimit()) getDadosIframeProcessoPro(idProcedimento, 'editor');
-    if (getOptionsPro('setKeywordInlineOpenAI')) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
+    if (getOptionsPro('setKeywordInlineAI')) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
 }
-addButton();
+$('body').addClass('seiEditor');
+
+if (!isSEI_5) {
+    addButton();
+}

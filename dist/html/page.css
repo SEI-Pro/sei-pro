@@ -141,14 +141,14 @@ h2 { font-size: 15pt; padding:0; margin: 5px 0; }
     opacity: 0;
     pointer-events: none;
 }
-.onoffswitch-label {
+.onoff-switch-label {
     display: block; overflow: hidden; cursor: pointer;
     height: 21px; padding: 0; line-height: 21px;
     border: 2px solid #E3E3E3; border-radius: 21px;
     background-color: #E8E8E8;
     transition: background-color 0.3s ease-in;
 }
-.onoffswitch-label:before {
+.onoff-switch-label:before {
     content: "";
     display: block; width: 21px; margin: 0px;
     background: #FFFFFF;
@@ -157,13 +157,13 @@ h2 { font-size: 15pt; padding:0; margin: 5px 0; }
     border: 2px solid #E3E3E3; border-radius: 21px;
     transition: all 0.3s ease-in 0s; 
 }
-.onoffswitch-checkbox:checked + .onoffswitch-label {
+.onoffswitch-checkbox:checked + .onoff-switch-label {
     background-color: #007FFF;
 }
-.onoffswitch-checkbox:checked + .onoffswitch-label, .onoffswitch-checkbox:checked + .onoffswitch-label:before {
+.onoffswitch-checkbox:checked + .onoff-switch-label, .onoffswitch-checkbox:checked + .onoff-switch-label:before {
    border-color: #007FFF;
 }
-.onoffswitch-checkbox:checked + .onoffswitch-label:before {
+.onoffswitch-checkbox:checked + .onoff-switch-label:before {
     right: 0px; 
 }
 .tableZebra p {
