@@ -1305,7 +1305,10 @@ function setChosenInCke(multiple = false, max_width = '500px') {
             } else {
                 $(this).chosen("destroy").chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
                 });
             }
         });
@@ -6155,7 +6158,10 @@ function getLinksProcessoPublicoPro(href) {
         $('.trListDocPublico').show();
         $('#selectDocPublico').html(optionSelectDocumentos).chosen("destroy").chosen({
             placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
         }).trigger('chosen:updated').trigger('chosen:activate');
 
         setTimeout(() => {

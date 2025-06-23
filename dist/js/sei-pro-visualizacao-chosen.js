@@ -24,7 +24,10 @@ function setReplaceSelectOnVisualizacao(force = false) {
                     return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none' || (!force && typeof $(this).data('chosen') !== 'undefined') )
                 }).chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
                 });
 
             // console.log('@ setReplaceSelectOnVisualizacao',force);

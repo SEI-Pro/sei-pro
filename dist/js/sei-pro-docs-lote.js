@@ -14,8 +14,9 @@ var aborted = false;
 var flagError = false;
 var flagConfirmSpecialChars = false;
 var forceNames = false;
-var pageHelp = typeof URLPAGES_SPRO !== 'undefined' ? URLPAGES_SPRO+'/pages/DOCUMENTOSEMLOTE.html' : false;
+var pageHelp = typeof URLPAGES_SPRO !== 'undefined' ? `${URLPAGES_SPRO}/pages/DOCUMENTOSEMLOTE.html` : false;
 var docsCriados = [];
+var listTxtPadraoDoc = [];
 
 var docsLote_getDocsArvore = (optionBlank = false, disableId = false) => {
     getDocsArvore(
@@ -24,13 +25,13 @@ var docsLote_getDocsArvore = (optionBlank = false, disableId = false) => {
             getDocsArvore_fillSelect(select, optionBlank, disableId);
         }, 
         function() {
-            $("#btnSelecaoDoc").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+            // $("#btnSelecaoDoc").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
         }, 
         optionBlank, 
         disableId
     );
 }
-var docsLote_docAnalysis = (protocolo) => {
+var docsLote_docAnalysis = async (protocolo, nrTxtPadrao) => {
     $('#fieldList').remove();
     dynamicFields = [];
 
@@ -39,23 +40,69 @@ var docsLote_docAnalysis = (protocolo) => {
         $("#btnConfirmAnalysis").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled'); //Desabilita Botao OK ate o carregamento
     }
 
-    const selectedDoc = dataDocs.find((doc) => doc.id_documento.toString() === protocolo.toString());
+    const selectedDoc = protocolo? dataDocs.find((doc) => doc.id_documento.toString() === protocolo.toString()) : false;
+    const selectedTxtPadrao = nrTxtPadrao? listTxtPadraoDoc.find((txtPadrao) => txtPadrao.id.toString() === nrTxtPadrao.toString()) : false;
 
-    $.get(selectedDoc.src).done((contentDoc) => {
-        const body = contentDoc.substring(contentDoc.indexOf('<body>'), contentDoc.lastIndexOf('</body>'))
-        const matches = Array.from(new Set(body.match(/##.+?##/gm)));//rearranjo para remover duplicatas
-        docsLote_fillModelAnalysis(matches, selectedDoc);
-    }).then(() => {
-        $("#loaderAnalysis").remove();
-    });
+    if (selectedTxtPadrao) {
+        $.get(selectedTxtPadrao.view).done((contentTxtPadrao) => {
+            selectedTxtPadrao.nome = selectedTxtPadrao.name;
+            selectedTxtPadrao.numero = selectedTxtPadrao.id;
+            const body = $(contentTxtPadrao).find('#txaConteudo').text();
+            const matches = Array.from(new Set(body.match(/##.+?##/gm)));//rearranjo para remover duplicatas
+            docsLote_fillModelAnalysis(matches, selectedTxtPadrao, true);
+        }).then(() => {
+            $("#loaderAnalysis").remove();
+        });
+    } else {
+        $.get(selectedDoc.src).done((contentDoc) => {
+            const body = contentDoc.substring(contentDoc.indexOf('<body>'), contentDoc.lastIndexOf('</body>'));
+            const matches = Array.from(new Set(body.match(/##.+?##/gm)));//rearranjo para remover duplicatas
+            docsLote_fillModelAnalysis(matches, selectedDoc);
+        }).then(() => {
+            $("#loaderAnalysis").remove();
+        });
+    }
 }
-
-var docsLote_fillModelAnalysis = (matches, selectedDoc) => {
+var docsLote_fillModelAnalysis = async (matches, selectedDoc, txtModelo = false) => {
     selectedModel = selectedDoc;
     dynamicFields = matches.map((field) => field.trim());
 
     $('#dialogBoxDocLote').append(`<div id='fieldList'></div>`);
-    $('#fieldList').append(`<p class="textAnalysis"><i class='fas fa-file-alt azulColor'></i> Documento: ${selectedDoc.nome}</p>`)
+    $('#fieldList').append(`<p class="textAnalysis"><i class='fas fa-${txtModelo ? 'keyboard' : 'file-alt'} cinzaColor'></i> ${txtModelo ? 'Texto Padr\u00E3o' : 'Documento'} : ${selectedDoc.nome}</p>`)
+    if (txtModelo) {
+        $("#btnConfirmAnalysis").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
+        
+        const tiposDocumentos = await getTypeSEI('documentos');
+        const selectTiposDocumentos = tiposDocumentos ? $.map(tiposDocumentos, function(v){ return '<option value="'+v.id+'">'+v.name+'</option>' }).join('') : false;
+
+        $('#fieldList').append(`
+            <p class="textAnalysis">
+                <i class='fas fa-file-alt cinzaColor'></i> Tipo de Documento:
+            </p>
+            <p class="textAnalysis">
+                <select style="width:300px" id="tipoDocumentoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposDocumentos}</select>
+            </p>
+            `);
+        
+        $('#tipoDocumentoSelect').chosen({
+            placeholder_text_single: ' ', 
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
+        });
+        $('#tipoDocumentoSelect').on('change', function() {
+            const id_tipo_documento = $('#tipoDocumentoSelect').val();
+            const tipoDocumento = tiposDocumentos.find((tipo) => tipo.id === id_tipo_documento);
+            if (tipoDocumento) {
+                selectedModel.nome = tipoDocumento.name;
+                selectedModel.id_tipo_documento = id_tipo_documento;
+                $("#btnConfirmAnalysis").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+            } else {
+                $("#btnConfirmAnalysis").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
+            }
+        });
+    }
     if (matches.length) {
 
         let lista = `<ul class="textAnalysis" style="max-height: 250px;overflow-y: auto;">\n`;
@@ -65,7 +112,7 @@ var docsLote_fillModelAnalysis = (matches, selectedDoc) => {
         lista += '</ul>';
         $('#fieldList').append(`<p class="textAnalysis dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Campos din\u00E2micos detectados:</p>`)
         $('#fieldList').append(lista);
-        $("#btnConfirmAnalysis").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+        if (!txtModelo) $("#btnConfirmAnalysis").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
     } else {
         $('#fieldList').append(`<small class="noFieldsError">N\u00E3o foi identificado nenhum campo din\u00E2mico no documento modelo informado. Verifique se os mesmos foram redigidos corretamente com o padr\u00E3o ##nome do campo##.</small>`)
     }
@@ -136,7 +183,7 @@ var docsLote_printFieldError = () => {
     $('#dialogBoxDocLote').append(`<p class="noFieldsError"><i class="fas fa-exclamation-triangle vermelhoColor"></i> N\u00E3o foi identificado nenhum cabe\u00E7alho no arquivo enviado. <br><br>\uD83E\uDD14 Verifique se a planilha n\u00E3o est\u00E1 vazia.</p>`);
     $("#btnConfirmAnalysis").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
 }
-var docsLote_printDataCrossing = () => {
+var docsLote_printDataCrossing = async () => {
     dataCrossing = [];
     const cleanFields = dynamicFields.map((field) => field.replaceAll('#', ''));
         CSVHeaders.forEach((header) => {
@@ -164,6 +211,10 @@ var docsLote_printDataCrossing = () => {
         let selectData = '';
             CSVHeaders.forEach(header => { selectData += `<option>${header}</option>` });
 
+        const tiposProcessos = await getTypeSEI('processos');
+        const selectTiposProcessos = tiposProcessos ? $.map(tiposProcessos, function(v){ return '<option value="'+v.id+'">'+v.name+'</option>' }).join('') : false;
+
+
         $('#dialogBoxDocLote').append(`
             <div id="divTableDataCrossing">
                 <div style="max-height: 300px;overflow-y: auto;">
@@ -177,47 +228,150 @@ var docsLote_printDataCrossing = () => {
                             ${tbody}
                         </tbody>
                     </table>
-                    </div>
-            ${
-                !isNewSEI ?
-                `<hr style="all:revert">
-                    <div>
-                        <p>Nome do documento na \u00E1rvore de processos *</p>
-                        <select id="nomesDoc">${selectData}</select>
-                        <p><small>*Alguns documentos possuem a propriedade <b>N\u00FAmero</b> que quando preenchida exibe o valor na \u00E1rvore de processos logo ap\u00F3s o tipo. Exemplo: Anexo Contrato (Anexo = tipo e Contrato = N\u00FAmero)</small></p>
-                        <div class="divInputForceNames" style="margin: 10px 0; font-size: 9pt;">
-                            <input id="checkForceNames" type="checkbox">
-                            <label for="checkForceNames">For\u00E7ar atribui\u00E7\u00E3o de nomes na \u00C1rvore (Pode gerar erros \uD83D\uDC80)</label>
-                        </div>
-                    </div>
                 </div>
-                `
-                : isNewSEI ?
-                `<hr style="all:revert">
-                    <div>
-                        <p>Nome do documento na \u00E1rvore de processos*</p>
-                        <select id="nomesDoc">${selectData}</select>
-                        <p><small>* Somente alguns tipos de documentos suportam</small></p>
-                    </div>
-                </div>
-                ` : 
-                ""
-            }`);
-            $('#nomesDoc').chosen({placeholder_text_single: ' ', no_results_text: 'Nenhum resultado encontrado'});
+                <hr style="all:revert;border: 1px solid #dcdcdc;margin: 10px 0;">
+                <table style="font-size: 9pt !important;width: 100%;">
+                    <tbody>
+                        ${
+                            !isNewSEI ?
+                            `
+                            <tr>
+                                <td colspan="2">
+                                    <p style="font-size: 1.2em;"><i class='fas fa-file-alt cinzaColor'></i> Nome do documento na \u00E1rvore de processos <a class="newLink" style="font-size: 0.8em;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Alguns documentos possuem a propriedade <b>N\u00FAmero</b> que quando preenchida exibe o valor na \u00E1rvore de processos logo ap\u00F3s o tipo. Exemplo: Anexo Contrato (Anexo = tipo e Contrato = N\u00FAmero)\')"><i class="fas fa-info-circle azulColor"></i></a></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <select id="nomesDoc">${selectData}</select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 50px;">
+                                    <div class="divInputForceNames" style="margin: 10px 0; font-size: 9pt;transform: scale(0.9);">
+                                        <div class="onoffswitch" style="float: left;margin-right: 1em;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="checkForceNames" data-type="setdate" tabindex="0">
+                                        <label class="onoff-switch-label" for="checkForceNames"></label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <label for="checkForceNames">For\u00E7ar atribui\u00E7\u00E3o de nomes na \u00C1rvore (Pode gerar erros \uD83D\uDC80)</label>
+                                </td>
+                            </tr>
+                            `
+                            : isNewSEI ?
+                            `
+                            <tr>
+                                <td>
+                                    <div style="margin: 10px 0;display: inline-block;">
+                                    <p style="font-size: 1.2em;">Nome do documento na \u00E1rvore de processos <a class="newLink" style="font-size: 0.8em;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Somente alguns tipos de documentos suportam a propriedade <b>N\u00FAmero</b> que quando preenchida exibe o valor na \u00E1rvore de processos logo ap\u00F3s o tipo. Exemplo: Anexo Contrato (Anexo = tipo e Contrato = N\u00FAmero)\')"><i class="fas fa-info-circle colorAzul"></i></a></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <select id="nomesDoc">${selectData}</select>
+                                </td>
+                            </tr>
+                            ` : 
+                            ""
+                        }
+                    </tbody>
+                </table>
+                <hr style="all:revert;border: 1px solid #dcdcdc;margin: 10px 0;">
+                <table style="font-size: 9pt !important;width: 100%;">
+                    <tbody>
+                        <tr>
+                            <td style="width: 50px;">
+                                <div style="margin: 10px 0;font-size: 9pt;display: inline-block;transform: scale(0.9);float: left;">
+                                    <div class="onoffswitch" style="float: left;margin-right: 1em;margin-left: 0;">
+                                        <input type="checkbox" onchange="changeNewProcs(this)" name="onoffswitch" class="onoffswitch-checkbox" id="newProcs" data-type="setdate" tabindex="0">
+                                        <label class="onoff-switch-label" for="newProcs"></label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>     
+                                <label for="newProcs">Criar cada documento em um novo processo</label>
+                            </td>
+                        </tr>
+                        <tr style="display:none" class="containerTipoProcessoSelect">
+                            <td colspan="2">
+                                <p style="font-size: 1.2em;"><i class="fas fa-folder-open cinzaColor"></i> Tipo de Processo:</p>
+                                <select onchange="checkTipoProcessoSelect()" id="tipoProcessoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposProcessos}</select>
+                            </td>
+                        </tr>
+                        <tr style="display:none" class="containerTipoProcessoSelect">
+                            <td colspan="2">
+                                <p style="font-size: 1.2em;"><i class="fas fa-comment-dots cinzaColor"></i> Especifica\u00E7\u00E3o do processo: (Dispon\u00EDvel campos din\u00E2micos da planilha)</p>
+                                <input type="text" class="infraText" id="txtEspecificacaoProcesso" style="width: 480px;padding: 0.8em;" placeholder="Ex: Certificado de ##nome_aluno##">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            `);
+            $('#nomesDoc').chosen({
+                placeholder_text_single: ' ', 
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
+            });
+            $('#tipoProcessoSelect').chosen({
+                placeholder_text_single: ' ', 
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
+            });    
+            $('#tipoProcessoSelect_chosen').css('width', '500px');
 
     }
     setTimeout(() => {
         centralizeDialogBox(dialogBoxPro);
     }, 300);
+    setTimeout(() => {
+        $('#dialogBoxPro').removeAttr('style');
+    }, 500);
 }
 
+var changeNewProcs = async (this_) => {
+    if ($(this_).is(':checked')) {
+        $('.containerTipoProcessoSelect').show();
+        checkTipoProcessoSelect();
+    } else {
+        $('.containerTipoProcessoSelect').hide();
+        $("#btnConfirm").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+    }
+};
+
+var checkTipoProcessoSelect = () => {
+    if ($('#tipoProcessoSelect').val() && $('#tipoProcessoSelect').val() != 'null') {
+        $("#btnConfirm").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+    } else {
+        $("#btnConfirm").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
+    }
+}
+var docsLote_getLinkNewDoc = async (param, dataCSV) => {
+    let urlNewDoc = false;
+    if (param.createNewProcs) {
+
+        const txtEspecificacaoProcesso = param.txtEspecificacaoProcesso.replace(/##(.*?)##/g, function(match, chave) {
+            return dataCSV[chave] !== undefined ? dataCSV[chave] : match;
+        });
+
+        const urlProcesso = await docsLote_setNewProc(param.idTipoProcedimento, txtEspecificacaoProcesso);
+        if (urlProcesso) {
+            urlNewDoc = await docsLote_getUrlNewDoc(urlProcesso);
+        }
+    } else {
+        urlNewDoc = getUrlNewDocArvore();
+    }
+    return urlNewDoc;
+}
 var docsLote_execute = async (param) => {
     aborted = false;
 
-    // const urlNewDoc = $($ifrVisualizacao).contents().find("img[alt='Incluir Documento'").parent().attr('href');
-    const urlNewDoc = getUrlNewDocArvore();
-
-    if (!urlNewDoc) {
+    if (!param.createNewProcs && !getUrlNewDocArvore()) {
         flagError = true;
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao localizar o link de inserir documento. Verifique se o processo encontra-se aberto em sua unidade!');
     } else {
@@ -235,7 +389,7 @@ var docsLote_execute = async (param) => {
                 Deseja continuar ?
                 `)
                 if (!confirmSpecialChars) {
-                    docLoteModalCruzamentoDados(param.nrDoc, param.csvFile);
+                    docLoteModalCruzamentoDados(param.nrDoc, param.csvFile, param.nrTxtPadrao);
                     flagConfirmSpecialChars = true;
                     return;
                 }
@@ -244,6 +398,7 @@ var docsLote_execute = async (param) => {
 
         for (let i = 0; i < CSVData.length; i++) {
             try {
+                const urlNewDoc = await docsLote_getLinkNewDoc(param, CSVData[i]);
                 const response1 = await docsLote_clickNewDoc(urlNewDoc);
                 const response2 = await docsLote_selectDocType(response1.urlExpandDocList);
                 const response3 = await docsLote_formNewDoc(response2.urlFormNewDoc, CSVData[i], param);
@@ -259,19 +414,19 @@ var docsLote_execute = async (param) => {
                 if (e.message && e.message === "cancel") {
                     $('#ifrArvore').contents()[0].location.reload();
                     setTimeout(() => {
-                        var htmlFilterDoclote = '<div class="btn-group filterTablePro" role="group" style="margin: 10px 0;">'+
-                                                '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
-                                                '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
-                                                '       <span class="text">Baixar</span>'+
-                                                '   </button>'+
-                                                '   <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">'+
-                                                '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
-                                                '       <span class="text">Copiar</span>'+
-                                                '   </button>'+
-                                                '</div>';
+                        var htmlFilterDoclote = `<div class="btn-group filterTablePro" role="group" style="margin: 10px 0;">
+                                                <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">
+                                                    <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>
+                                                    <span class="text">Baixar</span>
+                                                </button>
+                                                <button type="button" onclick="copyTablePro(this)" data-icon="fas fa-copy" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Copiar" class="btn btn-sm btn-light">
+                                                    <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>
+                                                    <span class="text">Copiar</span>
+                                                </button>
+                                            </div>`;
 
                         var theadRows = '<tr>';
-                            theadRows += $.map(Object.keys(docsCriados[0].data_doc),function(k){ return '<th class="tituloControle">'+k+'</th>' }).join('');
+                            theadRows += $.map(Object.keys(docsCriados[0].data_doc),function(k){ return `<th class="tituloControle">${k}</th>` }).join('');
                             theadRows += '   <th class="tituloControle" style="white-space: nowrap;">nome_documento_gerado</th>';
                             theadRows += '   <th class="tituloControle" style="white-space: nowrap;">numero_sei_gerado</th>';
                             theadRows += '   <th class="tituloControle" style="white-space: nowrap;">link_documento_gerado</th>';
@@ -279,11 +434,11 @@ var docsLote_execute = async (param) => {
 
                         var tbodyRows = $.map(docsCriados, function(v){ 
                                             var _return = '<tr>';
-                                                _return += $.map(v.data_doc,function(d){ return '<td style="white-space: nowrap;">'+d+'</td>' }).join('');
+                                                _return += $.map(v.data_doc,function(d){ return `<td style="white-space: nowrap;">${d}</td>` }).join('');
                                                 // _return += $.map(v.data_doc,function(d){ return '<td style="white-space: nowrap;">'+decodeURIComponent(escape(d))+'</td>' }).join('');
-                                                _return += '   <td style="white-space: nowrap;">'+(v.nome_documento || '')+' '+(v.data_doc[param.docsNames] || '')+'</td>';
-                                                _return += '   <td style="white-space: nowrap;">'+(v.nr_sei || '')+'</td>';
-                                                _return += '   <td style="white-space: nowrap;"><a href="'+(v.url_doc || '')+'" target="_blank" class="bLink" style="font-size: 9pt;">'+(v.url_doc || '')+'</a></td>';
+                                                _return += `   <td style="white-space: nowrap;">${v.nome_documento || ''} ${v.data_doc[param.docsNames] || ''}</td>`;
+                                                _return += `   <td style="white-space: nowrap;">${v.nr_sei || ''}</td>`;
+                                                _return += `   <td style="white-space: nowrap;"><a href="${v.url_doc || ''}" target="_blank" class="bLink" style="font-size: 9pt;">${v.url_doc || ''}</a></td>`;
                                                 _return += '</tr>';
                                             return _return
                                         }).join('');
@@ -301,7 +456,7 @@ var docsLote_execute = async (param) => {
                                 `;
                         $('#preparingProgressCircular').remove();
                         $('#cancelExecute').hide();
-                        $('#progress').html(`<h4 style="text-align:center;margin: 30px 0 10px 0; font-size: 1.5rem;"><i class="fas fa-check-circle verdeColor" style="font-size: 1em;"></i> Progresso finalizado! \uD83D\uDC4F</h4>`+tableResult);
+                        $('#progress').html(`<h4 style="text-align:center;margin: 30px 0 10px 0; font-size: 1.5rem;"><i class="fas fa-check-circle verdeColor" style="font-size: 1em;"></i> Progresso finalizado! \uD83D\uDC4F</h4>${tableResult}`);
                         // setTimeout(() => { resetDialogBoxPro('dialogBoxPro') }, 2000);
                         dialogBoxPro.dialog('option', 'width', 870);
                         dialogBoxPro.dialog('option', 'height', 500);
@@ -333,33 +488,43 @@ var docsLote_clickNewDoc = async (urlNewDoc) => {
 }
 var docsLote_selectDocType = async (urlExpandDocList) => {
 
-  const htmlExpandedDocList = await $.ajax({
-    method: 'POST',
-    url: urlExpandDocList,
-    data: { hdnFiltroSerie: 'T' }
-  });
-
-  const htmlTypeList = $(htmlExpandedDocList).find('.ancoraOpcao')
-  let typeList = []
-  for (let i = 0; i < htmlTypeList.length; i++) {
-    typeList.push({
-      nome: htmlTypeList[i].textContent,
-      url: htmlTypeList[i].getAttribute("href")
+    const htmlExpandedDocList = await $.ajax({
+        method: 'POST',
+        url: urlExpandDocList,
+        data: { hdnFiltroSerie: 'T' }
     });
-  }
-  let urlFormNewDoc = '';
-  typeList.some((type) => {
-    if (selectedModel.nome.startsWith(type.nome)) {
-      urlFormNewDoc = type.url;
-      return true;
+
+    const htmlTypeList = $(htmlExpandedDocList).find('.ancoraOpcao');
+
+    let checkPost = htmlTypeList.attr('href');
+        checkPost = typeof checkPost !== 'undefined' && checkPost == '#' ? true : false;
+
+
+    let urlFormNewDoc = false;
+
+    if (checkPost) {
+        urlFormNewDoc = await getSerieForm($(htmlExpandedDocList), null, selectedModel.nome, selectedModel.id_tipo_documento);
+    } else {
+        let typeList = [];
+        for (let i = 0; i < htmlTypeList.length; i++) {
+            typeList.push({
+                nome: htmlTypeList[i].textContent,
+                url: htmlTypeList[i].getAttribute("href")
+            });
+        }
+        typeList.some((type) => {
+            if (selectedModel.nome.startsWith(type.nome)) {
+                urlFormNewDoc = type.url;
+                return true;
+            }
+        });
     }
-  });
-  if (aborted) throw new Error("cancel");
-  if (urlFormNewDoc != '') $('#progress span').text('\u2588\u2588\u2592\u2592\u2592\u2592');
-  return {
-    urlFormNewDoc,
-    success: true
-  };
+    if (aborted) throw new Error("cancel");
+    if (urlFormNewDoc) $('#progress span').text('\u2588\u2588\u2592\u2592\u2592\u2592');
+    return {
+        urlFormNewDoc,
+        success: true
+    };
 }
 var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
     const htmlFormNewDoc = await $.get(urlFormNewDoc);
@@ -394,7 +559,11 @@ var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
     params.hdnFlagDocumentoCadastro = '2';
     params.txaObservacoes = '';
     params.txtDescricao = '';
-    params.txtProtocoloDocumentoTextoBase = selectedModel.numero;
+    if (dataDialog.nrTxtPadrao) {
+        params.selTextoPadrao = selectedModel.numero;
+    } else {
+        params.txtProtocoloDocumentoTextoBase = selectedModel.numero;
+    }
 
     const regex = new RegExp(Object.keys(docsLote_normalChars).join('|'), 'g');
     // let nomeArvore = forceNames ? data[dataDialog.docsNames].replace(regex, (match) => docsLote_normalChars[match]).substring(0, 50) : data[dataDialog.docsNames].substring(0, 50);
@@ -420,9 +589,9 @@ var docsLote_confirmDocData = async (urlConfirmDocData, params) => {
 
     var postData = '';
     for (var k in params) {
-        if (postData !== '') postData = postData + '&';
+        if (postData !== '') postData = `${postData}&`;
         var valor = (k=='txtNomeArvore') ? escapeComponent(params[k]) : params[k];
-            postData = postData + k + '=' + valor;
+            postData = `${postData}${k}=${valor}`;
     }
 
     const htmlDocCreated = await $.ajax({
@@ -433,17 +602,14 @@ var docsLote_confirmDocData = async (urlConfirmDocData, params) => {
         contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1'
     });
 
-    const lines = htmlDocCreated.split('\n');
-    let urlEditor = '';
-    if (!isNewSEI) {
-        urlEditor = lines.filter((line) => line.includes(`if ('controlador.php?acao=editor_montar`))[0].match(/'(.+)'!/)[1];
-    } else if (isNewSEI) {
-        urlEditor = lines.filter((line) => line.includes(`infraAbrirJanela('controlador.php?acao=editor_montar`))[0].match(/'(.+?)'/)[0].replaceAll("'", "");;
-    } else
-    throw new Error('vers\u00E3o do SEI incompat\u00EDvel');
+    let urlEditor = false;
+    var searchLinkEditor = htmlDocCreated.match(/controlador\.php\?acao=editor_montar&id_procedimento=[^'"]*/);
+    if (searchLinkEditor) urlEditor = searchLinkEditor[0];
+    else throw new Error('Link de edi\u00E7\u00E3o n\u00E3o encontrado');
 
     if (aborted) throw new Error("cancel");
-    if (urlEditor != '') $('#progress span').text('\u2588\u2588\u2588\u2588\u2592\u2592');
+    if (urlEditor) $('#progress span').text('\u2588\u2588\u2588\u2588\u2592\u2592');
+    else throw new Error('Link de edi\u00E7\u00E3o n\u00E3o encontrado');
 
     return {
         urlEditor,
@@ -461,7 +627,9 @@ var docsLote_editDocContent = async (urlEditor, data) => {
     const textAreas = $(htmlEditor).find('div#divEditores textarea');
     const allText = $.map(textAreas, function(v){ return $(v).text() }).join('');
     const arrayCamposDinamicos = uniqPro(getHashTagsPro($(allText).map(function(){ return $(this).text().replace(/\u00A0/gm, " ") }).get().join(' ')));
-    const dadosProcesso = camposDinamicosProcesso(arrayCamposDinamicos);
+    const dadosProcesso = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' 
+        ? camposDinamicosProcesso(arrayCamposDinamicos) 
+        : false;
     const regex1 = new RegExp(dataCrossing.map((data) => `##${data}##`).join('|'), 'g');
     const regex2 = new RegExp(Object.keys(docsLote_specialChars).join('|'), 'g');
     const regex3 = new RegExp(arrayCamposDinamicos.map((data) => `#${data}`).join('|'), 'g');
@@ -471,7 +639,7 @@ var docsLote_editDocContent = async (urlEditor, data) => {
             data[match.substring(2, match.length - 2)].replace(regex2, (match) => docsLote_specialChars[match])
         )
     );
-    /* if (arrayCamposDinamicos.length) {
+    /* if (dadosProcesso && arrayCamposDinamicos.length) {
         textAreasReplaced = textAreas.map((_, el) =>
         $(el).text().replace(regex3, (match) =>dadosProcesso[match.substring(1, match.length)])
         );
@@ -497,7 +665,7 @@ var docsLote_editDocContent = async (urlEditor, data) => {
         id_procedimento: urlParams.id_procedimento, 
         data_doc: data,
         nome_documento: nomeDocumento,
-        url_doc: url_host+'?acao=procedimento_trabalhar&id_procedimento='+urlParams.id_procedimento+'&id_documento='+urlParams.id_documento
+        url_doc: `${url_host}?acao=procedimento_trabalhar&id_procedimento=${urlParams.id_procedimento}&id_documento=${urlParams.id_documento}`
     });
 
     return {
@@ -540,34 +708,72 @@ function docLoteModalSelecaoDoc() {
         flagError = true;
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao localizar o link de inserir documento. Verifique se o processo encontra-se aberto em sua unidade!');
     } else {
-        var htmlBox =   '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: top;text-align: left;height: 40px;" class="label">'+
-                        '               <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> Selecione abaixo, dentre os documentos constantes na \u00E1rvore do processo, o modelo para reprodu\u00E7\u00E3o em lote:</label>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '           <td class="required">'+
-                        '               <select id="docLoteSelect"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '  </table>'+
-                        (restrictConfigValue('documentosemlote') ? '<div style="margin: 10px 0;font-size: 8pt;color: #888;">C\u00F3digo-fonte gentilmente cedido por <a href="https://github.com/tcgontijo" target="_blank" style="color: #00c;">tcgontijo</a> | PluriDocs SEI!<div>' : '');
+        var htmlBox = `<table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                        <tr>
+                            <td style="vertical-align: top;text-align: left;height: 40px;" class="label">
+                                <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> Selecione abaixo, dentre os documentos constantes na \u00E1rvore do processo, o modelo para reprodu\u00E7\u00E3o em lote:</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="required">
+                                <select id="docLoteSelect"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: bottom;text-align: left;height: 40px;" class="label">
+                                <label for="textoPadraoSelect"><i class="iconPopup iconSwitch fas fa-keyboard cinzaColor"></i> ou Selecione do Texto Padr\u00E3o da Unidade:</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <select id="textoPadraoSelect"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>
+                            </td>
+                        </tr>
+                    </table>
+                    ${restrictConfigValue('documentosemlote') ? '<div style="margin: 10px 0;font-size: 8pt;color: #888;">C\u00F3digo-fonte gentilmente cedido por <a href="https://github.com/tcgontijo" target="_blank" style="color: #00c;">tcgontijo</a> | PluriDocs SEI!<div>' : ''}`;
 
         resetDialogBoxPro('dialogBoxPro');
         dialogBoxPro = $('#dialogBoxPro')
-            .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'</div>')
+            .html(`<div id="dialogBoxDocLote" class="dialogBoxDiv">${htmlBox}</div>`)
             .dialog({
                 title: 'Documento modelo - Sele\u00E7\u00E3o (1/6)',
                     width: 600,
                     open: () => {
-                        if (typeof URL_SPRO !== 'undefined' && typeof jschardet === 'undefined') $.getScript(URL_SPRO+"js/lib/jschardet.min.js"); 
-                        if (typeof URL_SPRO !== 'undefined' && typeof Papa === 'undefined') $.getScript(URL_SPRO+"js/lib/papaparse.js");
+                        if (typeof URL_SPRO !== 'undefined' && typeof jschardet === 'undefined') $.getScript(`${URL_SPRO}js/lib/jschardet.min.js`); 
+                        if (typeof URL_SPRO !== 'undefined' && typeof Papa === 'undefined') $.getScript(`${URL_SPRO}js/lib/papaparse.js`);
                         $("#btnSelecaoDoc").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
-                        $('#docLoteSelect').chosen({placeholder_text_single: ' ', no_results_text: 'Nenhum resultado encontrado'});
-                        $('#docLoteSelect_chosen').addClass('chosenLoading');
-                        docsLote_getDocsArvore();
+                        $('#docLoteSelect')
+                            .on('change', () => {
+                                $('#textoPadraoSelect').val('').trigger('chosen:updated');
+                                $("#btnSelecaoDoc").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+                            })
+                            .chosen({
+                                placeholder_text_single: ' ', 
+                                no_results_text: 'Nenhum resultado encontrado',
+                                normalize_search_text: function(text) {
+                                    return removeAcentos(text.toLowerCase());
+                                }
+                            });
+                        $('#textoPadraoSelect').chosen({
+                            placeholder_text_single: ' ', 
+                            no_results_text: 'Nenhum resultado encontrado',
+                            normalize_search_text: function(text) {
+                                return removeAcentos(text.toLowerCase());
+                            }
+                        });
+                        docsLote_getDocsArvore(true);
                         docsCriados = [];
+                        $('#textoPadraoSelect')
+                            .on('change', () => {
+                                $('#docLoteSelect').val('').trigger('chosen:updated');
+                                $("#btnSelecaoDoc").prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+                            })
+                            .html('<option value="">&nbsp;</option>');
+                        txtPadrao_getList().then(listTxtPadrao => {
+                            listTxtPadraoDoc = listTxtPadrao;
+                            $('#textoPadraoSelect').append(listTxtPadrao.map(item => `<option value="${item.id}">${item.name}</option>`).join(''));
+                            $('#textoPadraoSelect').trigger('chosen:updated');
+                        });
                     },
                     buttons: [{
                         text: "Ajuda",
@@ -585,7 +791,8 @@ function docLoteModalSelecaoDoc() {
                                 resetDialogBoxPro('dialogBoxPro');
                             } else {
                                 const nrDoc = $('#docLoteSelect').find('option:selected').data('id_documento');
-                                docLoteModalAnaliseDocModelo(nrDoc);
+                                const nrTxtPadrao = $('#textoPadraoSelect').val();
+                                docLoteModalAnaliseDocModelo(nrDoc, nrTxtPadrao);
                             }
                         }
                     }]
@@ -593,23 +800,23 @@ function docLoteModalSelecaoDoc() {
     }
 }
 
-var docLoteModalSelecaoBaseDados = (nrDoc) => {
-    var htmlBox =   '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                    '      <tr>'+
-                    '          <td style="vertical-align: top;text-align: left;height: 40px;" class="label">'+
-                    '               <label for="inputBD"><i class="iconPopup iconSwitch fas fa-upload cinzaColor"></i>Selecione um arquivo no formato CSV para servir como base de dados para a gera\u00E7\u00E3o de documentos em lote:</label>'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '      <tr>'+
-                    '           <td class="required">'+
-                    '               <input id="inputBD" type="file" accept=".csv, text/csv"></input>'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '  </table>';
+var docLoteModalSelecaoBaseDados = (nrDoc, csvFile, nrTxtPadrao) => {
+    var htmlBox = `<table style="font-size: 10pt;width: 100%;" class="seiProForm">
+                    <tr>
+                        <td style="vertical-align: top;text-align: left;height: 40px;" class="label">
+                            <label for="inputBD"><i class="iconPopup iconSwitch fas fa-upload cinzaColor"></i>Selecione um arquivo no formato CSV para servir como base de dados para a gera\u00E7\u00E3o de documentos em lote:</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="required">
+                            <input id="inputBD" type="file" accept=".csv, text/csv"></input>
+                        </td>
+                    </tr>
+                </table>`;
 
     resetDialogBoxPro('dialogBoxPro');
     dialogBoxPro = $('#dialogBoxPro')
-        .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'</div>')
+        .html(`<div id="dialogBoxDocLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Base de dados - Upload (3/6)',
             width: 600,
@@ -630,7 +837,7 @@ var docLoteModalSelecaoBaseDados = (nrDoc) => {
                 text: "Voltar",
                 icon: 'ui-icon-arrowthick-1-w',
                 click: function () {
-                    docLoteModalAnaliseDocModelo(nrDoc);
+                    docLoteModalAnaliseDocModelo(nrDoc, nrTxtPadrao);
                 }
             },{
                 id: 'btnEnviaCSV',
@@ -643,7 +850,7 @@ var docLoteModalSelecaoBaseDados = (nrDoc) => {
                     const file = $("#inputBD")[0].files[0];
                     
                     if (file.name.substring(file.name.lastIndexOf("."), file.name.length).toLocaleLowerCase().trim() === ".csv") {
-                        docLoteModalAnaliseCSV(nrDoc, $("#inputBD")[0].files[0]);
+                        docLoteModalAnaliseCSV(nrDoc, $("#inputBD")[0].files[0], nrTxtPadrao);
                     } else {
                         $('#inputBD').after(`<small class="noFieldsError">Arquivo inv\u00E1lido! Selecione um documento no formato "CSV".</small>`);
                     }
@@ -662,7 +869,7 @@ var docLoteModalLoader = (paramData) => {
 
     resetDialogBoxPro('dialogBoxPro');
     dialogBoxPro = $('#dialogBoxPro')
-        .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'</div>')
+        .html(`<div id="dialogBoxDocLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Documentos em lote - Criando (6/6)',
             width: 300,
@@ -693,7 +900,7 @@ var docLoteModalErro = (textError = false) => {
 
     resetDialogBoxPro('dialogBoxPro');
     dialogBoxPro = $('#dialogBoxPro')
-        .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'</div>')
+        .html(`<div id="dialogBoxDocLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: '\uD83E\uDD26\u200D\u2642\uFE0F Ops...',
             width: 600,
@@ -707,12 +914,12 @@ var docLoteModalErro = (textError = false) => {
     });
 }
 
-var docLoteModalCruzamentoDados = (nrDoc, csvFile) => {
+var docLoteModalCruzamentoDados = (nrDoc, csvFile, nrTxtPadrao) => {
     var htmlBox = `<p>Segue abaixo o relacionamento entre cabe\u00E7alhos da base de dados e os campos din\u00E2micos do documento modelo:</p>`;
 
     resetDialogBoxPro('dialogBoxPro');
     dialogBoxPro = $('#dialogBoxPro')
-        .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'</div>')
+        .html(`<div id="dialogBoxDocLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Cruzamento de dado (5/6)',
             width: 600,
@@ -728,7 +935,7 @@ var docLoteModalCruzamentoDados = (nrDoc, csvFile) => {
                 text: "Voltar",
                 icon: 'ui-icon-arrowthick-1-w',
                 click: function () {
-                    docLoteModalSelecaoBaseDados(nrDoc, csvFile);
+                    docLoteModalSelecaoBaseDados(nrDoc, csvFile, nrTxtPadrao);
                 }
             },{
                 id: 'btnConfirm',
@@ -739,8 +946,12 @@ var docLoteModalCruzamentoDados = (nrDoc, csvFile) => {
                     var paramData = {
                         docsNames: $('#nomesDoc').val(),
                         forceNames: $("#checkForceNames").is(":checked"),
+                        createNewProcs: $("#newProcs").is(":checked"),
+                        idTipoProcedimento: $('#tipoProcessoSelect').val(),
+                        txtEspecificacaoProcesso: $('#txtEspecificacaoProcesso').val(),
                         nrDoc: nrDoc,
-                        csvFile: csvFile
+                        csvFile: csvFile,
+                        nrTxtPadrao: nrTxtPadrao
                     };
                     docLoteModalLoader(paramData);
                 }
@@ -748,18 +959,21 @@ var docLoteModalCruzamentoDados = (nrDoc, csvFile) => {
     });
 }
 
-var docLoteModalAnaliseDocModelo = (nrDoc) => {
+var docLoteModalAnaliseDocModelo = (nrDoc, nrTxtPadrao) => {
     var htmlBox = `<p>An\u00E1lise do documento modelo:</p>`;
 
     resetDialogBoxPro('dialogBoxPro');
     dialogBoxPro = $('#dialogBoxPro')
-        .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'</div>')
+        .html(`<div id="dialogBoxDocLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Documento modelo - Campos din\u00E2micos (2/6)',
             width: 600,
             maxHeight: (window.innerHeight * 0.9),
             open: () => {
-                docsLote_docAnalysis(nrDoc);
+                docsLote_docAnalysis(nrDoc, nrTxtPadrao);
+                setTimeout(() => {
+                    $('#dialogBoxPro').removeAttr('style');
+                }, 500);
             },
             buttons: [{
                     text: "Ajuda",
@@ -779,19 +993,19 @@ var docLoteModalAnaliseDocModelo = (nrDoc) => {
                     icon: 'ui-icon-arrowthick-1-e',
                     class: 'confirm ui-state-active',
                     click: function () {
-                        docLoteModalSelecaoBaseDados(nrDoc);
+                        docLoteModalSelecaoBaseDados(nrDoc, null, nrTxtPadrao);
                     }
                 },
             ]
     });
 }
 
-var docLoteModalAnaliseCSV = (nrDoc, csvFile) => {
+var docLoteModalAnaliseCSV = (nrDoc, csvFile, nrTxtPadrao) => {
     var htmlBox = `<p>An\u00E1lise da base de dados:</p>`;
 
     resetDialogBoxPro('dialogBoxPro');
     dialogBoxPro = $('#dialogBoxPro')
-        .html('<div id="dialogBoxDocLote" class="dialogBoxDiv">'+htmlBox+'</div>')
+        .html(`<div id="dialogBoxDocLote" class="dialogBoxDiv">${htmlBox}</div>`)
         .dialog({
             title: 'Base de dados - Cabe\u00E7alhos e registros (4/6)',
             width: 600,
@@ -808,7 +1022,7 @@ var docLoteModalAnaliseCSV = (nrDoc, csvFile) => {
                 text: "Voltar",
                 icon: 'ui-icon-arrowthick-1-w',
                 click: function () {
-                    docLoteModalSelecaoBaseDados(nrDoc, csvFile);
+                    docLoteModalSelecaoBaseDados(nrDoc, csvFile, nrTxtPadrao);
                 }
             },{
                 id: 'btnConfirmAnalysisCSV',
@@ -816,8 +1030,317 @@ var docLoteModalAnaliseCSV = (nrDoc, csvFile) => {
                 icon: 'ui-icon-arrowthick-1-e',
                 class: 'confirm ui-state-active',
                 click: function () {
-                    docLoteModalCruzamentoDados(nrDoc);
+                    docLoteModalCruzamentoDados(nrDoc, csvFile, nrTxtPadrao);
                 }
             }]
     });
 }
+
+// Função assíncrona para obter a URL inicial do procedimento
+const getInitialProcUrl = async () => {
+    const urlInitProc = $(`${mainMenu} a[href*="acao=procedimento_escolher_tipo"]`).attr('href');
+    if (!urlInitProc) {
+        throw new Error('Erro ao iniciar a criação do processo');
+    }
+    return urlInitProc;
+};
+
+// Função assíncrona para obter o HTML inicial do procedimento
+const getInitialProcHtml = async (urlInitProc) => {
+    const htmlInitProc = await $.ajax({ url: urlInitProc });
+    return $(htmlInitProc);
+};
+
+// Função assíncrona para obter a lista completa de tipos de procedimento
+const getFullProcList = async (htmlInitProc) => {
+    const form = isSEI_5 ? htmlInitProc.find('#frmProcedimentoEscolherTipo') : htmlInitProc.find('#frmIniciarProcessoEscolhaTipo');
+    const hrefForm = form.attr('action');
+    
+    const param = {};
+    form.find("input[type=hidden]").each(function () {
+        if ($(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+            param[$(this).attr('name')] = $(this).val();
+        }
+    });
+    param.hdnFiltroTipoProcedimento = 'T';
+
+    const htmlFullList = await $.ajax({
+        method: 'POST',
+        data: param,
+        url: hrefForm
+    });
+    
+    return $(htmlFullList);
+};
+
+// Função assíncrona para obter o formulário do procedimento específico
+const getProcForm = async (htmlFullList, id_tipo_procedimento) => {
+    let urlProc = htmlFullList.find(`a[href*="procedimento_escolher_tipo&id_tipo_procedimento=${id_tipo_procedimento}"]`).attr('href');
+
+    let checkPost = htmlFullList.find('#tblTipoProcedimento').find('a.ancoraOpcao').attr('href');
+        checkPost = typeof checkPost !== 'undefined' && checkPost == '#' ? true : false;
+
+    if (checkPost) {
+        urlProc = await getSerieForm(htmlFullList, id_tipo_procedimento);
+    }
+
+    if (!urlProc) {
+        throw new Error('Erro ao selecionar o tipo de processo. Verifique se o tipo est\u00E1 dispon\u00EDvel no sistema e tente novamente');
+    }
+    
+    const htmlFormProc = await $.ajax({ url: urlProc });
+    return $(htmlFormProc);
+};
+
+const getSerieForm = async (htmlFullList, id_tipo_procedimento, nameDoc = null, id_tipo_documento = null) => {
+    const urlForm = !nameDoc ? htmlFullList.find('#frmProcedimentoEscolherTipo') : htmlFullList.find('#frmDocumentoEscolherTipo');
+    const param = {};
+        urlForm.find("input[type=hidden]").each(function () {
+            if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+                param[$(this).attr('name')] = $(this).val(); 
+            }
+        });
+        
+        if (id_tipo_documento) {
+            param.hdnIdSerie = id_tipo_documento;
+        } else if (nameDoc) {
+            let hdnIdSerie = false; 
+
+            urlForm.find('input.infraCheckbox').each(function(){
+                if ($(this).attr('title').startsWith(nameDoc)) {
+                    hdnIdSerie = $(this).val();
+                    return false;
+                }
+            });
+
+            if (!hdnIdSerie) {
+                throw new Error('Erro ao selecionar o tipo de documento. Verifique se o tipo est\u00E1 dispon\u00EDvel no sistema e tente novamente');
+            }
+
+            param.hdnIdSerie = hdnIdSerie; 
+        } else { param.hdnIdTipoProcedimento = id_tipo_procedimento; }
+
+    const xhr = new XMLHttpRequest();
+    const htmlSerieForm = await $.ajax({ 
+        method: 'POST',
+        data: param,
+        url: urlForm.attr('action'),
+        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+        xhr: function() {
+            return xhr;
+        },
+    });
+    return xhr.responseURL;
+};
+// Função para extrair parâmetros do formulário
+const extractFormParams = (form) => {
+    const param = {};
+    
+    // Inputs hidden
+    form.find("input[type=hidden]").each(function () {
+        if ($(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
+            param[$(this).attr('name')] = $(this).val();
+        }
+    });
+    
+    // Inputs de texto
+    form.find('input[type=text]').each(function () {
+        if ($(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
+            param[$(this).attr('id')] = $(this).val();
+        }
+    });
+    
+    // Selects
+    form.find('select').each(function () {
+        if ($(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
+            param[$(this).attr('id')] = $(this).val();
+        }
+    });
+    
+    // Inputs radio
+    form.find('input[type=radio]').each(function () {
+        if ($(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
+            param[$(this).attr('name')] = $(this).val();
+        }
+    });
+    
+    return param;
+};
+
+// Função para preparar dados do formulário
+const prepareFormData = (param, htmlFormProc, txtEspecificacaoProcesso) => {
+    // Configurações padrão
+    param.rdoNivelAcesso = '0';
+    param.hdnFlagProcedimentoCadastro = '2';
+    param.rdoProtocolo = 'M';
+    param.txaObservacoes = '';
+    param.txtDescricao = txtEspecificacaoProcesso ? txtEspecificacaoProcesso.substring(0, 100).trim() : '';
+    // Assuntos
+    param.hdnAssuntos = (htmlFormProc.find('#selAssuntos option').length === 0) 
+        ? [] 
+        : htmlFormProc.find('#selAssuntos option')
+            .map(function() { 
+                return $(this).val() + '\u00B1' + $(this).text(); 
+            })
+            .get()
+            .join('\u00A5')
+            .replaceAll(' ', '+');
+    
+    // Interessados
+    param.hdnInteressados = htmlFormProc.find('#selInteressados option')
+        .map(function() { 
+            return $(this).val() + '\u00B1' + $(this).text(); 
+        })
+        .get()
+        .join('\u00A5')
+        .replaceAll(' ', '+');
+
+    // Converter para string de dados
+    let postData = '';
+    for (const [key, value] of Object.entries(param)) {
+        if (postData !== '') postData += '&';
+        let valor = value;
+        
+        if (key === 'hdnNomeTipoProcedimento' || key === 'hdnAssuntos' || key === 'txtDescricao') {
+            valor = escapeComponent(value);
+        }
+        
+        postData += `${key}=${valor}`;
+    }
+    return postData;
+};
+
+// Função assíncrona para criar o procedimento
+const createProc = async (hrefForm, postData) => {
+    const xhr = new XMLHttpRequest();
+    const htmlResult = await $.ajax({
+        method: 'POST',
+        data: postData,
+        url: hrefForm,
+        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+        xhr: function() {
+            return xhr;
+        },
+    });
+    
+    return { htmlResult, xhr };
+};
+
+// Função para extrair ID do procedimento criado
+const extractProcId = (htmlResult) => {
+    const $htmlResult = $(htmlResult);
+    const linkProc = $htmlResult.find('#ifrArvore').attr('src');
+    
+    if (!linkProc) return false;
+    
+    const id_procedimento = getParamsUrlPro(linkProc).id_procedimento;
+    return (typeof id_procedimento !== 'undefined') ? id_procedimento : false;
+};
+
+// Função principal assíncrona
+const docsLote_setNewProc = async (id_tipo_procedimento, txtEspecificacaoProcesso) => {
+    try {
+        // 1. Obter URL inicial
+        const urlInitProc = await getInitialProcUrl();
+        
+        // 2. Obter HTML inicial
+        const htmlInitProc = await getInitialProcHtml(urlInitProc);
+        
+        // 3. Obter lista completa de tipos
+        const htmlFullList = await getFullProcList(htmlInitProc);
+        
+        // 4. Obter formulário do procedimento específico
+        const htmlFormProc = await getProcForm(htmlFullList, id_tipo_procedimento);
+        
+        // 5. Extrair parâmetros do formulário
+        const form = htmlFormProc.find('#frmProcedimentoCadastro');
+        const hrefForm = form.attr('action');
+        const param = extractFormParams(form);
+        
+        // 6. Preparar dados do formulário
+        const postData = prepareFormData(param, htmlFormProc, txtEspecificacaoProcesso);
+        
+        // 7. Criar procedimento
+        const { htmlResult, xhr } = await createProc(hrefForm, postData);
+        
+        // 8. Verificar sucesso e extrair ID
+        const status = xhr.responseURL.indexOf('controlador.php?acao=procedimento_trabalhar&acao_origem=procedimento_gerar') !== -1;
+        
+        if (status) {
+            const id_procedimento = extractProcId(htmlResult);
+            
+            if (id_procedimento) {
+                const href = url_host.replace('controlador.php', '') + 
+                           `controlador.php?acao=procedimento_trabalhar&id_procedimento=${String(id_procedimento)}`;
+                return href;
+            } else {
+                alertaBoxPro('Error', 'exclamation-triangle', 
+                    'N\u00E3o foi poss\u00EDvel abrir o processo gerado. Verifique na caixa de entrada de sua unidade');
+                return null;
+            }
+        }
+        
+    } catch (error) {
+        console.error('Erro na cria\u00E7\u00E3o do procedimento:', error);
+        alertaBoxPro('Error', 'exclamation-triangle', error.message);
+        return null;
+    }
+
+};
+
+// Função assíncrona para obter o HTML do processo
+const getProcessHtml = async (urlProcesso) => {
+    const html = await $.ajax({ url: urlProcesso });
+    return $(html);
+};
+
+// Função assíncrona para obter a URL da árvore do processo
+const getTreeUrl = (html) => {
+    const urlArvore = html.find("#ifrArvore").attr('src');
+    if (!urlArvore) {
+        throw new Error('Erro ao obter a URL da u00E1rvore do processo');
+    }
+    return urlArvore;
+};
+
+// Função assíncrona para obter o HTML da árvore
+const getTreeHtml = async (urlArvore) => {
+    const htmlArvore = await $.ajax({ url: urlArvore });
+    return htmlArvore;
+};
+
+// Função para extrair a URL de novo documento usando regex
+const extractNewDocUrl = (htmlArvore) => {
+    const regex = /controlador\.php\?acao=documento_escolher_tipo&acao_origem=arvore_visualizar[^"]*/;
+    const resultado = htmlArvore.match(regex);
+    
+    if (!resultado) {
+        throw new Error('Erro ao encontrar o link de novo documento');
+    }
+    
+    return resultado[0];
+};
+
+// Função principal assíncrona para obter URL de novo documento
+const docsLote_getUrlNewDoc = async (urlProcesso) => {
+    try {
+        // 1. Obter HTML do processo
+        const html = await getProcessHtml(urlProcesso);
+        
+        // 2. Obter URL da árvore
+        const urlArvore = getTreeUrl(html);
+        
+        // 3. Obter HTML da árvore
+        const htmlArvore = await getTreeHtml(urlArvore);
+        
+        // 4. Extrair URL de novo documento
+        const urlNewDoc = extractNewDocUrl(htmlArvore);
+        
+        return urlNewDoc;
+        
+    } catch (error) {
+        console.error('Erro ao obter URL de novo documento:', error);
+        alertaBoxPro('Error', 'exclamation-triangle', error.message);
+        return null;
+    }
+};

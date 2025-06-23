@@ -246,7 +246,10 @@ function changeSelectDocsPrescricao(this_) {
     var optionsDocSEI = optionSelectDocsPrescricao(value);
         _this.closest('table').find('[data-key="documento_relacionado"]').html('<option>&nbsp;</option>'+optionsDocSEI).chosen("destroy").chosen({
             placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
         });
     checkAtivRequiredFields(this_, 'mark');
 }

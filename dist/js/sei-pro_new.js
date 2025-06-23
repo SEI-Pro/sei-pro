@@ -876,7 +876,10 @@ function initChosenFilterHome(TimeOut = 9000) {
         setTimeout(() => {
             $('#newFiltro .selectPro').chosen({
                 placeholder_text_single: ' ',
-                no_results_text: 'Nenhum resultado encontrado'
+                no_results_text: 'Nenhum resultado encontrado',
+     normalize_search_text: function(text) {
+       return removeAcentos(text.toLowerCase());
+     }
             });
             forcePlaceHoldChosen();
         }, 2000);
@@ -2411,7 +2414,10 @@ function getPanelProc(this_) {
                 if (verifyConfigValue('substituiselecao')) {
                     selectGroupTablePro.chosen('destroy').chosen({
                         placeholder_text_single: ' ',
-                        no_results_text: 'Nenhum resultado encontrado'
+                        no_results_text: 'Nenhum resultado encontrado',
+     normalize_search_text: function(text) {
+       return removeAcentos(text.toLowerCase());
+     }
                     }).trigger('chosen:updated');
                 }
                 setTimeout(function(){ 
@@ -3143,7 +3149,26 @@ function updateCountIconDist() {
 
 // var conteudoDist = await txtPadrao_getConfig('DISTRIBUICAO_AUTOMATICA_SEIPRO');
 // console.log(conteudoDist);
-
+var txtPadrao_getList = async () => {
+    var htmlTxtPadrao = await $.get(urlTxtPadrao);
+    var listTxtPadrao = $(htmlTxtPadrao).find('#divInfraAreaTabela table.infraTable tr').map(function(){
+        var td = $(this).find('td');
+        var link = td.eq(4).find('a');
+        var id = td.eq(1).text();
+        var name = td.eq(2).text();
+        var description = td.eq(3).text();
+        if (name) {
+            return {
+                id: id,
+                name: name,
+                description: description,
+                view: link.eq(0).attr('href'),
+                edit: link.eq(1).attr('href')
+            }
+        }
+    }).get();
+    return listTxtPadrao;
+}
 var txtPadrao_newLink = async () => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
     var urlNew = $(htmlTxtPadrao).find('#btnNovo').attr('onclick');

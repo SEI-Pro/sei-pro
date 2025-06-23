@@ -1365,7 +1365,10 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
                 })
                 .chosen({
                 placeholder_text_single: ' ',
-                no_results_text: 'Nenhum resultado encontrado'
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
             });
         } else if (mode == 'box_init') {
             _parent.find('select')
@@ -1375,7 +1378,10 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
                 })
                 .chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
             });
         } else if (mode == 'box_multiple') {
             _parent.find('select')
@@ -1384,7 +1390,10 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
                 })
                 .chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
             });
         } else if (mode == 'box_refresh') {
             _parent.find('select')
@@ -1402,7 +1411,10 @@ function initChosenReplace(mode, this_ = false, force = false, TimeOut = 9000) {
                 .chosen("destroy")
                 .chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
             });
         }
         chosenReparePosition();
@@ -1781,7 +1793,13 @@ function openDialogCompareDocs() {
                 // height: $(window).height()-80,
                 open: function() { 
                     $("#btnSelecaoDoc").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
-                    $('#docLoteSelect').chosen({placeholder_text_single: ' ', no_results_text: 'Nenhum resultado encontrado'});
+                    $('#docLoteSelect').chosen({
+                        placeholder_text_single: ' ', 
+                        no_results_text: 'Nenhum resultado encontrado',
+                        normalize_search_text: function(text) {
+                            return removeAcentos(text.toLowerCase());
+                        }
+                    })
                     $('#docLoteSelect_chosen').addClass('chosenLoading');
                     docsLote_getDocsArvore(true, idRef);
                     $(":button:not(.ui-dialog-titlebar-close)").prop("disabled", true).addClass("ui-state-disabled");
@@ -2299,7 +2317,10 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                 if ($('#dialogBoxProcesso').is('select') && typeof $().chosen !== 'undefined') {
                     $('#dialogBoxProcesso').chosen({
                         placeholder_text_single: ' ',
-                        no_results_text: 'Nenhum resultado encontrado'
+                        no_results_text: 'Nenhum resultado encontrado',
+                        normalize_search_text: function(text) {
+                            return removeAcentos(text.toLowerCase());
+                        }
                     }).trigger('chosen:activate')
                 }
                 if (data.mode == 'nivel_acesso' && (prop.rdoNivelAcesso == '1' || prop.rdoNivelAcesso == '2')) {
@@ -2321,7 +2342,10 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         elementSelect.html('<option value="">&nbsp;</option>'+select_result);
                         elementSelect.chosen('destroy').chosen({
                             placeholder_text_single: ' ',
-                            no_results_text: 'Nenhum resultado encontrado'
+                            no_results_text: 'Nenhum resultado encontrado',
+                            normalize_search_text: function(text) {
+                                return removeAcentos(text.toLowerCase());
+                            }
                         }).trigger('chosen:updated').trigger('chosen:activate');
                     });
                 } else if (data.mode == 'acompanhamento_especial') {
@@ -2334,7 +2358,10 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                         }).join('');
                         $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
                             placeholder_text_single: ' ',
-                            no_results_text: 'Nenhum resultado encontrado'
+                            no_results_text: 'Nenhum resultado encontrado',
+                            normalize_search_text: function(text) {
+                                return removeAcentos(text.toLowerCase());
+                            }
                         }).trigger('chosen:updated').trigger('chosen:activate');
                     } else {
                         var ifrArvore = $('#ifrArvore');
@@ -2353,7 +2380,10 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                                 }).join('');
                                 $('#configDatesBox_acompesp').html('<option value="null">&nbsp;</option>'+htmlOptions).chosen('destroy').chosen({
                                     placeholder_text_single: ' ',
-                                    no_results_text: 'Nenhum resultado encontrado'
+                                    no_results_text: 'Nenhum resultado encontrado',
+                                    normalize_search_text: function(text) {
+                                        return removeAcentos(text.toLowerCase());
+                                    }
                                 }).trigger('chosen:updated').trigger('chosen:activate');
                             });
                         }
@@ -2589,7 +2619,10 @@ function getSelectHipoteseLegal(elementHipotese = $('#dialogBoxProcesso_hipotese
         }
         elementHipotese.chosen('destroy').chosen({
             placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
         }).trigger('chosen:updated');
     });
 }
@@ -2697,7 +2730,10 @@ function saveNewItemSelect(_this) {
         resetDialogBoxPro('alertBoxPro');
         $(_this).prepend('<option selected>'+value+'</option>').val(value).change().chosen("destroy").chosen({
             placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
         });
     }
 }
@@ -6743,6 +6779,42 @@ function getDadosPesquisaPro(iframe, mode) {
         });
     }
 }
+
+const getTypeSEI = async (type = 'documentos') => {
+    try {
+        if (type == 'documentos' && typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.tiposDocumentos !== 'undefined' && dadosProcessoPro.tiposDocumentos.length) return dadosProcessoPro.tiposDocumentos;
+        if (type == 'processos' && typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.selTipoProcedimento_select !== 'undefined' && dadosProcessoPro.propProcesso.selTipoProcedimento_select.length) return dadosProcessoPro.propProcesso.selTipoProcedimento_select
+        
+        const href = $(mainMenu).find('li a').map(function () { 
+            if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=protocolo_pesquisar') !== -1) { 
+                return $(this).attr('href'); 
+            } 
+        }).get().join();
+        
+        if (href === '') {
+            throw new Error('Erro ao obter a URL de pesquisa de protocolos');
+        }
+        
+        const html = await $.ajax({ url: href });
+        const $html = $(html);
+        let listArray = [];
+        const elemSelect = type === 'documentos' ? $html.find("#selSeriePesquisa") : $html.find("#selTipoProcedimentoPesquisa");
+        
+        elemSelect.find('option').each(function(){
+            const id = $(this).attr('value');
+            const name = $(this).text().trim();
+            if (name !== '') { listArray.push({id: id, name: name}); }
+        });
+        
+        return listArray;
+        
+    } catch (error) {
+        console.error('Erro ao obter tipos de documentos:', error);
+        alertaBoxPro('Error', 'exclamation-triangle', error.message);
+        return [];
+    }
+};
+
 function getDadosProcessoPro(_ifrVisualizacao, _ifrArvore, mode) {
     var processo = {};
 
@@ -7209,6 +7281,12 @@ function getHistoryProcessosPro() {
             title: 'Hist\u00F3rio de Processos Visitados',
             width: 980,
             height: 450,
+            resize: function(event, ui) {
+                setTabelaPanelScrollHeight('#boxHistory', 30);
+            },
+            open: function(event, ui) {
+                setTabelaPanelScrollHeight('#boxHistory', 30);
+            },
             close: function() { 
                 $('#boxHistory').remove();
                 resetDialogBoxPro('dialogBoxPro');
@@ -7248,7 +7326,7 @@ function getHistoryProcessosPro() {
                     $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
                     $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
             });
-            initPanelResize('#boxHistory', 'historicoPro');
+            // initPanelResize('#boxHistory', 'historicoPro');
 
         var filterHistory = historyTable.find('.tablesorter-filter-row').get(0);
         if (typeof filterHistory !== 'undefined') {
@@ -7442,13 +7520,32 @@ function batchActionsPro(this_) {
                                         width: 450,
                                         title: 'Assinatura em lote',
                                         open: function(){
-                                            $('#configBoxPro_selOrgao').chosen({ placeholder_text_single: ' ', no_results_text: 'Nenhum resultado encontrado' });
+                                            $('#configBoxPro_selOrgao').chosen({ 
+                                                placeholder_text_single: ' ', 
+                                                no_results_text: 'Nenhum resultado encontrado',
+                                                normalize_search_text: function(text) {
+                                                    return removeAcentos(text.toLowerCase());
+                                                } 
+                                            });
                                             if (selContexto.length > 0) {
-                                                $('#configBoxPro_selContexto').chosen({ placeholder_text_single: ' ', no_results_text: 'Nenhum resultado encontrado' });
+                                                $('#configBoxPro_selContexto').chosen({ 
+                                                    placeholder_text_single: ' ', 
+                                                    no_results_text: 'Nenhum resultado encontrado',
+                                                    normalize_search_text: function(text) {
+                                                        return removeAcentos(text.toLowerCase());
+                                                    } 
+                                                });
                                             } else {
                                                 $('.configBoxPro_selContexto').hide();
                                             }
-                                            $('#configBoxPro_selCargoFuncao').chosen({ placeholder_text_single: ' ', disable_search: true, no_results_text: 'Nenhum resultado encontrado' });
+                                            $('#configBoxPro_selCargoFuncao').chosen({ 
+                                                placeholder_text_single: ' ', 
+                                                disable_search: true,
+                                                no_results_text: 'Nenhum resultado encontrado',
+                                                normalize_search_text: function(text) {
+                                                    return removeAcentos(text.toLowerCase());
+                                                } 
+                                            });
                                             $('.ui-dialog[aria-describedby="configBoxPro"], #configBoxPro').css('overflow','visible');
                                             $('#configBoxPro_pwdSenha').focus();
                                         },
@@ -7495,7 +7592,10 @@ function batchActionsPro(this_) {
                     open: function(){
                         $('#configBoxProSigiloBatch').chosen({
                             placeholder_text_single: ' ',
-                            no_results_text: 'Nenhum resultado encontrado'
+                            no_results_text: 'Nenhum resultado encontrado',
+                            normalize_search_text: function(text) {
+                                return removeAcentos(text.toLowerCase());
+                            }
                         });
                         $('.ui-dialog[aria-describedby="configBoxPro"], #configBoxPro').css('overflow','visible');
                     },
@@ -7896,6 +7996,9 @@ function getDocumentosActions() {
             title: 'A\u00E7\u00F5es em lote',
             width: $('body').width()-300,
             height: 650,
+            resize: function(event, ui) {
+                setTabelaPanelScrollHeight('#boxActions', 80);
+            },
             open: function() { 
                 if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
                 alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Pesquisando links de documentos');
@@ -7909,6 +8012,7 @@ function getDocumentosActions() {
                 } else {
                     getAllLinksFolder();
                 }
+                setTabelaPanelScrollHeight('#boxActions', 80);
                 initAppendIconsDocumentosActions();
                 mergeAllAndamentosProcesso(function(){
                     var actionsTable = $('#actionsTablePro');
@@ -7980,7 +8084,7 @@ function getDocumentosActions() {
                     $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
                     $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
             });
-            initPanelResize('#boxActions', 'actionsPro');
+            // initPanelResize('#boxActions', 'actionsPro');
 
         var filterAction = actionsTable.find('.tablesorter-filter-row').get(0);
         if (typeof filterAction !== 'undefined') {
@@ -8045,6 +8149,11 @@ function getDocumentosActions() {
     }, 500);
     if (typeof $().visible == 'undefined') $.getScript(URL_SPRO+"js/lib/jquery-visible.min.js");
 }
+function setTabelaPanelScrollHeight(target, padding) {
+    var availableHeight = $('#dialogBoxPro').outerHeight(true)-padding;
+    $(target).css({'max-height': availableHeight, 'height': availableHeight, 'min-height': availableHeight});
+}
+
 function initAppendIconsDocumentosActions(TimeOut = 3000) {
     if (TimeOut <= 0) { 
         setAppendIconsDocumentosActions();
@@ -11186,7 +11295,10 @@ function setReplaceSelectAllVisualizacao() {
                     return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') 
                 }).chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
                 })
             chosenReparePosition(target);
             target.find('.infraAreaDados').css('overflow','initial');
@@ -11543,7 +11655,13 @@ function setSelectUnidadePro() {
         $('#changeUnidadeSEIPro').remove();
         $('#divInfraBarraSistemaPadraoD .input-group.align-self-center').html(htmlSelect);
         if (verifyConfigValue('substituiselecao') && typeof $().chosen === 'function') {
-            $('#changeUnidadeSEIPro').chosen({placeholder_text_single: ' ', no_results_text: 'Nenhum resultado encontrado'});
+            $('#changeUnidadeSEIPro').chosen({
+                placeholder_text_single: ' ', 
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
+            });
         }
     }
 }

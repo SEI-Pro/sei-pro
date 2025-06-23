@@ -62,6 +62,5 @@ function initSeiProVisualizacao() {
     if (typeof parent.verifyMenuSistemaView === 'function') {
         parent.verifyMenuSistemaView();
     }
-    console.log('initSeiProVisualizacao', window.name);
 }
 $(document).ready(function () { initSeiProVisualizacao() });

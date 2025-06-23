@@ -257,7 +257,10 @@ function setProjetos(mode = 'insert', arrayProjetos = arrayConfigAtividades.proj
                         setProjetos('refresh');
                 }).chosen("destroy").chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
                 });
                 scrollProjetoGanttToFirstBar();
                 normalizeAreaTela();
@@ -1163,7 +1166,10 @@ function saveEtapa(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                     });
                     $('#proj_id_demandas').chosen("destroy").chosen({
                         placeholder_text_single: 'Selecione uma ou mais demandas de vincula\u00E7\u00E3o (opcional)',
-                        no_results_text: 'Nenhum resultado encontrado'
+                        no_results_text: 'Nenhum resultado encontrado',
+                        normalize_search_text: function(text) {
+                            return removeAcentos(text.toLowerCase());
+                        }
                     });
                 },
                 buttons: btnDialogBoxPro
@@ -1403,7 +1409,16 @@ function completeEtapa(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                     updateButtonConfirm(this, true);
                     prepareFieldsReplace(this);
                     if (typeof value.id_procedimento !== 'undefined' && value.id_procedimento) {
-                        $("#proj_documento_relacionado").empty().append($('<option>Carrengando documentos...<option/>')).chosen("destroy").chosen({placeholder_text_single: ' ', no_results_text: 'Nenhum resultado encontrado' });
+                        $("#proj_documento_relacionado")
+                            .empty()
+                            .append($('<option>Carrengando documentos...<option/>'))
+                            .chosen("destroy").chosen({
+                                placeholder_text_single: ' ', 
+                                no_results_text: 'Nenhum resultado encontrado',
+                                normalize_search_text: function(text) {
+                                    return removeAcentos(text.toLowerCase());
+                                } 
+                            });
                         $('#proj_documento_relacionado_chosen').addClass('chosenLoading');
                         getDadosIframeProcessoPro(String(value.id_procedimento), 'projeto');
                     }
@@ -1672,7 +1687,10 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                                                         }).join('');
                                 _this.html(`<select data-old="`+oldVal+`" data-type="unidade" data-mode="insert_`+data.key+`" onchange="shareTableNewItem(this)"><option value="0">&nbsp;</option>`+htmlOptions).find('select').focus().chosen({
                                     placeholder_text_single: ' ',
-                                    no_results_text: 'Nenhum resultado encontrado'
+                                    no_results_text: 'Nenhum resultado encontrado',
+                                    normalize_search_text: function(text) {
+                                        return removeAcentos(text.toLowerCase());
+                                    }
                                 });
                                 if (checkBrowser() == 'Firefox') _this.find('.chosen-container').addClass('chosen-repair-firefox');
                             },
@@ -1820,7 +1838,10 @@ function updateSelectConcluirProjetoEtapa() {
 			data_documento : valueSelect.documento
         })).chosen("destroy").chosen({
             placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
         });
     });
     $('#proj_documento_relacionado_chosen').removeClass('chosenLoading');

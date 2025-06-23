@@ -1002,7 +1002,10 @@ function repairPerfilSelectUnidade() {
     }
     $('select[data-type="perfil"]').chosen("destroy").chosen({
         placeholder_text_single: ' ',
-        no_results_text: 'Nenhum resultado encontrado'
+        no_results_text: 'Nenhum resultado encontrado',
+        normalize_search_text: function(text) {
+            return removeAcentos(text.toLowerCase());
+        }
     });
 }
 function failureScreen(data, textStatus, param = false) {
@@ -1148,7 +1151,10 @@ function changeChartAtiv(this_) {
     if (_this.attr('id') == 'selectChartProgramasAtiv') {
         elem_user.val('').chosen("destroy").chosen({
             placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
         });
         forcePlaceHoldChosen();
     }
@@ -1222,7 +1228,10 @@ function setSelectProgramas(data, idElem = 'selectChartProgramasAtiv', optionSto
     optionSelectPrograma += '<option value="-1" data-label="" '+(id_selected == '-1' || (getOptionsPro(optionStore) && getOptionsPro(optionStore).id_programa == '-1') ? 'selected' : '')+'>Todos os programas</option>';
     $('#'+idElem).html(optionSelectPrograma).chosen("destroy").chosen({
         placeholder_text_single: ' ',
-        no_results_text: 'Nenhum resultado encontrado'
+        no_results_text: 'Nenhum resultado encontrado',
+        normalize_search_text: function(text) {
+            return removeAcentos(text.toLowerCase());
+        }
     });
     $('#'+idElem+'_chosen').addClass('chosen-min');
     forcePlaceHoldChosen();
@@ -1259,7 +1268,10 @@ function setChartUsuariosAtiv(data = false) {
     }
     $('#selectChartUserAtiv').html(optionSelectUser).chosen("destroy").chosen({
         placeholder_text_single: ' ',
-        no_results_text: 'Nenhum resultado encontrado'
+        no_results_text: 'Nenhum resultado encontrado',
+        normalize_search_text: function(text) {
+            return removeAcentos(text.toLowerCase());
+        }
     });
     $('#selectChartUserAtiv_chosen').addClass('chosen-min');
 }
@@ -2831,7 +2843,10 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
             if (typeof $().chosen !== 'undefined' && $('#selectViewControl_tabelaAtivPanel_chosen').length == 0) {
                 $('#selectViewControl_tabelaAtivPanel').chosen({
                     placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado'
+                    no_results_text: 'Nenhum resultado encontrado',
+                    normalize_search_text: function(text) {
+                        return removeAcentos(text.toLowerCase());
+                    }
                 });
                 forcePlaceHoldChosen();
                 setResizeAreaTelaD();
@@ -3234,7 +3249,10 @@ function selectViewControl(this_) {
     }
     _this.val('').chosen("destroy").chosen({
         placeholder_text_single: ' ',
-        no_results_text: 'Nenhum resultado encontrado'
+        no_results_text: 'Nenhum resultado encontrado',
+        normalize_search_text: function(text) {
+            return removeAcentos(text.toLowerCase());
+        }
     });
     forcePlaceHoldChosen();
 }
@@ -6817,7 +6835,10 @@ function getTableCellEditor(idConfigTabela, type) {
                         .focus()
                         .chosen({
                             placeholder_text_single: ' ',
-                            no_results_text: 'Nenhum resultado encontrado'
+                            no_results_text: 'Nenhum resultado encontrado',
+                            normalize_search_text: function(text) {
+                                return removeAcentos(text.toLowerCase());
+                            }
                         })
                         .on('chosen:showing_dropdown', function (evt, params) {
                             let elementScroll = $(this).closest('.tabelaPanelScroll');
@@ -12406,7 +12427,10 @@ function setFunctionsEditConfigOptions(idConfigBox, data) {
                             .find('select')
                             .chosen({
                                 placeholder_text_single: ' ',
-                                no_results_text: 'Nenhum resultado encontrado'
+                                no_results_text: 'Nenhum resultado encontrado',
+                                normalize_search_text: function(text) {
+                                    return removeAcentos(text.toLowerCase());
+                                }
                             })
                             .on('chosen:showing_dropdown', function (evt, params) {
                                 let elementScroll = $(this).closest('.tabelaPanelScroll');
@@ -15088,7 +15112,10 @@ function updateOptionSelectMotivo(this_) {
     var optionSelectMotivo = getOptionSelectMotivo(this_, id_afastamento);
         _parent.find('select[data-key="id_tipo_motivo"]').html(optionSelectMotivo).chosen("destroy").chosen({
             placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado'
+            no_results_text: 'Nenhum resultado encontrado',
+            normalize_search_text: function(text) {
+                return removeAcentos(text.toLowerCase());
+            }
         });
 }
 function saveAfastamento(this_, id_afastamento = 0) {
@@ -15274,7 +15301,10 @@ function saveAfastamento(this_, id_afastamento = 0) {
                                     .find('select')
                                     .chosen({
                                         placeholder_text_single: ' ',
-                                        no_results_text: 'Nenhum resultado encontrado'
+                                        no_results_text: 'Nenhum resultado encontrado',
+                                        normalize_search_text: function(text) {
+                                            return removeAcentos(text.toLowerCase());
+                                        }
                                     })
                                     .on('chosen:showing_dropdown', function (evt, params) {
                                         let elementScroll = $(this).closest('.tabelaPanelScroll');
@@ -16725,7 +16755,10 @@ function getKanbanAtividades(this_) {
         if (typeof $().chosen === 'function') {
             $('#selectViewControl_kanbanAtivPanel').chosen({
                 placeholder_text_single: ' ',
-                no_results_text: 'Nenhum resultado encontrado'
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
             });
             forcePlaceHoldChosen();
         }
@@ -17502,7 +17535,10 @@ function getGanttAtividades(bar_class = false) {
         if (typeof $().chosen === 'function') {
             $('#selectViewControl_ganttAtivPanel').chosen({
                 placeholder_text_single: ' ',
-                no_results_text: 'Nenhum resultado encontrado'
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
             });
             forcePlaceHoldChosen();
         }
@@ -17550,7 +17586,10 @@ function getChartAtividades(bar_class = false) {
         if (typeof $().chosen === 'function') {
             panelChart.find('select').chosen({
                 placeholder_text_single: ' ',
-                no_results_text: 'Nenhum resultado encontrado'
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
             });
         }
     if (panelChart.is(':visible')) { setTimeout(function(){ initGetChartDemandas() }, 500); }
@@ -17864,7 +17903,10 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
                     if (typeof $().chosen !== 'undefined') {
                         $('#selectViewControl_tabelaAtivPanel').chosen({
                             placeholder_text_single: ' ',
-                            no_results_text: 'Nenhum resultado encontrado'
+                            no_results_text: 'Nenhum resultado encontrado',
+                            normalize_search_text: function(text) {
+                                return removeAcentos(text.toLowerCase());
+                            }
                         });
                         forcePlaceHoldChosen();
                         setResizeAreaTelaD();
@@ -25550,7 +25592,10 @@ function onStarAtiv(this_, mode) {
                                             .find('select')
                                             .chosen({
                                                 placeholder_text_single: ' ',
-                                                no_results_text: 'Nenhum resultado encontrado'
+                                                no_results_text: 'Nenhum resultado encontrado',
+                                                normalize_search_text: function(text) {
+                                                    return removeAcentos(text.toLowerCase());
+                                                }
                                             })
                                             .on('chosen:showing_dropdown', function (evt, params) {
                                                 let elementScroll = $(this).closest('.tabelaPanelScroll');
