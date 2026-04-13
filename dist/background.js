@@ -40,3 +40,19 @@ if(!isChrome) {
     browser.storage.local.set({version: info.version}).then(null, null);
   });
 }
+
+browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request && request.action === 'getServersPro') {
+    fetch('https://seipro.app/servers/', { method: 'GET' })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        sendResponse({ ok: true, data: data });
+      })
+      .catch(function(error) {
+        sendResponse({ ok: false, error: error.message });
+      });
+    return true;
+  }
+});

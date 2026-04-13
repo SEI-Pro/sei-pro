@@ -26203,6 +26203,53 @@ function initPerfilLoginAtiv(TimeOut = 9000) {
 
 // Verifica dominios permitidos
 function getServersPro() {
+    var handleServersResponse = function(result) {
+        var host = jmespath.search(result, "[?domain=='"+window.location.host+"'] | [0]");
+            host = (host !== null && host.enabled) ? host : false;
+        if (host) {
+            if (host.login_default == 'key') {
+                urlServerAtiv = host.remote_host;
+                arrayConfigAtividades = false;
+                arrayConfigAtivUnidade = false;
+                removeLocalDataAtiv();
+                removeOptionsPro('perfilAtividadesSelected');
+                removeOptionsPro('panelAtividadesView');
+                removeOptionsPro('panelAfastamentosView');
+                initEmptyAtividades();
+                $('.panelHome').find('.iconAtividade_update i').removeClass('fa-spin');
+                $('.atividadesBtnPanel button[data-value="Tabela"]').trigger('click');
+                $('#tabelaAtivPanel').attr('class','').css('text-align','center').html('<a class="newLink" onclick="getResendKey(this)" style="transform: scale(1.4);margin: 10px 0;"><i class="fas fa-key laranjaColor"></i> Solicitar chave de acesso</a>');
+            }
+        } else {
+            initAtividades();
+        }
+    };
+
+    if (typeof browser !== 'undefined' && browser.runtime && typeof browser.runtime.sendMessage === 'function') {
+        Promise.resolve(browser.runtime.sendMessage({ action: 'getServersPro' }))
+            .then(function(response) {
+                if (response && response.ok && response.data) {
+                    handleServersResponse(response.data);
+                } else {
+                    initAtividades();
+                }
+            })
+            .catch(function() {
+                initAtividades();
+            });
+        return;
+    }
+
+    if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
+        chrome.runtime.sendMessage({ action: 'getServersPro' }, function(response) {
+            if (response && response.ok && response.data) {
+                handleServersResponse(response.data);
+            } else {
+                initAtividades();
+            }
+        });
+        return;
+    }
     $.ajax({
         url: 'https://seipro.app/servers/',
         type: 'GET',
