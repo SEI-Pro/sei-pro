@@ -9,7 +9,10 @@ var delayAjax = false;
 var selectedItensPanelArvore = false;
 var stickNoteDivSelected = 0;
 const pathArvore = parent.isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
-const anchorDoc = isSEI_5 ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]';
+const sei5ArvoreMode = (typeof parent !== 'undefined' && typeof parent.isSEI_5 !== 'undefined')
+    ? parent.isSEI_5
+    : false;
+const anchorDoc = sei5ArvoreMode ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]';
 
 function initCSSArvore() {
     if ( $('head').find('style[data-style="seipro"]').length == 0 ) {
@@ -275,7 +278,7 @@ function checkToolbarToClose() {
 }
 function getToolbarPro(click) {
     if ( typeof parent.dadosProcessoPro !== 'undefined') {
-        let elemProc = isSEI_5
+        let elemProc = sei5ArvoreMode
             ? $('a[id*="anchor"][target="ifrVisualizacao"].infraArvoreNo')
             : $(`a[target="${ifrVisualizacao_}"]`).eq(0);
             
@@ -292,7 +295,7 @@ function getToolbarPro(click) {
             if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)|| (parent.isSEI_5 && $('a[data-serialtip*="popover"]').length)) {
                 $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').each(function(){ $(this).addClass('clipboard') });
             }
-            var listToolbar = isSEI_5
+            var listToolbar = sei5ArvoreMode
                 ? $('a[id*="anchorImg"][data-serialtip]').not(':first').not('[data-toolbarpro]').get()
                 : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').not('[data-toolbarpro]').get();
 
@@ -1415,7 +1418,7 @@ function initDadosProcessoArvoreSession() {
     }
 }
 function initDadosProcessoArvore(TimeOut = 1000) {
-    if (TimeOut <= 0 || (!isSEI_5 && parent.window.name != '') || (isSEI_5 && parent.window.name != 'autopreenchersenha')) { 
+    if (TimeOut <= 0 || (!sei5ArvoreMode && parent.window.name != '') || (sei5ArvoreMode && parent.window.name != 'autopreenchersenha')) { 
         if ($('#ifrArvore').length > 0) {
             getLisDocsProcessoPro();
         }
@@ -2178,7 +2181,7 @@ function getDataMarcadorProcesso() {
     }
 }
 function initAtividadesProcesso(TimeOut = 9000) {
-    if (TimeOut <= 0 || (!isSEI_5 && parent.window.name != '') || (isSEI_5 && parent.window.name != 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!sei5ArvoreMode && parent.window.name != '') || (sei5ArvoreMode && parent.window.name != 'autopreenchersenha')) { return; }
     if (
         typeof parent.arrayConfigAtividades !== 'undefined' && 
         typeof parent.arrayConfigAtividades.perfil !== 'undefined'
@@ -2371,7 +2374,7 @@ function stylePanelArvore() {
 }
 function initStylePanelArvore(TimeOut = 9000) {
 
-    if (TimeOut <= 0 || (!isSEI_5 && parent.window.name != '') || (isSEI_5 && parent.window.name != 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!sei5ArvoreMode && parent.window.name != '') || (sei5ArvoreMode && parent.window.name != 'autopreenchersenha')) { return; }
     if (
         typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
         selectedItensPanelArvore.length && 
@@ -2409,7 +2412,7 @@ function breakDocTwoLines() {
     });
 }
 function initBreakDocTwoLines(TimeOut = 9000) {
-    if (TimeOut <= 0 || (!isSEI_5 && parent.window.name != '') || (isSEI_5 && parent.window.name != 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!sei5ArvoreMode && parent.window.name != '') || (sei5ArvoreMode && parent.window.name != 'autopreenchersenha')) { return; }
     if (typeof resizeArvoreMaxWidth !== 'undefined') {
         breakDocTwoLines();
     } else {
