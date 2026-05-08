@@ -1014,7 +1014,10 @@
                         openInlineEditor(panel, marcUrl, [
                             { kind: 'select',   label: 'Marcador',  srcSelector: '#selMarcador', name: 'selMarcador' },
                             { kind: 'textarea', label: 'Observação (opcional)', srcSelector: '#txaTexto', name: 'txaTexto' },
-                        ], function () { refreshAll('post-add marcador'); });
+                        ], function () {
+                            refreshSection('marcador', 'post-add marcador');
+                            if (typeof p.setCapaProcesso === 'function') p.setCapaProcesso(false);
+                        });
                         return;
                     }
                     // Listing layout — parse rows and render a remove/add UI.
@@ -1062,7 +1065,11 @@
                                     var f = d2.getElementById('frmGerenciarMarcador') || d2.querySelector('form');
                                     if (f) f.submit();
                                 }
-                            }).then(function () { refreshAll('post-remove marcador'); editMarcadorInline(panel); })
+                            }).then(function () {
+                                refreshSection('marcador', 'post-remove marcador');
+                                if (typeof p.setCapaProcesso === 'function') p.setCapaProcesso(false);
+                                editMarcadorInline(panel);
+                            })
                               .catch(function (e) { err('marcador remove:', e.message); body.innerHTML = savedHTML; });
                         });
                         row.appendChild(lbl); row.appendChild(btn);
@@ -1091,7 +1098,11 @@
                             openInlineEditor(panel, addUrl, [
                                 { kind: 'select',   label: 'Marcador',  srcSelector: '#selMarcador', name: 'selMarcador' },
                                 { kind: 'textarea', label: 'Observação (opcional)', srcSelector: '#txaTexto', name: 'txaTexto' },
-                            ], function () { refreshAll('post-add marcador'); editMarcadorInline(panel); });
+                            ], function () {
+                                refreshSection('marcador', 'post-add marcador');
+                                if (typeof p.setCapaProcesso === 'function') p.setCapaProcesso(false);
+                                editMarcadorInline(panel);
+                            });
                         }).catch(function (e) { err('marcador add fetch:', e.message); });
                     });
                 }).catch(function (e) {

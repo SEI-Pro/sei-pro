@@ -4293,16 +4293,31 @@ div#capaProcessoPro .data {
     margin: 5px 0 10px 12px;
     color: #222;
 }
-div#capaProcessoPro .data a.newLink {
+div#capaProcessoPro .data a.newLink,
+div#capaProcessoPro .data button.capaProcessoAction {
     font-size: 11pt;
 	margin: 0 5px;
 	color: #222;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     padding: 5px;
     border-radius: 5px;
     cursor: pointer;
+    border: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    font: inherit;
+    text-align: left;
+    user-select: none;
 }
-div#capaProcessoPro .data a.newLink:hover {
+div#capaProcessoPro .data button.capaProcessoAction i {
+    color: inherit;
+    pointer-events: none;
+}
+div#capaProcessoPro .data a.newLink:hover,
+div#capaProcessoPro .data button.capaProcessoAction:hover {
 	background-color: #eee !important;
 }
 div#capaProcessoPro .qrcapa {
@@ -4328,7 +4343,8 @@ a.urgentePro {
     line-height: 20px;
     width: max-content;
 }
-div.urgentePro {
+div.urgentePro,
+span.urgentePro {
 	display: inline-block;
     margin: 0 5px;
     background: #e46e64;
@@ -4341,7 +4357,8 @@ div.urgentePro {
 	transform: scale(1);
 	animation: pulser 2s infinite;
 }
-div.urgentePro:after {
+div.urgentePro:after,
+span.urgentePro:after {
     content: "\f12a";
     font-family: 'Font Awesome 5 Pro';
     color: #fff;
@@ -4351,7 +4368,8 @@ div.urgentePro:after {
     position: absolute;
     height: 100%;
 }
-.seiSlim div.urgentePro:after {
+.seiSlim div.urgentePro:after,
+.seiSlim span.urgentePro:after {
     font-family: 'Font Awesome 5 Pro' !important;
 }
 a.urgentePro[target="ifrVisualizacao"],

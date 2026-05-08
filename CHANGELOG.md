@@ -14,6 +14,11 @@
 ### Corrigido
 
 - Botão de checklist (☐/☑) na anotação não respondia ao clique: agora a toolbar salva e restaura a seleção do editor antes de alternar a linha, evitando cliques sem efeito, e os checkboxes são desenhados também na nova UI (regras CSS para `stickNoteCheck`/`stickNoteChecked` que antes só funcionavam no painel antigo)
+- Capa com os dados da raiz do processo na visualização: montagem agora faz retentativa curta até os dados do processo e a seleção da raiz estarem prontos, reduzindo casos em que a seção aparecia só às vezes ao abrir a tela
+- Capa do processo reestruturada para usar botões semânticos e listeners diretos, reduzindo dependência de `onclick` inline e melhorando a acessibilidade dos itens clicáveis
+- Bloco informativo da capa agora é clonado do DOM do SEI em vez de ser reserializado como string, reduzindo risco de mojibake em rótulos e preservando melhor o markup original
+- Marcador passou a atualizar só o cache/capa e a seção lateral correspondente, sem reinicializar o frame principal do processo
+- Atribuição passou a salvar via frame oculto e atualizar só os caches locais, sem recarregar o frame principal visível
 
 ## [1.7.6] - 2026-05-07
 

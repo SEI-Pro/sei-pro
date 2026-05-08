@@ -2803,7 +2803,15 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                         var new_id = $('#dialogBoxProcesso').val().trim();
                                             new_id = (new_id == '') ? 'null' : new_id;
                                         console.log('Atribuir Processo', 'selAtribuicao', new_id, id_procedimento);
-                                        updateDadosArvore('Atribuir Processo', 'selAtribuicao', new_id, id_procedimento, function(){ 
+                                        updateDadosArvoreMult('Atribuir Processo', [{element: 'selAtribuicao', value: new_id}], id_procedimento, function(){ 
+                                            var dadosProcessoSession = pullDadosProcessoSession();
+                                            if (dadosProcessoSession && dadosProcessoSession.propProcesso) {
+                                                dadosProcessoSession.propProcesso.selAtribuicao = new_id;
+                                                setSessionProcessosPro(dadosProcessoSession);
+                                            }
+                                            if (typeof getListaAtribuicaoProcesso === 'function') {
+                                                getListaAtribuicaoProcesso($('#ifrArvore'), 'processo');
+                                            }
                                             resetDialogBoxPro('dialogBoxPro');
                                             alertaBoxPro('Sucess', 'check-circle', 'Atribui\u00E7\u00E3o de processo alterada com sucesso!');
                                         });
@@ -2864,6 +2872,8 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                                 // console.log(listMarcadores[objIndexDoc]);
                                                 resetDialogBoxPro('dialogBoxPro');
                                                 alertaBoxPro('Sucess', 'check-circle', 'Marcador alterado com sucesso!');
+                                                if (typeof getAjaxListaMarcador === 'function') getAjaxListaMarcador();
+                                                if (typeof setCapaProcesso === 'function') setCapaProcesso(false);
                                             });
                                         }
                                     }
@@ -3658,7 +3668,7 @@ function automaticActions(type, mode, value = false, callback = false) {
     if (type == 'anotacao' && mode == 'remove') {
         updateDadosArvore('Anota\u00E7\u00F5es', 'txaDescricao', '', id_procedimento, callback);
     } else if (type == 'atribuicao' && mode == 'remove') {
-        updateDadosArvore('Atribuir Processo', 'selAtribuicao', 'null', id_procedimento, callback);
+        updateDadosArvoreMult('Atribuir Processo', [{element: 'selAtribuicao', value: 'null'}], id_procedimento, callback);
         console.log('Atribuir Processo', 'selAtribuicao', 'null', id_procedimento, callback);
     } else if (type == 'urgencia_processo') {
         updateDadosArvore('Atualizar Andamento', 'txaDescricao', (mode == 'remove' ? 'Removida' : 'Adicionada')+' marca de urg\u00EAncia no processo', id_procedimento, callback);
@@ -9379,7 +9389,8 @@ function setCapaProcesso(loop = true) {
     var ifrVisualizacao = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 
                         ? $($ifrVisualizacao).contents().find($ifrArvoreHtml).contents()
                         : $($ifrVisualizacao).contents() 
-    var prop = (pullDadosProcessoSession()) ? pullDadosProcessoSession().propProcesso : dadosProcessoPro.propProcesso;
+    var dadosProcessoSession = pullDadosProcessoSession();
+    var prop = dadosProcessoSession ? dadosProcessoSession.propProcesso : dadosProcessoPro.propProcesso;
     var id_procedimento = (typeof prop !== 'undefined' && typeof prop.hdnIdProcedimento !== 'undefined') ? prop.hdnIdProcedimento : getParamsUrlPro(window.location.href).id_protocolo;
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
     var hipoteseLegal = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '1') ? jmespath.search(prop.selHipoteseLegal_select, "[?id=='"+prop.selHipoteseLegal+"'] | [0].name") : null;
@@ -9387,11 +9398,45 @@ function setCapaProcesso(loop = true) {
     var dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '0') ? {name: 'P\u00FAblico', icon: 'fas fa-globe-americas'} : false;
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '1') ? {name: 'Restrito: '+hipoteseLegal, icon: 'fas fa-lock'} : dataNivelAcesso;
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '2') ? {name: 'Sigiloso', icon: 'fas fa-user-slash'} : dataNivelAcesso;
-    var htmlInfoProc = ifrVisualizacao.find(divInformacao).html();
+    var infoProcNode = ifrVisualizacao.find(divInformacao).get(0);
+    var rootSelected = !!(id_procedimento && ifrArvore.find('#span'+id_procedimento).hasClass('infraArvoreNoSelecionado'));
+    var capaReady = !!prop && !!id_procedimento && ifrVisualizacao.length > 0 && ifrArvore.length > 0 && rootSelected;
+
+    function retryCapaProcesso(reason) {
+        if (!loop) return;
+        var stateKey = '__SEI_PRO_CAPA_PROCESSO_RETRY__';
+        var state = window[stateKey] || (window[stateKey] = {});
+        var retryKey = id_procedimento || 'pending';
+        var retryState = state[retryKey] || { count: 0, timer: null };
+        if (retryState.timer) clearTimeout(retryState.timer);
+        if (retryState.count >= 20) {
+            console.warn('[SEI Pro]', 'setCapaProcesso: retry limit reached for', retryKey, 'reason=', reason);
+            retryState.timer = null;
+            state[retryKey] = retryState;
+            return;
+        }
+        retryState.count++;
+        retryState.timer = setTimeout(function () {
+            retryState.timer = null;
+            state[retryKey] = retryState;
+            setCapaProcesso(true);
+        }, 400);
+        state[retryKey] = retryState;
+        console.log('[SEI Pro]', 'setCapaProcesso: waiting for readiness retry #' + retryState.count + ' (' + reason + ')');
+    }
+
+    if (!capaReady) {
+        if (!prop || !id_procedimento || ifrVisualizacao.length === 0 || ifrArvore.length === 0) {
+            retryCapaProcesso('data/frame not ready');
+        } else if (!rootSelected) {
+            retryCapaProcesso('root not selected yet');
+        }
+        return;
+    }
 
     var checkBlocoInterno = (typeof $('#ifrArvore')[0] !== 'undefined' && typeof $('#ifrArvore')[0].contentWindow.selectedItensPanelArvore !== 'undefined' && $.inArray("Bloco Interno",jmespath.search($('#ifrArvore')[0].contentWindow.selectedItensPanelArvore,"[]")) !== -1) ? true : false;
     var blocoProcesso = checkBlocoInterno ? initBlocoProcessoHistorico() : false;
-    var dadosProcessoP = typeof pullDadosProcessoSession() !== 'undefined' ? pullDadosProcessoSession() : false;
+    var dadosProcessoP = dadosProcessoSession || false;
     var descBlocoInterno = (typeof blocoProcesso !== 'undefined' && blocoProcesso !== null) 
                         ? (typeof blocoProcesso !== 'undefined' && blocoProcesso.length > 0 && typeof blocoProcesso[0].descricao !== 'undefined') ? blocoProcesso[0].descricao : false
                         : false;
@@ -9401,107 +9446,253 @@ function setCapaProcesso(loop = true) {
     var iconMarcador = htmlMarcador.icon;
     var linkPrazo = htmlMarcador.prazo;
     var dataMarcador = htmlMarcador.data;
+    var capaDoc = ifrVisualizacao[0] || document;
+    function bindTooltip(el, text) {
+        if (!el || !text) return el;
+        el.title = text;
+        el.setAttribute('aria-label', text);
+        el.addEventListener('mouseenter', function () {
+            if (typeof parent.infraTooltipMostrar === 'function') parent.infraTooltipMostrar(text);
+        });
+        el.addEventListener('focus', function () {
+            if (typeof parent.infraTooltipMostrar === 'function') parent.infraTooltipMostrar(text);
+        });
+        el.addEventListener('mouseleave', function () {
+            if (typeof parent.infraTooltipOcultar === 'function') parent.infraTooltipOcultar();
+        });
+        el.addEventListener('blur', function () {
+            if (typeof parent.infraTooltipOcultar === 'function') parent.infraTooltipOcultar();
+        });
+        return el;
+    }
+    function createButton(opts) {
+        var btn = capaDoc.createElement('button');
+        btn.type = 'button';
+        btn.className = 'newLink capaProcessoAction' + (opts && opts.className ? ' ' + opts.className : '');
+        if (opts && opts.html) {
+            btn.innerHTML = opts.html;
+        } else {
+            if (opts && opts.iconClass) {
+                var icon = capaDoc.createElement('i');
+                icon.className = opts.iconClass;
+                btn.appendChild(icon);
+                if (opts.text) btn.appendChild(capaDoc.createTextNode(' '));
+            }
+            if (opts && opts.text) {
+                btn.appendChild(capaDoc.createTextNode(opts.text));
+            }
+        }
+        bindTooltip(btn, opts && opts.tooltip ? opts.tooltip : '');
+        return btn;
+    }
+    function createField(labelIconClass, labelText) {
+        var field = capaDoc.createElement('div');
+        field.className = 'field';
+        var label = capaDoc.createElement('div');
+        label.className = 'label txt_cinza';
+        if (labelIconClass) {
+            var icon = capaDoc.createElement('i');
+            icon.className = labelIconClass + ' iconDadosProcesso';
+            label.appendChild(icon);
+        }
+        if (labelText) label.appendChild(capaDoc.createTextNode(labelText));
+        var data = capaDoc.createElement('div');
+        data.className = 'data';
+        field.appendChild(label);
+        field.appendChild(data);
+        return { field: field, data: data, label: label };
+    }
+    function appendValueButton(data, value, tooltip, clickHandler, opts) {
+        var btn = createButton({
+            text: value,
+            html: opts && opts.html ? opts.html : '',
+            iconClass: opts && opts.iconClass ? opts.iconClass : '',
+            className: opts && opts.className ? opts.className : '',
+            tooltip: tooltip
+        });
+        if (clickHandler) btn.addEventListener('click', clickHandler);
+        data.appendChild(btn);
+        return btn;
+    }
+    function appendHtml(data, html) {
+        if (!html) return null;
+        var span = capaDoc.createElement('span');
+        span.innerHTML = html;
+        data.appendChild(span);
+        return span;
+    }
+    function appendLineButton(data, text, tooltip, clickHandler, opts) {
+        return appendValueButton(data, text, tooltip, clickHandler, opts || {});
+    }
 
-    var html =  '<div id="capaProcessoPro" '+(isNewSEI ? 'class="newSEI_capaProcessoPro"': '')+'>'+
-                '      <div style="float: right;max-width: 40%;">'+
-                '           <div class="qrcapa" onmouseover="return infraTooltipMostrar(\'Aponte a c\u00E2mera para abrir o processo em seu celular\');" onmouseout="return infraTooltipOcultar();"></div>'+
-                '           <div class="infocapa">'+
-                '               '+htmlInfoProc+
-                '           </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="data" style="margin: 10px 0;">'+
-                '               <a class="newLink" style="margin: 0;cursor:pointer;" onclick="parent.initGanttHistoryProc()"><i class="fas fa-history azulColor iconDadosProcesso"></i> Hist\u00F3rico de tramita\u00E7\u00E3o do processo</a> '+
-                '         </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-scroll azulColor iconDadosProcesso"></i>Processo:</div>'+
-                '         <div class="data">'+
-                (typeof prop !== 'undefined' && typeof prop.hdnProtocoloFormatado !== 'undefined' ? 
-                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnProtocoloFormatado+'</a> '+
-                '               <a onclick="copyLinkProcesso(this)" data-id_procedimento="'+id_procedimento+'" onmouseover="return infraTooltipMostrar(\'Clique para copiar o link do processo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-link iconDadosProcesso" style="color:#777"></i></a>' : 
-                '')+
-                '         </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-calendar-check azulColor iconDadosProcesso"></i>Data de Autua\u00E7\u00E3o:</div>'+
-                '         <div class="data">'+
-                (typeof prop !== 'undefined' && typeof prop.hdnDtaGeracao !== 'undefined' ? 
-                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnDtaGeracao+'</a>' : 
-                '')+
-                '           </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-inbox azulColor iconDadosProcesso"></i>Tipo do Processo:</div>'+
-                '         <div class="data">'+
-                (typeof prop !== 'undefined' && typeof prop.hdnNomeTipoProcedimento !== 'undefined' ? 
-                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnNomeTipoProcedimento+'</a>' : 
-                '')+
-                '           </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>Especifica\u00E7\u00E3o:</div>'+
-                '         <div class="data">'+
-                (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined' ? 
-                '               <a class="newLink '+(prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? 'urgentePro' : '')+'" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+(prop.txtDescricao && prop.txtDescricao.toLowerCase().indexOf('(urgente)') !== -1 ? '<div class="urgentePro"></div>' : '')+prop.txtDescricao+'</a>' : 
-                '')+
-                '           </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-bookmark azulColor iconDadosProcesso"></i>Assuntos:</div>'+
-                '         <div class="data">'+
-                (typeof prop !== 'undefined' && typeof prop.selAssuntos !== 'undefined' ? 
-                $.map(prop.selAssuntos,function(v){ return '<a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v+'</a>'; }).join('') : 
-                '')+
-                '           </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-users azulColor iconDadosProcesso"></i>Interessados:</div>'+
-                '         <div class="data">'+
-                (typeof prop !== 'undefined' && typeof prop.selInteressadosProcedimento !== 'undefined' ? 
-                $.map(prop.selInteressadosProcedimento,function(v){ return '<a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v+'</a>'; }).join('') : 
-                '')+
-                '           </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="'+(dataNivelAcesso ? dataNivelAcesso.icon : 'fas fa-globe-americas')+' azulColor iconDadosProcesso"></i>N\u00EDvel de Acesso:</div>'+
-                '         <div class="data">'+
-                (dataNivelAcesso ? 
-                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+dataNivelAcesso.name+'</a>' : 
-                '')+
-                '           </div>'+
-                '      </div>'+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-tag azulColor iconDadosProcesso"></i>Marcador:</div>'+
-                '         <div class="data">'+
-                (dataMarcador ? 
-                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+iconMarcador+linkPrazo+'</a>' : 
-                '')+
-                '           </div>'+
-                '      </div>'+
-                (descBlocoInterno ? 
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-book azulColor iconDadosProcesso"></i>Bloco Interno:</div>'+
-                '         <div class="data">'+
-                '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+descBlocoInterno+'</a>'+
-                '         </div>'+
-                '      </div>'+
-                '' : '')+
-                '      <div class="field">'+
-                '         <div class="label txt_cinza"><i class="fas fa-comment-dots azulColor iconDadosProcesso"></i>Observa\u00E7\u00F5es:</div>'+
-                '         <div class="data">'+
-                (typeof prop !== 'undefined' && typeof prop.txaObservacoes !== 'undefined' ? 
-                $.map(prop.txaObservacoes, function(v){ return '<div><a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+v.unidade+': '+v.observacao+'</a></div>' }).join('') :
-                // '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.txtDescricao+'</a>' : 
-                '')+
-                '         </div>'+
-                '      </div>'+
-                '</div>';
+    var capaRoot = capaDoc.createElement('div');
+    capaRoot.id = 'capaProcessoPro';
+    if (isNewSEI) capaRoot.className = 'newSEI_capaProcessoPro';
+
+    var infoSide = capaDoc.createElement('div');
+    infoSide.style.cssText = 'float:right;max-width:40%;';
+
+    var qrcapa = capaDoc.createElement('div');
+    qrcapa.className = 'qrcapa';
+    bindTooltip(qrcapa, 'Aponte a c\u00E2mera para abrir o processo em seu celular');
+    infoSide.appendChild(qrcapa);
+
+    var infocapa = capaDoc.createElement('div');
+    infocapa.className = 'infocapa';
+    if (infoProcNode) {
+        infocapa.appendChild(infoProcNode.cloneNode(true));
+    }
+    infoSide.appendChild(infocapa);
+    capaRoot.appendChild(infoSide);
+
+    var historyField = createField(null, '');
+    historyField.data.style.cssText = 'margin: 10px 0;';
+    var historyBtn = createButton({
+        iconClass: 'fas fa-history azulColor iconDadosProcesso',
+        text: 'Hist\u00F3rico de tramita\u00E7\u00E3o do processo',
+        tooltip: 'Abrir hist\u00F3rico de tramita\u00E7\u00E3o do processo'
+    });
+    historyBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        if (typeof parent.initGanttHistoryProc === 'function') parent.initGanttHistoryProc();
+    });
+    historyField.data.appendChild(historyBtn);
+    capaRoot.appendChild(historyField.field);
+
+    var processoField = createField('fas fa-scroll azulColor', 'Processo:');
+    if (typeof prop !== 'undefined' && typeof prop.hdnProtocoloFormatado !== 'undefined') {
+        appendLineButton(processoField.data, prop.hdnProtocoloFormatado, 'Clique para copiar', function () {
+            if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+        }, { className: 'capaProcessoTextAction' });
+        var linkBtn = createButton({
+            iconClass: 'fas fa-link iconDadosProcesso',
+            tooltip: 'Clique para copiar o link do processo',
+            className: 'capaProcessoLink'
+        });
+        linkBtn.dataset.id_procedimento = id_procedimento;
+        linkBtn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            if (typeof parent.copyLinkProcesso === 'function') parent.copyLinkProcesso(this);
+        });
+        processoField.data.appendChild(linkBtn);
+    }
+    capaRoot.appendChild(processoField.field);
+
+    var autuacaoField = createField('fas fa-calendar-check azulColor', 'Data de Autua\u00E7\u00E3o:');
+    if (typeof prop !== 'undefined' && typeof prop.hdnDtaGeracao !== 'undefined') {
+        appendLineButton(autuacaoField.data, prop.hdnDtaGeracao, 'Clique para copiar', function () {
+            if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+        }, { className: 'capaProcessoTextAction' });
+    }
+    capaRoot.appendChild(autuacaoField.field);
+
+    var tipoField = createField('fas fa-inbox azulColor', 'Tipo do Processo:');
+    if (typeof prop !== 'undefined' && typeof prop.hdnNomeTipoProcedimento !== 'undefined') {
+        appendLineButton(tipoField.data, prop.hdnNomeTipoProcedimento, 'Clique para copiar', function () {
+            if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+        }, { className: 'capaProcessoTextAction' });
+    }
+    capaRoot.appendChild(tipoField.field);
+
+    var especificacaoField = createField('fas fa-comment-dots azulColor', 'Especifica\u00E7\u00E3o:');
+    if (typeof prop !== 'undefined' && typeof prop.txtDescricao !== 'undefined') {
+        var descricao = String(prop.txtDescricao || '');
+        var urgente = descricao.toLowerCase().indexOf('(urgente)') !== -1;
+        var descricaoBtn = createButton({
+            className: 'capaProcessoTextAction' + (urgente ? ' urgentePro' : ''),
+            tooltip: 'Clique para copiar'
+        });
+        if (urgente) {
+            var urg = capaDoc.createElement('span');
+            urg.className = 'urgentePro';
+            urg.setAttribute('aria-hidden', 'true');
+            descricaoBtn.appendChild(urg);
+        }
+        descricaoBtn.appendChild(capaDoc.createTextNode(descricao));
+        descricaoBtn.addEventListener('click', function () {
+            if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+        });
+        especificacaoField.data.appendChild(descricaoBtn);
+    }
+    capaRoot.appendChild(especificacaoField.field);
+
+    var assuntosField = createField('fas fa-bookmark azulColor', 'Assuntos:');
+    if (typeof prop !== 'undefined' && typeof prop.selAssuntos !== 'undefined') {
+        $.each(prop.selAssuntos, function (i, v) {
+            appendLineButton(assuntosField.data, v, 'Clique para copiar', function () {
+                if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+            }, { className: 'capaProcessoTextAction' });
+        });
+    }
+    capaRoot.appendChild(assuntosField.field);
+
+    var interessadosField = createField('fas fa-users azulColor', 'Interessados:');
+    if (typeof prop !== 'undefined' && typeof prop.selInteressadosProcedimento !== 'undefined') {
+        $.each(prop.selInteressadosProcedimento, function (i, v) {
+            appendLineButton(interessadosField.data, v, 'Clique para copiar', function () {
+                if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+            }, { className: 'capaProcessoTextAction' });
+        });
+    }
+    capaRoot.appendChild(interessadosField.field);
+
+    var nivelField = createField(dataNivelAcesso ? dataNivelAcesso.icon : 'fas fa-globe-americas', 'N\u00EDvel de Acesso:');
+    if (dataNivelAcesso) {
+        appendLineButton(nivelField.data, dataNivelAcesso.name, 'Clique para copiar', function () {
+            if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+        }, { className: 'capaProcessoTextAction' });
+    }
+    capaRoot.appendChild(nivelField.field);
+
+    var marcadorField = createField('fas fa-tag azulColor', 'Marcador:');
+    if (dataMarcador) {
+        var marcadorBtn = createButton({
+            html: iconMarcador,
+            tooltip: 'Clique para copiar',
+            className: 'capaProcessoTextAction'
+        });
+        marcadorBtn.addEventListener('click', function () {
+            if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+        });
+        marcadorField.data.appendChild(marcadorBtn);
+        if (linkPrazo) appendHtml(marcadorField.data, linkPrazo);
+    }
+    capaRoot.appendChild(marcadorField.field);
+
+    if (descBlocoInterno) {
+        var blocoField = createField('fas fa-book azulColor', 'Bloco Interno:');
+        appendLineButton(blocoField.data, descBlocoInterno, 'Clique para copiar', function () {
+            if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+        }, { className: 'capaProcessoTextAction' });
+        capaRoot.appendChild(blocoField.field);
+    }
+
+    var obsField = createField('fas fa-comment-dots azulColor', 'Observa\u00E7\u00F5es:');
+    if (typeof prop !== 'undefined' && typeof prop.txaObservacoes !== 'undefined') {
+        $.each(prop.txaObservacoes, function (i, v) {
+            var obsRow = capaDoc.createElement('div');
+            var obsBtn = createButton({
+                className: 'capaProcessoTextAction',
+                tooltip: 'Clique para copiar'
+            });
+            obsBtn.appendChild(capaDoc.createTextNode((v.unidade || '') + ': ' + (v.observacao || '')));
+            obsBtn.addEventListener('click', function () {
+                if (typeof parent.copyTextThis === 'function') parent.copyTextThis(this);
+            });
+            obsRow.appendChild(obsBtn);
+            obsField.data.appendChild(obsRow);
+        });
+    }
+    capaRoot.appendChild(obsField.field);
 
     ifrVisualizacao.find('#capaProcessoPro').remove();
+    if (window.__SEI_PRO_CAPA_PROCESSO_RETRY__ && window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento]) {
+        if (window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento].timer) clearTimeout(window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento].timer);
+        delete window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento];
+    }
 
-    if (typeof prop !== 'undefined' && typeof id_procedimento !== 'undefined' && ifrArvore.find('#span'+id_procedimento).hasClass('infraArvoreNoSelecionado')) {
-        ifrVisualizacao.find('#divArvoreHtml').prepend(html);
+    if (rootSelected) {
+        ifrVisualizacao.find('#divArvoreHtml').prepend(capaRoot);
         ifrVisualizacao.find(divInformacao).hide();
         if (isSEI_5) ifrVisualizacao.find('#divArvoreHtml').removeClass('d-flex');
         replaceColorsIcons(ifrVisualizacao.find('#tagUserColorPro'));

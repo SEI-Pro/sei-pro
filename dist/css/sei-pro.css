@@ -347,6 +347,32 @@ a.bLink {
 a.newLink:hover {
 	background-color: #eee !important;
 }
+button.newLink.capaProcessoAction {
+	margin: 0 5px;
+	color: #666;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px;
+    border: 0;
+    border-radius: 5px;
+    cursor: pointer;
+    word-break: break-word;
+    user-select: none;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    font: inherit;
+}
+button.newLink.capaProcessoAction:hover {
+	background-color: #eee !important;
+}
+button.newLink.capaProcessoAction i {
+	font-size: 1.2em;
+	color: #666;
+	margin: 0 5px;
+	pointer-events: none;
+}
 .newLink i {
 	font-size: 1.2em;
 	color: #666;
