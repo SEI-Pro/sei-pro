@@ -118,3 +118,4 @@ dist/js/sei-pro-config-local.js
 dist.zip
 .playwright-cli/
 playwright-open-extension.sh
+.playwright-mcp/

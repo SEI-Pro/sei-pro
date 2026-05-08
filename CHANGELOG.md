@@ -1,5 +1,45 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.7] - 2026-05-07
+
+### Alterado
+
+- Painel de Anotação na árvore do processo:
+  - movido para o topo do painel lateral, acima de "Atribuição"
+  - borda própria e leve sombra para destacar visualmente das demais seções
+  - ícones de edição maiores (15pt) com hover suave para facilitar o clique
+  - quando a anotação está marcada como prioridade, o painel fica num tom levemente avermelhado para chamar atenção mesmo sem ler o texto
+  - duplo clique no texto entra em modo de edição com o cursor onde foi clicado
+
+### Corrigido
+
+- Botão de checklist (☐/☑) na anotação não respondia ao clique: agora a toolbar salva e restaura a seleção do editor antes de alternar a linha, evitando cliques sem efeito, e os checkboxes são desenhados também na nova UI (regras CSS para `stickNoteCheck`/`stickNoteChecked` que antes só funcionavam no painel antigo)
+
+## [1.7.6] - 2026-05-07
+
+### Alterado
+
+- Árvore do processo (Informações adicionais):
+  - reescrita do bootstrap: detecção determinística por `target="ifrVisualizacao"` em vez de heurísticas baseadas no nome do SVG do ícone (resolve casos em que o painel não carregava em variantes do SEI da PRF)
+  - boot tolerante a falhas: nunca aborta quando o frame pai não responde — degrada para um stub silencioso e o painel ainda monta
+  - detecção precoce de contexto fora da tela "trabalhar" para evitar 2,5s de polling em frames irrelevantes
+  - cache de páginas com TTL de 60s, observador único de mutação debounçado por animation frame, e watcher de diálogo de edição via `MutationObserver` em vez de `setInterval`
+  - "Personalizar Menu" volta a funcionar: a seleção de seções a exibir (Atribuição, Marcador, Interessados, Anotação, Acompanhamento Especial, Tipo de Processo, Nível de Acesso, Assuntos, Observações) é respeitada de novo; seções desativadas pulam fetch e DOM
+
+### Corrigido
+
+- Painel lateral da árvore que ocasionalmente "não carregava completamente": logs claros agora identificam cada caminho de degradação, e o boot deixa de abortar silenciosamente
+
+### Removido
+
+- Código legado morto em `sei-pro-arvore.js` (~408 linhas): `setDadosProcessoArvore`, `getDataMarcadorProcesso`, `initDadosProcessoArvore`, `initDadosProcessoArvoreSession`, `stylePanelArvore`, `initStylePanelArvore` e a chamada órfã correspondente em `sei-functions-pro.js`
+
+### Interno
+
+- Renomeado `sei-pro-arvore-boot.proto.js` → `sei-pro-arvore-boot.js` (deixou de ser protótipo, é a implementação canônica)
+- Adicionados helpers `seiProArvore.{isProcessNode,isDocumentNode,getNodeIdProc,getNodeWrapper}` em `sei-functions-pro.js` como fonte única de verdade para identificação de nós da árvore
+- Logs estruturados auto-reportáveis: novo helper `report(reason, detail)` que sempre inclui contexto (URL, frame, ID do procedimento) e dispara o auto-report já existente. Documentação em `docs/logging.md` define a convenção para o resto da extensão
+
 ## [1.7.5] - 2026-04-22
 
 ### Alterado

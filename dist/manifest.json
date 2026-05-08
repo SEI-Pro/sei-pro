@@ -3,7 +3,7 @@
   "name": "SEI Pro PRF",
   "short_name": "SEI Pro PRF",
   "description": "Ferramentas avançadas para o SEI da PRF, com reporte de bugs restrito ao ambiente da PRF e recursos para processos, documentos e IA.",
-  "version": "1.7.5",
+  "version": "1.7.7",
   "author": "Polícia Rodoviária Federal",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -234,6 +234,20 @@
         "css/sei-pro.css",
         "css/jquery.toolbar.css",
         "css/dropzone.min.css"
+      ],
+      "all_frames": true,
+      "matches": [
+        "*://*.br/*controlador.php?acao=procedimento_visualizar*",
+        "*://*.org/*controlador.php?acao=procedimento_visualizar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_visualizar*"
+      ],
+      "exclude_matches": [
+        "*://sei.sp1.gov.br/*"
+      ]
+    },
+    {
+      "js": [
+        "js/sei-pro-arvore-boot.js"
       ],
       "all_frames": true,
       "matches": [

@@ -1,4 +1,9 @@
 const loadFunctionsPro = true;
+// SeiProReady — single event-driven readiness signal for child frames (árvore, viewer).
+// Resolved when jQuery's document-ready handler (fnJqueryPro) finishes. Consumers: parent.SeiProReady.
+if (!window.SeiProReady) {
+    window.SeiProReady = new Promise(function (resolve) { window.__seiProReadyResolve = resolve; });
+}
 var dadosProcessoPro = {};
 var dadosProjetosObj = [];
 var dadosEtapasObj = [];
@@ -50,6 +55,58 @@ var ifrVisualizacao_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(g
 var $ifrVisualizacao = '#'+ifrVisualizacao_;
 var ifrArvoreHtml_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrVisualizacao' : 'ifrArvoreHtml';
 var $ifrArvoreHtml = '#'+ifrArvoreHtml_;
+
+var seiProArvore = (function() {
+    var PROCESS_TARGET = 'ifrVisualizacao';
+    var DOC_TARGET = ifrVisualizacao_;
+    var SEL_PROCESS = 'a.infraArvoreNo[target="' + PROCESS_TARGET + '"]';
+    var SEL_DOCUMENT = 'a.infraArvoreNo[target="' + DOC_TARGET + '"]';
+    var SEL_FOLDER_IMG = 'a[id^="anchorImgPASTA"]';
+
+    function asEl(x) {
+        if (!x) return null;
+        if (x.jquery) return x.get(0) || null;
+        if (x.nodeType === 1) return x;
+        return null;
+    }
+    function anchorOf(x) {
+        var el = asEl(x);
+        if (!el) return null;
+        if (el.matches && el.matches('a.infraArvoreNo')) return el;
+        if (el.closest) {
+            var w = el.closest('div.infraArvore');
+            if (w) return w.querySelector('a.infraArvoreNo');
+        }
+        if (el.id && /^anchorImg(\d+)$/.test(el.id)) {
+            var sib = el.parentNode && el.parentNode.querySelector('#anchor' + RegExp.$1);
+            if (sib) return sib;
+        }
+        return null;
+    }
+    return {
+        SEL_PROCESS: SEL_PROCESS,
+        SEL_DOCUMENT: SEL_DOCUMENT,
+        SEL_FOLDER_IMG: SEL_FOLDER_IMG,
+        isProcessNode: function(x) {
+            var a = anchorOf(x);
+            return !!(a && a.getAttribute('target') === PROCESS_TARGET);
+        },
+        isDocumentNode: function(x) {
+            var a = anchorOf(x);
+            return !!(a && a.getAttribute('target') === DOC_TARGET);
+        },
+        getNodeIdProc: function(x) {
+            var a = anchorOf(x);
+            if (!a) return null;
+            var m = /^anchor(\d+)$/.exec(a.id || '');
+            return m ? m[1] : null;
+        },
+        getNodeWrapper: function(x) {
+            var el = asEl(x);
+            return (el && el.closest) ? el.closest('div.infraArvore') : null;
+        }
+    };
+})();
 var dialogIsDraggable = false;
 var tableHomeTimeout = 3000;
 var _parentSPRO = (typeof parent !== 'undefined' && typeof parent._P === 'function') ? parent._P() : null;
@@ -5037,11 +5094,8 @@ function initBlocoProcessoHistorico() {
         } else if (!delayCrash) {
             delayCrash = true;
             setTimeout(function(){ delayCrash = false }, 6000);
-            mergeAllAndamentosProcesso(function() { 
+            mergeAllAndamentosProcesso(function() {
                 getBlocoProcessoHistorico();
-                if ($('#ifrArvore').contents().find('.panelDadosArvorePro[data-type="bloco_interno"]').length == 0) {
-                    $('#ifrArvore')[0].contentWindow.setDadosProcessoArvore();
-                }
             });
             return false;
         }
@@ -13638,6 +13692,10 @@ function fnJqueryPro() {
     if (isNewSEI) $('body').addClass('newSEI');
     if (isSEI_5) $('body').addClass('isSEI_5');
     initModalNewSEISigiloso();
+    if (typeof window.__seiProReadyResolve === 'function') {
+        window.__seiProReadyResolve(window);
+        window.__seiProReadyResolve = null;
+    }
 }
 $(document).ready(function () { fnJqueryPro() });
 
