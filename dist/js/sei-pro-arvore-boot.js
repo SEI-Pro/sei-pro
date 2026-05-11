@@ -310,6 +310,7 @@
     // Active edits still use invalidatePage(url) for immediate refresh.
     var PAGE_CACHE_TTL_MS = 60 * 1000;
     var pageCache = Object.create(null);
+
     function invalidatePage(url) { delete pageCache[url]; }
     function fetchPage(url) {
         var entry = pageCache[url];
@@ -438,6 +439,22 @@
                 links.push({ name: img ? img.getAttribute('title') : '', url: href });
             }
             break;
+        }
+        // Fallback: try window.Nos array directly (some SEI versions expose it as a global)
+        if (!links.length && win.Nos && win.Nos[0] && win.Nos[0].acoes) {
+            var tmp2 = doc.createElement('div');
+            tmp2.innerHTML = win.Nos[0].acoes;
+            var anchors2 = tmp2.querySelectorAll('a[href*="controlador.php?acao="]');
+            for (var k = 0; k < anchors2.length; k++) {
+                var href2 = anchors2[k].getAttribute('href');
+                if (!href2 || href2 === '#') continue;
+                var img2 = anchors2[k].querySelector('img');
+                links.push({ name: img2 ? img2.getAttribute('title') : '', url: href2 });
+            }
+            if (links.length) log('toolbar links from window.Nos fallback:', links.length);
+        }
+        if (!links.length) {
+            report('getToolbarLinks: no action links found — Nos[0].acoes missing or unparseable. Panel sections depending on toolbar links will show "(indisponível)".');
         }
         _toolbarLinksCache = links;
         log('toolbar links parsed:', links.length);

@@ -2324,13 +2324,13 @@ function initSeiProArvore(loop = true) {
         initToolbarDocs(); 
         initCSSArvore();
     }
-    if (typeof localStorageRestorePro === "function" && typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('duaslinhas') ) { 
+    if (!window.__SEI_PRO_TREE_BOOT__ && typeof localStorageRestorePro === "function" && typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('duaslinhas') ) {
         initBreakDocTwoLines();
     }
     if (typeof resizeArvoreMaxWidth === "function" && typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('resizearvore') ) { 
         parent.resizeArvoreMaxWidth();
     }
-    if (typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('numerar_documentos') ) { 
+    if (!window.__SEI_PRO_TREE_BOOT__ && typeof parent.verifyConfigValue !== 'undefined'  && parent.verifyConfigValue('numerar_documentos') ) {
         initNumericDocsPro();
     }
     if (
@@ -2346,7 +2346,7 @@ function initSeiProArvore(loop = true) {
         ) {
         parent.insertIconFavorites();
     }
-    if (typeof parent.checkHostLimit !== 'undefined'  && !parent.checkHostLimit() && (typeof parent.initCheckDadosProcesso === 'function' || typeof parent.initCheckDadosProcesso !== 'undefined')) {
+    if (!window.__SEI_PRO_TREE_BOOT__ && typeof parent.checkHostLimit !== 'undefined'  && !parent.checkHostLimit() && (typeof parent.initCheckDadosProcesso === 'function' || typeof parent.initCheckDadosProcesso !== 'undefined')) {
         parent.initCheckDadosProcesso();
     }
     if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('uploaddocsexternos')) {
@@ -2381,7 +2381,9 @@ function initSeiProArvore(loop = true) {
     };
 
     markTreeAnchors();
-    $('a[target="ifrVisualizacao"]:contains("(URGENTE)")').addClass('urgentePro').find('div.urgentePro').remove().end().prepend('<div class="urgentePro"></div>');
+    if (!window.__SEI_PRO_TREE_BOOT__) {
+        $('a[target="ifrVisualizacao"]:contains("(URGENTE)")').addClass('urgentePro').find('div.urgentePro').remove().end().prepend('<div class="urgentePro"></div>');
+    }
 
     if (!window.__SEI_PRO_ARVORE_MUTATION_OBSERVER__ && typeof MutationObserver !== 'undefined') {
         var treeObserverTarget = document.getElementById('divArvore') || document.body;
@@ -2398,7 +2400,7 @@ function initSeiProArvore(loop = true) {
 
     if (typeof DOMPurify === 'undefined' && typeof parent.URL_SPRO !== 'undefined') $.getScript(parent.URL_SPRO+"js/lib/purify.min.js");
 
-    if (!window.__SEI_PRO_ARVORE_READY_EVENT_SENT__ && typeof parent.dispatchEvent === 'function') {
+    if (!window.__SEI_PRO_TREE_BOOT__ && !window.__SEI_PRO_ARVORE_READY_EVENT_SENT__ && typeof parent.dispatchEvent === 'function') {
         window.__SEI_PRO_ARVORE_READY_EVENT_SENT__ = true;
         try {
             var ArvoreReadyEvent = (typeof parent.CustomEvent === 'function') ? parent.CustomEvent : CustomEvent;
@@ -2413,7 +2415,7 @@ function initSeiProArvore(loop = true) {
         }
     }
 
-    if (typeof parent.checkHostLimit !== 'undefined'  && parent.checkHostLimit() && typeof parent.getUrlAcaoPro !== 'undefined'  && parent.getUrlAcaoPro('duplicar_documento')) {
+    if (!window.__SEI_PRO_TREE_BOOT__ && typeof parent.checkHostLimit !== 'undefined'  && parent.checkHostLimit() && typeof parent.getUrlAcaoPro !== 'undefined'  && parent.getUrlAcaoPro('duplicar_documento')) {
         parent.initCheckDadosProcesso();
         console.log('parent.getUrlAcaoPro(duplicar_documento)',parent.getUrlAcaoPro('duplicar_documento'));
     }
