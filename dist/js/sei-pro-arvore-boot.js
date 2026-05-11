@@ -26,8 +26,8 @@
     var ANCHOR_SEL = 'a.infraArvoreNo[target="ifrConteudoVisualizacao"], a.infraArvoreNo[target="ifrVisualizacao"]';
     // Short timeout: if parent helpers aren't ready in 2.5s, proceed with a stub so panels still mount
     // (this is the user's reported "às vezes não carrega" — never let the boot abort silently).
-    var PARENT_READY_TIMEOUT = 2500;
-    var TREE_READY_TIMEOUT = 15000;
+    var PARENT_READY_TIMEOUT = 6000;
+    var TREE_READY_TIMEOUT = 20000;
 
     function log()  { console.log.apply(console, [TAG].concat([].slice.call(arguments))); }
     function warn() { console.warn.apply(console, [TAG].concat([].slice.call(arguments))); }
@@ -126,7 +126,7 @@
             return Promise.resolve(stubParent());
         }
 
-        warn('parent.SeiProReady missing — polling for checkConfigValue (250ms intervals)');
+        warn('parent.SeiProReady missing — polling for checkConfigValue (250ms intervals, timeout=' + PARENT_READY_TIMEOUT + 'ms)');
         return new Promise(function (resolve) {
             (function probe() {
                 try {
@@ -617,15 +617,32 @@
             // Use refreshSection('name') to refresh just one — important after a server-side save,
             // since SEI hash tokens for other endpoints may go stale and cause spurious fetch errors.
             var refreshers = {};
+            var sectionRefreshMap = {
+                responsaveis: 'responsaveis',
+                marcador: 'marcador',
+                tipo_procedimento: 'consulta',
+                nivel_acesso: 'consulta',
+                interessados: 'consulta',
+                assuntos: 'consulta',
+                observacoes: 'consulta',
+                acompanhamento_especial: 'acomp',
+                anotacoes: 'anotacoes',
+                consulta: 'consulta',
+                acomp: 'acomp'
+            };
+            function resolveRefreshKey(name) {
+                return sectionRefreshMap[name] || name;
+            }
             function refreshAll(reason) {
                 var names = Object.keys(refreshers);
                 log('infoarvore: refreshing (' + (reason || 'manual') + ') — ' + names.length + ' section(s)');
                 names.forEach(function (n) { try { refreshers[n](); } catch (e) { err('refresh ' + n + ':', e.message); } });
             }
             function refreshSection(name, reason) {
-                if (!refreshers[name]) { report('refreshSection: no refresher named ' + name); return; }
-                log('infoarvore: refreshing ' + name + ' (' + (reason || 'manual') + ')');
-                try { refreshers[name](); } catch (e) { err('refresh ' + name + ':', e.message); }
+                var key = resolveRefreshKey(name);
+                if (!refreshers[key]) { report('refreshSection: no refresher named ' + name + ' (resolved=' + key + ')'); return; }
+                log('infoarvore: refreshing ' + name + ' -> ' + key + ' (' + (reason || 'manual') + ')');
+                try { refreshers[key](); } catch (e) { err('refresh ' + key + ':', e.message); }
             }
             // Add pencil icon (or trash) to a section header. Hands off to legacy `parent.editDadosArvorePro`.
             function addHeadBtn(panel, mode, icon, title, extraData) {
@@ -712,10 +729,7 @@
                     if (typeof p.editDadosArvorePro !== 'function') { err('editDadosArvorePro missing on parent'); return; }
                     try { p.editDadosArvorePro(editA); } catch (e) { err('editDadosArvorePro threw:', e.message); return; }
                     // Map legacy edit modes → which section the change affects.
-                    var modeToSection = {
-                        // tipo_procedimento is handled inline above; legacy fallback for the rest
-                        'acompanhamento_especial': 'acomp'
-                    };
+                    var modeToSection = sectionRefreshMap;
                     watchDialogClose(function () {
                         var sec = modeToSection[mode];
                         if (sec) refreshSection(sec, 'post-edit ' + mode);
@@ -763,6 +777,47 @@
             // the panel body for a native <select> + Salvar/Cancelar, submits via submitForm.
             // Replaces the broken legacy chosen.js dialog (which expects elements but receives
             // {name,value} objects from getSelectAtribuicaoProcesso).
+            function parseAtribuicaoItemsFromDoc(docR) {
+                var newResp = [];
+                var scrs = docR.querySelectorAll('script:not([src])');
+                for (var i = 0; i < scrs.length; i++) {
+                    var txt = scrs[i].textContent || '';
+                    if (txt.indexOf('Nos[0].html = ') === -1) continue;
+                    var m = txt.match(/Nos\[0\]\.html\s*=\s*'([^']+)'/);
+                    if (!m) continue;
+                    m[1].split('<br />').forEach(function (frag) {
+                        var tmp = doc.createElement('div');
+                        tmp.innerHTML = frag;
+                        var text = tmp.textContent.trim();
+                        if (text) newResp.push({ text: text, unassigned: !/atribuído para/i.test(text) && !!tmp.querySelector('a.ancoraSigla') });
+                    });
+                    break;
+                }
+                return newResp;
+            }
+            function renderAtribuicaoRows(body, items) {
+                body.innerHTML = '';
+                if (!items.length) {
+                    body.innerHTML = '<span class="infoAlerta">(sem responsáveis)</span>';
+                    return;
+                }
+                items.forEach(function (r) {
+                    var row = doc.createElement('div');
+                    var a = doc.createElement('a');
+                    a.className = 'newLink seipro-copy';
+                    a.style.cursor = 'pointer';
+                    a.style.maxWidth = 'calc(100% - 70px)';
+                    a.textContent = r.text + (r.unassigned ? ' ' : '');
+                    if (r.unassigned) {
+                        var alert = doc.createElement('span');
+                        alert.className = 'infoAlerta';
+                        alert.textContent = '(não atribuído)';
+                        a.appendChild(alert);
+                    }
+                    row.appendChild(a);
+                    body.appendChild(row);
+                });
+            }
             function editAtribuicaoInline(panel) {
                 var atribUrl = findToolbarLink('procedimento_atribuicao_cadastrar');
                 if (!atribUrl) { report('inline atrib: toolbar link not found — edit Atribuição disabled', { sought: 'procedimento_atribuicao_cadastrar' }); return; }
@@ -807,42 +862,8 @@
                             // — avoids reloading the iframe (which would reset the visualization pane).
                             invalidatePage(win.location.href);
                             return fetchPage(win.location.href).then(function (docR) {
-                                var newResp = [];
-                                var scrs = docR.querySelectorAll('script:not([src])');
-                                for (var i = 0; i < scrs.length; i++) {
-                                    var txt = scrs[i].textContent || '';
-                                    if (txt.indexOf('Nos[0].html = ') === -1) continue;
-                                    var m = txt.match(/Nos\[0\]\.html\s*=\s*'([^']+)'/);
-                                    if (!m) continue;
-                                    m[1].split('<br />').forEach(function (frag) {
-                                        var tmp = doc.createElement('div'); tmp.innerHTML = frag;
-                                        var text = tmp.textContent.trim();
-                                        if (text) newResp.push({ text: text, unassigned: !/atribuído para/i.test(text) && !!tmp.querySelector('a.ancoraSigla') });
-                                    });
-                                    break;
-                                }
-                                // Re-render body
-                                body.innerHTML = '';
-                                if (!newResp.length) {
-                                    body.innerHTML = '<span class="infoAlerta">(sem responsáveis)</span>';
-                                } else {
-                                    newResp.forEach(function (r) {
-                                        var row = doc.createElement('div');
-                                        var a = doc.createElement('a');
-                                        a.className = 'newLink seipro-copy';
-                                        a.style.cursor = 'pointer';
-                                        a.style.maxWidth = 'calc(100% - 70px)';
-                                        a.textContent = r.text + (r.unassigned ? ' ' : '');
-                                        if (r.unassigned) {
-                                            var alert = doc.createElement('span');
-                                            alert.className = 'infoAlerta';
-                                            alert.textContent = '(não atribuído)';
-                                            a.appendChild(alert);
-                                        }
-                                        row.appendChild(a);
-                                        body.appendChild(row);
-                                    });
-                                }
+                                var newResp = parseAtribuicaoItemsFromDoc(docR);
+                                renderAtribuicaoRows(body, newResp);
                                 // Update pencil's data-text so the legacy edit dialog (if ever invoked) sees current user
                                 var pencilA = panel.querySelector('.seipro-edit[data-mode="responsaveis"]');
                                 if (pencilA) pencilA.dataset.text = (newResp[0] && newResp[0].text) || '';
@@ -1017,7 +1038,7 @@
             // (Marcador list/remove editor removed — caused session logoff with multi-fetch loops.
             // Add-only flow lives inline in the click handler.)
             // eslint-disable-next-line
-            function editMarcadorInline_unused(panel) {
+            function editMarcadorInline(panel) {
                 var marcUrl = findToolbarLink('andamento_marcador_gerenciar');
                 if (!marcUrl) { err('inline marcador: toolbar link missing'); return; }
                 var body = panel.querySelector('.infoDadosArvore');
@@ -1136,7 +1157,7 @@
                 if (!url) { report('inline tipo: toolbar link missing — edit Tipo de Processo disabled', { sought: 'procedimento_alterar' }); return; }
                 openInlineEditor(panel, url, [
                     { kind: 'select', label: 'Tipo de Processo', srcSelector: '#selTipoProcedimento', name: 'selTipoProcedimento' },
-                ], function () { refreshSection('consulta', 'post-edit tipo'); });
+                ], function () { refreshSection('tipo_procedimento', 'post-edit tipo'); });
             }
 
             // Acompanhamento Especial — same shape as Marcador. acompanhamento_gerenciar serves
@@ -1244,11 +1265,7 @@
 
             // --- 4) Marcador fetch (stage 3a) — shared fetcher, populates the placeholder.
             var marcadorUrl = findToolbarLink('andamento_marcador_gerenciar');
-            if (!marcadorUrl) { warn('infoarvore_marcador: toolbar link not found — section will stay as "carregando"'); marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span style="opacity:0.6">(sem marcador)</span>'; return; }
-            function renderMarcador() {
-              invalidatePage(marcadorUrl);
-              marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span style="opacity:0.6">carregando…</span>';
-              fetchPage(marcadorUrl).then(function (docM) {
+            function renderMarcadorItems(docM) {
                 var items = [];
                 // SEI 4.1+: table-of-marcadores layout (one row per marcador).
                 var rows = docM.querySelectorAll('table.infraTable tr');
@@ -1256,9 +1273,13 @@
                     var tds = rows[r].querySelectorAll('td');
                     if (tds.length < 4) continue;
                     var img = tds[1].querySelector('img');
+                    var remA = rows[r].querySelector('a[onclick*="acaoRemover"]');
+                    var remMatch = remA && remA.getAttribute('onclick').match(/acaoRemover\('([^']+)'/);
+                    var tagA = tds[1].querySelector('a[title]');
                     items.push({
+                        id: remMatch ? remMatch[1] : null,
                         iconSrc: img ? img.getAttribute('src') : null,
-                        tag:  (tds[1].textContent || '').trim(),
+                        tag: (tagA && tagA.getAttribute('title')) || (tds[1].textContent || '').trim(),
                         note: (tds[2].textContent || '').trim(),
                         user: (tds[3].textContent || '').trim()
                     });
@@ -1270,19 +1291,55 @@
                     var opt = sel && (sel.querySelector('option[selected]') || (sel.options && sel.options[sel.selectedIndex]));
                     var tag = opt ? opt.textContent.trim() : '';
                     var note = ta ? ta.value || ta.textContent || '' : '';
-                    if (tag || note) items.push({ iconSrc: opt && (opt.getAttribute('data-imagesrc') || opt.dataset.imagesrc), tag: tag, note: note, user: '' });
+                    if (tag || note) items.push({ id: null, iconSrc: opt && (opt.getAttribute('data-imagesrc') || opt.dataset.imagesrc), tag: tag, note: note, user: '' });
                 }
+                return items;
+            }
+            function renderMarcadorItemRow(it) {
+                var row = doc.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+                var lbl = doc.createElement('span'); lbl.style.flex = '1';
+                if (it.iconSrc) { var im = doc.createElement('img'); im.src = it.iconSrc; im.style.cssText = 'width:14px;vertical-align:middle;margin-right:6px;'; lbl.appendChild(im); }
+                var s = doc.createElement('strong'); s.textContent = it.tag; lbl.appendChild(s);
+                if (it.note) { var n = doc.createElement('div'); n.style.cssText = 'opacity:0.8;margin-left:20px;'; n.textContent = it.note; lbl.appendChild(n); }
+                row.appendChild(lbl);
+                if (it.id) {
+                    var rmBtn = doc.createElement('a');
+                    rmBtn.className = 'newLink'; rmBtn.title = 'Remover marcador';
+                    rmBtn.style.cssText = 'cursor:pointer;color:#c00;flex-shrink:0;';
+                    rmBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    rmBtn.addEventListener('click', function () {
+                        if (rmBtn.style.opacity === '0.4') return;
+                        rmBtn.style.opacity = '0.4'; rmBtn.style.pointerEvents = 'none';
+                        log('marcador remove: id=' + it.id);
+                        submitViaIframe(marcadorUrl, function (w, d2) {
+                            if (typeof w.acaoRemover === 'function') {
+                                w.acaoRemover(it.id, it.tag || '');
+                            } else {
+                                var hdn = d2.getElementById('hdnInfraItemId'); if (hdn) hdn.value = it.id;
+                                var f = d2.getElementById('frmGerenciarMarcador') || d2.querySelector('form');
+                                if (f) f.submit();
+                            }
+                        }).then(function () {
+                            refreshSection('marcador', 'post-remove marcador');
+                        }).catch(function (e) { err('marcador remove:', e.message); rmBtn.style.opacity = '1'; rmBtn.style.pointerEvents = ''; });
+                    });
+                    row.appendChild(rmBtn);
+                }
+                return row;
+            }
+            if (!marcadorUrl) {
+                warn('infoarvore_marcador: toolbar link not found — section will stay as "carregando"');
+                marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span style="opacity:0.6">(sem marcador)</span>';
+            } else {
+            function renderMarcador() {
+              invalidatePage(marcadorUrl);
+              marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span style="opacity:0.6">carregando…</span>';
+              fetchPage(marcadorUrl).then(function (docM) {
+                var items = renderMarcadorItems(docM);
                 var bd = marcPanel.querySelector('.seipro-marcador-body');
                 bd.innerHTML = '';
                 if (!items.length) { bd.innerHTML = '<span style="opacity:0.6">(sem marcador)</span>'; log('infoarvore_marcador: empty'); return; }
-                for (var k = 0; k < items.length; k++) {
-                    var it = items[k];
-                    var row = doc.createElement('div'); row.style.marginBottom = '4px';
-                    if (it.iconSrc) { var im = doc.createElement('img'); im.src = it.iconSrc; im.style.width = '14px'; im.style.verticalAlign = 'middle'; im.style.marginRight = '6px'; row.appendChild(im); }
-                    var s = doc.createElement('strong'); s.textContent = it.tag; row.appendChild(s);
-                    if (it.note) { var n = doc.createElement('div'); n.style.opacity = '0.8'; n.style.marginLeft = '20px'; n.textContent = it.note; row.appendChild(n); }
-                    bd.appendChild(row);
-                }
+                items.forEach(function (it) { bd.appendChild(renderMarcadorItemRow(it)); });
                 log('infoarvore_marcador: populated', items.length, 'marcador(es)');
               }).catch(function (e) {
                 marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span class="infoAlerta">(falha ao carregar marcador)</span>';
@@ -1292,99 +1349,129 @@
             refreshers.marcador = renderMarcador;
             if (sectionEnabled('marcador')) renderMarcador();
             else log('infoarvore_marcador: skipped (section disabled by user)');
+            }
 
             // --- 5) Interessados fetch (stage 3b) — consulta page, read #selInteressados options.
             var intBody = intPanel.querySelector('.seipro-interessados-body');
             // Prefer "procedimento_alterar" — form layout includes #txaObservacoes. Fall back to consultar (read-only).
             var consultaUrl = findToolbarLink('procedimento_alterar') || findToolbarLink('procedimento_consultar');
             if (!consultaUrl) { warn('infoarvore_interessados: consulta link not found'); intBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>'; return; }
-            function renderConsulta() {
-              invalidatePage(consultaUrl);
-              fetchPage(consultaUrl).then(function (docC) {
-                // --- Tipo de Processo
-                var tipoBody = tipoPanel.querySelector('.seipro-tipo-body');
-                var selTipo = docC.getElementById('selTipoProcedimento');
-                var tipoOpt = selTipo && (selTipo.querySelector('option[selected]') || (selTipo.options && selTipo.options[selTipo.selectedIndex]));
-                var tipoName = tipoOpt ? tipoOpt.textContent.trim() : '';
-                tipoBody.innerHTML = '';
-                if (tipoName) {
-                    var aT = doc.createElement('a'); aT.className = 'newLink seipro-copy'; aT.style.cursor = 'pointer'; aT.style.maxWidth = 'calc(100% - 70px)'; aT.textContent = tipoName;
-                    tipoBody.appendChild(aT);
-                } else {
-                    tipoBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-                    report('infoarvore_consulta: Tipo de Processo unavailable in fetched form', { hasSelTipo: !!selTipo });
-                }
 
-                // --- Nível de Acesso
-                var acessoBody = acessoPanel.querySelector('.seipro-acesso-body');
-                var rdo = docC.querySelector('input[name="rdoNivelAcesso"]:checked');
+            function setSectionText(panelBody, text, emptyText) {
+                panelBody.innerHTML = '';
+                if (text) {
+                    var a = doc.createElement('a');
+                    a.className = 'newLink seipro-copy';
+                    a.style.cssText = 'cursor:pointer;max-width:calc(100% - 70px);';
+                    a.textContent = text;
+                    panelBody.appendChild(a);
+                } else {
+                    panelBody.innerHTML = '<span style="opacity:0.6">' + (emptyText || '(indisponível)') + '</span>';
+                }
+            }
+
+            function appendCopyRow(panelBody, text) {
+                var row = doc.createElement('div');
+                var a = doc.createElement('a');
+                a.className = 'newLink seipro-copy';
+                a.style.cssText = 'cursor:pointer;display:block;max-width:calc(100% - 70px);';
+                a.textContent = text;
+                row.appendChild(a);
+                panelBody.appendChild(row);
+            }
+
+            function getSelectedOptionText(docA, selector) {
+                var el = docA.querySelector(selector);
+                var opt = el && (el.querySelector('option[selected]') || (el.options && el.options[el.selectedIndex]));
+                return {
+                    element: el,
+                    text: opt ? opt.textContent.trim() : ''
+                };
+            }
+
+            function getAcessoText(docA) {
+                var rdo = docA.querySelector('input[name="rdoNivelAcesso"]:checked');
                 var acessoMap = { '0': 'Público', '1': 'Restrito', '2': 'Sigiloso' };
                 var acessoTxt = rdo ? acessoMap[rdo.value] || rdo.value : '';
                 if (rdo && rdo.value === '1') {
-                    var hipSel = docC.getElementById('selHipoteseLegal');
+                    var hipSel = docA.getElementById('selHipoteseLegal');
                     var hipOpt = hipSel && (hipSel.querySelector('option[selected]') || (hipSel.options && hipSel.options[hipSel.selectedIndex]));
                     if (hipOpt && hipOpt.textContent.trim()) acessoTxt += ': ' + hipOpt.textContent.trim();
                 }
-                acessoBody.innerHTML = '';
-                if (acessoTxt) {
-                    var aA = doc.createElement('a'); aA.className = 'newLink seipro-copy'; aA.style.cursor = 'pointer'; aA.style.maxWidth = 'calc(100% - 70px)'; aA.textContent = acessoTxt;
-                    acessoBody.appendChild(aA);
-                } else {
-                    acessoBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-                    report('infoarvore_consulta: Nível de Acesso unavailable', { hasRdo: !!rdo });
-                }
+                return { text: acessoTxt, element: rdo };
+            }
 
-                // --- Assuntos
-                var assBody = assuntosPanel.querySelector('.seipro-assuntos-body');
-                var assOpts = docC.querySelectorAll('#selAssuntos option');
-                assBody.innerHTML = '';
-                if (!assOpts.length) { assBody.innerHTML = '<span style="opacity:0.6">(sem assuntos)</span>'; }
-                else {
-                    assOpts.forEach(function (o) {
-                        var txt = (o.textContent || '').trim(); if (!txt) return;
-                        var row = doc.createElement('div');
-                        var a = doc.createElement('a'); a.className = 'newLink seipro-copy'; a.style.cursor = 'pointer'; a.style.maxWidth = 'calc(100% - 70px)'; a.textContent = txt;
-                        row.appendChild(a); assBody.appendChild(row);
-                    });
-                }
+            function getOptionTexts(docA, selector) {
+                var nodes = docA.querySelectorAll(selector);
+                var items = [];
+                nodes.forEach(function (o) {
+                    var txt = (o.textContent || '').trim();
+                    if (txt) items.push(txt);
+                });
+                return items;
+            }
 
-                // --- Observações
-                var obsBody = obsPanel.querySelector('.seipro-obs-body');
-                var obsTA = docC.getElementById('txaObservacoes');
-                var obsVal = obsTA ? (obsTA.value || obsTA.textContent || '').trim() : '';
-                obsBody.innerHTML = '';
-                if (obsVal) {
-                    var aO = doc.createElement('a'); aO.className = 'newLink seipro-copy'; aO.style.cursor = 'pointer'; aO.style.maxWidth = 'calc(100% - 70px)'; aO.style.whiteSpace = 'pre-wrap'; aO.textContent = obsVal;
-                    obsBody.appendChild(aO);
-                } else { obsBody.innerHTML = '<span style="opacity:0.6">(sem observações)</span>'; }
-
-                log('infoarvore_consulta: tipo="' + tipoName + '" acesso="' + acessoTxt + '" assuntos=' + assOpts.length + ' obs.len=' + obsVal.length);
-
-                // --- Interessados (existing)
-                // SEI 4.1 renamed #selInteressados → #selInteressadosProcedimento. Try new first, fall back to legacy.
-                var opts = docC.querySelectorAll('#selInteressadosProcedimento option, #selInteressados option');
-                intBody.innerHTML = '';
-                if (!opts.length) { intBody.innerHTML = '<span style="opacity:0.6">(sem interessados)</span>'; log('infoarvore_interessados: empty'); return; }
+            function getInteressadosTexts(docA) {
+                var opts = docA.querySelectorAll('#selInteressadosProcedimento option, #selInteressados option');
+                var items = [];
                 for (var i = 0; i < opts.length; i++) {
                     var name = (opts[i].textContent || '').trim();
                     if (!name) continue;
                     var parts = name.indexOf('(') !== -1
                         ? name.split('(').map(function (s) { return s.trim().replace(')', ''); })
                         : [name];
-                    var row = doc.createElement('div');
                     parts.forEach(function (part) {
-                        if (!part) return;
-                        var a = doc.createElement('a');
-                        a.className = 'newLink seipro-copy';
-                        a.style.cursor = 'pointer';
-                        a.style.display = 'block';
-                        a.style.maxWidth = 'calc(100% - 70px)';
-                        a.textContent = part;
-                        row.appendChild(a);
+                        if (part) items.push(part);
                     });
-                    intBody.appendChild(row);
                 }
+                return items;
+            }
+
+            function renderConsultaSections(docC) {
+                // --- Tipo de Processo
+                var tipoBody = tipoPanel.querySelector('.seipro-tipo-body');
+                var tipoData = getSelectedOptionText(docC, '#selTipoProcedimento');
+                var tipoName = tipoData.text;
+                setSectionText(tipoBody, tipoName, '(indisponível)');
+                if (!tipoName) report('infoarvore_consulta: Tipo de Processo unavailable in fetched form', { hasSelTipo: !!tipoData.element });
+
+                // --- Nível de Acesso
+                var acessoBody = acessoPanel.querySelector('.seipro-acesso-body');
+                var acessoData = getAcessoText(docC);
+                var acessoTxt = acessoData.text;
+                setSectionText(acessoBody, acessoTxt, '(indisponível)');
+                if (!acessoTxt) report('infoarvore_consulta: Nível de Acesso unavailable', { hasRdo: !!acessoData.element });
+
+                // --- Assuntos
+                var assBody = assuntosPanel.querySelector('.seipro-assuntos-body');
+                var assOpts = getOptionTexts(docC, '#selAssuntos option');
+                assBody.innerHTML = '';
+                if (!assOpts.length) { assBody.innerHTML = '<span style="opacity:0.6">(sem assuntos)</span>'; }
+                else {
+                    assOpts.forEach(function (txt) { appendCopyRow(assBody, txt); });
+                }
+
+                // --- Observações
+                var obsBody = obsPanel.querySelector('.seipro-obs-body');
+                var obsTA = docC.getElementById('txaObservacoes');
+                var obsVal = obsTA ? (obsTA.value || obsTA.textContent || '').trim() : '';
+                setSectionText(obsBody, obsVal, '(sem observações)');
+                if (obsBody.firstChild && obsVal) obsBody.firstChild.style.whiteSpace = 'pre-wrap';
+
+                // --- Interessados
+                var opts = getInteressadosTexts(docC);
+                intBody.innerHTML = '';
+                if (!opts.length) { intBody.innerHTML = '<span style="opacity:0.6">(sem interessados)</span>'; log('infoarvore_interessados: empty'); return; }
+                opts.forEach(function (part) { appendCopyRow(intBody, part); });
+
+                log('infoarvore_consulta: tipo="' + tipoName + '" acesso="' + acessoTxt + '" assuntos=' + assOpts.length + ' obs.len=' + obsVal.length);
                 log('infoarvore_interessados: populated', opts.length, 'interessado(s)');
+            }
+
+            function renderConsulta() {
+              invalidatePage(consultaUrl);
+              fetchPage(consultaUrl).then(function (docC) {
+                renderConsultaSections(docC);
               }).catch(function (e) {
                 var msg = '<span class="infoAlerta">(falha ao carregar)</span>';
                 intBody.innerHTML = msg;
@@ -1402,63 +1489,98 @@
             else log('infoarvore_consulta: skipped (all 5 dependent sections disabled by user)');
 
             // --- 5b) Acompanhamento Especial — fetch form page; if fields are prefilled, process is registered.
-            (function () {
-                var body = acompPanel.querySelector('.seipro-acomp-body');
-                var acompUrl = findToolbarLink('acompanhamento_gerenciar')
-                            || findToolbarLink('acompanhamento_listar')
-                            || findToolbarLink('acompanhamento_cadastrar')
-                            || findToolbarLink('acompanhamento_alterar');
-                if (!acompUrl) {
-                    body.innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-                    var names = getToolbarLinks().map(function (l) { return (l.url.match(/acao=([^&]+)/) || [])[1]; }).filter(Boolean);
-                    warn('infoarvore_acomp: no acompanhamento_* toolbar link. Toolbar actions:', names.join(', '));
-                    return;
-                }
-                function renderAcomp() {
-                  invalidatePage(acompUrl);
-                  body.innerHTML = '<span style="opacity:0.6">carregando…</span>';
-                  log('infoarvore_acomp: fetching', acompUrl.match(/acao=([^&]+)/)[1]);
-                  fetchPage(acompUrl).then(function (docA) {
-                    // Listing page: table row per acompanhamento
-                    var rows = docA.querySelectorAll('table.infraTable tr');
-                    var items = [];
-                    for (var r = 1; r < rows.length; r++) {
-                        var tds = rows[r].querySelectorAll('td');
-                        if (tds.length < 3) continue;
-                        // Columns: checkbox, Grupo, Observação, Usuário, Data, Ações
-                        items.push({
-                            grupo: (tds[1].textContent || '').trim(),
-                            obs:   (tds[2].textContent || '').trim(),
-                            user:  tds[3] ? (tds[3].textContent || '').trim() : '',
-                            date:  tds[4] ? (tds[4].textContent || '').trim() : ''
-                        });
+            var acompBody = acompPanel.querySelector('.seipro-acomp-body');
+            var acompUrl = findToolbarLink('acompanhamento_gerenciar')
+                        || findToolbarLink('acompanhamento_listar')
+                        || findToolbarLink('acompanhamento_cadastrar')
+                        || findToolbarLink('acompanhamento_alterar');
+            function parseAcompItems(docA) {
+                var rows = docA.querySelectorAll('table.infraTable tr');
+                var items = [];
+                for (var r = 1; r < rows.length; r++) {
+                    var tds = rows[r].querySelectorAll('td');
+                    if (tds.length < 3) continue;
+                    var acompId = null;
+                    var exLink = rows[r].querySelector('a[onclick*="acaoExcluir"]');
+                    if (exLink) {
+                        var idM = exLink.getAttribute('onclick').match(/acaoExcluir\((\d+)/);
+                        if (idM) acompId = idM[1];
                     }
-                    body.innerHTML = '';
+                    if (!acompId) {
+                        var chk = rows[r].querySelector('input[type="checkbox"][name*="chk"]');
+                        if (chk) acompId = chk.value;
+                    }
+                    items.push({
+                        id: acompId,
+                        grupo: (tds[1].textContent || '').trim(),
+                        obs: (tds[2].textContent || '').trim(),
+                        user: tds[3] ? (tds[3].textContent || '').trim() : '',
+                        date: tds[4] ? (tds[4].textContent || '').trim() : ''
+                    });
+                }
+                return items;
+            }
+            function renderAcompItemRow(it) {
+                var row = doc.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+                var txt = it.obs + (it.grupo ? (it.obs ? ' ' : '') + '(' + it.grupo + ')' : '');
+                var a = doc.createElement('a');
+                a.className = 'newLink seipro-copy';
+                a.style.cssText = 'cursor:pointer;flex:1;white-space:pre-wrap;';
+                a.textContent = txt || '(em acompanhamento)';
+                row.appendChild(a);
+                if (it.id) {
+                    var btn = doc.createElement('a');
+                    btn.className = 'newLink';
+                    btn.title = 'Remover acompanhamento especial';
+                    btn.style.cssText = 'cursor:pointer;color:#c00;flex-shrink:0;';
+                    btn.innerHTML = '<i class="fas fa-times"></i>';
+                    btn.addEventListener('click', function () {
+                        btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none';
+                        log('acomp remove: id=' + it.id);
+                        submitViaIframe(acompUrl, function (w, d2) {
+                            w.acaoExclusaoMultipla = function () {
+                                var chks = d2.querySelectorAll('input[type="checkbox"]');
+                                for (var c = 0; c < chks.length; c++) { chks[c].checked = (chks[c].value == it.id); }
+                                var f = d2.querySelector('form'); if (f) f.submit();
+                            };
+                            if (typeof w.acaoExcluir === 'function') {
+                                w.acaoExcluir(it.id, it.obs || it.grupo || '');
+                            } else {
+                                w.acaoExclusaoMultipla();
+                            }
+                        }).then(function () {
+                            refreshSection('acomp', 'post-remove acomp');
+                        }).catch(function (e) { err('acomp remove:', e.message); btn.style.opacity = '1'; btn.style.pointerEvents = ''; });
+                    });
+                    row.appendChild(btn);
+                }
+                return row;
+            }
+            function renderAcomp() {
+                invalidatePage(acompUrl);
+                acompBody.innerHTML = '<span style="opacity:0.6">carregando…</span>';
+                log('infoarvore_acomp: fetching', acompUrl.match(/acao=([^&]+)/)[1]);
+                fetchPage(acompUrl).then(function (docA) {
+                    var items = parseAcompItems(docA);
+                    acompBody.innerHTML = '';
                     if (!items.length) {
-                        body.innerHTML = '<span style="opacity:0.6">(não está em acompanhamento especial)</span>';
-                        log('infoarvore_acomp: empty listing');
+                        acompBody.innerHTML = '<span style="opacity:0.6">(não está em acompanhamento especial)</span>';
                         return;
                     }
-                    items.forEach(function (it) {
-                        var row = doc.createElement('div'); row.style.marginBottom = '4px';
-                        var txt = it.obs + (it.grupo ? (it.obs ? ' ' : '') + '(' + it.grupo + ')' : '');
-                        var a = doc.createElement('a');
-                        a.className = 'newLink seipro-copy';
-                        a.style.cursor = 'pointer'; a.style.maxWidth = 'calc(100% - 70px)'; a.style.whiteSpace = 'pre-wrap';
-                        a.textContent = txt || '(em acompanhamento)';
-                        row.appendChild(a);
-                        body.appendChild(row);
-                    });
+                    items.forEach(function (it) { acompBody.appendChild(renderAcompItemRow(it)); });
                     log('infoarvore_acomp: populated', items.length, 'registro(s)');
-                  }).catch(function (e) {
-                    body.innerHTML = '<span class="infoAlerta">(falha ao carregar)</span>';
+                }).catch(function (e) {
+                    acompBody.innerHTML = '<span class="infoAlerta">(falha ao carregar)</span>';
                     report('infoarvore_acomp: fetch failed', { error: e.message, url: acompUrl });
-                  });
-                }
-                refreshers.acomp = renderAcomp;
-                if (sectionEnabled('acompanhamento_especial')) renderAcomp();
-                else log('infoarvore_acomp: skipped (section disabled by user)');
-            })();
+                });
+            }
+            refreshers.acomp = renderAcomp;
+            if (!acompUrl) {
+                acompBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
+                var names = getToolbarLinks().map(function (l) { return (l.url.match(/acao=([^&]+)/) || [])[1]; }).filter(Boolean);
+                warn('infoarvore_acomp: no acompanhamento_* toolbar link. Toolbar actions:', names.join(', '));
+            } else if (sectionEnabled('acompanhamento_especial')) renderAcomp();
+            else log('infoarvore_acomp: skipped (section disabled by user)');
 
             // --- 6) Anotação (sticknote) — full edit flow: edit/save/cancel/remove/priority/date/checklist.
             var anotBody = anotPanel.querySelector('.seipro-anot-body');
@@ -1470,35 +1592,39 @@
                 else log('infoarvore_anotacoes: skipped (section disabled by user)');
             }
 
+            function readAnotacaoData(docA) {
+                var ta  = docA.getElementById('txaDescricao');
+                var pri = docA.getElementById('chkSinPrioridade');
+                return {
+                    text: ta ? (ta.value || ta.textContent || '') : '',
+                    priority: !!(pri && (pri.checked || pri.getAttribute('checked') !== null))
+                };
+            }
+
             function renderAnotacao(url) {
                 fetchPage(url).then(function (docA) {
-                    var ta  = docA.getElementById('txaDescricao');
-                    var pri = docA.getElementById('chkSinPrioridade');
-                    var txt = ta ? (ta.value || ta.textContent || '') : '';
-                    var priority = !!(pri && (pri.checked || pri.getAttribute('checked') !== null));
-                    buildAnotUI(url, txt, priority);
-                    log('infoarvore_anotacoes: loaded (priority=' + priority + ', len=' + txt.length + ')');
+                    var data = readAnotacaoData(docA);
+                    buildAnotUI(url, data.text, data.priority);
+                    log('infoarvore_anotacoes: loaded (priority=' + data.priority + ', len=' + data.text.length + ')');
                 }).catch(function (e) {
                     anotBody.innerHTML = '<span class="infoAlerta">(falha ao carregar anotação)</span>';
                     report('infoarvore_anotacoes: fetch failed', { error: e.message, url: anotUrl });
                 });
             }
 
-            function buildAnotUI(url, initialText, initialPriority, opts) {
-                opts = opts || {};
-                anotBody.innerHTML = '';
-                anotBody.classList.toggle('seipro-anot-priority', initialPriority);
+            function saveAnotacaoToServer(url, line, priority, onDone, onFail) {
+                invalidatePage(url);
+                fetchPage(url).then(function (docA) {
+                    return submitForm(docA, { txaDescricao: line, chkSinPrioridade: priority ? 'on' : false });
+                }).then(function () {
+                    invalidatePage(url);
+                    if (typeof onDone === 'function') onDone();
+                }).catch(function (e) {
+                    if (typeof onFail === 'function') onFail(e);
+                });
+            }
 
-                // Persist author + timestamp locally keyed by id_procedimento+user (the server doesn't expose a read API).
-                var idProc = (win.location.href.match(/id_procedimento=(\d+)/) || [])[1];
-                var stampKey = 'seiProAnotStamp_' + idProc;
-                var userSEI = (function () { try { return win.parent && win.parent.userSEI; } catch (e) { return ''; } })() || '';
-                if (opts.justSaved) {
-                    try { win.localStorage.setItem(stampKey, JSON.stringify({ user: userSEI, at: Date.now() })); } catch (e) {}
-                }
-                var stamp = null;
-                try { stamp = JSON.parse(win.localStorage.getItem(stampKey) || 'null'); } catch (e) {}
-
+            function createAnotacaoStaticUI(initialText, initialPriority, stamp) {
                 var editor = doc.createElement('div');
                 editor.className = 'seipro-anot-editor';
                 editor.setAttribute('contenteditable', 'false');
@@ -1508,8 +1634,6 @@
                 anotDomFromLine(editor, initialText);
                 if (!initialText) editor.innerHTML = '<div style="opacity:0.5;font-style:italic;">(sem anotação — clique em ✏️ para adicionar)</div>';
                 if (initialPriority) editor.style.borderLeft = '3px solid #d33';
-
-                // Highlight expired dates (DD/MM/YYYY in past) + linkify process numbers (read-only view).
                 decorateReadonly(editor);
 
                 var actions = doc.createElement('div');
@@ -1528,10 +1652,40 @@
                     '<i class="fas fa-thumbs-up seipro-anot-btn" data-act="remove-confirm"  title="Confirmar remoção" style="cursor:pointer;color:#393;display:none;"></i>' +
                     '<i class="fas fa-thumbs-down seipro-anot-btn" data-act="remove-cancel"  title="Cancelar" style="cursor:pointer;color:#888;display:none;"></i>';
 
-                // Collapsible if content > 3 lines.
                 var collapseBtn = doc.createElement('a');
                 collapseBtn.className = 'newLink'; collapseBtn.style.cssText = 'cursor:pointer;font-size:85%;display:none;';
                 collapseBtn.textContent = 'ver mais';
+
+                var stampEl = doc.createElement('div');
+                stampEl.style.cssText = 'font-size:80%;color:#666;margin-top:4px;';
+                if (stamp && stamp.user) {
+                    var when = new Date(stamp.at);
+                    stampEl.innerHTML = '<i class="far fa-user" style="margin-right:4px;"></i>por <strong>' + stamp.user + '</strong> em ' + when.toLocaleString('pt-BR');
+                }
+
+                return { editor: editor, actions: actions, collapseBtn: collapseBtn, stampEl: stampEl };
+            }
+
+            function buildAnotUI(url, initialText, initialPriority, opts) {
+                opts = opts || {};
+                anotBody.innerHTML = '';
+                anotBody.classList.toggle('seipro-anot-priority', initialPriority);
+
+                // Persist author + timestamp locally keyed by id_procedimento+user (the server doesn't expose a read API).
+                var idProc = (win.location.href.match(/id_procedimento=(\d+)/) || [])[1];
+                var stampKey = 'seiProAnotStamp_' + idProc;
+                var userSEI = (function () { try { return win.parent && win.parent.userSEI; } catch (e) { return ''; } })() || '';
+                if (opts.justSaved) {
+                    try { win.localStorage.setItem(stampKey, JSON.stringify({ user: userSEI, at: Date.now() })); } catch (e) {}
+                }
+                var stamp = null;
+                try { stamp = JSON.parse(win.localStorage.getItem(stampKey) || 'null'); } catch (e) {}
+                var ui = createAnotacaoStaticUI(initialText, initialPriority, stamp);
+                var editor = ui.editor;
+                var actions = ui.actions;
+                var collapseBtn = ui.collapseBtn;
+                var stampEl = ui.stampEl;
+
                 var collapsed = true;
                 function applyCollapse() {
                     var nLines = editor.children.length;
@@ -1542,14 +1696,6 @@
                     } else { collapseBtn.style.display = 'none'; editor.style.maxHeight = ''; editor.style.overflow = ''; }
                 }
                 collapseBtn.addEventListener('click', function () { collapsed = !collapsed; applyCollapse(); });
-
-                // Stamp display (author + time).
-                var stampEl = doc.createElement('div');
-                stampEl.style.cssText = 'font-size:80%;color:#666;margin-top:4px;';
-                if (stamp && stamp.user) {
-                    var when = new Date(stamp.at);
-                    stampEl.innerHTML = '<i class="far fa-user" style="margin-right:4px;"></i>por <strong>' + stamp.user + '</strong> em ' + when.toLocaleString('pt-BR');
-                }
 
                 anotBody.appendChild(editor);
                 anotBody.appendChild(collapseBtn);
@@ -1750,14 +1896,10 @@
 
                 function persist(line, priority, kind, keepEditing) {
                     actions.querySelectorAll('i').forEach(function (i) { i.style.pointerEvents = 'none'; i.style.opacity = '0.5'; });
-                    invalidatePage(url);
-                    fetchPage(url).then(function (docA) {
-                        return submitForm(docA, { txaDescricao: line, chkSinPrioridade: priority ? 'on' : false });
-                    }).then(function () {
-                        invalidatePage(url);
+                    saveAnotacaoToServer(url, line, priority, function () {
                         log('infoarvore_anotacoes: ' + kind + ' ok (priority=' + priority + ', len=' + line.length + ')');
                         buildAnotUI(url, line, priority, { justSaved: true, keepEditing: keepEditing });
-                    }).catch(function (e) {
+                    }, function (e) {
                         actions.querySelectorAll('i').forEach(function (i) { i.style.pointerEvents = ''; i.style.opacity = ''; });
                         report('infoarvore_anotacoes: ' + kind + ' failed', { error: e.message, kind: kind });
                         alert('Falha ao salvar anotação: ' + e.message);
