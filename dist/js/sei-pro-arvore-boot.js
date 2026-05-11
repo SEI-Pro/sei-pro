@@ -1355,7 +1355,22 @@
             var intBody = intPanel.querySelector('.seipro-interessados-body');
             // Prefer "procedimento_alterar" — form layout includes #txaObservacoes. Fall back to consultar (read-only).
             var consultaUrl = findToolbarLink('procedimento_alterar') || findToolbarLink('procedimento_consultar');
-            if (!consultaUrl) { warn('infoarvore_interessados: consulta link not found'); intBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>'; return; }
+            if (!consultaUrl) {
+                warn('infoarvore_interessados: consulta link not found');
+                intBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
+                tipoPanel.querySelector('.seipro-tipo-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
+                acessoPanel.querySelector('.seipro-acesso-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
+                assuntosPanel.querySelector('.seipro-assuntos-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
+                obsPanel.querySelector('.seipro-obs-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
+                refreshers.consulta = function () {
+                    var msg = '<span style="opacity:0.6">(indisponível)</span>';
+                    intBody.innerHTML = msg;
+                    tipoPanel.querySelector('.seipro-tipo-body').innerHTML = msg;
+                    acessoPanel.querySelector('.seipro-acesso-body').innerHTML = msg;
+                    assuntosPanel.querySelector('.seipro-assuntos-body').innerHTML = msg;
+                    obsPanel.querySelector('.seipro-obs-body').innerHTML = msg;
+                };
+            } else {
 
             function setSectionText(panelBody, text, emptyText) {
                 panelBody.innerHTML = '';
@@ -1487,6 +1502,7 @@
             var consultaSections = ['interessados', 'tipo_procedimento', 'nivel_acesso', 'assuntos', 'observacoes'];
             if (consultaSections.some(sectionEnabled)) renderConsulta();
             else log('infoarvore_consulta: skipped (all 5 dependent sections disabled by user)');
+            }
 
             // --- 5b) Acompanhamento Especial — fetch form page; if fields are prefilled, process is registered.
             var acompBody = acompPanel.querySelector('.seipro-acomp-body');
