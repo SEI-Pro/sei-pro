@@ -156,10 +156,27 @@
     }
     win.SeiProTree = { register: register, features: features };
 
+    var PROCESSED_KEYS = win.__SEI_PRO_TREE_PROCESSED_KEYS__ || (win.__SEI_PRO_TREE_PROCESSED_KEYS__ = Object.create(null));
     function hasDone(el, id) { return (el.getAttribute(DONE_ATTR) || '').split(' ').indexOf(id) !== -1; }
     function markDone(el, id) {
         var cur = el.getAttribute(DONE_ATTR) || '';
         el.setAttribute(DONE_ATTR, cur ? cur + ' ' + id : id);
+    }
+    function anchorKey(el) {
+        if (!el) return '';
+        return [
+            el.getAttribute('id') || '',
+            el.getAttribute('href') || '',
+            el.getAttribute('target') || ''
+        ].join('|');
+    }
+    function isProcessed(el) {
+        var key = anchorKey(el);
+        return !!(key && PROCESSED_KEYS[key]);
+    }
+    function markProcessed(el) {
+        var key = anchorKey(el);
+        if (key) PROCESSED_KEYS[key] = true;
     }
 
     function runPipeline(ctx, anchors, label) {
@@ -168,17 +185,23 @@
             var f = features[i];
             if (!ctx.enabled[f.id]) continue;
             applied[f.id] = 0;
-            for (var j = 0; j < anchors.length; j++) {
-                var a = anchors[j];
-                if (hasDone(a, f.id)) continue;
+        }
+        for (var j = 0; j < anchors.length; j++) {
+            var a = anchors[j];
+            if (isProcessed(a)) continue;
+            for (var i2 = 0; i2 < features.length; i2++) {
+                var f2 = features[i2];
+                if (!ctx.enabled[f2.id]) continue;
+                if (hasDone(a, f2.id)) continue;
                 try {
-                    f.enrich(a, ctx);
-                    markDone(a, f.id);
-                    applied[f.id]++;
+                    f2.enrich(a, ctx);
+                    markDone(a, f2.id);
+                    applied[f2.id] = (applied[f2.id] || 0) + 1;
                 } catch (e) {
-                    err('feature', f.id, 'threw on', a.id, e);
+                    err('feature', f2.id, 'threw on', a.id, e);
                 }
             }
+            markProcessed(a);
         }
         log('pipeline', label || '', '— anchors:', anchors.length, 'applied:', applied);
     }
@@ -203,6 +226,8 @@
             requestAnimationFrame(function () {
                 pending = false;
                 var batch = Array.from(queued); queued.clear();
+                batch = batch.filter(function (a) { return !isProcessed(a); });
+                if (batch.length === 0) return;
                 log('observer batch —', batch.length, 'new anchor(s)');
                 onBatch(batch);
             });

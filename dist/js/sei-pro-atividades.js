@@ -23028,10 +23028,7 @@ function changeAtivMarcadorSwitch(this_) {
             }).join('');
             _parent.find('#ativ_lista_marcador').html(htmlOptions).trigger('chosen:updated').chosenImage();
         } else {
-            var ifrArvore = $('#ifrArvore');
-            var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
-            arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
-            var href = jmespath.search(arrayLinksArvore, "[?name=='Gerenciar Marcador'].url");
+            var href = parent.getTreeLinkUrlByName('Gerenciar Marcador');
             if (href !== null) {
                 $.ajax({
                     url: href

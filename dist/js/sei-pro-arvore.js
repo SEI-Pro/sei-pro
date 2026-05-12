@@ -89,7 +89,7 @@ function setToolbarDocs() {
     var htmlToolbarProc =   '<div id="toolbar-options-proc" class="hidden">';
         if (getOptionsPro('optionsFlashMenu_menuproc') != 'disabled') {
             $.each(selectedItensMenu,function(index, value){
-                var data = (typeof jmespath !== 'undefined') ? jmespath.search(arrayLinksArvore, "[?name=='"+value[0]+"'] | [0]") : null;
+                var data = getTreeLinkByName(value[0], {treeModel: {links: arrayLinksArvore}});
                 if ( data !== null ) {
                     var valueAlt = ( data.alt != '' ) ? data.alt : data.name;
                     var icon = data.icon == '' ? jmespath.search(iconsFlashMenu, "[?name=='"+value[0]+"'] | [0].icon") : data.icon;
@@ -167,7 +167,7 @@ function actionToolbarPro(this_, triggerButton) {
 
     if ( name_action == 'linksArvore' ) {
         button_clicktxt = 'Abrindo...'; 
-        var url = jmespath.search(arrayLinksArvore, "[?name=='"+button_txt+"'].url | [0]");
+        var url = jmespath.search(getTreeLinksSession(), "[?name=='"+button_txt+"'].url | [0]");
         if ( button_txt == 'Incluir em Bloco' ) {
             parent.execIncluirEmBlocoPro();
         } else if ( button_txt == 'Concluir Processo' ||  button_txt == 'Reabrir Processo' ) {
@@ -343,7 +343,8 @@ function actionToolbarDocs(_this, click) {
         $(event.currentTarget).next().addClass('highlight');
         var id_documento = $(event.currentTarget).attr('id');
             id_documento = (typeof id_documento !== 'undefined') ? parseInt(id_documento.replace('anchorImg','')) : false;
-        var listLinks = (id_documento) ? arrayLinksArvoreAll.filter(function(v){ return v.indexOf('id_documento='+id_documento) !== -1 }) : [];
+        var listLinksAll = getTreeLinksAllSession();
+        var listLinks = (id_documento) ? listLinksAll.filter(function(v){ return v.indexOf('id_documento='+id_documento) !== -1 }) : [];
             setTimeout(function () { 
                 var toolbar = $('.tool-container.tool-bottom.toolbar-menu.animate-standard:visible');
                 if (id_documento && listLinks.length > 0 && toolbar.length > 0) {
@@ -358,6 +359,7 @@ function actionToolbarDocs(_this, click) {
                                         var $html = $(html);
                                         var textLink = $html.filter('script').not('[src*="js"]').text();
                                         var arrayLinksArvoreDoc = getLinksInText(textLink);
+                                        var arrayLinksArvoreAll = getTreeLinksAllSession();
 
                                         var objIndexLink = (typeof arrayLinksArvoreAll === 'undefined' || arrayLinksArvoreAll.length == 0) ? -1 : arrayLinksArvoreAll.findIndex((obj => obj == doc[0]));
                                         if (objIndexLink !== -1) {
@@ -365,6 +367,11 @@ function actionToolbarDocs(_this, click) {
                                         }
 
                                         $.merge(arrayLinksArvoreAll, arrayLinksArvoreDoc);
+                                        if (typeof parent.syncTreeModelSession === 'function' && typeof parent.pullDadosProcessoSession === 'function') {
+                                            parent.syncTreeModelSession(parent.pullDadosProcessoSession(), {
+                                                linksAll: arrayLinksArvoreAll
+                                            });
+                                        }
                                         setTimeout(function () {
                                             updateLinksToolbar(toolbar, arrayLinksArvoreAll.filter(function(v){ return v.indexOf('id_documento='+id_documento) !== -1 }), id_documento, true);
                                             // console.log(arrayLinksArvoreAll.filter(function(v){ return v.indexOf('id_documento='+id_documento) !== -1 }));
@@ -396,6 +403,7 @@ function actionToolbarDocs(_this, click) {
     }); 
 }
 function getLinksArvorePasta(nomePasta) {
+    var arrayLinksArvoreAll = getTreeLinksAllSession();
     var href = (nomePasta) ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('procedimento_paginar') !== -1 && v.indexOf('no_pai='+nomePasta) !== -1) }) : [];
     if (href.length > 0) {
         $.ajax({ 
@@ -411,6 +419,11 @@ function getLinksArvorePasta(nomePasta) {
                 $.merge(newLinks, arrayLinksArvoreAll);
                 newLinks = uniqPro(newLinks);
                 arrayLinksArvoreAll = newLinks;
+                if (typeof parent.syncTreeModelSession === 'function' && typeof parent.pullDadosProcessoSession === 'function') {
+                    parent.syncTreeModelSession(parent.pullDadosProcessoSession(), {
+                        linksAll: arrayLinksArvoreAll
+                    });
+                }
         });
     }
 }
@@ -442,6 +455,7 @@ function getLinksInText(text) {
     return array;
 }
 function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = false) {
+    var arrayIconsView = getTreeIconsViewSession();
     var listIconsView = (checkIconsView && arrayIconsView.length > 0) ? jmespath.search(arrayIconsView, "[?id_documento==`"+id_documento+"`] | [0].icones") : null;
         listIconsView = (listIconsView === null) ? [] : listIconsView;
         
@@ -569,7 +583,8 @@ function addIconActionsArvore(param) {
         id_documento = (typeof id_documento !== 'undefined') ? id_documento : $(this).attr('id').replace('anchor', '');
         id_documento = (typeof id_documento !== 'undefined') ? id_documento : false;
         var iconDoc = (id_documento && $('#icon'+id_documento).attr('src').indexOf('documento_interno') !== -1) ? true : false;
-        var newDocLink = jmespath.search(arrayLinksPage, "[?name=='Incluir Documento'] | [0].url");
+        var arrayLinksPage = getTreePageLinksSession();
+        var newDocLink = getTreeLinkUrlByName('Incluir Documento', null, true);
         var checkThisDocumento = id_documento ? !seiProArvore.isProcessNode(document.getElementById('anchorImg'+id_documento)) : true;
         if (
                 (
@@ -610,6 +625,7 @@ function callActionsArvore(doc, mode) {
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
     var linkDoc = parent.url_host+'?acao=procedimento_trabalhar&id_procedimento='+id_procedimento+'&id_documento='+id_documento;
     var linkProc = parent.url_host+'?acao=procedimento_trabalhar&id_procedimento='+id_procedimento;
+    var arrayLinksArvoreAll = getTreeLinksAllSession();
     if (mode == 'clone') {
         setLoadingActionDoc(id_documento); 
         window.doc_callActionsArvore = doc
@@ -817,7 +833,7 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
         if (nameDoc && nameDoc != '') {
             var itemSelected = false;
             var nr_sei = getNrSei(nameDoc);
-            var href = parent.jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
+            var href = parent.jmespath.search(getTreeLinksSession(), "[?name=='Incluir Documento'].url | [0]");
             // console.log('getDuplicateDoc === else', nameDoc, nr_sei, href, arrayLinksArvore);
             if (href !== null) {
                 $.ajax({ url: href }).done(function (html) {
@@ -1165,7 +1181,7 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
     var queuedFiles = (typeof arrayDropzone.getQueuedFiles === 'function') ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
 
     if (mode == 'upload' && queuedFiles.length > 0) {
-        var href = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url | [0]");
+        var href = jmespath.search(getTreeLinksSession(), "[?name=='Incluir Documento'].url | [0]");
         if (href !== null) {
             $.ajax({ url: href }).done(function (html) {
                 let $html = $(html);
@@ -1472,7 +1488,7 @@ function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') 
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var textarea = _parent.find('.stickNotePro');
-    var url = jmespath.search(arrayLinksArvore, "[?name=='Anota\u00E7\u00F5es'] | [0].url");
+    var url = getTreeLinkUrlByName('Anotações');
     if (typeof url !== 'undefined' && url != '') {
         if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
 
@@ -1855,11 +1871,10 @@ function setStickNoteCheck() {
 function getUrlAnotacaoArvore() {
     if (typeof jmespath === 'undefined') return false;
 
-    var url = jmespath.search(arrayLinksArvore, "[?name=='Anota\u00E7\u00F5es'] | [0].url");
-        url = url || jmespath.search(arrayLinksPage, "[?name=='Anota\u00E7\u00F5es'] | [0].url");
+    var url = getTreeLinkUrlByName('Anotações', null, true);
 
-    if (!url && arrayLinksArvoreAll && arrayLinksArvoreAll.length) {
-        $.each(arrayLinksArvoreAll, function(index, value) {
+    if (!url && getTreeLinksAllSession().length) {
+        $.each(getTreeLinksAllSession(), function(index, value) {
             if (value && (value.indexOf('anotacao_registrar') !== -1 || value.indexOf('acao=anotacao_') !== -1)) {
                 url = value;
                 return false;
@@ -2278,6 +2293,16 @@ function initAnchorImg() {
         return ($(this).closest('.anchorSpacePro').length == 0) ? '<span class="anchorSpacePro" data-img="'+$(this).attr('src')+'"></span>' : false;
     });
 }
+function getArvoreInitSignature() {
+    var anchors = $('a[id*="anchor"][target="'+ifrVisualizacao_+'"]');
+    if (!anchors.length) return '';
+    return anchors.map(function() {
+        return [
+            $(this).attr('id') || '',
+            $(this).attr('href') || ''
+        ].join('|');
+    }).get().join('::');
+}
 /*
 function initOnClickPasta() {
     $('a[id*="ancjoinPASTA"]').on('click', function(){
@@ -2306,12 +2331,29 @@ function initSeiProArvore(loop = true) {
         }
         return;
     }
+    var treeSignature = getArvoreInitSignature();
+    if (treeSignature && window.__SEI_PRO_ARVORE_LAST_SIGNATURE__ === treeSignature) {
+        return;
+    }
+    if (treeSignature) {
+        window.__SEI_PRO_ARVORE_LAST_SIGNATURE__ = treeSignature;
+    }
     loadStyleDesign();
     checkProcessoSigiloso();
     if (typeof parent.checkCapacidade !== 'undefined' && parent.checkCapacidade('view_prescricoes') && parent.checkConfigValue('gerenciarprescricoes')) initPanelPrescricaoProcesso();
     arrayLinksArvore = getLinksArvore();
     arrayLinksPage = getLinksPage();
     parent.linksArvore = getLinksPage(); 
+    if (typeof parent.syncTreeModelSession === 'function' && typeof parent.pullDadosProcessoSession === 'function') {
+        parent.syncTreeModelSession(parent.pullDadosProcessoSession(), {
+            links: arrayLinksArvore,
+            linksAll: arrayLinksArvoreAll,
+            iconsView: arrayIconsView,
+            pageLinks: arrayLinksPage,
+            signature: treeSignature,
+            source: window.location.href
+        });
+    }
 
     if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined'  && !parent.checkConfigValue('infoarvore')) {
         if (typeof parent.resizeArvoreMaxWidth === 'function') {
