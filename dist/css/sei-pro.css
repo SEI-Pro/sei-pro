@@ -4613,6 +4613,10 @@ div#dialogBoxDocLote p {
 .sticknoteHomeNoteCell .newLink {
     display: none;
 }
+.sticknoteHomeLayout a[href*="acao=anotacao_registrar"],
+.sticknoteHomeLayout a.botaoSEI[onclick*="acao=anotacao_registrar"] {
+    display: none !important;
+}
 .sticknoteHomeInsertedCell + td {
     padding-left: 0 !important;
 }

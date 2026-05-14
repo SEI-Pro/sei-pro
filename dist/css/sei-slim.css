@@ -3083,6 +3083,10 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f249";
     color: #d8a63a;
 }
+.seiSlim .sticknoteHomeLayout a[href*="acao=anotacao_registrar"],
+.seiSlim .sticknoteHomeLayout a.botaoSEI[onclick*="acao=anotacao_registrar"] {
+    display: none !important;
+}
 .seiSlim a.botaoSEI[onclick*="?acao=acompanhamento_cadastrar"]:after,
 .seiSlim a.botaoSEI[onclick*="?acao=acompanhamento_cadastrar"]:before {
     content: "\f06e";
