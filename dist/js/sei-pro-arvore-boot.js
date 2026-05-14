@@ -927,8 +927,9 @@
                     ifr.id = 'seipro-submit-frame-' + Date.now();
                     // Sandbox prevents the SEI response from running top.location.reload()/redirects
                     // that would clobber the visualization pane. We still need same-origin (DOM access),
-                    // forms (submit the form), and scripts (form has onsubmit="return OnSubmitForm()").
-                    ifr.setAttribute('sandbox', 'allow-same-origin allow-forms allow-scripts');
+                    // forms (submit the form), scripts (form has onsubmit="return OnSubmitForm()"),
+                    // and modals because acaoRemover() uses confirm() before submitting.
+                    ifr.setAttribute('sandbox', 'allow-same-origin allow-forms allow-scripts allow-modals');
                     var loads = 0;
                     var timeout = setTimeout(function () {
                         try { ifr.remove(); } catch (e) {}
@@ -1079,7 +1080,6 @@
                             { kind: 'textarea', label: 'Observação (opcional)', srcSelector: '#txaTexto', name: 'txaTexto' },
                         ], function () {
                             refreshSection('marcador', 'post-add marcador');
-                            if (typeof p.setCapaProcesso === 'function') p.setCapaProcesso(false);
                         });
                         return;
                     }
@@ -1120,7 +1120,17 @@
                             btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none';
                             log('marcador remove: id=' + it.id);
                             submitViaIframe(marcUrl, function (w, d2) {
-                                if (typeof w.acaoRemover === 'function') {
+                                // Prefer the real SEI link click because it preserves the exact
+                                // confirmation + submit chain used by the page itself.
+                                var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoRemover"]'))
+                                    .find(function (a) {
+                                        var oc = a.getAttribute('onclick') || '';
+                                        return oc.indexOf("acaoRemover('" + it.id + "'") !== -1;
+                                    });
+                                if (removeLink) {
+                                    try { w.confirm = function () { return true; }; } catch (_) {}
+                                    removeLink.click();
+                                } else if (typeof w.acaoRemover === 'function') {
                                     w.acaoRemover(it.id, it.tag || '');
                                 } else {
                                     // Fallback: set #hdnInfraItemId and submit the form manually.
@@ -1130,7 +1140,6 @@
                                 }
                             }).then(function () {
                                 refreshSection('marcador', 'post-remove marcador');
-                                if (typeof p.setCapaProcesso === 'function') p.setCapaProcesso(false);
                                 editMarcadorInline(panel);
                             })
                               .catch(function (e) { err('marcador remove:', e.message); body.innerHTML = savedHTML; });
@@ -1163,7 +1172,6 @@
                                 { kind: 'textarea', label: 'Observação (opcional)', srcSelector: '#txaTexto', name: 'txaTexto' },
                             ], function () {
                                 refreshSection('marcador', 'post-add marcador');
-                                if (typeof p.setCapaProcesso === 'function') p.setCapaProcesso(false);
                                 editMarcadorInline(panel);
                             });
                         }).catch(function (e) { err('marcador add fetch:', e.message); });
@@ -1321,32 +1329,66 @@
                 return items;
             }
             function renderMarcadorItemRow(it) {
-                var row = doc.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
-                var lbl = doc.createElement('span'); lbl.style.flex = '1';
-                if (it.iconSrc) { var im = doc.createElement('img'); im.src = it.iconSrc; im.style.cssText = 'width:14px;vertical-align:middle;margin-right:6px;'; lbl.appendChild(im); }
-                var s = doc.createElement('strong'); s.textContent = it.tag; lbl.appendChild(s);
-                if (it.note) { var n = doc.createElement('div'); n.style.cssText = 'opacity:0.8;margin-left:20px;'; n.textContent = it.note; lbl.appendChild(n); }
+                var row = doc.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+
+                var lbl = doc.createElement('span');
+                lbl.style.flex = '1';
+                if (it.iconSrc) {
+                    var im = doc.createElement('img');
+                    im.src = it.iconSrc;
+                    im.style.cssText = 'width:14px;vertical-align:middle;margin-right:6px;';
+                    lbl.appendChild(im);
+                }
+                var s = doc.createElement('strong');
+                s.textContent = it.tag;
+                lbl.appendChild(s);
+                if (it.note) {
+                    var n = doc.createElement('div');
+                    n.style.cssText = 'opacity:0.8;margin-left:20px;';
+                    n.textContent = it.note;
+                    lbl.appendChild(n);
+                }
                 row.appendChild(lbl);
+
                 if (it.id) {
                     var rmBtn = doc.createElement('a');
-                    rmBtn.className = 'newLink'; rmBtn.title = 'Remover marcador';
+                    rmBtn.className = 'newLink';
+                    rmBtn.title = 'Remover marcador';
                     rmBtn.style.cssText = 'cursor:pointer;color:#c00;flex-shrink:0;';
                     rmBtn.innerHTML = '<i class="fas fa-times"></i>';
                     rmBtn.addEventListener('click', function () {
                         if (rmBtn.style.opacity === '0.4') return;
-                        rmBtn.style.opacity = '0.4'; rmBtn.style.pointerEvents = 'none';
+                        rmBtn.style.opacity = '0.4';
+                        rmBtn.style.pointerEvents = 'none';
                         log('marcador remove: id=' + it.id);
                         submitViaIframe(marcadorUrl, function (w, d2) {
-                            if (typeof w.acaoRemover === 'function') {
+                            var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoRemover"]'))
+                                .find(function (a) {
+                                    var oc = a.getAttribute('onclick') || '';
+                                    return oc.indexOf("acaoRemover('" + it.id + "'") !== -1;
+                                });
+                            if (removeLink) {
+                                log('marcador remove: clicking SEI remove link');
+                                try { w.confirm = function () { return true; }; } catch (_) {}
+                                removeLink.click();
+                            } else if (typeof w.acaoRemover === 'function') {
+                                log('marcador remove: fallback to w.acaoRemover');
                                 w.acaoRemover(it.id, it.tag || '');
                             } else {
-                                var hdn = d2.getElementById('hdnInfraItemId'); if (hdn) hdn.value = it.id;
+                                log('marcador remove: fallback to form submit');
+                                var hdn = d2.getElementById('hdnInfraItemId');
+                                if (hdn) hdn.value = it.id;
                                 var f = d2.getElementById('frmGerenciarMarcador') || d2.querySelector('form');
                                 if (f) f.submit();
                             }
                         }).then(function () {
                             refreshSection('marcador', 'post-remove marcador');
-                        }).catch(function (e) { err('marcador remove:', e.message); rmBtn.style.opacity = '1'; rmBtn.style.pointerEvents = ''; });
+                        }).catch(function (e) {
+                            err('marcador remove:', e.message);
+                            rmBtn.style.opacity = '1';
+                            rmBtn.style.pointerEvents = '';
+                        });
                     });
                     row.appendChild(rmBtn);
                 }
