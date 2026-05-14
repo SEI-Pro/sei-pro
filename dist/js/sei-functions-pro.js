@@ -344,67 +344,23 @@ function sendSEIProBugPayload(payload, handlers) {
 
     var isChrome = (typeof browser === 'undefined');
     var _browser = isChrome ? (typeof chrome !== 'undefined' ? chrome : null) : browser;
-    var payloadJson = JSON.stringify(payload || {});
-    var encoded = btoa(unescape(encodeURIComponent(payloadJson)));
-    var fallbackUrl = appsScriptUrl + '?d=' + encodeURIComponent(encoded);
-
-    function parseResponse(response) {
-        return response.text().then(function(text) {
-            var data = {};
-            try {
-                data = text ? JSON.parse(text) : {};
-            } catch (e) {}
-            return response.ok && (!data.status || data.status === 'ok');
-        });
-    }
     function success() {
         if (typeof callbacks.onSuccess === 'function') callbacks.onSuccess();
     }
     function fail(message) {
         if (typeof callbacks.onError === 'function') callbacks.onError(message || 'Erro ao enviar relatório');
     }
-    function sendDirect() {
-        return fetch(appsScriptUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8'
-            },
-            body: payloadJson
-        })
-        .then(parseResponse)
-        .then(function(ok) {
-            if (ok) {
-                success();
-                return;
-            }
-            return fetch(fallbackUrl)
-                .then(parseResponse)
-                .then(function(fallbackOk) {
-                    if (fallbackOk) success();
-                    else fail();
-                });
-        })
-        .catch(function() {
-            return fetch(fallbackUrl)
-                .then(parseResponse)
-                .then(function(fallbackOk) {
-                    if (fallbackOk) success();
-                    else fail();
-                })
-                .catch(function(error) {
-                    fail(error && error.message ? error.message : '');
-                });
-        });
-    }
-
     if (!_browser || !_browser.runtime || !_browser.runtime.sendMessage) {
-        sendDirect();
+        fail('Serviço de envio indisponível');
         return;
     }
 
     _browser.runtime.sendMessage({ action: 'enviarRelatorioBug', url: appsScriptUrl, payload: payload }, function(response) {
-        if (response && response.ok) success();
-        else fail(response && response.erro ? response.erro : '');
+        if (response && response.ok) {
+            success();
+        } else {
+            fail(response && response.erro ? response.erro : '');
+        }
     });
 }
 function scheduleSEIProAutomaticErrorReport(textError, origem) {
@@ -8241,6 +8197,19 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
         getDocumentosActions();
     }
 }
+function getArvoreInitSignature(root) {
+    var scope = (root && typeof root.find === 'function') ? root : $(root || document);
+    var targetFrame = (typeof ifrVisualizacao_ !== 'undefined' && ifrVisualizacao_) ? ifrVisualizacao_ : null;
+    if (!targetFrame) return '';
+    var anchors = scope.find('a[id*="anchor"][target="' + targetFrame + '"]');
+    if (!anchors.length) return '';
+    return anchors.map(function() {
+        return [
+            $(this).attr('id') || '',
+            $(this).attr('href') || ''
+        ].join('|');
+    }).get().join('::');
+}
 function getListDocumentosArvore(ifrArvore) {
     var processo = [];
     var dadosProcessoPro = pullDadosProcessoSession();
@@ -8319,7 +8288,7 @@ function getListDocumentosArvore(ifrArvore) {
             linksAll: typeof arrayLinksArvoreAll !== 'undefined' ? arrayLinksArvoreAll : [],
             iconsView: typeof arrayIconsView !== 'undefined' ? arrayIconsView : [],
             pageLinks: typeof arrayLinksPage !== 'undefined' ? arrayLinksPage : [],
-            signature: getArvoreInitSignature(),
+            signature: getArvoreInitSignature(ifrArvore),
             source: window.location.href
         });
         dadosProcessoPro.listDocumentos = dadosProcessoPro.treeModel.documents;

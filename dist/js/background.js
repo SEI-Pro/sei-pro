@@ -8,6 +8,7 @@ const isChrome = (typeof browser === 'undefined');
 if (isChrome) { var browser = chrome; }
 const SEI_PRO_PROCESS_NOTIFICATIONS_KEY = 'seiProProcessNotifications';
 const SEI_PRO_PROCESS_NOTIFICATION_ID = 'sei-pro-new-process';
+const SEI_PRO_BUG_REPORT_TIMEOUT_MS = 15000;
 
 function handleInstalled(details) {
     if (details.reason === 'install') {
@@ -136,26 +137,61 @@ function isAllowedBugReportSender(sender) {
     }
 }
 
+function buildBugReportPayloadJson(payload) {
+    try {
+        return JSON.stringify(payload || {});
+    } catch (e) {
+        return null;
+    }
+}
+
+function fetchWithTimeout(url, options, timeoutMs) {
+    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = null;
+    var requestOptions = Object.assign({}, options || {});
+
+    if (controller) {
+        requestOptions.signal = controller.signal;
+        timer = setTimeout(function() {
+            controller.abort();
+        }, timeoutMs);
+    }
+
+    return fetch(url, requestOptions).finally(function() {
+        if (timer) clearTimeout(timer);
+    });
+}
+
 // Recebe requisições de envio de relatório de bug dos content scripts
 // e faz o fetch a partir do service worker (sem restrições de CORS).
 // Preferimos POST para evitar estourar o tamanho da URL quando há logs.
 browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message.action === 'syncNotificacaoProcessos') {
+    var action = message && message.action ? message.action : '';
+
+    if (action === 'syncNotificacaoProcessos') {
         syncProcessNotificationState(message, sendResponse);
         return true;
     }
 
-    if (message.action === 'syncNotificacaoProcessosConfig') {
+    if (action === 'syncNotificacaoProcessosConfig') {
         syncProcessNotificationConfig(message, sendResponse);
         return false;
     }
 
-    if (message.action === 'enviarRelatorioBug') {
+    if (action === 'enviarRelatorioBug') {
         if (!isAllowedBugReportSender(sender)) {
             sendResponse({ ok: false, erro: 'Relatório desabilitado fora do SEI da PRF' });
             return false;
         }
-        var payloadJson = JSON.stringify(message.payload || {});
+        if (!message || !message.url) {
+            sendResponse({ ok: false, erro: 'URL do relatório ausente' });
+            return false;
+        }
+        var payloadJson = buildBugReportPayloadJson(message.payload);
+        if (!payloadJson) {
+            sendResponse({ ok: false, erro: 'Falha ao serializar relatório' });
+            return false;
+        }
 
         function parseResponse(response) {
             return response.text().then(function(text) {
@@ -173,18 +209,18 @@ browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         function sendViaGet() {
             var encoded = btoa(unescape(encodeURIComponent(payloadJson)));
             var url = message.url + '?d=' + encodeURIComponent(encoded);
-            return fetch(url, { method: 'GET', redirect: 'follow' })
+            return fetchWithTimeout(url, { method: 'GET', redirect: 'follow' }, SEI_PRO_BUG_REPORT_TIMEOUT_MS)
                 .then(parseResponse);
         }
 
-        fetch(message.url, {
+        fetchWithTimeout(message.url, {
             method: 'POST',
             redirect: 'follow',
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8'
             },
             body: payloadJson
-        })
+        }, SEI_PRO_BUG_REPORT_TIMEOUT_MS)
         .then(parseResponse)
         .then(function(result) {
             if (result.ok) {
