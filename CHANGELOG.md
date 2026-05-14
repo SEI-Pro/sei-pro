@@ -1,5 +1,19 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.8] - 2026-05-14
+
+### Alterado
+
+- Árvore do processo:
+  - remoção de marcador ajustada para a tela nova de múltiplos marcadores do SEI
+  - remoção de acompanhamento especial alinhada ao fluxo nativo da página do SEI
+  - atualização dos botões de remoção para agir apenas no painel lateral da árvore, sem recarregar o frame principal
+
+### Corrigido
+
+- Consoles de desenvolvimento e mensagens de retry excessivas removidos dos fluxos de marcador, acompanhamento especial e capa do processo
+- Estabilização dos fluxos de inclusão e remoção de marcador e acompanhamento especial após a adaptação para a estrutura nova do SEI
+
 ## [1.7.7] - 2026-05-07
 
 ### Alterado
