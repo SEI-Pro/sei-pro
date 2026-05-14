@@ -9617,7 +9617,6 @@ function setCapaProcesso(loop = true) {
             setCapaProcesso(true);
         }, 400);
         state[retryKey] = retryState;
-        console.log('[SEI Pro]', 'setCapaProcesso: waiting for readiness retry #' + retryState.count + ' (' + reason + ')');
     }
 
     if (!capaReady) {

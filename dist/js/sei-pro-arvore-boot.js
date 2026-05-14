@@ -54,6 +54,53 @@
         console.error.call(console, TAG, '[REPORT]', reason, '| ctx=' + JSON.stringify(ctx) + (detail !== undefined ? ' | detail=' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : ''));
     }
 
+    function forceTrueConfirm(winObj) {
+        if (!winObj) return;
+        var alwaysTrue = function () { return true; };
+        try { winObj.confirm = alwaysTrue; } catch (_) {}
+        try {
+            Object.defineProperty(winObj, 'confirm', {
+                configurable: true,
+                writable: true,
+                value: alwaysTrue
+            });
+        } catch (_) {}
+        try {
+            if (typeof winObj.eval === 'function') {
+                winObj.eval('window.confirm = function () { return true; };');
+            }
+        } catch (_) {}
+        try {
+            if (winObj.top && winObj.top !== winObj) {
+                winObj.top.confirm = alwaysTrue;
+            }
+        } catch (_) {}
+    }
+
+    function createMarcadorRemoveConfirmBox(docRef, onConfirm, onCancel) {
+        var wrap = docRef.createElement('span');
+        wrap.style.cssText = 'display:none;align-items:center;gap:3px;margin-left:4px;white-space:nowrap;font-size:150%;line-height:1;vertical-align:middle;';
+        var yes = docRef.createElement('i');
+        yes.className = 'fas fa-thumbs-up';
+        yes.title = 'Confirmar remoção';
+        yes.style.cssText = 'cursor:pointer;color:#393;';
+        var no = docRef.createElement('i');
+        no.className = 'fas fa-thumbs-down';
+        no.title = 'Cancelar';
+        no.style.cssText = 'cursor:pointer;color:#888;';
+        yes.addEventListener('click', function () {
+            wrap.style.display = 'none';
+            if (typeof onConfirm === 'function') onConfirm();
+        });
+        no.addEventListener('click', function () {
+            wrap.style.display = 'none';
+            if (typeof onCancel === 'function') onCancel();
+        });
+        wrap.appendChild(yes);
+        wrap.appendChild(no);
+        return wrap;
+    }
+
     // ---------- Readiness (Promise-based, no polling) ----------
 
     function waitFor(name, predicate, root, timeoutMs) {
@@ -957,7 +1004,7 @@
                                         if (id.indexOf('sel') === 0) {
                                             var hdnId = 'hdnId' + id.replace('sel', '');
                                             var hdn = ifrDoc.getElementById(hdnId);
-                                            if (hdn) { hdn.value = values[id]; log('submitViaIframe: set #' + hdnId + ' = ' + values[id]); }
+                                            if (hdn) { hdn.value = values[id]; }
                                         }
                                         var el = ifrDoc.getElementById(id);
                                         if (!el) { return; }
@@ -1118,22 +1165,19 @@
                         btn.addEventListener('click', function () {
                             if (!it.id) { err('marcador remove: no id'); return; }
                             btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none';
-                            log('marcador remove: id=' + it.id);
                             submitViaIframe(marcUrl, function (w, d2) {
-                                // Prefer the real SEI link click because it preserves the exact
-                                // confirmation + submit chain used by the page itself.
                                 var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoRemover"]'))
                                     .find(function (a) {
                                         var oc = a.getAttribute('onclick') || '';
                                         return oc.indexOf("acaoRemover('" + it.id + "'") !== -1;
                                     });
                                 if (removeLink) {
-                                    try { w.confirm = function () { return true; }; } catch (_) {}
+                                    forceTrueConfirm(w);
                                     removeLink.click();
                                 } else if (typeof w.acaoRemover === 'function') {
+                                    forceTrueConfirm(w);
                                     w.acaoRemover(it.id, it.tag || '');
                                 } else {
-                                    // Fallback: set #hdnInfraItemId and submit the form manually.
                                     var hdn = d2.getElementById('hdnInfraItemId'); if (hdn) hdn.value = it.id;
                                     var f = d2.getElementById('frmGerenciarMarcador') || d2.querySelector('form');
                                     if (f) f.submit();
@@ -1361,7 +1405,6 @@
                         if (rmBtn.style.opacity === '0.4') return;
                         rmBtn.style.opacity = '0.4';
                         rmBtn.style.pointerEvents = 'none';
-                        log('marcador remove: id=' + it.id);
                         submitViaIframe(marcadorUrl, function (w, d2) {
                             var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoRemover"]'))
                                 .find(function (a) {
@@ -1369,14 +1412,12 @@
                                     return oc.indexOf("acaoRemover('" + it.id + "'") !== -1;
                                 });
                             if (removeLink) {
-                                log('marcador remove: clicking SEI remove link');
-                                try { w.confirm = function () { return true; }; } catch (_) {}
+                                forceTrueConfirm(w);
                                 removeLink.click();
                             } else if (typeof w.acaoRemover === 'function') {
-                                log('marcador remove: fallback to w.acaoRemover');
+                                forceTrueConfirm(w);
                                 w.acaoRemover(it.id, it.tag || '');
                             } else {
-                                log('marcador remove: fallback to form submit');
                                 var hdn = d2.getElementById('hdnInfraItemId');
                                 if (hdn) hdn.value = it.id;
                                 var f = d2.getElementById('frmGerenciarMarcador') || d2.querySelector('form');
@@ -1405,9 +1446,8 @@
                 var items = renderMarcadorItems(docM);
                 var bd = marcPanel.querySelector('.seipro-marcador-body');
                 bd.innerHTML = '';
-                if (!items.length) { bd.innerHTML = '<span style="opacity:0.6">(sem marcador)</span>'; log('infoarvore_marcador: empty'); return; }
+                if (!items.length) { bd.innerHTML = '<span style="opacity:0.6">(sem marcador)</span>'; return; }
                 items.forEach(function (it) { bd.appendChild(renderMarcadorItemRow(it)); });
-                log('infoarvore_marcador: populated', items.length, 'marcador(es)');
               }).catch(function (e) {
                 marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span class="infoAlerta">(falha ao carregar marcador)</span>';
                 report('infoarvore_marcador: fetch failed', { error: e.message, url: marcadorUrl });
@@ -1618,22 +1658,31 @@
                     btn.style.cssText = 'cursor:pointer;color:#c00;flex-shrink:0;';
                     btn.innerHTML = '<i class="fas fa-times"></i>';
                     btn.addEventListener('click', function () {
-                        btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none';
-                        log('acomp remove: id=' + it.id);
+                        if (btn.style.opacity === '0.4') return;
+                        btn.style.opacity = '0.4';
+                        btn.style.pointerEvents = 'none';
                         submitViaIframe(acompUrl, function (w, d2) {
-                            w.acaoExclusaoMultipla = function () {
+                            var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoExcluir"]'))
+                                .find(function (a) {
+                                    var oc = a.getAttribute('onclick') || '';
+                                    return oc.indexOf('acaoExcluir(' + it.id) !== -1 || oc.indexOf("acaoExcluir('" + it.id + "'") !== -1;
+                                });
+                            if (removeLink) {
+                                removeLink.click();
+                            } else if (typeof w.acaoExcluir === 'function') {
+                                w.acaoExcluir(it.id, it.obs || it.grupo || '');
+                            } else {
                                 var chks = d2.querySelectorAll('input[type="checkbox"]');
                                 for (var c = 0; c < chks.length; c++) { chks[c].checked = (chks[c].value == it.id); }
                                 var f = d2.querySelector('form'); if (f) f.submit();
-                            };
-                            if (typeof w.acaoExcluir === 'function') {
-                                w.acaoExcluir(it.id, it.obs || it.grupo || '');
-                            } else {
-                                w.acaoExclusaoMultipla();
                             }
                         }).then(function () {
                             refreshSection('acomp', 'post-remove acomp');
-                        }).catch(function (e) { err('acomp remove:', e.message); btn.style.opacity = '1'; btn.style.pointerEvents = ''; });
+                        }).catch(function (e) {
+                            err('acomp remove:', e.message);
+                            btn.style.opacity = '1';
+                            btn.style.pointerEvents = '';
+                        });
                     });
                     row.appendChild(btn);
                 }
@@ -1642,7 +1691,6 @@
             function renderAcomp() {
                 invalidatePage(acompUrl);
                 acompBody.innerHTML = '<span style="opacity:0.6">carregando…</span>';
-                log('infoarvore_acomp: fetching', acompUrl.match(/acao=([^&]+)/)[1]);
                 fetchPage(acompUrl).then(function (docA) {
                     var items = parseAcompItems(docA);
                     acompBody.innerHTML = '';
@@ -1651,7 +1699,6 @@
                         return;
                     }
                     items.forEach(function (it) { acompBody.appendChild(renderAcompItemRow(it)); });
-                    log('infoarvore_acomp: populated', items.length, 'registro(s)');
                 }).catch(function (e) {
                     acompBody.innerHTML = '<span class="infoAlerta">(falha ao carregar)</span>';
                     report('infoarvore_acomp: fetch failed', { error: e.message, url: acompUrl });
