@@ -1754,6 +1754,27 @@
                 });
             }
 
+            function createPresetRankIconHtml(barCount, act, label) {
+                var bars = barCount === 2
+                    ? [
+                        '<rect x="5.2" y="6.4" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect>',
+                        '<rect x="5.2" y="11.9" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect>'
+                    ].join('')
+                    : [
+                        '<rect x="5.2" y="4.9" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect>',
+                        '<rect x="5.2" y="9.2" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect>',
+                        '<rect x="5.2" y="13.5" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect>'
+                    ].join('');
+                return (
+                    '<i class="seipro-anot-btn seipro-anot-preset" data-act="' + act + '" title="' + label + '" aria-label="' + label + '" role="button" style="cursor:pointer;color:#666;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;line-height:1;font-size:0;">' +
+                        '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" style="width:30px;height:30px;display:block;pointer-events:none;">' +
+                            '<circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.25"></circle>' +
+                            bars +
+                        '</svg>' +
+                    '</i>'
+                );
+            }
+
             function createAnotacaoStaticUI(initialText, initialPriority, stamp) {
                 var editor = doc.createElement('div');
                 editor.className = 'seipro-anot-editor';
@@ -1777,6 +1798,10 @@
                     '<i class="fas fa-calendar-plus azulColor seipro-anot-btn" data-act="date"  title="Inserir data" style="cursor:pointer;"></i>' +
                     '<input type="date" class="seipro-anot-date-input" style="display:none;">' +
                     '<i class="fas fa-exclamation-circle seipro-anot-btn" data-act="prio"  title="Prioridade" style="cursor:pointer;color:' + (initialPriority ? '#d33' : '#888') + ';"></i>' +
+                    '<span class="seipro-anot-presets" style="display:inline-flex;gap:6px;align-items:center;margin-left:6px;">' +
+                        createPresetRankIconHtml(2, 'preset-chefia', 'Adicionar: Aguardando a assinatura da chefia imediata') +
+                        createPresetRankIconHtml(3, 'preset-superintendente', 'Adicionar: Aguardando a assinatura do superintendente') +
+                    '</span>' +
                     '<span class="seipro-anot-count" style="margin-left:auto;font-size:85%;color:#888;"></span>' +
                     '<i class="fas fa-trash-alt seipro-anot-btn" data-act="remove"  title="Remover" style="cursor:pointer;color:#a33;"></i>' +
                     '<i class="fas fa-thumbs-up seipro-anot-btn" data-act="remove-confirm"  title="Confirmar remoção" style="cursor:pointer;color:#393;display:none;"></i>' +
@@ -1940,6 +1965,8 @@
                     if (act === 'remove-cancel')  { toggleRemoveConfirm(false); return; }
                     if (act === 'remove-confirm') { doRemove(); return; }
                     if (act === 'prio')   { togglePriority(); return; }
+                    if (act === 'preset-chefia') { applyPresetText('Aguardando a assinatura da chefia imediata'); return; }
+                    if (act === 'preset-superintendente') { applyPresetText('Aguardando a assinatura do superintendente'); return; }
                     if (act === 'check')  { toggleChecklistOnSelection(); return; }
                     if (act === 'date')   { toggleDateInput(); return; }
                 });
@@ -1982,6 +2009,12 @@
                     } else {
                         persist(editor.dataset.original, newPri, 'priority');
                     }
+                }
+                function applyPresetText(text) {
+                    var base = (editor.getAttribute('contenteditable') === 'true') ? anotLineFromDom(editor) : (editor.dataset.original || '');
+                    base = base ? base.replace(/\s+$/, '') : '';
+                    var next = base ? (base + '\n' + text) : text;
+                    persist(next.slice(0, 500), editor.dataset.priority === '1', 'preset', false);
                 }
                 function toggleChecklistOnSelection() {
                     if (!restoreEditorSelection()) saveEditorSelection();

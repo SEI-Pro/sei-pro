@@ -4645,6 +4645,24 @@ div#dialogBoxDocLote p {
     transform: scale(1.1);
     transition: transform 120ms ease;
 }
+.panelDadosArvore[data-type="anotacoes"] .seipro-anot-presets {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    margin-left: 6px;
+}
+.panelDadosArvore[data-type="anotacoes"] .seipro-anot-preset {
+    font-size: 0 !important;
+    line-height: 1;
+    width: 30px;
+    height: 30px;
+}
+.panelDadosArvore[data-type="anotacoes"] .seipro-anot-preset svg {
+    width: 30px;
+    height: 30px;
+    display: block;
+    pointer-events: none;
+}
 .panelDadosArvore[data-type="anotacoes"] .seipro-anot-count {
     font-size: 90% !important;
 }

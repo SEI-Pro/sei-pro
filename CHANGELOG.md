@@ -1,5 +1,14 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.9] - 2026-05-14
+
+### Alterado
+
+- Árvore do processo:
+  - novos atalhos de anotação para inserir, com um clique, os textos "Aguardando a assinatura da chefia imediata" e "Aguardando a assinatura do superintendente"
+  - ícones de atalho da anotação aumentados para melhor usabilidade
+  - espaçamento ajustado entre a prioridade e os atalhos novos para manter a barra mais legível
+
 ## [1.7.8] - 2026-05-14
 
 ### Alterado

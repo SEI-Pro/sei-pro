@@ -1515,6 +1515,7 @@ function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') 
             _parent.find('.editStickNote').show();
             _parent.find('.removeStickNote').show();
             _parent.find('.priorityStickNote').show();
+            _parent.find('.seipro-sticknote-preset').show();
             _parent.find('.setDateStickNote_input').hide();
             _parent.find('.setDateStickNote').show();
             _parent.find('.countLimit').text('');
@@ -1600,6 +1601,7 @@ function sticknoteCancel(this_) {
     _parent.find('.editStickNote').show();
     _parent.find('.removeStickNote').show();
     _parent.find('.priorityStickNote').show();
+    _parent.find('.seipro-sticknote-preset').show();
     _parent.find('.setDateStickNote').show();
     _parent.find('.setDateStickNote_input').hide();
     _parent.find('.saveStickNote').hide();
@@ -1621,6 +1623,7 @@ function sticknoteEdit(this_) {
     _parent.find('.editStickNote').hide();
     _parent.find('.removeStickNote').hide();
     // _parent.find('.priorityStickNote').hide();
+    _parent.find('.seipro-sticknote-preset').hide();
     _parent.find('.setDateStickNote_input').hide();
     // _parent.find('.setDateStickNote').hide();
     _parent.find('.saveStickNote').show();
@@ -1717,6 +1720,24 @@ function sticknotePriority(this_) {
         }, 0);
     }
 }
+function sticknotePresetRankIconHtml(label, text, bars) {
+    return (
+        '<i class="fas seipro-sticknote-preset" title="' + label + '" aria-label="' + label + '" role="button" onclick="sticknoteQuickPreset(this, \'' + text + '\')" onmouseover="return infraTooltipMostrar(\'' + label + '\');" onmouseout="return infraTooltipOcultar();" style="cursor:pointer;color:#666;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;line-height:1;font-size:0;">' +
+            '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" style="width:30px;height:30px;display:block;pointer-events:none;">' +
+                '<circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.25"></circle>' +
+                bars +
+            '</svg>' +
+        '</i>'
+    );
+}
+function sticknoteQuickPreset(this_, value) {
+    var _this = $(this_);
+    var _parent = _this.closest('.stickDadosArvore');
+    var textarea = _parent.find('.stickNotePro');
+    var current = formatDadosAnotacao(textarea[0].outerHTML, 'line').replace(/\s+$/, '');
+    var mode = (current !== '') ? 'increment' : 'insert';
+    sticknoteUpdate(this_, value, 'preset', _parent.hasClass('priority'), mode);
+}
 function removeFormatting(this_) {
     var _this = $(this_);
     setTimeout(function(){ 
@@ -1805,6 +1826,10 @@ function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
                         '           <span class="setDateStickNote_input" style="display:none"><input onkeypress="sticknoteSetDateKey(event, this)" type="date" name="setDateStickNote"></span>'+
                         '           <span style="cursor: pointer;float: right;margin: -2px 10px 0 0; display:none;font-size: 100%;" class="checkStickNote" onclick="sticknoteCheck(this)"><i class="fas fa-check-square azulColor" style="font-size: 90%;"></i> <span  class="checkListStickNote" style="font-size: 80%;">Checklist</span></span>'+
                         '           <i class="fas fa-exclamation-circle priorityStickNote" style="cursor: pointer;float: right;margin-right: 10px;" onclick="sticknotePriority(this)" onmouseover="return infraTooltipMostrar(\'Prioridade\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                        '           <span style="float:right;display:inline-flex;gap:6px;align-items:center;margin:0 8px 0 6px;">' +
+                        sticknotePresetRankIconHtml('Adicionar: Aguardando a assinatura da chefia imediata', 'Aguardando a assinatura da chefia imediata', '<rect x="5.2" y="6.4" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect><rect x="5.2" y="11.9" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect>') +
+                        sticknotePresetRankIconHtml('Adicionar: Aguardando a assinatura do superintendente', 'Aguardando a assinatura do superintendente', '<rect x="5.2" y="4.9" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect><rect x="5.2" y="9.2" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect><rect x="5.2" y="13.5" width="9.6" height="1.6" rx="0.8" fill="currentColor"></rect>') +
+                        '           </span>'+
                         '       </div>'+
                         '   </div>'+
                         '</div>';
