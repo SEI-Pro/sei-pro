@@ -77,6 +77,26 @@
         } catch (_) {}
     }
 
+    function normalizeMojibakeUtf8(value) {
+        value = (typeof value === 'string') ? value : '';
+        if (!value) return value;
+        if (!/(?:[\u00C2\u00C3][\u0080-\u00BF]|\u00E2[\u0080-\u00BF]{2})/.test(value)) {
+            return value;
+        }
+        try {
+            return decodeURIComponent(escape(value));
+        } catch (err) {
+            if (typeof TextDecoder !== 'undefined' && typeof Uint8Array !== 'undefined') {
+                try {
+                    return new TextDecoder('utf-8').decode(Uint8Array.from(value, function (ch) {
+                        return ch.charCodeAt(0);
+                    }));
+                } catch (err2) {}
+            }
+        }
+        return value;
+    }
+
     function createMarcadorRemoveConfirmBox(docRef, onConfirm, onCancel) {
         var wrap = docRef.createElement('span');
         wrap.style.cssText = 'display:none;align-items:center;gap:3px;margin-left:4px;white-space:nowrap;font-size:150%;line-height:1;vertical-align:middle;';
@@ -1726,7 +1746,7 @@
                 var ta  = docA.getElementById('txaDescricao');
                 var pri = docA.getElementById('chkSinPrioridade');
                 return {
-                    text: ta ? (ta.value || ta.textContent || '') : '',
+                    text: normalizeMojibakeUtf8(ta ? (ta.value || ta.textContent || '') : ''),
                     priority: !!(pri && (pri.checked || pri.getAttribute('checked') !== null))
                 };
             }

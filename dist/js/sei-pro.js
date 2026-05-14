@@ -2314,6 +2314,7 @@ function normalizeSticknoteHomeText(value) {
 function formatDadosAnotacaoHome(value, type) {
     var result = '';
     if (type == 'paragraph') {
+        value = normalizeMojibakeUtf8(value);
         value = normalizeSticknoteHomeText(value);
         if (value.indexOf('\n') !== -1) {
             $.each(value.split('\n'), function(i, v){

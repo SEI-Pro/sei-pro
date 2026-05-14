@@ -1025,6 +1025,25 @@ function replaceTextToProcessoSEI(text) {
     var urlSEI = url_host.replace('controlador.php','');
     return text.replace(Rexp, "<a href='"+urlSEI+"#$1' target='_blank'>$1</a>");
 }
+function normalizeMojibakeUtf8(value) {
+    value = (typeof value === 'string') ? value : '';
+    if (!value) return value;
+    if (!/(?:[\u00C2\u00C3][\u0080-\u00BF]|\u00E2[\u0080-\u00BF]{2})/.test(value)) {
+        return value;
+    }
+    try {
+        return decodeURIComponent(escape(value));
+    } catch (err) {
+        if (typeof TextDecoder !== 'undefined' && typeof Uint8Array !== 'undefined') {
+            try {
+                return new TextDecoder('utf-8').decode(Uint8Array.from(value, function(ch) {
+                    return ch.charCodeAt(0);
+                }));
+            } catch (err2) {}
+        }
+    }
+    return value;
+}
 function replaceTextToUrl(text) {
     // Put the URL to variable $1 and Domain name
     // to $3 after visiting the URL

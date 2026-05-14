@@ -1760,6 +1760,7 @@ function checkLimitTextArvore(this_) {
 function formatDadosAnotacao(value, type, paste = false) {
     var result = '';
     if (type == 'line') {
+        value = normalizeMojibakeUtf8(value);
         var elem = $('<div/>').html(value).contents();
         var fistLine = elem.clone().children().remove().end().text();
         var othesLines = (paste) ? elem.find('div, p, br') : elem.find('div, p');
@@ -1775,6 +1776,7 @@ function formatDadosAnotacao(value, type, paste = false) {
         // var othesLines = elem.find('div, p, br').map(function(v){ if ($(this).text().trim() != '') { return $(this).text()+'\n' } }).get().join('');
         result = (othesLines != '') ? fistLine+'\n'+othesLines : fistLine;
     } else if ('paragraph') {
+        value = normalizeMojibakeUtf8(value);
         if (value.indexOf('\n') !== -1) {
             $.each(value.trim().split('\n'), function(i, v){
                 if (v != '') {

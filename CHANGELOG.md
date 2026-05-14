@@ -1,5 +1,16 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.10] - 2026-05-14
+
+### Corrigido
+
+- Tela de controle de processos:
+  - contadores de `Recebidos` e `Gerados` agora ignoram linhas auxiliares e contam só processos reais
+  - a área de anotação inline passou a respeitar o mesmo texto exibido na árvore, sem duplicar contagem nem mostrar `+1`
+- Árvore do processo:
+  - textos da anotação agora são normalizados ao carregar, corrigindo casos como `extensÃ£o`
+  - o fluxo `boot` recebeu a mesma normalização para não depender da ordem de carregamento dos bundles
+
 ## [1.7.9] - 2026-05-14
 
 ### Alterado
