@@ -840,7 +840,11 @@ function updateHomeFilterCaption(table, filteredRows) {
         ? filteredRows
         : table.find('tbody tr').filter(function(){
             var row = $(this);
-            return row.is(':visible') && !row.hasClass('tableHeader') && !row.hasClass('tagintable') && !row.hasClass('infraCaption');
+            return row.is(':visible') &&
+                !row.hasClass('tableHeader') &&
+                !row.hasClass('tagintable') &&
+                !row.hasClass('infraCaption') &&
+                row.find('a[href*="acao=procedimento_trabalhar"]').length > 0;
         }).length;
     var singular = (visibleRows === 1) ? 'registro' : 'registros';
     var updatedCaption = String(baseCaption).replace(/\(\s*\d+\s+registros?\s*\)/i, '('+visibleRows+' '+singular+')');
@@ -850,6 +854,10 @@ function updateHomeFilterCaption(table, filteredRows) {
     }
 
     caption.text(updatedCaption);
+}
+function syncHomeProcessCaption() {
+    updateHomeFilterCaption($('#tblProcessosRecebidos'));
+    updateHomeFilterCaption($('#tblProcessosGerados'));
 }
 function updateVisibleHeadersForHomeFilter(table) {
     var currentHeader = null;
@@ -1483,7 +1491,9 @@ function getProcessosPaginacao(this_, index, tipo) {
                 });
                 var NroItens = $html.find('#hdn'+tipo+'NroItens').val();
                 var NroItens_ = $('#hdn'+tipo+'NroItens');
-                var totalItens = parseInt(NroItens_.val())+parseInt(NroItens);
+                var totalItens = $('#tblProcessos'+tipo).find('tbody tr.infraTrClara').filter(function(){
+                    return $(this).find('a[href*="acao=procedimento_trabalhar"]').length > 0;
+                }).length;
                     NroItens_.val(totalItens);
                     $('#tblProcessos'+tipo).find('caption.infraCaption').html('<span '+actionTest+'>'+totalItens+' registros:</span>');
                 var Itens = $html.find('#hdn'+tipo+'Itens').val();
@@ -2138,7 +2148,7 @@ function setTableSorterHome() {
                             checkboxRangerSelectShift();
                         }).on("filterEnd", function (event, data) {
                             checkboxRangerSelectShift();
-                            updateHomeFilterCaption($(this), data.filteredRows);
+                            updateHomeFilterCaption($(this));
                                 $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
                                 $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
                         });
@@ -4056,7 +4066,10 @@ function initSeiPro() {
         initPanelFavorites();
         checkLoadConfigSheets();
         insertDivPanel();
-        setTimeout(() => { initNewTabProcesso() }, 2000);
+        setTimeout(() => {
+            initNewTabProcesso();
+            syncHomeProcessCaption();
+        }, 2000);
         forceOnLoadBody();
         observeAreaTela();
         initReplaceSticknoteHome();

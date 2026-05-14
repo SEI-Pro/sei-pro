@@ -1169,7 +1169,9 @@ function initDadosProcesso(TimeOut = 9000) {
 
             const NroItens = parseInt($html.find(`#hdn${tipo}NroItens`).val(), 10) || 0;
             const NroItens_ = $('#hdn' + tipo + 'NroItens');
-            const totalItens = (parseInt(NroItens_.val(), 10) || 0) + NroItens;
+            const totalItens = $('#tblProcessos' + tipo).find('tbody tr.infraTrClara').filter(function() {
+                return $(this).find('a[href*="acao=procedimento_trabalhar"]').length > 0;
+            }).length;
             NroItens_.val(totalItens);
 
             const sanitizedCaption = sanitizeHTML(`<span ${actionTest}>${totalItens} registros:</span>`);
@@ -2048,11 +2050,9 @@ function observeHistoryBrowserPro() {
                         checkboxRangerSelectShift();
                     }).on("filterEnd", function (event, data) {
                         checkboxRangerSelectShift();
-                        const caption = $(this).find("caption").eq(0);
-                        const tx = caption.text();
-                        caption.text(tx.replace(/\d+/g, data.filteredRows));
                         $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
                         $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
+                        syncHomeProcessCaption();
                     });
 
                     tableHomePro.push(tableHomeThis);
@@ -3746,6 +3746,33 @@ function storeVersionSEI() {
         getSeiVersionPro();
     else if (typeof setSeiVersionPro !== 'undefined') setSeiVersionPro();
 }
+function syncHomeProcessCaption() {
+    $('#tblProcessosRecebidos, #tblProcessosGerados').each(function() {
+        const caption = $(this).find('caption.infraCaption').eq(0);
+        if (caption.length === 0) {
+            return;
+        }
+
+        const visibleRows = $(this).find('tbody tr').filter(function() {
+            const row = $(this);
+            return row.is(':visible') &&
+                !row.hasClass('tableHeader') &&
+                !row.hasClass('tagintable') &&
+                !row.hasClass('infraCaption') &&
+                row.find('a[href*="acao=procedimento_trabalhar"]').length > 0;
+        }).length;
+
+        const singular = visibleRows === 1 ? 'registro' : 'registros';
+        const currentCaption = caption.text();
+        let updatedCaption = currentCaption.replace(/\(\s*\d+\s+registros?\s*\)/i, `(${visibleRows} ${singular})`);
+
+        if (updatedCaption === currentCaption) {
+            updatedCaption = currentCaption.replace(/\d+/, visibleRows);
+        }
+
+        caption.text(updatedCaption);
+    });
+}
 function initSeiPro() {
 	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
         if (typeof URL_SPRO !== 'undefined' && typeof SimpleTableCellEdition === 'undefined') $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
@@ -3756,7 +3783,10 @@ function initSeiPro() {
         initPanelFavorites();
         // checkLoadConfigSheets();
         insertDivPanel();
-        setTimeout(() => { initNewTabProcesso() }, 2000);
+        setTimeout(() => {
+            initNewTabProcesso();
+            syncHomeProcessCaption();
+        }, 2000);
         forceOnLoadBody();
         observeAreaTela();
         initReplaceSticknoteHome();
