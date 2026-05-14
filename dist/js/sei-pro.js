@@ -2422,9 +2422,15 @@ function renderSticknoteHomeInline() {
         }
         if (processCellIdx <= 0) return;
         var headRow = $table.find('thead tr').last();
+        if (!headRow.length) {
+            headRow = $table.find('tbody tr').not('.tableHeader, .infraCaption, .tablesorter-filter-row').has('th').first();
+        }
         var processHead = headRow.find('th').eq(processCellIdx);
+        if (!processHead.length) {
+            processHead = headRow.find('th').last();
+        }
         if (processHead.length) {
-            $('<th class="tituloControle sticknoteHomeInsertedHead"></th>').insertBefore(processHead);
+            $('<th class="tituloControle infraTh sticknoteHomeInsertedHead"></th>').insertBefore(processHead);
         }
     });
     var detailedNoteColIdx = -1;
