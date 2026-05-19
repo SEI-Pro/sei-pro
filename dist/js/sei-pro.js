@@ -2266,19 +2266,47 @@ function observeAreaTela(TimeOut = 9000) {
     }
 }
 
+function parseSticknoteHomeLabel(label) {
+    label = normalizeMojibakeUtf8(label);
+    label = (typeof label === 'string') ? label : '';
+    if (!label) {
+        return false;
+    }
+    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s*\/\s*(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
+    if (!match) {
+        return false;
+    }
+    return {
+        text: match[1].trim(),
+        user: match[2].trim()
+    };
+}
 function replaceSticknoteHome() {
     var arraySticknoteHome = [];
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('a[href*="acao=anotacao_registrar"]').each(function(){
         var _this = $(this);
-        var tooltip = _this.attr('onmouseover');
-            tooltip = (typeof tooltip !== 'undefined') ? tooltip.split("'") : false; 
-        if (tooltip) {
+        var parsed = false;
+        var ariaLabel = _this.attr('aria-label');
+        if (ariaLabel) {
+            parsed = parseSticknoteHomeLabel(ariaLabel);
+        }
+        if (!parsed) {
+            var tooltip = _this.attr('onmouseover');
+                tooltip = (typeof tooltip !== 'undefined') ? tooltip.split("'") : false;
+            if (tooltip) {
+                parsed = {
+                    text: tooltip[1] || '',
+                    user: tooltip[3] || ''
+                };
+            }
+        }
+        if (parsed && parsed.text) {
             var id_protocolo = _this.attr('href');
                 id_protocolo = (typeof id_protocolo !== 'undefined') ? getParamsUrlPro(id_protocolo).id_protocolo : false;
-            var texttip = tooltip[1];
-            var usertip = tooltip[3];
-            var _return = $.map(texttip.split('\\n'), function(v){
-                if (v != '') { 
+            var texttip = normalizeSticknoteHomeText(parsed.text);
+            var usertip = normalizeMojibakeUtf8(parsed.user || '');
+            var _return = $.map(texttip.split('\n'), function(v){
+                if (v != '') {
                     var check = (v.indexOf('[ ]') !== -1) ? true : false;
                     var checked = (v.indexOf('[X]') !== -1) ? true : false;
                     var style = (checked) ? ' style=\\"text-decoration: line-through;\\"' : '';
@@ -2286,12 +2314,12 @@ function replaceSticknoteHome() {
                         text = (checked) ? '<i class=\\"fas fa-check-square\\"></i> '+v.replace('[X]','').trim() : text;
                     return (check || checked) ? '<div'+style+'>'+text+'</div>' : v;
 
-                } else { 
+                } else {
                     return v;
-                } 
+                }
             }).join('');
             _this
-                .attr('onmouseover', 'return infraTooltipMostrar(\''+_return+'\',\''+usertip+'\');')
+                .attr('onmouseover', 'return infraTooltipMostrar(' + JSON.stringify(_return) + ',' + JSON.stringify(usertip) + ');')
                 .attr('data-sticknote-text', texttip)
                 .attr('data-sticknote-user', usertip);
             if (id_protocolo) {
@@ -2304,6 +2332,9 @@ function replaceSticknoteHome() {
 function normalizeSticknoteHomeText(value) {
     value = (typeof value === 'string') ? value : '';
     return value
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\n')
         .replace(/\r\n/g, '\n')
         .replace(/\r/g, '\n')
         .replace(/\u00a0/g, ' ')
@@ -2345,11 +2376,18 @@ function getSticknoteHomeText(link) {
     var _this = $(link);
     var texttip = _this.attr('data-sticknote-text');
     if (typeof texttip !== 'undefined') {
-        return texttip;
+        return normalizeSticknoteHomeText(normalizeMojibakeUtf8(texttip));
+    }
+    var ariaLabel = _this.attr('aria-label');
+    if (ariaLabel) {
+        var parsed = parseSticknoteHomeLabel(ariaLabel);
+        if (parsed && parsed.text) {
+            return normalizeSticknoteHomeText(parsed.text);
+        }
     }
     var tooltip = _this.attr('onmouseover');
         tooltip = (typeof tooltip !== 'undefined') ? tooltip.split("'") : false;
-    return (tooltip && typeof tooltip[1] !== 'undefined') ? tooltip[1] : '';
+    return (tooltip && typeof tooltip[1] !== 'undefined') ? normalizeSticknoteHomeText(normalizeMojibakeUtf8(tooltip[1])) : '';
 }
 function getSticknoteHomePriority(link) {
     var _this = $(link);

@@ -1,5 +1,14 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.11] - 2026-05-19
+
+### Corrigido
+
+- Controle de processos:
+  - leitura da anotação inline passou a usar o `aria-label` estável do SEI quando disponível, em vez de depender apenas do tooltip montado em string
+  - normalização de quebras de linha reforçada para lidar com textos vindos como `\n`, `\r\n` ou escapes literais
+  - montagem do tooltip do link de anotação endurecida para não quebrar com aspas, barras e caracteres especiais no texto
+
 ## [1.7.10] - 2026-05-14
 
 ### Corrigido
