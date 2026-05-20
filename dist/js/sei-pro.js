@@ -2423,6 +2423,8 @@ function renderSticknoteHomeInline() {
     tableProc.removeClass('sticknoteHomeLayout');
     tableProc.find('.sticknoteHomeInsertedCell').remove();
     tableProc.find('.sticknoteHomeInsertedHead').remove();
+    tableProc.find('.sticknoteHomeCheckCell').removeClass('sticknoteHomeCheckCell');
+    tableProc.find('.sticknoteHomeCheckHead').removeClass('sticknoteHomeCheckHead');
     tableProc.find('.sticknoteHomeIconCell').removeClass('sticknoteHomeIconCell');
     tableProc.find('.sticknoteHomeDetailedNoteCell').removeClass('sticknoteHomeDetailedNoteCell sticknoteHomeNoteCell');
     tableProc.find('.sticknoteHomeProcessCell').removeClass('sticknoteHomeProcessCell');
@@ -2441,6 +2443,12 @@ function renderSticknoteHomeInline() {
         return;
     }
     tableProc.addClass('sticknoteHomeLayout');
+    tableProc.find('tbody tr')
+        .not('.tableHeader, .tagintable, .infraCaption, .tablesorter-filter-row')
+        .has('a[href*="acao=procedimento_trabalhar"]')
+        .each(function() {
+            $(this).find('td').eq(0).addClass('sticknoteHomeCheckCell');
+        });
     tableProc.find('a[href*="acao=procedimento_trabalhar"]').each(function() {
         var processLink = $(this);
         var table = processLink.closest('table');
@@ -2471,6 +2479,7 @@ function renderSticknoteHomeInline() {
         if (processHead.length) {
             $('<th class="tituloControle infraTh sticknoteHomeInsertedHead"></th>').insertBefore(processHead);
         }
+        headRow.find('th').eq(0).addClass('sticknoteHomeCheckHead');
     });
     var detailedNoteColIdx = -1;
     var detailedTable = $('#tblProcessosDetalhado');

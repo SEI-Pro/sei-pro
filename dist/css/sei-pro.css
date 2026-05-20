@@ -4593,6 +4593,16 @@ div#dialogBoxDocLote p {
     text-align: center;
     vertical-align: top;
 }
+.sticknoteHomeCheckCell,
+.sticknoteHomeCheckHead {
+    width: 28px;
+    min-width: 28px;
+    max-width: 28px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: center;
+    vertical-align: top;
+}
 .sticknoteHomeDetailedNoteCell {
     vertical-align: top;
     padding: 4px 4px 4px 0 !important;
