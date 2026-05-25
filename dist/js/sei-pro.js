@@ -41,6 +41,18 @@ function handleClientLoadPro(TimeOut = 3000) {
 }
 
 //// Agrupamento de lista de processos
+function extractGroupTableTooltipToArray(elem) {
+    if (typeof elem === 'undefined' || elem === null || elem === '') {
+        return false;
+    }
+
+    elem = $("<div>").html(elem).text();
+    elem = elem.replace(/<[^>]*>?/gm, '');
+    elem = elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(/["']/g, '"');
+
+    var array = (elem != '' && isJson('['+elem+']')) ? JSON.parse('['+elem+']') : [];
+    return (array.length > 0) ? array : false;
+}
 function getGroupTableLabelFromLink(linkElem, acaoType) {
     var $link = $(linkElem);
     var href = $link.attr('href');
@@ -55,10 +67,10 @@ function getGroupTableLabelFromLink(linkElem, acaoType) {
             title = getAtribuicaoDisplayLabel($link.attr('title'), '', checkConfigValue('nomesusuarios'));
         }
     } else if (acaoType == 'checkpoints') {
-        var checkpointTooltip = extractTooltipToArray($link.attr('onmouseover'));
+        var checkpointTooltip = extractGroupTableTooltipToArray($link.attr('onmouseover'));
         title = (checkpointTooltip && typeof checkpointTooltip[0] !== 'undefined') ? checkpointTooltip[0] : '';
     } else if (acaoType == 'tags' || acaoType == 'types') {
-        var typeTooltip = extractTooltipToArray($link.attr('onmouseover'));
+        var typeTooltip = extractGroupTableTooltipToArray($link.attr('onmouseover'));
         title = (typeTooltip && typeof typeTooltip[1] !== 'undefined') ? typeTooltip[1] : '';
     } else if (acaoType == 'senddepart') {
         var dadosRecebido = getArrayProcessoRecebido(href);
@@ -76,10 +88,13 @@ function getGroupTableLabelFromLink(linkElem, acaoType) {
 
     return (typeof title !== 'undefined' && title !== null) ? String(title).trim() : '';
 }
+function getProcessoLinkFromGroupRow(row) {
+    return $(row).find('a[href*="acao=procedimento_trabalhar"], a[href*="controlador.php?acao=procedimento_trabalhar"]').first();
+}
 function getListTypes(acaoType) {
     var orderbyTableGroup = getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc';
     var arrayTag = [''];
-    if (acaoType == 'tags' || acaoType == 'deadline') {
+    if (acaoType == 'tags') {
     	var acaoType_ = 'acao=andamento_marcador_gerenciar';
 	} else if (acaoType == 'types') {
 		var acaoType_ = 'acao=procedimento_trabalhar';
@@ -87,7 +102,7 @@ function getListTypes(acaoType) {
 		var acaoType_ = 'acao=procedimento_atribuicao_listar';
     } else if (acaoType == 'checkpoints') {
 		var acaoType_ = 'acao=andamento_situacao_gerenciar';
-    } else if (acaoType == 'arrivaldate' || acaoType == 'acessdate' || acaoType == 'senddate' || acaoType == 'senddepart' || acaoType == 'createdate' || acaoType == 'acompanhamentoesp') {
+    } else if (acaoType == 'arrivaldate' || acaoType == 'acessdate' || acaoType == 'senddate' || acaoType == 'senddepart' || acaoType == 'createdate' || acaoType == 'acompanhamentoesp' || acaoType == 'deadline') {
 		var acaoType_ = 'acao=procedimento_trabalhar';
 	}
     $('#divRecebidos').find('table tr').attr('data-tagname', 'SemGrupo');
@@ -225,7 +240,8 @@ function appendGerados(type) {
     
     var tbody = $('#divRecebidos tbody');
     tbody.find('tr').each(function() {
-        var dataRecebido = ($(this).find('td').eq(2).find('a').length) ? getArrayProcessoRecebido($(this).find('td').eq(2).find('a').attr('href')) : '';
+        var processoLink = getProcessoLinkFromGroupRow(this);
+        var dataRecebido = (processoLink.length) ? getArrayProcessoRecebido(processoLink.attr('href')) : '';
             dataRecebido = (dataRecebido != '' && type == 'arrivaldate') ? moment(dataRecebido.datahora, 'YYYY-MM-DD HH:mm:ss').unix() : dataRecebido;
             dataRecebido = (dataRecebido != '' && type == 'acessdate') ? moment(dataRecebido.datetime, 'YYYY-MM-DD HH:mm:ss').unix() : dataRecebido;
             dataRecebido = (dataRecebido != '' && type == 'createdate') ? moment(dataRecebido.datageracao, 'YYYY-MM-DD HH:mm:ss').unix() : dataRecebido;
@@ -441,18 +457,19 @@ function toggleGroupTablePro(this_) {
 }
 function getTableOnTag(type) {
     $('#divRecebidos table tbody tr').each(function(index){
+        var processoLink = getProcessoLinkFromGroupRow(this);
     	var dataTag = $(this).attr('data-tagname');
     		dataTag = ( dataTag == '' ) ? 'SemGrupo' : dataTag;
-    	if ( typeof dataTag !== 'undefined' && $(this).find('td').eq(2).find('a').length > 0 ) {
-            var descAttr = $(this).find('td').eq(2).find('a').attr('onmouseover');
-            var desc = (typeof descAttr !== 'undefined' && descAttr !== '') ? extractTooltipToArray(descAttr) : false;
+    	if ( typeof dataTag !== 'undefined' && processoLink.length > 0 ) {
+            var descAttr = processoLink.attr('onmouseover');
+            var desc = (typeof descAttr !== 'undefined' && descAttr !== '') ? extractGroupTableTooltipToArray(descAttr) : false;
             var txt_desc = (desc && typeof desc[0] !== 'undefined') ? desc[0] : '';
             var txt_tipo_proc = (desc && typeof desc[1] !== 'undefined') ? desc[1] : '';
             var editDesc = '<a class="newLink newLink_active followLink followLinkDesc content_btnsave" onclick="editFieldProc(this)" style="right: 0;top: 0;" onmouseover="return infraTooltipMostrar(\'Editar descri\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>';        
     		var htmlDesc = (type == 'all')
                 ? '<td class="tagintable" data-old="'+txt_desc+'"><span class="info">'+txt_desc+'</span>'+editDesc+'</td>'
                 : '<td class="tagintable" data-old="'+txt_desc+'"><span class="info">'+txt_desc+'</span>'+editDesc+'</td><td class="tagintable">'+txt_tipo_proc+'</td>';
-            var dataRecebido = getArrayProcessoRecebido($(this).find('td').eq(2).find('a').attr('href'));
+            var dataRecebido = getArrayProcessoRecebido(processoLink.attr('href'));
             var textBoxDesc =   (type == 'arrivaldate' || type == 'acessdate') 
                                 ? dataRecebido.descricao+' em: '+moment(dataRecebido.datahora, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+'<br>'
                                 : (dataRecebido.datesend != '') ? dataRecebido.descricaosend+' em: '+moment(dataRecebido.datesend, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+'<br>' : '';
@@ -891,7 +908,7 @@ function getHomeRowTagValue(row) {
 
     var markerLink = row.find('a[href*="acao=andamento_marcador_gerenciar"]').first();
     if (markerLink.length > 0) {
-        var markerTooltip = extractTooltipToArray(markerLink.attr('onmouseover'));
+        var markerTooltip = extractGroupTableTooltipToArray(markerLink.attr('onmouseover'));
         var markerName = (markerTooltip && typeof markerTooltip[1] !== 'undefined' && markerTooltip[1] !== '') ? markerTooltip[1] : '';
         if (markerName === '') {
             var ariaLabel = markerLink.attr('aria-label');
@@ -1044,7 +1061,7 @@ function selectFilterTableHome(includeUserFilters = true) {
         users = (typeof users !== 'undefined' && users !== null) ? uniqPro(users) : [];
 
     var tipos = tableProc.find('a[href*="acao=procedimento_trabalhar"]').map(function(){ 
-            var tipoNomeProc = extractTooltipToArray($(this).attr('onmouseover'));
+            var tipoNomeProc = extractGroupTableTooltipToArray($(this).attr('onmouseover'));
                 tipoNomeProc = (tipoNomeProc) ? tipoNomeProc[1] : false;
             if (tipoNomeProc) {
                 return tipoNomeProc;
@@ -1053,7 +1070,7 @@ function selectFilterTableHome(includeUserFilters = true) {
         tipos = (typeof tipos !== 'undefined' && tipos !== null) ? uniqPro(tipos) : [];
 
     var marcadores = tableProc.find('a[href*="acao=andamento_marcador_gerenciar"]').map(function(){ 
-            var tipoNomeTag = extractTooltipToArray($(this).attr('onmouseover'));
+            var tipoNomeTag = extractGroupTableTooltipToArray($(this).attr('onmouseover'));
                 tipoNomeTag = (tipoNomeTag) ? tipoNomeTag[1] : false;
             if (tipoNomeTag) {
                 return tipoNomeTag;
