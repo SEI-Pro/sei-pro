@@ -1,5 +1,19 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.14] - 2026-05-25
+
+### Alterado
+
+- Pesquisa rápida:
+  - a opção `Filtrar a página pelo campo de pesquisa rápida` passou a vir habilitada por padrão
+  - o filtro instantâneo do Controle de Processos foi expandido para considerar mais metadados da linha, incluindo textos vindos de tooltips e atributos auxiliares
+  - na tela de processo, a digitação no campo de pesquisa rápida agora destaca ocorrências também na árvore de documentos, nos painéis laterais e no conteúdo HTML visível do frame principal
+
+### Corrigido
+
+- Pesquisa rápida:
+  - a reaplicação do highlight passou a normalizar o DOM antes de marcar novamente o texto, corrigindo o caso em que apenas a primeira letra permanecia destacada ao continuar digitando
+
 ## [1.7.13] - 2026-05-25
 
 ### Alterado
