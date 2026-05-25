@@ -994,6 +994,25 @@ td.celStatusAtividade a.iconAtividade:first-child {
     position: relative;
     margin-top: 20px !important;
 }
+#favoritesProDiv {
+    width: 100% !important;
+    overflow-x: hidden;
+}
+#favoritesProDiv .tabelaPanelScroll {
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    min-height: 0;
+    max-height: none;
+    height: auto !important;
+    padding-bottom: 0;
+}
+#favoritesProDiv .tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
+    display: none !important;
+}
+#favoritesProDiv #favoriteTablePro {
+    width: 100% !important;
+}
 .tableFavoritos .newLink .fa-layers-counter {
     background: #b7b7b7;
 }

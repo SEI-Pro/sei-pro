@@ -1227,7 +1227,7 @@ function setPanelFavorites(mode) {
                                 '       <a class="newLink" id="favoritesProDiv_showIcon" onclick="toggleTablePro(\'#favoritesProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
                                 '       <a class="newLink" id="favoritesProDiv_hideIcon" onclick="toggleTablePro(\'#favoritesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
                                 '   </div>'+
-                                '   <div id="favoritesProDiv" class="panelHome" style="width: 98%; '+statusView+'">'+
+                                '   <div id="favoritesProDiv" class="panelHome" style="width: 100%; '+statusView+'">'+
                                 '   	<div id="favoritosProActions" style="top:0; position: absolute; z-index: 9999; left: 190px; width: calc(100% - 230px)">'+
                                 '           <a class="newLink iconFavoritos_remove" onclick="removeFavoritePainelPro(this)" onmouseover="return infraTooltipMostrar(\'Remover favoritos\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
                                 '                   <span class="fa-layers fa-fw">'+
@@ -1253,7 +1253,6 @@ function setPanelFavorites(mode) {
                                 '</div>';
 
         function positionFavoritesBeforeControl() {
-            if (typeof verifyConfigValue !== 'function' || !verifyConfigValue('favoritosacimacontrole')) return;
             if (!$('#favoritesPro').length || !$('#processosSEIPro').length) return;
             $('#favoritesPro').insertBefore('#processosSEIPro');
         }
@@ -1396,6 +1395,10 @@ function keyDatesFav(e) {
     }
 }
 function initFunctionsPanelFav(TimeOut = 9000) {
+    if (typeof window.seiProFavInitTimer !== 'undefined' && window.seiProFavInitTimer && TimeOut == 9000) {
+        clearTimeout(window.seiProFavInitTimer);
+        window.seiProFavInitTimer = false;
+    }
     if (TimeOut <= 0) { return; }
     var hasTagsInput = typeof $.fn.tagsInput === 'function';
     var hasTableSorter = typeof $.fn.tablesorter === 'function';
@@ -1406,7 +1409,10 @@ function initFunctionsPanelFav(TimeOut = 9000) {
         var tableFavorites = $(idTableFavorite);
         if (!tableFavorites.length) { return; }
         if (tableFavorites.data('sei-pro-fav-init') === true) { return; }
+        if (tableFavorites.data('sei-pro-fav-init-pending') === true) { return; }
+        tableFavorites.data('sei-pro-fav-init-pending', true);
         tableFavorites.data('sei-pro-fav-init', true);
+        window.seiProFavInitTimer = false;
 
         initChosenReplace('panel');
 
@@ -1439,8 +1445,6 @@ function initFunctionsPanelFav(TimeOut = 9000) {
                 console.log('tagName',tagName);
             }, 500);
         }
-        initPanelResize('#favoritesProDiv .tabelaPanelScroll', 'favoritesPro');
-
         tableFavorites.tablesorter({
             sortLocaleCompare : true,
             textExtraction: {
@@ -1492,7 +1496,6 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             axis: 'y',
             dropOnEmpty: false,
             update: function(event, ui) {
-                console.log(event, ui);
                 setTimeout(function(){ 
                     var storeFavorites = getStoreFavoritePro();
                     $('#favoriteTablePro').find('tbody tr').each(function(index, value){
@@ -1532,6 +1535,7 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             });
             checkboxRangerSelectShift();
             checkFileRemoteFav('get');
+            tableFavorites.removeData('sei-pro-fav-init-pending');
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('initFunctionsPanelFav => '+TimeOut);
         }, 500);
 
@@ -1571,7 +1575,9 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             }, 500);
         }
     } else {
-        setTimeout(function(){ 
+        if (typeof window.seiProFavInitTimer !== 'undefined' && window.seiProFavInitTimer) { return; }
+        window.seiProFavInitTimer = setTimeout(function(){ 
+            window.seiProFavInitTimer = false;
             if (typeof $.fn.tagsInput !== 'function' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
             if (typeof $.fn.tablesorter !== 'function' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initFunctionsPanelFav(TimeOut - 100); 
