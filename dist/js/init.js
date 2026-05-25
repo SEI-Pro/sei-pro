@@ -2,7 +2,8 @@ const compareVersionNumbers_init = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_init(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
 var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
-var frmEditor5Exists = $('html script[charset="utf-8"]').last().html().includes('INFRA_EDITOR_CONFIG');
+var frmEditor5Script = $('html script[charset="utf-8"]').last().html() || '';
+var frmEditor5Exists = frmEditor5Script.includes('INFRA_EDITOR_CONFIG');
 window.__SEI_PRO_CONFIG_READY__ = false;
 
 $.getScript(getUrlExtension("js/lib/jmespath.min.js"));

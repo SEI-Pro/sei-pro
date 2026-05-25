@@ -316,6 +316,13 @@ function favoriteProcessDataReady(id_procedimento, dados) {
         dados.propProcesso !== null
     );
 }
+function favoriteProcessPayloadReady(id_procedimento, dados) {
+    return (
+        favoriteProcessDataReady(id_procedimento, dados) &&
+        typeof dados.listDocumentosAssinados !== 'undefined' &&
+        $.isArray(dados.listDocumentosAssinados)
+    );
+}
 function waitFavoriteProcessData(id_procedimento, callback, onTimeout, requireDocs = false) {
     var eventName = 'sei-pro-process-session-updated';
     var resolved = false;
@@ -325,7 +332,7 @@ function waitFavoriteProcessData(id_procedimento, callback, onTimeout, requireDo
         if (typeof detail.id_procedimento !== 'undefined' && detail.id_procedimento !== null && String(detail.id_procedimento) !== String(id_procedimento)) {
             return;
         }
-        var dados = pullDadosProcessoSession();
+        var dados = pullDadosProcessoSession(id_procedimento);
         if (favoriteProcessDataReady(id_procedimento, dados) && (!requireDocs || typeof dados.listDocumentosAssinados !== 'undefined')) {
             resolved = true;
             window.removeEventListener(eventName, handler);
@@ -334,7 +341,7 @@ function waitFavoriteProcessData(id_procedimento, callback, onTimeout, requireDo
         }
     };
 
-    var dados = pullDadosProcessoSession();
+    var dados = pullDadosProcessoSession(id_procedimento);
     if (favoriteProcessDataReady(id_procedimento, dados) && (!requireDocs || typeof dados.listDocumentosAssinados !== 'undefined')) {
         if (typeof callback === 'function') callback(dados);
         return true;
@@ -382,7 +389,7 @@ function updateArraySelectFavorites(id_procedimento) {
     var storeFavorites = getStoreFavoritePro();
     if (typeof storeFavorites !== 'undefined' && storeFavorites.hasOwnProperty('favorites')) {
         var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-        if (typeof favoriteIndex !== 'undefined' && favoriteIndex !== null) {
+        if (typeof favoriteIndex !== 'undefined' && favoriteIndex !== null && favoriteIndex !== -1) {
             var item = storeFavorites.favorites[favoriteIndex];
                 item.documentos = dadosProcessoPro.listDocumentosAssinados;
                 item.andamento = dadosProcessoPro.listAndamento.andamento;
@@ -714,14 +721,109 @@ function actFavoritePro(this_, mode) {
         });
     }
 }
+function getFallbackFavoriteRowData(target, id_procedimento) {
+    var row = (target && target.length > 0) ? target.closest('tr') : $();
+    if ((!row || row.length === 0) && id_procedimento) {
+        row = $('.tabelaControle tr').filter(function(){
+            var _row = $(this);
+            var hrefAtribuicao = _row.find('a[href*="id_procedimento="]').eq(0).attr('href');
+            return hrefAtribuicao && String(getParamsUrlPro(hrefAtribuicao).id_procedimento) === String(id_procedimento);
+        }).eq(0);
+    }
+    if (!row || row.length === 0) return false;
+
+    var rowText = row.text().trim();
+    var checkbox = row.find('input[type="checkbox"]').eq(0);
+    var processo = '';
+    var descricao = '';
+    var tipo_procedimento = '';
+    var assuntos = [];
+    var interessados = [];
+    var hrefProcesso = row.find('a[href*="acao=procedimento_trabalhar"]').eq(0);
+    var processoCell = row.find('td').eq(3);
+    var descricaoCell = row.find('td').eq(2);
+    var processCheckboxHelp = checkbox.attr('title') || checkbox.attr('aria-label') || checkbox.attr('data-original-title') || '';
+    var processCheckboxDesc = checkbox.attr('alt') || checkbox.attr('label') || '';
+
+    if (processoCell.length > 0) {
+        processo = processoCell.text().trim();
+    }
+    if (!processo && processCheckboxHelp) {
+        processo = processCheckboxHelp.trim();
+    }
+    if (!processo && hrefProcesso.length > 0) {
+        processo = hrefProcesso.text().trim();
+    }
+
+    if (descricaoCell.length > 0) {
+        descricao = descricaoCell.text().trim();
+    }
+    if (!descricao && processCheckboxDesc) {
+        var descMatch = processCheckboxDesc.match(/Especifica(?:ção|cao)\s+(.+)$/i);
+        if (descMatch && descMatch[1]) descricao = descMatch[1].trim();
+    }
+
+    var tipoTooltip = hrefProcesso.attr('onmouseover') || '';
+    var tooltipArray = extractTooltipToArray(tipoTooltip);
+    if (tooltipArray && tooltipArray.length > 1) {
+        tipo_procedimento = tooltipArray[1].split(' / ')[0].trim();
+    }
+    if (!tipo_procedimento && processCheckboxDesc) {
+        var tipoMatch = processCheckboxDesc.match(/Tipo\s+(.+?)(?:\s*\/\s*Especifica(?:ção|cao)\s+|$)/i);
+        if (tipoMatch && tipoMatch[1]) tipo_procedimento = tipoMatch[1].trim();
+    }
+    if (!descricao && rowText) {
+        descricao = rowText.replace(/\s+/g, ' ').trim();
+    }
+    if (!processo) {
+        processo = String(id_procedimento);
+    }
+
+    if (descricao && tipo_procedimento && descricao !== tipo_procedimento) {
+        interessados = [];
+    }
+
+    return {
+        listAndamento: {
+            historico_completo: false,
+            processo: processo,
+            id_procedimento: String(id_procedimento),
+            andamento: []
+        },
+        listDocumentosAssinados: [],
+        tiposDocumentos: [],
+        propProcesso: {
+            hdnIdProcedimento: String(id_procedimento),
+            hdnNomeTipoProcedimento: tipo_procedimento,
+            selAssuntos_select: assuntos,
+            selInteressadosProcedimento: interessados,
+            txtDescricao: descricao
+        }
+    };
+}
+function saveImmediateFavoritePro(target, id_procedimento) {
+    var fallbackData = getFallbackFavoriteRowData(target, id_procedimento);
+    if (!fallbackData) return false;
+    dadosProcessoPro = fallbackData;
+    if (!dadosProcessoPro.hasOwnProperty('tiposDocumentos')) dadosProcessoPro.tiposDocumentos = [];
+    if (!dadosProcessoPro.hasOwnProperty('listDocumentosAssinados')) dadosProcessoPro.listDocumentosAssinados = [];
+    storeFavoritePro('add', id_procedimento);
+    return fallbackData;
+}
 function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
     var target = (this_) ? $(this_) : $('#ifrArvore').contents().find('#iconFavoritePro_'+id_procedimento);
+    var favoriteSaved = false;
     var storeWhenReady = function(dados) {
         dadosProcessoPro = dados;
         if (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro && !dadosProcessoPro.hasOwnProperty('tiposDocumentos')) dadosProcessoPro.tiposDocumentos = [];
         if (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro && !dadosProcessoPro.hasOwnProperty('listDocumentosAssinados')) dadosProcessoPro.listDocumentosAssinados = [];
-        storeFavoritePro(mode, id_procedimento);
-        target.fadeOut(100).fadeIn(100);
+        if (mode == 'add' && favoriteSaved) {
+            syncFavoriteProProcessData(id_procedimento, dadosProcessoPro);
+        } else {
+            storeFavoritePro(mode, id_procedimento);
+            favoriteSaved = (mode == 'add');
+        }
+        if (target && target.length > 0) target.fadeOut(100).fadeIn(100);
     };
 
     if (mode == 'remove') {
@@ -729,11 +831,24 @@ function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
         return true;
     }
 
-    if (waitFavoriteProcessData(id_procedimento, storeWhenReady, function(){
-        if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Timeout checkDataFavoritePro => '+id_procedimento);
-    })) {
+    var dados = pullDadosProcessoSession(id_procedimento);
+    if (favoriteProcessPayloadReady(id_procedimento, dados)) {
+        storeWhenReady(dados);
         return true;
     }
+
+    if (mode == 'add') {
+        favoriteSaved = !!saveImmediateFavoritePro(target, id_procedimento);
+        if (favoriteSaved && target && target.length > 0) target.fadeOut(100).fadeIn(100);
+    }
+
+    waitFavoriteProcessData(id_procedimento, function(dados){
+        if (!favoriteProcessPayloadReady(id_procedimento, dados)) return;
+        storeWhenReady(dados);
+    }, function(){
+        if (mode == 'add' && favoriteSaved) return;
+        if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Timeout checkDataFavoritePro => '+id_procedimento);
+    });
 
     if (mode == 'add') {
         getDadosIframeProcessoPro(id_procedimento, 'favorites');
@@ -753,6 +868,15 @@ function syncFavoriteProProcessData(id_procedimento, dados) {
     var andamento = dados.listAndamento || {};
     var prop = dados.propProcesso || {};
     var item = storeFavorites.favorites[favoriteIndex];
+    var previousSnapshot = JSON.stringify({
+        processo: item.processo || '',
+        andamento: item.andamento || [],
+        documentos: item.documentos || [],
+        tipo_procedimento: item.tipo_procedimento || '',
+        assuntos: item.assuntos || [],
+        interessados: item.interessados || [],
+        descricao: item.descricao || ''
+    });
     item.id_procedimento = andamento.id_procedimento || item.id_procedimento;
     item.processo = andamento.processo || item.processo;
     item.andamento = andamento.andamento || item.andamento || [];
@@ -762,8 +886,24 @@ function syncFavoriteProProcessData(id_procedimento, dados) {
     item.interessados = prop.selInteressadosProcedimento || item.interessados || [];
     item.descricao = prop.txtDescricao || item.descricao || '';
     storeFavorites.favorites[favoriteIndex] = item;
+    if (typeof dados.tiposDocumentos !== 'undefined' && $.isArray(dados.tiposDocumentos) && dados.tiposDocumentos.length > 0) {
+        storeFavorites.config = storeFavorites.config || {};
+        storeFavorites.config.tiposdocs = dados.tiposDocumentos;
+    }
     localStorageStorePro('configDataFavoritesPro', storeFavorites);
     saveConfigFav();
+    var currentSnapshot = JSON.stringify({
+        processo: item.processo || '',
+        andamento: item.andamento || [],
+        documentos: item.documentos || [],
+        tipo_procedimento: item.tipo_procedimento || '',
+        assuntos: item.assuntos || [],
+        interessados: item.interessados || [],
+        descricao: item.descricao || ''
+    });
+    if ($('#ifrArvore').length == 0 && $('#favoritesPro').length > 0 && previousSnapshot !== currentSnapshot) {
+        setPanelFavorites('refresh');
+    }
 }
 function bindFavoriteProcessSync() {
     if (window.__seiProFavoriteProcessSyncBound) return;
@@ -772,7 +912,7 @@ function bindFavoriteProcessSync() {
         var detail = (event && event.detail) ? event.detail : {};
         var id_procedimento = detail.id_procedimento;
         if (typeof id_procedimento === 'undefined' || id_procedimento === null || id_procedimento === '') return;
-        var dados = pullDadosProcessoSession();
+        var dados = pullDadosProcessoSession(id_procedimento);
         if (!favoriteProcessDataReady(id_procedimento, dados)) return;
         syncFavoriteProProcessData(id_procedimento, dados);
     });
@@ -780,7 +920,7 @@ function bindFavoriteProcessSync() {
 bindFavoriteProcessSync();
 function storeFavoritePro(mode, id_procedimento) {
     if (mode == 'add') {
-        var storeFavorites = addFavoritePro();
+        var storeFavorites = addFavoritePro(id_procedimento);
     } else {
         var storeFavorites = removeFavoritePro(id_procedimento);
     }
@@ -832,8 +972,8 @@ function updateFavorites(this_) {
     setPanelFavorites('refresh');
     initChosenReplace('panel', this_);
 }
-function removeFavoritePro(id_procedimento) {
-    var storeFavorites = getStoreFavoritePro();
+function removeFavoritePro(id_procedimento, storeFavorites = false) {
+    var storeFavorites = storeFavorites || getStoreFavoritePro();
     for (i = 0; i < storeFavorites['favorites'].length; i++) {
         if( storeFavorites['favorites'][i]['id_procedimento'] == id_procedimento) {
             // console.log('notinclude', i, storeFavorites['favorites'][i]['id_procedimento'], storeFavorites['favorites'][i]['processo']);
@@ -939,8 +1079,12 @@ function saveCategoryFavorite(this_, value) {
         resetDialogBoxPro('alertBoxPro');
     }
 }
-function addFavoritePro() {
+function addFavoritePro(id_procedimento = false) {
     var storeFavorites = getStoreFavoritePro();
+    var favoriteId = id_procedimento || (dadosProcessoPro && dadosProcessoPro.listAndamento ? dadosProcessoPro.listAndamento.id_procedimento : false);
+    if (favoriteId !== false) {
+        storeFavorites = removeFavoritePro(favoriteId, storeFavorites);
+    }
     var andamento = (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.listAndamento) ? dadosProcessoPro.listAndamento : {};
     var prop = (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.propProcesso) ? dadosProcessoPro.propProcesso : {};
         storeFavorites['favorites'].push({
@@ -1151,8 +1295,16 @@ function appendStarOnProcess() {
     $('.tabelaControle').find('tbody tr').each(function(){
         var _this = $(this);
         if (_this.find('.processoNaoVisualizado').length == 0) {
-            var id_procedimento =_this.attr('id');
-                id_procedimento = (typeof id_procedimento !== 'undefined') ? id_procedimento.replace('P', '') : false;
+            var id_procedimento = _this.attr('id');
+                id_procedimento = (typeof id_procedimento !== 'undefined' && id_procedimento !== null && id_procedimento !== '') ? id_procedimento.replace('P', '') : false;
+            if (!id_procedimento) {
+                var hrefAtribuicao = _this.find('a[href*="id_procedimento="]').eq(0).attr('href');
+                id_procedimento = (typeof hrefAtribuicao !== 'undefined' && hrefAtribuicao) ? getParamsUrlPro(hrefAtribuicao).id_procedimento : false;
+            }
+            if (!id_procedimento) {
+                var hrefProcesso = _this.find('a[href*="acao=procedimento_trabalhar"]').eq(0).attr('href');
+                id_procedimento = (typeof hrefProcesso !== 'undefined' && hrefProcesso) ? getParamsUrlPro(hrefProcesso).id_procedimento : false;
+            }
             var iconStar = (id_procedimento) ? htmlIconFavorites(id_procedimento, 'left') : '';
             var td = _this.find('td').eq(1);
             td.find('.iconFavoritePro').remove();
@@ -1245,31 +1397,39 @@ function keyDatesFav(e) {
 }
 function initFunctionsPanelFav(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof $('.favoriteTagsPro').tagsInput !== 'undefined' && 
-        typeof $('.tabelaPanelScroll').tagsInput !== 'undefined' && 
-        typeof $().tablesorter !== 'undefined' && 
-        typeof $('.ui-autocomplete-input').autocomplete !== 'undefined') {
+    var hasTagsInput = typeof $.fn.tagsInput === 'function';
+    var hasTableSorter = typeof $.fn.tablesorter === 'function';
+    var hasAutocomplete = typeof $.fn.autocomplete === 'function';
+    if (hasTagsInput && hasTableSorter && hasAutocomplete) {
 
         var idTableFavorite = '#favoriteTablePro';
         var tableFavorites = $(idTableFavorite);
+        if (!tableFavorites.length) { return; }
+        if (tableFavorites.data('sei-pro-fav-init') === true) { return; }
+        tableFavorites.data('sei-pro-fav-init', true);
 
         initChosenReplace('panel');
 
-        $('.favoriteTagsPro').tagsInput({
-          interactive: true,
-          placeholder: 'Adicionar etiqueta',
-          minChars: 2,
-          maxChars: 100,
-          limit: 8,
-          autocomplete_url: '',
-          autocomplete: {'source': sugestEtiquetaPro('fav') },
-          hide: true,
-          delimiter: [';'],
-          unique: true,
-          removeWithBackspace: true,
-          onAddTag: saveFollowEtiqueta,
-          onRemoveTag: saveFollowEtiqueta,
-          onChange: saveFollowEtiqueta
+        $('.favoriteTagsPro').each(function(){
+            var _input = $(this);
+            if (_input.data('sei-pro-tags-init') === true) return;
+            _input.data('sei-pro-tags-init', true);
+            _input.tagsInput({
+              interactive: true,
+              placeholder: 'Adicionar etiqueta',
+              minChars: 2,
+              maxChars: 100,
+              limit: 8,
+              autocomplete_url: '',
+              autocomplete: {'source': sugestEtiquetaPro('fav') },
+              hide: true,
+              delimiter: [';'],
+              unique: true,
+              removeWithBackspace: true,
+              onAddTag: saveFollowEtiqueta,
+              onRemoveTag: saveFollowEtiqueta,
+              onChange: saveFollowEtiqueta
+            });
         });
         
         var tagName = getOptionsPro('filterTag_favoritos');
@@ -1412,8 +1572,8 @@ function initFunctionsPanelFav(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
-            if (typeof $().tagsInput === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
-            if (typeof $().tablesorter === 'undefined' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
+            if (typeof $.fn.tagsInput !== 'function' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
+            if (typeof $.fn.tablesorter !== 'function' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
             initFunctionsPanelFav(TimeOut - 100); 
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initFunctionsPanelFav'); 
         }, 500);

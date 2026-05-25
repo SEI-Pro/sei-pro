@@ -2107,8 +2107,11 @@ function getAcompanhamentoEspecialAjax(htmlArvore) {
     }
     return {url: acompEsp.attr('href'), title: title};
 }
-function getTiposDocumentosAjax(hrefPesquisa) {
-    if (typeof hrefPesquisa === 'undefined' || hrefPesquisa === null || hrefPesquisa === '') return;
+function getTiposDocumentosAjax(hrefPesquisa, callback = false) {
+    if (typeof hrefPesquisa === 'undefined' || hrefPesquisa === null || hrefPesquisa === '') {
+        if (typeof callback === 'function') callback([]);
+        return;
+    }
     $.ajax({ url: hrefPesquisa }).done(function (html) {
         var tiposDocumentos = [];
         $(html).find('#selSeriePesquisa option').each(function(){
@@ -2119,13 +2122,22 @@ function getTiposDocumentosAjax(hrefPesquisa) {
             }
         });
         dadosProcessoPro.tiposDocumentos = tiposDocumentos;
+        setSessionProcessosPro(dadosProcessoPro);
+        if (typeof callback === 'function') callback(tiposDocumentos);
     });
 }
 function getDadosAjaxFavoritePro(idProcedimento) {
     if (typeof idProcedimento === 'undefined' || idProcedimento === null || idProcedimento === '') return;
     var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(idProcedimento);
+    dadosProcessoPro.listAndamento = {
+        historico_completo: false,
+        processo: '',
+        id_procedimento: String(idProcedimento),
+        andamento: []
+    };
     dadosProcessoPro.tiposDocumentos = [];
     dadosProcessoPro.listDocumentosAssinados = [];
+    setSessionProcessosPro(dadosProcessoPro);
     $.ajax({ url: href }).done(function (html) {
         var $html = $(html);
         var urlArvore = $html.find('#ifrArvore').attr('src');
@@ -2133,7 +2145,10 @@ function getDadosAjaxFavoritePro(idProcedimento) {
         if (typeof hrefPesquisa !== 'undefined' && hrefPesquisa !== '') {
             getTiposDocumentosAjax(hrefPesquisa);
         }
-        if (typeof urlArvore === 'undefined' || urlArvore === '') return;
+        if (typeof urlArvore === 'undefined' || urlArvore === '') {
+            setSessionProcessosPro(dadosProcessoPro);
+            return;
+        }
         $.ajax({ url: urlArvore }).done(function (htmlArvore) {
             var arrayLinksArvore = getLinksArvoreAjax(htmlArvore);
             var hrefProcesso = null;
@@ -2150,6 +2165,7 @@ function getDadosAjaxFavoritePro(idProcedimento) {
             var hrefHistorico = getHistoricoProcessoUrlAjax(htmlArvore);
 
             dadosProcessoPro.listLinks = arrayLinksArvore;
+            setSessionProcessosPro(dadosProcessoPro);
 
             if (hrefProcesso) {
                 ajaxDadosProcessoPro(hrefProcesso, 'favorites', arrayAcompEsp, function(processo) {
@@ -2161,10 +2177,14 @@ function getDadosAjaxFavoritePro(idProcedimento) {
                             andamento: []
                         };
                     }
+                    setSessionProcessosPro(dadosProcessoPro);
                 });
             }
             if (hrefDocumentos) {
                 ajaxDadosDocumentosPro(hrefDocumentos, 'favorites');
+            } else {
+                dadosProcessoPro.listDocumentosAssinados = [];
+                setSessionProcessosPro(dadosProcessoPro);
             }
             if (hrefHistorico) {
                 getDadosAndamentoPro(hrefHistorico);
@@ -10332,13 +10352,33 @@ function setHistoryProcessosPro(dadosProcessoPro) {
 
     localStorageStorePro('dadosHistoricoProcessoPro', dadosHistoricoProcessoPro);
 }
-function pullDadosProcessoSession() {
-    return getDadosProcessoSession() ? getDadosProcessoSession() : dadosProcessoPro;
+function resolveProcessoSessionId(id_procedimento = false) {
+    if (typeof id_procedimento !== 'undefined' && id_procedimento !== null && id_procedimento !== '') {
+        return String(id_procedimento);
+    }
+    var idAtual = getParamsUrlPro(window.location.href).id_procedimento;
+    if (typeof idAtual !== 'undefined' && idAtual !== null && idAtual !== '') {
+        return String(idAtual);
+    }
+    if ($('#ifrArvore').length > 0) {
+        var srcArvore = $('#ifrArvore').attr('src');
+        if (typeof srcArvore !== 'undefined' && srcArvore !== null && srcArvore !== '') {
+            var paramsArvore = getParamsUrlPro(srcArvore);
+            if (typeof paramsArvore.id_procedimento !== 'undefined' && paramsArvore.id_procedimento !== null && paramsArvore.id_procedimento !== '') {
+                return String(paramsArvore.id_procedimento);
+            }
+        }
+    }
+    return false;
 }
-function getDadosProcessoSession() {
-    var id_procedimento = getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento;
+function pullDadosProcessoSession(id_procedimento = false) {
+    return getDadosProcessoSession(id_procedimento) ? getDadosProcessoSession(id_procedimento) : dadosProcessoPro;
+}
+function getDadosProcessoSession(id_procedimento = false) {
+    id_procedimento = resolveProcessoSessionId(id_procedimento);
+    if (!id_procedimento) return false;
     var dadosSessionProcessoPro = sessionStorageRestorePro('dadosSessionProcessoPro');
-    var dadosProcesso = (dadosSessionProcessoPro) ? jmespath.search(dadosSessionProcessoPro, "[?propProcesso.hdnIdProcedimento=='"+id_procedimento+"'] | [0]") : null;
+    var dadosProcesso = (dadosSessionProcessoPro) ? jmespath.search(dadosSessionProcessoPro, "[?propProcesso.hdnIdProcedimento=='"+id_procedimento+"' || listAndamento.id_procedimento=='"+id_procedimento+"'] | [0]") : null;
     return (dadosProcesso && dadosProcesso !== null) ? dadosProcesso : false;
 }
 function setSessionProcessosPro(dadosProcessoPro) {
