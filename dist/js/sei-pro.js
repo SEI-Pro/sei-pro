@@ -236,7 +236,10 @@ function appendGerados(type) {
     });
     $('#divGerados').addClass('displayNone');
     $('#divRecebidos').addClass('tagintable');
-    $('#divRecebidosAreaTabela').addClass('tabelaPanelScroll');
+    $('#divRecebidosAreaTabela').removeClass('tabelaPanelScroll').css({height: '', overflowY: ''});
+    if($('#divRecebidosAreaTabela').find('.ui-resizable-handle.ui-resizable-s').length > 0 && typeof $('#divRecebidosAreaTabela').resizable !== 'undefined') {
+        $('#divRecebidosAreaTabela').resizable().resizable('destroy');
+    }
     
     var tbody = $('#divRecebidos tbody');
     tbody.find('tr').each(function() {
@@ -260,7 +263,6 @@ function appendGerados(type) {
                     : tda < tdb 
                         ? (orderbyDesc ? 1 : -1) : 0;
     }).appendTo(tbody);
-    initPanelResize('#divRecebidosAreaTabela.tabelaPanelScroll', 'recebidosPro');
     if ($('#divRecebidosAreaPaginacaoInferior a').length == 0) { $('#divRecebidosAreaPaginacaoInferior').hide() }
 }
 function removeDuplicateValue(element) {
