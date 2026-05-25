@@ -1238,6 +1238,65 @@ function getQuickPageFilterTokens(text) {
     var query = normalizeQuickPageFilterText(text);
     return query === '' ? [] : uniqPro(query.split(' ').filter(function(token){ return token !== ''; }));
 }
+function buildQuickPageFilterRowText(row) {
+    var segments = [];
+    var seen = {};
+
+    function pushSegment(value) {
+        var normalizedValue = normalizeQuickPageFilterText(String(value || '').replace(/\u00a0/g, ' '));
+        if (normalizedValue === '' || seen[normalizedValue]) {
+            return;
+        }
+        seen[normalizedValue] = true;
+        segments.push(normalizedValue);
+    }
+
+    pushSegment(row.text());
+
+    row.find('a, span, td, th, img').each(function(){
+        var elem = $(this);
+
+        pushSegment(elem.text());
+        pushSegment(elem.attr('title'));
+        pushSegment(elem.attr('aria-label'));
+        pushSegment(elem.attr('alt'));
+        pushSegment(elem.attr('data-tagname'));
+
+        var onmouseover = elem.attr('onmouseover');
+        if (typeof onmouseover !== 'undefined' && onmouseover !== '') {
+            pushSegment(onmouseover);
+
+            if (typeof extractTooltipToArray === 'function') {
+                var tooltip = extractTooltipToArray(onmouseover);
+                if ($.isArray(tooltip)) {
+                    $.each(tooltip, function(_, value){
+                        pushSegment(value);
+                    });
+                }
+            }
+
+            if (typeof extractGroupTableTooltipToArray === 'function') {
+                var groupTooltip = extractGroupTableTooltipToArray(onmouseover);
+                if ($.isArray(groupTooltip)) {
+                    $.each(groupTooltip, function(_, value){
+                        pushSegment(value);
+                    });
+                }
+            }
+
+            if (typeof extractAllTextBetweenQuotes === 'function') {
+                var quotedTexts = extractAllTextBetweenQuotes(onmouseover);
+                if ($.isArray(quotedTexts)) {
+                    $.each(quotedTexts, function(_, value){
+                        pushSegment(value);
+                    });
+                }
+            }
+        }
+    });
+
+    return segments.join(' ');
+}
 function getQuickPageFilterProcessRows(table) {
     return table.find('tbody tr').not('.tableHeader').not('.tagintable').not('.infraCaption');
 }
@@ -1273,12 +1332,7 @@ function applyQuickPageFilterToControlTables(value) {
         var table = $(this);
         getQuickPageFilterProcessRows(table).each(function(){
             var row = $(this);
-            var haystack = row.data('seiproQuickPageFilterText');
-
-            if (!haystack) {
-                haystack = normalizeQuickPageFilterText(row.text());
-                row.data('seiproQuickPageFilterText', haystack);
-            }
+            var haystack = buildQuickPageFilterRowText(row);
 
             var matches = tokens.length === 0 || tokens.every(function(token){
                 return haystack.indexOf(token) !== -1;

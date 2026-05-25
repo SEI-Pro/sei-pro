@@ -6474,11 +6474,17 @@ function setNameConst() {
     window.__ = __;
     setOptionsPro('nomeVariaveisPro', __);
 }
+function isDefaultEnabledConfigValue(name) {
+    return ['filtrarpaginapelapesquisarapida'].indexOf(String(name || '')) !== -1;
+}
 function checkConfigValue(name) {
     var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
     var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
         dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
         // dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
+    if ((dataValuesConfig === false || dataValuesConfig === null) && isDefaultEnabledConfigValue(name)) {
+        return true;
+    }
     if (dataValuesConfig == false && typeof configBasePro !== 'undefined' && configBasePro !== null && configBasePro.length > 0 ) {
         return false;
     } else {

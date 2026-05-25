@@ -3,7 +3,7 @@
   "name": "SEI Pro PRF",
   "short_name": "SEI Pro PRF",
   "description": "Ferramentas avançadas para o SEI da PRF, com reporte de bugs restrito ao ambiente da PRF e recursos para processos, documentos e IA.",
-  "version": "1.7.13",
+  "version": "1.7.14",
   "author": "Polícia Rodoviária Federal",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {

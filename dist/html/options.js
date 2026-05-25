@@ -114,6 +114,9 @@ function getRuntimeApi() {
     }
     return null;
 }
+function isDefaultEnabledConfigOption(name) {
+    return ['filtrarpaginapelapesquisarapida'].indexOf(String(name || '')) !== -1;
+}
 function syncProcessNotificationOption() {
     var runtimeApi = getRuntimeApi();
     if (!runtimeApi || !runtimeApi.runtime || typeof runtimeApi.runtime.sendMessage !== 'function') {
@@ -205,6 +208,13 @@ function restore_options() {
         
         var dataValuesConfig = ( items.dataValues != '' ) ? JSON.parse(items.dataValues) : [];
             dataValuesConfig = jmespath.search(dataValuesConfig, "[*].configGeral | [0]");
+            $('input[name="onoffswitch"][data-name]').each(function() {
+                var optionName = $(this).attr('data-name');
+                if (isDefaultEnabledConfigOption(optionName)) {
+                    $(this).prop('checked', true);
+                    $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
+                }
+            });
             $.each(dataValuesConfig, function (indexB, value) {
                 if (value.value === false) { 
                     $('#itemConfigGeral_'+value.name).prop('checked', false); 
