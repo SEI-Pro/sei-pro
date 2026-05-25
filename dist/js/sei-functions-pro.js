@@ -5514,7 +5514,8 @@ function editFollowDesc(this_, mode) {
 }
 function keyFollowDesc(e, mode) {
     if(e.which == 13) {
-        parent.saveFollowDesc(e.path[0], mode);
+        var target = (e && e.target) ? e.target : (e && e.currentTarget) ? e.currentTarget : (e && e.path && e.path.length > 0) ? e.path[0] : false;
+        if (target) parent.saveFollowDesc(target, mode);
         if (mode == 'fav') {
             saveConfigFav();
         }

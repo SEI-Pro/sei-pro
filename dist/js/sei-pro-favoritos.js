@@ -1402,7 +1402,8 @@ function restoreFavServer(data) {
 }
 function keyDatesFav(e) {
     if(e.which == 13) {
-        showDatesFav(e.path[0], 'hide');
+        var target = (e && e.target) ? e.target : (e && e.currentTarget) ? e.currentTarget : (e && e.path && e.path.length > 0) ? e.path[0] : false;
+        if (target) showDatesFav(target, 'hide');
     }
 }
 function initFunctionsPanelFav(TimeOut = 9000) {

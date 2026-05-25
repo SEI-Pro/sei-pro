@@ -1,5 +1,19 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.13] - 2026-05-25
+
+### Alterado
+
+- Processos Monitorados:
+  - nomenclatura da funcionalidade atualizada na interface para diferenciar do favorito nativo do SEI
+  - títulos do painel ajustados: `Etiqueta` passou para `Marcador` e `Especificação` para `Anotação`
+  - tooltips da estrela, ações do painel e tela de configurações alinhados ao novo nome
+
+### Corrigido
+
+- Processos Monitorados:
+  - salvamento da anotação e do prazo por `Enter` deixou de depender de `event.path`, evitando erro `Cannot read properties of undefined (reading '0')`
+
 ## [1.7.12] - 2026-05-25
 
 ### Alterado
