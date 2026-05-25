@@ -1016,6 +1016,9 @@ td.celStatusAtividade a.iconAtividade:first-child {
 .tableFavoritos .newLink .fa-layers-counter {
     background: #b7b7b7;
 }
+#favoriteTablePro .sorterTrFavorite .fa-layers-counter {
+    display: none !important;
+}
 .tableFavoritos th.tituloControle,
 .tableAtividades th.tituloControle {
     padding: 5px 0;
