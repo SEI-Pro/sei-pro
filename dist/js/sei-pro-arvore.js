@@ -2330,6 +2330,195 @@ function getArvoreInitSignature() {
         ].join('|');
     }).get().join('::');
 }
+function normalizeQuickTreeFilterText(text) {
+    text = (typeof text === 'string') ? text : '';
+    if (typeof removeAcentos === 'function') {
+        text = removeAcentos(text.toLowerCase());
+    } else {
+        text = text.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+    return text.replace(/\s+/g, ' ').trim();
+}
+function getQuickTreeFilterTokens(text) {
+    var query = normalizeQuickTreeFilterText(text);
+    return query === '' ? [] : query.split(' ').filter(function(token){ return token !== ''; });
+}
+function getQuickTreeDocumentAnchors() {
+    return $('#divArvore').find('a.infraArvoreNo[target="ifrConteudoVisualizacao"], a.infraArvoreNo[target="ifrVisualizacao"]');
+}
+function buildQuickTreeAnchorText(anchor) {
+    var parts = [];
+    var seen = {};
+
+    function push(value) {
+        var normalizedValue = normalizeQuickTreeFilterText(String(value || '').replace(/\u00a0/g, ' '));
+        if (normalizedValue === '' || seen[normalizedValue]) {
+            return;
+        }
+        seen[normalizedValue] = true;
+        parts.push(normalizedValue);
+    }
+
+    var row = anchor.closest('.infraArvore');
+    push(anchor.text());
+    push(anchor.attr('title'));
+    push(anchor.attr('alt'));
+    push(anchor.attr('aria-label'));
+    push(anchor.attr('onmouseover'));
+    if (row.length) {
+        push(row.text());
+        row.find('a, span, div, img').each(function(){
+            push($(this).text());
+            push($(this).attr('title'));
+            push($(this).attr('alt'));
+            push($(this).attr('aria-label'));
+            push($(this).attr('onmouseover'));
+        });
+    }
+
+    return parts.join(' ');
+}
+function clearQuickTreeHighlights() {
+    $('.seiProQuickPageHighlight').each(function(){
+        $(this).replaceWith(document.createTextNode($(this).text()));
+    });
+    if (document.body && typeof document.body.normalize === 'function') {
+        document.body.normalize();
+    }
+}
+function shouldSkipQuickTreeHighlightNode(node) {
+    if (!node || !node.parentNode) return true;
+    var parentNode = node.parentNode;
+    if (parentNode.nodeType !== 1) return false;
+    var parentElem = $(parentNode);
+    if (parentElem.closest('script, style, noscript, textarea, title').length > 0) return true;
+    if (parentElem.closest('.seiProQuickPageHighlight, .seiProQuickPageFilterHidden').length > 0) return true;
+    return false;
+}
+function buildQuickTreeHighlightRanges(text, tokens) {
+    var ranges = [];
+    var normalizedText = normalizeQuickTreeFilterText(text);
+
+    tokens.forEach(function(token){
+        var startIndex = 0;
+        while (startIndex < normalizedText.length) {
+            var foundAt = normalizedText.indexOf(token, startIndex);
+            if (foundAt === -1) break;
+            ranges.push({ start: foundAt, end: foundAt + token.length });
+            startIndex = foundAt + token.length;
+        }
+    });
+
+    ranges.sort(function(a, b){ return a.start - b.start; });
+    return ranges.reduce(function(merged, current){
+        if (!merged.length) {
+            merged.push(current);
+            return merged;
+        }
+        var previous = merged[merged.length - 1];
+        if (current.start <= previous.end) {
+            previous.end = Math.max(previous.end, current.end);
+        } else {
+            merged.push(current);
+        }
+        return merged;
+    }, []);
+}
+function highlightQuickTreeTextNode(node, tokens) {
+    var text = node.nodeValue;
+    if (!text || !text.trim()) return;
+
+    var ranges = buildQuickTreeHighlightRanges(text, tokens);
+    if (!ranges.length) return;
+
+    var fragment = document.createDocumentFragment();
+    var cursor = 0;
+
+    ranges.forEach(function(range){
+        if (range.start > cursor) {
+            fragment.appendChild(document.createTextNode(text.slice(cursor, range.start)));
+        }
+        var span = document.createElement('span');
+        span.className = 'seiProQuickPageHighlight';
+        span.style.background = '#ffef86';
+        span.style.color = 'inherit';
+        span.style.borderRadius = '2px';
+        span.style.boxShadow = 'inset 0 -1px 0 rgba(0, 0, 0, 0.18)';
+        span.style.padding = '0 1px';
+        span.textContent = text.slice(range.start, range.end);
+        fragment.appendChild(span);
+        cursor = range.end;
+    });
+
+    if (cursor < text.length) {
+        fragment.appendChild(document.createTextNode(text.slice(cursor)));
+    }
+
+    node.parentNode.replaceChild(fragment, node);
+}
+function applyQuickTreeHighlight(value) {
+    var tokens = getQuickTreeFilterTokens(value);
+    clearQuickTreeHighlights();
+
+    if (!tokens.length) return;
+
+    var container = document.body;
+    if (!container) return;
+
+    var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node) {
+            return shouldSkipQuickTreeHighlightNode(node) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+        }
+    });
+
+    var textNodes = [];
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(function(node){
+        highlightQuickTreeTextNode(node, tokens);
+    });
+}
+function applyQuickTreeFilter(value) {
+    $('.infraArvore.seiProQuickPageFilterHidden').removeClass('seiProQuickPageFilterHidden');
+    applyQuickTreeHighlight(value);
+}
+function initQuickPageFilterArvore() {
+    if (typeof parent.checkConfigValue !== 'function' || !parent.checkConfigValue('filtrarpaginapelapesquisarapida')) {
+        return;
+    }
+    if (typeof parent.$ !== 'function') {
+        return;
+    }
+
+    var input = parent.$('#txtPesquisaRapida');
+    if (!input.length) {
+        return;
+    }
+
+    input.off('.seiProQuickTreeFilter');
+
+    var debounceId = null;
+    input.on('input.seiProQuickTreeFilter', function(){
+        var currentValue = this.value;
+        clearTimeout(debounceId);
+        debounceId = setTimeout(function(){
+            applyQuickTreeFilter(currentValue);
+        }, 120);
+    });
+
+    input.on('keydown.seiProQuickTreeFilter', function(event){
+        if (event.key === 'Escape') {
+            clearTimeout(debounceId);
+            applyQuickTreeFilter('');
+        }
+    });
+
+    applyQuickTreeFilter(input.val() || '');
+}
 /*
 function initOnClickPasta() {
     $('a[id*="ancjoinPASTA"]').on('click', function(){
@@ -2436,6 +2625,7 @@ function initSeiProArvore(loop = true) {
     if (typeof replaceColorsIcons !== 'undefined' && checkConfigValue('coresmarcadores')) {
         replaceColorsIcons($('a[href*="andamento_marcador_gerenciar"], .tagUserColorPro'));
     }
+    initQuickPageFilterArvore();
     
     var markTreeAnchors = function() {
         $('a[id*="anchor"][target="'+ifrVisualizacao_+'"]').data('arvore-pro', true);
