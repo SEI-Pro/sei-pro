@@ -3661,13 +3661,70 @@ body.seiProHideProcessoPaginacaoSuperior #divGeradosAreaPaginacaoSuperior,
 body.seiProHideProcessoPaginacaoSuperior #divRecebidosAreaPaginacaoSuperior {
     display: none !important;
 }
+#divFiltroLinhaPro {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px 20px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#divFiltroLinhaPro::-webkit-scrollbar {
+    display: none;
+}
+#divFiltroLinhaPro > #divFiltro,
+#divFiltroLinhaPro > #newFiltro {
+    flex: 0 0 auto;
+}
+#divFiltro.collapseTabelaProcesso {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: auto !important;
+    vertical-align: top;
+    margin-right: 20px;
+}
+#divFiltro.collapseTabelaProcesso > div {
+    flex: 0 0 auto;
+}
 #newFiltro {
-    display: inline-block; 
-    vertical-align: top; 
-    float: right; 
-    text-align: right; 
-    width: 100%; 
-    margin-right: 30px;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    vertical-align: top;
+    float: none;
+    text-align: left;
+    width: auto;
+    max-width: 100%;
+    margin-right: 0;
+}
+#newFiltro .chosen-container-single,
+#newFiltro #filterTableHome_chosen,
+#newFiltro #selectGroupTablePro_chosen {
+    float: none;
+    margin-right: 0;
+    min-width: 0;
+}
+#newFiltro #filterTableHome,
+#newFiltro #selectGroupTablePro,
+#newFiltro #filterTableHome_chosen,
+#newFiltro #selectGroupTablePro_chosen {
+    width: 220px !important;
+    max-width: 220px;
+}
+#newFiltro #processosProActions {
+    margin-left: 0 !important;
+    flex: 0 0 auto;
+}
+#newFiltro > a.newLink {
+    float: none !important;
+    display: inline-flex;
+    align-items: center;
 }
 a.controleTableTag {
     transform: scale(0.7);

@@ -658,7 +658,14 @@ function insertGroupTable(TimeOut = 9000) {
         }
 
         htmlControl += '</div>';
-        $('#divFiltro').after(htmlControl).css('width','50%');
+        $('#divFiltro').after(htmlControl).css({
+            'width': 'auto',
+            'display': 'inline-flex',
+            'vertical-align': 'top'
+        });
+        if ($('#divFiltroLinhaPro').length == 0) {
+            $('#divFiltro, #newFiltro').wrapAll('<div id="divFiltroLinhaPro" class="collapseTabelaProcesso"></div>');
+        }
 
         if ($('#idSelectTipoBloco').length != 0 ) { 
             $("#idSelectTipoBloco").appendTo("#newFiltro");
