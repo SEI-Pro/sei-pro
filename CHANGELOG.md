@@ -1,5 +1,14 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.12] - 2026-05-25
+
+### Alterado
+
+- Controle de processos:
+  - links de filtro rápido, filtros de seleção e botões de visualização passaram a compartilhar a mesma linha no topo do painel
+  - layout da faixa de filtros ajustado para evitar quebra prematura entre os atalhos e os controles de agrupamento
+  - barra de rolagem horizontal oculta nessa faixa, preservando o alinhamento visual sem exibir a scrollbar
+
 ## [1.7.11] - 2026-05-19
 
 ### Corrigido
