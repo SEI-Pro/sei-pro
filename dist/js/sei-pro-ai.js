@@ -38,13 +38,27 @@ let perfilPlataform = currentPlataform == 'openai' ? perfilOpenAI : perfilGemini
     
 
 // MODELOS DISPONÍVEIS DA GEMINI ARMAZENADOS NA MÁQUINA OU PADRÕES PRÉ-DEFINIDOS
-let modelsGemini =  (typeof localStorageRestorePro('modelsGemini') !== 'undefined' && localStorageRestorePro('modelsGemini') !== null)
-    ? localStorageRestorePro('modelsGemini')
-    : [
-        ['gemini-pro'],
-        ['gemini-pro-vision'], // para entrada com imagem
-        ['gemini-2.0-flash-latest'] // caso tenha acesso via Google AI Studio
-    ];
+const mergeModelList = (baseList, extraList) => {
+    const modelMap = new Map();
+
+    (baseList || []).concat(extraList || []).forEach(([model]) => {
+        if (model && !modelMap.has(model)) {
+            modelMap.set(model, [model]);
+        }
+    });
+
+    return Array.from(modelMap.values());
+};
+
+const defaultGeminiModels = [
+    ['gemini-pro'],
+    ['gemini-pro-vision'], // para entrada com imagem
+    ['gemini-2.0-flash-latest'], // caso tenha acesso via Google AI Studio
+    ['gemini-3.1-pro-preview'],
+    ['gemini-3.1-flash-lite-preview']
+];
+
+let modelsGemini = mergeModelList(defaultGeminiModels, (typeof localStorageRestorePro('modelsGemini') !== 'undefined' && localStorageRestorePro('modelsGemini') !== null) ? localStorageRestorePro('modelsGemini') : []);
 
 // MODELOS DISPONÍVEIS NA API DA OPENAI ARMAZENADOS NA MÁQUINA OU PADRÕES PRÉ-DEFINIDOS
 let modelsOpenAI = (typeof localStorageRestorePro('modelsOpenAI') !== 'undefined' && localStorageRestorePro('modelsOpenAI') !== null)
@@ -62,7 +76,7 @@ let modelsOpenAI = (typeof localStorageRestorePro('modelsOpenAI') !== 'undefined
         ['gpt-3.5-turbo-instruct'],
     ];
 
-let getModelAI = currentPlataform == 'openai' ? getOptionsPro('setModelOpenAI') || 'gpt-4' :  getOptionsPro('setModelGemini') || 'gemini-2.0-flash';
+let getModelAI = currentPlataform == 'openai' ? getOptionsPro('setModelOpenAI') || 'gpt-4' :  getOptionsPro('setModelGemini') || 'gemini-3.1-flash-lite-preview';
 
 // HISTÓRICO DE CONVERSA COM O MODELO 
 const defaultSystemInstruction = `Voc\u00EA \u00E9 um agente que analisa processos administrativos em um \u00F3rg\u00E3o p\u00FAblico (${capitalizeFirstLetter(nomeInstituicao)}), elabora pareceres e auxilia na reda\u00E7\u00E3o de documentos oficiais.`;
@@ -73,6 +87,132 @@ const conversationSystem = () => {
 }
 let conversationHistory = conversationSystem();
 let sendConversationHistory = false;
+
+const normalizePromptText = (text) => {
+    return (text ?? '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/\r/g, '')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/[ \t]{2,}/g, ' ')
+        .trim();
+};
+
+const getPromptCharLimit = () => {
+    const maxTokens = parseInt(getOptionsPro('setMaxTokenAI') || '6400', 10);
+    const safeMaxTokens = Number.isFinite(maxTokens) && maxTokens > 0 ? maxTokens : 6400;
+    return Math.max(24000, safeMaxTokens * 6);
+};
+
+const condensePromptText = (text, label = 'conteúdo') => {
+    const content = normalizePromptText(text);
+    const charLimit = getPromptCharLimit();
+
+    if (!content || content.length <= charLimit) {
+        return content;
+    }
+
+    const headSize = Math.floor(charLimit * 0.45);
+    const tailSize = Math.floor(charLimit * 0.25);
+    const middleSize = Math.max(0, charLimit - headSize - tailSize);
+    const middleStart = Math.max(headSize, Math.floor((content.length - middleSize) / 2));
+    const middleText = middleSize > 0 ? content.slice(middleStart, middleStart + middleSize) : '';
+    const condensedNotice = `[[Conteúdo condensado automaticamente: ${label} ultrapassou o limite local de aproximadamente ${charLimit} caracteres. Foram preservados trechos iniciais, centrais e finais para reduzir risco de estouro de tokens.]]`;
+
+    return `${condensedNotice}\n\n${content.slice(0, headSize)}\n\n${middleText}\n\n${tailSize > 0 ? content.slice(-tailSize) : ''}`.trim();
+};
+
+const defaultGeminiAttachmentMode = 'hybrid';
+const allowedGeminiNativeMimeTypes = [
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/webp',
+    'image/gif'
+];
+
+const normalizeGeminiAttachmentMode = (mode) => mode === 'text' ? 'text' : defaultGeminiAttachmentMode;
+const getGeminiAttachmentMode = () => normalizeGeminiAttachmentMode(getOptionsPro('setGeminiAttachmentMode') || defaultGeminiAttachmentMode);
+const setGeminiAttachmentMode = (mode) => setOptionsPro('setGeminiAttachmentMode', normalizeGeminiAttachmentMode(mode));
+const getGeminiAttachmentModeLabel = () => getGeminiAttachmentMode() === 'text' ? 'Texto/OCR' : 'H\u00EDbrido';
+const getGeminiAttachmentModeTooltip = () => getGeminiAttachmentMode() === 'text'
+    ? 'Usa apenas texto/OCR dos anexos.'
+    : 'Usa texto/OCR e tenta enviar PDF/imagem de forma nativa ao Gemini quando poss\u00EDvel.';
+
+const normalizeMimeType = (mimeType) => (mimeType || '').split(';')[0].trim().toLowerCase();
+
+const getMimeTypeFromUrl = (url) => {
+    const cleanUrl = (url || '').split('?')[0].toLowerCase();
+    if (cleanUrl.endsWith('.pdf')) return 'application/pdf';
+    if (cleanUrl.endsWith('.png')) return 'image/png';
+    if (cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg')) return 'image/jpeg';
+    if (cleanUrl.endsWith('.webp')) return 'image/webp';
+    if (cleanUrl.endsWith('.gif')) return 'image/gif';
+    return false;
+};
+
+const bufferToBase64 = (buffer) => {
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+};
+
+const buildGeminiAttachmentPart = async (selectedDoc) => {
+    try {
+        if (!selectedDoc || !selectedDoc.src) {
+            return false;
+        }
+
+        const response = await fetch(selectedDoc.src, { credentials: 'include' });
+        if (!response.ok) {
+            return false;
+        }
+
+        const mimeType = normalizeMimeType(response.headers.get('content-type')) || getMimeTypeFromUrl(selectedDoc.src);
+        if (!allowedGeminiNativeMimeTypes.includes(mimeType)) {
+            return false;
+        }
+
+        const contentLength = parseInt(response.headers.get('content-length') || '0', 10) || 0;
+        const maxBytes = 8 * 1024 * 1024;
+        if (contentLength > maxBytes) {
+            return false;
+        }
+
+        const buffer = await response.arrayBuffer();
+        if (!buffer || buffer.byteLength === 0 || buffer.byteLength > maxBytes) {
+            return false;
+        }
+
+        return {
+            inlineData: {
+                mimeType,
+                data: bufferToBase64(buffer)
+            }
+        };
+    } catch (err) {
+        console.warn('Falha ao construir anexo nativo do Gemini.', err);
+        return false;
+    }
+};
+
+const buildGeminiAttachmentParts = async (data_protocolo) => {
+    if (currentPlataform !== 'gemini' || getGeminiAttachmentMode() !== 'hybrid') {
+        return [];
+    }
+    if (!data_protocolo || ['all', 'text_selected', 'text_doc'].includes(data_protocolo.id_documento)) {
+        return [];
+    }
+
+    const selectedDoc = await getSelectedDoc(data_protocolo);
+    const nativeAttachment = await buildGeminiAttachmentPart(selectedDoc);
+    return nativeAttachment ? [nativeAttachment] : [];
+};
 
 // FUNÇÃO PARA MODULAR O OBJETO DE INTERAÇÃO DO CHAT, A DEPENDER DA PLATAFORMA
 const buildMessage = (role, text) => {
@@ -631,6 +771,9 @@ const getSessionTextProcesso = (num_processo_format) => {
             for (const v of elements) {
                 const data_input = $(v).data();
                 const prompt_f = await getFooterPrompt(data_input, respost_id);
+                if (!prompt_f) {
+                    return false;
+                }
                 prompt_footer += `
                 ${prompt_f}
                 `;
@@ -649,16 +792,22 @@ const getSessionTextProcesso = (num_processo_format) => {
             const contet_text_session = getSessionTextProcesso(num_processo);
             const content_doc = contet_text_session ? contet_text_session : await getAllTextProcesso(data_protocolo, respost_id);
             const name_doc = `Processo SEI n\u00BA ${num_processo}:`;
+            if (!content_doc) {
+                appendBotMessageError(`Não foi possível obter o conteúdo do processo`);
+                return false;
+            }
+            const content_doc_condensed = condensePromptText(content_doc, name_doc);
 
             if (!contet_text_session) sessionStorage.setItem(`fulltext_${onlyNumber(num_processo)}`,content_doc);
             
             prompt_footer = `
                 ${name_doc}
 
-                ${content_doc}`;
+                ${content_doc_condensed}`;
         } else if (data_protocolo.id_documento == 'text_selected') {
 
             const content_doc = extrairTextoComNumeracao(getSelectedHtmlFromCKEditor());
+            const content_doc_condensed = condensePromptText(content_doc, 'Texto selecionado');
 
             if (content_doc == '' || !content_doc) { 
                 appendBotMessageError(`Nenhum texto selecionado`);
@@ -668,10 +817,11 @@ const getSessionTextProcesso = (num_processo_format) => {
             prompt_footer = `
                 Texto selecionado: 
 
-                ${content_doc}`;
+                ${content_doc_condensed}`;
         } else if (data_protocolo.id_documento == 'text_doc') {
 
             const content_doc = getAllTextEditor(true);
+            const content_doc_condensed = condensePromptText(content_doc, 'Todo o documento');
 
             if (content_doc == '' || !content_doc) { 
                 appendBotMessageError(`Nenhum texto encontrado`);
@@ -681,18 +831,23 @@ const getSessionTextProcesso = (num_processo_format) => {
             prompt_footer = `
                 Todo o documento: 
 
-                ${content_doc}`;
+                ${content_doc_condensed}`;
         } else {
             loadResponseBoxHTML(respost_id, 'Obtendo link do processo...');
             const selectedDoc = await getSelectedDoc(data_protocolo);
             loadResponseBoxHTML(respost_id, 'Baixando documento do processo...');
             const content_doc = await getContentDoc(selectedDoc, respost_id, data_protocolo);
             const name_doc = `Documento SEI ${selectedDoc.nome}:`;
+            if (!content_doc) {
+                appendBotMessageError(`Não foi possível obter o conteúdo do documento`);
+                return false;
+            }
+            const content_doc_condensed = condensePromptText(content_doc, name_doc);
 
             prompt_footer = `
                 ${name_doc}
 
-                ${content_doc}`;
+                ${content_doc_condensed}`;
         }
         return prompt_footer;
     };
@@ -737,6 +892,11 @@ const getSessionTextProcesso = (num_processo_format) => {
         btnSendAI.removeClass('newLink_confirm').find('i').attr('class','fas fa-spin fa-spinner');
 
         const prompt_footer = await makeFooterPrompt(data_protocolo, respost_id);
+        if (!prompt_footer) {
+            btnSendAI.removeClass('newLink_confirm').find('i').attr('class','fas fa-paper-plane');
+            return;
+        }
+        const geminiAttachmentParts = await buildGeminiAttachmentParts(data_protocolo);
 
             prompt_text = type == 'resume' 
                 ? `
@@ -873,15 +1033,15 @@ const getSessionTextProcesso = (num_processo_format) => {
                 ` 
                 : prompt_text;
 
-        getResponseAI(prompt_text, respost_id);
+        getResponseAI(prompt_text, respost_id, geminiAttachmentParts);
     };
 
     // OBTEM RESPOSTA DA PLATAFORMA DE IA
-    const getResponseAI = async (prompt_text, respost_id = randomString(8)) => {
+    const getResponseAI = async (prompt_text, respost_id = randomString(8), geminiAttachmentParts = []) => {
         const container = $('#response_ai');
         const iconChat = currentPlataform == 'openai' ? iconChatGPT : iconGemini;
         const htmlIconChat = `<img src="${iconChat}" style="width: 30px;border-radius: 5px;position: absolute;top: -3px;left: -50px;">`;
-        const responseText = await sendAI(prompt_text, respost_id);
+        const responseText = await sendAI(prompt_text, respost_id, geminiAttachmentParts);
         const responseBox = $(`#responseBot_${respost_id}`);
         const btnSendAI = $('#btnSendAI');
         const htmlAddDoc = frmEditor.length 
@@ -957,18 +1117,18 @@ const getSessionTextProcesso = (num_processo_format) => {
     };
 
     // ENVIA REQUISIÇÃO A PLATAFORMA DE IA
-    const sendAI = async (prompt_text, respost_id) => {
+    const sendAI = async (prompt_text, respost_id, geminiAttachmentParts = []) => {
         const model = currentPlataform == 'openai'
             ? getOptionsPro('setModelOpenAI') || 'gpt-4'
-            : getOptionsPro('setModelGemini') || 'gemini-2.0-flash';
+            : getOptionsPro('setModelGemini') || 'gemini-3.1-flash-lite-preview';
 
         const beta = getOptionsPro('setBetaModelsAI') == 'checked' ? 'beta' : '';
     
         const url = currentPlataform == 'openai'
             ? perfilPlataform.URL_API + `v1/chat/completions`
-            : perfilPlataform.URL_API + `v1${beta}/models/${model}:generateContent?key=${perfilPlataform.KEY_USER}`;
+            : perfilPlataform.URL_API + `v1beta/models/${model}:generateContent?key=${perfilPlataform.KEY_USER}`;
     
-        const data = getDataBodyAI(JSON.stringify(prompt_text));
+        const data = getDataBodyAI(JSON.stringify(prompt_text), geminiAttachmentParts);
         const container = $('#response_ai');
         
         loadResponseBoxHTML(respost_id, 'Obtendo resposta...');
@@ -1159,9 +1319,9 @@ const getSessionTextProcesso = (num_processo_format) => {
     };
 
     // COMPILA OBJETO DATA PARA ENVIO NO CORPO DA REQUISIÇÃO DA PLATAFORMA 
-    const getDataBodyAI = (prompt_text) => {
+    const getDataBodyAI = (prompt_text, geminiAttachmentParts = []) => {
         const advancedConfigs = getOptionsPro('setAdvancedConfigs') == 'checked' ? true : false;
-        const model = currentPlataform == 'openai' ? getOptionsPro('setModelOpenAI') || 'gpt-4' :  getOptionsPro('setModelGemini') || 'gemini-2.0-flash';
+        const model = currentPlataform == 'openai' ? getOptionsPro('setModelOpenAI') || 'gpt-4' :  getOptionsPro('setModelGemini') || 'gemini-3.1-flash-lite-preview';
         const temperature = getOptionsPro('setTemperatureAI') || '0.4';
         const maxTokens = getOptionsPro('setMaxTokenAI') || '6400';
         const topP = getOptionsPro('setTopPAI') || '1';
@@ -1175,11 +1335,13 @@ const getSessionTextProcesso = (num_processo_format) => {
     
         const contentMessage = currentPlataform == 'openai'
             ? [systemInstruction, { role: 'user', content: JSON.parse(prompt_text) }]
-            : [systemInstruction, { role: 'user', parts: [{ text: JSON.parse(prompt_text) }] }];
+            : [systemInstruction, { role: 'user', parts: [{ text: JSON.parse(prompt_text) }, ...geminiAttachmentParts] }];
 
-        let message = sendConversationHistory
+        let message = (currentPlataform == 'gemini' && geminiAttachmentParts.length > 0)
+            ? contentMessage
+            : (sendConversationHistory
             ? conversationHistory
-            : contentMessage;
+            : contentMessage);
 
         const dataAdvanced = currentPlataform == 'openai' 
             ? JSON.stringify({
@@ -1435,6 +1597,17 @@ const getSessionTextProcesso = (num_processo_format) => {
                             <label class="onoff-switch-label" for="configAI_betamodels"></label>
                         </div>
                     </td>
+                    <td class="label" ${currentPlataform == 'gemini' ? '' : 'style="display:none;"'}>
+                        <label for="configAI_gemini_attachment_mode">
+                            Gemini h\u00EDbrido
+                        </label>
+                    </td>
+                    <td ${currentPlataform == 'gemini' ? '' : 'style="display:none;"'}>
+                        <div class="onoffswitch" style="display: inline-block;transform: scale(0.7);">
+                            <input id="configAI_gemini_attachment_mode" type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" ${getGeminiAttachmentMode() == 'hybrid' ? 'checked' : ''}>
+                            <label class="onoff-switch-label" for="configAI_gemini_attachment_mode"></label>
+                        </div>
+                    </td>
                 </tr>
                 <tr>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
@@ -1554,7 +1727,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         if (currentPlataform == 'openai')
                             setOptionsPro('setModelOpenAI', 'gpt-4');
                         else 
-                            setOptionsPro('setModelGemini', 'gemini-2.0-flash');
+                            setOptionsPro('setModelGemini', 'gemini-3.1-flash-lite-preview');
 
                         setOptionsPro('setTemperatureAI', '0.4');
                         setOptionsPro('setMaxTokenAI', '640');
@@ -1563,6 +1736,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         setOptionsPro('setPresencePenaltyAI', '0');
                         setOptionsPro('setTypingAI', 'checked');
                         setOptionsPro('setBetaModelsAI', '');
+                        setOptionsPro('setGeminiAttachmentMode', defaultGeminiAttachmentMode);
                         setOptionsPro('setAdvancedConfigs', '');
                         setOptionsPro('setSystemInstructionAI', defaultSystemInstruction);
                         resetDialogBoxPro('alertBoxPro');
@@ -1592,6 +1766,9 @@ const getSessionTextProcesso = (num_processo_format) => {
                         setOptionsPro('setPresencePenaltyAI', $('#configAI_presence_penalty').val());
                         setOptionsPro('setTypingAI', $('#configAI_typing_box').is(':checked') ? 'checked' : '');
                         setOptionsPro('setBetaModelsAI', $('#configAI_betamodels').is(':checked') ? 'checked' : '');
+                        if (currentPlataform == 'gemini') {
+                            setOptionsPro('setGeminiAttachmentMode', $('#configAI_gemini_attachment_mode').is(':checked') ? 'hybrid' : 'text');
+                        }
                         setOptionsPro('setAdvancedConfigs', $('#configAI_advancedconfigs').is(':checked') ? 'checked' : '');
                         setOptionsPro('setSystemInstructionAI', $('#configAI_system_instruction').val());
                         stopType = $('#configAI_typing_box').is(':checked') ? false : true;
@@ -1769,7 +1946,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         } else {
                             currentPlataform = 'gemini';
                             perfilPlataform = perfilGemini;
-                            getModelAI = getOptionsPro('setModelGemini') || 'gemini-2.0-flash';
+                            getModelAI = getOptionsPro('setModelGemini') || 'gemini-3.1-flash-lite-preview';
                             $('#btnSecondPlataform').attr('data-plataform', 'openai').find('img').attr('src', iconChatGPT);
                             $('#btnMainPlataform').find('img').attr('src', iconGemini);
                             setOptionsPro('plataformAI_current', 'gemini');
@@ -2132,7 +2309,7 @@ const getSessionTextProcesso = (num_processo_format) => {
 // FUNÇÃO PARA ATUALIZAR A LISTA DE MODELOS DISPONÍVEIS NA API
 const updateModelsAI = () => {
     const beta = getOptionsPro('setBetaModelsAI') == 'checked' ? 'beta' : '';
-    const url = currentPlataform == 'openai' ? perfilPlataform.URL_API+`v1/models` :  perfilPlataform.URL_API+`v1${beta}/models?key=${perfilPlataform.KEY_USER}`;    
+    const url = currentPlataform == 'openai' ? perfilPlataform.URL_API+`v1/models` :  perfilPlataform.URL_API+`v1beta/models?key=${perfilPlataform.KEY_USER}`;    
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -2153,8 +2330,8 @@ const updateModelsAI = () => {
                     modelsOpenAI = responseAiModels;
                     localStorageStorePro('modelsOpenAI', responseAiModels);
                 } else {
-                    modelsGemini = responseAiModels;
-                    localStorageStorePro('modelsGemini', responseAiModels);
+                    modelsGemini = mergeModelList(defaultGeminiModels, responseAiModels);
+                    localStorageStorePro('modelsGemini', modelsGemini);
                 }
             }
         } else if (xhr.status !== 200 && xhr.readyState === 2) {

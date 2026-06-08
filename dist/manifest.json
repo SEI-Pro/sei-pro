@@ -20,6 +20,12 @@
   "permissions": [
     "storage"
   ],
+  "host_permissions": [
+    "https://seipro.app/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "js": [

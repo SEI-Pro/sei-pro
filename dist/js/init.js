@@ -3,6 +3,11 @@ var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_init(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
 var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
 var frmEditor5Exists = $('html script[charset="utf-8"]').last().html().includes('INFRA_EDITOR_CONFIG');
+if (typeof window.checkHostLimit !== 'function') {
+    window.checkHostLimit = function() {
+        return false;
+    };
+}
 
 $.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"));
 $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
