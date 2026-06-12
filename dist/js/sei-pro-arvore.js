@@ -9,7 +9,7 @@ var delayAjax = false;
 var selectedItensPanelArvore = false;
 var stickNoteDivSelected = 0;
 const pathArvore = parent.isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
-const anchorDoc = isSEI_5 ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]';
+const anchorDoc = (typeof isSEI_5 !== 'undefined' && isSEI_5) ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]'; // FIX: guard against load order
 
 function initCSSArvore() {
     if ( $('head').find('style[data-style="seipro"]').length == 0 ) {
@@ -827,7 +827,7 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
                         }
                     });
                     if (!itemSelected) { 
-                        openAlertDuplicateDoc('Erro ao selecionar o tipo de documento');
+                        openAlertDuplicateDoc('Documento n\u00E3o nativo do SEI, a\u00E7\u00E3o n\u00E3o permitida.');
                     }
                 });
             } else {

@@ -1700,6 +1700,33 @@ function initReplaceNewIcons(TimeOut = 9000) {
     if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
     if (typeof replaceNewIcons === 'function') {
         replaceNewIcons($(`${infraBarraComandos} a.botaoSEI`));
+
+        // [FIX v9.0.10] Processar botões em divComandos fora de .barraBotoesSEI.
+        // O botão nativo "Controle de Processos" está em divComandos mas não em
+        // .barraBotoesSEI — por isso não recebe iconBoxSlim pelo replaceNewIcons normal.
+        // Sem iconBoxSlim, no slim a img tem a mesma cor do fundo → invisível.
+        // Solução: adicionar iconBoxSlim + injetar botaoSEI_iconBox com FA icon
+        // para cada botão fora de .barraBotoesSEI (mesmo padrão do iconReaberturaPro).
+        var _barraBotoes = $(infraBarraComandos);
+        $(divComandos + ' a.botaoSEI').each(function() {
+            if (!_barraBotoes.find(this).length && $(this).find('.botaoSEI_iconBox').length === 0) {
+                var _thisBtn = $(this);
+                var _title   = _thisBtn.find('img').attr('title') || _thisBtn.attr('title') || '';
+                _thisBtn.addClass('iconBoxSlim');
+                // Injetar ícone FA — escolhe o ícone com base no href/onclick do botão
+                var _href    = _thisBtn.attr('href') || _thisBtn.attr('onclick') || '';
+                var _faIcon  = 'fa-list-alt'; // default: lista de processos
+                if (_href.indexOf('procedimento_controlar') !== -1) { _faIcon = 'fa-th-list'; }
+                else if (_href.indexOf('processo_visualizar') !== -1) { _faIcon = 'fa-eye'; }
+                var _iconBox = $('<span class="botaoSEI_iconBox">' +
+                                '<i class="fas ' + _faIcon + '" style="font-size:17pt;color:#fff;"></i>' +
+                                '</span>');
+                _thisBtn.append(_iconBox);
+                if (localStorage.getItem('iconLabel') && _title) {
+                    _thisBtn.addClass('iconLabel').append('<span class="newIconTitle">' + _title + '</span>');
+                }
+            }
+        });
     } else {
         setTimeout(function(){ 
             initReplaceNewIcons(TimeOut - 100); 
@@ -3141,11 +3168,23 @@ function initSeiPro() {
         storeVersionSEI();
         if (typeof checkDadosAcompEspecial !== 'undefined') checkDadosAcompEspecial();
         if (sessionStorage.getItem('configHost_Pro') === null && typeof getConfigHost !== 'undefined') getConfigHost();
+        // [v9.0.11] Botão Voltar ao Topo — ativado na página Controle de Processos
+        if (typeof initBtnVoltarTopo === 'function') { initBtnVoltarTopo(); }
 	} else if ( $("#ifrArvore").length > 0 ) {
-        if (!checkHostLimit()) initDadosProcesso();
+        // FIX: sei-functions-pro.js (que define checkHostLimit) é carregado
+        // via $.getScript() — pode ainda não ter terminado quando sei-pro.js
+        // executa. Aguarda até que esteja disponível antes de prosseguir.
+        (function _waitCheckHostLimit(tries) {
+            if (typeof checkHostLimit !== 'undefined') {
+                if (!checkHostLimit()) initDadosProcesso();
+            } else if (tries > 0) {
+                setTimeout(function(){ _waitCheckHostLimit(tries - 1); }, 100);
+            }
+        }(90)); // até 9 segundos de espera
         initObserveUrlChange();
         checkLoadConfigSheets();
         //observeHistoryBrowserPro();
+
 	}
     initReloadModalLink();
     if (typeof isNewSEI !== 'undefined' && isNewSEI) {
@@ -3163,4 +3202,15 @@ function initSeiPro() {
         });
     }
 }
-$(document).ready(function () { initSeiPro() });
+$(document).ready(function () {
+    // FIX: sei-functions-pro.js (que define isNewSEI, checkHostLimit, etc.) é
+    // carregado via $.getScript() com etapa intermediária de jQuery UI —
+    // pode ainda não ter terminado quando sei-pro.js executa.
+    (function _waitSeiProReady(tries) {
+        if (typeof isNewSEI !== 'undefined' && typeof checkHostLimit !== 'undefined') {
+            initSeiPro();
+        } else if (tries > 0) {
+            setTimeout(function(){ _waitSeiProReady(tries - 1); }, 100);
+        }
+    }(90)); // até 9 segundos de espera
+});

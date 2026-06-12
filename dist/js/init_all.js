@@ -3,9 +3,22 @@ var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_initall(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
 var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
 
-if (!frmEditor.length 
+// FIX DEFINITIVO: $.getScript() injeta código via <script> tag no contexto
+// da PAGE (window), não no isolated world da extensão. Por isso:
+//
+//   - A verificação `typeof $.fn.dialog` avalia o jQuery do isolated world
+//     (que JÁ tem jQuery UI carregado como content script) → sempre `defined`
+//     → a condição nunca carregava jQuery UI na página → .dialog() falhava.
+//
+// Solução: SEMPRE carregar jquery-ui.min.js no contexto da página ANTES de
+// sei-functions-pro.js, via callback sequencial. Carregar jQuery UI duas
+// vezes é inócuo (apenas redefine as mesmas funções).
+if (!frmEditor.length) {
     // && (!isNewSEI || (isNewSEI && typeof loadFunctionsPro === 'undefined'))
-) $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+    $.getScript(getUrlExtension("js/lib/jquery-ui.min.js"), function() {
+        $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+    });
+}
 
 function getUrlExtension(url) {
     if (typeof browser === "undefined") {

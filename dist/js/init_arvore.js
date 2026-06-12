@@ -79,7 +79,72 @@ if (typeof $().toolbar === 'undefined') $.getScript(getUrlExtension("js/lib/jque
 if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
 if (typeof DOMPurify === 'undefined') $.getScript(getUrlExtension("js/lib/purify.min.js"));
 if (typeof Dropzone === 'undefined') $.getScript(getUrlExtension("js/lib/dropzone.min.js"));
-if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
-if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
-if (typeof loadSEIProArvore === 'undefined') $.getScript(getUrlExtension("js/sei-pro-arvore.js"));
+// ─── FIX: carregamento sequencial e seguro no contexto do ifrArvore ────────
+//
+// PROBLEMA RAIZ: $.getScript() injeta um <script> no DOM da PÁGINA (não no
+// isolated world da extensão), portanto o código executa no contexto window
+// da página. No ifrArvore, a página SEI tem jQuery mas NÃO tem jQuery UI
+// (.dialog, .resizable, .sortable, .tablesorter). Isso causava:
+//   - "$.(...).dialog is not a function"    (sei-functions-pro.js)
+//   - "$.(...).html(...).dialog is not a function" (sei-pro-docs-lote.js)
+//   - "moment is not defined"  (typeof moment.duration falha pois moment
+//     é definido no contexto da página, não no isolated world)
+//
+// SOLUÇÃO: carregar jQuery UI antes de sei-functions-pro.js, e tratar
+// o carregamento de moment sem acessar propriedades encadeadas com typeof.
+// ─────────────────────────────────────────────────────────────────────────
+
+function _seiProLoadMoment() {
+    // Usa window.moment para verificar se está no contexto da página
+    if (typeof window.moment === 'undefined') {
+        $.getScript(getUrlExtension("js/lib/moment.min.js"), function() {
+            // Carrega plugins após moment estar disponível
+            $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
+            $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
+        });
+    } else {
+        // moment já carregado; verifica plugins
+        try {
+            if (typeof window.moment.duration.fn.format === 'undefined') {
+                $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
+            }
+        } catch(e) {
+            $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
+        }
+    }
+}
+
+function _seiProLoadScripts() {
+    if (!document.head) {
+        setTimeout(_seiProLoadScripts, 100);
+        return;
+    }
+
+    // PASSO 1: garante jQuery UI antes de sei-functions-pro.js
+    // (sem jQuery UI, .dialog()/.resizable()/.sortable() lançam TypeError)
+    var _loadWithUI = function() {
+        _seiProLoadMoment();
+        // tablesorter: necessário para as tabelas do Ações em Lote
+        if (typeof $.tablesorter === 'undefined') {
+            $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
+        }
+        if (typeof loadFunctionsPro === 'undefined') {
+            $.getScript(getUrlExtension("js/sei-functions-pro.js"), function() {
+                if (typeof loadSEIProArvore === 'undefined') {
+                    $.getScript(getUrlExtension("js/sei-pro-arvore.js"));
+                }
+            });
+        } else {
+            if (typeof loadSEIProArvore === 'undefined') {
+                $.getScript(getUrlExtension("js/sei-pro-arvore.js"));
+            }
+        }
+    };
+
+    // Sempre carrega jQuery UI incondicionalmente:
+    // typeof $.fn.dialog avalia o isolated world (que JÁ tem jQuery UI),
+    // não o contexto da página onde o código realmente executa.
+    $.getScript(getUrlExtension("js/lib/jquery-ui.min.js"), _loadWithUI);
+}
+_seiProLoadScripts();
 
