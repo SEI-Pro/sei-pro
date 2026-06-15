@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -31,6 +31,7 @@
         "js/lib/pdf.worker.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
+        "js/moment-global-shim.js",
         "js/lib/moment-duration-format.min.js",
         "js/lib/frappe-gantt.js",
         "js/lib/jkanban.min.js",
@@ -147,6 +148,7 @@
         "js/lib/pdf.worker.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
+        "js/moment-global-shim.js",
         "js/lib/moment-duration-format.min.js",
         "js/lib/jkanban.min.js",
         "js/lib/frappe-gantt.js",
@@ -279,6 +281,7 @@
         "js/lib/pdf.worker.min.js",
         "js/lib/moment.min.js",
         "js/lib/moment-weekday-calc.js",
+        "js/moment-global-shim.js",
         "js/lib/moment-duration-format.min.js",
         "js/lib/jquery-qrcode-0.18.0.min.js",
         "js/init.js"

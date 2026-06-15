@@ -26202,13 +26202,12 @@ function initPerfilLoginAtiv(TimeOut = 9000) {
 }
 
 // Verifica dominios permitidos
+// FIX CSP: A requisição a seipro.app/servers/ é feita via background service
+// worker (chrome.runtime.sendMessage) para contornar a CSP "default-src 'self'"
+// do SEI, que bloqueia conexões externas a partir de content scripts.
 function getServersPro() {
-    $.ajax({
-        url: 'https://seipro.app/servers/',
-        type: 'GET',
-        dataType: 'json',
-        success: function(result) {
-            var host = jmespath.search(result, "[?domain=='"+window.location.host+"'] | [0]");
+    var _handleServersResult = function(result) {
+        var host = jmespath.search(result, "[?domain=='"+window.location.host+"'] | [0]");
                 host = (host !== null && host.enabled) ? host : false;
             if (host) {
                 if (host.login_default == 'key') {
@@ -26244,8 +26243,21 @@ function getServersPro() {
                     });
                 } */
             }
-        }
-    });
+    };
+    // Tenta via background proxy (não sujeito à CSP da página)
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        try {
+            chrome.runtime.sendMessage(
+                { type: 'FETCH_EXTERNAL', url: 'https://seipro.app/servers/' },
+                function(response) {
+                    if (response && response.data) {
+                        _handleServersResult(response.data);
+                    }
+                    // Se falhar (CSP, rede, etc.), ignora silenciosamente
+                }
+            );
+        } catch(e) { /* extensão possivelmente desconectada */ }
+    }
 }
 /* 
 function getTokenGoogle(response = false) {

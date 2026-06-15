@@ -2612,19 +2612,88 @@ function changeSelectHipoteseLegal(this_) {
     }
 }
 function getSelectHipoteseLegal(elementHipotese = $('#dialogBoxProcesso_hipoteses'), nivelAcesso = 1) {
-    getHipoteseLegal(dadosProcessoPro.propProcesso.urlHipoteseLegal, nivelAcesso, function(html_result){
-        elementHipotese.show().html(html_result);
-        if (dadosProcessoPro.propProcesso.selHipoteseLegal) {
-            elementHipotese.val(dadosProcessoPro.propProcesso.selHipoteseLegal);
-        }
-        elementHipotese.chosen('destroy').chosen({
-            placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado',
-            normalize_search_text: function(text) {
-                return removeAcentos(text.toLowerCase());
+    // [FIX v9.0.2] Estratégia em 3 camadas para obter urlHipoteseLegal:
+    //  1. Sessão: pullDadosProcessoSession().propProcesso.urlHipoteseLegal (mais confiável)
+    //  2. Global: dadosProcessoPro.propProcesso.urlHipoteseLegal (fallback em memória)
+    //  3. AJAX: busca procedimento_alterar/consultar para extrair a URL dinamicamente
+    //     (necessário quando getDocumentosActions() é chamado em contexto onde
+    //     ajaxDadosProcessoPro() ainda não rodou, ex: procedimento_controlar)
+    var _dados = pullDadosProcessoSession();
+    var _prop  = (_dados && _dados.propProcesso) ? _dados.propProcesso
+                : (dadosProcessoPro && dadosProcessoPro.propProcesso) ? dadosProcessoPro.propProcesso
+                : null;
+
+    var _doLoad = function(urlHipoteseLegal, selHipoteseLegal) {
+        getHipoteseLegal(urlHipoteseLegal, nivelAcesso, function(html_result){
+            elementHipotese.show().html(html_result);
+            if (selHipoteseLegal) {
+                elementHipotese.val(selHipoteseLegal);
             }
-        }).trigger('chosen:updated');
-    });
+            elementHipotese.chosen('destroy').chosen({
+                placeholder_text_single: ' ',
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return removeAcentos(text.toLowerCase());
+                }
+            }).trigger('chosen:updated');
+        });
+    };
+
+    if (_prop && _prop.urlHipoteseLegal) {
+        // Camada 1/2: URL já disponível na sessão ou no global
+        _doLoad(_prop.urlHipoteseLegal, _prop.selHipoteseLegal || null);
+        return;
+    }
+
+    // Camada 3: URL não disponível → busca via AJAX no link de alterar/consultar processo
+    var _ifrArvore = $('#ifrArvore');
+    var _arrayLinks = (typeof _ifrArvore[0].contentWindow.arrayLinksArvore !== 'undefined')
+                    ? _ifrArvore[0].contentWindow.arrayLinksArvore
+                    : (typeof parent.linksArvore !== 'undefined' ? parent.linksArvore : []);
+
+    // Tenta obter link de procedimento_alterar ou procedimento_consultar
+    var _linkAlterarHref = null;
+    // [FIX v9.0.3] NUNCA usar jmespath.search com contains() sobre arrayLinksArvore:
+    // os objetos de iconsFlashMenu não têm campo .url → jmespath recebe null (tipo 7)
+    // em vez de string (tipo 2) → TypeError inevitável. Usar native .filter() + indexOf().
+    if (_arrayLinks && _arrayLinks.length > 0) {
+        var _filteredAlter = _arrayLinks.filter(function(v){ return v && v.url && v.url.indexOf('procedimento_alterar') !== -1; });
+        _linkAlterarHref = _filteredAlter.length > 0 ? _filteredAlter[0].url : null;
+        if (!_linkAlterarHref) {
+            var _filteredConsult = _arrayLinks.filter(function(v){ return v && v.url && v.url.indexOf('procedimento_consultar') !== -1; });
+            _linkAlterarHref = _filteredConsult.length > 0 ? _filteredConsult[0].url : null;
+        }
+    }
+    // Fallback adicional: arrayLinksArvoreAll (tem mais links que arrayLinksArvore)
+    if (!_linkAlterarHref) {
+        var _allLinks = (typeof _ifrArvore[0].contentWindow.arrayLinksArvoreAll !== 'undefined')
+                      ? _ifrArvore[0].contentWindow.arrayLinksArvoreAll : [];
+        var _filteredAll = _allLinks.filter(function(v){ return v && v.indexOf && v.indexOf('procedimento_alterar') !== -1; });
+        _linkAlterarHref = _filteredAll.length > 0 ? _filteredAll[0] : null;
+    }
+    // Fallback: busca direta no DOM da árvore
+    if (!_linkAlterarHref) {
+        _linkAlterarHref = _ifrArvore.contents().find('a[href*="procedimento_alterar"]').eq(0).attr('href')
+                        || _ifrArvore.contents().find('a[href*="procedimento_consultar"]').eq(0).attr('href');
+    }
+
+    if (_linkAlterarHref) {
+        $.ajax({ url: _linkAlterarHref }).done(function(html) {
+            var urlHipoteseLegal = getUrlHipoteseLegal(html);
+            if (urlHipoteseLegal) {
+                // Armazena para uso futuro evitando nova requisição
+                if (!dadosProcessoPro.propProcesso) dadosProcessoPro.propProcesso = {};
+                dadosProcessoPro.propProcesso.urlHipoteseLegal = urlHipoteseLegal;
+                _doLoad(urlHipoteseLegal, null);
+            } else {
+                console.warn('[SEI Pro] getSelectHipoteseLegal: urlHipoteseLegal não encontrada no HTML de procedimento_alterar. Processo pode não suportar hipótese legal.');
+            }
+        }).fail(function() {
+            console.warn('[SEI Pro] getSelectHipoteseLegal: falha ao buscar procedimento_alterar para obter urlHipoteseLegal.');
+        });
+    } else {
+        console.warn('[SEI Pro] getSelectHipoteseLegal: link procedimento_alterar/consultar não localizado na árvore.');
+    }
 }
 function updateDadosArvore(nameLink, idElement, value, idProcedimento, callback = false) {
     if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && idProcedimento !== null && idProcedimento != 0 && !checkProcessoSigiloso()) {
@@ -4339,9 +4408,9 @@ function initBlocoProcessoHistorico() {
 function getBlocoProcessoHistorico() {
     var listHistoryProc = pullDadosProcessoSession();
         listHistoryProc = listHistoryProc && typeof listHistoryProc.listAndamento !== 'undefined'  ? listHistoryProc.listAndamento : dadosProcessoPro.listAndamento;
-    var retiradoBlocoProcesso = (typeof listHistoryProc !== 'undefined' && typeof listHistoryProc.andamento !== 'undefined' && listHistoryProc.andamento.length) ? jmespath.search(listHistoryProc.andamento, "[?unidade=='"+siglaUnidadeAtual+"'] | [?contains(descricao, 'Processo retirado do bloco')]") : null;
+    var retiradoBlocoProcesso = (typeof listHistoryProc !== 'undefined' && typeof listHistoryProc.andamento !== 'undefined' && listHistoryProc.andamento.length) ? jmespath.search(listHistoryProc.andamento, "[?unidade=='"+siglaUnidadeAtual+"'] | [?descricao] | [?contains(descricao, 'Processo retirado do bloco')]") : null;
         retiradoBlocoProcesso = retiradoBlocoProcesso !== null && retiradoBlocoProcesso.length ? retiradoBlocoProcesso : false;
-    var blocoProcesso = (typeof listHistoryProc !== 'undefined' && typeof listHistoryProc.andamento !== 'undefined' && listHistoryProc.andamento.length) ? jmespath.search(listHistoryProc.andamento, "[?unidade=='"+siglaUnidadeAtual+"'] | [?contains(descricao, 'Processo inserido no bloco')]") : null;
+    var blocoProcesso = (typeof listHistoryProc !== 'undefined' && typeof listHistoryProc.andamento !== 'undefined' && listHistoryProc.andamento.length) ? jmespath.search(listHistoryProc.andamento, "[?unidade=='"+siglaUnidadeAtual+"'] | [?descricao] | [?contains(descricao, 'Processo inserido no bloco')]") : null;
         blocoProcesso = blocoProcesso === null ? false : blocoProcesso;
         blocoProcesso = !retiradoBlocoProcesso
                     ? blocoProcesso 
@@ -4379,16 +4448,16 @@ function getGanttHistoryProc(listHistoryProc = false) {
         setSessionProcessosPro(dadosProcessoPro);
     }
     var proc = listHistoryProc ? listHistoryProc.andamento : dadosProcessoPro.listAndamento.andamento;
-    var recebido = jmespath.search(proc, "[?contains(descricao, 'Processo recebido na unidade')]");
+    var recebido = jmespath.search(proc, "[?descricao] | [?contains(descricao, 'Processo recebido na unidade')]");
 
-    var init_recebido = jmespath.search(proc, "[?contains(descricao, 'Processo p\u00FAblico gerado')||contains(descricao, 'Processo restrito gerado')] | [0]");
+    var init_recebido = jmespath.search(proc, "[?descricao] | [?contains(descricao, 'Processo p\u00FAblico gerado')||contains(descricao, 'Processo restrito gerado')] | [0]");
         init_recebido = (typeof init_recebido !== 'undefined' && init_recebido !== null) ? init_recebido : false;
 
     var init_remetido = jmespath.search(proc, "[?descricao=='Processo remetido pela unidade "+init_recebido.unidade+"'] | [?datahora >= `"+init_recebido.datahora+"`]  | [-1]");
         init_remetido = (typeof init_remetido !== 'undefined' && init_remetido !== null) ? init_remetido : false;
 
     var init_documentos_gerados = (init_recebido && init_remetido) 
-                                ? jmespath.search(proc, "[?contains(descricao, 'Gerado documento')] | [?unidade=='"+init_recebido.unidade+"'] | [?datahora >= `"+init_recebido.datahora+"`] | [?datahora <= `"+init_remetido.datahora+"`]") 
+                                ? jmespath.search(proc, "[?descricao] | [?contains(descricao, 'Gerado documento')] | [?unidade=='"+init_recebido.unidade+"'] | [?datahora >= `"+init_recebido.datahora+"`] | [?datahora <= `"+init_remetido.datahora+"`]") 
                                 : [];
     var init_customClass = (init_remetido && init_remetido.descricao.indexOf('Processo aberto na unidade') !== -1 ) ? 'bar-complete' : 'bar-ongoing'; 
     var taskProcesso = [];
@@ -4427,7 +4496,7 @@ function getGanttHistoryProc(listHistoryProc = false) {
             var remetido_i = jmespath.search(proc, "[?descricao=='Processo remetido pela unidade "+recebido_i.unidade+"'] | [?datahora >= `"+recebido_i.datahora+"`] | [-1]");
                 remetido_i = (remetido_i === null) ? jmespath.search(proc, "[?descricao=='Conclus\u00E3o do processo na unidade'] | [?unidade=='"+recebido_i.unidade+"'] | [?datahora > `"+recebido_i.datahora+"`] | [-1]") : remetido_i;
                 remetido_i = (remetido_i === null) ? {datahora: moment().format('YYYY-MM-DD HH:mm:ss'), unidade: recebido_i.unidade, descricao: 'Processo aberto na unidade '+recebido_i.unidade, descricao_alt: ''} : remetido_i;
-            var documentos_gerados = jmespath.search(proc, "[?contains(descricao, 'Gerado documento')] | [?unidade=='"+recebido_i.unidade+"'] | [?datahora >= `"+recebido_i.datahora+"`] | [?datahora <= `"+remetido_i.datahora+"`]")
+            var documentos_gerados = jmespath.search(proc, "[?descricao] | [?contains(descricao, 'Gerado documento')] | [?unidade=='"+recebido_i.unidade+"'] | [?datahora >= `"+recebido_i.datahora+"`] | [?datahora <= `"+remetido_i.datahora+"`]")
             var customClass = ( remetido_i.descricao.indexOf('Processo aberto na unidade') !== -1 ) ? 'bar-complete' : 'bar-ongoing'; 
 
 
@@ -7213,17 +7282,65 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
     }
 }
 function getListDocumentosArvore(ifrArvore) {
+    // ── FIX SEI 4.1.5 ────────────────────────────────────────────────────────
+    // PROBLEMA: em SEI >= 4.1.0 o iframe de visualização foi renomeado de
+    // "ifrVisualizacao" para "ifrConteudoVisualizacao", mas em SEI 4.1.5 os
+    // links da árvore continuam usando o atributo target com o NOME ANTIGO (ou
+    // nenhum target). O seletor original falha silenciosamente e retorna 0
+    // elementos → lista de documentos fica vazia.
+    //
+    // CORREÇÃO: cadeia de seletores multi-versão com fallback para id^="anchor".
+    // ─────────────────────────────────────────────────────────────────────────
     var processo = [];
     var dadosProcessoPro = pullDadosProcessoSession();
-    ifrArvore.find(`#divArvore a[target="${ifrVisualizacao_}"]`).each(function(index){
+
+    // Tenta o seletor original (SEI 3.x / 4.0.x com target atualizado)
+    var links = ifrArvore.find(`#divArvore a[target="${ifrVisualizacao_}"]`);
+
+    // Fallback 1: SEI 4.1.5 mantém target="ifrVisualizacao" (nome antigo)
+    if (!links.length) {
+        links = ifrArvore.find('#divArvore a[target="ifrVisualizacao"]');
+    }
+    // Fallback 2: builds que atualizaram o target para o nome novo
+    if (!links.length) {
+        links = ifrArvore.find('#divArvore a[target="ifrConteudoVisualizacao"]');
+    }
+    // Fallback 3 (SEI 4.1.5 sem atributo target): busca por id="anchor[numérico]"
+    // excluindo anchorA (assinatura), anchorImg (ícone), ancjoin (pasta), anchorAP (tudo)
+    if (!links.length) {
+        links = ifrArvore.find('#divArvore a[id]').filter(function() {
+            return /^anchor\d+$/.test($(this).attr('id') || '');
+        });
+    }
+
+    links.each(function(index){
         var txt = $(this).text().trim();
         var text = txt.split(' ');
-        var id_protocolo = $(this).attr('id').replace('anchor','');
+
+        // ── FIX: extração robusta do id_protocolo ────────────────────────────
+        // Original: .replace('anchor','') — falha se o id não começa por "anchor"
+        // ou se o formato mudou (ex.: "anchor_12345"). Agora valida que é numérico.
+        var rawId = ($(this).attr('id') || '').replace(/^anchor/, '');
+        if (!/^\d+$/.test(rawId)) return; // pula âncoras não-documentos
+        var id_protocolo = rawId;
+        // ─────────────────────────────────────────────────────────────────────
+
         var nr_sei = (txt.indexOf(' ') !== -1) ? text[text.length-1] : '';
         var documento = txt.replace(nr_sei, '').trim();
             nr_sei = (nr_sei.indexOf('(') !== -1) ? nr_sei.replace(')','').replace('(','') : nr_sei;
         var assinatura = (ifrArvore.find('#anchorA'+id_protocolo).length) ? (ifrArvore.find('#anchorA'+id_protocolo+' img').attr('title') || '').replace('Assinado por:','').trim() : '';
-        var sigilo = (ifrArvore.find('#iconNA'+id_protocolo).length) ? (ifrArvore.find('#iconNA'+id_protocolo+'').attr('title') || '').trim() : '';
+        // [FIX v9.0.2] SEI 4.1.5: ícone de nível de acesso do documento pode aparecer
+        // como #iconNA{id} (SVG) ou como img[id*="iconNA"] dentro de a[id*="anchorNA"].
+        // Fallback cobre ambas as estruturas para garantir leitura do sigilo.
+        var _iconNA = ifrArvore.find('#iconNA'+id_protocolo);
+        var sigilo = '';
+        if (_iconNA.length) {
+            sigilo = (_iconNA.attr('title') || '').trim();
+        } else {
+            // SEI 4.1.5: ícone pode estar em a[id*="anchorNA"] > img
+            var _anchorNA = ifrArvore.find('a[id*="anchorNA'+id_protocolo+'"] img, img[id*="iconNA'+id_protocolo+'"]');
+            sigilo = _anchorNA.length ? (_anchorNA.attr('title') || '').trim() : '';
+        }
         var data_assinatura =   (typeof dadosProcessoPro.listDocumentosAssinados !== 'undefined' && !$.isEmptyObject(dadosProcessoPro.listDocumentosAssinados) && jmespath.search(dadosProcessoPro.listDocumentosAssinados, "[?id_documento=='"+id_protocolo+"'].data_assinatura | length(@)") > 0)
                                 ? jmespath.search(dadosProcessoPro.listDocumentosAssinados, "[?id_documento=='"+id_protocolo+"'].data_assinatura | [0]")
                                 : '';
@@ -7408,14 +7525,22 @@ function mergeAllAndamentosProcesso(callback = false) {
             var linkHistorico_ = isSEI_5 ? linkHistorico : linkHistorico[0];
             var listProc = {processo: processo, id_procedimento: id_procedimento};
             getDadosHistoricoUrlPro(linkHistorico_, listProc, true, function(andamento){
-                var dadosProcessoPro = (typeof pullDadosProcessoSession().listAndamento !== 'undefined') ? pullDadosProcessoSession() : dadosProcessoPro;
-                    dadosProcessoPro = (typeof dadosProcessoPro !== 'undefined') ? dadosProcessoPro : {};
+                // [FIX v9.0.2] pullDadosProcessoSession() pode retornar false quando
+                // propProcesso ainda não foi carregado (ex: contexto procedimento_controlar).
+                // Guard explícito evita TypeError e garante que dadosProcessoPro seja sempre objeto.
+                var _sessionData = pullDadosProcessoSession();
+                var dadosProcessoPro = (_sessionData && typeof _sessionData.listAndamento !== 'undefined') ? _sessionData
+                                     : (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro) ? dadosProcessoPro
+                                     : {};
+                    dadosProcessoPro = (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro) ? dadosProcessoPro : {};
                     dadosProcessoPro.listAndamento = andamento;
                     
                     $.each(dadosProcessoPro.listDocumentos, function(index, value){
-                        var data_documento = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].datahora");
+                        // [FIX v9.0.3] Pré-filtro [?descricao] exclui registros com descricao=null
+                        // antes de contains() — evita TypeError: contains() expected type 2,3 got 7.
+                        var data_documento = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?descricao] | [?contains(descricao, 'Gerado documento')] | [0].datahora");
                             data_documento = (data_documento !== null) ? data_documento : false;
-                        var assinatura = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Assinado')||contains(descricao, 'assinatura')]");
+                        var assinatura = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?descricao] | [?contains(descricao, 'Assinado')||contains(descricao, 'assinatura')]");
                         var data_assinatura = (assinatura !== null) ? assinatura : false;
                             data_assinatura = (data_assinatura && data_assinatura.length > 0 && typeof data_assinatura[0].descricao !== 'undefined' && data_assinatura[0].descricao.indexOf('Assinado Documento') !== -1) 
                                 ? data_assinatura[0].datahora 
@@ -7424,7 +7549,7 @@ function mergeAllAndamentosProcesso(callback = false) {
                                 ? false 
                                 : data_assinatura;
                         var assinado = (assinatura && assinatura !== null && assinatura.length > 0 && typeof assinatura[0].descricao !== 'undefined' && assinatura[0].descricao.indexOf('Assinado Documento') !== -1) ? true : false;
-                        var unidade = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].unidade");
+                        var unidade = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?descricao] | [?contains(descricao, 'Gerado documento')] | [0].unidade");
                             unidade = (unidade !== null) ? unidade : false;
                             
                         dadosProcessoPro.listDocumentos[index]['unidade'] = unidade;
@@ -7438,6 +7563,13 @@ function mergeAllAndamentosProcesso(callback = false) {
                     setSessionProcessosPro(dadosProcessoPro);
                     if (typeof callback === 'function') callback();
             });
+        } else {
+            // [FIX v9.0.2] Quando linkHistorico está vazio (SEI 4.1.5 sem link de histórico
+            // acessível neste contexto), o callback nunca era invocado → colunas "unidade"
+            // e "sigilo" ficavam vazias e o alerta "Aguarde..." nunca fechava.
+            // Chama o callback imediatamente para que a tabela seja atualizada com os
+            // dados disponíveis em listDocumentos (sigilo lido do DOM da árvore).
+            if (typeof callback === 'function') callback();
         }
     // }
 }
@@ -7631,6 +7763,102 @@ function getBatchActionsPro(this_) {
     var arrayIconsView = _ifrArvore[0].contentWindow.arrayIconsView;
     var doc = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('acao=arvore_visualizar') !== -1 && v.indexOf('id_documento='+id_documento) !== -1) });
 
+    // ── Early-exit para documento_visualizar (Baixar) ──────────────────────────
+    // [FIX v9.0.8] Download de documentos (nativos e externos) sem depender do
+    // fluxo AJAX via arvore_visualizar. Estratégia em 4 buscas diretas + fallback
+    // AJAX que analisa scripts E HTML da resposta do arvore_visualizar.
+    // Resolve: docs externos sem fake suffix, id_protocolo != anchor id, e downloads em lote.
+    if (_this.data('action') === 'documento_visualizar') {
+        var tr_dl = _table.find('tr[data-index="'+id_documento+'"]');
+            tr_dl.find('td.documento').prepend('<i class="fas fa-sync fa-spin azulColor batchLoading"></i> ');
+
+        var _nomeDoc = ifrArvore.find('#anchor'+id_documento).text().trim() || ('documento_'+id_documento);
+
+        // Helper: executa o download e avança o loop de lote
+        var _execDlBatch = function(urlDl) {
+            tr_dl.find('i.batchLoading').remove();
+            if (urlDl) {
+                var _urlClean = urlDl.split('#')[0]; // remove sufixo fake '#&_fake_acao=...'
+                var _isAnexo  = _urlClean.indexOf('documento_download_anexo') !== -1;
+                var _a = document.createElement('a');
+                    _a.href = _urlClean;
+                if (_isAnexo) {
+                    // Externo: target="_blank" isola a requisição da sessão atual.
+                    // Se o servidor redirecionar para login (params inválidos),
+                    // isso ocorre na nova aba e NÃO destrói a sessão do usuário.
+                    _a.target = '_blank';
+                    _a.rel    = 'noopener noreferrer';
+                } else {
+                    // Nativo SEI: download direto com nome do arquivo
+                    _a.download = _nomeDoc + '.html';
+                }
+                document.body.appendChild(_a);
+                _a.click();
+                document.body.removeChild(_a);
+                tr_dl.removeClass('infraTrMarcada');
+                tr_dl.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
+            } else {
+                tr_dl.find('td.documento').prepend('<i class="fas fa-times-circle vermelhoColor batchLoading"></i> ');
+            }
+            tr_dl.find('input').prop('checked', false);
+            loopActionsPro.index = loopActionsPro.index + 1;
+            if (typeof loopActionsPro.list[loopActionsPro.index] !== 'undefined') {
+                getBatchActionsPro(this_);
+            } else {
+                window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
+                $(_this).find('i').attr('class', $(_this).data('lastclass'));
+            }
+        };
+
+        // Estratégias diretas em arrayLinksArvoreAll (4 cascatas)
+        var _dlUrl = null;
+        var _dlChecks = [
+            // 1. Nativo: acao=documento_visualizar com id_documento
+            function(v){ return v.indexOf('acao=documento_visualizar') !== -1 && v.indexOf('id_documento='+id_documento) !== -1; },
+            // 2. Externo: documento_download_anexo com id_documento (inclui fake suffix _id_documento=X)
+            function(v){ return v.indexOf('documento_download_anexo') !== -1 && v.indexOf('id_documento='+id_documento) !== -1; },
+            // 3. Externo: documento_download_anexo com id_protocolo (anchor ID = id_protocolo no SEI)
+            function(v){ return v.indexOf('documento_download_anexo') !== -1 && v.indexOf('id_protocolo='+id_documento) !== -1; },
+            // 4. Qualquer link com documento_visualizar + id_documento (cobre fake suffix via _id_documento=)
+            function(v){ return v.indexOf('documento_visualizar') !== -1 && v.indexOf('id_documento='+id_documento) !== -1; }
+        ];
+        for (var _dci = 0; _dci < _dlChecks.length && !_dlUrl; _dci++) {
+            var _dlResult = arrayLinksArvoreAll.filter(_dlChecks[_dci]);
+            if (_dlResult.length) _dlUrl = _dlResult[0];
+        }
+
+        if (_dlUrl) {
+            _execDlBatch(_dlUrl);
+        } else {
+            // Fallback final AJAX: analisa HTML + scripts do arvore_visualizar
+            var _arvUrl = arrayLinksArvoreAll.filter(function(v){
+                return v.indexOf('acao=arvore_visualizar') !== -1 &&
+                       v.indexOf('id_documento='+id_documento) !== -1;
+            });
+            if (_arvUrl.length) {
+                $.ajax({ url: _arvUrl[0] }).done(function(html) {
+                    var $h = $(html);
+                    var _sLinks = getLinksInText($h.filter('script').not('[src*="js"]').text());
+                    var _dl = _sLinks.filter(function(v){
+                        return v.indexOf('documento_download_anexo') !== -1 ||
+                               v.indexOf('acao=documento_visualizar') !== -1;
+                    });
+                    if (!_dl.length) {
+                        $h.find('a[href*="documento_download_anexo"], a[href*="documento_visualizar"]').each(function(){
+                            var _h = $(this).attr('href');
+                            if (_h) { _dl = [_h]; return false; }
+                        });
+                    }
+                    _execDlBatch(_dl.length ? _dl[0] : null);
+                }).fail(function(){ _execDlBatch(null); });
+            } else {
+                _execDlBatch(null);
+            }
+        }
+        return; // Não passa para o fluxo AJAX padrão abaixo
+    }
+    // ────────────────────────────────────────────────────────────────────────────
+
     if (doc.length > 0) {
             var tr = _table.find('tr[data-index="'+id_documento+'"]');
                 td_doc = tr.find('td.documento');
@@ -7643,6 +7871,7 @@ function getBatchActionsPro(this_) {
                     var btnData = _this.data();
                     var linkAction = arrayLinksArvoreDoc.filter(function(v){ return (v.indexOf('acao='+btnData.action) !== -1) });
                         linkAction = (linkAction.length == 0) ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf(btnData.action) !== -1) }) : linkAction;
+
                     var listIconsView = (arrayIconsView.length > 0) ? jmespath.search(arrayIconsView, "[?id_documento==`"+id_documento+"`] | [0].icones") : null;
                         listIconsView = (listIconsView === null) ? [] : listIconsView;
                     var checkIconView = listIconsView.filter(function(v){ return v.indexOf(btnData.icon) !== -1 });
@@ -7659,7 +7888,10 @@ function getBatchActionsPro(this_) {
                     });
                     */
 
-                    if (btnData.action != 'documento_visualizar' && btnData.action != 'documento_alterar' && btnData.action != 'documento_assinar' && btnData.action != 'documento_duplicar' && linkAction.length > 0 && checkIconView.length > 0) {
+                    // [FIX v9.0.11-2a] Cancelar Assinatura (editor_montar) dispensa
+                    // checkIconView: SEI 4.1.5 omite o ícone em docs já assinados.
+                    var _skipIconCheck = (btnData.action === 'editor_montar');
+                    if (btnData.action != 'documento_visualizar' && btnData.action != 'documento_alterar' && btnData.action != 'documento_assinar' && btnData.action != 'documento_duplicar' && linkAction.length > 0 && (checkIconView.length > 0 || _skipIconCheck)) {
                         $.ajax({ url: linkAction }).done(function (htmlArvore) {
                             var dadosProcessoPro = pullDadosProcessoSession();
                             var id_documento = loopActionsPro.list[loopActionsPro.index];
@@ -7810,40 +8042,10 @@ function getBatchActionsPro(this_) {
                                 }
                             });
                         });
-                    } else if (btnData.action == 'documento_visualizar' && linkAction.length > 0 && checkIconView.length > 0) {
-
-                        var id_documento = loopActionsPro.list[loopActionsPro.index];
-                        if (typeof id_documento !== 'undefined') {
-                            console.log('*****', loopActionsPro);
-                            var urlLink = linkAction[0];
-                            var link = document.createElement('a');
-                                link.href = urlLink;
-                                
-                                if (urlLink.indexOf('documento_download_anexo') === -1) {
-                                    link.download =  ifrArvore.find('#anchor'+id_documento).text().trim()+'.html';
-                                } else {
-                                    link.download =  ifrArvore.find('#anchor'+id_documento).text().trim();
-                                }
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-
-
-                            tr.removeClass('infraTrMarcada').find('i.batchLoading').remove();
-                            tr.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
-                            tr.find('input').prop('checked',false);
-
-                            loopActionsPro.index = loopActionsPro.index+1;
-                            if (typeof loopActionsPro.list[loopActionsPro.index] !== 'undefined') {
-                                getBatchActionsPro(this_);
-                            } else {
-                                window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
-                                $(this_).find('i').attr('class', $(this_).data('lastclass'));
-                            }
-
-                        } else if (typeof id_documento === 'undefined' || typeof loopActionsPro.list[loopActionsPro.index+1] === 'undefined') {
-                            resetDocsActions();
-                        }
+                    } else if (btnData.action == 'documento_visualizar') {
+                        // [v9.0.7] Ação tratada pelo early-exit antes do bloco AJAX.
+                        // Este branch não é mais atingido — mantido apenas como fallback de segurança.
+                        resetDocsActions();
 
                     } else if (btnData.action == 'documento_alterar' && linkAction.length > 0 && checkIconView.length > 0) {
                         var idElement = loopActionsPro.sigilo.element;
@@ -7852,39 +8054,62 @@ function getBatchActionsPro(this_) {
 
                         if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
                         $('#frmCheckerProcessoPro').attr('src', linkAction[0]).unbind().on('load', function(){
-                            var iframe = $(this).contents();
+                            var _self  = $(this);
+                            var iframe = _self.contents();
                             var element = iframe.find('#'+idElement);
-                                element.prop('checked',true).trigger('change');
+                                element.prop('checked', true).trigger('change');
+
+                            // [FIX v9.0.1] Race condition: trigger('change') em optRestrito/optSigiloso
+                            // dispara carregamento AJAX do #selHipoteseLegal no SEI (infra_ajax_select).
+                            // O submit deve ocorrer somente após o select estar disponível no DOM do
+                            // iframe — caso contrário a hipótese legal não é incluída no POST e o
+                            // sigilo é gravado sem hipótese. waitLoadPro aguarda até 6 s (100 ms steps).
+                            // Para optPublico não há AJAX dependente, submetemos diretamente.
+                            var _doSubmit = function() {
+                                if (idElement == 'optRestrito' || idElement == 'optSigiloso') {
+                                    // Substitui o <select> por <input> estático para garantir
+                                    // que o valor seja enviado corretamente no submit do formulário.
+                                    iframe.find('#selHipoteseLegal')
+                                          .after('<input id="selHipoteseLegal" value="'+hipotese+'" name="selHipoteseLegal"></input>')
+                                          .remove();
+                                }
+                                _self.unbind();
+                                if (iframe.find('button[type="submit"]').length > 0) {
+                                    iframe.find('button[type="submit"]').trigger('click');
+                                } else {
+                                    iframe.find('button[name="btnSalvar"]').trigger('click');
+                                }
+                                tr.removeClass('infraTrMarcada').find('i.batchLoading').remove();
+                                tr.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
+                                tr.find('td.sigilo').html(text_hipotese);
+                                tr.find('input').prop('checked', false);
+
+                                var dadosProcessoPro = pullDadosProcessoSession();
+                                var objIndexDoc = (typeof dadosProcessoPro.listDocumentos === 'undefined' || dadosProcessoPro.listDocumentos.length == 0) ? -1 : dadosProcessoPro.listDocumentos.findIndex((obj => obj.id_protocolo == id_documento));
+                                if (objIndexDoc !== -1) {
+                                    dadosProcessoPro.listDocumentos[objIndexDoc].sigilo = text_hipotese;
+                                }
+                                // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
+                                setSessionProcessosPro(dadosProcessoPro);
+
+                                loopActionsPro.index = loopActionsPro.index + 1;
+                                if (typeof loopActionsPro.list[loopActionsPro.index] !== 'undefined') {
+                                    getBatchActionsPro(this_);
+                                } else {
+                                    window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
+                                    $(this_).find('i').attr('class', $(this_).data('lastclass'));
+                                    initAppendIconsDocumentosActions();
+                                }
+                            }; // fim _doSubmit
+
                             if (idElement == 'optRestrito' || idElement == 'optSigiloso') {
-                                iframe.find('#selHipoteseLegal').after('<input id="selHipoteseLegal" value="'+hipotese+'" name="selHipoteseLegal"></input>').remove();
-                            }
-                            
-                            $(this).unbind();
-                            if (iframe.find('button[type="submit"]').length > 0) {
-                                iframe.find('button[type="submit"]').trigger('click');
+                                // Aguarda #selHipoteseLegal ser carregado via AJAX pelo SEI (até 6 s)
+                                waitLoadPro(iframe, 'form', '#selHipoteseLegal', function(){
+                                    _doSubmit();
+                                }, 6000);
                             } else {
-                                iframe.find('button[name="btnSalvar"]').trigger('click');
-                            }
-                            tr.removeClass('infraTrMarcada').find('i.batchLoading').remove();
-                            tr.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
-                            tr.find('td.sigilo').html(text_hipotese);
-                            tr.find('input').prop('checked',false);
-
-                            var dadosProcessoPro = pullDadosProcessoSession();
-                            var objIndexDoc = (typeof dadosProcessoPro.listDocumentos === 'undefined' || dadosProcessoPro.listDocumentos.length == 0) ? -1 : dadosProcessoPro.listDocumentos.findIndex((obj => obj.id_protocolo == id_documento));
-                            if (objIndexDoc !== -1) {
-                                dadosProcessoPro.listDocumentos[objIndexDoc].sigilo = text_hipotese;
-                            }
-                            // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
-                            setSessionProcessosPro(dadosProcessoPro);
-
-                            loopActionsPro.index = loopActionsPro.index+1;
-                            if (typeof loopActionsPro.list[loopActionsPro.index] !== 'undefined') {
-                                getBatchActionsPro(this_);
-                            } else {
-                                window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
-                                $(this_).find('i').attr('class', $(this_).data('lastclass'));
-                                initAppendIconsDocumentosActions();
+                                // optPublico: sem dependência de AJAX, submete imediatamente
+                                _doSubmit();
                             }
                         });
                     } else {
@@ -7905,9 +8130,50 @@ function getBatchActionsPro(this_) {
     }
 }
 function getDocumentosActions() {
-    getListDocumentosArvore($('#ifrArvore').contents());
-    var dadosProcesso = pullDadosProcessoSession();
-    var listDocumentos = (dadosProcesso) ? dadosProcesso.listDocumentos : dadosProcessoPro.listDocumentos;
+    // ─────────────────────────────────────────────────────────────────────────
+    // [REFACTOR v9.0.4] Inversão de fluxo para exibir TODOS os documentos.
+    //
+    // PROBLEMA ORIGINAL:
+    //   A tabela era construída na linha 2 da função, a partir do estado
+    //   ATUAL da árvore — que exibia apenas o último grupamento/pasta visível.
+    //   O "Aguarde..." aparecia depois, e mesmo que o iframe recarregasse com
+    //   todos os documentos, a tabela já estava renderizada com dados parciais.
+    //
+    // SOLUÇÃO — 3 fases sequenciais:
+    //   FASE 1 (imediata): exibir alerta "Aguarde..." antes de qualquer coisa.
+    //   FASE 2 (assíncrona): carregar a árvore completa (todos os grupamentos).
+    //     → Se urlAllPasta existe: recarregar o iframe com todos os docs.
+    //     → Senão: getAllLinksFolder() + pequeno delay para o DOM estabilizar.
+    //   FASE 3 (callback): DEPOIS que a árvore terminou de carregar:
+    //     → Chamar getListDocumentosArvore() → listDocumentos completa.
+    //     → Construir e exibir a tabela completa.
+    //     → Fechar "Aguarde...".
+    //     → Iniciar mergeAllAndamentosProcesso() para preencher unidade/datas.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── FASE 1: alerta imediato ───────────────────────────────────────────────
+    if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') {
+        $.getScript(URL_SPRO + "js/lib/chosen.jquery.min.js");
+    }
+    alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Pesquisando links de documentos');
+
+    // ── FASE 2: detectar estratégia de carregamento da árvore ────────────────
+    var _arvoreContents = $('#ifrArvore').contents();
+    var urlAllPasta = _arvoreContents.find('#topmenu a[id*="anchorAP"]').attr('href')
+                   || _arvoreContents.find('a[id*="anchorAP"]').attr('href')
+                   || _arvoreContents.find('a[href*="exibir_arvore_todos"]').attr('href')
+                   || _arvoreContents.find('a[onclick*="exibirTodosDocumentos"]').attr('href');
+
+    // ── FASE 3: callback executado APÓS a árvore estar completamente carregada ─
+    var _renderDocumentosActions = function() {
+
+        // 3a. Ler todos os documentos do DOM da árvore agora completo
+        getListDocumentosArvore($('#ifrArvore').contents());
+
+        var dadosProcesso = pullDadosProcessoSession();
+        var listDocumentos = (dadosProcesso) ? dadosProcesso.listDocumentos : dadosProcessoPro.listDocumentos;
+
+        // 3b. Construir HTML da tabela com dados completos
         var htmlBox =   '<div id="iconsActions">'+
                         '   <a class="newLink documento_ciencia" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ci\u00EAncia\')" data-action="documento_ciencia" data-icon="'+(isNewSEI ? 'ciencia' : 'sei_ciencia')+'">'+
                         '       <span class="fa-layers fa-fw">'+
@@ -7915,9 +8181,9 @@ function getDocumentosActions() {
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
-                        '   <a class="newLink documento_visualizar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento\')" data-action="documento_visualizar" data-icon="'+(isNewSEI ? 'consultar_alterar_protocolo' : 'sei_consultar_alterar_protocolo')+'">'+
+                        '   <a class="newLink documento_visualizar" onclick="return false;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Fun\u00E7\u00E3o Desativada\')" data-action="documento_visualizar" data-icon="'+(isNewSEI ? 'consultar_alterar_protocolo' : 'sei_consultar_alterar_protocolo')+'" style="cursor:not-allowed;opacity:0.45;">'+
                         '       <span class="fa-layers fa-fw">'+
-                        '           <i class="fas fa-download azulColor"></i>'+
+                        '           <i class="fas fa-download cinzaColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
@@ -7951,31 +8217,36 @@ function getDocumentosActions() {
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
+                        '   <a class="newLink" style="margin-left:8px;" onclick="resetDialogBoxPro(\'dialogBoxPro\');getDocumentosActions();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Atualizar lista\')" title="Atualizar lista">'+
+                        '       <span class="fa-layers fa-fw">'+
+                        '           <i class="fas fa-sync-alt cinzaColor"></i>'+
+                        '       </span>'+
+                        '   </a>'+
                         '</div>'+
                         '<div id="boxActions" class="tabelaPanelScroll" style="margin-top: 10px;height: 550px;">'+
-                        '   <table id="actionsTablePro" style="font-size: 8pt !important;width: 100%;" class="seiProForm tabelaControle tableDialog tableInfo tableZebra">'+
+                        '   <table id="actionsTablePro" style="font-size: 8pt !important;width: 100%;table-layout:auto;word-break:break-word;" class="seiProForm tabelaControle tableDialog tableInfo tableZebra">'+
                         '        <thead>'+
                         '            <tr class="tableHeader" onmouseout="infraTooltipOcultar();">'+
-                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
-                        '                <th class="tituloControle" style="text-align: center;">N\u00BA SEI</th>'+
-                        '                <th class="tituloControle" style="text-align: center;">Documento</th>'+
-                        '                <th class="tituloControle" style="text-align: center;">Assinatura</th>'+
-                        '                <th class="tituloControle" style="text-align: center;">Data da Assinatura</th>'+
-                        '                <th class="tituloControle" style="text-align: center;">Data do Documento</th>'+
-                        '                <th class="tituloControle" style="text-align: center;">Unidade</th>'+
-                        '                <th class="tituloControle" style="text-align: center;">Sigilo</th>'+
-                        '                <th class="tituloControle" style="text-align: center; width: 140px;">A\u00E7\u00F5es</th>'+
+                        '                <th class="tituloControle" style="text-align:center;width:40px;"><label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
+                        '                <th class="tituloControle" style="text-align:center;white-space:nowrap;width:1%;">N\u00BA SEI</th>'+
+                        '                <th class="tituloControle" style="text-align:center;max-width:180px;">Documento</th>'+
+                        '                <th class="tituloControle" style="text-align:center;white-space:nowrap;width:1%;">Assinatura</th>'+
+                        '                <th class="tituloControle" style="text-align:center;white-space:nowrap;width:1%;">Data Assinatura</th>'+
+                        '                <th class="tituloControle" style="text-align:center;white-space:nowrap;width:1%;">Data Documento</th>'+
+                        '                <th class="tituloControle" style="text-align:center;white-space:nowrap;width:1%;">Unidade</th>'+
+                        '                <th class="tituloControle" style="text-align:center;white-space:nowrap;width:1%;">Sigilo</th>'+
+                        '                <th class="tituloControle" style="text-align:center;white-space:nowrap;width:auto;white-space:nowrap;">A\u00E7\u00F5es</th>'+
                         '            </tr>'+
                         '        </thead>'+
                         '        <tbody>';
-        if (listDocumentos){
+        if (listDocumentos) {
             $.each(listDocumentos, function(i, v){
                 htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo" data-index="'+v.id_protocolo+'">'+
                             '       <td style="text-align: center;">'+
                             '           <input type="checkbox" onclick="followSelecionarItens(this)" name="actionsPro" value="'+v.id_protocolo+'">'+
                             '       </td>'+
-                            '       <td>'+v.nr_sei+'</td>'+
-                            '       <td class="documento"><a class="newLink" onclick="getDocOnArvore('+v.id_protocolo+')" style="display: initial;font-size: 10pt;text-decoration: underline;"><i class="far fa-file azulColor" style="margin-right: 5px;"></i>'+v.documento+'</a></td>'+
+                            '       <td style="white-space:nowrap;">'+v.nr_sei+'</td>'+
+                            '       <td class="documento" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a class="newLink" onclick="getDocOnArvore('+v.id_protocolo+')" title="'+v.documento+'" style="display:initial;font-size:10pt;text-decoration:underline;"><i class="far fa-file azulColor" style="margin-right:5px;"></i>'+v.documento+'</a></td>'+
                             '       <td class="assinatura">'+v.assinatura+'</td>'+
                             '       <td class="data_assinatura"></td>'+
                             '       <td class="data_documento">'+(v.data_documento ? moment(v.data_documento, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : '')+'</td>'+
@@ -7983,143 +8254,140 @@ function getDocumentosActions() {
                             '       <td class="sigilo">'+v.sigilo+'</td>'+
                             '       <td class="icons"></td>'+
                             '   </tr>';
-
             });
         }
-        htmlBox +=          '   </table>'+
-                            '</div>';
+        htmlBox +=  '   </table>'+
+                    '</div>';
 
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
-        .dialog({
-            title: 'A\u00E7\u00F5es em lote',
-            width: $('body').width()-300,
-            height: 650,
-            resize: function(event, ui) {
-                setTabelaPanelScrollHeight('#boxActions', 80);
-            },
-            open: function() { 
-                if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
-                alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Pesquisando links de documentos');
-                var urlAllPasta = $('#ifrArvore').contents().find('#topmenu a[id*="anchorAP"]').attr('href');
-                if (typeof urlAllPasta !== 'undefined' && urlAllPasta !== '') {
-                    $('#ifrArvore').attr('src', urlAllPasta).unbind().on('load', function(){
-                        $(this).unbind();
-                        getListDocumentosArvore($('#ifrArvore').contents());
-                        resetDialogBoxPro('alertBoxPro');
-                    })
-                } else {
-                    getAllLinksFolder();
-                }
-                setTabelaPanelScrollHeight('#boxActions', 80);
-                initAppendIconsDocumentosActions();
-                mergeAllAndamentosProcesso(function(){
-                    var actionsTable = $('#actionsTablePro');
-                    if (typeof dadosProcessoPro.listDocumentos !== 'undefined' && dadosProcessoPro.listDocumentos.length > 0) {
-                        actionsTable.find('tbody tr').each(function(){
-                            var id_protocolo = $(this).data('index');
-                            var values = jmespath.search(dadosProcessoPro.listDocumentos, "[?id_protocolo=='"+id_protocolo+"'] | [0]");
-                            if (values !== null) {
-                                $(this).find('td.unidade').text((values.unidade ? values.unidade : ''));
-                                $(this).find('td.data_assinatura').text((values.assinado && values.data_assinatura ? moment(values.data_assinatura, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : ''));
-                                if (values.data_documento) {
-                                    $(this).find('td.data_documento').text(moment(values.data_documento, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'));
+        // 3c. Fechar "Aguarde..." e exibir a tabela
+        resetDialogBoxPro('alertBoxPro');
+        resetDialogBoxPro('dialogBoxPro');
+
+        dialogBoxPro = $('#dialogBoxPro')
+            .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
+            .dialog({
+                title: 'A\u00E7\u00F5es em lote',
+                width: $('body').width()-300,
+                height: 650,
+                resize: function(event, ui) {
+                    setTabelaPanelScrollHeight('#boxActions', 80);
+                },
+                open: function() {
+                    setTabelaPanelScrollHeight('#boxActions', 80);
+                    initAppendIconsDocumentosActions();
+
+                    // 3d. Buscar andamentos para preencher colunas unidade/datas/sigilo
+                    // A tabela já está visível — as colunas preenchem progressivamente.
+                    mergeAllAndamentosProcesso(function(){
+                        var actionsTable = $('#actionsTablePro');
+                        if (typeof dadosProcessoPro.listDocumentos !== 'undefined' && dadosProcessoPro.listDocumentos.length > 0) {
+                            actionsTable.find('tbody tr').each(function(){
+                                var id_protocolo = $(this).data('index');
+                                var values = jmespath.search(dadosProcessoPro.listDocumentos, "[?id_protocolo=='"+id_protocolo+"'] | [0]");
+                                if (values !== null) {
+                                    $(this).find('td.unidade').text((values.unidade ? values.unidade : ''));
+                                    $(this).find('td.data_assinatura').text((values.assinado && values.data_assinatura ? moment(values.data_assinatura, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : ''));
+                                    if (values.data_documento) {
+                                        $(this).find('td.data_documento').text(moment(values.data_documento, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'));
+                                    }
+                                    if (values.sigilo !== undefined && values.sigilo !== '') {
+                                        $(this).find('td.sigilo').text(values.sigilo);
+                                    }
                                 }
-                            }
-                        }).trigger('update');
-                    }
+                            }).trigger('update');
+                        }
+                    });
+                    window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
+                },
+                close: function() {
+                    $('#boxActions').remove();
+                    resetDialogBoxPro('dialogBoxPro');
                     resetDialogBoxPro('alertBoxPro');
+                }
+            });
+
+        // 3e. Inicializar tablesorter e observadores após a tabela estar no DOM
+        setTimeout(function(){
+            var actionsTable = $('#actionsTablePro');
+                actionsTable.tablesorter({
+                    sortLocaleCompare : true,
+                    textExtraction: {
+                        4: function (elem, table, cellIndex) {
+                            var text_date = $(elem).text() != '' ? moment($(elem).text(), 'DD/MM/YYYY').format('YYYY-MM-DD') : false;
+                            return text_date;
+                        },
+                        5: function (elem, table, cellIndex) {
+                            var text_date = $(elem).text() != '' ? moment($(elem).text(), 'DD/MM/YYYY').format('YYYY-MM-DD') : false;
+                            return text_date;
+                        },
+                        8: function (elem, table, cellIndex) {
+                            var sort = $(elem).find('a').map(function(){ return $(this).data('action') }).get().join(' ');
+                            return sort;
+                        }
+                    },
+                    widgets: ["saveSort", "filter"],
+                    widgetOptions: {
+                        saveSort: true,
+                        filter_hideFilters: true,
+                        filter_columnFilters: true,
+                        filter_saveFilters: true,
+                        filter_hideEmpty: true,
+                        filter_excludeFilter: {}
+                    },
+                    sortReset: true,
+                    headers: {
+                        0: { sorter: false, filter: false },
+                        1: { filter: true },
+                        2: { filter: true },
+                        3: { filter: true },
+                        4: { filter: true },
+                        6: { filter: true },
+                        5: { filter: true }
+                    }
+                }).on("filterEnd", function (event, data) {
+                    checkboxRangerSelectShift();
+                    var caption = $(this).find("caption").eq(0);
+                    var tx = caption.text();
+                        caption.text(tx.replace(/\d+/g, data.filteredRows));
+                        $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
+                        $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
                 });
-                window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
-            },
-            close: function() { 
-                $('#boxActions').remove();
-                resetDialogBoxPro('dialogBoxPro');
-                resetDialogBoxPro('alertBoxPro');
-            }
-    });
-    setTimeout(function(){ 
-        var actionsTable = $('#actionsTablePro');
-            actionsTable.tablesorter({
-                sortLocaleCompare : true,
-                textExtraction: {
-                    4: function (elem, table, cellIndex) {
-                        var text_date = $(elem).text() != '' ? moment($(elem).text(), 'DD/MM/YYYY').format('YYYY-MM-DD') : false;
-                        return text_date;
-                    },
-                    5: function (elem, table, cellIndex) {
-                        var text_date = $(elem).text() != '' ? moment($(elem).text(), 'DD/MM/YYYY').format('YYYY-MM-DD') : false;
-                        return text_date;
-                    },
-                    8: function (elem, table, cellIndex) {
-                        var sort = $(elem).find('a').map(function(){ return $(this).data('action') }).get().join(' ');
-                        return sort;
-                    }
-                },
-                widgets: ["saveSort", "filter"],
-                widgetOptions: {
-                    saveSort: true,
-                    filter_hideFilters: true,
-                    filter_columnFilters: true,
-                    filter_saveFilters: true,
-                    filter_hideEmpty: true,
-                    filter_excludeFilter: {}
-                },
-                sortReset: true,
-                headers: {
-                    0: { sorter: false, filter: false },
-                    1: { filter: true },
-                    2: { filter: true },
-                    3: { filter: true },
-                    4: { filter: true },
-                    6: { filter: true },
-                    5: { filter: true }
-                }
-            }).on("filterEnd", function (event, data) {
-                checkboxRangerSelectShift();
-                var caption = $(this).find("caption").eq(0);
-                var tx = caption.text();
-                    caption.text(tx.replace(/\d+/g, data.filteredRows));
-                    $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
-                    $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
-            });
-            // initPanelResize('#boxActions', 'actionsPro');
 
-        var filterAction = actionsTable.find('.tablesorter-filter-row').get(0);
-        if (typeof filterAction !== 'undefined') {
-            var observerFilterAction = new MutationObserver(function(mutations) {
-                var _this = $(mutations[0].target);
-                var _parent = _this.closest('table');
-                var iconFilter = _parent.find('.filterTableActions button');
-                var checkIconFilter = iconFilter.hasClass('active');
-                var hideme = _this.hasClass('hideme');
-                if (hideme && checkIconFilter) {
-                    iconFilter.removeClass('active');
-                }
-            });
-
-            var observerTableActions = new MutationObserver(function(mutations) {
-                var _this = $(mutations[0].target);
-                var _parent = _this.closest('table');
-                function updateCountIcon(_parent, class_icon) {
-                    var counter = _parent.find('tr.infraTrMarcada.'+class_icon).length;
-                    if (counter > 0) {
-                        $('#iconsActions').find('.'+class_icon).find('.fa-layers-counter').text(counter).show();
-                    } else {
-                        $('#iconsActions').find('.'+class_icon).find('.fa-layers-counter').hide();
+            var filterAction = actionsTable.find('.tablesorter-filter-row').get(0);
+            if (typeof filterAction !== 'undefined') {
+                var observerFilterAction = new MutationObserver(function(mutations) {
+                    var _this = $(mutations[0].target);
+                    var _parent = _this.closest('table');
+                    var iconFilter = _parent.find('.filterTableActions button');
+                    var checkIconFilter = iconFilter.hasClass('active');
+                    var hideme = _this.hasClass('hideme');
+                    if (hideme && checkIconFilter) {
+                        iconFilter.removeClass('active');
                     }
-                }
-                updateCountIcon(_parent, 'documento_visualizar');
-                updateCountIcon(_parent, 'documento_ciencia');
-                updateCountIcon(_parent, 'documento_excluir');
-                updateCountIcon(_parent, 'documento_alterar');
-                updateCountIcon(_parent, 'documento_assinar');
-                updateCountIcon(_parent, 'editor_montar');
-                updateCountIcon(_parent, 'documento_duplicar');
-            });
-            setTimeout(function(){ 
-                var htmlFilterActions =    '<div class="btn-group filterTableActions" role="group" style="right: 45px;top: 18px;z-index: 999;position: absolute;">'+
+                });
+
+                var observerTableActions = new MutationObserver(function(mutations) {
+                    var _this = $(mutations[0].target);
+                    var _parent = _this.closest('table');
+                    function updateCountIcon(_parent, class_icon) {
+                        var counter = _parent.find('tr.infraTrMarcada.'+class_icon).length;
+                        if (counter > 0) {
+                            $('#iconsActions').find('.'+class_icon).find('.fa-layers-counter').text(counter).show();
+                        } else {
+                            $('#iconsActions').find('.'+class_icon).find('.fa-layers-counter').hide();
+                        }
+                    }
+                    updateCountIcon(_parent, 'documento_visualizar');
+                    updateCountIcon(_parent, 'documento_ciencia');
+                    updateCountIcon(_parent, 'documento_excluir');
+                    updateCountIcon(_parent, 'documento_alterar');
+                    updateCountIcon(_parent, 'documento_assinar');
+                    updateCountIcon(_parent, 'editor_montar');
+                    updateCountIcon(_parent, 'documento_duplicar');
+                });
+
+                setTimeout(function(){
+                    var htmlFilterActions = '<div class="btn-group filterTableActions" role="group" style="right: 45px;top: 18px;z-index: 999;position: absolute;">'+
                                             '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                             '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                             '       <span class="text">Baixar</span>'+
@@ -8135,19 +8403,34 @@ function getDocumentosActions() {
                                             '</div>';
                     actionsTable.find('thead .filterTableActions').remove();
                     actionsTable.find('thead').prepend(htmlFilterActions);
-                    observerFilterAction.observe(filterAction, {
-                        attributes: true
-                    });
+                    observerFilterAction.observe(filterAction, { attributes: true });
                     actionsTable.find('tbody tr').each(function(){
-                        observerTableActions.observe(this, {
-                                attributes: true
-                        });
+                        observerTableActions.observe(this, { attributes: true });
                     });
                     checkboxRangerSelectShift();
-            }, 1000);
-        }
-    }, 500);
-    if (typeof $().visible == 'undefined') $.getScript(URL_SPRO+"js/lib/jquery-visible.min.js");
+                }, 1000);
+            }
+        }, 500);
+
+        if (typeof $().visible == 'undefined') $.getScript(URL_SPRO + "js/lib/jquery-visible.min.js");
+    }; // fim _renderDocumentosActions
+
+    // ── FASE 2: carregar árvore completa, então executar FASE 3 ──────────────
+    if (typeof urlAllPasta !== 'undefined' && urlAllPasta !== '') {
+        // Recarregar iframe com todos os grupamentos expandidos
+        $('#ifrArvore').attr('src', urlAllPasta).unbind().on('load', function(){
+            $(this).unbind();
+            _renderDocumentosActions();
+        });
+    } else {
+        // Sem link "Exibir todos": expandir pastas e aguardar estabilização do DOM
+        getAllLinksFolder();
+        // getAllLinksFolder() é síncrono no JS, mas o contentWindow pode ter
+        // micro-tarefas pendentes. Delay de 500 ms garante estabilidade antes de ler o DOM.
+        setTimeout(function(){
+            _renderDocumentosActions();
+        }, 500);
+    }
 }
 function setTabelaPanelScrollHeight(target, padding) {
     var availableHeight = $('#dialogBoxPro').outerHeight(true)-padding;
@@ -8196,9 +8479,18 @@ function setAppendIconsDocumentosActions() {
                 htmlIcon += ' <a class="newLink" onclick="batchActionsSinglePro(this)" data-action="documento_ciencia" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ci\u00EAncia\')" style="margin: 0;padding: 5px 0;"><i class="fas fa-thumbs-up azulColor"></i></a>';
                 classIcon += 'documento_ciencia ';
             }
-            if (iconList.filter(function(v){ return v.indexOf('consultar') !== -1 }).length > 0) {
+            // [FIX v9.0.11-2c] Baixar habilitado apenas para docs NATIVOS SEI.
+            // Detecção positiva: nativo tem 'acao=documento_visualizar' + id_documento em arrayLinksArvoreAll.
+            // Se arrayLinksArvoreAll estiver vazio (iframe ainda carregando), usa comportamento original (todos habilitados).
+            var _allLinks = _ifrArvore[0].contentWindow.arrayLinksArvoreAll || [];
+            var _isNativo = _allLinks.length === 0 || _allLinks.filter(function(v){
+                return v && v.indexOf('acao=documento_visualizar') !== -1 && v.indexOf('id_documento='+id_documento) !== -1;
+            }).length > 0;
+            if (_isNativo) {
                 htmlIcon += ' <a class="newLink" onclick="batchActionsSinglePro(this)" data-action="documento_visualizar" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento\')" style="margin: 0;padding: 5px 0;"><i class="fas fa-download azulColor"></i></a>';
                 classIcon += 'documento_visualizar ';
+            } else {
+                htmlIcon += ' <a class="newLink" data-action="documento_visualizar" onclick="return false;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Fun\u00E7\u00E3o Desativada\')" style="margin: 0;padding: 5px 0;cursor:not-allowed;opacity:0.45;"><i class="fas fa-download cinzaColor"></i></a>';
             }
             if (iconList.filter(function(v){ return (v.indexOf('sei_consultar_alterar_protocolo') !== -1 || v.indexOf('documento_alterar') !== -1) }).length > 0) {
                 htmlIcon += ' <a class="newLink" onclick="batchActionsSinglePro(this)" data-action="documento_alterar" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Alterar sigilo\')" style="margin: 0;padding: 5px 0;"><i class="fas fa-key laranjaColor"></i></a>';
@@ -9818,7 +10110,7 @@ function ImgToBase64(iframeDoc, TimeOut = 1000) {
     }, 1000);
 }
 function openLinkNewTab(url) {
-    var win = window.open(url, '_blank');
+    var win = window.open(url, '_blank', 'noopener,noreferrer');
     if (win) {
         win.focus();
     } else {
@@ -9828,7 +10120,7 @@ function openLinkNewTab(url) {
 function openLinkSEIPro(id_procedimento) {
     //var url_host = window.location.href.split('?')[0];
     var url = url_host+'?acao=procedimento_trabalhar&id_procedimento='+id_procedimento;
-    var win = window.open(url, '_blank');
+    var win = window.open(url, '_blank', 'noopener,noreferrer'); // FIX S-03
     if (win) {
         win.focus();
     } else {
@@ -10991,17 +11283,27 @@ function confirmaDadosUrgencia(_this) {
 function insertIconBatchActions() {
     waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconBatchActions);
 }
-function appendIconBatchActions(loop = true) {
+function appendIconBatchActions(loop = true, _retries415 = 0) {
+    // FIX SEI 4.1.5: limite de tentativas para evitar loop infinito (S-07 equivalente).
+    // Também tenta o seletor alternativo '#divArvoreAcoesBarraComandos' caso
+    // '#divArvoreAcoes' não exista no SEI 4.1.5.
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     var htmlIconbatchActions =  '<a href="#" id="iconBatchActions" onclick="parent.getDocumentosActions();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Iniciar a\u00E7\u00F5es em lote\')"  tabindex="452" class="botaoSEI">'+
                                 '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/acao_lote.svg" alt="Iniciar a\u00E7\u00F5es em lote" title="Iniciar a\u00E7\u00F5es em lote">'+
                                 '</a>';
     if (!ifrVisualizacao.find('#iconBatchActions').length) {
-        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconbatchActions);
+        // Tenta o seletor padrão; se não encontrar, usa alternativo do SEI 4.1.5
+        var barraAcoes = ifrVisualizacao.find('#divArvoreAcoes');
+        if (!barraAcoes.length) {
+            barraAcoes = ifrVisualizacao.find('#divArvoreAcoesBarraComandos');
+        }
+        if (barraAcoes.length) {
+            barraAcoes.append(htmlIconbatchActions);
+        }
     }
-    if (loop) {
+    if (loop && _retries415 < 20) {
         setTimeout(function () {
-            appendIconBatchActions();
+            appendIconBatchActions(true, _retries415 + 1);
         },1500);
     }
 }
@@ -11579,6 +11881,51 @@ function initToolbarOnTop() {
         });
     }
 }
+
+// [v9.0.11] Botão flutuante 'Voltar ao Topo' — Controle de Processos e demais páginas.
+// Aparece após 200px de scroll. Compatível com isNewSEI (#divInfraAreaTelaD) e SEI clássico.
+// Idempotente: verifica #seiProBtnTopo antes de criar.
+// [v9.0.12] Botão Voltar ao Topo com aparência adaptativa:
+// - Estilo avançado (seiSlim) ativado → retângulo integrado à barra de botões (botaoSEI iconBoxSlim)
+// - Estilo padrão → círculo flutuante
+// Idempotente; scroll-listener com namespace para não acumular.
+function initBtnVoltarTopo() {
+    if ($('#seiProBtnTopo').length > 0) { return; }
+    var scrollTarget = isNewSEI ? '#divInfraAreaTelaD' : 'html,body';
+    var isSlim = !!localStorage.getItem('seiSlim');
+    var $btn;
+    if (isSlim) {
+        // Estilo avançado: retângulo integrado ao padrão botaoSEI/iconBoxSlim da barra
+        $btn = $('<a id="seiProBtnTopo" class="botaoSEI iconBoxSlim"'
+            + ' onmouseover="return infraTooltipMostrar(\'Voltar ao Topo\')"'
+            + ' onmouseout="return infraTooltipOcultar()"'
+            + ' style="display:none;position:fixed;bottom:60px;right:16px;z-index:9998;'
+            + 'cursor:pointer;width:44px;height:44px;text-align:center;line-height:44px;'
+            + 'border:1px solid #ccc;border-radius:4px;background:#fff;'
+            + 'box-shadow:0 2px 6px rgba(0,0,0,.18);">'
+            + '<i class="fas fa-chevron-up" style="font-size:13pt;"></i>'
+            + '</a>');
+    } else {
+        // Estilo padrão: círculo flutuante
+        $btn = $('<a id="seiProBtnTopo"'
+            + ' onmouseover="return infraTooltipMostrar(\'Voltar ao Topo\')"'
+            + ' onmouseout="return infraTooltipOcultar()"'
+            + ' style="display:none;position:fixed;bottom:60px;right:16px;z-index:9998;'
+            + 'cursor:pointer;background:#fff;border:1px solid #bbb;border-radius:50%;'
+            + 'width:36px;height:36px;text-align:center;line-height:34px;'
+            + 'box-shadow:0 2px 6px rgba(0,0,0,.22);">'
+            + '<i class="fas fa-chevron-up cinzaColor" style="font-size:12pt;"></i>'
+            + '</a>');
+    }
+    $btn.on('click', function () {
+        $(scrollTarget).animate({ scrollTop: 0 }, 400);
+    });
+    $('body').append($btn);
+    var $sc = isNewSEI ? $('#divInfraAreaTelaD') : $(window);
+    $sc.off('scroll.seiProBtnTopo').on('scroll.seiProBtnTopo', function () {
+        $('#seiProBtnTopo').toggle($(this).scrollTop() > 200);
+    });
+}
 function getUnidadesPermissaoSEI() {
     if (isNewSEI) {
         if (sessionStorageRestorePro('unidadesPermissaoSEIPro') !== null) {
@@ -11733,12 +12080,19 @@ function appendNewIcons(loop = true) {
 function replaceNewIcons(element) {
         element.find('.newIconTitle').remove();
         element.each(function(){
-            var title = $(this).find('img').attr('title');
-            $(this).addClass('iconBoxSlim');
-            if (localStorage.getItem('iconLabel') && typeof title !== 'undefined' && title != '') { 
-                $(this).addClass('iconLabel').append('<span class="newIconTitle">'+title+'</span>'); 
+            // [FIX v9.0.11-3a] Fallback: SEI 4.1.5 nem sempre popula img[title].
+            // Cascata: img[title] → img[alt] → [aria-label] → [data-tippy-content].
+            var $el = $(this);
+            var title = $el.find('img').attr('title')
+                     || $el.find('img').attr('alt')
+                     || $el.attr('aria-label')
+                     || $el.attr('data-tippy-content')
+                     || '';
+            $el.addClass('iconBoxSlim');
+            if (localStorage.getItem('iconLabel') && title !== '') {
+                $el.addClass('iconLabel').append('<span class="newIconTitle">'+title+'</span>');
             } else {
-                $(this).attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()');
+                $el.attr('onmouseover','return infraTooltipMostrar(\''+title+'\')').attr('onmouseout','return infraTooltipOcultar()');
             }
         });
 }
@@ -12643,6 +12997,8 @@ if (localStorage.getItem('seiSlim') && !isNewSEI) {
 function loadResizeIframeArvoreNewSEI() {
     if ($("#divIframeArvore").length) {
         setTimeout(() => {
+            // FIX: guard contra jQuery UI não carregado no contexto do iframe
+            if (typeof $.fn.resizable !== 'function') return;
             $("#divIframeArvore").resizable({
                 handles: "e,  w",
                 minWidth: 200,

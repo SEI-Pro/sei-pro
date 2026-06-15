@@ -755,7 +755,11 @@ function initStyleBoxSlimPro(TimeOut = 9000) {
         if (getOptionsPro('colorSlimPro')) {
             setColorSlimPro(getOptionsPro('colorSlimPro'));
         }
-        $(document).ready(function () { initToolbarOnTop() });
+        $(document).ready(function () {
+            initToolbarOnTop();
+            // [v9.0.11] Botão Voltar ao Topo
+            if (typeof initBtnVoltarTopo === 'function') { initBtnVoltarTopo(); }
+        });
     } else {
         setTimeout(function(){ 
             initStyleBoxSlimPro(TimeOut - 100); 
@@ -952,4 +956,16 @@ function initSeiProAll() {
         };
     }
 }
-$(document).ready(function () { initSeiProAll() });
+$(document).ready(function () {
+    // FIX: sei-functions-pro.js (que define isNewSEI) é carregado via
+    // $.getScript() com etapa intermediária de jQuery UI — pode ainda não
+    // ter terminado quando sei-pro-all.js executa. Aguarda até que
+    // isNewSEI esteja disponível antes de prosseguir.
+    (function _waitIsNewSEI(tries) {
+        if (typeof isNewSEI !== 'undefined') {
+            initSeiProAll();
+        } else if (tries > 0) {
+            setTimeout(function(){ _waitIsNewSEI(tries - 1); }, 100);
+        }
+    }(90)); // até 9 segundos de espera
+});

@@ -40,3 +40,34 @@ if(!isChrome) {
     browser.storage.local.set({version: info.version}).then(null, null);
   });
 }
+
+/******************************************************************************
+ * FIX CSP: Proxy de requisições externas bloqueadas pela CSP da página SEI
+ *
+ * O content script não pode fazer fetch() para seipro.app/servers/ porque a
+ * CSP do SEI bloqueia conexões externas ("default-src 'self'").
+ * O background service worker tem origem própria e não está sujeito à CSP
+ * da página, então ele faz a requisição e devolve ao content script via
+ * chrome.runtime.sendMessage / onMessage.
+ ******************************************************************************/
+browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  if (message && message.type === 'FETCH_EXTERNAL') {
+    var url = message.url;
+    // Whitelist de domínios permitidos (segurança)
+    var allowed = ['seipro.app', 'sei-pro.github.io'];
+    var isAllowed = allowed.some(function(d) { return url.indexOf(d) !== -1; });
+
+    if (!isAllowed) {
+      sendResponse({ error: 'URL não permitida' });
+      return false;
+    }
+
+    fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { sendResponse({ data: data }); })
+      .catch(function(e)  { sendResponse({ error: e.message || 'Erro de rede' }); });
+
+    return true; // mantém o canal aberto para resposta assíncrona
+  }
+  return false;
+});
