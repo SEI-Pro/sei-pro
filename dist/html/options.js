@@ -240,11 +240,6 @@ function restore_options() {
         } else {
             $('#uploadDoc_sortBefore').hide();
         }
-        if(jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada'].value | [0]") === null) {
-            $('#reaberturaProgram_periodo').show();
-        } else {
-            $('#reaberturaProgram_periodo').hide();
-        }
         if(jmespath.search(dataValuesConfig, "[?name=='certidaosigilo'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='certidaosigilo'].value | [0]") === null) {
             $('#getDocCertidao_docName').show();
         } else {
@@ -287,10 +282,7 @@ function restore_options() {
         if (jmespath.search(dataValuesConfig, "[?name=='qualidadeimagens'].value | [0]") !== null) { 
             $('#itemConfigGeral_qualidadeimagens').val(jmespath.search(dataValuesConfig, "[?name=='qualidadeimagens'].value | [0]"));
         }
-        if (jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada_periodo'].value | [0]") !== null) { 
-            $('#itemConfigGeral_reaberturaprogramada_periodo').val(jmespath.search(dataValuesConfig, "[?name=='reaberturaprogramada_periodo'].value | [0]"));
-        }
-        if (jmespath.search(dataValuesConfig, "[?name=='newdocsigilo'].value | [0]") !== null) { 
+        if (jmespath.search(dataValuesConfig, "[?name=='newdocsigilo'].value | [0]") !== null) {
             var valueNewDocSigilo = jmespath.search(dataValuesConfig, "[?name=='newdocsigilo'].value | [0]");
                 valueNewDocSigilo = (valueNewDocSigilo != '' && valueNewDocSigilo.indexOf('|') !== -1) ? valueNewDocSigilo.split('|') : false;
                 if (valueNewDocSigilo) {
@@ -423,12 +415,7 @@ function changeConfigGeral() {
         $('#uploadDoc_sortBefore').hide(); 
         $('#itemConfigGeral_sortbeforeupload').prop('checked',false); 
     }
-    if ($('#itemConfigGeral_reaberturaprogramada').is(':checked')) { 
-        $('#reaberturaProgram_periodo').show(); 
-    } else { 
-        $('#reaberturaProgram_periodo').hide(); 
-    }
-    if ($('#itemConfigGeral_certidaosigilo').is(':checked')) { 
+    if ($('#itemConfigGeral_certidaosigilo').is(':checked')) {
         $('#getDocCertidao_docName').show(); 
     } else { 
         $('#getDocCertidao_docName').hide(); 

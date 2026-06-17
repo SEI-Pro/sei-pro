@@ -5,13 +5,13 @@ Este projeto inclui funcionalidades reimplementadas com base em análise comport
 ## Referências funcionais
 
 - Recurso: notificação de novos processos não visualizados
-- Implementação deste repositório: reimplementada do zero em `dist/js/background.js`, `dist/js/sei-functions-pro.js`, `dist/js/sei-pro.js`, `dist/js/sei-pro_new.js` e `dist/html/options.*`
+- Implementação deste repositório: reimplementada do zero em `dist/js/background.js`, `dist/js/sei-functions-pro.js`, `dist/js/sei-pro.js` e `dist/html/options.*`
 - Referência funcional consultada: projeto `SEI++`
 - Repositório: <https://github.com/jonatasrs/sei>
 - Licença do projeto de referência: GPL-3.0-only
 
 - Recurso: seleção inteligente no bloco de assinatura
-- Implementação deste repositório: reimplementada do zero em `dist/js/sei-functions-pro.js`, `dist/js/sei-pro.js`, `dist/js/sei-pro_new.js`, `dist/css/sei-pro.css` e `dist/html/options.*`
+- Implementação deste repositório: reimplementada do zero em `dist/js/sei-functions-pro.js`, `dist/js/sei-pro.js`, `dist/css/sei-pro.css` e `dist/html/options.*`
 - Referência funcional consultada: projeto `SEI++`
 - Repositório: <https://github.com/jonatasrs/sei>
 - Licença do projeto de referência: GPL-3.0-only

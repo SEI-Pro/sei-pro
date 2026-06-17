@@ -1651,25 +1651,6 @@ function observeHistoryBrowserPro() {
     };
 }
 */
-function initNewBtnHome() { 
-    var lastCheck = getOptionsPro('lastcheck_AcompEsp');
-        lastCheck = (lastCheck) ? ' <br>(\u00DAltima verifica\u00E7\u00E3o em: '+moment(lastCheck, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+')' : '';
-    var title = 'Reabertura Programada de Processos'+lastCheck;
-    var iconBoxSlim = localStorage.getItem('seiSlim');
-    var iconLabel = localStorage.getItem('iconLabel'); 
-
-    var htmlBtn =   '<a tabindex="451" class="botaoSEI iconReaberturaPro '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_reopen" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+title+'\')" onclick="checkDadosAcompEspecial(true);" style="position: relative; margin-left: -3px;">'+
-                    '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/reabertura.svg" alt="'+title+'">'+
-                    '    <span class="botaoSEI_iconBox">'+
-                    '       <i class="fas fa-folder-download" style="font-size: 17pt; color: #fff;"></i>'+
-                    '    </span>'+
-                    (iconBoxSlim ?
-                    '    <span class="newIconTitle">'+title+'</span>'+
-                    '' : '')+
-                    '</a>';
-    $(divComandos).find('.iconReaberturaPro').remove();
-    $(divComandos).append(htmlBtn);
-}
 function initNewTabProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof verifyConfigValue !== 'undefined') { 
@@ -1681,9 +1662,7 @@ function initNewTabProcesso(TimeOut = 9000) {
         }, 500);
     }
 }
-function getNewTabProcesso() { 
-    if (verifyConfigValue('reaberturaprogramada')) initNewBtnHome();
-
+function getNewTabProcesso() {
     var iconLabel = localStorage.getItem('iconLabel');
     var iconBoxSlim = localStorage.getItem('seiSlim');
     var observerTableControle = new MutationObserver(function(mutations) {
@@ -4220,7 +4199,6 @@ function initSeiPro() {
         if (typeof initProcessNotificationsPro === 'function') initProcessNotificationsPro();
         storeLinkUsuarioSistema();
         storeVersionSEI();
-        if (typeof checkDadosAcompEspecial !== 'undefined') checkDadosAcompEspecial();
         if (sessionStorage.getItem('configHost_Pro') === null && typeof getConfigHost !== 'undefined') getConfigHost();
 	} else if ( $("#ifrArvore").length > 0 ) {
         if (!checkHostLimit()) initDadosProcesso();

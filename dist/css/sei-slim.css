@@ -2020,7 +2020,6 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("],
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("],
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("],
-.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("],
 .seiSlim a.botaoSEI[onclick*="openListNewTab("],
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("],
 .seiSlim a.botaoSEI[onclick*="getDosimetria("],
@@ -2091,8 +2090,6 @@ a[href*="andamento_marcador_gerenciar"][data-color],
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("] img:hover,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("] img,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("] img:hover,
-.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("] img,
-.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("] img:hover,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("] img,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("] img:hover,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("] img,
@@ -2369,7 +2366,6 @@ span.tagUserColorPro[data-color] img:hover,
 .seiSlim a.botaoSEI[onclick*="getProcessoNaoLido("]:before,
 .seiSlim a.botaoSEI[onclick*="dialogChangeTypeProc("]:before,
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:before,
-.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:before,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:before,
 .seiSlim a.botaoSEI[onclick*="getChecksumPro("]:before,
 .seiSlim a.botaoSEI[onclick*="getDosimetria("]:before,
@@ -3027,14 +3023,6 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
 .seiSlim a.botaoSEI[onclick*="initUploadFilesInProcess("]:before {
     content: "\f574";
     color: #7562d8;
-}
-.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:after,
-.seiSlim a.botaoSEI[onclick*="checkDadosAcompEspecial("]:before {
-    content: "\e053";
-    color: #7562d8;
-}
-.newSEI:not(.seiSlim) .iconReaberturaPro .botaoSEI_iconBox {
-    display: none;
 }
 .seiSlim a.botaoSEI.iconLoading:after,
 .seiSlim a.botaoSEI.iconLoading:before {

@@ -14,7 +14,6 @@
 - Adicionado [Mostrar nomes de usuários na tabela de controle de processos](./pages/NOMESUSUARIOS.md)
 - Adicionado [Permitir marcar processos como "Não Visualizado"](./pages/NAOLIDO.md)
 - Adicionado a [Comparador de Documentos](./pages/COMPARARDOCUMENTOS.md)
-- Adicionado a [Reabertura programada de processos](./pages/REABRIRPROCESSOS.md)
 - Adicionado o [Ditado no editor de documentos](./pages/DITADO.md)
 - Adicionado a [Escrita interativa no editor de documentos](./pages/ESCRITAINTERATIVA.md)
 - Adicionado a [Revisão de texto no editor de documentos](./pages/REVISARDOC.md)

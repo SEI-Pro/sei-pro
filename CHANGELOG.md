@@ -1,6 +1,23 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.17] - 2026-06-17
+
+### Removido
+
+- Reabertura programada de processos:
+  - funcionalidade descontinuada (o SEI 4.1+ já oferece o mecanismo nativamente); removidos a opção nas configurações, o botão na barra de comandos, o diálogo de reabertura, os campos no editor de acompanhamento especial, os estilos, o ícone e a documentação relacionados
+
+### Alterado
+
+- Anotações na árvore do processo:
+  - o auto-save passou a aguardar 5 segundos antes de salvar, e a posição do cursor agora é preservada ao reconstruir o editor, evitando que o texto pule para o fim após a gravação automática
+
 ## [1.7.16] - 2026-06-17
+
+### Removido
+
+- Reabertura programada de processos:
+  - funcionalidade descontinuada (o SEI 4.1+ já oferece o mecanismo nativamente); removidos a opção nas configurações, o botão na barra de comandos, o diálogo de reabertura, os campos no editor de acompanhamento especial, os estilos, o ícone e a documentação relacionados
 
 ### Alterado
 

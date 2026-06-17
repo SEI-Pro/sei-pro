@@ -2623,35 +2623,11 @@ function editDadosArvorePro_(this_ = false, parse = false) {
             dataAcompEsp = dataAcompEsp ? dataAcompEsp : false;
         var force = (typeof data.force !== 'undefined' && data.force) ? true : false;
         
-        var configAcomp = (dataAcompEsp && dataAcompEsp.config) ? dataAcompEsp.config : false;
-        var dataReabertura = (configAcomp && configAcomp.hasOwnProperty('Reabertura')) ? moment(configAcomp.Reabertura, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
         var txtAcompEsp = (dataAcompEsp) ? dataAcompEsp.observacoes : prop.txtDescricao;
         var txtGroup = (dataAcompEsp) ? dataAcompEsp.grupo : false;
 
         var textBox =   '<div class="dialogBoxDiv seiProForm">'+
                         '   <table style="font-size: 10pt;width: 100%;">'+
-                        (verifyConfigValue('reaberturaprogramada') ? 
-                        '      <tr style="height: 40px;">'+
-                        '          <td style="vertical-align: bottom;width: 200px;">'+
-                        '               <i class="iconPopup iconSwitch far fa-clock '+(force || configAcomp ? 'azulColor' : 'cinzaColor')+'"></i> '+
-                        '               Reabertura programada?'+
-                        '          </td>'+
-                        '          <td>'+
-                        '              <div class="onoffswitch" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="configDatesSwitchChangeReabertura(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_setreopen" data-type="setdate" tabindex="0" '+(force || configAcomp ? 'checked' : '')+'>'+
-                        '                  <label class="onoff-switch-label" for="configDatesBox_setreopen"></label>'+
-                        '              </div>'+
-                        '          </td>'+
-                        '      </tr>'+
-                        '      <tr style="height: 40px;'+(force || configAcomp ? '' : 'display:none')+'" class="configDates_setreopen">'+
-                        '          <td class="label" style="vertical-align: bottom;">'+
-                        '               <i class="iconPopup fas fa-clock azulColor"></i> <span>Data de Reabertura</span>'+
-                        '          </td>'+
-                        '          <td class="input" style="position:relative">'+
-                        '               <input type="datetime-local" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+(dataReabertura ? dataReabertura : moment().format('YYYY-MM-DD'))+'" style="float: right;width: calc(100% - 16px);">'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '': '')+
                         '      <tr style="height: 40px;">'+
                         '          <td class="label" style="vertical-align: bottom;">'+
                         '               <i class="iconPopup fas fa-layer-group azulColor"></i> <span>Grupo</span>'+
@@ -2828,11 +2804,10 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                             alertaBoxPro('Sucess', 'check-circle', 'Atribui\u00E7\u00E3o de processo alterada com sucesso!');
                                         });
                                     } else if (data.mode == 'acompanhamento_especial') {
-                                        var dataReabertura = ($('#configDatesBox_setreopen').is(':checked')) ? moment($('#configDatesBox_date').val(), 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : false;
                                         var groupAcompEsp = $('#configDatesBox_acompesp').val();
                                         var textObservacao = $('#configDatesBox_text').val();
-                                        var observacao = textObservacao+(dataReabertura ? ' ["Reabertura": "'+dataReabertura+'"]' : '');
-                                        var configAcomp = (dataReabertura) ? {"Reabertura": dataReabertura} : false;
+                                        var observacao = textObservacao;
+                                        var configAcomp = false;
 
                                         var valuesIframe = [
                                             {element: 'selGrupoAcompanhamento', value: groupAcompEsp},
@@ -3709,15 +3684,6 @@ function getActionsOnSendProcess() {
                         )+
                         '     <label id="lblSinRemoverAtribuicao" for="chkSinRemoverAtribuicao" accesskey="" class="infraLabelCheckbox">Remover atribui\u00E7\u00E3o</label>'+
                         '   </span>'+
-                        (verifyConfigValue('reaberturaprogramada') ? 
-                        '   <span style="margin: 0 10px;display: inline-block;">'+
-                        (isNewSEI ? 
-                        '      <div class="infraCheckboxDiv "><input onchange="if ($(this).is(\':checked\')) { parent.editDadosArvorePro_AcompEsp() }" type="checkbox" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinReabrirProcesso"></label></div>' : 
-                        '      <input type="checkbox" onclick="parent.editDadosArvorePro_AcompEsp();" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'
-                        )+
-                        '     <label id="lblSinReabrirProcesso" for="chkSinReabrirProcesso" accesskey="" class="infraLabelCheckbox">Reabrir processo em data certa</label>'+
-                        '   </span>'+
-                        '': '')+
                         '</span>';
     ifrVisualizacao.find('#divSinRemoveAttributes').remove();
     ifrVisualizacao.find('#divSinRemoverAnotacoes').append(htmlBoxActions);
@@ -3778,281 +3744,6 @@ function getAutomaticActions() {
             } else {
                 parent.window.sendAutomaticActions === undefined;
             }
-    }
-}
-function getListAcompanhamentoEspecial(force = false) {
-    var href = $(mainMenu).find('li a').map(function () { if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=acompanhamento_listar') !== -1) { return $(this).attr('href') } }).get().join();
-    if (href !== null) {
-        ajaxListAcompanhamentoEspecial(href, force);
-    }
-}
-function ajaxListAcompanhamentoEspecial(href, force) {
-    $.ajax({ url: href }).done(function (html) {
-        let $html = $(html);
-        if ($html.find('#lnkInfraProximaPaginaSuperior').length) {
-            saveListAcompanhamentoEspecial($html, force, false, false);
-            postListAcompanhamentoEspecial($html, href, force);
-        } else if ($html.find('#lnkInfraPaginaAnteriorSuperior').length) {
-            postListAcompanhamentoEspecial($html, href, force, true);
-        } else {
-            saveListAcompanhamentoEspecial($html, force, true, false);
-        }
-    });
-}
-function postListAcompanhamentoEspecial($html, href, force, reset = false) {
-    var param = {};
-    $html.find('#frmAcompanhamentoLista').find("input[type=hidden]").map(function () {
-        if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-            param[$(this).attr('name')] = $(this).val(); 
-        }
-    });
-    param.hdnInfraPaginaAtual = reset ? 0 : parseInt($html.find('#hdnInfraPaginaAtual').val())+1;
-    $.ajax({ 
-        method: 'POST',
-        data: param,
-        url: href
-    }).done(function (html) {
-        let $htmlPost = $(html);
-        if ($htmlPost.find('#lnkInfraProximaPaginaSuperior').length) {
-            postListAcompanhamentoEspecial($htmlPost, href, force);
-            saveListAcompanhamentoEspecial($htmlPost, force, false, true);
-        } else {
-            saveListAcompanhamentoEspecial($htmlPost, force, true, true);
-        }
-    });
-}
-function saveListAcompanhamentoEspecial($html, force, end = true, append = false) {
-    var arrayAcompanhamento = $html.find('#frmAcompanhamentoLista #divInfraAreaTabela table tbody tr').map(function(){ 
-        var _this = $(this);
-        var _td = _this.find('td');
-        var link = _td.eq(2).find('a[href*="procedimento_trabalhar"]');
-        var id_protocolo = getParamsUrlPro(link.attr('href')).id_procedimento;
-        var observacoes = _td.eq(6).text().trim();
-        var config = (observacoes.indexOf('[') !== -1 && observacoes.indexOf(']') !== -1) ? observacoes.match(RegExp(/([^[]+(?=]))/, 'g')) : false;
-            config = (config) ? JSON.parse('{'+config+'}') : false;
-            observacoes = (observacoes.indexOf('[') !== -1 && observacoes.indexOf(']') !== -1) ? observacoes.split('[')[0].trim() : observacoes;
-        if (typeof id_protocolo !== 'undefined') {
-            return {
-                id_protocolo: getParamsUrlPro(link.attr('href')).id_procedimento,
-                url: link.attr('href'),
-                processo: link.text().trim(),
-                usuario: {name: _td.eq(3).find('a').attr('title'), user: _td.eq(3).find('a').text().trim() },
-                data_hora: _td.eq(4).text().trim(),
-                grupo: _td.eq(5).text().trim(),
-                observacoes: observacoes,
-                acoes: _td.eq(7).find('a').map(function(){ return $(this).attr('href') }).get(),
-                icones: _td.eq(1).html(),
-                config: config
-            }
-        }
-    }).get();
-    if (!append) {
-        localStorageStorePro('dadosAcompanhamentoEspProcessoPro',arrayAcompanhamento);
-    } else {
-        var _arrayAcompanhamento = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
-            _arrayAcompanhamento = _arrayAcompanhamento === null ? arrayAcompanhamento : _arrayAcompanhamento.concat(arrayAcompanhamento);
-
-        var __arrayAcompanhamento = [];
-            _arrayAcompanhamento.filter(function(item){
-                    var i = __arrayAcompanhamento.findIndex(x => (x.id_protocolo == item.id_protocolo));
-                    if (i <= -1){
-                        __arrayAcompanhamento.push(item);
-                    }
-                    return null;
-                });
-        localStorageStorePro('dadosAcompanhamentoEspProcessoPro',__arrayAcompanhamento);
-    }
-    if (force) initNewBtnHome();
-    if (end) {
-        setOptionsPro('lastcheck_AcompEsp',moment().format('YYYY-MM-DD HH:mm:ss'));
-        var listReabertura = checkReaberturaProcesso();
-        if (listReabertura && listReabertura.length) {
-            dialogReaberturaProcesso(listReabertura);
-        }
-    }
-}
-function checkDadosAcompEspecial(force = false) {
-    if (verifyConfigValue('reaberturaprogramada')) {
-        var lastCheck = getOptionsPro('lastcheck_AcompEsp');
-        if ( force ||
-                (
-                    verifyConfigValue('reaberturaprogramada_periodo') && 
-                    (
-                        (lastCheck && moment().add(-Math.abs(parseInt(getConfigValue('reaberturaprogramada_periodo'))), 'h') > moment(lastCheck, 'YYYY-MM-DD HH:mm:ss')) || 
-                        !lastCheck
-                    )
-                )
-            ) {
-            getListAcompanhamentoEspecial(force);
-            if (force) {
-                removeOptionsPro('hideDialogReaberturaProcesso');
-                if ($('body').hasClass('seiSlim')) {
-                    $(divComandos+' .iconReaberturaPro').addClass('iconLoading');
-                } else {
-                    setIconLoadinBtnSEI($('.iconReaberturaPro'),true);
-                }
-            }
-        }
-    }
-}
-function goReaberturaProcesso(index = 0) {
-    var listReabertura = checkReaberturaProcesso();
-    var selectReabertura = $('#listReaberturaProcessos input[type="checkbox"]:checked').map(function(){ return $(this).val() }).get();
-    var id_protocolo = (listReabertura && typeof listReabertura[index] !== 'undefined') ? listReabertura[index].id_protocolo : false;
-    if (id_protocolo && $.inArray(id_protocolo, selectReabertura) !== -1){
-        var td = $('#listReaberturaProcessos tr[data-id="'+id_protocolo+'"] td').eq(2);
-            td.append('<i class="fas fa-spinner fa-spin azulColor" style="margin-left:10px;"></i>');
-
-        reopenProcessAjax(id_protocolo, function(){
-            var next = index+1;
-                goReaberturaProcesso(next);
-
-                td.find('.sucessEdit').remove();
-                td.append('<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>');
-                setTimeout(function(){ td.find('.sucessEdit').remove(); }, 2000);
-
-            if (next == listReabertura.length) {
-                alertaBoxPro('Sucess', 'check-circle', (listReabertura.length > 1 ? 'Processos reabertos': 'Processo reaberto')+' com sucesso!', function(){ 
-                    window.location.href += "#ID-"+selectReabertura.join(',');
-                    location.reload();
-                    // window.location.reload();
-                });
-                loadingButtonConfirm(false);
-            }
-            console.log(listReabertura[index], next, listReabertura.length);
-        });
-    } else if (index == 0) {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Nenhum processo dispon\u00EDvel para abertura.');
-        loadingButtonConfirm(false);
-    }
-}
-function dialogReaberturaProcesso(listReabertura) {
-    var hideDialog = getOptionsPro('hideDialogReaberturaProcesso');
-    if (!hideDialog || (hideDialog && moment() > moment(hideDialog, 'YYYY-MM-DD HH:mm:ss').add(1, 'd')) ) {
-        var listaProcessoUnidade = getOptionsPro('listaProcessoUnidade');
-        var htmlBox =   '<div id="listReaberturaProcessos" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
-                        '   <table id="reaberturaTablePro" style="margin-top: 35px; font-size: 8pt !important;width: 100%;" class="seiProForm tableAtividades tableDialog tableInfo tableZebra">'+
-                        '        <thead>'+
-                        '            <tr class="tableHeader" onmouseout="infraTooltipOcultar();">'+
-                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><span class="lblInfraCheck" aria-hidden="true"></span><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
-                        '                <th class="tituloControle" style="text-align: center; width: 180px;">Processo</th>'+
-                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Observa\u00E7\u00F5es</th>'+
-                        '                <th class="tituloControle" style="text-align: center;font-weight: bold;">Reabertura</th>'+
-                        '            </tr>'+
-                        '        </thead>'+
-                        '        <tbody>';
-
-            if (listReabertura){
-                $.each(listReabertura, function(i, v){
-                    if (listaProcessoUnidade && $.inArray(v.processo, listaProcessoUnidade) == -1 && moment() >= moment(v.reabertura, 'DD/MM/YYYY HH:mm')) {
-                        htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo" data-id="'+v.id_protocolo+'">'+
-                                    '       <td style="text-align: center;">'+
-                                    '           <input type="checkbox" onclick="followSelecionarItens(this)" name="actionsPro" value="'+v.id_protocolo+'">'+
-                                    '       </td>'+
-                                    '       <td>'+
-                                    '           <a style="margin-left: 5px;" href="'+url_host+'?acao=procedimento_trabalhar&id_procedimento='+v.id_protocolo+'" target="_blank">'+
-                                    '               <span class="bLink">'+
-                                    '                   '+v.processo+
-                                    '                   <i class="fas fa-external-link-alt bLink" style="font-size: 90%; text-decoration: underline;"></i>'+
-                                    '               </span>'+
-                                    '           </a>'+
-                                    '       </td>'+
-                                    '       <td>'+v.observacoes+'</td>'+
-                                    '       <td data-time-sorter="'+v.reabertura+'">'+v.reabertura+'<td>'+
-                                    '   </tr>';
-                    }
-                });
-            }
-            htmlBox +=          '   </table>'+
-                                '</div>';
-        
-            resetDialogBoxPro('alertBoxPro');
-            alertBoxPro = $('#alertaBoxPro')
-                .html('<div>'+htmlBox+'</div>')
-                .dialog({
-                    title: "Reabertura Programada de Processos",
-                    width: 980,
-                    open: function(){
-                        $('#reaberturaTablePro a#lnkInfraCheck').trigger('click');
-                    },
-                    buttons: [{
-                        text: "Ocultar hoje",
-                        click: function() {
-                            setOptionsPro('hideDialogReaberturaProcesso', moment().format('YYYY-MM-DD HH:mm:ss'));
-                            resetDialogBoxPro('alertBoxPro');
-                        }
-                    },{
-                        text: "Reabrir",
-                        class: 'confirm ui-state-active',
-                        click: function() {
-                            goReaberturaProcesso();
-                            loadingButtonConfirm(true);
-                        }
-                    }]
-            });
-    }
-}
-function checkReaberturaProcesso() {
-    var listaProcessoUnidade = getOptionsPro('listaProcessoUnidade');
-    var arrayAcompanhamento = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
-    var configAcompEsp = (arrayAcompanhamento !== null) ? jmespath.search(arrayAcompanhamento, "[?config]") : false;
-    if (configAcompEsp && configAcompEsp !== null && configAcompEsp.length > 0) {
-        var reabertura = $.map(configAcompEsp,function(v){
-            if (v.config.hasOwnProperty('Reabertura') && listaProcessoUnidade && $.inArray(v.processo, listaProcessoUnidade) == -1 && moment() >= moment(v.config.Reabertura, 'DD/MM/YYYY HH:mm')) {
-                return {
-                    id_protocolo: v.id_protocolo,
-                    processo: v.processo,
-                    observacoes: v.observacoes,
-                    reabertura: v.config.Reabertura
-                };
-            }
-        });
-        return (reabertura.length) ? reabertura : false;
-    }
-    return false;
-}
-function reopenProcessAjax(id_procedimento, callback = false) {
-    var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(id_procedimento);
-    if (href !== null) {
-        $.ajax({ url: href }).done(function (html) {
-            var $html = $(html);
-            var urlArvore = $html.find("#ifrArvore").attr('src');
-            $.ajax({ url: urlArvore }).done(function (htmlArvore) {
-                var urlVisualizacao = $.map(htmlArvore.split('\n'), function(substr, i) {
-                        return (substr.indexOf('?acao=arvore_visualizar&acao_origem=procedimento_visualizar&id_procedimento='+id_procedimento+'&infra_sistema=') !== -1) ? substr : null;
-                    }).join('');
-                    urlVisualizacao = (urlVisualizacao.indexOf('new infraArvoreNo("PROCESSO"') !== -1) ? urlVisualizacao.split('"')[5] : false;
-                    if(urlVisualizacao) {
-                        $.ajax({ url: urlVisualizacao }).done(function (htmlVisualizacao) {
-                            var urlReabertura = $.map(htmlVisualizacao.split('\n'), function(substr, i) {
-                                    return (substr.indexOf('?acao=procedimento_reabrir') !== -1) ? substr : null;
-                                }).join('');
-                            urlReabertura = (urlReabertura != '') ? urlReabertura.split("'")[1] : false;
-                            console.log(urlReabertura);
-                            if (urlReabertura) {
-                                $.ajax({ url: urlReabertura }).done(function (htmlReabertura) {
-                                    if (typeof callback === 'function') {
-                                        callback();
-                                    } else {
-                                        alertaBoxPro('Sucess', 'check-circle', 'Processo reaberto com sucesso!');
-                                    }
-                                });
-                            } else { alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao reabrir o processo.') }
-                        });
-                    } else { alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao reabrir o processo.') }
-            });
-        });
-    } else { alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao reabrir o processo.') }
-}
-function configDatesSwitchChangeReabertura(this_) {
-    var _this = $(this_);
-    var _parent = _this.closest('.ui-dialog');
-    if (_this.is(':checked')) {
-        _parent.find('.configDates_setreopen').show();
-        _this.closest('tr').find('.iconSwitch').addClass('azulColor');
-    } else {
-        _parent.find('.configDates_setreopen').hide();
-        _this.closest('tr').find('.iconSwitch').removeClass('azulColor');
     }
 }
 function getListaGruposAcompEsp(html) {

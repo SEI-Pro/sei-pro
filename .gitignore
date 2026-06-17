@@ -107,9 +107,7 @@ development/
 
 # Arquivos de debug
 debug.log
-error.log 
-dist/js/sei-pro_new.js
-dist/js/sei-pro_new.js
+error.log
 
 # Google Apps Script — contém email pessoal, manter apenas local
 google-apps-script.js

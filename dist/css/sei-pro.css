@@ -3847,7 +3847,6 @@ td.prazoBoxDisplay a.addControlePrazo span {
 .newSEI a.newLinksMenuPro {
     padding-left: 5px !important;
 }
-.newSEI .botaoSEI.iconReaberturaPro i,
 .newSEI .botaoSEI.iconPro_Observe i {
     color: var(--color-primary-default) !important;
     font-size: 2.5em !important;
