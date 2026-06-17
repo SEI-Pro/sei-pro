@@ -9686,6 +9686,15 @@ function setCapaProcesso(loop = true) {
         if (!prop || !id_procedimento || ifrVisualizacao.length === 0 || ifrArvore.length === 0) {
             retryCapaProcesso('data/frame not ready');
         } else if (!rootSelected) {
+            // Se outro nó da árvore (um documento) já está selecionado e a capa
+            // não está visível, o usuário está vendo um documento — não há capa
+            // para montar. Sai sem reretentar para evitar 20 tentativas inúteis
+            // e o aviso "root not selected yet" a cada documento aberto.
+            var otherNodeSelected = ifrArvore.find('.infraArvoreNoSelecionado').length > 0;
+            var capaVisible = !!infoProcNode;
+            if (otherNodeSelected && !capaVisible) {
+                return;
+            }
             retryCapaProcesso('root not selected yet');
         }
         return;

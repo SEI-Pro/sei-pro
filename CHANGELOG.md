@@ -1,5 +1,12 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.16] - 2026-06-17
+
+### Alterado
+
+- Anotações na árvore do processo:
+  - o auto-save passou a aguardar 5 segundos antes de salvar, e a posição do cursor agora é preservada ao reconstruir o editor, evitando que o texto pule para o fim após a gravação automática
+
 ## [1.7.15] - 2026-06-17
 
 ### Corrigido
@@ -7,6 +14,9 @@
 - Visualização de documentos:
   - a biblioteca `jmespath` passou a ser carregada nas páginas de visualização (`arvore_visualizar`, `documento_visualizar` e `arvore_processar_html`), corrigindo o erro `ReferenceError: jmespath is not defined` que ocorria na inicialização (`getDadosProcessoSession` → `insertIconNewTab` → `initSeiProVisualizacao`)
   - `getDadosProcessoSession` ganhou guarda defensiva para retornar sem erro caso o `jmespath` ainda não esteja disponível
+
+- Capa do processo:
+  - `setCapaProcesso` deixou de reretentar (20 tentativas) e de emitir o aviso `setCapaProcesso: retry limit reached ... root not selected yet` ao abrir documentos; quando outro nó da árvore está selecionado e a capa não está visível, a função sai sem insistir, eliminando o desperdício de polling e o ruído de log
 
 - Relatório automático de erros:
   - erros opacos de origem cruzada ("Script error." sem mensagem, arquivo ou stack) deixaram de gerar relatórios automáticos vazios e não diagnosticáveis; passam a ser apenas registrados localmente, garantindo que os relatórios enviados contenham informação acionável

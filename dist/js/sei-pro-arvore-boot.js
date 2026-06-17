@@ -1950,12 +1950,16 @@
                 editor.addEventListener('input', function () {
                     updateCount();
                     updateDirtyIndicator();
-                    // Auto-save debounced 2s.
+                    // Auto-save debounced 10s.
                     if (autoSaveTimer) clearTimeout(autoSaveTimer);
                     if (editor.getAttribute('contenteditable') === 'true') {
                         autoSaveTimer = setTimeout(function () {
-                            if (isDirty()) { log('anotacao: auto-save'); doSave({ keepEditing: true }); }
-                        }, 2000);
+                            if (isDirty()) {
+                                log('anotacao: auto-save');
+                                // Preserva a posição do cursor através da reconstrução do editor.
+                                doSave({ keepEditing: true, caretOffset: getCaretCharOffset(editor) });
+                            }
+                        }, 5000);
                     }
                 });
                 editor.addEventListener('mouseup', saveEditorSelection);
@@ -2071,17 +2075,17 @@
                 function doSave(opts) {
                     opts = opts || {};
                     var line = anotLineFromDom(editor).slice(0, 500);
-                    persist(line, editor.dataset.priority === '1', 'save', opts.keepEditing);
+                    persist(line, editor.dataset.priority === '1', 'save', opts.keepEditing, opts.caretOffset);
                 }
                 function doRemove() {
                     persist('', false, 'remove', false);
                 }
 
-                function persist(line, priority, kind, keepEditing) {
+                function persist(line, priority, kind, keepEditing, caretOffset) {
                     actions.querySelectorAll('i').forEach(function (i) { i.style.pointerEvents = 'none'; i.style.opacity = '0.5'; });
                     saveAnotacaoToServer(url, line, priority, function () {
                         log('infoarvore_anotacoes: ' + kind + ' ok (priority=' + priority + ', len=' + line.length + ')');
-                        buildAnotUI(url, line, priority, { justSaved: true, keepEditing: keepEditing });
+                        buildAnotUI(url, line, priority, { justSaved: true, keepEditing: keepEditing, caretOffset: caretOffset });
                     }, function (e) {
                         actions.querySelectorAll('i').forEach(function (i) { i.style.pointerEvents = ''; i.style.opacity = ''; });
                         report('infoarvore_anotacoes: ' + kind + ' failed', { error: e.message, kind: kind });
@@ -2091,13 +2095,91 @@
 
                 updateCount();
 
-                if (opts.keepEditing) { setMode(true); placeCaretAtEnd(editor); }
+                if (opts.keepEditing) {
+                    setMode(true);
+                    if (typeof opts.caretOffset === 'number' && opts.caretOffset >= 0) setCaretCharOffset(editor, opts.caretOffset);
+                    else placeCaretAtEnd(editor);
+                }
             }
 
             function placeCaretAtEnd(el) {
                 el.focus();
                 var range = doc.createRange(); range.selectNodeContents(el); range.collapse(false);
                 var sel = win.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+            }
+
+            // Caret position as a DOM-independent character offset (newlines between
+            // block lines count as 1 char), so it survives the editor being rebuilt
+            // on auto-save instead of jumping to the end.
+            function getCaretCharOffset(el) {
+                try {
+                    var sel = win.getSelection();
+                    if (!sel || !sel.rangeCount) return null;
+                    var r = sel.getRangeAt(0);
+                    if (!el.contains(r.startContainer)) return null;
+                    var lines = Array.prototype.slice.call(el.children);
+                    if (!lines.length) {
+                        // Flat editor: count text up to caret directly.
+                        if (r.startContainer.nodeType === 3) return r.startOffset;
+                        return (el.textContent || '').length;
+                    }
+                    var count = 0;
+                    for (var i = 0; i < lines.length; i++) {
+                        if (i > 0) count += 1; // newline between lines
+                        var lineDiv = lines[i];
+                        var inThisLine = lineDiv === r.startContainer || lineDiv.contains(r.startContainer);
+                        if (!inThisLine) { count += (lineDiv.textContent || '').length; continue; }
+                        if (r.startContainer === lineDiv) {
+                            for (var c = 0; c < r.startOffset && c < lineDiv.childNodes.length; c++) {
+                                count += (lineDiv.childNodes[c].textContent || '').length;
+                            }
+                            return count;
+                        }
+                        var walker = doc.createTreeWalker(lineDiv, NodeFilter.SHOW_TEXT, null, false);
+                        var node;
+                        while ((node = walker.nextNode())) {
+                            if (node === r.startContainer) return count + r.startOffset;
+                            count += node.nodeValue.length;
+                        }
+                        return count;
+                    }
+                    return count;
+                } catch (e) { return null; }
+            }
+            function setCaretCharOffset(el, target) {
+                if (target == null || target < 0) { placeCaretAtEnd(el); return; }
+                el.focus();
+                try {
+                    var lines = Array.prototype.slice.call(el.children);
+                    if (!lines.length) { placeCaretAtEnd(el); return; }
+                    var count = 0;
+                    for (var i = 0; i < lines.length; i++) {
+                        if (i > 0) count += 1; // newline between lines
+                        var lineDiv = lines[i];
+                        var lineLen = (lineDiv.textContent || '').length;
+                        if (target <= count + lineLen) {
+                            var within = target - count;
+                            var walker = doc.createTreeWalker(lineDiv, NodeFilter.SHOW_TEXT, null, false);
+                            var node, acc = 0;
+                            while ((node = walker.nextNode())) {
+                                var len = node.nodeValue.length;
+                                if (within <= acc + len) {
+                                    var range = doc.createRange();
+                                    range.setStart(node, within - acc); range.collapse(true);
+                                    var sel = win.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+                                    return;
+                                }
+                                acc += len;
+                            }
+                            // Empty line / no text node: collapse at line start.
+                            var r2 = doc.createRange(); r2.selectNodeContents(lineDiv); r2.collapse(true);
+                            var s2 = win.getSelection(); s2.removeAllRanges(); s2.addRange(r2);
+                            return;
+                        }
+                        count += lineLen;
+                    }
+                    placeCaretAtEnd(el);
+                } catch (e) { placeCaretAtEnd(el); }
             }
 
             // Readonly decorations: highlight expired dates + linkify process numbers.
