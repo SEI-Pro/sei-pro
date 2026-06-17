@@ -1,5 +1,16 @@
 # Changelog — SEI Pro PRF
 
+## [1.7.15] - 2026-06-17
+
+### Corrigido
+
+- Visualização de documentos:
+  - a biblioteca `jmespath` passou a ser carregada nas páginas de visualização (`arvore_visualizar`, `documento_visualizar` e `arvore_processar_html`), corrigindo o erro `ReferenceError: jmespath is not defined` que ocorria na inicialização (`getDadosProcessoSession` → `insertIconNewTab` → `initSeiProVisualizacao`)
+  - `getDadosProcessoSession` ganhou guarda defensiva para retornar sem erro caso o `jmespath` ainda não esteja disponível
+
+- Relatório automático de erros:
+  - erros opacos de origem cruzada ("Script error." sem mensagem, arquivo ou stack) deixaram de gerar relatórios automáticos vazios e não diagnosticáveis; passam a ser apenas registrados localmente, garantindo que os relatórios enviados contenham informação acionável
+
 ## [1.7.14] - 2026-05-25
 
 ### Alterado

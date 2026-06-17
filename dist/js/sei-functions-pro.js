@@ -426,10 +426,27 @@ function ensureSEIProLogCapture() {
     });
 
     window.addEventListener('error', function(event) {
+        var hasMessage = !!(event && event.message);
+        var hasFilename = !!(event && event.filename);
+        var hasError = !!(event && event.error);
+
+        // Erro opaco de origem cruzada ("Script error."): o navegador sanitiza
+        // message/filename/error por seguranca quando um script de outra origem
+        // (sem CORS) lanca uma excecao. Nao ha stack nem localizacao recuperavel,
+        // entao nao vale a pena gerar relatorio automatico — seria sempre vazio.
+        var isOpaqueCrossOrigin = !hasMessage && !hasFilename && !hasError;
+        if (isOpaqueCrossOrigin) {
+            pushSEIProLog('error', [
+                'Script error (cross-origin/opaco, sem stack disponivel)',
+                'readyState=' + (document.readyState || '?')
+            ]);
+            return;
+        }
+
         var entry = pushSEIProLog('error', [
-            event && event.message ? event.message : 'Unhandled error',
-            event && event.filename ? ('at ' + event.filename + ':' + event.lineno + ':' + event.colno) : '',
-            event && event.error ? event.error : ''
+            hasMessage ? event.message : 'Unhandled error',
+            hasFilename ? ('at ' + event.filename + ':' + event.lineno + ':' + event.colno) : '',
+            hasError ? event.error : ''
         ]);
         scheduleSEIProAutomaticErrorReport(entry, 'window.error');
     }, true);
@@ -10384,6 +10401,7 @@ function pullDadosProcessoSession(id_procedimento = false) {
 function getDadosProcessoSession(id_procedimento = false) {
     id_procedimento = resolveProcessoSessionId(id_procedimento);
     if (!id_procedimento) return false;
+    if (typeof jmespath === 'undefined') return false;
     var dadosSessionProcessoPro = sessionStorageRestorePro('dadosSessionProcessoPro');
     var dadosProcesso = (dadosSessionProcessoPro) ? jmespath.search(dadosSessionProcessoPro, "[?propProcesso.hdnIdProcedimento=='"+id_procedimento+"' || listAndamento.id_procedimento=='"+id_procedimento+"'] | [0]") : null;
     return (dadosProcesso && dadosProcesso !== null) ? dadosProcesso : false;
