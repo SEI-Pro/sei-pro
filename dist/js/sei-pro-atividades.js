@@ -21305,22 +21305,7 @@ function updateRecalculaPrazo(this_) {
         inputPrazoEntrega.val(prazoEntrega);
     }
 }
-function getRecalculaPrazo(data_ref, hora_format, prazo, config_unidade) {
-    var workday = config_unidade.count_dias_uteis;
-    var config_feriados = (typeof config_unidade.feriados !== 'undefined' && config_unidade.feriados !== null) ? config_unidade.feriados : false;
-    var arrayFeriados = (workday)
-        ? jmespath.search(getHolidayBetweenDates(moment(data_ref, hora_format).format('Y') + '-01-01', moment(data_ref, hora_format).add(1, 'Y').format('Y') + '-01-01', config_feriados), "[*].d_")
-        : [];
-
-    var prazoEntrega = (workday)
-        ? moment(data_ref, hora_format).isoAddWeekdaysFromSet({
-            'workdays': prazo,
-            'weekdays': [1, 2, 3, 4, 5],
-            'exclusions': arrayFeriados
-        }).format(hora_format)
-        : moment(data_ref, hora_format).add(prazo, 'd').format(hora_format);
-    return prazoEntrega;
-}
+// getRecalculaPrazo migrada para SeiPro.core.prazos (src/core/prazos.js) — Fase 6
 function pauseAtividade(id_demanda) {
     var value = getAtividadeData(id_demanda);
     var check_ispaused = (typeof value.data_retomada !== 'undefined' && value.data_retomada !== null && value.data_retomada == '0000-00-00 00:00:00') ? true : false;

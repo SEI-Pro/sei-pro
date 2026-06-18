@@ -3839,14 +3839,10 @@ function setControlePrazo(force = false) {
         var _tag = $(this).find('a[href*="andamento_marcador_gerenciar"]').attr('onmouseover');
         var _checkbox = $(this).find('input[type="checkbox"]');
         var _processo = $(this).find('a[href*="procedimento_trabalhar"]');
-        var content = (typeof _tag !== 'undefined') ? _tag.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
-            content = (content && content !== null && content.length > 0 && content[0] != '') ? content[0] : false;
-        var dateTo = (content && removeAcentos(content).toLowerCase().indexOf('ate') !== -1) ? true : false;
-
-        var dateContent = (content) ? content.match(/(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}/img) : null;
-        var timeContent = (content) ? content.match(/(\d{1,2}:\d{2})/img) : null;
-        var dateTag = (dateContent !== null) ? dateContent[0]+' '+(timeContent !== null ? timeContent[0] : '23:59') : false;
-            dateTag = (dateTag) ? moment(dateTag,'DD/MM/YYYY HH:mm') : false;
+        // Parsing puro migrado para SeiPro.core.prazos.parsePrazoTag (Fase 6)
+        var _prazoTag = parsePrazoTag(_tag);
+        var dateTo = _prazoTag.dateTo;
+        var dateTag = (_prazoTag.dateTag) ? moment(_prazoTag.dateTag, 'DD/MM/YYYY HH:mm') : false;
 
         // var dateTag = (content && content.indexOf(' ') !== -1) ? content.split(' ')[1] : (content) ? content : false;
             // dateTag = (dateTag && dateTag != '') ? moment(dateTag,'DD/MM/YYYY') : false;

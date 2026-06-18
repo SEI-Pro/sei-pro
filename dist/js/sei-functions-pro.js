@@ -5244,15 +5244,8 @@ function getDatesPreview(config, dateduepreview=false) {
     var iconDateColor = (moment().format(formatDate) == config.dateDue) ? '#ad0606' : '#4285f4';
     var iconDateClass = (config.deliverydoc) ? config.deliverydoc_style : 'far fa-clock';
         iconDateClass = (config.displayicon) ? config.displayicon : iconDateClass;
-    var tagName = (moment(config.date, formatDate).diff(moment(), 'days') > 0) ? { name: 'Seguinte', value: 'date_seguinte', color: '#eef4f9' } : { name: 'Vencida', value: 'date_vencido', color: '#f9e2e0'};
-        tagName = (config.displaydue) ? { name: 'No prazo', value: 'date_noprazo', color: '#eef4f9' } : tagName;
-        tagName = ((config.duedate || config.duesetdate) && (resultDate.alertdate)) ? { name: 'Atrasada', value: 'date_atrasado', color: '#f9e2e0'} : tagName;
-        tagName = (moment().format(formatDate) == config.dateDue) ? { name: 'Hoje', value: 'date_hoje', color: '#f9e2e0' } : tagName;
-        tagName = (config.deliverydoc) ? { name: 'Entregue', value: 'date_entregue', color: '#ddf1dd' } : tagName;
-        tagName = (typeof config.ratingdoc !== 'undefined' && config.ratingdoc) ? { name: 'Avaliada', value: 'date_avaliado', color: '#f1ecdd' } : tagName;
-        tagName = (typeof config.paused !== 'undefined' && config.paused) ? { name: 'Pausada', value: 'date_pausado', color: '#f1ecdd' } : tagName;
-        tagName = (typeof config.senddoc !== 'undefined' && config.senddoc) ? { name: 'Arquivada', value: 'date_enviado', color: '#ececec' } : tagName;
-        tagName = (typeof config.nametag !== 'undefined' && config.nametag) ? config.nametag : tagName;
+    // Cascata de decisão de estado/tag migrada para SeiPro.core.prazos.getDateBoxState (Fase 6)
+    var tagName = getDateBoxState(config, resultDate);
     var tagAction = (typeof config.action !== 'undefined' && config.action != '') ? config.action : 'parent.filterTagView(this)';
     var htmlDateDue = (config.duedate || config.duesetdate) 
                         ? (resultDate.alertdate) 
@@ -5274,11 +5267,11 @@ function configDatesPreview() {
         //console.log(config);
 }
 function getProgressPreview(config) {
-    var max = moment(config.dateDue, 'YYYY-MM-DD').diff(moment(config.date, 'YYYY-MM-DD'), 'days');
-    var progress = moment().diff(moment(config.date, 'YYYY-MM-DD'), 'days');
-    if ((config.duesetdate || config.duedate) && progress <= max && progress >= 0) {
-        var percentProgresso = Math.round((progress/max)*100);
-        var colorProgresso = ( percentProgresso > 100 ) 
+    // Cálculo puro migrado para SeiPro.core.prazos.getProgressPercent (Fase 6)
+    var _progress = getProgressPercent(config);
+    if (_progress.show) {
+        var percentProgresso = _progress.percent;
+        var colorProgresso = ( percentProgresso > 100 )
                                     ? 'style="stroke: #ff010199;"' 
                                     : (config.deliverydoc) ? 'style="stroke: #72a50a70;"' : '';
             htmlProgress = '<svg viewBox="0 0 36 36" class="circular-chart"><path '+colorProgresso+' class="circle" stroke-dasharray="'+percentProgresso+', 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path></svg>';
@@ -5319,14 +5312,11 @@ function updateTablePrazoProcesso() {
             var linkTag = tag.attr('href');
             var textTag = (typeof tag.attr('onmouseover') !== 'undefined') ? extractTooltip(tag.attr('onmouseover')) : '';
 
-            var regexDue = /(ate )(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-            var checkDateDue = regexDue.exec(removeAcentos(textTag.trim()).toLowerCase().replaceAll('  ',' '));
-            var datePrazoDue = (checkDateDue !== null) ? moment(checkDateDue[0], 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss') : false;
+            // Parsing puro migrado para SeiPro.core.prazos.parsePrazoTooltip (Fase 6)
+            var _prazoTooltip = parsePrazoTooltip(textTag);
+            var datePrazoDue = _prazoTooltip.datePrazoDue;
+            var datePrazo = _prazoTooltip.datePrazo;
 
-            var regex = /(\d{1,2})\/(\d{1,2})\/(\d{4})/i;
-            var checkDate = regex.exec(removeAcentos(textTag.trim()));
-            var datePrazo = (checkDateDue === null && checkDate !== null) ? moment(checkDate[0], 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss') : false;
-            
             var htmlDatePrazo = (datePrazo) ? getDatesPreview({date: datePrazo}) : false;
                 htmlDatePrazo = (datePrazoDue) ? getDatesPreview({date: datePrazoDue}) : htmlDatePrazo;
                 htmlDatePrazo = (htmlDatePrazo) ? $('<div>'+htmlDatePrazo+'</div>').find('.dateboxDisplay').html(): htmlDatePrazo;
@@ -5862,23 +5852,8 @@ function setNameConst() {
     window.__ = __;
     setOptionsPro('nomeVariaveisPro', __);
 }
-function isDefaultEnabledConfigValue(name) {
-    return ['filtrarpaginapelapesquisarapida'].indexOf(String(name || '')) !== -1;
-}
-function checkConfigValue(name) {
-    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
-    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
-        // dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
-    if ((dataValuesConfig === false || dataValuesConfig === null) && isDefaultEnabledConfigValue(name)) {
-        return true;
-    }
-    if (dataValuesConfig == false && typeof configBasePro !== 'undefined' && configBasePro !== null && configBasePro.length > 0 ) {
-        return false;
-    } else {
-        return true;
-    }
-}
+// isDefaultEnabledConfigValue + checkConfigValue migradas para SeiPro.core.config
+// (src/core/config.js) — Fase 6. Globais preservados via aliasGlobal.
 function copyTextThis(this_) {
     copyToClipboard($(this_).text().trim());
     $(this_).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);

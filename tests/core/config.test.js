@@ -39,3 +39,55 @@ describe('config queries', () => {
         expect(empty.readConfigBasePro()).toEqual([]);
     });
 });
+
+// checkConfigValue tem semântica "default-enabled" (Fase 6): recurso ligado a
+// menos que explicitamente desligado. Precisa de um jmespath que resolva a query
+// de valor "[?name=='X'].value | [0]" (o mock simples retorna null).
+function makeJmespath() {
+    return {
+        search(data, expression) {
+            if (expression === '[*].configGeral | [0]') {
+                return data && data[0] && data[0].configGeral ? data[0].configGeral : null;
+            }
+            const m = expression.match(/^\[\?name=='(.+)'\]\.value \| \[0\]$/);
+            if (m) {
+                const arr = Array.isArray(data) ? data : [];
+                const found = arr.filter((x) => x && x.name === m[1]);
+                return found.length ? (found[0].value === undefined ? null : found[0].value) : null;
+            }
+            return null;
+        }
+    };
+}
+
+describe('checkConfigValue (default-enabled)', () => {
+    const cfg = [{
+        configGeral: [
+            { name: 'kanban', value: true },
+            { name: 'darkmode', value: false },
+            { name: 'filtrarpaginapelapesquisarapida', value: false }
+        ]
+    }];
+    const config = loadConfigWithData(cfg, makeJmespath());
+
+    it('valor explícito true → true', () => {
+        expect(config.checkConfigValue('kanban')).toBe(true);
+    });
+
+    it('valor explícito false → false', () => {
+        expect(config.checkConfigValue('darkmode')).toBe(false);
+    });
+
+    it('config ausente → true (ligado por padrão)', () => {
+        expect(config.checkConfigValue('inexistente')).toBe(true);
+    });
+
+    it('nome default-enabled força true mesmo desligado explicitamente', () => {
+        expect(config.checkConfigValue('filtrarpaginapelapesquisarapida')).toBe(true);
+    });
+
+    it('isDefaultEnabledConfigValue reconhece o nome especial', () => {
+        expect(config.isDefaultEnabledConfigValue('filtrarpaginapelapesquisarapida')).toBe(true);
+        expect(config.isDefaultEnabledConfigValue('kanban')).toBe(false);
+    });
+});

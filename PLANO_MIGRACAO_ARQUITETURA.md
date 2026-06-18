@@ -1,7 +1,7 @@
 # Plano de Migração de Arquitetura — SEI Pro PRF
 
 > Documento de planejamento técnico para evolução arquitetural da extensão.
-> Versão base analisada: **1.7.16** · Data: **2026-06-17**
+> Versão base analisada: **1.7.16** · Data: **2026-06-17** · Atualizado: **2026-06-18** (§5.1 playbook)
 
 ---
 
@@ -359,12 +359,14 @@ CORS e quotas num só lugar.
 > reload (ver SMOKE_TEST.md). Confirmou também a correção do bug de dois mundos (bundle no
 > `world:"MAIN"` + `getUrlExtension` resiliente). Pendente apenas Firefox/SEI 4.x.
 
-> **Contrato de compatibilidade — `checkConfigValue`.** O `core/config.js` expõe
-> `verifyConfigValue` e `getConfigValue`, mas **não** `checkConfigValue` — esta tem semântica
-> distinta ("default-enabled" via `isDefaultEnabledConfigValue`) e segue só no legado
-> (`sei-functions-pro.js`). Há ~9 usos; a extensão depende do legado permanecer carregado.
-> Aceitável hoje; vira risco na Fase 6 (ao quebrar `sei-functions-pro.js`). Travado por
-> `tests/structure/config-compat.test.js`.
+> **Contrato de compatibilidade — `checkConfigValue` ✅ resolvido na Fase 6.** Antes
+> `checkConfigValue`/`isDefaultEnabledConfigValue` viviam só no legado (`sei-functions-pro.js`),
+> com semântica distinta ("default-enabled"). Foram **portados VERBATIM** para `core/config.js`
+> (preservando a igualdade frouxa `== false` e a distinção `null` vs `false` da query jmespath —
+> por isso não reusam `queryConfigValue`); a definição legada foi removida e o global preservado
+> via `aliasGlobal`. `tests/structure/config-compat.test.js` foi **invertido**: agora trava que
+> o core os provê e o legado não os redefine. Isso **destrava a quebra de `sei-functions-pro.js`**
+> na Fase 6.
 
 ### Fase 6 — Quebrar God modules em feature folders 🟡 piloto feito
 **Objetivo:** SRP de verdade.
@@ -439,6 +441,67 @@ CORS e quotas num só lugar.
 > Cuidados pegos por teste: a regex zero-width de `normalizeNameTag` foi mantida com escapes
 > `\u` explícitos; `addAlpha(_,0)` retorna `FF` (quirk `opacity||1`, verbatim). **123 testes
 > verdes.** Acumulado: **54 funções** em 7 módulos.
+>
+> **10ª leva — feature "Controlar Prazos" (gerenciarprazos), 1ª fatia.** Início da
+> migração **feature-orientada** (separar lógica pura de efeito DOM). O núcleo puro de
+> cálculo de prazo `getRecalculaPrazo(data_ref, hora_format, prazo, config_unidade)` foi
+> extraído de `sei-pro-atividades.js` para o novo `core/prazos.js` (importa
+> `getHolidayBetweenDates` de `feriados`; `moment`+weekday-calc+`jmespath` lazy). A **camada
+> de DOM** da feature (`setControlePrazo`, `addControlePrazo`, `initControlePrazo`,
+> `updateTablePrazoProcesso`, `setPrazoMarcador`, `updateRecalculaPrazo`…) **permanece nos
+> arquivos legados** chamando o core — é onde deve ficar (view layer). `prazos.test.js`
+> (4 testes: dias corridos, dias úteis pulando fim de semana, feriado customizado).
+> **127 testes verdes.** Acumulado: **55 funções** em 8 módulos. Marca a transição do
+> "minério puro" para o desacoplamento por feature.
+>
+> **11ª leva — prazos, 2ª fatia (extração de bit puro de dentro do DOM).** `parsePrazoTag`
+> — o parsing puro (regex) da string `onmouseover` do marcador de prazo (content / dateTo /
+> dateTag) — foi extraído de **dentro** de `setControlePrazo` (sei-pro.js) para
+> `core/prazos.js` (importa `removeAcentos` de `util`). O `setControlePrazo` agora chama
+> `parsePrazoTag(_tag)` e mantém só o `moment(...)` + manipulação de DOM. Demonstra o passo
+> seguinte do desacoplamento: **isolar lógica pura embutida em funções de DOM**, não só mover
+> funções já puras. `prazos.test.js` +4 (com/sem hora, sem data, tag undefined). **131 testes
+> verdes.** Acumulado: **56 funções** em 8 módulos.
+>
+> **Estado da feature "Controlar Prazos" (caso-guia da Fase 6).** O núcleo puro de prazos já
+> vive em `src/core/prazos.js` (`getRecalculaPrazo`, `parsePrazoTag`), mas a feature ainda está
+> **fisicamente espalhada** pelo legado — é o exemplo que o §5.1 usa para definir o método:
+>
+> | Arquivo legado | Ocorrências `Prazo` | Papel atual |
+> |---|---:|---|
+> | `sei-pro-atividades.js` | 55 | DOM/config da feature (`addControlePrazo`, `initControlePrazo`, `updateTablePrazoProcesso`, `updateRecalculaPrazo`, `changeAtivRecalcPrazoSwitch`, `configDatesSwitchChangePrazo`) |
+> | `sei-functions-pro.js` | 44 | helpers de cálculo/config que o core ainda não absorveu |
+> | `sei-pro.js` | 30 | `setControlePrazo` + `setPrazoMarcador` (marcador na lista de processos) |
+> | `sei-pro-monitorados.js` | 4 | integração com monitorados |
+> | `sei-pro-arvore.js` / `sei-pro-prescricoes.js` | 1 cada | consumo pontual |
+>
+> Próximas fatias de prazos seguem o **playbook do §5.1** abaixo.
+>
+> **12ª leva — prazos, fatia A (lógica pura embutida em view).** +3 funções puras extraídas
+> para `core/prazos.js`, no padrão "isolar bit puro de dentro de função de DOM" (§5.1.3):
+> - `parsePrazoTooltip(textTag)` — parse por regex do tooltip do marcador na lista de
+>   processos (`ate DD/MM/YYYY` → `datePrazoDue`; data solta → `datePrazo`), extraído de
+>   `updateTablePrazoProcesso` (`sei-functions-pro.js`). Importa `removeAcentos`; `moment` lazy.
+> - `getDateBoxState(config, resultDate)` — cascata de decisão da etiqueta visual
+>   (`date_seguinte`/`vencido`/`atrasado`/`hoje`/`entregue`…), extraída de `getDatesPreview`.
+> - `getProgressPercent(config)` — cálculo do percentual de progresso (matemática de datas),
+>   extraído de `getProgressPreview`; a montagem do SVG fica na view.
+>
+> Os 3 call-sites legados (`updateTablePrazoProcesso`, `getDatesPreview`, `getProgressPreview`)
+> passaram a chamar o core; a montagem de HTML/SVG permanece na view. `prazos.test.js` +11
+> (libs reais no `vm`). **142 testes verdes.** Acumulado: **59 funções** em 8 módulos. Restam
+> da feature: portar `checkConfigValue` para `core/config` (destrava config/init) e apontar a
+> view restante para o core — ver §5.1.5.
+>
+> **13ª leva — `checkConfigValue`/`isDefaultEnabledConfigValue` → `core/config.js`.** Porte
+> VERBATIM da semântica "default-enabled" (recurso ligado a menos que explicitamente desligado),
+> preservando a igualdade frouxa `== false` e a query jmespath que retorna `null` p/ ausente
+> (por isso **não** reusa `queryConfigValue`, que colapsa ausente→`false`). Definições legadas
+> removidas; globais preservados via `aliasGlobal`. `config-compat.test.js` invertido (core provê,
+> legado não redefine) + 5 testes de comportamento em `config.test.js` (true/false explícito,
+> ausente→true, nome default-enabled força true). **147 testes verdes.** Acumulado: **61 funções**
+> em 8 módulos. Este é o **destravamento** das camadas C (config/switches) e D (init) da feature
+> de prazos — e da quebra futura de `sei-functions-pro.js`.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…
@@ -448,6 +511,121 @@ CORS e quotas num só lugar.
   propósito).
 - **Risco:** alto isoladamente, **baixo agora** — chega protegido por testes, namespace,
   adapter e build prontos.
+
+---
+
+## 5.1 Playbook de quebra dos God Modules (o "norte")
+
+Esta seção é o **método repetível** para a Fase 6. As 11 fatias já feitas (validacao →
+prazos) provaram o padrão; aqui ele fica explícito para guiar as próximas — começando por
+**Controlar Prazos**, que é o caso-guia.
+
+### 5.1.1 Princípio: separar por *eixo de mudança*, não por arquivo
+
+Um God module mistura responsabilidades que mudam por razões diferentes. A quebra agrupa o
+código pelo que o faz mudar, em **três camadas** com dependência só de cima para baixo:
+
+```
+core (puro)  ←  feature/view (DOM, jQuery, estado)  ←  init (bootstrap por página)
+   │                    │                                    │
+ sem DOM,          orquestra o core,                  decide QUANDO a feature
+ sem jQuery,       lê/escreve DOM,                    roda (matches do manifest),
+ sem estado;       chama storage/net;                 injeta scripts.
+ testável a seco   NÃO contém regra de cálculo pura
+```
+
+Regra de ouro: **toda lógica que dá para testar sem um navegador pertence ao `core/`.** O
+resto (selecionar elemento, montar HTML, ligar evento, ler config do storage) é *view* e
+fica na camada de feature.
+
+### 5.1.2 O alvo por feature (`features/<nome>/`)
+
+Cada feature vira uma pasta com fronteira explícita. Para prazos:
+
+```
+src/
+  core/
+    prazos.js            ✅ núcleo PURO: getRecalculaPrazo, parsePrazoTag (já existe)
+  features/
+    prazos/
+      index.js           install(): registra a feature, expõe SeiPro.features.prazos
+      view.js            DOM: setControlePrazo, setPrazoMarcador, updateTablePrazoProcesso
+      config.js          config/switches: changeAtivRecalcPrazoSwitch, configDatesSwitchChangePrazo
+      init.js            initControlePrazo / addControlePrazo (entrada da feature por página)
+```
+
+> **Restrição de build (importante).** Hoje o `build.mjs` bundla **só** `src/content/core-stack.js`
+> (camada core/sei). A camada `features/` em `src/` **ainda não é bundlada** nem carregada pelo
+> manifest. Então, na prática atual, a fatia de cada feature é:
+> 1. **mover a lógica pura** para `src/core/<feature>.js` (entra no bundle, ganha teste); e
+> 2. **deixar a camada de view no arquivo legado**, agora *chamando* o core (`SeiPro.core.<feature>`).
+>
+> A pasta `src/features/<nome>/` acima é o **destino final**; ela só passa a existir de fato
+> quando a Fase 6 evoluir o build para também bundlar `features/` (decisão a tomar quando a
+> primeira feature estiver com o core 100% extraído). Até lá, "feature folder" = *core extraído
+> + view legada apontando para ele*. Não criar `src/features/` vazio antes do build suportá-lo.
+
+### 5.1.3 O ciclo de uma fatia (repetir até o god module esvaziar)
+
+Cada fatia é pequena, verde e commitável isoladamente:
+
+1. **Identificar um cluster coeso** dentro do god module (funções que se chamam entre si e
+   compartilham um tema). Preferir começar pelo **mais puro**.
+2. **Classificar cada função do cluster:** pura → vai pro `core/`; toca DOM/jQuery/estado →
+   fica na view (mas pode ter *bits puros embutidos* a extrair, como `parsePrazoTag` saiu de
+   dentro de `setControlePrazo`).
+3. **Mover a parte pura** para `src/core/<feature>.js`. Dependências de lib vendor (`moment`,
+   `jmespath`) entram como **global lazy** via `globalRef.*` (nunca `import` de vendor).
+   Dependências de outro módulo core entram como **import modular** (ex.: prazos → feriados).
+4. **Registrar** no `install<Feature>()`: `SeiPro.core.<feature> = {...}` + `aliasGlobal(nome, fn)`
+   para cada função (preserva o global legado — nada quebra). Encadear o `install` em
+   `src/content/core-stack.js`.
+5. **Remover a definição legada** e apontar os call-sites para o core/alias.
+6. **Escrever o teste** (`tests/core/<feature>.test.js`) carregando libs REAIS no sandbox `vm`
+   quando houver dependência de vendor — mais fiel que stub.
+7. **`npm run build` + `npm test` verdes** e `node --check` nos arquivos tocados. Commitar a fatia.
+
+### 5.1.4 Guard-rails (o que trava regressão)
+
+- `no-duplicate-core.test.js` — garante definição **única**: ao remover a legada, a função
+  migrada não pode reaparecer em dois lugares.
+- `config-compat.test.js` — protege o contrato `checkConfigValue`/`isDefaultEnabledConfigValue`,
+  **já portados para `core/config`** (fatia 13). O teste agora trava que o core os provê e o
+  legado não os redefine.
+- **Smoke test manual** (`SMOKE_TEST.md`) como gate de produção a cada fatia que toque view.
+- Cuidado verbatim com **regex e quirks** (ranges mojibake, zero-width, `opacity||1`): copiar
+  com escapes `\u`, nunca "limpar" — já documentado nas fatias 8–9.
+
+### 5.1.5 Roteiro concreto para terminar "Controlar Prazos"
+
+**Estado atual — núcleo puro da feature 100% extraído** (fatias 10–13):
+`getRecalculaPrazo`, `parsePrazoTag`, `parsePrazoTooltip`, `getDateBoxState`, `getProgressPercent`
+em `core/prazos.js`; o gate `checkConfigValue` agora é core-backed (`core/config.js`).
+
+Fatias concluídas:
+1. ✅ **`core/prazos.js` — cálculo/parse puros.** `getRecalculaPrazo` (fatia 10), `parsePrazoTag`
+   (11), `parsePrazoTooltip`/`getDateBoxState`/`getProgressPercent` (12, extraídos de dentro de
+   `updateTablePrazoProcesso`/`getDatesPreview`/`getProgressPreview`).
+2. ✅ **View do marcador (`sei-pro.js`).** `setControlePrazo`/`updateTablePrazoProcesso`/
+   `getProgressPreview` agora delegam ao core; só DOM+`moment` ficam na view.
+3. ✅ **Gate de config.** `checkConfigValue`/`isDefaultEnabledConfigValue` portados (fatia 13).
+
+**Conclusão (avaliação 2026-06-18): a feature atingiu o ponto de parada natural desta fase.**
+O que resta NÃO tem extração limpa para o core e **deve permanecer no legado** — manter assim é
+o playbook sendo seguido, não dívida:
+- **Switch handlers** (`configDatesSwitchChangePrazo`, `changeAtivRecalcPrazoSwitch`): jQuery
+  show/hide puro, **sem lógica de domínio**. View por definição (§5.1.1).
+- **`getConfigDadosUnidade`** (`sei-pro-atividades.js`): lê **estado global mutável**
+  (`arrayConfigAtividades`, `arrayConfigAtivUnidade` — reatribuídos em múltiplos pontos, ligados
+  a `getOptionsPro`/`hybridStorageRestorePro`) e chama `getConfigDadosEntidade`. Trazê-lo ao core
+  **arrastaria esse acoplamento para dentro do core** — proibido pelo playbook. Pertence a um
+  **cluster futuro "config de atividades"**, não à fatia de prazos.
+- **Orquestração** (`initControlePrazo`/`addControlePrazo`/`setPrazoMarcador`): init/dialog/AJAX —
+  camada de view/bootstrap, fica no legado até `features/` ser bundlado.
+
+**Gatilho para retomar:** quando o build evoluir para bundlar `src/features/` (§5.1.2), prazos é
+a **candidata a inaugurar `src/features/prazos/`** — movendo a view legada (que já só chama o
+core) para lá. Antes disso não há ganho arquitetural a extrair desta feature.
 
 ---
 
@@ -461,7 +639,7 @@ CORS e quotas num só lugar.
 | 3 — Adapter versão | Alto | Médio | **Alto valor** |
 | 4 — Storage/rede | Médio | Médio | Sequência |
 | 5 — Build | Habilitador | Médio-alto | Quando limpo |
-| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 piloto `core/validacao.js` feito |
+| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 11 fatias feitas (56 fn em 8 módulos); método em §5.1 |
 
 ---
 

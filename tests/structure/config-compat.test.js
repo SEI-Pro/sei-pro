@@ -9,29 +9,31 @@ function read(rel) {
     return readFileSync(join(rootDir, rel), 'utf8');
 }
 
-// Compatibility contract (migration Phases 1–5):
+// Compatibility contract (migration Phase 6 — checkConfigValue ported to core):
 //
-// The core config layer (src/core/config.js) exposes verifyConfigValue and
-// getConfigValue, but NOT checkConfigValue. checkConfigValue has distinct
-// "default-enabled" semantics (it returns true for absent config via
-// isDefaultEnabledConfigValue), so it was intentionally left in the legacy
-// module rather than ported. Many call sites still use it, so the extension
-// depends on sei-functions-pro.js remaining loaded to provide it.
+// checkConfigValue has distinct "default-enabled" semantics (returns true for
+// absent config via isDefaultEnabledConfigValue). It was previously left in the
+// legacy module; in Phase 6 it was ported VERBATIM to src/core/config.js and the
+// legacy definition removed. The legacy global is preserved via aliasGlobal so
+// the existing call sites keep working.
 //
-// This test locks that contract: if checkConfigValue is removed from the legacy
-// module without being ported to core, this fails — surfacing the break instead
-// of letting it ship silently.
+// This test locks the new contract: checkConfigValue (and its default-enabled
+// dependency) must be provided by the core config layer and aliased globally,
+// and must NOT be redefined in the legacy module (which would duplicate/shadow).
 describe('config compatibility contract: checkConfigValue', () => {
-    it('is provided by the legacy module (sei-functions-pro.js)', () => {
-        const legacy = read('dist/js/sei-functions-pro.js');
-        expect(legacy).toMatch(/function checkConfigValue\s*\(/);
+    it('is provided by the core config layer (src/core/config.js)', () => {
+        const core = read('src/core/config.js');
+        expect(core).toMatch(/function checkConfigValue\s*\(/);
         // its default-enabled dependency must live alongside it
-        expect(legacy).toMatch(/function isDefaultEnabledConfigValue\s*\(/);
+        expect(core).toMatch(/function isDefaultEnabledConfigValue\s*\(/);
+        // and both must be exposed as legacy globals for back-compat
+        expect(core).toMatch(/aliasGlobal\(\s*['"]checkConfigValue['"]/);
+        expect(core).toMatch(/aliasGlobal\(\s*['"]isDefaultEnabledConfigValue['"]/);
     });
 
-    it('is NOT yet provided by the core config layer (still a legacy dependency)', () => {
-        const core = read('src/core/config.js');
-        expect(core).not.toMatch(/function checkConfigValue\b/);
-        expect(core).not.toMatch(/aliasGlobal\(\s*['"]checkConfigValue['"]/);
+    it('is NOT redefined in the legacy module (sei-functions-pro.js)', () => {
+        const legacy = read('dist/js/sei-functions-pro.js');
+        expect(legacy).not.toMatch(/function checkConfigValue\s*\(/);
+        expect(legacy).not.toMatch(/function isDefaultEnabledConfigValue\s*\(/);
     });
 });
