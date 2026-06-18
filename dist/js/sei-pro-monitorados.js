@@ -1157,12 +1157,14 @@ function setPanelMonitorados(mode) {
                 if (typeof value.configdate !== 'undefined' && value.configdate !== null && typeof value.configdate.dateTo !== 'undefined' && value.configdate.dateTo !== null) { value.configdate.dateTo = moment().format('YYYY-MM-DD') }
                 var datesMonitoradoHtml = (typeof value.configdate !== 'undefined' && value.configdate !== null) ? getDatesPreview(value.configdate) : ''; 
                 var tagDatesMonitoradoClass = (datesMonitoradoHtml != '') ? 'tagTableName_'+$(datesMonitoradoHtml).data('tagname') : '';
-                var iconProcesso = ( $.inArray(value.processo, arrayProcessosUnidade) == -1 ) ? 'fas fa-folder' : 'far fa-folder-open';
-                var tipsProcesso = ( $.inArray(value.processo, arrayProcessosUnidade) == -1 ) ? 'Processo fechado nesta unidade' : 'Processo aberto nesta unidade';
+                var processoAberto = ( $.inArray(value.processo, arrayProcessosUnidade) != -1 );
+                var iconProcesso = processoAberto ? 'far fa-folder-open' : 'fas fa-folder';
+                var tipsProcesso = processoAberto ? 'Processo aberto nesta unidade' : 'Processo fechado nesta unidade';
                 var issetOrder = (value.hasOwnProperty('order') && value.order !== null && value.order != -1) ? true : false;
                 var order = (issetOrder) ? value.order : index;
                 var categoria = (value.hasOwnProperty('categoria') && value.categoria !== null && value.categoria != '') ? value.categoria : false;
-                var htmlIconsHome = ($('#P'+value.id_procedimento).find('td').eq(1).find('a').length > 0) ? $('#P'+value.id_procedimento).find('td').eq(1).find('a').map(function(v){ return this.outerHTML }).get().join('') : '';
+                var procRow = $('#P'+value.id_procedimento).find('td').eq(1).find('a');
+                var htmlIconsHome = (procRow.length > 0) ? procRow.map(function(){ return this.outerHTML }).get().join('') : '';
                 var processoSafe = (typeof escapeHtml === 'function') ? escapeHtml(value.processo) : value.processo;
                 var descricaoSafe = (typeof escapeHtml === 'function') ? escapeHtml(value.descricao) : value.descricao;
                 var tipoProcedimentoSafe = (typeof escapeHtml === 'function') ? escapeHtml(value.tipo_procedimento) : value.tipo_procedimento;
@@ -1180,15 +1182,15 @@ function setPanelMonitorados(mode) {
                                             '           <td align="left" class="tdmonitorado_dates '+((datesMonitoradoHtml.trim() == '' ) ? 'info_dates_follow_empty' : '')+'">'+
                                             '               <span class="info_dates_monitorado">'+datesMonitoradoHtml+
                                             '               </span>'+
-                                            '               <a class="newLink followLink followLinkDates followLinkDatesEdit" onclick="showDatesMonitorado(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Editar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
-                                            '               <a class="newLink followLink followLinkDates followLinkDatesAdd" onclick="showDatesMonitorado(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-stopwatch" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkDates followLinkDatesEdit" onclick="showDatesMonitorado(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Editar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt"></i></a>'+
+                                            '               <a class="newLink followLink followLinkDates followLinkDatesAdd" onclick="showDatesMonitorado(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-stopwatch"></i></a>'+
                                             '               <span class="info_dates_monitorado_txt" style="display:none;">'+
                                             '                   <input value="'+datesMonitorado+'" onblur="showDatesMonitorado(this, \'hide\')"  onkeypress="keyDatesMonitorado(event)" type="date" class="monitoradoDatesPro" name="monitoradoDatesPro">'+
                                             '                   <a class="newLink" onclick="showDatesMonitorado(this, \'hide\')" style="padding: 2px; margin: 0 2px;" onmouseover="return infraTooltipMostrar(\'Salvar\');" onmouseout="return infraTooltipOcultar();">'+
-                                            '                      <i class="fas fa-thumbs-up" style="font-size: 100%;"></i>'+
+                                            '                      <i class="fas fa-thumbs-up"></i>'+
                                             '                   </a>'+
                                             '                   <a class="newLink monitoradoConfigDates" onclick="openBoxConfigDates(this)" style="padding: 2px; margin: 0 2px;" onmouseover="return infraTooltipMostrar(\'Op\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();">'+
-                                            '                      <i class="fas fa-cog" style="font-size: 100%;"></i>'+
+                                            '                      <i class="fas fa-cog"></i>'+
                                             '                   </a>'+
                                             '               </span>'+
                                             '           </td>'+
@@ -1198,27 +1200,27 @@ function setPanelMonitorados(mode) {
                                             '               <span class="info_tags_follow_txt" style="display:none">'+
                                             '                   <input value="'+tagsMonitorado+'" class="monitoradoTagsPro" name="monitoradoTagsPro">'+
                                             '               </span>'+
-                                            '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
-                                            '               <a class="newLink followLink followLinkTags followLinkTagsAdd" onclick="showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Adicionar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkTagsAdd" onclick="showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Adicionar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags"></i></a>'+
                                             '           </td>'+
                                             '           <td class="tdmonitorado_map '+((typeof value.latlng !== 'undefined' && value.latlng !== null) ? '' : 'info_maps_follow_empty')+'">'+
-                                            '               <span class="info_maps_follow">'+(typeof value.latlng !== 'undefined' && value.latlng !== null ? '<a class="newLink" onclick="openBoxSingleMap(this, true)"><i class="fas fa-map-marked azulColor" style="font-size: 100%;"></i></a>' : '')+'</span>'+
-                                            '               <a class="newLink followLink followLinkMaps followLinkMapsEdit" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Editar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
-                                            '               <a class="newLink followLink followLinkMaps followLinkMapsAdd" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Adicionar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-map-marker-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <span class="info_maps_follow">'+(typeof value.latlng !== 'undefined' && value.latlng !== null ? '<a class="newLink" onclick="openBoxSingleMap(this, true)"><i class="fas fa-map-marked azulColor"></i></a>' : '')+'</span>'+
+                                            '               <a class="newLink followLink followLinkMaps followLinkMapsEdit" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Editar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt"></i></a>'+
+                                            '               <a class="newLink followLink followLinkMaps followLinkMapsAdd" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Adicionar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-map-marker-alt"></i></a>'+
                                             '           </td>'+
                                             '           <td class="content_desc">'+
                                             '               <span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'monitorado\')" onkeypress="keyFollowDesc(event, \'monitorado\')" value="'+descricaoSafe+'" name="monitoradoDescriptionPro"></span>'+
                                             '               <span class="info">'+descricaoSafe+'</span>'+
-                                            '               <a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Editar especifica\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Editar especifica\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt"></i></a>'+
                                             '           </td>'+
                                             '           <td>'+
                                             '               '+tipoProcedimentoSafe+
-                                            '               <a class="newLink followLink followLinkTags followLinkMonitoradoRemove" onclick="removeMonitoradoPainelPro(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Remover dos Processos Monitorados\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkMonitoradoRemove" onclick="removeMonitoradoPainelPro(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Remover dos Processos Monitorados\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash-alt"></i></a>'+
                                             '           </td>'+
                                             '           <td class="td_monitorado_category">'+
                                             '               <span class="info_category_txt">'+categoriaSafe+'</span>'+
                                             '               <span class="info_category" style="display:none"></span>'+
-                                            '               <a class="newLink followLink followLinkTags followLinkMonitoradoCategory" onclick="editCategoryMonitorado(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Editar categoria\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkMonitoradoCategory" onclick="editCategoryMonitorado(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Editar categoria\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt"></i></a>'+
                                             '           </td>'+
                                             '           <td align="center" data-order="'+order+'">'+
                                             '               <a class="newLink sorterTrMonitorado" style="margin-right: 20px; cursor: grab;"></i>'+
@@ -1256,7 +1258,7 @@ function setPanelMonitorados(mode) {
                                 '               <i class="fas fa-sync-alt"></i>'+
                                 '           </a>'+
                                 '           <a class="newLink iconMonitorados_maps" onclick="openBoxMultipleMap()" onmouseover="return infraTooltipMostrar(\'Mapa de processos monitorados\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right; '+(checkMaps ? '' : 'display:none;')+'">'+
-                                '              <i class="fas fa-map-marker-alt" style="font-size: 100%;"></i>'+
+                                '              <i class="fas fa-map-marker-alt"></i>'+
                                 '           </a>'+
                                 '           <a class="newLink iconMonitorados_config" onclick="openConfigMonitorados(this)" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-cog"></i>'+
@@ -1732,7 +1734,7 @@ function monitoradosLabelOptions(id_procedimento) {
                             '                   <span class="info_dates_monitorado_txt">'+
                             '                       <input id="monitoradoPrazoSend" value="'+(config && typeof config.date !== 'undefined' && config.date !== null ? config.date : '')+'" style="width: 120px; background-color: #f9fafa;" onblur="parent.showDatesMonitorado(this, \'hide\')" onkeypress="parent.keyDatesMonitorado(event)" type="date" class="monitoradoDatesPro" name="monitoradoPrazoSend">'+
                             '                       <a class="newLink monitoradoConfigDates" onclick="parent.openBoxConfigDates(this)" style="padding: 5px 8px;margin: 8px 2px 0 10px;font-size: 10pt;" onmouseover="return infraTooltipMostrar(\'Op\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();">'+
-                            '                          <i class="fas fa-cog" style="font-size: 100%;"></i>'+
+                            '                          <i class="fas fa-cog"></i>'+
                             '                       </a>'+
                             '                   </span>'+
                             '               </td>'+
@@ -1744,7 +1746,7 @@ function monitoradosLabelOptions(id_procedimento) {
                             '                   <span class="info_tags_follow_txt" style="display:none;margin-top: -8px !important;">'+
                             '                       <input value="'+tagsMonitorado+'" class="monitoradoTagsPro" name="monitoradoTagsPro">'+
                             '                   </span>'+
-                            '                   <a class="newLink followLinkTagsAdd_send" style="font-size: 10pt;" onclick="parent.showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i> Adicionar etiqueta</a>'+
+                            '                   <a class="newLink followLinkTagsAdd_send" style="font-size: 10pt;" onclick="parent.showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags"></i> Adicionar etiqueta</a>'+
                             '               </td>'+
                             '          </tr>'+
                             '       </table>';
