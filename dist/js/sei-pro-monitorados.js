@@ -553,70 +553,31 @@ function configDatesSwitchChange(this_) {
     configDatesPreview();
     if ($('#configDatesBox_selectdoc').is(':checked')) { configDatesSetUpdate('update') }
 }
+// Grupo de switches mutuamente exclusivos (radio-like via checkboxes).
+// Regra: o switch que liga vence; ao desligar, opt1<->opt2 se alternam e opt3 off devolve para opt2.
 function configSwitchChange(this_, option1, option2, option3) {
-    var data_this = $(this_).data();
-    if (data_this.type == option1 && $(this_).is(':checked')) {
-        $('#configDatesBox_'+option2).prop('checked', false);
-        $('#configDatesBox_'+option2).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        if (option3) { 
-            $('#configDatesBox_'+option3).prop('checked', false); 
-            $('#configDatesBox_'+option3).closest('tr').find('.iconSwitch').removeClass('azulColor');
+    var _this = $(this_);
+    var type = _this.data('type');
+    var group = option3 ? [option1, option2, option3] : [option1, option2];
+
+    if (group.indexOf(type) !== -1) {
+        var active;
+        if (_this.is(':checked')) {
+            active = type;                      // o que acabou de ligar vence
+        } else if (type === option2) {
+            active = option1;                   // desligou opt2 -> opt1 assume
+        } else {
+            active = option2;                   // desligou opt1 ou opt3 -> opt2 assume
         }
-        $('.configDates_'+option1).fadeIn('slow');
-        $('.configDates_'+option2).fadeOut('slow');
-        if (option3) { $('.configDates_'+option3).fadeOut('slow'); }
-    } else if (data_this.type == option1 && !$(this_).is(':checked')) {
-        $('#configDatesBox_'+option2).prop('checked', true);
-        $('#configDatesBox_'+option2).closest('tr').find('.iconSwitch').addClass('azulColor');
-        if (option3) { 
-            $('#configDatesBox_'+option3).prop('checked', false); 
-            $('#configDatesBox_'+option3).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        }
-        $('.configDates_'+option2).fadeIn('slow');
-        $('.configDates_'+option1).fadeOut('slow');
-        if (option3) { $('.configDates_'+option3).fadeOut('slow'); }
-    } else if (data_this.type == option2 && !$(this_).is(':checked')) {
-        $('#configDatesBox_'+option1).prop('checked', true);
-        $('#configDatesBox_'+option1).closest('tr').find('.iconSwitch').addClass('azulColor');
-        if (option3) { 
-            $('#configDatesBox_'+option3).prop('checked', false); 
-            $('#configDatesBox_'+option3).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        }
-        $('.configDates_'+option1).fadeIn('slow');
-        $('.configDates_'+option2).fadeOut('slow');
-        if (option3) { $('.configDates_'+option3).fadeOut('slow'); }
-    } else if (data_this.type == option2 && $(this_).is(':checked')) {
-        $('#configDatesBox_'+option1).prop('checked', false);
-        $('#configDatesBox_'+option1).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        if (option3) { 
-            $('#configDatesBox_'+option3).prop('checked', false); 
-            $('#configDatesBox_'+option3).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        }
-        $('.configDates_'+option1).fadeOut('slow');
-        $('.configDates_'+option2).fadeIn('slow');
-        if (option3) { $('.configDates_'+option3).fadeOut('slow'); }
-    } else if (option3 && data_this.type == option3 && !$(this_).is(':checked')) {
-        $('#configDatesBox_'+option2).prop('checked', true);
-        $('#configDatesBox_'+option2).closest('tr').find('.iconSwitch').addClass('azulColor');
-        $('#configDatesBox_'+option1).prop('checked', false);
-        $('#configDatesBox_'+option1).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        $('.configDates_'+option2).fadeIn('slow');
-        $('.configDates_'+option1).fadeOut('slow');
-        $('.configDates_'+option3).fadeOut('slow');
-    } else if (option3 && data_this.type == option3 && $(this_).is(':checked')) {
-        $('#configDatesBox_'+option1).prop('checked', false);
-        $('#configDatesBox_'+option1).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        $('#configDatesBox_'+option2).prop('checked', false);
-        $('#configDatesBox_'+option2).closest('tr').find('.iconSwitch').removeClass('azulColor');
-        $('.configDates_'+option1).fadeOut('slow');
-        $('.configDates_'+option2).fadeOut('slow');
-        $('.configDates_'+option3).fadeIn('slow');
+        group.forEach(function(opt){
+            var on = (opt === active);
+            $('#configDatesBox_'+opt).prop('checked', on)
+                .closest('tr').find('.iconSwitch').toggleClass('azulColor', on);
+            $('.configDates_'+opt)[on ? 'fadeIn' : 'fadeOut']('slow');
+        });
     }
-    if ($(this_).is(':checked')) { 
-        $(this_).closest('tr').find('.iconSwitch').addClass('azulColor');
-    } else {
-        $(this_).closest('tr').find('.iconSwitch').removeClass('azulColor');
-    }
+    // sincroniza o ícone do próprio switch alterado (idempotente entre as 3 chamadas)
+    _this.closest('tr').find('.iconSwitch').toggleClass('azulColor', _this.is(':checked'));
 }
 function updateCountTableMonitorado() {
     var count = $('.tableFollow').find('tbody').find('tr:visible').length;
