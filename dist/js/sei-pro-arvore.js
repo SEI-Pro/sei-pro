@@ -248,8 +248,8 @@ function actionToolbarPro(this_, triggerButton) {
         } else if ( button_txt == 'Assinar documento' ) {
             callActionsArvore(doc, 'doc_assinar');
             button_clicktxt = 'Abrindo...';
-        } else if ( button_txt == 'Adicionar aos favoritos' ) {
-            callActionsArvore(doc, 'doc_favorito');
+        } else if ( button_txt == 'Adicionar aos monitorados' ) {
+            callActionsArvore(doc, 'doc_monitorado');
             button_clicktxt = 'Abrindo...';
         } else if ( button_txt == 'Ci\u00EAncia' ) {
             callActionsArvore(doc, 'doc_ciencia');
@@ -489,7 +489,7 @@ function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = f
             a.show();
         } else if (a.text() == 'Assinar documento' && (!checkIconsView || listIconsView.filter(function(v){ return (v.indexOf('sei_assinar') !== -1 || v.indexOf('documento_assinar') !== -1) }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_assinar') !== -1 }).length > 0 ) {
             a.show();
-        } else if (a.text() == 'Adicionar aos favoritos' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_documento_modelo') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('protocolo_modelo_cadastrar') !== -1 }).length > 0 ) {
+        } else if (a.text() == 'Adicionar aos monitorados' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_documento_modelo') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('protocolo_modelo_cadastrar') !== -1 }).length > 0 ) {
             a.show();
         } else if (a.text() == 'Ci\u00EAncia' && (!checkIconsView || listIconsView.filter(function(v){ return v.indexOf('sei_ciencia') !== -1 }).length > 0) && listLinks.filter(function(v){ return v.indexOf('documento_ciencia') !== -1 }).length > 0 ) {
             a.show();
@@ -731,7 +731,7 @@ function callActionsArvore(doc, mode) {
         if (link.length > 0 && link[0] !== '') {
             parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
         }
-    } else if (mode == 'doc_favorito') {
+    } else if (mode == 'doc_monitorado') {
         var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('protocolo_modelo_cadastrar') !== -1) });
         if (link.length > 0 && link[0] !== '') {
             parent.document.getElementById(ifrVisualizacao_).setAttribute("src",link[0]);
@@ -2126,7 +2126,7 @@ function getAtividadesProcessoArvore() {
                     htmlInfoAtividades +=   '<div class="kanban-item '+kanbanItem.class.join(' ')+'" data-eid="_id_'+value.id_demanda+'">'+
                                             '   '+kanbanItem.title+
                                             (htmlActionsAtividade.action == 'info' ? '' :
-                                            '   <span class="info_dates_fav" style="display: block;padding: 0;margin: 10px 0 0 0;">'+
+                                            '   <span class="info_dates_monitorado" style="display: block;padding: 0;margin: 10px 0 0 0;">'+
                                             '       <a class="newLink" onclick="parent.actionsAtividade('+value.id_demanda+')">'+
                                             '           <i style="margin-right: 3px;" class="'+htmlActionsAtividade.icon+' azulColor"></i>'+
                                             '           '+htmlActionsAtividade.name+
@@ -2602,10 +2602,10 @@ function initSeiProArvore(loop = true) {
         parent.initAtividadesProcesso();
     }
     if (
-        (typeof parent.insertIconFavorites === 'function' || typeof parent.insertIconFavorites !== 'undefined') && 
-        typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('gerenciarfavoritos')
+        (typeof parent.insertIconMonitorados === 'function' || typeof parent.insertIconMonitorados !== 'undefined') && 
+        typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('gerenciarmonitorados')
         ) {
-        parent.insertIconFavorites();
+        parent.insertIconMonitorados();
     }
     if (!window.__SEI_PRO_TREE_BOOT__ && typeof parent.checkHostLimit !== 'undefined'  && !parent.checkHostLimit() && (typeof parent.initCheckDadosProcesso === 'function' || typeof parent.initCheckDadosProcesso !== 'undefined')) {
         parent.initCheckDadosProcesso();

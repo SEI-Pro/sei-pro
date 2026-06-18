@@ -990,15 +990,15 @@ td.celStatusAtividade a.iconAtividade:first-child {
     background: #4285F4 !important;
     border: 1px solid #365ea0 !important;
 }
-.tableFavoritos {
+.tableMonitorados {
     position: relative;
     margin-top: 20px !important;
 }
-#favoritesProDiv {
+#monitoradosProDiv {
     width: 100% !important;
     overflow-x: hidden;
 }
-#favoritesProDiv .tabelaPanelScroll {
+#monitoradosProDiv .tabelaPanelScroll {
     overflow: visible !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
@@ -1007,19 +1007,19 @@ td.celStatusAtividade a.iconAtividade:first-child {
     height: auto !important;
     padding-bottom: 0;
 }
-#favoritesProDiv .tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
+#monitoradosProDiv .tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
     display: none !important;
 }
-#favoritesProDiv #favoriteTablePro {
+#monitoradosProDiv #monitoradoTablePro {
     width: 100% !important;
 }
-.tableFavoritos .newLink .fa-layers-counter {
+.tableMonitorados .newLink .fa-layers-counter {
     background: #b7b7b7;
 }
-#favoriteTablePro .sorterTrFavorite .fa-layers-counter {
+#monitoradoTablePro .sorterTrMonitorado .fa-layers-counter {
     display: none !important;
 }
-.tableFavoritos th.tituloControle,
+.tableMonitorados th.tituloControle,
 .tableAtividades th.tituloControle {
     padding: 5px 0;
 }
@@ -1347,7 +1347,7 @@ span.info[contentEditable="true"] {
     overflow: hidden;
     white-space: nowrap;
 }
-td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
+td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after {
     content: "Adicionar prazo";
     position: absolute;
     right: 40px;
@@ -1355,7 +1355,7 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
     color: #adadad;
     font-style: italic;
 }
-.tableFavoritos td.tdfav_tags.info_tags_follow_empty:hover .info_tags_follow:after {
+.tableMonitorados td.tdmonitorado_tags.info_tags_follow_empty:hover .info_tags_follow:after {
     content: "Adicionar etiqueta";
     position: absolute;
     right: 40px;
@@ -1363,7 +1363,7 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
     color: #adadad;
     font-style: italic;
 }
-.tableFavoritos td.tdfav_maps.info_maps_follow_empty:hover .info_maps_follow:after {
+.tableMonitorados td.tdmonitorado_maps.info_maps_follow_empty:hover .info_maps_follow:after {
     content: "Adicionar mapa";
     position: absolute;
     right: 40px;
@@ -1386,20 +1386,20 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
 .info_tags_follow_txt .tagsinput {
     padding-left: 10px;
 }
-.tagFavAddColorInput {
+.tagMonitoradoAddColorInput {
     opacity: 0;
     width: 2px !important;
     margin-left: 38px;
     height: 10px;
 }
-.tagFavEditIcon{
+.tagMonitoradoEditIcon{
     margin: -2px 0 0 -38px;
 }
-.tagFavAddColor {
+.tagMonitoradoAddColor {
     margin: -2px 0 0 -18px;
 }
-.tagFavEditIcon,
-.tagFavAddColor {
+.tagMonitoradoEditIcon,
+.tagMonitoradoAddColor {
     position: absolute;
     height: 20px;
     width: 20px;
@@ -1451,12 +1451,12 @@ td.tdfav_dates.info_dates_follow_empty:hover .info_dates_fav:after {
     padding: 5px 10px;
     z-index: 88;
 }
-.info_dates_fav {
+.info_dates_monitorado {
     display: inline-block;
     min-height: 14px;
     margin-right: 20px;
 }
-td.tdfav_tags {
+td.tdmonitorado_tags {
     padding-right: 20px;
     min-width: 120px;
 }
@@ -1474,7 +1474,7 @@ span.info_maps_follow {
     display: inline-flex;
     min-height: 22px;
 }
-input.favoriteDatesPro {
+input.monitoradoDatesPro {
     border: none;
     background: transparent;
     font-size: 9pt;
@@ -1508,7 +1508,7 @@ td.info_maps_follow_empty:hover a.newLink.followLink.followLinkMapsEdit,
 td.info_tags_follow_empty:hover a.newLink.followLink.followLinkTagsEdit {
     visibility: hidden;
 }
-input.favoriteDatesPro {
+input.monitoradoDatesPro {
     background: #dfdfdf;
     border-radius: 5px;
     text-align: center;
@@ -1856,10 +1856,10 @@ table.moreInfoBox td:first-child,
 #tabelaAtivPanel .tagsinput .tag {
     margin: 5px;
 }
-#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavAddColor,
-#boxProjeto .tagsinput .tag .tagFavAddColor,
-#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagFavEditIcon,
-#boxProjeto .tagsinput .tag .tagFavEditIcon {
+#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagMonitoradoAddColor,
+#boxProjeto .tagsinput .tag .tagMonitoradoAddColor,
+#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagMonitoradoEditIcon,
+#boxProjeto .tagsinput .tag .tagMonitoradoEditIcon {
     height: 30px !important;
     margin-top: -7px !important;
     font-size: 90%;
@@ -2104,7 +2104,7 @@ table.moreInfoBox td:first-child,
 .kanban-container .kanban-item.tagKanName_date_pausado > div > span {
     opacity: 0.5;
 }
-.kanban-container .kanban-item.tagKanName_date_pausado span.info_dates_fav {
+.kanban-container .kanban-item.tagKanName_date_pausado span.info_dates_monitorado {
     opacity: 1 !important;
 }
 .kanban-container .kanban-item.tagKanName_date_pausado:before {
@@ -2160,7 +2160,7 @@ table.moreInfoBox td:first-child,
 .kanban-container.view_full .kanban-item .kanban-actions {
     display: block !important;
 }
-.kanban-item:hover .info_dates_fav {
+.kanban-item:hover .info_dates_monitorado {
     display: none !important;
 }
 .kanban-item .kanban-title-card .info {
@@ -3578,7 +3578,7 @@ div#chartAtivActions .chosen-container {
 .kanban-item a.newLink .fa-archive {
     color: #666;
 }
-.infraAreaTabela .fa-star.iconFavoritePro {
+.infraAreaTabela .fa-star.iconMonitoradoPro {
     color: #999 !important;
 }
 .infoDadosArvore .kanban-pinboard,
@@ -3882,7 +3882,7 @@ input[type="currency"]{
 .newSEI #divArvore .urgentePro {
     vertical-align: baseline;
 }
-.newSEI #topmenu .iconFavoritePro {
+.newSEI #topmenu .iconMonitoradoPro {
     vertical-align: super;
 }
 .newSEI #topmenu .noVisitado[title*="(URGENTE)"],
@@ -4520,7 +4520,7 @@ div#dialogBoxDocLote p {
     display: inline;
     margin: 0;
 }
-.dialogBoxAI #favoritePromptAI {
+.dialogBoxAI #monitoradoPromptAI {
     position: absolute;
     right: 20px;
     top: 70px;

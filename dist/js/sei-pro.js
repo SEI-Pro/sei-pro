@@ -1583,7 +1583,7 @@ function getProcessosPaginacao(this_, index, tipo) {
                 var ItensHash_ = $('#hdn'+tipo+'ItensHash');
                     //ItensHash_.val(ItensHash);
                 getProcessosPaginacao(this_, index+1, tipo);
-                if (checkConfigValue('gerenciarfavoritos')) appendStarOnProcess();
+                if (checkConfigValue('gerenciarmonitorados')) appendStarOnProcess();
                 initControlePrazo(true);
                 initViewEspecifacaoProcesso();
                 addAcompanhamentoEspIcon();
@@ -1846,19 +1846,19 @@ function getChangeTypeProc(idTypeProc, txtTypeProc) {
         alertaBoxPro('Sucess', 'check-circle', 'Informa\u00E7\u00F5es editadas com sucesso!');
     }
 }
-function initPanelFavorites(TimeOut = 9000) {
+function initPanelMonitorados(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelFavorites !== 'undefined' && typeof orderDivPanel !== 'undefined') { 
-        if (checkConfigValue('gerenciarfavoritos') && typeof getStoreFavoritePro() !== 'undefined' && getStoreFavoritePro().hasOwnProperty('favorites')) {
+    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelMonitorados !== 'undefined' && typeof orderDivPanel !== 'undefined') { 
+        if (checkConfigValue('gerenciarmonitorados') && typeof getStoreMonitoradoPro() !== 'undefined' && getStoreMonitoradoPro().hasOwnProperty('monitorados')) {
             setTimeout(function(){ 
-                setPanelFavorites('insert');
-                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('setPanelFavorites');
+                setPanelMonitorados('insert');
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('setPanelMonitorados');
             }, 500);
         }
     } else {
         setTimeout(function(){ 
-            initPanelFavorites(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initPanelFavorites'); 
+            initPanelMonitorados(TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initPanelMonitorados'); 
         }, 500);
     }
 }
@@ -4176,7 +4176,7 @@ function initSeiPro() {
         initTableSorterHome();
         insertGroupTable();
         replaceSelectAll();
-        initPanelFavorites();
+        initPanelMonitorados();
         checkLoadConfigSheets();
         insertDivPanel();
         setTimeout(() => {

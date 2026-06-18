@@ -30,7 +30,7 @@ var arrayAtividadesPro = (typeof getOptionsPro !== 'undefined' && !getOptionsPro
 var arrayAtividadesProcPro = typeof getOptionsPro !== 'undefined' && !getOptionsPro('panelLocalStorePro') && (hybridStorageRestorePro('configDataAtividadesProcPro') !== null) ? hybridStorageRestorePro('configDataAtividadesProcPro') : [];
 var arrayPrescricoesProcPro = typeof getOptionsPro !== 'undefined' && !getOptionsPro('panelLocalStorePro') && (hybridStorageRestorePro('configDataPrescricoesProcPro') !== null) ? hybridStorageRestorePro('configDataPrescricoesProcPro') : [];
 var checkLoadAtividadesProcPro = false;
-var checkLoadFavoritesProcPro = false;
+var checkLoadMonitoradosProcPro = false;
 var arrayAtividades = ($('#ifrArvore').length > 0) ? arrayAtividadesProcPro : arrayAtividadesPro;
 var perfilAtividadesSelected = typeof getOptionsPro !== 'undefined' && getOptionsPro('panelAtividadesViewSyncUnidade')
     ? siglaUnidadeAtual
@@ -142,7 +142,7 @@ function getServerAtividades(param, mode) {
             (mode == 'chart_demandas' && checkCapacidade(mode)) ||
             (mode == 'chart_produtividade_mensal' && checkCapacidade(mode)) ||
             (mode.indexOf('config_') !== -1 && checkCapacidade(mode)) ||
-            (mode.indexOf('_favoritos') !== -1 && checkCapacidade(mode)) ||
+            (mode.indexOf('_monitorados') !== -1 && checkCapacidade(mode)) ||
             (mode == 'update_checklist' && checkCapacidade(mode)) ||
             (mode == 'update_projeto_etapa' && checkCapacidade(mode)) ||
             (mode.indexOf('report_') !== -1 && checkCapacidade(mode)) ||
@@ -161,7 +161,7 @@ function getServerAtividades(param, mode) {
 
         delayServerAtiv = 1; setTimeout(function () { delayServerAtiv = 0; }, 1000);
 
-        if (typeof loadingButtonConfirm !== 'undefined' && mode.indexOf('_favoritos') === -1) { loadingButtonConfirm(true); }
+        if (typeof loadingButtonConfirm !== 'undefined' && mode.indexOf('_monitorados') === -1) { loadingButtonConfirm(true); }
         if (mode.indexOf('config_update_') !== -1) loadingTagConfig(param.type, 'get');
 
         var authToken = undefined;
@@ -220,14 +220,14 @@ function getServerAtividades(param, mode) {
                             } else {
                                 setChartAtividades(ativData['chart'], mode);
                             }
-                        } else if (mode == 'check_favoritos') {
-                            checkFileRemoteFav('set', ativData);
+                        } else if (mode == 'check_monitorados') {
+                            checkFileRemoteMonitorado('set', ativData);
                         } else if (mode == 'check_entregas_atividades') {
                             checkTempoPlanoEntrega(false, 'set', ativData);
                             loadingButtonConfirm(false);
-                        } else if (mode == 'get_favoritos') {
-                            restoreFavServer(ativData['config']);
-                        } else if (mode == 'set_favoritos') {
+                        } else if (mode == 'get_monitorados') {
+                            restoreMonitoradoServer(ativData['config']);
+                        } else if (mode == 'set_monitorados') {
                             loadingButtonConfirm(false);
                         } else if (mode == 'view_documento') {
                             loadingButtonConfirm(false);
@@ -2903,7 +2903,7 @@ function getRowsPanelAtividades(storeAtividades, target) {
                     '           </td>';
             } else if (type == 'date') {
                 html = '           <td align="left" data-type="date">' +
-                    '               <span class="info_dates_fav">' + datesAtivHtml + '</span>' +
+                    '               <span class="info_dates_monitorado">' + datesAtivHtml + '</span>' +
                     '           </td>';
             } else if (type == 'action') {
                 html = '           <td align="left" data-type="action">' +
@@ -2915,7 +2915,7 @@ function getRowsPanelAtividades(storeAtividades, target) {
                     '               ' + checklistHtml +
                     '           </td>';
             } else if (type == 'etiqueta') {
-                html = '           <td align="left" data-type="etiqueta" class="tdfav_tags ' + ((tagsAtivHtml.trim() == '' && checkCapacidade('edit_etiqueta')) ? 'info_tags_follow_empty' : '') + '" data-etiqueta-mode="ativ">' +
+                html = '           <td align="left" data-type="etiqueta" class="tdmonitorado_tags ' + ((tagsAtivHtml.trim() == '' && checkCapacidade('edit_etiqueta')) ? 'info_tags_follow_empty' : '') + '" data-etiqueta-mode="ativ">' +
                     '               <span class="info_tags_follow">' + tagsAtivHtml +
                     '               </span>' + (!checkCapacidade('edit_etiqueta') ? '' :
                         '               <span class="info_tags_follow_txt" style="display:none">' +
@@ -3233,7 +3233,7 @@ function selectViewControl(this_) {
     var value = _this.val().trim();
     var modView = _this.data('panel');
     if (value != '' && modView != 'ganttAtivPanel') {
-        $('#' + modView).find('.info_tags_follow, .info_dates_fav').find('.' + value).eq(0).click();
+        $('#' + modView).find('.info_tags_follow, .info_dates_monitorado').find('.' + value).eq(0).click();
     } else if (value != '' && modView == 'ganttAtivPanel') {
         var data_bar = $(this_).find('option:selected').data('bar');
         var data_text = $(this_).find('option:selected').text();
@@ -4657,7 +4657,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
                         '           <td align="left" class="' + (checkCapacidade('config_approve_atividades') || !value.homologado ? 'editCellNum' : '') + '" data-key="tempo_pactuado">' + value.tempo_pactuado + '</td>' +
                         '           <td align="left" class="editCellNum" data-key="dias_planejado">' + value.dias_planejado + '</td>' +
                         '           <td align="left" class="editCellSelect" data-array="self" data-key="macroatividade" data-value="macroatividade" data-blank-item="true" data-blank-value="">' + (value.macroatividade ? value.macroatividade : '') + '</td>' +
-                        '           <td align="left" class="" data-array="self" data-key="etiquetas" data-value="etiquetas" data-type="etiqueta" data-etiqueta-mode="tipo_ativ" class="tdfav_tags ' + ((tagsAtivHtml.trim() == '' && checkCapacidade('config_approve_atividades')) ? 'info_tags_follow_empty' : '') + '" >' +
+                        '           <td align="left" class="" data-array="self" data-key="etiquetas" data-value="etiquetas" data-type="etiqueta" data-etiqueta-mode="tipo_ativ" class="tdmonitorado_tags ' + ((tagsAtivHtml.trim() == '' && checkCapacidade('config_approve_atividades')) ? 'info_tags_follow_empty' : '') + '" >' +
                         '               <span class="info_tags_follow">' + tagsAtivHtml +
                         '               </span>' +
                         (!checkCapacidade('edit_etiqueta_atividades') ? '' :
@@ -10718,9 +10718,9 @@ function editConfigOptions(this_, id = false) {
             '                   <div class="tagsinput" style="width: 100%;min-height: auto;height: auto;">' +
             '                       <span class="tag tagTableText_afastamento singleOptionColor" data-icontag="' + (colors ? colors.icontag : 'tag') + '" data-colortag="' + (colors ? colors.colortag : 'rgb(191, 213, 232)') + '" data-textcolor="' + (colors ? colors.textcolor : 'black') + '" style="background-color: ' + (colors ? colors.colortag : 'rgb(191, 213, 232)') + ';color: ' + (colors ? colors.textcolor : 'black') + ';width: 100%;height: 30px;">' +
             '                           <span class="tag-text" style="color: ' + (colors ? colors.textcolor : 'black') + ';padding-top: 6px;">' + value.nome_motivo + '</span>' +
-        '                           <input type="color" class="tagFavAddColorInput" value="' + (colors ? colors.colortag : '#bfd5e8') + '" onchange="parent.changeColorEtiqueta(this, \'options\')" style="width: 30px !important;padding: 0 !important;margin: 0 !important;" name="tagFavAddColorInput">' +
-            '                           <i class="tagFavEditIcon fas fa-' + (colors ? colors.icontag : 'tag') + '" data-icontag="' + (colors ? colors.icontag : 'tag') + '" onclick="parent.openBoxIconsFA(\'selectIconEtiqueta\', \'afastamento\', \'options\')" onmouseover="return infraTooltipMostrar(\'Alterar \u00EDcone\');" onmouseout="return infraTooltipOcultar();" style="right: 30px;height: 30px;width: 30px;"></i>' +
-            '                           <i class="tagFavAddColor fas fa-fill-drip" onclick="parent.openColorEtiqueta(this)" onmouseover="return infraTooltipMostrar(\'Alterar cor\');" onmouseout="return infraTooltipOcultar();" style="right: 0;border-radius: 0 5px 5px 0;height: 30px;width: 30px;"></i>' +
+        '                           <input type="color" class="tagMonitoradoAddColorInput" value="' + (colors ? colors.colortag : '#bfd5e8') + '" onchange="parent.changeColorEtiqueta(this, \'options\')" style="width: 30px !important;padding: 0 !important;margin: 0 !important;" name="tagMonitoradoAddColorInput">' +
+            '                           <i class="tagMonitoradoEditIcon fas fa-' + (colors ? colors.icontag : 'tag') + '" data-icontag="' + (colors ? colors.icontag : 'tag') + '" onclick="parent.openBoxIconsFA(\'selectIconEtiqueta\', \'afastamento\', \'options\')" onmouseover="return infraTooltipMostrar(\'Alterar \u00EDcone\');" onmouseout="return infraTooltipOcultar();" style="right: 30px;height: 30px;width: 30px;"></i>' +
+            '                           <i class="tagMonitoradoAddColor fas fa-fill-drip" onclick="parent.openColorEtiqueta(this)" onmouseover="return infraTooltipMostrar(\'Alterar cor\');" onmouseout="return infraTooltipOcultar();" style="right: 0;border-radius: 0 5px 5px 0;height: 30px;width: 30px;"></i>' +
             '                       </span>' +
             '                   </div>' +
             '              </span>' +
@@ -10814,9 +10814,9 @@ function editConfigOptions(this_, id = false) {
             '                   <div class="tagsinput" style="width: 100%;min-height: auto;height: auto;">' +
             '                       <span class="tag tagTableText_afastamento singleOptionColor" data-icontag="' + (icontag ? icontag : 'tag') + '" data-colortag="' + (colortag ? colortag : 'rgb(191, 213, 232)') + '" data-textcolor="' + (textcolor ? textcolor : 'black') + '" style="background-color: ' + (colortag ? colortag : 'rgb(191, 213, 232)') + ';color: ' + (textcolor ? textcolor : 'black') + ';width: 100%;height: 30px;">' +
             '                           <span class="tag-text" style="color: ' + (textcolor ? textcolor : 'black') + ';padding-top: 6px;">' + value.nome_avaliacao + '</span>' +
-            '                           <input type="color" class="tagFavAddColorInput" value="' + (colortag ? colortag : '#bfd5e8') + '" onchange="parent.changeColorEtiqueta(this, \'options\')" style="width: 30px !important;padding: 0 !important;margin: 0 !important;">' +
-            '                           <i class="tagFavEditIcon fas fa-' + (icontag ? icontag : 'tag') + '" data-icontag="' + (icontag ? icontag : 'tag') + '" onclick="parent.openBoxIconsFA(\'selectIconEtiqueta\', \'afastamento\', \'options\')" onmouseover="return infraTooltipMostrar(\'Alterar \u00EDcone\');" onmouseout="return infraTooltipOcultar();" style="right: 30px;height: 30px;width: 30px;"></i>' +
-            '                           <i class="tagFavAddColor fas fa-fill-drip" onclick="parent.openColorEtiqueta(this)" onmouseover="return infraTooltipMostrar(\'Alterar cor\');" onmouseout="return infraTooltipOcultar();" style="right: 0;border-radius: 0 5px 5px 0;height: 30px;width: 30px;"></i>' +
+            '                           <input type="color" class="tagMonitoradoAddColorInput" value="' + (colortag ? colortag : '#bfd5e8') + '" onchange="parent.changeColorEtiqueta(this, \'options\')" style="width: 30px !important;padding: 0 !important;margin: 0 !important;">' +
+            '                           <i class="tagMonitoradoEditIcon fas fa-' + (icontag ? icontag : 'tag') + '" data-icontag="' + (icontag ? icontag : 'tag') + '" onclick="parent.openBoxIconsFA(\'selectIconEtiqueta\', \'afastamento\', \'options\')" onmouseover="return infraTooltipMostrar(\'Alterar \u00EDcone\');" onmouseout="return infraTooltipOcultar();" style="right: 30px;height: 30px;width: 30px;"></i>' +
+            '                           <i class="tagMonitoradoAddColor fas fa-fill-drip" onclick="parent.openColorEtiqueta(this)" onmouseover="return infraTooltipMostrar(\'Alterar cor\');" onmouseout="return infraTooltipOcultar();" style="right: 0;border-radius: 0 5px 5px 0;height: 30px;width: 30px;"></i>' +
             '                       </span>' +
             '                   </div>' +
             '              </span>' +
@@ -14202,24 +14202,24 @@ function getRowsPanelRelatorios(storeRelatorios, type, offset) {
                 '           <td align="center" class="filterResume_tempo_planejado">' + value.tempo_planejado + '</td>' +
                 '           <td align="center" class="filterResume_dias_planejado">' + value.dias_planejado + '</td>' +
                 '           <td align="center">' +
-                '               <span class="info_dates_fav" data-time-sorter="' + value.data_distribuicao + '">' +
+                '               <span class="info_dates_monitorado" data-time-sorter="' + value.data_distribuicao + '">' +
                 '                   ' + (value.data_distribuicao == '0000-00-00 00:00:00' ? '' : moment(value.data_distribuicao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')) +
                 '               </span>' +
                 '           </td>' +
                 '           <td align="center">' +
-                '               <span class="info_dates_fav" data-time-sorter="' + value.prazo_entrega + '">' +
+                '               <span class="info_dates_monitorado" data-time-sorter="' + value.prazo_entrega + '">' +
                 '                   ' + (value.prazo_entrega == '0000-00-00 00:00:00' ? '' : moment(value.prazo_entrega, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')) +
                 '               </span>' +
                 '           </td>' +
                 '           <td align="center" class="filterResume_tempo_pactuado">' + value.tempo_pactuado + '</td>' +
                 '           <td align="center" class="filterResume_fator_complexidade">' + value.fator_complexidade + '</td>' +
                 '           <td align="center">' +
-                '               <span class="info_dates_fav" data-time-sorter="' + value.data_inicio + '">' +
+                '               <span class="info_dates_monitorado" data-time-sorter="' + value.data_inicio + '">' +
                 '                   ' + (value.data_inicio == '0000-00-00 00:00:00' ? '' : moment(value.data_inicio, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')) +
                 '               </span>' +
                 '           </td>' +
                 '           <td align="center">' +
-                '               <span class="info_dates_fav" data-time-sorter="' + value.data_entrega + '">' +
+                '               <span class="info_dates_monitorado" data-time-sorter="' + value.data_entrega + '">' +
                 '                   ' + (value.data_entrega == '0000-00-00 00:00:00' ? '' : moment(value.data_entrega, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')) +
                 '               </span>' +
                 '           </td>' +
@@ -14235,17 +14235,17 @@ function getRowsPanelRelatorios(storeRelatorios, type, offset) {
                 '           <td align="left">' + (value_avaliacao && value_avaliacao.comentarios ? value_avaliacao.comentarios : '') + '</td>' +
                 '           <td align="left">' + (value_avaliacao && value_avaliacao.justificativas ? $.map(value_avaliacao.justificativas, function (v) { return v.nome_justificativa }).join(', ') : '') + '</td>' +
                 '           <td align="center">' +
-                '               <span class="info_dates_fav" data-time-sorter="' + value.data_avaliacao + '">' +
+                '               <span class="info_dates_monitorado" data-time-sorter="' + value.data_avaliacao + '">' +
                 '                   ' + (value.data_avaliacao == '0000-00-00 00:00:00' ? '' : moment(value.data_avaliacao, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')) +
                 '               </span>' +
                 '           </td>' +
                 '           <td align="center">' +
-                '               <span class="info_dates_fav" data-time-sorter="' + value.data_envio + '">' +
+                '               <span class="info_dates_monitorado" data-time-sorter="' + value.data_envio + '">' +
                 '                   ' + (value.data_envio == '0000-00-00 00:00:00' ? '' : moment(value.data_envio, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')) +
                 '               </span>' +
                 '           </td>' +
                 '           <td align="center">' +
-                '               <span class="info_dates_fav" data-time-sorter="' + value.datetime + '">' +
+                '               <span class="info_dates_monitorado" data-time-sorter="' + value.datetime + '">' +
                 '                   ' + (value.datetime == '0000-00-00 00:00:00' ? '' : moment(value.datetime, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')) +
                 '               </span>' +
                 '           </td>' +
@@ -14604,16 +14604,16 @@ function getTableAfastamentoPanel(this_) {
                 '                       <i class="tagicon fas fa-' + tagColor.icontag + '" style="font-size: 90%;margin: 0 2px; color: ' + tagColor.textcolor + '"></i>' +
                 '                       ' + value.nome_motivo +
                 '                   </span>' + icon_integracao +
-                '                   <span class="info_dates_fav">' + tagDate + '</span>' +
+                '                   <span class="info_dates_monitorado">' + tagDate + '</span>' +
                 '               </span>' +
                 '           </td>' +
                 '           <td align="center" data-time-sorter="' + moment(value.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD HH:mm:ss') + '">' +
-                '               <span class="info_dates_fav">' +
+                '               <span class="info_dates_monitorado">' +
                 '                   ' + moment(value.inicio_afastamento, 'YYYY-MM-DD HH:mm:ss').format(format_display) +
                 '               </span>' +
                 '           </td>' +
                 '           <td align="center" data-time-sorter="' + moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD HH:mm:ss') + '">' +
-                '               <span class="info_dates_fav">' +
+                '               <span class="info_dates_monitorado">' +
                 '                   ' + moment(value.fim_afastamento, 'YYYY-MM-DD HH:mm:ss').format(format_display) +
                 '               </span>' +
                 '           </td>' +
@@ -17061,7 +17061,7 @@ function getKanbanItem(value) {
             '           ' + (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null && value.etiquetas.length > 0 ? $.map(value.etiquetas, function (i) { return $(getHtmlEtiqueta(i, 'ativ'))[0].outerHTML }).join('') : '') +
             '       </span>' +
             '       <span class="info_tags_follow">' + getHtmlEtiquetaUnidade(value) + tagPacto + '</span>' +
-            '       <span class="info_dates_fav" style="display: block; margin: 10px 0;">' + timerAtiv + tagDate + '</span>' +
+            '       <span class="info_dates_monitorado" style="display: block; margin: 10px 0;">' + timerAtiv + tagDate + '</span>' +
             '   </div>' +
             '   <div class="kanban-actions">' +
             '       ' + btnActionAtiv +
@@ -17871,7 +17871,7 @@ function initFunctionsPanelAtiv(TimeOut = 9000) {
                     var selectFilterTable = getSelectViewControl('tabelaAtivPanel');
                     var topPosition = (typeof arrayConfigAtividades.perfil.id_user !== 'undefined' && jmespath.search(arrayConfigAtividades.planos, "[?id_user==`" + arrayConfigAtividades.perfil.id_user + "`] | [0]") !== null) ? '140px' : '52px';
                     var htmlFlashFilterTable = '<div class="filterTablePro filterTableAtivStatus" onmouseout="return infraTooltipOcultar();" style="position: absolute;top: ' + topPosition + ';text-align: right;right: 320px;z-index: 9999;">' +
-                        '   <span class="info_dates_fav" style="margin: 0; margin-right: 20px;">' +
+                        '   <span class="info_dates_monitorado" style="margin: 0; margin-right: 20px;">' +
                         '       <span class="dateboxDisplay tag-remove filterTagClean" onmouseover="return _infraTooltipMostrar(this, \'Limpar Filtros\');" onmouseout="return infraTooltipOcultar();" onclick="parent.filterTagView(this); $(this).closest(\'table\').trigger(\'filterReset\');" style="display:none; font-size: 9pt;padding: 3px 10px;background-color: #f9fafa;">' +
                         '           <span class="dateBoxIcon">' +
                         '               <i class="fas fa-eraser" style="color: #9d9d9d; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>' +
@@ -26191,7 +26191,7 @@ function initAtividades(TimeOut = 9000) {
     if (typeof localStorageRestorePro !== 'undefined' && typeof checkLoadingButtonConfirm !== 'undefined' && typeof $().tabs !== 'undefined' && typeof moment().isoWeekdayCalc !== 'undefined') {
         urlServerAtiv = perfilLoginAtiv.URL_API;
         userHashAtiv = perfilLoginAtiv.KEY_USER;
-        if (typeof initPanelFavorites !== 'undefined') initPanelFavorites();
+        if (typeof initPanelMonitorados !== 'undefined') initPanelMonitorados();
         initEmptyAtividades();
         getAtividades();
         if (typeof $.mask === 'undefined') $.getScript(URL_SPRO + "js/lib/jquery.maskedinput.min.js");

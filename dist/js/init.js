@@ -293,7 +293,7 @@ function loadScriptPro() {
             showAutoReportNoticePro();
             if (typeof moment !== 'undefined' && typeof moment().isoAddWeekdaysFromSet === 'undefined') $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             // $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
-            if (typeof loadFavoritosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-favoritos.js"));
+            if (typeof loadMonitoradosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-monitorados.js"));
             loadLocalConfigScriptPro().finally(function() {
                 if (typeof loadAtividadesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
             });

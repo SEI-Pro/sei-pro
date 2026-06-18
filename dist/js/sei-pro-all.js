@@ -428,21 +428,21 @@ function initScrollToElement(TimeOut = 9000) {
         }, 500);
     }
 }
-function initAppendIconFavorites(TimeOut = 9000) {
+function initAppendIconMonitorados(TimeOut = 9000) {
     var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
     if (TimeOut <= 0 || parent.window.name != '' ||  table.length == 0) { return; }
-    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconFavorites !== 'undefined' && typeof getStoreFavoritePro !== 'undefined') {
-        if (checkConfigValue('gerenciarfavoritos')) {
-            setAppendIconFavorites();
+    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconMonitorados !== 'undefined' && typeof getStoreMonitoradoPro !== 'undefined') {
+        if (checkConfigValue('gerenciarmonitorados')) {
+            setAppendIconMonitorados();
         }
     } else {
         setTimeout(function(){ 
-            initAppendIconFavorites(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initAppendIconFavorites => '+TimeOut); 
+            initAppendIconMonitorados(TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initAppendIconMonitorados => '+TimeOut); 
         }, 500);
     }
 }
-function setAppendIconFavorites() {
+function setAppendIconMonitorados() {
     var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
     if (table.length > 0) {
         table.find('tbody tr').each(function(){
@@ -450,8 +450,8 @@ function setAppendIconFavorites() {
             var td = _this.find('td').eq(2);
             var id_procedimento = td.find('a[href*="acao=procedimento_trabalhar"]').attr('href');
                 id_procedimento = (typeof id_procedimento !== 'undefined') ? String(getParamsUrlPro(id_procedimento).id_procedimento) : false;
-            var iconStar = (id_procedimento) ? htmlIconFavorites(id_procedimento, 'left') : '';
-                td.find('.iconFavoritePro').remove();
+            var iconStar = (id_procedimento) ? htmlIconMonitorados(id_procedimento, 'left') : '';
+                td.find('.iconMonitoradoPro').remove();
                 td.prepend(iconStar);
         });
     }
@@ -1009,7 +1009,7 @@ function initSeiProAll() {
     initSetMomentPtBr();
     initTablePesquisaDownload();
     initReplaceSelectAll();
-    initAppendIconFavorites();
+    initAppendIconMonitorados();
     initQuickViewSearch();
     initObserveUrlPage();
     initSlimPro();

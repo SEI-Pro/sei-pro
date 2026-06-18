@@ -510,7 +510,7 @@ var iconsFlashDocMenu = [
                     {name: 'Excluir documento', icon: 'fa-trash-alt', alt: '', show: false},
                     {name: 'Editar documento', icon: 'fa-edit', alt: '', show: false},
                     {name: 'Assinar documento', icon: 'fa-pen-alt', alt: '', show: false},
-                    {name: 'Adicionar aos favoritos', icon: 'fa-star', alt: '', show: false},
+                    {name: 'Adicionar aos monitorados', icon: 'fa-star', alt: '', show: false},
                     {name: 'Ci\u00EAncia', icon: 'fa-thumbs-up', alt: '', show: false},
                     {name: 'Enviar por e-mail', icon: 'fa-at', alt: '', show: false},
                     {name: 'Mover p/ outro processo', icon: 'fa-people-carry', alt: '', show: false},
@@ -1224,7 +1224,7 @@ function setLocalFilePro(content) {
 }
 function initDownloadLocalFilePro(this_, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if ((typeof fileSystemContentPro !== 'undefined' && fileSystemContentPro) || (typeof localStorageRestorePro('configDataFavoritesPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataFavoritesPro'))) ) { 
+    if ((typeof fileSystemContentPro !== 'undefined' && fileSystemContentPro) || (typeof localStorageRestorePro('configDataMonitoradosPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataMonitoradosPro'))) ) { 
         downloadLocalFilePro(this_);
     } else {
         $(this_).find('i').attr('class','fas fa-spinner fa-spin cinzaColor');
@@ -1237,7 +1237,7 @@ function initDownloadLocalFilePro(this_, TimeOut = 9000) {
 }
 function downloadLocalFilePro(this_) {
     var _this = $(this_);
-    var configPro = JSON.stringify(localStorageRestorePro('configDataFavoritesPro'));
+    var configPro = JSON.stringify(localStorageRestorePro('configDataMonitoradosPro'));
     var nameFile = 'configPro';
 
     var downloadLink = document.createElement("a");
@@ -1259,7 +1259,7 @@ function initLoadLocalFilePro() {
     $('#selectLocalFilesPro[type=file]').trigger('click');
 }
 function loadLocalFilePro() {
-    confirmaFraseBoxPro('Esta a\u00E7\u00E3o ir\u00E1 substituir todos os dados de processos favoritos. Tem certeza que deseja prosseguir?', 'SIM', 
+    confirmaFraseBoxPro('Esta a\u00E7\u00E3o ir\u00E1 substituir todos os dados de processos monitorados. Tem certeza que deseja prosseguir?', 'SIM', 
         function(){
             var files = document.getElementById('selectLocalFilesPro').files;
             if (files.length <= 0) { return false; }
@@ -1270,24 +1270,24 @@ function loadLocalFilePro() {
                     result.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
 
                     setLocalFilePro(result);
-                    localStorageStorePro('configDataFavoritesPro', result);
-                    setPanelFavorites('refresh');
+                    localStorageStorePro('configDataMonitoradosPro', result);
+                    setPanelMonitorados('refresh');
                     resetDialogBoxPro('dialogBoxPro');
                 setTimeout(function(){ 
                         alertaBoxPro('Sucess', 'check-circle', 'Configura\u00E7\u00F5es carregadas com sucesso!');
-                        console.log('loadLocalFilePro', result.datetime, result, getStoreFavoritePro());
+                        console.log('loadLocalFilePro', result.datetime, result, getStoreMonitoradoPro());
                 }, 500);
             }
             fr.readAsText(files.item(0));
     });
 }
-function htmlIconFavorites(id_procedimento, float = false) {
-    var storeFavorites = getStoreFavoritePro()['favorites'];
-    var dataFavorites = (jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
+function htmlIconMonitorados(id_procedimento, float = false) {
+    var storeMonitorados = getStoreMonitoradoPro()['monitorados'];
+    var dataMonitorados = (jmespath.search(storeMonitorados, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeMonitorados, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
     var floatStyle = (float) ? 'float: '+float+';' : '';
-    var iconStar = (dataFavorites == '') 
-                    ? '<i title="Adicionar aos Processos Monitorados" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'add\')" class="far fa-star iconFavoritePro" style="font-size: 12pt; margin: 0 5px; color: #666; cursor: pointer; '+floatStyle+'"></i>'
-                    : '<i title="Remover dos Processos Monitorados" id="iconFavoritePro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actFavoritePro(this, \'remove\')" class="fas fa-star starGold iconFavoritePro" style="font-size: 12pt; margin: 0 5px; cursor: pointer; -webkit-text-fill-color: #FED35B; -webkit-text-stroke-color: rgb(216 162 22); -webkit-text-stroke-width: 2px; '+floatStyle+'"></i>';
+    var iconStar = (dataMonitorados == '') 
+                    ? '<i title="Adicionar aos Processos Monitorados" id="iconMonitoradoPro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actMonitoradoPro(this, \'add\')" class="far fa-star iconMonitoradoPro" style="font-size: 12pt; margin: 0 5px; color: #666; cursor: pointer; '+floatStyle+'"></i>'
+                    : '<i title="Remover dos Processos Monitorados" id="iconMonitoradoPro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actMonitoradoPro(this, \'remove\')" class="fas fa-star starGold iconMonitoradoPro" style="font-size: 12pt; margin: 0 5px; cursor: pointer; -webkit-text-fill-color: #FED35B; -webkit-text-stroke-color: rgb(216 162 22); -webkit-text-stroke-width: 2px; '+floatStyle+'"></i>';
     return iconStar;
 }
 function resizeWinArvore(widthArvore) {
@@ -1914,7 +1914,7 @@ function getTiposDocumentosAjax(hrefPesquisa, callback = false) {
         if (typeof callback === 'function') callback(tiposDocumentos);
     });
 }
-function getDadosAjaxFavoritePro(idProcedimento) {
+function getDadosAjaxMonitoradoPro(idProcedimento) {
     if (typeof idProcedimento === 'undefined' || idProcedimento === null || idProcedimento === '') return;
     var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(idProcedimento);
     dadosProcessoPro.listAndamento = {
@@ -1956,7 +1956,7 @@ function getDadosAjaxFavoritePro(idProcedimento) {
             setSessionProcessosPro(dadosProcessoPro);
 
             if (hrefProcesso) {
-                ajaxDadosProcessoPro(hrefProcesso, 'favorites', arrayAcompEsp, function(processo) {
+                ajaxDadosProcessoPro(hrefProcesso, 'monitorados', arrayAcompEsp, function(processo) {
                     if (typeof dadosProcessoPro.listAndamento === 'undefined') {
                         dadosProcessoPro.listAndamento = {
                             historico_completo: false,
@@ -1969,7 +1969,7 @@ function getDadosAjaxFavoritePro(idProcedimento) {
                 });
             }
             if (hrefDocumentos) {
-                ajaxDadosDocumentosPro(hrefDocumentos, 'favorites');
+                ajaxDadosDocumentosPro(hrefDocumentos, 'monitorados');
             } else {
                 dadosProcessoPro.listDocumentosAssinados = [];
                 setSessionProcessosPro(dadosProcessoPro);
@@ -4782,7 +4782,7 @@ function cancelTablePaginacao(this_) {
 function filterTagView(this_) {
     if ($('#kanbanAtivPanel').is(':visible')) {
         filterTagKanban(this_);
-    } else if ($('#tabelaAtivPanel').is(':visible') || $('#favoritesProDiv').is(':visible') || $('#tableAfastamentoPanel').is(':visible') || $('table.tableInfo[id*="tableConfiguracoesPanel_"]').is(':visible')) {
+    } else if ($('#tabelaAtivPanel').is(':visible') || $('#monitoradosProDiv').is(':visible') || $('#tableAfastamentoPanel').is(':visible') || $('table.tableInfo[id*="tableConfiguracoesPanel_"]').is(':visible')) {
         filterTagTable(this_);
     } else if ($('#ifrArvore').length > 0) {
         $('#ifrArvore')[0].contentWindow.filterTagKanbanArvore(this_);
@@ -4877,7 +4877,7 @@ function filterTagTable(this_) {
         });
         */
        
-        updateCountTableFav();
+        updateCountTableMonitorado();
         th_head.find('.tablesorter-header-inner').append(htmlFilter);
         setOptionsPro('filterTag_'+typeTable, tagName_);
         infraTooltipOcultar();
@@ -4957,11 +4957,11 @@ function saveFollowDesc(this_, mode) {
                     kanban_item.find('span.info').text(value);
                     kanban_item.find('span.info_txt input').val(value);
             }
-        } else if (mode == 'fav') {
-            var storeFavorites = getStoreFavoritePro();
-            var favoriteIndex = (id_procedimento) ? storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento)) : index;
-                storeFavorites['favorites'][favoriteIndex].descricao = value;
-                localStorageStorePro('configDataFavoritesPro', storeFavorites);
+        } else if (mode == 'monitorado') {
+            var storeMonitorados = getStoreMonitoradoPro();
+            var monitoradoIndex = (id_procedimento) ? storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento)) : index;
+                storeMonitorados['monitorados'][monitoradoIndex].descricao = value;
+                localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
         }
     }
 }
@@ -4990,8 +4990,8 @@ function keyFollowDesc(e, mode) {
     if(e.which == 13) {
         var target = (e && e.target) ? e.target : (e && e.currentTarget) ? e.currentTarget : (e && e.path && e.path.length > 0) ? e.path[0] : false;
         if (target) parent.saveFollowDesc(target, mode);
-        if (mode == 'fav') {
-            saveConfigFav();
+        if (mode == 'monitorado') {
+            saveConfigMonitorado();
         }
     }
 }
@@ -5024,8 +5024,8 @@ function showFollowEtiqueta(this_, status, mode) {
         addOptionsEtiqueta(this_, mode);
     } 
     setTimeout(function(){ 
-        if (status == 'close' && mode == 'fav' && !_this.closest('tr').find('.content_desc span.info_txt').is(':visible')) {
-            saveConfigFav();
+        if (status == 'close' && mode == 'monitorado' && !_this.closest('tr').find('.content_desc span.info_txt').is(':visible')) {
+            saveConfigMonitorado();
         }
     }, 500);
     if ($($ifrVisualizacao).length > 0) {
@@ -5050,13 +5050,13 @@ function getColorTags(mode) {
             ? (typeof arrayConfigAtivUnidade !== 'undefined' && arrayConfigAtivUnidade !== null && typeof arrayConfigAtivUnidade.config !== 'undefined' && arrayConfigAtivUnidade.config !== null && typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined' && arrayConfigAtivUnidade.config.etiquetas !== null) 
                 ? arrayConfigAtivUnidade.config.etiquetas.config.colortags
                 : []
-            : getStoreFavoritePro().config.colortags;
+            : getStoreMonitoradoPro().config.colortags;
         colorTags = (typeof colorTags !== 'undefined') ? colorTags : [];
     return colorTags;
 }
 function addOptionsEtiqueta(this_, mode) {
     var colorTags = getColorTags(mode);
-    $(this_).closest('table').find('.tagFavAddColor, .tagFavAddColorInput, .tagFavEditIcon').remove();
+    $(this_).closest('table').find('.tagMonitoradoAddColor, .tagMonitoradoAddColorInput, .tagMonitoradoEditIcon').remove();
     $(this_).closest('table').find('.tagsinput .tag').each(function(){
         var tagNamed = $(this).find('.tag-text').text();
         var tagName = removeAcentos(tagNamed).replace(/\ /g, '').toLowerCase();
@@ -5071,9 +5071,9 @@ function addOptionsEtiqueta(this_, mode) {
         var textColour = (colorValue != '') ? (getBrightnessColor(colorValue) > 125) ? 'black' : 'white' : '';
             textColour = ((tagName == 'urgente' || tagName == 'importante') && tags === null) ? 'white' : textColour;
         var backgroundColor = ($(this).data('colortag')) ? $(this).data('colortag') : colorValue;
-        var htmlOptions =   '<input type="color" class="tagFavAddColorInput" value="'+backgroundColor+'" onchange="parent.changeColorEtiqueta(this, \''+mode+'\')">'+
-                            '<i class="tagFavEditIcon fas fa-'+iconValue+'" data-icontag="'+iconValue+'" onclick="parent.openBoxIconsFA(\'selectIconEtiqueta\', \''+tagName+'\', \''+mode+'\')" onmouseover="return infraTooltipMostrar(\'Alterar \u00EDcone\');" onmouseout="return infraTooltipOcultar();"></i>'+
-                            '<i class="tagFavAddColor fas fa-fill-drip" onclick="parent.openColorEtiqueta(this)" onmouseover="return infraTooltipMostrar(\'Alterar cor\');" onmouseout="return infraTooltipOcultar();"></i>';
+        var htmlOptions =   '<input type="color" class="tagMonitoradoAddColorInput" value="'+backgroundColor+'" onchange="parent.changeColorEtiqueta(this, \''+mode+'\')">'+
+                            '<i class="tagMonitoradoEditIcon fas fa-'+iconValue+'" data-icontag="'+iconValue+'" onclick="parent.openBoxIconsFA(\'selectIconEtiqueta\', \''+tagName+'\', \''+mode+'\')" onmouseover="return infraTooltipMostrar(\'Alterar \u00EDcone\');" onmouseout="return infraTooltipOcultar();"></i>'+
+                            '<i class="tagMonitoradoAddColor fas fa-fill-drip" onclick="parent.openColorEtiqueta(this)" onmouseover="return infraTooltipMostrar(\'Alterar cor\');" onmouseout="return infraTooltipOcultar();"></i>';
         if (colorValue != '') {
             $(this).css({'background-color': colorValue, 'color': textColour}).find('.tag-text').css('color',textColour);
         }
@@ -5089,13 +5089,13 @@ function selectIconEtiqueta(this_, tagName, mode) {
             ? $('.tableAtividades').is(':visible') 
                 ? $('.tableAtividades tbody, .atividadeInfo') 
                 : $('.kanbanAtividade, .atividadeInfo')
-            : $('.tableFavoritos tbody');
-        table = ($($ifrVisualizacao).contents().find('.favoritosLabelOptions').length > 0) ? $($ifrVisualizacao).contents().find('.favoritosLabelOptions table') : table;
+            : $('.tableMonitorados tbody');
+        table = ($($ifrVisualizacao).contents().find('.monitoradosLabelOptions').length > 0) ? $($ifrVisualizacao).contents().find('.monitoradosLabelOptions table') : table;
         table = (mode == 'options') ? $('#dialogBoxPro') : table;
     var icon = $(this_).find('.iconListTxt').text();
     var value = table.find('.tag_text.tagTableText_'+tagName).data('colortag');
     table.find('.tag_text.tagTableText_'+tagName).attr('data-icontag', icon).data('icontag', icon).find('i.tagicon').attr('class', 'fas fa-'+icon);
-    table.find('.tag.tagTableText_'+tagName).attr('data-icontag', icon).data('icontag', icon).find('i.tagFavEditIcon').attr('data-icontag', icon).data('icontag', icon).attr('class', 'tagFavEditIcon fas fa-'+icon);
+    table.find('.tag.tagTableText_'+tagName).attr('data-icontag', icon).data('icontag', icon).find('i.tagMonitoradoEditIcon').attr('data-icontag', icon).data('icontag', icon).attr('class', 'tagMonitoradoEditIcon fas fa-'+icon);
     resetDialogBoxPro('alertBoxPro');
     $('#listIconsFontAwesome').remove();
     if (mode != 'options') saveConfigEtiqueta(tagName, value, icon, mode);
@@ -5106,18 +5106,18 @@ function changeColorEtiqueta(this_, mode) {
     var tagNamed = (mode == 'options') ? 'afastamento' : removeAcentos($(this_).closest('.tag').find('.tag-text').text()).replace(/\ /g, '').toLowerCase();
     var tagName = 'tagTableText_'+tagNamed;
     var index = parseInt($(this_).closest('tr').data('index'));
-    var icon = $(this_).closest('.tag').find('.tagFavEditIcon').data('icontag');
+    var icon = $(this_).closest('.tag').find('.tagMonitoradoEditIcon').data('icontag');
     var table = (mode == 'options') ? $(this_).closest('.seiProForm') : $(this_).closest('tbody');
         table.find('.'+tagName).attr('data-colortag',value).attr('data-textcolor',textColour).data('colortag',value).data('textcolor',textColour).css({'background-color': value, 'color': textColour}).find('.tag-text').css('color', textColour).find('.tagicon').css('color', textColour);
         table.find('.'+tagName).find('.tagicon').css('color', textColour);
-        table.find('.'+tagName+' .tagFavAddColorInput').val(value);
+        table.find('.'+tagName+' .tagMonitoradoAddColorInput').val(value);
         if (mode != 'options') saveConfigEtiqueta(tagNamed, value, icon, mode);
 }
 function saveConfigEtiqueta(name, value, icon, mode) {
     var storeEtiqueta = (mode == 'ativ') 
             ? (typeof arrayConfigAtivUnidade.config !== 'undefined' && typeof arrayConfigAtivUnidade.config.etiquetas !== 'undefined') 
                 ? arrayConfigAtivUnidade.config.etiquetas : {config: {colortags: []}}
-            : getStoreFavoritePro();
+            : getStoreMonitoradoPro();
             // console.log(storeEtiqueta);
     var colorTags = (Object.keys(storeEtiqueta).length > 0 && typeof storeEtiqueta.config.colortags !== 'undefined') 
                         ? storeEtiqueta.config.colortags : [];
@@ -5138,8 +5138,8 @@ function saveConfigEtiqueta(name, value, icon, mode) {
             console.log(itemPushConfig, arrayConfigAtivUnidade['config']);
         }
         getServerAtividades({action: 'edit_etiqueta_config', config_etiquetas: arrayConfigAtivUnidade['config']['etiquetas']}, 'edit_etiqueta_config');
-    } else if (mode == 'fav') {
-        localStorageStorePro('configDataFavoritesPro', storeEtiqueta);
+    } else if (mode == 'monitorado') {
+        localStorageStorePro('configDataMonitoradosPro', storeEtiqueta);
     }
 }
 function saveFollowEtiqueta() {
@@ -5147,10 +5147,10 @@ function saveFollowEtiqueta() {
     if ($(this).closest('.info_tags_follow_txt').is(':visible')) {
         var tags = $(this).closest('.info_tags_follow_txt').find('.tag-text').map(function () { return $(this).text(); }).get();
         var tagsHtml = $.map(tags, function (value) { return getHtmlEtiqueta(value, mode) }).join('');
-        var tagsFavClass = $.map(tags, function (value) { return 'tagTableName_'+removeAcentos(value).replace(/\ /g, '').toLowerCase(); }).join(' ');   
+        var tagsMonitoradoClass = $.map(tags, function (value) { return 'tagTableName_'+removeAcentos(value).replace(/\ /g, '').toLowerCase(); }).join(' ');   
         var index = parseInt($(this).closest('tr').data('index'));
             $(this).closest('td').find('.info_tags_follow').html(tagsHtml);
-            $(this).closest('tr').attr('class',tagsFavClass);
+            $(this).closest('tr').attr('class',tagsMonitoradoClass);
             addOptionsEtiqueta(this, mode);
         if (typeof $('.ui-autocomplete-input').autocomplete !== 'undefined') {
             $('.ui-autocomplete-input').autocomplete("option", { source: sugestEtiquetaPro(mode) });
@@ -5158,7 +5158,7 @@ function saveFollowEtiqueta() {
         if (mode == 'ativ') {
             if ($('div.ui-dialog').is(':visible')) {
                 $('.kanban-item[data-eid="_id_'+index+'"] .info_tags_follow_etiquetas').html(tagsHtml);
-                $('.tableAtividades tbody tr[data-index="'+index+'"] td.tdfav_tags .info_tags_follow').html(tagsHtml);
+                $('.tableAtividades tbody tr[data-index="'+index+'"] td.tdmonitorado_tags .info_tags_follow').html(tagsHtml);
             }
             getServerAtividades({action: 'edit_etiqueta', id: index, etiquetas: tags}, 'edit_etiqueta');
             if (typeof arrayConfigAtividades.etiquetas !== 'undefined' && typeof arrayConfigAtividades.etiquetas.list !== 'undefined') {
@@ -5187,12 +5187,12 @@ function saveFollowEtiqueta() {
             if (atividadeIndex != -1) {
                 tableConfigList.atividades[atividadeIndex].etiquetas = tags;
             }
-        } else if (mode == 'fav') {
-            var storeFavorites = getStoreFavoritePro();
+        } else if (mode == 'monitorado') {
+            var storeMonitorados = getStoreMonitoradoPro();
             var id_procedimento = parseInt($(this).closest('tr').data('id_procedimento'));
-            var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-            storeFavorites['favorites'][favoriteIndex].etiquetas = tags;
-            localStorageStorePro('configDataFavoritesPro', storeFavorites);
+            var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+            storeMonitorados['monitorados'][monitoradoIndex].etiquetas = tags;
+            localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
         }
         infraTooltipOcultar();
     }
@@ -5201,7 +5201,7 @@ function saveFollowEtiqueta() {
 function sugestEtiquetaPro(mode) {
     return (mode == 'ativ') 
         ? (typeof arrayConfigAtividades.etiquetas !== 'undefined' ? arrayConfigAtividades['etiquetas']['list'] : [])
-        : uniqPro($.map(getStoreFavoritePro()['favorites'], function (value) { return value.etiquetas; }));
+        : uniqPro($.map(getStoreMonitoradoPro()['monitorados'], function (value) { return value.etiquetas; }));
 }
 function getHtmlEtiqueta(name, mode) {
     var colorTags = getColorTags(mode);
@@ -5266,7 +5266,7 @@ function getDatesPreview(config, dateduepreview=false) {
 // calculeDatesDuration migrada para SeiPro.core.datas (src/core/datas.js) \u2014 Fase 6
 // getDateSemantic migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function configDatesPreview() {
-    var config = getConfigDatesFav();
+    var config = getConfigDatesMonitorado();
     if (config.selectdoc) { configDatesSetUpdate() }
         config.dateTo = moment().format('YYYY-MM-DD');
     var htmlDatePreview = getDatesPreview(config, true);
@@ -5335,7 +5335,7 @@ function updateTablePrazoProcesso() {
 
 
             var htmlPrazo = (htmlDatePrazo) 
-                            ?   '<span class="info_dates_fav">'+
+                            ?   '<span class="info_dates_monitorado">'+
                                 '    <span class="dateboxDisplay">'+
                                 '        '+htmlDatePrazo+
                                 '    </span>'+
@@ -7084,8 +7084,8 @@ function getCheckerProcessoPro() {
 }
 function getDadosIframeProcessoPro(idProcedimento, mode) {
     if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && !checkProcessoSigiloso() ) {
-        if (mode == 'favorites') {
-            getDadosAjaxFavoritePro(idProcedimento);
+        if (mode == 'monitorados') {
+            getDadosAjaxMonitoradoPro(idProcedimento);
             return;
         }
         if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
@@ -7552,10 +7552,10 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
         updateSelectConcluirEtapa();
     } else if (mode == 'projeto') { 
         updateSelectConcluirProjetoEtapa();
-    } else if (mode == 'favorites') {
-        parent.updateSelectFavorites();
-        parent.initAppendIconFavorites();
-        console.log('updateSelectFavorites');
+    } else if (mode == 'monitorados') {
+        parent.updateSelectMonitorados();
+        parent.initAppendIconMonitorados();
+        console.log('updateSelectMonitorados');
     } else if (mode == 'dados') {
         //loopIDProcedimentos();
     }
@@ -13474,7 +13474,7 @@ function scriptVisualizacaoPro(ifrV) {
     if (typeof loadFontIcons === 'function') loadFontIcons('head', ifrV);
     if (typeof checkPageVisualizacao === 'function') checkPageVisualizacao();
     if (typeof checkPageAtividadesVisualizacao === 'function') checkPageAtividadesVisualizacao();
-    if (typeof checkPageFavoritosVisualizacao === 'function') checkPageFavoritosVisualizacao();
+    if (typeof checkPageMonitoradosVisualizacao === 'function') checkPageMonitoradosVisualizacao();
 }
 
 function loadScriptArvorePro() {

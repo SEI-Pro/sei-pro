@@ -413,7 +413,7 @@
         "js/sei-pro-editor.js",
         "js/sei-pro-arvore.js",
         "js/sei-pro-visualizacao.js",
-        "js/sei-pro-favoritos.js",
+        "js/sei-pro-monitorados.js",
         "js/sei-pro-icons.js",
         "js/sei-legis.js",
         "js/sei-pro-visualizacao-chosen.js",

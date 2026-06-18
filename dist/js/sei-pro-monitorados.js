@@ -1,17 +1,17 @@
-const loadFavoritosPro = true;
+const loadMonitoradosPro = true;
 var statusLoadRemoteFile = true;
 var map;
 var markers = [];
 var markersLayer = false;
 var locationUser = false;
 var current_position = false;
-var favoriteLocationDenied = false;
-var fav_loopServer = 0;
+var monitoradoLocationDenied = false;
+var monitorado_loopServer = 0;
 // ADICIONA ACOMPANHAMENTO DE PROCESSOS
 function getOptionsConfigDate(index) {
-    var storeFavorites = getStoreFavoritePro();
-    var configdate = (!$.isEmptyObject(storeFavorites['favorites'][index]['configdate'])) 
-                        ? storeFavorites['favorites'][index]['configdate']
+    var storeMonitorados = getStoreMonitoradoPro();
+    var configdate = (!$.isEmptyObject(storeMonitorados['monitorados'][index]['configdate'])) 
+                        ? storeMonitorados['monitorados'][index]['configdate']
                         : {
                             date: moment().format('YYYY-MM-DD'), 
                             listdocs: false,
@@ -43,11 +43,11 @@ function openBoxConfigDates(this_) {
     var _this = $(this_);
     var index = parseInt(_this.closest('tr').data('index'));
     var id_procedimento = parseInt(_this.closest('tr').data('id_procedimento'));
-    var storeFavorites = getStoreFavoritePro();
-    var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-    var dateInput = _this.closest('.info_dates_fav_txt').find('.favoriteDatesPro').val().trim();
+    var storeMonitorados = getStoreMonitoradoPro();
+    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    var dateInput = _this.closest('.info_dates_monitorado_txt').find('.monitoradoDatesPro').val().trim();
     var date_ = (dateInput == '') ? moment().format('YYYY-MM-DD') : dateInput;
-    var configdate = getOptionsConfigDate(favoriteIndex);
+    var configdate = getOptionsConfigDate(monitoradoIndex);
         configdate.date = (dateInput == '') ? configdate.date : date_;
     
     var stateCountDown = (configdate.countdown) ? 'checked' : '';
@@ -82,8 +82,8 @@ function openBoxConfigDates(this_) {
     var stateDuemode_depois = (configdate.duemode == 'depois') ? 'selected' : '';
     var stateDuemode_antes = (configdate.duemode == 'antes') ? 'selected' : '';
     var duenumber = (configdate.duenumber > 0 ) ? configdate.duenumber : Math.abs(configdate.duenumber);
-    var arrayItemFavorite = storeFavorites['favorites'][favoriteIndex];
-    var favoriteDocList = arrayItemFavorite['documentos'];
+    var arrayItemMonitorado = storeMonitorados['monitorados'][monitoradoIndex];
+    var monitoradoDocList = arrayItemMonitorado['documentos'];
 
     var htmlBox =   '<div id="configDatesBox">'+
                     '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
@@ -104,8 +104,8 @@ function openBoxConfigDates(this_) {
                     '      <tr style="height: 40px; '+stateSelectDocDiv+'" class="configDates_selectdoc">'+
                     '          <td colspan="2">'+
                     '               <select onchange="configDatesSetUpdate(\'update\')" id="configDatesBox_listdocs">';
-        if (typeof favoriteDocList !== 'undefined' && favoriteDocList !== null && favoriteDocList.length > 0) {
-            $.each(favoriteDocList, function(i,value){
+        if (typeof monitoradoDocList !== 'undefined' && monitoradoDocList !== null && monitoradoDocList.length > 0) {
+            $.each(monitoradoDocList, function(i,value){
                 var selected = (configdate.listdocs && configdate.listdocs == value.id_protocolo) ? 'selected' : '';
                 htmlBox +=   (value.data_assinatura == '') ? '' : '                   <option data-sign="'+value.data_assinatura+'" data-id-protocolo="'+value.id_documento+'" value="'+value.id_documento+'" '+selected+'>'+value.nome_documento+' (SEI n\u00BA '+value.nr_sei+') [assinado em '+value.data_assinatura+']</option>';
             });
@@ -196,8 +196,8 @@ function openBoxConfigDates(this_) {
                     '          <td colspan="2">'+
                     '               <select id="configDatesBox_listnewdoc" onchange="configDatesDocsChange(this)">'+
                     '                   <option value="0">Qualquer tipo de documento</option>';
-        if (typeof storeFavorites['config']['tiposdocs'] !== 'undefined' && storeFavorites['config']['tiposdocs'].length > 0) {
-            $.each(storeFavorites['config']['tiposdocs'], function(i,value){
+        if (typeof storeMonitorados['config']['tiposdocs'] !== 'undefined' && storeMonitorados['config']['tiposdocs'].length > 0) {
+            $.each(storeMonitorados['config']['tiposdocs'], function(i,value){
                 htmlBox +=   (value.name == '') ? '' : '                   <option value="'+value.id+'" >'+value.name+'</option>';
             });
         }
@@ -277,13 +277,13 @@ function openBoxConfigDates(this_) {
                     text: "Remover",
                     icon: 'ui-icon-trash',
                     click: function() {
-                        removeConfigDatesFav(this_);
+                        removeConfigDatesMonitorado(this_);
                         $(this).dialog('close');
                     }
                 },{
                     text: "Ok",
                     click: function() {
-                        saveConfigDatesFav(this_);
+                        saveConfigDatesMonitorado(this_);
                         $(this).dialog('close');
                     }
                 }]
@@ -295,12 +295,12 @@ function getDadosSelectDoc(this_, id_procedimento) {
     if (_this.is(':checked')) {
         dadosProcessoPro = {};
         _this.closest('tr').find('td').eq(0).addClass('editCellLoading');
-        getDadosIframeProcessoPro(String(id_procedimento), 'favorites');
+        getDadosIframeProcessoPro(String(id_procedimento), 'monitorados');
         initDadosSelectDoc(id_procedimento);
     }
     console.log(_this, id_procedimento);
 }
-function favoriteProcessDataReady(id_procedimento, dados) {
+function monitoradoProcessDataReady(id_procedimento, dados) {
     return (
         typeof dados !== 'undefined' &&
         dados &&
@@ -317,14 +317,14 @@ function favoriteProcessDataReady(id_procedimento, dados) {
         dados.propProcesso !== null
     );
 }
-function favoriteProcessPayloadReady(id_procedimento, dados) {
+function monitoradoProcessPayloadReady(id_procedimento, dados) {
     return (
-        favoriteProcessDataReady(id_procedimento, dados) &&
+        monitoradoProcessDataReady(id_procedimento, dados) &&
         typeof dados.listDocumentosAssinados !== 'undefined' &&
         $.isArray(dados.listDocumentosAssinados)
     );
 }
-function waitFavoriteProcessData(id_procedimento, callback, onTimeout, requireDocs = false) {
+function waitMonitoradoProcessData(id_procedimento, callback, onTimeout, requireDocs = false) {
     var eventName = 'sei-pro-process-session-updated';
     var resolved = false;
     var timeoutId = null;
@@ -334,7 +334,7 @@ function waitFavoriteProcessData(id_procedimento, callback, onTimeout, requireDo
             return;
         }
         var dados = pullDadosProcessoSession(id_procedimento);
-        if (favoriteProcessDataReady(id_procedimento, dados) && (!requireDocs || typeof dados.listDocumentosAssinados !== 'undefined')) {
+        if (monitoradoProcessDataReady(id_procedimento, dados) && (!requireDocs || typeof dados.listDocumentosAssinados !== 'undefined')) {
             resolved = true;
             window.removeEventListener(eventName, handler);
             if (timeoutId) clearTimeout(timeoutId);
@@ -343,7 +343,7 @@ function waitFavoriteProcessData(id_procedimento, callback, onTimeout, requireDo
     };
 
     var dados = pullDadosProcessoSession(id_procedimento);
-    if (favoriteProcessDataReady(id_procedimento, dados) && (!requireDocs || typeof dados.listDocumentosAssinados !== 'undefined')) {
+    if (monitoradoProcessDataReady(id_procedimento, dados) && (!requireDocs || typeof dados.listDocumentosAssinados !== 'undefined')) {
         if (typeof callback === 'function') callback(dados);
         return true;
     }
@@ -359,16 +359,16 @@ function waitFavoriteProcessData(id_procedimento, callback, onTimeout, requireDo
     return false;
 }
 function initDadosSelectDoc(id_procedimento) {
-    waitFavoriteProcessData(id_procedimento, function(dados){
+    waitMonitoradoProcessData(id_procedimento, function(dados){
         dadosProcessoPro = dados;
         $('#configDatesBox_selectdoc').closest('tr').find('td').eq(0).removeClass('editCellLoading');
-        updateSelectFavorites(id_procedimento);
+        updateSelectMonitorados(id_procedimento);
     }, function(){
         $('#configDatesBox_selectdoc').closest('tr').find('td').eq(0).removeClass('editCellLoading');
         if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Timeout initDadosSelectDoc => '+id_procedimento);
     }, true);
 }
-function updateSelectFavorites(id_procedimento) {
+function updateSelectMonitorados(id_procedimento) {
     $('#configDatesBox_selectdoc').closest('tr').find('td').eq(0).removeClass('editCellLoading');
     
     if (typeof dadosProcessoPro.listDocumentosAssinados !== 'undefined' && 
@@ -383,20 +383,20 @@ function updateSelectFavorites(id_procedimento) {
             return (value.data_assinatura == '') ? '' : '<option data-sign="'+value.data_assinatura+'" data-id-protocolo="'+value.id_documento+'" '+selected+'>'+value.nome_documento+' (SEI n\u00BA '+value.nr_sei+') [assinado em '+value.data_assinatura+']</option>';
         }).join('');
         selectDoc.html(htmlBox);
-        updateArraySelectFavorites(id_procedimento);
+        updateArraySelectMonitorados(id_procedimento);
     }
 }
-function updateArraySelectFavorites(id_procedimento) {
-    var storeFavorites = getStoreFavoritePro();
-    if (typeof storeFavorites !== 'undefined' && storeFavorites.hasOwnProperty('favorites')) {
-        var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-        if (typeof favoriteIndex !== 'undefined' && favoriteIndex !== null && favoriteIndex !== -1) {
-            var item = storeFavorites.favorites[favoriteIndex];
+function updateArraySelectMonitorados(id_procedimento) {
+    var storeMonitorados = getStoreMonitoradoPro();
+    if (typeof storeMonitorados !== 'undefined' && storeMonitorados.hasOwnProperty('monitorados')) {
+        var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+        if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null && monitoradoIndex !== -1) {
+            var item = storeMonitorados.monitorados[monitoradoIndex];
                 item.documentos = dadosProcessoPro.listDocumentosAssinados;
                 item.andamento = dadosProcessoPro.listAndamento.andamento;
-                storeFavorites.favorites[favoriteIndex] = item;
-                localStorageStorePro('configDataFavoritesPro', storeFavorites);
-                saveConfigFav();
+                storeMonitorados.monitorados[monitoradoIndex] = item;
+                localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+                saveConfigMonitorado();
         }
     }
 }
@@ -443,101 +443,101 @@ function configDatesSetUpdate(mode) {
         }
     }
 }
-function getConfigDatetimeFav() {
-    var storeFavorites = getStoreFavoritePro();
-    var config = storeFavorites.config;
+function getConfigDatetimeMonitorado() {
+    var storeMonitorados = getStoreMonitoradoPro();
+    var config = storeMonitorados.config;
         config.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
-        storeFavorites.config = config;
-        localStorageStorePro('configDataFavoritesPro', storeFavorites);
-    return storeFavorites;
+        storeMonitorados.config = config;
+        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+    return storeMonitorados;
 }
-function saveConfigFav() {
-    var storeFavorites = getConfigDatetimeFav();
-    if (typeof storeFavorites !== 'undefined' && storeFavorites.hasOwnProperty('favorites')) {
-        var sendFavorites = {favorites: [], config: {colortags: []}};
-            sendFavorites.favorites = jmespath.search(storeFavorites.favorites, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
-            sendFavorites.config.colortags = storeFavorites.config.colortags;
+function saveConfigMonitorado() {
+    var storeMonitorados = getConfigDatetimeMonitorado();
+    if (typeof storeMonitorados !== 'undefined' && storeMonitorados.hasOwnProperty('monitorados')) {
+        var sendMonitorados = {monitorados: [], config: {colortags: []}};
+            sendMonitorados.monitorados = jmespath.search(storeMonitorados.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
+            sendMonitorados.config.colortags = storeMonitorados.config.colortags;
         if (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null) {
-            var action = 'set_favoritos';
+            var action = 'set_monitorados';
             var param = {
-                config: encodeURIComponent(encodeJSON_toHex(JSON.stringify(sendFavorites))),
+                config: encodeURIComponent(encodeJSON_toHex(JSON.stringify(sendMonitorados))),
                 action: action
             };
             getServerAtividades(param, action);
-            setLocalFilePro(getStoreFavoritePro());
+            setLocalFilePro(getStoreMonitoradoPro());
         } else {
             console.log('OK');
         }
     }
 }
-function actionFavoriteCheckbox(this_) {
+function actionMonitoradoCheckbox(this_) {
     var _this = $(this_);
-    var optionsDiv = _this.closest('.infraDivCheckbox').find('.favoritosLabelOptions');
+    var optionsDiv = _this.closest('.infraDivCheckbox').find('.monitoradosLabelOptions');
     if (_this.is(':checked')) {
-        actFavoritePro(false, 'add');
+        actMonitoradoPro(false, 'add');
         optionsDiv.slideDown();
     } else {
-        actFavoritePro(false, 'remove');
+        actMonitoradoPro(false, 'remove');
         optionsDiv.slideUp();
         optionsDiv.find('.selectPro').val('');
-        optionsDiv.find('#favoritePrazoSend').val('');
-        optionsDiv.find('.favoriteTagsPro').val('');
+        optionsDiv.find('#monitoradoPrazoSend').val('');
+        optionsDiv.find('.monitoradoTagsPro').val('');
         optionsDiv.find('.info_tags_follow').html('');
         optionsDiv.find('div.tagsinput .tag').remove();
     }
 }
-function saveConfigDatesFav(this_) {
+function saveConfigDatesMonitorado(this_) {
     var _this = $(this_);
-    var config = getConfigDatesFav();
-    var storeFavorites = getStoreFavoritePro();
+    var config = getConfigDatesMonitorado();
+    var storeMonitorados = getStoreMonitoradoPro();
     var id_procedimento = parseInt($('#configDatesBox_id_procedimento').val().trim());
-    var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-    if (favoriteIndex >=0 && typeof storeFavorites['favorites'][favoriteIndex] !== undefined && typeof getConfigDatesFav() !== undefined) {
+    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    if (monitoradoIndex >=0 && typeof storeMonitorados['monitorados'][monitoradoIndex] !== undefined && typeof getConfigDatesMonitorado() !== undefined) {
         //console.log(config);
         var htmlDatePreview = getDatesPreview(config);
-        var trFavorite = _this.closest('table').find('tr[data-id_procedimento="'+id_procedimento+'"]');
+        var trMonitorado = _this.closest('table').find('tr[data-id_procedimento="'+id_procedimento+'"]');
         
         if ($(this_).closest('#frmAtividadeListar').length == 0) {
-            trFavorite.find('.info_dates_fav').html(htmlDatePreview).show().closest('td').find('.info_dates_fav_txt').hide();
-            trFavorite.find('.followLinkDatesEdit').show();
+            trMonitorado.find('.info_dates_monitorado').html(htmlDatePreview).show().closest('td').find('.info_dates_monitorado_txt').hide();
+            trMonitorado.find('.followLinkDatesEdit').show();
         }
         $('#configDatesBox').remove();
-        trFavorite.find('.favoriteDatesPro').val(config.date);
-        storeFavorites['favorites'][favoriteIndex]['configdate'] = config;
-        localStorageStorePro('configDataFavoritesPro', storeFavorites);
+        trMonitorado.find('.monitoradoDatesPro').val(config.date);
+        storeMonitorados['monitorados'][monitoradoIndex]['configdate'] = config;
+        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
         alertaBoxPro('Sucess', 'check-circle', 'Contagem de tempo cadastrada com sucesso!');
         resetDialogBoxPro('iframeBoxPro');
-        saveConfigFav();
+        saveConfigMonitorado();
     } else {
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao cadastrar!');
     }
 }
-function removeConfigDatesFav(this_) {
+function removeConfigDatesMonitorado(this_) {
     var _this = $(this_);
-    var config = getConfigDatesFav();
-    var storeFavorites = getStoreFavoritePro();
+    var config = getConfigDatesMonitorado();
+    var storeMonitorados = getStoreMonitoradoPro();
     var id_procedimento = parseInt($('#configDatesBox_id_procedimento').val().trim());
-    var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-    if (favoriteIndex >=0 && typeof storeFavorites['favorites'][favoriteIndex] !== undefined && typeof getConfigDatesFav() !== undefined) {
+    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    if (monitoradoIndex >=0 && typeof storeMonitorados['monitorados'][monitoradoIndex] !== undefined && typeof getConfigDatesMonitorado() !== undefined) {
         //console.log(config);
-        var trFavorite = _this.closest('table').find('tr[data-id_procedimento="'+id_procedimento+'"]');
+        var trMonitorado = _this.closest('table').find('tr[data-id_procedimento="'+id_procedimento+'"]');
         
         if ($(this_).closest('#frmAtividadeListar').length == 0) {
-            trFavorite.find('.info_dates_fav').html('').show().closest('td').find('.info_dates_fav_txt').hide();
-            trFavorite.find('.followLinkDatesEdit').show();
+            trMonitorado.find('.info_dates_monitorado').html('').show().closest('td').find('.info_dates_monitorado_txt').hide();
+            trMonitorado.find('.followLinkDatesEdit').show();
         }
         $('#configDatesBox').remove();
-        trFavorite.find('.favoriteDatesPro').val('');
-        storeFavorites['favorites'][favoriteIndex]['configdate'] = null;
-        localStorageStorePro('configDataFavoritesPro', storeFavorites);
+        trMonitorado.find('.monitoradoDatesPro').val('');
+        storeMonitorados['monitorados'][monitoradoIndex]['configdate'] = null;
+        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
         alertaBoxPro('Sucess', 'check-circle', 'Contagem de tempo removida com sucesso!');
         resetDialogBoxPro('iframeBoxPro');
-        saveConfigFav();
+        saveConfigMonitorado();
     } else {
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao cadastrar!');
     }
 }
-function getConfigDatesFav() {
+function getConfigDatesMonitorado() {
     var countdown = $('#configDatesBox_countdown').is(':checked');
     var countdays = $('#configDatesBox_countdays').is(':checked');
     var workday = $('#configDatesBox_workday').is(':checked');
@@ -638,15 +638,15 @@ function configSwitchChange(this_, option1, option2, option3) {
         $(this_).closest('tr').find('.iconSwitch').removeClass('azulColor');
     }
 }
-function updateCountTableFav() {
+function updateCountTableMonitorado() {
     var count = $('.tableFollow').find('tbody').find('tr:visible').length;
     var countTxt = (count == 1) ? count+' registro:' : count+' registros:';
         $('.tableFollow').find('caption.infraCaption').text(countTxt);
 }
-function getStoreFavoritePro() {
-    return ( typeof localStorageRestorePro('configDataFavoritesPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataFavoritesPro')) ) ? localStorageRestorePro('configDataFavoritesPro') : {favorites: [], config: {colortags: []} };
+function getStoreMonitoradoPro() {
+    return ( typeof localStorageRestorePro('configDataMonitoradosPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataMonitoradosPro')) ) ? localStorageRestorePro('configDataMonitoradosPro') : {monitorados: [], config: {colortags: []} };
 }
-function getFavoriteProcessAnchor(ifrArvore) {
+function getMonitoradoProcessAnchor(ifrArvore) {
     if (!ifrArvore || !ifrArvore.length) return $();
     var targetSelectors = [
         '#topmenu a[target="' + ifrVisualizacao_ + '"]',
@@ -659,29 +659,29 @@ function getFavoriteProcessAnchor(ifrArvore) {
     }
     return $();
 }
-function getFavoriteVisualizacaoContents() {
+function getMonitoradoVisualizacaoContents() {
     var visualizacao = $($ifrVisualizacao);
     if (visualizacao.length > 0) return visualizacao.contents();
     var fallback = $('#ifrConteudoVisualizacao, #ifrVisualizacao').eq(0);
     return fallback.length > 0 ? fallback.contents() : false;
 }
-function insertIconFavorites() {
+function insertIconMonitorados() {
     const target = `a[target="${ifrVisualizacao_}"], a[target="ifrConteudoVisualizacao"], a[target="ifrVisualizacao"]`;
     if (!$('#ifrArvore').length) return;
-    waitLoadPro($('#ifrArvore').contents(), '#topmenu', target, appendIconFavorites);
+    waitLoadPro($('#ifrArvore').contents(), '#topmenu', target, appendIconMonitorados);
 }
-function appendIconFavorites() {
+function appendIconMonitorados() {
     if (!$('#ifrArvore').length) return;
     var ifrArvore = $('#ifrArvore').contents(); 
-    var iconProc = getFavoriteProcessAnchor(ifrArvore);
+    var iconProc = getMonitoradoProcessAnchor(ifrArvore);
     if (!iconProc.length || !iconProc.attr('href')) return;
     var id_procedimento = String(getParamsUrlPro(iconProc.attr('href')).id_procedimento);
     if (!id_procedimento || id_procedimento === 'undefined') return;
-    var iconStar = htmlIconFavorites(id_procedimento);
-    ifrArvore.find('.iconFavoritePro').remove();
+    var iconStar = htmlIconMonitorados(id_procedimento);
+    ifrArvore.find('.iconMonitoradoPro').remove();
     iconProc.after(iconStar);    
 }
-function actFavoritePro(this_, mode) {
+function actMonitoradoPro(this_, mode) {
     if (this_) {
         var _this = $(this_);
         var id_procedimento = _this.data('id_procedimento');
@@ -690,15 +690,15 @@ function actFavoritePro(this_, mode) {
     } else {
         var _this = false;
         var ifrArvore = $('#ifrArvore').length ? $('#ifrArvore').contents() : false; 
-        var ifrVisualizacao = getFavoriteVisualizacaoContents(); 
-        var iconProc = getFavoriteProcessAnchor(ifrArvore);
+        var ifrVisualizacao = getMonitoradoVisualizacaoContents(); 
+        var iconProc = getMonitoradoProcessAnchor(ifrArvore);
         if (!iconProc.length || !iconProc.attr('href')) return false;
         var id_procedimento = String(getParamsUrlPro(iconProc.attr('href')).id_procedimento);
     }
-    checkDataFavoritePro(this_, mode, id_procedimento);
+    checkDataMonitoradoPro(this_, mode, id_procedimento);
 
     if (mode == 'add' && ifrVisualizacao && ifrVisualizacao.find('#frmAtividadeListar').length == 0 && ifrArvore && ifrArvore.length > 0) {
-        var htmlBox = favoritosLabelOptions(id_procedimento);
+        var htmlBox = monitoradosLabelOptions(id_procedimento);
         var htmlSucess =    '<strong class="iframeSucessPro" style="background-color: #f9efad;font-size: 10pt;padding: 10px;border-radius: 5px;margin: 0 0 10px 0;display: block;color: #404040;">'+
                             '   <i class="fas fa-check-circle azulColor" style="margin-right: 5px;"></i>'+
                             '   Processo adicionado com sucesso no painel de Processos Monitorados (p\u00E1gina incial do SEI)'+
@@ -722,7 +722,7 @@ function actFavoritePro(this_, mode) {
         });
     }
 }
-function getFallbackFavoriteRowData(target, id_procedimento) {
+function getFallbackMonitoradoRowData(target, id_procedimento) {
     var row = (target && target.length > 0) ? target.closest('tr') : $();
     if ((!row || row.length === 0) && id_procedimento) {
         row = $('.tabelaControle tr').filter(function(){
@@ -802,27 +802,27 @@ function getFallbackFavoriteRowData(target, id_procedimento) {
         }
     };
 }
-function saveImmediateFavoritePro(target, id_procedimento) {
-    var fallbackData = getFallbackFavoriteRowData(target, id_procedimento);
+function saveImmediateMonitoradoPro(target, id_procedimento) {
+    var fallbackData = getFallbackMonitoradoRowData(target, id_procedimento);
     if (!fallbackData) return false;
     dadosProcessoPro = fallbackData;
     if (!dadosProcessoPro.hasOwnProperty('tiposDocumentos')) dadosProcessoPro.tiposDocumentos = [];
     if (!dadosProcessoPro.hasOwnProperty('listDocumentosAssinados')) dadosProcessoPro.listDocumentosAssinados = [];
-    storeFavoritePro('add', id_procedimento);
+    storeMonitoradoPro('add', id_procedimento);
     return fallbackData;
 }
-function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
-    var target = (this_) ? $(this_) : $('#ifrArvore').contents().find('#iconFavoritePro_'+id_procedimento);
-    var favoriteSaved = false;
+function checkDataMonitoradoPro(this_, mode, id_procedimento, TimeOut = 9000) {
+    var target = (this_) ? $(this_) : $('#ifrArvore').contents().find('#iconMonitoradoPro_'+id_procedimento);
+    var monitoradoSaved = false;
     var storeWhenReady = function(dados) {
         dadosProcessoPro = dados;
         if (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro && !dadosProcessoPro.hasOwnProperty('tiposDocumentos')) dadosProcessoPro.tiposDocumentos = [];
         if (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro && !dadosProcessoPro.hasOwnProperty('listDocumentosAssinados')) dadosProcessoPro.listDocumentosAssinados = [];
-        if (mode == 'add' && favoriteSaved) {
-            syncFavoriteProProcessData(id_procedimento, dadosProcessoPro);
+        if (mode == 'add' && monitoradoSaved) {
+            syncMonitoradoProProcessData(id_procedimento, dadosProcessoPro);
         } else {
-            storeFavoritePro(mode, id_procedimento);
-            favoriteSaved = (mode == 'add');
+            storeMonitoradoPro(mode, id_procedimento);
+            monitoradoSaved = (mode == 'add');
         }
         if (target && target.length > 0) target.fadeOut(100).fadeIn(100);
     };
@@ -833,42 +833,42 @@ function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
     }
 
     var dados = pullDadosProcessoSession(id_procedimento);
-    if (favoriteProcessPayloadReady(id_procedimento, dados)) {
+    if (monitoradoProcessPayloadReady(id_procedimento, dados)) {
         storeWhenReady(dados);
         return true;
     }
 
     if (mode == 'add') {
-        favoriteSaved = !!saveImmediateFavoritePro(target, id_procedimento);
-        if (favoriteSaved && target && target.length > 0) target.fadeOut(100).fadeIn(100);
+        monitoradoSaved = !!saveImmediateMonitoradoPro(target, id_procedimento);
+        if (monitoradoSaved && target && target.length > 0) target.fadeOut(100).fadeIn(100);
     }
 
-    waitFavoriteProcessData(id_procedimento, function(dados){
-        if (!favoriteProcessPayloadReady(id_procedimento, dados)) return;
+    waitMonitoradoProcessData(id_procedimento, function(dados){
+        if (!monitoradoProcessPayloadReady(id_procedimento, dados)) return;
         storeWhenReady(dados);
     }, function(){
-        if (mode == 'add' && favoriteSaved) return;
-        if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Timeout checkDataFavoritePro => '+id_procedimento);
+        if (mode == 'add' && monitoradoSaved) return;
+        if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Timeout checkDataMonitoradoPro => '+id_procedimento);
     });
 
     if (mode == 'add') {
-        getDadosIframeProcessoPro(id_procedimento, 'favorites');
+        getDadosIframeProcessoPro(id_procedimento, 'monitorados');
     }
 
     return false;
 }
-function syncFavoriteProProcessData(id_procedimento, dados) {
+function syncMonitoradoProProcessData(id_procedimento, dados) {
     if (typeof id_procedimento === 'undefined' || id_procedimento === null || id_procedimento === '') return;
     if (typeof dados === 'undefined' || !dados || typeof dados.propProcesso === 'undefined' || dados.propProcesso === null) return;
-    var storeFavorites = getStoreFavoritePro();
-    if (!storeFavorites || typeof storeFavorites.favorites === 'undefined' || !storeFavorites.favorites.length) return;
+    var storeMonitorados = getStoreMonitoradoPro();
+    if (!storeMonitorados || typeof storeMonitorados.monitorados === 'undefined' || !storeMonitorados.monitorados.length) return;
 
-    var favoriteIndex = storeFavorites.favorites.findIndex((obj => String(obj.id_procedimento) == String(id_procedimento)));
-    if (favoriteIndex === -1) return;
+    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => String(obj.id_procedimento) == String(id_procedimento)));
+    if (monitoradoIndex === -1) return;
 
     var andamento = dados.listAndamento || {};
     var prop = dados.propProcesso || {};
-    var item = storeFavorites.favorites[favoriteIndex];
+    var item = storeMonitorados.monitorados[monitoradoIndex];
     var previousSnapshot = JSON.stringify({
         processo: item.processo || '',
         andamento: item.andamento || [],
@@ -886,13 +886,13 @@ function syncFavoriteProProcessData(id_procedimento, dados) {
     item.assuntos = prop.selAssuntos_select || item.assuntos || [];
     item.interessados = prop.selInteressadosProcedimento || item.interessados || [];
     item.descricao = prop.txtDescricao || item.descricao || '';
-    storeFavorites.favorites[favoriteIndex] = item;
+    storeMonitorados.monitorados[monitoradoIndex] = item;
     if (typeof dados.tiposDocumentos !== 'undefined' && $.isArray(dados.tiposDocumentos) && dados.tiposDocumentos.length > 0) {
-        storeFavorites.config = storeFavorites.config || {};
-        storeFavorites.config.tiposdocs = dados.tiposDocumentos;
+        storeMonitorados.config = storeMonitorados.config || {};
+        storeMonitorados.config.tiposdocs = dados.tiposDocumentos;
     }
-    localStorageStorePro('configDataFavoritesPro', storeFavorites);
-    saveConfigFav();
+    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+    saveConfigMonitorado();
     var currentSnapshot = JSON.stringify({
         processo: item.processo || '',
         andamento: item.andamento || [],
@@ -902,75 +902,75 @@ function syncFavoriteProProcessData(id_procedimento, dados) {
         interessados: item.interessados || [],
         descricao: item.descricao || ''
     });
-    if ($('#ifrArvore').length == 0 && $('#favoritesPro').length > 0 && previousSnapshot !== currentSnapshot) {
-        setPanelFavorites('refresh');
+    if ($('#ifrArvore').length == 0 && $('#monitoradosPro').length > 0 && previousSnapshot !== currentSnapshot) {
+        setPanelMonitorados('refresh');
     }
 }
-function bindFavoriteProcessSync() {
-    if (window.__seiProFavoriteProcessSyncBound) return;
-    window.__seiProFavoriteProcessSyncBound = true;
+function bindMonitoradoProcessSync() {
+    if (window.__seiProMonitoradoProcessSyncBound) return;
+    window.__seiProMonitoradoProcessSyncBound = true;
     window.addEventListener('sei-pro-process-session-updated', function(event){
         var detail = (event && event.detail) ? event.detail : {};
         var id_procedimento = detail.id_procedimento;
         if (typeof id_procedimento === 'undefined' || id_procedimento === null || id_procedimento === '') return;
         var dados = pullDadosProcessoSession(id_procedimento);
-        if (!favoriteProcessDataReady(id_procedimento, dados)) return;
-        syncFavoriteProProcessData(id_procedimento, dados);
+        if (!monitoradoProcessDataReady(id_procedimento, dados)) return;
+        syncMonitoradoProProcessData(id_procedimento, dados);
     });
 }
-bindFavoriteProcessSync();
-function storeFavoritePro(mode, id_procedimento) {
+bindMonitoradoProcessSync();
+function storeMonitoradoPro(mode, id_procedimento) {
     if (mode == 'add') {
-        var storeFavorites = addFavoritePro(id_procedimento);
+        var storeMonitorados = addMonitoradoPro(id_procedimento);
     } else {
-        var storeFavorites = removeFavoritePro(id_procedimento);
+        var storeMonitorados = removeMonitoradoPro(id_procedimento);
     }
-    if (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.hasOwnProperty('tiposDocumentos') && dadosProcessoPro.tiposDocumentos.length > 0 ) { storeFavorites['config']['tiposdocs'] = dadosProcessoPro.tiposDocumentos; }
-    localStorageStorePro('configDataFavoritesPro', storeFavorites);
-    saveConfigFav();
-    appendIconFavorites();
+    if (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.hasOwnProperty('tiposDocumentos') && dadosProcessoPro.tiposDocumentos.length > 0 ) { storeMonitorados['config']['tiposdocs'] = dadosProcessoPro.tiposDocumentos; }
+    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+    saveConfigMonitorado();
+    appendIconMonitorados();
     if ($('#ifrArvore').length == 0) {
-        // console.log('### addFavoritePro', mode, storeFavorites); 
-        if ($('#favoritesPro').length == 0) {
-                setPanelFavorites('insert');
-                initAppendIconFavorites();
+        // console.log('### addMonitoradoPro', mode, storeMonitorados); 
+        if ($('#monitoradosPro').length == 0) {
+                setPanelMonitorados('insert');
+                initAppendIconMonitorados();
         } else {
-            if (typeof storeFavorites.favorites === 'undefined' || storeFavorites.favorites === null || storeFavorites.favorites.length == 0) {
-                $('#favoritesPro').remove();
+            if (typeof storeMonitorados.monitorados === 'undefined' || storeMonitorados.monitorados === null || storeMonitorados.monitorados.length == 0) {
+                $('#monitoradosPro').remove();
                 appendStarOnProcess();
             } else {
-                setPanelFavorites('refresh');
+                setPanelMonitorados('refresh');
             }
         }
         dadosProcessoPro = {};
         if ($('#processosKanban').is(':visible')) addKanbanProc();
     }
 }
-function removeFavoritePainelPro(this_, id_procedimento = 0) {
+function removeMonitoradoPainelPro(this_, id_procedimento = 0) {
     confirmaBoxPro('Tem certeza que deseja remover esse processo dos Processos Monitorados?', function(){
         if (id_procedimento == 0) {
-            $('#favoriteTablePro').find('input[name="favoritePro"]:checked').each(function(){
+            $('#monitoradoTablePro').find('input[name="monitoradoPro"]:checked').each(function(){
                 var id_procedimento = $(this).val().trim();
-                removeFavoritePainelPro_(this, id_procedimento);
+                removeMonitoradoPainelPro_(this, id_procedimento);
             });
             setTimeout(function(){ 
                 $(this_).hide();
             }, 500);
         } else {
-            removeFavoritePainelPro_(this_, id_procedimento);
+            removeMonitoradoPainelPro_(this_, id_procedimento);
         }
     });
 }
-function removeFavoritePainelPro_(this_, id_procedimento) {
+function removeMonitoradoPainelPro_(this_, id_procedimento) {
     var _this = $(this_);
-    var storeFavorites = removeFavoritePro(id_procedimento);
-    localStorageStorePro('configDataFavoritesPro', storeFavorites);
-    saveConfigFav();
+    var storeMonitorados = removeMonitoradoPro(id_procedimento);
+    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+    saveConfigMonitorado();
     _this.closest('tr').slideUp();
 }
-function updateFavorites(this_) {
+function updateMonitorados(this_) {
     $(this_).find('i').addClass('fa-spin');
-    setPanelFavorites('refresh');
+    setPanelMonitorados('refresh');
     initChosenReplace('panel', this_);
 }
 function configureLeafletAssets() {
@@ -983,20 +983,20 @@ function configureLeafletAssets() {
     });
     L.Icon.Default.prototype._seiProAssetsConfigured = true;
 }
-function removeFavoritePro(id_procedimento, storeFavorites = false) {
-    var storeFavorites = storeFavorites || getStoreFavoritePro();
-    for (i = 0; i < storeFavorites['favorites'].length; i++) {
-        if( storeFavorites['favorites'][i]['id_procedimento'] == id_procedimento) {
-            // console.log('notinclude', i, storeFavorites['favorites'][i]['id_procedimento'], storeFavorites['favorites'][i]['processo']);
-            storeFavorites['favorites'].splice(i,1);
+function removeMonitoradoPro(id_procedimento, storeMonitorados = false) {
+    var storeMonitorados = storeMonitorados || getStoreMonitoradoPro();
+    for (i = 0; i < storeMonitorados['monitorados'].length; i++) {
+        if( storeMonitorados['monitorados'][i]['id_procedimento'] == id_procedimento) {
+            // console.log('notinclude', i, storeMonitorados['monitorados'][i]['id_procedimento'], storeMonitorados['monitorados'][i]['processo']);
+            storeMonitorados['monitorados'].splice(i,1);
             i--;
         }
     }
-    return storeFavorites;
+    return storeMonitorados;
 }
-function editCategoryFavorite(this_, id_procedimento) {
+function editCategoryMonitorado(this_, id_procedimento) {
     var _this = $(this_);
-    var storeFavorites = getStoreFavoritePro()['favorites'];
+    var storeMonitorados = getStoreMonitoradoPro()['monitorados'];
     var category_elem = _this.closest('td').find('.info_category');
     var category_txt = _this.closest('td').find('.info_category_txt');
     if (category_elem.is(':visible')) {
@@ -1004,16 +1004,16 @@ function editCategoryFavorite(this_, id_procedimento) {
         category_txt.show();
         _this.find('i').attr('class','fas fa-pencil-alt');
     } else {
-        var value = jmespath.search(storeFavorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
-        var categoriaLista = selectCategoryFavorite(value.categoria, 'changeCategoryFavorite', true, id_procedimento);
+        var value = jmespath.search(storeMonitorados, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
+        var categoriaLista = selectCategoryMonitorado(value.categoria, 'changeCategoryMonitorado', true, id_procedimento);
         category_elem.show().html(categoriaLista);
         category_txt.hide();
         _this.find('i').attr('class','fas fa-thumbs-up');
     }
 }
-function selectCategoryFavorite(select = '', func = false, newItem = false, id_procedimento = 0) {
-    var storeFavorites = getStoreFavoritePro()['favorites'];
-    var listaCategorias = jmespath.search(storeFavorites,"[*].categoria");
+function selectCategoryMonitorado(select = '', func = false, newItem = false, id_procedimento = 0) {
+    var storeMonitorados = getStoreMonitoradoPro()['monitorados'];
+    var listaCategorias = jmespath.search(storeMonitorados,"[*].categoria");
         listaCategorias = (listaCategorias !== null) ? uniqPro(listaCategorias) : false;
     var categoriaLista = (listaCategorias) 
         ? $.map(listaCategorias, function(v, i){
@@ -1026,12 +1026,12 @@ function selectCategoryFavorite(select = '', func = false, newItem = false, id_p
         categoriaLista = '<select class="selectPro" '+(id_procedimento ? 'style="margin: 0 !important;font-size: 10pt;" data-id="'+id_procedimento+'"' : 'style="width: 100%;font-size: 10pt;"')+' '+(func ? 'onchange="'+func+'(this)"' : '')+'><option value="&nbsp;">&nbsp;</option>'+categoriaLista+(newItem ? '<option value="new">\u2795 Nova categoria</option>' : '')+'</select>';
    return categoriaLista;
 }
-function changePanelCategoryFavorite(this_) {
+function changePanelCategoryMonitorado(this_) {
     var _this = $(this_);
-    setOptionsPro('panelFavoritosView', _this.val().trim());
-    setPanelFavorites('refresh');
+    setOptionsPro('panelMonitoradosView', _this.val().trim());
+    setPanelMonitorados('refresh');
 }
-function changeCategoryFavorite(this_) {
+function changeCategoryMonitorado(this_) {
     var _this = $(this_);
     if (_this.val() == 'new') {
         var textBox =   '<i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Digite o nome da nova categoria:'+
@@ -1063,42 +1063,42 @@ function changeCategoryFavorite(this_) {
                     text: "Ok",
                     class: 'confirm ui-state-active',
                     click: function() {
-                        saveCategoryFavorite(this_, $('#nomeNovoItem').val().trim());
+                        saveCategoryMonitorado(this_, $('#nomeNovoItem').val().trim());
                     }
                 }]
         });
     } else {
-        saveCategoryFavorite(this_, _this.val().trim());
+        saveCategoryMonitorado(this_, _this.val().trim());
     }
 }
-function saveCategoryFavorite(this_, value) {
+function saveCategoryMonitorado(this_, value) {
     var _this = $(this_);
     var data = _this.data();
     var id_procedimento = data.id;
-    var storeFavorites = getStoreFavoritePro();
-    var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-    if (typeof favoriteIndex !== 'undefined' && favoriteIndex !== null) {
-            var item = storeFavorites.favorites[favoriteIndex];
+    var storeMonitorados = getStoreMonitoradoPro();
+    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null) {
+            var item = storeMonitorados.monitorados[monitoradoIndex];
                 item.categoria = value;
-            storeFavorites.favorites[favoriteIndex] = item;
+            storeMonitorados.monitorados[monitoradoIndex] = item;
     }
-    localStorageStorePro('configDataFavoritesPro', storeFavorites);
-    saveConfigFav();
-    setPanelFavorites('refresh');
+    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+    saveConfigMonitorado();
+    setPanelMonitorados('refresh');
     if (alertBoxPro) {   
         alertBoxPro.dialog('close');
         resetDialogBoxPro('alertBoxPro');
     }
 }
-function addFavoritePro(id_procedimento = false) {
-    var storeFavorites = getStoreFavoritePro();
-    var favoriteId = id_procedimento || (dadosProcessoPro && dadosProcessoPro.listAndamento ? dadosProcessoPro.listAndamento.id_procedimento : false);
-    if (favoriteId !== false) {
-        storeFavorites = removeFavoritePro(favoriteId, storeFavorites);
+function addMonitoradoPro(id_procedimento = false) {
+    var storeMonitorados = getStoreMonitoradoPro();
+    var monitoradoId = id_procedimento || (dadosProcessoPro && dadosProcessoPro.listAndamento ? dadosProcessoPro.listAndamento.id_procedimento : false);
+    if (monitoradoId !== false) {
+        storeMonitorados = removeMonitoradoPro(monitoradoId, storeMonitorados);
     }
     var andamento = (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.listAndamento) ? dadosProcessoPro.listAndamento : {};
     var prop = (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.propProcesso) ? dadosProcessoPro.propProcesso : {};
-        storeFavorites['favorites'].push({
+        storeMonitorados['monitorados'].push({
             id_procedimento: andamento.id_procedimento,
             processo: andamento.processo,
             andamento: andamento.andamento || [],
@@ -1110,29 +1110,29 @@ function addFavoritePro(id_procedimento = false) {
             order: -1,
             categoria: ''
         });
-    return storeFavorites;
+    return storeMonitorados;
 }
-function setPanelFavorites(mode) {
-    var statusView = ( getOptionsPro('favoritesProDiv') == 'hide' ) ? 'display:none;' : 'display: inline-table;';
-    var statusIconShow = ( getOptionsPro('favoritesProDiv') == 'hide' ) ? '' : 'display:none;';
-    var statusIconHide = ( getOptionsPro('favoritesProDiv') == 'hide' ) ? 'display:none;' : '';
-    var storeFavorites = getStoreFavoritePro()['favorites'];
-        storeFavorites.forEach(function(fav){
-            if (fav.order === null) {
-                fav.order = -1;
+function setPanelMonitorados(mode) {
+    var statusView = ( getOptionsPro('monitoradosProDiv') == 'hide' ) ? 'display:none;' : 'display: inline-table;';
+    var statusIconShow = ( getOptionsPro('monitoradosProDiv') == 'hide' ) ? '' : 'display:none;';
+    var statusIconHide = ( getOptionsPro('monitoradosProDiv') == 'hide' ) ? 'display:none;' : '';
+    var storeMonitorados = getStoreMonitoradoPro()['monitorados'];
+        storeMonitorados.forEach(function(monitorado){
+            if (monitorado.order === null) {
+                monitorado.order = -1;
             }
         });
-        storeFavorites = (checkObjHasProperty(storeFavorites, 'order')) ? jmespath.search(storeFavorites, "sort_by([*],&order)") : storeFavorites;
+        storeMonitorados = (checkObjHasProperty(storeMonitorados, 'order')) ? jmespath.search(storeMonitorados, "sort_by([*],&order)") : storeMonitorados;
     var arrayProcessosUnidade = getProcessoUnidadePro();
-    var selectedCategoryView = (getOptionsPro('panelFavoritosView')) ? getOptionsPro('panelFavoritosView') : '';
+    var selectedCategoryView = (getOptionsPro('panelMonitoradosView')) ? getOptionsPro('panelMonitoradosView') : '';
 
-    var listFavorite = (selectedCategoryView != '') ? jmespath.search(storeFavorites, "[?categoria=='"+selectedCategoryView+"']") : storeFavorites;
-    var countFavorite = (listFavorite.length == 1) ? listFavorite.length+' registro:' : listFavorite.length+' registros:';
-    var checkMaps = (jmespath.search(storeFavorites, "length([?not_null(latlng)])") > 0) ? true : false;
+    var listMonitorado = (selectedCategoryView != '') ? jmespath.search(storeMonitorados, "[?categoria=='"+selectedCategoryView+"']") : storeMonitorados;
+    var countMonitorado = (listMonitorado.length == 1) ? listMonitorado.length+' registro:' : listMonitorado.length+' registros:';
+    var checkMaps = (jmespath.search(storeMonitorados, "length([?not_null(latlng)])") > 0) ? true : false;
 
-    if (listFavorite !== null && listFavorite.length > 0) {
-        var htmlTableFavorites =    '<table class="tableInfo tableZebra infraTable tableFollow tableFavoritos tabelaControle" data-name-table="Processos Monitorados" data-tabletype="favoritos" id="favoriteTablePro">'+
-                                    '   <caption class="infraCaption" style="text-align: left;">'+countFavorite+'</caption>'+
+    if (listMonitorado !== null && listMonitorado.length > 0) {
+        var htmlTableMonitorados =    '<table class="tableInfo tableZebra infraTable tableFollow tableMonitorados tabelaControle" data-name-table="Processos Monitorados" data-tabletype="monitorados" id="monitoradoTablePro">'+
+                                    '   <caption class="infraCaption" style="text-align: left;">'+countMonitorado+'</caption>'+
                                     '   <thead>'+
                                     '       <tr class="tableHeader">'+
                                     '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: 50px;" align="center"><span class="lblInfraCheck" aria-hidden="true"></span><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
@@ -1147,15 +1147,15 @@ function setPanelFavorites(mode) {
                                     '       </tr>'+
                                     '   </thead>'+
                                     '   <tbody>';
-            $.each(listFavorite,function(index, value){
+            $.each(listMonitorado,function(index, value){
                 var linkDoc = url_host+'?acao=procedimento_trabalhar&id_procedimento='+value.id_procedimento;
-                var tagsFav = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? (value.etiquetas.length > 0 ? value.etiquetas.join(';') : value.etiquetas[0]) : '';
-                var tagsFavHtml = (typeof value.etiquetas !== 'undefined') ? $.map(listFavorite[index].etiquetas, function (i) { return getHtmlEtiqueta(i,'fav') }).join('') : '';
-                var tagsFavClass = (typeof value.etiquetas !== 'undefined') ? $.map(listFavorite[index].etiquetas, function (i) { return 'tagTableName_'+normalizeNameTag(i); }).join(' ') : '';   
-                var datesFav = (typeof value.configdate !== 'undefined' && value.configdate !== null && typeof value.configdate.date !== 'undefined' && value.configdate.date !== null) ? value.configdate.date : '';
+                var tagsMonitorado = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? (value.etiquetas.length > 0 ? value.etiquetas.join(';') : value.etiquetas[0]) : '';
+                var tagsMonitoradoHtml = (typeof value.etiquetas !== 'undefined') ? $.map(listMonitorado[index].etiquetas, function (i) { return getHtmlEtiqueta(i,'monitorado') }).join('') : '';
+                var tagsMonitoradoClass = (typeof value.etiquetas !== 'undefined') ? $.map(listMonitorado[index].etiquetas, function (i) { return 'tagTableName_'+normalizeNameTag(i); }).join(' ') : '';   
+                var datesMonitorado = (typeof value.configdate !== 'undefined' && value.configdate !== null && typeof value.configdate.date !== 'undefined' && value.configdate.date !== null) ? value.configdate.date : '';
                 if (typeof value.configdate !== 'undefined' && value.configdate !== null && typeof value.configdate.dateTo !== 'undefined' && value.configdate.dateTo !== null) { value.configdate.dateTo = moment().format('YYYY-MM-DD') }
-                var datesFavHtml = (typeof value.configdate !== 'undefined' && value.configdate !== null) ? getDatesPreview(value.configdate) : ''; 
-                var tagDatesFavClass = (datesFavHtml != '') ? 'tagTableName_'+$(datesFavHtml).data('tagname') : '';
+                var datesMonitoradoHtml = (typeof value.configdate !== 'undefined' && value.configdate !== null) ? getDatesPreview(value.configdate) : ''; 
+                var tagDatesMonitoradoClass = (datesMonitoradoHtml != '') ? 'tagTableName_'+$(datesMonitoradoHtml).data('tagname') : '';
                 var iconProcesso = ( $.inArray(value.processo, arrayProcessosUnidade) == -1 ) ? 'fas fa-folder' : 'far fa-folder-open';
                 var tipsProcesso = ( $.inArray(value.processo, arrayProcessosUnidade) == -1 ) ? 'Processo fechado nesta unidade' : 'Processo aberto nesta unidade';
                 var issetOrder = (value.hasOwnProperty('order') && value.order !== null && value.order != -1) ? true : false;
@@ -1163,60 +1163,60 @@ function setPanelFavorites(mode) {
                 var categoria = (value.hasOwnProperty('categoria') && value.categoria !== null && value.categoria != '') ? value.categoria : false;
                 var htmlIconsHome = ($('#P'+value.id_procedimento).find('td').eq(1).find('a').length > 0) ? $('#P'+value.id_procedimento).find('td').eq(1).find('a').map(function(v){ return this.outerHTML }).get().join('') : '';
                 if (selectedCategoryView == '' || selectedCategoryView == categoria) {
-                    htmlTableFavorites +=   '       <tr data-tagname="SemGrupo" data-index="'+index+'" data-id_procedimento="'+value.id_procedimento+'" class="'+tagsFavClass+' '+tagDatesFavClass+'">'+
-                                            '           <td align="center"><input type="checkbox" onclick="followSelecionarItens(this)" id="favoritePro_'+value.id_procedimento+'" name="favoritePro" value="'+value.id_procedimento+'"></td>'+
+                    htmlTableMonitorados +=   '       <tr data-tagname="SemGrupo" data-index="'+index+'" data-id_procedimento="'+value.id_procedimento+'" class="'+tagsMonitoradoClass+' '+tagDatesMonitoradoClass+'">'+
+                                            '           <td align="center"><input type="checkbox" onclick="followSelecionarItens(this)" id="monitoradoPro_'+value.id_procedimento+'" name="monitoradoPro" value="'+value.id_procedimento+'"></td>'+
                                             '           <td align="left">'+
                                             '               <a class="followLinkProcesso bLink" style="text-decoration: underline;" href="'+linkDoc+'">'+
                                             '               <i class="'+iconProcesso+' bLink" style="text-decoration: underline;"  onmouseover="return infraTooltipMostrar(\''+tipsProcesso+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
                                             '               '+value.processo+'</a>'+
                                             '               <a class="newLink followLink followLinkNewtab" href="'+linkDoc+'" onmouseover="return infraTooltipMostrar(\'Abrir em nova aba\');" onmouseout="return infraTooltipOcultar();" target="_blank"><i class="fas fa-external-link-alt" style="font-size: 90%; text-decoration: underline;"></i></a>'+
-                                            '               <div class="info_icons_fav">'+htmlIconsHome+'</div>'+
+                                            '               <div class="info_icons_monitorado">'+htmlIconsHome+'</div>'+
                                             '           </td>'+
-                                            '           <td align="left" class="tdfav_dates '+((datesFavHtml.trim() == '' ) ? 'info_dates_follow_empty' : '')+'">'+
-                                            '               <span class="info_dates_fav">'+datesFavHtml+
+                                            '           <td align="left" class="tdmonitorado_dates '+((datesMonitoradoHtml.trim() == '' ) ? 'info_dates_follow_empty' : '')+'">'+
+                                            '               <span class="info_dates_monitorado">'+datesMonitoradoHtml+
                                             '               </span>'+
-                                            '               <a class="newLink followLink followLinkDates followLinkDatesEdit" onclick="showDatesFav(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Editar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
-                                            '               <a class="newLink followLink followLinkDates followLinkDatesAdd" onclick="showDatesFav(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-stopwatch" style="font-size: 100%;"></i></a>'+
-                                            '               <span class="info_dates_fav_txt" style="display:none;">'+
-                                            '                   <input value="'+datesFav+'" onblur="showDatesFav(this, \'hide\')"  onkeypress="keyDatesFav(event)" type="date" class="favoriteDatesPro" name="favoriteDatesPro">'+
-                                            '                   <a class="newLink" onclick="showDatesFav(this, \'hide\')" style="padding: 2px; margin: 0 2px;" onmouseover="return infraTooltipMostrar(\'Salvar\');" onmouseout="return infraTooltipOcultar();">'+
+                                            '               <a class="newLink followLink followLinkDates followLinkDatesEdit" onclick="showDatesMonitorado(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Editar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkDates followLinkDatesAdd" onclick="showDatesMonitorado(this, \'show\')" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-stopwatch" style="font-size: 100%;"></i></a>'+
+                                            '               <span class="info_dates_monitorado_txt" style="display:none;">'+
+                                            '                   <input value="'+datesMonitorado+'" onblur="showDatesMonitorado(this, \'hide\')"  onkeypress="keyDatesMonitorado(event)" type="date" class="monitoradoDatesPro" name="monitoradoDatesPro">'+
+                                            '                   <a class="newLink" onclick="showDatesMonitorado(this, \'hide\')" style="padding: 2px; margin: 0 2px;" onmouseover="return infraTooltipMostrar(\'Salvar\');" onmouseout="return infraTooltipOcultar();">'+
                                             '                      <i class="fas fa-thumbs-up" style="font-size: 100%;"></i>'+
                                             '                   </a>'+
-                                            '                   <a class="newLink favoriteConfigDates" onclick="openBoxConfigDates(this)" style="padding: 2px; margin: 0 2px;" onmouseover="return infraTooltipMostrar(\'Op\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();">'+
+                                            '                   <a class="newLink monitoradoConfigDates" onclick="openBoxConfigDates(this)" style="padding: 2px; margin: 0 2px;" onmouseover="return infraTooltipMostrar(\'Op\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();">'+
                                             '                      <i class="fas fa-cog" style="font-size: 100%;"></i>'+
                                             '                   </a>'+
                                             '               </span>'+
                                             '           </td>'+
-                                            '           <td align="left" class="tdfav_tags '+((tagsFavHtml.trim() == '' ) ? 'info_tags_follow_empty' : '')+'" data-etiqueta-mode="fav">'+
-                                            '               <span class="info_tags_follow">'+tagsFavHtml+
+                                            '           <td align="left" class="tdmonitorado_tags '+((tagsMonitoradoHtml.trim() == '' ) ? 'info_tags_follow_empty' : '')+'" data-etiqueta-mode="monitorado">'+
+                                            '               <span class="info_tags_follow">'+tagsMonitoradoHtml+
                                             '               </span>'+
                                             '               <span class="info_tags_follow_txt" style="display:none">'+
-                                            '                   <input value="'+tagsFav+'" class="favoriteTagsPro" name="favoriteTagsPro">'+
+                                            '                   <input value="'+tagsMonitorado+'" class="monitoradoTagsPro" name="monitoradoTagsPro">'+
                                             '               </span>'+
-                                            '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'fav\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
-                                            '               <a class="newLink followLink followLinkTags followLinkTagsAdd" onclick="showFollowEtiqueta(this, \'show\', \'fav\')" onmouseover="return infraTooltipMostrar(\'Adicionar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkTagsEdit" onclick="showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Editar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkTagsAdd" onclick="showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Adicionar etiqueta\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
-                                            '           <td class="tdfav_map '+((typeof value.latlng !== 'undefined' && value.latlng !== null) ? '' : 'info_maps_follow_empty')+'">'+
+                                            '           <td class="tdmonitorado_map '+((typeof value.latlng !== 'undefined' && value.latlng !== null) ? '' : 'info_maps_follow_empty')+'">'+
                                             '               <span class="info_maps_follow">'+(typeof value.latlng !== 'undefined' && value.latlng !== null ? '<a class="newLink" onclick="openBoxSingleMap(this, true)"><i class="fas fa-map-marked azulColor" style="font-size: 100%;"></i></a>' : '')+'</span>'+
                                             '               <a class="newLink followLink followLinkMaps followLinkMapsEdit" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Editar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                             '               <a class="newLink followLink followLinkMaps followLinkMapsAdd" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Adicionar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-map-marker-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
                                             '           <td class="content_desc">'+
-                                            '               <span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'fav\')" onkeypress="keyFollowDesc(event, \'fav\')" value="'+value.descricao+'" name="favoriteDescriptionPro"></span>'+
+                                            '               <span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'monitorado\')" onkeypress="keyFollowDesc(event, \'monitorado\')" value="'+value.descricao+'" name="monitoradoDescriptionPro"></span>'+
                                             '               <span class="info">'+value.descricao+'</span>'+
-                                            '               <a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'fav\')" onmouseover="return infraTooltipMostrar(\'Editar especifica\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Editar especifica\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
                                             '           <td>'+
                                             '               '+value.tipo_procedimento+
-                                            '               <a class="newLink followLink followLinkTags followLinkFavRemove" onclick="removeFavoritePainelPro(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Remover dos Processos Monitorados\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkMonitoradoRemove" onclick="removeMonitoradoPainelPro(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Remover dos Processos Monitorados\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
-                                            '           <td class="td_fav_category">'+
+                                            '           <td class="td_monitorado_category">'+
                                             '               <span class="info_category_txt">'+(categoria ? categoria : '')+'</span>'+
                                             '               <span class="info_category" style="display:none"></span>'+
-                                            '               <a class="newLink followLink followLinkTags followLinkFavCategory" onclick="editCategoryFavorite(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Editar categoria\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
+                                            '               <a class="newLink followLink followLinkTags followLinkMonitoradoCategory" onclick="editCategoryMonitorado(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Editar categoria\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
                                             '           <td align="center" data-order="'+order+'">'+
-                                            '               <a class="newLink sorterTrFavorite" style="margin-right: 20px; cursor: grab;"></i>'+
+                                            '               <a class="newLink sorterTrMonitorado" style="margin-right: 20px; cursor: grab;"></i>'+
                                             '                   <span class="fa-layers fa-fw">'+
                                             '                       <i class="fas fa-bars cinzaColor"></i>'+
                                             (issetOrder ? 
@@ -1228,50 +1228,50 @@ function setPanelFavorites(mode) {
                                             '       </tr>';
                 }
             });
-            htmlTableFavorites +=   '   </tbody>'+
+            htmlTableMonitorados +=   '   </tbody>'+
                                     '</table>';
-        var idOrder = (getOptionsPro('orderPanelHome') && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='favoritesPro'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='favoritesPro'].index | [0]") : '';
-        var htmlPanelFavorites = '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="favoritesPro" data-order="'+idOrder+'">'+
+        var idOrder = (getOptionsPro('orderPanelHome') && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='monitoradosPro'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='monitoradosPro'].index | [0]") : '';
+        var htmlPanelMonitorados = '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="monitoradosPro" data-order="'+idOrder+'">'+
                                 '   <div class="infraBarraLocalizacao titlePanelHome">'+
                                 '       <i class="fas fa-star starGold" style="margin: 0 5px; font-size: 1.1em;"></i>'+
                                 '       Processos Monitorados'+
-                                '       <a class="newLink" id="favoritesProDiv_showIcon" onclick="toggleTablePro(\'#favoritesProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
-                                '       <a class="newLink" id="favoritesProDiv_hideIcon" onclick="toggleTablePro(\'#favoritesProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="monitoradosProDiv_showIcon" onclick="toggleTablePro(\'#monitoradosProDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
+                                '       <a class="newLink" id="monitoradosProDiv_hideIcon" onclick="toggleTablePro(\'#monitoradosProDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
                                 '   </div>'+
-                                '   <div id="favoritesProDiv" class="panelHome" style="width: 100%; '+statusView+'">'+
-                                '   	<div id="favoritosProActions" style="top:0; position: absolute; z-index: 9999; left: 190px; width: calc(100% - 230px)">'+
-                                '           <a class="newLink iconFavoritos_remove" onclick="removeFavoritePainelPro(this)" onmouseover="return infraTooltipMostrar(\'Remover processos monitorados\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
+                                '   <div id="monitoradosProDiv" class="panelHome" style="width: 100%; '+statusView+'">'+
+                                '   	<div id="monitoradosProActions" style="top:0; position: absolute; z-index: 9999; left: 190px; width: calc(100% - 230px)">'+
+                                '           <a class="newLink iconMonitorados_remove" onclick="removeMonitoradoPainelPro(this)" onmouseover="return infraTooltipMostrar(\'Remover processos monitorados\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt; display: none">'+
                                 '                   <span class="fa-layers fa-fw">'+
                                 '                       <i class="fas fa-trash-alt"></i>'+
                                 '                       <span class="fa-layers-counter">1</span>'+
                                 '                   </span>'+
                                 '           </a>'+
-                                '           <span style="display:block; float:right; width:200px;">'+selectCategoryFavorite(selectedCategoryView, 'changePanelCategoryFavorite')+'</span>'+
-                                '           <a class="newLink iconFavoritos_update" onclick="updateFavorites(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin-right: 10px;;font-size: 14pt;float: right;">'+
+                                '           <span style="display:block; float:right; width:200px;">'+selectCategoryMonitorado(selectedCategoryView, 'changePanelCategoryMonitorado')+'</span>'+
+                                '           <a class="newLink iconMonitorados_update" onclick="updateMonitorados(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin-right: 10px;;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-sync-alt"></i>'+
                                 '           </a>'+
-                                '           <a class="newLink iconFavoritos_maps" onclick="openBoxMultipleMap()" onmouseover="return infraTooltipMostrar(\'Mapa de processos monitorados\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right; '+(checkMaps ? '' : 'display:none;')+'">'+
+                                '           <a class="newLink iconMonitorados_maps" onclick="openBoxMultipleMap()" onmouseover="return infraTooltipMostrar(\'Mapa de processos monitorados\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right; '+(checkMaps ? '' : 'display:none;')+'">'+
                                 '              <i class="fas fa-map-marker-alt" style="font-size: 100%;"></i>'+
                                 '           </a>'+
-                                '           <a class="newLink iconFavoritos_config" onclick="openConfigFavorites(this)" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
+                                '           <a class="newLink iconMonitorados_config" onclick="openConfigMonitorados(this)" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
                                 '               <i class="fas fa-cog"></i>'+
                                 '           </a>'+
                                 '   	</div>'+
                                 '   	<div class="tabelaPanelScroll">'+
-                                '           '+htmlTableFavorites+
+                                '           '+htmlTableMonitorados+
                                 '   	</div>'+
                                 '   </div>'+
                                 '</div>';
 
-        function positionFavoritesBeforeControl() {
-            if (!$('#favoritesPro').length || !$('#processosSEIPro').length) return;
-            $('#favoritesPro').insertBefore('#processosSEIPro');
+        function positionMonitoradosBeforeControl() {
+            if (!$('#monitoradosPro').length || !$('#processosSEIPro').length) return;
+            $('#monitoradosPro').insertBefore('#processosSEIPro');
         }
 
         if ( mode == 'insert' ) {
-            if ( $('#favoritesPro').length > 0 ) { $('#favoritesPro').remove(); }        
-            orderDivPanel(htmlPanelFavorites, idOrder, 'favoritesPro');
-            positionFavoritesBeforeControl();
+            if ( $('#monitoradosPro').length > 0 ) { $('#monitoradosPro').remove(); }        
+            orderDivPanel(htmlPanelMonitorados, idOrder, 'monitoradosPro');
+            positionMonitoradosBeforeControl();
 
             if (typeof L === 'undefined') {
                 loadStylePro(URL_SPRO+"css/leaflet.css");
@@ -1286,40 +1286,42 @@ function setPanelFavorites(mode) {
                 initSortDivPanel();
             }
         } else if ( mode == 'refresh' ) {
-            $('#favoritesPro').attr('id', 'favoritesPro_temp');
-            $('#favoritesPro_temp').after(htmlPanelFavorites);
-            $('#favoritesPro_temp').remove();
-            positionFavoritesBeforeControl();
+            $('#monitoradosPro').attr('id', 'monitoradosPro_temp');
+            $('#monitoradosPro_temp').after(htmlPanelMonitorados);
+            $('#monitoradosPro_temp').remove();
+            positionMonitoradosBeforeControl();
         }
-        initFunctionsPanelFav();
+        initFunctionsPanelMonitorado();
         checkFileSystemInit();
         appendStarOnProcess();
-        // console.log('setPanelFavorites');
+        // console.log('setPanelMonitorados');
     } else {
-        checkFileLocalFav();
+        checkFileLocalMonitorado();
         appendStarOnProcess();
     }
 }
 function appendStarOnProcess() {
-    var storeFavorites = getStoreFavoritePro()['favorites'];
+    var storeMonitorados = getStoreMonitoradoPro()['monitorados'];
     $('.tabelaControle').find('tbody tr').each(function(){
         var _this = $(this);
-        if (_this.find('.processoNaoVisualizado').length == 0) {
-            var id_procedimento = _this.attr('id');
-                id_procedimento = (typeof id_procedimento !== 'undefined' && id_procedimento !== null && id_procedimento !== '') ? id_procedimento.replace('P', '') : false;
-            if (!id_procedimento) {
-                var hrefAtribuicao = _this.find('a[href*="id_procedimento="]').eq(0).attr('href');
-                id_procedimento = (typeof hrefAtribuicao !== 'undefined' && hrefAtribuicao) ? getParamsUrlPro(hrefAtribuicao).id_procedimento : false;
-            }
-            if (!id_procedimento) {
-                var hrefProcesso = _this.find('a[href*="acao=procedimento_trabalhar"]').eq(0).attr('href');
-                id_procedimento = (typeof hrefProcesso !== 'undefined' && hrefProcesso) ? getParamsUrlPro(hrefProcesso).id_procedimento : false;
-            }
-            var iconStar = (id_procedimento) ? htmlIconFavorites(id_procedimento, 'left') : '';
-            var td = _this.find('td').eq(1);
-            td.find('.iconFavoritePro').remove();
-            td.prepend(iconStar);
+        // A estrela é exibida em TODOS os processos, inclusive os não visualizados
+        // (a marca .processoNaoVisualizado fica no td do número, não no td da estrela).
+        var id_procedimento = _this.attr('id');
+            id_procedimento = (typeof id_procedimento !== 'undefined' && id_procedimento !== null && id_procedimento !== '') ? id_procedimento.replace('P', '') : false;
+        if (!id_procedimento) {
+            var hrefAtribuicao = _this.find('a[href*="id_procedimento="]').eq(0).attr('href');
+            id_procedimento = (typeof hrefAtribuicao !== 'undefined' && hrefAtribuicao) ? getParamsUrlPro(hrefAtribuicao).id_procedimento : false;
         }
+        if (!id_procedimento) {
+            var hrefProcesso = _this.find('a[href*="acao=procedimento_trabalhar"]').eq(0).attr('href');
+            id_procedimento = (typeof hrefProcesso !== 'undefined' && hrefProcesso) ? getParamsUrlPro(hrefProcesso).id_procedimento : false;
+        }
+        // Sem float: a estrela fica inline e centralizada verticalmente na célula
+        // (vertical-align:middle) em relação à descrição do processo.
+        var iconStar = (id_procedimento) ? htmlIconMonitorados(id_procedimento) : '';
+        var td = _this.find('td').eq(1);
+        td.find('.iconMonitoradoPro').remove();
+        td.css('vertical-align', 'middle').prepend(iconStar);
     });
 }
 function checkFileSystemInit() {
@@ -1330,86 +1332,86 @@ function checkFileSystemInit() {
                 var htmlFileSystemStatus =  '<span id="htmlFileSystemStatus" style="display:block;float: left;font-size: 9pt;color: #888;clear: both;top: 0; left:60px;position: absolute;width: calc(100% - 400px);">'+
                                             '   <i class="fas fa-exclamation-triangle vermelhoColor"></i> Seu navegador n\u00E3o possui suporte ao sistema de arquivos local (FileSystem API) ou o usu\u00E1rio n\u00E3o autorizou o seu uso. '+
                                             '   <br> A n\u00E3o utiliza\u00E7\u00E3o dessa tecnologia poder\u00E1 ocasionar a perda de dados dos Processos Monitorados, caso o dados de cache do navegador sejam apagados. '+
-                                            '   <br><a onclick="initFileSystem(); setPanelFavorites(\'refresh\');" style="font-size: 9pt;color: blue; text-decoration: underline;">Re-autorize</a> a aplica\u00E7\u00E3o ou utilize outro navegador compat\u00EDvel.'+
+                                            '   <br><a onclick="initFileSystem(); setPanelMonitorados(\'refresh\');" style="font-size: 9pt;color: blue; text-decoration: underline;">Re-autorize</a> a aplica\u00E7\u00E3o ou utilize outro navegador compat\u00EDvel.'+
                                             '</span>';
                 $('#htmlFileSystemStatus').remove();
-                $('#favoritosProActions').append(htmlFileSystemStatus);
+                $('#monitoradosProActions').append(htmlFileSystemStatus);
             }
         }, 1000);
     }
 }
-function checkFileRemoteFav(mode, data = false) {
-    if (mode == 'get' && typeof getServerAtividades !== 'undefined' && (typeof checkLoadFavoritesProcPro === 'undefined' || !checkLoadFavoritesProcPro) ) {
-        var action = 'check_favoritos';
+function checkFileRemoteMonitorado(mode, data = false) {
+    if (mode == 'get' && typeof getServerAtividades !== 'undefined' && (typeof checkLoadMonitoradosProcPro === 'undefined' || !checkLoadMonitoradosProcPro) ) {
+        var action = 'check_monitorados';
         var param = {
             action: action
         };
         getServerAtividades(param, action);
     } else if (mode == 'set') {
         if (data) {
-            var storeFavorites = getStoreFavoritePro();
+            var storeMonitorados = getStoreMonitoradoPro();
             var datetime_server = moment(data.datetime,'YYYY-MM-DD HH:mm:ss');
-            var datetime_local = moment(storeFavorites.datetime,'YYYY-MM-DD HH:mm:ss');
+            var datetime_local = moment(storeMonitorados.datetime,'YYYY-MM-DD HH:mm:ss');
             if (statusLoadRemoteFile && datetime_server.isValid() && datetime_local.isValid() && datetime_server > datetime_local.add(1,'minutes')) {
-                getConfigDatetimeFav();
+                getConfigDatetimeMonitorado();
                 setTimeout(function(){
-                    getRemoteFileFav();
+                    getRemoteFileMonitorado();
                     statusLoadRemoteFile = false;
                     setTimeout(function(){
                         statusLoadRemoteFile = true;
                     }, 5000);
-                    console.log('getRemoteFileFav', storeFavorites, datetime_server.format('YYYY-MM-DD HH:mm:ss'), datetime_local.add(1,'minutes').format('YYYY-MM-DD HH:mm:ss'));
+                    console.log('getRemoteFileMonitorado', storeMonitorados, datetime_server.format('YYYY-MM-DD HH:mm:ss'), datetime_local.add(1,'minutes').format('YYYY-MM-DD HH:mm:ss'));
                 }, 3000);
             }
         }
     }
 }
-function checkFileLocalFav() {
+function checkFileLocalMonitorado() {
         getLocalFilePro();
         setTimeout(function(){ 
-            if (fileSystemPro && fileSystemContentPro && typeof fileSystemContentPro === 'object' && typeof moment().isoWeekdayCalc === 'function' && fileSystemContentPro.hasOwnProperty('favorites') && fileSystemContentPro.favorites.length > 0 ) {
+            if (fileSystemPro && fileSystemContentPro && typeof fileSystemContentPro === 'object' && typeof moment().isoWeekdayCalc === 'function' && fileSystemContentPro.hasOwnProperty('monitorados') && fileSystemContentPro.monitorados.length > 0 ) {
                 console.log('ok');
-                localStorageStorePro('configDataFavoritesPro', fileSystemContentPro);
-                saveConfigFav();
-                initPanelFavorites();
-                console.log('backup setPanelFavorites');
+                localStorageStorePro('configDataMonitoradosPro', fileSystemContentPro);
+                saveConfigMonitorado();
+                initPanelMonitorados();
+                console.log('backup setPanelMonitorados');
             } else if (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null) {
-                getRemoteFileFav();
+                getRemoteFileMonitorado();
                 if (typeof moment().isoWeekdayCalc !== 'function') $.getScript(URL_SPRO+"js/lib/moment-weekday-calc.js");
             }
         }, 500);
 }
-function getRemoteFileFav() {
-    if (fav_loopServer < 5) {
-        var action = 'get_favoritos';
+function getRemoteFileMonitorado() {
+    if (monitorado_loopServer < 5) {
+        var action = 'get_monitorados';
         var param = {
             action: action
         };
         getServerAtividades(param, action);
-        fav_loopServer++;
+        monitorado_loopServer++;
     }
 }
-function restoreFavServer(data) {
-    var storeFavorites = getStoreFavoritePro();
-    if (typeof storeFavorites !== 'undefined' && typeof storeFavorites.favorites !== 'undefined' && typeof data !== 'undefined' && typeof data.favorites !== 'undefined' && typeof data.config.colortags !== 'undefined') {
-        storeFavorites.favorites = data.favorites;
-        storeFavorites.config.colortags = data.config.colortags;
-        localStorageStorePro('configDataFavoritesPro', storeFavorites);
-        setLocalFilePro(storeFavorites);
-        initPanelFavorites();
-        console.log('backup setPanelFavorites');
+function restoreMonitoradoServer(data) {
+    var storeMonitorados = getStoreMonitoradoPro();
+    if (typeof storeMonitorados !== 'undefined' && typeof storeMonitorados.monitorados !== 'undefined' && typeof data !== 'undefined' && typeof data.monitorados !== 'undefined' && typeof data.config.colortags !== 'undefined') {
+        storeMonitorados.monitorados = data.monitorados;
+        storeMonitorados.config.colortags = data.config.colortags;
+        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+        setLocalFilePro(storeMonitorados);
+        initPanelMonitorados();
+        console.log('backup setPanelMonitorados');
     }
 }
-function keyDatesFav(e) {
+function keyDatesMonitorado(e) {
     if(e.which == 13) {
         var target = (e && e.target) ? e.target : (e && e.currentTarget) ? e.currentTarget : (e && e.path && e.path.length > 0) ? e.path[0] : false;
-        if (target) showDatesFav(target, 'hide');
+        if (target) showDatesMonitorado(target, 'hide');
     }
 }
-function initFunctionsPanelFav(TimeOut = 9000) {
-    if (typeof window.seiProFavInitTimer !== 'undefined' && window.seiProFavInitTimer && TimeOut == 9000) {
-        clearTimeout(window.seiProFavInitTimer);
-        window.seiProFavInitTimer = false;
+function initFunctionsPanelMonitorado(TimeOut = 9000) {
+    if (typeof window.seiProMonitoradoInitTimer !== 'undefined' && window.seiProMonitoradoInitTimer && TimeOut == 9000) {
+        clearTimeout(window.seiProMonitoradoInitTimer);
+        window.seiProMonitoradoInitTimer = false;
     }
     if (TimeOut <= 0) { return; }
     var hasTagsInput = typeof $.fn.tagsInput === 'function';
@@ -1417,18 +1419,18 @@ function initFunctionsPanelFav(TimeOut = 9000) {
     var hasAutocomplete = typeof $.fn.autocomplete === 'function';
     if (hasTagsInput && hasTableSorter && hasAutocomplete) {
 
-        var idTableFavorite = '#favoriteTablePro';
-        var tableFavorites = $(idTableFavorite);
-        if (!tableFavorites.length) { return; }
-        if (tableFavorites.data('sei-pro-fav-init') === true) { return; }
-        if (tableFavorites.data('sei-pro-fav-init-pending') === true) { return; }
-        tableFavorites.data('sei-pro-fav-init-pending', true);
-        tableFavorites.data('sei-pro-fav-init', true);
-        window.seiProFavInitTimer = false;
+        var idTableMonitorado = '#monitoradoTablePro';
+        var tableMonitorados = $(idTableMonitorado);
+        if (!tableMonitorados.length) { return; }
+        if (tableMonitorados.data('sei-pro-monitorado-init') === true) { return; }
+        if (tableMonitorados.data('sei-pro-monitorado-init-pending') === true) { return; }
+        tableMonitorados.data('sei-pro-monitorado-init-pending', true);
+        tableMonitorados.data('sei-pro-monitorado-init', true);
+        window.seiProMonitoradoInitTimer = false;
 
         initChosenReplace('panel');
 
-        $('.favoriteTagsPro').each(function(){
+        $('.monitoradoTagsPro').each(function(){
             var _input = $(this);
             if (_input.data('sei-pro-tags-init') === true) return;
             _input.data('sei-pro-tags-init', true);
@@ -1439,7 +1441,7 @@ function initFunctionsPanelFav(TimeOut = 9000) {
               maxChars: 100,
               limit: 8,
               autocomplete_url: '',
-              autocomplete: {'source': sugestEtiquetaPro('fav') },
+              autocomplete: {'source': sugestEtiquetaPro('monitorado') },
               hide: true,
               delimiter: [';'],
               unique: true,
@@ -1450,14 +1452,14 @@ function initFunctionsPanelFav(TimeOut = 9000) {
             });
         });
         
-        var tagName = getOptionsPro('filterTag_favoritos');
+        var tagName = getOptionsPro('filterTag_monitorados');
         if (typeof tagName !== 'undefined' && tagName != '') {
             setTimeout(function(){ 
-                $('.tableFavoritos .tagTableText_'+tagName).eq(0).trigger('click');
+                $('.tableMonitorados .tagTableText_'+tagName).eq(0).trigger('click');
                 console.log('tagName',tagName);
             }, 500);
         }
-        tableFavorites.tablesorter({
+        tableMonitorados.tablesorter({
             sortLocaleCompare : true,
             textExtraction: {
                 2: function (elem, table, cellIndex) {
@@ -1488,74 +1490,74 @@ function initFunctionsPanelFav(TimeOut = 9000) {
                   4: { filter: true }
               }
         }).on("sortEnd", function (event, data) {
-            checkboxRangerSelectShift(idTableFavorite);
+            checkboxRangerSelectShift(idTableMonitorado);
         }).on("filterEnd", function (event, data) {
-            checkboxRangerSelectShift(idTableFavorite);
+            checkboxRangerSelectShift(idTableMonitorado);
             var caption = $(this).find("caption").eq(0);
             var tx = caption.text();
                 caption.text(tx.replace(/\d+/g, data.filteredRows));
                 $(this).find("tbody > tr:visible > td > input").prop('disabled', false);
                 $(this).find("tbody > tr:hidden > td > input").prop('disabled', true);
         });
-        checkboxRangerSelectShift(idTableFavorite);
+        checkboxRangerSelectShift(idTableMonitorado);
 
-        tableFavorites.sortable({
+        tableMonitorados.sortable({
             items: 'tr',
             cursor: 'grabbing',
-            handle: '.sorterTrFavorite',
+            handle: '.sorterTrMonitorado',
             forceHelperSize: true,
             opacity: 0.5,
             axis: 'y',
             dropOnEmpty: false,
             update: function(event, ui) {
                 setTimeout(function(){ 
-                    var storeFavorites = getStoreFavoritePro();
-                    $('#favoriteTablePro').find('tbody tr').each(function(index, value){
+                    var storeMonitorados = getStoreMonitoradoPro();
+                    $('#monitoradoTablePro').find('tbody tr').each(function(index, value){
                         var _tr = $(this);
                         var id_procedimento = _tr.data('id_procedimento');
-                        var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
+                        var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
 
-                        if (typeof favoriteIndex !== 'undefined' && favoriteIndex !== null) {
+                        if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null) {
                                 var newIndex = index+1;
-                                var item = storeFavorites.favorites[favoriteIndex];
+                                var item = storeMonitorados.monitorados[monitoradoIndex];
                                     item.order = newIndex;
-                                storeFavorites.favorites[favoriteIndex] = item;
+                                storeMonitorados.monitorados[monitoradoIndex] = item;
                         }
                     });
-                    localStorageStorePro('configDataFavoritesPro', storeFavorites);
-                    saveConfigFav();
-                    $('#favoriteTablePro').find('tbody tr').each(function(index){
+                    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+                    saveConfigMonitorado();
+                    $('#monitoradoTablePro').find('tbody tr').each(function(index){
                         $(this).attr('data-index', index).find('td').last().attr('data-order', index + 1);
                     });
                 }, 500);
             }
         });
 
-        var observerTableFav = new MutationObserver(function(mutations) {
+        var observerTableMonitorado = new MutationObserver(function(mutations) {
             var _this = $(mutations[0].target);
             var _parent = _this.closest('table');
             var count_all = _parent.find('tr.infraTrMarcada').length;
             if (count_all > 0) {
-                $('#favoritosProActions').find('.iconFavoritos_remove').show().find('.fa-layers-counter').text(count_all);
+                $('#monitoradosProActions').find('.iconMonitorados_remove').show().find('.fa-layers-counter').text(count_all);
             } else {
-                $('#favoritosProActions').find('.iconFavoritos_remove').hide();
+                $('#monitoradosProActions').find('.iconMonitorados_remove').hide();
             }
         });
         setTimeout(function(){ 
-            tableFavorites.find('tbody tr').each(function(){
-                observerTableFav.observe(this, {
+            tableMonitorados.find('tbody tr').each(function(){
+                observerTableMonitorado.observe(this, {
                         attributes: true
                 });
             });
             checkboxRangerSelectShift();
-            checkFileRemoteFav('get');
-            tableFavorites.removeData('sei-pro-fav-init-pending');
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('initFunctionsPanelFav => '+TimeOut);
+            checkFileRemoteMonitorado('get');
+            tableMonitorados.removeData('sei-pro-monitorado-init-pending');
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('initFunctionsPanelMonitorado => '+TimeOut);
         }, 500);
 
-        var filterFav = tableFavorites.find('.tablesorter-filter-row').get(0);
-        if (typeof filterFav !== 'undefined') {
-            var observerFilterTableFav = new MutationObserver(function(mutations) {
+        var filterMonitorado = tableMonitorados.find('.tablesorter-filter-row').get(0);
+        if (typeof filterMonitorado !== 'undefined') {
+            var observerFilterTableMonitorado = new MutationObserver(function(mutations) {
                 var _this = $(mutations[0].target);
                 var _parent = _this.closest('table');
                 var iconFilter = _parent.find('.filterIfraTable');
@@ -1566,7 +1568,7 @@ function initFunctionsPanelFav(TimeOut = 9000) {
                 }
             });
             setTimeout(function(){ 
-                var htmlFilterFav = '<div class="btn-group filterIfraTable" role="group" style="right: 30px; top: -15px;z-index: 999; position: absolute;">'+
+                var htmlFilterMonitorado = '<div class="btn-group filterIfraTable" role="group" style="right: 30px; top: -15px;z-index: 999; position: absolute;">'+
                                     '   <button type="button" onclick="downloadTablePro(this)" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light">'+
                                     '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                     '       <span class="text">Baixar</span>'+
@@ -1575,40 +1577,40 @@ function initFunctionsPanelFav(TimeOut = 9000) {
                                     '       <i class="fas fa-copy" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                                     '       <span class="text">Copiar</span>'+
                                     '   </button>'+
-                                    '   <button type="button" onclick="filterIfraTable(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(tableFavorites.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
+                                    '   <button type="button" onclick="filterIfraTable(this)" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Pesquisar" class="btn btn-sm btn-light '+(tableMonitorados.find('tr.tablesorter-filter-row').hasClass('hideme') ? '' : 'active')+'">'+
                                     '       <i class="fas fa-search" style="padding-right: 3px; cursor: pointer; font-size: 10pt;"></i>'+
                                     '       Pesquisar'+
                                     '   </button>'+
                                     '</div>';
 
-                tableFavorites.find('thead .filterIfraTable').remove();
-                tableFavorites.find('thead').prepend(htmlFilterFav);
-                observerFilterTableFav.observe(filterFav, {
+                tableMonitorados.find('thead .filterIfraTable').remove();
+                tableMonitorados.find('thead').prepend(htmlFilterMonitorado);
+                observerFilterTableMonitorado.observe(filterMonitorado, {
                     attributes: true
                 });
             }, 500);
         }
     } else {
-        if (typeof window.seiProFavInitTimer !== 'undefined' && window.seiProFavInitTimer) { return; }
-        window.seiProFavInitTimer = setTimeout(function(){ 
-            window.seiProFavInitTimer = false;
+        if (typeof window.seiProMonitoradoInitTimer !== 'undefined' && window.seiProMonitoradoInitTimer) { return; }
+        window.seiProMonitoradoInitTimer = setTimeout(function(){ 
+            window.seiProMonitoradoInitTimer = false;
             if (typeof $.fn.tagsInput !== 'function' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tagsinput-revisited.js")) }
             if (typeof $.fn.tablesorter !== 'function' && TimeOut == 9000) { $.getScript((URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js")) }
-            initFunctionsPanelFav(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initFunctionsPanelFav'); 
+            initFunctionsPanelMonitorado(TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initFunctionsPanelMonitorado'); 
         }, 500);
     }
 }
 
-function openConfigFavorites() {
+function openConfigMonitorados() {
     var textBox =   '<table style="font-size: 9pt;width: 100%;" class="seiProForm">'+
                     '   <tr style="height: 40px;">'+
                     '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                    '               <a id="backup_fav" style="cursor:pointer" onclick="initDownloadLocalFilePro(this)" class="newLink"><i class="fas fa-download azulColor"></i>Baixar Processos Monitorados</a>'+
+                    '               <a id="backup_monitorado" style="cursor:pointer" onclick="initDownloadLocalFilePro(this)" class="newLink"><i class="fas fa-download azulColor"></i>Baixar Processos Monitorados</a>'+
                     '           </td>'+
                     '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
                     '               <input type="file" id="selectLocalFilesPro" onchange="loadLocalFilePro()" value="Import" style="display: none" />'+
-                    '               <a id="restore_fav" style="cursor:pointer;float: right;" onclick="initLoadLocalFilePro()" class="newLink"><i class="fas fa-upload azulColor"></i>Carregar Processos Monitorados</a>'+
+                    '               <a id="restore_monitorado" style="cursor:pointer;float: right;" onclick="initLoadLocalFilePro()" class="newLink"><i class="fas fa-upload azulColor"></i>Carregar Processos Monitorados</a>'+
                     '           </td>'+
                     '       <td>'+
                     '       </td>'+
@@ -1626,25 +1628,25 @@ function openConfigFavorites() {
             }
     });
 }
-function actionToolbarFavPro(this_, triggerButton) {
+function actionToolbarMonitoradoPro(this_, triggerButton) {
     var button = $(triggerButton);
     var name_action = button.data('action');
     if (name_action == 'etiqueta') {
         showFollowEtiqueta(this_, 'show');
     } else if (name_action == 'remove') {
-        removeFav(this_);
+        removeMonitorado(this_);
     } else if (name_action == 'dates') {
-        showDatesFav(this_, 'show');
+        showDatesMonitorado(this_, 'show');
     } else if (name_action == 'descricao') {
-        editFavoriteDesc(this_);
+        editMonitoradoDesc(this_);
     }
 }
-function updateDatesFav(this_) {
-    var storeFavorites = getStoreFavoritePro();
+function updateDatesMonitorado(this_) {
+    var storeMonitorados = getStoreMonitoradoPro();
     var index = parseInt($(this_).closest('tr').data('index'));
     var id_procedimento = parseInt($(this_).closest('tr').data('id_procedimento'));
-    var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-    var config = getOptionsConfigDate(favoriteIndex);
+    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    var config = getOptionsConfigDate(monitoradoIndex);
     if ($(this_).val().trim() != '') {
             if ($(this_).val().trim() != config.date && config.date != '' && $(this_).val().trim() != '' ) {
                 config.selectdoc = false;
@@ -1655,117 +1657,117 @@ function updateDatesFav(this_) {
         var htmlDatePreview = getDatesPreview(config);
         var followLink = $(this_).closest('td').find('.followLink');
         if (followLink.length > 0) {
-            $(this_).closest('td').find('.info_dates_fav').html(htmlDatePreview+followLink[0].outerHTML);
+            $(this_).closest('td').find('.info_dates_monitorado').html(htmlDatePreview+followLink[0].outerHTML);
         }
-        storeFavorites['favorites'][favoriteIndex]['configdate'] = config;
-        localStorageStorePro('configDataFavoritesPro', storeFavorites);
+        storeMonitorados['monitorados'][monitoradoIndex]['configdate'] = config;
+        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
     }
 }
-function showDatesFav(this_, mode) {
+function showDatesMonitorado(this_, mode) {
     if ($(this_).closest('#frmAtividadeListar').length > 0) {
-        updateDatesFav(this_);
+        updateDatesMonitorado(this_);
     } else {
-        if(!$(this_).closest('tr').find('.favoriteConfigDates').is(':hover')) {
-            $(this_).closest('table').find('.info_dates_fav').show();
-            $(this_).closest('table').find('.info_dates_fav_txt').hide();
+        if(!$(this_).closest('tr').find('.monitoradoConfigDates').is(':hover')) {
+            $(this_).closest('table').find('.info_dates_monitorado').show();
+            $(this_).closest('table').find('.info_dates_monitorado_txt').hide();
             $(this_).closest('table').find('.followLinkDates').show();
             infraTooltipOcultar();
-            updateDatesFav(this_);
+            updateDatesMonitorado(this_);
         }
         if(mode == 'show') {
             $(this_).closest('td').find('.followLinkDates').hide();
-            $(this_).closest('tr').find('.info_dates_fav').hide();
-            $(this_).closest('tr').find('.info_dates_fav_txt').css('display','inline-flex').find('input.favoriteDatesPro').focus().trigger('click');
+            $(this_).closest('tr').find('.info_dates_monitorado').hide();
+            $(this_).closest('tr').find('.info_dates_monitorado_txt').css('display','inline-flex').find('input.monitoradoDatesPro').focus().trigger('click');
         }
-        if ($(this_).closest('tr').find('.info_dates_fav').text().trim() != '') {
+        if ($(this_).closest('tr').find('.info_dates_monitorado').text().trim() != '') {
             $(this_).closest('td').removeClass('info_dates_follow_empty');
         } else {
             $(this_).closest('td').addClass('info_dates_follow_empty');
         }
     }
 }
-function getFavoritesEnviarProcesso() {
+function getMonitoradosEnviarProcesso() {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
-    var storeFavorites = getStoreFavoritePro();
+    var storeMonitorados = getStoreMonitoradoPro();
     var id_procedimento = String(getParamsUrlPro(window.location.href).id_procedimento);
-    var value = jmespath.search(storeFavorites.favorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
-    var htmlAddFav =    '<div id="divSinAdicionarFavoritos" class="infraDivCheckbox" style="position: absolute;top: 100%;left: 0;">'+
-                        '   <input type="checkbox" id="chkSindicionarFavoritos" onchange="parent.actionFavoriteCheckbox(this)" name="chkSindicionarFavoritos" class="infraCheckbox" tabindex="510" '+(value ? 'checked' : '')+'>'+
-                        '   <label id="lblSinAdicionarFavoritos" for="chkSindicionarFavoritos" accesskey="" class="infraLabelCheckbox">Manter processo em Processos Monitorados</label>'+
-                        '   <div class="favoritosLabelOptions seiProForm" style="display:'+(value ? 'block' : 'none')+';font-size: 9pt;clear: both;">'+
-                        favoritosLabelOptions(id_procedimento)+
+    var value = jmespath.search(storeMonitorados.monitorados, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
+    var htmlAddMonitorado =    '<div id="divSinAdicionarMonitorados" class="infraDivCheckbox" style="position: absolute;top: 100%;left: 0;">'+
+                        '   <input type="checkbox" id="chkSindicionarMonitorados" onchange="parent.actionMonitoradoCheckbox(this)" name="chkSindicionarMonitorados" class="infraCheckbox" tabindex="510" '+(value ? 'checked' : '')+'>'+
+                        '   <label id="lblSinAdicionarMonitorados" for="chkSindicionarMonitorados" accesskey="" class="infraLabelCheckbox">Manter processo em Processos Monitorados</label>'+
+                        '   <div class="monitoradosLabelOptions seiProForm" style="display:'+(value ? 'block' : 'none')+';font-size: 9pt;clear: both;">'+
+                        monitoradosLabelOptions(id_procedimento)+
                         '   </div>'+
                         '</div>';
-    if (ifrVisualizacao.find('#divSinAdicionarFavoritos').length == 0) ifrVisualizacao.find('#frmAtividadeListar').append(htmlAddFav);
+    if (ifrVisualizacao.find('#divSinAdicionarMonitorados').length == 0) ifrVisualizacao.find('#frmAtividadeListar').append(htmlAddMonitorado);
     loadStylePro(URL_SPRO+"css/sei-pro.css", ifrVisualizacao.find('head'), ifrVisualizacao);
     loadStylePro((localStorage.getItem('seiSlim') ? URL_SPRO+"css/fontawesome.pro.min.css" : URL_SPRO+"css/fontawesome.min.css"), ifrVisualizacao.find('head'), ifrVisualizacao);
-    loadScriptFavoriteTag(ifrVisualizacao);
+    loadScriptMonitoradoTag(ifrVisualizacao);
 }
-function favoritosLabelOptions(id_procedimento) {
-    var storeFavorites = getStoreFavoritePro();
-    var value = jmespath.search(storeFavorites.favorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
+function monitoradosLabelOptions(id_procedimento) {
+    var storeMonitorados = getStoreMonitoradoPro();
+    var value = jmespath.search(storeMonitorados.monitorados, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
     var value = (value !== null) ? value : false;   
     var config = (value && typeof value.configdate !== 'undefined' && value.configdate !== null) ? value.configdate : '';
-    var tagsFav = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? value.etiquetas : false;
-        tagsFav = (tagsFav && tagsFav.length > 0) ? value.etiquetas.join(';') : '';
-    var tagsFavHtml = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? $.map(value.etiquetas, function (i) { return getHtmlEtiqueta(i,'fav') }).join('') : '';
+    var tagsMonitorado = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? value.etiquetas : false;
+        tagsMonitorado = (tagsMonitorado && tagsMonitorado.length > 0) ? value.etiquetas.join(';') : '';
+    var tagsMonitoradoHtml = (typeof value.etiquetas !== 'undefined' && value.etiquetas !== null) ? $.map(value.etiquetas, function (i) { return getHtmlEtiqueta(i,'monitorado') }).join('') : '';
 
-    var favoritosOptions = '       <table style="font-size: 10pt;width: 100%;min-width: 610px;" class="seiProForm">'+
+    var monitoradosOptions = '       <table style="font-size: 10pt;width: 100%;min-width: 610px;" class="seiProForm">'+
                             '          <tr data-id_procedimento="'+id_procedimento+'" data-index="0">'+
                             '              <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                            '                   <label for="categoria_fav"><i class="iconPopup iconSwitch fas fa-layer-group cinzaColor"></i>Categoria:</label>'+
+                            '                   <label for="categoria_monitorado"><i class="iconPopup iconSwitch fas fa-layer-group cinzaColor"></i>Categoria:</label>'+
                             '               </td>'+
                             '               <td>'+
-                            '                   '+selectCategoryFavorite((value ? value.categoria : ''), 'parent.changeCategoryFavorite', true, id_procedimento).replace('<select ', '<select id="categoria_fav" ')+
+                            '                   '+selectCategoryMonitorado((value ? value.categoria : ''), 'parent.changeCategoryMonitorado', true, id_procedimento).replace('<select ', '<select id="categoria_monitorado" ')+
                             '               </td>'+
                             '               <td style="vertical-align: bottom;" class="label">'+
-                            '                   <label class="last" for="favoritePrazoSend"><i class="iconPopup iconSwitch fas fa-stopwatch cinzaColor" style="float: initial;"></i>Prazo:</label>'+
+                            '                   <label class="last" for="monitoradoPrazoSend"><i class="iconPopup iconSwitch fas fa-stopwatch cinzaColor" style="float: initial;"></i>Prazo:</label>'+
                             '               </td>'+
                             '               <td>'+
-                            '                   <span class="info_dates_fav_txt">'+
-                            '                       <input id="favoritePrazoSend" value="'+(config && typeof config.date !== 'undefined' && config.date !== null ? config.date : '')+'" style="width: 120px; background-color: #f9fafa;" onblur="parent.showDatesFav(this, \'hide\')" onkeypress="parent.keyDatesFav(event)" type="date" class="favoriteDatesPro" name="favoritePrazoSend">'+
-                            '                       <a class="newLink favoriteConfigDates" onclick="parent.openBoxConfigDates(this)" style="padding: 5px 8px;margin: 8px 2px 0 10px;font-size: 10pt;" onmouseover="return infraTooltipMostrar(\'Op\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();">'+
+                            '                   <span class="info_dates_monitorado_txt">'+
+                            '                       <input id="monitoradoPrazoSend" value="'+(config && typeof config.date !== 'undefined' && config.date !== null ? config.date : '')+'" style="width: 120px; background-color: #f9fafa;" onblur="parent.showDatesMonitorado(this, \'hide\')" onkeypress="parent.keyDatesMonitorado(event)" type="date" class="monitoradoDatesPro" name="monitoradoPrazoSend">'+
+                            '                       <a class="newLink monitoradoConfigDates" onclick="parent.openBoxConfigDates(this)" style="padding: 5px 8px;margin: 8px 2px 0 10px;font-size: 10pt;" onmouseover="return infraTooltipMostrar(\'Op\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();">'+
                             '                          <i class="fas fa-cog" style="font-size: 100%;"></i>'+
                             '                       </a>'+
                             '                   </span>'+
                             '               </td>'+
                             '          </tr>'+
                             '          <tr data-id_procedimento="'+id_procedimento+'" data-index="0" style="height: 40px;">'+
-                            '               <td align="left" class="tdfav_tags" data-etiqueta-mode="fav" colspan="4">'+
-                            '                   <span class="info_tags_follow">'+tagsFavHtml+
+                            '               <td align="left" class="tdmonitorado_tags" data-etiqueta-mode="monitorado" colspan="4">'+
+                            '                   <span class="info_tags_follow">'+tagsMonitoradoHtml+
                             '                   </span>'+
                             '                   <span class="info_tags_follow_txt" style="display:none;margin-top: -8px !important;">'+
-                            '                       <input value="'+tagsFav+'" class="favoriteTagsPro" name="favoriteTagsPro">'+
+                            '                       <input value="'+tagsMonitorado+'" class="monitoradoTagsPro" name="monitoradoTagsPro">'+
                             '                   </span>'+
-                            '                   <a class="newLink followLinkTagsAdd_send" style="font-size: 10pt;" onclick="parent.showFollowEtiqueta(this, \'show\', \'fav\')" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i> Adicionar etiqueta</a>'+
+                            '                   <a class="newLink followLinkTagsAdd_send" style="font-size: 10pt;" onclick="parent.showFollowEtiqueta(this, \'show\', \'monitorado\')" onmouseout="return infraTooltipOcultar();"><i class="fas fa-tags" style="font-size: 100%;"></i> Adicionar etiqueta</a>'+
                             '               </td>'+
                             '          </tr>'+
                             '       </table>';
-    return favoritosOptions;
+    return monitoradosOptions;
 }
-function loadScriptFavoriteTag(iFrame) {
-    var scriptText =    '<script data-config="config-seipro-fav">\n'+
-                        '   function initFavoriteTagIframe(TimeOut = 9000) {\n'+
+function loadScriptMonitoradoTag(iFrame) {
+    var scriptText =    '<script data-config="config-seipro-monitorado">\n'+
+                        '   function initMonitoradoTagIframe(TimeOut = 9000) {\n'+
                         '       if (TimeOut <= 0) { return; }\n'+
                         '       if (typeof $().tagsInput !== \'undefined\') {\n'+
-                        '           getFavoriteTagIframe();\n'+
+                        '           getMonitoradoTagIframe();\n'+
                         '       } else {\n'+
                         '           $.getScript(\''+URL_SPRO+'js/lib/jquery.tagsinput-revisited.js\');\n'+
                         '           setTimeout(function(){\n'+
-                        '               initFavoriteTagIframe(TimeOut - 100);\n'+
-                        '               console.log(\'Reload initFavoriteTagIframe\');\n'+
+                        '               initMonitoradoTagIframe(TimeOut - 100);\n'+
+                        '               console.log(\'Reload initMonitoradoTagIframe\');\n'+
                         '           }, 500);\n'+
                         '       }\n'+
                         '   }\n'+
-                        '   function getFavoriteTagIframe() {\n'+
-                        '       $(\'.favoriteTagsPro\').tagsInput({\n'+
+                        '   function getMonitoradoTagIframe() {\n'+
+                        '       $(\'.monitoradoTagsPro\').tagsInput({\n'+
                         '           interactive: true,\n'+
                         '           placeholder: \'Adicionar etiqueta\',\n'+
                         '           minChars: 2,\n'+
                         '           maxChars: 100,\n'+
                         '           limit: 8,\n'+
                         '           autocomplete_url: \'\',\n'+
-                        '           autocomplete: {\'source\': parent.sugestEtiquetaPro(\'fav\') },\n'+
+                        '           autocomplete: {\'source\': parent.sugestEtiquetaPro(\'monitorado\') },\n'+
                         '           hide: true,\n'+
                         '           delimiter: [\';\'],\n'+
                         '           unique: true,\n'+
@@ -1775,37 +1777,37 @@ function loadScriptFavoriteTag(iFrame) {
                         '           onChange: parent.saveFollowEtiqueta\n'+
                         '         });\n'+
                         '   }\n'+
-                        '   initFavoriteTagIframe();\n'+
+                        '   initMonitoradoTagIframe();\n'+
                         '</script>';
     $(scriptText).appendTo(iFrame.find('head'));
 }
-function checkPageFavoritosVisualizacao() {
-    waitLoadPro($($ifrVisualizacao).contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', infraBarraComandos, getFavoritesEnviarProcesso);
+function checkPageMonitoradosVisualizacao() {
+    waitLoadPro($($ifrVisualizacao).contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', infraBarraComandos, getMonitoradosEnviarProcesso);
 }
-function removeFav(this_) { 
-    var storeFavorites = getStoreFavoritePro();
+function removeMonitorado(this_) { 
+    var storeMonitorados = getStoreMonitoradoPro();
     var index = parseInt($(this_).closest('tr').data('index'));
     if (typeof index && parseInt(index) >= 0) {
-        storeFavorites['favorites'].splice(parseInt(index),1);
+        storeMonitorados['monitorados'].splice(parseInt(index),1);
         $(this_).closest('tr').trigger('click').effect('highlight').effect('highlight').fadeOut( "slow", function() {
             $(this).remove();
-            updateIndexTableFav();
-            updateCountTableFav();
-            localStorageStorePro('configDataFavoritesPro', storeFavorites);
+            updateIndexTableMonitorado();
+            updateCountTableMonitorado();
+            localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
         });
     }
 }
-function updateIndexTableFav() {
+function updateIndexTableMonitorado() {
     $('.tableFollow').find('tbody tr').each(function(index){
         $(this).data('index', index);
     });
 }
 function setSingleMap(id_procedimento, readonly = false) {
-    var storeFavorites = getStoreFavoritePro();
-    var value = jmespath.search(storeFavorites.favorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
+    var storeMonitorados = getStoreMonitoradoPro();
+    var value = jmespath.search(storeMonitorados.monitorados, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
         value = (value !== null) ? value : false;
     var latlng = (value !== null && typeof value.latlng !== 'undefined' && value.latlng !== null && value.latlng.length > 0 && value.latlng[0] !== null && value.latlng[1] !== null) ? value.latlng : false;
-    var latlng_fav = (latlng) ? latlng : [-15.800909532800379, -47.861289633438];
+    var latlng_monitorado = (latlng) ? latlng : [-15.800909532800379, -47.861289633438];
 
     function onLocationFound(e) {
         // if position defined, then remove the existing position marker and accuracy circle from the map
@@ -1821,7 +1823,7 @@ function setSingleMap(id_procedimento, readonly = false) {
             markers = e.latlng;
     }
     function onLocationError(e) {
-        favoriteLocationDenied = true;
+        monitoradoLocationDenied = true;
         clearLocationUser();
     }
     // wrap map.locate in a function    
@@ -1837,7 +1839,7 @@ function setSingleMap(id_procedimento, readonly = false) {
     }
 
     markersLayer = new L.LayerGroup();
-    map = L.map('mapid').setView(latlng_fav, 16);
+    map = L.map('mapid').setView(latlng_monitorado, 16);
     configureLeafletAssets();
 
     var geocoder = L.Control.Geocoder.nominatim();
@@ -1874,16 +1876,16 @@ function setSingleMap(id_procedimento, readonly = false) {
         zoomOffset: -1
     }).addTo(map);
 
-    var marker = L.marker(latlng_fav).addTo(map);
+    var marker = L.marker(latlng_monitorado).addTo(map);
     markers = marker._latlng;
     if (value && latlng) {
-        var linkProc = $('#favoriteTablePro tbody tr[data-id_procedimento="'+id_procedimento+'"] .followLinkProcesso')[0].outerHTML;
+        var linkProc = $('#monitoradoTablePro tbody tr[data-id_procedimento="'+id_procedimento+'"] .followLinkProcesso')[0].outerHTML;
         marker.bindPopup('<b>'+linkProc+'</b><br>'+value.descricao).openPopup();
     }
     
     if (!readonly) {   
         map.on('click', addMarker);
-        if (latlng === false && !favoriteLocationDenied) {
+        if (latlng === false && !monitoradoLocationDenied) {
             locationUser = setInterval(locate, 3000);
             map.on('locationfound', onLocationFound);
             map.on('locationerror', onLocationError);
@@ -1910,7 +1912,7 @@ function clearLocationUser() {
     locationUser = false;
 }
 function openBoxSingleMap(this_, readonly = false) {
-    favoriteLocationDenied = false;
+    monitoradoLocationDenied = false;
     var _this = $(this_);
     var id_procedimento = _this.closest('tr').data('id_procedimento');
     var buttons = (readonly) 
@@ -1919,14 +1921,14 @@ function openBoxSingleMap(this_, readonly = false) {
             text: "Remover",
             icon: 'ui-icon-trash',
             click: function() {
-                saveConfigMapsFav(id_procedimento, 'remove');
+                saveConfigMapsMonitorado(id_procedimento, 'remove');
                 resetDialogBoxPro('dialogBoxPro');
             }
         },{
             text: "Salvar",
             class: 'confirm ui-state-active',
             click: function() {
-                saveConfigMapsFav(id_procedimento);
+                saveConfigMapsMonitorado(id_procedimento);
                 resetDialogBoxPro('dialogBoxPro');
             }
         }];
@@ -1962,12 +1964,12 @@ function openBoxMultipleMap() {
 }
 function setMultipleMap() {
     var marker_list = [];
-    var storeFavorites = getStoreFavoritePro();
-    var listFavorite = jmespath.search(storeFavorites.favorites, "[?not_null(latlng)]");
-        listFavorite = (typeof listFavorite !== 'undefined' && listFavorite !== null && listFavorite.length > 0) ? listFavorite : false;
-    if (listFavorite) {
+    var storeMonitorados = getStoreMonitoradoPro();
+    var listMonitorado = jmespath.search(storeMonitorados.monitorados, "[?not_null(latlng)]");
+        listMonitorado = (typeof listMonitorado !== 'undefined' && listMonitorado !== null && listMonitorado.length > 0) ? listMonitorado : false;
+    if (listMonitorado) {
         markersLayer = new L.LayerGroup();
-        map = L.map('mapid').setView(listFavorite[0].latlng, 16);
+        map = L.map('mapid').setView(listMonitorado[0].latlng, 16);
 
         var geocoder = L.Control.Geocoder.nominatim();
         if (typeof URLSearchParams !== 'undefined' && location.search) {
@@ -2003,35 +2005,35 @@ function setMultipleMap() {
             tileSize: 512,
             zoomOffset: -1
         }).addTo(map);
-        $.each(listFavorite,function(index, value){
-            var marker = L.marker(value.latlng).addTo(map).on('click', openMarkerFav);
-            var linkProc = $('#favoriteTablePro tbody tr[data-id_procedimento="'+value.id_procedimento+'"] .followLinkProcesso')[0].outerHTML;
+        $.each(listMonitorado,function(index, value){
+            var marker = L.marker(value.latlng).addTo(map).on('click', openMarkerMonitorado);
+            var linkProc = $('#monitoradoTablePro tbody tr[data-id_procedimento="'+value.id_procedimento+'"] .followLinkProcesso')[0].outerHTML;
                 marker.bindPopup('<b>'+linkProc+'</b><br>'+value.descricao);
                 marker_list.push([marker._latlng.lat, marker._latlng.lng]);
-                marker.favorites = value;
+                marker.monitorados = value;
         });
         map.fitBounds(marker_list);
         marker = false;
     }
 }
-function openMarkerFav(e){
+function openMarkerMonitorado(e){
     console.log(e);
-    var value = e.target.favorites;
-    $('#favoriteTablePro').find('#lnkInfraCheck').data('index',1).trigger('click');
-    scrollToElement($('#favoritesProDiv .tabelaPanelScroll'), $('#favoriteTablePro tbody tr[data-id_procedimento="'+value.id_procedimento+'"]'), 30);
-    $('#favoritePro_'+value.id_procedimento).trigger('click');
+    var value = e.target.monitorados;
+    $('#monitoradoTablePro').find('#lnkInfraCheck').data('index',1).trigger('click');
+    scrollToElement($('#monitoradosProDiv .tabelaPanelScroll'), $('#monitoradoTablePro tbody tr[data-id_procedimento="'+value.id_procedimento+'"]'), 30);
+    $('#monitoradoPro_'+value.id_procedimento).trigger('click');
 }
-function saveConfigMapsFav(id_procedimento, mode = 'add'){
+function saveConfigMapsMonitorado(id_procedimento, mode = 'add'){
     if (typeof markers === 'object' && markers.lat !== null && markers.lng !== null) {
-        var storeFavorites = getStoreFavoritePro();
-        var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
-        if (typeof favoriteIndex !== 'undefined' && favoriteIndex !== null) {
-            var item = storeFavorites.favorites[favoriteIndex];
+        var storeMonitorados = getStoreMonitoradoPro();
+        var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+        if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null) {
+            var item = storeMonitorados.monitorados[monitoradoIndex];
                 item.latlng = (mode == 'remove') ? null : [markers.lat, markers.lng];
-            storeFavorites.favorites[favoriteIndex] = item;
-            localStorageStorePro('configDataFavoritesPro', storeFavorites);
-            saveConfigFav();
-            setPanelFavorites('refresh');
+            storeMonitorados.monitorados[monitoradoIndex] = item;
+            localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+            saveConfigMonitorado();
+            setPanelMonitorados('refresh');
             markers = [];
             setTimeout(function(){ 
                 alertaBoxPro('Sucess', 'check-circle', 'Mapa '+(mode == 'remove' ? 'removido' : 'adicionado')+' com sucesso!');
