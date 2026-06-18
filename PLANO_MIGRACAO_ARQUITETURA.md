@@ -379,6 +379,27 @@ CORS e quotas num só lugar.
 > (adicionado `URL` ao sandbox do `load-core.js`). **58 testes verdes.** Demonstra o padrão
 > repetível para o resto da Fase 6: identificar cluster puro → mover para `src/` → alias →
 > remover legado → testar.
+>
+> **2ª fatia — `core/texto.js`.** Cluster de 6 utilitários puros de texto/string movido de
+> `sei-functions-pro.js`: `escapeRegExp`, `escapeComponent`, `normalizeMojibakeUtf8`,
+> `replaceTextToUrl`, `extractHexColor`, `pad`. Mesmo padrão (install + alias + remoção do
+> legado + `texto.test.js`, 8 testes). **69 testes verdes.** Atenção registrada: a regex de
+> `normalizeMojibakeUtf8` usa ranges `-¿` — preservada verbatim com escapes `\u`
+> (reescrevê-la com caracteres literais mudaria a classe de caracteres e o comportamento).
+>
+> **3ª fatia — `core/cor.js`.** Conversão RGB↔hex (4 funções puras que se referenciam):
+> `componentToHex`, `rgbToHex`, `rgbToHexString`, `hexToRgb`. Mesmo padrão + `cor.test.js`
+> (6 testes). **75 testes verdes.** Acumulado da Fase 6: **18 funções** extraídas em 3 módulos
+> (`validacao`, `texto`, `cor`).
+>
+> **4ª fatia — `core/datas.js`.** Formatação/duração de datas (5 funções): `getDatesFormatBR`,
+> `randomDate`, `getRecentDateRow`, `calculeDatesDurationTemplate`, `calculeDatesDuration`.
+> Primeira fatia com **dependência de lib vendor**: `moment` (+ plugin duration-format), lida
+> como **global lazy** via `globalRef.moment` no momento da chamada (igual ao core com `$`).
+> Os testes (`datas.test.js`, 10) carregam o `moment` REAL + plugin num contexto `vm` — mais
+> fiel que stub. Excluídas de propósito `getDateSemantic`/`getDatesPreview`/`configDatesPreview`
+> (puxam `getHolidayBetweenDates`/`jmespath`/DOM — acoplariam core↔legado; esperam um cluster
+> de "feriados"). **85 testes verdes.** Acumulado: **23 funções** em 4 módulos.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…

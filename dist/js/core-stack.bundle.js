@@ -448,6 +448,177 @@
     return validacao;
   }
 
+  // src/core/texto.js
+  function escapeRegExp(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+  }
+  function escapeComponent(str) {
+    return escape(str).replace(/\+/g, "%2B");
+  }
+  function normalizeMojibakeUtf8(value) {
+    value = typeof value === "string" ? value : "";
+    if (!value) return value;
+    if (!/(?:[\u00C2\u00C3][\u0080-\u00BF]|\u00E2[\u0080-\u00BF]{2})/.test(value)) {
+      return value;
+    }
+    try {
+      return decodeURIComponent(escape(value));
+    } catch (err) {
+      if (typeof TextDecoder !== "undefined" && typeof Uint8Array !== "undefined") {
+        try {
+          return new TextDecoder("utf-8").decode(Uint8Array.from(value, function(ch) {
+            return ch.charCodeAt(0);
+          }));
+        } catch (err2) {
+        }
+      }
+    }
+    return value;
+  }
+  function replaceTextToUrl(text) {
+    const Rexp = /(\b(https?|ftp|file):\/\/([-A-Z0-9+&@#%?=~_|!:,.;]*)([-A-Z0-9+&@#%?\/=~_|!:,.;]*)[-A-Z0-9+&@#\/%=~_|])/ig;
+    return text.replace(Rexp, "<a href='$1' target='_blank'>$3</a>");
+  }
+  function extractHexColor(text) {
+    return text.match(/#[0-9a-f]{6}|#[0-9a-f]{3}/gi);
+  }
+  function pad(str, max) {
+    str = str.toString();
+    return str.length < max ? pad("0" + str, max) : str;
+  }
+  function installTexto() {
+    const texto = {
+      escapeRegExp,
+      escapeComponent,
+      normalizeMojibakeUtf8,
+      replaceTextToUrl,
+      extractHexColor,
+      pad
+    };
+    getSeiPro().core.texto = texto;
+    aliasGlobal("escapeRegExp", escapeRegExp);
+    aliasGlobal("escapeComponent", escapeComponent);
+    aliasGlobal("normalizeMojibakeUtf8", normalizeMojibakeUtf8);
+    aliasGlobal("replaceTextToUrl", replaceTextToUrl);
+    aliasGlobal("extractHexColor", extractHexColor);
+    aliasGlobal("pad", pad);
+    return texto;
+  }
+
+  // src/core/cor.js
+  function componentToHex(c) {
+    const hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+  }
+  function rgbToHex(r, g, b) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+  }
+  function rgbToHexString(string) {
+    string = typeof string !== "undefined" && string !== null ? string.substring(4, string.length - 1).replace(/ /g, "").split(",") : false;
+    return string ? rgbToHex(parseInt(string[0]), parseInt(string[1]), parseInt(string[2])) : "";
+  }
+  function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+  function installCor() {
+    const cor = { componentToHex, rgbToHex, rgbToHexString, hexToRgb };
+    getSeiPro().core.cor = cor;
+    aliasGlobal("componentToHex", componentToHex);
+    aliasGlobal("rgbToHex", rgbToHex);
+    aliasGlobal("rgbToHexString", rgbToHexString);
+    aliasGlobal("hexToRgb", hexToRgb);
+    return cor;
+  }
+
+  // src/core/datas.js
+  function getDatesFormatBR(value) {
+    const moment = globalRef.moment;
+    return moment(value, "YYYY-MM-DD HH:mm:ss").format("HH:mm:ss") == "00:00:00" ? moment(value, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY") : moment(value, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY HH:mm");
+  }
+  function randomDate(start, end, startHour, endHour) {
+    const moment = globalRef.moment;
+    const date = new Date(+start + Math.random() * (end - start));
+    const hour = startHour + Math.random() * (endHour - startHour) | 0;
+    date.setHours(hour);
+    return moment(date).format("YYYY-MM-DD HH:mm:ss");
+  }
+  function getRecentDateRow(inicio, seconds) {
+    const moment = globalRef.moment;
+    if (moment().format("YYYY-MM-DD") == moment(inicio, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD")) {
+      const diff = moment().add(seconds, "seconds").diff(moment(inicio, "YYYY-MM-DD HH:mm:ss"));
+      return diff < 0 ? true : false;
+    }
+  }
+  function calculeDatesDurationTemplate() {
+    const duration = this.duration;
+    let return_ = [];
+    if (duration.years() == 1) {
+      return_.push("Y [ano]");
+    } else if (duration.years() > 1) {
+      return_.push("Y [anos]");
+    }
+    if (duration.months() == 1) {
+      return_.push("M [mes]");
+    } else if (duration.months() > 1) {
+      return_.push("M [meses]");
+    } else if (duration.years() == 0 && duration.months() == 0 && duration.days() > 7) {
+      if (duration.weeks() == 1) {
+        return_.push("w [semana]");
+      } else {
+        return_.push("w [semanas]");
+      }
+    }
+    if (duration.days() == 1) {
+      return_.push("d [dia]");
+    } else if (duration.days() > 1) {
+      if (duration.months() == 0 && duration.days() % 7 === 0) {
+      } else {
+        return_.push("d [dias]");
+      }
+    } else if (duration.years() == 0 && duration.months() == 0 && duration.weeks() == 0 && duration.days() == 0) {
+      return_.push("[hoje]");
+    }
+    return_ = return_.join(", ");
+    return_ = return_ == "" ? "d [dias]" : return_;
+    return return_;
+  }
+  function calculeDatesDuration(date, dateTo, countdays) {
+    const moment = globalRef.moment;
+    const diff = moment(date).diff(moment(dateTo), "milliseconds");
+    const diff_d = moment(date).diff(moment(dateTo), "days");
+    const day_formated = diff_d.toLocaleString("pt-BR");
+    const diff_ = diff < 0 ? diff * -1 : moment(date).diff(moment(dateTo).add(-1, "d"), "milliseconds");
+    let duration = moment.duration(diff_, "milliseconds");
+    duration = typeof duration !== "undefined" && duration !== null && typeof duration.format !== "undefined" ? duration.format(calculeDatesDurationTemplate) : "";
+    const day_txt = diff_d >= -1 && diff_d <= 1 ? "dia" : "dias";
+    let duration_ = diff == 0 ? "hoje" : diff < 0 ? duration.trim() == "hoje" ? moment(date).fromNow() : duration.trim() + " atr\xE1s" : "em " + duration;
+    duration_ = countdays && diff_d >= 1 ? day_formated + " " + day_txt + " atr\xE1s" : duration_;
+    duration_ = countdays && diff_d <= -1 ? "em " + Math.abs(day_formated) + " " + day_txt : duration_;
+    duration_ = countdays && diff_d == 0 ? day_formated + " " + day_txt : duration_;
+    return duration_;
+  }
+  function installDatas() {
+    const datas = {
+      getDatesFormatBR,
+      randomDate,
+      getRecentDateRow,
+      calculeDatesDurationTemplate,
+      calculeDatesDuration
+    };
+    getSeiPro().core.datas = datas;
+    aliasGlobal("getDatesFormatBR", getDatesFormatBR);
+    aliasGlobal("randomDate", randomDate);
+    aliasGlobal("getRecentDateRow", getRecentDateRow);
+    aliasGlobal("calculeDatesDurationTemplate", calculeDatesDurationTemplate);
+    aliasGlobal("calculeDatesDuration", calculeDatesDuration);
+    return datas;
+  }
+
   // src/core/ui.js
   function installUi() {
     function resolveTarget(elementTo, target) {
@@ -920,6 +1091,9 @@
     installBootstrap();
     installConfig();
     installValidacao();
+    installTexto();
+    installCor();
+    installDatas();
     installUi();
     installMessaging();
     installStorage();

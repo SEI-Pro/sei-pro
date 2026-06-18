@@ -948,9 +948,7 @@ function extractEmails(text) {
     return text.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
 }
 // extractCPFs migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
-function extractHexColor(text) {
-    return text.match(/#[0-9a-f]{6}|#[0-9a-f]{3}/gi);
-}
+// extractHexColor migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 function arrayMax(arr) {
     return arr.reduce(function (p, v) { return ( p > v ? p : v ) });
 }
@@ -979,33 +977,7 @@ function replaceTextToProcessoSEI(text) {
     var urlSEI = url_host.replace('controlador.php','');
     return text.replace(Rexp, "<a href='"+urlSEI+"#$1' target='_blank'>$1</a>");
 }
-function normalizeMojibakeUtf8(value) {
-    value = (typeof value === 'string') ? value : '';
-    if (!value) return value;
-    if (!/(?:[\u00C2\u00C3][\u0080-\u00BF]|\u00E2[\u0080-\u00BF]{2})/.test(value)) {
-        return value;
-    }
-    try {
-        return decodeURIComponent(escape(value));
-    } catch (err) {
-        if (typeof TextDecoder !== 'undefined' && typeof Uint8Array !== 'undefined') {
-            try {
-                return new TextDecoder('utf-8').decode(Uint8Array.from(value, function(ch) {
-                    return ch.charCodeAt(0);
-                }));
-            } catch (err2) {}
-        }
-    }
-    return value;
-}
-function replaceTextToUrl(text) {
-    // Put the URL to variable $1 and Domain name
-    // to $3 after visiting the URL
-    var Rexp = /(\b(https?|ftp|file):\/\/([-A-Z0-9+&@#%?=~_|!:,.;]*)([-A-Z0-9+&@#%?\/=~_|!:,.;]*)[-A-Z0-9+&@#\/%=~_|])/ig;
-     
-    // Replacing the RegExp content by HTML element
-    return text.replace(Rexp, "<a href='$1' target='_blank'>$3</a>");
-}
+// normalizeMojibakeUtf8 e replaceTextToUrl migradas para SeiPro.core.texto (src/core/texto.js) \u2014 Fase 6
 // maskCNPJ, maskCPF, maskPEN migradas para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 function setChartLabelItemStore(e, legendItem){
     var ci = this.chart;
@@ -1439,12 +1411,7 @@ function is_html(str) {
 }
 // validateEmail migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 // encodeURIComponent para ISO-8859-1
-function escapeComponent(str) {  
-    return escape(str).replace(/\+/g, '%2B');
-}
-function escapeRegExp(text) {
-    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-}
+// escapeComponent e escapeRegExp migradas para SeiPro.core.texto (src/core/texto.js) — Fase 6
 // escapeHtml migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 function forceOnLoadBodyPage() {
     var onloadAttr = $('body').attr('onload');
@@ -1505,32 +1472,14 @@ function prepCSVRow(arr, columnCount, initial) {
   });
   return initial + row;
 }
-function componentToHex(c) {
-  var hex = c.toString(16);
-  return hex.length == 1 ? "0" + hex : hex;
-}
+// componentToHex migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
 function toNumBr(num) {
     return num.toString().replace(/\./g, ',');
 }
-function pad(str, max) {
-  str = str.toString();
-  return str.length < max ? pad("0" + str, max) : str;
-}
-function rgbToHexString(string) {
-    string = (typeof string !== 'undefined' && string !== null) ? string.substring(4, string.length-1).replace(/ /g, '').split(',') : false;
-  return (string) ? rgbToHex(parseInt(string[0]), parseInt(string[1]), parseInt(string[2])) : '';
-}
-function rgbToHex(r, g, b) {
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-}
-function hexToRgb(hex) {
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
-}
+// pad migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
+// rgbToHexString migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
+// rgbToHex migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
+// hexToRgb migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
 function addAlpha(color, opacity) {
     // coerce values so ti is between 0 and 1.
     var _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
@@ -5019,12 +4968,7 @@ function filterTagTable(this_) {
         setOptionsPro('filterTag_'+typeTable, tagName_);
         infraTooltipOcultar();
 }
-function getRecentDateRow(inicio, seconds) {
-    if (moment().format('YYYY-MM-DD') == moment(inicio,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')) {
-        var diff = moment().add(seconds, 'seconds').diff(moment(inicio,'YYYY-MM-DD HH:mm:ss'));
-        return (diff < 0) ? true : false;
-    }
-}
+// getRecentDateRow migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function normalizeAreaTela() {
     $('#divInfraAreaTela').css({'height':'','margin-bottom': '40px', 'display': 'inline-block'});
 }
@@ -5361,9 +5305,7 @@ function getHtmlEtiqueta(name, mode) {
     var styleTag = (backgroundColor != '') ? 'style="background-color: rgb('+$.map(hexToRgb(backgroundColor),function(e){ return e }).join(", ")+'); color: '+textColour+'"' : '';
     return '<span data-colortag="'+backgroundColor+'"  data-type="etiqueta" data-icontag="'+iconTag+'" '+styleTag+' data-tagname="'+tagName+'" data-textcolor="'+textColour+'" class="tag_text tagTableText_'+tagName+'" onclick="parent.filterTagView(this)"><i class="tagicon fas fa-'+iconTag+'" style="font-size: 90%;margin: 0 2px; color: '+textColour+'"></i> '+name+'</span>'; 
 }
-function getDatesFormatBR(value) {
-    return (moment(value, 'YYYY-MM-DD HH:mm:ss').format('HH:mm:ss') == '00:00:00') ? moment(value, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY') : moment(value, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm');
-}
+// getDatesFormatBR migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function getDatesPreview(config, dateduepreview=false) {
     var formatDate = 'YYYY-MM-DD HH:mm:ss';
     var displayFormat = (typeof config !== 'undefined' && typeof config.displayformat !== 'undefined' && config.displayformat !== null && config.displayformat) ? config.displayformat : 'DD/MM/YYYY';
@@ -5408,32 +5350,8 @@ function getDatesPreview(config, dateduepreview=false) {
     // console.log('getDatesPreview',resultDate);
    return '<span class="dateboxDisplay tagTableText_'+tagName.value+' '+backgroundDiv+'" data-duesetdate="'+config.duesetdate+'" data-colortag="'+tagName.color+'" data-tagname="'+tagName.value+'" data-nametag="'+tagName.name+'" data-time-sorter="'+resultDate.date+'" data-type="date" onclick="'+tagAction+'">'+htmlDateDue+' '+displayMode+'</span>'+htmlDateDueBox;
 }
-function calculeDatesDurationTemplate() {
-    var duration = this.duration;
-    var return_ = [];
-        if (duration.years() == 1) { return_.push('Y [ano]') } else if (duration.years() > 1) {  return_.push('Y [anos]') };
-        if (duration.months() == 1) { return_.push('M [mes]') } else if (duration.months() > 1) { return_.push('M [meses]') } else if (duration.years() == 0 && duration.months() == 0 && duration.days() > 7) { if (duration.weeks() == 1 ) { return_.push('w [semana]') } else { return_.push('w [semanas]') } };
-        if (duration.days() == 1) { return_.push('d [dia]') } else if (duration.days() > 1) { if (duration.months() == 0 && duration.days() % 7 === 0 ) { } else { return_.push('d [dias]') } } else if (duration.years() == 0 && duration.months() == 0 && duration.weeks() == 0 && duration.days() == 0) {  return_.push('[hoje]') };
-        return_ = return_.join(', ');
-        return_ = (return_ == '') ? 'd [dias]' : return_;
-    return return_;
-}
-function calculeDatesDuration(date, dateTo, countdays) {
-    var diff = moment(date).diff(moment(dateTo), 'milliseconds');
-    var diff_d = moment(date).diff(moment(dateTo), 'days');
-        // diff_d = (countdays && diff_d <= -1) ? diff_d-1 : diff_d;
-    var day_formated = (diff_d).toLocaleString('pt-BR');
-    var diff_ = (diff < 0) ? diff*-1 : moment(date).diff(moment(dateTo).add(-1,'d'), 'milliseconds');
-    var duration = moment.duration(diff_, 'milliseconds');
-        duration = (typeof duration !== 'undefined' && duration !== null && typeof duration.format !== 'undefined') ? duration.format(calculeDatesDurationTemplate) : '';
-    var day_txt = (diff_d >= -1 && diff_d <= 1) ? 'dia' : 'dias';
-    var duration_ = (diff == 0) ? 'hoje' : (diff < 0) ? (duration.trim() == 'hoje') ? moment(date).fromNow() : duration.trim()+' atr\u00E1s' : 'em '+duration;
-        duration_ = (countdays && diff_d >= 1) ? day_formated+' '+day_txt+' atr\u00E1s' : duration_;
-        duration_ = (countdays && diff_d <= -1) ? 'em '+Math.abs(day_formated)+' '+day_txt : duration_;
-        duration_ = (countdays && diff_d == 0) ? day_formated+' '+day_txt : duration_;
-    
-    return  duration_;
-}
+// calculeDatesDurationTemplate migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
+// calculeDatesDuration migrada para SeiPro.core.datas (src/core/datas.js) \u2014 Fase 6
 function getDateSemantic(config) {
     var formatDate = 'YYYY-MM-DD HH:mm:ss';
     var displayFormat = (config.displayformat) ? config.displayformat : 'DD/MM/YYYY';
@@ -7477,12 +7395,7 @@ function getDadosAndamentoPro(href) {
             }
         });
 }
-function randomDate(start, end, startHour, endHour) {
-  var date = new Date(+start + Math.random() * (end - start));
-  var hour = startHour + Math.random() * (endHour - startHour) | 0;
-  date.setHours(hour);
-  return moment(date).format('YYYY-MM-DD HH:mm:ss');
-}
+// randomDate migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function getDataRecebimentoPro(listAndamento, listProc = false, acompanhamentoEsp = '') {
     var dataRecebimento = [];
     var datesend = '',
