@@ -400,6 +400,20 @@ CORS e quotas num só lugar.
 > fiel que stub. Excluídas de propósito `getDateSemantic`/`getDatesPreview`/`configDatesPreview`
 > (puxam `getHolidayBetweenDates`/`jmespath`/DOM — acoplariam core↔legado; esperam um cluster
 > de "feriados"). **85 testes verdes.** Acumulado: **23 funções** em 4 módulos.
+>
+> **5ª fatia — `core/feriados.js`.** Feriados nacionais BR + cálculo de Páscoa: `easterDay`,
+> `getHolidaysBr`, `getHolidayBetweenDates`. Depende de `moment` e — só em
+> `getHolidayBetweenDates` — de `$.merge`/`$.map` (a semântica de `$.map` descartando
+> retornos null/undefined é intencional e preservada), ambos lidos como global lazy. Testes
+> (`feriados.test.js`, 6) com `moment` real + stub mínimo de `$`. Esta fatia **destrava** o
+> `getDateSemantic` (que dependia de `getHolidayBetweenDates`) para uma fatia futura — embora
+> ele ainda puxe `jmespath` + plugins moment-weekday-calc. **91 testes verdes.** Acumulado:
+> **26 funções** em 5 módulos (`validacao`, `texto`, `cor`, `datas`, `feriados`).
+>
+> **6ª fatia — `core/numeros.js`.** Números e matemática de array (8 funções puras):
+> `arrayMax`, `arrayMin`, `toNumBr`, `isNumeric`, `roundToTwo`, `randomNumber`, `hasNumber`,
+> `onlyNumber`. Sem dependências externas. `numeros.test.js` (8 testes). **99 testes verdes.**
+> Acumulado: **34 funções** em 6 módulos.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…

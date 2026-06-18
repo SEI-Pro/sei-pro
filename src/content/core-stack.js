@@ -29,6 +29,8 @@ import { installValidacao } from '../core/validacao.js';
 import { installTexto } from '../core/texto.js';
 import { installCor } from '../core/cor.js';
 import { installDatas } from '../core/datas.js';
+import { installFeriados } from '../core/feriados.js';
+import { installNumeros } from '../core/numeros.js';
 import { installUi } from '../core/ui.js';
 import { installMessaging } from '../core/messaging.js';
 import { installStorage } from '../core/storage.js';
@@ -47,6 +49,8 @@ export function installCoreStack() {
     installTexto();
     installCor();
     installDatas();
+    installFeriados();
+    installNumeros();
     installUi();
     installMessaging();
     installStorage();
