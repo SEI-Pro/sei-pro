@@ -599,7 +599,10 @@
     function sendMessage(message) {
       const runtime = getRuntime();
       if (!runtime || typeof runtime.sendMessage !== "function") {
-        return Promise.reject(new Error("Extension runtime unavailable"));
+        const action = message && message.action || "desconhecida";
+        return Promise.reject(new Error(
+          'SeiPro.messaging: runtime de extens\xE3o indispon\xEDvel (prov\xE1vel mundo MAIN). A\xE7\xE3o "' + action + '" n\xE3o p\xF4de ser entregue ao service worker.'
+        ));
       }
       return new Promise(function(resolve, reject) {
         try {

@@ -206,7 +206,7 @@ CORS e quotas num só lugar.
 > lados ficam sempre em sincronia. O `var` legado continua sendo o backing store único.
 > Coberto por `tests/core/namespace.test.js` (live sync nos dois sentidos + idempotência).
 
-### Fase 3 — Adapter de versão do SEI (resolve OCP) ✅ migração principal concluída
+### Fase 3 — Adapter de versão do SEI (resolve OCP) ✅ concluída (migração + smoke)
 **Objetivo:** isolar diferenças SEI 4.x/5.x.
 - Criar `SeiPro.version` / `seiAdapter` encapsulando as ~263 ramificações
   `isNewSEI`/`isSEI_5`, expondo seletores neutros (ex.: `SeiPro.dom.divInformacao()`).
@@ -238,9 +238,9 @@ CORS e quotas num só lugar.
 >   iframe não detecta versão de forma confiável, então os `parent.isNewSEI` ficam como estão.
 > - `sei-pro-ai.js` (2 sites) e `sei-pro-arvore-boot.js` ficam para um próximo lote.
 >
-> **Verificação:** `node --check` OK nos 10 arquivos; `npm test` (33 testes) verde. **Falta
-> apenas o smoke test manual por página do SEI** (lista, árvore, editor, visualização) antes
-> de fechar a fase em produção.
+> **Verificação:** `node --check` OK nos 10 arquivos; `npm test` verde. **Smoke test em
+> produção (Chrome, SEI 5.x PRF) executado em 2026-06-18 — PASSOU** (lista, árvore, editor;
+> ver SMOKE_TEST.md). Pendente apenas Firefox/SEI 4.x.
 
 ### Fase 4 — Centralizar storage e rede ✅ storage · 🟡 rede remota (piloto feito)
 **Objetivo:** aplicar DIP nas dependências externas.
@@ -295,6 +295,19 @@ CORS e quotas num só lugar.
 > extensão** (`chrome-extension://…` via `getUrlExtension`) e **intencionalmente não** passam
 > pela fachada — rotear leitura de arquivo local pelo SW não traz benefício.
 
+> **RISCO CONHECIDO (dois mundos × fachadas de extensão).** O bundle roda em dois
+> mundos (decisão documentada em `src/content/core-stack.js`): isolado (tem `chrome.*`)
+> e MAIN da página (arquivos via `$.getScript`; **não** tem `chrome.*`). As fachadas
+> `SeiPro.core.messaging`/`storage`/`net` dependem de `chrome.runtime`/`chrome.storage`
+> e por isso **rejeitam no mundo MAIN** (erro explícito desde `messaging.js`). Hoje não
+> quebra porque os call-sites migrados rodam no mundo isolado. Quando um call-site do
+> mundo MAIN precisar de storage/SW, a solução é uma **ponte MAIN→isolado**
+> (`window.postMessage`/CustomEvent). Ela **não** foi construída ainda de propósito: uma
+> ponte incondicional deixaria scripts da própria página do SEI forjarem requisições que
+> o mundo isolado repassaria ao SW (escalada de privilégio). A ponte deve vir com um
+> call-site real e **validação de origem/envelope**, não especulativamente. Vigiar no
+> smoke test (`SMOKE_TEST.md`).
+
 ### Fase 5 — Build step (habilitador de módulos) ✅ concluída (esbuild)
 **Objetivo:** permitir `import/export` reais.
 - Bundlar a camada `core/`+`sei/` (ESM em `src/`) num único IIFE legível.
@@ -341,8 +354,10 @@ CORS e quotas num só lugar.
 > `(undefined, secondClass, options)` e o ramo `htmlExtras` foi portado ao core. Travado por
 > `tests/core/ui.test.js` (a suíte não cobria efeitos de classe/DOM — por isso passou batido).
 >
-> **Falta o smoke test manual por página do SEI** (lista, árvore, editor, visualização)
-> carregando o `dist/` **após `npm run build`** antes de fechar a fase em produção.
+> **Smoke test executado em 2026-06-18 (Chrome, SEI 5.x produção PRF) — PASSOU.** Lista de
+> processos, árvore (iframe) e editor carregaram sem erros no console após `npm run build` +
+> reload (ver SMOKE_TEST.md). Confirmou também a correção do bug de dois mundos (bundle no
+> `world:"MAIN"` + `getUrlExtension` resiliente). Pendente apenas Firefox/SEI 4.x.
 
 > **Contrato de compatibilidade — `checkConfigValue`.** O `core/config.js` expõe
 > `verifyConfigValue` e `getConfigValue`, mas **não** `checkConfigValue` — esta tem semântica

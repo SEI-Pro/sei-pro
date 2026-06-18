@@ -75,6 +75,34 @@ Registre data, versão do SEI e navegador.
 | 5 — Build | Carregar `dist/` **após `npm run build`**; conferir que o bundle carrega antes do jQuery sem erro de ordem. |
 | 6 — Feature folders | Exercitar a feature movida; validar que os globais legados (`window.<fn>`) ainda existem via alias. |
 
+## Risco conhecido a vigiar — fachadas no mundo MAIN
+
+O core roda em dois mundos (isolado + MAIN da página). `SeiPro.core.messaging`/`storage`/
+`net` **rejeitam no mundo MAIN** (não há `chrome.*` lá). Fique atento no console a erros
+do tipo:
+
+> `SeiPro.messaging: runtime de extensão indisponível (provável mundo MAIN). Ação "..." não pôde ser entregue ao service worker.`
+
+Se aparecer, significa que um arquivo carregado via `$.getScript` tentou usar storage/SW
+no mundo errado — anote **qual ação** e **qual feature** disparou; é o gatilho para
+implementar a ponte MAIN→isolado (com validação de origem). Ver `PLANO_MIGRACAO_ARQUITETURA.md` §4.
+
+## Execuções registradas
+
+### 2026-06-18 · Chrome (macOS) · SEI 5.x produção PRF (`sei.prf.gov.br`) — ✅ PASSOU
+Após `npm run build` + reload da extensão. Capturado o console (apenas erros + logs) em cada página:
+- **Lista de processos** (`procedimento_controlar`): limpa. `checkHostLimit`, modais e
+  `getProcessoUnidadePro` rodaram sem erro (eram a origem da regressão dos dois mundos).
+- **Todas as páginas**: branding PRF, favoritos, marcadores, prazos, toolbar e dark mode renderizam.
+- **Árvore / processo** (`procedimento_trabalhar`, iframe): limpa. Boot completo via
+  `sei-pro-arvore-boot.js` — `parentReady via SeiProReady`, painel infoarvore (9 seções),
+  toolbar (22 links), `fetchPage → controlador.php`, anotações/consulta/interessados.
+- **Editor** (`editor_montar`, CKEditor): renderizou com toolbar e documento; zero erros.
+- **Risco mundo MAIN**: nenhum erro de `messaging`/runtime indisponível em nenhuma página —
+  ponte MAIN→isolado segue desnecessária.
+
+> Pendente: repetir em Firefox e em SEI 4.x quando possível (o `world:"MAIN"` exige Firefox 128+).
+
 ## Critério de aprovação
 Todas as caixas aplicáveis marcadas, **zero** erros novos no console, em pelo menos um
 navegador Chromium **e** Firefox, nas versões de SEI alvo da mudança.

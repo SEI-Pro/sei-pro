@@ -14,7 +14,16 @@ export function installMessaging() {
     function sendMessage(message) {
         const runtime = getRuntime();
         if (!runtime || typeof runtime.sendMessage !== 'function') {
-            return Promise.reject(new Error('Extension runtime unavailable'));
+            // chrome.runtime só existe no mundo ISOLADO. No mundo MAIN da página
+            // (onde rodam os arquivos carregados via $.getScript) esta fachada não
+            // alcança o service worker — exigiria uma ponte MAIN→isolado com
+            // validação de origem (RISCO CONHECIDO, ver PLANO_MIGRACAO_ARQUITETURA.md
+            // §4 e SMOKE_TEST.md). Falha explícita em vez de silenciosa.
+            const action = (message && message.action) || 'desconhecida';
+            return Promise.reject(new Error(
+                'SeiPro.messaging: runtime de extensão indisponível (provável mundo MAIN). ' +
+                'Ação "' + action + '" não pôde ser entregue ao service worker.'
+            ));
         }
         return new Promise(function (resolve, reject) {
             try {
