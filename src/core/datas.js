@@ -1,4 +1,5 @@
 import { aliasGlobal, getSeiPro, globalRef } from './global.js';
+import { getHolidayBetweenDates } from './feriados.js';
 
 /**
  * Formatação e duração de datas — cluster extraído de sei-functions-pro.js (Fase 6).
@@ -63,13 +64,60 @@ export function calculeDatesDuration(date, dateTo, countdays) {
     return duration_;
 }
 
+// Semântica de prazo: dado um config { date, dateTo, countdays, workday, due... },
+// devolve { date, dateref, duedate, alertdate, calcalert, duecalcref }.
+// Usa getHolidayBetweenDates (feriados) + calculeDatesDuration (local) e, no modo
+// workday, jmespath + os plugins moment-weekday-calc (isoWeekdayCalc/isoAddWeekdaysFromSet).
+export function getDateSemantic(config) {
+    const moment = globalRef.moment;
+    const jmespath = globalRef.jmespath;
+    var formatDate = 'YYYY-MM-DD HH:mm:ss';
+    var displayFormat = (config.displayformat) ? config.displayformat : 'DD/MM/YYYY';
+    var duration = (config.countdays) ? moment(config.dateTo, formatDate).diff(moment(config.date, formatDate), 'days') : moment(config.date, formatDate).diff(moment(config.dateTo, formatDate), 'days');
+    var listaFeriados = (config.workday && config.countdays) ? getHolidayBetweenDates(moment(config.date, formatDate).format('Y') + '-01-01', moment(config.dateTo, formatDate).format('Y') + '-01-01') : [];
+    var arrayFeriados = (config.workday && config.countdays) ? jmespath.search(listaFeriados, "[*].d_") : [];
+    var calcWorkday = (config.workday) ? moment().isoWeekdayCalc({
+        rangeStart: moment(config.date, formatDate),
+        rangeEnd: moment(config.dateTo, formatDate),
+        weekdays: [1, 2, 3, 4, 5],
+        exclusions: arrayFeriados
+    }) : '';
+    var calcWorkday_ = (calcWorkday - 1);
+    var day_txt = (calcWorkday_ >= -1 && calcWorkday_ <= 1) ? 'dia útil' : 'dias úteis';
+    var txtCalcWorkday = (config.workday && config.countdays && duration >= 1) ? calcWorkday_.toLocaleString('pt-BR') + ' ' + day_txt + ' atrás' : '';
+    txtCalcWorkday = (config.workday && config.countdays && duration <= -1) ? 'em ' + calcWorkday_.toLocaleString('pt-BR') + ' ' + day_txt : txtCalcWorkday;
+    txtCalcWorkday = (config.workday && config.countdays && duration == 0) ? calcWorkday_.toLocaleString('pt-BR') + ' ' + day_txt : txtCalcWorkday;
+    var frowNow = (config.workday && config.countdays)
+        ? txtCalcWorkday
+        : (config.countdays) ? calculeDatesDuration(config.dateTo, config.date, config.countdays) : calculeDatesDuration(config.date, config.dateTo, config.countdays);
+    var duedate = (config.duesetdate)
+        ? moment(config.dateDue, formatDate)
+        : (config.duecounter == 'util')
+            ? moment(config.date, formatDate).isoAddWeekdaysFromSet({
+                'workdays': config.duenumber,
+                'weekdays': [1, 2, 3, 4, 5],
+                'exclusions': arrayFeriados
+            })
+            : moment(config.date, formatDate).add(config.duenumber, 'd');
+
+    var alertdate = (moment(config.dateTo, formatDate) > moment(duedate)) ? true : false;
+    var calcalert = (alertdate) ? moment(config.dateTo, formatDate).diff(moment(duedate), 'days') : moment(duedate).diff(moment(config.dateTo, formatDate), 'days');
+    calcalert = (calcalert).toLocaleString('pt-BR');
+    var duecalcref = (alertdate)
+        ? (calcalert == 1) ? calcalert + ' dia de atraso' : (calcalert > 1) ? calcalert + ' dias de atraso' : (calcalert == 0) ? moment(duedate, formatDate).fromNow() : ''
+        : (calcalert == 1) ? 'em ' + calcalert + ' dia' : (calcalert > 1) ? 'em ' + calcalert + ' dias' : (calcalert == 0) ? moment(duedate, formatDate).fromNow() : '';
+
+    return { date: config.date, dateref: frowNow, duedate: duedate.format(displayFormat), alertdate: alertdate, calcalert: calcalert, duecalcref: duecalcref };
+}
+
 export function installDatas() {
     const datas = {
         getDatesFormatBR,
         randomDate,
         getRecentDateRow,
         calculeDatesDurationTemplate,
-        calculeDatesDuration
+        calculeDatesDuration,
+        getDateSemantic
     };
 
     getSeiPro().core.datas = datas;
@@ -79,6 +127,7 @@ export function installDatas() {
     aliasGlobal('getRecentDateRow', getRecentDateRow);
     aliasGlobal('calculeDatesDurationTemplate', calculeDatesDurationTemplate);
     aliasGlobal('calculeDatesDuration', calculeDatesDuration);
+    aliasGlobal('getDateSemantic', getDateSemantic);
 
     return datas;
 }

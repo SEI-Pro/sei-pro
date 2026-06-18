@@ -535,90 +535,6 @@
     return cor;
   }
 
-  // src/core/datas.js
-  function getDatesFormatBR(value) {
-    const moment = globalRef.moment;
-    return moment(value, "YYYY-MM-DD HH:mm:ss").format("HH:mm:ss") == "00:00:00" ? moment(value, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY") : moment(value, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY HH:mm");
-  }
-  function randomDate(start, end, startHour, endHour) {
-    const moment = globalRef.moment;
-    const date = new Date(+start + Math.random() * (end - start));
-    const hour = startHour + Math.random() * (endHour - startHour) | 0;
-    date.setHours(hour);
-    return moment(date).format("YYYY-MM-DD HH:mm:ss");
-  }
-  function getRecentDateRow(inicio, seconds) {
-    const moment = globalRef.moment;
-    if (moment().format("YYYY-MM-DD") == moment(inicio, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD")) {
-      const diff = moment().add(seconds, "seconds").diff(moment(inicio, "YYYY-MM-DD HH:mm:ss"));
-      return diff < 0 ? true : false;
-    }
-  }
-  function calculeDatesDurationTemplate() {
-    const duration = this.duration;
-    let return_ = [];
-    if (duration.years() == 1) {
-      return_.push("Y [ano]");
-    } else if (duration.years() > 1) {
-      return_.push("Y [anos]");
-    }
-    if (duration.months() == 1) {
-      return_.push("M [mes]");
-    } else if (duration.months() > 1) {
-      return_.push("M [meses]");
-    } else if (duration.years() == 0 && duration.months() == 0 && duration.days() > 7) {
-      if (duration.weeks() == 1) {
-        return_.push("w [semana]");
-      } else {
-        return_.push("w [semanas]");
-      }
-    }
-    if (duration.days() == 1) {
-      return_.push("d [dia]");
-    } else if (duration.days() > 1) {
-      if (duration.months() == 0 && duration.days() % 7 === 0) {
-      } else {
-        return_.push("d [dias]");
-      }
-    } else if (duration.years() == 0 && duration.months() == 0 && duration.weeks() == 0 && duration.days() == 0) {
-      return_.push("[hoje]");
-    }
-    return_ = return_.join(", ");
-    return_ = return_ == "" ? "d [dias]" : return_;
-    return return_;
-  }
-  function calculeDatesDuration(date, dateTo, countdays) {
-    const moment = globalRef.moment;
-    const diff = moment(date).diff(moment(dateTo), "milliseconds");
-    const diff_d = moment(date).diff(moment(dateTo), "days");
-    const day_formated = diff_d.toLocaleString("pt-BR");
-    const diff_ = diff < 0 ? diff * -1 : moment(date).diff(moment(dateTo).add(-1, "d"), "milliseconds");
-    let duration = moment.duration(diff_, "milliseconds");
-    duration = typeof duration !== "undefined" && duration !== null && typeof duration.format !== "undefined" ? duration.format(calculeDatesDurationTemplate) : "";
-    const day_txt = diff_d >= -1 && diff_d <= 1 ? "dia" : "dias";
-    let duration_ = diff == 0 ? "hoje" : diff < 0 ? duration.trim() == "hoje" ? moment(date).fromNow() : duration.trim() + " atr\xE1s" : "em " + duration;
-    duration_ = countdays && diff_d >= 1 ? day_formated + " " + day_txt + " atr\xE1s" : duration_;
-    duration_ = countdays && diff_d <= -1 ? "em " + Math.abs(day_formated) + " " + day_txt : duration_;
-    duration_ = countdays && diff_d == 0 ? day_formated + " " + day_txt : duration_;
-    return duration_;
-  }
-  function installDatas() {
-    const datas = {
-      getDatesFormatBR,
-      randomDate,
-      getRecentDateRow,
-      calculeDatesDurationTemplate,
-      calculeDatesDuration
-    };
-    getSeiPro().core.datas = datas;
-    aliasGlobal("getDatesFormatBR", getDatesFormatBR);
-    aliasGlobal("randomDate", randomDate);
-    aliasGlobal("getRecentDateRow", getRecentDateRow);
-    aliasGlobal("calculeDatesDurationTemplate", calculeDatesDurationTemplate);
-    aliasGlobal("calculeDatesDuration", calculeDatesDuration);
-    return datas;
-  }
-
   // src/core/feriados.js
   function easterDay(y) {
     const moment = globalRef.moment;
@@ -699,6 +615,123 @@
     aliasGlobal("getHolidaysBr", getHolidaysBr);
     aliasGlobal("getHolidayBetweenDates", getHolidayBetweenDates);
     return feriados;
+  }
+
+  // src/core/datas.js
+  function getDatesFormatBR(value) {
+    const moment = globalRef.moment;
+    return moment(value, "YYYY-MM-DD HH:mm:ss").format("HH:mm:ss") == "00:00:00" ? moment(value, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY") : moment(value, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY HH:mm");
+  }
+  function randomDate(start, end, startHour, endHour) {
+    const moment = globalRef.moment;
+    const date = new Date(+start + Math.random() * (end - start));
+    const hour = startHour + Math.random() * (endHour - startHour) | 0;
+    date.setHours(hour);
+    return moment(date).format("YYYY-MM-DD HH:mm:ss");
+  }
+  function getRecentDateRow(inicio, seconds) {
+    const moment = globalRef.moment;
+    if (moment().format("YYYY-MM-DD") == moment(inicio, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD")) {
+      const diff = moment().add(seconds, "seconds").diff(moment(inicio, "YYYY-MM-DD HH:mm:ss"));
+      return diff < 0 ? true : false;
+    }
+  }
+  function calculeDatesDurationTemplate() {
+    const duration = this.duration;
+    let return_ = [];
+    if (duration.years() == 1) {
+      return_.push("Y [ano]");
+    } else if (duration.years() > 1) {
+      return_.push("Y [anos]");
+    }
+    if (duration.months() == 1) {
+      return_.push("M [mes]");
+    } else if (duration.months() > 1) {
+      return_.push("M [meses]");
+    } else if (duration.years() == 0 && duration.months() == 0 && duration.days() > 7) {
+      if (duration.weeks() == 1) {
+        return_.push("w [semana]");
+      } else {
+        return_.push("w [semanas]");
+      }
+    }
+    if (duration.days() == 1) {
+      return_.push("d [dia]");
+    } else if (duration.days() > 1) {
+      if (duration.months() == 0 && duration.days() % 7 === 0) {
+      } else {
+        return_.push("d [dias]");
+      }
+    } else if (duration.years() == 0 && duration.months() == 0 && duration.weeks() == 0 && duration.days() == 0) {
+      return_.push("[hoje]");
+    }
+    return_ = return_.join(", ");
+    return_ = return_ == "" ? "d [dias]" : return_;
+    return return_;
+  }
+  function calculeDatesDuration(date, dateTo, countdays) {
+    const moment = globalRef.moment;
+    const diff = moment(date).diff(moment(dateTo), "milliseconds");
+    const diff_d = moment(date).diff(moment(dateTo), "days");
+    const day_formated = diff_d.toLocaleString("pt-BR");
+    const diff_ = diff < 0 ? diff * -1 : moment(date).diff(moment(dateTo).add(-1, "d"), "milliseconds");
+    let duration = moment.duration(diff_, "milliseconds");
+    duration = typeof duration !== "undefined" && duration !== null && typeof duration.format !== "undefined" ? duration.format(calculeDatesDurationTemplate) : "";
+    const day_txt = diff_d >= -1 && diff_d <= 1 ? "dia" : "dias";
+    let duration_ = diff == 0 ? "hoje" : diff < 0 ? duration.trim() == "hoje" ? moment(date).fromNow() : duration.trim() + " atr\xE1s" : "em " + duration;
+    duration_ = countdays && diff_d >= 1 ? day_formated + " " + day_txt + " atr\xE1s" : duration_;
+    duration_ = countdays && diff_d <= -1 ? "em " + Math.abs(day_formated) + " " + day_txt : duration_;
+    duration_ = countdays && diff_d == 0 ? day_formated + " " + day_txt : duration_;
+    return duration_;
+  }
+  function getDateSemantic(config) {
+    const moment = globalRef.moment;
+    const jmespath = globalRef.jmespath;
+    var formatDate = "YYYY-MM-DD HH:mm:ss";
+    var displayFormat = config.displayformat ? config.displayformat : "DD/MM/YYYY";
+    var duration = config.countdays ? moment(config.dateTo, formatDate).diff(moment(config.date, formatDate), "days") : moment(config.date, formatDate).diff(moment(config.dateTo, formatDate), "days");
+    var listaFeriados = config.workday && config.countdays ? getHolidayBetweenDates(moment(config.date, formatDate).format("Y") + "-01-01", moment(config.dateTo, formatDate).format("Y") + "-01-01") : [];
+    var arrayFeriados = config.workday && config.countdays ? jmespath.search(listaFeriados, "[*].d_") : [];
+    var calcWorkday = config.workday ? moment().isoWeekdayCalc({
+      rangeStart: moment(config.date, formatDate),
+      rangeEnd: moment(config.dateTo, formatDate),
+      weekdays: [1, 2, 3, 4, 5],
+      exclusions: arrayFeriados
+    }) : "";
+    var calcWorkday_ = calcWorkday - 1;
+    var day_txt = calcWorkday_ >= -1 && calcWorkday_ <= 1 ? "dia \xFAtil" : "dias \xFAteis";
+    var txtCalcWorkday = config.workday && config.countdays && duration >= 1 ? calcWorkday_.toLocaleString("pt-BR") + " " + day_txt + " atr\xE1s" : "";
+    txtCalcWorkday = config.workday && config.countdays && duration <= -1 ? "em " + calcWorkday_.toLocaleString("pt-BR") + " " + day_txt : txtCalcWorkday;
+    txtCalcWorkday = config.workday && config.countdays && duration == 0 ? calcWorkday_.toLocaleString("pt-BR") + " " + day_txt : txtCalcWorkday;
+    var frowNow = config.workday && config.countdays ? txtCalcWorkday : config.countdays ? calculeDatesDuration(config.dateTo, config.date, config.countdays) : calculeDatesDuration(config.date, config.dateTo, config.countdays);
+    var duedate = config.duesetdate ? moment(config.dateDue, formatDate) : config.duecounter == "util" ? moment(config.date, formatDate).isoAddWeekdaysFromSet({
+      "workdays": config.duenumber,
+      "weekdays": [1, 2, 3, 4, 5],
+      "exclusions": arrayFeriados
+    }) : moment(config.date, formatDate).add(config.duenumber, "d");
+    var alertdate = moment(config.dateTo, formatDate) > moment(duedate) ? true : false;
+    var calcalert = alertdate ? moment(config.dateTo, formatDate).diff(moment(duedate), "days") : moment(duedate).diff(moment(config.dateTo, formatDate), "days");
+    calcalert = calcalert.toLocaleString("pt-BR");
+    var duecalcref = alertdate ? calcalert == 1 ? calcalert + " dia de atraso" : calcalert > 1 ? calcalert + " dias de atraso" : calcalert == 0 ? moment(duedate, formatDate).fromNow() : "" : calcalert == 1 ? "em " + calcalert + " dia" : calcalert > 1 ? "em " + calcalert + " dias" : calcalert == 0 ? moment(duedate, formatDate).fromNow() : "";
+    return { date: config.date, dateref: frowNow, duedate: duedate.format(displayFormat), alertdate, calcalert, duecalcref };
+  }
+  function installDatas() {
+    const datas = {
+      getDatesFormatBR,
+      randomDate,
+      getRecentDateRow,
+      calculeDatesDurationTemplate,
+      calculeDatesDuration,
+      getDateSemantic
+    };
+    getSeiPro().core.datas = datas;
+    aliasGlobal("getDatesFormatBR", getDatesFormatBR);
+    aliasGlobal("randomDate", randomDate);
+    aliasGlobal("getRecentDateRow", getRecentDateRow);
+    aliasGlobal("calculeDatesDurationTemplate", calculeDatesDurationTemplate);
+    aliasGlobal("calculeDatesDuration", calculeDatesDuration);
+    aliasGlobal("getDateSemantic", getDateSemantic);
+    return datas;
   }
 
   // src/core/numeros.js

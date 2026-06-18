@@ -414,6 +414,16 @@ CORS e quotas num só lugar.
 > `arrayMax`, `arrayMin`, `toNumBr`, `isNumeric`, `roundToTwo`, `randomNumber`, `hasNumber`,
 > `onlyNumber`. Sem dependências externas. `numeros.test.js` (8 testes). **99 testes verdes.**
 > Acumulado: **34 funções** em 6 módulos.
+>
+> **7ª fatia — `getDateSemantic` → `core/datas.js`** (destravada pela fatia de feriados).
+> Adicionada ao módulo `datas`, importando `getHolidayBetweenDates` de `feriados.js`
+> (import **modular**, não via alias global) e usando o `calculeDatesDuration` local;
+> `moment`/`jmespath` + plugins moment-weekday-calc (`isoWeekdayCalc`/`isoAddWeekdaysFromSet`)
+> como globais lazy. Testes carregam todas as libs REAIS (moment + duration-format +
+> weekday-calc + jmespath) num `vm`; cobrem o modo corrido (valores exatos) e o modo dias
+> úteis (plugins + jmespath). **102 testes verdes.** Acumulado: **35 funções** em 6 módulos —
+> e a 1ª fatia com **dependências internas entre módulos do core** (datas → feriados),
+> mostrando que o padrão escala além de funções isoladas.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…

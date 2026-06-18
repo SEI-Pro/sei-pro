@@ -16,7 +16,14 @@ function loadWithMoment() {
     browser: undefined,
     sessionStorage: { _d: {}, getItem(k){ return this._d[k] ?? null; }, setItem(k,v){ this._d[k]=String(v); }, removeItem(k){ delete this._d[k]; } },
     localStorage: { _d: {}, getItem(k){ return this._d[k] ?? null; }, setItem(k,v){ this._d[k]=String(v); }, removeItem(k){ delete this._d[k]; } },
-    console, URL
+    console, URL,
+    // $.merge/$.map mínimos — getDateSemantic(workday) chama getHolidayBetweenDates,
+    // que usa esses utilitários ($.map descarta retornos null/undefined).
+    $: {
+      merge(first, second) { Array.prototype.push.apply(first, second || []); return first; },
+      map(arr, cb) { const o = []; (arr || []).forEach((v, i) => { const r = cb(v, i); if (r !== null && r !== undefined) o.push(r); }); return o; }
+    },
+    jQuery: undefined
   };
   sandbox.window = sandbox;
   const ctx = vm.createContext(sandbox);
@@ -27,6 +34,8 @@ function loadWithMoment() {
   if (typeof sandbox.moment.duration(0).format !== 'function' && typeof sandbox.momentDurationFormatSetup === 'function') {
     sandbox.momentDurationFormatSetup(sandbox.moment);
   }
+  run('dist/js/lib/moment-weekday-calc.js'); // isoWeekdayCalc / isoAddWeekdaysFromSet
+  run('dist/js/lib/jmespath.min.js');
   run('dist/js/core-stack.bundle.js');
   return sandbox;
 }
@@ -84,5 +93,35 @@ describe('calculeDatesDuration', () => {
   });
   it('countdays com diferença positiva → "N dias atrás"', () => {
     expect(datas.calculeDatesDuration('2024-01-10', '2024-01-01', true)).toBe('9 dias atrás');
+  });
+});
+
+describe('getDateSemantic', () => {
+  it('carregou plugins moment-weekday-calc e jmespath', () => {
+    expect(typeof sandbox.moment().isoWeekdayCalc).toBe('function');
+    expect(typeof sandbox.jmespath.search).toBe('function');
+  });
+
+  it('modo corrido (não-workday) calcula dateref, duedate, alerta', () => {
+    const r = datas.getDateSemantic({
+      date: '2024-01-01', dateTo: '2024-01-10', countdays: true, workday: false,
+      duenumber: 30, displayformat: 'DD/MM/YYYY'
+    });
+    expect(r.date).toBe('2024-01-01');
+    expect(r.dateref).toBe('9 dias atrás');
+    expect(r.duedate).toBe('31/01/2024');
+    expect(r.alertdate).toBe(false);
+    expect(r.calcalert).toBe('21');
+    expect(r.duecalcref).toBe('em 21 dias');
+  });
+
+  it('modo dias úteis (workday) usa os plugins e retorna texto de dias úteis', () => {
+    const r = datas.getDateSemantic({
+      date: '2024-01-01', dateTo: '2024-01-31', countdays: true, workday: true,
+      duecounter: 'util', duenumber: 5, displayformat: 'DD/MM/YYYY'
+    });
+    expect(typeof r.duedate).toBe('string');
+    expect(typeof r.alertdate).toBe('boolean');
+    expect(r.dateref).toContain('úteis');
   });
 });

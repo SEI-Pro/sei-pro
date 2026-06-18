@@ -5335,47 +5335,7 @@ function getDatesPreview(config, dateduepreview=false) {
 }
 // calculeDatesDurationTemplate migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 // calculeDatesDuration migrada para SeiPro.core.datas (src/core/datas.js) \u2014 Fase 6
-function getDateSemantic(config) {
-    var formatDate = 'YYYY-MM-DD HH:mm:ss';
-    var displayFormat = (config.displayformat) ? config.displayformat : 'DD/MM/YYYY';
-    var duration = (config.countdays) ? moment(config.dateTo, formatDate).diff(moment(config.date, formatDate), 'days') : moment(config.date, formatDate).diff(moment(config.dateTo, formatDate), 'days');
-    var listaFeriados = (config.workday && config.countdays) ? getHolidayBetweenDates(moment(config.date, formatDate).format('Y')+'-01-01',moment(config.dateTo, formatDate).format('Y')+'-01-01') : [];
-    var arrayFeriados = (config.workday && config.countdays) ? jmespath.search(listaFeriados, "[*].d_") : [];
-    var calcWorkday = (config.workday) ? moment().isoWeekdayCalc({  
-                          rangeStart: moment(config.date,formatDate),  
-                          rangeEnd: moment(config.dateTo,formatDate),  
-                          weekdays: [1,2,3,4,5],  
-                          exclusions: arrayFeriados
-                        }) : '';
-    //var txtCalcWorkday = (config.workday && config.countdays) ? ((calcWorkday-1) == 1 || (calcWorkday-1) == 0) ? (calcWorkday-1).toLocaleString('pt-BR')+' dia \u00FAtil' : (calcWorkday-1).toLocaleString('pt-BR')+' dias \u00FAteis' : '';
-    var calcWorkday_ = (calcWorkday-1);
-    var day_txt = (calcWorkday_ >= -1 && calcWorkday_ <= 1 ) ? 'dia \u00FAtil' : 'dias \u00FAteis';
-    var txtCalcWorkday = (config.workday && config.countdays && duration >= 1) ? calcWorkday_.toLocaleString('pt-BR')+' '+day_txt+' atr\u00E1s' : '';
-        txtCalcWorkday = (config.workday && config.countdays && duration <= -1) ? 'em '+calcWorkday_.toLocaleString('pt-BR')+' '+day_txt : txtCalcWorkday;
-        txtCalcWorkday = (config.workday && config.countdays && duration == 0) ? calcWorkday_.toLocaleString('pt-BR')+' '+day_txt : txtCalcWorkday;
-    //console.log(calcWorkday_, duration, config.date);
-    var frowNow = (config.workday && config.countdays) 
-                    ? txtCalcWorkday
-                    : (config.countdays) ? calculeDatesDuration(config.dateTo, config.date, config.countdays) : calculeDatesDuration(config.date, config.dateTo, config.countdays);
-    var duedate = (config.duesetdate)
-                    ? moment(config.dateDue, formatDate)
-                    : (config.duecounter == 'util')
-                        ? moment(config.date, formatDate).isoAddWeekdaysFromSet({  
-                                          'workdays': config.duenumber,  
-                                          'weekdays': [1,2,3,4,5],  
-                                          'exclusions': arrayFeriados
-                                        })
-                        : moment(config.date,formatDate).add(config.duenumber, 'd');
-    
-    var alertdate = (moment(config.dateTo, formatDate) > moment(duedate)) ? true : false;
-    var calcalert = (alertdate) ? moment(config.dateTo, formatDate).diff(moment(duedate), 'days') : moment(duedate).diff(moment(config.dateTo, formatDate), 'days');
-        calcalert = (calcalert).toLocaleString('pt-BR');
-    var duecalcref = (alertdate) 
-                        ? (calcalert == 1) ? calcalert+' dia de atraso' : (calcalert > 1) ? calcalert+' dias de atraso' : (calcalert == 0) ? moment(duedate,formatDate).fromNow() : ''
-                        : (calcalert == 1) ? 'em '+calcalert+' dia' : (calcalert > 1) ? 'em '+calcalert+' dias' : (calcalert == 0) ? moment(duedate,formatDate).fromNow() : '';
-    
-    return {date: config.date, dateref: frowNow, duedate: duedate.format(displayFormat), alertdate: alertdate, calcalert: calcalert, duecalcref: duecalcref};
-}
+// getDateSemantic migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function configDatesPreview() {
     var config = getConfigDatesFav();
     if (config.selectdoc) { configDatesSetUpdate() }
