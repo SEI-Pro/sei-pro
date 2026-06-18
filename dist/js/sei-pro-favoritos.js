@@ -1135,15 +1135,15 @@ function setPanelFavorites(mode) {
                                     '   <caption class="infraCaption" style="text-align: left;">'+countFavorite+'</caption>'+
                                     '   <thead>'+
                                     '       <tr class="tableHeader">'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" style="width: 50px;" align="center"><span class="lblInfraCheck" aria-hidden="true"></span><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" style="width: 210px;">Processo</th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+' tituloFilter" data-filter-type="date" style="width: 150px;">Prazo</th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+' tituloFilter" data-filter-type="etiqueta" style="width: 150px;">Marcador</th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+' tituloFilter" data-filter-type="etiqueta" style="width: 80px;">Mapa</th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'">Anota\u00E7\u00E3o</th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'">Tipo de Processo</th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'">Categoria</th>'+
-                                    '           <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" style="width: 50px;" align="center"><i class="fas fa-sort-numeric-up"></i></th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: 50px;" align="center"><span class="lblInfraCheck" aria-hidden="true"></span><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: 210px;">Processo</th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+' tituloFilter" data-filter-type="date" style="width: 150px;">Prazo</th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+' tituloFilter" data-filter-type="etiqueta" style="width: 150px;">Marcador</th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+' tituloFilter" data-filter-type="etiqueta" style="width: 80px;">Mapa</th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'">Anota\u00E7\u00E3o</th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'">Tipo de Processo</th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'">Categoria</th>'+
+                                    '           <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: 50px;" align="center"><i class="fas fa-sort-numeric-up"></i></th>'+
                                     '       </tr>'+
                                     '   </thead>'+
                                     '   <tbody>';

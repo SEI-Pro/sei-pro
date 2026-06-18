@@ -8,8 +8,8 @@ var kanbanProcessosMoving = false;
 var containerUpload = 'body';
 var arvoreDropzone = false;
 var contentW = false;
-var pathArvore = typeof isNewSEI !== 'undefined' && isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
-var elemCheckbox = typeof isNewSEI !== 'undefined' && isNewSEI ? '.infraCheckboxInput' : '.infraCheckbox';
+var pathArvore = typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
+var elemCheckbox = typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? '.infraCheckboxInput' : '.infraCheckbox';
 const objProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro(false, true) : false;
 const arrayProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro() : false;
 
@@ -339,7 +339,7 @@ function updateTipSelectAll(this_) {
 function replaceSelectAll() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     if ( tableProc.length > 0 ) {
-        tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(typeof isNewSEI !== 'undefined' && isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>').remove();
+        tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>').remove();
     }
 }
 function cleanConfigDataRecebimento() {
@@ -376,7 +376,7 @@ function removeAllTags(forceFilter = false, n) {
 	$('#divRecebidos thead').show();
     $('table tr.tablesorter-headerRow').show();
     $('#orderbyTableGroup').remove();
-    if (isNewSEI) $('#divTabelaProcesso').removeClass('displayInitial');
+    if (SeiPro.sei.adapter.isNewSEI()) $('#divTabelaProcesso').removeClass('displayInitial');
 
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado')
         .trigger('filterReset')
@@ -421,7 +421,7 @@ function getUniqueTableTag(i, tagName, type) {
     var txtTagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
 	var tbRecebidos = $('#divRecebidos table');
 	var countTd = tbRecebidos.find('tr:not(.tablesorter-headerRow)').eq(1).find('td').length;
-	var iconSelect = '<span class="lblInfraCheck" aria-hidden="true"></span><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \''+tagName_+'\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg"></a></th>';
+	var iconSelect = '<span class="lblInfraCheck" aria-hidden="true"></span><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \''+tagName_+'\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg"></a></th>';
 	var tagCount = $('#divRecebidos table tbody').find('tr[data-tagname="'+tagName_+'"]:visible').length;
     var collapseBtn =   '<span class="tagintable">'+
                         '   <a class="controleTableTag newLink" data-htagname="'+tagName_+'" onclick="toggleGroupTablePro(this)" data-action="show" onmouseover="return infraTooltipMostrar(\'Mostrar Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? '' : 'display:none;' )+'">'+
@@ -433,8 +433,8 @@ function getUniqueTableTag(i, tagName, type) {
                         '</span>';
 	var htmlBody = '<tr class="infraCaption tagintable"><td colspan="'+(countTd+3)+'"><span '+actionTest+'>'+tagCount+' registros:</span></td></tr>'
 					+'<tr data-htagname="'+tagName_+'" class="tagintable tableHeader">'
-					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" width="5%" align="center">'+iconSelect+'</th>'
-					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" colspan="'+(countTd+2)+'">'+txtTagName+collapseBtn+'</th>'
+					+'<th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" width="5%" align="center">'+iconSelect+'</th>'
+					+'<th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" colspan="'+(countTd+2)+'">'+txtTagName+collapseBtn+'</th>'
 					+'</tr>';
 		$(htmlBody).appendTo('#divRecebidos table tbody');
 		if ( i == 0 ) { 
@@ -500,9 +500,9 @@ function getTableOnTag(type) {
         tbody.find('tr[data-tagname="SemGrupo"]:not(.infraTrClara)').eq(0).hide();
     }
     if (type == 'all') {
-        var newColumns =    '<th class="tituloControle newRowControle '+(isNewSEI ? 'infraTh' : '')+'" style="text-align: center;">Especifica\u00E7\u00E3o</th>'+
+        var newColumns =    '<th class="tituloControle newRowControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="text-align: center;">Especifica\u00E7\u00E3o</th>'+
                             // '<th class="tituloControle newRowControle" style="text-align: center;">Tipo</th>'+
-                            (checkConfigValue('gerenciarprazos') ? '<th class="tituloControle newRowControle '+(isNewSEI ? 'infraTh' : '')+'" style="text-align: center;">Prazos</th>' : '');
+                            (checkConfigValue('gerenciarprazos') ? '<th class="tituloControle newRowControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="text-align: center;">Prazos</th>' : '');
         var titleCaption = $('#tblProcessosRecebidos').find('tbody').find('.tableHeader, .infraCaption').text();
             titleCaption = (titleCaption !== '') ? ' <span class="newRowControle">(Agrupados: '+titleCaption+')</span>' : '';
         $('#tblProcessosRecebidos').find('caption.infraCaption').show().append(titleCaption);
@@ -515,9 +515,9 @@ function getTableOnTag(type) {
         var orderbyTableGroup = getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc';
         $('#processoToCSV').after('<a class="newLink" data-order="'+orderbyTableGroup+'" onclick="orderbyTableGroup(this)" id="orderbyTableGroup" onmouseover="return infraTooltipMostrar(\'Classificar dados pela ordem '+(orderbyTableGroup == 'asc' ? 'decrescente' : 'crescente')+'\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-sort-numeric-'+(orderbyTableGroup == 'asc' ? 'up' : 'down')+' cinzaColor"></i></a>');
     }
-    if (isNewSEI && type != '') {
+    if (SeiPro.sei.adapter.isNewSEI() && type != '') {
         $('#divTabelaProcesso').addClass('displayInitial');
-    } else if (isNewSEI) {
+    } else if (SeiPro.sei.adapter.isNewSEI()) {
         $('#divTabelaProcesso').removeClass('displayInitial');
     }
 }
@@ -814,13 +814,13 @@ function initTableTag(type = '') {
             var colspan = $('#tblProcessosRecebidos tr:not(.tableHeader)').eq(1).find('td').length;
                 colspan = (typeof colspan !== 'undefined' && colspan > 0) ? colspan+2 : 7;
             var htmlHeadUrgente =   '<tr data-htagname="(URGENTE)" class="tagintable tableHeader">'+
-                                    '   <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" width="5%" align="center">'+
+                                    '   <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" width="5%" align="center">'+
 	                                    '       <span class="lblInfraCheck" aria-hidden="true"></span>'+
                                     '       <a id="lnkInfraCheck" onclick="getSelectAllTr(this, \'(URGENTE)\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();">'+
-                                    '           <img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg">'+
+                                    '           <img src="/infra_css/'+(SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg">'+
                                     '       </a>'+
                                     '   </th>'+
-                                    '   <th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" colspan="'+colspan+'">(URGENTE)</th>'+
+                                    '   <th class="tituloControle '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" colspan="'+colspan+'">(URGENTE)</th>'+
                                     '</tr>';
             $("#tblProcessosRecebidos tbody").prepend(htmlHeadUrgente);
         }
@@ -1900,27 +1900,27 @@ function orderDivPanel(html, idOrder, name) {
     }
 }
 function insertDivPanelControleProc() {
-    var elementControleProc = isNewSEI ? 'collapseTabelaProcesso' : 'frmProcedimentoControlar';
+    var elementControleProc = SeiPro.sei.adapter.isNewSEI() ? 'collapseTabelaProcesso' : 'frmProcedimentoControlar';
     var statusView = ( getOptionsPro(elementControleProc) == 'hide' ) ? 'none' : 'initial';
     var statusIconShow = ( getOptionsPro(elementControleProc) == 'hide' ) ? '' : 'display:none;';
     var statusIconHide = ( getOptionsPro(elementControleProc) == 'hide' ) ? 'display:none;' : '';
-    var idControleProc = isNewSEI ? '.'+elementControleProc : '#'+elementControleProc;
+    var idControleProc = SeiPro.sei.adapter.isNewSEI() ? '.'+elementControleProc : '#'+elementControleProc;
     var idOrder = (getOptionsPro('orderPanelHome') && typeof jmespath !== 'undefined' && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='processosSEIPro'].index | [0]") : '';
     var htmlIconTable =     '<i class="controleProcPro '+(localStorage.getItem('seiSlim') ? 'fad fa-folders' : 'fas fa-folder-open')+' cinzaColor" style="margin: 0 10px 0 0; font-size: 1.1em;"></i>';
     var htmlToggleTable =   '<a class="controleProcPro newLink" id="'+elementControleProc+'_showIcon" onclick="toggleTablePro(\''+idControleProc+'\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconShow+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
                             '<a class="controleProcPro newLink" id="'+elementControleProc+'_hideIcon" onclick="toggleTablePro(\''+idControleProc+'\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+statusIconHide+'"><i class="fas fa-minus-square cinzaColor"></i></a>';
     var htmlDivPanel = '<div class="controleProcPro panelHomePro" style="display: inline-block; width: 100%;" id="processosSEIPro" data-order="'+idOrder+'"></div>';
     
-    if (isNewSEI) $('#divFiltro, #collapseControle, #newFiltro, #divTabelaProcesso').addClass('collapseTabelaProcesso');
+    if (SeiPro.sei.adapter.isNewSEI()) $('#divFiltro, #collapseControle, #newFiltro, #divTabelaProcesso').addClass('collapseTabelaProcesso');
 
     if ($('.controleProcPro').length == 0) {
         $('#divInfraBarraLocalizacao').css('width', '100%').addClass('titlePanelHome').append(htmlToggleTable).prepend(htmlIconTable);
         $(idControleProc).css('width', '100%');
-        if (!isNewSEI) $(idControleProc).css('display', statusView);
+        if (!SeiPro.sei.adapter.isNewSEI()) $(idControleProc).css('display', statusView);
         $('#panelHomePro').prepend(htmlDivPanel);
         $('#frmProcedimentoControlar').moveTo('#processosSEIPro');
         $('#divInfraBarraLocalizacao').moveTo('#processosSEIPro');
-        if (isNewSEI && getOptionsPro(elementControleProc) == 'hide') $(idControleProc).addClass('displayNone');
+        if (SeiPro.sei.adapter.isNewSEI() && getOptionsPro(elementControleProc) == 'hide') $(idControleProc).addClass('displayNone');
         if (!checkLoadedTableSorter() && (typeof storeGroupTablePro() === 'undefined' || storeGroupTablePro() == '')) removeAllTags(false, 3);
     }
 }
@@ -2108,7 +2108,7 @@ function setTableSorterHome() {
                 if (!$(this).hasClass('infraTableOrdenacao')) {
                     $(this).find('thead tr.tablesorter-filter-row').remove();
                     corrigeTableSEI(this);
-                   if (isNewSEI) {
+                   if (SeiPro.sei.adapter.isNewSEI()) {
                         $(this).find('thead [colspan]').each(function(){
                             var _this = $(this);
                             var colspan = parseInt(_this.attr('colspan'));
@@ -2305,7 +2305,7 @@ function forceTableHomeDestroy(Timeout = 3000) {
 }
 function forceOnLoadBody() {
     var onload = new Function($('body').attr('onload'));
-    if (typeof isNewSEI !== 'undefined' && isNewSEI && typeof $.modalLink === 'undefined' && !$('.sparkling-modal-frame').length) {
+    if (typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() && typeof $.modalLink === 'undefined' && !$('.sparkling-modal-frame').length) {
         $.get($('script[src*="jquery.modalLink"]').attr('src'), function(){
             onload();
         });
@@ -2699,7 +2699,7 @@ function initReloadModalLink(TimeOut = 9000) {
     }
 }
 function initReplaceNewIcons(TimeOut = 9000) {
-    if (typeof isNewSEI !== 'undefined' && isNewSEI) $(divComandos+' a').addClass('botaoSEI');
+    if (typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI()) $(divComandos+' a').addClass('botaoSEI');
     if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
     if (typeof replaceNewIcons === 'function') {
         replaceNewIcons($(`${infraBarraComandos} a.botaoSEI`));
@@ -3194,7 +3194,7 @@ function addControlePrazo(this_ = false) {
     var textTag = '';
     var textControle = 'Adicionar';
     var form = $('#frmProcedimentoControlar');
-    var href = isNewSEI
+    var href = SeiPro.sei.adapter.isNewSEI()
             ? $(divComandos+' a[onclick*="andamento_marcador_cadastrar"]').attr('onclick') 
             : $(divComandos+' a[onclick*="andamento_marcador_gerenciar"]').attr('onclick');
         href = (typeof href !== 'undefined') ? href.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
@@ -3355,7 +3355,7 @@ function setPrazoMarcador(mode, this_, form, href, param = false, callback = fal
         var _dateTo = ($('#configDatesBox_duesetdate').is(':checked')) ? _dateRef : false;
         
         if (href && href != '') {
-            tblProcessos.find('tr.infraTrMarcada td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin '+(isNewSEI ? 'brancoColor' : 'azulColor')+'"></i>');
+            tblProcessos.find('tr.infraTrMarcada td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin '+(SeiPro.sei.adapter.isNewSEI() ? 'brancoColor' : 'azulColor')+'"></i>');
             $.ajax({ 
                 method: 'POST',
                 data: param,
@@ -3363,7 +3363,7 @@ function setPrazoMarcador(mode, this_, form, href, param = false, callback = fal
             }).done(function (html) {
                 var $html = $(html);
                 var xhr = new XMLHttpRequest();
-                var formTag = isNewSEI ? $html.find('#frmAndamentoMarcadorCadastro') : $html.find('#frmGerenciarMarcador');
+                var formTag = SeiPro.sei.adapter.isNewSEI() ? $html.find('#frmAndamentoMarcadorCadastro') : $html.find('#frmGerenciarMarcador');
                 var hrefTag = formTag.attr('action');
                 var dateSubmit = (_dateTo) ? 'Ate '+moment(_dateTo, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : moment(_dateRef, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
                     dateSubmit = dateSubmit+_textTag;
@@ -3440,7 +3440,7 @@ function setPrazoMarcador(mode, this_, form, href, param = false, callback = fal
                                                 // tr.css('background-color','transparent');
                                                 tr.removeClass('infraTrAlerta').removeClass('infraTrAtrasada');
                                             }
-                                        if (param) tr.find(isNewSEI ? '.infraCheckboxInput:checked' : '.infraCheckbox:checked').trigger('click');
+                                        if (param) tr.find(SeiPro.sei.adapter.isNewSEI() ? '.infraCheckboxInput:checked' : '.infraCheckbox:checked').trigger('click');
                                         if (typeof callback === 'function') {
                                             callback();
                                             // console.log('**** CALBACK');
@@ -3829,10 +3829,10 @@ function setControlePrazo(force = false) {
             tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="prazoBoxDisplay" style="text-align: center;"></td>');
 
         if ( thead.length > 0 ) {
-            thead.find('tr').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(isNewSEI ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
+            thead.find('tr').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
         } else {
             $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.prazoBoxDisplay').remove();
-            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(isNewSEI ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
         }
     }
     tblProcessos.find('tbody tr').each(function(){
@@ -4208,7 +4208,7 @@ function initSeiPro() {
 	}
     initReloadModalLink();
     if (typeof initSmartSignatureSelectionPro === 'function') initSmartSignatureSelectionPro();
-    if (typeof isNewSEI !== 'undefined' && isNewSEI) {
+    if (typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI()) {
         // localStorageRemovePro('seiSlim');
         
         //  Força o reestabelecimento de funcionalidades nativas do SEI 4.0

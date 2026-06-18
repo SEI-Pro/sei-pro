@@ -1,0 +1,18 @@
+{
+  "name": "sei-pro-prf",
+  "private": true,
+  "description": "Dev tooling for SEI Pro PRF extension",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "pretest": "node scripts/build.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "//build": "Fase 5: esbuild bundla SOMENTE src/content/core-stack.js -> dist/js/core-stack.bundle.js (IIFE, não minificado) e copia manifest.base.json -> dist/manifest.json. NÃO usa outDir === dist/ para os legados nem passa arquivos legíveis pelo bundler (foi o que destruiu a fonte na 1ª tentativa). Ver PLANO_MIGRACAO_ARQUITETURA.md §5 Fase 5.",
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "vitest": "^3.2.4"
+  }
+}

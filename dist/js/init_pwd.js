@@ -1,15 +1,4 @@
-function verifyConfigValue(name) {
-    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
-    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
-        dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
-    
-    if (dataValuesConfig == true ) {
-        return true;
-    } else {
-        return false;
-    }
-}
+// [migrado para core/sei] verifyConfigValue
 function isLoginPageNewSei() {
     return window.location.href.indexOf('sip/login.php') !== -1;
 }

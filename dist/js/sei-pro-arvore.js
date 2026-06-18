@@ -2187,7 +2187,10 @@ function initBreakDocTwoLines(TimeOut = 9000) {
         }, 500);
     }
 }
-function loadStyleDesign(loop = 3) {
+// Tree-specific variant: applies seiSlim classes + initAnchorImg + retry loop.
+// Distinct from the canonical SeiPro.core.ui.loadStyleDesign(body, secondClass, options);
+// kept local (renamed) to avoid a global name collision with different semantics.
+function loadStyleDesignArvore(loop = 3) {
     if (localStorage.getItem('seiSlim')) {
         var body = document.body;
         body.classList.add("seiSlim");
@@ -2198,9 +2201,9 @@ function loadStyleDesign(loop = 3) {
         initAnchorImg();
         // initOnClickPasta();
         if (loop > 0) {
-            setTimeout(function(){ 
-                loadStyleDesign(false);
-                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload loadStyleDesign', loop);
+            setTimeout(function(){
+                loadStyleDesignArvore(false);
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload loadStyleDesignArvore', loop);
             }, 1500);
         }
     }
@@ -2554,7 +2557,7 @@ function initSeiProArvore(loop = true) {
     if (treeSignature) {
         window.__SEI_PRO_ARVORE_LAST_SIGNATURE__ = treeSignature;
     }
-    loadStyleDesign();
+    loadStyleDesignArvore();
     checkProcessoSigiloso();
     if (typeof parent.checkCapacidade !== 'undefined' && parent.checkCapacidade('view_prescricoes') && parent.checkConfigValue('gerenciarprescricoes')) initPanelPrescricaoProcesso();
     arrayLinksArvore = getLinksArvore();

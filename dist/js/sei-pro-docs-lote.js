@@ -233,7 +233,7 @@ var docsLote_printDataCrossing = async () => {
                 <table style="font-size: 9pt !important;width: 100%;">
                     <tbody>
                         ${
-                            !isNewSEI ?
+                            !SeiPro.sei.adapter.isNewSEI() ?
                             `
                             <tr>
                                 <td colspan="2">
@@ -258,7 +258,7 @@ var docsLote_printDataCrossing = async () => {
                                 </td>
                             </tr>
                             `
-                            : isNewSEI ?
+                            : SeiPro.sei.adapter.isNewSEI() ?
                             `
                             <tr>
                                 <td>
@@ -375,7 +375,7 @@ var docsLote_execute = async (param) => {
         flagError = true;
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao localizar o link de inserir documento. Verifique se o processo encontra-se aberto em sua unidade!');
     } else {
-        if (!isNewSEI) {
+        if (!SeiPro.sei.adapter.isNewSEI()) {
             forceNames = param.forceNames;
             let docsLote_normalChars = CSVEnconding == 'utf-8' ? docsLote_normalChars_utf8 : docsLote_normalChars_iso;
             const regex = new RegExp(Object.keys(docsLote_normalChars).join('|'));
@@ -574,7 +574,7 @@ var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
     } else {
         params.txtNumero = '';
     }
-    params.txtNomeArvore = (nomeOpcional && isNewSEI) ? decodeURIComponent(escape(nomeArvore)) : '';
+    params.txtNomeArvore = (nomeOpcional && SeiPro.sei.adapter.isNewSEI()) ? decodeURIComponent(escape(nomeArvore)) : '';
     
     if (aborted) throw new Error("cancel");
     if (typeof urlConfirmDocData !== 'undefined') $('#progress span').text('\u2588\u2588\u2588\u2592\u2592\u2592');
@@ -1053,7 +1053,7 @@ const getInitialProcHtml = async (urlInitProc) => {
 
 // Função assíncrona para obter a lista completa de tipos de procedimento
 const getFullProcList = async (htmlInitProc) => {
-    const form = isSEI_5 ? htmlInitProc.find('#frmProcedimentoEscolherTipo') : htmlInitProc.find('#frmIniciarProcessoEscolhaTipo');
+    const form = SeiPro.sei.adapter.isSEI5() ? htmlInitProc.find('#frmProcedimentoEscolherTipo') : htmlInitProc.find('#frmIniciarProcessoEscolhaTipo');
     const hrefForm = form.attr('action');
     
     const param = {};

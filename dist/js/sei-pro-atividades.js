@@ -2244,10 +2244,10 @@ function updateTableProcessos() {
         tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="atividadeBoxDisplay" style="text-align: center;"></td>');
 
         if (tblProcessos.find('thead').length > 0) {
-            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header ' + (isNewSEI ? 'infraTh' : '') + ' atividadeBoxDisplay"> ' + __.Demandas + '</th>');
+            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header ' + (SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '') + ' atividadeBoxDisplay"> ' + __.Demandas + '</th>');
         } else {
             $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.atividadeBoxDisplay').remove();
-            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header ' + (isNewSEI ? 'infraTh' : '') + ' atividadeBoxDisplay"> ' + __.Demandas + '</th>');
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header ' + (SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '') + ' atividadeBoxDisplay"> ' + __.Demandas + '</th>');
         }
         if ($('.tabelaControle').find('tr').hasClass('tableHeader')) {
             $('.tabelaControle').find('tr.tableHeader').each(function () {
@@ -2517,7 +2517,7 @@ function setPanelAtividades(storeAtividades = arrayAtividadesPro) {
             '   <caption class="infraCaption" style="text-align: left; margin-top: 10px;">' + countAtividade + '</caption>' +
             '   <thead>' +
             '       <tr class="tableHeader">' +
-            '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck"></a></th>' +
+            '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck"></a></th>' +
             '           ' + htmlColumnsAtividades +
             '       </tr>' +
             '   </thead>' +
@@ -4623,7 +4623,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome d' + __.a_Atividade + '</th>' +
                 '              <th class="tituloControle tituloFilter">Tempo Pactuado (horas)</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 160px;">Dias de Planejamento</th>' +
@@ -4711,7 +4711,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Respons\u00E1vel</th>' +
                 (checkOutrasUnidades ?
                     '              <th class="tituloControle tituloFilter" style="width: 100px;">Unidade</th>' +
@@ -4871,7 +4871,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Respons\u00E1vel</th>' +
                 (checkOutrasUnidades ?
                     '              <th class="tituloControle tituloFilter" style="width: 100px;">Unidade</th>' +
@@ -4947,7 +4947,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 (checkOutrasUnidades ?
                     '              <th class="tituloControle tituloFilter">Unidade</th>' +
                     '' : '') +
@@ -5048,7 +5048,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome Completo</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 150px;">Apelido</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 150px;">Matr\u00EDcula</th>' +
@@ -5136,7 +5136,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da Unidade</th>' +
                 '              <th class="tituloControle tituloFilter">Sigla da Unidade</th>' +
                 '              <th class="tituloControle tituloFilter">C\u00F3digo SIORG</th>' +
@@ -5197,7 +5197,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Processo</th>' +
                 '              <th class="tituloControle tituloFilter">Depend\u00EAncia</th>' +
                 '              <th class="tituloControle tituloFilter">Selecion\u00E1vel</th>' +
@@ -5258,7 +5258,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Objetivo</th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Mapa Estr\u00E9gico</th>' +
                 '              <th class="tituloControle tituloFilter">Fundamenta\u00E7\u00E3o</th>' +
@@ -5318,7 +5318,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Mapa Estrat\u00E9gico</th>' +
                 '              <th class="tituloControle tituloFilter">Miss\u00E3o</th>' +
                 '              <th class="tituloControle tituloFilter">Vis\u00E3o</th>' +
@@ -5381,7 +5381,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da A\u00E7\u00E3o Estrat\u00E9gica</th>' +
                 '              <th class="tituloControle tituloFilter">C\u00F3digo da A\u00E7\u00E3o</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 250px;">Descri\u00E7\u00E3o</th>' +
@@ -5462,7 +5462,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da Entrega</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 250px;">A\u00E7\u00E3o Estrat\u00E9gica</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 250px;">Objetivos Estrat\u00E9gicos</th>' +
@@ -5540,7 +5540,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da ' + __.Prescricao + '</th>' +
                 '              <th class="tituloControle tituloFilter">Prazo (Dias)</th>' +
                 (checkCapacidade('config_update_' + type) ?
@@ -5594,7 +5594,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da Entidade</th>' +
                 '              <th class="tituloControle tituloFilter">Sigla da Entidade</th>' +
                 (checkCapacidade('config_update_' + type) ?
@@ -5645,7 +5645,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da Nomenclatura</th>' +
                 '              <th class="tituloControle tituloFilter">Refer\u00EAncia</th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Descri\u00E7\u00E3o</th>' +
@@ -5698,7 +5698,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Tipo de Perfil</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 160px;">N\u00EDvel</th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Descri\u00E7\u00E3o</th>' +
@@ -5751,7 +5751,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome do Metadado</th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Refer\u00EAncia do Metadado</th>' +
                 '              <th class="tituloControle tituloFilter" style="width: 160px;">Tipo de Metadado</th>' +
@@ -5812,7 +5812,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Nome da avalia\u00E7\u00E3o</th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 50px;">Nota atribu\u00EDda</th>' +
                 '              <th class="tituloControle tituloFilter">Pergunta</th>' +
@@ -5903,7 +5903,7 @@ function getRowsTableTabConfig(type, mode, list = false, value = false) {
         if (mode == 'header') {
             _return = (!isInitOffset) ? '' :
                 '          <tr class="tableHeader">' +
-                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
+                '              <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_configuracoes_' + type + '" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_configuracoes_' + type + '" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck_' + type + '"></a></th>' +
                 '              <th class="tituloControle tituloFilter" style="min-width: 250px;">' + param.name_head + '</th>' +
                 (param.col_descricao ?
                     '              <th class="tituloControle tituloFilter" style="min-width: 250px;">Descri\u00E7\u00E3o</th>' +
@@ -9234,7 +9234,7 @@ function editConfigOptions(this_, id = false) {
             '                               <table id="configBox_lista_atividades" data-format="obj_mult" data-key="lista_atividades" style="font-size: 8pt !important;width: 100%;" class="tableCheckboxConfig seiProForm tableDialog tableInfo tableZebra tableFollow tableAtividades">' +
             '                                    <thead>' +
             '                                        <tr class="tableHeader">' +
-            '                                            <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck"></a></th>' +
+            '                                            <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_atividades" accesskey=";"></label><a class="lnkInfraCheck" id="lnkInfraCheck_atividades" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck"></a></th>' +
             '                                            <th class="tituloControle">Nome d' + __.a_Atividade + '</th>' +
             '                                            <th class="tituloControle">Tempo Pactuado</th>' +
             '                                        </tr>' +
@@ -14549,7 +14549,7 @@ function getTableAfastamentoPanel(this_) {
             '   <caption class="infraCaption" style="text-align: left; margin-top: 10px;">' + countAfastamentos + '</caption>' +
             '   <thead>' +
             '       <tr class="tableHeader">' +
-            '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_afastamentos" accesskey=";"></label><a id="lnkInfraCheck_afastamentos" class="lnkInfraCheck" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (isNewSEI ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck"></a></th>' +
+            '           <th class="tituloControle" data-sorter="false" style="width: 50px;" align="center"><label class="lblInfraCheck_label" for="lnkInfraCheck_afastamentos" accesskey=";"></label><a id="lnkInfraCheck_afastamentos" class="lnkInfraCheck" onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/' + (SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif') + '" id="imgRecebidosCheck"></a></th>' +
             '           <th class="tituloControle tituloFilter" data-filter-type="user">Usu\u00E1rio</th>' +
             '           <th class="tituloControle tituloFilter" data-filter-type="date" style="width: 25%;">Motivo do Afastamento</th>' +
             '           <th class="tituloControle tituloFilter sorter-date-range-dmy" data-filter-type="inicio" style="width: 160px;">In\u00EDcio do Afastamento</th>' +
@@ -26156,7 +26156,7 @@ function getHtmlIconAtividade(value) {
         htmlBtn = '<a tabindex="451" class="botaoSEI iconBoxAtividade ' + (iconLabel ? 'iconLabel' : '') + ' ' + (iconBoxSlim ? 'iconBoxSlim' : '') + ' iconAtividade_' + value.name + '" ' + (iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'' + value.title + '\')"') + ' onclick="parent.' + value.action + '" style="position: relative;display: inline-block;">' +
             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="' + value.title + '">' +
             '    <span class="botaoSEI_iconBox">' +
-            '       <i class="' + value.icon + ' fa-' + (!isNewSEI ? 'brancoColor' : 'azulColor') + '" style="font-size: 17pt;"></i>' +
+            '       <i class="' + value.icon + ' fa-' + (!SeiPro.sei.adapter.isNewSEI() ? 'brancoColor' : 'azulColor') + '" style="font-size: 17pt;"></i>' +
             '    </span>' +
             (iconLabel ?
                 '    <span class="newIconTitle">' + value.title + '</span>' +

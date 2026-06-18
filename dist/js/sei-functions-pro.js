@@ -39,21 +39,21 @@ var isNewSEI = getIsNewSEI();
 var isSEI_5 = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'5') >= 0 ? true : false;
 const lnkInfraUnidade = $('#lnkInfraUnidade').attr('onclick');
 const infra_unidade_atual = lnkInfraUnidade ? getParamsUrlPro(lnkInfraUnidade.split("'")[1]).infra_unidade_atual : null;
-var siglaUnidadeAtual = isNewSEI ? $('#lnkInfraUnidade').text().trim() : $('#selInfraUnidades').find('option:selected').text().trim();
-var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
-var idUnidade = isNewSEI ? infra_unidade_atual : $('#selInfraUnidades').val();
-var divInformacao = isNewSEI ? '#divArvoreInformacao' : '#divInformacao';
-var mainMenu = isNewSEI ? '#infraMenu' : '#main-menu';
-var ancoraArvoreDownload = isNewSEI ? 'a.ancoraVisualizacaoArvore' : 'a.ancoraArvoreDownload';
-var infraBarraComandos = isNewSEI ? '.barraBotoesSEI' : '.infraBarraComandos';
-var idMenu = isNewSEI ? '#divInfraSidebarMenu '+mainMenu : '#divInfraAreaTelaE '+mainMenu;
-var infraBarraS = isNewSEI ? '#divInfraBarraSistemaPadraoE' : '#divInfraBarraSistemaE';
-var nameDocInterno = isNewSEI ? 'documento_interno.svg' : 'sei_documento_interno.gif';
-var nomeInstituicao = isNewSEI ? $('#divInfraBarraSistema h6.infraCorBarraSuperior').eq(0).text().trim() : $('#divInfraBarraSuperior label').text().trim();
-var divComandos = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? '#divBotoesControleProcessos' : '#divComandos';
-var ifrVisualizacao_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrConteudoVisualizacao' : 'ifrVisualizacao';
+var siglaUnidadeAtual = SeiPro.sei.adapter.isNewSEI() ? $('#lnkInfraUnidade').text().trim() : $('#selInfraUnidades').find('option:selected').text().trim();
+var frmEditor = SeiPro.sei.adapter.isSEI5() ? $('.infra-editor__editor-completo') : $('#frmEditor');
+var idUnidade = SeiPro.sei.adapter.isNewSEI() ? infra_unidade_atual : $('#selInfraUnidades').val();
+var divInformacao = SeiPro.sei.adapter.isNewSEI() ? '#divArvoreInformacao' : '#divInformacao';
+var mainMenu = SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu';
+var ancoraArvoreDownload = SeiPro.sei.adapter.isNewSEI() ? 'a.ancoraVisualizacaoArvore' : 'a.ancoraArvoreDownload';
+var infraBarraComandos = SeiPro.sei.adapter.isNewSEI() ? '.barraBotoesSEI' : '.infraBarraComandos';
+var idMenu = SeiPro.sei.adapter.isNewSEI() ? '#divInfraSidebarMenu '+mainMenu : '#divInfraAreaTelaE '+mainMenu;
+var infraBarraS = SeiPro.sei.adapter.isNewSEI() ? '#divInfraBarraSistemaPadraoE' : '#divInfraBarraSistemaE';
+var nameDocInterno = SeiPro.sei.adapter.isNewSEI() ? 'documento_interno.svg' : 'sei_documento_interno.gif';
+var nomeInstituicao = SeiPro.sei.adapter.isNewSEI() ? $('#divInfraBarraSistema h6.infraCorBarraSuperior').eq(0).text().trim() : $('#divInfraBarraSuperior label').text().trim();
+var divComandos = SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? '#divBotoesControleProcessos' : '#divComandos';
+var ifrVisualizacao_ = SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrConteudoVisualizacao' : 'ifrVisualizacao';
 var $ifrVisualizacao = '#'+ifrVisualizacao_;
-var ifrArvoreHtml_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrVisualizacao' : 'ifrArvoreHtml';
+var ifrArvoreHtml_ = SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrVisualizacao' : 'ifrArvoreHtml';
 var $ifrArvoreHtml = '#'+ifrArvoreHtml_;
 
 var seiProArvore = (function() {
@@ -565,43 +565,11 @@ var listIconsFontAwesome = ["ad","address-book","address-card","adjust","air-fre
 var invisibleCharacters = /[\0-\x1F\x7F-\x9F\xAD\u0378\u0379\u037F-\u0383\u038B\u038D\u03A2\u0528-\u0530\u0557\u0558\u0560\u0588\u058B-\u058E\u0590\u05C8-\u05CF\u05EB-\u05EF\u05F5-\u0605\u061C\u061D\u06DD\u070E\u070F\u074B\u074C\u07B2-\u07BF\u07FB-\u07FF\u082E\u082F\u083F\u085C\u085D\u085F-\u089F\u08A1\u08AD-\u08E3\u08FF\u0978\u0980\u0984\u098D\u098E\u0991\u0992\u09A9\u09B1\u09B3-\u09B5\u09BA\u09BB\u09C5\u09C6\u09C9\u09CA\u09CF-\u09D6\u09D8-\u09DB\u09DE\u09E4\u09E5\u09FC-\u0A00\u0A04\u0A0B-\u0A0E\u0A11\u0A12\u0A29\u0A31\u0A34\u0A37\u0A3A\u0A3B\u0A3D\u0A43-\u0A46\u0A49\u0A4A\u0A4E-\u0A50\u0A52-\u0A58\u0A5D\u0A5F-\u0A65\u0A76-\u0A80\u0A84\u0A8E\u0A92\u0AA9\u0AB1\u0AB4\u0ABA\u0ABB\u0AC6\u0ACA\u0ACE\u0ACF\u0AD1-\u0ADF\u0AE4\u0AE5\u0AF2-\u0B00\u0B04\u0B0D\u0B0E\u0B11\u0B12\u0B29\u0B31\u0B34\u0B3A\u0B3B\u0B45\u0B46\u0B49\u0B4A\u0B4E-\u0B55\u0B58-\u0B5B\u0B5E\u0B64\u0B65\u0B78-\u0B81\u0B84\u0B8B-\u0B8D\u0B91\u0B96-\u0B98\u0B9B\u0B9D\u0BA0-\u0BA2\u0BA5-\u0BA7\u0BAB-\u0BAD\u0BBA-\u0BBD\u0BC3-\u0BC5\u0BC9\u0BCE\u0BCF\u0BD1-\u0BD6\u0BD8-\u0BE5\u0BFB-\u0C00\u0C04\u0C0D\u0C11\u0C29\u0C34\u0C3A-\u0C3C\u0C45\u0C49\u0C4E-\u0C54\u0C57\u0C5A-\u0C5F\u0C64\u0C65\u0C70-\u0C77\u0C80\u0C81\u0C84\u0C8D\u0C91\u0CA9\u0CB4\u0CBA\u0CBB\u0CC5\u0CC9\u0CCE-\u0CD4\u0CD7-\u0CDD\u0CDF\u0CE4\u0CE5\u0CF0\u0CF3-\u0D01\u0D04\u0D0D\u0D11\u0D3B\u0D3C\u0D45\u0D49\u0D4F-\u0D56\u0D58-\u0D5F\u0D64\u0D65\u0D76-\u0D78\u0D80\u0D81\u0D84\u0D97-\u0D99\u0DB2\u0DBC\u0DBE\u0DBF\u0DC7-\u0DC9\u0DCB-\u0DCE\u0DD5\u0DD7\u0DE0-\u0DF1\u0DF5-\u0E00\u0E3B-\u0E3E\u0E5C-\u0E80\u0E83\u0E85\u0E86\u0E89\u0E8B\u0E8C\u0E8E-\u0E93\u0E98\u0EA0\u0EA4\u0EA6\u0EA8\u0EA9\u0EAC\u0EBA\u0EBE\u0EBF\u0EC5\u0EC7\u0ECE\u0ECF\u0EDA\u0EDB\u0EE0-\u0EFF\u0F48\u0F6D-\u0F70\u0F98\u0FBD\u0FCD\u0FDB-\u0FFF\u10C6\u10C8-\u10CC\u10CE\u10CF\u1249\u124E\u124F\u1257\u1259\u125E\u125F\u1289\u128E\u128F\u12B1\u12B6\u12B7\u12BF\u12C1\u12C6\u12C7\u12D7\u1311\u1316\u1317\u135B\u135C\u137D-\u137F\u139A-\u139F\u13F5-\u13FF\u169D-\u169F\u16F1-\u16FF\u170D\u1715-\u171F\u1737-\u173F\u1754-\u175F\u176D\u1771\u1774-\u177F\u17DE\u17DF\u17EA-\u17EF\u17FA-\u17FF\u180F\u181A-\u181F\u1878-\u187F\u18AB-\u18AF\u18F6-\u18FF\u191D-\u191F\u192C-\u192F\u193C-\u193F\u1941-\u1943\u196E\u196F\u1975-\u197F\u19AC-\u19AF\u19CA-\u19CF\u19DB-\u19DD\u1A1C\u1A1D\u1A5F\u1A7D\u1A7E\u1A8A-\u1A8F\u1A9A-\u1A9F\u1AAE-\u1AFF\u1B4C-\u1B4F\u1B7D-\u1B7F\u1BF4-\u1BFB\u1C38-\u1C3A\u1C4A-\u1C4C\u1C80-\u1CBF\u1CC8-\u1CCF\u1CF7-\u1CFF\u1DE7-\u1DFB\u1F16\u1F17\u1F1E\u1F1F\u1F46\u1F47\u1F4E\u1F4F\u1F58\u1F5A\u1F5C\u1F5E\u1F7E\u1F7F\u1FB5\u1FC5\u1FD4\u1FD5\u1FDC\u1FF0\u1FF1\u1FF5\u1FFF\u200B-\u200F\u202A-\u202E\u2060-\u206F\u2072\u2073\u208F\u209D-\u209F\u20BB-\u20CF\u20F1-\u20FF\u218A-\u218F\u23F4-\u23FF\u2427-\u243F\u244B-\u245F\u2700\u2B4D-\u2B4F\u2B5A-\u2BFF\u2C2F\u2C5F\u2CF4-\u2CF8\u2D26\u2D28-\u2D2C\u2D2E\u2D2F\u2D68-\u2D6E\u2D71-\u2D7E\u2D97-\u2D9F\u2DA7\u2DAF\u2DB7\u2DBF\u2DC7\u2DCF\u2DD7\u2DDF\u2E3C-\u2E7F\u2E9A\u2EF4-\u2EFF\u2FD6-\u2FEF\u2FFC-\u2FFF\u3040\u3097\u3098\u3100-\u3104\u312E-\u3130\u318F\u31BB-\u31BF\u31E4-\u31EF\u321F\u32FF\u4DB6-\u4DBF\u9FCD-\u9FFF\uA48D-\uA48F\uA4C7-\uA4CF\uA62C-\uA63F\uA698-\uA69E\uA6F8-\uA6FF\uA78F\uA794-\uA79F\uA7AB-\uA7F7\uA82C-\uA82F\uA83A-\uA83F\uA878-\uA87F\uA8C5-\uA8CD\uA8DA-\uA8DF\uA8FC-\uA8FF\uA954-\uA95E\uA97D-\uA97F\uA9CE\uA9DA-\uA9DD\uA9E0-\uA9FF\uAA37-\uAA3F\uAA4E\uAA4F\uAA5A\uAA5B\uAA7C-\uAA7F\uAAC3-\uAADA\uAAF7-\uAB00\uAB07\uAB08\uAB0F\uAB10\uAB17-\uAB1F\uAB27\uAB2F-\uABBF\uABEE\uABEF\uABFA-\uABFF\uD7A4-\uD7AF\uD7C7-\uD7CA\uD7FC-\uF8FF\uFA6E\uFA6F\uFADA-\uFAFF\uFB07-\uFB12\uFB18-\uFB1C\uFB37\uFB3D\uFB3F\uFB42\uFB45\uFBC2-\uFBD2\uFD40-\uFD4F\uFD90\uFD91\uFDC8-\uFDEF\uFDFE\uFDFF\uFE1A-\uFE1F\uFE27-\uFE2F\uFE53\uFE67\uFE6C-\uFE6F\uFE75\uFEFD-\uFF00\uFFBF-\uFFC1\uFFC8\uFFC9\uFFD0\uFFD1\uFFD8\uFFD9\uFFDD-\uFFDF\uFFE7\uFFEF-\uFFFB\uFFFE\uFFFF]/g;
 
 var html_initContentPro = '<div class="sheetsUpdate seiProForm" id="sheetsCompleteEtapaForm" style="display:none"></div>';
-if ( $('#sheetsCompleteEtapaForm').length == 0 ) { $(isNewSEI ? '#divInfraBarraSistemaPadrao' : '#divInfraBarraSistema').append(html_initContentPro) }
+if ( $('#sheetsCompleteEtapaForm').length == 0 ) { $(SeiPro.sei.adapter.isNewSEI() ? '#divInfraBarraSistemaPadrao' : '#divInfraBarraSistema').append(html_initContentPro) }
 
-function setSeiVersionPro() {
-    var version = $('img[title*="Sistema Eletr\u00F4nico de Informa\u00E7\u00F5es - Vers\u00E3o"]').attr('title');
-        version = typeof version !== 'undefined' ? version.match(/[0-9.]/g).join('') : false;
-        sessionStorage.setItem('versaoSei', version);
-}
-function getSeiVersionPro() {
-    return sessionStorage.getItem('versaoSei') || false;
-}
-function compareVersionNumbers(v1, v2){
-    function isPositiveInteger(x) {
-        // http://stackoverflow.com/a/1019526/11236
-        return /^\d+$/.test(x);
-    }
-    
-    var v1parts = v1.split('.');
-    var v2parts = v2.split('.');
-
-    // First, validate both numbers are true version numbers
-    function validateParts(parts) {
-        for (var i = 0; i < parts.length; ++i) {
-            if (!isPositiveInteger(parts[i])) return false;
-        }
-        return true;
-    }
-    if (!validateParts(v1parts) || !validateParts(v2parts)) return NaN;
-
-    for (var i = 0; i < v1parts.length; ++i) {
-        if (v2parts.length === i) return 1;
-        if (v1parts[i] === v2parts[i]) continue; 
-        if (v1parts[i] > v2parts[i]) return 1;
-        return -1;
-    }
-    if (v1parts.length != v2parts.length)  return -1;
-    return 0;
-}
+// [migrado para core/sei] setSeiVersionPro
+// [migrado para core/sei] getSeiVersionPro
+// [migrado para core/sei] compareVersionNumbers
 
 /* function _G() { // get  Session Google Name Space
     var _return = localStorage.getItem('SEIPro_google_projetos');
@@ -611,9 +579,7 @@ function compareVersionNumbers(v1, v2){
 
     return _return ? JSON.parse(_return) : false;
 } */
-function _P() { // get  Session Name Space
-    return JSON.parse(sessionStorage.getItem('new_extension'));
-}
+// [migrado para core/sei] _P
 /* function loadAPIGooglePro() {
     if (!!URL_SPRO) $.getScript(URL_SPRO+"js/lib/google_api.js");
 } */
@@ -690,11 +656,7 @@ const initWithRetry = ({
     }
 };
 
-function getIsNewSEI() {
-    var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
-    if (isNewSEI) setOptionsPro('isNewSEI', true);
-    return getOptionsPro('isNewSEI') ? true : isNewSEI;
-}
+// [migrado para core/sei] getIsNewSEI
 
 // FUNÇÃO PARA OBTER O NÚMERO DO PROCESSO
 const getNumProcesso = () => {
@@ -912,16 +874,7 @@ function reloadModalLink() {
         $.getScript(urlModalink);
     }
 }
-function loadStylePro(url, elementTo = $('head'), iframeTo = $('head')) {
-    if (iframeTo.find('link[data-style="seipro-style"]').length == 0) {
-        $("<link/>", {
-            rel: "stylesheet",
-            type: "text/css",
-            "data-style": "seipro-style",
-            href: url
-        }).appendTo(elementTo);
-    }
-}
+// [migrado para core/sei] loadStylePro
 function checkLoadJqueryUI(callback = false) {
     if (typeof jQuery.ui === 'undefined')  {
         $.getScript(URL_SPRO+"js/lib/jquery-ui.min.js", function(){
@@ -1630,12 +1583,8 @@ function arrayMin(arr) {
     });
 }
 
-function arrayMax(arr) {
-    return arr.reduce(function (p, v) {
-        return ( p > v ? p : v );
-    });
-}
-function getHashTagsPro(inputText) {  
+// [removida redeclaração duplicada de arrayMax — definida acima na linha ~958]
+function getHashTagsPro(inputText) {
     var regex = /(?:^|\s)(?:#)([a-zA-Z+-§\d]+)/gm;
     var matches = [];
     var match;
@@ -1659,7 +1608,7 @@ function getBrightnessColor(value) {
 }
 function setIconLoadinBtnSEI(elem, display = true) {
     if (display) {
-        elem.find('img').css('opacity','0').end().append('<span class="botaoSEI_iconBox botaoSEI_loading infraCorBarraSistema" style="'+(isNewSEI ? 'margin: 0;border: 0;width: 100%;height: 46px;background: #fff !important;' : 'margin: 0px 0 0 5px; border: 0.1em solid white;')+'"><i class="fas fa-spin fa-spinner" style="font-size: 17pt; color: #fff;"></i></span>'); 
+        elem.find('img').css('opacity','0').end().append('<span class="botaoSEI_iconBox botaoSEI_loading infraCorBarraSistema" style="'+(SeiPro.sei.adapter.isNewSEI() ? 'margin: 0;border: 0;width: 100%;height: 46px;background: #fff !important;' : 'margin: 0px 0 0 5px; border: 0.1em solid white;')+'"><i class="fas fa-spin fa-spinner" style="font-size: 17pt; color: #fff;"></i></span>'); 
     } else {
         elem.find('img').css('opacity','1').end().find('.botaoSEI_loading').remove();
     }
@@ -2092,7 +2041,7 @@ function getLinksProcessoAjax(id_procedimento, callback) {
 }
 function getHistoricoProcessoUrlAjax(htmlArvore) {
     var $htmlArvore = $(htmlArvore);
-    if (isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0) {
+    if (SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0) {
         var onclick = $htmlArvore.find('#divConsultarAndamento a').attr('onclick');
         if (typeof onclick !== 'undefined' && onclick !== '') {
             return onclick.split("'")[1];
@@ -3024,7 +2973,7 @@ function getAjaxListaAtribuicao() {
     }
 }
 function getAjaxListaMarcador() {
-    var href = isNewSEI
+    var href = SeiPro.sei.adapter.isNewSEI()
             ? $(divComandos+' a[onclick*="andamento_marcador_cadastrar"]').attr('onclick') 
             : $(divComandos+' a[onclick*="andamento_marcador_gerenciar"]').attr('onclick');
         href = (typeof href !== 'undefined') ? href.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g')) : false;
@@ -3671,14 +3620,14 @@ function getActionsOnSendProcess() {
     });
     htmlBoxActions =    '<span id="divSinRemoveAttributes" style="margin: 0 10px;display: inline-block;">'+
                         '   <span style="margin: 0 10px;display: inline-block;">'+
-                        (isNewSEI ? 
+                        (SeiPro.sei.adapter.isNewSEI() ? 
                         '      <div class="infraCheckboxDiv "><input type="checkbox" id="chkSinRemoverMarcadores" name="chkSinRemoverMarcadores" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinRemoverMarcadores"></label></div>' : 
                         '      <input type="checkbox" id="chkSinRemoverMarcadores" name="chkSinRemoverMarcadores" class="infraCheckbox" tabindex="0">'
                         )+
                         '     <label id="lblSinRemoverMarcadores" for="chkSinRemoverMarcadores" accesskey="" class="infraLabelCheckbox">Remover marcadores</label>'+
                         '   </span>'+
                         '   <span style="margin: 0 10px;display: inline-block;">'+
-                        (isNewSEI ? 
+                        (SeiPro.sei.adapter.isNewSEI() ? 
                         '      <div class="infraCheckboxDiv "><input type="checkbox" id="chkSinRemoverAtribuicao" name="chkSinRemoverAtribuicao" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinRemoverAtribuicao"></label></div>' : 
                         '      <input type="checkbox" id="chkSinRemoverAtribuicao" name="chkSinRemoverAtribuicao" class="infraCheckbox" tabindex="0">'
                         )+
@@ -3717,7 +3666,7 @@ function getFaviconNrProcesso() {
             });
             favicon.badge(nrProcNVisualizados);
             
-            if (isNewSEI) {
+            if (SeiPro.sei.adapter.isNewSEI()) {
                 setTimeout(() => {
                     var icon = $('link[rel="shortcut icon"]').attr('href');
                     $('link[rel="icon"]').attr('href',icon);
@@ -5150,7 +5099,7 @@ function setPanelResize(element, name) {
     if (getOptionsPro('panelHeight_'+name) != '') {
         $(element).css('height',getOptionsPro('panelHeight_'+name)+'px');
     }
-    if (isNewSEI && $('#divRecebidosAreaPaginacaoInferior').is(':visible')) {
+    if (SeiPro.sei.adapter.isNewSEI() && $('#divRecebidosAreaPaginacaoInferior').is(':visible')) {
         $(element).find('.ui-resizable-handle.ui-resizable-s').css('bottom','-30px');
     }
     $(element)
@@ -6029,26 +5978,8 @@ const appendAutocompleteProc = (this_, elem) => {
         elem.focus();
     }, 100);
 };
-function getConfigValue(name) {
-    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
-    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
-        dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
-
-    return (dataValuesConfig !== null) ? dataValuesConfig : false;
-}
-function verifyConfigValue(name) {
-    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
-    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
-        dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
-    
-    if (dataValuesConfig == true ) {
-        return true;
-    } else {
-        return false;
-    }
-}
+// [migrado para core/sei] getConfigValue
+// [migrado para core/sei] verifyConfigValue
 function limitConfigValue(name) {
     return !checkHostLimit() ? checkConfigValue(name) : false;
 }
@@ -6363,33 +6294,8 @@ function logoutSheetPro() {
     removeOptionsPro('configBaseSelectedFormPro');
     removeOptionsPro('projetosGanttActiveTabs');
 } */
-function uniqPro(a) {
-    return a.sort().filter(function(item, pos, ary) {
-        return !pos || item != ary[pos - 1];
-    })
-}
-function getParamsUrlPro(url) {
-    var params = {};
-    if (typeof url !== 'undefined' && url.indexOf('?') !== -1 && url.indexOf('&') !== -1) {
-        var vars = url.split('?')[1].split('&');
-        for (var i = 0; i < vars.length; i++) {
-            var pair = vars[i].split('=');
-            var key = pair.shift();
-            var value = pair.join('=');
-            if (typeof value === 'undefined') {
-                value = '';
-            }
-            value = value.replace(/\+/g, ' ');
-            try {
-                value = decodeURIComponent(value);
-            } catch (error) {
-                console.warn('Parametro de URL malformado ignorado em getParamsUrlPro:', value, error);
-            }
-            params[key] = value;
-        }
-        return params;
-    } else { return false; }
-}
+// [migrado para core/sei] uniqPro
+// [migrado para core/sei] getParamsUrlPro
 function dynamicColors() {
     var r = Math.floor(Math.random() * 255);
     var g = Math.floor(Math.random() * 255);
@@ -7311,9 +7217,7 @@ function readCookiePro(name) {
 function eraseCookiePro(name) {
     createCookiePro(name, "", -1);
 }
-function removeAcentos(str) {
-    return (typeof str !== 'undefined' && str !== null && typeof str.normalize === 'function') ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
-}
+// [migrado para core/sei] removeAcentos
 function encodeURI_toHex(str){
     var hex, i;
     var result = "";
@@ -7354,29 +7258,8 @@ function unicodeToChar(text) {
         return text;
     }
  }
-function capitalizeFirstLetter(string) {
-    if (!string || typeof string !== 'string' || string.trim() === '') {
-        return '';
-    }
-    // return string.charAt(0).toUpperCase() + string.slice(1);        string = string.toLowerCase();
-    var excetWords = ['a', '\u00E0', 'algo', 'algu\u00E9m', 'algum', 'alguma', 'algumas', 'alguns', 'ao', 'aos', 'aquela', 'aquelas', 'aquele', 'aqueles', 'aquilo', 'as', '\u00E0s', 'cada', 'certa', 'certas', 'certo', 'certos', 'com', 'comigo', 'como', 'conosco', 'consigo', 'contigo', 'convosco', 'cuja', 'cujas', 'cujo', 'cujos', 'da', 'das', 'de', 'dessa', 'dessas', 'desse', 'desses', 'desta', 'destas', 'do', 'dos', 'dum', 'duma', 'dumas', 'duns', 'e', '\u00E9', 'ela', 'elas', 'ele', 'eles', 'em', 'entre', 'essa', 'essas', 'esse', 'esses', 'esta', 'estas', 'este', 'estes', 'eu', 'isso', 'isto', 'la', 'las', 'lhe', 'lhes', 'lo', 'los', 'me', 'mesma', 'mesmas', 'mesmo', 'mesmos', 'meu', 'meus', 'mim', 'minha', 'minhas', 'muita', 'muitas', 'muito', 'muitos', 'na', 'nada', 'n\u00E3o', 'nas', 'nenhum', 'nenhuma', 'nenhumas', 'nenhuns', 'ningu\u00E9m', 'no', 'nos', 'n\u00F3s', 'nossa', 'nossas', 'nosso', 'nossos', 'num', 'numa', 'numas', 'nuns', 'o', 'onde', 'os', 'ou', 'outra', 'outras', 'outrem', 'outro', 'outros', 'para', 'pela', 'pelas', 'pelo', 'por', 'pouca', 'poucas', 'pouco', 'poucos', 'quais', 'quaisquer', 'qual', 'qualquer', 'quando', 'quanta', 'quantas', 'quanto', 'quantos', 'que', 'quem', 's\u00E3o', 'se', 'seja', 'sem', 'seu', 'seus', 'si', 'sob', 'sobre', 'sua', 'suas', 'tanta', 'tantas', 'tanto', 'tantos', 'te', 'teu', 'teus', 'ti', 'toda', 'todas', 'todo', 'todos', 'tu', 'tua', 'tuas', 'tudo', 'um', 'uma', 'umas', 'uns', 'v\u00E1ria', 'v\u00E1rias', 'v\u00E1rio', 'v\u00E1rios', 'voc\u00EA', 'voc\u00EAs', 'vos', 'v\u00F3s', 'vossa', 'vossas', 'vosso', 'vossos']
-    var _return = ( string.indexOf(' ') === -1 ) ? string[0].toUpperCase() + string.substring(1).toLowerCase() : string.split(' ').map((s, index) => {
-            if (excetWords.includes(s.toLowerCase()) && index != 0 ) {
-                return s.toLowerCase()
-            } else if (romanToInt(s) > 0) {
-                return s.toUpperCase()
-            } else {
-                return s[0].toUpperCase() + s.substring(1).toLowerCase()
-            }
-        }).join(' ');
-    return _return;
-}
-function randomString(length) {
-    var result = '';
-    var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
-    return result;
-}
+// [migrado para core/sei] capitalizeFirstLetter
+// [migrado para core/sei] randomString
 function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -7491,7 +7374,7 @@ function checkDadosIframeProcessoPro(mode) {
                 getLinksArvorePro(_ifrArvore);
                 getDadosPesquisaPro(iframe, mode);
                 getListaAtribuicaoProcesso(ifrArvoreElem, mode);
-                unidade = isNewSEI ? $('#lnkInfraUnidade').text() : $('#selInfraUnidades').find('option:selected').text().trim();
+                unidade = SeiPro.sei.adapter.isNewSEI() ? $('#lnkInfraUnidade').text() : $('#selInfraUnidades').find('option:selected').text().trim();
             } else {
                 checkDadosIframeProcessoPro(mode);
             }
@@ -7590,7 +7473,7 @@ function getLisDocsProcessoPro() {
 }
 function getLinksArvorePro(_ifrArvore) { 
     
-    if (isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0) {
+    if (SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0) {
         var link = _ifrArvore.find('#divConsultarAndamento a').attr('onclick');
             link = typeof link !== 'undefined' ? link.split("'")[1] : false;
             if (link) getDadosAndamentoPro(link);
@@ -7738,7 +7621,7 @@ function getLinksProcessoPro(_ifrVisualizacao, _ifrArvore) {
             }
         }
     });
-    if (isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0) {
+    if (SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0) {
         linksArvore = getLinksArvoreAjax(_ifrArvore.find('html').html());
         dadosProcessoPro.listLinks = linksArvore;
     } else {
@@ -8396,11 +8279,11 @@ function mergeAllAndamentosProcesso(callback = false) {
         var arrayLinksArvoreAll = getTreeLinksAllSession();
         var id_procedimento = getParamsUrlPro(_ifrArvore.attr('src')).id_procedimento;
         var processo = ifrArvore.find(`a[target="${ifrVisualizacao_}"]`).eq(0).text().trim();
-        var linkHistorico = isSEI_5 
+        var linkHistorico = SeiPro.sei.adapter.isSEI5() 
         ? ifrArvore.find('#divConsultarAndamento a').attr('onclick').match(/consultarAndamento\('([^']+)'\)/)?.[1]
         : typeof arrayLinksArvoreAll !== 'undefined' ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('procedimento_consultar_historico') !== -1) }) : [];
         if (linkHistorico.length > 0) {
-            var linkHistorico_ = isSEI_5 ? linkHistorico : linkHistorico[0];
+            var linkHistorico_ = SeiPro.sei.adapter.isSEI5() ? linkHistorico : linkHistorico[0];
             var listProc = {processo: processo, id_procedimento: id_procedimento};
             getDadosHistoricoUrlPro(linkHistorico_, listProc, true, function(andamento){
                 var dadosProcessoPro = (typeof pullDadosProcessoSession().listAndamento !== 'undefined') ? pullDadosProcessoSession() : dadosProcessoPro;
@@ -8907,43 +8790,43 @@ function getDocumentosActions() {
     var dadosProcesso = pullDadosProcessoSession();
     var listDocumentos = getTreeDocumentsSession(dadosProcesso);
         var htmlBox =   '<div id="iconsActions">'+
-                        '   <a class="newLink documento_ciencia" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ci\u00EAncia\')" data-action="documento_ciencia" data-icon="'+(isNewSEI ? 'ciencia' : 'sei_ciencia')+'">'+
+                        '   <a class="newLink documento_ciencia" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ci\u00EAncia\')" data-action="documento_ciencia" data-icon="'+(SeiPro.sei.adapter.isNewSEI() ? 'ciencia' : 'sei_ciencia')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-thumbs-up azulColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
-                        '   <a class="newLink documento_visualizar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento\')" data-action="documento_visualizar" data-icon="'+(isNewSEI ? 'consultar_alterar_protocolo' : 'sei_consultar_alterar_protocolo')+'">'+
+                        '   <a class="newLink documento_visualizar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento\')" data-action="documento_visualizar" data-icon="'+(SeiPro.sei.adapter.isNewSEI() ? 'consultar_alterar_protocolo' : 'sei_consultar_alterar_protocolo')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-download azulColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
-                        '   <a class="newLink documento_excluir" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Excluir\')" data-action="documento_excluir" data-icon="'+(isNewSEI ? 'protocolo_excluir' : 'sei_lixeira')+'">'+
+                        '   <a class="newLink documento_excluir" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Excluir\')" data-action="documento_excluir" data-icon="'+(SeiPro.sei.adapter.isNewSEI() ? 'protocolo_excluir' : 'sei_lixeira')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-trash-alt vermelhoColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
-                        '   <a class="newLink documento_alterar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Alterar Sigilo\')" data-action="documento_alterar" data-icon="'+(isNewSEI ? 'documento_alterar' : 'sei_consultar_alterar_protocolo')+'">'+
+                        '   <a class="newLink documento_alterar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Alterar Sigilo\')" data-action="documento_alterar" data-icon="'+(SeiPro.sei.adapter.isNewSEI() ? 'documento_alterar' : 'sei_consultar_alterar_protocolo')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-key laranjaColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
-                        '   <a class="newLink documento_assinar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Assinar\')" data-action="documento_assinar" data-icon="'+(isNewSEI ? 'documento_assinar' : 'sei_assinar')+'">'+
+                        '   <a class="newLink documento_assinar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Assinar\')" data-action="documento_assinar" data-icon="'+(SeiPro.sei.adapter.isNewSEI() ? 'documento_assinar' : 'sei_assinar')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-pen-alt laranjaColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
-                        '   <a class="newLink editor_montar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Cancelar Assinatura\')" data-action="editor_montar" data-icon="'+(isNewSEI ? 'documento_editar_conteudo' : 'sei_editar_conteudo')+'">'+
+                        '   <a class="newLink editor_montar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Cancelar Assinatura\')" data-action="editor_montar" data-icon="'+(SeiPro.sei.adapter.isNewSEI() ? 'documento_editar_conteudo' : 'sei_editar_conteudo')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-ban vermelhoColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
                         '       </span>'+
                         '   </a>'+
-                        '   <a class="newLink documento_duplicar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Duplicar Documento\')" data-action="documento_duplicar" data-icon="'+(isNewSEI ? 'documento_alterar' : 'sei_consultar_alterar_protocolo')+'">'+
+                        '   <a class="newLink documento_duplicar" onclick="batchActionsPro(this)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Duplicar Documento\')" data-action="documento_duplicar" data-icon="'+(SeiPro.sei.adapter.isNewSEI() ? 'documento_alterar' : 'sei_consultar_alterar_protocolo')+'">'+
                         '       <span class="fa-layers fa-fw">'+
                         '           <i class="fas fa-copy azulColor"></i>'+
                         '           <span class="fa-layers-counter" style="display:none">1</span>'+
@@ -8954,7 +8837,7 @@ function getDocumentosActions() {
                         '   <table id="actionsTablePro" style="font-size: 8pt !important;width: 100%;" class="seiProForm tabelaControle tableDialog tableInfo tableZebra">'+
                         '        <thead>'+
                         '            <tr class="tableHeader" onmouseout="infraTooltipOcultar();">'+
-                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><span class="lblInfraCheck" aria-hidden="true"></span><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
+                        '                <th class="tituloControle" style="text-align: center;width: 50px;"><span class="lblInfraCheck" aria-hidden="true"></span><a style="text-align: center; display: block;" id="lnkInfraCheck" onclick="setSelectAllTr(this, \'SemGrupo\');"><img src="/infra_css/'+(SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'+
                         '                <th class="tituloControle" style="text-align: center;">N\u00BA SEI</th>'+
                         '                <th class="tituloControle" style="text-align: center;">Documento</th>'+
                         '                <th class="tituloControle" style="text-align: center;">Assinatura</th>'+
@@ -9302,7 +9185,7 @@ function setDataDocs(htmlArvore, id_procedimento) {
                 listDocs.push({
                     nrNo,
                     nome: `${props[5]},${props[6]}`,
-                    numero: isNewSEI ? split_doc[25] : split_doc[21],
+                    numero: SeiPro.sei.adapter.isNewSEI() ? split_doc[25] : split_doc[21],
                     id_documento: split_doc[3],
                     cancelado: props[7].startsWith('Documento Cancelado') ? true : false,
                     externo: props[9].includes('documento_interno') || /email/i.test(split_doc[15]) ? false : true,
@@ -9313,7 +9196,7 @@ function setDataDocs(htmlArvore, id_procedimento) {
                 listDocs.push({
                     nrNo,
                     nome: props[5],
-                    numero: isNewSEI ? split_doc[25] : split_doc[21],
+                    numero: SeiPro.sei.adapter.isNewSEI() ? split_doc[25] : split_doc[21],
                     id_documento: split_doc[3],
                     cancelado: props[6].startsWith('Documento Cancelado') ? true : false,
                     externo: props[9].includes('documento_interno') || /email/i.test(split_doc[15]) ? false : true,
@@ -9335,7 +9218,7 @@ function setDataDocs(htmlArvore, id_procedimento) {
 }
 function setCapaProcesso(loop = true) {
     var ifrArvore = $('#ifrArvore').contents();
-    var ifrVisualizacao = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 
+    var ifrVisualizacao = SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 
                         ? $($ifrVisualizacao).contents().find($ifrArvoreHtml).contents()
                         : $($ifrVisualizacao).contents() 
     var dadosProcessoSession = pullDadosProcessoSession();
@@ -9484,7 +9367,7 @@ function setCapaProcesso(loop = true) {
 
     var capaRoot = capaDoc.createElement('div');
     capaRoot.id = 'capaProcessoPro';
-    if (isNewSEI) capaRoot.className = 'newSEI_capaProcessoPro';
+    if (SeiPro.sei.adapter.isNewSEI()) capaRoot.className = 'newSEI_capaProcessoPro';
 
     var infoSide = capaDoc.createElement('div');
     infoSide.style.cssText = 'float:right;max-width:40%;';
@@ -9651,7 +9534,7 @@ function setCapaProcesso(loop = true) {
     if (rootSelected) {
         ifrVisualizacao.find('#divArvoreHtml').prepend(capaRoot);
         ifrVisualizacao.find(divInformacao).hide();
-        if (isSEI_5) ifrVisualizacao.find('#divArvoreHtml').removeClass('d-flex');
+        if (SeiPro.sei.adapter.isSEI5()) ifrVisualizacao.find('#divArvoreHtml').removeClass('d-flex');
         replaceColorsIcons(ifrVisualizacao.find('#tagUserColorPro'));
         if (typeof $().qrcode === 'function') {
             ifrVisualizacao.find('.qrcapa').html('').qrcode({
@@ -11789,6 +11672,35 @@ const resolveCaptchaAI = async (prompt_text, imageBase64 = null) => {
     const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${perfilGemini.KEY_USER}`;
     const data = getDataBodyResolveCaptcha(prompt_text, imageBase64); // <-- INCLUINDO A IMAGEM
 
+    // Fase 4 — rede remota delegada ao service worker (centraliza CORS/host).
+    // facade-com-fallback: usa SeiPro.core.net se carregado, senão o XHR legado.
+    var net = (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.net);
+    if (net) {
+        return net.fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: data
+        }).then(function (response) {
+            if (response.status === 200) {
+                try {
+                    return JSON.parse(response.body).candidates[0].content.parts[0].text;
+                } catch (e) {
+                    return Promise.reject('Erro ao processar a resposta da IA');
+                }
+            }
+            try {
+                var error = JSON.parse(response.body);
+                var errorMsg = error?.error?.message ?? 'Erro inesperado';
+                console.error(errorMsg);
+                return Promise.reject(errorMsg);
+            } catch (e) {
+                return Promise.reject('Erro inesperado');
+            }
+        }, function () {
+            return Promise.reject('Erro inesperado');
+        });
+    }
+
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', url);
@@ -12053,7 +11965,7 @@ function noNotifyPro(this_) {
     }
 }
 function checkPageVisualizacao() {
-    const ifrV = isSEI_5 
+    const ifrV = SeiPro.sei.adapter.isSEI5() 
     ? $($ifrVisualizacao).contents().find('#ifrVisualizacao').contents()
     : $($ifrVisualizacao).contents();
 
@@ -12075,7 +11987,7 @@ function addUrgentPro(this_) {
     }
 }
 function setNewDocDefault() {
-    var ifrVisualizacao = isSEI_5 
+    var ifrVisualizacao = SeiPro.sei.adapter.isSEI5() 
         ? $($ifrVisualizacao).contents().find('#ifrVisualizacao').contents()
         : $($ifrVisualizacao).contents();
         ifrVisualizacao.find('#txtProtocoloDocumentoTextoBase').removeAttr('maxlength'); // remove atributo de largura do campo de modelo de documento
@@ -12478,7 +12390,7 @@ function appendTooltipOnButtons() {
     });
 }
 function insertIconNewDoc() {
-    if (!isNewSEI) waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', "a.botaoSEI", appendIconNewDoc);
+    if (!SeiPro.sei.adapter.isNewSEI()) waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', "a.botaoSEI", appendIconNewDoc);
 }
 function appendIconNewDoc(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
@@ -12496,7 +12408,7 @@ function appendIconNewDoc(loop = true) {
     }
 }
 function initMoveIconDeleteToEnd() {
-    if (!isNewSEI) waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', "a.botaoSEI", moveIconDeleteToEnd);
+    if (!SeiPro.sei.adapter.isNewSEI()) waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', "a.botaoSEI", moveIconDeleteToEnd);
 }
 function moveIconDeleteToEnd(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
@@ -12760,10 +12672,10 @@ function setColorSlimPro(backgroundColor) {
                         +"      -webkit-background-clip: text;\n"
                         +"  }\n"
                         +"  .seiSlim.dark-mode .panelHome .iconBoxSlim:hover .newIconTitle, \n"
-                        +"  .seiSlim #divInfraAreaTelaE "+(isNewSEI ? '#infraMenu' : '#main-menu')+" li a:hover:before { \n"
+                        +"  .seiSlim #divInfraAreaTelaE "+(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu')+" li a:hover:before { \n"
                         +"      color: "+color+" !important;\n"
                         +"  }\n"
-                        +"  .seiSlim #divInfraAreaTelaE "+(isNewSEI ? '#infraMenu' : '#main-menu')+" li a:before { \n"
+                        +"  .seiSlim #divInfraAreaTelaE "+(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu')+" li a:before { \n"
                         +"      color: "+backgroundColor+" !important;\n"
                         +"  }\n"
                         +"  .seiSlim.seiSlim_parent div#divInfraBarraSistemaPadrao, \n"
@@ -12781,9 +12693,9 @@ function setColorSlimPro(backgroundColor) {
                         +"  .seiSlim .iconBoxSlim.botaoSEI:hover {\n"
                         +"      background: "+backgroundColor+" !important;\n"
                         +"  }\n"
-                        +"  .seiSlim.dark-mode #divInfraAreaTelaE "+(isNewSEI ? '#infraMenu' : '#main-menu')+" li a:hover,\n"
+                        +"  .seiSlim.dark-mode #divInfraAreaTelaE "+(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu')+" li a:hover,\n"
                         +"  .seiSlim "+divComandos+" a.botaoSEI:hover,\n"
-                        +"  .seiSlim #divInfraAreaTelaE "+(isNewSEI ? '#infraMenu' : '#main-menu')+" li a:hover {\n"
+                        +"  .seiSlim #divInfraAreaTelaE "+(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu')+" li a:hover {\n"
                         +"      background: "+backgroundColor+" !important;\n"
                         +"      color: "+color+" !important;\n"
                         +"  }\n"
@@ -12800,15 +12712,15 @@ function setColorSlimPro(backgroundColor) {
                         +"      -webkit-background-clip: text;\n"
                         +"  }\n"
                         +"  .seiSlim .iconBoxSlim.botaoSEI:hover i.fas, \n"
-                        +"  .seiSlim #divInfraAreaTelaE "+(isNewSEI ? '#infraMenu' : '#main-menu')+" li a:hover i.fas, \n"
-                        +"  .seiSlim.dark-mode #divInfraAreaTelaE "+(isNewSEI ? '#infraMenu' : '#main-menu')+" li a:hover i.fas, \n"
+                        +"  .seiSlim #divInfraAreaTelaE "+(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu')+" li a:hover i.fas, \n"
+                        +"  .seiSlim.dark-mode #divInfraAreaTelaE "+(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu')+" li a:hover i.fas, \n"
                         +"  .seiSlim.dark-mode .iconBoxSlim.botaoSEI:hover .newIconTitle, \n"
                         +"  .seiSlim .iconBoxSlim.botaoSEI:hover .newIconTitle {\n"
                         +"      color: "+color+" !important;\n"
                         +"      background: -webkit-gradient(linear, left top, left bottom, from("+color+"), to("+color+"));\n"
                         +"      -webkit-background-clip: text;\n"
                         +"  }\n"
-                        +"  .seiSlim #divInfraAreaTelaE "+(isNewSEI ? '#infraMenu' : '#main-menu')+" li a i.fas {\n"
+                        +"  .seiSlim #divInfraAreaTelaE "+(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu')+" li a i.fas {\n"
                         +"      background: -webkit-gradient(linear, left top, left bottom, from("+backgroundColor+"), to("+backgroundColor+"));\n"
                         +"      -webkit-background-clip: text;\n"
                         +"  }\n"
@@ -12839,12 +12751,12 @@ function setBtnRight(this_) {
 function initToolbarOnTop() {
     var toolbar = $(divComandos);
     if (toolbar.length) {
-        var topWindow = isNewSEI ? 80 : 200;
+        var topWindow = SeiPro.sei.adapter.isNewSEI() ? 80 : 200;
         var topElement = toolbar.offset().top;
             topElement = topElement-topWindow;
         var toolbarFixedSelector = divComandos + '.fixed';
         var updateToolbarFixedPosition = function() {
-            if (!isNewSEI || divComandos !== '#divBotoesControleProcessos') return;
+            if (!SeiPro.sei.adapter.isNewSEI() || divComandos !== '#divBotoesControleProcessos') return;
             var fixedToolbar = $(toolbarFixedSelector);
             var menuButton = $('#divInfraBarraSistemaPadraoD #lnkInfraMenuSistema:visible').first();
             if (!menuButton.length) {
@@ -12866,7 +12778,7 @@ function initToolbarOnTop() {
                 transform: 'none'
             });
         };
-        $(isNewSEI ? '#divInfraAreaTelaD' : window).scroll(function(){
+        $(SeiPro.sei.adapter.isNewSEI() ? '#divInfraAreaTelaD' : window).scroll(function(){
             if ($(this).scrollTop() > topWindow) {
                 delayCrash = true;
                 setTimeout(function(){ delayCrash = false }, 300);
@@ -12886,7 +12798,7 @@ function initToolbarOnTop() {
     }
 }
 function getUnidadesPermissaoSEI() {
-    if (isNewSEI) {
+    if (SeiPro.sei.adapter.isNewSEI()) {
         if (sessionStorageRestorePro('unidadesPermissaoSEIPro') !== null) {
             setSelectUnidadePro();
         } else {
@@ -12949,7 +12861,7 @@ function changeUnidadeSEI(url, idUnidade) {
     }
 }
 function setSelectUnidadePro() {
-    if (isNewSEI) {
+    if (SeiPro.sei.adapter.isNewSEI()) {
         let url = $('a#lnkInfraUnidade').attr('onclick');
             url = typeof url !== 'undefined' ? url.split("'")[1] : false;
         let listUnidades = sessionStorageRestorePro('unidadesPermissaoSEIPro');
@@ -13451,7 +13363,7 @@ function setSizeIframePro(tLeft, saveSize = true) {
                           +"  }\n"
                           +"</style>");
     if (saveSize) setOptionsPro('iframeSizeSlimPro',tLeft);
-    if (isNewSEI) $('#divIframeArvore').css('width',tLeft);
+    if (SeiPro.sei.adapter.isNewSEI()) $('#divIframeArvore').css('width',tLeft);
 }
 /*
 if (verifyConfigValue('menususpenso')) {
@@ -13522,7 +13434,7 @@ function infraMenuSistemaEsquema() {
 }
 function infraMenuSistemaEsquemaPro() {
     if (!delayCrash) {
-        if (isNewSEI) {
+        if (SeiPro.sei.adapter.isNewSEI()) {
             if (!checkMenuVisible()) {
                 showMenuSEIPro();
             } else {
@@ -13540,7 +13452,7 @@ function infraMenuSistemaEsquemaPro() {
     }
 }
 function hideMenuSEIPro() {
-    if (verifyConfigValue('menususpenso') && !isNewSEI) {
+    if (verifyConfigValue('menususpenso') && !SeiPro.sei.adapter.isNewSEI()) {
         $('#divInfraAreaTelaE').hide({ effect: 'slide', direction: 'left', duration: 300, complete: function(){ 
                 $(this).attr('style','display:none;');
         }});
@@ -13554,7 +13466,7 @@ function hideMenuSEIPro() {
         $('#divInfraAreaTelaD').css({'width': '99%'});
         setOptionsPro('showMenuSEIPro',true);
         $('body').addClass('seiSlim_hidemenu');
-        if (isNewSEI) {
+        if (SeiPro.sei.adapter.isNewSEI()) {
             $("#divInfraAreaTelaE").addClass("infraMenuAnimacao");
             $("#divInfraAreaTelaE").addClass("text-truncate");
             $("#divInfraAreaTelaE").removeClass("infraAreaTelaEExibeGrande");
@@ -13568,7 +13480,7 @@ function hideMenuSEIPro() {
     }
 }
 function showMenuSEIPro() {
-    if (verifyConfigValue('menususpenso') && !isNewSEI) {
+    if (verifyConfigValue('menususpenso') && !SeiPro.sei.adapter.isNewSEI()) {
         if (typeof $.easing !== 'undefined') {
             $('#divInfraAreaTelaE').show({ effect: 'slide', direction: 'left', duration: 300, complete: function(){ 
                 $(this).removeAttr('style'); 
@@ -13580,7 +13492,7 @@ function showMenuSEIPro() {
         $('#divInfraAreaTelaD').css({'width': '79%'});
         setOptionsPro('showMenuSEIPro',false);
         $('body').removeClass('seiSlim_hidemenu');
-        if (isNewSEI) {
+        if (SeiPro.sei.adapter.isNewSEI()) {
             $("#divInfraAreaTelaE").addClass("text-truncate");
             $("#divInfraAreaTelaE").addClass("infraMenuAnimacao");
             $("#divInfraAreaTelaE").addClass("infraAreaTelaEExibeGrande");
@@ -13769,7 +13681,7 @@ function initModalNewSEISigiloso(TimeOut = 1000) {
     })();
     if (window !== sigilosoHost) { return; }
     if (sigilosoHost.__SEI_PRO_SIGILOSO_INIT_DONE__) { return; }
-    if (TimeOut <= 0 || !isNewSEI ||  !checkProcessoSigiloso() || $('#divInfraSparklingModalContent').is(':visible')) { return; }
+    if (TimeOut <= 0 || !SeiPro.sei.adapter.isNewSEI() ||  !checkProcessoSigiloso() || $('#divInfraSparklingModalContent').is(':visible')) { return; }
     if (typeof $.modalLink !== 'undefined' && typeof $().resizable !== 'undefined') { 
         if (checkProcessoSigiloso()) { 
             try {
@@ -13878,8 +13790,8 @@ function fnJqueryPro() {
             })
         }
     });
-    if (isNewSEI) $('body').addClass('newSEI');
-    if (isSEI_5) $('body').addClass('isSEI_5');
+    if (SeiPro.sei.adapter.isNewSEI()) $('body').addClass('newSEI');
+    if (SeiPro.sei.adapter.isSEI5()) $('body').addClass('SeiPro.sei.adapter.isSEI5()');
     initModalNewSEISigiloso();
     if (typeof window.__seiProReadyResolve === 'function') {
         window.__seiProReadyResolve(window);
@@ -13889,19 +13801,11 @@ function fnJqueryPro() {
 $(document).ready(function () { fnJqueryPro() });
 
 
-function loadStyleDesign(body = $('body'), secondClass = false) {
-    if (localStorage.getItem('seiSlim')) {
-        if (typeof body.addClass === 'function') body.addClass("seiSlim");
-        if (secondClass) body.addClass("seiSlim_"+secondClass);
-        if (localStorage.getItem('darkModePro')) {
-            if (typeof body.addClass === 'function') body.addClass("dark-mode");
-        }
-    }
-}
+// [migrado para core/sei] loadStyleDesign
 function loadScriptVisualizacaoPro() {
     if ( $($ifrVisualizacao).length ) {
         $($ifrVisualizacao).off("load.seipro").on("load.seipro", function() {
-            if (isSEI_5) {
+            if (SeiPro.sei.adapter.isSEI5()) {
                 var $ifrInternoVisualizacao = $($ifrVisualizacao).contents().find('#ifrVisualizacao');
                 $ifrInternoVisualizacao.off("load.seipro").on("load.seipro", function() {
                     scriptVisualizacaoPro($ifrInternoVisualizacao.contents());
@@ -13941,7 +13845,7 @@ function initLoadSeiProArvore(TimeOut = 1000) {
     }
 }
 // Subscreve funcao nativa do SEI
-if (localStorage.getItem('seiSlim') && !isNewSEI) {
+if (localStorage.getItem('seiSlim') && !SeiPro.sei.adapter.isNewSEI()) {
     function movemouse(e) { 
         if (e == null) { e = window.event } 
         if (e.button <= 1 && isdrag){
@@ -13971,7 +13875,7 @@ if (localStorage.getItem('seiSlim') && !isNewSEI) {
         }
         return false;
     }
-} else if (localStorage.getItem('seiSlim') && isNewSEI && typeof $().resizable === 'function') {
+} else if (localStorage.getItem('seiSlim') && SeiPro.sei.adapter.isNewSEI() && typeof $().resizable === 'function') {
     loadResizeIframeArvoreNewSEI();
 }
 function loadResizeIframeArvoreNewSEI() {

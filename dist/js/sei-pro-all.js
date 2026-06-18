@@ -1,7 +1,7 @@
 const loadSEIProAll = true;
 var pagesInfiniteSearch = [];
 var frmPesquisaProtocolo = ($('#seiSearch').length) ? '#seiSearch' : '#frmPesquisaProtocolo';
-var divPaginas = typeof isNewSEI !== 'undefined' && isNewSEI ? 'div.pesquisaPaginas' : 'div.paginas';
+var divPaginas = typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? 'div.pesquisaPaginas' : 'div.paginas';
 
 function getTableInfiniteSearch(ifrView, formID, tableID, index) {
     // console.log(pagesInfiniteSearch, index, pagesInfiniteSearch);
@@ -47,13 +47,13 @@ function getTableInfiniteSearch(ifrView, formID, tableID, index) {
     }
 }
 function getInfiniteSearch() {
-    var nrPage = parseInt($(isNewSEI ? 'div.pesquisaPaginas .pesquisaPaginaSelecionada' : 'div.paginas b').text()+'0');
-    if ($(isNewSEI ? 'div.pesquisaPaginas a' : 'div.paginas span.pequeno').last().text() == 'Pr\u00F3xima') {
-        getTableInfiniteSearch($('#divInfraAreaTela'), frmPesquisaProtocolo, isNewSEI ? 'table.pesquisaResultado' : 'table.resultado', nrPage);
+    var nrPage = parseInt($(SeiPro.sei.adapter.isNewSEI() ? 'div.pesquisaPaginas .pesquisaPaginaSelecionada' : 'div.paginas b').text()+'0');
+    if ($(SeiPro.sei.adapter.isNewSEI() ? 'div.pesquisaPaginas a' : 'div.paginas span.pequeno').last().text() == 'Pr\u00F3xima') {
+        getTableInfiniteSearch($('#divInfraAreaTela'), frmPesquisaProtocolo, SeiPro.sei.adapter.isNewSEI() ? 'table.pesquisaResultado' : 'table.resultado', nrPage);
     }  
 }
 function startPagesInfiniteSearch(index = false) {
-    $(isNewSEI ? '#divInfraAreaTelaD' :  window).scroll(function () { 
+    $(SeiPro.sei.adapter.isNewSEI() ? '#divInfraAreaTelaD' :  window).scroll(function () { 
        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 120) {
             getInfiniteSearch();
         }
@@ -309,12 +309,12 @@ function getTablePesquisaDownload(this_, mode){
                     '    </thead>'+
                     '    <tbody>';
 
-    $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo table.pesquisaResultado tr' : '#conteudo table.resultado').each(function(i){
-        var tr = isNewSEI ? $(this) : $(this).find('tr');
-        var urlArvore = isNewSEI ? tr.find('a.protocoloNormal').attr('href') : tr.eq(0).find('a.arvore').attr('href');
+    $(frmPesquisaProtocolo).find(SeiPro.sei.adapter.isNewSEI() ? '#conteudo table.pesquisaResultado tr' : '#conteudo table.resultado').each(function(i){
+        var tr = SeiPro.sei.adapter.isNewSEI() ? $(this) : $(this).find('tr');
+        var urlArvore = SeiPro.sei.adapter.isNewSEI() ? tr.find('a.protocoloNormal').attr('href') : tr.eq(0).find('a.arvore').attr('href');
         var paramsUrl = (typeof urlArvore !== 'undefined') ? getParamsUrlPro(url_host.replace('controlador.php','')+urlArvore) : false;
         var urlTable = (paramsUrl) ? url_host+'?acao=procedimento_trabalhar&id_procedimento='+paramsUrl.id_procedimento+(typeof paramsUrl.id_documento !== 'undefined' ? '&id_documento='+paramsUrl.id_documento : '') : false;
-        if (isNewSEI && i % 3 == 0) {
+        if (SeiPro.sei.adapter.isNewSEI() && i % 3 == 0) {
             var nomeProcesso = (urlTable) ? '<a href="'+urlTable+'" target="_blank">'+tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim()+'</a>' : tr.find('td.pesquisaTituloEsquerda span').text().replace('N\u00BA', '').trim();
                 htmlTable +=    '       <tr>'+
                                 '           <td>'+nomeProcesso+'</td>'+
@@ -334,7 +334,7 @@ function getTablePesquisaDownload(this_, mode){
                                 '            <td>'+window.location.href.split('md_')[0]+tr.find('td.pesquisaTituloEsquerda a.protocoloNormal').eq(1).attr('href')+'</td>'+
                                 '' : '')+
                                 '       </tr>';
-        } else if (!isNewSEI) {
+        } else if (!SeiPro.sei.adapter.isNewSEI()) {
             var nomeProcesso = (urlTable) ? '<a href="'+urlTable+'" target="_blank">'+tr.eq(0).find('td').eq(0).text().trim()+'</a>' : tr.eq(0).find('td').eq(0).text().trim();
                 htmlTable +=    '       <tr>'+
                                 '           <td>'+nomeProcesso+'</td>'+
@@ -390,7 +390,7 @@ function downloadTablePesquisa(this_, table){
 
 }
 function setTablePesquisaDownload() {
-    var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="'+(isNewSEI ? 'right: 220px;top: 10px;z-index: 999;position: absolute;' : 'right: 0;top: -40px;z-index: 999;position: absolute;')+'">'+
+    var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="'+(SeiPro.sei.adapter.isNewSEI() ? 'right: 220px;top: 10px;z-index: 999;position: absolute;' : 'right: 0;top: -40px;z-index: 999;position: absolute;')+'">'+
                         '   <button type="button" onclick="getTablePesquisaDownload(this, \'download\')" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Lista" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                         '       <span class="text">Baixar Lista</span>'+
@@ -405,16 +405,16 @@ function setTablePesquisaDownload() {
                         '   </button>'+
                         '</div>';
 
-    var tablePesquisa = $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo .pesquisaBarra' : '#conteudo');
+    var tablePesquisa = $(frmPesquisaProtocolo).find(SeiPro.sei.adapter.isNewSEI() ? '#conteudo .pesquisaBarra' : '#conteudo');
         tablePesquisa.css('position','relative').find('.filterIfraTable').remove();
         tablePesquisa.prepend(htmlFilter);
         if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
 }
 function initTablePesquisaDownload() {
-    var resultado = $(frmPesquisaProtocolo).find(typeof isNewSEI !== 'undefined' && isNewSEI ? '#conteudo table.pesquisaResultado' : '#conteudo table.resultado');
+    var resultado = $(frmPesquisaProtocolo).find(typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? '#conteudo table.pesquisaResultado' : '#conteudo table.resultado');
     if (resultado.length > 0) {
         setTablePesquisaDownload();
-        if (!isNewSEI) initScrollToElement();
+        if (!SeiPro.sei.adapter.isNewSEI()) initScrollToElement();
     }
 }
 function initScrollToElement(TimeOut = 9000) {
@@ -628,12 +628,12 @@ function markQuickViewSearch(this_) {
 }
 function startQuickViewSearch() { 
     $('a.quickview').remove();
-    $(isNewSEI ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_visualizar"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_visualizar"]').each(function(){
-        var nrSEI = isNewSEI ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
+    $(SeiPro.sei.adapter.isNewSEI() ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_visualizar"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_visualizar"]').each(function(){
+        var nrSEI = SeiPro.sei.adapter.isNewSEI() ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
         var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openSEINrPro(this, \''+nrSEI+'\')"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
         $(this).after(html);
     });
-    $(isNewSEI ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_download_anexo"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_download_anexo"]').each(function(){
+    $(SeiPro.sei.adapter.isNewSEI() ? '#conteudo .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_download_anexo"]' : '#conteudo .resultado a[href*="controlador.php?acao=documento_download_anexo"]').each(function(){
         var href = $(this).attr('href');
         var text = $(this).text();
         var html = '<a class="quickview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" onclick="markQuickViewSearch(this);openDialogAnexo(this)" data-url="'+href+'" data-title="'+text+'"><i style="margin: 0 3px;" class="fas fa-eye azulColor"></i></a>';
@@ -651,13 +651,13 @@ function downloadAllDocsSearch(this_) {
         }, 1500);
 
     $('tr:not(.infraDocBaixado) a.downloadview').remove();
-    $(isNewSEI 
+    $(SeiPro.sei.adapter.isNewSEI() 
             ? '#conteudo tr:not(.infraDocBaixado) .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_visualizar"], #conteudo tr:not(.infraDocBaixado) .pesquisaTituloEsquerda a[href*="controlador.php?acao=documento_download_anexo"]' 
             : '#conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_visualizar"], #conteudo .resultado tr:not(.infraDocBaixado) a[href*="controlador.php?acao=documento_download_anexo"]'
         ).each(function(index){
         var text = $(this).text().trim();
         var href = $(this).attr('href');
-        var nrSEI = isNewSEI ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
+        var nrSEI = SeiPro.sei.adapter.isNewSEI() ? $(this).closest('tr').find('td.pesquisaTituloDireita a').text().trim() :  $(this).closest('tr').find('td.resTituloDireita').text().trim();
         var html = '<a class="downloadview" style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Baixando documento...\');" onmouseout="return infraTooltipOcultar();"><i style="margin: 0 3px;" class="fas fa-hourglass-half roxoColor"></i></a>';
         $(this).after(html);
         var _this = $(this).closest('td').find('.downloadview');
@@ -740,8 +740,8 @@ function initSlimPro() {
     var htmlDarkMode =   '           <i onclick="setDarkModePro(this)" id="iconDarkMode" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('darkModePro') ? 'Desativar modo noturno' : 'Ativar modo noturno')+'\')" class="fas fa-'+(localStorage.getItem('darkModePro') ? 'house-day' : 'house-night')+' brancoColor" style="font-size:16pt;cursor:pointer;position:absolute;margin:5px -35px;line-height:1;transition:color .15s ease,opacity .15s ease;"></i> ';
 
     $('div[data-ref="infraAcaoBarraSistema"]').remove();
-    $(typeof isNewSEI !== 'undefined' && isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(htmlSlimPro);
-    $(typeof isNewSEI !== 'undefined' && isNewSEI && localStorage.getItem('seiSlim') ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').prepend(htmlDarkMode);
+    $(typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(htmlSlimPro);
+    $(typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() && localStorage.getItem('seiSlim') ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').prepend(htmlDarkMode);
     initStyleBoxSlimPro();
 }
 function initStyleBoxSlimPro(TimeOut = 9000) {
@@ -820,7 +820,7 @@ function changeMarcadorUserColor(this_) {
 function checkBlankPageSEI() {
     var title = $('#divInfraBarraLocalizacao').text();
     var content = $('#divInfraAreaDados').text();
-    var urlHome = $(isNewSEI ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
+    var urlHome = $(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
     setTimeout(function(){ 
         if (window.location.hash == '' && typeof title !== 'undefined' && typeof content !== 'undefined' && title.trim() == '' && content.trim() == '' && typeof urlHome !== 'undefined' && window.location.href.indexOf('controlador.php') === -1) {
             console.log('redirect checkBlankPageSEI'); 
@@ -893,7 +893,7 @@ function initOptionsCloseListenerSEI() {
         }
         $('#ifrConfig').remove();
         if (data.goHome) {
-            var urlHome = $(isNewSEI ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
+            var urlHome = $(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
             if (typeof urlHome !== 'undefined' && urlHome) {
                 setTimeout(function() {
                     window.location.href = urlHome;
@@ -924,7 +924,7 @@ function initCaixaSelecaoUnidadesSEI() {
 // ---------------------------------------------------------------------------
 function initBrandingPRF() {
     if (!isSEIProPRFHost()) return;
-    if (typeof isNewSEI === 'undefined' || !isNewSEI) return;
+    if (typeof isNewSEI === 'undefined' || !SeiPro.sei.adapter.isNewSEI()) return;
 
     if ($('style[data-style="seipro-hide-prf-bar"]').length === 0) {
         $('head').prepend(
@@ -999,7 +999,7 @@ function initSeiProAll() {
     initInfraImg();
     checkPageParent();
     setTimeout(() => { initMarcadorUserColor() }, 500);
-    if (typeof isNewSEI !== 'undefined' && !isNewSEI) initNewProcDefault();
+    if (typeof isNewSEI !== 'undefined' && !SeiPro.sei.adapter.isNewSEI()) initNewProcDefault();
     appendVersionSEIPro();
     initTableSorter();
     repairLnkControleProcesso();
@@ -1025,7 +1025,7 @@ function initSeiProAll() {
     // initReplaceNewIconsBar();
     // observeIfrArvore();
     //checkBlankPageSEI();
-    if (typeof isSEI_5 !== 'undefined' && isSEI_5) $.getScript(URL_SPRO+"js/lib/modalLink.js");
+    if (typeof isSEI_5 !== 'undefined' && SeiPro.sei.adapter.isSEI5()) $.getScript(URL_SPRO+"js/lib/modalLink.js");
 
     // Ícone de reporte somente no SEI da PRF
     if (typeof appendDebugReport === 'function') appendDebugReport();

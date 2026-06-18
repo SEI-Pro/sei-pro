@@ -6,20 +6,82 @@ Documentação técnica para desenvolvimento e manutenção da extensão. Para i
 
 ## Ambiente
 
-Não há sistema de build. Todo o código-fonte fica em `dist/` e é carregado diretamente pelo navegador.
+A extensão usa **Vite + CRXJS** para empacotar a camada `src/` (módulos ES) em `dist/`.
+Scripts legados (`sei-functions-pro.js`, `init_*.js`, `lib/`) ainda vivem em `dist/` e
+serão migrados incrementalmente na Fase 6.
 
-**Para desenvolver:**
-1. Edite os arquivos em `dist/js/`
-2. Acesse `chrome://extensions/` e clique em **Atualizar**
-3. Recarregue a página do SEI
+**Instalação e build:**
+```bash
+npm install
+npm run build    # gera/atualiza dist/ (carregar unpacked em chrome://extensions)
+npm run dev      # Vite dev server com HMR (CRXJS)
+```
+
+**Testes unitários (dev-only, não vão para `dist/`):**
+```bash
+npm test
+```
+
+**Para desenvolver a camada core/sei (módulos ES):**
+1. Edite arquivos em `src/core/` e `src/sei/`
+2. Execute `npm run build`
+3. Atualize a extensão em `chrome://extensions/` e recarregue a página do SEI
+
+**Para desenvolver scripts legados** (`sei-pro.js`, `init_*.js`, etc.):
+1. Edite diretamente em `dist/js/`
+2. Execute `npm run build` (reempacota sem apagar legados — `emptyOutDir: false`)
+3. Recarregue a extensão e a página do SEI
+
+Execute `npm test` antes de fechar mudanças em utilitários do `src/core/`.
+
+---
+
+## Arquitetura em camadas (`dist/js/core/` e `dist/js/sei/`)
+
+A migração arquitetural introduz fronteiras explícitas carregadas **antes** dos `init_*.js` via `manifest.json`:
+
+| Camada | Arquivos | Responsabilidade |
+|---|---|---|
+| Namespace | `core/namespace.js` | `window.SeiPro` e aliases de estado |
+| Runtime | `core/runtime.js` | `getUrlExtension`, manifest, path da extensão |
+| Util | `core/util.js` | Funções puras (`compareVersionNumbers`, `getParamsUrlPro`, …) |
+| Bootstrap | `core/bootstrap.js` | `_P`, `getPathExtensionPro`, session namespace |
+| Config | `core/config.js` | `verifyConfigValue`, `getConfigValue` |
+| UI | `core/ui.js` | `loadFontIcons`, `loadStyleDesign`, … |
+| Messaging | `core/messaging.js` | Transporte `runtime.sendMessage` |
+| Logger | `core/logger.js` | Log debug condicionado a `debugpage` |
+| Storage/Net | `core/storage.js` | Fachadas delegadas ao service worker |
+| SEI version | `sei/version.js` | Detecção SEI 4.x / 5.x |
+| SEI adapter | `sei/adapter.js` | Seletores neutros por versão |
+| SEI URLs | `sei/urls.js` | Parsing e construção de query strings |
+
+Funções legadas permanecem como aliases globais (`getUrlExtension`, etc.) para compatibilidade incremental.
+
+### Smoke test manual (gate entre fases)
+
+Antes de fechar mudanças arquiteturais, validar no SEI:
+
+- [ ] Lista de processos (agrupamento, favoritos, Kanban)
+- [ ] Árvore de documentos (menus rápidos, upload)
+- [ ] Editor de documentos (atalhos, auto-save)
+- [ ] Visualização de documento (marca d'água, numeração)
 
 ---
 
 ## Estrutura
 
 ```
-dist/
+src/                               # Módulos ES (Fase 5) — fonte da camada core/sei
+├── core/                          # namespace, runtime, util, config, storage, …
+├── sei/                           # version, adapter, urls
+├── content/core-stack.js          # entry point bundled nos content scripts
+└── background/index.js            # service worker (ES module)
+
+dist/                              # Saída do build + scripts legados
+├── assets/                        # Bundles gerados (core-stack, background loader)
 ├── js/
+│   ├── core/                      # Legado IIFE (substituído pelo bundle após build)
+│   ├── sei/                       # Legado IIFE (substituído pelo bundle após build)
 │   ├── sei-functions-pro.js       # Funções utilitárias, configuração, localStorage
 │   ├── sei-pro.js                 # Lista de processos, Kanban, agrupamentos
 │   ├── sei-pro-editor.js          # CKEditor — tabelas, atalhos, auto-save, IA

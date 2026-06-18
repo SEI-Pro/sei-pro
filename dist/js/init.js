@@ -1,7 +1,7 @@
 const compareVersionNumbers_init = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+(\.\d+)*$/.test(v2) ? ((a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) { const n1 = +a[i] || 0, n2 = +b[i] || 0; if (n1 !== n2) return n1 > n2 ? 1 : -1; } return 0; })(v1.split('.'), v2.split('.')) : NaN;
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_init(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
-var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
+var frmEditor = SeiPro.sei.adapter.isSEI5() ? $('.infra-editor__editor-completo') : $('#frmEditor');
 var frmEditor5Script = $('html script[charset="utf-8"]').last().html() || '';
 var frmEditor5Exists = frmEditor5Script.includes('INFRA_EDITOR_CONFIG');
 window.__SEI_PRO_CONFIG_READY__ = false;
@@ -22,8 +22,8 @@ function divIconsLoginPro() {
                             +'  <a id="authorizeButtonPro" href="#" data-tippy-content="Conectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-off brancoColor"></i></a>'
                             +'  <a id="signoutButtonPro" href="#" data-tippy-content="Desconectar Base de Dados (SeiPro)" onmouseover="return infraTooltipMostrar(\'Conectado! Clique para desconectar Base de Dados (SeiPro)\');" onmouseout="return infraTooltipOcultar();" style="display: none;"><i class="fas fa-toggle-on brancoColor"></i></a>'
                             +'</div>';
-    if ($(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').length > 0) {
-        $(isNewSEI ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(html_initLogin);
+    if ($(SeiPro.sei.adapter.isNewSEI() ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').length > 0) {
+        $(SeiPro.sei.adapter.isNewSEI() ? '#divInfraBarraSistemaPadraoD' : '#divInfraBarraSistemaD').append(html_initLogin);
     } else if ($('#divInfraBarraSistemaPadraoD').length > 0) {
         $('#divInfraBarraSistemaPadraoD').append(html_initLogin);
     }
@@ -36,20 +36,8 @@ function classBodyPro() {
         }
     }
 }
-function getUrlExtension(url) {
-    if (typeof browser === "undefined") {
-        return chrome.runtime.getURL(url);
-    } else {
-        return browser.runtime.getURL(url);
-    }
-}
-function getManifestExtension() {
-    if (typeof browser === "undefined") {
-        return chrome.runtime.getManifest();
-    } else {
-        return browser.runtime.getManifest();
-    }
-}
+// [migrado para core/sei] getUrlExtension
+// [migrado para core/sei] getManifestExtension
 function loadLocalConfigScriptPro() {
     if (typeof window.SEI_PRO_APPS_SCRIPT_URL !== 'undefined' && window.SEI_PRO_APPS_SCRIPT_URL) {
         return $.Deferred().resolve().promise();
@@ -271,98 +259,14 @@ function loadDataBaseProStorage(items) {
         }
     }
 }
-function loadFontIcons(elementTo, target = $('html')) {
-    var iconBoxSlim = (localStorage.getItem('seiSlim') || localStorage.getItem('seiSlim_editor')) ? true : false;
-    var pathExtension = pathExtensionSEIPro();
-    if (target.find('link[data-style="seipro-fonticon"]').length == 0 && target.find('style[data-style="seipro-fonticon"]').length == 0) {
-        $("<link/>", {
-            rel: "stylesheet",
-            type: "text/css",
-            "data-style": "seipro-fonticon",
-            href: getUrlExtension("css/fontawesome.pro.min.css") 
-        }).appendTo(target.find(elementTo));
-        
-        var htmlStyleFont = '<style type="text/css" data-style="seipro-fonticon" data-index="5">'+
-                            '    @font-face {\n'+
-                            '       font-family: "Font Awesome 5 Pro";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 900;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
-                            '   }\n'+
-                            '   @font-face {\n'+
-                            '       font-family: \"Font Awesome 5 Pro";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 400;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
-                            '   }\n'+
-                            (iconBoxSlim ?
-                            '   @font-face { \n'+
-                            '       font-family: "Font Awesome 5 Pro";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 300;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot?#iefix) format("embedded-opentype"), url('+pathExtension+'webfonts/pro/fa-light-300.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-light-300.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-light-300.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-light-300.svg#fontawesome) format("svg") !important; }\n'+
-                            '   }\n'+
-                            '   @font-face {\n'+
-                            '       font-family: \"Font Awesome 5 Duotone\";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 900;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot?#iefix) format(\"embedded-opentype\"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-duotone-900.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important; }\n'+
-                            '   }\n'
-                            : '')
-                            '</style>';
-        target.find('head').append(htmlStyleFont);
-    }
-}
-function loadStylePro(url, elementTo) {
-    if ($('link[data-style="seipro-style"]').length == 0) {
-        $("<link/>", {
-            rel: "stylesheet",
-            type: "text/css",
-            "data-style": "seipro-style",
-            href: url
-        }).appendTo(elementTo);
-    }
-}
-function loadFilesUI() {
-    if (typeof jQuery.ui === 'undefined') $.getScript(getUrlExtension('js/lib/jquery-ui.min.js'));
-    loadStylePro(getUrlExtension('css/jquery-ui.css'), 'head');
-}
-function loadStyleDesign(body = $('body'), secondClass = false) {
-    if (localStorage.getItem('seiSlim')) {
-        body.addClass("seiSlim");
-        if (secondClass) body.addClass("seiSlim_"+secondClass);
-        if (localStorage.getItem('darkModePro')) {
-            body.addClass("dark-mode");
-        }
-    }
-}
+// [migrado para core/sei] loadFontIcons
+// [migrado para core/sei] loadStylePro
+// [migrado para core/sei] loadFilesUI
+// [migrado para core/sei] loadStyleDesign
 loadStyleDesign();
-function pathExtensionSEIPro() {
-    var URL_SPRO = getUrlExtension("js/sei-pro.js");
-        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
-    return URL_SPRO;
-}
-function getPathExtensionPro() {
-    if ($('script[data-config="config-seipro"]').length == 0) {
-        var URL_SPRO = pathExtensionSEIPro();
-        var manifest = getManifestExtension();
-        var VERSION_SPRO = manifest.version;
-        var NAMESPACE_SPRO = manifest.short_name;
-        var URLPAGES_SPRO = 'https://sei-pro.github.io/sei-pro';
-        setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, URLPAGES_SPRO: URLPAGES_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
-    }
-}
-function setSessionNameSpace(param) {
-    sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
-}
+// [migrado para core/sei] pathExtensionSEIPro
+// [migrado para core/sei] getPathExtensionPro
+// [migrado para core/sei] setSessionNameSpace
 
 function loadScriptPro() {
     getPathExtensionPro();

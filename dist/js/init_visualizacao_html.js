@@ -1,48 +1,5 @@
-function loadStyleDesign() {
-    var body = document.body;
-    if (localStorage.getItem('seiSlim')) {
-        body.classList.add("seiSlim");
-        body.classList.add("seiSlim_html");
-        if (localStorage.getItem('darkModePro')) {
-            body.classList.add("dark-mode");
-            var script = {
-                type: 'text/css', style: document.createElement('style'), 
-                content:  '   p.Texto_Fundo_Cinza_Maiusculas_Negrito, \n'
-                         +'   p.Texto_Fundo_Cinza_Negrito, \n'
-                         +'   p .ancoraSei, \n'
-                         +'   p.Item_Nivel1 { \n'
-                         +'       background-color: #e5e5e566 !important;  \n'
-                         +'   } \n'
-                         +'   .dark-mode-color-black, \n'
-                         +'   .dark-mode-color-black * { \n'
-                         +'       color: #000 !important;  \n'
-                         +'   } \n'
-                         +'   .dark-mode-color-white, \n'
-                         +'   .dark-mode-color-white * { \n'
-                         +'       color: #fff !important;  \n'
-                         +'   } \n'
-                         +'   .pageBreakPro { background: #6f7071; height: 15px; } \n',
-                append: function() {
-                  this.style.type = this.type;
-                  this.style.appendChild(document.createTextNode(this.content));
-                  document.head.appendChild(this.style);
-              }}; script.append();
-              initRepareBgTableColor();
-        }
-    }
-}
-function verifyConfigValue(name) {
-    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
-    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
-        dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
-    
-    if (dataValuesConfig == true ) {
-        return true;
-    } else {
-        return false;
-    }
-}
+// [migrado para core/sei] loadStyleDesign
+// [migrado para core/sei] verifyConfigValue
 function normalizeQuickVisualizacaoHtmlText(text) {
     text = (typeof text === 'string') ? text : '';
     if (typeof parent !== 'undefined' && typeof parent.removeAcentos === 'function') {
@@ -246,7 +203,8 @@ function debugListStylesheetsVisualizacaoHtml() {
         }
     });
 }
-loadStyleDesign();
+// secondClass='html' (seiSlim_html); htmlExtras -> CSS extra de dark-mode + initRepareBgTableColor()
+loadStyleDesign(undefined, 'html', { htmlExtras: true });
 initQuickPageHighlightVisualizacaoHtml();
 initLinhaNumerada();
 debugListStylesheetsVisualizacaoHtml();

@@ -585,7 +585,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     }
                 });
             param.hdnFlagGerar = 1;
-            if (isNewSEI) param.rdoTipo = "T";
+            if (SeiPro.sei.adapter.isNewSEI()) param.rdoTipo = "T";
 
             return {action: hrefForm, param: param};
         } catch (err) {
@@ -611,7 +611,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 appendBotMessageError(`'Erro: HTML vazio ao baixar o conte\u00FAdo integral do processo`);
                 return false;
             }
-            const regex = isNewSEI 
+            const regex = SeiPro.sei.adapter.isNewSEI() 
             ? /['"]([^'"]*acao=exibir_arquivo[^'"]*)['"]/
             : /window\.open\(['"]([^'"]+)['"]\)/;
             const match = htmlDoc.match(regex);

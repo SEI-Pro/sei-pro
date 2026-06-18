@@ -86,16 +86,26 @@ config_local.json
 .env
 .env.local
 
-# Arquivos de dependências (se usar npm/yarn)
+# Arquivos de dependências (dev tooling — not shipped in dist/)
 node_modules/
-package-lock.json
-yarn.lock
 
-# Arquivos de teste
-test/
-tests/
+# Generated symlinks for Vite publicDir (Phase 5 build)
+public/
+
+# Root symlinks for CRXJS manifest path resolution (Phase 5 build)
+/css
+/icons
+/html
+/webfonts
+/js
+/config_hosts.json
+
+
+
+# Arquivos de teste (Vitest — dev only)
 *.test.js
 *.spec.js
+!tests/**
 
 # Arquivos de documentação temporária
 docs/temp/

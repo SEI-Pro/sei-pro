@@ -1,6 +1,6 @@
 
 var 
-    frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor'),
+    frmEditor = SeiPro.sei.adapter.isSEI5() ? $('.infra-editor__editor-completo') : $('#frmEditor'),
     idEditor,
     oEditor, 
     imgEditor, 
@@ -16,7 +16,7 @@ var
     resultTextTip = false,
     CKWebSpeechHandler;
 
-    txaEditor = isSEI_5 ? '.infra-editor__editor-completo' : txaEditor;
+    txaEditor = SeiPro.sei.adapter.isSEI5() ? '.infra-editor__editor-completo' : txaEditor;
 
 
 var loadOnKeyEditor = false;
@@ -31,7 +31,7 @@ var qualidadeImagens = (checkConfigValue('qualidadeimagens')) ? getConfigValue('
     qualidadeImagens = (qualidadeImagens < 0) ? 0 : qualidadeImagens;
 
 function setParamEditor(this_) {
-    if (!isSEI_5) {
+    if (!SeiPro.sei.adapter.isSEI5()) {
         idEditor = $(this_).closest('div.cke').attr('id').replace('cke_', '');
         oEditor = CKEDITOR.instances[idEditor];
         iframeEditor = (frmEditor.length) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor).find('iframe[title*="txaConteudo"]').contents();
@@ -85,13 +85,13 @@ function htmlButton(status) {
             'getQuickTableButtom',
             'quicktable',
             'Tabela R\u00E1pida',
-            isSEI_5 ? 'fab fa-bolt rosaColor' : icon16baseQuickTable
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-bolt rosaColor' : icon16baseQuickTable
         ) +
         htmlButtonPro(
             'getTablestylesButtom',
             'tablestyles',
             'Adicionar estilo \u00E0 tabela',
-            isSEI_5 ? 'fab fa-paint-brush rosaColor' : icon16baseTable
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-paint-brush rosaColor' : icon16baseTable
         );
     
     const htmlButtonAfterImage = 
@@ -99,13 +99,13 @@ function htmlButton(status) {
             'getBatchImgQualityButtom',
             'batch_quality_pro',
             'Reduzir qualidade das imagens',
-            isSEI_5 ? 'fab fa-compress azulColor' : icon16baseBatchImgQuality
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-compress azulColor' : icon16baseBatchImgQuality
         ) +
         htmlButtonPro(
             'getInsertCheckboxButtom',
             'insert_checkbox_pro',
             'Inserir caixa de sele\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-check-square azulColor' : icon16baseInsertCheckboxQuality
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-check-square azulColor' : icon16baseInsertCheckboxQuality
         );
     
     const htmlButtonBeforeCut = 
@@ -113,7 +113,7 @@ function htmlButton(status) {
             'getCopyStyleButtom',
             'copy_style_pro',
             'Copiar formata\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-brush rosaColor' : icon16baseCopyStyle
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-brush rosaColor' : icon16baseCopyStyle
         );
     
     const htmlButtonBeforeList = 
@@ -122,32 +122,32 @@ function htmlButton(status) {
                 'getAlignLeftButtom',
                 'align_left_pro',
                 'Alinhar texto \u00E0 esquerda',
-                isSEI_5 ? 'fab fa-align-left roxoColor' : icon16baseAlignLeft
+                SeiPro.sei.adapter.isSEI5() ? 'fab fa-align-left roxoColor' : icon16baseAlignLeft
             ) +
             htmlButtonPro(
                 'getAlignCenterButtom',
                 'align_center_pro',
                 'Alinhar texto ao centro',
-                isSEI_5 ? 'fab fa-align-center roxoColor' : icon16baseAlignCenter
+                SeiPro.sei.adapter.isSEI5() ? 'fab fa-align-center roxoColor' : icon16baseAlignCenter
             ) +
             htmlButtonPro(
                 'getAlignRightButtom',
                 'align_right_pro',
                 'Alinhar texto \u00E0 direita',
-                isSEI_5 ? 'fab fa-align-right roxoColor' : icon16baseAlignRight
+                SeiPro.sei.adapter.isSEI5() ? 'fab fa-align-right roxoColor' : icon16baseAlignRight
             ) +
             htmlButtonPro(
                 'getAlignJustifyButtom',
                 'align_justify_pro',
                 'Alinhar texto justificadamente',
-                isSEI_5 ? 'fab fa-align-justify roxoColor' : icon16baseAlignJustify
+                SeiPro.sei.adapter.isSEI5() ? 'fab fa-align-justify roxoColor' : icon16baseAlignJustify
             ) +
         '</div>' +
         htmlButtonPro(
             'getAlignButtom',
             'align_pro',
             'Alinhar texto roxoColor',
-            isSEI_5 ? 'fab fa-align-left roxoColor' : icon16baseAlignCenter
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-align-left roxoColor' : icon16baseAlignCenter
         );
 
     const htmlButtonAfterLetters = 
@@ -155,26 +155,26 @@ function htmlButton(status) {
             'getCapLetterButtom', 
             'capletter_pro', 
             'Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)', 
-            isSEI_5 ? 'fab fa-font-case cianoColor' : icon16baseCapLetter
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-font-case cianoColor' : icon16baseCapLetter
         ) +
         htmlButtonPro(
             'getFontSizeUpButtom', 
             'fontsize_up_pro', 
             'Aumentar tamanho da fonte', 
-            isSEI_5 ? 'fab fa-sort-alpha-up cianoColor' : icon16baseFonteSizeUp
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-sort-alpha-up cianoColor' : icon16baseFonteSizeUp
         ) +
         htmlButtonPro(
             'getFontSizeDownButtom', 
             'fontsize_down_pro', 
             'Diminuir tamanho da fonte cianoColor', 
-            isSEI_5 ? 'fab fa-sort-alpha-down cianoColor' : icon16baseFonteSizeDown
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-sort-alpha-down cianoColor' : icon16baseFonteSizeDown
         );
 
     const htmlButtonAfterSave = htmlButtonPro(
         'getAutoSaveButtom',
         'autosave',
         `Salvamento autom\u00E1tico (${autoSaveInterval} ${autoSaveInterval === 1 ? 'minuto' : 'minutos'})`,
-        isSEI_5 ? '' : icon16baseAutoSave
+        SeiPro.sei.adapter.isSEI5() ? '' : icon16baseAutoSave
     );
 
     const htmlButton = 
@@ -183,70 +183,70 @@ function htmlButton(status) {
                 'getPlataformAIButtom',
                 'openai',
                 'Inserir texto de intelig\u00EAncia artificial',
-                isSEI_5 ? 'fab fa-robot roxoColor' : icon16baseOpenAI
+                SeiPro.sei.adapter.isSEI5() ? 'fab fa-robot roxoColor' : icon16baseOpenAI
             ) : '') +
         htmlButtonPro(
             'importDocButtom',
             'externalfile',
             'Inserir conte\u00FAdo externo',
-            isSEI_5 ? 'fab fa-upload vermelhoColor' : icon16baseImport
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-upload vermelhoColor' : icon16baseImport
         ) +
         htmlButtonPro(
             'getLinkLegisButtom',
             'linklegis',
             'Adicionar link de legisla\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-balance-scale-right verdeColor' : icon16baseLegis
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-balance-scale-right verdeColor' : icon16baseLegis
         ) +
         (frmEditor.length ? 
             htmlButtonPro(
                 'getCitacaoDocumentoButtom',
                 'citacaodoc',
                 'Inserir refer\u00EAncia de documento do processo',
-                isSEI_5 ? 'fab fa-folder-tree amareloColor' : icon16baseCitaDocumento
+                SeiPro.sei.adapter.isSEI5() ? 'fab fa-folder-tree amareloColor' : icon16baseCitaDocumento
             ) : '') +
         htmlButtonPro(
             'getNotaRodapeButtom',
             'notarodape',
             'Inserir nota de rodap\u00E9',
-            isSEI_5 ? 'fab fa-comment-alt-dots cianoColor' : icon16baseNotaRodape
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-comment-alt-dots cianoColor' : icon16baseNotaRodape
         ) +
         htmlButtonPro(
             'getRefInternaButtom',
             'refinterna',
             'Inserir refer\u00EAncia interna',
-            isSEI_5 ? 'fab fa-retweet cianoColor' : icon16baseRefInterna
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-retweet cianoColor' : icon16baseRefInterna
         ) +
         htmlButtonPro(
             'getSumarioButtom',
             'sumario',
             'Inserir sum\u00E1rio',
-            isSEI_5 ? 'fab fa-list-alt roxoColor' : icon16baseSumario
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-list-alt roxoColor' : icon16baseSumario
         ) +
         (frmEditor.length == 0 ? '' : 
             htmlButtonPro(
                 'getDadosProcessoButtom',
                 'dadosprocesso',
                 'Inserir dados do processo',
-                isSEI_5 ? 'fab fa-book-spells rosaColor' : icon16baseDadosProcesso
+                SeiPro.sei.adapter.isSEI5() ? 'fab fa-book-spells rosaColor' : icon16baseDadosProcesso
             )
         ) +
         htmlButtonPro(
             'getTinyUrlButtom',
             'tinyurl',
             'Gerar link curto do TinyURL',
-            isSEI_5 ? 'fab fa-compress-arrows-alt azulColor' : icon16baseTinyUrl
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-compress-arrows-alt azulColor' : icon16baseTinyUrl
         ) +
         htmlButtonPro(
             'getQrCodeButtom',
             'qrcode',
             'Gerar C\u00F3digo QR',
-            isSEI_5 ? 'fab fa-qrcode rosaColor' : icon16baseQrCode
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-qrcode rosaColor' : icon16baseQrCode
         ) +
         htmlButtonPro(
             'getPageBreakButtom',
             'pagebreak',
             'Inserir Quebra de P\u00E1gina',
-            isSEI_5 ? 'fab fa-page-break azulColor' : icon16basePageBreak,
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-page-break azulColor' : icon16basePageBreak,
             '', 
             isSeiSlim ? '' : '!important'
         ) +
@@ -254,31 +254,31 @@ function htmlButton(status) {
             'getSessionBreakButtom',
             'sessionbreak',
             'Inserir Quebra de Se\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-page-break verdeColor' : icon16baseSessionBreak
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-page-break verdeColor' : icon16baseSessionBreak
         ) +
         htmlButtonPro(
             'getLatexButtom',
             'latex',
             'Inserir Equa\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-sigma vermelhoColor' : icon16baseLatex
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-sigma vermelhoColor' : icon16baseLatex
         ) +
         htmlButtonPro(
             'getProcessoPublicoButton',
             'processopublico',
             'Adicionar Link de Documento P\u00FAblico',
-            isSEI_5 ? 'fab fa-globe-americas azulColor' : icon16baseDocPublico
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-globe-americas azulColor' : icon16baseDocPublico
         ) +
         htmlButtonPro(
             'getMinutaWatermarkButton',
             'watermark',
             'Adicionar Marca D\'\u00E1gua de MINUTA/MODELO',
-            isSEI_5 ? 'fab fa-layer-plus verdeColor' : icon16baseWatermark
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-layer-plus verdeColor' : icon16baseWatermark
         ) +
         htmlButtonPro(
             'pageImageBackgroundButtom',
             'pageimagebackground',
             'Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o',
-            isSEI_5 ? 'fab fa-print roxoColor' : icon16baseImagePage
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-print roxoColor' : icon16baseImagePage
         );
 
     const htmlButtonReview = checkConfigValue('revisaotexto') ? 
@@ -286,13 +286,13 @@ function htmlButton(status) {
             'getReviewButton',
             'review',
             'Ativar revis\u00E3o de texto',
-            isSEI_5 ? 'fab fa-user-edit azulColor' : icon16baseReview
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-user-edit azulColor' : icon16baseReview
         ) + 
         htmlButtonPro(
             'getCtrReviewButton',
             'ctr_review',
             'Gerenciar revis\u00F5es de texto',
-            isSEI_5 ? 'fab fa-comments azulColor' : icon16baseCtrReview
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-comments azulColor' : icon16baseCtrReview
         ) : '';
     
     const htmlButtonDitado = checkConfigValue('ditado') ? 
@@ -300,21 +300,21 @@ function htmlButton(status) {
             'getDitadoButton',
             'ditado',
             'Ativar ditado de texto',
-            isSEI_5 ? 'fab fa-microphone-alt rosaColor' : URL_SPRO + 'icons/editor/webspeech.png'
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-microphone-alt rosaColor' : URL_SPRO + 'icons/editor/webspeech.png'
         ) + 
         htmlButtonPro(
             'getCtrDitadoButton',
             'ctr_ditado',
             'Gerenciar configura\u00E7\u00F5es do ditado',
-            isSEI_5 ? 'fab fa-cogs rosaColor' : URL_SPRO + 'icons/editor/webspeech-settings.png'
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-cogs rosaColor' : URL_SPRO + 'icons/editor/webspeech-settings.png'
         ) : '';
     
-    const htmlButtonNewStyle = isNewSEI ? 
+    const htmlButtonNewStyle = SeiPro.sei.adapter.isNewSEI() ? 
         htmlButtonPro(
             'getNewStyleButton',
             'newstyle',
             'Ativar estilo avan\u00E7ado',
-            isSEI_5 ? 'fab fa-palette azulColor' : icon16baseNewStyle,
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-palette azulColor' : icon16baseNewStyle,
             '', 
             localStorage.getItem('seiSlim_editor') ? 'cke_button_on' : 'cke_button_off'
         ) : '';
@@ -324,13 +324,13 @@ function htmlButton(status) {
             'getMarkSigiloButton',
             'mark_sigilo_pro',
             'Adicionar / Remover marca de sigilo no texto',
-            isSEI_5 ? 'fab fa-lock-open-alt azulColor' : icon16baseMarkSigilo
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-lock-open-alt azulColor' : icon16baseMarkSigilo
         ) +
         htmlButtonPro(
             'getBoxSigiloButton',
             'boxsigilo',
             'Gerenciar marcas de sigilo do documento',
-            isSEI_5 ? 'fab fa-user-unlock azulColor' : icon16baseBoxSigilo
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-user-unlock azulColor' : icon16baseBoxSigilo
         );
     
     const htmlButtonLegis = 
@@ -338,21 +338,21 @@ function htmlButton(status) {
             'getLegisButtom',
             'legis',
             'Enumerar norma',
-            isSEI_5 ? 'fab fa-pi azulColor' : icon16baseSEILegis
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-pi azulColor' : icon16baseSEILegis
         ) +
         htmlButtonPro(
             'helpLegisButtom',
             'legis_help',
             'Ajuda',
-            isSEI_5 ? 'fab fa-info-circle azulColor' : window.location.origin+'/sei/editor/ck/skins/moonocolor/icons.png',
-            isSEI_5 ? '' : ';background-position: 0 -168px;',
+            SeiPro.sei.adapter.isSEI5() ? 'fab fa-info-circle azulColor' : window.location.origin+'/sei/editor/ck/skins/moonocolor/icons.png',
+            SeiPro.sei.adapter.isSEI5() ? '' : ';background-position: 0 -168px;',
             ''
         );
-    const blockHtmlButton = isSEI_5
+    const blockHtmlButton = SeiPro.sei.adapter.isSEI5()
         ? htmlButton
         : `<span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">${htmlButton}</span>`;
 
-    const htmlNewBlock = isSEI_5 
+    const htmlNewBlock = SeiPro.sei.adapter.isSEI5() 
         ? htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonNewStyle
         : `
             <span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">
@@ -378,7 +378,7 @@ function htmlButton(status) {
 function addButton(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     setTimeout(function(){ 
-        if (isSEI_5) {
+        if (SeiPro.sei.adapter.isSEI5()) {
             $('.ck.ck-toolbar__items').append(htmlButton('').default);
             $('button[data-cke-tooltip-text="Inserir tabela"]').closest('.ck.ck-dropdown').after(htmlButton('').tables);
             // $('button[data-cke-tooltip-text="Transformar o texto em MAI\u00DASCULO ou min\u00FAsculo"]').closest('.ck.ck-dropdown').append(htmlButton('').afterletters);
@@ -390,7 +390,7 @@ function addButton(TimeOut = 9000) {
             initFunctions();
         } else {
             if ( $(txaEditor).length && !$('.cke_buttonPro').length ) {
-                    if ( !$('#idEditor').length ) { $(isSEI_5 ? 'body' : '#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
+                    if ( !$('#idEditor').length ) { $(SeiPro.sei.adapter.isSEI5() ? 'body' : '#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
                         $(txaEditor).each(function(index){ 
                             var idEditor = $(this).attr('id').replace('cke_', '');
                             if ( $('iframe[title*="'+idEditor+'"]').contents().find('body').attr('contenteditable') == 'true' ) {
@@ -425,7 +425,7 @@ function addButton(TimeOut = 9000) {
     }, 500);
 }
 const htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = '', important = '') => {
-    const htmlButton = isSEI_5
+    const htmlButton = SeiPro.sei.adapter.isSEI5()
     ? `
         <button class="ck ck-button ck-off cke_iconPro cke_buttonPro ${classClick}" type="button" style="${extraStyle} ${important}" aria-labelledby="ck-editor__aria-label_${classClick}" tabindex="-1" aria-pressed="false" data-cke-tooltip-text="${title}" data-cke-tooltip-position="s">
             <i class="${icon}"></i>
@@ -5866,7 +5866,7 @@ function tableSorterPro( editor ) {
     }
 }
 function initContextMenuPro() {
-    if (isSEI_5) {
+    if (SeiPro.sei.adapter.isSEI5()) {
 
     } else {
         $(txaEditor).each(function(){ 
@@ -8254,6 +8254,6 @@ function initFunctions() {
 }
 $('body').addClass('seiEditor');
 
-if (!isSEI_5) {
+if (!SeiPro.sei.adapter.isSEI5()) {
     addButton();
 }

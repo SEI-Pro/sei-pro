@@ -1,11 +1,5 @@
 
-function getUrlExtension(url) {
-    if (typeof browser === "undefined") {
-        return chrome.runtime.getURL(url);
-    } else {
-        return browser.runtime.getURL(url);
-    }
-}
+// [migrado para core/sei] getUrlExtension
 function getConfigHost(callback = false, callback_else = false) {
     var hosts = getUrlExtension("config_hosts.json");
         fetch(hosts)
@@ -34,28 +28,7 @@ function setConfigHost(host, callback, callback_else){
 
     }
 } */
-function getParamsUrlPro(url) {
-    var params = {};
-    if (typeof url !== 'undefined' && url.indexOf('?') !== -1 && url.indexOf('&') !== -1) {
-        var vars = url.split('?')[1].split('&');
-        for (var i = 0; i < vars.length; i++) {
-            var pair = vars[i].split('=');
-            var key = pair.shift();
-            var value = pair.join('=');
-            if (typeof value === 'undefined') {
-                value = '';
-            }
-            value = value.replace(/\+/g, ' ');
-            try {
-                value = decodeURIComponent(value);
-            } catch (error) {
-                console.warn('Parametro de URL malformado ignorado em getParamsUrlPro:', value, error);
-            }
-            params[key] = value;
-        }
-        return params;
-    } else { return false; }
-}
+// [migrado para core/sei] getParamsUrlPro
 function setOptionsSEIPro(option_key, option_value) {
     chrome.storage.sync.get({
         dataValues: ''
@@ -118,7 +91,7 @@ function getOptionsSEIPro(data) {
                     }
                 }
                 if (typeof window.jQuery !== 'undefined') {
-                    var urlHome = $(isNewSEI ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
+                    var urlHome = $(SeiPro.sei.adapter.isNewSEI() ? '#infraMenu' : '#main-menu').find('a[href*="controlador.php?acao=procedimento_controlar"]').attr('href');
                     if (typeof urlHome !== 'undefined') {
                         // localStorage.setItem('configBasePro_atividades', JSON.stringify({URL_API: newItem.url, KEY_USER: newItem.token}));
                         console.log({URL_API: newItem.url, KEY_USER: newItem.token});
@@ -256,43 +229,11 @@ function observeAcaoPro() {
         setOptionsSEIPro(param.option_key, param.option_value);
     }
 }
-function pathExtensionSEIPro() {
-    var URL_SPRO = getUrlExtension("js/sei-pro.js");
-        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
-    return URL_SPRO;
-}
-function getPathExtensionPro() {
-    if ($('script[data-config="config-seipro"]').length == 0) {
-        var URL_SPRO = pathExtensionSEIPro();
-        var manifest = getManifestExtension();
-        var VERSION_SPRO = manifest.version;
-        var NAMESPACE_SPRO = manifest.short_name;
-        var URLPAGES_SPRO = 'https://sei-pro.github.io/sei-pro';
-        setSessionNameSpace({URL_SPRO: URL_SPRO, NAMESPACE_SPRO: NAMESPACE_SPRO, URLPAGES_SPRO: URLPAGES_SPRO, VERSION_SPRO: VERSION_SPRO, ICON_SPRO: manifest.icons});
-    }
-}
-function setSessionNameSpace(param) {
-    sessionStorage.setItem((param.NAMESPACE_SPRO != 'SPro' ? 'new_extension' : 'old_extension'),  JSON.stringify(param));
-}
-function getManifestExtension() {
-    if (typeof browser === "undefined") {
-        return chrome.runtime.getManifest();
-    } else {
-        return browser.runtime.getManifest();
-    }
-}
-function verifyConfigValue(name) {
-    var configBasePro = ( typeof localStorage.getItem('configBasePro') !== 'undefined' && localStorage.getItem('configBasePro') != '' ) ? JSON.parse(localStorage.getItem('configBasePro')) : [];
-    var dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-        dataValuesConfig = (typeof jmespath !== 'undefined') ? jmespath.search(dataValuesConfig, "[?name=='"+name+"'].value | [0]") : false;
-        dataValuesConfig = (dataValuesConfig !== null) ? dataValuesConfig : false;
-    
-    if (dataValuesConfig == true ) {
-        return true;
-    } else {
-        return false;
-    }
-}
+// [migrado para core/sei] pathExtensionSEIPro
+// [migrado para core/sei] getPathExtensionPro
+// [migrado para core/sei] setSessionNameSpace
+// [migrado para core/sei] getManifestExtension
+// [migrado para core/sei] verifyConfigValue
 function loadRepairPwdNewSei() {
     if (verifyConfigValue('autopreenchersenha') && window.location.href.indexOf('sip/login.php') !== -1) {
         var pwdHidden = $('#pwdSenha');
