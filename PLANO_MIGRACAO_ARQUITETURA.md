@@ -176,9 +176,9 @@ CORS e quotas num só lugar.
 > escrever seu teste no mesmo passo. Não trate a Fase 0 como 100% independente.
 
 > **Guard-rail de regressão.** Como não há testes de integração para um monólito acoplado
-> ao DOM, defina um **smoke test manual mínimo por página do SEI** (lista de processos,
-> árvore, editor, visualização) como *gate* entre cada fase. Registre o checklist e
-> execute-o antes de fechar qualquer fase.
+> ao DOM, há um **smoke test manual mínimo por página do SEI** (lista de processos, árvore,
+> editor, visualização) como *gate* entre cada fase — registrado em **`SMOKE_TEST.md`**.
+> Execute-o (após `npm run build`) antes de fechar qualquer fase em produção.
 
 ### Fase 1 — Eliminar duplicação (maior retorno imediato)
 **Objetivo:** uma única definição por função.
@@ -327,9 +327,11 @@ CORS e quotas num só lugar.
 >   `src/` via `aliasGlobal`). 47 testes verdes.
 > - **`scripts/generate-manifest-base.mjs` removido** (obsoleto — expandia os 12 scripts;
 >   o `build.mjs` o substitui).
-> - **`src/background/index.js` marcado como DORMENTE** (header explícito): não é buildado
->   nem shipado; o SW efetivo é `dist/js/background.js` (verbatim, fonte da verdade). As duas
->   versões divergem — reconciliar é follow-up.
+> - **`src/background/index.js` REMOVIDO (reconciliação feita).** Era funcionalmente
+>   idêntico ao `dist/js/background.js` (só diferia em `var` vs `let/const` e estilo), sem
+>   nenhum consumidor (build/manifest/testes não o referenciavam) — armadilha de divergência.
+>   Deletado; `dist/js/background.js` é a fonte única do SW. Bundlá-lo via esbuild fica como
+>   opção futura *se* ele passar a importar módulos de `core/`; hoje não importa nada.
 >
 > **Regressão corrigida durante a revisão — `loadStyleDesign`.** A consolidação das 5 cópias
 > divergentes de `loadStyleDesign` numa única função parametrizada (`core/ui.js`) deixou os
@@ -349,8 +351,20 @@ CORS e quotas num só lugar.
 > Aceitável hoje; vira risco na Fase 6 (ao quebrar `sei-functions-pro.js`). Travado por
 > `tests/structure/config-compat.test.js`.
 
-### Fase 6 — Quebrar God modules em feature folders
+### Fase 6 — Quebrar God modules em feature folders 🟡 piloto feito
 **Objetivo:** SRP de verdade.
+
+> **Piloto extraído — `core/validacao.js`.** Cluster coeso de 8 funções **puras**
+> (validação/máscara de identificadores e texto) foi movido de `sei-functions-pro.js`
+> para `src/core/validacao.js`: `validaCPF`, `extractCPFs`, `maskCPF`, `maskCNPJ`,
+> `maskPEN`, `validateEmail`, `escapeHtml`, `isValidHttpUrl`. Registrado via
+> `installValidacao()` em `core-stack.js` (`SeiPro.core.validacao` + `aliasGlobal` para
+> cada nome — globais legados preservados). As 8 definições legadas foram removidas;
+> `no-duplicate-core.test.js` agora as guarda. Coberto por `tests/core/validacao.test.js`
+> (adicionado `URL` ao sandbox do `load-core.js`). **58 testes verdes.** Demonstra o padrão
+> repetível para o resto da Fase 6: identificar cluster puro → mover para `src/` → alias →
+> remover legado → testar.
+
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…
 - **Atenção ao contrato `checkConfigValue`** (ver nota na Fase 5): ao mover/quebrar
@@ -372,7 +386,7 @@ CORS e quotas num só lugar.
 | 3 — Adapter versão | Alto | Médio | **Alto valor** |
 | 4 — Storage/rede | Médio | Médio | Sequência |
 | 5 — Build | Habilitador | Médio-alto | Quando limpo |
-| 6 — Feature folders | Alto | Baixo (após 0–5) | Final |
+| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 piloto `core/validacao.js` feito |
 
 ---
 

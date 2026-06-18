@@ -31,6 +31,25 @@
   "content_scripts": [
     {
       "js": [
+        "js/core-stack.bundle.js"
+      ],
+      "matches": [
+        "*://*.br/sei/*",
+        "*://*.br/sip/*",
+        "*://*.br/*/sei/*",
+        "*://*.br/*/sip/*",
+        "*://*.br/*controlador*.php?acao=*",
+        "*://*.org/sei/*",
+        "*://*.org/sip/*",
+        "*://*.org/*controlador*.php?acao=*",
+        "*://sip-sei.ans.gov.br/*"
+      ],
+      "all_frames": true,
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "js": [
         "js/core-stack.bundle.js",
         "js/lib/jquery-3.7.1.min.js",
         "js/lib/jquery-ui.min.js",

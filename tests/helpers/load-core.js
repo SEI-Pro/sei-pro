@@ -41,6 +41,7 @@ export function loadCoreScripts(scriptPaths) {
     sessionStorage: createStorage(),
     localStorage: createStorage(),
     console,
+    URL,
     jmespath: null,
     jQuery: null,
     $: null

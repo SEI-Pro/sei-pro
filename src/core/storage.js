@@ -40,6 +40,17 @@ export function installStorage() {
         });
     }
 
+    /**
+     * Fachada de rede delegada ao service worker.
+     *
+     * CONTRATO (NÃO é a Response do fetch): resolve com um objeto simples
+     *   { ok: boolean, status: number, body: string }
+     * onde `body` é SEMPRE texto cru (o SW faz response.text()). Não há
+     * `.json()`/`.text()`/`.headers` — quem precisa de JSON faz
+     * `JSON.parse(result.body)`. Promise rejeita apenas em falha de transporte
+     * (URL bloqueada pela allowlist do SW, erro de rede); respostas HTTP 4xx/5xx
+     * resolvem normalmente com `ok:false` e o corpo preservado.
+     */
     function fetchRequest(url, options) {
         return getSeiPro().core.messaging.sendMessage({
             action: 'fetch',

@@ -947,30 +947,14 @@ String.prototype.repeat = function( num )
 function extractEmails(text) {
     return text.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
 }
-function extractCPFs(text) {
-    return text.match(/(([0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2}))/gi);
-}
+// extractCPFs migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 function extractHexColor(text) {
     return text.match(/#[0-9a-f]{6}|#[0-9a-f]{3}/gi);
 }
 function arrayMax(arr) {
     return arr.reduce(function (p, v) { return ( p > v ? p : v ) });
 }
-function validaCPF(cpf){
-    cpf = cpf.replace(/\D/g, '');
-    if(cpf.toString().length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-    var result = true;
-    [9,10].forEach(function(j){
-        var soma = 0, r;
-        cpf.split(/(?=)/).splice(0,j).forEach(function(e, i){
-            soma += parseInt(e) * ((j+2)-(i+1));
-        });
-        r = soma % 11;
-        r = (r <2)?0:11-r;
-        if(r != cpf.substring(j, j+1)) result = false;
-    });
-    return result;
-}
+// validaCPF migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 function getChartLabelItemStore(idElem, chartObj){
     if (getOptionsPro(idElem+'_canvas')){
         var arrayLabels = getOptionsPro(idElem+'_canvas');
@@ -1022,15 +1006,7 @@ function replaceTextToUrl(text) {
     // Replacing the RegExp content by HTML element
     return text.replace(Rexp, "<a href='$1' target='_blank'>$3</a>");
 }
-function maskCNPJ(text) {
-    return !!text ? text.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5") : text;
-}
-function maskCPF(text) {
-    return !!text ? text.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : text;
-}
-function maskPEN(text) {
-    return text.replace(/^(\d{5})(\d{6})(\d{4})(\d{2})/, "$1.$2/$3-$4");
-}
+// maskCNPJ, maskCPF, maskPEN migradas para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 function setChartLabelItemStore(e, legendItem){
     var ci = this.chart;
     var is_line = (typeof legendItem.datasetIndex !== 'undefined') ? true : false;
@@ -1461,10 +1437,7 @@ function is_html(str) {
     var regex = /<\/?[a-z][\s\S]*>/i; 
     return regex.test(str);
 }
-function validateEmail(email) {
-    var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/; 
-    return regex.test(email);
-}
+// validateEmail migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 // encodeURIComponent para ISO-8859-1
 function escapeComponent(str) {  
     return escape(str).replace(/\+/g, '%2B');
@@ -1472,21 +1445,7 @@ function escapeComponent(str) {
 function escapeRegExp(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
-function escapeHtml(string) {
-    var entityMap = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-        '/': '&#x2F;',
-        '`': '&#x60;',
-        '=': '&#x3D;'
-    };
-    return String(string).replace(/[&<>"'`=\/]/g, function (s) {
-      return entityMap[s];
-    });
-  }
+// escapeHtml migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 function forceOnLoadBodyPage() {
     var onloadAttr = $('body').attr('onload');
     if (!onloadAttr || typeof $().resizable === 'undefined' || $('.sparkling-modal-frame').length) return;
@@ -6356,17 +6315,7 @@ function getIDProtocoloSEI(protocolo, funcSucess, funcError) {
         }
     });
 }
-function isValidHttpUrl(string) {
-  let url;
-
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;  
-  }
-
-  return url.protocol === "http:" || url.protocol === "https:";
-}
+// isValidHttpUrl migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 function arraySheetToJSON(array) {
     var objDados = [];
     $.each(array,function(index, value){

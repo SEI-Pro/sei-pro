@@ -51,16 +51,101 @@
   }
 
   // src/core/runtime.js
+  var EXT_BASE_KEY = "seiProExtBaseUrl";
+  var EXT_MANIFEST_KEY = "seiProExtManifest";
+  function runtimeApi() {
+    if (typeof globalRef.browser !== "undefined" && globalRef.browser.runtime) {
+      return globalRef.browser.runtime;
+    }
+    if (typeof globalRef.chrome !== "undefined" && globalRef.chrome.runtime) {
+      return globalRef.chrome.runtime;
+    }
+    return null;
+  }
+  function sessionGet(key) {
+    try {
+      return typeof globalRef.sessionStorage !== "undefined" ? globalRef.sessionStorage.getItem(key) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function sessionSet(key, value) {
+    try {
+      if (typeof globalRef.sessionStorage !== "undefined") {
+        globalRef.sessionStorage.setItem(key, value);
+      }
+    } catch (e) {
+    }
+  }
+  function extBase() {
+    if (globalRef.__seiProExtBase) return globalRef.__seiProExtBase;
+    const cached = sessionGet(EXT_BASE_KEY);
+    if (cached) return cached;
+    if (typeof globalRef.URL_SPRO !== "undefined" && globalRef.URL_SPRO) {
+      return globalRef.URL_SPRO;
+    }
+    return "";
+  }
   function createRuntime() {
     const isChrome = typeof globalRef.browser === "undefined";
     if (isChrome && typeof globalRef.chrome !== "undefined") {
       globalRef.browser = globalRef.chrome;
     }
+    const api = runtimeApi();
+    if (api && typeof api.getURL === "function") {
+      try {
+        const base = api.getURL("");
+        globalRef.__seiProExtBase = base;
+        sessionSet(EXT_BASE_KEY, base);
+      } catch (e) {
+      }
+    } else if (!globalRef.__seiProExtBase) {
+      try {
+        const self = typeof document !== "undefined" ? document.currentScript : null;
+        const src = self && self.src ? String(self.src) : "";
+        const m = src.match(/^(.*\/)js\/core-stack\.bundle\.js(?:[?#].*)?$/);
+        if (m) {
+          globalRef.__seiProExtBase = m[1];
+          sessionSet(EXT_BASE_KEY, m[1]);
+        }
+      } catch (e) {
+      }
+    }
+    if (api && typeof api.getManifest === "function") {
+      try {
+        const manifest = api.getManifest();
+        globalRef.__seiProExtManifest = manifest;
+        sessionSet(EXT_MANIFEST_KEY, JSON.stringify(manifest));
+      } catch (e) {
+      }
+    }
     function getUrlExtension(url) {
-      return globalRef.browser.runtime.getURL(url);
+      const rt = runtimeApi();
+      if (rt && typeof rt.getURL === "function") {
+        return rt.getURL(url);
+      }
+      const base = extBase();
+      if (!base) {
+        throw new Error(
+          "SeiPro.getUrlExtension: base da extens\xE3o indispon\xEDvel no mundo MAIN (cache de sessionStorage vazio, sem chrome.runtime e sem URL_SPRO)."
+        );
+      }
+      return base + url;
     }
     function getManifestExtension() {
-      return globalRef.browser.runtime.getManifest();
+      const rt = runtimeApi();
+      if (rt && typeof rt.getManifest === "function") {
+        return rt.getManifest();
+      }
+      if (globalRef.__seiProExtManifest) return globalRef.__seiProExtManifest;
+      const cached = sessionGet(EXT_MANIFEST_KEY);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {
+        }
+      }
+      return {};
     }
     function pathExtensionSEIPro() {
       return getUrlExtension("js/sei-pro.js").toString().replace("js/sei-pro.js", "");
@@ -282,6 +367,85 @@
     aliasGlobal("verifyConfigValue", verifyConfigValue);
     aliasGlobal("getConfigValue", getConfigValue);
     return config;
+  }
+
+  // src/core/validacao.js
+  function extractCPFs(text) {
+    return text.match(/(([0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2}))/gi);
+  }
+  function validaCPF(cpf) {
+    cpf = cpf.replace(/\D/g, "");
+    if (cpf.toString().length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let result = true;
+    [9, 10].forEach(function(j) {
+      let soma = 0, r;
+      cpf.split(/(?=)/).splice(0, j).forEach(function(e, i) {
+        soma += parseInt(e) * (j + 2 - (i + 1));
+      });
+      r = soma % 11;
+      r = r < 2 ? 0 : 11 - r;
+      if (r != cpf.substring(j, j + 1)) result = false;
+    });
+    return result;
+  }
+  function maskCNPJ(text) {
+    return !!text ? text.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5") : text;
+  }
+  function maskCPF(text) {
+    return !!text ? text.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : text;
+  }
+  function maskPEN(text) {
+    return text.replace(/^(\d{5})(\d{6})(\d{4})(\d{2})/, "$1.$2/$3-$4");
+  }
+  function validateEmail(email) {
+    const regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    return regex.test(email);
+  }
+  function escapeHtml(string) {
+    const entityMap = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+      "/": "&#x2F;",
+      "`": "&#x60;",
+      "=": "&#x3D;"
+    };
+    return String(string).replace(/[&<>"'`=\/]/g, function(s) {
+      return entityMap[s];
+    });
+  }
+  function isValidHttpUrl(string) {
+    let url;
+    try {
+      url = new URL(string);
+    } catch (_) {
+      return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
+  function installValidacao() {
+    const validacao = {
+      extractCPFs,
+      validaCPF,
+      maskCNPJ,
+      maskCPF,
+      maskPEN,
+      validateEmail,
+      escapeHtml,
+      isValidHttpUrl
+    };
+    getSeiPro().core.validacao = validacao;
+    aliasGlobal("extractCPFs", extractCPFs);
+    aliasGlobal("validaCPF", validaCPF);
+    aliasGlobal("maskCNPJ", maskCNPJ);
+    aliasGlobal("maskCPF", maskCPF);
+    aliasGlobal("maskPEN", maskPEN);
+    aliasGlobal("validateEmail", validateEmail);
+    aliasGlobal("escapeHtml", escapeHtml);
+    aliasGlobal("isValidHttpUrl", isValidHttpUrl);
+    return validacao;
   }
 
   // src/core/ui.js
@@ -752,6 +916,7 @@
     installUtil();
     installBootstrap();
     installConfig();
+    installValidacao();
     installUi();
     installMessaging();
     installStorage();
