@@ -8,43 +8,44 @@ var current_position = false;
 var monitoradoLocationDenied = false;
 var monitorado_loopServer = 0;
 // ADICIONA ACOMPANHAMENTO DE PROCESSOS
+function defaultConfigDate() {
+    return {
+        date: moment().format('YYYY-MM-DD'),
+        listdocs: false,
+        dateDue: moment().add(5,'d').format('YYYY-MM-DD'),
+        countdown: true,
+        countdays: false,
+        workday: false,
+        setdate: true,
+        duenumber: 5,
+        duecounter: 'corrido',
+        duemode: 'depois',
+        duesetdate: false,
+        duedate: false,
+        newdoc: true,
+        selectdoc: false,
+        advanced: false,
+        displayformat: false,
+        displayicon: false,
+        displaydue: false,
+        displaydue_txt: 'Vencimento:',
+        displaytip: '',
+        deliverydoc: false,
+        deliverydoc_style: '',
+        newdoclist: []
+    };
+}
 function getOptionsConfigDate(index) {
     var storeMonitorados = getStoreMonitoradoPro();
-    var configdate = (!$.isEmptyObject(storeMonitorados['monitorados'][index]['configdate'])) 
-                        ? storeMonitorados['monitorados'][index]['configdate']
-                        : {
-                            date: moment().format('YYYY-MM-DD'), 
-                            listdocs: false,
-                            dateDue: moment().add(5,'d').format('YYYY-MM-DD'), 
-                            countdown: true, 
-                            countdays: false, 
-                            workday: false, 
-                            setdate: true, 
-                            duenumber: 5, 
-                            duecounter: 'corrido', 
-                            duemode: 'depois', 
-                            duesetdate: false, 
-                            duedate: false, 
-                            newdoc: true,
-                            selectdoc: false,
-                            advanced: false,
-                            displayformat: false,
-                            displayicon: false,
-                            displaydue: false,
-                            displaydue_txt: 'Vencimento:',
-                            displaytip: '',
-                            deliverydoc: false,
-                            deliverydoc_style: '',
-                            newdoclist: []
-                        };
-    return configdate;
+    var item = (index >= 0 && storeMonitorados['monitorados'][index]) ? storeMonitorados['monitorados'][index] : false;
+    return (item && !$.isEmptyObject(item['configdate'])) ? item['configdate'] : defaultConfigDate();
 }
 function openBoxConfigDates(this_) {
     var _this = $(this_);
     var index = parseInt(_this.closest('tr').data('index'));
     var id_procedimento = parseInt(_this.closest('tr').data('id_procedimento'));
     var storeMonitorados = getStoreMonitoradoPro();
-    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
     var dateInput = _this.closest('.info_dates_monitorado_txt').find('.monitoradoDatesPro').val().trim();
     var date_ = (dateInput == '') ? moment().format('YYYY-MM-DD') : dateInput;
     var configdate = getOptionsConfigDate(monitoradoIndex);
@@ -298,7 +299,6 @@ function getDadosSelectDoc(this_, id_procedimento) {
         getDadosIframeProcessoPro(String(id_procedimento), 'monitorados');
         initDadosSelectDoc(id_procedimento);
     }
-    console.log(_this, id_procedimento);
 }
 function monitoradoProcessDataReady(id_procedimento, dados) {
     return (
@@ -389,14 +389,13 @@ function updateSelectMonitorados(id_procedimento) {
 function updateArraySelectMonitorados(id_procedimento) {
     var storeMonitorados = getStoreMonitoradoPro();
     if (typeof storeMonitorados !== 'undefined' && storeMonitorados.hasOwnProperty('monitorados')) {
-        var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+        var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
         if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null && monitoradoIndex !== -1) {
             var item = storeMonitorados.monitorados[monitoradoIndex];
                 item.documentos = dadosProcessoPro.listDocumentosAssinados;
                 item.andamento = dadosProcessoPro.listAndamento.andamento;
                 storeMonitorados.monitorados[monitoradoIndex] = item;
-                localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
-                saveConfigMonitorado();
+                persistMonitoradoStore(storeMonitorados);
         }
     }
 }
@@ -443,32 +442,15 @@ function configDatesSetUpdate(mode) {
         }
     }
 }
+// Mantida apenas como atalho: atualiza datetime e persiste localmente (sem remoto).
 function getConfigDatetimeMonitorado() {
     var storeMonitorados = getStoreMonitoradoPro();
-    var config = storeMonitorados.config;
-        config.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
-        storeMonitorados.config = config;
-        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+    persistMonitoradoStore(storeMonitorados, { remote: false });
     return storeMonitorados;
 }
+// Persiste o store atual e agenda (debounce) o envio remoto. Chamada também por sei-functions-pro (etiquetas).
 function saveConfigMonitorado() {
-    var storeMonitorados = getConfigDatetimeMonitorado();
-    if (typeof storeMonitorados !== 'undefined' && storeMonitorados.hasOwnProperty('monitorados')) {
-        var sendMonitorados = {monitorados: [], config: {colortags: []}};
-            sendMonitorados.monitorados = jmespath.search(storeMonitorados.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
-            sendMonitorados.config.colortags = storeMonitorados.config.colortags;
-        if (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null) {
-            var action = 'set_monitorados';
-            var param = {
-                config: encodeURIComponent(encodeJSON_toHex(JSON.stringify(sendMonitorados))),
-                action: action
-            };
-            getServerAtividades(param, action);
-            setLocalFilePro(getStoreMonitoradoPro());
-        } else {
-            console.log('OK');
-        }
-    }
+    persistMonitoradoStore(getStoreMonitoradoPro());
 }
 function actionMonitoradoCheckbox(this_) {
     var _this = $(this_);
@@ -491,7 +473,7 @@ function saveConfigDatesMonitorado(this_) {
     var config = getConfigDatesMonitorado();
     var storeMonitorados = getStoreMonitoradoPro();
     var id_procedimento = parseInt($('#configDatesBox_id_procedimento').val().trim());
-    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
     if (monitoradoIndex >=0 && typeof storeMonitorados['monitorados'][monitoradoIndex] !== undefined && typeof getConfigDatesMonitorado() !== undefined) {
         //console.log(config);
         var htmlDatePreview = getDatesPreview(config);
@@ -504,10 +486,9 @@ function saveConfigDatesMonitorado(this_) {
         $('#configDatesBox').remove();
         trMonitorado.find('.monitoradoDatesPro').val(config.date);
         storeMonitorados['monitorados'][monitoradoIndex]['configdate'] = config;
-        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+        persistMonitoradoStore(storeMonitorados);
         alertaBoxPro('Sucess', 'check-circle', 'Contagem de tempo cadastrada com sucesso!');
         resetDialogBoxPro('iframeBoxPro');
-        saveConfigMonitorado();
     } else {
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao cadastrar!');
     }
@@ -517,7 +498,7 @@ function removeConfigDatesMonitorado(this_) {
     var config = getConfigDatesMonitorado();
     var storeMonitorados = getStoreMonitoradoPro();
     var id_procedimento = parseInt($('#configDatesBox_id_procedimento').val().trim());
-    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
     if (monitoradoIndex >=0 && typeof storeMonitorados['monitorados'][monitoradoIndex] !== undefined && typeof getConfigDatesMonitorado() !== undefined) {
         //console.log(config);
         var trMonitorado = _this.closest('table').find('tr[data-id_procedimento="'+id_procedimento+'"]');
@@ -529,10 +510,9 @@ function removeConfigDatesMonitorado(this_) {
         $('#configDatesBox').remove();
         trMonitorado.find('.monitoradoDatesPro').val('');
         storeMonitorados['monitorados'][monitoradoIndex]['configdate'] = null;
-        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+        persistMonitoradoStore(storeMonitorados);
         alertaBoxPro('Sucess', 'check-circle', 'Contagem de tempo removida com sucesso!');
         resetDialogBoxPro('iframeBoxPro');
-        saveConfigMonitorado();
     } else {
         alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao cadastrar!');
     }
@@ -643,8 +623,76 @@ function updateCountTableMonitorado() {
     var countTxt = (count == 1) ? count+' registro:' : count+' registros:';
         $('.tableFollow').find('caption.infraCaption').text(countTxt);
 }
+// ===== Store em memória (fonte da verdade) =====
+// O objeto vivo fica em memória e o localStorage é write-through (síncrono),
+// para os demais arquivos continuarem lendo a chave 'configDataMonitoradosPro'.
+// O cache de parse é invalidado comparando a string crua do localStorage, então
+// escritas externas (sync de servidor, etiquetas, outras abas) são sempre refletidas.
+// A persistência remota (servidor + FileSystem) é agrupada com debounce.
+var SEIPRO_MONITORADO_KEY = 'configDataMonitoradosPro';
+var monitoradoStoreState = null;
+var monitoradoStoreLastRaw = null;
+var monitoradoRemoteTimer = null;
+function defaultMonitoradoStore() {
+    return { monitorados: [], config: { colortags: [] } };
+}
 function getStoreMonitoradoPro() {
-    return ( typeof localStorageRestorePro('configDataMonitoradosPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataMonitoradosPro')) ) ? localStorageRestorePro('configDataMonitoradosPro') : {monitorados: [], config: {colortags: []} };
+    var raw = localStorage.getItem(SEIPRO_MONITORADO_KEY);
+    if (raw === monitoradoStoreLastRaw && monitoradoStoreState !== null) {
+        return monitoradoStoreState;
+    }
+    var parsed = (raw && isJson(raw)) ? JSON.parse(raw) : false;
+    monitoradoStoreState = (parsed && !$.isEmptyObject(parsed)) ? parsed : defaultMonitoradoStore();
+    monitoradoStoreLastRaw = raw;
+    return monitoradoStoreState;
+}
+// Localiza o índice de um processo monitorado no store (retorna -1 se ausente).
+function findMonitoradoIndex(store, id_procedimento) {
+    if (!store || !store.monitorados) return -1;
+    return store.monitorados.findIndex(function(obj){
+        return String(obj.id_procedimento) === String(id_procedimento);
+    });
+}
+function persistMonitoradoStore(store, options) {
+    options = options || {};
+    monitoradoStoreState = store || getStoreMonitoradoPro();
+    if (!monitoradoStoreState.config) monitoradoStoreState.config = { colortags: [] };
+    monitoradoStoreState.config.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
+    monitoradoStoreLastRaw = JSON.stringify(monitoradoStoreState);
+    localStorage.setItem(SEIPRO_MONITORADO_KEY, monitoradoStoreLastRaw);
+    if (options.remote !== false) scheduleMonitoradoRemote();
+}
+function scheduleMonitoradoRemote() {
+    if (monitoradoRemoteTimer) clearTimeout(monitoradoRemoteTimer);
+    monitoradoRemoteTimer = setTimeout(function(){
+        monitoradoRemoteTimer = null;
+        flushMonitoradoRemote();
+    }, 800);
+}
+// Se houver envio remoto pendente, dispara imediatamente ao sair da página
+// (o localStorage já é síncrono; isto garante o backup remoto/FileSystem).
+if (!window.__seiProMonitoradoFlushBound) {
+    window.__seiProMonitoradoFlushBound = true;
+    window.addEventListener('pagehide', function(){
+        if (monitoradoRemoteTimer) {
+            clearTimeout(monitoradoRemoteTimer);
+            monitoradoRemoteTimer = null;
+            flushMonitoradoRemote();
+        }
+    });
+}
+function flushMonitoradoRemote() {
+    var storeMonitorados = getStoreMonitoradoPro();
+    if (typeof storeMonitorados === 'undefined' || !storeMonitorados.hasOwnProperty('monitorados')) return;
+    if (typeof perfilLoginAtiv === 'undefined' || perfilLoginAtiv === null) return;
+    var sendMonitorados = { monitorados: [], config: { colortags: [] } };
+    sendMonitorados.monitorados = jmespath.search(storeMonitorados.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
+    sendMonitorados.config.colortags = storeMonitorados.config.colortags;
+    getServerAtividades({
+        config: encodeURIComponent(encodeJSON_toHex(JSON.stringify(sendMonitorados))),
+        action: 'set_monitorados'
+    }, 'set_monitorados');
+    setLocalFilePro(getStoreMonitoradoPro());
 }
 function getMonitoradoProcessAnchor(ifrArvore) {
     if (!ifrArvore || !ifrArvore.length) return $();
@@ -863,7 +911,7 @@ function syncMonitoradoProProcessData(id_procedimento, dados) {
     var storeMonitorados = getStoreMonitoradoPro();
     if (!storeMonitorados || typeof storeMonitorados.monitorados === 'undefined' || !storeMonitorados.monitorados.length) return;
 
-    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => String(obj.id_procedimento) == String(id_procedimento)));
+    var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
     if (monitoradoIndex === -1) return;
 
     var andamento = dados.listAndamento || {};
@@ -891,8 +939,7 @@ function syncMonitoradoProProcessData(id_procedimento, dados) {
         storeMonitorados.config = storeMonitorados.config || {};
         storeMonitorados.config.tiposdocs = dados.tiposDocumentos;
     }
-    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
-    saveConfigMonitorado();
+    persistMonitoradoStore(storeMonitorados);
     var currentSnapshot = JSON.stringify({
         processo: item.processo || '',
         andamento: item.andamento || [],
@@ -926,8 +973,7 @@ function storeMonitoradoPro(mode, id_procedimento) {
         var storeMonitorados = removeMonitoradoPro(id_procedimento);
     }
     if (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.hasOwnProperty('tiposDocumentos') && dadosProcessoPro.tiposDocumentos.length > 0 ) { storeMonitorados['config']['tiposdocs'] = dadosProcessoPro.tiposDocumentos; }
-    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
-    saveConfigMonitorado();
+    persistMonitoradoStore(storeMonitorados);
     appendIconMonitorados();
     if ($('#ifrArvore').length == 0) {
         // console.log('### addMonitoradoPro', mode, storeMonitorados); 
@@ -964,8 +1010,7 @@ function removeMonitoradoPainelPro(this_, id_procedimento = 0) {
 function removeMonitoradoPainelPro_(this_, id_procedimento) {
     var _this = $(this_);
     var storeMonitorados = removeMonitoradoPro(id_procedimento);
-    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
-    saveConfigMonitorado();
+    persistMonitoradoStore(storeMonitorados);
     _this.closest('tr').slideUp();
 }
 function updateMonitorados(this_) {
@@ -985,13 +1030,9 @@ function configureLeafletAssets() {
 }
 function removeMonitoradoPro(id_procedimento, storeMonitorados = false) {
     var storeMonitorados = storeMonitorados || getStoreMonitoradoPro();
-    for (i = 0; i < storeMonitorados['monitorados'].length; i++) {
-        if( storeMonitorados['monitorados'][i]['id_procedimento'] == id_procedimento) {
-            // console.log('notinclude', i, storeMonitorados['monitorados'][i]['id_procedimento'], storeMonitorados['monitorados'][i]['processo']);
-            storeMonitorados['monitorados'].splice(i,1);
-            i--;
-        }
-    }
+    storeMonitorados['monitorados'] = storeMonitorados['monitorados'].filter(function(item){
+        return item['id_procedimento'] != id_procedimento;
+    });
     return storeMonitorados;
 }
 function editCategoryMonitorado(this_, id_procedimento) {
@@ -1076,14 +1117,13 @@ function saveCategoryMonitorado(this_, value) {
     var data = _this.data();
     var id_procedimento = data.id;
     var storeMonitorados = getStoreMonitoradoPro();
-    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
-    if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null) {
+    var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
+    if (monitoradoIndex >= 0) {
             var item = storeMonitorados.monitorados[monitoradoIndex];
                 item.categoria = value;
             storeMonitorados.monitorados[monitoradoIndex] = item;
     }
-    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
-    saveConfigMonitorado();
+    persistMonitoradoStore(storeMonitorados);
     setPanelMonitorados('refresh');
     if (alertBoxPro) {   
         alertBoxPro.dialog('close');
@@ -1162,13 +1202,17 @@ function setPanelMonitorados(mode) {
                 var order = (issetOrder) ? value.order : index;
                 var categoria = (value.hasOwnProperty('categoria') && value.categoria !== null && value.categoria != '') ? value.categoria : false;
                 var htmlIconsHome = ($('#P'+value.id_procedimento).find('td').eq(1).find('a').length > 0) ? $('#P'+value.id_procedimento).find('td').eq(1).find('a').map(function(v){ return this.outerHTML }).get().join('') : '';
+                var processoSafe = (typeof escapeHtml === 'function') ? escapeHtml(value.processo) : value.processo;
+                var descricaoSafe = (typeof escapeHtml === 'function') ? escapeHtml(value.descricao) : value.descricao;
+                var tipoProcedimentoSafe = (typeof escapeHtml === 'function') ? escapeHtml(value.tipo_procedimento) : value.tipo_procedimento;
+                var categoriaSafe = (categoria && typeof escapeHtml === 'function') ? escapeHtml(categoria) : (categoria ? categoria : '');
                 if (selectedCategoryView == '' || selectedCategoryView == categoria) {
                     htmlTableMonitorados +=   '       <tr data-tagname="SemGrupo" data-index="'+index+'" data-id_procedimento="'+value.id_procedimento+'" class="'+tagsMonitoradoClass+' '+tagDatesMonitoradoClass+'">'+
                                             '           <td align="center"><input type="checkbox" onclick="followSelecionarItens(this)" id="monitoradoPro_'+value.id_procedimento+'" name="monitoradoPro" value="'+value.id_procedimento+'"></td>'+
                                             '           <td align="left">'+
                                             '               <a class="followLinkProcesso bLink" style="text-decoration: underline;" href="'+linkDoc+'">'+
                                             '               <i class="'+iconProcesso+' bLink" style="text-decoration: underline;"  onmouseover="return infraTooltipMostrar(\''+tipsProcesso+'\');" onmouseout="return infraTooltipOcultar();"></i> '+
-                                            '               '+value.processo+'</a>'+
+                                            '               '+processoSafe+'</a>'+
                                             '               <a class="newLink followLink followLinkNewtab" href="'+linkDoc+'" onmouseover="return infraTooltipMostrar(\'Abrir em nova aba\');" onmouseout="return infraTooltipOcultar();" target="_blank"><i class="fas fa-external-link-alt" style="font-size: 90%; text-decoration: underline;"></i></a>'+
                                             '               <div class="info_icons_monitorado">'+htmlIconsHome+'</div>'+
                                             '           </td>'+
@@ -1202,16 +1246,16 @@ function setPanelMonitorados(mode) {
                                             '               <a class="newLink followLink followLinkMaps followLinkMapsAdd" onclick="openBoxSingleMap(this)" onmouseover="return infraTooltipMostrar(\'Adicionar mapa\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-map-marker-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
                                             '           <td class="content_desc">'+
-                                            '               <span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'monitorado\')" onkeypress="keyFollowDesc(event, \'monitorado\')" value="'+value.descricao+'" name="monitoradoDescriptionPro"></span>'+
-                                            '               <span class="info">'+value.descricao+'</span>'+
+                                            '               <span class="info_txt" style="display:none"><input onblur="saveFollowDesc(this, \'monitorado\')" onkeypress="keyFollowDesc(event, \'monitorado\')" value="'+descricaoSafe+'" name="monitoradoDescriptionPro"></span>'+
+                                            '               <span class="info">'+descricaoSafe+'</span>'+
                                             '               <a class="newLink followLink followLinkDesc" onclick="editFollowDesc(this, \'monitorado\')" onmouseover="return infraTooltipMostrar(\'Editar especifica\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
                                             '           <td>'+
-                                            '               '+value.tipo_procedimento+
+                                            '               '+tipoProcedimentoSafe+
                                             '               <a class="newLink followLink followLinkTags followLinkMonitoradoRemove" onclick="removeMonitoradoPainelPro(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Remover dos Processos Monitorados\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-trash-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
                                             '           <td class="td_monitorado_category">'+
-                                            '               <span class="info_category_txt">'+(categoria ? categoria : '')+'</span>'+
+                                            '               <span class="info_category_txt">'+categoriaSafe+'</span>'+
                                             '               <span class="info_category" style="display:none"></span>'+
                                             '               <a class="newLink followLink followLinkTags followLinkMonitoradoCategory" onclick="editCategoryMonitorado(this, \''+value.id_procedimento+'\')" onmouseover="return infraTooltipMostrar(\'Editar categoria\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-pencil-alt" style="font-size: 100%;"></i></a>'+
                                             '           </td>'+
@@ -1360,7 +1404,7 @@ function checkFileRemoteMonitorado(mode, data = false) {
                     setTimeout(function(){
                         statusLoadRemoteFile = true;
                     }, 5000);
-                    console.log('getRemoteFileMonitorado', storeMonitorados, datetime_server.format('YYYY-MM-DD HH:mm:ss'), datetime_local.add(1,'minutes').format('YYYY-MM-DD HH:mm:ss'));
+                    if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('getRemoteFileMonitorado', storeMonitorados, datetime_server.format('YYYY-MM-DD HH:mm:ss'), datetime_local.add(1,'minutes').format('YYYY-MM-DD HH:mm:ss'));
                 }, 3000);
             }
         }
@@ -1370,11 +1414,9 @@ function checkFileLocalMonitorado() {
         getLocalFilePro();
         setTimeout(function(){ 
             if (fileSystemPro && fileSystemContentPro && typeof fileSystemContentPro === 'object' && typeof moment().isoWeekdayCalc === 'function' && fileSystemContentPro.hasOwnProperty('monitorados') && fileSystemContentPro.monitorados.length > 0 ) {
-                console.log('ok');
-                localStorageStorePro('configDataMonitoradosPro', fileSystemContentPro);
-                saveConfigMonitorado();
+                persistMonitoradoStore(fileSystemContentPro);
                 initPanelMonitorados();
-                console.log('backup setPanelMonitorados');
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('checkFileLocalMonitorado => backup setPanelMonitorados');
             } else if (typeof perfilLoginAtiv !== 'undefined' && perfilLoginAtiv !== null) {
                 getRemoteFileMonitorado();
                 if (typeof moment().isoWeekdayCalc !== 'function') $.getScript(URL_SPRO+"js/lib/moment-weekday-calc.js");
@@ -1396,10 +1438,10 @@ function restoreMonitoradoServer(data) {
     if (typeof storeMonitorados !== 'undefined' && typeof storeMonitorados.monitorados !== 'undefined' && typeof data !== 'undefined' && typeof data.monitorados !== 'undefined' && typeof data.config.colortags !== 'undefined') {
         storeMonitorados.monitorados = data.monitorados;
         storeMonitorados.config.colortags = data.config.colortags;
-        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+        persistMonitoradoStore(storeMonitorados, { remote: false });
         setLocalFilePro(storeMonitorados);
         initPanelMonitorados();
-        console.log('backup setPanelMonitorados');
+        if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('restoreMonitoradoServer => backup setPanelMonitorados');
     }
 }
 function keyDatesMonitorado(e) {
@@ -1456,7 +1498,7 @@ function initFunctionsPanelMonitorado(TimeOut = 9000) {
         if (typeof tagName !== 'undefined' && tagName != '') {
             setTimeout(function(){ 
                 $('.tableMonitorados .tagTableText_'+tagName).eq(0).trigger('click');
-                console.log('tagName',tagName);
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('tagName',tagName);
             }, 500);
         }
         tableMonitorados.tablesorter({
@@ -1515,17 +1557,16 @@ function initFunctionsPanelMonitorado(TimeOut = 9000) {
                     $('#monitoradoTablePro').find('tbody tr').each(function(index, value){
                         var _tr = $(this);
                         var id_procedimento = _tr.data('id_procedimento');
-                        var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+                        var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
 
-                        if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null) {
+                        if (monitoradoIndex >= 0) {
                                 var newIndex = index+1;
                                 var item = storeMonitorados.monitorados[monitoradoIndex];
                                     item.order = newIndex;
                                 storeMonitorados.monitorados[monitoradoIndex] = item;
                         }
                     });
-                    localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
-                    saveConfigMonitorado();
+                    persistMonitoradoStore(storeMonitorados);
                     $('#monitoradoTablePro').find('tbody tr').each(function(index){
                         $(this).attr('data-index', index).find('td').last().attr('data-order', index + 1);
                     });
@@ -1533,22 +1574,24 @@ function initFunctionsPanelMonitorado(TimeOut = 9000) {
             }
         });
 
-        var observerTableMonitorado = new MutationObserver(function(mutations) {
-            var _this = $(mutations[0].target);
-            var _parent = _this.closest('table');
-            var count_all = _parent.find('tr.infraTrMarcada').length;
+        // Um único observer no tbody (subtree + filtro de class) substitui um observer por linha.
+        var tbodyMonitorado = tableMonitorados.find('tbody').get(0);
+        var observerTableMonitorado = new MutationObserver(function() {
+            var count_all = tableMonitorados.find('tr.infraTrMarcada').length;
             if (count_all > 0) {
                 $('#monitoradosProActions').find('.iconMonitorados_remove').show().find('.fa-layers-counter').text(count_all);
             } else {
                 $('#monitoradosProActions').find('.iconMonitorados_remove').hide();
             }
         });
-        setTimeout(function(){ 
-            tableMonitorados.find('tbody tr').each(function(){
-                observerTableMonitorado.observe(this, {
-                        attributes: true
+        setTimeout(function(){
+            if (tbodyMonitorado) {
+                observerTableMonitorado.observe(tbodyMonitorado, {
+                    attributes: true,
+                    attributeFilter: ['class'],
+                    subtree: true
                 });
-            });
+            }
             checkboxRangerSelectShift();
             checkFileRemoteMonitorado('get');
             tableMonitorados.removeData('sei-pro-monitorado-init-pending');
@@ -1645,7 +1688,8 @@ function updateDatesMonitorado(this_) {
     var storeMonitorados = getStoreMonitoradoPro();
     var index = parseInt($(this_).closest('tr').data('index'));
     var id_procedimento = parseInt($(this_).closest('tr').data('id_procedimento'));
-    var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
+    var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
+    if (monitoradoIndex < 0) { return; }
     var config = getOptionsConfigDate(monitoradoIndex);
     if ($(this_).val().trim() != '') {
             if ($(this_).val().trim() != config.date && config.date != '' && $(this_).val().trim() != '' ) {
@@ -1660,7 +1704,7 @@ function updateDatesMonitorado(this_) {
             $(this_).closest('td').find('.info_dates_monitorado').html(htmlDatePreview+followLink[0].outerHTML);
         }
         storeMonitorados['monitorados'][monitoradoIndex]['configdate'] = config;
-        localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+        persistMonitoradoStore(storeMonitorados);
     }
 }
 function showDatesMonitorado(this_, mode) {
@@ -1793,7 +1837,7 @@ function removeMonitorado(this_) {
             $(this).remove();
             updateIndexTableMonitorado();
             updateCountTableMonitorado();
-            localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
+            persistMonitoradoStore(storeMonitorados);
         });
     }
 }
@@ -1880,7 +1924,7 @@ function setSingleMap(id_procedimento, readonly = false) {
     markers = marker._latlng;
     if (value && latlng) {
         var linkProc = $('#monitoradoTablePro tbody tr[data-id_procedimento="'+id_procedimento+'"] .followLinkProcesso')[0].outerHTML;
-        marker.bindPopup('<b>'+linkProc+'</b><br>'+value.descricao).openPopup();
+        marker.bindPopup('<b>'+linkProc+'</b><br>'+((typeof escapeHtml === 'function') ? escapeHtml(value.descricao) : value.descricao)).openPopup();
     }
     
     if (!readonly) {   
@@ -2008,7 +2052,7 @@ function setMultipleMap() {
         $.each(listMonitorado,function(index, value){
             var marker = L.marker(value.latlng).addTo(map).on('click', openMarkerMonitorado);
             var linkProc = $('#monitoradoTablePro tbody tr[data-id_procedimento="'+value.id_procedimento+'"] .followLinkProcesso')[0].outerHTML;
-                marker.bindPopup('<b>'+linkProc+'</b><br>'+value.descricao);
+                marker.bindPopup('<b>'+linkProc+'</b><br>'+((typeof escapeHtml === 'function') ? escapeHtml(value.descricao) : value.descricao));
                 marker_list.push([marker._latlng.lat, marker._latlng.lng]);
                 marker.monitorados = value;
         });
@@ -2017,7 +2061,6 @@ function setMultipleMap() {
     }
 }
 function openMarkerMonitorado(e){
-    console.log(e);
     var value = e.target.monitorados;
     $('#monitoradoTablePro').find('#lnkInfraCheck').data('index',1).trigger('click');
     scrollToElement($('#monitoradosProDiv .tabelaPanelScroll'), $('#monitoradoTablePro tbody tr[data-id_procedimento="'+value.id_procedimento+'"]'), 30);
@@ -2026,13 +2069,12 @@ function openMarkerMonitorado(e){
 function saveConfigMapsMonitorado(id_procedimento, mode = 'add'){
     if (typeof markers === 'object' && markers.lat !== null && markers.lng !== null) {
         var storeMonitorados = getStoreMonitoradoPro();
-        var monitoradoIndex = storeMonitorados.monitorados.findIndex((obj => obj.id_procedimento == id_procedimento));
-        if (typeof monitoradoIndex !== 'undefined' && monitoradoIndex !== null) {
+        var monitoradoIndex = findMonitoradoIndex(storeMonitorados, id_procedimento);
+        if (monitoradoIndex >= 0) {
             var item = storeMonitorados.monitorados[monitoradoIndex];
                 item.latlng = (mode == 'remove') ? null : [markers.lat, markers.lng];
             storeMonitorados.monitorados[monitoradoIndex] = item;
-            localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
-            saveConfigMonitorado();
+            persistMonitoradoStore(storeMonitorados);
             setPanelMonitorados('refresh');
             markers = [];
             setTimeout(function(){ 
