@@ -505,6 +505,25 @@
   function joinAnd(a) {
     return a.length == 1 ? a[0] : a.slice(0, -1).join(", ") + " e " + a.slice(-1);
   }
+  function is_html(str) {
+    const regex = /<\/?[a-z][\s\S]*>/i;
+    return regex.test(str);
+  }
+  function normalizeHTML(html) {
+    return String(html).replace(/\s+/g, " ").trim();
+  }
+  function getHashTagsPro(inputText) {
+    const regex = /(?:^|\s)(?:#)([a-zA-Z+-§\d]+)/gm;
+    const matches = [];
+    let match;
+    while (match = regex.exec(inputText)) {
+      matches.push(match[1].trim().replace(/\.|\,|\:|\//g, ""));
+    }
+    return matches;
+  }
+  function normalizeNameTag(tag) {
+    return removeAcentos(tag).replace(/\ /g, "").toLowerCase().replace(/[^a-z0-9]/gi, "").replace(/[\u200B-\u200D\uFEFF]/g, "");
+  }
   function installTexto() {
     const texto = {
       escapeRegExp,
@@ -516,7 +535,11 @@
       extractEmails,
       extractAllTextBetweenQuotes,
       extractOnlyAlphaNum,
-      joinAnd
+      joinAnd,
+      is_html,
+      normalizeHTML,
+      getHashTagsPro,
+      normalizeNameTag
     };
     getSeiPro().core.texto = texto;
     aliasGlobal("escapeRegExp", escapeRegExp);
@@ -529,6 +552,10 @@
     aliasGlobal("extractAllTextBetweenQuotes", extractAllTextBetweenQuotes);
     aliasGlobal("extractOnlyAlphaNum", extractOnlyAlphaNum);
     aliasGlobal("joinAnd", joinAnd);
+    aliasGlobal("is_html", is_html);
+    aliasGlobal("normalizeHTML", normalizeHTML);
+    aliasGlobal("getHashTagsPro", getHashTagsPro);
+    aliasGlobal("normalizeNameTag", normalizeNameTag);
     return texto;
   }
 
@@ -552,13 +579,23 @@
       b: parseInt(result[3], 16)
     } : null;
   }
+  function addAlpha(color, opacity) {
+    const _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
+    return color + _opacity.toString(16).toUpperCase();
+  }
+  function getBrightnessColor(value) {
+    const rgb = hexToRgb(value);
+    return Math.round((parseInt(rgb.r) * 299 + parseInt(rgb.g) * 587 + parseInt(rgb.b) * 114) / 1e3);
+  }
   function installCor() {
-    const cor = { componentToHex, rgbToHex, rgbToHexString, hexToRgb };
+    const cor = { componentToHex, rgbToHex, rgbToHexString, hexToRgb, addAlpha, getBrightnessColor };
     getSeiPro().core.cor = cor;
     aliasGlobal("componentToHex", componentToHex);
     aliasGlobal("rgbToHex", rgbToHex);
     aliasGlobal("rgbToHexString", rgbToHexString);
     aliasGlobal("hexToRgb", hexToRgb);
+    aliasGlobal("addAlpha", addAlpha);
+    aliasGlobal("getBrightnessColor", getBrightnessColor);
     return cor;
   }
 
@@ -808,6 +845,9 @@
     }
     return arr;
   }
+  function numberToLetter(number) {
+    return (parseInt(number) + 9).toString(36).toUpperCase();
+  }
   function decimalHourToMinute(minutes) {
     const sign = minutes < 0 ? "-" : "";
     const min = Math.floor(Math.abs(minutes));
@@ -827,6 +867,7 @@
       avgArray,
       reverseArray,
       toArray,
+      numberToLetter,
       decimalHourToMinute
     };
     getSeiPro().core.numeros = numeros;
@@ -841,6 +882,7 @@
     aliasGlobal("avgArray", avgArray);
     aliasGlobal("reverseArray", reverseArray);
     aliasGlobal("toArray", toArray);
+    aliasGlobal("numberToLetter", numberToLetter);
     aliasGlobal("decimalHourToMinute", decimalHourToMinute);
     return numeros;
   }

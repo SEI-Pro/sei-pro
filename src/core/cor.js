@@ -32,8 +32,20 @@ export function hexToRgb(hex) {
     } : null;
 }
 
+// Acrescenta canal alpha (0..1) a uma cor hex "#rrggbb" → "#rrggbbAA".
+export function addAlpha(color, opacity) {
+    const _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
+    return color + _opacity.toString(16).toUpperCase();
+}
+
+// Brilho percebido (YIQ) de uma cor hex, 0..255.
+export function getBrightnessColor(value) {
+    const rgb = hexToRgb(value);
+    return Math.round(((parseInt(rgb.r) * 299) + (parseInt(rgb.g) * 587) + (parseInt(rgb.b) * 114)) / 1000);
+}
+
 export function installCor() {
-    const cor = { componentToHex, rgbToHex, rgbToHexString, hexToRgb };
+    const cor = { componentToHex, rgbToHex, rgbToHexString, hexToRgb, addAlpha, getBrightnessColor };
 
     getSeiPro().core.cor = cor;
 
@@ -41,6 +53,8 @@ export function installCor() {
     aliasGlobal('rgbToHex', rgbToHex);
     aliasGlobal('rgbToHexString', rgbToHexString);
     aliasGlobal('hexToRgb', hexToRgb);
+    aliasGlobal('addAlpha', addAlpha);
+    aliasGlobal('getBrightnessColor', getBrightnessColor);
 
     return cor;
 }

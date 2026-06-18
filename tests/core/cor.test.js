@@ -30,6 +30,22 @@ describe('rgbToHexString', () => {
   });
 });
 
+describe('addAlpha', () => {
+  it('acrescenta canal alpha em hex maiúsculo', () => {
+    expect(cor.addAlpha('#ffffff', 1)).toBe('#ffffffFF');
+    expect(cor.addAlpha('#000000', 0.5)).toBe('#00000080');
+    // quirk verbatim: opacity 0 é falsy → `opacity || 1` usa 1 → FF
+    expect(cor.addAlpha('#000000', 0)).toBe('#000000FF');
+  });
+});
+
+describe('getBrightnessColor', () => {
+  it('calcula brilho YIQ (branco alto, preto zero)', () => {
+    expect(cor.getBrightnessColor('#ffffff')).toBe(255);
+    expect(cor.getBrightnessColor('#000000')).toBe(0);
+  });
+});
+
 describe('hexToRgb', () => {
   it('converte "#rrggbb" em objeto {r,g,b}', () => {
     expect(cor.hexToRgb('#ff0010')).toEqual({ r: 255, g: 0, b: 16 });

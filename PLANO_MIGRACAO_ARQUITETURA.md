@@ -432,6 +432,13 @@ CORS e quotas num só lugar.
 > `decimalHourToMinute`. Sandbox de teste ganhou `btoa`/`atob` (faltavam no `vm`).
 > **116 testes verdes.** Acumulado: **47 funções** em 7 módulos
 > (`validacao`, `texto`, `cor`, `datas`, `feriados`, `numeros`, `serial`).
+>
+> **9ª leva — extensões puras.** +7 funções: `cor` (`addAlpha`, `getBrightnessColor`);
+> `numeros` (`numberToLetter`); `texto` (`is_html`, `normalizeHTML`, `getHashTagsPro`,
+> `normalizeNameTag` — esta importa `removeAcentos` de `util.js`, 2ª dependência inter-core).
+> Cuidados pegos por teste: a regex zero-width de `normalizeNameTag` foi mantida com escapes
+> `\u` explícitos; `addAlpha(_,0)` retorna `FF` (quirk `opacity||1`, verbatim). **123 testes
+> verdes.** Acumulado: **54 funções** em 7 módulos.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…

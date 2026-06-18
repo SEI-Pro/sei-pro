@@ -591,9 +591,7 @@ const sanitizeHTML = (html) => DOMPurify.sanitize(html, {
 });
 
 // FUNÇÃO PARA NORMALIZAR HTML (remover espaços e quebras de linha extras)
-function normalizeHTML(html) {
-    return String(html).replace(/\s+/g, ' ').trim();
-}
+// normalizeHTML migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 
 // FUNÇÃO PARA FORMATAR NUMERO EM DUAS CASAS DECIMAIS
 const format2Decimal = v => isNaN(v = +v) ? '0.00' : v.toFixed(2);
@@ -858,9 +856,7 @@ function insertFontIcon(elementTo, target = $('html')) {
         $('body').addClass('seiSlim seiSlim_parent seiSlim_view');
     }
 }
-function numberToLetter(number) {
-    return (parseInt(number) + 9).toString(36).toUpperCase();
-}
+// numberToLetter migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 // decimalHourToMinute migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 function reloadModalLink() {
     var urlModalink = $('head').find('script[src*="modalLink"]');
@@ -1357,10 +1353,7 @@ function infraFormatarTamanhoBytes(numBytes){
     }
     return ret;
 }
-function is_html(str) {
-    var regex = /<\/?[a-z][\s\S]*>/i; 
-    return regex.test(str);
-}
+// is_html migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 // validateEmail migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 // encodeURIComponent para ISO-8859-1
 // escapeComponent e escapeRegExp migradas para SeiPro.core.texto (src/core/texto.js) — Fase 6
@@ -1430,29 +1423,14 @@ function prepCSVRow(arr, columnCount, initial) {
 // rgbToHexString migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
 // rgbToHex migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
 // hexToRgb migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
-function addAlpha(color, opacity) {
-    // coerce values so ti is between 0 and 1.
-    var _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
-    return color + _opacity.toString(16).toUpperCase();
-}
+// addAlpha migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
 // arrayMin migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 
 // [removida redeclaração duplicada de arrayMax — definida acima na linha ~958]
-function getHashTagsPro(inputText) {
-    var regex = /(?:^|\s)(?:#)([a-zA-Z+-§\d]+)/gm;
-    var matches = [];
-    var match;
-    while ((match = regex.exec(inputText))) {
-        matches.push(match[1].trim().replace(/\.|\,|\:|\//g, ''));
-    }
-    return matches;
-}
+// getHashTagsPro migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 // hasNumber e onlyNumber migradas para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 // joinAnd migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
-function getBrightnessColor(value) {
-    var rgb = hexToRgb(value);
-    return Math.round(((parseInt(rgb.r) * 299) + (parseInt(rgb.g) * 587) + (parseInt(rgb.b) * 114)) / 1000);
-}
+// getBrightnessColor migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
 function setIconLoadinBtnSEI(elem, display = true) {
     if (display) {
         elem.find('img').css('opacity','0').end().append('<span class="botaoSEI_iconBox botaoSEI_loading infraCorBarraSistema" style="'+(SeiPro.sei.adapter.isNewSEI() ? 'margin: 0;border: 0;width: 100%;height: 46px;background: #fff !important;' : 'margin: 0px 0 0 5px; border: 0.1em solid white;')+'"><i class="fas fa-spin fa-spinner" style="font-size: 17pt; color: #fff;"></i></span>'); 
@@ -5219,9 +5197,7 @@ function saveFollowEtiqueta() {
         infraTooltipOcultar();
     }
 }
-function normalizeNameTag(tag) {
-    return removeAcentos(tag).replace(/\ /g, '').toLowerCase().replace(/[^a-z0-9]/gi,'').replace(/[\u200B-\u200D\uFEFF]/g, '');
-}
+// normalizeNameTag migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 function sugestEtiquetaPro(mode) {
     return (mode == 'ativ') 
         ? (typeof arrayConfigAtividades.etiquetas !== 'undefined' ? arrayConfigAtividades['etiquetas']['list'] : [])

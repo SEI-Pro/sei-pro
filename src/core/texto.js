@@ -1,4 +1,5 @@
 import { aliasGlobal, getSeiPro } from './global.js';
+import { removeAcentos } from './util.js';
 
 /**
  * Utilitários de texto/string — cluster PURO extraído de sei-functions-pro.js
@@ -81,6 +82,33 @@ export function joinAnd(a) {
     return (a.length == 1) ? a[0] : a.slice(0, -1).join(', ') + ' e ' + a.slice(-1);
 }
 
+// Detecta se a string contém marcação HTML.
+export function is_html(str) {
+    const regex = /<\/?[a-z][\s\S]*>/i;
+    return regex.test(str);
+}
+
+// Colapsa espaços em branco consecutivos e apara as pontas.
+export function normalizeHTML(html) {
+    return String(html).replace(/\s+/g, ' ').trim();
+}
+
+// Extrai hashtags (#tag) de um texto.
+export function getHashTagsPro(inputText) {
+    const regex = /(?:^|\s)(?:#)([a-zA-Z+-§\d]+)/gm;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(inputText))) {
+        matches.push(match[1].trim().replace(/\.|\,|\:|\//g, ''));
+    }
+    return matches;
+}
+
+// Normaliza um nome de tag: sem acentos, sem espaços, minúsculo, só [a-z0-9].
+export function normalizeNameTag(tag) {
+    return removeAcentos(tag).replace(/\ /g, '').toLowerCase().replace(/[^a-z0-9]/gi, '').replace(/[\u200B-\u200D\uFEFF]/g, '');
+}
+
 export function installTexto() {
     const texto = {
         escapeRegExp,
@@ -92,7 +120,11 @@ export function installTexto() {
         extractEmails,
         extractAllTextBetweenQuotes,
         extractOnlyAlphaNum,
-        joinAnd
+        joinAnd,
+        is_html,
+        normalizeHTML,
+        getHashTagsPro,
+        normalizeNameTag
     };
 
     getSeiPro().core.texto = texto;
@@ -107,6 +139,10 @@ export function installTexto() {
     aliasGlobal('extractAllTextBetweenQuotes', extractAllTextBetweenQuotes);
     aliasGlobal('extractOnlyAlphaNum', extractOnlyAlphaNum);
     aliasGlobal('joinAnd', joinAnd);
+    aliasGlobal('is_html', is_html);
+    aliasGlobal('normalizeHTML', normalizeHTML);
+    aliasGlobal('getHashTagsPro', getHashTagsPro);
+    aliasGlobal('normalizeNameTag', normalizeNameTag);
 
     return texto;
 }

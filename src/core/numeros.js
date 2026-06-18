@@ -61,6 +61,11 @@ export function toArray(obj) {
     return arr;
 }
 
+// Número → letra/base36 (ex.: 1 → "A", 2 → "B"): (n + 9) em base 36, maiúsculo.
+export function numberToLetter(number) {
+    return (parseInt(number) + 9).toString(36).toUpperCase();
+}
+
 // Minutos decimais → "MM:SS" (com sinal).
 export function decimalHourToMinute(minutes) {
     const sign = minutes < 0 ? '-' : '';
@@ -82,6 +87,7 @@ export function installNumeros() {
         avgArray,
         reverseArray,
         toArray,
+        numberToLetter,
         decimalHourToMinute
     };
 
@@ -98,6 +104,7 @@ export function installNumeros() {
     aliasGlobal('avgArray', avgArray);
     aliasGlobal('reverseArray', reverseArray);
     aliasGlobal('toArray', toArray);
+    aliasGlobal('numberToLetter', numberToLetter);
     aliasGlobal('decimalHourToMinute', decimalHourToMinute);
 
     return numeros;

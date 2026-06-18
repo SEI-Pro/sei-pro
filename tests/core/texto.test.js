@@ -77,6 +77,31 @@ describe('joinAnd', () => {
   });
 });
 
+describe('is_html', () => {
+  it('detecta marcação HTML', () => {
+    expect(texto.is_html('<p>oi</p>')).toBe(true);
+    expect(texto.is_html('texto puro')).toBe(false);
+  });
+});
+
+describe('normalizeHTML', () => {
+  it('colapsa espaços e apara', () => {
+    expect(texto.normalizeHTML('  a   b\n c  ')).toBe('a b c');
+  });
+});
+
+describe('getHashTagsPro', () => {
+  it('extrai hashtags', () => {
+    expect(texto.getHashTagsPro('processo #urgente e #lote2')).toEqual(['urgente', 'lote2']);
+  });
+});
+
+describe('normalizeNameTag', () => {
+  it('remove acentos, espaços e símbolos, minúsculo', () => {
+    expect(texto.normalizeNameTag('Ação Urgente!')).toBe('acaourgente');
+  });
+});
+
 describe('normalizeMojibakeUtf8', () => {
   it('corrige UTF-8 lido como Latin-1', () => {
     // "ção" mal-decodificado vira "Ã§Ã£o"; deve voltar a "ção".

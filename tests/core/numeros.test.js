@@ -75,6 +75,14 @@ describe('toArray', () => {
   });
 });
 
+describe('numberToLetter', () => {
+  it('converte número para letra (base36 + 9)', () => {
+    expect(numeros.numberToLetter(1)).toBe('A');
+    expect(numeros.numberToLetter(2)).toBe('B');
+    expect(numeros.numberToLetter(17)).toBe('Q');
+  });
+});
+
 describe('decimalHourToMinute', () => {
   it('formata minutos decimais como MM:SS', () => {
     expect(numeros.decimalHourToMinute(5.5)).toBe('05:30');
