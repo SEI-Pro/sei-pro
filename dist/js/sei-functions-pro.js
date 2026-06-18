@@ -861,12 +861,7 @@ function insertFontIcon(elementTo, target = $('html')) {
 function numberToLetter(number) {
     return (parseInt(number) + 9).toString(36).toUpperCase();
 }
-function decimalHourToMinute(minutes) {
-    var sign = minutes < 0 ? "-" : "";
-    var min = Math.floor(Math.abs(minutes));
-    var sec = Math.floor((Math.abs(minutes) * 60) % 60);
-    return sign + (min < 10 ? "0" : "") + min + ":" + (sec < 10 ? "0" : "") + sec;
-}
+// decimalHourToMinute migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 function reloadModalLink() {
     var urlModalink = $('head').find('script[src*="modalLink"]');
         urlModalink = (typeof urlModalink !== 'undefined') ? urlModalink.attr('src') : false;
@@ -898,37 +893,14 @@ function checkValue(elem) {
     var len = (typeof elem.val() !== 'undefined' && elem.val() !== null) ? elem.val().trim().length : 0;
     return (len > 0) ? true : false;
 }
-function isJson(str) {
-    try {
-        JSON.parse(str);
-    } catch (e) {
-        return false;
-    }
-    return true;
-}
-function tryParseJsonObject(jsonString) {
-    try {
-      const o = JSON.parse(jsonString);
-      if (o && typeof o === "object" && !Array.isArray(o)) {
-        return o;
-      }
-    } catch (e) {}
-    return false;
-}
+// isJson migrada para SeiPro.core.serial (src/core/serial.js) — Fase 6
+// tryParseJsonObject migrada para SeiPro.core.serial (src/core/serial.js) — Fase 6
 function trycatch(func, fail) {
     try { return func() }
     catch(e) { return fail }
 }
-function avgArray(array) {
-    var sum = 0;
-    for( var i = 0; i < array.length; i++ ){
-        sum += parseInt( array[i], 10 ); //don't forget to add the base
-    }
-    return sum/array.length;
-}
-function convertJsonBools(obj) {
-    return JSON.parse(JSON.stringify(obj), (k, v) => v === "true" ? true : v === "false" ? false : v);
-}
+// avgArray migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
+// convertJsonBools migrada para SeiPro.core.serial (src/core/serial.js) — Fase 6
 function zeroWidthTrim(stringToTrim) {
     var ZERO_WIDTH_SPACES_REGEX = /([\u200B]+|[\u200C]+|[\u200D]+|[\u200E]+|[\u200F]+|[\uFEFF]+)/g;
     var trimmedString = stringToTrim.replace(ZERO_WIDTH_SPACES_REGEX, '');
@@ -944,9 +916,7 @@ String.prototype.repeat = function( num )
 {
     return new Array( num + 1 ).join( this );
 }
-function extractEmails(text) {
-    return text.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
-}
+// extractEmails migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 // extractCPFs migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 // extractHexColor migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 // arrayMax migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
@@ -1001,17 +971,7 @@ function setChartLabelItemStore(e, legendItem){
     ci.update();
     setOptionsPro($(this.chart.canvas).attr('id'), arrayMetaChart);
 }
-function extractAllTextBetweenQuotes(str){
-  const re = /'(.*?)'/g;
-  const result = [];
-  let current;
-  while (current = re.exec(str)) {
-    result.push(current.pop());
-  }
-  return result.length > 0
-    ? result
-    : [str];
-}
+// extractAllTextBetweenQuotes migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 function appendDebugReport(comAnimacao = false) {
     if (!isSEIProPRFHost()) {
         $('.iconDebugScreen').remove();
@@ -1366,9 +1326,7 @@ function addTextToTextarea(source, target, text) {
     target.insertAtCaret(text);
     source.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 }
-function reverseArray(array){
-    return array.map((item,idx) => array[array.length-1-idx])
-}
+// reverseArray migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 function checkObjHasProperty(obj, key) {
     var return_ = true;
     for(var i = 0; i < obj.length; i++) {
@@ -1490,9 +1448,7 @@ function getHashTagsPro(inputText) {
     return matches;
 }
 // hasNumber e onlyNumber migradas para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
-function joinAnd(a) {
-    return (a.length==1) ? a[0] : a.slice(0, -1).join(', ')+' e '+a.slice(-1);
-}
+// joinAnd migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 function getBrightnessColor(value) {
     var rgb = hexToRgb(value);
     return Math.round(((parseInt(rgb.r) * 299) + (parseInt(rgb.g) * 587) + (parseInt(rgb.b) * 114)) / 1000);
@@ -1516,10 +1472,7 @@ function removeDuplicatesArray(list, ref) {
     });
     return result;
 }
-function extractOnlyAlphaNum(string) {
-    string = (string != '') ? string.replace(/[^a-z0-9 ]/gi, '').replace(/  /g, ' ') : string;
-    return string;
-}
+// extractOnlyAlphaNum migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 function extractTooltip(elem) {
     return extractOnlyAlphaNum(removeAcentos($("<div/>").html(elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(',', ' ').replace(/["']/g, "")).text()));
 }
@@ -10353,13 +10306,7 @@ DragEvent.prototype = {
 };
 
 //helper functions
-function toArray(obj) {
-	var len = obj.length, arr = new Array(len);
-	for (var i = 0; i < len; i++) {
-	  arr[i] = obj[i];
-	}
-	return arr;
-}
+// toArray migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 
 function bind(fn, ctx) {
 	if (fn.bind) {
@@ -10713,13 +10660,7 @@ function convertCSSToStyle(iframeDoc) {
     }
     //iframeDoc.find('style[data-style="seipro-import"]').remove();
 }
-function isBase64(str) {
-    try {
-        return btoa(atob(str)) == str;
-    } catch (err) {
-        return false;
-    }
-}
+// isBase64 migrada para SeiPro.core.serial (src/core/serial.js) — Fase 6
 function ImgToBase64(iframeDoc, TimeOut = 1000) {
     if (TimeOut <= 0) { 
         iframeDoc.find('img').not('.img-base64').each(function(){

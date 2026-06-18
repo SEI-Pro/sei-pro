@@ -424,6 +424,14 @@ CORS e quotas num só lugar.
 > úteis (plugins + jmespath). **102 testes verdes.** Acumulado: **35 funções** em 6 módulos —
 > e a 1ª fatia com **dependências internas entre módulos do core** (datas → feriados),
 > mostrando que o padrão escala além de funções isoladas.
+>
+> **8ª leva — `core/serial.js` (novo) + extensões.** 12 funções puras: novo módulo
+> `serial` (parse/serialização: `isJson`, `tryParseJsonObject`, `convertJsonBools`,
+> `isBase64`); `texto` ganhou `extractEmails`, `extractAllTextBetweenQuotes`,
+> `extractOnlyAlphaNum`, `joinAnd`; `numeros` ganhou `avgArray`, `reverseArray`, `toArray`,
+> `decimalHourToMinute`. Sandbox de teste ganhou `btoa`/`atob` (faltavam no `vm`).
+> **116 testes verdes.** Acumulado: **47 funções** em 7 módulos
+> (`validacao`, `texto`, `cor`, `datas`, `feriados`, `numeros`, `serial`).
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…

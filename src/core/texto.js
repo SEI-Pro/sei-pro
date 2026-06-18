@@ -54,6 +54,33 @@ export function pad(str, max) {
     return str.length < max ? pad('0' + str, max) : str;
 }
 
+// Extrai e-mails de um texto (ou null se nenhum).
+export function extractEmails(text) {
+    return text.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+}
+
+// Extrai todos os trechos entre aspas simples; se nenhum, devolve [str].
+export function extractAllTextBetweenQuotes(str) {
+    const re = /'(.*?)'/g;
+    const result = [];
+    let current;
+    while ((current = re.exec(str))) {
+        result.push(current.pop());
+    }
+    return result.length > 0 ? result : [str];
+}
+
+// Mantém apenas alfanuméricos e espaços, colapsando espaços duplos.
+export function extractOnlyAlphaNum(string) {
+    string = (string != '') ? string.replace(/[^a-z0-9 ]/gi, '').replace(/  /g, ' ') : string;
+    return string;
+}
+
+// Junta lista em texto com "," e " e " antes do último item ("a, b e c").
+export function joinAnd(a) {
+    return (a.length == 1) ? a[0] : a.slice(0, -1).join(', ') + ' e ' + a.slice(-1);
+}
+
 export function installTexto() {
     const texto = {
         escapeRegExp,
@@ -61,7 +88,11 @@ export function installTexto() {
         normalizeMojibakeUtf8,
         replaceTextToUrl,
         extractHexColor,
-        pad
+        pad,
+        extractEmails,
+        extractAllTextBetweenQuotes,
+        extractOnlyAlphaNum,
+        joinAnd
     };
 
     getSeiPro().core.texto = texto;
@@ -72,6 +103,10 @@ export function installTexto() {
     aliasGlobal('replaceTextToUrl', replaceTextToUrl);
     aliasGlobal('extractHexColor', extractHexColor);
     aliasGlobal('pad', pad);
+    aliasGlobal('extractEmails', extractEmails);
+    aliasGlobal('extractAllTextBetweenQuotes', extractAllTextBetweenQuotes);
+    aliasGlobal('extractOnlyAlphaNum', extractOnlyAlphaNum);
+    aliasGlobal('joinAnd', joinAnd);
 
     return texto;
 }

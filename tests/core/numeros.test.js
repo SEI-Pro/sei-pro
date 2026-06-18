@@ -53,6 +53,35 @@ describe('randomNumber', () => {
   });
 });
 
+describe('avgArray', () => {
+  it('calcula a média', () => {
+    expect(numeros.avgArray([2, 4, 6])).toBe(4);
+    expect(numeros.avgArray(['10', '20'])).toBe(15);
+  });
+});
+
+describe('reverseArray', () => {
+  it('inverte o array', () => {
+    expect(numeros.reverseArray([1, 2, 3])).toEqual([3, 2, 1]);
+  });
+});
+
+describe('toArray', () => {
+  it('converte array-like em Array', () => {
+    const arrayLike = { 0: 'a', 1: 'b', length: 2 };
+    const out = numeros.toArray(arrayLike);
+    expect(Array.isArray(out)).toBe(true);
+    expect(out).toEqual(['a', 'b']);
+  });
+});
+
+describe('decimalHourToMinute', () => {
+  it('formata minutos decimais como MM:SS', () => {
+    expect(numeros.decimalHourToMinute(5.5)).toBe('05:30');
+    expect(numeros.decimalHourToMinute(-1)).toBe('-01:00');
+  });
+});
+
 describe('hasNumber / onlyNumber', () => {
   it('hasNumber detecta dígito', () => {
     expect(numeros.hasNumber('abc1')).toBe(true);

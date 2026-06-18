@@ -486,6 +486,25 @@
     str = str.toString();
     return str.length < max ? pad("0" + str, max) : str;
   }
+  function extractEmails(text) {
+    return text.match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+  }
+  function extractAllTextBetweenQuotes(str) {
+    const re = /'(.*?)'/g;
+    const result = [];
+    let current;
+    while (current = re.exec(str)) {
+      result.push(current.pop());
+    }
+    return result.length > 0 ? result : [str];
+  }
+  function extractOnlyAlphaNum(string) {
+    string = string != "" ? string.replace(/[^a-z0-9 ]/gi, "").replace(/  /g, " ") : string;
+    return string;
+  }
+  function joinAnd(a) {
+    return a.length == 1 ? a[0] : a.slice(0, -1).join(", ") + " e " + a.slice(-1);
+  }
   function installTexto() {
     const texto = {
       escapeRegExp,
@@ -493,7 +512,11 @@
       normalizeMojibakeUtf8,
       replaceTextToUrl,
       extractHexColor,
-      pad
+      pad,
+      extractEmails,
+      extractAllTextBetweenQuotes,
+      extractOnlyAlphaNum,
+      joinAnd
     };
     getSeiPro().core.texto = texto;
     aliasGlobal("escapeRegExp", escapeRegExp);
@@ -502,6 +525,10 @@
     aliasGlobal("replaceTextToUrl", replaceTextToUrl);
     aliasGlobal("extractHexColor", extractHexColor);
     aliasGlobal("pad", pad);
+    aliasGlobal("extractEmails", extractEmails);
+    aliasGlobal("extractAllTextBetweenQuotes", extractAllTextBetweenQuotes);
+    aliasGlobal("extractOnlyAlphaNum", extractOnlyAlphaNum);
+    aliasGlobal("joinAnd", joinAnd);
     return texto;
   }
 
@@ -763,6 +790,30 @@
   function onlyNumber(str) {
     return hasNumber(str) ? str.match(/\d+/g).join("") : str;
   }
+  function avgArray(array) {
+    let sum = 0;
+    for (let i = 0; i < array.length; i++) {
+      sum += parseInt(array[i], 10);
+    }
+    return sum / array.length;
+  }
+  function reverseArray(array) {
+    return array.map((item, idx) => array[array.length - 1 - idx]);
+  }
+  function toArray(obj) {
+    const len = obj.length;
+    const arr = new Array(len);
+    for (let i = 0; i < len; i++) {
+      arr[i] = obj[i];
+    }
+    return arr;
+  }
+  function decimalHourToMinute(minutes) {
+    const sign = minutes < 0 ? "-" : "";
+    const min = Math.floor(Math.abs(minutes));
+    const sec = Math.floor(Math.abs(minutes) * 60 % 60);
+    return sign + (min < 10 ? "0" : "") + min + ":" + (sec < 10 ? "0" : "") + sec;
+  }
   function installNumeros() {
     const numeros = {
       arrayMax,
@@ -772,7 +823,11 @@
       roundToTwo,
       randomNumber,
       hasNumber,
-      onlyNumber
+      onlyNumber,
+      avgArray,
+      reverseArray,
+      toArray,
+      decimalHourToMinute
     };
     getSeiPro().core.numeros = numeros;
     aliasGlobal("arrayMax", arrayMax);
@@ -783,7 +838,50 @@
     aliasGlobal("randomNumber", randomNumber);
     aliasGlobal("hasNumber", hasNumber);
     aliasGlobal("onlyNumber", onlyNumber);
+    aliasGlobal("avgArray", avgArray);
+    aliasGlobal("reverseArray", reverseArray);
+    aliasGlobal("toArray", toArray);
+    aliasGlobal("decimalHourToMinute", decimalHourToMinute);
     return numeros;
+  }
+
+  // src/core/serial.js
+  function isJson(str) {
+    try {
+      JSON.parse(str);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+  function tryParseJsonObject(jsonString) {
+    try {
+      const o = JSON.parse(jsonString);
+      if (o && typeof o === "object" && !Array.isArray(o)) {
+        return o;
+      }
+    } catch (e) {
+    }
+    return false;
+  }
+  function convertJsonBools(obj) {
+    return JSON.parse(JSON.stringify(obj), (k, v) => v === "true" ? true : v === "false" ? false : v);
+  }
+  function isBase64(str) {
+    try {
+      return btoa(atob(str)) == str;
+    } catch (err) {
+      return false;
+    }
+  }
+  function installSerial() {
+    const serial = { isJson, tryParseJsonObject, convertJsonBools, isBase64 };
+    getSeiPro().core.serial = serial;
+    aliasGlobal("isJson", isJson);
+    aliasGlobal("tryParseJsonObject", tryParseJsonObject);
+    aliasGlobal("convertJsonBools", convertJsonBools);
+    aliasGlobal("isBase64", isBase64);
+    return serial;
   }
 
   // src/core/ui.js
@@ -1263,6 +1361,7 @@
     installDatas();
     installFeriados();
     installNumeros();
+    installSerial();
     installUi();
     installMessaging();
     installStorage();

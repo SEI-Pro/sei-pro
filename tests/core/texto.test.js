@@ -47,6 +47,36 @@ describe('replaceTextToUrl', () => {
   });
 });
 
+describe('extractEmails', () => {
+  it('extrai e-mails de um texto', () => {
+    expect(texto.extractEmails('contatos: a@x.com e b.c@y.gov.br fim'))
+      .toEqual(['a@x.com', 'b.c@y.gov.br']);
+  });
+});
+
+describe('extractAllTextBetweenQuotes', () => {
+  it('extrai trechos entre aspas simples', () => {
+    expect(texto.extractAllTextBetweenQuotes("foo 'um' bar 'dois'")).toEqual(['um', 'dois']);
+  });
+  it('devolve [str] quando não há aspas', () => {
+    expect(texto.extractAllTextBetweenQuotes('sem aspas')).toEqual(['sem aspas']);
+  });
+});
+
+describe('extractOnlyAlphaNum', () => {
+  it('mantém só alfanuméricos e espaços', () => {
+    expect(texto.extractOnlyAlphaNum('Proc. 08675/2025-10!')).toBe('Proc 08675202510');
+  });
+});
+
+describe('joinAnd', () => {
+  it('junta com vírgulas e "e" final', () => {
+    expect(texto.joinAnd(['a'])).toBe('a');
+    expect(texto.joinAnd(['a', 'b'])).toBe('a e b');
+    expect(texto.joinAnd(['a', 'b', 'c'])).toBe('a, b e c');
+  });
+});
+
 describe('normalizeMojibakeUtf8', () => {
   it('corrige UTF-8 lido como Latin-1', () => {
     // "ção" mal-decodificado vira "Ã§Ã£o"; deve voltar a "ção".
