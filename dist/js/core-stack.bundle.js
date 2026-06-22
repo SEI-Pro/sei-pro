@@ -962,6 +962,58 @@
     }).format(hora_format) : moment(data_ref, hora_format).add(prazo, "d").format(hora_format);
     return prazoEntrega;
   }
+  function extractFirstQuotedValue(text) {
+    if (typeof text !== "string") return "";
+    var content = text.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, "g"));
+    return content && content !== null && content.length > 0 && content[0] != "" ? content[0] : text;
+  }
+  function normalizeNativePrazoTooltip(text) {
+    if (typeof text === "undefined" || text === null) return "";
+    text = String(text).replace(/<[^>]*>/gm, "").replace(/\\n/g, " ").trim();
+    text = extractFirstQuotedValue(text).replace(/\\n/g, " ").trim();
+    text = text.replace(/^controle de prazo:\s*/i, "").trim();
+    text = text.replace(/\s+/g, " ").trim();
+    return text;
+  }
+  function parseControlePrazoNativo(tooltip, svgSrc) {
+    const moment = globalRef.moment;
+    var content = normalizeNativePrazoTooltip(tooltip);
+    var src = typeof svgSrc !== "undefined" && svgSrc !== null ? String(svgSrc).toLowerCase() : "";
+    var normalized = removeAcentos(content).toLowerCase();
+    var concludedBySrc = src.indexOf("controle_prazo2.svg") !== -1;
+    var dueMatch = content.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/i);
+    var concludedMatch = normalized.match(/concluid(?:o|a)(?:\s+em)?\s+(\d{1,2}\/\d{1,2}\/\d{4})/i);
+    var dateFinished = concludedMatch !== null ? moment(concludedMatch[1], "DD/MM/YYYY").format("YYYY-MM-DD 23:59:59") : false;
+    var dateDue = !concludedMatch && dueMatch !== null ? moment(dueMatch[0], "DD/MM/YYYY").format("YYYY-MM-DD 23:59:59") : false;
+    var dateSort = dateFinished || dateDue || false;
+    var responsible = false;
+    if (!concludedMatch && dueMatch !== null) {
+      responsible = content.slice(0, content.indexOf(dueMatch[0])).replace(/[\s:-]+$/, "").trim();
+      responsible = responsible !== "" ? responsible : false;
+    }
+    var diasRestantes = null;
+    var daysMatch = content.match(/\(([-+]?\d+)\s*dias?(?:\s+uteis)?(?:\s+de atraso)?\)/i);
+    if (daysMatch !== null) {
+      diasRestantes = parseInt(daysMatch[1], 10);
+    } else if (dateDue) {
+      diasRestantes = moment(dateDue, "YYYY-MM-DD HH:mm:ss").startOf("day").diff(moment().startOf("day"), "days");
+    }
+    var concluido = concludedBySrc || concludedMatch !== null;
+    var vencido = !concluido && diasRestantes !== null ? diasRestantes < 0 : false;
+    return {
+      fonte: "nativo",
+      content: content || false,
+      responsavel: responsible,
+      dateDue,
+      dateFinished,
+      dateSort,
+      diasRestantes,
+      concluido,
+      vencido,
+      status: concluido ? "concluido" : vencido ? "vencido" : dateDue ? "ativo" : "sem_data",
+      svgSrc: src || false
+    };
+  }
   function parsePrazoTag(tag) {
     var content = typeof tag !== "undefined" ? tag.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, "g")) : false;
     content = content && content !== null && content.length > 0 && content[0] != "" ? content[0] : false;
@@ -1006,9 +1058,10 @@
     return { show: false, percent: 0, max, progress };
   }
   function installPrazos() {
-    const prazos = { getRecalculaPrazo, parsePrazoTag, parsePrazoTooltip, getDateBoxState, getProgressPercent };
+    const prazos = { getRecalculaPrazo, parseControlePrazoNativo, parsePrazoTag, parsePrazoTooltip, getDateBoxState, getProgressPercent };
     getSeiPro().core.prazos = prazos;
     aliasGlobal("getRecalculaPrazo", getRecalculaPrazo);
+    aliasGlobal("parseControlePrazoNativo", parseControlePrazoNativo);
     aliasGlobal("parsePrazoTag", parsePrazoTag);
     aliasGlobal("parsePrazoTooltip", parsePrazoTooltip);
     aliasGlobal("getDateBoxState", getDateBoxState);

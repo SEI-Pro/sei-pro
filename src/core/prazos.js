@@ -35,6 +35,72 @@ export function getRecalculaPrazo(data_ref, hora_format, prazo, config_unidade) 
     return prazoEntrega;
 }
 
+function extractFirstQuotedValue(text) {
+    if (typeof text !== 'string') return '';
+    var content = text.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g'));
+    return (content && content !== null && content.length > 0 && content[0] != '') ? content[0] : text;
+}
+
+function normalizeNativePrazoTooltip(text) {
+    if (typeof text === 'undefined' || text === null) return '';
+    text = String(text).replace(/<[^>]*>/gm, '').replace(/\\n/g, ' ').trim();
+    text = extractFirstQuotedValue(text).replace(/\\n/g, ' ').trim();
+    text = text.replace(/^controle de prazo:\s*/i, '').trim();
+    text = text.replace(/\s+/g, ' ').trim();
+    return text;
+}
+
+// Parsing PURO do tooltip do ícone nativo de prazo do SEI.
+// Formatos observados:
+//  - "usuario 30/06/2026 (12 dias)"
+//  - "Concluído em 18/06/2026"
+//  - "controle_prazo1.svg" / "controle_prazo2.svg" ajudam a determinar o estado
+//    quando o tooltip é ambíguo.
+// Retorna apenas dados sem DOM: datas em YYYY-MM-DD HH:mm:ss, estado e texto cru.
+export function parseControlePrazoNativo(tooltip, svgSrc) {
+    const moment = globalRef.moment;
+    var content = normalizeNativePrazoTooltip(tooltip);
+    var src = (typeof svgSrc !== 'undefined' && svgSrc !== null) ? String(svgSrc).toLowerCase() : '';
+    var normalized = removeAcentos(content).toLowerCase();
+    var concludedBySrc = src.indexOf('controle_prazo2.svg') !== -1;
+    var dueMatch = content.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/i);
+    var concludedMatch = normalized.match(/concluid(?:o|a)(?:\s+em)?\s+(\d{1,2}\/\d{1,2}\/\d{4})/i);
+    var dateFinished = (concludedMatch !== null) ? moment(concludedMatch[1], 'DD/MM/YYYY').format('YYYY-MM-DD 23:59:59') : false;
+    var dateDue = (!concludedMatch && dueMatch !== null) ? moment(dueMatch[0], 'DD/MM/YYYY').format('YYYY-MM-DD 23:59:59') : false;
+    var dateSort = dateFinished || dateDue || false;
+    var responsible = false;
+
+    if (!concludedMatch && dueMatch !== null) {
+        responsible = content.slice(0, content.indexOf(dueMatch[0])).replace(/[\s:-]+$/, '').trim();
+        responsible = (responsible !== '') ? responsible : false;
+    }
+
+    var diasRestantes = null;
+    var daysMatch = content.match(/\(([-+]?\d+)\s*dias?(?:\s+uteis)?(?:\s+de atraso)?\)/i);
+    if (daysMatch !== null) {
+        diasRestantes = parseInt(daysMatch[1], 10);
+    } else if (dateDue) {
+        diasRestantes = moment(dateDue, 'YYYY-MM-DD HH:mm:ss').startOf('day').diff(moment().startOf('day'), 'days');
+    }
+
+    var concluido = concludedBySrc || concludedMatch !== null;
+    var vencido = (!concluido && diasRestantes !== null) ? diasRestantes < 0 : false;
+
+    return {
+        fonte: 'nativo',
+        content: content || false,
+        responsavel: responsible,
+        dateDue: dateDue,
+        dateFinished: dateFinished,
+        dateSort: dateSort,
+        diasRestantes: diasRestantes,
+        concluido: concluido,
+        vencido: vencido,
+        status: concluido ? 'concluido' : (vencido ? 'vencido' : (dateDue ? 'ativo' : 'sem_data')),
+        svgSrc: src || false
+    };
+}
+
 // Parsing PURO da string `onmouseover` do marcador de prazo do SEI. Extrai:
 //  - content: o primeiro texto entre aspas do atributo;
 //  - dateTo:  true se o texto contém "até" (prazo final, não contagem);
@@ -103,11 +169,12 @@ export function getProgressPercent(config) {
 }
 
 export function installPrazos() {
-    const prazos = { getRecalculaPrazo, parsePrazoTag, parsePrazoTooltip, getDateBoxState, getProgressPercent };
+    const prazos = { getRecalculaPrazo, parseControlePrazoNativo, parsePrazoTag, parsePrazoTooltip, getDateBoxState, getProgressPercent };
 
     getSeiPro().core.prazos = prazos;
 
     aliasGlobal('getRecalculaPrazo', getRecalculaPrazo);
+    aliasGlobal('parseControlePrazoNativo', parseControlePrazoNativo);
     aliasGlobal('parsePrazoTag', parsePrazoTag);
     aliasGlobal('parsePrazoTooltip', parsePrazoTooltip);
     aliasGlobal('getDateBoxState', getDateBoxState);

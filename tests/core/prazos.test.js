@@ -40,7 +40,9 @@ beforeAll(() => { sandbox = loadWithLibs(); prazos = sandbox.SeiPro.core.prazos;
 describe('core/prazos — instalação', () => {
   it('expõe SeiPro.core.prazos e o alias global', () => {
     expect(typeof prazos.getRecalculaPrazo).toBe('function');
+    expect(typeof prazos.parseControlePrazoNativo).toBe('function');
     expect(typeof sandbox.getRecalculaPrazo).toBe('function');
+    expect(typeof sandbox.parseControlePrazoNativo).toBe('function');
   });
 });
 
@@ -123,6 +125,49 @@ describe('parsePrazoTooltip', () => {
     const r = prazos.parsePrazoTooltip(undefined);
     expect(r.datePrazo).toBe(false);
     expect(r.datePrazoDue).toBe(false);
+  });
+});
+
+describe('parseControlePrazoNativo', () => {
+  it('extrai responsável, data de vencimento e dias restantes do tooltip ativo', () => {
+    const r = prazos.parseControlePrazoNativo(
+      "return infraTooltipMostrar('tadeu.guimaraes 30/06/2026 (12 dias)','Controle de Prazo');",
+      'controle_prazo1.svg'
+    );
+
+    expect(r.fonte).toBe('nativo');
+    expect(r.content).toBe('tadeu.guimaraes 30/06/2026 (12 dias)');
+    expect(r.responsavel).toBe('tadeu.guimaraes');
+    expect(r.dateDue).toBe('2026-06-30 23:59:59');
+    expect(r.dateFinished).toBe(false);
+    expect(r.diasRestantes).toBe(12);
+    expect(r.concluido).toBe(false);
+    expect(r.vencido).toBe(false);
+    expect(r.status).toBe('ativo');
+  });
+
+  it('detecta prazo concluído pelo tooltip e pelo svg', () => {
+    const r = prazos.parseControlePrazoNativo(
+      "return infraTooltipMostrar('Concluído em 18/06/2026','Controle de Prazo');",
+      'controle_prazo2.svg'
+    );
+
+    expect(r.concluido).toBe(true);
+    expect(r.dateDue).toBe(false);
+    expect(r.dateFinished).toBe('2026-06-18 23:59:59');
+    expect(r.dateSort).toBe('2026-06-18 23:59:59');
+    expect(r.status).toBe('concluido');
+  });
+
+  it('sem dados úteis → retorna estrutura neutra sem lançar', () => {
+    const r = prazos.parseControlePrazoNativo(undefined, undefined);
+    expect(r.content).toBe(false);
+    expect(r.dateDue).toBe(false);
+    expect(r.dateFinished).toBe(false);
+    expect(r.diasRestantes).toBe(null);
+    expect(r.concluido).toBe(false);
+    expect(r.vencido).toBe(false);
+    expect(r.status).toBe('sem_data');
   });
 });
 

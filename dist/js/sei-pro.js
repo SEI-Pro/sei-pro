@@ -3186,6 +3186,581 @@ function addAcompanhamentoEspIcon() {
         }
     });
 }
+function quoteInlineJsText(text) {
+    return '\'' + String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n') + '\'';
+}
+function getControlePrazoNativeInfo(row) {
+    var _row = $(row);
+    var nativeLink = _row.find('a[href*="acao=controle_prazo_definir"], a[href*="controle_prazo_definir"]').first();
+    if (nativeLink.length == 0) {
+        nativeLink = _row.find('img[src*="controle_prazo"]').first().closest('a[href*="acao=controle_prazo_definir"], a[href*="controle_prazo_definir"]');
+        if (nativeLink.length == 0) {
+            nativeLink = _row.find('img[src*="controle_prazo"]').first();
+        }
+    }
+    if (nativeLink.length == 0) {
+        return false;
+    }
+
+    var nativeAnchor = nativeLink.closest('a');
+    var href = nativeLink.attr('href') || nativeAnchor.attr('href') || '';
+    var onmouseover = nativeLink.attr('onmouseover') || nativeAnchor.attr('onmouseover') || nativeLink.attr('title') || nativeAnchor.attr('title') || '';
+    var tooltipArray = extractGroupTableTooltipToArray(onmouseover);
+    var tooltip = (tooltipArray && tooltipArray.length > 0 && tooltipArray[0] != '') ? tooltipArray[0] : onmouseover;
+    var src = nativeLink.attr('src') || nativeLink.find('img').attr('src') || nativeAnchor.find('img').attr('src') || '';
+    var prazoInfo = (typeof parseControlePrazoNativo === 'function') ? parseControlePrazoNativo(tooltip, src) : false;
+
+    if (!prazoInfo || (!prazoInfo.dateDue && !prazoInfo.dateFinished)) {
+        return false;
+    }
+
+    var params = getParamsUrlPro(href);
+    prazoInfo.id_controle_prazo = (params && typeof params.id_controle_prazo !== 'undefined') ? params.id_controle_prazo : false;
+    prazoInfo.id_procedimento = (params && typeof params.id_procedimento !== 'undefined') ? params.id_procedimento : false;
+    prazoInfo.href = href;
+    prazoInfo.tooltip = tooltip;
+    prazoInfo.src = src;
+    prazoInfo.nativeLink = nativeAnchor.length > 0 ? nativeAnchor : nativeLink;
+    return prazoInfo;
+}
+function getControlePrazoNativeHref(row, id_procedimento, id_controle_prazo = false, allowFallback = true) {
+    var _row = $(row);
+    var nativeLink = _row.find('a[href*="acao=controle_prazo_definir"], a[href*="controle_prazo_definir"]').first();
+    var href = nativeLink.attr('href') || nativeLink.closest('a').attr('href') || '';
+    if (!href) {
+        var comandoNative = $(divComandos+' a[href*="acao=controle_prazo_definir"], '+divComandos+' a[onclick*="controle_prazo_definir"]').first();
+        href = comandoNative.attr('href') || comandoNative.closest('a').attr('href') || comandoNative.attr('onclick') || '';
+        if (href) {
+            var hrefMatch = href.match(RegExp(/(?<=(["']))(?:(?=(\\?))\2.)*?(?=\1)/, 'g'));
+            href = (hrefMatch && hrefMatch.length > 0) ? hrefMatch[0] : href;
+        }
+    }
+    // Sem fallback de URL construída à mão: o SEI assina a querystring com infra_hash,
+    // então uma URL sem hash é rejeitada (cai na tela de login). Se não houver link
+    // nativo disponível, devolvemos '' e o chamador trata como "form indisponível".
+    if (href && id_controle_prazo && href.indexOf('id_controle_prazo=') === -1) {
+        href = href + (href.indexOf('?') === -1 ? '?' : '&') + 'id_controle_prazo=' + id_controle_prazo;
+    }
+    return href;
+}
+function buildControlePrazoNativeTooltip(prazoInfo, dateValue) {
+    var dateText = (dateValue && moment(dateValue, 'YYYY-MM-DD HH:mm:ss').isValid()) ? moment(dateValue, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY') : '';
+    if (prazoInfo && prazoInfo.concluido) {
+        return 'Conclu\u00EDdo em ' + dateText;
+    }
+    if (prazoInfo && prazoInfo.content) {
+        return prazoInfo.content;
+    }
+    var userName = (typeof getCurrentUserNamePro === 'function') ? getCurrentUserNamePro() : '';
+    var daysRemaining = (prazoInfo && prazoInfo.diasRestantes !== null && typeof prazoInfo.diasRestantes !== 'undefined') ? prazoInfo.diasRestantes : '';
+    if (userName && dateText && daysRemaining !== '') {
+        return userName + ' ' + dateText + ' (' + daysRemaining + ' ' + (Math.abs(daysRemaining) == 1 ? 'dia' : 'dias') + ')';
+    }
+    if (userName && dateText) {
+        return userName + ' ' + dateText;
+    }
+    return dateText || (prazoInfo && prazoInfo.content) || '';
+}
+function renderControlePrazoNativePreview(prazoInfo, dateValue, hrefNative) {
+    var dateSort = (prazoInfo && prazoInfo.dateSort) ? prazoInfo.dateSort : dateValue;
+    if (!dateSort) {
+        return '';
+    }
+    var dateMoment = moment(dateSort, 'YYYY-MM-DD HH:mm:ss');
+    var tooltipText = buildControlePrazoNativeTooltip(prazoInfo, dateSort);
+    var href = hrefNative || (prazoInfo && prazoInfo.href) || '';
+    var linkOpen = (href) ? '<a href="'+href+'" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();">' : '<span onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();">';
+    var linkClose = (href) ? '</a>' : '</span>';
+    if (prazoInfo && prazoInfo.concluido) {
+        return '<span class="dateboxDisplay tagTableText_date_entregue" data-time-sorter="'+dateSort+'" data-colortag="#ddf1dd" data-tagname="date_entregue" data-nametag="Entregue" data-type="date" onclick="addControlePrazo(this)">'+
+                '   <span class="dateBoxIcon" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-check-circle verdeColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span> Conclu\u00EDdo'+
+                '</span>';
+    }
+    var config = {
+        date: dateMoment.format('YYYY-MM-DD HH:mm:ss'),
+        dateDue: dateMoment.format('YYYY-MM-DD HH:mm:ss'),
+        dateMaxProgress: 30,
+        countdays: true,
+        workday: false,
+        duesetdate: true,
+        displayformat: 'DD/MM/YYYY HH:mm',
+        action: 'addControlePrazo(this)'
+    };
+    var htmlDatePreview = getDatesPreview(config);
+    if (href) {
+        htmlDatePreview = htmlDatePreview.replace('onclick="addControlePrazo(this)"', 'onclick="addControlePrazo(this)" data-native-href="'+href+'"');
+    }
+    return htmlDatePreview;
+}
+function updateControlePrazoNativeRow(tr, prazoInfo, dateValue, hrefNative) {
+    var _tr = $(tr);
+    var dateSort = (prazoInfo && prazoInfo.dateSort) ? prazoInfo.dateSort : dateValue;
+    var tdProcesso = _tr.find('td').eq(1);
+    var tooltipText = buildControlePrazoNativeTooltip(prazoInfo, dateValue);
+    var nativeHref = hrefNative || (prazoInfo && prazoInfo.href) || '';
+    var nativeSrc = (prazoInfo && prazoInfo.concluido) ? 'controle_prazo2.svg' : 'controle_prazo1.svg';
+    var nativeIcon = (nativeHref ? '<a href="'+nativeHref+'" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();"><img src="'+nativeSrc+'" class="imagemStatus"></a>' : '<img src="'+nativeSrc+'" class="imagemStatus" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();">');
+    var htmlDatePreview = renderControlePrazoNativePreview(prazoInfo, dateValue, nativeHref);
+
+    tdProcesso.find('a[href*="andamento_marcador_gerenciar"], a[href*="controle_prazo_definir"], a[href*="acao=controle_prazo_definir"], img[src*="controle_prazo"]').remove();
+    tdProcesso.append(nativeIcon);
+
+    _tr.removeClass('infraTrAtrasada').removeClass('infraTrAlerta');
+    if (prazoInfo && !prazoInfo.concluido) {
+        if (prazoInfo.vencido) {
+            _tr.addClass('infraTrAtrasada');
+        } else if (dateValue && moment(dateValue, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD') == moment().format('YYYY-MM-DD')) {
+            _tr.addClass('infraTrAlerta');
+        }
+    }
+
+    if (htmlDatePreview) {
+        _tr.find('td.prazoBoxDisplay').html(htmlDatePreview).attr('data-time-sorter', dateSort);
+    }
+}
+function getControlePrazoNativeTargetRows(this_) {
+    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+    if (this_) {
+        var _this = $(this_);
+        if (_this.closest('tr').length > 0) {
+            return _this.closest('tr');
+        }
+    }
+    return tblProcessos.find('input[type="checkbox"]:checked').closest('tr').not('.tableHeader');
+}
+function openControlePrazoNativoDialog(this_, form, hrefNative, nativeInfo, dateRef, daysRef, dueSetDate, textControle, processo) {
+    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+    // "Concluir" é uma ação (botão), não um modo do formulário; e só faz sentido
+    // quando já existe um prazo ATIVO no processo.
+    var hasActiveDeadline = !!(nativeInfo && nativeInfo.id_controle_prazo && !nativeInfo.concluido);
+    var modeSelected = 'data';
+    var dateValue = (nativeInfo && nativeInfo.dateDue) ? moment(nativeInfo.dateDue, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD') : dateRef;
+    var daysValue = (nativeInfo && nativeInfo.diasRestantes !== null && typeof nativeInfo.diasRestantes !== 'undefined') ? Math.max(1, Math.abs(nativeInfo.diasRestantes)) : daysRef;
+    var diasUteis = (nativeInfo && nativeInfo.content && removeAcentos(nativeInfo.content).toLowerCase().indexOf('dia util') !== -1) ? true : false;
+
+    var htmlBox =   '<div class="dialogBoxDiv">'+
+                    '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
+                    '      <tr style="height: 40px;">'+
+                    '          <td style="vertical-align: bottom;">'+
+                    '               <i class="iconPopup iconSwitch fas fa-calendar-day azulColor"></i> '+
+                    '               <label><input type="radio" name="configControlePrazoMode" value="data" '+(modeSelected == 'data' ? 'checked' : '')+'> Data certa</label>'+
+                    '          </td>'+
+                    '          <td style="text-align: right;">'+
+                    '               <input type="date" id="configControlePrazoDate" value="'+dateValue+'" style="width: 150px;">'+
+                    '          </td>'+
+                    '      </tr>'+
+                    '      <tr style="height: 40px;">'+
+                    '          <td style="vertical-align: bottom;">'+
+                    '               <i class="iconPopup iconSwitch fas fa-hourglass-half azulColor"></i> '+
+                    '               <label><input type="radio" name="configControlePrazoMode" value="dias" '+(modeSelected == 'dias' ? 'checked' : '')+'> Prazo em dias</label>'+
+                    '          </td>'+
+                    '          <td style="text-align: right;">'+
+                    '               <input type="number" min="1" step="1" id="configControlePrazoDays" value="'+daysValue+'" style="width: 100px;">'+
+                    '               <label style="margin-left: 10px;"><input type="checkbox" id="configControlePrazoDaysUteis" '+(diasUteis ? 'checked' : '')+'> Dias \u00FAteis</label>'+
+                    '          </td>'+
+                    '      </tr>'+
+                    '   </table>'+
+                    '</div>';
+
+    var btnDialogBoxPro = [];
+    if (hasActiveDeadline) {
+        btnDialogBoxPro.push({
+            text: 'Concluir prazo',
+            icon: 'ui-icon-closethick',
+            click: function(event) {
+                setControlePrazoNativo('concluir', this_, form, hrefNative, {
+                    date: $('#configControlePrazoDate').val(),
+                    days: $('#configControlePrazoDays').val(),
+                    daysUteis: $('#configControlePrazoDaysUteis').is(':checked'),
+                    idControlePrazo: (nativeInfo && nativeInfo.id_controle_prazo) ? nativeInfo.id_controle_prazo : false
+                });
+            }
+        });
+    }
+    btnDialogBoxPro.push({
+            text: textControle+' prazo',
+            class: 'confirm',
+            icon: 'ui-icon-disk',
+            click: function() {
+                setControlePrazoNativo($('#dialogBoxPro').find('input[name="configControlePrazoMode"]:checked').val() || 'data', this_, form, hrefNative, {
+                    date: $('#configControlePrazoDate').val(),
+                    days: $('#configControlePrazoDays').val(),
+                    daysUteis: $('#configControlePrazoDaysUteis').is(':checked'),
+                    idControlePrazo: (nativeInfo && nativeInfo.id_controle_prazo) ? nativeInfo.id_controle_prazo : false
+                });
+            }
+        });
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .html('<div class="dialogBoxDiv"> '+htmlBox+'</div>')
+        .dialog({
+            title: (this_) ? textControle+' controle de prazo ('+processo+')' : 'Controle de prazo em processos ('+tblProcessos.find('input[type="checkbox"]:checked').length+')',
+            width: 580,
+            open: function() {
+            },
+            close: function() {
+                if (this_) _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+            },
+            buttons: btnDialogBoxPro
+    });
+}
+function setControlePrazoNativo(mode, this_, form, href, param = false, callback = false) {
+    var _this = (this_) ? $(this_) : false;
+    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+    var selectedRows = getControlePrazoNativeTargetRows(this_);
+    var failCount = 0;
+    var _mode = (param && typeof param.mode !== 'undefined' && param.mode !== false) ? param.mode : mode;
+    var _dateRef = (param && typeof param.date !== 'undefined') ? param.date : $('#configControlePrazoDate').val();
+    var _daysRef = (param && typeof param.days !== 'undefined') ? param.days : $('#configControlePrazoDays').val();
+    var _daysUteis = (param && typeof param.daysUteis !== 'undefined') ? param.daysUteis : $('#configControlePrazoDaysUteis').is(':checked');
+    var _idControlePrazo = (param && typeof param.idControlePrazo !== 'undefined') ? param.idControlePrazo : false;
+
+    if (selectedRows.length == 0 && !_this) {
+        alertaBoxPro('Error', 'exclamation-triangle', 'Selecione pelo menos um processo.');
+        return;
+    }
+    if (_mode == 'data' && !_dateRef) {
+        alertaBoxPro('Error', 'exclamation-triangle', 'Selecione uma data!');
+        return;
+    }
+    if (_mode == 'dias' && (!_daysRef || parseInt(_daysRef, 10) <= 0)) {
+        alertaBoxPro('Error', 'exclamation-triangle', 'Informe a quantidade de dias!');
+        return;
+    }
+
+    // "Prazo em dias" no form nativo é REJEITADO pelo servidor por este fluxo
+    // (Acesso negado / veiculo_publicacao_consultar), enquanto "Data certa" grava normal.
+    // Como descartamos feriados (item 6), convertemos o nº de dias numa DATA concreta no
+    // cliente (pulando só fim de semana) e gravamos como "Data certa" — exata e confiável.
+    if (_mode == 'dias') {
+        _dateRef = buildSubmittedDate('dias').slice(0, 10); // YYYY-MM-DD
+        _mode = 'data';
+    }
+
+    if (_this && _this.closest('.kanban-item').length) {
+        var id = _this.closest('.kanban-item').attr('data-eid');
+        $('#P'+id+' td.prazoBoxDisplay [onclick="addControlePrazo(this)"]').trigger('click');
+        return false;
+    }
+
+    // Data SÓ para render OTIMISTA (último recurso). A data autoritativa vem do nativo
+    // (resultado do submit ou re-leitura). Para 'dias', estimativa simples pulando fim de
+    // semana — sem feriados (item 6 descartado); pode divergir do SEI e é logo substituída.
+    function buildSubmittedDate(modeSubmit) {
+        if (modeSubmit == 'data') {
+            return moment(_dateRef, 'YYYY-MM-DD').format('YYYY-MM-DD 23:59:59');
+        }
+        if (modeSubmit == 'dias') {
+            var n = parseInt(_daysRef, 10) || 0;
+            var d = moment();
+            if (!_daysUteis) return d.add(n, 'days').format('YYYY-MM-DD 23:59:59');
+            var added = 0;
+            while (added < n) { d.add(1, 'day'); if (d.isoWeekday() <= 5) added++; }
+            return d.format('YYYY-MM-DD 23:59:59');
+        }
+        return moment().format('YYYY-MM-DD 23:59:59');
+    }
+
+    function buildNativeIconHtml(prazoInfo, hrefNative, dateValue) {
+        var tooltipText = buildControlePrazoNativeTooltip(prazoInfo, dateValue);
+        var src = (prazoInfo && prazoInfo.concluido) ? 'controle_prazo2.svg' : 'controle_prazo1.svg';
+        var hrefIcon = hrefNative || (prazoInfo && prazoInfo.href) || '';
+        var html = (hrefIcon)
+            ? '<a href="'+hrefIcon+'" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();"><img src="'+src+'" class="imagemStatus"></a>'
+            : '<img src="'+src+'" class="imagemStatus" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();">';
+        return html;
+    }
+
+    function submitNativeForRow(row, next) {
+        var _row = $(row);
+        var prevCell = _row.find('td.prazoBoxDisplay').html();
+        var rowInfo = getControlePrazoNativeInfo(_row);
+        var rowTrabalharHref = _row.find('a[href*="procedimento_trabalhar"]').attr('href');
+        var idProc = rowInfo && rowInfo.id_procedimento ? rowInfo.id_procedimento : getParamsUrlPro(rowTrabalharHref).id_procedimento;
+        var existingHref = getControlePrazoNativeHref(_row, idProc, _idControlePrazo || (rowInfo && rowInfo.id_controle_prazo));
+        var hasExistingForm = _row.find('a[href*="controle_prazo_definir"]').length > 0 ||
+                                !!_idControlePrazo ||
+                                !!(rowInfo && rowInfo.id_controle_prazo);
+
+        _row.find('td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin '+(SeiPro.sei.adapter.isNewSEI() ? 'brancoColor' : 'azulColor')+'"></i>');
+
+        // Com prazo existente, a linha já expõe o link hasheado (com id_controle_prazo) → usa direto.
+        // SEM prazo, resolvemos o link nativo "Definir Controle de Prazo" do processo sob demanda
+        // (procedimento_trabalhar → frame procedimento_visualizar → href da toolbar), pois o SEI
+        // assina a URL com infra_hash (não dá para construir à mão).
+        if (existingHref && hasExistingForm) {
+            runIframe(existingHref);
+        } else if (_mode === 'concluir') {
+            // Concluir exige prazo existente; sem ele não há o que concluir.
+            _row.find('td.prazoBoxDisplay').html(prevCell);
+            failCount++;
+            next();
+        } else {
+            fetchControlePrazoDefinirHref(rowTrabalharHref).then(function(resolvedHref){
+                if (!resolvedHref) {
+                    _row.find('td.prazoBoxDisplay').html(prevCell);
+                    failCount++;
+                    next();
+                    return;
+                }
+                runIframe(resolvedHref);
+            });
+        }
+        return;
+
+        // Estratégia de iframe oculto: carrega o formulário nativo, preenche e dispara o
+        // Salvar REAL (deixando o JS do SEI rodar). A reconstrução do POST via fetch é
+        // rejeitada pelo SEI ("Selecione uma opção"); só o submit nativo funciona de fato.
+        function runIframe(rowHref) {
+        var iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:absolute;width:1px;height:1px;left:-9999px;top:-9999px;border:0;';
+        var stage = 0;
+        var finished = false;
+        var capturedAlert = '';
+        var timeoutId = setTimeout(function(){ finish(false); }, 20000);
+
+        function cleanup() {
+            clearTimeout(timeoutId);
+            if (iframe && iframe.parentNode) { iframe.parentNode.removeChild(iframe); }
+        }
+        function finish(ok, resultDoc) {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            if (ok) {
+                renderRowFromResult(resultDoc);
+            } else {
+                _row.find('td.prazoBoxDisplay').html(prevCell);
+                failCount++;
+            }
+            if (typeof next === 'function') next();
+        }
+        function renderRowFromResult(resultDoc) {
+            // 1) Tenta a data AUTORITATIVA já no resultado do submit (ícone de prazo do SEI).
+            var prazoInfo = false;
+            if (resultDoc) {
+                try {
+                    var link = $(resultDoc).find('a[href*="controle_prazo_definir"], img[src*="controle_prazo"]').first();
+                    if (link.length) {
+                        var holder = (link.closest('a').length) ? link.closest('a') : link;
+                        prazoInfo = getControlePrazoNativeInfo($('<div>').append(holder.clone())) || false;
+                    }
+                } catch (e) {}
+            }
+            if (prazoInfo && (prazoInfo.dateDue || prazoInfo.dateFinished)) {
+                prazoInfo.href = prazoInfo.href || rowHref;
+                updateControlePrazoNativeRow(_row, prazoInfo, prazoInfo.dateSort, prazoInfo.href);
+                return;
+            }
+            // 2) Sem data no resultado: RE-LÊ o prazo nativo do processo (fonte da verdade),
+            //    em vez de confiar num cálculo próprio de dias úteis/feriados (item 6 descartado).
+            fetchControlePrazoNativeInfo(rowTrabalharHref).then(function(info){
+                if (info && (info.dateDue || info.dateFinished)) {
+                    info.href = info.href || rowHref;
+                    updateControlePrazoNativeRow(_row, info, info.dateSort, info.href);
+                } else {
+                    renderOptimistic();
+                }
+            });
+            // 3) Último recurso: render otimista (data certa = exata; dias = estimativa s/ feriados).
+            function renderOptimistic() {
+                var dateValue = buildSubmittedDate(_mode);
+                var concluded = (_mode === 'concluir');
+                var optInfo = {
+                    fonte: 'nativo',
+                    content: buildControlePrazoNativeTooltip({ concluido: concluded, diasRestantes: (_mode === 'dias') ? parseInt(_daysRef, 10) : null }, dateValue),
+                    responsavel: typeof getCurrentUserNamePro === 'function' ? getCurrentUserNamePro() : false,
+                    dateDue: concluded ? false : dateValue,
+                    dateFinished: concluded ? dateValue : false,
+                    dateSort: dateValue,
+                    diasRestantes: (_mode === 'dias') ? parseInt(_daysRef, 10) : null,
+                    concluido: concluded,
+                    vencido: false,
+                    status: concluded ? 'concluido' : 'ativo',
+                    src: concluded ? 'controle_prazo2.svg' : 'controle_prazo1.svg',
+                    href: rowHref,
+                    id_procedimento: idProc,
+                    id_controle_prazo: _idControlePrazo
+                };
+                updateControlePrazoNativeRow(_row, optInfo, optInfo.dateSort, optInfo.href);
+            }
+        }
+
+        iframe.addEventListener('load', function() {
+            var idoc;
+            try { idoc = iframe.contentDocument; } catch (e) { finish(false); return; }
+            if (!idoc) { finish(false); return; }
+            // Captura (e suprime) o alert() nativo — a validação client-side do SEI
+            // (ex.: "Selecione uma opção.") usa alert; é o sinal real de falha.
+            try { iframe.contentWindow.alert = function(m){ capturedAlert = String(m || ''); }; } catch (e) {}
+
+            if (stage === 0) {
+                var fdoc = findControlePrazoFormDoc(idoc);
+                if (!fdoc) {
+                    // O carregamento do form dispara 'load' mais de uma vez (página
+                    // intermediária antes do formulário). Aguarda o próximo load em vez
+                    // de desistir; o timeout cobre os casos sem form (ex.: shell do frameset).
+                    return;
+                }
+                stage = 1;
+                try {
+                    fillNativeControlePrazoFormDoc(fdoc, _mode, _dateRef, _daysRef, _daysUteis);
+                    var btn = findControlePrazoSalvarBtn(fdoc);
+                    if (!btn) { finish(false); return; }
+                    capturedAlert = '';
+                    btn.click();
+                    // Se a validação client-side barrou (alert síncrono), o submit não navega.
+                    if (capturedAlert && /selecione|obrigat|inv[aá]lid/i.test(capturedAlert)) {
+                        finish(false);
+                    }
+                } catch (e) {
+                    finish(false);
+                }
+            } else {
+                // stage 1: resultado do submit. NÃO usar "form ainda presente" como falha —
+                // o SEI re-renderiza o formulário (com o prazo atualizado) mesmo no sucesso.
+                // Falha = alerta de validação, QUALQUER página de exceção do SEI
+                // (#divInfraExcecao/.infraExcecao — pega "Acesso negado" e outros erros),
+                // ou sessão expirada (login). A página de sucesso não tem esse container,
+                // então não há risco de falso-negativo.
+                var txt = '';
+                try { txt = (idoc.body && idoc.body.innerText) || ''; } catch (e) {}
+                var loc = '';
+                try { loc = idoc.location ? idoc.location.href : ''; } catch (e) {}
+                var temExcecaoSei = false;
+                try { temExcecaoSei = !!(idoc.querySelector && idoc.querySelector('#divInfraExcecao, .infraExcecao')); } catch (e) {}
+                var failed = (capturedAlert && /selecione|obrigat|inv[aá]lid/i.test(capturedAlert)) ||
+                             temExcecaoSei ||
+                             /Acesso negado/i.test(txt) ||
+                             /sip\/login\.php/.test(loc);
+                finish(!failed, failed ? null : idoc);
+            }
+        });
+
+        document.body.appendChild(iframe);
+        iframe.src = rowHref;
+        }
+    }
+
+    function runQueue(index) {
+        if (index >= selectedRows.length) {
+            if (_this) {
+                tblProcessos.find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
+            }
+            setTimeout(function() {
+                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload tableHomeDestroy');
+                tableHomeDestroy(true);
+            }, 500);
+            if (typeof callback === 'function') {
+                callback();
+            }
+            if (failCount > 0) {
+                alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel gravar o prazo em '+failCount+' processo(s) pela lista. Para definir o primeiro prazo de um processo, abra o processo e use "Controle de Prazo".');
+            }
+            resetDialogBoxPro('dialogBoxPro');
+            return;
+        }
+        submitNativeForRow(selectedRows[index], function() {
+            runQueue(index + 1);
+        });
+    }
+
+    runQueue(0);
+}
+// Resolve o link hasheado de "Definir Controle de Prazo" de um processo SEM prazo.
+// O SEI assina a URL com infra_hash, então é preciso obtê-la do próprio SEI:
+// GET procedimento_trabalhar (frameset) -> src do frame procedimento_visualizar ->
+// GET visualizar -> href da toolbar controle_prazo_definir. Retorna Promise<string|false>.
+function fetchControlePrazoDefinirHref(trabalharHref) {
+    if (!trabalharHref) return Promise.resolve(false);
+    var absTrab;
+    try { absTrab = new URL(trabalharHref, location.href).href; } catch (e) { return Promise.resolve(false); }
+    return fetch(absTrab, { credentials: 'include' })
+        .then(function(r){ return r.text(); })
+        .then(function(html){
+            var m = html.match(/src="([^"]*procedimento_visualizar[^"]*)"/i);
+            if (!m) return false;
+            var visUrl = new URL(m[1].replace(/&amp;/g, '&'), absTrab).href;
+            return fetch(visUrl, { credentials: 'include' })
+                .then(function(r){ return r.text(); })
+                .then(function(vhtml){
+                    var lm = vhtml.match(/href="([^"]*controle_prazo_definir[^"]*)"/i);
+                    return lm ? new URL(lm[1].replace(/&amp;/g, '&'), visUrl).href : false;
+                });
+        })
+        .catch(function(){ return false; });
+}
+// Re-lê o prazo nativo (fonte da verdade) de um processo após gravar, para obter a
+// data de vencimento CALCULADA pelo SEI (relevante no modo "dias"/dias úteis, onde não
+// dá para inferir client-side). Mesmos 2 fetches do resolver de href; parseia o ícone
+// controle_prazo via getControlePrazoNativeInfo (mesma lógica do read da coluna).
+// Retorna Promise<prazoInfo|false>.
+function fetchControlePrazoNativeInfo(trabalharHref) {
+    if (!trabalharHref) return Promise.resolve(false);
+    var absTrab;
+    try { absTrab = new URL(trabalharHref, location.href).href; } catch (e) { return Promise.resolve(false); }
+    return fetch(absTrab, { credentials: 'include' })
+        .then(function(r){ return r.text(); })
+        .then(function(html){
+            var m = html.match(/src="([^"]*procedimento_visualizar[^"]*)"/i);
+            if (!m) return false;
+            var visUrl = new URL(m[1].replace(/&amp;/g, '&'), absTrab).href;
+            return fetch(visUrl, { credentials: 'include' })
+                .then(function(r){ return r.text(); })
+                .then(function(vhtml){
+                    // Só o ÍCONE DE STATUS (controle_prazo1/2.svg) carrega data no tooltip;
+                    // o controle_prazo_gerenciar.svg é a AÇÃO da toolbar (sem data) e deve ser ignorado.
+                    var block = vhtml.match(/<a\b[^>]*controle_prazo_definir[^>]*>\s*<img\b[^>]*src="[^"]*controle_prazo[12]\.svg[^"]*"[^>]*>/i);
+                    if (!block) return false;
+                    return getControlePrazoNativeInfo($('<div>').html(block[0].replace(/&amp;/g, '&') + '</a>')) || false;
+                });
+        })
+        .catch(function(){ return false; });
+}
+// Localiza recursivamente o documento (mesmo em frame aninhado) que contém o
+// formulário nativo de controle de prazo.
+function findControlePrazoFormDoc(doc) {
+    try {
+        if (doc && doc.getElementById && doc.getElementById('frmControlePrazoCadastro')) return doc;
+        var frames = (doc && doc.querySelectorAll) ? doc.querySelectorAll('iframe, frame') : [];
+        for (var i = 0; i < frames.length; i++) {
+            try {
+                var sub = findControlePrazoFormDoc(frames[i].contentDocument);
+                if (sub) return sub;
+            } catch (e) {}
+        }
+    } catch (e) {}
+    return null;
+}
+// Preenche o formulário nativo no documento do iframe (clica o rádio para disparar
+// o onclick do SEI que habilita os campos, depois preenche data/dias/dias úteis).
+function fillNativeControlePrazoFormDoc(fdoc, mode, dateRef, daysRef, daysUteis) {
+    var radioId = (mode === 'concluir') ? 'optConcluir' : (mode === 'dias') ? 'optDias' : 'optDataCerta';
+    var radio = fdoc.getElementById(radioId);
+    if (radio) {
+        radio.checked = true;
+        try { radio.click(); } catch (e) {}
+    }
+    if (mode === 'data') {
+        var t = fdoc.getElementById('txtPrazo');
+        if (t) t.value = moment(dateRef, 'YYYY-MM-DD').format('DD/MM/YYYY');
+    } else if (mode === 'dias') {
+        var d = fdoc.getElementById('txtDias');
+        if (d) d.value = String(parseInt(daysRef, 10));
+        var c = fdoc.getElementById('chkSinDiasUteis');
+        if (c) c.checked = !!daysUteis;
+    }
+}
+function findControlePrazoSalvarBtn(fdoc) {
+    var btns = fdoc.querySelectorAll('button, input[type=submit], input[type=button]');
+    for (var i = 0; i < btns.length; i++) {
+        var label = (btns[i].value || btns[i].textContent || '').trim();
+        if (/salvar/i.test(label)) return btns[i];
+    }
+    var form = fdoc.getElementById('frmControlePrazoCadastro');
+    return form ? (form.querySelector('button[type=submit], input[type=submit]') || null) : null;
+}
 function addControlePrazo(this_ = false) {
     var dateRef = moment().format('YYYY-MM-DD');
     var timeRef = '23:59';
@@ -3226,244 +3801,17 @@ function addControlePrazo(this_ = false) {
 
             _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
             _parent.find('input[type="checkbox"]').trigger('click');
-            textTag = (typeof _data.timeSorter !== 'undefined') ? textTag.replace(moment(_data.timeSorter, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm'), '').replace('Ate ', '').trim() : textTag;
-            textTag = (typeof textTag !== 'undefined' && textTag !== null && textTag != '') ? textTag.replace(/\\n/g, "") : '';
+            textTag = (typeof _data.timeSorter !== 'undefined' && typeof textTag === 'string') ? textTag.replace(moment(_data.timeSorter, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm'), '').replace('Ate ', '').trim() : textTag;
+            textTag = (typeof textTag === 'string' && textTag != '') ? textTag.replace(/\\n/g, "") : '';
     }
-    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
-    
-    var htmlBox =   '<div class="dialogBoxDiv">'+
-                    '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                    '      <tr style="height: 40px;">'+
-                    '          <td style="vertical-align: bottom;">'+
-                    '               <i class="iconPopup iconSwitch fas fa-calendar-alt '+(dueSetDate ? 'azulColor' : 'cinzaColor')+'"></i> '+
-                    '               Controlar vencimento?'+
-                    '          </td>'+
-                    '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(dueSetDate ? 'checked' : '')+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_duesetdate"></label>'+
-                    '              </div>'+
-                    '          </td>'+
-                    '      </tr>'+
-                    '      <tr style="height: 40px;" class="configDates_duesetdate">'+
-                    '          <td class="label" style="vertical-align: bottom;">'+
-                    '               <i class="iconPopup '+(dueSetDate ? 'fas fa-clock' : 'far fa-clock')+' azulColor"></i> <span>'+(dueSetDate ? 'Data de vencimento' : 'Data inicial')+'</span>'+
-                    '          </td>'+
-                    '          <td class="input" style="position:relative">'+
-                    '               <span class="newLink_active" style="margin: 0px;padding: 5px 8px;border-radius: 5px;position: absolute;top: 10px;'+(dueSetDate ? 'display:block;' : 'display:none;')+'">At\u00E9</span>'+
-                    '               <input type="date" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_date" value="'+dateRef+'" style="width:130px; margin-left: 50px !important;">'+
-                    '               <input type="time" onkeypress="if (event.which == 13) { $(this).closest(\'.ui-dialog\').find(\'.confirm.ui-button\').trigger(\'click\') }" id="configDatesBox_time" value="'+timeRef+'" style="width:80px; float: right;">'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '      <tr style="height: 40px;">'+
-                    '          <td class="label" style="vertical-align: bottom;">'+
-                    '               <i class="iconPopup fas fa-tags azulColor"></i> <span>Marcador</span>'+
-                    '          </td>'+
-                    '          <td>'+
-                    '               <select id="configDatesBox_tag" style="width:310px; float: right;">'+
-                    '               </select>'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '      <tr style="height: 40px;">'+
-                    '          <td class="label" style="vertical-align: bottom;">'+
-                    '               <i class="iconPopup fas fa-comment-alt azulColor"></i> <span>Texto</span>'+
-                    '          </td>'+
-                    '          <td>'+
-                    '               <input type="text" id="configDatesBox_text" style="width:290px; float: right;" value="'+textTag+'">'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '   </table>'+
-                    '</div>';
-
-    var btnDialogBoxPro =   [{
-            text: (this_) ? 'Remover Prazo' : 'Remover Prazos',
-            icon: 'ui-icon-closethick',
-            click: function(event) { 
-                setPrazoMarcador('remove', this_, form, href);
-            }
-        },{
-            text: textControle+' Prazo',
-            class: 'confirm',
-            icon: 'ui-icon-tag',
-            click: function() { 
-                setPrazoMarcador('add', this_, form, href);
-            }
-        }];
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+htmlBox+'</div>')
-        .dialog({
-            title: (this_) ? textControle+' controle de prazo ('+processo+')' : 'Controle de prazo em processos ('+tblProcessos.find('input[type="checkbox"]:checked').length+')',
-            width: 550,
-            open: function() {
-                var listaMarcadores = getOptionsPro('listaMarcadores');
-                var listaMarcadores_unidade = getOptionsPro('listaMarcadores_unidade');
-                if (listaMarcadores && listaMarcadores_unidade == $('#selInfraUnidades').val()) {
-                    var htmlOptions = $.map(listaMarcadores, function(v){
-                                        var selected = (tagName && tagName == v.name) ? 'selected' : '';
-                                        return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
-                                    }).join('');
-                    $('#configDatesBox_tag').html(htmlOptions).chosenImage();
-                } else {
-                    var param = {};
-                        form.find("input[type=hidden]").map(function () {
-                            if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-                                param[$(this).attr('name')] = $(this).val(); 
-                            }
-                        });
-                    $.ajax({ 
-                        method: 'POST',
-                        data: param,
-                        url: href
-                    }).done(function (html) {
-                        var $html = $(html);
-                            listaMarcadores = getListaMarcadores($html).array;
-                        var htmlOptions = $.map(listaMarcadores, function(v){
-                                            var selected = (tagName && tagName == v.name) ? 'selected' : '';
-                                            return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
-                                        }).join('');
-                        $('#configDatesBox_tag').html(htmlOptions).chosenImage();
-                    });
-                }
-            },
-            close: function() {
-                if (this_) _this.closest('table').find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
-            },
-            buttons: btnDialogBoxPro
-    });
-}
-function setPrazoMarcador(mode, this_, form, href, param = false, callback = false) {
-
-    var _this = (this_) ? $(this_) : false;
-    var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
-    var _dateRef = (!param) ? $('#configDatesBox_date').val() : param.date;
-    var _timeRef = (!param) ? $('#configDatesBox_time').val() : param.time;
-    var _tagSelected = (!param) ? $('#configDatesBox_tag').val() : param.tag;
-    var _textTag = (!param) ? $('#configDatesBox_text').val() : param.text;
-        _textTag = (_textTag != '') ? '\n'+_textTag : '';
-    if (mode == 'add' && _dateRef == '') {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Selecione uma data!');
-    } else {
-        var param = {};
-            form.find("input[type=hidden]").map(function () {
-                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-                    param[$(this).attr('name')] = $(this).val(); 
-                }
-            });
-            _dateRef = _dateRef+' '+(_timeRef != '' ? _timeRef : '23:59');
-        var _dateTo = ($('#configDatesBox_duesetdate').is(':checked')) ? _dateRef : false;
-        
-        if (href && href != '') {
-            tblProcessos.find('tr.infraTrMarcada td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin '+(SeiPro.sei.adapter.isNewSEI() ? 'brancoColor' : 'azulColor')+'"></i>');
-            $.ajax({ 
-                method: 'POST',
-                data: param,
-                url: href
-            }).done(function (html) {
-                var $html = $(html);
-                var xhr = new XMLHttpRequest();
-                var formTag = SeiPro.sei.adapter.isNewSEI() ? $html.find('#frmAndamentoMarcadorCadastro') : $html.find('#frmGerenciarMarcador');
-                var hrefTag = formTag.attr('action');
-                var dateSubmit = (_dateTo) ? 'Ate '+moment(_dateTo, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm') : moment(_dateRef, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
-                    dateSubmit = dateSubmit+_textTag;
-                var optionsMarcadores = getListaMarcadores($html);
-                var selectTags = optionsMarcadores.array;
-                var indexSelected = optionsMarcadores.indexSelected;
-                // var tagSelected = (typeof selectTags[indexSelected] !== 'undefined') ? selectTags[indexSelected].value : selectTags[0].value;
-
-                var paramTag = {};
-                    formTag.find("input[type=hidden], textarea, button").map(function () {
-                        if ( $(this).attr('name')) {
-                            paramTag[$(this).attr('name')] = $(this).val(); 
-                        }
-                    });
-                    paramTag['txaTexto'] = (mode == 'remove') ? '' : dateSubmit;
-                    paramTag['hdnIdMarcador'] = _tagSelected;
-
-                    var postDataTag = '';
-                    for (var k in paramTag) {
-                        if (postDataTag !== '') postDataTag = postDataTag + '&';
-                        var valor = (k!='txaTexto') ? paramTag[k] : escapeComponent(paramTag[k]);
-                            postDataTag = postDataTag + k + '=' + valor;
-                    }
-                    // console.log(postDataTag);
-
-                if (hrefTag && hrefTag != '') {
-                    $.ajax({ 
-                        method: 'POST',
-                        // data: paramTag,
-                        data: postDataTag,
-                        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
-                        xhr: function() {
-                            return xhr;
-                        },
-                        url: hrefTag
-                    }).done(function (htmlResult) {
-                        if (xhr.responseURL != hrefTag) {
-                            var $htmlResult = $(htmlResult);
-                            var ids = paramTag['hdnIdProtocolo'];
-                                ids = (ids.indexOf(',') !== -1) ? ids.split(',') : [ids];
-                            var tagResult = $htmlResult.find('a[href*="andamento_marcador_gerenciar"]').map(function(){ 
-                                var tagResultLink = getParamsUrlPro($(this).attr('href'));
-                                if (tagResultLink && typeof tagResultLink.id_procedimento !== 'undefined' && $.inArray(tagResultLink.id_procedimento, ids) !== -1) {
-                                    return {id_procedimento: tagResultLink.id_procedimento, html: this.outerHTML};
-                                }
-                            }).get();
-                            
-                            if (tagResult.length > 0) {
-                                $.each(tagResult, function(i, v){
-                                    var _dateConfig = moment(_dateRef, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
-                                    var tr = $('tr#P'+v.id_procedimento);
-                                    var td = tr.find('td').eq(1);
-                                    td.find('a[href*="andamento_marcador_gerenciar"]').remove();
-                                    td.append(v.html);
-                                    if (mode == 'add') {
-                                        var config = {
-                                                            date: _dateConfig, 
-                                                            dateDue: (_dateTo) ? _dateConfig : undefined, 
-                                                            countdays: true, 
-                                                            workday: false, 
-                                                            duesetdate: _dateTo,
-                                                            displayformat: 'DD/MM/YYYY HH:mm',
-                                                            action: 'addControlePrazo(this)'
-                                                        };
-                                        var htmlDatePreview = getDatesPreview(config);
-                                            tr.find('td.prazoBoxDisplay').html(htmlDatePreview);
-                                            if ($(htmlDatePreview).hasClass('tagTableText_date_atrasado')) {
-                                                // tr.css('background-color','#fff1f0');
-                                                tr.addClass('infraTrAtrasada');
-                                            } else if (moment(_dateRef, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD') == moment().format('YYYY-MM-DD')) {
-                                                // tr.css('background-color','#fdf9df');
-                                                tr.addClass('infraTrAlerta');
-                                            } else {
-                                                // tr.css('background-color','transparent');
-                                                tr.removeClass('infraTrAlerta').removeClass('infraTrAtrasada');
-                                            }
-                                        if (param) tr.find(SeiPro.sei.adapter.isNewSEI() ? '.infraCheckboxInput:checked' : '.infraCheckbox:checked').trigger('click');
-                                        if (typeof callback === 'function') {
-                                            callback();
-                                            // console.log('**** CALBACK');
-                                        }
-                                    } else {
-                                        // tr.css('background-color','transparent');
-                                        tr.removeClass('infraTrAlerta').removeClass('infraTrAtrasada');
-                                        tr.find('td.prazoBoxDisplay').html('');
-                                        setControlePrazo();
-                                    }
-                                });
-                                if (this_) tblProcessos.find('thead th a[onclick*="setSelectAllTr"]').data('index',1).trigger('click');
-                                setTimeout(function(){ 
-                                    if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload tableHomeDestroy');
-                                    tableHomeDestroy(true);
-                                }, 500);
-                            }
-                        }
-                    });
-                }
-            });
-        }
-        resetDialogBoxPro('dialogBoxPro');
+    var nativeInfo = (typeof parseControlePrazoNativo === 'function') ? getControlePrazoNativeInfo(_parent) : false;
+    var nativeHref = getControlePrazoNativeHref(_parent, id_procedimento, nativeInfo && nativeInfo.id_controle_prazo ? nativeInfo.id_controle_prazo : false, false);
+    // Com a feature de prazo nativo disponível, TODO "Adicionar/Alterar prazo" usa o diálogo
+    // nativo — inclusive para processos SEM prazo (o link hasheado do form é resolvido sob
+    // demanda em setControlePrazoNativo). O fluxo de Marcador legado deixa de ser acionado.
+    if (typeof parseControlePrazoNativo === 'function') {
+        openControlePrazoNativoDialog(this_, form, nativeHref || (nativeInfo ? nativeInfo.href : ''), nativeInfo, dateRef, (nativeInfo && nativeInfo.diasRestantes !== null && typeof nativeInfo.diasRestantes !== 'undefined') ? nativeInfo.diasRestantes : 1, dueSetDate, textControle, processo);
+        return false;
     }
 }
 function getListaMarcadores(html) {
@@ -3800,6 +4148,42 @@ function setAtribuicaoAutomatica() {
             }
     });
 }
+// Reconcilia a soma de colspans do cabeçalho com o nº de tds do corpo (a coluna "Prazos"
+// desalinha porque o cabeçalho do SEI usa colspan e outras features [anotação] adicionam th
+// sem casar com o corpo). Ajusta o th principal (maior colspan) de cada tabela.
+function reconcileControlePrazoColspan() {
+    $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').each(function(){
+        var t = $(this);
+        var bodyRow = t.find('tbody tr').not('.tableHeader').filter(function(){ return $(this).find('td.prazoBoxDisplay').length > 0; }).first();
+        var headRow = t.find('thead tr').not('.tablesorter-filter-row').first();
+        if (bodyRow.length === 0 || headRow.length === 0) return;
+        if (headRow.find('th.prazoBoxDisplay').length === 0) return;
+        var bodyCols = bodyRow.find('td').length;
+        var headCols = 0, mainTh = null, maxSpan = 0;
+        headRow.find('th').each(function(){
+            var c = parseInt($(this).attr('colspan') || '1', 10);
+            headCols += c;
+            if (c > maxSpan) { maxSpan = c; mainTh = $(this); }
+        });
+        if (mainTh && headCols !== bodyCols) {
+            var adjusted = maxSpan - (headCols - bodyCols);
+            if (adjusted >= 1) { mainTh.attr('colspan', adjusted); }
+        }
+    });
+}
+// O tablesorter / a feature de anotação reescrevem o thead DEPOIS do setControlePrazo,
+// desfazendo o ajuste de colspan. Em vez de um MutationObserver contínuo (que reagia a cada
+// mutação do init e causava flicker das colunas), re-aplicamos em momentos DISCRETOS:
+// alguns timers após o init e nos eventos de ordenação/filtro do tablesorter.
+function scheduleControlePrazoColspanReconcile() {
+    reconcileControlePrazoColspan();
+    [200, 800, 2000].forEach(function(ms){ setTimeout(reconcileControlePrazoColspan, ms); });
+    if (!window.__seiProPrazoColspanBound) {
+        window.__seiProPrazoColspanBound = true;
+        $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado')
+            .on('tablesorter-initialized sortEnd filterEnd', function(){ setTimeout(reconcileControlePrazoColspan, 30); });
+    }
+}
 function setControlePrazo(force = false) {
     var tblProcessos = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     var prazoColumnWidth = '5em';
@@ -3835,10 +4219,31 @@ function setControlePrazo(force = false) {
             $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
         }
     }
+    scheduleControlePrazoColspanReconcile();
     tblProcessos.find('tbody tr').each(function(){
-        var _tag = $(this).find('a[href*="andamento_marcador_gerenciar"]').attr('onmouseover');
         var _checkbox = $(this).find('input[type="checkbox"]');
         var _processo = $(this).find('a[href*="procedimento_trabalhar"]');
+        var nativeInfo = (typeof parseControlePrazoNativo === 'function') ? getControlePrazoNativeInfo(this) : false;
+        // Oculta o ícone de prazo NATIVO da linha (ao lado da estrela): a coluna "Prazos"
+        // já exibe o prazo. Mantém no DOM (display:none) para a leitura continuar funcionando.
+        $(this).find('a[href*="controle_prazo_definir"], img[src*="controle_prazo"]').filter(function(){
+            return $(this).closest('td.prazoBoxDisplay').length === 0;
+        }).css('display', 'none');
+        if (nativeInfo) {
+            var nativeDate = nativeInfo.dateFinished || nativeInfo.dateDue || nativeInfo.dateSort;
+            var htmlDateNative = renderControlePrazoNativePreview(nativeInfo, nativeDate, nativeInfo.href);
+            $(this).removeClass('infraTrAtrasada').removeClass('infraTrAlerta');
+            $(this).find('td.prazoBoxDisplay').html(htmlDateNative).attr('data-time-sorter', nativeInfo.dateSort || nativeDate).attr('data-id-controle-prazo', nativeInfo.id_controle_prazo || '');
+            if (!nativeInfo.concluido) {
+                if (nativeInfo.vencido) {
+                    $(this).addClass('infraTrAtrasada');
+                } else if (nativeDate && moment(nativeDate, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD') == moment().format('YYYY-MM-DD')) {
+                    $(this).addClass('infraTrAlerta');
+                }
+            }
+            return;
+        }
+        var _tag = $(this).find('a[href*="andamento_marcador_gerenciar"]').attr('onmouseover');
         // Parsing puro migrado para SeiPro.core.prazos.parsePrazoTag (Fase 6)
         var _prazoTag = parsePrazoTag(_tag);
         var dateTo = _prazoTag.dateTo;
