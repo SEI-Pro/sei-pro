@@ -55,3 +55,19 @@ describe('isAjaxRedirectAction', () => {
         expect(fn(make(url), 'arvore_visualizar', 'procedimento_enviar')).toBe(true);
     });
 });
+
+describe('predicados de página (autopreenchersenha)', () => {
+    it('isLoginPageNewSei: detecta sip/login.php', () => {
+        const SeiPro = loadSeiUrls();
+        const fn = SeiPro.sei.urls.isLoginPageNewSei;
+        expect(fn('https://sei.gov.br/sip/login.php?x=1')).toBe(true);
+        expect(fn('https://sei.gov.br/controlador.php?acao=procedimento_controlar')).toBe(false);
+    });
+
+    it('isDocumentoAssinarPage: detecta acao=documento_assinar', () => {
+        const SeiPro = loadSeiUrls();
+        const fn = SeiPro.sei.urls.isDocumentoAssinarPage;
+        expect(fn('https://sei.gov.br/controlador.php?acao=documento_assinar&id=9')).toBe(true);
+        expect(fn('https://sei.gov.br/sip/login.php')).toBe(false);
+    });
+});

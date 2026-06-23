@@ -546,6 +546,23 @@ CORS e quotas num só lugar.
 > Para texto sem acento (nomes de documento típicos) o resultado é idêntico. `node --check` OK.
 > **Pendente:** smoke test do filtro **na árvore** de um processo (gate de iframe — `SMOKE_TEST.md`).
 
+> **16ª leva — feature "autopreencher senha no login" (`autopreenchersenha`).** Opção
+> ("Autopreencher senha no login (SEI ≥ 4.0)"). A feature é quase toda DOM (esconde o
+> `#pwdSenha` real, mostra/estiliza o campo visível, espelha o valor no change) e vive em
+> `init_pwd.js` (`loadRepairPwdNewSei`). Os únicos bits **puros** são predicados de tipo de
+> página: `isLoginPageNewSei` (`sip/login.php`) e o check inline `acao=documento_assinar`.
+> Ambos extraídos para **`sei/urls.js`** como `isLoginPageNewSei(href)` /
+> `isDocumentoAssinarPage(href)` (default `location.href`); `init_pwd.js` passou a usá-los pelos
+> globais aliased. A camada DOM (`loadRepairPwdNewSei`) fica no legado (view). `urls.test.js` +5.
+> **172 testes verdes.** Acumulado: **69 funções** em 9 módulos.
+>
+> > **Limpeza de código morto junto.** `init_db.js` tinha uma 2ª cópia (antiga, mais simples)
+> > de `loadRepairPwdNewSei` com o **call-site já comentado** (dead code) — removida, junto com a
+> > duplicação inline do check `sip/login.php`. A versão viva é a do `init_pwd.js`.
+> >
+> > **Smoke test pendente (login):** abrir a tela de login (SEI ≥ 4.0) com a opção ligada e
+> > confirmar o autopreenchimento/máscara da senha; idem na tela `documento_assinar`.
+
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…
 - **Atenção ao contrato `checkConfigValue`** (ver nota na Fase 5): ao mover/quebrar
@@ -682,7 +699,7 @@ core) para lá. Antes disso não há ganho arquitetural a extrair desta feature.
 | 3 — Adapter versão | Alto | Médio | **Alto valor** |
 | 4 — Storage/rede | Médio | Médio | Sequência |
 | 5 — Build | Habilitador | Médio-alto | Quando limpo |
-| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 15 fatias feitas (67 fn em 9 módulos); método em §5.1 |
+| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 16 fatias feitas (69 fn em 9 módulos); método em §5.1 |
 
 ---
 

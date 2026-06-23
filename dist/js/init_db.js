@@ -234,34 +234,13 @@ function observeAcaoPro() {
 // [migrado para core/sei] setSessionNameSpace
 // [migrado para core/sei] getManifestExtension
 // [migrado para core/sei] verifyConfigValue
-function loadRepairPwdNewSei() {
-    if (verifyConfigValue('autopreenchersenha') && window.location.href.indexOf('sip/login.php') !== -1) {
-        var pwdHidden = $('#pwdSenha');
-        var pwdVisible = $('input[type="password"]').not('#pwdSenha');
-
-        if (!pwdHidden.length || !pwdVisible.length) {
-            setTimeout(loadRepairPwdNewSei, 250);
-            return;
-        }
-
-        pwdHidden.hide();
-        pwdVisible.show().attr('autocomplete','current-password').css({
-            fontSize: '2em',
-            height: 'calc(1em + .75rem)',
-            borderTopLeftRadius: '0',
-            borderBottomLeftRadius: '0'
-        }).addClass('form-control masked').off('change.seiProPwd').on('change.seiProPwd',function(){
-            pwdHidden.val($(this).val()).trigger('change');
-        });
-        console.log('loadRepairPwdNewSei');
-    }
-}
+// loadRepairPwdNewSei removida — código morto (call-site abaixo já comentado; a
+// versão viva e mais completa vive em init_pwd.js). Fase 6.
 function loadScriptProDB() {
     observeAcaoPro();
     changeBasePro();
     // getConfigHost(appendIconEntidadeLogin);
     getPathExtensionPro();
-    // loadRepairPwdNewSei();
 }
 if (getManifestExtension().short_name == 'SPro') {
     setTimeout(function(){ 

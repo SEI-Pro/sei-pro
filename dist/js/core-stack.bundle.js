@@ -1694,10 +1694,20 @@
       }
       return typeof params.acao_origem === "undefined" || params.acao_origem === origin;
     }
-    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction };
+    function isLoginPageNewSei(href) {
+      href = typeof href === "string" ? href : globalRef.location.href;
+      return href.indexOf("sip/login.php") !== -1;
+    }
+    function isDocumentoAssinarPage(href) {
+      href = typeof href === "string" ? href : globalRef.location.href;
+      return href.indexOf("acao=documento_assinar") !== -1;
+    }
+    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction, isLoginPageNewSei, isDocumentoAssinarPage };
     getSeiPro().sei.urls = urls;
     aliasGlobal("getParamsUrlPro", getSeiPro().core.util.getParamsUrlPro);
     aliasGlobal("isAjaxRedirectAction", isAjaxRedirectAction);
+    aliasGlobal("isLoginPageNewSei", isLoginPageNewSei);
+    aliasGlobal("isDocumentoAssinarPage", isDocumentoAssinarPage);
     return urls;
   }
 

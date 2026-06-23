@@ -65,7 +65,9 @@ Registre data, versão do SEI e navegador.
 - [ ] Estilo avançado aplicado sem quebrar o layout nativo.
 
 ### 6. Login (`init_pwd.js`)
-- [ ] Auto-fill de senha funciona no SEI 4.0+.
+- [ ] Auto-fill de senha funciona no SEI 4.0+ (`sip/login.php`) — valida
+      `isLoginPageNewSei` em `SeiPro.sei.urls` (Fase 6, 16ª leva).
+- [ ] Máscara/auto-fill da senha na tela `acao=documento_assinar` — valida `isDocumentoAssinarPage`.
 
 ---
 
