@@ -502,6 +502,22 @@ CORS e quotas num só lugar.
 > ausente→true, nome default-enabled força true). **147 testes verdes.** Acumulado: **61 funções**
 > em 8 módulos. Este é o **destravamento** das camadas C (config/switches) e D (init) da feature
 > de prazos — e da quebra futura de `sei-functions-pro.js`.
+>
+> **14ª leva — feature "marcar como não visualizado" (`marcar_naolido`), núcleo puro.**
+> Opção de config `marcar_naolido` ("Permitir marcar processos como Não Visualizado"). A feature
+> tem 5 funções em `sei-functions-pro.js` (`setProcessoNaoLidoLoading`, `getSelectedProcessoNaoLido`,
+> `failProcessoNaoLido`, `getProcessoNaoLido` — orquestrador AJAX) + o botão em `sei-pro.js`.
+> A única lógica **genuinamente pura** é `isAjaxRedirectAction(xhr, action, origin)` — detecção
+> de redirect do SEI via `xhr.responseURL` (usada 2× no orquestrador). Movida para
+> **`sei/urls.js`** (interpreta URL de ação do SEI; usa `getParamsUrlPro`); legado removido,
+> global via `aliasGlobal`. O resto (loading/seleção/alerta/orquestração AJAX + botão) é
+> **view/DOM por definição** e permanece no legado chamando o alias (§5.1.1) — fica para
+> `src/features/naolido/` quando o build bundlar `features/`. `urls.test.js` +5. **155 testes
+> verdes.** Acumulado: **62 funções** em 8 módulos.
+>
+> > **Quirk travado por teste:** `getParamsUrlPro` só parseia URLs com `?` **e** `&` (ignora
+> > param único). URLs de redirect do SEI sempre têm múltiplos params, então é seguro na prática;
+> > os testes de `isAjaxRedirectAction` usam URLs realistas (com `&`) para refletir isso.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…

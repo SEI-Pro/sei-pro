@@ -1527,9 +1527,23 @@
       if (!query) return baseUrl;
       return baseUrl + (baseUrl.indexOf("?") === -1 ? "?" : "&") + query;
     }
-    const urls = { getParams, buildQuery, appendQuery };
+    function isAjaxRedirectAction(xhr, action, origin = false) {
+      if (!xhr || typeof xhr.responseURL !== "string" || xhr.responseURL === "") {
+        return false;
+      }
+      const params = getSeiPro().core.util.getParamsUrlPro(xhr.responseURL);
+      if (!params || params.acao !== action) {
+        return false;
+      }
+      if (origin === false || origin === null || typeof origin === "undefined") {
+        return true;
+      }
+      return typeof params.acao_origem === "undefined" || params.acao_origem === origin;
+    }
+    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction };
     getSeiPro().sei.urls = urls;
     aliasGlobal("getParamsUrlPro", getSeiPro().core.util.getParamsUrlPro);
+    aliasGlobal("isAjaxRedirectAction", isAjaxRedirectAction);
     return urls;
   }
 

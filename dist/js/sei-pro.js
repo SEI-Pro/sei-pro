@@ -1731,7 +1731,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnNaoLido =  (checkConfigValue('marcar_naolido')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Marcar como n\u00E3o visualizado\')"')+' onclick="getProcessoNaoLido()" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Marcar como n\u00E3o visualizado\')"')+' onclick="marcarProcessoNaoLido()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Marcar como n\u00E3o visualizado">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-eye-slash" style="font-size: 17pt; color: #fff;"></i>'+
@@ -4332,9 +4332,13 @@ function initAllMarcadoresHome(TimeOut = 9000) {
 }
 function initNaoVisualizadoPro() {
     $('.processoNaoVisualizado').each(function(){
-        var tooltip = $(this).attr('onmouseover');
-            tooltip = typeof tooltip !== 'undefined' ? tooltip.replace("return infraTooltipMostrar('","return infraTooltipMostrar('(N\u00E3o Visualizado) ") : false;
-        if (tooltip) $(this).attr('onmouseover',tooltip);
+        var el = $(this);
+        if (el.attr('data-nvis') === '1') return;            // j\u00E1 processado nesta p\u00E1gina
+        var tooltip = el.attr('onmouseover');
+        if (typeof tooltip !== 'undefined' && tooltip.indexOf("(N\u00E3o Visualizado) ") === -1) {
+            el.attr('onmouseover', tooltip.replace("return infraTooltipMostrar('","return infraTooltipMostrar('(N\u00E3o Visualizado) "));
+        }
+        el.attr('data-nvis','1');
     });
 }
 function initUrgentePro() {

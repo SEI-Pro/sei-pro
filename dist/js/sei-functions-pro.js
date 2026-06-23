@@ -3150,202 +3150,143 @@ function getSelectedProcessoNaoLido() {
     }
     return false;
 }
-function isAjaxRedirectAction(xhr, action, origin = false) {
-    if (!xhr || typeof xhr.responseURL !== 'string' || xhr.responseURL === '') {
-        return false;
-    }
-    var params = getParamsUrlPro(xhr.responseURL);
-    if (!params || params.acao !== action) {
-        return false;
-    }
-    if (origin === false || origin === null || typeof origin === 'undefined') {
-        return true;
-    }
-    return (typeof params.acao_origem === 'undefined' || params.acao_origem === origin);
-}
+// isAjaxRedirectAction migrada para SeiPro.sei.urls (src/sei/urls.js) — Fase 6.
+// Global preservado via aliasGlobal.
 function failProcessoNaoLido(message) {
     setProcessoNaoLidoLoading(false);
     alertaBoxPro('Error', 'exclamation-triangle', message);
 }
-function getProcessoNaoLido() {
-    var id_procedimento = getSelectedProcessoNaoLido();
+// Serializa um form do SEI (#frmAtividadeListar etc.) no formato
+// x-www-form-urlencoded esperado pelo backend (charset ISO-8859-1), aplicando os
+// `overrides` informados e as regras de encoding espec\u00EDficas de cada campo.
+// Centraliza a l\u00F3gica que antes ficava duplicada nos POSTs de "Atualizar
+// Andamento" e "Enviar Processo".
+function serializeSeiForm(form, overrides) {
+    var param = {};
+    form.find('input[type=hidden]').each(function () {
+        var name = $(this).attr('name'), id = $(this).attr('id');
+        if (name && id && id.indexOf('hdn') !== -1) param[name] = $(this).val();
+    });
+    form.find('input[type=text]').each(function () {
+        var id = $(this).attr('id');
+        if (id && id.indexOf('txt') !== -1) param[id] = $(this).val();
+    });
+    form.find('select').each(function () {
+        var id = $(this).attr('id');
+        if (id && id.indexOf('sel') !== -1) param[id] = $(this).val();
+    });
+    form.find('input[type=radio]').each(function () {
+        var name = $(this).attr('name');
+        if (name && name.indexOf('rdo') !== -1) param[name] = $(this).val();
+    });
+    $.extend(param, overrides || {});
+
+    var parts = [];
+    for (var k in param) {
+        if (!param.hasOwnProperty(k)) continue;
+        var valor;
+        if (k === 'hdnAssuntos' || k === 'hdnInteressados') {
+            valor = param[k];                                   // j\u00E1 v\u00EAm codificados pelo SEI
+        } else if (k === 'txtDescricao') {
+            valor = parent.encodeURI_toHex(String(param[k]).normalize('NFC'));
+        } else {
+            valor = escapeComponent(param[k]);
+        }
+        parts.push(k + '=' + valor);
+    }
+    return parts.join('&');
+}
+// GET de uma p\u00E1gina do SEI como Promise (resolve com o HTML retornado).
+function getSeiHtml(url) {
+    return Promise.resolve($.ajax({ url: url }));
+}
+// POST de um form do SEI como Promise. Resolve com { html, xhr } para que o
+// chamador possa inspecionar xhr.responseURL via isAjaxRedirectAction.
+function postSeiForm(url, data) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        $.ajax({
+            method: 'POST',
+            data: data,
+            url: url,
+            contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+            xhr: function () { return xhr; }
+        }).done(function (html) { resolve({ html: html, xhr: xhr }); })
+          .fail(function () { reject(); });
+    });
+}
+// Marca UM processo como n\u00E3o visualizado: lan\u00E7a um andamento e reenvia o
+// processo para a pr\u00F3pria unidade (o SEI passa a trat\u00E1-lo como n\u00E3o visto).
+async function marcarUmProcessoNaoLido(id_procedimento) {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
-    if (!id_procedimento) {
+    var tr = tableProc.find('tr#P' + id_procedimento);
+    var href = url_host.replace('controlador.php', '') + 'controlador.php?acao=procedimento_trabalhar&id_procedimento=' + String(id_procedimento);
+
+    var htmlTrabalhar = await getSeiHtml(href);
+    var urlArvore = $(htmlTrabalhar).find('#ifrArvore').attr('src');
+    if (!urlArvore) throw 'N\u00E3o foi poss\u00EDvel localizar a \u00E1rvore do processo selecionado.';
+
+    var arrayLinksArvore = getLinksArvoreAjax(await getSeiHtml(urlArvore));
+    var ctxArvore = { treeModel: { links: arrayLinksArvore } };
+    var urlAndamento = getTreeLinkUrlByName('Atualizar Andamento', ctxArvore);
+    var urlEnviar = getTreeLinkUrlByName('Enviar Processo', ctxArvore);
+    if (!urlAndamento || !urlEnviar) throw 'N\u00E3o foi poss\u00EDvel localizar as a\u00E7\u00F5es necess\u00E1rias no processo selecionado.';
+
+    // 1) Atualizar Andamento
+    var formAndamento = $(await getSeiHtml(urlAndamento)).find('#frmAtividadeListar');
+    if (formAndamento.length === 0) throw 'N\u00E3o foi poss\u00EDvel carregar o formul\u00E1rio de andamento do processo.';
+    var resAndamento = await postSeiForm(formAndamento.attr('action'), serializeSeiForm(formAndamento, {
+        txaDescricao: 'Processo marcado como n\u00E3o visualizado',
+        sbmSalvar: 'Salvar'
+    }));
+    if (!isAjaxRedirectAction(resAndamento.xhr, 'procedimento_consultar_historico', 'procedimento_atualizar_andamento')) {
+        throw 'Falha ao salvar o andamento do processo.';
+    }
+
+    // 2) Enviar Processo de volta para a pr\u00F3pria unidade
+    var formEnviar = $(await getSeiHtml(urlEnviar)).find('#frmAtividadeListar');
+    if (formEnviar.length === 0) throw 'N\u00E3o foi poss\u00EDvel carregar o formul\u00E1rio de envio do processo.';
+    var resEnviar = await postSeiForm(formEnviar.attr('action'), serializeSeiForm(formEnviar, {
+        selUnidades: idUnidade,
+        hdnUnidades: idUnidade + '\u00B1' + siglaUnidadeAtual,
+        sbmEnviar: 'Enviar'
+    }));
+    if (!isAjaxRedirectAction(resEnviar.xhr, 'arvore_visualizar', 'procedimento_enviar')) {
+        throw 'N\u00E3o foi poss\u00EDvel confirmar a marca\u00E7\u00E3o como n\u00E3o visualizado.';
+    }
+
+    // sucesso: reflete na linha da lista
+    tr.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').attr('class', 'processoNaoVisualizado');
+    tr.find(elemCheckbox + ':checked').trigger('click');
+}
+// A\u00E7\u00E3o do bot\u00E3o: marca todos os processos selecionados como n\u00E3o
+// visualizados (sequencialmente, para n\u00E3o sobrecarregar o SEI).
+async function marcarProcessoNaoLido() {
+    var listId = getListIdProtocoloSelected();
+    if (!listId || listId.length === 0) {
+        var single = getSelectedProcessoNaoLido();
+        listId = single ? [single] : [];
+    }
+    if (listId.length === 0) {
         failProcessoNaoLido('Selecione um processo para marcar como n\u00E3o visualizado.');
         return;
     }
     setProcessoNaoLidoLoading(true);
-    var tr = tableProc.find('tr#P'+id_procedimento);
-    var href = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+String(id_procedimento);
-    if (href !== null) {
-        $.ajax({ url: href }).done(function (html) {
-            var $html = $(html);
-            var urlArvore = $html.find("#ifrArvore").attr('src');
-            if (typeof urlArvore === 'undefined' || urlArvore === '') {
-                failProcessoNaoLido('N\u00E3o foi poss\u00EDvel localizar a \u00E1rvore do processo selecionado.');
-                return;
-            }
-            $.ajax({ url: urlArvore }).done(function (htmlArvore) {
-                var arrayLinksArvore = getLinksArvoreAjax(htmlArvore);
-                var urlEnviar = getTreeLinkUrlByName('Enviar Processo', {treeModel: {links: arrayLinksArvore}});
-                var urlAndamento = getTreeLinkUrlByName('Atualizar Andamento', {treeModel: {links: arrayLinksArvore}});
-                // console.log(arrayLinksArvore, urlEnviar, urlAndamento);
-                if (urlAndamento !== null && urlEnviar !== null) {
-                    $.ajax({ url: urlAndamento }).done(function (htmlDoc) {
-                        var $htmlDoc = $(htmlDoc);
-                        var form = $htmlDoc.find('#frmAtividadeListar');
-                        if (form.length === 0) {
-                            failProcessoNaoLido('N\u00E3o foi poss\u00EDvel carregar o formul\u00E1rio de andamento do processo.');
-                            return;
-                        }
-                        var hrefForm = form.attr('action');
-                        var param = {};
-                            form.find("input[type=hidden]").each(function () {
-                                if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-                                    param[$(this).attr('name')] = $(this).val(); 
-                                }
-                            });
-                            form.find('input[type=text]').each(function () { 
-                                if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
-                                    param[$(this).attr('id')] = $(this).val();
-                                }
-                            });
-                            form.find('select').each(function () { 
-                                if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
-                                    param[$(this).attr('id')] = $(this).val();
-                                }
-                            });
-                            form.find('input[type=radio]').each(function () { 
-                                if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
-                                    param[$(this).attr('name')] = $(this).val();
-                                }
-                            });
-                            param.txaDescricao = 'Processo marcado como n\u00E3o visualizado';
-                            param.sbmSalvar = 'Salvar';
-                
-                        // console.log({nr_sei: nr_sei, name: nameOption, value: value, url: urlDoc, param: param});
-                
-                        var postData = '';
-                        for (var k in param) {
-                            if (postData !== '') postData = postData + '&';
-                            var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
-                                valor = (k=='hdnInteressados') ? param[k] : valor;
-                                // valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
-                                valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
-                                postData = postData + k + '=' + valor;
-                        }
-                        // console.log(postData);
-                
-                        var xhr = new XMLHttpRequest();
-                        $.ajax({
-                            method: 'POST',
-                            // data: param,
-                            data: postData,
-                            url: hrefForm,
-                            contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
-                            xhr: function() {
-                                return xhr;
-                            },
-                        }).done(function (htmlResult) {
-                            var status = isAjaxRedirectAction(xhr, 'procedimento_consultar_historico', 'procedimento_atualizar_andamento');
-                            if (status) {
-            
-                                $.ajax({ url: urlEnviar }).done(function (htmlDoc) {
-                                    var $htmlDoc = $(htmlDoc);
-                                    var form = $htmlDoc.find('#frmAtividadeListar');
-                                    if (form.length === 0) {
-                                        failProcessoNaoLido('N\u00E3o foi poss\u00EDvel carregar o formul\u00E1rio de envio do processo.');
-                                        return;
-                                    }
-                                    var hrefForm = form.attr('action');
-                                    var param = {};
-                                        form.find("input[type=hidden]").each(function () {
-                                            if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
-                                                param[$(this).attr('name')] = $(this).val(); 
-                                            }
-                                        });
-                                        form.find('input[type=text]').each(function () { 
-                                            if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
-                                                param[$(this).attr('id')] = $(this).val();
-                                            }
-                                        });
-                                        form.find('select').each(function () { 
-                                            if ( $(this).attr('id') && $(this).attr('id').indexOf('sel') !== -1) {
-                                                param[$(this).attr('id')] = $(this).val();
-                                            }
-                                        });
-                                        form.find('input[type=radio]').each(function () { 
-                                            if ( $(this).attr('name') && $(this).attr('name').indexOf('rdo') !== -1) {
-                                                param[$(this).attr('name')] = $(this).val();
-                                            }
-                                        });
-                                        param.selUnidades = idUnidade;
-                                        param.hdnUnidades = idUnidade+'\u00B1'+siglaUnidadeAtual;
-                                        param.sbmEnviar = 'Enviar';
-                            
-                                    // console.log({nr_sei: nr_sei, name: nameOption, value: value, url: urlDoc, param: param});
-                            
-                                    var postData = '';
-                                    for (var k in param) {
-                                        if (postData !== '') postData = postData + '&';
-                                        var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
-                                            valor = (k=='hdnInteressados') ? param[k] : valor;
-                                            valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
-                                            valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
-                                            postData = postData + k + '=' + valor;
-                                    }
-                                    // console.log(postData);
-                            
-                                    var xhr = new XMLHttpRequest();
-                                    $.ajax({
-                                        method: 'POST',
-                                        // data: param,
-                                        data: postData,
-                                        url: hrefForm,
-                                        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
-                                        xhr: function() {
-                                            return xhr;
-                                        },
-                                    }).done(function (htmlResult) {
-                                        var status = isAjaxRedirectAction(xhr, 'arvore_visualizar', 'procedimento_enviar');
-                                        if (status) {
-                                            tr.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').attr('class', 'processoNaoVisualizado');
-                                            tr.find(elemCheckbox+':checked').trigger('click');
-                                            initNaoVisualizadoPro();
-                                            initFaviconNrProcesso();
-                                            setProcessoNaoLidoLoading(false);
-                                        } else {
-                                            failProcessoNaoLido('N\u00E3o foi poss\u00EDvel confirmar a marca\u00E7\u00E3o como n\u00E3o visualizado.');
-                                        }
-                                    }).fail(function () {
-                                        failProcessoNaoLido('Falha ao concluir o envio do processo.');
-                                    });
-                                    
-                                }).fail(function () {
-                                    failProcessoNaoLido('Falha ao abrir a tela de envio do processo.');
-                                });
-                                
-                            } else {
-                                failProcessoNaoLido('Falha ao salvar o andamento do processo.');
-                            }
-                        }).fail(function () {
-                            failProcessoNaoLido('Falha ao registrar o andamento do processo.');
-                        });
-                        
-                    }).fail(function () {
-                        failProcessoNaoLido('Falha ao abrir a tela de andamento do processo.');
-                    });
-                } else {
-                    failProcessoNaoLido('N\u00E3o foi poss\u00EDvel localizar as a\u00E7\u00F5es necess\u00E1rias no processo selecionado.');
-                }
-            }).fail(function () {
-                failProcessoNaoLido('Falha ao carregar a \u00E1rvore do processo selecionado.');
-            });
-        }).fail(function () {
-            failProcessoNaoLido('Falha ao abrir o processo selecionado.');
-        });
-    } else {
-        failProcessoNaoLido('N\u00E3o foi poss\u00EDvel localizar o processo selecionado.');
+    var erros = [];
+    for (var i = 0; i < listId.length; i++) {
+        try {
+            await marcarUmProcessoNaoLido(listId[i]);
+        } catch (e) {
+            erros.push(typeof e === 'string' ? e : 'Falha ao marcar o processo.');
+        }
+    }
+    initNaoVisualizadoPro();
+    initFaviconNrProcesso();
+    setProcessoNaoLidoLoading(false);
+    if (erros.length > 0) {
+        failProcessoNaoLido(erros.length === listId.length
+            ? erros[0]
+            : (erros.length + ' de ' + listId.length + ' processo(s) n\u00E3o puderam ser marcados: ' + erros[0]));
     }
 }
 function updateDadosArvoreMult(nameLink, values, idProcedimento, callback = false) {

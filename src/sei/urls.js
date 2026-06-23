@@ -21,10 +21,29 @@ export function installUrls() {
         return baseUrl + (baseUrl.indexOf('?') === -1 ? '?' : '&') + query;
     }
 
-    const urls = { getParams, buildQuery, appendQuery };
+    // Detecção PURA de redirect de uma resposta AJAX do SEI: dado o XHR concluído,
+    // confirma se o SEI redirecionou para a `action` esperada (e, opcionalmente, a
+    // partir de `origin` via acao_origem). Núcleo extraído da feature "marcar como
+    // não visualizado" (marcar_naolido) — Fase 6. Sem DOM; lê só xhr.responseURL.
+    function isAjaxRedirectAction(xhr, action, origin = false) {
+        if (!xhr || typeof xhr.responseURL !== 'string' || xhr.responseURL === '') {
+            return false;
+        }
+        const params = getSeiPro().core.util.getParamsUrlPro(xhr.responseURL);
+        if (!params || params.acao !== action) {
+            return false;
+        }
+        if (origin === false || origin === null || typeof origin === 'undefined') {
+            return true;
+        }
+        return (typeof params.acao_origem === 'undefined' || params.acao_origem === origin);
+    }
+
+    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction };
     getSeiPro().sei.urls = urls;
 
     aliasGlobal('getParamsUrlPro', getSeiPro().core.util.getParamsUrlPro);
+    aliasGlobal('isAjaxRedirectAction', isAjaxRedirectAction);
 
     return urls;
 }
