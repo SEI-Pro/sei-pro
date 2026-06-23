@@ -66,3 +66,36 @@ describe('manifest content_scripts load order (bundled core)', () => {
         }
     });
 });
+
+// Fase 6 — feature bundles built from src/features/ (1ª: arvore-info, no ifrArvore).
+const FEATURE_BUNDLE = 'js/arvore-info.bundle.js';
+
+describe('feature bundle: arvore-info (Informações adicionais na árvore)', () => {
+    it('is referenced as a content script (replaces the legacy boot file)', () => {
+        const manifest = readManifest();
+        const blocks = (manifest.content_scripts || []).filter(
+            (cs) => Array.isArray(cs.js) && cs.js.includes(FEATURE_BUNDLE)
+        );
+        expect(blocks.length, 'arvore-info bundle present').toBeGreaterThan(0);
+        // legacy boot must be gone
+        for (const cs of manifest.content_scripts || []) {
+            for (const f of cs.js || []) {
+                expect(f, 'legacy boot removed').not.toBe('js/sei-pro-arvore-boot.js');
+            }
+        }
+    });
+
+    it('runs in a frame where the core-stack bundle is loaded first (earlier block, same matches)', () => {
+        const manifest = readManifest();
+        const cs = manifest.content_scripts || [];
+        const featIdx = cs.findIndex((b) => Array.isArray(b.js) && b.js.includes(FEATURE_BUNDLE));
+        expect(featIdx, 'feature block found').toBeGreaterThanOrEqual(0);
+        const featMatches = new Set(cs[featIdx].matches || []);
+        // some EARLIER block must load core-stack with overlapping matches + all_frames
+        const coreBefore = cs.slice(0, featIdx).some(
+            (b) => Array.isArray(b.js) && b.js.includes(BUNDLE) && b.all_frames &&
+                   (b.matches || []).some((m) => featMatches.has(m))
+        );
+        expect(coreBefore, 'core-stack loads before arvore-info in the same frame').toBe(true);
+    });
+});

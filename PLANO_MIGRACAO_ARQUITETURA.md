@@ -609,6 +609,103 @@ CORS e quotas num só lugar.
 > > nomes na árvore e conteúdo com entidades HTML corretas (sem mojibake), nos dois ramos
 > > SEI 4.x/5.x.
 
+> **19ª leva — feature "Informações adicionais na árvore do processo" (`infoarvore`):
+> avaliação + dedup.** Diferente das levas anteriores, **esta feature é view-by-definition**
+> (§5.1.1): vive em `sei-pro-arvore-boot.js` (~2.230 linhas, IIFE auto-contido que roda DENTRO do
+> iframe `ifrArvore`) e é quase inteiramente DOM/AJAX — painel lateral que busca e renderiza
+> marcador, atribuição, acompanhamento, anotação, interessados, tipo/nível/assuntos. As funções
+> `parse*`/`render*` recebem um **`document` já parseado** e o consultam (querySelector,
+> createElement, listeners) — não há **lógica de domínio pura** testável sem navegador a extrair
+> para o `core/`. É o mesmo "ponto de parada natural" documentado para Controlar Prazos (§5.1.5):
+> manter no legado é o playbook sendo seguido, não dívida.
+>
+> **O ganho arquitetural disponível foi eliminar duplicação:** o boot tinha uma **cópia local
+> byte-a-byte de `normalizeMojibakeUtf8`** (já existente em `core/texto`). Como o bloco
+> `init_arvore` do manifest carrega o `core-stack.bundle.js` **no mesmo frame e mundo isolado**
+> do boot (blocos 6 e 7, ambos `all_frames`, world default), `win.SeiPro.core.texto` é alcançável
+> ali. A cópia local passou a **delegar** a `SeiPro.core.texto.normalizeMojibakeUtf8` via
+> **facade-com-fallback** (mantém o corpo legado como rede de segurança contra corrida de carga —
+> mesmo padrão da unificação da árvore na 15ª leva). Sem novas funções de core. `node --check` OK;
+> **198 testes verdes** (a função delegada já é coberta por `texto.test.js`).
+>
+> > **Nota de cobertura:** `no-duplicate-core.test.js` só varre `function` de coluna 0; a cópia
+> > do boot era **indentada** (dentro do IIFE), por isso passou batida — a dedup a remove de fato.
+> >
+> > **Smoke test (infoarvore dedup) — PASSOU** 2026-06-23 (Chrome, SEI 5.x): painel monta com
+> > 9 seções, sem mojibake, delegação ao core OK.
+>
+> > ⚠️ **Revisão de estratégia (2026-06-23).** A conclusão "view-by-definition / dedup só" acima
+> > foi **revista a pedido do usuário**: `infoarvore` é a funcionalidade **mais usada** e, sendo o
+> > caso mais importante, justifica a migração completa para a nova arquitetura — ver **20ª leva**.
+
+> **20ª leva — `infoarvore` migrada para `src/features/` (feature folder).** Decisão do usuário:
+> migração **completa em etapas** + **reconciliação** dos caminhos old/new. Ativa o gatilho §5.1.2
+> (build passa a bundlar `src/features/`). Feita em etapas, cada uma verde + smoke:
+> - **A — Build enabler + porte verbatim.** `scripts/build.mjs` passou a ter **2 entry points**
+>   (`core-stack` + `arvore-info`), gerando `dist/js/arvore-info.bundle.js` (IIFE, sem minificação).
+>   O IIFE de `sei-pro-arvore-boot.js` foi para `src/features/arvore-info/index.js` **verbatim**;
+>   `manifest.base.json` aponta para o bundle; arquivo legado **removido**. `manifest-order.test.js`
+>   +2 (bundle referenciado; core-stack carrega antes no mesmo frame). Smoke PASSOU.
+> - **B — `parse/` PURO + testes.** 5 módulos (`inline-payload`, `atribuicao`, `marcador`,
+>   `consulta`, `anotacao`) com os kernels puros antes embutidos no DOM (extração de `Nos[0].acoes`/
+>   `Nos[0].html` + unescape; heurística "atribuído para"; id de `acaoRemover`; mapa de acesso +
+>   split nome/(unidade) de interessados; marcadores `[ ]`/`[X]`). `index.js` os **importa**
+>   (bundler inlina). `tests/features/arvore-info/parse.test.js` +16. Smoke PASSOU.
+> - **E — Reconciliação old/new.** Mapeado: as 4 seções editáveis (atribuição, marcador, tipo,
+>   acompanhamento) já usavam **editores inline da própria feature**; o handoff ao diálogo legado
+>   `parent.editDadosArvorePro` era **branch morto** (sem lápis de `nivel_acesso`). E1: removido o
+>   branch morto + `watchDialogClose` (usado só por ele) do boot. E2: **deletadas 436 linhas** de
+>   `sei-functions-pro.js` (`editDadosArvorePro`/`_`/`_AcompEsp` — diálogo jQuery UI + chosen).
+>   Helpers compartilhados (`getRemoverMarcador`, `getAjaxLista*`, `getSelect/ListaAtribuicao*`)
+>   **preservados** (usados por features vivas — traçado por call-site). `chosen.js` permanece (usado
+>   em todo o resto). 216 testes verdes.
+>
+> - **C — `io.js` (fronteira de rede).** `fetchPage`(+cache/TTL/retry), `invalidatePage`,
+>   `submitForm` extraídos para `io.js` como fábrica `createIo({win,log,warn,err})` (injetável →
+>   testável). `index.js` instancia e mantém os call-sites idênticos. `io.test.js` +5 (fetch/DOMParser
+>   stubados: cache compartilha 1 request, invalidate refaz, retry em "Failed to fetch", erro não-
+>   transiente limpa cache). Semântica Latin-1 preservada.
+> - **D (parcial) — utilitários de DOM auto-contidos.** Matemática de cursor → `dom/caret.js`
+>   (fábrica `createCaret({doc,win})`, wrappers finos no `index.js`); `forceTrueConfirm` →
+>   `dom/confirm.js`; `createMarcadorRemoveConfirmBox` **removido** (código morto, 0 usos);
+>   2 leituras mortas de `.panelDadosArvorePro[bloco_interno]` removidas de `sei-functions-pro.js`.
+>   **221 testes verdes.**
+>
+> **Estado:** `infoarvore` em `src/features/arvore-info/`: `parse/` ×5 (testado), `io.js` (testado),
+> `dom/caret.js`, `dom/confirm.js`. Edição unificada; legado morto removido. **Todo o conteúdo
+> separável e testável a seco já foi extraído.**
+>
+> **D (completa) — split por seção concluído (incremental, smoke por etapa).** A closure `initOnce`
+> foi quebrada em módulos por seção, cada um recebendo um `ctx` com painel(éis) + deps de runtime
+> (fetch/toolbar/refreshers/logger); a lógica pura vem de `parse/`. Extraídas, uma por vez, com
+> build+test verdes e smoke não-destrutivo em produção (Chrome/SEI 5.x):
+> - `sections/consulta.js` — Tipo/Nível/Assuntos/Observações/Interessados (read-only).
+> - `sections/acompanhamento.js` — render + remoção inline (editor de adição fica no index).
+> - `sections/marcador.js` — render + remoção inline (idem).
+> - `sections/atribuicao.js` — fábrica `createAtribuicaoSection` (renderRows + editInline).
+> - `sections/anotacao.js` — a maior: editor completo (edit/save/cancel/remove/prioridade/data/
+>   checklist) + caret + round-trip texto↔DOM; cria seu próprio `createCaret`.
+>
+> **Resultado:** `index.js` **2.238 → 1.143 linhas** (-49%); restou só bootstrap/ciclo de vida/
+> observer + scaffolding de painel/wiring de clique. `infoarvore` agora é: `parse/`×5 (testado),
+> `io.js` (testado), `dom/caret.js`+`dom/confirm.js`, `sections/`×5. **221 testes verdes.**
+> Smoke do split completo PASSOU (9 seções renderizam dos módulos novos; editor de Atribuição abre;
+> console limpo). Bug pego no caminho: o import de `createAtribuicaoSection` faltava (esbuild não
+> acusa identificador indefinido) — corrigido antes do smoke.
+>
+> **Bug de runtime corrigido pós-smoke — `submitForm` na Anotação.** O save/excluir/data da
+> anotação chama `saveAnotacaoToServer → submitForm`, que **não fora repassado** no `ctx` de
+> `installAnotacaoSection` (esbuild não acusa identificador indefinido). Sintoma reportado em
+> produção: "Falha ao salvar anotação: submitForm is not defined". Corrigido (ctx + chamada).
+> Para **travar a classe inteira do bug**, adicionado `tests/features/arvore-info/ctx-wiring.test.js`:
+> para cada `sections/*.js`, toda `ctx.<chave>` usada precisa ser passada na chamada do index.js.
+> **226 testes verdes.**
+>
+> **Validação de save em produção — OK (usuário, 2026-06-23):** salvar/excluir/inserir-data na
+> anotação e remover marcador funcionaram; estado pós-remoção correto; console limpo. (Confirmado
+> também que o "placeholder + 456 restantes" coexistindo é a UI normal do estado vazio — o contador
+> de caracteres na barra de ações, não conteúdo stale.)
+
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…
 - **Atenção ao contrato `checkConfigValue`** (ver nota na Fase 5): ao mover/quebrar
@@ -745,7 +842,7 @@ core) para lá. Antes disso não há ganho arquitetural a extrair desta feature.
 | 3 — Adapter versão | Alto | Médio | **Alto valor** |
 | 4 — Storage/rede | Médio | Médio | Sequência |
 | 5 — Build | Habilitador | Médio-alto | Quando limpo |
-| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 18 fatias feitas (76 fn em 11 módulos); método em §5.1 |
+| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 19 fatias feitas (76 fn em 11 módulos; 19ª = dedup); método em §5.1 |
 
 ---
 

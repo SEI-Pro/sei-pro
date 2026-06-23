@@ -272,7 +272,7 @@
     },
     {
       "js": [
-        "js/sei-pro-arvore-boot.js"
+        "js/arvore-info.bundle.js"
       ],
       "all_frames": true,
       "matches": [

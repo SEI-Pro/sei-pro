@@ -20,14 +20,25 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const watch = process.argv.includes('--watch');
 
-const options = {
-    entryPoints: [path.join(root, 'src/content/core-stack.js')],
-    bundle: true,
-    format: 'iife',
-    minify: false,
-    outfile: path.join(root, 'dist/js/core-stack.bundle.js'),
-    logLevel: 'info'
-};
+// One bundle per content-script entry. Same options (IIFE, no minification, readable).
+// - core-stack: the core+sei stack loaded first in every content-script block.
+// - arvore-info: the "Informações adicionais na árvore" feature (runs in ifrArvore),
+//   first feature bundled from src/features/ (activates the §5.1.2 build trigger).
+const bundles = [
+    { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
+    { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' }
+];
+
+function optionsFor({ entry, out }) {
+    return {
+        entryPoints: [path.join(root, entry)],
+        bundle: true,
+        format: 'iife',
+        minify: false,
+        outfile: path.join(root, out),
+        logLevel: 'info'
+    };
+}
 
 function syncManifest() {
     copyFileSync(
@@ -36,13 +47,18 @@ function syncManifest() {
     );
 }
 
+const outNames = bundles.map((b) => path.basename(b.out)).join(' + ');
+
 if (watch) {
-    const ctx = await (await import('esbuild')).context(options);
-    await ctx.watch();
+    const esbuild = await import('esbuild');
+    for (const b of bundles) {
+        const ctx = await esbuild.context(optionsFor(b));
+        await ctx.watch();
+    }
     syncManifest();
-    console.log('build: watching src/ — dist/js/core-stack.bundle.js');
+    console.log('build: watching src/ — ' + outNames);
 } else {
-    await build(options);
+    await Promise.all(bundles.map((b) => build(optionsFor(b))));
     syncManifest();
-    console.log('build: dist/js/core-stack.bundle.js + dist/manifest.json generated');
+    console.log('build: ' + outNames + ' + dist/manifest.json generated');
 }
