@@ -2333,7 +2333,13 @@ function getArvoreInitSignature() {
         ].join('|');
     }).get().join('::');
 }
+// N\u00facleo migrado para SeiPro.core.quickfilter (src/core/quickfilter.js) \u2014 Fase 6.
+// Facade-com-fallback: roda no iframe ifrArvore; delega ao core do bundle quando
+// presente (caminho real), sen\u00e3o mant\u00e9m o corpo legado como rede de seguran\u00e7a.
 function normalizeQuickTreeFilterText(text) {
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilter) {
+        return SeiPro.core.quickfilter.normalizeFilterText(text);
+    }
     text = (typeof text === 'string') ? text : '';
     if (typeof removeAcentos === 'function') {
         text = removeAcentos(text.toLowerCase());
@@ -2345,45 +2351,17 @@ function normalizeQuickTreeFilterText(text) {
     return text.replace(/\s+/g, ' ').trim();
 }
 function getQuickTreeFilterTokens(text) {
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilter) {
+        return SeiPro.core.quickfilter.getFilterTokens(text);
+    }
     var query = normalizeQuickTreeFilterText(text);
     return query === '' ? [] : query.split(' ').filter(function(token){ return token !== ''; });
 }
-function getQuickTreeDocumentAnchors() {
-    return $('#divArvore').find('a.infraArvoreNo[target="ifrConteudoVisualizacao"], a.infraArvoreNo[target="ifrVisualizacao"]');
-}
-function buildQuickTreeAnchorText(anchor) {
-    var parts = [];
-    var seen = {};
-
-    function push(value) {
-        var normalizedValue = normalizeQuickTreeFilterText(String(value || '').replace(/\u00a0/g, ' '));
-        if (normalizedValue === '' || seen[normalizedValue]) {
-            return;
-        }
-        seen[normalizedValue] = true;
-        parts.push(normalizedValue);
-    }
-
-    var row = anchor.closest('.infraArvore');
-    push(anchor.text());
-    push(anchor.attr('title'));
-    push(anchor.attr('alt'));
-    push(anchor.attr('aria-label'));
-    push(anchor.attr('onmouseover'));
-    if (row.length) {
-        push(row.text());
-        row.find('a, span, div, img').each(function(){
-            push($(this).text());
-            push($(this).attr('title'));
-            push($(this).attr('alt'));
-            push($(this).attr('aria-label'));
-            push($(this).attr('onmouseover'));
-        });
-    }
-
-    return parts.join(' ');
-}
 function clearQuickTreeHighlights() {
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilterDom) {
+        SeiPro.core.quickfilterDom.clearHighlights(document.body);
+        return;
+    }
     $('.seiProQuickPageHighlight').each(function(){
         $(this).replaceWith(document.createTextNode($(this).text()));
     });
@@ -2394,42 +2372,30 @@ function clearQuickTreeHighlights() {
 function shouldSkipQuickTreeHighlightNode(node) {
     if (!node || !node.parentNode) return true;
     var parentNode = node.parentNode;
-    if (parentNode.nodeType !== 1) return false;
+    if (parentNode.nodeType !== 1) return true;
     var parentElem = $(parentNode);
     if (parentElem.closest('script, style, noscript, textarea, title').length > 0) return true;
     if (parentElem.closest('.seiProQuickPageHighlight, .seiProQuickPageFilterHidden').length > 0) return true;
     return false;
 }
 function buildQuickTreeHighlightRanges(text, tokens) {
-    var ranges = [];
-    var normalizedText = normalizeQuickTreeFilterText(text);
-
-    tokens.forEach(function(token){
-        var startIndex = 0;
-        while (startIndex < normalizedText.length) {
-            var foundAt = normalizedText.indexOf(token, startIndex);
-            if (foundAt === -1) break;
-            ranges.push({ start: foundAt, end: foundAt + token.length });
-            startIndex = foundAt + token.length;
-        }
-    });
-
-    ranges.sort(function(a, b){ return a.start - b.start; });
-    return ranges.reduce(function(merged, current){
-        if (!merged.length) {
-            merged.push(current);
-            return merged;
-        }
-        var previous = merged[merged.length - 1];
-        if (current.start <= previous.end) {
-            previous.end = Math.max(previous.end, current.end);
-        } else {
-            merged.push(current);
-        }
-        return merged;
-    }, []);
+    // Núcleo migrado para SeiPro.core.quickfilter — Fase 6. O core devolve faixas em
+    // coords do texto ORIGINAL (via index map), compatível com o slice cru de
+    // highlightQuickTreeTextNode e corrigindo o caso de acentos que mudam de tamanho.
+    // (O fallback legado calculava ranges no texto NORMALIZADO e fatiava o ORIGINAL,
+    // quebrando com acentos — removido; sem o core, não há destaque.)
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilter) {
+        return SeiPro.core.quickfilter.buildHighlightRanges(text, tokens);
+    }
+    return [];
 }
 function highlightQuickTreeTextNode(node, tokens) {
+    // O estilo do destaque vem da classe .seiProQuickPageHighlight (sei-pro.css,
+    // injetado também no iframe ifrArvore via manifest) — sem estilos inline.
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilterDom) {
+        SeiPro.core.quickfilterDom.highlightTextNode(node, tokens);
+        return;
+    }
     var text = node.nodeValue;
     if (!text || !text.trim()) return;
 
@@ -2445,11 +2411,6 @@ function highlightQuickTreeTextNode(node, tokens) {
         }
         var span = document.createElement('span');
         span.className = 'seiProQuickPageHighlight';
-        span.style.background = '#ffef86';
-        span.style.color = 'inherit';
-        span.style.borderRadius = '2px';
-        span.style.boxShadow = 'inset 0 -1px 0 rgba(0, 0, 0, 0.18)';
-        span.style.padding = '0 1px';
         span.textContent = text.slice(range.start, range.end);
         fragment.appendChild(span);
         cursor = range.end;
@@ -2463,12 +2424,19 @@ function highlightQuickTreeTextNode(node, tokens) {
 }
 function applyQuickTreeHighlight(value) {
     var tokens = getQuickTreeFilterTokens(value);
+    // Escopa a varredura à árvore (#divArvore) em vez do document.body inteiro.
+    var container = (document.getElementById('divArvore')) || document.body;
+    if (!container) { clearQuickTreeHighlights(); return; }
+
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilterDom) {
+        SeiPro.core.quickfilterDom.applyHighlight(container, tokens, {
+            shouldSkip: shouldSkipQuickTreeHighlightNode
+        });
+        return;
+    }
+
     clearQuickTreeHighlights();
-
     if (!tokens.length) return;
-
-    var container = document.body;
-    if (!container) return;
 
     var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
         acceptNode: function(node) {
@@ -2485,6 +2453,9 @@ function applyQuickTreeHighlight(value) {
         highlightQuickTreeTextNode(node, tokens);
     });
 }
+// Na árvore do processo a pesquisa rápida NÃO esconde nós — apenas destaca
+// (highlight) o termo pesquisado. (Esconder é comportamento só da lista de
+// processos.) O reset da classe Hidden é mantido por segurança.
 function applyQuickTreeFilter(value) {
     $('.infraArvore.seiProQuickPageFilterHidden').removeClass('seiProQuickPageFilterHidden');
     applyQuickTreeHighlight(value);
@@ -2515,6 +2486,7 @@ function initQuickPageFilterArvore() {
 
     input.on('keydown.seiProQuickTreeFilter', function(event){
         if (event.key === 'Escape') {
+            this.value = '';
             clearTimeout(debounceId);
             applyQuickTreeFilter('');
         }

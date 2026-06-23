@@ -33,6 +33,8 @@ import { installFeriados } from '../core/feriados.js';
 import { installNumeros } from '../core/numeros.js';
 import { installSerial } from '../core/serial.js';
 import { installPrazos } from '../core/prazos.js';
+import { installQuickFilter } from '../core/quickfilter.js';
+import { installQuickFilterDom } from '../core/quickfilter-dom.js';
 import { installUi } from '../core/ui.js';
 import { installMessaging } from '../core/messaging.js';
 import { installStorage } from '../core/storage.js';
@@ -55,6 +57,8 @@ export function installCoreStack() {
     installNumeros();
     installSerial();
     installPrazos();
+    installQuickFilter();
+    installQuickFilterDom();
     installUi();
     installMessaging();
     installStorage();

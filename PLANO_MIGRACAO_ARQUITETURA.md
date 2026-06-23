@@ -518,6 +518,33 @@ CORS e quotas num só lugar.
 > > **Quirk travado por teste:** `getParamsUrlPro` só parseia URLs com `?` **e** `&` (ignora
 > > param único). URLs de redirect do SEI sempre têm múltiplos params, então é seguro na prática;
 > > os testes de `isAjaxRedirectAction` usam URLs realistas (com `&`) para refletir isso.
+>
+> **15ª leva — feature "Filtrar a página pela pesquisa rápida" (`filtrarpaginapelapesquisarapida`),
+> núcleo puro.** Novo módulo **`core/quickfilter.js`** com o cluster puro coeso (5 funções) extraído
+> de `sei-pro.js`: `normalizeFilterText`, `getFilterTokens` (normalização/tokenização do termo) e
+> `getNormalizedIndexMap`, `mergeHighlightRanges`, `buildHighlightRanges` (cálculo das faixas de
+> destaque em coords do texto **original**, tolerando diferença de comprimento por acentos via index
+> map). Importa `removeAcentos`/`uniqPro` de `core/util`. Legados removidos; globais da página via
+> `aliasGlobal` (`normalizeQuickPageFilterText`, `getQuickPageFilterTokens`, `getNormalizedIndexMap`,
+> `mergeQuickPageHighlightRanges`, `buildQuickPageHighlightRanges`). A camada de DOM
+> (`buildQuickPageFilterRowText`, `applyQuickPageFilterToControlTables`, TreeWalker/`highlight*`,
+> `init*`) permanece no legado chamando o core. `quickfilter.test.js` +12. **167 testes verdes.**
+> Acumulado: **67 funções** em 9 módulos.
+>
+> > **Quirk travado por teste:** `uniqPro` **ordena** o array (sort) antes de deduplicar — a ordem
+> > dos tokens muda, mas é irrelevante para o matching (todo token precisa casar). Preservado verbatim.
+> >
+> **Unificação ÁRVORE ✅ (parte da mesma 15ª leva).** `sei-pro-arvore.js` tinha funções
+> paralelas `QuickTree*` (mesma feature, dentro do iframe `ifrArvore`). Os 3 núcleos puros
+> (`normalizeQuickTreeFilterText`, `getQuickTreeFilterTokens`, `buildQuickTreeHighlightRanges`)
+> passaram a **delegar a `SeiPro.core.quickfilter`** via **facade-com-fallback** (delega ao bundle
+> quando presente — caminho real no iframe, pois o bloco `init_arvore` do manifest carrega o
+> core-stack lá; senão mantém o corpo legado como rede de segurança, respeitando o estilo defensivo
+> do arquivo). Efeito colateral **positivo**: `buildQuickTreeHighlightRanges` usava coords do texto
+> **normalizado** (sem index map) — um bug latente quando acentos mudam de tamanho; o core devolve
+> coords **cruas**, compatível com o slice de `highlightQuickTreeTextNode` e **corrigindo** o caso.
+> Para texto sem acento (nomes de documento típicos) o resultado é idêntico. `node --check` OK.
+> **Pendente:** smoke test do filtro **na árvore** de um processo (gate de iframe — `SMOKE_TEST.md`).
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…
@@ -655,7 +682,7 @@ core) para lá. Antes disso não há ganho arquitetural a extrair desta feature.
 | 3 — Adapter versão | Alto | Médio | **Alto valor** |
 | 4 — Storage/rede | Médio | Médio | Sequência |
 | 5 — Build | Habilitador | Médio-alto | Quando limpo |
-| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 11 fatias feitas (56 fn em 8 módulos); método em §5.1 |
+| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 15 fatias feitas (67 fn em 9 módulos); método em §5.1 |
 
 ---
 

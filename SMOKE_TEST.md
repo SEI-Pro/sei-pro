@@ -42,6 +42,9 @@ Registre data, versão do SEI e navegador.
 - [ ] Upload via drag-and-drop (dropzone) abre e envia.
 - [ ] Anotações e informações do documento exibem.
 - [ ] Detecção de versão dentro do iframe OK (`parent.isNewSEI` — não migrado de propósito).
+- [ ] **Filtro/realce rápido na árvore** (digitar no campo de pesquisa rápida realça/filtra os
+      documentos da árvore) — valida `QuickTree*` delegando a `SeiPro.core.quickfilter` no iframe
+      (Fase 6, 15ª leva). Testar termo **com acento** (ex.: "memória") confirma o realce correto.
 
 ### 3. Editor de documentos (`editor_montar` — CKEditor)
 - [ ] Barra de ferramentas SEI Pro carrega (estilos de tabela, copiar formatação).

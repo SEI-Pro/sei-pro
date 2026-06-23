@@ -1229,16 +1229,16 @@ function restoreAssignmentFilterHome() {
     }
     getFilterAssignmentTableHome(target);
 }
-function normalizeQuickPageFilterText(text) {
-    text = (typeof text === 'string') ? text : '';
-    text = removeAcentos(text.toLowerCase());
-    return text.replace(/\s+/g, ' ').trim();
-}
-function getQuickPageFilterTokens(text) {
-    var query = normalizeQuickPageFilterText(text);
-    return query === '' ? [] : uniqPro(query.split(' ').filter(function(token){ return token !== ''; }));
-}
+// normalizeQuickPageFilterText / getQuickPageFilterTokens migradas para
+// SeiPro.core.quickfilter (src/core/quickfilter.js) — Fase 6. Globais via aliasGlobal.
+// Cache do haystack por linha (o conteúdo não muda entre teclas; chaveado pelo
+// nó DOM, então re-render da tabela cria entradas novas e descarta as antigas).
+var quickPageFilterRowTextCache = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;
 function buildQuickPageFilterRowText(row) {
+    var rowEl = row.get(0);
+    if (quickPageFilterRowTextCache && rowEl && quickPageFilterRowTextCache.has(rowEl)) {
+        return quickPageFilterRowTextCache.get(rowEl);
+    }
     var segments = [];
     var seen = {};
 
@@ -1295,7 +1295,11 @@ function buildQuickPageFilterRowText(row) {
         }
     });
 
-    return segments.join(' ');
+    var result = segments.join(' ');
+    if (quickPageFilterRowTextCache && rowEl) {
+        quickPageFilterRowTextCache.set(rowEl, result);
+    }
+    return result;
 }
 function getQuickPageFilterProcessRows(table) {
     return table.find('tbody tr').not('.tableHeader').not('.tagintable').not('.infraCaption');
@@ -1350,6 +1354,10 @@ function getQuickPageHighlightContainer() {
     return $('body');
 }
 function clearQuickPageHighlights() {
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilterDom) {
+        SeiPro.core.quickfilterDom.clearHighlights(document);
+        return;
+    }
     $('.seiProQuickPageHighlight').each(function(){
         var highlight = $(this);
         highlight.replaceWith(document.createTextNode(highlight.text()));
@@ -1360,7 +1368,7 @@ function shouldSkipQuickPageHighlightNode(node) {
     var parent = node.parentNode;
     if (parent.nodeType !== 1) return true;
     if ($(parent).closest('#navInfraBarraNavegacao, #divInfraBarraSistema, #frmProtocoloPesquisaRapida, #divInfraSidebarMenu, #divInfraBarraLocalizacao').length > 0) return true;
-    if ($(parent).closest('.seiProQuickPageHighlight').length > 0) return true;
+    if ($(parent).closest('.seiProQuickPageHighlight, .seiProQuickPageFilterHidden').length > 0) return true;
     var tagName = parent.tagName;
     if (!tagName) return true;
     tagName = tagName.toLowerCase();
@@ -1368,70 +1376,14 @@ function shouldSkipQuickPageHighlightNode(node) {
     if ($(parent).is('[contenteditable="true"]') || $(parent).closest('[contenteditable="true"]').length > 0) return true;
     return !node.nodeValue || !node.nodeValue.trim();
 }
-function getNormalizedIndexMap(text) {
-    var normalized = '';
-    var map = [];
-
-    for (var i = 0; i < text.length; i++) {
-        var normalizedChar = removeAcentos(text.charAt(i).toLowerCase());
-        if (typeof normalizedChar !== 'string') normalizedChar = text.charAt(i).toLowerCase();
-        for (var j = 0; j < normalizedChar.length; j++) {
-            normalized += normalizedChar.charAt(j);
-            map.push(i);
-        }
-    }
-
-    return {
-        normalized: normalized,
-        map: map
-    };
-}
-function mergeQuickPageHighlightRanges(ranges) {
-    if (!ranges.length) return [];
-
-    ranges.sort(function(a, b){
-        return a.start - b.start || a.end - b.end;
-    });
-
-    var merged = [ranges[0]];
-    for (var i = 1; i < ranges.length; i++) {
-        var current = ranges[i];
-        var last = merged[merged.length - 1];
-        if (current.start <= last.end) {
-            last.end = Math.max(last.end, current.end);
-        } else {
-            merged.push(current);
-        }
-    }
-
-    return merged;
-}
-function buildQuickPageHighlightRanges(text, tokens) {
-    if (!tokens.length || !text) return [];
-
-    var mapData = getNormalizedIndexMap(text);
-    var normalized = mapData.normalized;
-    var indexMap = mapData.map;
-    var ranges = [];
-
-    tokens.forEach(function(token){
-        var startIndex = 0;
-        while (startIndex < normalized.length) {
-            var foundIndex = normalized.indexOf(token, startIndex);
-            if (foundIndex === -1) break;
-
-            var rawStart = indexMap[foundIndex];
-            var rawEndIndex = foundIndex + token.length - 1;
-            var rawEnd = indexMap[rawEndIndex] + 1;
-
-            ranges.push({ start: rawStart, end: rawEnd });
-            startIndex = foundIndex + token.length;
-        }
-    });
-
-    return mergeQuickPageHighlightRanges(ranges);
-}
+// getNormalizedIndexMap / mergeQuickPageHighlightRanges / buildQuickPageHighlightRanges
+// migradas para SeiPro.core.quickfilter; o motor de highlight (TreeWalker + spans)
+// para SeiPro.core.quickfilterDom (src/core/quickfilter-dom.js) — Fase 6.
 function highlightQuickPageTextNode(node, tokens) {
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilterDom) {
+        SeiPro.core.quickfilterDom.highlightTextNode(node, tokens);
+        return;
+    }
     var text = node.nodeValue;
     var ranges = buildQuickPageHighlightRanges(text, tokens);
     if (!ranges.length) return;
@@ -1459,13 +1411,18 @@ function highlightQuickPageTextNode(node, tokens) {
 }
 function applyQuickPageHighlight(value) {
     var tokens = getQuickPageFilterTokens(value);
-    clearQuickPageHighlights();
+    var container = getQuickPageHighlightContainer().get(0);
 
-    if (!tokens.length) {
+    if (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.quickfilterDom) {
+        if (!container) { clearQuickPageHighlights(); return; }
+        SeiPro.core.quickfilterDom.applyHighlight(container, tokens, {
+            shouldSkip: shouldSkipQuickPageHighlightNode
+        });
         return;
     }
 
-    var container = getQuickPageHighlightContainer().get(0);
+    clearQuickPageHighlights();
+    if (!tokens.length) return;
     if (!container) return;
 
     var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
@@ -1503,7 +1460,7 @@ function initQuickPageFilterTopSearch() {
         debounceId = setTimeout(function(){
             if ($('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0) {
                 applyQuickPageFilterToControlTables(currentValue);
-                clearQuickPageHighlights();
+                applyQuickPageHighlight(currentValue);
             } else {
                 applyQuickPageHighlight(currentValue);
             }
@@ -1522,6 +1479,7 @@ function initQuickPageFilterTopSearch() {
     if (input.val()) {
         if ($('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0) {
             applyQuickPageFilterToControlTables(input.val());
+            applyQuickPageHighlight(input.val());
         } else {
             applyQuickPageHighlight(input.val());
         }
