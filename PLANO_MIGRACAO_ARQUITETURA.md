@@ -563,6 +563,26 @@ CORS e quotas num só lugar.
 > > **Smoke test pendente (login):** abrir a tela de login (SEI ≥ 4.0) com a opção ligada e
 > > confirmar o autopreenchimento/máscara da senha; idem na tela `documento_assinar`.
 
+> **17ª leva — feature "Mostrar anotação do processo na tela de controle de processos"
+> (`mostraranotacaocontrole`), núcleo puro.** Novo módulo **`core/sticknote.js`** com o cluster
+> puro (2 funções) extraído de `sei-pro.js`: `parseSticknoteHomeLabel` (parse por regex do rótulo
+> `Anotação / <texto> / <usuário> em DD/MM/YYYY HH:MM`, importa `normalizeMojibakeUtf8` de
+> `core/texto`) e `normalizeSticknoteHomeText` (normalização de quebras de linha/NBSP/espaços).
+> Registrados via `installSticknote()` em `core-stack.js` (`SeiPro.core.sticknote` + `aliasGlobal`
+> para os 2 nomes legados). Definições legadas removidas. A camada de DOM da feature
+> (`replaceSticknoteHome`, `formatDadosAnotacaoHome`, `getSticknoteHome*`, `loadSticknoteHomePriority`
+> via AJAX, `renderSticknoteHomeInline` — varredura das tabelas de processos, montagem de
+> células/HTML, layout inline) **permanece em `sei-pro.js` chamando o core** (view por definição).
+> `sticknote.test.js` +9. **181 testes verdes.** Acumulado: **71 funções** em 10 módulos
+> (`validacao`, `texto`, `cor`, `datas`, `feriados`, `numeros`, `serial`, `quickfilter`, `prazos`,
+> `sticknote`).
+>
+> > **Cuidado verbatim:** a regex de `parseSticknoteHomeLabel` (alternâncias `ç|c`/`ã|a`) e o
+> > `.replace(/ /g, ' ')` (NBSP) foram preservados com escapes `\u` explícitos.
+> >
+> > **Smoke test pendente (anotação):** abrir a tela de controle de processos com a opção ligada
+> > e confirmar que a anotação/sticknote ainda renderiza (coluna inline, tooltip, prioridade).
+
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…
 - **Atenção ao contrato `checkConfigValue`** (ver nota na Fase 5): ao mover/quebrar
@@ -699,7 +719,7 @@ core) para lá. Antes disso não há ganho arquitetural a extrair desta feature.
 | 3 — Adapter versão | Alto | Médio | **Alto valor** |
 | 4 — Storage/rede | Médio | Médio | Sequência |
 | 5 — Build | Habilitador | Médio-alto | Quando limpo |
-| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 16 fatias feitas (69 fn em 9 módulos); método em §5.1 |
+| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 17 fatias feitas (71 fn em 10 módulos); método em §5.1 |
 
 ---
 

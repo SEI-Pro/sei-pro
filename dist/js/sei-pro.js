@@ -2283,57 +2283,47 @@ function observeAreaTela(TimeOut = 9000) {
     }
 }
 
-function parseSticknoteHomeLabel(label) {
-    label = normalizeMojibakeUtf8(label);
-    label = (typeof label === 'string') ? label : '';
-    if (!label) {
-        return false;
+// parseSticknoteHomeLabel migrado para src/core/sticknote.js (Fase 6); global via aliasGlobal.
+// Resolve {text, user} de um link de anotação a partir das fontes disponíveis na
+// página, na ordem de confiança: aria-label (formato rotulado) → onmouseover
+// (string JS escapada). Retorna false quando nenhuma fonte casa.
+function resolveSticknoteHomeParsed(link) {
+    var _this = $(link);
+    var ariaLabel = _this.attr('aria-label');
+    if (ariaLabel) {
+        var parsed = parseSticknoteHomeLabel(ariaLabel);
+        if (parsed) {
+            return parsed;
+        }
     }
-    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s*\/\s*(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
-    if (!match) {
-        return false;
+    var tooltip = _this.attr('onmouseover');
+        tooltip = (typeof tooltip !== 'undefined') ? tooltip.split("'") : false;
+    if (tooltip) {
+        return { text: tooltip[1] || '', user: tooltip[3] || '' };
     }
-    return {
-        text: match[1].trim(),
-        user: match[2].trim()
-    };
+    return false;
 }
 function replaceSticknoteHome() {
     var arraySticknoteHome = [];
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('a[href*="acao=anotacao_registrar"]').each(function(){
         var _this = $(this);
-        var parsed = false;
-        var ariaLabel = _this.attr('aria-label');
-        if (ariaLabel) {
-            parsed = parseSticknoteHomeLabel(ariaLabel);
-        }
-        if (!parsed) {
-            var tooltip = _this.attr('onmouseover');
-                tooltip = (typeof tooltip !== 'undefined') ? tooltip.split("'") : false;
-            if (tooltip) {
-                parsed = {
-                    text: tooltip[1] || '',
-                    user: tooltip[3] || ''
-                };
-            }
-        }
+        var parsed = resolveSticknoteHomeParsed(_this);
         if (parsed && parsed.text) {
             var id_protocolo = _this.attr('href');
                 id_protocolo = (typeof id_protocolo !== 'undefined') ? getParamsUrlPro(id_protocolo).id_protocolo : false;
             var texttip = normalizeSticknoteHomeText(parsed.text);
             var usertip = normalizeMojibakeUtf8(parsed.user || '');
             var _return = $.map(texttip.split('\n'), function(v){
-                if (v != '') {
-                    var check = (v.indexOf('[ ]') !== -1) ? true : false;
-                    var checked = (v.indexOf('[X]') !== -1) ? true : false;
-                    var style = (checked) ? ' style=\\"text-decoration: line-through;\\"' : '';
-                    var text = (check) ? '<i class=\\"far fa-square\\"></i> '+v.replace('[ ]','').trim() : v;
-                        text = (checked) ? '<i class=\\"fas fa-check-square\\"></i> '+v.replace('[X]','').trim() : text;
-                    return (check || checked) ? '<div'+style+'>'+text+'</div>' : v;
-
-                } else {
+                if (v === '') {
                     return v;
                 }
+                var item = parseSticknoteChecklistLine(v);
+                if (!item.isItem) {
+                    return v;
+                }
+                var icon = item.checked ? '<i class=\\"fas fa-check-square\\"></i> ' : '<i class=\\"far fa-square\\"></i> ';
+                var style = item.checked ? ' style=\\"text-decoration: line-through;\\"' : '';
+                return '<div'+style+'>'+icon+item.text+'</div>';
             }).join('');
             _this
                 .attr('onmouseover', 'return infraTooltipMostrar(' + JSON.stringify(_return) + ',' + JSON.stringify(usertip) + ');')
@@ -2346,44 +2336,34 @@ function replaceSticknoteHome() {
     });
     setOptionsPro('arraySticknoteHome', arraySticknoteHome);
 }
-function normalizeSticknoteHomeText(value) {
-    value = (typeof value === 'string') ? value : '';
-    return value
-        .replace(/\\r\\n/g, '\n')
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\n')
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .replace(/\u00a0/g, ' ')
-        .replace(/[ \t]+\n/g, '\n')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-}
-function formatDadosAnotacaoHome(value, type) {
-    var result = '';
-    if (type == 'paragraph') {
-        value = normalizeMojibakeUtf8(value);
-        value = normalizeSticknoteHomeText(value);
-        if (value.indexOf('\n') !== -1) {
-            $.each(value.split('\n'), function(i, v){
-                if (v != '') {
-                    var check = (v.indexOf('[ ]') !== -1) ? ' class="stickNoteCheck"' : '';
-                        check = (v.indexOf('[X]') !== -1) ? ' class="stickNoteCheck stickNoteChecked"' : check;
-                    var text = (v.indexOf('[ ]') !== -1) ? v.replace('[ ]','').trim() : v;
-                        text = (v.indexOf('[X]') !== -1) ? v.replace('[X]','').trim() : text;
-                    result += '<div'+check+'>'+replaceTextToProcessoSEI(text)+'</div>';
-                } else if (i != 0 || i != value.length-1) {
-                    result += '<div><br></div>';
-                }
-            });
-        } else if (value != '') {
-            var checkSingle = (value.indexOf('[ ]') !== -1) ? ' class="stickNoteCheck"' : '';
-                checkSingle = (value.indexOf('[X]') !== -1) ? ' class="stickNoteCheck stickNoteChecked"' : checkSingle;
-            var textSingle = (value.indexOf('[ ]') !== -1) ? value.replace('[ ]','').trim() : value;
-                textSingle = (value.indexOf('[X]') !== -1) ? value.replace('[X]','').trim() : textSingle;
-            result = '<div'+checkSingle+'>'+replaceTextToProcessoSEI(textSingle)+'</div>';
-        }
+// normalizeSticknoteHomeText migrado para src/core/sticknote.js (Fase 6); global via aliasGlobal.
+// Renderiza o texto da anotação como HTML de parágrafos para o card inline,
+// aplicando o estilo de checklist (stickNoteCheck/stickNoteChecked) por linha.
+function sticknoteChecklistClass(item) {
+    if (!item.isItem) {
+        return '';
     }
+    return item.checked ? ' class="stickNoteCheck stickNoteChecked"' : ' class="stickNoteCheck"';
+}
+function formatDadosAnotacaoHome(value) {
+    value = normalizeMojibakeUtf8(value);
+    value = normalizeSticknoteHomeText(value);
+    if (value === '') {
+        return '';
+    }
+    if (value.indexOf('\n') === -1) {
+        var single = parseSticknoteChecklistLine(value);
+        return '<div'+sticknoteChecklistClass(single)+'>'+replaceTextToProcessoSEI(single.text)+'</div>';
+    }
+    var result = '';
+    $.each(value.split('\n'), function(i, v){
+        if (v != '') {
+            var item = parseSticknoteChecklistLine(v);
+            result += '<div'+sticknoteChecklistClass(item)+'>'+replaceTextToProcessoSEI(item.text)+'</div>';
+        } else if (i != 0 || i != value.length-1) {
+            result += '<div><br></div>';
+        }
+    });
     return result;
 }
 function getSticknoteHomeLinks() {
@@ -2395,16 +2375,11 @@ function getSticknoteHomeText(link) {
     if (typeof texttip !== 'undefined') {
         return normalizeSticknoteHomeText(normalizeMojibakeUtf8(texttip));
     }
-    var ariaLabel = _this.attr('aria-label');
-    if (ariaLabel) {
-        var parsed = parseSticknoteHomeLabel(ariaLabel);
-        if (parsed && parsed.text) {
-            return normalizeSticknoteHomeText(parsed.text);
-        }
+    var parsed = resolveSticknoteHomeParsed(_this);
+    if (parsed && parsed.text) {
+        return normalizeSticknoteHomeText(normalizeMojibakeUtf8(parsed.text));
     }
-    var tooltip = _this.attr('onmouseover');
-        tooltip = (typeof tooltip !== 'undefined') ? tooltip.split("'") : false;
-    return (tooltip && typeof tooltip[1] !== 'undefined') ? normalizeSticknoteHomeText(normalizeMojibakeUtf8(tooltip[1])) : '';
+    return '';
 }
 function getSticknoteHomePriority(link) {
     var _this = $(link);
@@ -2426,10 +2401,23 @@ function loadSticknoteHomePriority(link) {
         var priority = doc.querySelector('#chkSinPrioridade');
         priority = priority ? priority.checked : false;
         _this.attr('data-sticknote-priority', priority ? 'true' : 'false');
-        renderSticknoteHomeInline();
+        scheduleRenderSticknoteHomeInline();
     }).always(function() {
         _this.removeAttr('data-sticknote-priority-loading');
     });
+}
+// Coalesce os re-renders disparados pelas respostas de prioridade: numa lista com
+// N processos, sem isso cada XHR concluído reconstruiria a tabela inteira
+// (O(N) tear-downs/rebuilds + thrash de layout). Agrupa num único render.
+var _sticknoteRenderTimer = null;
+function scheduleRenderSticknoteHomeInline() {
+    if (_sticknoteRenderTimer) {
+        clearTimeout(_sticknoteRenderTimer);
+    }
+    _sticknoteRenderTimer = setTimeout(function() {
+        _sticknoteRenderTimer = null;
+        renderSticknoteHomeInline();
+    }, 100);
 }
 function renderSticknoteHomeInline() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
@@ -2551,7 +2539,7 @@ function renderSticknoteHomeInline() {
         }
         var priority = getSticknoteHomePriority(_this);
         noteCell.find('.sticknoteHomeInline').remove();
-        noteCell.prepend('<div class="sticknoteHomeInline '+(priority ? 'priority' : '')+'">'+formatDadosAnotacaoHome(texttip, 'paragraph')+'</div>');
+        noteCell.prepend('<div class="sticknoteHomeInline '+(priority ? 'priority' : '')+'">'+formatDadosAnotacaoHome(texttip)+'</div>');
         if (typeof _this.attr('data-sticknote-priority') === 'undefined') {
             loadSticknoteHomePriority(_this);
         }

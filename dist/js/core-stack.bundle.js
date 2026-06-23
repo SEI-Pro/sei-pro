@@ -1223,6 +1223,52 @@
     return quickfilterDom;
   }
 
+  // src/core/sticknote.js
+  function parseSticknoteHomeLabel(label) {
+    label = normalizeMojibakeUtf8(label);
+    label = typeof label === "string" ? label : "";
+    if (!label) {
+      return false;
+    }
+    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s*\/\s*(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
+    if (!match) {
+      return false;
+    }
+    return {
+      text: match[1].trim(),
+      user: match[2].trim()
+    };
+  }
+  function normalizeSticknoteHomeText(value) {
+    value = typeof value === "string" ? value : "";
+    return value.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\r/g, "\n").replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\u00a0/g, " ").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  function parseSticknoteChecklistLine(line) {
+    line = typeof line === "string" ? line : "";
+    var hasUnchecked = line.indexOf("[ ]") !== -1;
+    var checked = line.indexOf("[X]") !== -1;
+    var isItem = hasUnchecked || checked;
+    var text = line;
+    if (checked) {
+      text = line.replace("[X]", "").trim();
+    } else if (hasUnchecked) {
+      text = line.replace("[ ]", "").trim();
+    }
+    return { isItem, checked, text };
+  }
+  function installSticknote() {
+    const sticknote = {
+      parseSticknoteHomeLabel,
+      normalizeSticknoteHomeText,
+      parseSticknoteChecklistLine
+    };
+    getSeiPro().core.sticknote = sticknote;
+    aliasGlobal("parseSticknoteHomeLabel", parseSticknoteHomeLabel);
+    aliasGlobal("normalizeSticknoteHomeText", normalizeSticknoteHomeText);
+    aliasGlobal("parseSticknoteChecklistLine", parseSticknoteChecklistLine);
+    return sticknote;
+  }
+
   // src/core/ui.js
   function installUi() {
     function resolveTarget(elementTo, target) {
@@ -1728,6 +1774,7 @@
     installPrazos();
     installQuickFilter();
     installQuickFilterDom();
+    installSticknote();
     installUi();
     installMessaging();
     installStorage();
