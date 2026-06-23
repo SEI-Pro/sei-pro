@@ -1269,6 +1269,53 @@
     return sticknote;
   }
 
+  // src/core/docslote.js
+  var docsLoteSpecialChars = { "\xC0": "&Agrave;", "\xC1": "&Aacute;", "\xC2": "&Acirc;", "\xC3": "&Atilde;", "\xC4": "&Auml;", "\xC5": "&Aring;", "\xE0": "&agrave;", "\xE1": "&aacute;", "\xE2": "&acirc;", "\xE3": "&atilde;", "\xE4": "&auml;", "\xE5": "&aring;", "\xC6": "&AElig;", "\xE6": "&aelig;", "\xDF": "&szlig;", "\xC7": "&Ccedil;", "\xE7": "&ccedil;", "\xC8": "&Egrave;", "\xC9": "&Eacute;", "\xCA": "&Ecirc;", "\xCB": "&Euml;", "\xE8": "&egrave;", "\xE9": "&eacute;", "\xEA": "&ecirc;", "\xEB": "&euml;", "\u0192": "&#131;", "\xCC": "&Igrave;", "\xCD": "&Iacute;", "\xCE": "&Icirc;", "\xCF": "&Iuml;", "\xEC": "&igrave;", "\xED": "&iacute;", "\xEE": "&icirc;", "\xEF": "&iuml;", "\xD1": "&Ntilde;", "\xF1": "&ntilde;", "\xD2": "&Ograve;", "\xD3": "&Oacute;", "\xD4": "&Ocirc;", "\xD5": "&Otilde;", "\xD6": "&Ouml;", "\xF2": "&ograve;", "\xF3": "&oacute;", "\xF4": "&ocirc;", "\xF5": "&otilde;", "\xF6": "&ouml;", "\xD8": "&Oslash;", "\xF8": "&oslash;", "\u0152": "&#140;", "\u0153": "&#156;", "\u0160": "&#138;", "\u0161": "&#154;", "\xD9": "&Ugrave;", "\xDA": "&Uacute;", "\xDB": "&Ucirc;", "\xDC": "&Uuml;", "\xF9": "&ugrave;", "\xFA": "&uacute;", "\xFB": "&ucirc;", "\xFC": "&uuml;", "\xB5": "&#181;", "\xD7": "&#215;", "\xDD": "&Yacute;", "\u0178": "&#159;", "\xFD": "&yacute;", "\xFF": "&yuml;", "\xB0": "&#176;", "\xBA": "&#176;", "\u2020": "&#134;", "\u2021": "&#135;", "\xB1": "&#177;", "\xAB": "&#171;", "\xBB": "&#187;", "\xBF": "&#191;", "\xA1": "&#161;", "\xB7": "&#183;", "\u2022": "&#149;", "\u2122": "&#153;", "\xA9": "&copy;", "\xAE": "&reg;", "\xA7": "&#167;", "\xB6": "&#182;" };
+  var docsLoteNormalCharsUtf8 = { "\xC0": "A", "\xC1": "A", "\xC2": "A", "\xC3": "A", "\xC4": "A", "\xC5": "A", "\xE0": "a", "\xE1": "a", "\xE2": "a", "\xE3": "a", "\xE4": "a", "\xE5": "a", "\xC6": "_", "\xE6": "_", "\xDF": "B", "\xC7": "C", "\xE7": "c", "\xC8": "E", "\xC9": "E", "\xCA": "E", "\xCB": "E", "\xE8": "e", "\xE9": "e", "\xEA": "e", "\xEB": "e", "\u0192": "f", "\xCC": "I", "\xCD": "I", "\xCE": "I", "\xCF": "I", "\xEC": "i", "\xED": "i", "\xEE": "i", "\xEF": "i", "\xD1": "N", "\xF1": "n", "\xD2": "O", "\xD3": "O", "\xD4": "O", "\xD5": "O", "\xD6": "O", "\xF2": "o", "\xF3": "o", "\xF4": "o", "\xF5": "o", "\xF6": "o", "\xD8": "_", "\xF8": "_", "\u0152": "_", "\u0153": "_", "\u0160": "S", "\u0161": "S", "\xD9": "U", "\xDA": "U", "\xDB": "U", "\xDC": "U", "\xF9": "u", "\xFA": "u", "\xFB": "u", "\xFC": "u", "\xB5": "u", "\xD7": "_", "\xDD": "Y", "\u0178": "Y", "\xFD": "y", "\xFF": "y", "\xB0": "", "\xBA": "", "\u2020": "_", "\u2021": "_", "\xB1": "_", "\xAB": "_", "\xBB": "_", "\xBF": "_", "\xA1": "_", "\xB7": "_", "\u2022": "_", "\u2122": "_", "\xA9": "_", "\xAE": "_", "\xA7": "_", "\xB6": "_" };
+  var docsLoteNormalCharsIso = { "\xC0": "A", "\xC1": "A", "\xC2": "A", "\xC3": "A", "\xC4": "A", "\xC5": "A", "\xE0": "a", "\xE1": "a", "\xE2": "a", "\xE3": "a", "\xE4": "a", "\xE5": "a", "\xC6": "_", "\xE6": "_", "\xDF": "B", "\xC7": "C", "\xE7": "c", "\xC8": "E", "\xC9": "E", "\xCA": "E", "\xCB": "E", "\xE8": "e", "\xE9": "e", "\xEA": "e", "\xEB": "e", "\u0192": "f", "\xCC": "I", "\xCD": "I", "\xCE": "I", "\xCF": "I", "\xEC": "i", "\xED": "i", "\xEE": "i", "\xEF": "i", "\xD1": "N", "\xF1": "n", "\xD2": "O", "\xD3": "O", "\xD4": "O", "\xD5": "O", "\xD6": "O", "\xF2": "o", "\xF3": "o", "\xF4": "o", "\xF5": "o", "\xF6": "o", "\xD8": "_", "\xF8": "_", "\u0152": "_", "\u0153": "_", "\u0160": "S", "\u0161": "S", "\xD9": "U", "\xDA": "U", "\xDB": "U", "\xDC": "U", "\xF9": "u", "\xFA": "u", "\xFB": "u", "\xFC": "u", "\xB5": "u", "\xD7": "_", "\xDD": "Y", "\u0178": "Y", "\xFD": "y", "\xFF": "y", "\xB0": "", "\xBA": "", "\u2020": "_", "\u2021": "_", "\xB1": "_", "\xAB": "_", "\xBB": "_", "\xBF": "_", "\xA1": "_", "\xB7": "_", "\u2022": "_", "\u2122": "_", "\xA9": "_", "\xAE": "_", "\xA7": "_", "\xB6": "_" };
+  function getDocsLoteNormalChars(encoding) {
+    return encoding === "utf-8" ? docsLoteNormalCharsUtf8 : docsLoteNormalCharsIso;
+  }
+  function hasDocsLoteSpecialChars(text, encoding) {
+    if (typeof text !== "string" || text === "") return false;
+    var map = getDocsLoteNormalChars(encoding);
+    var regex = new RegExp(Object.keys(map).join("|"));
+    return regex.test(text);
+  }
+  function encodeDocsLoteSpecialChars(text) {
+    if (typeof text !== "string") return text;
+    var regex = new RegExp(Object.keys(docsLoteSpecialChars).join("|"), "g");
+    return text.replace(regex, function(match) {
+      return docsLoteSpecialChars[match];
+    });
+  }
+  function parseDocsLoteDocTitle(docTitle) {
+    if (typeof docTitle !== "string" || docTitle === "") {
+      return { nrSEI: false, nomeDocumento: false };
+    }
+    var parts = docTitle.split("-");
+    return {
+      nrSEI: typeof parts[1] !== "undefined" ? parts[1].trim() : false,
+      nomeDocumento: typeof parts[2] !== "undefined" ? parts[2].trim() : false
+    };
+  }
+  function installDocsLote() {
+    const docslote = {
+      docsLoteSpecialChars,
+      docsLoteNormalCharsUtf8,
+      docsLoteNormalCharsIso,
+      getDocsLoteNormalChars,
+      hasDocsLoteSpecialChars,
+      encodeDocsLoteSpecialChars,
+      parseDocsLoteDocTitle
+    };
+    getSeiPro().core.docslote = docslote;
+    aliasGlobal("docsLote_specialChars", docsLoteSpecialChars);
+    aliasGlobal("docsLote_normalChars_utf8", docsLoteNormalCharsUtf8);
+    aliasGlobal("docsLote_normalChars_iso", docsLoteNormalCharsIso);
+    return docslote;
+  }
+
   // src/core/ui.js
   function installUi() {
     function resolveTarget(elementTo, target) {
@@ -1775,6 +1822,7 @@
     installQuickFilter();
     installQuickFilterDom();
     installSticknote();
+    installDocsLote();
     installUi();
     installMessaging();
     installStorage();

@@ -575,13 +575,39 @@ CORS e quotas num só lugar.
 > células/HTML, layout inline) **permanece em `sei-pro.js` chamando o core** (view por definição).
 > `sticknote.test.js` +9. **181 testes verdes.** Acumulado: **71 funções** em 10 módulos
 > (`validacao`, `texto`, `cor`, `datas`, `feriados`, `numeros`, `serial`, `quickfilter`, `prazos`,
-> `sticknote`).
+> `sticknote`). Depois somou-se `parseSticknoteChecklistLine` (parse puro do item de checklist
+> `[ ]`/`[X]`, antes embutido em `formatDadosAnotacaoHome`/`replaceSticknoteHome`), → **3 funções**
+> no módulo; `sticknote.test.js` passou a 14. Acumulado parcial: **72 funções** em 10 módulos.
 >
 > > **Cuidado verbatim:** a regex de `parseSticknoteHomeLabel` (alternâncias `ç|c`/`ã|a`) e o
 > > `.replace(/ /g, ' ')` (NBSP) foram preservados com escapes `\u` explícitos.
 > >
-> > **Smoke test pendente (anotação):** abrir a tela de controle de processos com a opção ligada
-> > e confirmar que a anotação/sticknote ainda renderiza (coluna inline, tooltip, prioridade).
+> > **Smoke test (anotação) — PASSOU** em 2026-06-23 (Chrome, SEI 5.x produção PRF, via
+> > Claude-in-Chrome): `SeiPro.core.sticknote` instalado, aliases ok, config `mostraranotacaocontrole`
+> > ligada, 19 links de anotação / 19 células inline renderizadas, layout aplicado em 2 tabelas,
+> > zero erros no console. Pendente apenas o console do **page-load** e Firefox/SEI 4.x.
+
+> **18ª leva — feature "Enviar Múltiplos Documentos Externos" (`uploaddocsexternos`), núcleo
+> puro.** Novo módulo **`core/docslote.js`** extraído de `sei-pro-docs-lote.js`. A feature é
+> majoritariamente AJAX/jQuery/DOM/CSV (Papa) — a parte **pura** é o tratamento de caracteres:
+> os 3 mapas (`docsLoteSpecialChars`, `docsLoteNormalCharsUtf8`, `docsLoteNormalCharsIso`,
+> copiados **VERBATIM** com escapes `\u` e verificados byte-a-byte contra o legado) + 4 funções:
+> `getDocsLoteNormalChars(encoding)`, `hasDocsLoteSpecialChars(text, encoding)`,
+> `encodeDocsLoteSpecialChars(text)` e `parseDocsLoteDocTitle(docTitle)` (parse `nrSEI`/
+> `nomeDocumento` do `<title>`). Registrados via `installDocsLote()` (`SeiPro.core.docslote` +
+> `aliasGlobal` dos 3 mapas legados). Os call-sites ativos passaram a chamar o core:
+> `docsLote_execute` (hasSpecialChars), `docsLote_editDocContent` (encode dos textareas/inputs +
+> parse do título). Limpeza junto: removidas as declarações de mapa do legado e duas linhas
+> mortas de `docsLote_normalChars`/`regex` em `docsLote_formNewDoc` (usadas só por código
+> comentado). A camada de DOM/AJAX/diálogos/CSV permanece no legado chamando o core.
+> `docslote.test.js` +12. **198 testes verdes.** Acumulado: **76 funções** em 11 módulos
+> (`validacao`, `texto`, `cor`, `datas`, `feriados`, `numeros`, `serial`, `quickfilter`, `prazos`,
+> `sticknote`, `docslote`).
+>
+> > **Smoke test pendente (docs em lote):** abrir o fluxo "Enviar Múltiplos Documentos Externos"
+> > com a opção ligada, importar um CSV com nomes acentuados e gerar os documentos — confirmar
+> > nomes na árvore e conteúdo com entidades HTML corretas (sem mojibake), nos dois ramos
+> > SEI 4.x/5.x.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…
@@ -719,7 +745,7 @@ core) para lá. Antes disso não há ganho arquitetural a extrair desta feature.
 | 3 — Adapter versão | Alto | Médio | **Alto valor** |
 | 4 — Storage/rede | Médio | Médio | Sequência |
 | 5 — Build | Habilitador | Médio-alto | Quando limpo |
-| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 17 fatias feitas (71 fn em 10 módulos); método em §5.1 |
+| 6 — Feature folders | Alto | Baixo (após 0–5) | 🟡 18 fatias feitas (76 fn em 11 módulos); método em §5.1 |
 
 ---
 

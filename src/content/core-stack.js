@@ -36,6 +36,7 @@ import { installPrazos } from '../core/prazos.js';
 import { installQuickFilter } from '../core/quickfilter.js';
 import { installQuickFilterDom } from '../core/quickfilter-dom.js';
 import { installSticknote } from '../core/sticknote.js';
+import { installDocsLote } from '../core/docslote.js';
 import { installUi } from '../core/ui.js';
 import { installMessaging } from '../core/messaging.js';
 import { installStorage } from '../core/storage.js';
@@ -61,6 +62,7 @@ export function installCoreStack() {
     installQuickFilter();
     installQuickFilterDom();
     installSticknote();
+    installDocsLote();
     installUi();
     installMessaging();
     installStorage();
