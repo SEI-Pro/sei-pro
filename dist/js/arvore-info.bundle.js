@@ -166,6 +166,28 @@
   }
 
   // src/features/arvore-info/sections/consulta.js
+  function getAcessoText(docA) {
+    var rdo = docA.querySelector('input[name="rdoNivelAcesso"]:checked');
+    var hipoteseText = "";
+    if (rdo && rdo.value === "1") {
+      var hipSel = docA.getElementById("selHipoteseLegal");
+      var hipOpt = hipSel && (hipSel.querySelector("option[selected]") || hipSel.options && hipSel.options[hipSel.selectedIndex]);
+      if (hipOpt && hipOpt.textContent.trim()) hipoteseText = hipOpt.textContent.trim();
+    }
+    return { text: acessoLabel(rdo ? rdo.value : null, hipoteseText), element: rdo };
+  }
+  function getInteressadosTexts(docA) {
+    var opts = docA.querySelectorAll("#selInteressadosProcedimento option, #selInteressados option");
+    var items = [];
+    for (var i = 0; i < opts.length; i++) {
+      var name = (opts[i].textContent || "").trim();
+      if (!name) continue;
+      splitInteressado(name).forEach(function(part) {
+        items.push(part);
+      });
+    }
+    return items;
+  }
   function installConsultaSection(ctx) {
     var doc = ctx.doc;
     var intPanel = ctx.intPanel, tipoPanel = ctx.tipoPanel, acessoPanel = ctx.acessoPanel, assuntosPanel = ctx.assuntosPanel, obsPanel = ctx.obsPanel;
@@ -220,16 +242,6 @@
         text: opt ? opt.textContent.trim() : ""
       };
     }
-    function getAcessoText(docA) {
-      var rdo = docA.querySelector('input[name="rdoNivelAcesso"]:checked');
-      var hipoteseText = "";
-      if (rdo && rdo.value === "1") {
-        var hipSel = docA.getElementById("selHipoteseLegal");
-        var hipOpt = hipSel && (hipSel.querySelector("option[selected]") || hipSel.options && hipSel.options[hipSel.selectedIndex]);
-        if (hipOpt && hipOpt.textContent.trim()) hipoteseText = hipOpt.textContent.trim();
-      }
-      return { text: acessoLabel(rdo ? rdo.value : null, hipoteseText), element: rdo };
-    }
     function getOptionTexts(docA, selector) {
       var nodes = docA.querySelectorAll(selector);
       var items = [];
@@ -237,18 +249,6 @@
         var txt = (o.textContent || "").trim();
         if (txt) items.push(txt);
       });
-      return items;
-    }
-    function getInteressadosTexts(docA) {
-      var opts = docA.querySelectorAll("#selInteressadosProcedimento option, #selInteressados option");
-      var items = [];
-      for (var i = 0; i < opts.length; i++) {
-        var name = (opts[i].textContent || "").trim();
-        if (!name) continue;
-        splitInteressado(name).forEach(function(part) {
-          items.push(part);
-        });
-      }
       return items;
     }
     function renderConsultaSections(docC) {
@@ -311,6 +311,32 @@
   }
 
   // src/features/arvore-info/sections/acompanhamento.js
+  function parseAcompItems(docA) {
+    var rows = docA.querySelectorAll("table.infraTable tr");
+    var items = [];
+    for (var r = 1; r < rows.length; r++) {
+      var tds = rows[r].querySelectorAll("td");
+      if (tds.length < 3) continue;
+      var acompId = null;
+      var exLink = rows[r].querySelector('a[onclick*="acaoExcluir"]');
+      if (exLink) {
+        var idM = exLink.getAttribute("onclick").match(/acaoExcluir\((\d+)/);
+        if (idM) acompId = idM[1];
+      }
+      if (!acompId) {
+        var chk = rows[r].querySelector('input[type="checkbox"][name*="chk"]');
+        if (chk) acompId = chk.value;
+      }
+      items.push({
+        id: acompId,
+        grupo: (tds[1].textContent || "").trim(),
+        obs: (tds[2].textContent || "").trim(),
+        user: tds[3] ? (tds[3].textContent || "").trim() : "",
+        date: tds[4] ? (tds[4].textContent || "").trim() : ""
+      });
+    }
+    return items;
+  }
   function installAcompanhamentoSection(ctx) {
     var doc = ctx.doc, acompPanel = ctx.acompPanel;
     var findToolbarLink = ctx.findToolbarLink, getToolbarLinks = ctx.getToolbarLinks;
@@ -319,32 +345,6 @@
     var log = ctx.log, warn = ctx.warn, err = ctx.err, report = ctx.report;
     var acompBody = acompPanel.querySelector(".seipro-acomp-body");
     var acompUrl = findToolbarLink("acompanhamento_gerenciar") || findToolbarLink("acompanhamento_listar") || findToolbarLink("acompanhamento_cadastrar") || findToolbarLink("acompanhamento_alterar");
-    function parseAcompItems(docA) {
-      var rows = docA.querySelectorAll("table.infraTable tr");
-      var items = [];
-      for (var r = 1; r < rows.length; r++) {
-        var tds = rows[r].querySelectorAll("td");
-        if (tds.length < 3) continue;
-        var acompId = null;
-        var exLink = rows[r].querySelector('a[onclick*="acaoExcluir"]');
-        if (exLink) {
-          var idM = exLink.getAttribute("onclick").match(/acaoExcluir\((\d+)/);
-          if (idM) acompId = idM[1];
-        }
-        if (!acompId) {
-          var chk = rows[r].querySelector('input[type="checkbox"][name*="chk"]');
-          if (chk) acompId = chk.value;
-        }
-        items.push({
-          id: acompId,
-          grupo: (tds[1].textContent || "").trim(),
-          obs: (tds[2].textContent || "").trim(),
-          user: tds[3] ? (tds[3].textContent || "").trim() : "",
-          date: tds[4] ? (tds[4].textContent || "").trim() : ""
-        });
-      }
-      return items;
-    }
     function renderAcompItemRow(it) {
       var row = doc.createElement("div");
       row.style.cssText = "display:flex;align-items:center;gap:6px;margin-bottom:4px;";
@@ -423,40 +423,40 @@
   }
 
   // src/features/arvore-info/sections/marcador.js
+  function parseMarcadorItems(docM) {
+    var items = [];
+    var rows = docM.querySelectorAll("table.infraTable tr");
+    for (var r = 1; r < rows.length; r++) {
+      var tds = rows[r].querySelectorAll("td");
+      if (tds.length < 4) continue;
+      var img = tds[1].querySelector("img");
+      var remA = rows[r].querySelector('a[onclick*="acaoRemover"]');
+      var remMatch = remA ? parseAcaoRemoverId(remA.getAttribute("onclick")) : null;
+      var tagA = tds[1].querySelector("a[title]");
+      items.push({
+        id: remMatch,
+        iconSrc: img ? img.getAttribute("src") : null,
+        tag: tagA && tagA.getAttribute("title") || (tds[1].textContent || "").trim(),
+        note: (tds[2].textContent || "").trim(),
+        user: (tds[3].textContent || "").trim()
+      });
+    }
+    if (!items.length) {
+      var sel = docM.getElementById("selMarcador");
+      var ta = docM.getElementById("txaTexto");
+      var opt = sel && (sel.querySelector("option[selected]") || sel.options && sel.options[sel.selectedIndex]);
+      var tag = opt ? opt.textContent.trim() : "";
+      var note = ta ? ta.value || ta.textContent || "" : "";
+      if (tag || note) items.push({ id: null, iconSrc: opt && (opt.getAttribute("data-imagesrc") || opt.dataset.imagesrc), tag, note, user: "" });
+    }
+    return items;
+  }
   function installMarcadorSection(ctx) {
     var doc = ctx.doc, marcPanel = ctx.marcPanel;
     var findToolbarLink = ctx.findToolbarLink, fetchPage = ctx.fetchPage, invalidatePage = ctx.invalidatePage;
     var submitViaIframe = ctx.submitViaIframe, refreshSection = ctx.refreshSection, refreshers = ctx.refreshers;
     var sectionEnabled = ctx.sectionEnabled, log = ctx.log, warn = ctx.warn, err = ctx.err, report = ctx.report;
     var marcadorUrl = findToolbarLink("andamento_marcador_gerenciar");
-    function renderMarcadorItems(docM) {
-      var items = [];
-      var rows = docM.querySelectorAll("table.infraTable tr");
-      for (var r = 1; r < rows.length; r++) {
-        var tds = rows[r].querySelectorAll("td");
-        if (tds.length < 4) continue;
-        var img = tds[1].querySelector("img");
-        var remA = rows[r].querySelector('a[onclick*="acaoRemover"]');
-        var remMatch = remA ? parseAcaoRemoverId(remA.getAttribute("onclick")) : null;
-        var tagA = tds[1].querySelector("a[title]");
-        items.push({
-          id: remMatch,
-          iconSrc: img ? img.getAttribute("src") : null,
-          tag: tagA && tagA.getAttribute("title") || (tds[1].textContent || "").trim(),
-          note: (tds[2].textContent || "").trim(),
-          user: (tds[3].textContent || "").trim()
-        });
-      }
-      if (!items.length) {
-        var sel = docM.getElementById("selMarcador");
-        var ta = docM.getElementById("txaTexto");
-        var opt = sel && (sel.querySelector("option[selected]") || sel.options && sel.options[sel.selectedIndex]);
-        var tag = opt ? opt.textContent.trim() : "";
-        var note = ta ? ta.value || ta.textContent || "" : "";
-        if (tag || note) items.push({ id: null, iconSrc: opt && (opt.getAttribute("data-imagesrc") || opt.dataset.imagesrc), tag, note, user: "" });
-      }
-      return items;
-    }
     function renderMarcadorItemRow(it) {
       var row = doc.createElement("div");
       row.style.cssText = "display:flex;align-items:center;gap:6px;margin-bottom:4px;";
@@ -526,7 +526,7 @@
       invalidatePage(marcadorUrl);
       marcPanel.querySelector(".seipro-marcador-body").innerHTML = '<span style="opacity:0.6">carregando\u2026</span>';
       fetchPage(marcadorUrl).then(function(docM) {
-        var items = renderMarcadorItems(docM);
+        var items = parseMarcadorItems(docM);
         var bd = marcPanel.querySelector(".seipro-marcador-body");
         bd.innerHTML = "";
         if (!items.length) {
@@ -547,27 +547,27 @@
   }
 
   // src/features/arvore-info/sections/atribuicao.js
+  function parseAtribuicaoItemsFromDoc(docR) {
+    var newResp = [];
+    var scrs = docR.querySelectorAll("script:not([src])");
+    for (var i = 0; i < scrs.length; i++) {
+      var txt = scrs[i].textContent || "";
+      var raw = extractNosHtml(txt);
+      if (raw === null) continue;
+      raw.split("<br />").forEach(function(frag) {
+        var tmp = docR.createElement("div");
+        tmp.innerHTML = frag;
+        var text = tmp.textContent.trim();
+        if (text) newResp.push({ text, unassigned: isAtribuicaoUnassigned(text, tmp.querySelector("a.ancoraSigla")) });
+      });
+      break;
+    }
+    return newResp;
+  }
   function createAtribuicaoSection(ctx) {
     var doc = ctx.doc, win = ctx.win;
     var findToolbarLink = ctx.findToolbarLink, fetchPage = ctx.fetchPage, invalidatePage = ctx.invalidatePage;
     var submitViaIframe = ctx.submitViaIframe, log = ctx.log, err = ctx.err, report = ctx.report;
-    function parseAtribuicaoItemsFromDoc(docR) {
-      var newResp = [];
-      var scrs = docR.querySelectorAll("script:not([src])");
-      for (var i = 0; i < scrs.length; i++) {
-        var txt = scrs[i].textContent || "";
-        var raw = extractNosHtml(txt);
-        if (raw === null) continue;
-        raw.split("<br />").forEach(function(frag) {
-          var tmp = doc.createElement("div");
-          tmp.innerHTML = frag;
-          var text = tmp.textContent.trim();
-          if (text) newResp.push({ text, unassigned: isAtribuicaoUnassigned(text, tmp.querySelector("a.ancoraSigla")) });
-        });
-        break;
-      }
-      return newResp;
-    }
     function renderRows(body, items) {
       body.innerHTML = "";
       if (!items.length) {
@@ -2103,135 +2103,6 @@
             });
           }).catch(function(e) {
             err("inline fetch:", e.message);
-            body2.innerHTML = savedHTML;
-          });
-        }
-        function editMarcadorInline(panel2) {
-          var marcUrl = findToolbarLink("andamento_marcador_gerenciar");
-          if (!marcUrl) {
-            err("inline marcador: toolbar link missing");
-            return;
-          }
-          var body2 = panel2.querySelector(".infoDadosArvore");
-          var savedHTML = body2.innerHTML;
-          body2.innerHTML = '<span style="opacity:0.6">carregando\u2026</span>';
-          invalidatePage(marcUrl);
-          fetchPage(marcUrl).then(function(docM) {
-            if (docM.querySelector("#selMarcador")) {
-              body2.innerHTML = savedHTML;
-              openInlineEditor(panel2, marcUrl, [
-                { kind: "select", label: "Marcador", srcSelector: "#selMarcador", name: "selMarcador" },
-                { kind: "textarea", label: "Observa\xE7\xE3o (opcional)", srcSelector: "#txaTexto", name: "txaTexto" }
-              ], function() {
-                refreshSection("marcador", "post-add marcador");
-              });
-              return;
-            }
-            var items = [];
-            var rows = docM.querySelectorAll("table.infraTable tr");
-            for (var r = 1; r < rows.length; r++) {
-              var tds = rows[r].querySelectorAll("td");
-              if (tds.length < 4) continue;
-              var removeA = rows[r].querySelector('a[onclick*="acaoRemover"]');
-              var idMatch = removeA ? parseAcaoRemoverId(removeA.getAttribute("onclick")) : null;
-              var tagA = tds[1].querySelector("a[title]");
-              items.push({
-                id: idMatch,
-                tag: tagA && tagA.getAttribute("title") || tds[1].textContent.trim(),
-                note: (tds[2].textContent || "").trim(),
-                user: (tds[3].textContent || "").trim()
-              });
-            }
-            var wrap = doc.createElement("div");
-            wrap.style.cssText = "display:flex;flex-direction:column;gap:4px;";
-            items.forEach(function(it) {
-              var row = doc.createElement("div");
-              row.style.cssText = "display:flex;align-items:center;gap:6px;";
-              var lbl = doc.createElement("span");
-              lbl.style.cssText = "flex:1;";
-              lbl.innerHTML = "<strong>" + (it.tag || "?") + "</strong>" + (it.note ? ' \u2014 <span style="opacity:0.8">' + it.note.replace(/</g, "&lt;") + "</span>" : "");
-              var btn = doc.createElement("a");
-              btn.className = "newLink";
-              btn.title = "Remover marcador";
-              btn.style.cssText = "cursor:pointer;color:#c00;";
-              btn.innerHTML = '<i class="fas fa-times"></i>';
-              btn.addEventListener("click", function() {
-                if (!it.id) {
-                  err("marcador remove: no id");
-                  return;
-                }
-                btn.style.opacity = "0.4";
-                btn.style.pointerEvents = "none";
-                submitViaIframe(marcUrl, function(w, d2) {
-                  var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoRemover"]')).find(function(a) {
-                    var oc = a.getAttribute("onclick") || "";
-                    return oc.indexOf("acaoRemover('" + it.id + "'") !== -1;
-                  });
-                  if (removeLink) {
-                    forceTrueConfirm(w);
-                    removeLink.click();
-                  } else if (typeof w.acaoRemover === "function") {
-                    forceTrueConfirm(w);
-                    w.acaoRemover(it.id, it.tag || "");
-                  } else {
-                    var hdn = d2.getElementById("hdnInfraItemId");
-                    if (hdn) hdn.value = it.id;
-                    var f = d2.getElementById("frmGerenciarMarcador") || d2.querySelector("form");
-                    if (f) f.submit();
-                  }
-                }).then(function() {
-                  refreshSection("marcador", "post-remove marcador");
-                  editMarcadorInline(panel2);
-                }).catch(function(e) {
-                  err("marcador remove:", e.message);
-                  body2.innerHTML = savedHTML;
-                });
-              });
-              row.appendChild(lbl);
-              row.appendChild(btn);
-              wrap.appendChild(row);
-            });
-            var sep = doc.createElement("div");
-            sep.style.cssText = "border-top:1px solid #ddd;margin:4px 0;";
-            wrap.appendChild(sep);
-            var btnRow = doc.createElement("div");
-            btnRow.style.cssText = "display:flex;gap:6px;justify-content:space-between;";
-            var btnAdd = doc.createElement("button");
-            btnAdd.type = "button";
-            btnAdd.className = "newLink";
-            btnAdd.textContent = "+ Adicionar marcador";
-            btnAdd.style.cssText = "cursor:pointer;padding:2px 10px;";
-            var btnClose = doc.createElement("button");
-            btnClose.type = "button";
-            btnClose.className = "newLink";
-            btnClose.textContent = "Fechar";
-            btnClose.style.cssText = "cursor:pointer;padding:2px 10px;";
-            btnRow.appendChild(btnAdd);
-            btnRow.appendChild(btnClose);
-            wrap.appendChild(btnRow);
-            body2.innerHTML = "";
-            body2.appendChild(wrap);
-            btnClose.addEventListener("click", function() {
-              body2.innerHTML = savedHTML;
-            });
-            btnAdd.addEventListener("click", function() {
-              var addUrl = marcUrl.replace("acao=andamento_marcador_gerenciar", "acao=andamento_marcador_cadastrar");
-              invalidatePage(addUrl);
-              fetchPage(addUrl).then(function() {
-                body2.innerHTML = savedHTML;
-                openInlineEditor(panel2, addUrl, [
-                  { kind: "select", label: "Marcador", srcSelector: "#selMarcador", name: "selMarcador" },
-                  { kind: "textarea", label: "Observa\xE7\xE3o (opcional)", srcSelector: "#txaTexto", name: "txaTexto" }
-                ], function() {
-                  refreshSection("marcador", "post-add marcador");
-                  editMarcadorInline(panel2);
-                });
-              }).catch(function(e) {
-                err("marcador add fetch:", e.message);
-              });
-            });
-          }).catch(function(e) {
-            err("marcador editor:", e.message);
             body2.innerHTML = savedHTML;
           });
         }

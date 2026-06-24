@@ -12,28 +12,30 @@ import { isAtribuicaoUnassigned } from '../parse/atribuicao.js';
  *
  * ctx = { doc, win, findToolbarLink, fetchPage, invalidatePage, submitViaIframe, log, err, report }
  */
+// Parsing PURO da lista de responsáveis a partir do Nos[0].html inline (só LÊ docR;
+// cria temp <div> no próprio docR). Testável jsdom. VERBATIM (createElement: doc→docR).
+export function parseAtribuicaoItemsFromDoc(docR) {
+    var newResp = [];
+    var scrs = docR.querySelectorAll('script:not([src])');
+    for (var i = 0; i < scrs.length; i++) {
+        var txt = scrs[i].textContent || '';
+        var raw = extractNosHtml(txt);
+        if (raw === null) continue;
+        raw.split('<br />').forEach(function (frag) {
+            var tmp = docR.createElement('div');
+            tmp.innerHTML = frag;
+            var text = tmp.textContent.trim();
+            if (text) newResp.push({ text: text, unassigned: isAtribuicaoUnassigned(text, tmp.querySelector('a.ancoraSigla')) });
+        });
+        break;
+    }
+    return newResp;
+}
+
 export function createAtribuicaoSection(ctx) {
     var doc = ctx.doc, win = ctx.win;
     var findToolbarLink = ctx.findToolbarLink, fetchPage = ctx.fetchPage, invalidatePage = ctx.invalidatePage;
     var submitViaIframe = ctx.submitViaIframe, log = ctx.log, err = ctx.err, report = ctx.report;
-
-    function parseAtribuicaoItemsFromDoc(docR) {
-        var newResp = [];
-        var scrs = docR.querySelectorAll('script:not([src])');
-        for (var i = 0; i < scrs.length; i++) {
-            var txt = scrs[i].textContent || '';
-            var raw = extractNosHtml(txt);
-            if (raw === null) continue;
-            raw.split('<br />').forEach(function (frag) {
-                var tmp = doc.createElement('div');
-                tmp.innerHTML = frag;
-                var text = tmp.textContent.trim();
-                if (text) newResp.push({ text: text, unassigned: isAtribuicaoUnassigned(text, tmp.querySelector('a.ancoraSigla')) });
-            });
-            break;
-        }
-        return newResp;
-    }
 
     function renderRows(body, items) {
         body.innerHTML = '';

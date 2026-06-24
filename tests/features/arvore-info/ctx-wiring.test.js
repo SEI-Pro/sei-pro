@@ -33,7 +33,8 @@ describe('arvore-info: ctx das seções é totalmente passado pelo index.js', ()
   for (const file of files) {
     it(`${file}: todas as ctx.<chave> usadas são passadas na chamada`, () => {
       const code = readFileSync(join(sectionsDir, file), 'utf8');
-      const exportName = (code.match(/export function (\w+)\s*\(/) || [])[1];
+      // A função de instalação da seção (install*/create*) — não os parsers exportados.
+      const exportName = (code.match(/export function ((?:install|create)\w+)\s*\(/) || [])[1];
       expect(exportName, `${file} deve exportar uma função install/create`).toBeTruthy();
 
       const used = new Set();

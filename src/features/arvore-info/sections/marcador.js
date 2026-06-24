@@ -9,6 +9,39 @@ import { forceTrueConfirm } from '../dom/confirm.js';
  * ctx = { doc, marcPanel, findToolbarLink, fetchPage, invalidatePage, submitViaIframe,
  *         refreshSection, refreshers, sectionEnabled, log, warn, err, report }
  */
+// Parsing PURO do documento de marcadores (SEI 4.1+ tabela / fallback form single).
+// Só LÊ docM → testável com jsdom. VERBATIM.
+export function parseMarcadorItems(docM) {
+    var items = [];
+    // SEI 4.1+: table-of-marcadores layout (one row per marcador).
+    var rows = docM.querySelectorAll('table.infraTable tr');
+    for (var r = 1; r < rows.length; r++) { // skip header
+        var tds = rows[r].querySelectorAll('td');
+        if (tds.length < 4) continue;
+        var img = tds[1].querySelector('img');
+        var remA = rows[r].querySelector('a[onclick*="acaoRemover"]');
+        var remMatch = remA ? parseAcaoRemoverId(remA.getAttribute('onclick')) : null;
+        var tagA = tds[1].querySelector('a[title]');
+        items.push({
+            id: remMatch,
+            iconSrc: img ? img.getAttribute('src') : null,
+            tag: (tagA && tagA.getAttribute('title')) || (tds[1].textContent || '').trim(),
+            note: (tds[2].textContent || '').trim(),
+            user: (tds[3].textContent || '').trim()
+        });
+    }
+    // Legacy fallback: single-marcador form layout.
+    if (!items.length) {
+        var sel = docM.getElementById('selMarcador');
+        var ta  = docM.getElementById('txaTexto');
+        var opt = sel && (sel.querySelector('option[selected]') || (sel.options && sel.options[sel.selectedIndex]));
+        var tag = opt ? opt.textContent.trim() : '';
+        var note = ta ? ta.value || ta.textContent || '' : '';
+        if (tag || note) items.push({ id: null, iconSrc: opt && (opt.getAttribute('data-imagesrc') || opt.dataset.imagesrc), tag: tag, note: note, user: '' });
+    }
+    return items;
+}
+
 export function installMarcadorSection(ctx) {
     var doc = ctx.doc, marcPanel = ctx.marcPanel;
     var findToolbarLink = ctx.findToolbarLink, fetchPage = ctx.fetchPage, invalidatePage = ctx.invalidatePage;
@@ -16,36 +49,6 @@ export function installMarcadorSection(ctx) {
     var sectionEnabled = ctx.sectionEnabled, log = ctx.log, warn = ctx.warn, err = ctx.err, report = ctx.report;
 
     var marcadorUrl = findToolbarLink('andamento_marcador_gerenciar');
-    function renderMarcadorItems(docM) {
-        var items = [];
-        // SEI 4.1+: table-of-marcadores layout (one row per marcador).
-        var rows = docM.querySelectorAll('table.infraTable tr');
-        for (var r = 1; r < rows.length; r++) { // skip header
-            var tds = rows[r].querySelectorAll('td');
-            if (tds.length < 4) continue;
-            var img = tds[1].querySelector('img');
-            var remA = rows[r].querySelector('a[onclick*="acaoRemover"]');
-            var remMatch = remA ? parseAcaoRemoverId(remA.getAttribute('onclick')) : null;
-            var tagA = tds[1].querySelector('a[title]');
-            items.push({
-                id: remMatch,
-                iconSrc: img ? img.getAttribute('src') : null,
-                tag: (tagA && tagA.getAttribute('title')) || (tds[1].textContent || '').trim(),
-                note: (tds[2].textContent || '').trim(),
-                user: (tds[3].textContent || '').trim()
-            });
-        }
-        // Legacy fallback: single-marcador form layout.
-        if (!items.length) {
-            var sel = docM.getElementById('selMarcador');
-            var ta  = docM.getElementById('txaTexto');
-            var opt = sel && (sel.querySelector('option[selected]') || (sel.options && sel.options[sel.selectedIndex]));
-            var tag = opt ? opt.textContent.trim() : '';
-            var note = ta ? ta.value || ta.textContent || '' : '';
-            if (tag || note) items.push({ id: null, iconSrc: opt && (opt.getAttribute('data-imagesrc') || opt.dataset.imagesrc), tag: tag, note: note, user: '' });
-        }
-        return items;
-    }
     function renderMarcadorItemRow(it) {
         var row = doc.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
@@ -118,7 +121,7 @@ export function installMarcadorSection(ctx) {
       invalidatePage(marcadorUrl);
       marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span style="opacity:0.6">carregando…</span>';
       fetchPage(marcadorUrl).then(function (docM) {
-        var items = renderMarcadorItems(docM);
+        var items = parseMarcadorItems(docM);
         var bd = marcPanel.querySelector('.seipro-marcador-body');
         bd.innerHTML = '';
         if (!items.length) { bd.innerHTML = '<span style="opacity:0.6">(sem marcador)</span>'; return; }

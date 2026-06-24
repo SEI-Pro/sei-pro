@@ -705,6 +705,28 @@ CORS e quotas num só lugar.
 > anotação e remover marcador funcionaram; estado pós-remoção correto; console limpo. (Confirmado
 > também que o "placeholder + 456 restantes" coexistindo é a UI normal do estado vazio — o contador
 > de caracteres na barra de ações, não conteúdo stale.)
+>
+> **Pós-validação — limpeza + cobertura de DOM.** (1) `editMarcadorInline` (código morto, já
+> desativado pelo próprio comentário no legado) **removido** (-117 linhas) → `index.js` **1.028**.
+> (2) **jsdom** adicionado como devDependency; os parsers de documento SEI das 5 seções foram
+> **promovidos a exports** (`parseMarcadorItems`, `parseAcompItems`, `getAcessoText`,
+> `getInteressadosTexts`, `parseAtribuicaoItemsFromDoc`) e cobertos por
+> `tests/features/arvore-info/sections-parse.test.js` (9 testes, fixtures de HTML real do SEI) —
+> fecha a lacuna "camada de DOM não testada" que deixou passar o bug do `submitForm`. **235 testes
+> verdes.**
+>
+> **Decisões finais de escopo (avaliação honesta, mantidas por design):**
+> - **Editores `editTipo`/`editAcomp` + marcador-add + `openInlineEditor`/`submitViaIframe` ficam em
+>   `index.js`** — são a camada de **orquestração/boot** da feature (no alvo, `index.js` = install/boot).
+>   Movê-los só realocaria orquestração, com smoke destrutivo e sem ganho arquitetural.
+> - **Fallbacks defensivos mantidos** (`normalizeMojibakeUtf8` facade-com-fallback; `stubParent`):
+>   são resiliência contra corrida de carga no iframe (o "às vezes não carrega" relatado), **não**
+>   legado-para-compat. Removê-los seria regressão.
+> - **Sub-features adjacentes** que renderizam perto da árvore mas são **requisitos distintos** —
+>   "Personalizar Menu" das seções (`iconsFlashPanelArvore` + UI em `sei-functions-pro.js`),
+>   **atividades/kanban na árvore** (`panelDadosArvore_atividades`, jKanban) e `getInfoArvoreLastDoc`
+>   (integração com upload) — **não** são dívida do `infoarvore`; cada uma é uma migração própria,
+>   a fazer quando/se aquela funcionalidade for tocada.
 
 - Dividir `sei-pro-atividades.js` e `sei-functions-pro.js` em pastas por responsabilidade:
   `features/kanban`, `features/gantt`, `core/config`, `core/dom`, `core/version`…

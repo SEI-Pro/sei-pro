@@ -7,6 +7,34 @@
  * ctx = { doc, acompPanel, findToolbarLink, getToolbarLinks, fetchPage, invalidatePage,
  *         submitViaIframe, refreshSection, refreshers, sectionEnabled, log, warn, err, report }
  */
+// Parsing PURO do documento de acompanhamento especial (só LÊ docA). Testável jsdom. VERBATIM.
+export function parseAcompItems(docA) {
+    var rows = docA.querySelectorAll('table.infraTable tr');
+    var items = [];
+    for (var r = 1; r < rows.length; r++) {
+        var tds = rows[r].querySelectorAll('td');
+        if (tds.length < 3) continue;
+        var acompId = null;
+        var exLink = rows[r].querySelector('a[onclick*="acaoExcluir"]');
+        if (exLink) {
+            var idM = exLink.getAttribute('onclick').match(/acaoExcluir\((\d+)/);
+            if (idM) acompId = idM[1];
+        }
+        if (!acompId) {
+            var chk = rows[r].querySelector('input[type="checkbox"][name*="chk"]');
+            if (chk) acompId = chk.value;
+        }
+        items.push({
+            id: acompId,
+            grupo: (tds[1].textContent || '').trim(),
+            obs: (tds[2].textContent || '').trim(),
+            user: tds[3] ? (tds[3].textContent || '').trim() : '',
+            date: tds[4] ? (tds[4].textContent || '').trim() : ''
+        });
+    }
+    return items;
+}
+
 export function installAcompanhamentoSection(ctx) {
     var doc = ctx.doc, acompPanel = ctx.acompPanel;
     var findToolbarLink = ctx.findToolbarLink, getToolbarLinks = ctx.getToolbarLinks;
@@ -19,32 +47,6 @@ export function installAcompanhamentoSection(ctx) {
                 || findToolbarLink('acompanhamento_listar')
                 || findToolbarLink('acompanhamento_cadastrar')
                 || findToolbarLink('acompanhamento_alterar');
-    function parseAcompItems(docA) {
-        var rows = docA.querySelectorAll('table.infraTable tr');
-        var items = [];
-        for (var r = 1; r < rows.length; r++) {
-            var tds = rows[r].querySelectorAll('td');
-            if (tds.length < 3) continue;
-            var acompId = null;
-            var exLink = rows[r].querySelector('a[onclick*="acaoExcluir"]');
-            if (exLink) {
-                var idM = exLink.getAttribute('onclick').match(/acaoExcluir\((\d+)/);
-                if (idM) acompId = idM[1];
-            }
-            if (!acompId) {
-                var chk = rows[r].querySelector('input[type="checkbox"][name*="chk"]');
-                if (chk) acompId = chk.value;
-            }
-            items.push({
-                id: acompId,
-                grupo: (tds[1].textContent || '').trim(),
-                obs: (tds[2].textContent || '').trim(),
-                user: tds[3] ? (tds[3].textContent || '').trim() : '',
-                date: tds[4] ? (tds[4].textContent || '').trim() : ''
-            });
-        }
-        return items;
-    }
     function renderAcompItemRow(it) {
         var row = doc.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
         var txt = it.obs + (it.grupo ? (it.obs ? ' ' : '') + '(' + it.grupo + ')' : '');

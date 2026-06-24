@@ -13,6 +13,32 @@ import { acessoLabel, splitInteressado } from '../parse/consulta.js';
  *         findToolbarLink, fetchPage, invalidatePage, refreshers, sectionEnabled,
  *         log, warn, report }
  */
+// Parsing PURO do form de consulta (só LÊ docA). Testável jsdom.
+// Nível de acesso (mapa + hipótese legal) e interessados (split nome/(unidade)).
+export function getAcessoText(docA) {
+    var rdo = docA.querySelector('input[name="rdoNivelAcesso"]:checked');
+    var hipoteseText = '';
+    if (rdo && rdo.value === '1') {
+        var hipSel = docA.getElementById('selHipoteseLegal');
+        var hipOpt = hipSel && (hipSel.querySelector('option[selected]') || (hipSel.options && hipSel.options[hipSel.selectedIndex]));
+        if (hipOpt && hipOpt.textContent.trim()) hipoteseText = hipOpt.textContent.trim();
+    }
+    return { text: acessoLabel(rdo ? rdo.value : null, hipoteseText), element: rdo };
+}
+
+export function getInteressadosTexts(docA) {
+    var opts = docA.querySelectorAll('#selInteressadosProcedimento option, #selInteressados option');
+    var items = [];
+    for (var i = 0; i < opts.length; i++) {
+        var name = (opts[i].textContent || '').trim();
+        if (!name) continue;
+        splitInteressado(name).forEach(function (part) {
+            items.push(part);
+        });
+    }
+    return items;
+}
+
 export function installConsultaSection(ctx) {
     var doc = ctx.doc;
     var intPanel = ctx.intPanel, tipoPanel = ctx.tipoPanel, acessoPanel = ctx.acessoPanel,
@@ -74,17 +100,6 @@ export function installConsultaSection(ctx) {
         };
     }
 
-    function getAcessoText(docA) {
-        var rdo = docA.querySelector('input[name="rdoNivelAcesso"]:checked');
-        var hipoteseText = '';
-        if (rdo && rdo.value === '1') {
-            var hipSel = docA.getElementById('selHipoteseLegal');
-            var hipOpt = hipSel && (hipSel.querySelector('option[selected]') || (hipSel.options && hipSel.options[hipSel.selectedIndex]));
-            if (hipOpt && hipOpt.textContent.trim()) hipoteseText = hipOpt.textContent.trim();
-        }
-        return { text: acessoLabel(rdo ? rdo.value : null, hipoteseText), element: rdo };
-    }
-
     function getOptionTexts(docA, selector) {
         var nodes = docA.querySelectorAll(selector);
         var items = [];
@@ -92,19 +107,6 @@ export function installConsultaSection(ctx) {
             var txt = (o.textContent || '').trim();
             if (txt) items.push(txt);
         });
-        return items;
-    }
-
-    function getInteressadosTexts(docA) {
-        var opts = docA.querySelectorAll('#selInteressadosProcedimento option, #selInteressados option');
-        var items = [];
-        for (var i = 0; i < opts.length; i++) {
-            var name = (opts[i].textContent || '').trim();
-            if (!name) continue;
-            splitInteressado(name).forEach(function (part) {
-                items.push(part);
-            });
-        }
         return items;
     }
 
