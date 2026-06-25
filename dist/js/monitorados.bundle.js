@@ -103,8 +103,11 @@
       return String(obj.id_procedimento) === String(id_procedimento);
     });
   }
-  function monitoradoProcessDataReady(id_procedimento, dados) {
-    return typeof dados !== "undefined" && dados && Object.keys(dados).length > 0 && dados.constructor === Object && typeof dados.listAndamento !== "undefined" && dados.listAndamento !== null && dados.hasOwnProperty("listAndamento") && typeof dados.listAndamento.id_procedimento !== "undefined" && dados.listAndamento.id_procedimento !== null && dados.listAndamento.hasOwnProperty("id_procedimento") && String(dados.listAndamento.id_procedimento) == String(id_procedimento) && typeof dados.propProcesso !== "undefined" && dados.propProcesso !== null;
+  function monitoradoProcessDataReady(id_procedimento, dados2) {
+    return typeof dados2 !== "undefined" && dados2 && Object.keys(dados2).length > 0 && dados2.constructor === Object && typeof dados2.listAndamento !== "undefined" && dados2.listAndamento !== null && dados2.hasOwnProperty("listAndamento") && typeof dados2.listAndamento.id_procedimento !== "undefined" && dados2.listAndamento.id_procedimento !== null && dados2.listAndamento.hasOwnProperty("id_procedimento") && String(dados2.listAndamento.id_procedimento) == String(id_procedimento) && typeof dados2.propProcesso !== "undefined" && dados2.propProcesso !== null;
+  }
+  function monitoradoProcessPayloadReady(id_procedimento, dados2) {
+    return monitoradoProcessDataReady(id_procedimento, dados2) && typeof dados2.listDocumentosAssinados !== "undefined" && Array.isArray(dados2.listDocumentosAssinados);
   }
 
   // src/features/monitorados/store.js
@@ -832,11 +835,11 @@
     }, true);
   }
   function updateSelect(id) {
-    const dados = globalRef.dadosProcessoPro;
-    if (!dados || !Array.isArray(dados.listDocumentosAssinados) || !dados.listDocumentosAssinados.length) return;
+    const dados2 = globalRef.dadosProcessoPro;
+    if (!dados2 || !Array.isArray(dados2.listDocumentosAssinados) || !dados2.listDocumentosAssinados.length) return;
     const sel = byId("configDatesBox_listdocs");
     const cur = sel ? (sel.value || "").trim() : "";
-    sel.innerHTML = dados.listDocumentosAssinados.map((v) => {
+    sel.innerHTML = dados2.listDocumentosAssinados.map((v) => {
       if (v.data_assinatura === "") return "";
       const s = cur !== "" && cur == v.id_documento ? "selected" : "";
       return '<option data-sign="' + v.data_assinatura + '" data-id-protocolo="' + v.id_documento + '" ' + s + ">" + v.nome_documento + " (SEI n\xBA " + v.nr_sei + ") [assinado em " + v.data_assinatura + "]</option>";
@@ -844,8 +847,8 @@
     const store = getStoreMonitoradoPro();
     const idx = findMonitoradoIndex(store, id);
     if (idx >= 0) {
-      store.monitorados[idx].documentos = dados.listDocumentosAssinados;
-      store.monitorados[idx].andamento = dados.listAndamento.andamento;
+      store.monitorados[idx].documentos = dados2.listDocumentosAssinados;
+      store.monitorados[idx].andamento = dados2.listAndamento.andamento;
       persistMonitoradoStore(store);
     }
   }
@@ -1049,6 +1052,262 @@
     });
   }
 
+  // src/features/monitorados/commands.js
+  var g3 = (n) => globalRef[n];
+  var dados = () => globalRef.dadosProcessoPro;
+  var setDados = (v) => {
+    globalRef.dadosProcessoPro = v;
+  };
+  function processAnchor2(treeDoc) {
+    if (!treeDoc) return null;
+    return treeDoc.querySelector('#topmenu a[target="ifrConteudoVisualizacao"], #topmenu a[target="ifrVisualizacao"]');
+  }
+  function visualizacaoDoc() {
+    const ifr = document.querySelector("#ifrConteudoVisualizacao, #ifrVisualizacao");
+    try {
+      return ifr && ifr.contentDocument ? ifr.contentDocument : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function removeMonitoradoPro(id_procedimento, store = false) {
+    store = store || getStoreMonitoradoPro();
+    store.monitorados = store.monitorados.filter((item) => item.id_procedimento != id_procedimento);
+    return store;
+  }
+  function addMonitoradoPro(id_procedimento = false) {
+    let store = getStoreMonitoradoPro();
+    const d = dados() || {};
+    const id = id_procedimento || (d.listAndamento ? d.listAndamento.id_procedimento : false);
+    if (id !== false) store = removeMonitoradoPro(id, store);
+    const andamento = d.listAndamento || {};
+    const prop = d.propProcesso || {};
+    store.monitorados.push({
+      id_procedimento: andamento.id_procedimento,
+      processo: andamento.processo,
+      andamento: andamento.andamento || [],
+      documentos: d.listDocumentosAssinados || [],
+      tipo_procedimento: prop.hdnNomeTipoProcedimento || "",
+      assuntos: prop.selAssuntos_select || [],
+      interessados: prop.selInteressadosProcedimento || [],
+      descricao: prop.txtDescricao || "",
+      order: -1,
+      categoria: ""
+    });
+    return store;
+  }
+  function storeMonitoradoPro(mode, id_procedimento) {
+    const store = mode === "add" ? addMonitoradoPro(id_procedimento) : removeMonitoradoPro(id_procedimento);
+    const d = dados();
+    if (d && Array.isArray(d.tiposDocumentos) && d.tiposDocumentos.length > 0) store.config.tiposdocs = d.tiposDocumentos;
+    persistMonitoradoStore(store);
+    if (typeof g3("appendIconMonitorados") === "function") g3("appendIconMonitorados")();
+    if (!document.getElementById("ifrArvore")) {
+      if (!document.getElementById("monitoradosPro")) {
+        if (g3("setPanelMonitorados")) g3("setPanelMonitorados")("insert");
+        if (g3("initAppendIconMonitorados")) g3("initAppendIconMonitorados")();
+      } else if (!store.monitorados || store.monitorados.length === 0) {
+        const panel = document.getElementById("monitoradosPro");
+        if (panel) panel.remove();
+        if (g3("appendStarOnProcess")) g3("appendStarOnProcess")();
+      } else if (g3("setPanelMonitorados")) {
+        g3("setPanelMonitorados")("refresh");
+      }
+      setDados({});
+      const kanban = document.getElementById("processosKanban");
+      if (kanban && kanban.offsetParent !== null && g3("addKanbanProc")) g3("addKanbanProc")();
+    }
+  }
+  function getFallbackMonitoradoRowData(target, id_procedimento) {
+    let row = target && target.closest ? target.closest("tr") : null;
+    if (!row && id_procedimento) {
+      row = qsa(".tabelaControle tr").find((r) => {
+        const a = r.querySelector('a[href*="id_procedimento="]');
+        return a && String(g3("getParamsUrlPro")(a.getAttribute("href")).id_procedimento) === String(id_procedimento);
+      }) || null;
+    }
+    if (!row) return false;
+    const rowText = row.textContent.trim();
+    const checkbox = row.querySelector('input[type="checkbox"]');
+    const hrefProcesso = row.querySelector('a[href*="acao=procedimento_trabalhar"]');
+    const cells = row.querySelectorAll("td");
+    let processo = cells[3] ? cells[3].textContent.trim() : "";
+    let descricao = cells[2] ? cells[2].textContent.trim() : "";
+    let tipo_procedimento = "";
+    const cbHelp = checkbox ? checkbox.getAttribute("title") || checkbox.getAttribute("aria-label") || checkbox.getAttribute("data-original-title") || "" : "";
+    const cbDesc = checkbox ? checkbox.getAttribute("alt") || checkbox.getAttribute("label") || "" : "";
+    if (!processo && cbHelp) processo = cbHelp.trim();
+    if (!processo && hrefProcesso) processo = hrefProcesso.textContent.trim();
+    if (!descricao && cbDesc) {
+      const m = cbDesc.match(/Especifica(?:ção|cao)\s+(.+)$/i);
+      if (m && m[1]) descricao = m[1].trim();
+    }
+    const tt = hrefProcesso && hrefProcesso.getAttribute("onmouseover") || "";
+    const ttArr = typeof g3("extractTooltipToArray") === "function" ? g3("extractTooltipToArray")(tt) : null;
+    if (ttArr && ttArr.length > 1) tipo_procedimento = ttArr[1].split(" / ")[0].trim();
+    if (!tipo_procedimento && cbDesc) {
+      const m = cbDesc.match(/Tipo\s+(.+?)(?:\s*\/\s*Especifica(?:ção|cao)\s+|$)/i);
+      if (m && m[1]) tipo_procedimento = m[1].trim();
+    }
+    if (!descricao && rowText) descricao = rowText.replace(/\s+/g, " ").trim();
+    if (!processo) processo = String(id_procedimento);
+    return {
+      listAndamento: { historico_completo: false, processo, id_procedimento: String(id_procedimento), andamento: [] },
+      listDocumentosAssinados: [],
+      tiposDocumentos: [],
+      propProcesso: { hdnIdProcedimento: String(id_procedimento), hdnNomeTipoProcedimento: tipo_procedimento, selAssuntos_select: [], selInteressadosProcedimento: [], txtDescricao: descricao }
+    };
+  }
+  function saveImmediateMonitoradoPro(target, id_procedimento) {
+    const fallback = getFallbackMonitoradoRowData(target, id_procedimento);
+    if (!fallback) return false;
+    setDados(fallback);
+    storeMonitoradoPro("add", id_procedimento);
+    return fallback;
+  }
+  function snapshot(item) {
+    return JSON.stringify({
+      processo: item.processo || "",
+      andamento: item.andamento || [],
+      documentos: item.documentos || [],
+      tipo_procedimento: item.tipo_procedimento || "",
+      assuntos: item.assuntos || [],
+      interessados: item.interessados || [],
+      descricao: item.descricao || ""
+    });
+  }
+  function syncMonitoradoProProcessData(id_procedimento, d) {
+    if (id_procedimento == null || id_procedimento === "") return;
+    if (!d || !d.propProcesso) return;
+    const store = getStoreMonitoradoPro();
+    if (!store.monitorados || !store.monitorados.length) return;
+    const idx = findMonitoradoIndex(store, id_procedimento);
+    if (idx === -1) return;
+    const andamento = d.listAndamento || {};
+    const prop = d.propProcesso || {};
+    const item = store.monitorados[idx];
+    const before = snapshot(item);
+    item.id_procedimento = andamento.id_procedimento || item.id_procedimento;
+    item.processo = andamento.processo || item.processo;
+    item.andamento = andamento.andamento || item.andamento || [];
+    item.documentos = d.listDocumentosAssinados || item.documentos || [];
+    item.tipo_procedimento = prop.hdnNomeTipoProcedimento || item.tipo_procedimento || "";
+    item.assuntos = prop.selAssuntos_select || item.assuntos || [];
+    item.interessados = prop.selInteressadosProcedimento || item.interessados || [];
+    item.descricao = prop.txtDescricao || item.descricao || "";
+    if (Array.isArray(d.tiposDocumentos) && d.tiposDocumentos.length > 0) {
+      store.config = store.config || {};
+      store.config.tiposdocs = d.tiposDocumentos;
+    }
+    persistMonitoradoStore(store);
+    if (!document.getElementById("ifrArvore") && document.getElementById("monitoradosPro") && before !== snapshot(item) && g3("setPanelMonitorados")) {
+      g3("setPanelMonitorados")("refresh");
+    }
+  }
+  function checkDataMonitoradoPro(this_, mode, id_procedimento) {
+    const treeDoc = frameDoc("ifrArvore");
+    const target = this_ || treeDoc && treeDoc.getElementById("iconMonitoradoPro_" + id_procedimento);
+    let saved = false;
+    const storeWhenReady = (d) => {
+      setDados(d || dados());
+      const dd = dados();
+      if (dd && !dd.hasOwnProperty("tiposDocumentos")) dd.tiposDocumentos = [];
+      if (dd && !dd.hasOwnProperty("listDocumentosAssinados")) dd.listDocumentosAssinados = [];
+      if (mode === "add" && saved) syncMonitoradoProProcessData(id_procedimento, dd);
+      else {
+        storeMonitoradoPro(mode, id_procedimento);
+        saved = mode === "add";
+      }
+    };
+    if (mode === "remove") {
+      storeWhenReady();
+      return true;
+    }
+    const d0 = g3("pullDadosProcessoSession")(id_procedimento);
+    if (monitoradoProcessPayloadReady(id_procedimento, d0)) {
+      storeWhenReady(d0);
+      return true;
+    }
+    if (mode === "add") saved = !!saveImmediateMonitoradoPro(target, id_procedimento);
+    if (typeof g3("waitMonitoradoProcessData") === "function") {
+      g3("waitMonitoradoProcessData")(id_procedimento, (d) => {
+        if (monitoradoProcessPayloadReady(id_procedimento, d)) storeWhenReady(d);
+      }, () => {
+      }, false);
+    }
+    if (mode === "add" && g3("getDadosIframeProcessoPro")) g3("getDadosIframeProcessoPro")(id_procedimento, "monitorados");
+    return false;
+  }
+  function actMonitoradoPro(this_, mode) {
+    let id_procedimento, treeDoc = null, visDoc = null;
+    if (this_) {
+      id_procedimento = this_.dataset ? this_.dataset.id_procedimento : this_.getAttribute && this_.getAttribute("data-id_procedimento");
+    } else {
+      treeDoc = frameDoc("ifrArvore");
+      visDoc = visualizacaoDoc();
+      const anchor = processAnchor2(treeDoc);
+      if (!anchor || !anchor.getAttribute("href")) return false;
+      id_procedimento = String(g3("getParamsUrlPro")(anchor.getAttribute("href")).id_procedimento);
+    }
+    checkDataMonitoradoPro(this_, mode, id_procedimento);
+    if (mode === "add" && visDoc && !visDoc.getElementById("frmAtividadeListar") && treeDoc) {
+      const htmlBox = typeof g3("monitoradosLabelOptions") === "function" ? g3("monitoradosLabelOptions")(id_procedimento) : "";
+      openModal({
+        title: "Op\xE7\xF5es: Processos Monitorados",
+        width: 650,
+        content: '<strong class="iframeSucessPro" style="background:#f9efad;font-size:10pt;padding:10px;border-radius:5px;margin:0 0 10px 0;display:block;color:#404040;"><i class="fas fa-check-circle azulColor" style="margin-right:5px;"></i> Processo adicionado com sucesso no painel de Processos Monitorados (p\xE1gina inicial do SEI)</strong>' + htmlBox,
+        buttons: [{ text: "Ok", class: "confirm", onClick: (ref) => ref.close() }]
+      });
+    }
+  }
+  function removeMonitoradoPainelPro(this_, id_procedimento = 0) {
+    const doRemove = () => {
+      if (id_procedimento == 0) {
+        qsa('#monitoradoTablePro input[name="monitoradoPro"]:checked').forEach((cb) => removeRow(cb, (cb.value || "").trim()));
+        setTimeout(() => {
+          if (this_ && this_.style) this_.style.display = "none";
+        }, 500);
+      } else {
+        removeRow(this_, id_procedimento);
+      }
+    };
+    if (typeof g3("confirmaBoxPro") === "function") g3("confirmaBoxPro")("Tem certeza que deseja remover esse processo dos Processos Monitorados?", doRemove);
+    else if (window.confirm("Remover esse processo dos Processos Monitorados?")) doRemove();
+  }
+  function removeRow(el, id_procedimento) {
+    persistMonitoradoStore(removeMonitoradoPro(id_procedimento));
+    const tr = el && el.closest ? el.closest("tr") : null;
+    if (tr) tr.style.display = "none";
+  }
+  function updateMonitorados(this_) {
+    const i = this_ && this_.querySelector ? this_.querySelector("i") : null;
+    if (i) i.classList.add("fa-spin");
+    if (g3("setPanelMonitorados")) g3("setPanelMonitorados")("refresh");
+  }
+  function bindProcessSync() {
+    if (globalRef.__seiProMonitoradoProcessSyncBound) return;
+    globalRef.__seiProMonitoradoProcessSyncBound = true;
+    window.addEventListener("sei-pro-process-session-updated", (event) => {
+      const detail = event && event.detail || {};
+      const id = detail.id_procedimento;
+      if (id == null || id === "") return;
+      const d = g3("pullDadosProcessoSession")(id);
+      if (monitoradoProcessDataReady(id, d)) syncMonitoradoProProcessData(id, d);
+    });
+  }
+  function installCommands() {
+    bindProcessSync();
+    aliasGlobal("actMonitoradoPro", actMonitoradoPro);
+    aliasGlobal("storeMonitoradoPro", storeMonitoradoPro);
+    aliasGlobal("addMonitoradoPro", addMonitoradoPro);
+    aliasGlobal("removeMonitoradoPro", removeMonitoradoPro);
+    aliasGlobal("removeMonitoradoPainelPro", removeMonitoradoPainelPro);
+    aliasGlobal("updateMonitorados", updateMonitorados);
+    aliasGlobal("checkDataMonitoradoPro", checkDataMonitoradoPro);
+    aliasGlobal("syncMonitoradoProProcessData", syncMonitoradoProProcessData);
+    aliasGlobal("getFallbackMonitoradoRowData", getFallbackMonitoradoRowData);
+  }
+
   // src/features/monitorados/index.js
   var monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
   monitorados.view = { initIcon, mountIcon, iconHtml };
@@ -1057,6 +1316,7 @@
   monitorados.datas = { openBox: openBoxConfigDates };
   installDatas();
   installCategorias();
+  installCommands();
   aliasGlobal("insertIconMonitorados", initIcon);
   aliasGlobal("appendIconMonitorados", mountIcon);
   aliasGlobal("htmlIconMonitorados", iconHtml);
