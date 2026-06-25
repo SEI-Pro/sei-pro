@@ -2262,7 +2262,11 @@ function forceTableHomeDestroy(Timeout = 3000) {
     }
 }
 function forceOnLoadBody() {
-    var onload = new Function($('body').attr('onload'));
+    // new Function é bloqueado pela CSP da extensão no mundo isolado; este hack
+    // (rodar o onload do <body> do SEI) degrada para no-op quando indisponível.
+    var onload;
+    try { onload = new Function($('body').attr('onload')); }
+    catch (e) { onload = function () {}; }
     if (typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() && typeof $.modalLink === 'undefined' && !$('.sparkling-modal-frame').length) {
         $.get($('script[src*="jquery.modalLink"]').attr('src'), function(){
             onload();

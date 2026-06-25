@@ -991,6 +991,8 @@ function forceOnLoadBodyPage() {
     window.__seiProForceOnLoadBodyPageLock = true;
     try {
         new Function(onloadAttr)();
+    } catch (e) {
+        // new Function é bloqueado pela CSP da extensão no mundo isolado — degrada.
     } finally {
         setTimeout(function(){
             window.__seiProForceOnLoadBodyPageLock = false;
@@ -12199,6 +12201,10 @@ function initModalNewSEISigiloso(TimeOut = 1000) {
     if (typeof $.modalLink !== 'undefined' && typeof $().resizable !== 'undefined') { 
         if (checkProcessoSigiloso()) { 
             try {
+                // `inicializar` é função da PÁGINA do SEI (mundo MAIN) — invisível
+                // no mundo isolado. Guardada para não quebrar; modal de sigiloso
+                // degrada quando indisponível.
+                if (typeof inicializar !== 'function') { sigilosoHost.__SEI_PRO_SIGILOSO_INIT_DONE__ = false; return; }
                 sigilosoHost.__SEI_PRO_SIGILOSO_INIT_DONE__ = true;
                 inicializar();
             } catch (e) {
