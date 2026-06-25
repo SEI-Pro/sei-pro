@@ -5,6 +5,9 @@ import { setPanelMonitorados, bindPanelDispatcher } from './panel.js';
 import { openBoxConfigDates, installDatas } from './datas.js';
 import { installCategorias } from './categorias.js';
 import { installCommands } from './commands.js';
+import { installServer } from './server.js';
+import { installPrazoRow } from './prazo-row.js';
+import { installExtras } from './extras.js';
 
 /**
  * Processos Monitorados — ENTRY do bundle ESM (reescrita vanilla, isolated-world).
@@ -29,6 +32,9 @@ monitorados.datas = { openBox: openBoxConfigDates };
 installDatas();
 installCategorias();
 installCommands();
+installServer();
+installPrazoRow();
+installExtras();
 
 // Pontos de entrada cross-arquivo (chamados por init/arvore/sei-pro): agora vanilla.
 aliasGlobal('insertIconMonitorados', initIcon);

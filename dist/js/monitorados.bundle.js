@@ -162,6 +162,11 @@
     }, "set_monitorados");
     globalRef.setLocalFilePro(getStoreMonitoradoPro());
   }
+  function getConfigDatetimeMonitorado() {
+    const store = getStoreMonitoradoPro();
+    persistMonitoradoStore(store, { remote: false });
+    return store;
+  }
 
   // src/features/monitorados/icon.js
   var TARGET_SEL = 'a[target="ifrConteudoVisualizacao"], a[target="ifrVisualizacao"]';
@@ -1308,6 +1313,251 @@
     aliasGlobal("getFallbackMonitoradoRowData", getFallbackMonitoradoRowData);
   }
 
+  // src/features/monitorados/server.js
+  var g4 = (n) => globalRef[n];
+  var statusLoadRemoteFile = true;
+  var loopServer = 0;
+  function checkFileSystemInit() {
+    if (globalRef.fileSystemPro) return;
+    if (g4("getLocalFilePro")) g4("getLocalFilePro")();
+    setTimeout(() => {
+      if (globalRef.fileSystemPro) return;
+      const actions = qs("#monitoradosProActions");
+      if (!actions) return;
+      const old = qs("#htmlFileSystemStatus");
+      if (old) old.remove();
+      actions.insertAdjacentHTML(
+        "beforeend",
+        '<span id="htmlFileSystemStatus" style="display:block;float:left;font-size:9pt;color:#888;clear:both;top:0;left:60px;position:absolute;width:calc(100% - 400px);"><i class="fas fa-exclamation-triangle vermelhoColor"></i> Seu navegador n\xE3o possui suporte ao sistema de arquivos local (FileSystem API) ou o usu\xE1rio n\xE3o autorizou o seu uso.<br> A n\xE3o utiliza\xE7\xE3o dessa tecnologia poder\xE1 ocasionar a perda de dados dos Processos Monitorados, caso o cache do navegador seja apagado.<br><a class="seipro-reauth-fs" style="font-size:9pt;color:blue;text-decoration:underline;cursor:pointer;">Re-autorize</a> a aplica\xE7\xE3o ou utilize outro navegador compat\xEDvel.</span>'
+      );
+      const link = qs("#htmlFileSystemStatus .seipro-reauth-fs");
+      if (link) link.addEventListener("click", () => {
+        if (g4("initFileSystem")) g4("initFileSystem")();
+        if (g4("setPanelMonitorados")) g4("setPanelMonitorados")("refresh");
+      });
+    }, 1e3);
+  }
+  function getRemoteFileMonitorado() {
+    if (loopServer < 5 && g4("getServerAtividades")) {
+      g4("getServerAtividades")({ action: "get_monitorados" }, "get_monitorados");
+      loopServer++;
+    }
+  }
+  function checkFileRemoteMonitorado(mode, data = false) {
+    if (mode === "get" && g4("getServerAtividades") && !globalRef.checkLoadMonitoradosProcPro) {
+      g4("getServerAtividades")({ action: "check_monitorados" }, "check_monitorados");
+    } else if (mode === "set" && data) {
+      const store = getStoreMonitoradoPro();
+      const moment2 = globalRef.moment;
+      const dtServer = moment2(data.datetime, "YYYY-MM-DD HH:mm:ss");
+      const dtLocal = moment2(store.datetime, "YYYY-MM-DD HH:mm:ss");
+      if (statusLoadRemoteFile && dtServer.isValid() && dtLocal.isValid() && dtServer > dtLocal.add(1, "minutes")) {
+        getConfigDatetimeMonitorado();
+        setTimeout(() => {
+          getRemoteFileMonitorado();
+          statusLoadRemoteFile = false;
+          setTimeout(() => {
+            statusLoadRemoteFile = true;
+          }, 5e3);
+        }, 3e3);
+      }
+    }
+  }
+  function checkFileLocalMonitorado() {
+    if (g4("getLocalFilePro")) g4("getLocalFilePro")();
+    setTimeout(() => {
+      const content = globalRef.fileSystemContentPro;
+      const moment2 = globalRef.moment;
+      if (globalRef.fileSystemPro && content && typeof content === "object" && typeof moment2().isoWeekdayCalc === "function" && Array.isArray(content.monitorados) && content.monitorados.length > 0) {
+        persistMonitoradoStore(content);
+        if (g4("initPanelMonitorados")) g4("initPanelMonitorados")();
+      } else if (globalRef.perfilLoginAtiv != null) {
+        getRemoteFileMonitorado();
+        if (typeof moment2().isoWeekdayCalc !== "function" && globalRef.jQuery) globalRef.jQuery.getScript(globalRef.URL_SPRO + "js/lib/moment-weekday-calc.js");
+      }
+    }, 500);
+  }
+  function restoreMonitoradoServer(data) {
+    const store = getStoreMonitoradoPro();
+    if (store && store.monitorados && data && data.monitorados && data.config && data.config.colortags !== void 0) {
+      store.monitorados = data.monitorados;
+      store.config.colortags = data.config.colortags;
+      persistMonitoradoStore(store, { remote: false });
+      if (g4("setLocalFilePro")) g4("setLocalFilePro")(store);
+      if (g4("initPanelMonitorados")) g4("initPanelMonitorados")();
+    }
+  }
+  function installServer() {
+    aliasGlobal("checkFileSystemInit", checkFileSystemInit);
+    aliasGlobal("checkFileRemoteMonitorado", checkFileRemoteMonitorado);
+    aliasGlobal("checkFileLocalMonitorado", checkFileLocalMonitorado);
+    aliasGlobal("getRemoteFileMonitorado", getRemoteFileMonitorado);
+    aliasGlobal("restoreMonitoradoServer", restoreMonitoradoServer);
+  }
+
+  // src/features/monitorados/prazo-row.js
+  var g5 = (n) => globalRef[n];
+  function updateDatesMonitorado(el) {
+    const tr = el.closest("tr");
+    if (!tr) return;
+    const store = getStoreMonitoradoPro();
+    const id = parseInt(tr.getAttribute("data-id_procedimento"));
+    const idx = findMonitoradoIndex(store, id);
+    if (idx < 0) return;
+    const config = getOptionsConfigDate(idx);
+    const v = (el.value || "").trim();
+    if (v === "") return;
+    if (v !== config.date && config.date !== "") {
+      config.selectdoc = false;
+      config.setdate = true;
+    }
+    config.date = v;
+    config.dateTo = globalRef.moment().format("YYYY-MM-DD");
+    const td = el.closest("td");
+    const info = td && qs(".info_dates_monitorado", td);
+    const followLink = td && qs(".followLink", td);
+    if (info && followLink) info.innerHTML = g5("getDatesPreview")(config) + followLink.outerHTML;
+    store.monitorados[idx].configdate = config;
+    persistMonitoradoStore(store);
+  }
+  function showDatesMonitorado(el, mode) {
+    if (el.closest("#frmAtividadeListar")) {
+      updateDatesMonitorado(el);
+      return;
+    }
+    const tr = el.closest("tr");
+    const table = el.closest("table");
+    const configBtn = tr && qs(".monitoradoConfigDates", tr);
+    if (!(configBtn && configBtn.matches(":hover"))) {
+      if (table) {
+        qsa(".info_dates_monitorado", table).forEach((n) => {
+          n.style.display = "";
+        });
+        qsa(".info_dates_monitorado_txt", table).forEach((n) => {
+          n.style.display = "none";
+        });
+        qsa(".followLinkDates", table).forEach((n) => {
+          n.style.display = "";
+        });
+      }
+      if (typeof globalRef.infraTooltipOcultar === "function") globalRef.infraTooltipOcultar();
+      updateDatesMonitorado(el);
+    }
+    if (mode === "show" && tr) {
+      const td = el.closest("td");
+      if (td) qsa(".followLinkDates", td).forEach((n) => {
+        n.style.display = "none";
+      });
+      qsa(".info_dates_monitorado", tr).forEach((n) => {
+        n.style.display = "none";
+      });
+      const txt = qs(".info_dates_monitorado_txt", tr);
+      if (txt) {
+        txt.style.display = "inline-flex";
+        const inp = qs("input.monitoradoDatesPro", txt);
+        if (inp) {
+          inp.focus();
+          inp.click();
+        }
+      }
+    }
+    if (tr) {
+      const td = el.closest("td");
+      const info = qs(".info_dates_monitorado", tr);
+      if (td) td.classList.toggle("info_dates_follow_empty", !(info && info.textContent.trim() !== ""));
+    }
+  }
+  function keyDatesMonitorado(e) {
+    if (e.which === 13 || e.key === "Enter") {
+      const target = e.target || e.currentTarget;
+      if (target) showDatesMonitorado(target, "hide");
+    }
+  }
+  function installPrazoRow() {
+    aliasGlobal("updateDatesMonitorado", updateDatesMonitorado);
+    aliasGlobal("showDatesMonitorado", showDatesMonitorado);
+    aliasGlobal("keyDatesMonitorado", keyDatesMonitorado);
+  }
+
+  // src/features/monitorados/extras.js
+  var g6 = (n) => globalRef[n];
+  function appendStarOnProcess() {
+    qsa(".tabelaControle tbody tr").forEach((tr) => {
+      let id = tr.getAttribute("id");
+      id = id != null && id !== "" ? id.replace("P", "") : false;
+      if (!id) {
+        const a = tr.querySelector('a[href*="id_procedimento="]');
+        id = a ? g6("getParamsUrlPro")(a.getAttribute("href")).id_procedimento : false;
+      }
+      if (!id) {
+        const a = tr.querySelector('a[href*="acao=procedimento_trabalhar"]');
+        id = a ? g6("getParamsUrlPro")(a.getAttribute("href")).id_procedimento : false;
+      }
+      const td = tr.querySelectorAll("td")[1];
+      if (!td) return;
+      qsa(".iconMonitoradoPro", td).forEach((n) => n.remove());
+      td.style.verticalAlign = "middle";
+      if (id) td.insertAdjacentElement("afterbegin", elFromHtml(iconHtml(id)));
+    });
+  }
+  function openConfigMonitorados() {
+    openModal({
+      title: "Configura\xE7\xF5es: Processos Monitorados",
+      width: 450,
+      content: '<table style="font-size:9pt;width:100%;" class="seiProForm"><tr style="height:40px;"><td style="vertical-align:bottom;text-align:left;" class="label"><a class="newLink seipro-backup-dl" style="cursor:pointer"><i class="fas fa-download azulColor"></i>Baixar Processos Monitorados</a></td><td style="vertical-align:bottom;text-align:left;" class="label"><input type="file" id="selectLocalFilesPro" class="seipro-backup-file" style="display:none" /><a class="newLink seipro-backup-up" style="cursor:pointer;float:right;"><i class="fas fa-upload azulColor"></i>Carregar Processos Monitorados</a></td><td></td></tr></table>',
+      onOpen: (ref) => {
+        if (g6("getLocalFilePro")) g6("getLocalFilePro")();
+        const dl = qs(".seipro-backup-dl", ref.body);
+        const up = qs(".seipro-backup-up", ref.body);
+        const file = qs(".seipro-backup-file", ref.body);
+        if (dl) dl.addEventListener("click", () => {
+          if (g6("initDownloadLocalFilePro")) g6("initDownloadLocalFilePro")(dl);
+        });
+        if (up) up.addEventListener("click", () => {
+          if (g6("initLoadLocalFilePro")) g6("initLoadLocalFilePro")();
+        });
+        if (file) file.addEventListener("change", () => {
+          if (g6("loadLocalFilePro")) g6("loadLocalFilePro")();
+        });
+      }
+    });
+  }
+  function updateIndexTableMonitorado() {
+    qsa(".tableFollow tbody tr").forEach((tr, index) => {
+      tr.dataset.index = index;
+    });
+  }
+  function removeMonitorado(el) {
+    const tr = el.closest("tr");
+    if (!tr) return;
+    const store = getStoreMonitoradoPro();
+    const index = parseInt(tr.getAttribute("data-index"));
+    if (!(index >= 0)) return;
+    store.monitorados.splice(index, 1);
+    tr.style.transition = "opacity .4s";
+    tr.style.opacity = "0";
+    setTimeout(() => {
+      tr.remove();
+      updateIndexTableMonitorado();
+      if (g6("updateCountTableMonitorado")) g6("updateCountTableMonitorado")();
+      persistMonitoradoStore(store);
+    }, 400);
+  }
+  function actionToolbarMonitoradoPro(this_, triggerButton) {
+    const action = triggerButton && triggerButton.dataset ? triggerButton.dataset.action : "";
+    if (action === "etiqueta" && g6("showFollowEtiqueta")) g6("showFollowEtiqueta")(this_, "show");
+    else if (action === "remove") removeMonitorado(this_);
+    else if (action === "dates" && g6("showDatesMonitorado")) g6("showDatesMonitorado")(this_, "show");
+    else if (action === "descricao" && g6("editMonitoradoDesc")) g6("editMonitoradoDesc")(this_);
+  }
+  function installExtras() {
+    aliasGlobal("appendStarOnProcess", appendStarOnProcess);
+    aliasGlobal("openConfigMonitorados", openConfigMonitorados);
+    aliasGlobal("removeMonitorado", removeMonitorado);
+    aliasGlobal("updateIndexTableMonitorado", updateIndexTableMonitorado);
+    aliasGlobal("actionToolbarMonitoradoPro", actionToolbarMonitoradoPro);
+  }
+
   // src/features/monitorados/index.js
   var monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
   monitorados.view = { initIcon, mountIcon, iconHtml };
@@ -1317,6 +1567,9 @@
   installDatas();
   installCategorias();
   installCommands();
+  installServer();
+  installPrazoRow();
+  installExtras();
   aliasGlobal("insertIconMonitorados", initIcon);
   aliasGlobal("appendIconMonitorados", mountIcon);
   aliasGlobal("htmlIconMonitorados", iconHtml);
