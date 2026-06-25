@@ -990,35 +990,6 @@ td.celStatusAtividade a.iconAtividade:first-child {
     background: #4285F4 !important;
     border: 1px solid #365ea0 !important;
 }
-.tableMonitorados {
-    position: relative;
-    margin-top: 20px !important;
-}
-#monitoradosProDiv {
-    width: 100% !important;
-    overflow-x: hidden;
-}
-#monitoradosProDiv .tabelaPanelScroll {
-    overflow: visible !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    min-height: 0;
-    max-height: none;
-    height: auto !important;
-    padding-bottom: 0;
-}
-#monitoradosProDiv .tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
-    display: none !important;
-}
-#monitoradosProDiv #monitoradoTablePro {
-    width: 100% !important;
-}
-.tableMonitorados .newLink .fa-layers-counter {
-    background: #b7b7b7;
-}
-#monitoradoTablePro .sorterTrMonitorado .fa-layers-counter {
-    display: none !important;
-}
 .tableMonitorados th.tituloControle,
 .tableAtividades th.tituloControle {
     padding: 5px 0;
@@ -1347,30 +1318,6 @@ span.info[contentEditable="true"] {
     overflow: hidden;
     white-space: nowrap;
 }
-td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after {
-    content: "Adicionar prazo";
-    position: absolute;
-    right: 40px;
-    top: calc(50% - 7px);
-    color: #adadad;
-    font-style: italic;
-}
-.tableMonitorados td.tdmonitorado_tags.info_tags_follow_empty:hover .info_tags_follow:after {
-    content: "Adicionar etiqueta";
-    position: absolute;
-    right: 40px;
-    top: calc(50% - 7px);
-    color: #adadad;
-    font-style: italic;
-}
-.tableMonitorados td.tdmonitorado_maps.info_maps_follow_empty:hover .info_maps_follow:after {
-    content: "Adicionar mapa";
-    position: absolute;
-    right: 40px;
-    top: calc(50% - 7px);
-    color: #adadad;
-    font-style: italic;
-}
 .btnCloseEtiqueta {
     position: initial;
     margin: 0px 0 0 -5px !important;
@@ -1456,10 +1403,6 @@ td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after
     min-height: 14px;
     margin-right: 20px;
 }
-td.tdmonitorado_tags {
-    padding-right: 20px;
-    min-width: 120px;
-}
 .info_dates_follow_txt {
     background-color: #cfddeb;
     padding: 5px;
@@ -1473,12 +1416,6 @@ span.info_tags_follow,
 span.info_maps_follow {
     display: inline-flex;
     min-height: 22px;
-}
-input.monitoradoDatesPro {
-    border: none;
-    background: transparent;
-    font-size: 9pt;
-    width: 120px;
 }
 a.newLink.followLink {
     visibility: hidden;
@@ -1508,11 +1445,6 @@ td.info_maps_follow_empty:hover a.newLink.followLink.followLinkMapsEdit,
 td.info_tags_follow_empty:hover a.newLink.followLink.followLinkTagsEdit {
     visibility: hidden;
 }
-input.monitoradoDatesPro {
-    background: #dfdfdf;
-    border-radius: 5px;
-    text-align: center;
-}
 .dateboxDisplay {
     padding: 0 10px;
     background-color: #bfd5e845;
@@ -1525,14 +1457,6 @@ input.monitoradoDatesPro {
 }
 .dateBoxIcon {
     position: relative;
-}
-.dateboxDoc {
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: #666;    
-    background-color: #f1f1f1;
-    margin: 3px;
-    display: inline-block;
 }
 .infraTooltipPro {
     background: #ffffaa;
@@ -3578,9 +3502,6 @@ div#chartAtivActions .chosen-container {
 .kanban-item a.newLink .fa-archive {
     color: #666;
 }
-.infraAreaTabela .fa-star.iconMonitoradoPro {
-    color: #999 !important;
-}
 .infoDadosArvore .kanban-pinboard,
 .preview_atividade .kanban-pinboard {
     display: none !important;
@@ -3881,9 +3802,6 @@ input[type="currency"]{
 .newSEI #topmenu .urgentePro,
 .newSEI #divArvore .urgentePro {
     vertical-align: baseline;
-}
-.newSEI #topmenu .iconMonitoradoPro {
-    vertical-align: super;
 }
 .newSEI #topmenu .noVisitado[title*="(URGENTE)"],
 .newSEI #divArvore .noVisitado[title*="(URGENTE)"] {

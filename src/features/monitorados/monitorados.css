@@ -1,0 +1,103 @@
+/* Processos Monitorados — CSS da feature (extraido de sei-pro.css).
+   Apenas regras exclusivas do painel/tabela. Classes compartilhadas (.followLink,
+   .tableFollow, .panelHomePro, .seiProForm, .tagMonitorado*, regras que tambem miram
+   .tableAtividades/.tableFavoritos, overrides de kanban/projeto/AI) permanecem no
+   sei-pro.css ate suas features migrarem. */
+
+.tableMonitorados {
+    position: relative;
+    margin-top: 20px !important;
+}
+
+#monitoradosProDiv {
+    width: 100% !important;
+    overflow-x: hidden;
+}
+
+#monitoradosProDiv .tabelaPanelScroll {
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    min-height: 0;
+    max-height: none;
+    height: auto !important;
+    padding-bottom: 0;
+}
+
+#monitoradosProDiv .tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
+    display: none !important;
+}
+
+#monitoradosProDiv #monitoradoTablePro {
+    width: 100% !important;
+}
+
+.tableMonitorados .newLink .fa-layers-counter {
+    background: #b7b7b7;
+}
+
+#monitoradoTablePro .sorterTrMonitorado .fa-layers-counter {
+    display: none !important;
+}
+
+td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after {
+    content: "Adicionar prazo";
+    position: absolute;
+    right: 40px;
+    top: calc(50% - 7px);
+    color: #adadad;
+    font-style: italic;
+}
+
+.tableMonitorados td.tdmonitorado_tags.info_tags_follow_empty:hover .info_tags_follow:after {
+    content: "Adicionar etiqueta";
+    position: absolute;
+    right: 40px;
+    top: calc(50% - 7px);
+    color: #adadad;
+    font-style: italic;
+}
+
+.tableMonitorados td.tdmonitorado_maps.info_maps_follow_empty:hover .info_maps_follow:after {
+    content: "Adicionar mapa";
+    position: absolute;
+    right: 40px;
+    top: calc(50% - 7px);
+    color: #adadad;
+    font-style: italic;
+}
+
+td.tdmonitorado_tags {
+    padding-right: 20px;
+    min-width: 120px;
+}
+
+input.monitoradoDatesPro {
+    border: none;
+    background: transparent;
+    font-size: 9pt;
+    width: 120px;
+}
+
+input.monitoradoDatesPro {
+    background: #dfdfdf;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.dateboxDoc {
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: #666;    
+    background-color: #f1f1f1;
+    margin: 3px;
+    display: inline-block;
+}
+
+.infraAreaTabela .fa-star.iconMonitoradoPro {
+    color: #999 !important;
+}
+
+.newSEI #topmenu .iconMonitoradoPro {
+    vertical-align: super;
+}

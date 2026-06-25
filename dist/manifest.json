@@ -219,6 +219,7 @@
       "css": [
         "css/sei-pro.css",
         "css/anotacao-controle.css",
+        "css/monitorados.css",
         "css/fontawesome.pro.min.css",
         "css/fontawesome.min.css",
         "css/frappe-gantt.css",
@@ -313,7 +314,8 @@
         "js/init.js"
       ],
       "css": [
-        "css/anotacao-controle.css"
+        "css/anotacao-controle.css",
+        "css/monitorados.css"
       ],
       "all_frames": true,
       "matches": [

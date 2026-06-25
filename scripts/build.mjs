@@ -107,7 +107,8 @@ function copyLegacy() {
 // src/features/<feature>/, copied to dist/css/<name>.css. The manifest loads it
 // only in the blocks where the feature runs (best practice: CSS follows JS).
 const featureCss = [
-    { src: 'src/features/anotacao-controle/style.css', out: 'dist/css/anotacao-controle.css' }
+    { src: 'src/features/anotacao-controle/style.css', out: 'dist/css/anotacao-controle.css' },
+    { src: 'src/features/monitorados/monitorados.css', out: 'dist/css/monitorados.css' }
 ];
 
 function copyFeatureCss() {
