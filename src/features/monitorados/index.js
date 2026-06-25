@@ -3,6 +3,7 @@ import { initIcon, mountIcon, iconHtml } from './icon.js';
 import { openBoxSingleMap, openBoxMultipleMap, saveConfigMapsMonitorado } from './maps.js';
 import { setPanelMonitorados, bindPanelDispatcher } from './panel.js';
 import { openBoxConfigDates, installDatas } from './datas.js';
+import { installCategorias } from './categorias.js';
 
 /**
  * Processos Monitorados — ENTRY do bundle ESM (reescrita vanilla, isolated-world).
@@ -25,6 +26,7 @@ monitorados.maps = { openSingle: openBoxSingleMap, openMultiple: openBoxMultiple
 monitorados.panel = { render: setPanelMonitorados };
 monitorados.datas = { openBox: openBoxConfigDates };
 installDatas();
+installCategorias();
 
 // Pontos de entrada cross-arquivo (chamados por init/arvore/sei-pro): agora vanilla.
 aliasGlobal('insertIconMonitorados', initIcon);
