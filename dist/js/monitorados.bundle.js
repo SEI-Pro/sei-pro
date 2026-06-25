@@ -172,6 +172,53 @@
     });
   }
 
+  // src/shared/ui/modal.js
+  function openModal({ title = "", content = "", width = 600, buttons, onOpen, onClose, className = "" } = {}) {
+    document.querySelectorAll(".seipro-modal").forEach((m) => m.remove());
+    const overlay = document.createElement("div");
+    overlay.className = "seipro-modal " + className;
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100000;display:flex;align-items:center;justify-content:center;";
+    overlay.innerHTML = '<div class="dialogBoxDiv seipro-modal-box" role="dialog" aria-modal="true" style="background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:95vw;max-height:95vh;overflow:auto;width:' + width + 'px;"><div class="seipro-modal-head" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #eee;font-weight:bold;"><span class="seipro-modal-title">' + title + '</span><i class="fas fa-times" data-modal-close style="cursor:pointer;color:#888;"></i></div><div class="seipro-modal-body" style="padding:14px;"></div><div class="seipro-modal-buttons" style="display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #eee;"></div></div>';
+    const body = overlay.querySelector(".seipro-modal-body");
+    if (typeof content === "string") body.innerHTML = content;
+    else if (content instanceof Node) body.appendChild(content);
+    const ref = { el: overlay, body, close };
+    let onKey;
+    function close() {
+      document.removeEventListener("keydown", onKey, true);
+      if (typeof onClose === "function") {
+        try {
+          onClose(ref);
+        } catch (e) {
+        }
+      }
+      overlay.remove();
+    }
+    onKey = (ev) => {
+      if (ev.key === "Escape") {
+        ev.stopPropagation();
+        close();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    overlay.addEventListener("click", (ev) => {
+      if (ev.target === overlay || ev.target.closest("[data-modal-close]")) close();
+    });
+    const btnRow = overlay.querySelector(".seipro-modal-buttons");
+    (buttons || [{ text: "Fechar", onClick: (r) => r.close() }]).forEach((b) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "newLink " + (b.class || "");
+      btn.textContent = b.text;
+      btn.style.cssText = "cursor:pointer;padding:4px 12px;";
+      btn.addEventListener("click", () => b.onClick(ref));
+      btnRow.appendChild(btn);
+    });
+    document.body.appendChild(overlay);
+    if (typeof onOpen === "function") onOpen(ref);
+    return ref;
+  }
+
   // src/features/monitorados/maps.js
   var DEFAULT_LATLNG = [-15.800909532800379, -47.861289633438];
   var map = null;
@@ -250,9 +297,13 @@
     function locate() {
       const old = qs(".loadingLocation");
       if (old) old.remove();
-      const html = '<div class="loadingLocation" style="color:#888;position:absolute;z-index:9999;right:0;padding:5px 15px 5px 10px;background:#fff;border-bottom-left-radius:5px;font-size:10pt;"><i class="fas fa-spinner fa-spin"></i> Carregando sua localiza\xE7\xE3o <i class="fas fa-times-circle" data-act="map-clear-location" style="cursor:pointer"></i></div>';
+      const html = '<div class="loadingLocation" style="color:#888;position:absolute;z-index:9999;right:0;padding:5px 15px 5px 10px;background:#fff;border-bottom-left-radius:5px;font-size:10pt;"><i class="fas fa-spinner fa-spin"></i> Carregando sua localiza\xE7\xE3o <i class="fas fa-times-circle seipro-clear-location" style="cursor:pointer"></i></div>';
       const mapid = qs("#mapid");
-      if (mapid) mapid.insertAdjacentElement("beforebegin", elFromHtml(html));
+      if (mapid) {
+        const node = elFromHtml(html);
+        node.querySelector(".seipro-clear-location").addEventListener("click", clearLocationUser);
+        mapid.insertAdjacentElement("beforebegin", node);
+      }
       map.locate({ setView: true, maxZoom: 16 });
     }
     markersLayer = new Lf.LayerGroup();
@@ -339,55 +390,23 @@
       }
     }, 500);
   }
-  function openModal({ title, contentHtml, width, buttons, onOpen, onClose }) {
-    const existing = qs(".seipro-monitorado-modal");
-    if (existing) existing.remove();
-    const overlay = elFromHtml(
-      '<div class="seipro-monitorado-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100000;display:flex;align-items:center;justify-content:center;"><div class="dialogBoxDiv" style="background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:95vw;max-height:95vh;overflow:auto;width:' + (width || 620) + 'px;"><div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #eee;font-weight:bold;"><span>' + title + '</span><i class="fas fa-times" data-act="map-close" style="cursor:pointer;color:#888;"></i></div><div class="seipro-modal-body" style="padding:14px;">' + contentHtml + '</div><div class="seipro-modal-buttons" style="display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #eee;"></div></div></div>'
-    );
-    const close = () => {
-      if (typeof onClose === "function") onClose();
-      overlay.remove();
-    };
-    overlay.addEventListener("click", (ev) => {
-      if (ev.target === overlay) {
-        close();
-        return;
-      }
-      if (ev.target.closest('[data-act="map-close"]')) close();
-      if (ev.target.closest('[data-act="map-clear-location"]')) clearLocationUser();
-    });
-    const btnRow = overlay.querySelector(".seipro-modal-buttons");
-    (buttons || [{ text: "Fechar", onClick: close }]).forEach((b) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "newLink " + (b.class || "");
-      btn.textContent = b.text;
-      btn.style.cssText = "cursor:pointer;padding:4px 12px;";
-      btn.addEventListener("click", () => b.onClick(close));
-      btnRow.appendChild(btn);
-    });
-    document.body.appendChild(overlay);
-    if (typeof onOpen === "function") onOpen();
-    return overlay;
-  }
   function openBoxSingleMap(triggerEl, readonly = false) {
     locationDenied = false;
     const row = triggerEl && triggerEl.closest ? triggerEl.closest("tr") : null;
     const id = row ? row.getAttribute("data-id_procedimento") : triggerEl && triggerEl.dataset ? triggerEl.dataset.id_procedimento : "";
-    const buttons = readonly ? [{ text: "Fechar", onClick: (close) => close() }] : [
-      { text: "Remover", onClick: (close) => {
+    const buttons = readonly ? [{ text: "Fechar", onClick: (ref) => ref.close() }] : [
+      { text: "Remover", onClick: (ref) => {
         saveConfigMapsMonitorado(id, "remove");
-        close();
+        ref.close();
       } },
-      { text: "Salvar", class: "confirm", onClick: (close) => {
+      { text: "Salvar", class: "confirm", onClick: (ref) => {
         saveConfigMapsMonitorado(id);
-        close();
+        ref.close();
       } }
     ];
     openModal({
       title: "Processos Monitorados: Mapa",
-      contentHtml: '<div id="mapid" style="width:600px;height:400px;max-width:100%;"></div>',
+      content: '<div id="mapid" style="width:600px;height:400px;max-width:100%;"></div>',
       width: 620,
       buttons,
       onOpen: () => renderSingleMap(id, readonly),
@@ -402,7 +421,7 @@
   function openBoxMultipleMap() {
     openModal({
       title: "Processos Monitorados: Mapa",
-      contentHtml: '<div id="mapid" style="width:900px;height:600px;max-width:100%;"></div>',
+      content: '<div id="mapid" style="width:900px;height:600px;max-width:100%;"></div>',
       width: 920,
       onOpen: renderMultipleMap
     });
