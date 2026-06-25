@@ -71,3 +71,10 @@ describe('predicados de página (autopreenchersenha)', () => {
         expect(fn('https://sei.gov.br/sip/login.php')).toBe(false);
     });
 });
+
+describe('sei/urls — getUrlHipoteseLegal (parse puro)', () => {
+  it('retorna false sem o marcador', () => {
+    const u = loadSeiUrls().sei.urls;
+    expect(u.getUrlHipoteseLegal('nada aqui')).toBe(false);
+  });
+});

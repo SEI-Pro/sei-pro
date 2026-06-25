@@ -51,13 +51,33 @@ export function installUrls() {
         return href.indexOf('acao=documento_assinar') !== -1;
     }
 
-    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction, isLoginPageNewSei, isDocumentoAssinarPage };
+    // True se o parâmetro acao_pro da URL atual é igual a `param`. (verbatim)
+    function getUrlAcaoPro(param) {
+        const acaoPro = getSeiPro().core.util.getParamsUrlPro(globalRef.location.href).acao_pro;
+        return typeof acaoPro !== 'undefined' && acaoPro === param;
+    }
+
+    // Extrai a URL de "hipótese legal" embutida num HTML do SEI (parse puro). (verbatim)
+    function getUrlHipoteseLegal(html) {
+        const word = 'hipotese_legal_select_nome_base_legal';
+        const reg = new RegExp("'(.*?" + word + ".*?)'", 'g');
+        if (reg.test(html)) {
+            let urlHipotese = html.match(reg);
+            urlHipotese = (urlHipotese && urlHipotese.length > 0) ? urlHipotese[0].split("'")[3].trim() : false;
+            return urlHipotese;
+        }
+        return false;
+    }
+
+    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction, isLoginPageNewSei, isDocumentoAssinarPage, getUrlAcaoPro, getUrlHipoteseLegal };
     getSeiPro().sei.urls = urls;
 
     aliasGlobal('getParamsUrlPro', getSeiPro().core.util.getParamsUrlPro);
     aliasGlobal('isAjaxRedirectAction', isAjaxRedirectAction);
     aliasGlobal('isLoginPageNewSei', isLoginPageNewSei);
     aliasGlobal('isDocumentoAssinarPage', isDocumentoAssinarPage);
+    aliasGlobal('getUrlAcaoPro', getUrlAcaoPro);
+    aliasGlobal('getUrlHipoteseLegal', getUrlHipoteseLegal);
 
     return urls;
 }

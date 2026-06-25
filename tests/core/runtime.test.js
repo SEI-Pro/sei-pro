@@ -10,16 +10,16 @@ describe('core/runtime — getUrlExtension', () => {
     expect(url).toBe('chrome-extension://test-id/js/sei-functions-pro.js');
   });
 
-  it('cacheia a base em sessionStorage para o mundo MAIN ler', () => {
+  // Durante a transição o bundle roda também no mundo MAIN (sem chrome.*); o
+  // mundo isolado publica a base em sessionStorage para o MAIN ler.
+  it('cacheia a base em sessionStorage (ponte p/ o mundo MAIN)', () => {
     const sandbox = loadCoreScripts();
-    expect(sandbox.sessionStorage.getItem('seiProExtBaseUrl'))
-      .toBe('chrome-extension://test-id/');
+    expect(sandbox.sessionStorage.getItem('seiProExtBaseUrl')).toBe('chrome-extension://test-id/');
   });
 
   it('lança erro explícito quando não há base resolvível (sem chrome, sem cache, sem URL_SPRO)', () => {
     const sandbox = loadCoreScripts();
     const fn = sandbox.SeiPro.core.runtime.getUrlExtension;
-    // Simula o mundo MAIN: derruba chrome/browser, base cacheada e URL_SPRO.
     sandbox.chrome = undefined;
     sandbox.browser = undefined;
     sandbox.window.__seiProExtBase = undefined;

@@ -1561,7 +1561,7 @@
     function storageRemove(area, keys) {
       return call("storageRemove", area, { keys });
     }
-    const storage = {
+    const storage2 = {
       getSync: function(keys) {
         return storageGet("sync", keys);
       },
@@ -1590,8 +1590,8 @@
         return storageRemove("session", keys);
       }
     };
-    getSeiPro().core.storage = storage;
-    return storage;
+    getSeiPro().core.storage = storage2;
+    return storage2;
   }
 
   // src/platform/net.js
@@ -2483,6 +2483,161 @@
     installTooltip();
   }
 
-  // src/content/core-stack.js
+  // src/dom/index.js
+  function qs(selector, root) {
+    return (root || document).querySelector(selector);
+  }
+  function ready(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn, { once: true });
+    } else {
+      fn();
+    }
+  }
+
+  // src/features/external-config/index.js
+  function sei() {
+    return getSeiPro();
+  }
+  function storage() {
+    return sei().core.storage;
+  }
+  function getManifest() {
+    return sei().core.runtime.getManifestExtension();
+  }
+  function readDataValues() {
+    return storage().getSync({ dataValues: "" }).then(function(items) {
+      return items && items.dataValues ? JSON.parse(items.dataValues) : [];
+    });
+  }
+  function writeDataValues(dataValues) {
+    return storage().setSync({ dataValues: JSON.stringify(dataValues) }).then(function() {
+      localStorage.setItem("configBasePro", JSON.stringify(dataValues));
+    });
+  }
+  function setOptionsSEIPro(optionKey, optionValue) {
+    return readDataValues().then(function(dataValues) {
+      dataValues.forEach(function(entry) {
+        if (typeof entry.configGeral === "undefined") return;
+        var changed = false;
+        entry.configGeral.forEach(function(cfg) {
+          if (cfg.name === optionKey) {
+            var v = optionValue;
+            if (v === "true") v = true;
+            if (v === "false") v = false;
+            cfg.value = v;
+            changed = true;
+          }
+        });
+        if (!changed) entry.configGeral.push({ name: optionKey, value: optionValue });
+      });
+      if (dataValues.length > 0) return writeDataValues(dataValues);
+    });
+  }
+  function redirectHome(newItem) {
+    var menu = qs(sei().sei.adapter.isNewSEI() ? "#infraMenu" : "#main-menu");
+    var a = menu && menu.querySelector('a[href*="controlador.php?acao=procedimento_controlar"]');
+    var urlHome = a && a.getAttribute("href");
+    if (urlHome) {
+      setTimeout(function() {
+        window.location.href = urlHome;
+      }, 1500);
+    }
+  }
+  function getOptionsSEIPro(data) {
+    if (!data.type || data.type !== "NEW_BASE") return Promise.resolve();
+    var newItem = data.newItem;
+    return readDataValues().then(function(dataValues) {
+      if (data.mode === "insert" || data.mode === "remove") {
+        dataValues = dataValues.filter(function(entry) {
+          return entry.baseTipo !== data.base;
+        });
+      }
+      if (data.mode !== "remove") dataValues.push(newItem);
+      return storage().setSync({ dataValues: JSON.stringify(dataValues) }).then(function() {
+        if (data.alert) {
+          alert(data.mode === "insert" ? "Configura\xE7\xF5es carregadas com sucesso!" : "Configura\xE7\xF5es removidas com sucesso!\n\n Recarregue a p\xE1gina.");
+        }
+        if (data.mode !== "remove") redirectHome(newItem);
+      });
+    });
+  }
+  function baseItem(base, param, manifest) {
+    const common = { CLIENT_ID: "", API_KEY: "", spreadsheetId: "", URL_API: param.url || "", KEY_USER: param.token || "" };
+    switch (base) {
+      case "atividades":
+        return {
+          baseName: manifest.short_name,
+          baseTipo: "atividades",
+          conexaoTipo: param.token === "" ? "googleapi" : "api",
+          ...common,
+          CLIENT_ID: param.token === "" ? param.client_id : ""
+        };
+      case "openai":
+        return { baseName: "Open AI (Chat GPT)", baseTipo: "openai", conexaoTipo: "api", ...common };
+      case "gemini":
+        return { baseName: "Gemini (Google)", baseTipo: "gemini", conexaoTipo: "api", ...common };
+      case "projetos":
+        return {
+          baseName: param.base_name,
+          baseTipo: "projetos",
+          conexaoTipo: "sheets",
+          CLIENT_ID: param.client_id,
+          API_KEY: param.api_key,
+          spreadsheetId: param.sheet_id,
+          URL_API: "",
+          KEY_USER: ""
+        };
+      default:
+        return null;
+    }
+  }
+  function observeAcaoPro() {
+    var param = getParamsUrlPro(window.location.href);
+    if (typeof param.acao_pro === "undefined") return;
+    var manifest = getManifest();
+    if (param.acao_pro === "set_database") {
+      var base = param.base;
+      var hasToken = typeof param.token !== "undefined" && typeof param.url !== "undefined";
+      var hasClientId = typeof param.client_id !== "undefined";
+      if (!hasToken && !(hasClientId && base === "projetos")) return;
+      var item = baseItem(base, param, manifest);
+      if (!item) return;
+      var alertFlag = base === "atividades" ? param.token !== "" : true;
+      return getOptionsSEIPro({ type: "NEW_BASE", mode: param.mode, base, alert: alertFlag, newItem: item });
+    }
+    if (param.acao_pro === "set_option" && typeof param.option_key !== "undefined" && typeof param.option_value !== "undefined") {
+      return setOptionsSEIPro(param.option_key, param.option_value);
+    }
+  }
+  function changeBasePro() {
+    var param = getParamsUrlPro(window.location.href);
+    if (param.acao_pro !== "change_database" || typeof param.url === "undefined" || param.base !== "atividades") return;
+    var perfil = JSON.parse(localStorage.getItem("configBasePro_atividades") || "{}");
+    return getOptionsSEIPro({
+      type: "NEW_BASE",
+      mode: "insert",
+      base: "atividades",
+      alert: false,
+      newItem: {
+        baseName: "Atividades",
+        baseTipo: "atividades",
+        conexaoTipo: "api",
+        CLIENT_ID: "",
+        API_KEY: "",
+        spreadsheetId: "",
+        URL_API: param.url,
+        KEY_USER: perfil.KEY_USER
+      }
+    });
+  }
+  function installExternalConfig() {
+    observeAcaoPro();
+    changeBasePro();
+    sei().core.bootstrap.getPathExtensionPro();
+  }
+
+  // src/entries/db.js
   installCoreStack();
+  ready(installExternalConfig);
 })();

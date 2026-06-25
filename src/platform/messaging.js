@@ -1,5 +1,10 @@
-import { getSeiPro, globalRef } from './global.js';
+import { getSeiPro, globalRef } from '../core/global.js';
 
+/**
+ * Transporte para o service worker via runtime.sendMessage (isolated-world).
+ * Sem mundo MAIN, `chrome.runtime` está sempre presente; a rejeição abaixo só
+ * ocorre em contexto degenerado (API ausente).
+ */
 export function installMessaging() {
     function getRuntime() {
         if (typeof globalRef.browser !== 'undefined' && globalRef.browser.runtime) {
@@ -14,25 +19,17 @@ export function installMessaging() {
     function sendMessage(message) {
         const runtime = getRuntime();
         if (!runtime || typeof runtime.sendMessage !== 'function') {
-            // chrome.runtime só existe no mundo ISOLADO. No mundo MAIN da página
-            // (onde rodam os arquivos carregados via $.getScript) esta fachada não
-            // alcança o service worker — exigiria uma ponte MAIN→isolado com
-            // validação de origem (RISCO CONHECIDO, ver PLANO_MIGRACAO_ARQUITETURA.md
-            // §4 e SMOKE_TEST.md). Falha explícita em vez de silenciosa.
             const action = (message && message.action) || 'desconhecida';
             return Promise.reject(new Error(
-                'SeiPro.messaging: runtime de extensão indisponível (provável mundo MAIN). ' +
-                'Ação "' + action + '" não pôde ser entregue ao service worker.'
+                'SeiPro.messaging: chrome.runtime indisponível. Ação "' + action +
+                '" não pôde ser entregue ao service worker.'
             ));
         }
         return new Promise(function (resolve, reject) {
             try {
                 const result = runtime.sendMessage(message, function (response) {
                     const lastError = globalRef.chrome && globalRef.chrome.runtime && globalRef.chrome.runtime.lastError;
-                    if (lastError) {
-                        reject(new Error(lastError.message));
-                        return;
-                    }
+                    if (lastError) { reject(new Error(lastError.message)); return; }
                     resolve(response);
                 });
                 if (result && typeof result.then === 'function') {

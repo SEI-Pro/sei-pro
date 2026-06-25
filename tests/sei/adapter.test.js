@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { createNamespace } from '../../src/core/namespace.js';
-import { createRuntime } from '../../src/core/runtime.js';
+import { createRuntime } from '../../src/platform/runtime.js';
 import { installUtil } from '../../src/core/util.js';
 import { installVersion } from '../../src/sei/version.js';
 import { installAdapter } from '../../src/sei/adapter.js';

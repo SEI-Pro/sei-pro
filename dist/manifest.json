@@ -104,16 +104,9 @@
     },
     {
       "js": [
-        "js/core-stack.bundle.js",
-        "js/lib/jquery-3.7.1.min.js",
-        "js/lib/jmespath.min.js",
-        "js/lib/purify.min.js",
-        "js/lib/pdfjs.js",
-        "js/lib/pdf.worker.min.js",
-        "js/init_db.js"
+        "js/db.bundle.js"
       ],
       "css": [
-        "css/chosen.min.css",
         "css/sei-slim.css"
       ],
       "all_frames": true,
@@ -138,9 +131,7 @@
     },
     {
       "js": [
-        "js/core-stack.bundle.js",
-        "js/lib/jquery-3.7.1.min.js",
-        "js/init_pwd.js"
+        "js/login.bundle.js"
       ],
       "all_frames": true,
       "matches": [
@@ -296,6 +287,25 @@
         "*://*.br/*controlador.php?acao=arvore_visualizar*",
         "*://*.org/*controlador.php?acao=arvore_visualizar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_visualizar*"
+      ],
+      "exclude_matches": [
+        "*://sei.sp1.gov.br/*"
+      ]
+    },
+    {
+      "js": [
+        "js/quick-highlight.bundle.js"
+      ],
+      "all_frames": true,
+      "matches": [
+        "*://*.br/*controlador.php?acao=arvore_visualizar*",
+        "*://*.br/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*",
+        "*://*.br/*controlador.php?acao=arvore_processar_html*",
+        "*://*.org/*controlador.php?acao=arvore_visualizar*",
+        "*://*.org/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*",
+        "*://*.org/*controlador.php?acao=arvore_processar_html*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_visualizar*",
+        "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_processar_html*"
       ],
       "exclude_matches": [
         "*://sei.sp1.gov.br/*"

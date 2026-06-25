@@ -29,20 +29,20 @@ const BARE_USAGE = /(?<![.\w])(?<!typeof )\b(isNewSEI|isSEI_5)\b(?!\s*=(?!=))/g;
 // - arvore runs inside the ifrArvore iframe and reads `parent.isNewSEI`; the local
 //   adapter cannot reliably detect the SEI version there.
 // - arvore-boot does not load the core/adapter stack.
-// - core-stack.bundle.js is the generated core/sei bundle (built from src/), not
-//   a hand-maintained legacy file; the adapter source itself defines isNewSEI.
+// - *.bundle.js are generated from src/ (not hand-maintained legacy files); the
+//   adapter/version source they bundle legitimately defines/reads isNewSEI.
 const ALLOWLIST = new Set([
   'sei-pro-arvore.js',
-  'sei-pro-arvore-boot.js',
-  'core-stack.bundle.js'
+  'sei-pro-arvore-boot.js'
 ]);
+const isGeneratedBundle = (name) => name.endsWith('.bundle.js');
 
 describe('Phase 3: version flags read through the adapter', () => {
   it('no migrated legacy file reads the bare isNewSEI/isSEI_5 global', () => {
     const offenders = [];
 
     listJsFiles(jsDir).forEach((name) => {
-      if (ALLOWLIST.has(name)) return;
+      if (ALLOWLIST.has(name) || isGeneratedBundle(name)) return;
       const code = stripComments(readFileSync(join(jsDir, name), 'utf8'))
         // Drop the legacy `var isNewSEI = ...` / `var isSEI_5 = ...` bootstrap
         // declarations: they are the backing store, and computing isSEI_5 reads

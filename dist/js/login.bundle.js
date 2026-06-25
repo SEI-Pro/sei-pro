@@ -338,7 +338,7 @@
       }
       return false;
     }
-    function verifyConfigValue(name) {
+    function verifyConfigValue2(name) {
       return queryConfigValue(name) === true;
     }
     function getConfigValue(name) {
@@ -365,13 +365,13 @@
     const config = {
       readConfigBasePro,
       queryConfigValue,
-      verifyConfigValue,
+      verifyConfigValue: verifyConfigValue2,
       getConfigValue,
       isDefaultEnabledConfigValue,
       checkConfigValue
     };
     getSeiPro().core.config = config;
-    aliasGlobal("verifyConfigValue", verifyConfigValue);
+    aliasGlobal("verifyConfigValue", verifyConfigValue2);
     aliasGlobal("getConfigValue", getConfigValue);
     aliasGlobal("isDefaultEnabledConfigValue", isDefaultEnabledConfigValue);
     aliasGlobal("checkConfigValue", checkConfigValue);
@@ -2387,11 +2387,11 @@
       }
       return typeof params.acao_origem === "undefined" || params.acao_origem === origin;
     }
-    function isLoginPageNewSei(href) {
+    function isLoginPageNewSei2(href) {
       href = typeof href === "string" ? href : globalRef.location.href;
       return href.indexOf("sip/login.php") !== -1;
     }
-    function isDocumentoAssinarPage(href) {
+    function isDocumentoAssinarPage2(href) {
       href = typeof href === "string" ? href : globalRef.location.href;
       return href.indexOf("acao=documento_assinar") !== -1;
     }
@@ -2409,12 +2409,12 @@
       }
       return false;
     }
-    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction, isLoginPageNewSei, isDocumentoAssinarPage, getUrlAcaoPro, getUrlHipoteseLegal };
+    const urls = { getParams, buildQuery, appendQuery, isAjaxRedirectAction, isLoginPageNewSei: isLoginPageNewSei2, isDocumentoAssinarPage: isDocumentoAssinarPage2, getUrlAcaoPro, getUrlHipoteseLegal };
     getSeiPro().sei.urls = urls;
     aliasGlobal("getParamsUrlPro", getSeiPro().core.util.getParamsUrlPro);
     aliasGlobal("isAjaxRedirectAction", isAjaxRedirectAction);
-    aliasGlobal("isLoginPageNewSei", isLoginPageNewSei);
-    aliasGlobal("isDocumentoAssinarPage", isDocumentoAssinarPage);
+    aliasGlobal("isLoginPageNewSei", isLoginPageNewSei2);
+    aliasGlobal("isDocumentoAssinarPage", isDocumentoAssinarPage2);
     aliasGlobal("getUrlAcaoPro", getUrlAcaoPro);
     aliasGlobal("getUrlHipoteseLegal", getUrlHipoteseLegal);
     return urls;
@@ -2483,6 +2483,118 @@
     installTooltip();
   }
 
-  // src/content/core-stack.js
+  // src/dom/index.js
+  function qs(selector, root) {
+    return (root || document).querySelector(selector);
+  }
+  function qsa(selector, root) {
+    return Array.prototype.slice.call((root || document).querySelectorAll(selector));
+  }
+  function closest(node, selector) {
+    return node && node.closest ? node.closest(selector) : null;
+  }
+  function ready(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn, { once: true });
+    } else {
+      fn();
+    }
+  }
+  function show(node) {
+    if (node) node.style.display = "";
+  }
+  function hide(node) {
+    if (node) node.style.display = "none";
+  }
+
+  // src/features/login/index.js
+  function sei() {
+    return getSeiPro();
+  }
+  function verifyConfigValue(name) {
+    return sei().core.config.verifyConfigValue(name);
+  }
+  function isLoginPageNewSei() {
+    return sei().sei.urls.isLoginPageNewSei();
+  }
+  function isDocumentoAssinarPage() {
+    return sei().sei.urls.isDocumentoAssinarPage();
+  }
+  function syncHidden(hidden, visible) {
+    hidden.value = visible.value;
+    hidden.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function repairPwdField(hidden, visible, css, extraClasses, doFocus) {
+    hide(hidden);
+    show(visible);
+    visible.setAttribute("autocomplete", "current-password");
+    Object.assign(visible.style, css);
+    extraClasses.split(/\s+/).filter(Boolean).forEach(function(c) {
+      visible.classList.add(c);
+    });
+    if (!visible.dataset.seiProPwd) {
+      visible.dataset.seiProPwd = "1";
+      var handler = function() {
+        syncHidden(hidden, visible);
+      };
+      visible.addEventListener("input", handler);
+      visible.addEventListener("change", handler);
+    }
+    if (visible.value) syncHidden(hidden, visible);
+    if (doFocus) visible.focus();
+  }
+  function applyRepairPwd() {
+    if (!verifyConfigValue("autopreenchersenha")) return false;
+    if (isLoginPageNewSei()) {
+      var hidden = qs("#pwdSenha");
+      if (!hidden) return false;
+      var scope = closest(hidden, "form") || document;
+      var visible = qsa('input[type="password"]', scope).filter(function(i) {
+        return i.id !== "pwdSenha";
+      })[0];
+      if (!visible) return false;
+      repairPwdField(hidden, visible, {
+        fontSize: "2em",
+        height: "calc(1em + .75rem)",
+        borderTopLeftRadius: "0",
+        borderBottomLeftRadius: "0"
+      }, "form-control masked", false);
+      return true;
+    }
+    if (isDocumentoAssinarPage() && qs("#frmAssinaturas")) {
+      var signHidden = qs("#pwdSenha");
+      if (!signHidden) return false;
+      var signVisible = qsa('#frmAssinaturas input[type="password"]').filter(function(i) {
+        return i.id !== "pwdSenha";
+      })[0] || signHidden;
+      repairPwdField(signHidden, signVisible, {
+        fontSize: "2em",
+        height: "calc(.8em + .75rem)",
+        width: "25%"
+      }, "infraText masked", true);
+      return true;
+    }
+    return false;
+  }
+  function installLoginAutofill() {
+    if (!verifyConfigValue("autopreenchersenha")) return;
+    if (!isLoginPageNewSei() && !isDocumentoAssinarPage()) return;
+    if (applyRepairPwd()) return;
+    if (typeof MutationObserver === "undefined") return;
+    var safety = null;
+    var observer = new MutationObserver(function() {
+      if (applyRepairPwd()) {
+        observer.disconnect();
+        if (safety) clearTimeout(safety);
+      }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    safety = setTimeout(function() {
+      observer.disconnect();
+    }, 1e4);
+  }
+
+  // src/entries/login.js
   installCoreStack();
+  ready(installLoginAutofill);
 })();

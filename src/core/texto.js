@@ -109,6 +109,69 @@ export function normalizeNameTag(tag) {
     return removeAcentos(tag).replace(/\ /g, '').toLowerCase().replace(/[^a-z0-9]/gi, '').replace(/[\u200B-\u200D\uFEFF]/g, '');
 }
 
+// Codifica caracteres acentuados como %XX (e espaço como '+'); demais intactos.
+export function encodeURI_toHex(str) {
+    let hex, i;
+    let result = '';
+    for (i = 0; i < str.length; i++) {
+        const test = removeAcentos(str.charAt(i));
+        if (str.charAt(i) === ' ') {
+            result += '+';
+        } else if (str.charAt(i) !== test && str.charAt(i) !== '') {
+            hex = str.charCodeAt(i).toString(16);
+            result += ('%' + hex).slice(-4).toUpperCase();
+        } else {
+            result += str.charAt(i);
+        }
+    }
+    return result;
+}
+
+// Codifica caracteres acentuados como \uXXXX (escape JSON); demais intactos.
+export function encodeJSON_toHex(str) {
+    let hex, i;
+    let result = '';
+    for (i = 0; i < str.length; i++) {
+        const test = removeAcentos(str.charAt(i));
+        if (str.charAt(i) !== test && str.charAt(i) !== '') {
+            hex = str.charCodeAt(i).toString(16);
+            result += '\\u' + ('00' + hex).slice(-4).toUpperCase();
+        } else {
+            result += str.charAt(i);
+        }
+    }
+    return result;
+}
+
+// Converte sequências \uXXXX de volta para o caractere.
+export function unicodeToChar(text) {
+    if (typeof text !== 'undefined' && text !== null && text != '') {
+        return text.replace(/\\u[\dA-F]{4}/gi, function (match) {
+            return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16));
+        });
+    }
+    return text;
+}
+
+// Normaliza texto p/ comparação (remove acentos, colapsa espaços, lowercase).
+const COMBINING_MARKS_RE = new RegExp('[\\u0300-\\u036f]', 'g');
+export function normalizeSignatureSelectionTextPro(text) {
+    return String(text || '')
+        .normalize('NFD')
+        .replace(COMBINING_MARKS_RE, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+// Extrai o número SEI do nome do documento (último token entre parênteses).
+export function getNrSei(nameDoc) {
+    let nr = nameDoc.split(' ');
+    nr = (nameDoc.indexOf(' ') !== -1) ? nr[nr.length - 1] : '';
+    nr = (nr.indexOf('(') !== -1) ? nr.replace(')', '').replace('(', '').trim() : nr;
+    return nr;
+}
+
 export function installTexto() {
     const texto = {
         escapeRegExp,
@@ -124,7 +187,12 @@ export function installTexto() {
         is_html,
         normalizeHTML,
         getHashTagsPro,
-        normalizeNameTag
+        normalizeNameTag,
+        encodeURI_toHex,
+        encodeJSON_toHex,
+        unicodeToChar,
+        normalizeSignatureSelectionTextPro,
+        getNrSei
     };
 
     getSeiPro().core.texto = texto;
@@ -143,6 +211,11 @@ export function installTexto() {
     aliasGlobal('normalizeHTML', normalizeHTML);
     aliasGlobal('getHashTagsPro', getHashTagsPro);
     aliasGlobal('normalizeNameTag', normalizeNameTag);
+    aliasGlobal('encodeURI_toHex', encodeURI_toHex);
+    aliasGlobal('encodeJSON_toHex', encodeJSON_toHex);
+    aliasGlobal('unicodeToChar', unicodeToChar);
+    aliasGlobal('normalizeSignatureSelectionTextPro', normalizeSignatureSelectionTextPro);
+    aliasGlobal('getNrSei', getNrSei);
 
     return texto;
 }

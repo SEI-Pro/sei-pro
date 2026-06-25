@@ -114,3 +114,33 @@ describe('normalizeMojibakeUtf8', () => {
     expect(texto.normalizeMojibakeUtf8('')).toBe('');
   });
 });
+
+describe('core/texto — encoding hex/unicode', () => {
+  it('encodeURI_toHex: espaço vira + e acentos viram %XX; resto intacto', () => {
+    expect(texto.encodeURI_toHex('a b')).toBe('a+b');
+    expect(texto.encodeURI_toHex('abc')).toBe('abc');
+    expect(texto.encodeURI_toHex('ç')).toBe('%E7'); // ç = 0xE7
+  });
+
+  it('encodeJSON_toHex: acentos viram \\uXXXX', () => {
+    expect(texto.encodeJSON_toHex('ç')).toBe('\\u00E7');
+    expect(texto.encodeJSON_toHex('ab')).toBe('ab');
+  });
+
+  it('unicodeToChar reverte \\uXXXX e tolera vazio/null', () => {
+    expect(texto.unicodeToChar('\\u00E7')).toBe('ç');
+    expect(texto.unicodeToChar('')).toBe('');
+    expect(texto.unicodeToChar(null)).toBe(null);
+  });
+});
+
+describe('core/texto — normalize/getNrSei', () => {
+  it('normalizeSignatureSelectionTextPro: sem acento, espaços colapsados, minúsculo', () => {
+    expect(texto.normalizeSignatureSelectionTextPro('  Inspeção   Técnica ')).toBe('inspecao tecnica');
+    expect(texto.normalizeSignatureSelectionTextPro(null)).toBe('');
+  });
+  it('getNrSei extrai número entre parênteses do nome do doc', () => {
+    expect(texto.getNrSei('Despacho (123456)')).toBe('123456');
+    expect(texto.getNrSei('SemEspaco')).toBe('');
+  });
+});

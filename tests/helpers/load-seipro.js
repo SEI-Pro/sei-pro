@@ -80,6 +80,14 @@ export function loadSeiVersion(options = {}) {
             getItem(key) { return this._data[key] || null; },
             setItem(key, value) { this._data[key] = String(value); }
         },
+        // version.js persiste a versão detectada via setOptionsPro (core/options),
+        // que usa web storage local — precisa existir no sandbox.
+        localStorage: {
+            _data: {},
+            getItem(key) { return Object.prototype.hasOwnProperty.call(this._data, key) ? this._data[key] : null; },
+            setItem(key, value) { this._data[key] = String(value); },
+            removeItem(key) { delete this._data[key]; }
+        },
         jQuery: function (selector) {
             if (selector === '#divInfraSidebarMenu ul#infraMenu') {
                 return { length: isNewSEI ? 1 : 0 };

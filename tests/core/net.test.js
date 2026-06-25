@@ -1,17 +1,17 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { createNamespace } from '../../src/core/namespace.js';
-import { installStorage } from '../../src/core/storage.js';
+import { installNet } from '../../src/platform/net.js';
 import { getSeiPro, globalRef } from '../../src/core/global.js';
 
-// Install the storage/net facade on top of a stub messaging transport whose
-// response we control per test.
+// Install the net facade on top of a stub messaging transport whose response we
+// control per test.
 function installWithMessaging(responder) {
     delete globalRef.SeiPro;
     createNamespace();
     getSeiPro().core.messaging = {
         sendMessage: (message) => Promise.resolve(responder(message))
     };
-    return installStorage();
+    return { net: installNet() };
 }
 
 describe('SeiPro.core.net.fetch', () => {

@@ -1,14 +1,16 @@
-import { aliasGlobal, getSeiPro, globalRef } from './global.js';
+import { aliasGlobal, getSeiPro, globalRef } from '../core/global.js';
 
 /**
- * Runtime/URL helpers resilientes aos dois mundos de execução:
+ * Runtime/URL helpers resilientes aos DOIS mundos durante a transição:
  *  - mundo ISOLADO (content scripts do manifest): `chrome`/`browser` existem.
- *  - mundo MAIN da página (arquivos carregados via $.getScript): NÃO existem.
+ *  - mundo MAIN da página (legado carregado via $.getScript): NÃO existem.
  *
- * `sessionStorage` é compartilhado entre os dois mundos (é o storage da página),
- * então o bundle no mundo isolado publica a URL base e o manifest da extensão lá;
- * o bundle no mundo MAIN lê desse cache (com fallback para URL_SPRO, o mecanismo
- * legado). Assim `getUrlExtension`/`getManifestExtension` funcionam nos dois mundos.
+ * NOTA (refundação): o objetivo é eliminar o mundo MAIN (porte do núcleo p/
+ * content scripts isolados). Enquanto o legado ainda roda via $.getScript no
+ * MAIN, o bundle é injetado também lá (bloco world:MAIN) e PRECISA resolver a
+ * base sem chrome.* — via cache em sessionStorage (publicado pelo mundo isolado),
+ * pelo src do próprio <script> do bundle, ou por URL_SPRO (legado). Quando o
+ * núcleo migrar para isolated-only, esses fallbacks ficam dormentes.
  */
 
 const EXT_BASE_KEY = 'seiProExtBaseUrl';
@@ -26,29 +28,20 @@ function runtimeApi() {
 
 function sessionGet(key) {
     try {
-        return typeof globalRef.sessionStorage !== 'undefined'
-            ? globalRef.sessionStorage.getItem(key)
-            : null;
-    } catch (e) {
-        return null;
-    }
+        return typeof globalRef.sessionStorage !== 'undefined' ? globalRef.sessionStorage.getItem(key) : null;
+    } catch (e) { return null; }
 }
-
 function sessionSet(key, value) {
     try {
-        if (typeof globalRef.sessionStorage !== 'undefined') {
-            globalRef.sessionStorage.setItem(key, value);
-        }
-    } catch (e) { /* sessionStorage indisponível/bloqueado */ }
+        if (typeof globalRef.sessionStorage !== 'undefined') globalRef.sessionStorage.setItem(key, value);
+    } catch (e) { /* indisponível */ }
 }
 
 function extBase() {
     if (globalRef.__seiProExtBase) return globalRef.__seiProExtBase;
     const cached = sessionGet(EXT_BASE_KEY);
     if (cached) return cached;
-    if (typeof globalRef.URL_SPRO !== 'undefined' && globalRef.URL_SPRO) {
-        return globalRef.URL_SPRO;
-    }
+    if (typeof globalRef.URL_SPRO !== 'undefined' && globalRef.URL_SPRO) return globalRef.URL_SPRO;
     return '';
 }
 
@@ -58,18 +51,16 @@ export function createRuntime() {
         globalRef.browser = globalRef.chrome;
     }
 
-    // No mundo isolado as APIs existem: cacheia base e manifest para o mundo MAIN.
     const api = runtimeApi();
     if (api && typeof api.getURL === 'function') {
+        // Mundo isolado: publica base + manifest para o mundo MAIN ler.
         try {
             const base = api.getURL('');
             globalRef.__seiProExtBase = base;
             sessionSet(EXT_BASE_KEY, base);
         } catch (e) { /* ignore */ }
     } else if (!globalRef.__seiProExtBase) {
-        // Mundo MAIN sem chrome.* — deriva a base do próprio <script> do bundle
-        // (chrome-extension://ID/js/core-stack.bundle.js). Fonte confiável que não
-        // depende do timing do cache em sessionStorage do mundo isolado.
+        // Mundo MAIN sem chrome.*: deriva a base do src do próprio bundle.
         try {
             const self = typeof document !== 'undefined' ? document.currentScript : null;
             const src = self && self.src ? String(self.src) : '';
@@ -90,17 +81,12 @@ export function createRuntime() {
 
     function getUrlExtension(url) {
         const rt = runtimeApi();
-        if (rt && typeof rt.getURL === 'function') {
-            return rt.getURL(url);
-        }
+        if (rt && typeof rt.getURL === 'function') return rt.getURL(url);
         const base = extBase();
         if (!base) {
-            // Sem chrome.* e sem base em cache/currentScript/URL_SPRO. Retornar
-            // `url` relativo resolveria contra a origem do SEI (recurso errado /
-            // 404) silenciosamente — falhar explicitamente é mais seguro.
             throw new Error(
-                'SeiPro.getUrlExtension: base da extensão indisponível no mundo MAIN ' +
-                '(cache de sessionStorage vazio, sem chrome.runtime e sem URL_SPRO).'
+                'SeiPro.getUrlExtension: base da extensão indisponível ' +
+                '(sem chrome.runtime, sem cache em sessionStorage, sem URL_SPRO).'
             );
         }
         return base + url;
@@ -108,15 +94,11 @@ export function createRuntime() {
 
     function getManifestExtension() {
         const rt = runtimeApi();
-        if (rt && typeof rt.getManifest === 'function') {
-            return rt.getManifest();
-        }
+        if (rt && typeof rt.getManifest === 'function') return rt.getManifest();
         if (globalRef.__seiProExtManifest) return globalRef.__seiProExtManifest;
         const cached = sessionGet(EXT_MANIFEST_KEY);
         if (cached) {
-            try {
-                return JSON.parse(cached);
-            } catch (e) { /* ignore */ }
+            try { return JSON.parse(cached); } catch (e) { /* ignore */ }
         }
         return {};
     }
@@ -125,13 +107,7 @@ export function createRuntime() {
         return getUrlExtension('js/sei-pro.js').toString().replace('js/sei-pro.js', '');
     }
 
-    const runtime = {
-        isChrome,
-        getUrlExtension,
-        getManifestExtension,
-        pathExtensionSEIPro
-    };
-
+    const runtime = { isChrome, getUrlExtension, getManifestExtension, pathExtensionSEIPro };
     getSeiPro().core.runtime = runtime;
 
     aliasGlobal('getUrlExtension', getUrlExtension);

@@ -116,350 +116,10 @@ var URLPAGES_SPRO = (_parentSPRO && typeof _parentSPRO.URLPAGES_SPRO !== 'undefi
 var VERSION_SPRO = (_parentSPRO && typeof _parentSPRO.VERSION_SPRO !== 'undefined') ? _parentSPRO.VERSION_SPRO : undefined;
 var ICON_SPRO = (_parentSPRO && typeof _parentSPRO.ICON_SPRO !== 'undefined') ? _parentSPRO.ICON_SPRO : undefined;
 var urlTxtPadrao = $(mainMenu+' a[href*="acao=texto_padrao_interno_listar"]').attr('href');
-var SEI_PRO_LOG_STORAGE_KEY = '__sei_pro_report_logs__';
-var SEI_PRO_LOG_MAX_ENTRIES = 200;
-var SEI_PRO_LOG_MAX_CHARS = 60000;
-var SEI_PRO_AUTO_REPORT_STATE_KEY = '__sei_pro_auto_report_state__';
-var SEI_PRO_AUTO_REPORT_MAX_PER_SESSION = 10;
-var SEI_PRO_AUTO_REPORT_DEBOUNCE_MS = 1500;
-var SEI_PRO_APPS_SCRIPT_URL_FALLBACK = 'https://script.google.com/macros/s/AKfycby8ZZuKIHICpWYxEualArOnC1CIotYWXQvLNhe6eeoR-pQd1EOPNXjxt9UQ1XqJERxH/exec';
-var SEI_PRO_PRF_SEI_HOSTNAME = 'sei.prf.gov.br';
-
-function isSEIProPRFHost() {
-    return typeof window !== 'undefined' &&
-        typeof window.location !== 'undefined' &&
-        window.location.hostname === SEI_PRO_PRF_SEI_HOSTNAME;
-}
-
-function getSEIProSharedLogBuffer() {
-    try {
-        var raw = sessionStorage.getItem(SEI_PRO_LOG_STORAGE_KEY);
-        var parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-        return [];
-    }
-}
-function setSEIProSharedLogBuffer(logs) {
-    try {
-        sessionStorage.setItem(SEI_PRO_LOG_STORAGE_KEY, JSON.stringify(logs));
-    } catch (e) {}
-}
-function trimSEIProLogs(logs) {
-    if (!Array.isArray(logs)) return [];
-
-    var compact = logs.map(function(entry) {
-        return String(entry || '').trim();
-    }).filter(function(entry) {
-        return entry !== '';
-    });
-
-    if (compact.length > SEI_PRO_LOG_MAX_ENTRIES) {
-        compact = compact.slice(compact.length - SEI_PRO_LOG_MAX_ENTRIES);
-    }
-
-    var totalChars = 0;
-    var trimmed = [];
-    for (var i = compact.length - 1; i >= 0; i--) {
-        var entry = compact[i];
-        if (!entry) continue;
-        if (!trimmed.length && entry.length > SEI_PRO_LOG_MAX_CHARS) {
-            entry = entry.slice(entry.length - SEI_PRO_LOG_MAX_CHARS);
-        }
-        if (totalChars + entry.length > SEI_PRO_LOG_MAX_CHARS && trimmed.length) break;
-        totalChars += entry.length;
-        trimmed.unshift(entry);
-    }
-    return trimmed;
-}
-function normalizeSEIProLogValue(value, seen, depth) {
-    if (value === null || typeof value === 'undefined') return value;
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
-    if (typeof value === 'bigint') return value.toString();
-    if (typeof value === 'function') return '[Function ' + (value.name || 'anonymous') + ']';
-    if (depth > 3) return '[Max depth]';
-
-    if (value && typeof value === 'object') {
-        if (seen.indexOf(value) !== -1) return '[Circular]';
-        seen.push(value);
-
-        if (value instanceof Date) {
-            seen.pop();
-            return value.toISOString();
-        }
-        if (value instanceof RegExp) {
-            seen.pop();
-            return value.toString();
-        }
-        if (value.jquery) {
-            var jqSummary = {
-                jquery: true,
-                length: value.length
-            };
-            if (value.selector) jqSummary.selector = value.selector;
-            seen.pop();
-            return jqSummary;
-        }
-        if (value.nodeType === 1 && value.tagName) {
-            var attrs = value.id ? '#' + value.id : '';
-            if (value.className && typeof value.className === 'string') {
-                attrs += '.' + value.className.trim().replace(/\s+/g, '.');
-            }
-            seen.pop();
-            return '<' + value.tagName.toLowerCase() + attrs + '>';
-        }
-        if (value.name && value.message && (value.stack || value.description)) {
-            var err = {
-                name: value.name,
-                message: value.message
-            };
-            if (value.stack) err.stack = value.stack;
-            if (value.description) err.description = value.description;
-            seen.pop();
-            return err;
-        }
-        if (Array.isArray(value)) {
-            var arr = value.map(function(item) {
-                return normalizeSEIProLogValue(item, seen, depth + 1);
-            });
-            seen.pop();
-            return arr;
-        }
-
-        var clone = {};
-        for (var key in value) {
-            if (Object.prototype.hasOwnProperty.call(value, key)) {
-                clone[key] = normalizeSEIProLogValue(value[key], seen, depth + 1);
-            }
-        }
-        seen.pop();
-        return clone;
-    }
-
-    try {
-        return String(value);
-    } catch (e) {
-        return '[Unserializable]';
-    }
-}
-function stringifySEIProLogValue(value) {
-    if (typeof value === 'string') return value;
-    try {
-        var normalized = normalizeSEIProLogValue(value, [], 0);
-        return (typeof normalized === 'string') ? normalized : JSON.stringify(normalized);
-    } catch (e) {
-        try {
-            return String(value);
-        } catch (err) {
-            return '[Unserializable]';
-        }
-    }
-}
-function pushSEIProLog(level, argsLike) {
-    var args = Array.prototype.slice.call(argsLike || []);
-    var timestamp = (new Date()).toISOString();
-    var label = String(level || 'log').toUpperCase();
-    var body = args.map(function(arg) {
-        return stringifySEIProLogValue(arg);
-    }).join(' ');
-    var entry = '[' + timestamp + '] [' + label + ']' + (body ? ' ' + body : '');
-
-    var localLogs = Array.isArray(window.__SEI_PRO_LOG_BUFFER__) ? window.__SEI_PRO_LOG_BUFFER__ : [];
-    localLogs.push(entry);
-    window.__SEI_PRO_LOG_BUFFER__ = trimSEIProLogs(localLogs);
-
-    var sharedLogs = getSEIProSharedLogBuffer();
-    sharedLogs.push(entry);
-    setSEIProSharedLogBuffer(trimSEIProLogs(sharedLogs));
-
-    return entry;
-}
-function getSEIProCollectedLogs() {
-    var merged = trimSEIProLogs(getSEIProSharedLogBuffer().concat(
-        Array.isArray(window.__SEI_PRO_LOG_BUFFER__) ? window.__SEI_PRO_LOG_BUFFER__ : []
-    ));
-    var seen = {};
-    return merged.filter(function(entry) {
-        if (!entry || seen[entry]) return false;
-        seen[entry] = true;
-        return true;
-    });
-}
-function getSEIProAppsScriptUrl() {
-    return (typeof window.SEI_PRO_APPS_SCRIPT_URL !== 'undefined' && window.SEI_PRO_APPS_SCRIPT_URL)
-        ? window.SEI_PRO_APPS_SCRIPT_URL
-        : SEI_PRO_APPS_SCRIPT_URL_FALLBACK;
-}
-function getSEIProAutoReportState() {
-    try {
-        var raw = sessionStorage.getItem(SEI_PRO_AUTO_REPORT_STATE_KEY);
-        var parsed = raw ? JSON.parse(raw) : {};
-        if (!parsed || typeof parsed !== 'object') parsed = {};
-        if (!parsed.sent || typeof parsed.sent !== 'object') parsed.sent = {};
-        if (typeof parsed.count !== 'number') parsed.count = 0;
-        return parsed;
-    } catch (e) {
-        return { count: 0, sent: {} };
-    }
-}
-function setSEIProAutoReportState(state) {
-    try {
-        sessionStorage.setItem(SEI_PRO_AUTO_REPORT_STATE_KEY, JSON.stringify(state));
-    } catch (e) {}
-}
-function getSEIProErrorSignature(textError) {
-    var base = String(textError || '')
-        .replace(/^\[[^\]]+\]\s+\[[^\]]+\]\s*/, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 500);
-    return [window.location.pathname || '', base].join(' :: ');
-}
-function buildSEIProBugPayload(param) {
-    var options = param || {};
-    var descricaoBase = options.descricao || '';
-    var detalhes = [];
-    var includeLogs = (typeof options.includeLogs === 'undefined') ? true : !!options.includeLogs;
-    if (options.modo === 'automatico') detalhes.push('Relatório automático de erro do navegador.');
-    if (options.origem) detalhes.push('Origem: ' + options.origem);
-    if (window.location && window.location.href) detalhes.push('Página: ' + window.location.href);
-
-    return {
-        tipo: options.tipo || 'bug',
-        versao: (typeof VERSION_SPRO !== 'undefined') ? VERSION_SPRO : '',
-        descricao: [descricaoBase].concat(detalhes).filter(function(item) { return item && item.trim() !== ''; }).join('\n\n'),
-        erro_tecnico: options.erro_tecnico || '',
-        logs: includeLogs ? JSON.stringify(getSEIProCollectedLogs(), null, "\t") : '',
-        modo_envio: options.modo || 'manual',
-        origem_erro: options.origem || ''
-    };
-}
-function sendSEIProBugPayload(payload, handlers) {
-    var callbacks = handlers || {};
-    var appsScriptUrl = getSEIProAppsScriptUrl();
-    if (!appsScriptUrl) {
-        if (typeof callbacks.onError === 'function') callbacks.onError('URL do servidor não configurada');
-        return;
-    }
-
-    var isChrome = (typeof browser === 'undefined');
-    var _browser = isChrome ? (typeof chrome !== 'undefined' ? chrome : null) : browser;
-    function success() {
-        if (typeof callbacks.onSuccess === 'function') callbacks.onSuccess();
-    }
-    function fail(message) {
-        if (typeof callbacks.onError === 'function') callbacks.onError(message || 'Erro ao enviar relatório');
-    }
-    if (!_browser || !_browser.runtime || !_browser.runtime.sendMessage) {
-        fail('Serviço de envio indisponível');
-        return;
-    }
-
-    _browser.runtime.sendMessage({ action: 'enviarRelatorioBug', url: appsScriptUrl, payload: payload }, function(response) {
-        if (response && response.ok) {
-            success();
-        } else {
-            fail(response && response.erro ? response.erro : '');
-        }
-    });
-}
-function scheduleSEIProAutomaticErrorReport(textError, origem) {
-    if (!textError || window.__SEI_PRO_AUTO_REPORT_SENDING__) return;
-    if (!getSEIProAppsScriptUrl()) return;
-
-    var normalized = String(textError || '').trim();
-    if (!normalized) return;
-    if (/Relat[oó]rio enviado|Erro ao enviar relat[oó]rio|Falha ao enviar relat[oó]rio/i.test(normalized)) return;
-
-    var signature = getSEIProErrorSignature(normalized);
-    var state = getSEIProAutoReportState();
-    if (state.sent[signature]) return;
-    if (state.count >= SEI_PRO_AUTO_REPORT_MAX_PER_SESSION) return;
-
-    clearTimeout(window.__SEI_PRO_AUTO_REPORT_TIMER__);
-    window.__SEI_PRO_AUTO_REPORT_TIMER__ = setTimeout(function() {
-        var latestState = getSEIProAutoReportState();
-        if (latestState.sent[signature] || latestState.count >= SEI_PRO_AUTO_REPORT_MAX_PER_SESSION) return;
-
-        latestState.sent[signature] = true;
-        latestState.count += 1;
-        setSEIProAutoReportState(latestState);
-
-        window.__SEI_PRO_AUTO_REPORT_SENDING__ = true;
-        sendSEIProBugPayload(buildSEIProBugPayload({
-            tipo: 'bug',
-            descricao: 'Erro detectado automaticamente pela extensão.',
-            erro_tecnico: normalized,
-            modo: 'automatico',
-            origem: origem || 'console.error',
-            includeLogs: true
-        }), {
-            onSuccess: function() {
-                window.__SEI_PRO_AUTO_REPORT_SENDING__ = false;
-            },
-            onError: function() {
-                window.__SEI_PRO_AUTO_REPORT_SENDING__ = false;
-            }
-        });
-    }, SEI_PRO_AUTO_REPORT_DEBOUNCE_MS);
-}
-function ensureSEIProLogCapture() {
-    if (window.__SEI_PRO_LOG_CAPTURE_INSTALLED__) return;
-    window.__SEI_PRO_LOG_CAPTURE_INSTALLED__ = true;
-
-    var methods = ['log', 'info', 'warn', 'error'];
-    window.__SEI_PRO_LOG_ORIGINALS__ = window.__SEI_PRO_LOG_ORIGINALS__ || {};
-
-    methods.forEach(function(method) {
-        var original = (console && typeof console[method] === 'function')
-            ? console[method]
-            : (console && typeof console.log === 'function' ? console.log : function() {});
-        window.__SEI_PRO_LOG_ORIGINALS__[method] = original;
-
-        console[method] = function() {
-            var entry = pushSEIProLog(method, arguments);
-            if (method === 'error') {
-                scheduleSEIProAutomaticErrorReport(entry, 'console.error');
-            }
-            return original.apply(console, arguments);
-        };
-    });
-
-    window.addEventListener('error', function(event) {
-        var hasMessage = !!(event && event.message);
-        var hasFilename = !!(event && event.filename);
-        var hasError = !!(event && event.error);
-
-        // Erro opaco de origem cruzada ("Script error."): o navegador sanitiza
-        // message/filename/error por seguranca quando um script de outra origem
-        // (sem CORS) lanca uma excecao. Nao ha stack nem localizacao recuperavel,
-        // entao nao vale a pena gerar relatorio automatico — seria sempre vazio.
-        var isOpaqueCrossOrigin = !hasMessage && !hasFilename && !hasError;
-        if (isOpaqueCrossOrigin) {
-            pushSEIProLog('error', [
-                'Script error (cross-origin/opaco, sem stack disponivel)',
-                'readyState=' + (document.readyState || '?')
-            ]);
-            return;
-        }
-
-        var entry = pushSEIProLog('error', [
-            hasMessage ? event.message : 'Unhandled error',
-            hasFilename ? ('at ' + event.filename + ':' + event.lineno + ':' + event.colno) : '',
-            hasError ? event.error : ''
-        ]);
-        scheduleSEIProAutomaticErrorReport(entry, 'window.error');
-    }, true);
-
-    window.addEventListener('unhandledrejection', function(event) {
-        var entry = pushSEIProLog('error', [
-            'Unhandled promise rejection',
-            event && typeof event.reason !== 'undefined' ? event.reason : ''
-        ]);
-        scheduleSEIProAutomaticErrorReport(entry, 'unhandledrejection');
-    }, true);
-}
-ensureSEIProLogCapture();
+// [migrado para platform/report.js] cluster de captura de log + auto-report de bugs
+// (isSEIProPRFHost, pushSEIProLog, getSEIProCollectedLogs, buildSEIProBugPayload,
+//  sendSEIProBugPayload, scheduleSEIProAutomaticErrorReport, ensureSEIProLogCapture, ...)
+// Instalado por installCoreStack() -> installReport(); globais preservados via aliasGlobal.
 
 var iconsFlashMenu = [
                     {name: 'Copiar n\u00FAmero do processo', icon: 'fas fa-copyright', alt: ''},
@@ -891,17 +551,10 @@ function checkValue(elem) {
 }
 // isJson migrada para SeiPro.core.serial (src/core/serial.js) — Fase 6
 // tryParseJsonObject migrada para SeiPro.core.serial (src/core/serial.js) — Fase 6
-function trycatch(func, fail) {
-    try { return func() }
-    catch(e) { return fail }
-}
+// [migrado para core/helpers.js] trycatch
 // avgArray migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 // convertJsonBools migrada para SeiPro.core.serial (src/core/serial.js) — Fase 6
-function zeroWidthTrim(stringToTrim) {
-    var ZERO_WIDTH_SPACES_REGEX = /([\u200B]+|[\u200C]+|[\u200D]+|[\u200E]+|[\u200F]+|[\uFEFF]+)/g;
-    var trimmedString = stringToTrim.replace(ZERO_WIDTH_SPACES_REGEX, '');
-    return trimmedString;
-  };
+// [migrado para core/helpers.js] zeroWidthTrim
 function goToTextInDoc(pesquisaTexto) {
     var ifrArvoreHtml = $($ifrVisualizacao).contents().find($ifrArvoreHtml);
     var urlDoc = ifrArvoreHtml.attr('src');
@@ -1323,36 +976,9 @@ function addTextToTextarea(source, target, text) {
     source.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 }
 // reverseArray migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
-function checkObjHasProperty(obj, key) {
-    var return_ = true;
-    for(var i = 0; i < obj.length; i++) {
-        if (typeof obj[i][key] === "undefined" || !obj[i].hasOwnProperty(key)) {
-            return_ = false;
-            break;
-        }
-    }
-    return return_;
-}
+// [migrado para core/helpers.js] checkObjHasProperty
 // isNumeric migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
-function fixedEncodeURIComponent(str) {
-    return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
-      return '%' + c.charCodeAt(0).toString(16);
-    });
-  }
-// roundToTwo migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
-function infraFormatarTamanhoBytes(numBytes){
-    var ret = null;
-    if (numBytes > 1099511627776){
-        ret = Math.round(numBytes/1099511627776 * 100) / 100 + ' Tb';
-    } else if (numBytes > 1073741824) {
-        ret = Math.round(numBytes/1073741824 * 100) / 100 + ' Gb';
-    } else if (numBytes > 1048576) {
-        ret = Math.round(numBytes/1048576 * 100) / 100 + ' Mb';
-    } else /* if (numBytes > 1024) */ {
-        ret = Math.round(numBytes/1024* 100) / 100 +' Kb';
-    }
-    return ret;
-}
+// [migrado para core/helpers.js] fixedEncodeURIComponent
 // is_html migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
 // validateEmail migrada para SeiPro.core.validacao (src/core/validacao.js) — Fase 6
 // encodeURIComponent para ISO-8859-1
@@ -1389,34 +1015,7 @@ function downloadTableCSV(element, nameFile) {
   downloadLink.click();
   document.body.removeChild(downloadLink);
 }
-function prepCSVRow(arr, columnCount, initial) {
-  var row = '';
-  var delimeter = ';';
-  var newLine = '\r\n';
-
-  function splitArray(_arr, _count) {
-    var splitted = [];
-    var result = [];
-    _arr.forEach(function(item, idx) {
-      if ((idx + 1) % _count === 0) {
-        splitted.push(item);
-        result.push(splitted);
-        splitted = [];
-      } else {
-        splitted.push(item);
-      }
-    });
-    return result;
-  }
-  var plainArr = splitArray(arr, columnCount);
-  plainArr.forEach(function(arrItem) {
-    arrItem.forEach(function(item, idx) {
-      row += item + ((idx + 1) === arrItem.length ? '' : delimeter);
-    });
-    row += newLine;
-  });
-  return initial + row;
-}
+// [migrado para core/helpers.js] prepCSVRow
 // componentToHex migrada para SeiPro.core.cor (src/core/cor.js) — Fase 6
 // toNumBr migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 // pad migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
@@ -1438,22 +1037,9 @@ function setIconLoadinBtnSEI(elem, display = true) {
         elem.find('img').css('opacity','1').end().find('.botaoSEI_loading').remove();
     }
 }
-function removeDuplicatesArray(list, ref) {
-    var result = [];
-    $.each(list, function (i, e) {
-        var matchingItems = $.grep(result, function (item) {
-           return item[ref] === e[ref];
-        });
-        if (matchingItems.length === 0){
-            result.push(e);
-        }
-    });
-    return result;
-}
+// [migrado para core/helpers.js] removeDuplicatesArray
 // extractOnlyAlphaNum migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
-function extractTooltip(elem) {
-    return extractOnlyAlphaNum(removeAcentos($("<div/>").html(elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(',', ' ').replace(/["']/g, "")).text()));
-}
+// [migrado para sei/tooltip.js] extractTooltip
 function changeInputProtocoloSEI(this_, callback = false, callback_error = false) {
     var _this = $(this_);
     var protocoloSEI = _this.val();
@@ -1469,16 +1055,7 @@ function changeInputProtocoloSEI(this_, callback = false, callback_error = false
         }
     );
 }
-function extractTooltipToArray(elem) {
-        elem = $("<div>").html(elem).text();
-        elem = elem.replace(/<[^>]*>?/gm, '');
-        elem = removeAcentos(elem);
-        elem = elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(/["']/g, '"');
-        // console.log(elem);
-    // var array = (elem != '') ? [] : [];
-    var array = (elem != '' && isJson('['+elem+']')) ? JSON.parse('['+elem+']') : [];
-    return (array.length > 0) ? array : false;
-}
+// [migrado para sei/tooltip.js] extractTooltipToArray
 function ganttAutoProgressPercent(dtStar, dtEnd) {
     var dtNow = moment();
     var progressDat = dtEnd.diff(dtStar, 'days');
@@ -3840,14 +3417,7 @@ function cancelDadosProcedimentosControlar() {
     }
     cleanTimeTest();
 }
-function getUrlAcaoPro(param) {
-    var acao_pro = getParamsUrlPro(window.location.href).acao_pro;
-    if (typeof acao_pro !== 'undefined' && acao_pro == param) {
-        return true;
-    } else {
-        return false;
-    }
-}
+// [migrado para sei/urls.js] getUrlAcaoPro
 function endProcessGroupTable() {
     $('#newFiltroProgress').hide();
     setTimeout(function(){ 
@@ -6070,88 +5640,16 @@ function getStyleTable(color, width = 80) {
 	};
 	return styleTable;
 }
-function localStorageRestorePro(item) {
-    return isJson(localStorage.getItem(item)) ? JSON.parse(localStorage.getItem(item)) : false;
-}
-function localStorageStorePro(item, result) {
-    localStorage.setItem(item, JSON.stringify(result));
-}
-function localStorageRemovePro(item) {
-    localStorage.removeItem(item);
-}
-function sessionStorageRestorePro(item) {
-    return JSON.parse(sessionStorage.getItem(item));
-}
-function sessionStorageStorePro(item, result) {
-    try {
-        sessionStorage.setItem(item, JSON.stringify(result));
-    } catch (e) {
-        console.log("Local Storage is full:", item);
-    }
-}
-function sessionStorageRemovePro(item) {
-    sessionStorage.removeItem(item);
-}
-function hybridStorageRestorePro(item) {
-    if (localStorageRestorePro(item) !== null) {
-        return localStorageRestorePro(item);
-    } else if (sessionStorageRestorePro(item) !== null) {
-        return sessionStorageRestorePro(item);
-    } else {
-        return false;
-    }
-}
-function hybridStorageRemovePro(item) {
-    if (localStorageRemovePro(item) !== null) {
-        return localStorageRemovePro(item);
-    } else if (sessionStorageRemovePro(item) !== null) {
-        return sessionStorageRemovePro(item);
-    } else {
-        return false;
-    }
-}
-function hybridStorageStorePro(item, result) {
-    try {
-        localStorageStorePro(item, result);
-    } catch(e) {
-        sessionStorageStorePro(item, result);
-    }
-    return true;
-}
-function verifyOptionsPro(item) {
-    var option = localStorageRestorePro('optionsPro');
-    if (typeof option !== 'undefined') {
-        if (typeof option !== 'undefined' && !$.isEmptyObject(option) && typeof option[item] !== 'undefined' && option[item] !== null) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        return false;
-    }
-}
-function getOptionsPro(item) {
-    updateOptionsPro(item);
-    var option = localStorageRestorePro('optionsPro');
-    if (typeof option !== 'undefined' && !$.isEmptyObject(option) && typeof option[item] !== 'undefined' && option[item] !== null) {
-        return option[item];
-    } else {
-        return false;
-    }
-}
+// [migrado para platform/webstore.js] wrappers de web storage da página:
+//  localStorage{Restore,Store,Remove}Pro, sessionStorage{...}, hybridStorage{...}.
+//  Instalados por installCoreStack() -> installWebstore(); globais via aliasGlobal.
+// [migrado para core/options.js] verifyOptionsPro, getOptionsPro
 function getProcessNotificationCountPro() {
     return $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado')
         .find('a.processoNaoVisualizado, a.processoNaoVisualizadoSigiloso, a.processoCredencialAssinaturaSigiloso')
         .length;
 }
-function normalizeSignatureSelectionTextPro(text) {
-    return String(text || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase();
-}
+// [migrado para core/texto.js] normalizeSignatureSelectionTextPro
 function getCurrentUserNamePro() {
     var userTitle = $('#lnkUsuarioSistema').attr('title') || '';
     var userText = $('#lnkUsuarioSistema').text() || '';
@@ -6383,100 +5881,9 @@ window.initProcessNotificationsPro = function initProcessNotificationsPro() {
         window.addEventListener('sei-pro-config-ready', start, { once: true });
     }
 }
-function setOptionsPro(item, value) {
-    var option = localStorageRestorePro('optionsPro');
-    if (typeof option !== 'undefined') {
-        if ($.isEmptyObject(option)) {
-            option = {[item]: value};
-        } else {
-            option[item] = value;
-        }
-        localStorageStorePro('optionsPro', option);
-        return true;
-    } else {
-        return false;
-    }
-}
-function removeOptionsPro(item) {
-    var option = localStorageRestorePro('optionsPro');
-    if (typeof option !== 'undefined' && !$.isEmptyObject(option) && option[item] !== null) {
-        delete option[item];
-        localStorageStorePro('optionsPro', option);
-    }
-    return true;
-}
-function updateOptionsPro(item) {
-    var oldOption = localStorageRestorePro(item);
-    if (typeof oldOption !== 'undefined' && oldOption !== null) {
-        setOptionsPro(item, oldOption);
-        localStorageRemovePro(item);
-    }
-}
-function createCookiePro(name, value, days) {
-    if (days) {
-        var date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        var expires = "; expires=" + date.toGMTString();
-    } else { var expires = ""; }
-    
-    if ( typeof readCookiePro(name) !== 'undefined' && days >= 0) { eraseCookiePro(name); }
-
-    document.cookie = name + "=" + value + expires + "; path=/";
-}
-function readCookiePro(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-function eraseCookiePro(name) {
-    createCookiePro(name, "", -1);
-}
-// [migrado para core/sei] removeAcentos
-function encodeURI_toHex(str){
-    var hex, i;
-    var result = "";
-    for (i=0; i<str.length; i++) {
-        var test = removeAcentos(str.charAt(i));
-        if (str.charAt(i) == ' ') {
-            result += '+';
-        } else if (str.charAt(i) != test && str.charAt(i) != '') {
-            hex = str.charCodeAt(i).toString(16);
-            result += ("%"+hex).slice(-4).toUpperCase();
-        } else {
-            result += str.charAt(i);
-        }
-    }
-    return result
-}
-function encodeJSON_toHex(str){
-    var hex, i;
-    var result = "";
-    for (i=0; i<str.length; i++) {
-        var test = removeAcentos(str.charAt(i));
-        if (str.charAt(i) != test && str.charAt(i) != '') {
-            hex = str.charCodeAt(i).toString(16);
-            result += "\\u"+("00"+hex).slice(-4).toUpperCase();
-        } else {
-            result += str.charAt(i);
-        }
-    }
-    return result
-}
-function unicodeToChar(text) {
-    if (typeof text !== 'undefined' && text !== null && text != '') {
-        return text.replace(/\\u[\dA-F]{4}/gi, 
-            function (match) {
-                    return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16));
-            });
-    } else {
-        return text;
-    }
- }
+// [migrado para core/options.js] setOptionsPro, removeOptionsPro, updateOptionsPro
+// [migrado para core/cookies.js] createCookiePro, readCookiePro, eraseCookiePro
+// [migrado para core/texto.js] encodeURI_toHex, encodeJSON_toHex, unicodeToChar
 // [migrado para core/sei] capitalizeFirstLetter
 // [migrado para core/sei] randomString
 // randomNumber migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
@@ -6974,17 +6381,7 @@ function ajaxDadosProcessoPro(href, mode, arrayAcompEsp, callback = false) {
         console.log(dadosProcessoPro.propProcesso, 'Erro ao acessar dadosProcessoPro.propProcesso');
     });
 }
-function getUrlHipoteseLegal(html) {
-    var word = 'hipotese_legal_select_nome_base_legal';
-    var reg = new RegExp("'(.*?"+word+".*?)'", 'g');
-    if (reg.test(html)) { 
-        var urlHipotese = html.match(reg);
-            urlHipotese = (typeof urlHipotese !== 'undefined' && urlHipotese !== null && urlHipotese.length > 0) ? urlHipotese[0].split("'")[3].trim() : false;
-        return urlHipotese;
-    } else {
-        return false;
-    }
-}
+// [migrado para sei/urls.js] getUrlHipoteseLegal
 function getHipoteseLegal(urlHipoteseLegal = dadosProcessoPro.propProcesso.urlHipoteseLegal, nivelAcesso = 1, callback = false) {
     $.ajax({
         type: "POST",
@@ -9066,23 +8463,7 @@ function updateInputDateTime(this_) {
 
     changeInputDateTime(this_);
 }
-function checkBrowser(){
-    let browser = "";
-    let c = navigator.userAgent.search("Chrome");
-    let f = navigator.userAgent.search("Firefox");
-    let m8 = navigator.userAgent.search("MSIE 8.0");
-    let m9 = navigator.userAgent.search("MSIE 9.0");
-    if (c > -1) {
-        browser = "Chrome";
-    } else if (f > -1) {
-        browser = "Firefox";
-    } else if (m9 > -1) {
-        browser ="MSIE 9.0";
-    } else if (m8 > -1) {
-        browser ="MSIE 8.0";
-    }
-    return browser;
-}
+// [migrado para core/helpers.js] checkBrowser
 function updateDatesRange(this_) {
     var _this = $(this_);
     var _parent = _this.closest('tr');
@@ -9312,12 +8693,7 @@ function updateUrlPage(update = true, dadosProcesso = false) {
         iHistory++;
     }
 }
-function getNrSei(nameDoc) {
-    var nr_sei = nameDoc.split(' ');
-        nr_sei = (nameDoc.indexOf(' ') !== -1) ? nr_sei[nr_sei.length-1] : '';
-        nr_sei = (nr_sei.indexOf('(') !== -1) ? nr_sei.replace(')','').replace('(','').trim() : nr_sei;
-    return nr_sei;
-}
+// [migrado para core/texto.js] getNrSei
 function getIfrArvoreDadosProcesso() {
     if ($('#ifrArvore').length > 0) {
         var ifrArvore = $('#ifrArvore').contents();
@@ -10873,8 +10249,13 @@ const resolveCaptchaAI = async (prompt_text, imageBase64 = null) => {
     const data = getDataBodyResolveCaptcha(prompt_text, imageBase64); // <-- INCLUINDO A IMAGEM
 
     // Fase 4 — rede remota delegada ao service worker (centraliza CORS/host).
-    // facade-com-fallback: usa SeiPro.core.net se carregado, senão o XHR legado.
-    var net = (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.net);
+    // facade-com-fallback: usa SeiPro.core.net SÓ quando há chrome.runtime (mundo
+    // ISOLADO). No mundo MAIN (script injetado via $.getScript) chrome.runtime não
+    // existe e a fachada REJEITA — então é preciso cair no XHR legado. Checar apenas
+    // a existência de SeiPro.core.net não basta (o core é instalado nos dois mundos);
+    // por isso o gate é chrome.runtime, a condição real de funcionamento da fachada.
+    var hasRuntime = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id);
+    var net = hasRuntime && (typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.net);
     if (net) {
         return net.fetch(url, {
             method: 'POST',

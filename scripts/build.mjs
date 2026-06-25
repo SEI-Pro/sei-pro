@@ -20,13 +20,30 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const watch = process.argv.includes('--watch');
 
-// One bundle per content-script entry. Same options (IIFE, no minification, readable).
-// - core-stack: the core+sei stack loaded first in every content-script block.
-// - arvore-info: the "Informações adicionais na árvore" feature (runs in ifrArvore),
-//   first feature bundled from src/features/ (activates the §5.1.2 build trigger).
+// One bundle per content-script entry (IIFE, readable, isolated-world).
+//
+// Refundação isolated-first: cada contexto de página tem UMA entry em
+// src/entries/ que compõe core + plataforma + as features daquele contexto.
+// Toda entry em src/entries/*.js vira dist/js/<nome>.bundle.js automaticamente.
+//
+// Transitórios (removidos quando todos os contextos migrarem para entries):
+//  - core-stack: stack core+sei carregada pelos blocos ainda não migrados.
+//  - arvore-info: feature da árvore (será dobrada na entry `tree`).
+import { readdirSync } from 'node:fs';
+
+const entriesDir = path.join(root, 'src/entries');
+const entryBundles = readdirSync(entriesDir)
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => ({
+        entry: 'src/entries/' + f,
+        out: 'dist/js/' + f.replace(/\.js$/, '.bundle.js')
+    }));
+
 const bundles = [
     { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
-    { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' }
+    { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
+    { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
+    ...entryBundles
 ];
 
 function optionsFor({ entry, out }) {
