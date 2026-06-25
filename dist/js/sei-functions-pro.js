@@ -519,6 +519,10 @@ function insertFontIcon(elementTo, target = $('html')) {
 // numberToLetter migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 // decimalHourToMinute migrada para SeiPro.core.numeros (src/core/numeros.js) — Fase 6
 function reloadModalLink() {
+    // Big-bang isolated: modalLink já é carregado eager via manifest. Recarregá-lo
+    // via $.getScript(src do DOM) cairia no globalEval do jQuery, bloqueado pela
+    // CSP da extensão no mundo isolado. Sai cedo quando já presente.
+    if (typeof $.modalLink !== 'undefined') return;
     var urlModalink = $('head').find('script[src*="modalLink"]');
         urlModalink = (typeof urlModalink !== 'undefined') ? urlModalink.attr('src') : false;
     if (urlModalink) {
