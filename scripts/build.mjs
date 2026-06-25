@@ -78,7 +78,6 @@ const legacyFiles = [
     'src/features/monitorados/sei-pro-monitorados.js',
     'src/features/monitorados/view/sei-pro-monitorados-datas.js',
     'src/features/monitorados/view/sei-pro-monitorados-categorias.js',
-    'src/features/monitorados/view/sei-pro-monitorados-maps.js',
     'src/features/projetos/sei-pro-projetos.js',
     'src/features/prescricoes/sei-pro-prescricoes.js',
     'src/features/docs-lote/sei-pro-docs-lote.js',
