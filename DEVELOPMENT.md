@@ -6,54 +6,61 @@ Documentação técnica para desenvolvimento e manutenção da extensão. Para i
 
 ## Ambiente
 
-A extensão usa **Vite + CRXJS** para empacotar a camada `src/` (módulos ES) em `dist/`.
-Scripts legados (`sei-functions-pro.js`, `init_*.js`, `lib/`) ainda vivem em `dist/` e
-serão migrados incrementalmente na Fase 6.
+A extensão é empacotada com **esbuild** (`scripts/build.mjs`). **`src/` é a fonte única
+da verdade**; `dist/` contém **apenas saída gerada** (bundles ESM + cópias verbatim dos
+scripts legados ainda não migrados + CSS + manifest). Nada em `dist/` é editado à mão.
+
+> Nota histórica: uma 1ª tentativa com **Vite + CRXJS** foi revertida porque minificava os
+> arquivos legados in-place (destruindo a fonte). O esbuild atual nunca passa os legados
+> pelo bundler — só os copia. Ver `scripts/build.mjs`.
 
 **Instalação e build:**
 ```bash
 npm install
 npm run build    # gera/atualiza dist/ (carregar unpacked em chrome://extensions)
-npm run dev      # Vite dev server com HMR (CRXJS)
+npm run dev      # esbuild em watch sobre src/
 ```
 
 **Testes unitários (dev-only, não vão para `dist/`):**
 ```bash
-npm test
+npm test         # vitest (pretest roda o build)
 ```
 
-**Para desenvolver a camada core/sei (módulos ES):**
-1. Edite arquivos em `src/core/` e `src/sei/`
-2. Execute `npm run build`
-3. Atualize a extensão em `chrome://extensions/` e recarregue a página do SEI
+**Fluxo de desenvolvimento (toda fonte vive em `src/`):**
+1. Edite em `src/` (módulos ESM em `src/core`, `src/sei`, `src/features/<x>`, `src/shared`;
+   ou os legados ainda não migrados em `src/features/<x>/*.js`, `src/shared/legacy/`, `src/bootstrap/`)
+2. `npm run build`
+3. Recarregue a extensão em `chrome://extensions/` e a página do SEI
 
-**Para desenvolver scripts legados** (`sei-pro.js`, `init_*.js`, etc.):
-1. Edite diretamente em `dist/js/`
-2. Execute `npm run build` (reempacota sem apagar legados — `emptyOutDir: false`)
-3. Recarregue a extensão e a página do SEI
+Execute `npm test` antes de fechar mudanças.
 
-Execute `npm test` antes de fechar mudanças em utilitários do `src/core/`.
+### O build (`scripts/build.mjs`)
+
+- **Bundles ESM** (esbuild, IIFE legível, sem minificação): `src/content/core-stack.js`,
+  cada `src/entries/*.js` e os `index.js` das features bundladas
+  (`arvore-info`, `quick-highlight`, `anotacao-controle`, `monitorados`).
+- **Legados** (`legacyFiles`): copiados verbatim de `src/.../<nome>.js` para `dist/js/<nome>.js`.
+  Não passam pelo bundler (compartilham ~1300 globais e dependem da ordem do manifest).
+- **CSS de feature** (`featureCss`): `src/features/<x>/*.css` → `dist/css/`.
+- **Manifest**: `manifest.base.json` é a fonte; `dist/manifest.json` é cópia.
 
 ---
 
-## Arquitetura em camadas (`dist/js/core/` e `dist/js/sei/`)
+## Camada core/sei/platform (`src/`)
 
-A migração arquitetural introduz fronteiras explícitas carregadas **antes** dos `init_*.js` via `manifest.json`:
+A stack é composta por `src/content/core-stack.js` → `installCoreStack()` (em `src/core/stack.js`),
+carregada **primeiro** em cada bloco de content script via `manifest.json`:
 
 | Camada | Arquivos | Responsabilidade |
 |---|---|---|
-| Namespace | `core/namespace.js` | `window.SeiPro` e aliases de estado |
-| Runtime | `core/runtime.js` | `getUrlExtension`, manifest, path da extensão |
+| Namespace | `core/namespace.js`, `core/global.js` | `window.SeiPro`, `aliasGlobal`, aliases de estado |
+| Runtime | `platform/runtime.js` | `getUrlExtension`, manifest, path da extensão |
 | Util | `core/util.js` | Funções puras (`compareVersionNumbers`, `getParamsUrlPro`, …) |
-| Bootstrap | `core/bootstrap.js` | `_P`, `getPathExtensionPro`, session namespace |
-| Config | `core/config.js` | `verifyConfigValue`, `getConfigValue` |
+| Config | `core/config.js` | `verifyConfigValue`, `getConfigValue`, `checkConfigValue` |
 | UI | `core/ui.js` | `loadFontIcons`, `loadStyleDesign`, … |
-| Messaging | `core/messaging.js` | Transporte `runtime.sendMessage` |
-| Logger | `core/logger.js` | Log debug condicionado a `debugpage` |
-| Storage/Net | `core/storage.js` | Fachadas delegadas ao service worker |
-| SEI version | `sei/version.js` | Detecção SEI 4.x / 5.x |
-| SEI adapter | `sei/adapter.js` | Seletores neutros por versão |
-| SEI URLs | `sei/urls.js` | Parsing e construção de query strings |
+| Messaging/Storage/Net | `platform/messaging.js`, `storage.js`, `net.js` | fachadas delegadas ao service worker |
+| Logger/Report | `platform/logger.js`, `report.js` | log/erro condicionados a `debugpage` |
+| SEI version/adapter/urls | `sei/version.js`, `adapter.js`, `urls.js` | detecção 4/5, seletores neutros, parsing de URL |
 
 Funções legadas permanecem como aliases globais (`getUrlExtension`, etc.) para compatibilidade incremental.
 
@@ -70,45 +77,72 @@ Antes de fechar mudanças arquiteturais, validar no SEI:
 
 ## Estrutura
 
-```
-src/                               # Módulos ES (Fase 5) — fonte da camada core/sei
-├── core/                          # namespace, runtime, util, config, storage, …
-├── sei/                           # version, adapter, urls
-├── content/core-stack.js          # entry point bundled nos content scripts
-└── background/index.js            # service worker (ES module)
+Tudo vive em `src/`. As features migradas são módulos ESM (vanilla, sem jQuery); as
+ainda-legadas são scripts globais que o build copia verbatim para `dist/js/`.
 
-dist/                              # Saída do build + scripts legados
-├── assets/                        # Bundles gerados (core-stack, background loader)
-├── js/
-│   ├── core/                      # Legado IIFE (substituído pelo bundle após build)
-│   ├── sei/                       # Legado IIFE (substituído pelo bundle após build)
-│   ├── sei-functions-pro.js       # Funções utilitárias, configuração, localStorage
-│   ├── sei-pro.js                 # Lista de processos, Kanban, agrupamentos
-│   ├── sei-pro-editor.js          # CKEditor — tabelas, atalhos, auto-save, IA
-│   ├── sei-pro-arvore.js          # Árvore de documentos — menus, drag & drop
-│   ├── sei-pro-ai.js              # IA — OpenAI, Gemini, Ollama
-│   ├── sei-pro-all.js             # Funcionalidades em todas as páginas
-│   ├── sei-pro-favoritos.js       # Favoritos
-│   ├── sei-pro-projetos.js        # Projetos e Gantt
-│   ├── sei-pro-atividades.js      # Kanban de atividades
-│   ├── sei-pro-prescricoes.js     # Controle de prazos
-│   ├── sei-pro-docs-lote.js       # Documentos em lote
-│   ├── sei-pro-visualizacao.js    # Visualizador de documentos
-│   ├── sei-pro-icons.js           # Definições de ícones dos menus rápidos
-│   ├── sei-legis.js               # Legística (enumeração de normas)
-│   ├── background.js              # Service worker (MV3)
-│   ├── init.js                    # Inicialização — páginas de processos
-│   ├── init_all.js                # Inicialização — todas as páginas
-│   ├── init_arvore.js             # Inicialização — árvore de documentos
-│   ├── init_db.js                 # Inicialização — configuração de host
-│   └── lib/                       # Bibliotecas de terceiros
-├── css/
-├── html/                          # options.html (página de configurações)
-├── icons/
-│   └── lab/                       # Ícones da extensão (16, 32, 48, 128px)
-├── config_hosts.json              # Configuração por host SEI
-└── manifest.json
 ```
+src/
+├── core/                          # núcleo PURO (datas, numeros, texto, validacao, config, …)
+├── sei/                           # adapter de versão SEI 4/5, urls, tooltip
+├── platform/                      # runtime, messaging, storage, net, logger (chrome.* / SW)
+├── content/core-stack.js          # composição core+sei+platform (bundle carregado em todo bloco)
+├── entries/                       # entries por contexto de página (db, login, …)
+├── shared/
+│   ├── ui/                        # PRIMITIVOS vanilla reusáveis: modal, tags-input,
+│   │                              #   sortable, sortable-table (substituem jQuery UI/plugins)
+│   └── legacy/                    # legado fundacional ainda global (sei-functions-pro, icons)
+├── features/
+│   ├── monitorados/               # ★ FEATURE 100% MIGRADA — referência do padrão
+│   │   ├── domain.js              #   núcleo puro (testável, sem DOM)
+│   │   ├── store.js               #   IO (localStorage + remoto)
+│   │   ├── dom.js                 #   helpers vanilla + delegação
+│   │   ├── icon/panel/maps/datas/categorias/commands/…  # view + comandos
+│   │   ├── index.js               #   entry do bundle (instala + aliasGlobal)
+│   │   └── monitorados.css        #   CSS da feature
+│   ├── arvore-info/ · quick-highlight/ · anotacao-controle/   # outras já bundladas
+│   ├── atividades/ · lista-processos/ · editor/ · ai/ · …     # ainda legadas (1 .js global)
+├── bootstrap/                     # init*.js, getscript-isolated, init-flags (glue de carga)
+└── background/background.js       # service worker (MV3)
+
+dist/                              # SAÍDA GERADA — não editar à mão
+├── js/                            # bundles *.bundle.js + cópias dos legados + lib/
+├── css/  html/  icons/  config_hosts.json  manifest.json
+```
+
+---
+
+## Arquitetura-alvo e padrão de migração por feature
+
+A meta é **fronteiras explícitas por camada**, no mundo isolado do content script
+(decisão isolated-first: sem `world:"MAIN"`). Cada feature migrada segue:
+
+| Camada | Onde | Regra |
+|---|---|---|
+| **domínio** | `domain.js` | funções puras, sem DOM/jQuery/chrome — 100% testável |
+| **io** | `store.js` / `server.js` | efeitos (storage, rede, sessão) isolados |
+| **view** | `panel.js`, `maps.js`, … | DOM vanilla; **eventos delegados** (sem `onclick` inline) |
+| **entry** | `index.js` | bundle: instala módulos + `aliasGlobal` p/ compat com legado |
+
+**Por que delegação, não `onclick` inline:** handlers inline executam no **mundo MAIN**
+da página, que não enxerga as funções do content script (mundo isolado). Um
+`addEventListener` registrado pelo content script roda no mundo isolado e funciona —
+inclusive em iframes same-origin (anexar o listener ao `contentDocument`). Ver
+`monitorados/panel.js` (dispatcher por `data-act`) e `monitorados/visualizacao.js`.
+
+**Infra compartilhada vira primitivo, não duplicata:** ao migrar uma feature que usa
+tablesorter/tagsInput/sortable/chosen/dialog, cria-se/usa-se um primitivo vanilla em
+`src/shared/ui/`. A lógica de negócio compartilhada (etiquetas, seleção, preview de
+prazo) permanece global até suas features migrarem. As features legadas seguem usando
+os plugins jQuery em paralelo — duplicação temporária e esperada.
+
+**Compat durante a transição:** cada função movida é preservada como global via
+`aliasGlobal('nome', fn)` (em `src/core/global.js`), então os call-sites do legado
+continuam funcionando sem edição. `tests/structure/no-duplicate-core.test.js` trava que
+um helper migrado não seja redefinido no legado.
+
+> **Verificação:** os testes (vitest) cobrem domínio puro, IO e os primitivos de
+> `shared/ui` (jsdom). **Não** cobrem a view montada no DOM real do SEI nem os contratos
+> de globais legados — por isso o smoke test manual no SEI continua sendo o gate final.
 
 ---
 
