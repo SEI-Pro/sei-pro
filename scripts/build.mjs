@@ -49,6 +49,7 @@ const bundles = [
     { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
+    { entry: 'src/features/anotacao-controle/index.js', out: 'dist/js/anotacao-controle.bundle.js' },
     ...entryBundles
 ];
 
@@ -101,6 +102,20 @@ function copyLegacy() {
     }
 }
 
+// Feature-owned CSS: a feature ships its own stylesheet next to its code in
+// src/features/<feature>/, copied to dist/css/<name>.css. The manifest loads it
+// only in the blocks where the feature runs (best practice: CSS follows JS).
+const featureCss = [
+    { src: 'src/features/anotacao-controle/style.css', out: 'dist/css/anotacao-controle.css' }
+];
+
+function copyFeatureCss() {
+    mkdirSync(path.join(root, 'dist/css'), { recursive: true });
+    for (const { src, out } of featureCss) {
+        copyFileSync(path.join(root, src), path.join(root, out));
+    }
+}
+
 function syncManifest() {
     copyFileSync(
         path.join(root, 'manifest.base.json'),
@@ -117,11 +132,13 @@ if (watch) {
         await ctx.watch();
     }
     copyLegacy();
+    copyFeatureCss();
     syncManifest();
     console.log('build: watching src/ — ' + outNames + ' (+ ' + legacyFiles.length + ' legacy copies)');
 } else {
     await Promise.all(bundles.map((b) => build(optionsFor(b))));
     copyLegacy();
+    copyFeatureCss();
     syncManifest();
     console.log('build: ' + outNames + ' + ' + legacyFiles.length + ' legacy + manifest -> dist/');
 }

@@ -206,6 +206,7 @@
         "js/sei-functions-pro.js",
         "js/sei-pro-docs-lote.js",
         "js/sei-pro.js",
+        "js/anotacao-controle.bundle.js",
         "js/sei-legis.js",
         "js/sei-pro-icons.js",
         "js/sei-pro-monitorados.js",
@@ -216,6 +217,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/anotacao-controle.css",
         "css/fontawesome.pro.min.css",
         "css/fontawesome.min.css",
         "css/frappe-gantt.css",
@@ -299,6 +301,7 @@
         "js/sei-functions-pro.js",
         "js/sei-pro-docs-lote.js",
         "js/sei-pro.js",
+        "js/anotacao-controle.bundle.js",
         "js/sei-legis.js",
         "js/sei-pro-icons.js",
         "js/sei-pro-monitorados.js",
@@ -306,6 +309,9 @@
         "js/sei-pro-projetos.js",
         "js/sei-pro-prescricoes.js",
         "js/init.js"
+      ],
+      "css": [
+        "css/anotacao-controle.css"
       ],
       "all_frames": true,
       "matches": [

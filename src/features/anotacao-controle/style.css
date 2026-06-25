@@ -1,0 +1,84 @@
+/*
+ * Feature "Mostrar anotação do processo na tela de controle de processos"
+ * (config `mostraranotacaocontrole`) — CSS da VIEW.
+ *
+ * Extraído VERBATIM de dist/css/sei-pro.css. Carregado pelo manifest nos mesmos
+ * blocos onde o bundle JS da feature roda (procedimento_trabalhar / controlar).
+ * Overrides de tema (.seiSlim ...) ficam em sei-slim.css (tema é dono deles).
+ */
+.sticknoteHomeInline {
+    display: block;
+    margin: 0;
+    padding: 5px 7px;
+    border-left: 3px solid #f0c36d;
+    background: #fff7df;
+    box-shadow: inset 0 0 0 1px rgba(240, 195, 109, 0.35);
+    color: #444;
+    font-size: 9pt;
+    line-height: 1.35;
+    border-radius: 4px;
+    min-width: 120px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.sticknoteHomeInline div {
+    margin: 0;
+}
+.sticknoteHomeInline.priority {
+    border-left-color: #df8b8d;
+    background: #fde1e2;
+    box-shadow: inset 0 0 0 1px rgba(223, 139, 141, 0.35);
+}
+.sticknoteHomeNoteCell {
+    width: 132px;
+    min-width: 132px;
+    max-width: 132px;
+    vertical-align: top;
+    padding: 4px 1px 4px 0 !important;
+}
+.sticknoteHomeIconCell {
+    width: 18px;
+    min-width: 18px;
+    max-width: 18px;
+    padding: 4px 0 4px 0 !important;
+    text-align: center;
+    vertical-align: top;
+}
+.sticknoteHomeCheckCell,
+.sticknoteHomeCheckHead {
+    width: 28px;
+    min-width: 28px;
+    max-width: 28px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: center;
+    vertical-align: top;
+}
+.sticknoteHomeDetailedNoteCell {
+    vertical-align: top;
+    padding: 4px 4px 4px 0 !important;
+}
+.sticknoteHomeProcessCell {
+    width: 8em;
+    min-width: 8em;
+    max-width: 8em;
+    white-space: nowrap;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+.sticknoteHomeProcessCell a.processoVisualizado {
+    display: inline-block;
+    white-space: nowrap;
+}
+.sticknoteHomeNoteCell .imagemStatus,
+.sticknoteHomeNoteCell .newLink {
+    display: none;
+}
+.sticknoteHomeLayout a[href*="acao=anotacao_registrar"],
+.sticknoteHomeLayout a.botaoSEI[onclick*="acao=anotacao_registrar"] {
+    display: none !important;
+}
+.sticknoteHomeInsertedCell + td {
+    padding-left: 0 !important;
+}
