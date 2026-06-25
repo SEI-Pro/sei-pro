@@ -1558,6 +1558,455 @@
     aliasGlobal("actionToolbarMonitoradoPro", actionToolbarMonitoradoPro);
   }
 
+  // src/shared/ui/tags-input.js
+  function createTagsInput(input, opts = {}) {
+    const o = Object.assign({
+      delimiter: ";",
+      placeholder: "Adicionar",
+      minChars: 1,
+      maxChars: 100,
+      limit: 0,
+      unique: true,
+      removeWithBackspace: true,
+      source: [],
+      // array de sugestões ou função () => array
+      renderLabel: null,
+      // (tag) => HTML do conteúdo da pill (sem o x)
+      onAdd: null,
+      onRemove: null,
+      onChange: null
+    }, opts);
+    let tags = String(input.value || "").split(o.delimiter).map((t) => t.trim()).filter(Boolean);
+    const wrap = document.createElement("div");
+    wrap.className = "seipro-tagsinput";
+    wrap.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:1px solid #ccc;border-radius:4px;padding:3px;min-height:28px;";
+    const inner = document.createElement("input");
+    inner.type = "text";
+    inner.placeholder = o.placeholder;
+    inner.className = "seipro-tagsinput-entry";
+    inner.style.cssText = "border:0;outline:0;flex:1;min-width:80px;font-size:inherit;background:transparent;";
+    input.style.display = "none";
+    input.insertAdjacentElement("afterend", wrap);
+    const dropdown = document.createElement("div");
+    dropdown.className = "seipro-tagsinput-suggest";
+    dropdown.style.cssText = "position:absolute;z-index:100001;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);max-height:160px;overflow:auto;display:none;font-size:11px;";
+    document.body.appendChild(dropdown);
+    function sync() {
+      input.value = tags.join(o.delimiter);
+      if (typeof o.onChange === "function") o.onChange(tags.slice(), input);
+    }
+    function pill(tag) {
+      const el = document.createElement("span");
+      el.className = "tag seipro-tag";
+      el.style.cssText = "display:inline-flex;align-items:center;gap:3px;background:#eef;border-radius:3px;padding:1px 6px;";
+      el.innerHTML = typeof o.renderLabel === "function" ? o.renderLabel(tag) : escapeText(tag);
+      const x = document.createElement("i");
+      x.className = "fas fa-times seipro-tag-remove";
+      x.style.cssText = "cursor:pointer;font-size:.8em;opacity:.7;";
+      x.addEventListener("click", () => remove(tag));
+      el.appendChild(x);
+      el.dataset.tag = tag;
+      return el;
+    }
+    function render() {
+      wrap.querySelectorAll(".seipro-tag").forEach((n) => n.remove());
+      tags.forEach((t) => wrap.insertBefore(pill(t), inner));
+    }
+    function add(raw) {
+      const tag = String(raw || "").trim();
+      if (tag.length < o.minChars || tag.length > o.maxChars) return false;
+      if (o.unique && tags.indexOf(tag) !== -1) return false;
+      if (o.limit > 0 && tags.length >= o.limit) return false;
+      tags.push(tag);
+      render();
+      sync();
+      if (typeof o.onAdd === "function") o.onAdd(tag, tags.slice());
+      return true;
+    }
+    function remove(tag) {
+      const i = tags.indexOf(tag);
+      if (i === -1) return;
+      tags.splice(i, 1);
+      render();
+      sync();
+      if (typeof o.onRemove === "function") o.onRemove(tag, tags.slice());
+    }
+    function sources() {
+      return (typeof o.source === "function" ? o.source() : o.source) || [];
+    }
+    function hideSuggest() {
+      dropdown.style.display = "none";
+      dropdown.innerHTML = "";
+    }
+    function showSuggest() {
+      const q = inner.value.trim().toLowerCase();
+      if (!q) return hideSuggest();
+      const matches = sources().filter((s) => String(s).toLowerCase().indexOf(q) !== -1 && tags.indexOf(String(s)) === -1).slice(0, 8);
+      if (!matches.length) return hideSuggest();
+      dropdown.innerHTML = "";
+      matches.forEach((m) => {
+        const item = document.createElement("div");
+        item.textContent = m;
+        item.style.cssText = "padding:4px 8px;cursor:pointer;";
+        item.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          add(m);
+          inner.value = "";
+          hideSuggest();
+        });
+        dropdown.appendChild(item);
+      });
+      const r = inner.getBoundingClientRect();
+      dropdown.style.left = r.left + window.scrollX + "px";
+      dropdown.style.top = r.bottom + window.scrollY + "px";
+      dropdown.style.minWidth = r.width + "px";
+      dropdown.style.display = "block";
+    }
+    inner.addEventListener("input", showSuggest);
+    inner.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === o.delimiter) {
+        e.preventDefault();
+        if (inner.value.trim()) {
+          add(inner.value);
+          inner.value = "";
+          hideSuggest();
+        }
+      } else if (e.key === "Backspace" && inner.value === "" && o.removeWithBackspace && tags.length) {
+        remove(tags[tags.length - 1]);
+      }
+    });
+    inner.addEventListener("blur", () => {
+      setTimeout(hideSuggest, 150);
+      if (inner.value.trim()) {
+        add(inner.value);
+        inner.value = "";
+      }
+    });
+    wrap.addEventListener("click", () => inner.focus());
+    wrap.appendChild(inner);
+    render();
+    return {
+      getTags: () => tags.slice(),
+      add,
+      remove,
+      destroy() {
+        hideSuggest();
+        dropdown.remove();
+        wrap.remove();
+        input.style.display = "";
+      }
+    };
+  }
+  function escapeText(s) {
+    return String(s).replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]);
+  }
+
+  // src/shared/ui/sortable.js
+  function insertionTarget(y, rows) {
+    for (const row of rows) {
+      const r = row.getBoundingClientRect();
+      if (y < r.top + r.height / 2) return row;
+    }
+    return null;
+  }
+  function createSortable(container, opts = {}) {
+    const itemsSel = opts.items || "tr";
+    const handleSel = opts.handle || null;
+    let dragged = null;
+    function rows() {
+      return Array.prototype.slice.call(container.querySelectorAll(itemsSel));
+    }
+    function onDown(e) {
+      const handle = handleSel ? e.target.closest(handleSel) : e.target.closest(itemsSel);
+      if (!handle) return;
+      const row = handle.closest(itemsSel);
+      if (!row || !container.contains(row)) return;
+      dragged = row;
+      row.classList.add("seipro-sorting");
+      row.style.opacity = "0.5";
+      try {
+        handle.setPointerCapture(e.pointerId);
+      } catch (_) {
+      }
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp, { once: true });
+      e.preventDefault();
+    }
+    function onMove(e) {
+      if (!dragged) return;
+      const others = rows().filter((r) => r !== dragged);
+      const before = insertionTarget(e.clientY, others);
+      if (before) dragged.parentNode.insertBefore(dragged, before);
+      else dragged.parentNode.appendChild(dragged);
+    }
+    function onUp(e) {
+      if (!dragged) return;
+      dragged.classList.remove("seipro-sorting");
+      dragged.style.opacity = "";
+      const handle = handleSel ? e.target.closest(handleSel) : dragged;
+      if (handle) handle.removeEventListener("pointermove", onMove);
+      dragged = null;
+      if (typeof opts.onUpdate === "function") opts.onUpdate(rows());
+    }
+    container.addEventListener("pointerdown", onDown);
+    return { destroy() {
+      container.removeEventListener("pointerdown", onDown);
+    } };
+  }
+
+  // src/shared/ui/sortable-table.js
+  function compareValues(a, b) {
+    const na = parseFloat(a), nb = parseFloat(b);
+    const bothNum = !isNaN(na) && !isNaN(nb) && String(a).trim() !== "" && String(b).trim() !== "";
+    if (bothNum) return na - nb;
+    return String(a).localeCompare(String(b), void 0, { numeric: true, sensitivity: "base" });
+  }
+  function createSortableTable(table, opts = {}) {
+    const headers = opts.headers || {};
+    const extraction = opts.textExtraction || {};
+    const tbody = table.tBodies[0];
+    const headRow = table.tHead ? table.tHead.rows[table.tHead.rows.length - 1] : null;
+    if (!tbody || !headRow) return { destroy() {
+    } };
+    let sortState = { col: -1, dir: 0 };
+    const filters = {};
+    function cfg(col) {
+      return headers[col] || {};
+    }
+    function sortable(col) {
+      return cfg(col).sorter !== false;
+    }
+    function filterable(col) {
+      return cfg(col).filter === true;
+    }
+    function cellText(row, col) {
+      const cell = row.cells[col];
+      if (!cell) return "";
+      const fn = extraction[col];
+      return fn ? fn(cell, table, col) : cell.textContent.trim();
+    }
+    function save() {
+      if (!opts.saveKey) return;
+      try {
+        localStorage.setItem("seipro-table-" + opts.saveKey, JSON.stringify({ sortState, filters }));
+      } catch (_) {
+      }
+    }
+    function load() {
+      if (!opts.saveKey) return;
+      try {
+        const raw = localStorage.getItem("seipro-table-" + opts.saveKey);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (s.sortState) sortState = s.sortState;
+        Object.assign(filters, s.filters || {});
+      } catch (_) {
+      }
+    }
+    function applySort() {
+      if (sortState.dir === 0 || sortState.col < 0) return;
+      const rows = Array.prototype.slice.call(tbody.rows);
+      const col = sortState.col, dir = sortState.dir;
+      rows.sort((ra, rb) => dir * compareValues(cellText(ra, col), cellText(rb, col)));
+      rows.forEach((r) => tbody.appendChild(r));
+    }
+    function onHeaderClick(ev) {
+      const th = ev.target.closest("th");
+      if (!th) return;
+      const col = Array.prototype.indexOf.call(headRow.cells, th);
+      if (col < 0 || !sortable(col)) return;
+      if (sortState.col !== col) sortState = { col, dir: 1 };
+      else sortState.dir = sortState.dir === 1 ? -1 : sortState.dir === -1 ? 0 : 1;
+      updateHeaderIndicators();
+      applySort();
+      applyFilter();
+      save();
+      if (typeof opts.onSortEnd === "function") opts.onSortEnd(api);
+    }
+    function updateHeaderIndicators() {
+      Array.prototype.forEach.call(headRow.cells, (th, i) => {
+        th.classList.remove("seipro-sort-asc", "seipro-sort-desc");
+        if (i === sortState.col && sortState.dir === 1) th.classList.add("seipro-sort-asc");
+        if (i === sortState.col && sortState.dir === -1) th.classList.add("seipro-sort-desc");
+        if (sortable(i)) th.style.cursor = "pointer";
+      });
+    }
+    let filterRow = null;
+    function buildFilterRow() {
+      if (!Object.keys(headers).some((k) => filterable(Number(k)))) return;
+      filterRow = document.createElement("tr");
+      filterRow.className = "seipro-filter-row";
+      Array.prototype.forEach.call(headRow.cells, (th, i) => {
+        const td = document.createElement("td");
+        if (filterable(i)) {
+          const inp = document.createElement("input");
+          inp.type = "search";
+          inp.className = "seipro-filter";
+          inp.value = filters[i] || "";
+          inp.style.cssText = "width:100%;box-sizing:border-box;font-size:11px;";
+          inp.addEventListener("input", () => {
+            filters[i] = inp.value;
+            applyFilter();
+            save();
+          });
+          td.appendChild(inp);
+        }
+        filterRow.appendChild(td);
+      });
+      table.tHead.appendChild(filterRow);
+    }
+    function rowMatches(row) {
+      return Object.keys(filters).every((col) => {
+        const q = (filters[col] || "").trim().toLowerCase();
+        if (!q) return true;
+        return cellText(row, Number(col)).toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    function applyFilter() {
+      let count = 0;
+      Array.prototype.forEach.call(tbody.rows, (row) => {
+        const ok = rowMatches(row);
+        row.style.display = ok ? "" : "none";
+        if (ok) count++;
+      });
+      if (typeof opts.onFilterEnd === "function") opts.onFilterEnd(count, api);
+      return count;
+    }
+    const api = {
+      sort(col, dir) {
+        sortState = { col, dir };
+        updateHeaderIndicators();
+        applySort();
+        applyFilter();
+        save();
+      },
+      filter(col, value) {
+        filters[col] = value;
+        if (filterRow) {
+          const inp = filterRow.cells[col] && filterRow.cells[col].querySelector("input");
+          if (inp) inp.value = value;
+        }
+        applyFilter();
+        save();
+      },
+      refresh() {
+        applySort();
+        applyFilter();
+      },
+      visibleCount() {
+        return Array.prototype.filter.call(tbody.rows, (r) => r.style.display !== "none").length;
+      },
+      destroy() {
+        headRow.removeEventListener("click", onHeaderClick);
+        if (filterRow) filterRow.remove();
+      }
+    };
+    load();
+    headRow.addEventListener("click", onHeaderClick);
+    buildFilterRow();
+    updateHeaderIndicators();
+    applySort();
+    applyFilter();
+    return api;
+  }
+
+  // src/features/monitorados/panel-lifecycle.js
+  var g7 = (n) => globalRef[n];
+  function initTags(table) {
+    qsa(".monitoradoTagsPro", table).forEach((input) => {
+      if (input.dataset.seiproTagsInit === "1") return;
+      input.dataset.seiproTagsInit = "1";
+      const persist = () => {
+        if (typeof g7("saveFollowEtiqueta") === "function") g7("saveFollowEtiqueta")(input);
+      };
+      createTagsInput(input, {
+        delimiter: ";",
+        placeholder: "Adicionar etiqueta",
+        limit: 8,
+        minChars: 2,
+        maxChars: 100,
+        source: () => typeof g7("sugestEtiquetaPro") === "function" ? g7("sugestEtiquetaPro")("monitorado") : [],
+        onAdd: persist,
+        onRemove: persist
+      });
+    });
+  }
+  function initTable(table) {
+    const dateExtract = (cell) => {
+      const d = cell.querySelector(".dateboxDisplay");
+      return d ? d.getAttribute("data-time-sorter") : cell.textContent.trim();
+    };
+    const orderExtract = (cell) => parseInt(cell.getAttribute("data-order")) || 0;
+    return createSortableTable(table, {
+      headers: { 0: { sorter: false }, 1: { filter: true }, 2: { filter: true }, 3: { filter: true }, 4: { filter: true } },
+      textExtraction: { 2: dateExtract, 8: orderExtract },
+      saveKey: "monitorados",
+      onSortEnd: () => {
+        if (g7("checkboxRangerSelectShift")) g7("checkboxRangerSelectShift")("#monitoradoTablePro");
+      },
+      onFilterEnd: (count) => {
+        const cap = qs("caption", table);
+        if (cap) cap.textContent = cap.textContent.replace(/\d+/g, count);
+        qsa("tbody tr", table).forEach((tr) => {
+          const inp = tr.querySelector("td input");
+          if (inp) inp.disabled = tr.style.display === "none";
+        });
+        if (g7("checkboxRangerSelectShift")) g7("checkboxRangerSelectShift")("#monitoradoTablePro");
+      }
+    });
+  }
+  function initRowSortable(table) {
+    const tbody = table.tBodies[0];
+    if (!tbody) return;
+    createSortable(tbody, {
+      items: "tr",
+      handle: ".sorterTrMonitorado",
+      onUpdate: (rows) => {
+        const store = getStoreMonitoradoPro();
+        rows.forEach((tr, index) => {
+          const id = tr.getAttribute("data-id_procedimento");
+          const idx = findMonitoradoIndex(store, id);
+          if (idx >= 0) store.monitorados[idx].order = index + 1;
+        });
+        persistMonitoradoStore(store);
+        rows.forEach((tr, index) => {
+          tr.setAttribute("data-index", index);
+          const last = tr.cells[tr.cells.length - 1];
+          if (last) last.setAttribute("data-order", index + 1);
+        });
+      }
+    });
+  }
+  function initSelectionObserver(table) {
+    const tbody = table.tBodies[0];
+    if (!tbody) return;
+    const update = () => {
+      const count = qsa("tr.infraTrMarcada", table).length;
+      const actions = qs("#monitoradosProActions");
+      const icon = actions && actions.querySelector(".iconMonitorados_remove");
+      if (!icon) return;
+      icon.style.display = count > 0 ? "" : "none";
+      const counter = icon.querySelector(".fa-layers-counter");
+      if (counter && count > 0) counter.textContent = count;
+    };
+    new MutationObserver(update).observe(tbody, { attributes: true, attributeFilter: ["class"], subtree: true });
+    update();
+  }
+  function initFunctionsPanelMonitorado() {
+    const table = qs("#monitoradoTablePro");
+    if (!table || table.dataset.seiproInit === "1") return;
+    table.dataset.seiproInit = "1";
+    initTags(table);
+    initTable(table);
+    initRowSortable(table);
+    initSelectionObserver(table);
+    if (g7("checkboxRangerSelectShift")) g7("checkboxRangerSelectShift")("#monitoradoTablePro");
+    if (typeof g7("checkFileRemoteMonitorado") === "function") g7("checkFileRemoteMonitorado")("get");
+  }
+  function installPanelLifecycle() {
+    aliasGlobal("initFunctionsPanelMonitorado", initFunctionsPanelMonitorado);
+  }
+
   // src/features/monitorados/index.js
   var monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
   monitorados.view = { initIcon, mountIcon, iconHtml };
@@ -1570,6 +2019,7 @@
   installServer();
   installPrazoRow();
   installExtras();
+  installPanelLifecycle();
   aliasGlobal("insertIconMonitorados", initIcon);
   aliasGlobal("appendIconMonitorados", mountIcon);
   aliasGlobal("htmlIconMonitorados", iconHtml);
