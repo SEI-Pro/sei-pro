@@ -257,12 +257,16 @@
         return [];
       }
     }
-    function queryConfigValue(name) {
-      const configBasePro = readConfigBasePro();
-      if (typeof globalRef.jmespath === "undefined" || globalRef.jmespath === null) {
-        return false;
+    function pickConfigGeral(configBasePro) {
+      if (!Array.isArray(configBasePro)) return null;
+      for (let i = 0; i < configBasePro.length; i++) {
+        const el = configBasePro[i];
+        if (el && Array.isArray(el.configGeral)) return el.configGeral;
       }
-      const configGeral = globalRef.jmespath.search(configBasePro, "[*].configGeral | [0]");
+      return null;
+    }
+    function queryConfigValue(name) {
+      const configGeral = pickConfigGeral(readConfigBasePro());
       if (!Array.isArray(configGeral)) {
         return false;
       }
@@ -283,11 +287,17 @@
       return ["filtrarpaginapelapesquisarapida"].indexOf(String(name || "")) !== -1;
     }
     function checkConfigValue(name) {
-      const jmespath = globalRef.jmespath;
-      const rawConfig = globalRef.localStorage.getItem("configBasePro");
-      var configBasePro = typeof rawConfig !== "undefined" && rawConfig != "" && rawConfig !== null ? JSON.parse(rawConfig) : [];
-      var dataValuesConfig = typeof jmespath !== "undefined" && jmespath !== null ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-      dataValuesConfig = typeof jmespath !== "undefined" && jmespath !== null ? jmespath.search(dataValuesConfig, "[?name=='" + name + "'].value | [0]") : false;
+      var configBasePro = readConfigBasePro();
+      const configGeral = pickConfigGeral(configBasePro);
+      var dataValuesConfig = null;
+      if (Array.isArray(configGeral)) {
+        for (let i = 0; i < configGeral.length; i++) {
+          if (configGeral[i] && configGeral[i].name === name) {
+            dataValuesConfig = configGeral[i].value !== null && typeof configGeral[i].value !== "undefined" ? configGeral[i].value : null;
+            break;
+          }
+        }
+      }
       if ((dataValuesConfig === false || dataValuesConfig === null) && isDefaultEnabledConfigValue(name)) {
         return true;
       }

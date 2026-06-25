@@ -257,12 +257,16 @@
         return [];
       }
     }
-    function queryConfigValue(name) {
-      const configBasePro = readConfigBasePro();
-      if (typeof globalRef.jmespath === "undefined" || globalRef.jmespath === null) {
-        return false;
+    function pickConfigGeral(configBasePro) {
+      if (!Array.isArray(configBasePro)) return null;
+      for (let i = 0; i < configBasePro.length; i++) {
+        const el = configBasePro[i];
+        if (el && Array.isArray(el.configGeral)) return el.configGeral;
       }
-      const configGeral = globalRef.jmespath.search(configBasePro, "[*].configGeral | [0]");
+      return null;
+    }
+    function queryConfigValue(name) {
+      const configGeral = pickConfigGeral(readConfigBasePro());
       if (!Array.isArray(configGeral)) {
         return false;
       }
@@ -283,11 +287,17 @@
       return ["filtrarpaginapelapesquisarapida"].indexOf(String(name || "")) !== -1;
     }
     function checkConfigValue(name) {
-      const jmespath = globalRef.jmespath;
-      const rawConfig = globalRef.localStorage.getItem("configBasePro");
-      var configBasePro = typeof rawConfig !== "undefined" && rawConfig != "" && rawConfig !== null ? JSON.parse(rawConfig) : [];
-      var dataValuesConfig = typeof jmespath !== "undefined" && jmespath !== null ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-      dataValuesConfig = typeof jmespath !== "undefined" && jmespath !== null ? jmespath.search(dataValuesConfig, "[?name=='" + name + "'].value | [0]") : false;
+      var configBasePro = readConfigBasePro();
+      const configGeral = pickConfigGeral(configBasePro);
+      var dataValuesConfig = null;
+      if (Array.isArray(configGeral)) {
+        for (let i = 0; i < configGeral.length; i++) {
+          if (configGeral[i] && configGeral[i].name === name) {
+            dataValuesConfig = configGeral[i].value !== null && typeof configGeral[i].value !== "undefined" ? configGeral[i].value : null;
+            break;
+          }
+        }
+      }
       if ((dataValuesConfig === false || dataValuesConfig === null) && isDefaultEnabledConfigValue(name)) {
         return true;
       }
@@ -2425,9 +2435,6 @@
   function qsa(selector, root) {
     return Array.prototype.slice.call((root || document).querySelectorAll(selector));
   }
-  function closest(node, selector) {
-    return node && node.closest ? node.closest(selector) : null;
-  }
   function ready(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn, { once: true });
@@ -2481,19 +2488,23 @@
   function applyRepairPwd() {
     if (!verifyConfigValue("autopreenchersenha")) return false;
     if (isLoginPageNewSei()) {
-      var hidden = qs("#pwdSenha");
-      if (!hidden) return false;
-      var scope = closest(hidden, "form") || document;
-      var visible = qsa('input[type="password"]', scope).filter(function(i) {
-        return i.id !== "pwdSenha";
+      var real = qsa('input[type="password"]').filter(function(i) {
+        return i.name === "pwdSenha";
       })[0];
-      if (!visible) return false;
-      repairPwdField(hidden, visible, {
-        fontSize: "2em",
-        height: "calc(1em + .75rem)",
-        borderTopLeftRadius: "0",
-        borderBottomLeftRadius: "0"
-      }, "form-control masked", false);
+      if (!real) return false;
+      var decoy = qs("#pwdSenha");
+      if (decoy && decoy !== real) {
+        decoy.removeAttribute("id");
+        decoy.remove();
+      }
+      show(real);
+      real.id = "pwdSenha";
+      real.setAttribute("autocomplete", "current-password");
+      real.className = (decoy && decoy.className ? decoy.className : "form-control").replace(/\bmasked\b/g, "").trim() || "form-control";
+      Object.assign(real.style, { fontSize: "2em", height: "calc(1em + .75rem)" });
+      real.dataset.seiProPwd = "1";
+      var user = qs("#txtUsuario");
+      if (user) user.setAttribute("autocomplete", "username");
       return true;
     }
     if (isDocumentoAssinarPage() && qs("#frmAssinaturas")) {

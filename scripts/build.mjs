@@ -1,19 +1,25 @@
 /**
- * Phase 5 build — bundle the ESM core+sei stack (src/) into a single readable
- * IIFE content script and sync the manifest into dist/.
+ * Build — assembles dist/ entirely from src/ (dist/js holds only generated output).
  *
- * Design constraints (learned from the reverted first attempt):
- *  - Output is ONLY the generated bundle (dist/js/core-stack.bundle.js) and a
- *    verbatim copy of manifest.base.json. Legacy scripts, vendor libs, CSS and
- *    the service worker are NEVER touched by the bundler — they stay verbatim
- *    in dist/, so the readable source is never overwritten in place.
- *  - No minification: the bundle must stay readable.
+ * src/ now has TWO kinds of source:
  *
- * manifest.base.json is the single source of truth for the manifest and already
- * references the bundle (js/core-stack.bundle.js); dist/manifest.json is a copy.
+ *  1. BUNDLED ESM entries (src/content, src/entries, some src/features index.js)
+ *     → esbuild produces a readable IIFE bundle in dist/js/. No minification.
+ *
+ *  2. LEGACY global scripts (the big pre-refactor modules) live under
+ *     src/features/<feature>/, src/shared/legacy/, src/bootstrap/ and
+ *     src/background/. They are NOT bundled — they share ~1300 globals and depend
+ *     on manifest load order, so esbuild would break them. The build copies each
+ *     VERBATIM to its original dist/js/<name>.js path. Output is byte-identical to
+ *     the previous tree, so the manifest needs no change. Per-feature decomposition
+ *     happens later, one feature at a time — relocating a file here does not change
+ *     its behavior.
+ *
+ * Design constraint (learned from the reverted Vite attempt): the bundler never
+ * touches the legacy/readable sources in place. Legacy files are only ever copied.
  */
 import { build } from 'esbuild';
-import { copyFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -57,6 +63,44 @@ function optionsFor({ entry, out }) {
     };
 }
 
+// Legacy global scripts copied verbatim to dist/js/<basename>. Source of truth
+// lives under src/; dist/js holds only generated output. Adding a file here is a
+// pure relocation — behavior is unchanged until the feature is decomposed later.
+const legacyFiles = [
+    'src/features/lista-processos/sei-pro.js',
+    'src/features/atividades/sei-pro-atividades.js',
+    'src/features/arvore/sei-pro-arvore.js',
+    'src/features/editor/sei-pro-editor.js',
+    'src/features/ai/sei-pro-ai.js',
+    'src/features/todas-paginas/sei-pro-all.js',
+    'src/features/monitorados/sei-pro-monitorados.js',
+    'src/features/projetos/sei-pro-projetos.js',
+    'src/features/prescricoes/sei-pro-prescricoes.js',
+    'src/features/docs-lote/sei-pro-docs-lote.js',
+    'src/features/visualizacao/sei-pro-visualizacao.js',
+    'src/features/visualizacao/sei-pro-visualizacao-chosen.js',
+    'src/features/legis/sei-legis.js',
+    'src/shared/legacy/sei-functions-pro.js',
+    'src/shared/legacy/sei-pro-icons.js',
+    'src/shared/legacy/sei-pro-db-transition.js',
+    'src/bootstrap/init.js',
+    'src/bootstrap/init_all.js',
+    'src/bootstrap/init_arvore.js',
+    'src/bootstrap/init_db.js',
+    'src/bootstrap/init_visualizacao.js',
+    'src/bootstrap/init_visualizacao_html.js',
+    'src/bootstrap/init-flags.js',
+    'src/bootstrap/getscript-isolated.js',
+    'src/background/background.js' // service worker (manifest: js/background.js)
+];
+
+function copyLegacy() {
+    mkdirSync(path.join(root, 'dist/js'), { recursive: true });
+    for (const rel of legacyFiles) {
+        copyFileSync(path.join(root, rel), path.join(root, 'dist/js', path.basename(rel)));
+    }
+}
+
 function syncManifest() {
     copyFileSync(
         path.join(root, 'manifest.base.json'),
@@ -72,10 +116,12 @@ if (watch) {
         const ctx = await esbuild.context(optionsFor(b));
         await ctx.watch();
     }
+    copyLegacy();
     syncManifest();
-    console.log('build: watching src/ — ' + outNames);
+    console.log('build: watching src/ — ' + outNames + ' (+ ' + legacyFiles.length + ' legacy copies)');
 } else {
     await Promise.all(bundles.map((b) => build(optionsFor(b))));
+    copyLegacy();
     syncManifest();
-    console.log('build: ' + outNames + ' + dist/manifest.json generated');
+    console.log('build: ' + outNames + ' + ' + legacyFiles.length + ' legacy + manifest -> dist/');
 }
