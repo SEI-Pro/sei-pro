@@ -1,0 +1,25 @@
+import { aliasGlobal, getSeiPro } from '../../core/global.js';
+import { initIcon, mountIcon, iconHtml } from './icon.js';
+
+/**
+ * Processos Monitorados — ENTRY do bundle ESM (reescrita vanilla, isolated-world).
+ *
+ * Estado da reescrita (incremental, carregável a cada etapa):
+ *   ✓ domain.js / store.js   — núcleo puro + IO (instalados via core-stack)
+ *   ✓ dom.js                 — helpers vanilla + delegação
+ *   ✓ icon.js                — ícone-estrela (add/remover) com clique DELEGADO
+ *   … pendente               — panel, datas, categorias, maps, sync, server, CSS
+ *
+ * Enquanto painel/diálogo não são portados, o clique do ícone delega ao fluxo
+ * legado window.actMonitoradoPro (mesmo mundo isolado), e os pontos de entrada
+ * chamados por OUTROS arquivos (insertIconMonitorados/appendIconMonitorados)
+ * são servidos pela versão vanilla via aliasGlobal — substituindo o legado.
+ */
+
+const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
+monitorados.view = { initIcon, mountIcon, iconHtml };
+
+// Pontos de entrada cross-arquivo (chamados por init/arvore/sei-pro): agora vanilla.
+aliasGlobal('insertIconMonitorados', initIcon);
+aliasGlobal('appendIconMonitorados', mountIcon);
+aliasGlobal('htmlIconMonitorados', iconHtml);

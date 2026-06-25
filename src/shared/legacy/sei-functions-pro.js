@@ -938,15 +938,8 @@ function loadLocalFilePro() {
             fr.readAsText(files.item(0));
     });
 }
-function htmlIconMonitorados(id_procedimento, float = false) {
-    var storeMonitorados = getStoreMonitoradoPro()['monitorados'];
-    var dataMonitorados = (jmespath.search(storeMonitorados, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeMonitorados, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
-    var floatStyle = (float) ? 'float: '+float+';' : '';
-    var iconStar = (dataMonitorados == '') 
-                    ? '<i title="Adicionar aos Processos Monitorados" id="iconMonitoradoPro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actMonitoradoPro(this, \'add\')" class="far fa-star iconMonitoradoPro" style="font-size: 12pt; margin: 0 5px; color: #666; cursor: pointer; '+floatStyle+'"></i>'
-                    : '<i title="Remover dos Processos Monitorados" id="iconMonitoradoPro_'+id_procedimento+'" data-id_procedimento="'+id_procedimento+'" onclick="parent.actMonitoradoPro(this, \'remove\')" class="fas fa-star starGold iconMonitoradoPro" style="font-size: 12pt; margin: 0 5px; cursor: pointer; -webkit-text-fill-color: #FED35B; -webkit-text-stroke-color: rgb(216 162 22); -webkit-text-stroke-width: 2px; '+floatStyle+'"></i>';
-    return iconStar;
-}
+// htmlIconMonitorados REESCRITO em vanilla ESM: src/features/monitorados/icon.js
+// (data-act delegado no lugar do onclick inline). Global via aliasGlobal no bundle.
 function resizeWinArvore(widthArvore) {
     var indent = 10; // reduz 10 pixel a largura do visualizador para compensar a barra divisoria existente entre a arvore e o visualizador
     var widthConteudo = $('#divConteudo').width(); // capta o tamanho total da janela do SEI (janela interna)

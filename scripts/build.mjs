@@ -50,6 +50,7 @@ const bundles = [
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/anotacao-controle/index.js', out: 'dist/js/anotacao-controle.bundle.js' },
+    { entry: 'src/features/monitorados/index.js', out: 'dist/js/monitorados.bundle.js' },
     ...entryBundles
 ];
 
@@ -75,6 +76,9 @@ const legacyFiles = [
     'src/features/ai/sei-pro-ai.js',
     'src/features/todas-paginas/sei-pro-all.js',
     'src/features/monitorados/sei-pro-monitorados.js',
+    'src/features/monitorados/view/sei-pro-monitorados-datas.js',
+    'src/features/monitorados/view/sei-pro-monitorados-categorias.js',
+    'src/features/monitorados/view/sei-pro-monitorados-maps.js',
     'src/features/projetos/sei-pro-projetos.js',
     'src/features/prescricoes/sei-pro-prescricoes.js',
     'src/features/docs-lote/sei-pro-docs-lote.js',
