@@ -21,12 +21,16 @@ export function createTagsInput(input, opts = {}) {
         onAdd: null, onRemove: null, onChange: null
     }, opts);
 
+    // doc: permite montar o widget dentro de outro documento (ex.: iframe same-origin).
+    const doc = o.doc || (input.ownerDocument) || document;
+    const dropRoot = o.dropdownRoot || doc.body;
+
     let tags = String(input.value || '').split(o.delimiter).map((t) => t.trim()).filter(Boolean);
 
-    const wrap = document.createElement('div');
+    const wrap = doc.createElement('div');
     wrap.className = 'seipro-tagsinput';
     wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:1px solid #ccc;border-radius:4px;padding:3px;min-height:28px;';
-    const inner = document.createElement('input');
+    const inner = doc.createElement('input');
     inner.type = 'text';
     inner.placeholder = o.placeholder;
     inner.className = 'seipro-tagsinput-entry';
@@ -35,21 +39,21 @@ export function createTagsInput(input, opts = {}) {
     input.style.display = 'none';
     input.insertAdjacentElement('afterend', wrap);
 
-    const dropdown = document.createElement('div');
+    const dropdown = doc.createElement('div');
     dropdown.className = 'seipro-tagsinput-suggest';
     dropdown.style.cssText = 'position:absolute;z-index:100001;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);max-height:160px;overflow:auto;display:none;font-size:11px;';
-    document.body.appendChild(dropdown);
+    dropRoot.appendChild(dropdown);
 
     function sync() {
         input.value = tags.join(o.delimiter);
         if (typeof o.onChange === 'function') o.onChange(tags.slice(), input);
     }
     function pill(tag) {
-        const el = document.createElement('span');
+        const el = doc.createElement('span');
         el.className = 'tag seipro-tag';
         el.style.cssText = 'display:inline-flex;align-items:center;gap:3px;background:#eef;border-radius:3px;padding:1px 6px;';
         el.innerHTML = (typeof o.renderLabel === 'function' ? o.renderLabel(tag) : escapeText(tag));
-        const x = document.createElement('i');
+        const x = doc.createElement('i');
         x.className = 'fas fa-times seipro-tag-remove';
         x.style.cssText = 'cursor:pointer;font-size:.8em;opacity:.7;';
         x.addEventListener('click', () => remove(tag));
@@ -89,15 +93,15 @@ export function createTagsInput(input, opts = {}) {
         if (!matches.length) return hideSuggest();
         dropdown.innerHTML = '';
         matches.forEach((m) => {
-            const item = document.createElement('div');
+            const item = doc.createElement('div');
             item.textContent = m;
             item.style.cssText = 'padding:4px 8px;cursor:pointer;';
             item.addEventListener('mousedown', (e) => { e.preventDefault(); add(m); inner.value = ''; hideSuggest(); });
             dropdown.appendChild(item);
         });
         const r = inner.getBoundingClientRect();
-        dropdown.style.left = (r.left + window.scrollX) + 'px';
-        dropdown.style.top = (r.bottom + window.scrollY) + 'px';
+        dropdown.style.left = (r.left + (doc.defaultView ? doc.defaultView.scrollX : 0)) + 'px';
+        dropdown.style.top = (r.bottom + (doc.defaultView ? doc.defaultView.scrollY : 0)) + 'px';
         dropdown.style.minWidth = r.width + 'px';
         dropdown.style.display = 'block';
     }

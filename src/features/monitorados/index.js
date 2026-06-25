@@ -9,6 +9,7 @@ import { installServer } from './server.js';
 import { installPrazoRow } from './prazo-row.js';
 import { installExtras } from './extras.js';
 import { installPanelLifecycle } from './panel-lifecycle.js';
+import { installVisualizacao } from './visualizacao.js';
 
 /**
  * Processos Monitorados — ENTRY do bundle ESM (reescrita vanilla, isolated-world).
@@ -37,6 +38,7 @@ installServer();
 installPrazoRow();
 installExtras();
 installPanelLifecycle();
+installVisualizacao();
 
 // Pontos de entrada cross-arquivo (chamados por init/arvore/sei-pro): agora vanilla.
 aliasGlobal('insertIconMonitorados', initIcon);

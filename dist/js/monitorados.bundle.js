@@ -1576,31 +1576,33 @@
       onRemove: null,
       onChange: null
     }, opts);
+    const doc = o.doc || input.ownerDocument || document;
+    const dropRoot = o.dropdownRoot || doc.body;
     let tags = String(input.value || "").split(o.delimiter).map((t) => t.trim()).filter(Boolean);
-    const wrap = document.createElement("div");
+    const wrap = doc.createElement("div");
     wrap.className = "seipro-tagsinput";
     wrap.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:1px solid #ccc;border-radius:4px;padding:3px;min-height:28px;";
-    const inner = document.createElement("input");
+    const inner = doc.createElement("input");
     inner.type = "text";
     inner.placeholder = o.placeholder;
     inner.className = "seipro-tagsinput-entry";
     inner.style.cssText = "border:0;outline:0;flex:1;min-width:80px;font-size:inherit;background:transparent;";
     input.style.display = "none";
     input.insertAdjacentElement("afterend", wrap);
-    const dropdown = document.createElement("div");
+    const dropdown = doc.createElement("div");
     dropdown.className = "seipro-tagsinput-suggest";
     dropdown.style.cssText = "position:absolute;z-index:100001;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);max-height:160px;overflow:auto;display:none;font-size:11px;";
-    document.body.appendChild(dropdown);
+    dropRoot.appendChild(dropdown);
     function sync() {
       input.value = tags.join(o.delimiter);
       if (typeof o.onChange === "function") o.onChange(tags.slice(), input);
     }
     function pill(tag) {
-      const el = document.createElement("span");
+      const el = doc.createElement("span");
       el.className = "tag seipro-tag";
       el.style.cssText = "display:inline-flex;align-items:center;gap:3px;background:#eef;border-radius:3px;padding:1px 6px;";
       el.innerHTML = typeof o.renderLabel === "function" ? o.renderLabel(tag) : escapeText(tag);
-      const x = document.createElement("i");
+      const x = doc.createElement("i");
       x.className = "fas fa-times seipro-tag-remove";
       x.style.cssText = "cursor:pointer;font-size:.8em;opacity:.7;";
       x.addEventListener("click", () => remove(tag));
@@ -1645,7 +1647,7 @@
       if (!matches.length) return hideSuggest();
       dropdown.innerHTML = "";
       matches.forEach((m) => {
-        const item = document.createElement("div");
+        const item = doc.createElement("div");
         item.textContent = m;
         item.style.cssText = "padding:4px 8px;cursor:pointer;";
         item.addEventListener("mousedown", (e) => {
@@ -1657,8 +1659,8 @@
         dropdown.appendChild(item);
       });
       const r = inner.getBoundingClientRect();
-      dropdown.style.left = r.left + window.scrollX + "px";
-      dropdown.style.top = r.bottom + window.scrollY + "px";
+      dropdown.style.left = r.left + (doc.defaultView ? doc.defaultView.scrollX : 0) + "px";
+      dropdown.style.top = r.bottom + (doc.defaultView ? doc.defaultView.scrollY : 0) + "px";
       dropdown.style.minWidth = r.width + "px";
       dropdown.style.display = "block";
     }
@@ -2007,6 +2009,109 @@
     aliasGlobal("initFunctionsPanelMonitorado", initFunctionsPanelMonitorado);
   }
 
+  // src/features/monitorados/visualizacao.js
+  var g8 = (n) => globalRef[n];
+  function visIframe() {
+    const sel = globalRef.$ifrVisualizacao;
+    let ifr = typeof sel === "string" && sel ? document.querySelector(sel) : null;
+    if (!ifr) ifr = document.querySelector("#ifrConteudoVisualizacao, #ifrVisualizacao");
+    return ifr;
+  }
+  function monitoradosLabelOptions(id_procedimento) {
+    const store = getStoreMonitoradoPro();
+    const value = globalRef.jmespath.search(store.monitorados, "[?id_procedimento=='" + id_procedimento + "'] | [0]") || false;
+    const config = value && value.configdate ? value.configdate : "";
+    const etq = value && Array.isArray(value.etiquetas) ? value.etiquetas : [];
+    const tagsMonitorado = etq.length ? etq.join(";") : "";
+    const tagsHtml = typeof g8("getHtmlEtiqueta") === "function" ? etq.map((i) => g8("getHtmlEtiqueta")(i, "monitorado")).join("") : "";
+    const catSelect = typeof g8("selectCategoryMonitorado") === "function" ? g8("selectCategoryMonitorado")(value ? value.categoria : "", "changeCategoryMonitorado", true, id_procedimento).replace("<select ", '<select id="categoria_monitorado" ') : "";
+    const dateVal = config && config.date != null ? config.date : "";
+    return '<table style="font-size:10pt;width:100%;min-width:610px;" class="seiProForm"><tr data-id_procedimento="' + id_procedimento + '" data-index="0"><td style="vertical-align:bottom;text-align:left;" class="label"><label for="categoria_monitorado"><i class="iconPopup iconSwitch fas fa-layer-group cinzaColor"></i>Categoria:</label></td><td>' + catSelect + '</td><td style="vertical-align:bottom;" class="label"><label class="last" for="monitoradoPrazoSend"><i class="iconPopup iconSwitch fas fa-stopwatch cinzaColor" style="float:initial;"></i>Prazo:</label></td><td><span class="info_dates_monitorado_txt"><input id="monitoradoPrazoSend" value="' + dateVal + '" style="width:120px;background:#f9fafa;" data-act="dates-hide-blur" data-key="dates" type="date" class="monitoradoDatesPro" name="monitoradoPrazoSend"><a class="newLink monitoradoConfigDates" data-act="dates-config" style="padding:5px 8px;margin:8px 2px 0 10px;font-size:10pt;" title="Op\xE7\xF5es"><i class="fas fa-cog"></i></a></span></td></tr><tr data-id_procedimento="' + id_procedimento + '" data-index="0" style="height:40px;"><td align="left" class="tdmonitorado_tags" data-etiqueta-mode="monitorado" colspan="4"><span class="info_tags_follow">' + tagsHtml + '</span><span class="info_tags_follow_txt" style="display:none;margin-top:-8px !important;"><input value="' + tagsMonitorado + '" class="monitoradoTagsPro" name="monitoradoTagsPro"></span><a class="newLink followLinkTagsAdd_send" data-act="tags-show" style="font-size:10pt;"><i class="fas fa-tags"></i> Adicionar etiqueta</a></td></tr></table>';
+  }
+  function bindVisDispatcher(idoc, id_procedimento) {
+    if (idoc.__seiproMonitoradoVisBound) return;
+    idoc.__seiproMonitoradoVisBound = true;
+    idoc.addEventListener("click", (ev) => {
+      const el = ev.target.closest("[data-act]");
+      if (!el) return;
+      if (el.dataset.act === "dates-config" && g8("openBoxConfigDates")) {
+        ev.preventDefault();
+        g8("openBoxConfigDates")(el);
+      } else if (el.dataset.act === "tags-show" && g8("showFollowEtiqueta")) {
+        ev.preventDefault();
+        g8("showFollowEtiqueta")(el, "show", "monitorado");
+      }
+    });
+    idoc.addEventListener("change", (ev) => {
+      const cb = ev.target.closest('[data-act="vis-checkbox"]');
+      if (cb && g8("actionMonitoradoCheckbox")) {
+        g8("actionMonitoradoCheckbox")(cb);
+        return;
+      }
+      const sel = ev.target.closest('select.selectPro[data-act="category-change"]');
+      if (sel && g8("changeCategoryMonitorado")) g8("changeCategoryMonitorado")(sel);
+    });
+    idoc.addEventListener("focusout", (ev) => {
+      const el = ev.target.closest('[data-act="dates-hide-blur"]');
+      if (el && g8("showDatesMonitorado")) g8("showDatesMonitorado")(el, "hide");
+    });
+    idoc.addEventListener("keydown", (ev) => {
+      const el = ev.target.closest('[data-key="dates"]');
+      if (el && g8("keyDatesMonitorado")) g8("keyDatesMonitorado")(ev);
+    });
+  }
+  function getMonitoradosEnviarProcesso() {
+    const ifr = visIframe();
+    if (!ifr || !ifr.contentDocument) return;
+    const idoc = ifr.contentDocument;
+    const id = String(g8("getParamsUrlPro")(window.location.href).id_procedimento);
+    const value = globalRef.jmespath.search(getStoreMonitoradoPro().monitorados, "[?id_procedimento=='" + id + "'] | [0]");
+    const form = idoc.getElementById("frmAtividadeListar");
+    if (!form) return;
+    if (!idoc.getElementById("divSinAdicionarMonitorados")) {
+      form.insertAdjacentHTML(
+        "beforeend",
+        '<div id="divSinAdicionarMonitorados" class="infraDivCheckbox" style="position:absolute;top:100%;left:0;"><input type="checkbox" id="chkSindicionarMonitorados" data-act="vis-checkbox" name="chkSindicionarMonitorados" class="infraCheckbox" tabindex="510" ' + (value ? "checked" : "") + '><label id="lblSinAdicionarMonitorados" for="chkSindicionarMonitorados" class="infraLabelCheckbox">Manter processo em Processos Monitorados</label><div class="monitoradosLabelOptions seiProForm" style="display:' + (value ? "block" : "none") + ';font-size:9pt;clear:both;">' + monitoradosLabelOptions(id) + "</div></div>"
+      );
+    }
+    if (typeof g8("loadStylePro") === "function") {
+      const head = idoc.head;
+      g8("loadStylePro")(globalRef.URL_SPRO + "css/sei-pro.css", head, idoc);
+      g8("loadStylePro")(localStorage.getItem("seiSlim") ? globalRef.URL_SPRO + "css/fontawesome.pro.min.css" : globalRef.URL_SPRO + "css/fontawesome.min.css", head, idoc);
+    }
+    bindVisDispatcher(idoc, id);
+    const tagInput = idoc.querySelector(".monitoradoTagsPro");
+    if (tagInput && !tagInput.dataset.seiproTagsInit) {
+      tagInput.dataset.seiproTagsInit = "1";
+      const persist = () => {
+        if (typeof g8("saveFollowEtiqueta") === "function") g8("saveFollowEtiqueta")(tagInput);
+      };
+      createTagsInput(tagInput, {
+        doc: idoc,
+        delimiter: ";",
+        placeholder: "Adicionar etiqueta",
+        limit: 8,
+        minChars: 2,
+        source: () => typeof g8("sugestEtiquetaPro") === "function" ? g8("sugestEtiquetaPro")("monitorado") : [],
+        onAdd: persist,
+        onRemove: persist
+      });
+    }
+  }
+  function checkPageMonitoradosVisualizacao() {
+    const ifr = visIframe();
+    if (!ifr || !ifr.contentDocument) return;
+    waitFor(ifr.contentDocument, '#frmAtividadeListar[action*="acao=procedimento_enviar"]').then((el) => {
+      if (el) getMonitoradosEnviarProcesso();
+    });
+  }
+  function installVisualizacao() {
+    globalRef.loadMonitoradosPro = true;
+    aliasGlobal("monitoradosLabelOptions", monitoradosLabelOptions);
+    aliasGlobal("getMonitoradosEnviarProcesso", getMonitoradosEnviarProcesso);
+    aliasGlobal("checkPageMonitoradosVisualizacao", checkPageMonitoradosVisualizacao);
+  }
+
   // src/features/monitorados/index.js
   var monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
   monitorados.view = { initIcon, mountIcon, iconHtml };
@@ -2020,6 +2125,7 @@
   installPrazoRow();
   installExtras();
   installPanelLifecycle();
+  installVisualizacao();
   aliasGlobal("insertIconMonitorados", initIcon);
   aliasGlobal("appendIconMonitorados", mountIcon);
   aliasGlobal("htmlIconMonitorados", iconHtml);
