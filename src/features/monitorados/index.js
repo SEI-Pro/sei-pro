@@ -2,6 +2,7 @@ import { aliasGlobal, getSeiPro } from '../../core/global.js';
 import { initIcon, mountIcon, iconHtml } from './icon.js';
 import { openBoxSingleMap, openBoxMultipleMap, saveConfigMapsMonitorado } from './maps.js';
 import { setPanelMonitorados, bindPanelDispatcher } from './panel.js';
+import { openBoxConfigDates, installDatas } from './datas.js';
 
 /**
  * Processos Monitorados — ENTRY do bundle ESM (reescrita vanilla, isolated-world).
@@ -22,6 +23,8 @@ const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.mo
 monitorados.view = { initIcon, mountIcon, iconHtml };
 monitorados.maps = { openSingle: openBoxSingleMap, openMultiple: openBoxMultipleMap, save: saveConfigMapsMonitorado };
 monitorados.panel = { render: setPanelMonitorados };
+monitorados.datas = { openBox: openBoxConfigDates };
+installDatas();
 
 // Pontos de entrada cross-arquivo (chamados por init/arvore/sei-pro): agora vanilla.
 aliasGlobal('insertIconMonitorados', initIcon);
