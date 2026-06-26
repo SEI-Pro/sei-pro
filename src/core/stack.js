@@ -40,6 +40,7 @@ import { installAdapter } from '../sei/adapter.js';
 import { installUrls } from '../sei/urls.js';
 import { installTooltip } from '../sei/tooltip.js';
 import { installMonitoradoStore } from '../features/monitorados/store.js';
+import { installPrazoPreview } from '../shared/ui/prazo-preview.js';
 
 export function installCoreStack() {
     createNamespace();
@@ -74,4 +75,5 @@ export function installCoreStack() {
     installUrls();
     installTooltip();
     installMonitoradoStore(); // store cross-page de Processos Monitorados (view fica no legado)
+    installPrazoPreview();    // view compartilhada de etiqueta/preview de prazo (getDatesPreview/…)
 }

@@ -51,6 +51,9 @@ const bundles = [
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/anotacao-controle/index.js', out: 'dist/js/anotacao-controle.bundle.js' },
     { entry: 'src/features/monitorados/index.js', out: 'dist/js/monitorados.bundle.js' },
+    // Controlar Prazos: decomposta em domain/io/view; saída mantém o nome do script
+    // legado (js/sei-pro-controle-prazo.js) p/ o manifest não mudar.
+    { entry: 'src/features/controlar-prazos/index.js', out: 'dist/js/sei-pro-controle-prazo.js' },
     ...entryBundles
 ];
 
@@ -107,7 +110,9 @@ function copyLegacy() {
 // only in the blocks where the feature runs (best practice: CSS follows JS).
 const featureCss = [
     { src: 'src/features/anotacao-controle/style.css', out: 'dist/css/anotacao-controle.css' },
-    { src: 'src/features/monitorados/monitorados.css', out: 'dist/css/monitorados.css' }
+    { src: 'src/features/monitorados/monitorados.css', out: 'dist/css/monitorados.css' },
+    { src: 'src/shared/ui/prazo-preview.css', out: 'dist/css/prazo-preview.css' },
+    { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' }
 ];
 
 function copyFeatureCss() {

@@ -1398,11 +1398,6 @@ span.info[contentEditable="true"] {
     padding: 5px 10px;
     z-index: 88;
 }
-.info_dates_monitorado {
-    display: inline-block;
-    min-height: 14px;
-    margin-right: 20px;
-}
 .info_dates_follow_txt {
     background-color: #cfddeb;
     padding: 5px;
@@ -1445,19 +1440,6 @@ td.info_maps_follow_empty:hover a.newLink.followLink.followLinkMapsEdit,
 td.info_tags_follow_empty:hover a.newLink.followLink.followLinkTagsEdit {
     visibility: hidden;
 }
-.dateboxDisplay {
-    padding: 0 10px;
-    background-color: #bfd5e845;
-    margin: 5px;
-    border-radius: 5px;
-    color: #666;
-    white-space: nowrap;
-    cursor: pointer;
-    position: relative;
-}
-.dateBoxIcon {
-    position: relative;
-}
 .infraTooltipPro {
     background: #ffffaa;
     padding: .4em;
@@ -1476,30 +1458,6 @@ td.info_tags_follow_empty:hover a.newLink.followLink.followLinkTagsEdit {
 }
 i.iconSwitch {
     color: #c0c0c0;
-}
-.dateboxDisplay .circular-chart {
-  display: inline-flex;
-  max-width: 22px;
-  max-height: 22px;
-  position: absolute;
-  margin: -3px 0 0 -3px;
-}
-.dateboxDisplay .circle {
-  stroke: #017fff99;
-  fill: none;
-  stroke-width: 5.8;
-  stroke-linecap: round;
-  animation: progress 1s ease-out forwards;
-}
-.tabelaControle .dateboxDisplay, 
-#frmArvore .dateboxDisplay {
-    padding: 2px 8px;
-    margin: 0;
-    background-color: transparent;
-    display: inline-block;
-}
-#frmArvore .dateboxDisplay {
-    padding: 0 2px !important;
 }
 .tabelaControle td.atividadeBoxDisplay {
     margin: 0 10px;
@@ -1597,11 +1555,6 @@ i.iconSwitch {
 }
 .ui-sortable .titlePanelHome {
     cursor: grab;
-}
-@keyframes progress {
-  0% {
-    stroke-dasharray: 0 100;
-  }
 }
 .SeiPro_pesquisa_agrupamento #divInfraBarraSuperior,
 .SeiPro_pesquisa_agrupamento #divInfraBarraSistemaPadrao,
@@ -2006,9 +1959,6 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-item.tagKanName_urgente,
 .kanban-container .kanban-item[data-class="urgente"],
-.urgenteBoxDisplay {
-    background: #f9e2e0;
-}
 .importanteBoxDisplay {
     background: #f9e2e0;
 }
@@ -2514,10 +2464,6 @@ table.infraTable tr > th.infraTh.tablesorter-headerSortDown {
 }
 .newSEI table.infraTable tr > th.infraTh.tablesorter-header .tablesorter-header-inner {
     color: var(--color-secondary-03) !important;
-}
-.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo i,
-.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo span {
-    color: var(--pure-0) !important;
 }
 .newSEI #frmProcedimentoControlar.h-100,
 .newSEI #divControleProcessosConteudo.h-100 {
@@ -3558,19 +3504,6 @@ td.message-content * {
     font-size: 8pt;
     padding: 3px 5px;
 }
-tr:hover td.prazoBoxDisplay a.addControlePrazo,
-tr.infraTrMarcada td.prazoBoxDisplay a.addControlePrazo {
-    display: inline-block;
-}
-tr.infraTrSelecionada td.prazoBoxDisplay a.addControlePrazo {
-    display: inline-block;
-    background-color: rgb(232, 232, 232);
-    color: rgb(68, 68, 68);
-}
-tr td.prazoBoxDisplay a.addControlePrazo:hover {
-    text-decoration: none;
-}
-tr td.prazoBoxDisplay a.addControlePrazo {
     display: none;
     padding: 0 5px;
     border-radius: 5px;
@@ -3714,13 +3647,6 @@ body:not(.newSEI) div.infraTooltipTexto b {
 body:not(.newSEI) div.infraTooltipTexto i {
     font-style:italic;
 }
-td.prazoBoxDisplay {
-    width: 5em !important;
-    min-width: 5em !important;
-    max-width: 5em !important;
-    overflow: hidden;
-    text-align: center;
-}
 .chosen-container .chosen-results li.disabled-result {
     color: #a2a2a2 !important;
 }
@@ -3729,35 +3655,6 @@ td.prazoBoxDisplay {
     height: 100vh;
     border: none;
 }
-td.prazoBoxDisplay {
-    width: 5em !important;
-    min-width: 5em !important;
-    max-width: 5em !important;
-}
-th.prazoBoxDisplay .tablesorter-header-inner {
-    display: flex !important;
-    width: 100%;
-    justify-content: flex-end;
-    padding-right: 0 !important;
-    text-align: right !important;
-}
-td.prazoBoxDisplay .dateboxDisplay,
-td.prazoBoxDisplay a.addControlePrazo {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    max-width: 100%;
-}
-td.prazoBoxDisplay a.addControlePrazo {
-    width: 100%;
-    overflow: hidden;
-    justify-content: center;
-}
-td.prazoBoxDisplay a.addControlePrazo span {
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .displayNone, #divInfraAreaTelaD .displayNone {
     display: none !important;

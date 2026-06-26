@@ -1,0 +1,62 @@
+/*
+ * CSS da feature "Controlar Prazos" (gerenciarprazos) — controle de prazo na
+ * LISTA DE PROCESSOS. Classes próprias da feature: a.addControlePrazo e
+ * td/th.prazoBoxDisplay (coluna de prazo). Pareado com sei-pro-controle-prazo.js.
+ */
+.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo i,
+.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo span {
+    color: var(--pure-0) !important;
+}
+
+tr:hover td.prazoBoxDisplay a.addControlePrazo,
+tr.infraTrMarcada td.prazoBoxDisplay a.addControlePrazo {
+    display: inline-block;
+}
+tr.infraTrSelecionada td.prazoBoxDisplay a.addControlePrazo {
+    display: inline-block;
+    background-color: rgb(232, 232, 232);
+    color: rgb(68, 68, 68);
+}
+tr td.prazoBoxDisplay a.addControlePrazo:hover {
+    text-decoration: none;
+}
+tr td.prazoBoxDisplay a.addControlePrazo {
+
+td.prazoBoxDisplay {
+    width: 5em !important;
+    min-width: 5em !important;
+    max-width: 5em !important;
+    overflow: hidden;
+    text-align: center;
+}
+
+td.prazoBoxDisplay {
+    width: 5em !important;
+    min-width: 5em !important;
+    max-width: 5em !important;
+}
+th.prazoBoxDisplay .tablesorter-header-inner {
+    display: flex !important;
+    width: 100%;
+    justify-content: flex-end;
+    padding-right: 0 !important;
+    text-align: right !important;
+}
+td.prazoBoxDisplay .dateboxDisplay,
+td.prazoBoxDisplay a.addControlePrazo {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+}
+td.prazoBoxDisplay a.addControlePrazo {
+    width: 100%;
+    overflow: hidden;
+    justify-content: center;
+}
+td.prazoBoxDisplay a.addControlePrazo span {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
