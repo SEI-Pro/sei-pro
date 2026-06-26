@@ -217,7 +217,8 @@
         "js/sei-pro-atividades.js",
         "js/sei-pro-projetos.js",
         "js/sei-pro-prescricoes.js",
-        "js/init.js"
+        "js/init.js",
+        "js/quick-filter-list.bundle.js"
       ],
       "css": [
         "css/sei-pro.css",
@@ -317,7 +318,8 @@
         "js/sei-pro-atividades.js",
         "js/sei-pro-projetos.js",
         "js/sei-pro-prescricoes.js",
-        "js/init.js"
+        "js/init.js",
+        "js/quick-filter-list.bundle.js"
       ],
       "css": [
         "css/anotacao-controle.css",
@@ -375,7 +377,8 @@
         "js/sei-functions-pro.js",
         "js/sei-pro-icons.js",
         "js/sei-pro-arvore.js",
-        "js/init_arvore.js"
+        "js/init_arvore.js",
+        "js/quick-filter-tree.bundle.js"
       ],
       "css": [
         "css/sei-pro.css",

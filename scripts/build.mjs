@@ -49,6 +49,8 @@ const bundles = [
     { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
+    { entry: 'src/features/quick-filter/index-list.js', out: 'dist/js/quick-filter-list.bundle.js' },
+    { entry: 'src/features/quick-filter/index-tree.js', out: 'dist/js/quick-filter-tree.bundle.js' },
     { entry: 'src/features/anotacao-controle/index.js', out: 'dist/js/anotacao-controle.bundle.js' },
     { entry: 'src/features/monitorados/index.js', out: 'dist/js/monitorados.bundle.js' },
     // Controlar Prazos: decomposta em domain/io/view; saída mantém o nome do script
