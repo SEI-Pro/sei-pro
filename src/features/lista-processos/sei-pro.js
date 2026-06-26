@@ -3193,17 +3193,8 @@ function initAllMarcadoresHome(TimeOut = 9000) {
         }, 500);
     }
 }
-function initNaoVisualizadoPro() {
-    $('.processoNaoVisualizado').each(function(){
-        var el = $(this);
-        if (el.attr('data-nvis') === '1') return;            // j\u00E1 processado nesta p\u00E1gina
-        var tooltip = el.attr('onmouseover');
-        if (typeof tooltip !== 'undefined' && tooltip.indexOf("(N\u00E3o Visualizado) ") === -1) {
-            el.attr('onmouseover', tooltip.replace("return infraTooltipMostrar('","return infraTooltipMostrar('(N\u00E3o Visualizado) "));
-        }
-        el.attr('data-nvis','1');
-    });
-}
+// initNaoVisualizadoPro migrada para src/features/nao-lido/view.js (feature
+// marcar_naolido). Global preservado via aliasGlobal no bundle js/sei-pro-nao-lido.js.
 function initUrgentePro() {
     $('a div.urgentePro').remove();
     $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]')

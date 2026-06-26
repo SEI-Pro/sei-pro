@@ -54,6 +54,9 @@ const bundles = [
     // Controlar Prazos: decomposta em domain/io/view; saída mantém o nome do script
     // legado (js/sei-pro-controle-prazo.js) p/ o manifest não mudar.
     { entry: 'src/features/controlar-prazos/index.js', out: 'dist/js/sei-pro-controle-prazo.js' },
+    // Marcar como "Não Visualizado": decomposta em io/view; saída nova (manifest
+    // blocos 3 e 4, após sei-pro.js). Globais preservados via aliasGlobal.
+    { entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' },
     ...entryBundles
 ];
 
