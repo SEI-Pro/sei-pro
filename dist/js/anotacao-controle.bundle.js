@@ -1,4 +1,70 @@
 (() => {
+  // src/dom/index.js
+  function qs(selector, root) {
+    return (root || document).querySelector(selector);
+  }
+  function qsa(selector, root) {
+    return Array.prototype.slice.call((root || document).querySelectorAll(selector));
+  }
+  function el(tag, props, children) {
+    const node = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function(key) {
+        const value = props[key];
+        if (value == null) return;
+        if (key === "className") {
+          node.className = value;
+          return;
+        }
+        if (key === "class") {
+          node.className = value;
+          return;
+        }
+        if (key === "textContent" || key === "text") {
+          node.textContent = value;
+          return;
+        }
+        if (key === "innerHTML" || key === "html") {
+          node.innerHTML = value;
+          return;
+        }
+        if (key === "style" && typeof value === "object") {
+          Object.keys(value).forEach(function(p) {
+            node.style[p] = value[p];
+          });
+          return;
+        }
+        if (key === "dataset" && typeof value === "object") {
+          Object.keys(value).forEach(function(d) {
+            node.dataset[d] = value[d];
+          });
+          return;
+        }
+        if (key === "on" && typeof value === "object") {
+          Object.keys(value).forEach(function(t) {
+            node.addEventListener(t, value[t]);
+          });
+          return;
+        }
+        node.setAttribute(key, value);
+      });
+    }
+    appendChildren(node, children);
+    return node;
+  }
+  function appendChildren(node, children) {
+    if (children == null) return node;
+    const list = Array.isArray(children) ? children : [children];
+    list.forEach(function(c) {
+      if (c == null) return;
+      node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return node;
+  }
+  function remove(node) {
+    if (node && node.parentNode) node.parentNode.removeChild(node);
+  }
+
   // src/core/texto.js
   function normalizeMojibakeUtf8(value) {
     value = typeof value === "string" ? value : "";
@@ -29,7 +95,7 @@
     if (!label) {
       return false;
     }
-    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s*\/\s*(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
+    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s+\/\s+(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
     if (!match) {
       return false;
     }
@@ -56,6 +122,39 @@
     return { isItem, checked, text };
   }
 
+  // src/features/anotacao-controle/domain.js
+  function sticknoteChecklistClass(item) {
+    if (!item.isItem) {
+      return "";
+    }
+    return item.checked ? ' class="stickNoteCheck stickNoteChecked"' : ' class="stickNoteCheck"';
+  }
+  function buildChecklistTooltipHtml(texttip) {
+    return texttip.split("\n").map(function(v) {
+      if (v === "") {
+        return v;
+      }
+      var item = parseSticknoteChecklistLine(v);
+      if (!item.isItem) {
+        return v;
+      }
+      var icon = item.checked ? '<i class=\\"fas fa-check-square\\"></i> ' : '<i class=\\"far fa-square\\"></i> ';
+      var style = item.checked ? ' style=\\"text-decoration: line-through;\\"' : "";
+      return "<div" + style + ">" + icon + item.text + "</div>";
+    }).join("");
+  }
+
+  // src/features/anotacao-controle/io.js
+  function fetchSticknotePriority(href) {
+    return fetch(href, { credentials: "same-origin" }).then(function(response) {
+      return response.text();
+    }).then(function(html) {
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var checkbox = doc.querySelector("#chkSinPrioridade");
+      return checkbox ? checkbox.checked : false;
+    });
+  }
+
   // src/features/anotacao-controle/view.js
   function getParamsUrlPro(u) {
     return window.getParamsUrlPro(u);
@@ -75,47 +174,91 @@
   function checkConfigValue(n) {
     return typeof window.checkConfigValue !== "undefined" ? window.checkConfigValue(n) : false;
   }
+  var PROCESS_TABLES_SEL = "#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado";
+  var NON_DATA_ROW_SEL = ".tableHeader, .tagintable, .infraCaption, .tablesorter-filter-row";
+  function processTables() {
+    return qsa(PROCESS_TABLES_SEL);
+  }
+  function findIn(tables, selector) {
+    return tables.reduce(function(acc, table) {
+      return acc.concat(qsa(selector, table));
+    }, []);
+  }
+  function unwrap(node) {
+    var parent = node.parentNode;
+    if (!parent) return;
+    while (node.firstChild) parent.insertBefore(node.firstChild, node);
+    parent.removeChild(node);
+  }
+  function wrapInner(node, className) {
+    var wrapper = document.createElement("div");
+    wrapper.className = className;
+    while (node.firstChild) wrapper.appendChild(node.firstChild);
+    node.appendChild(wrapper);
+  }
+  function clampToTwoLines(card) {
+    if (!card || !card.parentNode) return;
+    var cs = window.getComputedStyle(card);
+    var lineHeight = parseFloat(cs.lineHeight);
+    if (!lineHeight || isNaN(lineHeight)) lineHeight = (parseFloat(cs.fontSize) || 12) * 1.35;
+    var twoLines = Math.round(lineHeight * 2 + (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0));
+    if (card.scrollHeight <= twoLines + 1) return;
+    var collapsed = true;
+    var icon = el("i", { className: "fas fa-chevron-down" });
+    function apply() {
+      if (collapsed) {
+        card.style.maxHeight = twoLines + "px";
+        card.style.overflow = "hidden";
+        icon.className = "fas fa-chevron-down";
+        toggle.title = "Ver anota\xE7\xE3o completa";
+      } else {
+        card.style.maxHeight = "";
+        card.style.overflow = "";
+        icon.className = "fas fa-chevron-up";
+        toggle.title = "Recolher anota\xE7\xE3o";
+      }
+    }
+    var toggle = el("span", {
+      className: "seipro-sticknote-toggle",
+      title: "Ver anota\xE7\xE3o completa",
+      on: { click: function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        collapsed = !collapsed;
+        apply();
+      } }
+    }, icon);
+    apply();
+    card.appendChild(toggle);
+  }
   function resolveSticknoteHomeParsed(link) {
-    var $ = window.jQuery;
-    var _this = $(link);
-    var ariaLabel = _this.attr("aria-label");
+    var ariaLabel = link.getAttribute("aria-label");
     if (ariaLabel) {
       var parsed = parseSticknoteHomeLabel(ariaLabel);
       if (parsed) {
-        return parsed;
+        return { text: normalizeMojibakeUtf82(parsed.text), user: normalizeMojibakeUtf82(parsed.user) };
       }
     }
-    var tooltip = _this.attr("onmouseover");
-    tooltip = typeof tooltip !== "undefined" ? tooltip.split("'") : false;
+    var tooltip = link.getAttribute("onmouseover");
+    tooltip = tooltip != null ? tooltip.split("'") : false;
     if (tooltip) {
-      return { text: tooltip[1] || "", user: tooltip[3] || "" };
+      return { text: normalizeMojibakeUtf82(tooltip[1] || ""), user: normalizeMojibakeUtf82(tooltip[3] || "") };
     }
     return false;
   }
   function replaceSticknoteHome() {
-    var $ = window.jQuery;
     var arraySticknoteHome = [];
-    $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").find('a[href*="acao=anotacao_registrar"]').each(function() {
-      var _this = $(this);
-      var parsed = resolveSticknoteHomeParsed(_this);
+    findIn(processTables(), 'a[href*="acao=anotacao_registrar"]').forEach(function(link) {
+      var parsed = resolveSticknoteHomeParsed(link);
       if (parsed && parsed.text) {
-        var id_protocolo = _this.attr("href");
-        id_protocolo = typeof id_protocolo !== "undefined" ? getParamsUrlPro(id_protocolo).id_protocolo : false;
+        var href = link.getAttribute("href");
+        var id_protocolo = href != null ? getParamsUrlPro(href).id_protocolo : false;
         var texttip = normalizeSticknoteHomeText(parsed.text);
-        var usertip = normalizeMojibakeUtf82(parsed.user || "");
-        var _return = $.map(texttip.split("\n"), function(v) {
-          if (v === "") {
-            return v;
-          }
-          var item = parseSticknoteChecklistLine(v);
-          if (!item.isItem) {
-            return v;
-          }
-          var icon = item.checked ? '<i class=\\"fas fa-check-square\\"></i> ' : '<i class=\\"far fa-square\\"></i> ';
-          var style = item.checked ? ' style=\\"text-decoration: line-through;\\"' : "";
-          return "<div" + style + ">" + icon + item.text + "</div>";
-        }).join("");
-        _this.attr("onmouseover", "return infraTooltipMostrar(" + JSON.stringify(_return) + "," + JSON.stringify(usertip) + ");").attr("data-sticknote-text", texttip).attr("data-sticknote-user", usertip);
+        var usertip = parsed.user || "";
+        var _return = buildChecklistTooltipHtml(texttip);
+        link.setAttribute("onmouseover", "return infraTooltipMostrar(" + JSON.stringify(_return) + "," + JSON.stringify(usertip) + ");");
+        link.setAttribute("data-sticknote-text", texttip);
+        link.setAttribute("data-sticknote-user", usertip);
         if (id_protocolo) {
           arraySticknoteHome.push({ id_protocolo, usertip, texttip });
         }
@@ -123,15 +266,7 @@
     });
     setOptionsPro("arraySticknoteHome", arraySticknoteHome);
   }
-  function sticknoteChecklistClass(item) {
-    if (!item.isItem) {
-      return "";
-    }
-    return item.checked ? ' class="stickNoteCheck stickNoteChecked"' : ' class="stickNoteCheck"';
-  }
   function formatDadosAnotacaoHome(value) {
-    var $ = window.jQuery;
-    value = normalizeMojibakeUtf82(value);
     value = normalizeSticknoteHomeText(value);
     if (value === "") {
       return "";
@@ -141,7 +276,7 @@
       return "<div" + sticknoteChecklistClass(single) + ">" + replaceTextToProcessoSEI(single.text) + "</div>";
     }
     var result = "";
-    $.each(value.split("\n"), function(i, v) {
+    value.split("\n").forEach(function(v, i) {
       if (v != "") {
         var item = parseSticknoteChecklistLine(v);
         result += "<div" + sticknoteChecklistClass(item) + ">" + replaceTextToProcessoSEI(item.text) + "</div>";
@@ -152,47 +287,38 @@
     return result;
   }
   function getSticknoteHomeLinks() {
-    var $ = window.jQuery;
-    return $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").find('a[href*="acao=anotacao_registrar"]');
+    return findIn(processTables(), 'a[href*="acao=anotacao_registrar"]');
   }
   function getSticknoteHomeText(link) {
-    var $ = window.jQuery;
-    var _this = $(link);
-    var texttip = _this.attr("data-sticknote-text");
-    if (typeof texttip !== "undefined") {
-      return normalizeSticknoteHomeText(normalizeMojibakeUtf82(texttip));
+    var texttip = link.getAttribute("data-sticknote-text");
+    if (texttip != null) {
+      return normalizeSticknoteHomeText(texttip);
     }
-    var parsed = resolveSticknoteHomeParsed(_this);
+    var parsed = resolveSticknoteHomeParsed(link);
     if (parsed && parsed.text) {
-      return normalizeSticknoteHomeText(normalizeMojibakeUtf82(parsed.text));
+      return normalizeSticknoteHomeText(parsed.text);
     }
     return "";
   }
   function getSticknoteHomePriority(link) {
-    var $ = window.jQuery;
-    var _this = $(link);
-    var priority = _this.attr("data-sticknote-priority");
-    if (typeof priority !== "undefined") {
+    var priority = link.getAttribute("data-sticknote-priority");
+    if (priority != null) {
       return priority === "true";
     }
     return false;
   }
   function loadSticknoteHomePriority(link) {
-    var $ = window.jQuery;
-    var _this = $(link);
-    var href = _this.attr("href");
-    if (!href || _this.attr("data-sticknote-priority-loading") === "true") {
+    var href = link.getAttribute("href");
+    if (!href || link.getAttribute("data-sticknote-priority-loading") === "true") {
       return;
     }
-    _this.attr("data-sticknote-priority-loading", "true");
-    $.ajax({ url: href }).done(function(html) {
-      var doc = new DOMParser().parseFromString(html, "text/html");
-      var priority = doc.querySelector("#chkSinPrioridade");
-      priority = priority ? priority.checked : false;
-      _this.attr("data-sticknote-priority", priority ? "true" : "false");
+    link.setAttribute("data-sticknote-priority-loading", "true");
+    fetchSticknotePriority(href).then(function(priority) {
+      link.setAttribute("data-sticknote-priority", priority ? "true" : "false");
       scheduleRenderSticknoteHomeInline();
-    }).always(function() {
-      _this.removeAttr("data-sticknote-priority-loading");
+    }).catch(function() {
+    }).finally(function() {
+      link.removeAttribute("data-sticknote-priority-loading");
     });
   }
   var _sticknoteRenderTimer = null;
@@ -206,162 +332,220 @@
     }, 100);
   }
   function renderSticknoteHomeInline() {
-    var $ = window.jQuery;
-    var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
-    tableProc.find(".sticknoteHomeDetailedNoteCell .sticknoteHomeInline").each(function() {
-      $(this).replaceWith($(this).html());
+    var tableProc = processTables();
+    findIn(tableProc, ".seipro-sticknote-toggle").forEach(remove);
+    findIn(tableProc, ".seipro-sticknote-detailed-note-cell .seipro-sticknote-card").forEach(unwrap);
+    findIn(tableProc, ".seipro-sticknote-card").forEach(remove);
+    tableProc.forEach(function(t) {
+      t.classList.remove("seipro-sticknote-layout");
     });
-    tableProc.find(".sticknoteHomeInline").remove();
-    tableProc.removeClass("sticknoteHomeLayout");
-    tableProc.find(".sticknoteHomeInsertedCell").remove();
-    tableProc.find(".sticknoteHomeInsertedHead").remove();
-    tableProc.find(".sticknoteHomeCheckCell").removeClass("sticknoteHomeCheckCell");
-    tableProc.find(".sticknoteHomeCheckHead").removeClass("sticknoteHomeCheckHead");
-    tableProc.find(".sticknoteHomeIconCell").removeClass("sticknoteHomeIconCell");
-    tableProc.find(".sticknoteHomeDetailedNoteCell").removeClass("sticknoteHomeDetailedNoteCell sticknoteHomeNoteCell");
-    tableProc.find(".sticknoteHomeProcessCell").removeClass("sticknoteHomeProcessCell");
-    tableProc.find('td[data-sticknote-home-icon="true"]').removeAttr("data-sticknote-home-icon").css({ "width": "", "min-width": "", "max-width": "" });
-    tableProc.find("td[data-sticknote-orig-width]").each(function() {
-      var orig = $(this).attr("data-sticknote-orig-width");
-      if (orig) $(this).attr("width", orig);
-      else $(this).removeAttr("width");
-      $(this).removeAttr("data-sticknote-orig-width");
+    findIn(tableProc, ".seipro-sticknote-inserted-cell").forEach(remove);
+    findIn(tableProc, ".seipro-sticknote-inserted-head").forEach(remove);
+    findIn(tableProc, ".seipro-sticknote-check-cell").forEach(function(e) {
+      e.classList.remove("seipro-sticknote-check-cell");
     });
-    tableProc.find("thead tr th[data-sticknote-orig-colspan], tr.tableHeader th[data-sticknote-orig-colspan]").each(function() {
-      var orig = $(this).attr("data-sticknote-orig-colspan");
-      if (orig) $(this).attr("colspan", orig);
-      else $(this).removeAttr("colspan");
-      $(this).removeAttr("data-sticknote-orig-colspan");
+    findIn(tableProc, ".seipro-sticknote-check-head").forEach(function(e) {
+      e.classList.remove("seipro-sticknote-check-head");
+    });
+    findIn(tableProc, ".seipro-sticknote-icon-cell").forEach(function(e) {
+      e.classList.remove("seipro-sticknote-icon-cell");
+    });
+    findIn(tableProc, ".seipro-sticknote-detailed-note-cell").forEach(function(e) {
+      e.classList.remove("seipro-sticknote-detailed-note-cell", "seipro-sticknote-note-cell");
+    });
+    findIn(tableProc, ".seipro-sticknote-process-cell").forEach(function(e) {
+      e.classList.remove("seipro-sticknote-process-cell");
+    });
+    findIn(tableProc, 'td[data-sticknote-home-icon="true"]').forEach(function(td) {
+      td.removeAttribute("data-sticknote-home-icon");
+      td.style.width = "";
+      td.style.minWidth = "";
+      td.style.maxWidth = "";
+    });
+    findIn(tableProc, "td[data-sticknote-orig-width]").forEach(function(td) {
+      var orig = td.getAttribute("data-sticknote-orig-width");
+      if (orig) td.setAttribute("width", orig);
+      else td.removeAttribute("width");
+      td.removeAttribute("data-sticknote-orig-width");
+    });
+    findIn(tableProc, "thead tr th[data-sticknote-orig-colspan], tr.tableHeader th[data-sticknote-orig-colspan]").forEach(function(th) {
+      var orig = th.getAttribute("data-sticknote-orig-colspan");
+      if (orig) th.setAttribute("colspan", orig);
+      else th.removeAttribute("colspan");
+      th.removeAttribute("data-sticknote-orig-colspan");
     });
     if (!verifyConfigValue("mostraranotacaocontrole")) {
       return;
     }
-    tableProc.addClass("sticknoteHomeLayout");
-    tableProc.find("tbody tr").not(".tableHeader, .tagintable, .infraCaption, .tablesorter-filter-row").has('a[href*="acao=procedimento_trabalhar"]').each(function() {
-      $(this).find("td").eq(0).addClass("sticknoteHomeCheckCell");
+    tableProc.forEach(function(t) {
+      t.classList.add("seipro-sticknote-layout");
     });
-    tableProc.find('a[href*="acao=procedimento_trabalhar"]').each(function() {
-      var processLink = $(this);
+    tableProc.forEach(function(table) {
+      qsa("tbody tr", table).filter(function(tr) {
+        return !tr.matches(NON_DATA_ROW_SEL);
+      }).filter(function(tr) {
+        return qs('a[href*="acao=procedimento_trabalhar"]', tr);
+      }).forEach(function(tr) {
+        var td = qsa("td", tr)[0];
+        if (td) td.classList.add("seipro-sticknote-check-cell");
+      });
+    });
+    findIn(tableProc, 'a[href*="acao=procedimento_trabalhar"]').forEach(function(processLink) {
       var table = processLink.closest("table");
       var processCell = processLink.closest("td");
-      if (!processCell.length) return;
-      processCell.addClass("sticknoteHomeProcessCell");
-      if (!table.is("#tblProcessosDetalhado")) {
-        $('<td class="sticknoteHomeInsertedCell sticknoteHomeNoteCell"></td>').insertBefore(processCell);
+      if (!processCell) return;
+      processCell.classList.add("seipro-sticknote-process-cell");
+      if (!(table && table.matches("#tblProcessosDetalhado"))) {
+        var noteTd = el("td", { className: "seipro-sticknote-inserted-cell seipro-sticknote-note-cell" });
+        processCell.parentNode.insertBefore(noteTd, processCell);
       }
     });
-    tableProc.each(function() {
-      var $table = $(this);
-      if ($table.is("#tblProcessosDetalhado")) return;
-      var processRow = $table.find("tbody tr").not(".tableHeader, .infraCaption, .tablesorter-filter-row").has('a[href*="acao=procedimento_trabalhar"]').first();
+    tableProc.forEach(function(table) {
+      if (table.matches("#tblProcessosDetalhado")) return;
+      var processRow = qsa("tbody tr", table).filter(function(tr) {
+        return !tr.matches(".tableHeader, .infraCaption, .tablesorter-filter-row");
+      }).filter(function(tr) {
+        return qs('a[href*="acao=procedimento_trabalhar"]', tr);
+      })[0];
       var processCellIdx = -1;
-      if (processRow.length) {
-        processCellIdx = processRow.find("td").index(processRow.find('a[href*="acao=procedimento_trabalhar"]').first().closest("td"));
+      if (processRow) {
+        var firstProcA = qs('a[href*="acao=procedimento_trabalhar"]', processRow);
+        var pc = firstProcA ? firstProcA.closest("td") : null;
+        processCellIdx = pc ? qsa("td", processRow).indexOf(pc) : -1;
       }
       if (processCellIdx <= 0) return;
-      var headRow = $table.find("thead tr").last();
-      if (!headRow.length) {
-        headRow = $table.find("tbody tr").not(".tableHeader, .infraCaption, .tablesorter-filter-row").has("th").first();
+      var theadRows = qsa("thead tr", table);
+      var headRow = theadRows.length ? theadRows[theadRows.length - 1] : null;
+      if (!headRow) {
+        headRow = qsa("tbody tr", table).filter(function(tr) {
+          return !tr.matches(".tableHeader, .infraCaption, .tablesorter-filter-row");
+        }).filter(function(tr) {
+          return qs("th", tr);
+        })[0] || null;
       }
-      var processHead = headRow.find("th").eq(processCellIdx);
-      if (!processHead.length) {
-        processHead = headRow.find("th").last();
+      if (!headRow) return;
+      var ths = qsa("th", headRow);
+      var processHead = ths[processCellIdx] || ths[ths.length - 1];
+      if (processHead) {
+        var th = el("th", { className: "tituloControle infraTh seipro-sticknote-inserted-head" });
+        processHead.parentNode.insertBefore(th, processHead);
       }
-      if (processHead.length) {
-        $('<th class="tituloControle infraTh sticknoteHomeInsertedHead"></th>').insertBefore(processHead);
-      }
-      headRow.find("th").eq(0).addClass("sticknoteHomeCheckHead");
+      var firstTh = qsa("th", headRow)[0];
+      if (firstTh) firstTh.classList.add("seipro-sticknote-check-head");
     });
     var detailedNoteColIdx = -1;
-    var detailedTable = $("#tblProcessosDetalhado");
-    if (detailedTable.length) {
-      var detailedHeadRow = detailedTable.find("thead tr").last();
-      if (!detailedHeadRow.length) {
-        detailedHeadRow = detailedTable.find("tbody tr").has("th").first();
+    var detailedTable = qs("#tblProcessosDetalhado");
+    if (detailedTable) {
+      var dHeadRows = qsa("thead tr", detailedTable);
+      var detailedHeadRow = dHeadRows.length ? dHeadRows[dHeadRows.length - 1] : null;
+      if (!detailedHeadRow) {
+        detailedHeadRow = qsa("tbody tr", detailedTable).filter(function(tr) {
+          return qs("th", tr);
+        })[0] || null;
       }
-      detailedHeadRow.find("th").each(function(i) {
-        var label = $(this).text().replace(/\s+/g, " ").trim().toLowerCase();
-        if (label.indexOf("anota\xE7\xE3o") !== -1 || label.indexOf("anotacao") !== -1) {
-          detailedNoteColIdx = i;
-          return false;
-        }
-      });
-      if (detailedNoteColIdx >= 0) {
-        detailedTable.find("tbody tr").not(".tableHeader, .infraCaption, .tablesorter-filter-row").has("td").each(function() {
-          var noteCell = $(this).find("td").eq(detailedNoteColIdx);
-          if (!noteCell.length) return;
-          var noteText = noteCell.text().replace(/\u00a0/g, " ").trim();
-          if (noteText === "") return;
-          noteCell.addClass("sticknoteHomeDetailedNoteCell sticknoteHomeNoteCell");
-          if (!noteCell.find(".sticknoteHomeInline").length) {
-            noteCell.wrapInner('<div class="sticknoteHomeInline"></div>');
+      if (detailedHeadRow) {
+        var dths = qsa("th", detailedHeadRow);
+        for (var d = 0; d < dths.length; d++) {
+          var label = (dths[d].textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+          if (label.indexOf("anota\xE7\xE3o") !== -1 || label.indexOf("anotacao") !== -1) {
+            detailedNoteColIdx = d;
+            break;
           }
+        }
+      }
+      if (detailedNoteColIdx >= 0) {
+        qsa("tbody tr", detailedTable).filter(function(tr) {
+          return !tr.matches(".tableHeader, .infraCaption, .tablesorter-filter-row");
+        }).filter(function(tr) {
+          return qs("td", tr);
+        }).forEach(function(tr) {
+          var noteCell = qsa("td", tr)[detailedNoteColIdx];
+          if (!noteCell) return;
+          var noteText = (noteCell.textContent || "").replace(/ /g, " ").trim();
+          if (noteText === "") return;
+          noteCell.classList.add("seipro-sticknote-detailed-note-cell", "seipro-sticknote-note-cell");
+          if (!qs(".seipro-sticknote-card", noteCell)) {
+            wrapInner(noteCell, "seipro-sticknote-card");
+          }
+          clampToTwoLines(qs(".seipro-sticknote-card", noteCell));
         });
       }
     }
-    getSticknoteHomeLinks().each(function() {
-      var _this = $(this);
-      var texttip = getSticknoteHomeText(_this);
-      var processLink = _this.closest("tr").find('a[href*="acao=procedimento_trabalhar"]').eq(0);
-      if (!processLink.length) {
+    getSticknoteHomeLinks().forEach(function(link) {
+      var texttip = getSticknoteHomeText(link);
+      var tr = link.closest("tr");
+      var processLink = tr ? qs('a[href*="acao=procedimento_trabalhar"]', tr) : null;
+      if (!processLink) {
         return;
       }
-      if (typeof texttip === "undefined" || texttip.trim() == "") {
+      if (texttip == null || texttip.trim() === "") {
         return;
       }
       var table = processLink.closest("table");
-      if (table.is("#tblProcessosDetalhado")) {
+      if (table && table.matches("#tblProcessosDetalhado")) {
         return;
       }
-      var iconCell = _this.closest("td");
-      var noteCell = false;
-      iconCell.addClass("sticknoteHomeIconCell").attr("data-sticknote-home-icon", "true").css({ "width": "", "min-width": "", "max-width": "" });
-      noteCell = processLink.closest("td").prev(".sticknoteHomeInsertedCell");
-      if (!noteCell.length) {
-        noteCell = $('<td class="sticknoteHomeInsertedCell sticknoteHomeNoteCell"></td>').insertBefore(processLink.closest("td"));
+      var iconCell = link.closest("td");
+      if (iconCell) {
+        iconCell.classList.add("seipro-sticknote-icon-cell");
+        iconCell.setAttribute("data-sticknote-home-icon", "true");
+        iconCell.style.width = "";
+        iconCell.style.minWidth = "";
+        iconCell.style.maxWidth = "";
       }
-      var priority = getSticknoteHomePriority(_this);
-      noteCell.find(".sticknoteHomeInline").remove();
-      noteCell.prepend('<div class="sticknoteHomeInline ' + (priority ? "priority" : "") + '">' + formatDadosAnotacaoHome(texttip) + "</div>");
-      if (typeof _this.attr("data-sticknote-priority") === "undefined") {
-        loadSticknoteHomePriority(_this);
+      var processCell = processLink.closest("td");
+      var noteCell = processCell ? processCell.previousElementSibling : null;
+      if (!(noteCell && noteCell.matches(".seipro-sticknote-inserted-cell"))) {
+        noteCell = el("td", { className: "seipro-sticknote-inserted-cell seipro-sticknote-note-cell" });
+        processCell.parentNode.insertBefore(noteCell, processCell);
+      }
+      var priority = getSticknoteHomePriority(link);
+      qsa(".seipro-sticknote-card", noteCell).forEach(remove);
+      var inline = el("div", {
+        className: "seipro-sticknote-card " + (priority ? "seipro-sticknote-card--priority" : ""),
+        innerHTML: formatDadosAnotacaoHome(texttip)
+      });
+      noteCell.insertBefore(inline, noteCell.firstChild);
+      clampToTwoLines(inline);
+      if (link.getAttribute("data-sticknote-priority") == null) {
+        loadSticknoteHomePriority(link);
       }
     });
-    tableProc.each(function() {
-      var $table = $(this);
-      if ($table.is("#tblProcessosDetalhado")) return;
+    tableProc.forEach(function(table) {
+      if (table.matches("#tblProcessosDetalhado")) return;
       var iconColIdx = -1;
-      var iconCellByClass = $table.find(".sticknoteHomeIconCell").first();
-      if (iconCellByClass.length) {
-        iconColIdx = iconCellByClass.closest("tr").find("td").index(iconCellByClass);
+      var iconCellByClass = qs(".seipro-sticknote-icon-cell", table);
+      if (iconCellByClass) {
+        var iconRow = iconCellByClass.closest("tr");
+        iconColIdx = iconRow ? qsa("td", iconRow).indexOf(iconCellByClass) : -1;
       } else {
-        $table.find("tbody tr").each(function() {
-          $(this).find("td").each(function(i) {
-            if ($(this).attr("width") === "20%") {
-              iconColIdx = i;
-              return false;
+        var rows = qsa("tbody tr", table);
+        for (var r = 0; r < rows.length && iconColIdx < 0; r++) {
+          var tds = qsa("td", rows[r]);
+          for (var c = 0; c < tds.length; c++) {
+            if (tds[c].getAttribute("width") === "20%") {
+              iconColIdx = c;
+              break;
             }
-          });
-          if (iconColIdx >= 0) return false;
-        });
+          }
+        }
       }
       if (iconColIdx < 0) return;
-      $table.find("tbody tr").each(function() {
-        var cell = $(this).find("td").eq(iconColIdx);
-        if (!cell.length) return;
-        if (!cell.attr("data-sticknote-orig-width")) {
-          cell.attr("data-sticknote-orig-width", cell.attr("width") || "");
+      qsa("tbody tr", table).forEach(function(tr) {
+        var cell = qsa("td", tr)[iconColIdx];
+        if (!cell) return;
+        if (!cell.getAttribute("data-sticknote-orig-width")) {
+          cell.setAttribute("data-sticknote-orig-width", cell.getAttribute("width") || "");
         }
-        cell.attr("width", "28");
+        cell.setAttribute("width", "28");
       });
-      $table.find("thead tr th[colspan], tbody tr.tableHeader th[colspan]").each(function() {
-        var th = $(this);
-        var colspan = parseInt(th.attr("colspan"), 10);
-        if (!th.attr("data-sticknote-orig-colspan")) {
-          th.attr("data-sticknote-orig-colspan", th.attr("colspan") || "");
+      qsa("thead tr th[colspan], tbody tr.tableHeader th[colspan]", table).forEach(function(th) {
+        var colspan = parseInt(th.getAttribute("colspan"), 10);
+        if (!th.getAttribute("data-sticknote-orig-colspan")) {
+          th.setAttribute("data-sticknote-orig-colspan", th.getAttribute("colspan") || "");
         }
         if (!Number.isNaN(colspan)) {
-          th.attr("colspan", colspan + 1);
+          th.setAttribute("colspan", String(colspan + 1));
         }
       });
     });

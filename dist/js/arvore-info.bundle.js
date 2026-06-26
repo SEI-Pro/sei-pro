@@ -900,17 +900,13 @@
       actions.className = "seipro-anot-actions";
       actions.style.cssText = "margin-top:6px;display:flex;gap:10px;align-items:center;font-size:90%;";
       actions.innerHTML = '<i class="fas fa-edit azulColor seipro-anot-btn" data-act="edit"  title="Editar" style="cursor:pointer;"></i><i class="fas fa-save azulColor seipro-anot-btn" data-act="save"  title="Salvar" style="cursor:pointer;display:none;"></i><i class="fas fa-times-circle seipro-anot-btn" data-act="cancel"  title="Cancelar" style="cursor:pointer;color:#888;display:none;"></i><i class="fas fa-check-square azulColor seipro-anot-btn" data-act="check"  title="Alternar checklist na linha" style="cursor:pointer;display:none;"></i><i class="fas fa-calendar-plus azulColor seipro-anot-btn" data-act="date"  title="Inserir data" style="cursor:pointer;"></i><input type="date" class="seipro-anot-date-input" style="display:none;"><i class="fas fa-exclamation-circle seipro-anot-btn" data-act="prio"  title="Prioridade" style="cursor:pointer;color:' + (initialPriority ? "#d33" : "#888") + ';"></i><span class="seipro-anot-presets" style="display:inline-flex;gap:6px;align-items:center;margin-left:6px;">' + createPresetRankIconHtml(2, "preset-chefia", "Adicionar: Aguardando a assinatura da chefia imediata") + createPresetRankIconHtml(3, "preset-superintendente", "Adicionar: Aguardando a assinatura do superintendente") + '</span><span class="seipro-anot-count" style="margin-left:auto;font-size:85%;color:#888;"></span><i class="fas fa-trash-alt seipro-anot-btn" data-act="remove"  title="Remover" style="cursor:pointer;color:#a33;"></i><i class="fas fa-thumbs-up seipro-anot-btn" data-act="remove-confirm"  title="Confirmar remo\xE7\xE3o" style="cursor:pointer;color:#393;display:none;"></i><i class="fas fa-thumbs-down seipro-anot-btn" data-act="remove-cancel"  title="Cancelar" style="cursor:pointer;color:#888;display:none;"></i>';
-      var collapseBtn = doc.createElement("a");
-      collapseBtn.className = "newLink";
-      collapseBtn.style.cssText = "cursor:pointer;font-size:85%;display:none;";
-      collapseBtn.textContent = "ver mais";
       var stampEl = doc.createElement("div");
       stampEl.style.cssText = "font-size:80%;color:#666;margin-top:4px;";
       if (stamp && stamp.user) {
         var when = new Date(stamp.at);
         stampEl.innerHTML = '<i class="far fa-user" style="margin-right:4px;"></i>por <strong>' + stamp.user + "</strong> em " + when.toLocaleString("pt-BR");
       }
-      return { editor, actions, collapseBtn, stampEl };
+      return { editor, actions, stampEl };
     }
     function buildAnotUI(url, initialText, initialPriority, opts) {
       opts = opts || {};
@@ -939,37 +935,10 @@
       var ui = createAnotacaoStaticUI(initialText, initialPriority, stamp);
       var editor = ui.editor;
       var actions = ui.actions;
-      var collapseBtn = ui.collapseBtn;
       var stampEl = ui.stampEl;
-      var collapsed = true;
-      function applyCollapse() {
-        var nLines = editor.children.length;
-        if (nLines > 3) {
-          collapseBtn.style.display = "";
-          if (collapsed) {
-            editor.style.maxHeight = "4.5em";
-            editor.style.overflow = "hidden";
-            collapseBtn.textContent = "ver mais (" + nLines + " linhas)";
-          } else {
-            editor.style.maxHeight = "";
-            editor.style.overflow = "";
-            collapseBtn.textContent = "ver menos";
-          }
-        } else {
-          collapseBtn.style.display = "none";
-          editor.style.maxHeight = "";
-          editor.style.overflow = "";
-        }
-      }
-      collapseBtn.addEventListener("click", function() {
-        collapsed = !collapsed;
-        applyCollapse();
-      });
       anotBody.appendChild(editor);
-      anotBody.appendChild(collapseBtn);
       anotBody.appendChild(actions);
       if (stamp) anotBody.appendChild(stampEl);
-      applyCollapse();
       var savedSelectionRange = null;
       function saveEditorSelection() {
         try {
@@ -1011,12 +980,9 @@
             anotDomFromLine(editor, editor.dataset.original);
           }
           editor.focus();
-          collapsed = false;
-          applyCollapse();
         } else {
           anotDomFromLine(editor, editor.dataset.original);
           decorateReadonly(editor);
-          applyCollapse();
         }
         updateDirtyIndicator();
       }

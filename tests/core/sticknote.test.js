@@ -53,6 +53,11 @@ describe('parseSticknoteHomeLabel', () => {
     expect(r).toEqual({ text: 'Texto', user: 'Beltrano' });
   });
 
+  it('não trunca anotação que é uma data (barra interna não é separador)', () => {
+    const r = sticknote.parseSticknoteHomeLabel('Anotação / 25/06/2026 / guimaraes em 26/06/2026 14:36');
+    expect(r).toEqual({ text: '25/06/2026', user: 'guimaraes' });
+  });
+
   it('preserva quebras de linha no texto (multilinha)', () => {
     const r = sticknote.parseSticknoteHomeLabel('Anotação / linha1\nlinha2 / User em 01/01/2026 00:00');
     expect(r.text).toBe('linha1\nlinha2');
