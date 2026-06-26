@@ -14,7 +14,7 @@ function getQuickVisualizacaoHtmlTokens(text) {
     return query === '' ? [] : query.split(' ').filter(function(token){ return token !== ''; });
 }
 function clearQuickVisualizacaoHtmlHighlights() {
-    $('.seiProQuickPageHighlight').each(function(){
+    $('.seipro-quick-highlight').each(function(){
         $(this).replaceWith(document.createTextNode($(this).text()));
     });
     if (document.body && typeof document.body.normalize === 'function') {
@@ -27,7 +27,7 @@ function shouldSkipQuickVisualizacaoHtmlNode(node) {
     if (parentNode.nodeType !== 1) return false;
     var parentElem = $(parentNode);
     if (parentElem.closest('script, style, noscript, textarea, title').length > 0) return true;
-    if (parentElem.closest('.seiProQuickPageHighlight').length > 0) return true;
+    if (parentElem.closest('.seipro-quick-highlight').length > 0) return true;
     return false;
 }
 function buildQuickVisualizacaoHtmlRanges(text, tokens) {
@@ -74,7 +74,7 @@ function highlightQuickVisualizacaoHtmlTextNode(node, tokens) {
             fragment.appendChild(document.createTextNode(text.slice(cursor, range.start)));
         }
         var span = document.createElement('span');
-        span.className = 'seiProQuickPageHighlight';
+        span.className = 'seipro-quick-highlight';
         span.style.background = '#ffef86';
         span.style.color = 'inherit';
         span.style.borderRadius = '2px';

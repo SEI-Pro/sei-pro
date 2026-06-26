@@ -73,7 +73,7 @@
   }
 
   // src/core/quickfilter-dom.js
-  var HIGHLIGHT_CLASS = "seiProQuickPageHighlight";
+  var HIGHLIGHT_CLASS = "seipro-quick-highlight";
   function resolveDoc(scope) {
     if (scope && scope.ownerDocument) return scope.ownerDocument;
     if (scope && scope.nodeType === 9) return scope;
@@ -138,7 +138,7 @@
   }
 
   // src/features/quick-filter/tree.js
-  var HIDDEN_CLASS = "seiProQuickPageFilterHidden";
+  var HIDDEN_CLASS = "seipro-quick-hidden";
   function shouldSkipNode(node) {
     if (!node || !node.parentNode) return true;
     const parent2 = node.parentNode;

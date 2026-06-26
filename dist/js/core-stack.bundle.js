@@ -1139,7 +1139,7 @@
   }
 
   // src/core/quickfilter-dom.js
-  var HIGHLIGHT_CLASS = "seiProQuickPageHighlight";
+  var HIGHLIGHT_CLASS = "seipro-quick-highlight";
   function resolveDoc(scope) {
     if (scope && scope.ownerDocument) return scope.ownerDocument;
     if (scope && scope.nodeType === 9) return scope;

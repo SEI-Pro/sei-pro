@@ -1,0 +1,16 @@
+/* Feature "Filtrar a página pelo campo de pesquisa rápida" (filtrarpaginapelapesquisarapida).
+ * Classes prefixadas .seipro- (substituem as antigas seiProQuickPage* de sei-pro.css).
+ * Carregada nos blocos de lista (trabalhar/controlar) e árvore (visualizar).
+ * Os contextos do visualizador (quick-highlight) estilizam o destaque inline e não dependem daqui. */
+
+.seipro-quick-hidden {
+    display: none !important;
+}
+
+.seipro-quick-highlight {
+    background: #ffef86;
+    color: inherit;
+    border-radius: 2px;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+    padding: 0 1px;
+}

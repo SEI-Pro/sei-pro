@@ -12,7 +12,7 @@
 import { getFilterTokens } from '../../core/quickfilter.js';
 import { applyHighlight as coreApplyHighlight, clearHighlights, HIGHLIGHT_CLASS } from '../../core/quickfilter-dom.js';
 
-const HIDDEN_CLASS = 'seiProQuickPageFilterHidden';
+const HIDDEN_CLASS = 'seipro-quick-hidden';
 
 function shouldSkipNode(node) {
     if (!node || !node.parentNode) return true;

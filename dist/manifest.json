@@ -222,6 +222,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/quick-filter.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",
         "css/anotacao-controle.css",
@@ -322,6 +323,7 @@
         "js/quick-filter-list.bundle.js"
       ],
       "css": [
+        "css/quick-filter.css",
         "css/anotacao-controle.css",
         "css/monitorados.css"
       ],
@@ -382,6 +384,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/quick-filter.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",
         "css/jquery.toolbar.css",

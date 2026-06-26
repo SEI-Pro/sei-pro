@@ -15,7 +15,7 @@ import { getFilterTokens, normalizeFilterText } from '../../core/quickfilter.js'
 import { applyHighlight as coreApplyHighlight, clearHighlights, HIGHLIGHT_CLASS } from '../../core/quickfilter-dom.js';
 import { buildRowHaystack, rowMatchesTokens } from './domain.js';
 
-const HIDDEN_CLASS = 'seiProQuickPageFilterHidden';
+const HIDDEN_CLASS = 'seipro-quick-hidden';
 const CONTROL_TABLES = '#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado';
 
 // Cache do haystack por linha (conteúdo não muda entre teclas; chaveado pelo nó

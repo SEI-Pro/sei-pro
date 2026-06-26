@@ -16,7 +16,7 @@ import { buildHighlightRanges } from './quickfilter.js';
  * texto ORIGINAL via index map — compatível com slice cru e correto com acentos.
  */
 
-export var HIGHLIGHT_CLASS = 'seiProQuickPageHighlight';
+export var HIGHLIGHT_CLASS = 'seipro-quick-highlight';
 
 function resolveDoc(scope) {
     if (scope && scope.ownerDocument) return scope.ownerDocument;

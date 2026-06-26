@@ -117,7 +117,8 @@ const featureCss = [
     { src: 'src/features/anotacao-controle/style.css', out: 'dist/css/anotacao-controle.css' },
     { src: 'src/features/monitorados/monitorados.css', out: 'dist/css/monitorados.css' },
     { src: 'src/shared/ui/prazo-preview.css', out: 'dist/css/prazo-preview.css' },
-    { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' }
+    { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' },
+    { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' }
 ];
 
 function copyFeatureCss() {
