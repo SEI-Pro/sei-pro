@@ -7,9 +7,12 @@
  * (getListIdProtocoloSelected, alertaBoxPro, getLinksArvoreAjax, getTreeLinkUrlByName,
  * getParamsUrlPro, initFaviconNrProcesso, url_host, idUnidade, siglaUnidadeAtual,
  * divComandos, elemCheckbox, setIconLoadinBtnSEI) resolvem do escopo global isolado.
- * Relocado verbatim (split io/view) — comportamento idêntico.
+ * A lógica pura (tooltip/erro agregado) vive em domain.js; o handler do botão é
+ * delegado (installNaoLido), não onclick inline.
  */
 import { serializeSeiForm, getSeiHtml, postSeiForm } from './io.js';
+import { prefixNaoVisualizadoTooltip, buildErrosNaoLidoMessage } from './domain.js';
+import { on } from '../../dom/index.js';
 
 export function setProcessoNaoLidoLoading(display = true) {
     if ($('body').hasClass('seiSlim')) {
@@ -119,11 +122,21 @@ export async function marcarProcessoNaoLido() {
     initNaoVisualizadoPro();
     initFaviconNrProcesso();
     setProcessoNaoLidoLoading(false);
-    if (erros.length > 0) {
-        failProcessoNaoLido(erros.length === listId.length
-            ? erros[0]
-            : (erros.length + ' de ' + listId.length + ' processo(s) não puderam ser marcados: ' + erros[0]));
-    }
+    var msg = buildErrosNaoLidoMessage(erros, listId.length);
+    if (msg) failProcessoNaoLido(msg);
+}
+
+// Handler delegado do botão (data-act="nao-lido-marcar"), instalado uma vez no
+// document. Substitui o onclick inline do botão gerado em sei-pro.js — inline
+// rodaria no mundo MAIN e não enxergaria marcarProcessoNaoLido (mundo isolado).
+export function installNaoLido(root) {
+    var target = root || document;
+    if (target.__seiproNaoLidoBound) return;
+    target.__seiproNaoLidoBound = true;
+    on(target, 'click', '[data-act="nao-lido-marcar"]', function (ev) {
+        ev.preventDefault();
+        marcarProcessoNaoLido();
+    });
 }
 
 // Prefixa "(Não Visualizado) " no tooltip das linhas já marcadas (idempotente por data-nvis).
@@ -131,10 +144,8 @@ export function initNaoVisualizadoPro() {
     $('.processoNaoVisualizado').each(function(){
         var el = $(this);
         if (el.attr('data-nvis') === '1') return;            // já processado nesta página
-        var tooltip = el.attr('onmouseover');
-        if (typeof tooltip !== 'undefined' && tooltip.indexOf("(Não Visualizado) ") === -1) {
-            el.attr('onmouseover', tooltip.replace("return infraTooltipMostrar('","return infraTooltipMostrar('(Não Visualizado) "));
-        }
+        var novoTooltip = prefixNaoVisualizadoTooltip(el.attr('onmouseover'));
+        if (novoTooltip !== null) el.attr('onmouseover', novoTooltip);
         el.attr('data-nvis','1');
     });
 }

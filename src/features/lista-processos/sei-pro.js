@@ -1689,7 +1689,7 @@ function getNewTabProcesso() {
                             : '';
 
         var htmlBtnNaoLido =  (checkConfigValue('marcar_naolido')) ? 
-                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Marcar como n\u00E3o visualizado\')"')+' onclick="marcarProcessoNaoLido()" style="position: relative; margin-left: -3px;">'+
+                            '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconNaoLido" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Marcar como n\u00E3o visualizado\')"')+' data-act="nao-lido-marcar" style="position: relative; margin-left: -3px; cursor: pointer;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Marcar como n\u00E3o visualizado">'+
                             '    <span class="botaoSEI_iconBox">'+
                             '       <i class="fad fa-eye-slash" style="font-size: 17pt; color: #fff;"></i>'+

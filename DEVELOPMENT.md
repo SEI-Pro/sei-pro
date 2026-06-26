@@ -113,31 +113,263 @@ dist/                              # SAÍDA GERADA — não editar à mão
 
 ## Arquitetura-alvo e padrão de migração por feature
 
-A meta é **fronteiras explícitas por camada**, no mundo isolado do content script
-(decisão isolated-first: sem `world:"MAIN"`). Cada feature migrada segue:
+### Princípios fundamentais
 
-| Camada | Onde | Regra |
+1. **Mundo isolado (isolated-first):** todo código novo roda no mundo isolado do content
+   script. Sem `world:"MAIN"`. Sem `onclick` inline (handlers inline executam no mundo MAIN
+   e não enxergam funções do content script).
+2. **Direção de dependência:** `features` → `shared/ui` → `core` / `sei` / `platform`.
+   Nunca o contrário. `core/stack.js` **não deve importar nada de `features/`**.
+3. **`aliasGlobal` só em `legacy-api.js`:** nunca espalhado em domain, io ou view.
+   É dívida explícita, não padrão permanente.
+4. **CSS prefixado:** todas as classes de features usam prefixo `.seipro-`. Sem Shadow DOM
+   (cria fricção com FontAwesome, jQuery UI e estilos do SEI).
+5. **Entries específicos por contexto:** cada contexto de página deve caminhar para seu
+   próprio entry em `src/entries/`, carregando só o que precisa. O `core-stack.bundle.js`
+   amplo continua existindo enquanto houver blocos legados no manifest.
+6. **Mudança nova já nasce na arquitetura nova:** ao pedir uma feature ou correção, primeiro
+   identificar o contexto SEI, a config flag e a superfície legada; depois separar domínio,
+   IO, view, CSS e compatibilidade global conforme o contrato abaixo.
+
+---
+
+### Anatomia de uma feature migrada
+
+```
+src/features/<nome>/
+├── domain.js          # lógica pura: sem DOM, sem chrome.*, sem jQuery
+│                      #   → 100% testável com vitest/jsdom
+│                      #   → recebe dados, retorna dados
+├── io.js              # efeitos colaterais: storage, rede, sessão
+│                      #   → recebe dependências explícitas quando viável
+│                      #   → pode usar platform/core/sei; não chama view
+├── view.js            # DOM vanilla (ou sub-arquivos: panel.js, icon.js, …)
+│                      #   → recebe root/ctx quando possível; document só na borda
+│                      #   → eventos delegados via on() de src/dom/index.js
+│                      #   → classes CSS sempre com prefixo .seipro-
+├── templates.js       # opcional: HTML/DOM factory da feature
+│                      #   → markup estático/gerado fica aqui ou em view.js
+│                      #   → nunca em domain.js ou io.js
+├── index.js           # entry do bundle: compõe domain + io + view
+│                      #   → instala a feature no contexto (setup, observers)
+│                      #   → importa e chama legacy-api.js se houver legado
+├── legacy-api.js      # (se houver legado chamando esta feature)
+│                      #   → único arquivo que usa aliasGlobal()
+│                      #   → reexporta funções de domain/io/view como globais
+│                      #   → marcado com TODO: remover quando legado migrar
+└── style.css          # CSS da feature; classes todas prefixadas .seipro-
+```
+
+**Exemplo de composição em `index.js`:**
+```js
+import { ready } from '../../dom/index.js';
+import * as domain from './domain.js';
+import * as io from './io.js';
+import * as view from './view.js';
+import './legacy-api.js'; // remove quando legado migrar
+
+export function installMinhaFeature(ctx = {}) {
+    const deps = {
+        root: document,
+        config: window.SeiPro && window.SeiPro.core && window.SeiPro.core.config,
+        ...ctx
+    };
+    const dados = io.carregar(deps);
+    const estado = domain.calcular(dados);
+    ready(() => view.render(deps.root, estado));
+}
+```
+
+**Exemplo de `legacy-api.js`:**
+```js
+// TODO: remover quando lista-processos migrar
+import { aliasGlobal } from '../../core/global.js';
+import { minhaFuncao } from './domain.js';
+import { salvar } from './io.js';
+import { renderizar } from './view.js';
+
+aliasGlobal('minhaFuncao', minhaFuncao);
+aliasGlobal('salvar', salvar);
+aliasGlobal('renderizar', renderizar);
+```
+
+---
+
+### Regras de camada
+
+| Camada | Pode importar | Nunca importa |
 |---|---|---|
-| **domínio** | `domain.js` | funções puras, sem DOM/jQuery/chrome — 100% testável |
-| **io** | `store.js` / `server.js` | efeitos (storage, rede, sessão) isolados |
-| **view** | `panel.js`, `maps.js`, … | DOM vanilla; **eventos delegados** (sem `onclick` inline) |
-| **entry** | `index.js` | bundle: instala módulos + `aliasGlobal` p/ compat com legado |
+| `domain.js` | nada externo (funções puras) | dom, chrome.*, getSeiPro, jQuery |
+| `io.js` | `core/`, `platform/`, `sei/` | `view.js`, jQuery |
+| `view.js` | `dom/index.js`, `shared/ui/`, `templates.js`, `core/` | `io.js`, jQuery |
+| `templates.js` | `dom/index.js`, constantes da feature | `io.js`, jQuery, chrome.* |
+| `index.js` | tudo da própria feature | features de outras features diretamente |
+| `legacy-api.js` | domain, io, view, `core/global.js` | nada além disso |
 
-**Por que delegação, não `onclick` inline:** handlers inline executam no **mundo MAIN**
-da página, que não enxerga as funções do content script (mundo isolado). Um
-`addEventListener` registrado pelo content script roda no mundo isolado e funciona —
-inclusive em iframes same-origin (anexar o listener ao `contentDocument`). Ver
-`monitorados/panel.js` (dispatcher por `data-act`) e `monitorados/visualizacao.js`.
+Quando uma regra acima for impraticável por causa do legado, a exceção deve ficar no
+menor arquivo possível e ser comentada como ponte temporária.
 
-**Infra compartilhada vira primitivo, não duplicata:** ao migrar uma feature que usa
-tablesorter/tagsInput/sortable/chosen/dialog, cria-se/usa-se um primitivo vanilla em
-`src/shared/ui/`. A lógica de negócio compartilhada (etiquetas, seleção, preview de
-prazo) permanece global até suas features migrarem. As features legadas seguem usando
-os plugins jQuery em paralelo — duplicação temporária e esperada.
+---
+
+### HTML e templates
+
+HTML criado pela extensão pertence à camada de view. Para markup pequeno, pode ficar em
+`view.js`. Para painel, modal, tabela ou formulário maior, criar `templates.js` ou um
+subarquivo de view (`panel.js`, `form.js`, `row.js`).
+
+Regras:
+
+- `domain.js` nunca monta HTML.
+- `io.js` nunca retorna elemento DOM; retorna dados ou `Document` parseado quando estiver
+  lendo uma página do SEI.
+- Conteúdo vindo do usuário, rede ou página do SEI deve ser tratado como dado. Se virar
+  `innerHTML`, sanitizar antes ou montar DOM com `el()`/`textContent`.
+- Não usar `onclick`, `onchange` ou atributos inline novos. Usar `addEventListener` ou
+  delegação com `on(root, 'click', '[data-act="..."]', handler)`.
+- Ações em HTML gerado usam `data-act`, `data-id`, `data-*`; a view traduz para comandos.
+
+---
+
+### CSS: prefixo obrigatório `.seipro-`
+
+Toda classe criada por features deve usar o prefixo `.seipro-`:
+
+```css
+/* ✗ errado — pode colidir com SEI nativo */
+.modal { … }
+.btn-primary { … }
+.header { … }
+
+/* ✓ correto */
+.seipro-modal { … }
+.seipro-btn--primary { … }
+.seipro-header { … }
+```
+
+Modificadores seguem BEM: `.seipro-btn--primary`, `.seipro-modal--open`.
+
+---
+
+### Comunicação entre features
+
+Preferência: dependência explícita no `index.js` ou na entry do contexto. Uma feature não
+deve importar internals de outra feature.
+
+Ainda não há event bus oficial no projeto. Se uma mudança realmente transversal aparecer
+(ex.: várias features precisam reagir a `monitorados:updated`), criar primeiro um bus pequeno
+em `src/platform/bus.js`, instalar na stack/entry e documentar os eventos aqui. Não introduzir
+bus para chamada dentro da mesma feature.
+
+Formato sugerido para eventos transversais, quando o bus existir:
+
+```js
+bus.emit('monitorados:updated', { items });
+
+bus.on('monitorados:updated', ({ items }) => view.atualizarIcones(items));
+```
+
+Eventos candidatos, ainda não implementados como bus: `monitorados:updated`,
+`config:changed`, `process-list:refreshed`.
+
+---
+
+### Infra compartilhada → `src/shared/ui/`
+
+Ao migrar uma feature que usa jQuery UI / tablesorter / chosen / plugins legados:
+criar ou reusar um primitivo vanilla em `src/shared/ui/`. Primitivos existentes:
+`modal.js`, `sortable.js`, `sortable-table.js`, `tags-input.js`, `prazo-preview.js`.
+
+Features legadas continuam usando os plugins jQuery em paralelo — duplicação temporária
+e esperada durante a transição.
+
+---
+
+### Ordem de prioridade para migração
+
+Quando for migrar uma feature existente, seguir nesta ordem:
+
+1. **Tirar dependências de feature de dentro de `core/stack.js`** — `installMonitoradoStore`
+   não deveria estar lá; mover para `shared/` ou para o entry do contexto que precisa dele.
+2. **Mapear a superfície legada:** nomes globais, `onclick` existentes, config flags, blocos do
+   manifest, CSS carregado e páginas SEI afetadas.
+3. **Criar ou reaproveitar entry específico** em `src/entries/` quando o contexto já estiver
+   pronto para bundle próprio. Se ainda depender do bloco legado, manter o bundle da feature
+   no manifest atual e documentar a transição.
+4. **Separar domain / io / view / templates / index / legacy-api** conforme anatomia acima.
+5. **Substituir handlers inline novos por delegação**. Handlers inline antigos podem continuar
+   só enquanto houver `legacy-api.js`.
+6. **Prefixar todo CSS** da feature com `.seipro-` e copiar no build via `featureCss`.
+7. **Remover definição duplicada do legado** depois de expor compatibilidade em `legacy-api.js`.
+8. **Testar** domain/io com vitest; quando houver DOM relevante, usar jsdom/fixture; finalizar
+   com smoke test manual no SEI real.
+9. **Marcar `legacy-api.js`** com TODO explícito de remoção e condição de remoção.
+
+Para feature nova, começar diretamente no formato novo. Não criar função solta em
+`sei-functions-pro.js`, `sei-pro.js` ou `init*.js`.
+
+---
+
+### Checklist para próximos prompts
+
+Ao receber uma tarefa sobre funcionalidade, seguir este roteiro antes de editar:
+
+1. Identificar contexto SEI: lista de processos, árvore, editor, visualização, login,
+   todas as páginas, background ou options.
+2. Identificar se é feature nova, migração de legado ou correção pontual.
+3. Localizar config flag e pontos globais chamados pelo legado.
+4. Escolher o menor corte seguro: domain puro primeiro, depois IO, depois view/delegação,
+   depois CSS, depois `legacy-api.js`.
+5. Preservar comportamento e nomes globais durante a transição.
+6. Atualizar `scripts/build.mjs` e `manifest.base.json` apenas quando a nova saída precisar
+   ser carregada.
+7. Rodar `npm test` quando a alteração tocar código; para docs, revisão textual basta.
+
+Critério de pronto para considerar uma feature migrada:
+
+- `domain.js` sem DOM/window/jQuery/chrome/localStorage.
+- `io.js` concentra storage/rede/sessão e não chama view.
+- `view.js` usa DOM vanilla, eventos delegados e CSS `.seipro-*`.
+- HTML novo fica na view/templates, não misturado no domínio.
+- `legacy-api.js` é o único arquivo da feature com `aliasGlobal`.
+- Definições antigas equivalentes foram removidas dos arquivos legados ou explicitamente
+  marcadas como pendentes.
+- Há testes para domínio/IO e smoke test manual planejado para o fluxo SEI afetado.
+
+---
+
+### Evolução para registry e manifest gerado
+
+Alvo de médio prazo: substituir manifest manual duplicado e `init*.js` por um catálogo
+de contextos e features:
+
+```
+src/app/
+├── contexts.js          # contexto SEI → matches, css, libs, entry, features
+├── feature-registry.js  # id, configKey, contexts, install()
+└── boot.js              # carrega config e instala features do contexto
+```
+
+Essa mudança deve ser incremental. Primeiro aplicar em um contexto pequeno (`login`/`db`)
+ou em uma nova entry de processo; depois expandir para lista, árvore, visualização e editor.
+Antes de gerar manifest automaticamente, criar testes de snapshot/estrutura para garantir
+ordem de scripts, `matches`, `exclude_matches`, CSS e permissões.
+
+---
+
+### Violations conhecidas (dívida técnica a corrigir)
+
+| Arquivo | Problema | Correção |
+|---|---|---|
+| `src/core/stack.js:42` | importa `features/monitorados/store.js` — direção errada | mover `installMonitoradoStore` para os entries que precisam |
+| `src/features/*/index.js` (vários) | `aliasGlobal` espalhado fora de `legacy-api.js` | consolidar em `legacy-api.js` |
+| `src/features/*/*.css` e `src/shared/ui/*.css` | classes sem prefixo `.seipro-` | renomear sistematicamente quando tocar na feature |
+| `src/background/background.js` | monolítico (router + storage + fetch + notify) | extrair `background/router.js`, `storage-handler.js`, etc. antes de crescer mais |
+
+---
 
 **Compat durante a transição:** cada função movida é preservada como global via
-`aliasGlobal('nome', fn)` (em `src/core/global.js`), então os call-sites do legado
-continuam funcionando sem edição. `tests/structure/no-duplicate-core.test.js` trava que
+`aliasGlobal` (somente em `legacy-api.js`), então os call-sites do legado continuam
+funcionando sem edição. `tests/structure/no-duplicate-core.test.js` trava que
 um helper migrado não seja redefinido no legado.
 
 > **Verificação:** os testes (vitest) cobrem domínio puro, IO e os primitivos de

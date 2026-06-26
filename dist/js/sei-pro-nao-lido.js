@@ -5,6 +5,33 @@
       __defProp(target, name, { get: all[name], enumerable: true });
   };
 
+  // src/dom/index.js
+  function on(target, type, selectorOrHandler, maybeHandler) {
+    const delegated = typeof selectorOrHandler === "string";
+    const selector = delegated ? selectorOrHandler : null;
+    const handler = delegated ? maybeHandler : selectorOrHandler;
+    function listener(event) {
+      if (!delegated) {
+        return handler.call(target, event);
+      }
+      const match = event.target && event.target.closest ? event.target.closest(selector) : null;
+      if (match && target.contains(match)) {
+        return handler.call(match, event, match);
+      }
+    }
+    target.addEventListener(type, listener);
+    return function off() {
+      target.removeEventListener(type, listener);
+    };
+  }
+  function ready(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn, { once: true });
+    } else {
+      fn();
+    }
+  }
+
   // src/core/global.js
   var globalRef = typeof window !== "undefined" ? window : globalThis;
   function aliasGlobal(name, value) {
@@ -82,10 +109,28 @@
     failProcessoNaoLido: () => failProcessoNaoLido,
     getSelectedProcessoNaoLido: () => getSelectedProcessoNaoLido,
     initNaoVisualizadoPro: () => initNaoVisualizadoPro,
+    installNaoLido: () => installNaoLido,
     marcarProcessoNaoLido: () => marcarProcessoNaoLido,
     marcarUmProcessoNaoLido: () => marcarUmProcessoNaoLido,
     setProcessoNaoLidoLoading: () => setProcessoNaoLidoLoading
   });
+
+  // src/features/nao-lido/domain.js
+  var PREFIXO = "(N\xE3o Visualizado) ";
+  var ANCHOR = "return infraTooltipMostrar('";
+  function prefixNaoVisualizadoTooltip(onmouseover) {
+    if (typeof onmouseover !== "string") return null;
+    if (onmouseover.indexOf(PREFIXO) !== -1) return null;
+    if (onmouseover.indexOf(ANCHOR) === -1) return null;
+    return onmouseover.replace(ANCHOR, ANCHOR + PREFIXO);
+  }
+  function buildErrosNaoLidoMessage(erros, total) {
+    if (!erros || erros.length === 0) return null;
+    if (erros.length === total) return erros[0];
+    return erros.length + " de " + total + " processo(s) n\xE3o puderam ser marcados: " + erros[0];
+  }
+
+  // src/features/nao-lido/view.js
   function setProcessoNaoLidoLoading(display = true) {
     if ($("body").hasClass("seiSlim")) {
       $(divComandos + " .iconNaoLido").toggleClass("iconLoading", display);
@@ -178,26 +223,37 @@
     initNaoVisualizadoPro();
     initFaviconNrProcesso();
     setProcessoNaoLidoLoading(false);
-    if (erros.length > 0) {
-      failProcessoNaoLido(erros.length === listId.length ? erros[0] : erros.length + " de " + listId.length + " processo(s) n\xE3o puderam ser marcados: " + erros[0]);
-    }
+    var msg = buildErrosNaoLidoMessage(erros, listId.length);
+    if (msg) failProcessoNaoLido(msg);
+  }
+  function installNaoLido(root) {
+    var target = root || document;
+    if (target.__seiproNaoLidoBound) return;
+    target.__seiproNaoLidoBound = true;
+    on(target, "click", '[data-act="nao-lido-marcar"]', function(ev) {
+      ev.preventDefault();
+      marcarProcessoNaoLido();
+    });
   }
   function initNaoVisualizadoPro() {
     $(".processoNaoVisualizado").each(function() {
       var el = $(this);
       if (el.attr("data-nvis") === "1") return;
-      var tooltip = el.attr("onmouseover");
-      if (typeof tooltip !== "undefined" && tooltip.indexOf("(N\xE3o Visualizado) ") === -1) {
-        el.attr("onmouseover", tooltip.replace("return infraTooltipMostrar('", "return infraTooltipMostrar('(N\xE3o Visualizado) "));
-      }
+      var novoTooltip = prefixNaoVisualizadoTooltip(el.attr("onmouseover"));
+      if (novoTooltip !== null) el.attr("onmouseover", novoTooltip);
       el.attr("data-nvis", "1");
     });
   }
 
-  // src/features/nao-lido/index.js
+  // src/features/nao-lido/legacy-api.js
   [io_exports, view_exports].forEach(function(mod) {
     Object.keys(mod).forEach(function(name) {
       if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
     });
+  });
+
+  // src/features/nao-lido/index.js
+  ready(function() {
+    installNaoLido(document);
   });
 })();
