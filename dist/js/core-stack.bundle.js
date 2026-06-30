@@ -18,13 +18,6 @@
   // src/core/namespace.js
   function createNamespace() {
     const root = getSeiPro();
-    root.aliasState = function(name, value) {
-      root.state[name] = value;
-      if (typeof globalRef[name] === "undefined") {
-        globalRef[name] = value;
-      }
-      return value;
-    };
     root.linkState = function(name) {
       if (Object.prototype.hasOwnProperty.call(root.state, name)) {
         return;
@@ -43,9 +36,6 @@
       } catch (e) {
         root.state[name] = globalRef[name];
       }
-    };
-    root.linkStateAll = function(names) {
-      (names || []).forEach(root.linkState);
     };
     return root;
   }
@@ -2229,13 +2219,6 @@
   // src/sei/adapter.js
   function installAdapter() {
     function flags() {
-      if (getSeiPro().state && typeof getSeiPro().state.isNewSEI !== "undefined") {
-        return {
-          isNewSEI: !!getSeiPro().state.isNewSEI,
-          isSEI_5: !!getSeiPro().state.isSEI_5,
-          version: getSeiPro().state.version || getSeiPro().sei.version.getSeiVersionPro()
-        };
-      }
       return getSeiPro().sei.version.resolveVersionFlags();
     }
     function selectors(isNewSEI2, version) {
@@ -2261,22 +2244,6 @@
         infraBarraSistemaD: isNewSEI2 ? "#divInfraBarraSistemaPadraoD" : "#divInfraBarraSistemaD"
       };
     }
-    function applyToState() {
-      const f = flags();
-      const sel = selectors(f.isNewSEI, f.version);
-      getSeiPro().state.isNewSEI = f.isNewSEI;
-      getSeiPro().state.isSEI_5 = f.isSEI_5;
-      getSeiPro().state.version = f.version;
-      Object.keys(sel).forEach(function(key) {
-        getSeiPro().state[key] = sel[key];
-      });
-      getSeiPro().aliasState("isNewSEI", f.isNewSEI);
-      getSeiPro().aliasState("isSEI_5", f.isSEI_5);
-      Object.keys(sel).forEach(function(key) {
-        getSeiPro().aliasState(key, sel[key]);
-      });
-      return sel;
-    }
     function isNewSEI() {
       return !!flags().isNewSEI;
     }
@@ -2293,7 +2260,6 @@
     const adapter = {
       flags,
       selectors,
-      applyToState,
       isNewSEI,
       isSEI5,
       atLeast,
@@ -2612,6 +2578,75 @@
     return prazoPreview;
   }
 
+  // src/platform/legacy-inline-bridge.js
+  var HANDLER_ATTRS = ["onclick", "onmouseover", "onmouseout", "onchange", "onfocus", "onblur", "ondblclick"];
+  var CALL_RE = /^\s*([A-Za-z_$][\w$]*)\s*\(([^()]*)\)\s*;?\s*$/;
+  function parseArg(raw, el) {
+    const a = raw.trim();
+    if (a === "this") return { ok: true, value: el };
+    if (a === "null") return { ok: true, value: null };
+    if (a === "true") return { ok: true, value: true };
+    if (a === "false") return { ok: true, value: false };
+    if (/^-?\d+(\.\d+)?$/.test(a)) return { ok: true, value: Number(a) };
+    const strMatch = a.match(/^'([^']*)'$/) || a.match(/^"([^"]*)"$/);
+    if (strMatch) return { ok: true, value: strMatch[1] };
+    return { ok: false };
+  }
+  function parseStrictCall(attrValue, el) {
+    const m = CALL_RE.exec(attrValue || "");
+    if (!m) return null;
+    const fnName = m[1];
+    const rawArgs = m[2].trim();
+    if (rawArgs === "") return { fnName, args: [] };
+    const parts = rawArgs.split(",");
+    const args = [];
+    for (let i = 0; i < parts.length; i++) {
+      const parsed = parseArg(parts[i], el);
+      if (!parsed.ok) return null;
+      args.push(parsed.value);
+    }
+    return { fnName, args };
+  }
+  function findHandlerTarget(eventTarget, attr) {
+    let node = eventTarget;
+    while (node && node.nodeType === 1) {
+      if (node.hasAttribute(attr)) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+  function eventTypeForAttr(attr) {
+    return attr.slice(2);
+  }
+  function installLegacyInlineBridge(win) {
+    const w = win || globalRef;
+    if (!w.document || typeof w.document.addEventListener !== "function") return;
+    if (w.__SEI_PRO_LEGACY_INLINE_BRIDGE__) return;
+    w.__SEI_PRO_LEGACY_INLINE_BRIDGE__ = true;
+    HANDLER_ATTRS.forEach(function(attr) {
+      const type = eventTypeForAttr(attr);
+      w.document.addEventListener(type, function(event) {
+        const el = findHandlerTarget(event.target, attr);
+        if (!el) return;
+        const attrValue = el.getAttribute(attr);
+        const parsed = parseStrictCall(attrValue, el);
+        if (!parsed) return;
+        const fn = w[parsed.fnName];
+        if (typeof fn !== "function") return;
+        el.removeAttribute(attr);
+        Promise.resolve().then(function() {
+          el.setAttribute(attr, attrValue);
+        });
+        if (type === "click") event.preventDefault();
+        try {
+          fn.apply(el, parsed.args);
+        } catch (e) {
+          console.error("[SEI Pro] legacy-inline-bridge: erro ao executar", parsed.fnName, e);
+        }
+      }, true);
+    });
+  }
+
   // src/core/stack.js
   function installCoreStack() {
     createNamespace();
@@ -2647,6 +2682,7 @@
     installTooltip();
     installMonitoradoStore();
     installPrazoPreview();
+    installLegacyInlineBridge();
   }
 
   // src/content/core-stack.js

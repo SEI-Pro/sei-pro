@@ -2,13 +2,6 @@ import { getSeiPro } from '../core/global.js';
 
 export function installAdapter() {
     function flags() {
-        if (getSeiPro().state && typeof getSeiPro().state.isNewSEI !== 'undefined') {
-            return {
-                isNewSEI: !!getSeiPro().state.isNewSEI,
-                isSEI_5: !!getSeiPro().state.isSEI_5,
-                version: getSeiPro().state.version || getSeiPro().sei.version.getSeiVersionPro()
-            };
-        }
         return getSeiPro().sei.version.resolveVersionFlags();
     }
 
@@ -43,23 +36,6 @@ export function installAdapter() {
         };
     }
 
-    function applyToState() {
-        const f = flags();
-        const sel = selectors(f.isNewSEI, f.version);
-        getSeiPro().state.isNewSEI = f.isNewSEI;
-        getSeiPro().state.isSEI_5 = f.isSEI_5;
-        getSeiPro().state.version = f.version;
-        Object.keys(sel).forEach(function (key) {
-            getSeiPro().state[key] = sel[key];
-        });
-        getSeiPro().aliasState('isNewSEI', f.isNewSEI);
-        getSeiPro().aliasState('isSEI_5', f.isSEI_5);
-        Object.keys(sel).forEach(function (key) {
-            getSeiPro().aliasState(key, sel[key]);
-        });
-        return sel;
-    }
-
     function isNewSEI() {
         return !!flags().isNewSEI;
     }
@@ -80,7 +56,6 @@ export function installAdapter() {
     const adapter = {
         flags,
         selectors,
-        applyToState,
         isNewSEI,
         isSEI5,
         atLeast,

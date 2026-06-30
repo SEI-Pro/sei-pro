@@ -174,6 +174,23 @@ import { installAnotacaoSection } from './sections/anotacao.js';
             return Promise.resolve(stubParent());
         }
 
+        // Fast path: checkConfigValue costuma já existir no pai mesmo quando a Promise
+        // SeiProReady não foi criada (caminhos de inicialização diferentes). Checar
+        // SÍNCRONO antes de avisar evita o falso-positivo: em produção o "fallback probe"
+        // sempre resolvia em 0-1ms (ver logs), ou seja, checkConfigValue já estava
+        // disponível — o warn() disparava por não ter checado antes de poll. Esse warn
+        // aparecia como "Erro" na página chrome://extensions sem nunca refletir um
+        // problema real (nunca chegava a precisar do polling).
+        try {
+            if (win.parent && typeof win.parent.checkConfigValue === 'function') {
+                log('parentReady via checkConfigValue síncrono (sem SeiProReady, sem polling)');
+                return Promise.resolve(win.parent);
+            }
+        } catch (e) {
+            warn('parentReady cross-origin error, using stub:', e.message);
+            return Promise.resolve(stubParent());
+        }
+
         warn('parent.SeiProReady missing — polling for checkConfigValue (250ms intervals, timeout=' + PARENT_READY_TIMEOUT + 'ms)');
         return new Promise(function (resolve) {
             (function probe() {

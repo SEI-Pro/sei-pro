@@ -1,5 +1,26 @@
 # Changelog — SEI Pro PRF
 
+## [2.0.1] - 2026-06-30
+
+Correções de estabilização pós-**2.0.0** (mundo isolado): regressões observadas no SEI real após a migração isolated-first, sem mudança de escopo arquitetural.
+
+### Adicionado
+
+- **Ponte de handlers inline legados** (`legacy-inline-bridge`): intercepta `onclick` / `onmouseover` / etc. com gramática estrita (`nomeFuncao(this, 'literal', …)`) e executa a função no mundo isolado — ponte temporária até migrar cada call-site para `data-act` + delegação
+- Testes unitários da ponte inline (`tests/platform/legacy-inline-bridge.test.js`)
+
+### Alterado
+
+- **SEI adapter:** detecção de versão passa a usar sempre `resolveVersionFlags()`; removidos `applyToState`, `aliasState` e `linkStateAll` (estado espelhado obsoleto no namespace)
+- **Background:** aba do histórico de versões na atualização da extensão desativada temporariamente (URL externa comentada em `handleInstalled`)
+- **Controle de processos — "Ver meus processos":** clique em `#ancLiberarMeusProcessos` passa a submeter `#frmProcedimentoControlar` via DOM puro (`hdnMeusProcessos='T'`), sem chamar `verMeusProcessos` do mundo MAIN; binds duplicados de `#ancLiberarMarcador` / tipo / prioridade removidos (gap documentado — corpos nativos ainda não replicados com segurança)
+
+### Corrigido
+
+- **Capa do processo (`setCapaProcesso`):** resolução do iframe de visualização pelo DOM real (`#ifrConteudoVisualizacao` → `#ifrVisualizacao`) em vez do flag `isNewSEI`; leitura de `id_procedimento` também em URLs `procedimento_trabalhar`; seletor `#divArvoreInformacao, #divInformacao`; saída antecipada em frames que não são host da capa; mensagens de retry indicam qual pré-condição falhou
+- **Checker de documentos:** stub `atualizarVisualizacao` atribuído via `contentWindow` no iframe same-origin, substituindo injeção de `<script>` inline bloqueada pela CSP do SEI
+- **Informações na árvore (`arvore-info`):** fast path síncrono quando `parent.checkConfigValue` já existe, eliminando falso-positivo de erro no `chrome://extensions` por polling desnecessário de `SeiProReady`
+
 ## [2.0.0] - 2026-06-30
 
 Versão major de reestruturação interna (**isolated-first** + migração incremental para módulos ESM). O comportamento das funcionalidades existentes foi preservado; a mudança principal é a arquitetura de build e manutenção.

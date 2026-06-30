@@ -6125,7 +6125,15 @@ function checkDadosIframeDocumentosPro(mode) {
                 i = 1;
                 $('#frmCheckerProcessoPro').attr('src', href).unbind().on('load', function(){
                     var ifrArvoreOpen = $('#frmCheckerProcessoPro').contents();
-                        $(this).contents().find('head').append("<script data-config='config-seipro-checker'>function atualizarVisualizacao(){ return; }</script>");
+                        // Stub de atualizarVisualizacao (no-op) para a SEI não tentar
+                        // auto-refresh nesse iframe checker oculto. Antes injetava
+                        // <script> inline via jQuery append — bloqueado pela CSP da
+                        // página SEI (script-src 'self', sem 'unsafe-inline'). O iframe
+                        // é MESMA ORIGEM (domínio do SEI), então dá pra atribuir a
+                        // propriedade direto no contentWindow — acesso cross-frame
+                        // same-origin padrão, não precisa de <script> nenhum.
+                        var ifrWin = this.contentWindow;
+                        if (ifrWin) { ifrWin.atualizarVisualizacao = function () { return; }; }
                         arrayDadosIframeDocumentosPro(ifrArvoreOpen, mode);
                 });
             }
@@ -7543,19 +7551,29 @@ function setDataDocs(htmlArvore, id_procedimento) {
 }
 function setCapaProcesso(loop = true) {
     var ifrArvore = $('#ifrArvore').contents();
-    var ifrVisualizacao = SeiPro.sei.adapter.isNewSEI() && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 
-                        ? $($ifrVisualizacao).contents().find($ifrArvoreHtml).contents()
-                        : $($ifrVisualizacao).contents() 
+    // Resolve o frame de visualização pelo DOM REAL, não pelo flag isNewSEI (que se
+    // mostrou instável no mundo isolado e levava a procurar #ifrVisualizacao — id antigo,
+    // inexistente no SEI 4.1+). No SEI 4.1+ o frame é #ifrConteudoVisualizacao, com
+    // #ifrVisualizacao ANINHADO dentro; no SEI antigo é #ifrVisualizacao no topo.
+    var _ifrConteudoViz = $('#ifrConteudoVisualizacao');
+    var ifrVisualizacao = _ifrConteudoViz.length
+                        ? _ifrConteudoViz.contents().find('#ifrVisualizacao').contents()
+                        : $($ifrVisualizacao).contents();
     var dadosProcessoSession = pullDadosProcessoSession();
     var prop = dadosProcessoSession ? dadosProcessoSession.propProcesso : dadosProcessoPro.propProcesso;
-    var id_procedimento = (typeof prop !== 'undefined' && typeof prop.hdnIdProcedimento !== 'undefined') ? prop.hdnIdProcedimento : getParamsUrlPro(window.location.href).id_protocolo;
+    var _urlParamsCapa = getParamsUrlPro(window.location.href);
+    // URLs de procedimento_trabalhar carregam id_procedimento; protocolo, id_protocolo.
+    // Antes só id_protocolo era lido aqui — por isso o id ficava "pending" nessas páginas.
+    var id_procedimento = (typeof prop !== 'undefined' && typeof prop.hdnIdProcedimento !== 'undefined') ? prop.hdnIdProcedimento : (_urlParamsCapa.id_procedimento || _urlParamsCapa.id_protocolo);
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
     var hipoteseLegal = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '1') ? jmespath.search(prop.selHipoteseLegal_select, "[?id=='"+prop.selHipoteseLegal+"'] | [0].name") : null;
         hipoteseLegal = (hipoteseLegal == null) ? '' :  hipoteseLegal;
     var dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '0') ? {name: 'P\u00FAblico', icon: 'fas fa-globe-americas'} : false;
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '1') ? {name: 'Restrito: '+hipoteseLegal, icon: 'fas fa-lock'} : dataNivelAcesso;
         dataNivelAcesso = (typeof prop !== 'undefined' && typeof prop.rdoNivelAcesso !== 'undefined' && prop.rdoNivelAcesso == '2') ? {name: 'Sigiloso', icon: 'fas fa-user-slash'} : dataNivelAcesso;
-    var infoProcNode = ifrVisualizacao.find(divInformacao).get(0);
+    // Robusto à versão: divInformacao do flag isNewSEI pode estar errado (ver acima);
+    // tenta os dois ids (novo: #divArvoreInformacao, antigo: #divInformacao).
+    var infoProcNode = ifrVisualizacao.find('#divArvoreInformacao, #divInformacao').get(0);
     var rootSelected = !!(id_procedimento && ifrArvore.find('#span'+id_procedimento).hasClass('infraArvoreNoSelecionado'));
     var capaReady = !!prop && !!id_procedimento && ifrVisualizacao.length > 0 && ifrArvore.length > 0 && rootSelected;
 
@@ -7582,8 +7600,25 @@ function setCapaProcesso(loop = true) {
     }
 
     if (!capaReady) {
+        // Este documento não é o HOST da capa se não tem nem o frame da árvore nem o
+        // de visualização (ex.: setCapaProcesso disparado de DENTRO de um iframe via
+        // parent.setCapaProcesso, ou em frame aninhado). Aí não há capa para montar —
+        // sai sem retentar, evitando o warning espúrio "faltando ifrArvore" que persistia
+        // mesmo com a capa montando corretamente no contexto pai.
+        if (ifrArvore.length === 0 && $('#ifrConteudoVisualizacao').length === 0 && $($ifrVisualizacao).length === 0) {
+            return;
+        }
         if (!prop || !id_procedimento || ifrVisualizacao.length === 0 || ifrArvore.length === 0) {
-            retryCapaProcesso('data/frame not ready');
+            // Diagnóstico: reporta QUAL pré-condição falhou, em vez do genérico
+            // "data/frame not ready" (que não dizia se faltava o dado do processo,
+            // o id, ou um dos iframes). `prop` vem de pullDadosProcessoSession() →
+            // cache dadosSessionProcessoPro; se faltar, suspeitar do sessionStorage.
+            var capaMissing = [];
+            if (!prop) capaMissing.push('prop(dadosProcessoSession)');
+            if (!id_procedimento) capaMissing.push('id_procedimento');
+            if (ifrVisualizacao.length === 0) capaMissing.push('ifrVisualizacao');
+            if (ifrArvore.length === 0) capaMissing.push('ifrArvore');
+            retryCapaProcesso('data/frame not ready: faltando ' + capaMissing.join(', '));
         } else if (!rootSelected) {
             // Se outro nó da árvore (um documento) já está selecionado e a capa
             // não está visível, o usuário está vendo um documento — não há capa

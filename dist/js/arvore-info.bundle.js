@@ -1403,6 +1403,15 @@
         log("parentReady: parent inaccessible (cross-origin) \u2014 using stub");
         return Promise.resolve(stubParent());
       }
+      try {
+        if (win.parent && typeof win.parent.checkConfigValue === "function") {
+          log("parentReady via checkConfigValue s\xEDncrono (sem SeiProReady, sem polling)");
+          return Promise.resolve(win.parent);
+        }
+      } catch (e) {
+        warn("parentReady cross-origin error, using stub:", e.message);
+        return Promise.resolve(stubParent());
+      }
       warn("parent.SeiProReady missing \u2014 polling for checkConfigValue (250ms intervals, timeout=" + PARENT_READY_TIMEOUT + "ms)");
       return new Promise(function(resolve) {
         (function probe() {

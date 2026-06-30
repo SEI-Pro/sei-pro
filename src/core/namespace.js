@@ -6,14 +6,6 @@ import { getSeiPro, globalRef } from './global.js';
 export function createNamespace() {
     const root = getSeiPro();
 
-    root.aliasState = function (name, value) {
-        root.state[name] = value;
-        if (typeof globalRef[name] === 'undefined') {
-            globalRef[name] = value;
-        }
-        return value;
-    };
-
     root.linkState = function (name) {
         if (Object.prototype.hasOwnProperty.call(root.state, name)) {
             return;
@@ -28,10 +20,6 @@ export function createNamespace() {
         } catch (e) {
             root.state[name] = globalRef[name];
         }
-    };
-
-    root.linkStateAll = function (names) {
-        (names || []).forEach(root.linkState);
     };
 
     return root;

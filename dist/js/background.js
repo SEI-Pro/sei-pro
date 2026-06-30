@@ -18,7 +18,7 @@ function handleInstalled(details) {
         browser.storage.local.get('CheckTypes', function(item) {
             browser.storage.local.set({ InstallOrUpdate: true });
             if (!item.CheckTypes || item.CheckTypes.indexOf('hidemsgupdate') === -1) {
-                browser.tabs.create({ url: 'https://sei-pro.github.io/sei-pro/pages/HISTORICO.html' });
+                // browser.tabs.create({ url: 'https://sei-pro.github.io/sei-pro/pages/HISTORICO.html' });
             }
         });
     }

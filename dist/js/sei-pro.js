@@ -1815,18 +1815,26 @@ function setTableSorterHome() {
                         for (var j = theadCols; j < tbodyCols; j++) {
                             theadRow.append('<th></th>');
                         }
-                       $('#ancLiberarMeusProcessos').click(function(){
-                           verMeusProcessos('T')
-                       });
-                       $('#ancLiberarMarcador').click(function(){
-                           filtrarMarcador(null);
-                       });
-                       $('#ancLiberarTipoProcedimento').click(function(){
-                           filtrarTipoProcedimento(null);
-                       });
-                       $('#ancLiberarTipoPrioridade').click(function(){
-                           filtrarTipoPrioridade(null);
-                       });
+                        // #ancLiberarMeusProcessos precisa de bind: testado ao vivo (2026-06-30) —
+                        // o SEI não liga nenhum handler de clique nesse botão (jQuery._data confirma
+                        // zero listeners), embora a função nativa verMeusProcessos exista e funcione
+                        // (ela só existe no mundo MAIN da página — chamá-la direto do mundo isolado
+                        // lança ReferenceError, como tentamos antes). verMeusProcessos('T') faz só
+                        // duas coisas (confirmado lendo o código-fonte da função na página real):
+                        // seta #hdnMeusProcessos='T' e submete #frmProcedimentoControlar — isso É
+                        // manipulação de DOM pura, que o mundo isolado replica sem cruzar mundos.
+                        // O servidor decide ligar/desligar o filtro pelo estado de sessão, não pelo
+                        // valor estático do campo — por isso sempre 'T', tanto para ativar quanto
+                        // para remover (mesmo padrão usado pelo link "Ver atribuídos a mim").
+                        $('#ancLiberarMeusProcessos').click(function (e) {
+                            e.preventDefault();
+                            var hdn = document.getElementById('hdnMeusProcessos');
+                            var form = document.getElementById('frmProcedimentoControlar');
+                            if (hdn && form) {
+                                hdn.value = 'T';
+                                form.submit();
+                            }
+                        });
                    }
                     
                     var elemID = $(this).attr('id');
@@ -3197,19 +3205,23 @@ function initSeiPro() {
 	}
     initReloadModalLink();
     if (typeof initSmartSignatureSelectionPro === 'function') initSmartSignatureSelectionPro();
-    if (typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI()) {
-        // localStorageRemovePro('seiSlim');
-        
-        //  Força o reestabelecimento de funcionalidades nativas do SEI 4.0
-        $('#ancLiberarMeusProcessos').click(function() {
-            verMeusProcessos('T')
-        });
-        $('#ancLiberarMarcador').click(function() {
-            filtrarMarcador(null);
-        });
-        $('#ancLiberarTipoProcedimento').click(function() {
-            filtrarTipoProcedimento(null);
-        });
-    }
+    // #ancLiberarMeusProcessos: mesmo bind de setTableSorterHome acima (ver comentário lá
+    // — testado ao vivo, SEI não liga handler nesse botão; fix via DOM puro, sem cruzar
+    // mundos). Religar aqui também replica o comportamento original do legado (que tinha
+    // o mesmo bind duplicado nos dois pontos) — inofensivo, pois o 1º clique já navega
+    // (form.submit()) antes do 2º handler ter efeito.
+    // #ancLiberarMarcador/#ancLiberarTipoProcedimento/#ancLiberarTipoPrioridade ficam
+    // de fora por ora: corpos de filtrarMarcador/filtrarTipoProcedimento/filtrarTipoPrioridade
+    // são bem maiores (838-881 chars) e não foram lidos com segurança — não replicar
+    // 'no escuro'. Gap documentado, não corrigido.
+    $('#ancLiberarMeusProcessos').click(function (e) {
+        e.preventDefault();
+        var hdn = document.getElementById('hdnMeusProcessos');
+        var form = document.getElementById('frmProcedimentoControlar');
+        if (hdn && form) {
+            hdn.value = 'T';
+            form.submit();
+        }
+    });
 }
 $(document).ready(function () { initSeiPro() });
