@@ -9,7 +9,7 @@
  */
 import { getQuickTokens, buildQuickRanges } from './core.js';
 
-const HL_CLASS = 'seiProQuickPageHighlight';
+const HL_CLASS = 'seipro-quick-highlight';
 
 function clearHighlights(rootDoc) {
     rootDoc.querySelectorAll('.' + HL_CLASS).forEach(function (span) {

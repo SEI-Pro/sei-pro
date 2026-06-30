@@ -113,6 +113,35 @@ describe('normalizeMojibakeUtf8', () => {
     expect(texto.normalizeMojibakeUtf8('processo normal')).toBe('processo normal');
     expect(texto.normalizeMojibakeUtf8('')).toBe('');
   });
+
+  // Contrato definitivo do conserto de codificação (acentos/cedilha/crase) usado
+  // pela anotação na tela de controle. mojibake() reproduz "UTF-8 lido como Latin-1".
+  const mojibake = (s) => Array.from(new TextEncoder().encode(s)).map((b) => String.fromCharCode(b)).join('');
+
+  it('corrige acentos, cedilha e crase isolados', () => {
+    for (const ch of ['à', 'á', 'ã', 'â', 'ç', 'é', 'ê', 'í', 'ó', 'õ', 'ú']) {
+      expect(texto.normalizeMojibakeUtf8(mojibake(ch))).toBe(ch);
+    }
+  });
+
+  it('corrige frases inteiras (datas e pontuação preservadas)', () => {
+    expect(texto.normalizeMojibakeUtf8(mojibake('Informação: revisão até 25/06/2026')))
+      .toBe('Informação: revisão até 25/06/2026');
+    expect(texto.normalizeMojibakeUtf8(mojibake('crase à mão, ações e prazos')))
+      .toBe('crase à mão, ações e prazos');
+  });
+
+  it('é idempotente (aplicar 2x = aplicar 1x)', () => {
+    const once = texto.normalizeMojibakeUtf8(mojibake('coração à toa'));
+    expect(texto.normalizeMojibakeUtf8(once)).toBe(once);
+    expect(once).toBe('coração à toa');
+  });
+
+  it('NÃO corrompe texto já correto em UTF-8', () => {
+    for (const ok of ['São Paulo', 'ção', 'Coração já certo', 'à vista', 'Revisar 25/06/2026']) {
+      expect(texto.normalizeMojibakeUtf8(ok)).toBe(ok);
+    }
+  });
 });
 
 describe('core/texto — encoding hex/unicode', () => {

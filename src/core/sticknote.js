@@ -21,7 +21,11 @@ export function parseSticknoteHomeLabel(label) {
     if (!label) {
         return false;
     }
-    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s*\/\s*(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
+    // O separador texto/usuário exige espaço dos DOIS lados (`\s+\/\s+`): o
+    // formato do SEI é "Anotação / <texto> / <usuário> em ...". Usar `\s*` (espaço
+    // opcional) fazia a barra INTERNA de uma data casar como separador — uma
+    // anotação "25/06/2026" era truncada em texto="25", usuário="06/2026 / ...".
+    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s+\/\s+(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
     if (!match) {
         return false;
     }

@@ -214,16 +214,8 @@ caption.infraCaption {
 .infraSidebarMenu .seiProSignatureBlocksIndicator {
     margin-left: auto;
 }
-.seiProQuickPageFilterHidden {
-    display: none !important;
-}
-.seiProQuickPageHighlight {
-    background: #ffef86;
-    color: inherit;
-    border-radius: 2px;
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-    padding: 0 1px;
-}
+/* Classes .seiProQuickPage* migradas p/ src/features/quick-filter/style.css
+ * (prefixo .seipro-, carregada via css/quick-filter.css). — Fase 6. */
 #divRecebidos.tagintable .infraCaption td {
     border-top: none;
     background: #fff;
@@ -990,35 +982,6 @@ td.celStatusAtividade a.iconAtividade:first-child {
     background: #4285F4 !important;
     border: 1px solid #365ea0 !important;
 }
-.tableMonitorados {
-    position: relative;
-    margin-top: 20px !important;
-}
-#monitoradosProDiv {
-    width: 100% !important;
-    overflow-x: hidden;
-}
-#monitoradosProDiv .tabelaPanelScroll {
-    overflow: visible !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    min-height: 0;
-    max-height: none;
-    height: auto !important;
-    padding-bottom: 0;
-}
-#monitoradosProDiv .tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
-    display: none !important;
-}
-#monitoradosProDiv #monitoradoTablePro {
-    width: 100% !important;
-}
-.tableMonitorados .newLink .fa-layers-counter {
-    background: #b7b7b7;
-}
-#monitoradoTablePro .sorterTrMonitorado .fa-layers-counter {
-    display: none !important;
-}
 .tableMonitorados th.tituloControle,
 .tableAtividades th.tituloControle {
     padding: 5px 0;
@@ -1347,30 +1310,6 @@ span.info[contentEditable="true"] {
     overflow: hidden;
     white-space: nowrap;
 }
-td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after {
-    content: "Adicionar prazo";
-    position: absolute;
-    right: 40px;
-    top: calc(50% - 7px);
-    color: #adadad;
-    font-style: italic;
-}
-.tableMonitorados td.tdmonitorado_tags.info_tags_follow_empty:hover .info_tags_follow:after {
-    content: "Adicionar etiqueta";
-    position: absolute;
-    right: 40px;
-    top: calc(50% - 7px);
-    color: #adadad;
-    font-style: italic;
-}
-.tableMonitorados td.tdmonitorado_maps.info_maps_follow_empty:hover .info_maps_follow:after {
-    content: "Adicionar mapa";
-    position: absolute;
-    right: 40px;
-    top: calc(50% - 7px);
-    color: #adadad;
-    font-style: italic;
-}
 .btnCloseEtiqueta {
     position: initial;
     margin: 0px 0 0 -5px !important;
@@ -1451,15 +1390,6 @@ td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after
     padding: 5px 10px;
     z-index: 88;
 }
-.info_dates_monitorado {
-    display: inline-block;
-    min-height: 14px;
-    margin-right: 20px;
-}
-td.tdmonitorado_tags {
-    padding-right: 20px;
-    min-width: 120px;
-}
 .info_dates_follow_txt {
     background-color: #cfddeb;
     padding: 5px;
@@ -1473,12 +1403,6 @@ span.info_tags_follow,
 span.info_maps_follow {
     display: inline-flex;
     min-height: 22px;
-}
-input.monitoradoDatesPro {
-    border: none;
-    background: transparent;
-    font-size: 9pt;
-    width: 120px;
 }
 a.newLink.followLink {
     visibility: hidden;
@@ -1508,32 +1432,6 @@ td.info_maps_follow_empty:hover a.newLink.followLink.followLinkMapsEdit,
 td.info_tags_follow_empty:hover a.newLink.followLink.followLinkTagsEdit {
     visibility: hidden;
 }
-input.monitoradoDatesPro {
-    background: #dfdfdf;
-    border-radius: 5px;
-    text-align: center;
-}
-.dateboxDisplay {
-    padding: 0 10px;
-    background-color: #bfd5e845;
-    margin: 5px;
-    border-radius: 5px;
-    color: #666;
-    white-space: nowrap;
-    cursor: pointer;
-    position: relative;
-}
-.dateBoxIcon {
-    position: relative;
-}
-.dateboxDoc {
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: #666;    
-    background-color: #f1f1f1;
-    margin: 3px;
-    display: inline-block;
-}
 .infraTooltipPro {
     background: #ffffaa;
     padding: .4em;
@@ -1552,30 +1450,6 @@ input.monitoradoDatesPro {
 }
 i.iconSwitch {
     color: #c0c0c0;
-}
-.dateboxDisplay .circular-chart {
-  display: inline-flex;
-  max-width: 22px;
-  max-height: 22px;
-  position: absolute;
-  margin: -3px 0 0 -3px;
-}
-.dateboxDisplay .circle {
-  stroke: #017fff99;
-  fill: none;
-  stroke-width: 5.8;
-  stroke-linecap: round;
-  animation: progress 1s ease-out forwards;
-}
-.tabelaControle .dateboxDisplay, 
-#frmArvore .dateboxDisplay {
-    padding: 2px 8px;
-    margin: 0;
-    background-color: transparent;
-    display: inline-block;
-}
-#frmArvore .dateboxDisplay {
-    padding: 0 2px !important;
 }
 .tabelaControle td.atividadeBoxDisplay {
     margin: 0 10px;
@@ -1673,11 +1547,6 @@ i.iconSwitch {
 }
 .ui-sortable .titlePanelHome {
     cursor: grab;
-}
-@keyframes progress {
-  0% {
-    stroke-dasharray: 0 100;
-  }
 }
 .SeiPro_pesquisa_agrupamento #divInfraBarraSuperior,
 .SeiPro_pesquisa_agrupamento #divInfraBarraSistemaPadrao,
@@ -2082,9 +1951,6 @@ table.moreInfoBox td:first-child,
 }
 .kanban-container .kanban-item.tagKanName_urgente,
 .kanban-container .kanban-item[data-class="urgente"],
-.urgenteBoxDisplay {
-    background: #f9e2e0;
-}
 .importanteBoxDisplay {
     background: #f9e2e0;
 }
@@ -2590,10 +2456,6 @@ table.infraTable tr > th.infraTh.tablesorter-headerSortDown {
 }
 .newSEI table.infraTable tr > th.infraTh.tablesorter-header .tablesorter-header-inner {
     color: var(--color-secondary-03) !important;
-}
-.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo i,
-.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo span {
-    color: var(--pure-0) !important;
 }
 .newSEI #frmProcedimentoControlar.h-100,
 .newSEI #divControleProcessosConteudo.h-100 {
@@ -3578,9 +3440,6 @@ div#chartAtivActions .chosen-container {
 .kanban-item a.newLink .fa-archive {
     color: #666;
 }
-.infraAreaTabela .fa-star.iconMonitoradoPro {
-    color: #999 !important;
-}
 .infoDadosArvore .kanban-pinboard,
 .preview_atividade .kanban-pinboard {
     display: none !important;
@@ -3636,24 +3495,6 @@ td.message-content * {
     font-family: monospace;
     font-size: 8pt;
     padding: 3px 5px;
-}
-tr:hover td.prazoBoxDisplay a.addControlePrazo,
-tr.infraTrMarcada td.prazoBoxDisplay a.addControlePrazo {
-    display: inline-block;
-}
-tr.infraTrSelecionada td.prazoBoxDisplay a.addControlePrazo {
-    display: inline-block;
-    background-color: rgb(232, 232, 232);
-    color: rgb(68, 68, 68);
-}
-tr td.prazoBoxDisplay a.addControlePrazo:hover {
-    text-decoration: none;
-}
-tr td.prazoBoxDisplay a.addControlePrazo {
-    display: none;
-    padding: 0 5px;
-    border-radius: 5px;
-    user-select: none;
 }
 ul.sm-nowrap {
     z-index: 999 !important;
@@ -3793,13 +3634,6 @@ body:not(.newSEI) div.infraTooltipTexto b {
 body:not(.newSEI) div.infraTooltipTexto i {
     font-style:italic;
 }
-td.prazoBoxDisplay {
-    width: 5em !important;
-    min-width: 5em !important;
-    max-width: 5em !important;
-    overflow: hidden;
-    text-align: center;
-}
 .chosen-container .chosen-results li.disabled-result {
     color: #a2a2a2 !important;
 }
@@ -3807,36 +3641,6 @@ td.prazoBoxDisplay {
     width: 100%;
     height: 100vh;
     border: none;
-}
-td.prazoBoxDisplay {
-    width: 5em !important;
-    min-width: 5em !important;
-    max-width: 5em !important;
-}
-th.prazoBoxDisplay .tablesorter-header-inner {
-    display: flex !important;
-    width: 100%;
-    justify-content: flex-end;
-    padding-right: 0 !important;
-    text-align: right !important;
-}
-td.prazoBoxDisplay .dateboxDisplay,
-td.prazoBoxDisplay a.addControlePrazo {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    max-width: 100%;
-}
-td.prazoBoxDisplay a.addControlePrazo {
-    width: 100%;
-    overflow: hidden;
-    justify-content: center;
-}
-td.prazoBoxDisplay a.addControlePrazo span {
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .displayNone, #divInfraAreaTelaD .displayNone {
     display: none !important;
@@ -3881,9 +3685,6 @@ input[type="currency"]{
 .newSEI #topmenu .urgentePro,
 .newSEI #divArvore .urgentePro {
     vertical-align: baseline;
-}
-.newSEI #topmenu .iconMonitoradoPro {
-    vertical-align: super;
 }
 .newSEI #topmenu .noVisitado[title*="(URGENTE)"],
 .newSEI #divArvore .noVisitado[title*="(URGENTE)"] {
@@ -4631,82 +4432,6 @@ div#dialogBoxDocLote p {
 .chosen-container .chosen-results li {
     float: initial !important;
     padding: 5px 6px !important;
-}
-.sticknoteHomeInline {
-    display: block;
-    margin: 0;
-    padding: 5px 7px;
-    border-left: 3px solid #f0c36d;
-    background: #fff7df;
-    box-shadow: inset 0 0 0 1px rgba(240, 195, 109, 0.35);
-    color: #444;
-    font-size: 9pt;
-    line-height: 1.35;
-    border-radius: 4px;
-    min-width: 120px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-.sticknoteHomeInline div {
-    margin: 0;
-}
-.sticknoteHomeInline.priority {
-    border-left-color: #df8b8d;
-    background: #fde1e2;
-    box-shadow: inset 0 0 0 1px rgba(223, 139, 141, 0.35);
-}
-.sticknoteHomeNoteCell {
-    width: 132px;
-    min-width: 132px;
-    max-width: 132px;
-    vertical-align: top;
-    padding: 4px 1px 4px 0 !important;
-}
-.sticknoteHomeIconCell {
-    width: 18px;
-    min-width: 18px;
-    max-width: 18px;
-    padding: 4px 0 4px 0 !important;
-    text-align: center;
-    vertical-align: top;
-}
-.sticknoteHomeCheckCell,
-.sticknoteHomeCheckHead {
-    width: 28px;
-    min-width: 28px;
-    max-width: 28px;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    text-align: center;
-    vertical-align: top;
-}
-.sticknoteHomeDetailedNoteCell {
-    vertical-align: top;
-    padding: 4px 4px 4px 0 !important;
-}
-.sticknoteHomeProcessCell {
-    width: 8em;
-    min-width: 8em;
-    max-width: 8em;
-    white-space: nowrap;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-.sticknoteHomeProcessCell a.processoVisualizado {
-    display: inline-block;
-    white-space: nowrap;
-}
-.sticknoteHomeNoteCell .imagemStatus,
-.sticknoteHomeNoteCell .newLink {
-    display: none;
-}
-.sticknoteHomeLayout a[href*="acao=anotacao_registrar"],
-.sticknoteHomeLayout a.botaoSEI[onclick*="acao=anotacao_registrar"] {
-    display: none !important;
-}
-.sticknoteHomeInsertedCell + td {
-    padding-left: 0 !important;
 }
 
 /* Anotação panel: distinct border + larger edit controls (sei-pro-arvore-boot.js) */

@@ -10,44 +10,73 @@ function stubSeiPro({ enabled = true, login = false, assinar = false } = {}) {
     };
 }
 
+// DOM real do login SEI (classe MaskedPassword): um DECOY visível type=text com
+// id=pwdSenha (onde o usuário digita, mascarado em ●) + o campo real type=password
+// com name=pwdSenha, escondido, SEM id (é o que o form submete em texto puro).
+function seiLoginDom() {
+    return ''
+        + '<form>'
+        + '  <input id="txtUsuario" type="text">'
+        + '  <input type="password" name="pwdSenha" style="display:none">'
+        + '  <input id="pwdSenha" type="text" class="form-control masked" autocomplete="off">'
+        + '</form>';
+}
+
 describe('feature login — autopreencher senha', () => {
     beforeEach(() => { document.body.innerHTML = ''; delete window.SeiPro; });
 
     it('não faz nada se a config estiver desligada', () => {
         stubSeiPro({ enabled: false, login: true });
-        document.body.innerHTML = '<form><input id="pwdSenha" type="password"><input type="password" id="vis"></form>';
+        document.body.innerHTML = seiLoginDom();
         installLoginAutofill();
-        expect(document.getElementById('pwdSenha').style.display).not.toBe('none');
+        const real = document.querySelector('input[name="pwdSenha"]');
+        expect(real.dataset.seiProPwd).toBeUndefined();
+        // decoy intacto
+        expect(document.querySelectorAll('#pwdSenha').length).toBe(1);
     });
 
-    it('na tela de login: esconde #pwdSenha, prepara o visível e sincroniza', () => {
+    it('expõe o campo real (name=pwdSenha) e neutraliza o decoy', () => {
         stubSeiPro({ login: true });
-        document.body.innerHTML = '<form><input id="pwdSenha" type="password"><input type="password" id="vis"></form>';
+        document.body.innerHTML = seiLoginDom();
         installLoginAutofill();
-        const hidden = document.getElementById('pwdSenha');
-        const vis = document.getElementById('vis');
-        expect(hidden.style.display).toBe('none');
-        expect(vis.getAttribute('autocomplete')).toBe('current-password');
-        expect(vis.classList.contains('form-control')).toBe(true);
 
-        // digitar no visível propaga para o real
-        vis.value = 'segredo';
-        vis.dispatchEvent(new Event('input', { bubbles: true }));
-        expect(hidden.value).toBe('segredo');
+        const real = document.querySelector('input[name="pwdSenha"]');
+        // o decoy type=text foi removido; só sobra o campo real, agora com id=pwdSenha
+        const byId = document.querySelectorAll('#pwdSenha');
+        expect(byId.length).toBe(1);
+        expect(byId[0]).toBe(real);
+
+        expect(real.type).toBe('password');
+        expect(real.style.display).not.toBe('none');
+        expect(real.getAttribute('autocomplete')).toBe('current-password');
+        expect(real.classList.contains('masked')).toBe(false);
+        expect(real.dataset.seiProPwd).toBe('1');
     });
 
-    it('sincroniza autofill que já estava no campo visível antes do bind', () => {
+    it('marca o campo de usuário com autocomplete=username (pareamento)', () => {
         stubSeiPro({ login: true });
-        document.body.innerHTML = '<form><input id="pwdSenha" type="password"><input type="password" id="vis" value="preenchido"></form>';
+        document.body.innerHTML = seiLoginDom();
         installLoginAutofill();
-        expect(document.getElementById('pwdSenha').value).toBe('preenchido');
+        expect(document.getElementById('txtUsuario').getAttribute('autocomplete')).toBe('username');
     });
 
-    it('é idempotente: não rebinda o handler em chamadas repetidas', () => {
+    it('valor preenchido no campo real é o que o form submete (texto puro)', () => {
         stubSeiPro({ login: true });
-        document.body.innerHTML = '<form><input id="pwdSenha" type="password"><input type="password" id="vis"></form>';
+        document.body.innerHTML = seiLoginDom();
+        installLoginAutofill();
+        const real = document.querySelector('input[name="pwdSenha"]');
+        real.value = 'segredo'; // simula autofill direto no campo real exposto
+        expect(real.name).toBe('pwdSenha');
+        expect(real.value).toBe('segredo');
+    });
+
+    it('é idempotente: rodar duas vezes não quebra (decoy já removido)', () => {
+        stubSeiPro({ login: true });
+        document.body.innerHTML = seiLoginDom();
         installLoginAutofill();
         installLoginAutofill();
-        expect(document.getElementById('vis').dataset.seiProPwd).toBe('1');
+        const real = document.querySelector('input[name="pwdSenha"]');
+        expect(real.dataset.seiProPwd).toBe('1');
+        expect(document.querySelectorAll('#pwdSenha').length).toBe(1);
     });
 });

@@ -33,7 +33,23 @@ export function installWebstore() {
         try {
             session().setItem(item, JSON.stringify(result));
         } catch (e) {
-            console.log('Local Storage is full:', item);
+            // Cota do sessionStorage (~5MB/origin) estourada. Se o valor for um array
+            // que acumula (ex.: dadosSessionProcessoPro, uma entrada por processo
+            // visitado), descarta as entradas MAIS ANTIGAS (início do array) e retenta,
+            // preservando as mais recentes. Antes a gravação inteira era perdida em
+            // silêncio — o cache parava de atualizar assim que enchia.
+            if (Array.isArray(result) && result.length > 1) {
+                let trimmed = result;
+                for (let attempt = 0; attempt < 16 && trimmed.length > 1; attempt++) {
+                    trimmed = trimmed.slice(Math.ceil(trimmed.length / 2)); // mantém a metade recente
+                    try {
+                        session().setItem(item, JSON.stringify(trimmed));
+                        console.warn('[SeiPro] sessionStorage cheio em "' + item + '": entradas antigas podadas, mantidas ' + trimmed.length + '.');
+                        return;
+                    } catch (e2) { /* ainda não coube — continua podando */ }
+                }
+            }
+            console.warn('[SeiPro] sessionStorage cheio: gravação de "' + item + '" descartada.');
         }
     }
     function sessionStorageRemovePro(item) {

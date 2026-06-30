@@ -142,10 +142,6 @@ export function installAnotacaoSection(ctx) {
                     '<i class="fas fa-thumbs-up seipro-anot-btn" data-act="remove-confirm"  title="Confirmar remoção" style="cursor:pointer;color:#393;display:none;"></i>' +
                     '<i class="fas fa-thumbs-down seipro-anot-btn" data-act="remove-cancel"  title="Cancelar" style="cursor:pointer;color:#888;display:none;"></i>';
 
-                var collapseBtn = doc.createElement('a');
-                collapseBtn.className = 'newLink'; collapseBtn.style.cssText = 'cursor:pointer;font-size:85%;display:none;';
-                collapseBtn.textContent = 'ver mais';
-
                 var stampEl = doc.createElement('div');
                 stampEl.style.cssText = 'font-size:80%;color:#666;margin-top:4px;';
                 if (stamp && stamp.user) {
@@ -153,7 +149,7 @@ export function installAnotacaoSection(ctx) {
                     stampEl.innerHTML = '<i class="far fa-user" style="margin-right:4px;"></i>por <strong>' + stamp.user + '</strong> em ' + when.toLocaleString('pt-BR');
                 }
 
-                return { editor: editor, actions: actions, collapseBtn: collapseBtn, stampEl: stampEl };
+                return { editor: editor, actions: actions, stampEl: stampEl };
             }
 
             function buildAnotUI(url, initialText, initialPriority, opts) {
@@ -173,25 +169,14 @@ export function installAnotacaoSection(ctx) {
                 var ui = createAnotacaoStaticUI(initialText, initialPriority, stamp);
                 var editor = ui.editor;
                 var actions = ui.actions;
-                var collapseBtn = ui.collapseBtn;
                 var stampEl = ui.stampEl;
 
-                var collapsed = true;
-                function applyCollapse() {
-                    var nLines = editor.children.length;
-                    if (nLines > 3) {
-                        collapseBtn.style.display = '';
-                        if (collapsed) { editor.style.maxHeight = '4.5em'; editor.style.overflow = 'hidden'; collapseBtn.textContent = 'ver mais (' + nLines + ' linhas)'; }
-                        else { editor.style.maxHeight = ''; editor.style.overflow = ''; collapseBtn.textContent = 'ver menos'; }
-                    } else { collapseBtn.style.display = 'none'; editor.style.maxHeight = ''; editor.style.overflow = ''; }
-                }
-                collapseBtn.addEventListener('click', function () { collapsed = !collapsed; applyCollapse(); });
+                // Dentro do processo a anotação mostra TUDO — sem "ver mais"/colapso.
+                // (O clamp de 2 linhas existe só na tela de controle de processos.)
 
                 anotBody.appendChild(editor);
-                anotBody.appendChild(collapseBtn);
                 anotBody.appendChild(actions);
                 if (stamp) anotBody.appendChild(stampEl);
-                applyCollapse();
 
                 var savedSelectionRange = null;
                 function saveEditorSelection() {
@@ -229,11 +214,9 @@ export function installAnotacaoSection(ctx) {
                         if (!editor.dataset.original) { editor.innerHTML = ''; var d = doc.createElement('div'); d.appendChild(doc.createElement('br')); editor.appendChild(d); }
                         else { anotDomFromLine(editor, editor.dataset.original); }
                         editor.focus();
-                        collapsed = false; applyCollapse();
                     } else {
                         anotDomFromLine(editor, editor.dataset.original);
                         decorateReadonly(editor);
-                        applyCollapse();
                     }
                     updateDirtyIndicator();
                 }

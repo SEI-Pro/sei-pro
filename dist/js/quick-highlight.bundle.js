@@ -47,7 +47,7 @@
   }
 
   // src/features/quick-highlight/index.js
-  var HL_CLASS = "seiProQuickPageHighlight";
+  var HL_CLASS = "seipro-quick-highlight";
   function clearHighlights(rootDoc) {
     rootDoc.querySelectorAll("." + HL_CLASS).forEach(function(span) {
       span.replaceWith(rootDoc.createTextNode(span.textContent));

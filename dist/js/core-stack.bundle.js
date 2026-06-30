@@ -51,8 +51,6 @@
   }
 
   // src/platform/runtime.js
-  var EXT_BASE_KEY = "seiProExtBaseUrl";
-  var EXT_MANIFEST_KEY = "seiProExtManifest";
   function runtimeApi() {
     if (typeof globalRef.browser !== "undefined" && globalRef.browser.runtime) {
       return globalRef.browser.runtime;
@@ -62,82 +60,19 @@
     }
     return null;
   }
-  function sessionGet(key) {
-    try {
-      return typeof globalRef.sessionStorage !== "undefined" ? globalRef.sessionStorage.getItem(key) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function sessionSet(key, value) {
-    try {
-      if (typeof globalRef.sessionStorage !== "undefined") globalRef.sessionStorage.setItem(key, value);
-    } catch (e) {
-    }
-  }
-  function extBase() {
-    if (globalRef.__seiProExtBase) return globalRef.__seiProExtBase;
-    const cached = sessionGet(EXT_BASE_KEY);
-    if (cached) return cached;
-    if (typeof globalRef.URL_SPRO !== "undefined" && globalRef.URL_SPRO) return globalRef.URL_SPRO;
-    return "";
-  }
   function createRuntime() {
     const isChrome = typeof globalRef.browser === "undefined";
     if (isChrome && typeof globalRef.chrome !== "undefined") {
       globalRef.browser = globalRef.chrome;
     }
-    const api = runtimeApi();
-    if (api && typeof api.getURL === "function") {
-      try {
-        const base = api.getURL("");
-        globalRef.__seiProExtBase = base;
-        sessionSet(EXT_BASE_KEY, base);
-      } catch (e) {
-      }
-    } else if (!globalRef.__seiProExtBase) {
-      try {
-        const self = typeof document !== "undefined" ? document.currentScript : null;
-        const src = self && self.src ? String(self.src) : "";
-        const m = src.match(/^(.*\/)js\/core-stack\.bundle\.js(?:[?#].*)?$/);
-        if (m) {
-          globalRef.__seiProExtBase = m[1];
-          sessionSet(EXT_BASE_KEY, m[1]);
-        }
-      } catch (e) {
-      }
-    }
-    if (api && typeof api.getManifest === "function") {
-      try {
-        const manifest = api.getManifest();
-        globalRef.__seiProExtManifest = manifest;
-        sessionSet(EXT_MANIFEST_KEY, JSON.stringify(manifest));
-      } catch (e) {
-      }
-    }
     function getUrlExtension(url) {
       const rt = runtimeApi();
       if (rt && typeof rt.getURL === "function") return rt.getURL(url);
-      const base = extBase();
-      if (!base) {
-        throw new Error(
-          "SeiPro.getUrlExtension: base da extens\xE3o indispon\xEDvel (sem chrome.runtime, sem cache em sessionStorage, sem URL_SPRO)."
-        );
-      }
-      return base + url;
+      throw new Error("SeiPro.getUrlExtension: chrome.runtime indispon\xEDvel no mundo isolado.");
     }
     function getManifestExtension() {
       const rt = runtimeApi();
-      if (rt && typeof rt.getManifest === "function") return rt.getManifest();
-      if (globalRef.__seiProExtManifest) return globalRef.__seiProExtManifest;
-      const cached = sessionGet(EXT_MANIFEST_KEY);
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch (e) {
-        }
-      }
-      return {};
+      return rt && typeof rt.getManifest === "function" ? rt.getManifest() : {};
     }
     function pathExtensionSEIPro() {
       return getUrlExtension("js/sei-pro.js").toString().replace("js/sei-pro.js", "");
@@ -322,12 +257,16 @@
         return [];
       }
     }
-    function queryConfigValue(name) {
-      const configBasePro = readConfigBasePro();
-      if (typeof globalRef.jmespath === "undefined" || globalRef.jmespath === null) {
-        return false;
+    function pickConfigGeral(configBasePro) {
+      if (!Array.isArray(configBasePro)) return null;
+      for (let i = 0; i < configBasePro.length; i++) {
+        const el = configBasePro[i];
+        if (el && Array.isArray(el.configGeral)) return el.configGeral;
       }
-      const configGeral = globalRef.jmespath.search(configBasePro, "[*].configGeral | [0]");
+      return null;
+    }
+    function queryConfigValue(name) {
+      const configGeral = pickConfigGeral(readConfigBasePro());
       if (!Array.isArray(configGeral)) {
         return false;
       }
@@ -348,11 +287,17 @@
       return ["filtrarpaginapelapesquisarapida"].indexOf(String(name || "")) !== -1;
     }
     function checkConfigValue(name) {
-      const jmespath = globalRef.jmespath;
-      const rawConfig = globalRef.localStorage.getItem("configBasePro");
-      var configBasePro = typeof rawConfig !== "undefined" && rawConfig != "" && rawConfig !== null ? JSON.parse(rawConfig) : [];
-      var dataValuesConfig = typeof jmespath !== "undefined" && jmespath !== null ? jmespath.search(configBasePro, "[*].configGeral | [0]") : false;
-      dataValuesConfig = typeof jmespath !== "undefined" && jmespath !== null ? jmespath.search(dataValuesConfig, "[?name=='" + name + "'].value | [0]") : false;
+      var configBasePro = readConfigBasePro();
+      const configGeral = pickConfigGeral(configBasePro);
+      var dataValuesConfig = null;
+      if (Array.isArray(configGeral)) {
+        for (let i = 0; i < configGeral.length; i++) {
+          if (configGeral[i] && configGeral[i].name === name) {
+            dataValuesConfig = configGeral[i].value !== null && typeof configGeral[i].value !== "undefined" ? configGeral[i].value : null;
+            break;
+          }
+        }
+      }
       if ((dataValuesConfig === false || dataValuesConfig === null) && isDefaultEnabledConfigValue(name)) {
         return true;
       }
@@ -1194,7 +1139,7 @@
   }
 
   // src/core/quickfilter-dom.js
-  var HIGHLIGHT_CLASS = "seiProQuickPageHighlight";
+  var HIGHLIGHT_CLASS = "seipro-quick-highlight";
   function resolveDoc(scope) {
     if (scope && scope.ownerDocument) return scope.ownerDocument;
     if (scope && scope.nodeType === 9) return scope;
@@ -1275,7 +1220,7 @@
     if (!label) {
       return false;
     }
-    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s*\/\s*(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
+    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s+\/\s+(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
     if (!match) {
       return false;
     }
@@ -1952,7 +1897,19 @@
       try {
         session().setItem(item, JSON.stringify(result));
       } catch (e) {
-        console.log("Local Storage is full:", item);
+        if (Array.isArray(result) && result.length > 1) {
+          let trimmed = result;
+          for (let attempt = 0; attempt < 16 && trimmed.length > 1; attempt++) {
+            trimmed = trimmed.slice(Math.ceil(trimmed.length / 2));
+            try {
+              session().setItem(item, JSON.stringify(trimmed));
+              console.warn('[SeiPro] sessionStorage cheio em "' + item + '": entradas antigas podadas, mantidas ' + trimmed.length + ".");
+              return;
+            } catch (e2) {
+            }
+          }
+        }
+        console.warn('[SeiPro] sessionStorage cheio: grava\xE7\xE3o de "' + item + '" descartada.');
       }
     }
     function sessionStorageRemovePro(item) {
@@ -2448,6 +2405,213 @@
     return tooltip;
   }
 
+  // src/features/monitorados/domain.js
+  function defaultConfigDate() {
+    const moment = globalRef.moment;
+    return {
+      date: moment().format("YYYY-MM-DD"),
+      listdocs: false,
+      dateDue: moment().add(5, "d").format("YYYY-MM-DD"),
+      countdown: true,
+      countdays: false,
+      workday: false,
+      setdate: true,
+      duenumber: 5,
+      duecounter: "corrido",
+      duemode: "depois",
+      duesetdate: false,
+      duedate: false,
+      newdoc: true,
+      selectdoc: false,
+      advanced: false,
+      displayformat: false,
+      displayicon: false,
+      displaydue: false,
+      displaydue_txt: "Vencimento:",
+      displaytip: "",
+      deliverydoc: false,
+      deliverydoc_style: "",
+      newdoclist: []
+    };
+  }
+  function defaultMonitoradoStore() {
+    return { monitorados: [], config: { colortags: [] } };
+  }
+  function findMonitoradoIndex(store, id_procedimento) {
+    if (!store || !store.monitorados) return -1;
+    return store.monitorados.findIndex(function(obj) {
+      return String(obj.id_procedimento) === String(id_procedimento);
+    });
+  }
+  function monitoradoProcessDataReady(id_procedimento, dados) {
+    return typeof dados !== "undefined" && dados && Object.keys(dados).length > 0 && dados.constructor === Object && typeof dados.listAndamento !== "undefined" && dados.listAndamento !== null && dados.hasOwnProperty("listAndamento") && typeof dados.listAndamento.id_procedimento !== "undefined" && dados.listAndamento.id_procedimento !== null && dados.listAndamento.hasOwnProperty("id_procedimento") && String(dados.listAndamento.id_procedimento) == String(id_procedimento) && typeof dados.propProcesso !== "undefined" && dados.propProcesso !== null;
+  }
+  function monitoradoProcessPayloadReady(id_procedimento, dados) {
+    return monitoradoProcessDataReady(id_procedimento, dados) && typeof dados.listDocumentosAssinados !== "undefined" && Array.isArray(dados.listDocumentosAssinados);
+  }
+
+  // src/features/monitorados/store.js
+  var STORE_KEY = "configDataMonitoradosPro";
+  var storeState = null;
+  var storeLastRaw = null;
+  var remoteTimer = null;
+  function getStoreMonitoradoPro() {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw === storeLastRaw && storeState !== null) {
+      return storeState;
+    }
+    const parsed = raw && isJson(raw) ? JSON.parse(raw) : false;
+    storeState = parsed && Object.keys(parsed).length > 0 ? parsed : defaultMonitoradoStore();
+    storeLastRaw = raw;
+    return storeState;
+  }
+  function getOptionsConfigDate(index) {
+    const store = getStoreMonitoradoPro();
+    const item = index >= 0 && store["monitorados"][index] ? store["monitorados"][index] : false;
+    const hasConfig = item && item["configdate"] && Object.keys(item["configdate"]).length > 0;
+    return hasConfig ? item["configdate"] : defaultConfigDate();
+  }
+  function persistMonitoradoStore(store, options) {
+    const moment = globalRef.moment;
+    options = options || {};
+    storeState = store || getStoreMonitoradoPro();
+    if (!storeState.config) storeState.config = { colortags: [] };
+    storeState.config.datetime = moment().format("YYYY-MM-DD HH:mm:ss");
+    storeLastRaw = JSON.stringify(storeState);
+    localStorage.setItem(STORE_KEY, storeLastRaw);
+    if (options.remote !== false) scheduleMonitoradoRemote();
+  }
+  function scheduleMonitoradoRemote() {
+    if (remoteTimer) clearTimeout(remoteTimer);
+    remoteTimer = setTimeout(function() {
+      remoteTimer = null;
+      flushMonitoradoRemote();
+    }, 800);
+  }
+  function flushMonitoradoRemote() {
+    const jmespath = globalRef.jmespath;
+    const store = getStoreMonitoradoPro();
+    if (typeof store === "undefined" || !store.hasOwnProperty("monitorados")) return;
+    if (typeof globalRef.perfilLoginAtiv === "undefined" || globalRef.perfilLoginAtiv === null) return;
+    const sendMonitorados = { monitorados: [], config: { colortags: [] } };
+    sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
+    sendMonitorados.config.colortags = store.config.colortags;
+    globalRef.getServerAtividades({
+      config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
+      action: "set_monitorados"
+    }, "set_monitorados");
+    globalRef.setLocalFilePro(getStoreMonitoradoPro());
+  }
+  function getConfigDatetimeMonitorado() {
+    const store = getStoreMonitoradoPro();
+    persistMonitoradoStore(store, { remote: false });
+    return store;
+  }
+  function saveConfigMonitorado() {
+    persistMonitoradoStore(getStoreMonitoradoPro());
+  }
+  function installMonitoradoStore() {
+    const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
+    Object.assign(monitorados, {
+      // store / io
+      getStore: getStoreMonitoradoPro,
+      getOptionsConfigDate,
+      persist: persistMonitoradoStore,
+      scheduleRemote: scheduleMonitoradoRemote,
+      flushRemote: flushMonitoradoRemote,
+      getConfigDatetime: getConfigDatetimeMonitorado,
+      save: saveConfigMonitorado,
+      // domain (puro)
+      defaultConfigDate,
+      defaultStore: defaultMonitoradoStore,
+      findIndex: findMonitoradoIndex,
+      processDataReady: monitoradoProcessDataReady,
+      processPayloadReady: monitoradoProcessPayloadReady
+    });
+    aliasGlobal("getStoreMonitoradoPro", getStoreMonitoradoPro);
+    aliasGlobal("getOptionsConfigDate", getOptionsConfigDate);
+    aliasGlobal("persistMonitoradoStore", persistMonitoradoStore);
+    aliasGlobal("scheduleMonitoradoRemote", scheduleMonitoradoRemote);
+    aliasGlobal("flushMonitoradoRemote", flushMonitoradoRemote);
+    aliasGlobal("getConfigDatetimeMonitorado", getConfigDatetimeMonitorado);
+    aliasGlobal("saveConfigMonitorado", saveConfigMonitorado);
+    aliasGlobal("defaultConfigDate", defaultConfigDate);
+    aliasGlobal("defaultMonitoradoStore", defaultMonitoradoStore);
+    aliasGlobal("findMonitoradoIndex", findMonitoradoIndex);
+    aliasGlobal("monitoradoProcessDataReady", monitoradoProcessDataReady);
+    aliasGlobal("monitoradoProcessPayloadReady", monitoradoProcessPayloadReady);
+    if (typeof globalRef.addEventListener === "function" && !globalRef.__seiProMonitoradoFlushBound) {
+      globalRef.__seiProMonitoradoFlushBound = true;
+      globalRef.addEventListener("pagehide", function() {
+        if (remoteTimer) {
+          clearTimeout(remoteTimer);
+          remoteTimer = null;
+          flushMonitoradoRemote();
+        }
+      });
+    }
+    return monitorados;
+  }
+
+  // src/shared/ui/prazo-preview.js
+  function getDatesPreview(config, dateduepreview = false) {
+    const moment = globalRef.moment, $ = globalRef.$, getDateSemantic2 = globalRef.getDateSemantic, getDateBoxState2 = globalRef.getDateBoxState, getProgressPercent2 = globalRef.getProgressPercent, getConfigDatesMonitorado = globalRef.getConfigDatesMonitorado, configDatesSetUpdate = globalRef.configDatesSetUpdate;
+    var formatDate = "YYYY-MM-DD HH:mm:ss";
+    var displayFormat = typeof config !== "undefined" && typeof config.displayformat !== "undefined" && config.displayformat !== null && config.displayformat ? config.displayformat : "DD/MM/YYYY";
+    config.dateTo = typeof config.dateTo === "undefined" ? moment().format(formatDate) : config.dateTo;
+    var resultDate = getDateSemantic2(config);
+    var resultDateDate = resultDate.date != "" ? moment(resultDate.date, formatDate).format(displayFormat) : resultDate.date;
+    var displayDueText = typeof config.displaydue_txt === "undefined" ? "Vencimento:" : config.displaydue_txt;
+    var displayTipText = config.displaytip ? "<br>" + config.displaytip : "";
+    var displayModeTip = config.displaydue ? "infraTooltipMostrar('Criado " + resultDate.dateref + " (" + resultDateDate + ") " + displayTipText + "', '" + displayDueText + " " + resultDate.duedate + "')" : "infraTooltipMostrar('" + displayDueText + " " + resultDate.duedate + " " + displayTipText + "', '" + resultDate.duecalcref + "')";
+    displayModeTip = config.deliverydoc ? config.dateDue !== null ? "infraTooltipMostrar('Avalia\xE7\xE3o at\xE9 " + resultDate.duedate + " (" + resultDate.duecalcref + ") " + displayTipText + "', '" + displayDueText + " " + moment(resultDate.date, formatDate).format(displayFormat) + "')" : "infraTooltipMostrar('" + config.displaytip + "','" + displayDueText + " " + moment(resultDate.date, formatDate).format(displayFormat) + "')" : displayModeTip;
+    var displayMode = config.displaydue ? resultDate.duecalcref : resultDate.dateref;
+    var htmlDateDueBox = (config.duedate || config.duesetdate) && resultDate.duecalcref != "" && dateduepreview ? '<div class="infraTooltipPro" style="margin-top: 20px;"><strong>' + resultDate.duecalcref + "</strong>Vencimento em: " + resultDate.duedate + "</div>" : "";
+    var htmlProgress = getProgressPreview(config);
+    var backgroundDiv = (config.duedate || config.duesetdate) && resultDate.alertdate ? "urgenteBoxDisplay" : "";
+    var iconDate = moment(config.date, formatDate).diff(moment(), "days") > 0 ? "far fa-clock" : "fas fa-history";
+    iconDate = config.displayicon ? config.displayicon : iconDate;
+    var iconDateColor = moment().format(formatDate) == config.dateDue ? "#ad0606" : "#4285f4";
+    var iconDateClass = config.deliverydoc ? config.deliverydoc_style : "far fa-clock";
+    iconDateClass = config.displayicon ? config.displayicon : iconDateClass;
+    var tagName = getDateBoxState2(config, resultDate);
+    var tagAction = typeof config.action !== "undefined" && config.action != "" ? config.action : "parent.filterTagView(this)";
+    var htmlDateDue = config.duedate || config.duesetdate ? resultDate.alertdate ? '<span class="dateBoxIcon" onmouseover="return ' + displayModeTip + ';" onmouseout="return infraTooltipOcultar();"><i class="' + (config.displayicon ? config.displayicon : "fas fa-exclamation-triangle vermelhoColor") + '" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' : '<span class="dateBoxIcon" onmouseover="return ' + displayModeTip + ';" onmouseout="return infraTooltipOcultar();">' + htmlProgress + '<i class="' + iconDateClass + '" style="color: ' + iconDateColor + '; padding-right: 3px; cursor: pointer; font-size: 12pt;"></i></span>' : '<i class="' + iconDate + '" style="color: #777; padding-right: 3px; font-size: 12pt;"></i>';
+    return '<span class="dateboxDisplay tagTableText_' + tagName.value + " " + backgroundDiv + '" data-duesetdate="' + config.duesetdate + '" data-colortag="' + tagName.color + '" data-tagname="' + tagName.value + '" data-nametag="' + tagName.name + '" data-time-sorter="' + resultDate.date + '" data-type="date" onclick="' + tagAction + '">' + htmlDateDue + " " + displayMode + "</span>" + htmlDateDueBox;
+  }
+  function configDatesPreview() {
+    const moment = globalRef.moment, $ = globalRef.$, getDateSemantic2 = globalRef.getDateSemantic, getDateBoxState2 = globalRef.getDateBoxState, getProgressPercent2 = globalRef.getProgressPercent, getConfigDatesMonitorado = globalRef.getConfigDatesMonitorado, configDatesSetUpdate = globalRef.configDatesSetUpdate;
+    var config = getConfigDatesMonitorado();
+    if (config.selectdoc) {
+      configDatesSetUpdate();
+    }
+    config.dateTo = moment().format("YYYY-MM-DD");
+    var htmlDatePreview = getDatesPreview(config, true);
+    $("#dateboxPreview").show().html(htmlDatePreview);
+  }
+  function getProgressPreview(config) {
+    const moment = globalRef.moment, $ = globalRef.$, getDateSemantic2 = globalRef.getDateSemantic, getDateBoxState2 = globalRef.getDateBoxState, getProgressPercent2 = globalRef.getProgressPercent, getConfigDatesMonitorado = globalRef.getConfigDatesMonitorado, configDatesSetUpdate = globalRef.configDatesSetUpdate;
+    var htmlProgress;
+    var _progress = getProgressPercent2(config);
+    if (_progress.show) {
+      var percentProgresso = _progress.percent;
+      var colorProgresso = percentProgresso > 100 ? 'style="stroke: #ff010199;"' : config.deliverydoc ? 'style="stroke: #72a50a70;"' : "";
+      htmlProgress = '<svg viewBox="0 0 36 36" class="circular-chart"><path ' + colorProgresso + ' class="circle" stroke-dasharray="' + percentProgresso + ', 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path></svg>';
+    } else {
+      htmlProgress = "";
+    }
+    return htmlProgress;
+  }
+  function installPrazoPreview() {
+    const prazoPreview = { getDatesPreview, getProgressPreview, configDatesPreview };
+    getSeiPro().shared = getSeiPro().shared || {};
+    getSeiPro().shared.prazoPreview = prazoPreview;
+    aliasGlobal("getDatesPreview", getDatesPreview);
+    aliasGlobal("getProgressPreview", getProgressPreview);
+    aliasGlobal("configDatesPreview", configDatesPreview);
+    return prazoPreview;
+  }
+
   // src/core/stack.js
   function installCoreStack() {
     createNamespace();
@@ -2481,6 +2645,8 @@
     installAdapter();
     installUrls();
     installTooltip();
+    installMonitoradoStore();
+    installPrazoPreview();
   }
 
   // src/content/core-stack.js

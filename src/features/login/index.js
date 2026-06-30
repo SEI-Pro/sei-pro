@@ -47,15 +47,36 @@ function applyRepairPwd() {
     if (!verifyConfigValue('autopreenchersenha')) return false;
 
     if (isLoginPageNewSei()) {
-        var hidden = qs('#pwdSenha');
-        if (!hidden) return false;
-        var scope = closest(hidden, 'form') || document;
-        var visible = qsa('input[type="password"]', scope).filter(function (i) { return i.id !== 'pwdSenha'; })[0];
-        if (!visible) return false;
-        repairPwdField(hidden, visible, {
-            fontSize: '2em', height: 'calc(1em + .75rem)',
-            borderTopLeftRadius: '0', borderBottomLeftRadius: '0'
-        }, 'form-control masked', false);
+        // DOM real do login SEI (classe MaskedPassword): o SEI converte o campo de
+        // senha original num DECOY visível type=text (#pwdSenha) que mascara a
+        // digitação em ● e, a cada evento `input`, reescreve a senha em TEXTO PURO
+        // no campo type=password escondido (name=pwdSenha, sem id) — que é o que o
+        // form submete. Esse pipeline foi feito p/ digitação tecla-a-tecla e
+        // CORROMPE o valor quando um gerenciador faz autofill em bloco no decoy.
+        //
+        // Correção: expor o próprio campo real como um password normal e NEUTRALIZAR
+        // o decoy. O gerenciador preenche o campo real diretamente; texto puro em
+        // name=pwdSenha é exatamente o que o servidor espera (verificado no DOM real:
+        // valor setado direto sobrevive ao submit, sem clobber da máscara).
+        var real = qsa('input[type="password"]').filter(function (i) { return i.name === 'pwdSenha'; })[0];
+        if (!real) return false;
+        var decoy = qs('#pwdSenha'); // o decoy type=text carrega o id
+
+        // Neutraliza o decoy: remove p/ matar os listeners de máscara do SEI e liberar o id.
+        if (decoy && decoy !== real) { decoy.removeAttribute('id'); decoy.remove(); }
+
+        // Expõe o campo real como password normal e autofill-friendly.
+        show(real);
+        real.id = 'pwdSenha';
+        real.setAttribute('autocomplete', 'current-password');
+        real.className = (decoy && decoy.className ? decoy.className : 'form-control').replace(/\bmasked\b/g, '').trim() || 'form-control';
+        Object.assign(real.style, { fontSize: '2em', height: 'calc(1em + .75rem)' });
+        real.dataset.seiProPwd = '1';
+
+        // Pareamento usuário+senha: o gerenciador só oferece autofill de forma
+        // confiável quando o campo de usuário também está marcado.
+        var user = qs('#txtUsuario');
+        if (user) user.setAttribute('autocomplete', 'username');
         return true;
     }
 

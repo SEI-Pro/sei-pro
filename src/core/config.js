@@ -13,12 +13,22 @@ export function installConfig() {
         }
     }
 
-    function queryConfigValue(name) {
-        const configBasePro = readConfigBasePro();
-        if (typeof globalRef.jmespath === 'undefined' || globalRef.jmespath === null) {
-            return false;
+    // Extrai o array configGeral do primeiro elemento que o contém — substitui a
+    // query jmespath '[*].configGeral | [0]' por JS puro. A lib jmespath NÃO é
+    // carregada em todos os contextos de content script (ex.: o bloco da tela de
+    // login carrega só login.bundle.js); depender dela aqui fazia toda leitura de
+    // config retornar `false` no login, desligando features como autopreenchersenha.
+    function pickConfigGeral(configBasePro) {
+        if (!Array.isArray(configBasePro)) return null;
+        for (let i = 0; i < configBasePro.length; i++) {
+            const el = configBasePro[i];
+            if (el && Array.isArray(el.configGeral)) return el.configGeral;
         }
-        const configGeral = globalRef.jmespath.search(configBasePro, '[*].configGeral | [0]');
+        return null;
+    }
+
+    function queryConfigValue(name) {
+        const configGeral = pickConfigGeral(readConfigBasePro());
         if (!Array.isArray(configGeral)) {
             return false;
         }
@@ -51,11 +61,21 @@ export function installConfig() {
     // Depende da query jmespath retornar `null` p/ ausente (≠ `false` de queryConfigValue),
     // por isso NÃO reusa queryConfigValue. Igualdade frouxa (`== false`) preservada.
     function checkConfigValue(name) {
-        const jmespath = globalRef.jmespath;
-        const rawConfig = globalRef.localStorage.getItem('configBasePro');
-        var configBasePro = (typeof rawConfig !== 'undefined' && rawConfig != '' && rawConfig !== null) ? JSON.parse(rawConfig) : [];
-        var dataValuesConfig = (typeof jmespath !== 'undefined' && jmespath !== null) ? jmespath.search(configBasePro, '[*].configGeral | [0]') : false;
-        dataValuesConfig = (typeof jmespath !== 'undefined' && jmespath !== null) ? jmespath.search(dataValuesConfig, "[?name=='" + name + "'].value | [0]") : false;
+        var configBasePro = readConfigBasePro();
+        const configGeral = pickConfigGeral(configBasePro);
+        // `null` p/ ausente espelha a query jmespath original ('[?name==X].value | [0]'),
+        // que retorna null quando não há entrada — distinto de `false` (desligado explícito).
+        var dataValuesConfig = null;
+        if (Array.isArray(configGeral)) {
+            for (let i = 0; i < configGeral.length; i++) {
+                if (configGeral[i] && configGeral[i].name === name) {
+                    dataValuesConfig = (configGeral[i].value !== null && typeof configGeral[i].value !== 'undefined')
+                        ? configGeral[i].value
+                        : null;
+                    break;
+                }
+            }
+        }
         if ((dataValuesConfig === false || dataValuesConfig === null) && isDefaultEnabledConfigValue(name)) {
             return true;
         }

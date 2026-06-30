@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadCoreScripts } from '../helpers/load-core.js';
 
-describe('core/runtime — getUrlExtension', () => {
+describe('core/runtime — getUrlExtension (isolated-only)', () => {
   it('resolve uma URL absoluta da extensão (nunca relativa)', () => {
     const sandbox = loadCoreScripts();
     const url = sandbox.SeiPro.core.runtime.getUrlExtension('js/sei-functions-pro.js');
@@ -10,20 +10,13 @@ describe('core/runtime — getUrlExtension', () => {
     expect(url).toBe('chrome-extension://test-id/js/sei-functions-pro.js');
   });
 
-  // Durante a transição o bundle roda também no mundo MAIN (sem chrome.*); o
-  // mundo isolado publica a base em sessionStorage para o MAIN ler.
-  it('cacheia a base em sessionStorage (ponte p/ o mundo MAIN)', () => {
-    const sandbox = loadCoreScripts();
-    expect(sandbox.sessionStorage.getItem('seiProExtBaseUrl')).toBe('chrome-extension://test-id/');
-  });
-
-  it('lança erro explícito quando não há base resolvível (sem chrome, sem cache, sem URL_SPRO)', () => {
+  // Pós big-bang não há mundo MAIN; getUrlExtension usa chrome.runtime.getURL
+  // direto e falha explicitamente se a API sumir.
+  it('lança erro explícito quando chrome.runtime está indisponível', () => {
     const sandbox = loadCoreScripts();
     const fn = sandbox.SeiPro.core.runtime.getUrlExtension;
     sandbox.chrome = undefined;
     sandbox.browser = undefined;
-    sandbox.window.__seiProExtBase = undefined;
-    sandbox.sessionStorage.removeItem('seiProExtBaseUrl');
-    expect(() => fn('js/x.js')).toThrow(/base da extensão indisponível/);
+    expect(() => fn('js/x.js')).toThrow(/chrome\.runtime indisponível/);
   });
 });

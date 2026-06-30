@@ -13,7 +13,7 @@ describe('core/quickfilter-dom — instalação', () => {
     expect(typeof quickfilterDom.clearHighlights).toBe('function');
     expect(typeof quickfilterDom.highlightTextNode).toBe('function');
     expect(typeof quickfilterDom.applyHighlight).toBe('function');
-    expect(quickfilterDom.HIGHLIGHT_CLASS).toBe('seiProQuickPageHighlight');
+    expect(quickfilterDom.HIGHLIGHT_CLASS).toBe('seipro-quick-highlight');
   });
 });
 

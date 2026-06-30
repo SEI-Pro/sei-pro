@@ -1,0 +1,117 @@
+/*
+ * Feature "Mostrar anotação do processo na tela de controle de processos"
+ * (config `mostraranotacaocontrole`) — CSS da VIEW.
+ *
+ * Origem: dist/css/sei-pro.css; classes da feature renomeadas para o prefixo
+ * `.seipro-sticknote-*` (BEM). Carregado pelo manifest nos mesmos blocos onde o
+ * bundle JS da feature roda (procedimento_trabalhar / controlar).
+ * Overrides de tema (.seiSlim ...) ficam em sei-slim.css (tema é dono deles).
+ *
+ * NOTA: as classes de checklist `stickNoteCheck`/`stickNoteChecked` (geradas por
+ * domain.sticknoteChecklistClass) NÃO foram renomeadas — são compartilhadas com
+ * as features de árvore (arvore, arvore-info) e estilizadas em sei-pro.css.
+ * Renomeá-las é uma tarefa cross-feature separada.
+ */
+.seipro-sticknote-card {
+    display: block;
+    position: relative; /* âncora da setinha de "ver mais" */
+    margin: 0;
+    padding: 5px 7px;
+    border-left: 3px solid #f0c36d;
+    background: #fff7df;
+    box-shadow: inset 0 0 0 1px rgba(240, 195, 109, 0.35);
+    color: #444;
+    font-size: 9pt;
+    line-height: 1.35;
+    border-radius: 4px;
+    min-width: 120px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.seipro-sticknote-card div {
+    margin: 0;
+}
+.seipro-sticknote-card--priority {
+    border-left-color: #df8b8d;
+    background: #fde1e2;
+    box-shadow: inset 0 0 0 1px rgba(223, 139, 141, 0.35);
+}
+/* Setinha "ver mais"/"ver menos" — só na tela de controle, quando a anotação passa
+   de 2 linhas. Sobreposta no canto inferior direito DENTRO da stick (não ocupa
+   espaço entre as linhas); fade no fundo para legibilidade sobre o texto. */
+.seipro-sticknote-toggle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    width: 38px;
+    height: 1.5em;
+    padding: 0 4px 2px 0;
+    font-size: 7.5pt;
+    color: #8a6d1a;
+    cursor: pointer;
+    border-bottom-right-radius: 4px;
+    background: linear-gradient(to right, rgba(255, 247, 223, 0), #fff7df 55%);
+}
+.seipro-sticknote-toggle:hover {
+    color: #000;
+}
+.seipro-sticknote-card--priority .seipro-sticknote-toggle {
+    color: #a33;
+    background: linear-gradient(to right, rgba(253, 225, 226, 0), #fde1e2 55%);
+}
+.seipro-sticknote-note-cell {
+    width: 132px;
+    min-width: 132px;
+    max-width: 132px;
+    vertical-align: top;
+    padding: 4px 1px 4px 0 !important;
+}
+.seipro-sticknote-icon-cell {
+    width: 18px;
+    min-width: 18px;
+    max-width: 18px;
+    padding: 4px 0 4px 0 !important;
+    text-align: center;
+    vertical-align: top;
+}
+.seipro-sticknote-check-cell,
+.seipro-sticknote-check-head {
+    width: 28px;
+    min-width: 28px;
+    max-width: 28px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: center;
+    vertical-align: top;
+}
+.seipro-sticknote-detailed-note-cell {
+    vertical-align: top;
+    padding: 4px 4px 4px 0 !important;
+}
+.seipro-sticknote-process-cell {
+    width: 8em;
+    min-width: 8em;
+    max-width: 8em;
+    white-space: nowrap;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+.seipro-sticknote-process-cell a.processoVisualizado {
+    display: inline-block;
+    white-space: nowrap;
+}
+.seipro-sticknote-note-cell .imagemStatus,
+.seipro-sticknote-note-cell .newLink {
+    display: none;
+}
+.seipro-sticknote-layout a[href*="acao=anotacao_registrar"],
+.seipro-sticknote-layout a.botaoSEI[onclick*="acao=anotacao_registrar"] {
+    display: none !important;
+}
+.seipro-sticknote-inserted-cell + td {
+    padding-left: 0 !important;
+}
