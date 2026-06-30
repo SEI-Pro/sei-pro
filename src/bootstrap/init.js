@@ -13,7 +13,7 @@ $.getScript(getUrlExtension("js/lib/moment.min.js")).done(function() {
 });
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/lib/diff2html.min.js"));
-$.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
+$.getScript(getUrlExtension("js/docs-lote.bundle.js"));
 var seiProFunctionsLoaded_init = $.Deferred().resolve();
 if (typeof checkHostLimit === 'undefined' || typeof loadFunctionsPro === 'undefined') seiProFunctionsLoaded_init = $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 

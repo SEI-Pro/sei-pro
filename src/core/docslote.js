@@ -2,12 +2,13 @@ import { aliasGlobal, getSeiPro } from './global.js';
 
 /**
  * Núcleo PURO da feature "Enviar Múltiplos Documentos Externos"
- * (config `uploaddocsexternos`) — extraído de sei-pro-docs-lote.js (Fase 6).
+ * (config `documentosemlote`) — mapas de caracteres especiais/normalização.
  *
  * Cobre os mapas de caracteres especiais/normalização e os helpers puros que os
- * aplicam, além do parsing do título do documento. Toda a camada de DOM/jQuery,
- * AJAX, leitura de CSV (Papa) e diálogos permanece em sei-pro-docs-lote.js
- * chamando este core. Sem DOM, jQuery ou estado próprio.
+ * aplicam, além do parsing do título do documento. A feature foi migrada para o
+ * bundle ESM `src/features/docs-lote/` (domain/io/view); este core continua sendo
+ * a parte puramente compartilhável (consumida via SeiPro.core.docslote). Sem DOM,
+ * jQuery ou estado próprio.
  *
  * Os mapas são copiados VERBATIM do legado (com escapes \u) — não "limpar".
  */
@@ -68,7 +69,9 @@ export function installDocsLote() {
 
     getSeiPro().core.docslote = docslote;
 
-    // Mapas legados (sei-pro-docs-lote.js os referencia direto).
+    // Aliases globais dos mapas — sem consumidores após a migração da feature para
+    // o bundle docs-lote (que usa SeiPro.core.docslote.*). Mantidos por ora; podem
+    // ser removidos em uma limpeza futura.
     aliasGlobal('docsLote_specialChars', docsLoteSpecialChars);
     aliasGlobal('docsLote_normalChars_utf8', docsLoteNormalCharsUtf8);
     aliasGlobal('docsLote_normalChars_iso', docsLoteNormalCharsIso);
