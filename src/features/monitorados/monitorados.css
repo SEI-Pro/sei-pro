@@ -9,6 +9,19 @@
     margin-top: 20px !important;
 }
 
+/* Linha de títulos azul, igual ao header nativo de Controle de Processos do SEI
+   (tr nativa = rgb(21,95,155), texto #ecf0f1). Sobrepõe os overrides cinzas do
+   legado (.tableFollow/.panelHomePro th.tituloControle, ambos !important).
+   monitorados.css carrega depois de sei-pro.css → vence por ordem de origem. */
+.tableMonitorados th.tituloControle {
+    background-color: rgb(21, 95, 155) !important;
+    color: #ecf0f1 !important;
+}
+.tableMonitorados th.tituloControle a,
+.tableMonitorados th.tituloControle i {
+    color: #ecf0f1 !important;
+}
+
 #monitoradosProDiv {
     width: 100% !important;
     overflow-x: hidden;
@@ -36,7 +49,7 @@
     background: #b7b7b7;
 }
 
-#monitoradoTablePro .sorterTrMonitorado .fa-layers-counter {
+#monitoradoTablePro .seipro-monitorado-sorter .fa-layers-counter {
     display: none !important;
 }
 
@@ -58,34 +71,25 @@ td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after
     font-style: italic;
 }
 
-.tableMonitorados td.tdmonitorado_maps.info_maps_follow_empty:hover .info_maps_follow:after {
-    content: "Adicionar mapa";
-    position: absolute;
-    right: 40px;
-    top: calc(50% - 7px);
-    color: #adadad;
-    font-style: italic;
-}
-
 td.tdmonitorado_tags {
     padding-right: 20px;
     min-width: 120px;
 }
 
-input.monitoradoDatesPro {
+input.seipro-monitorado-dates {
     border: none;
     background: transparent;
     font-size: 9pt;
     width: 120px;
 }
 
-input.monitoradoDatesPro {
+input.seipro-monitorado-dates {
     background: #dfdfdf;
     border-radius: 5px;
     text-align: center;
 }
 
-.dateboxDoc {
+.seipro-monitorado-datebox {
     padding: 5px 10px;
     border-radius: 5px;
     color: #666;    
@@ -94,10 +98,10 @@ input.monitoradoDatesPro {
     display: inline-block;
 }
 
-.infraAreaTabela .fa-star.iconMonitoradoPro {
+.infraAreaTabela .fa-star.seipro-monitorado-icon {
     color: #999 !important;
 }
 
-.newSEI #topmenu .iconMonitoradoPro {
+.newSEI #topmenu .seipro-monitorado-icon {
     vertical-align: super;
 }

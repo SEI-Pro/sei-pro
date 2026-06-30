@@ -1,4 +1,4 @@
-import { aliasGlobal, globalRef } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import { qs, qsa } from './dom.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore, getOptionsConfigDate } from './store.js';
 import { findMonitoradoIndex } from './domain.js';
@@ -51,7 +51,7 @@ function showDatesMonitorado(el, mode) {
         if (td) qsa('.followLinkDates', td).forEach((n) => { n.style.display = 'none'; });
         qsa('.info_dates_monitorado', tr).forEach((n) => { n.style.display = 'none'; });
         const txt = qs('.info_dates_monitorado_txt', tr);
-        if (txt) { txt.style.display = 'inline-flex'; const inp = qs('input.monitoradoDatesPro', txt); if (inp) { inp.focus(); inp.click(); } }
+        if (txt) { txt.style.display = 'inline-flex'; const inp = qs('input.seipro-monitorado-dates', txt); if (inp) { inp.focus(); inp.click(); } }
     }
     if (tr) {
         const td = el.closest('td');
@@ -67,8 +67,9 @@ function keyDatesMonitorado(e) {
     }
 }
 
-export function installPrazoRow() {
-    aliasGlobal('updateDatesMonitorado', updateDatesMonitorado);
-    aliasGlobal('showDatesMonitorado', showDatesMonitorado);
-    aliasGlobal('keyDatesMonitorado', keyDatesMonitorado);
-}
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    updateDatesMonitorado,
+    showDatesMonitorado,
+    keyDatesMonitorado
+};

@@ -32,7 +32,7 @@ export function iconHtml(id_procedimento, float = false) {
     const monitorados = getStoreMonitoradoPro().monitorados || [];
     const isMonitored = monitorados.some((m) => String(m.id_procedimento) === String(id_procedimento));
     const floatStyle = float ? 'float:' + float + ';' : '';
-    const base = 'iconMonitoradoPro" data-id_procedimento="' + id_procedimento + '" id="iconMonitoradoPro_' + id_procedimento + '"';
+    const base = 'seipro-monitorado-icon" data-id_procedimento="' + id_procedimento + '" id="seipro-monitorado-icon_' + id_procedimento + '"';
     return isMonitored
         ? '<i title="Remover dos Processos Monitorados" class="fas fa-star starGold ' + base + ' data-act="monitorado-toggle" data-mode="remove" style="font-size:12pt;margin:0 5px;cursor:pointer;-webkit-text-fill-color:#FED35B;-webkit-text-stroke-color:rgb(216 162 22);-webkit-text-stroke-width:2px;' + floatStyle + '"></i>'
         : '<i title="Adicionar aos Processos Monitorados" class="far fa-star ' + base + ' data-act="monitorado-toggle" data-mode="add" style="font-size:12pt;margin:0 5px;color:#666;cursor:pointer;' + floatStyle + '"></i>';
@@ -46,7 +46,7 @@ export function mountIcon() {
     if (!anchor) return;
     const id = idFromAnchor(anchor);
     if (!id) return;
-    qsa('.iconMonitoradoPro', treeDoc).forEach((n) => n.remove());
+    qsa('.seipro-monitorado-icon', treeDoc).forEach((n) => n.remove());
     anchor.insertAdjacentElement('afterend', elFromHtml(iconHtml(id)));
 }
 
@@ -55,10 +55,14 @@ export function mountIcon() {
 // diálogo/painel) — mas agora a partir de um listener REAL no mundo isolado,
 // no lugar do onclick inline quebrado. Quando o painel for portado, troca-se
 // o alvo por uma função da própria feature.
-function bindToggle(treeDoc) {
-    if (treeDoc.__seiproMonitoradoIconBound) return;
-    treeDoc.__seiproMonitoradoIconBound = true;
-    treeDoc.addEventListener('click', function (ev) {
+// Liga a delegação do clique da estrela num documento (idempotente por doc).
+// Usada tanto na árvore (initIcon) quanto na tela de controle de processos, onde
+// a estrela é inserida por appendStarOnProcess no MESMO document do content script
+// (por isso precisa ser ligada em `document`, não só no doc da árvore).
+export function bindToggle(doc) {
+    if (!doc || doc.__seiproMonitoradoIconBound) return;
+    doc.__seiproMonitoradoIconBound = true;
+    doc.addEventListener('click', function (ev) {
         const icon = ev.target.closest('[data-act="monitorado-toggle"]');
         if (!icon) return;
         ev.preventDefault();
@@ -75,3 +79,10 @@ export function initIcon() {
     bindToggle(treeDoc);
     waitFor(treeDoc, '#topmenu ' + TARGET_SEL).then((el) => { if (el) mountIcon(); });
 }
+
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    insertIconMonitorados: initIcon,
+    appendIconMonitorados: mountIcon,
+    htmlIconMonitorados: iconHtml
+};

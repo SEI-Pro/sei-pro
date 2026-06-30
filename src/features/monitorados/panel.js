@@ -36,59 +36,41 @@ function sortedMonitorados() {
 function rowHtml(value, index, arrayProcessosUnidade) {
     const id = value.id_procedimento;
     const linkDoc = globalRef.url_host + '?acao=procedimento_trabalhar&id_procedimento=' + id;
-    const etq = Array.isArray(value.etiquetas) ? value.etiquetas : [];
-    const tagsMonitorado = etq.length ? etq.join(';') : '';
-    const tagsHtml = etq.map((i) => globalRef.getHtmlEtiqueta(i, 'monitorado')).join('');
-    const tagsClass = etq.map((i) => 'tagTableName_' + globalRef.normalizeNameTag(i)).join(' ');
-    const datesVal = (value.configdate && value.configdate.date != null) ? value.configdate.date : '';
-    if (value.configdate && value.configdate.dateTo != null) value.configdate.dateTo = globalRef.moment().format('YYYY-MM-DD');
-    const datesHtml = value.configdate ? globalRef.getDatesPreview(value.configdate) : '';
-    const datesEl = datesHtml ? elFromHtml(datesHtml) : null;
-    const tagDatesClass = datesEl && datesEl.dataset.tagname ? 'tagTableName_' + datesEl.dataset.tagname : '';
+    // prazo/marcador/anotação não são mais dados próprios — vêm do nativo (espelho).
     const aberto = arrayProcessosUnidade.indexOf(value.processo) !== -1;
     const iconProcesso = aberto ? 'far fa-folder-open' : 'fas fa-folder';
     const tipsProcesso = aberto ? 'Processo aberto nesta unidade' : 'Processo fechado nesta unidade';
     const issetOrder = value.order != null && value.order != -1;
     const order = issetOrder ? value.order : index;
     const categoria = (value.categoria != null && value.categoria !== '') ? value.categoria : false;
+    // Ícones clonados da célula nativa do processo, EXCETO anotação e marcador:
+    // ambos já têm coluna própria nesta tabela, então duplicá-los ao lado do número
+    // é redundante. Filtra pelas âncoras de anotação (acao=anotacao_registrar) e de
+    // marcador (href de marcador ou o <img class="imagemStatus" de marcador>).
     const procRow = qsa('#P' + id + ' td:nth-child(2) a');
-    const htmlIconsHome = procRow.map((a) => a.outerHTML).join('');
-    const hasMap = value.latlng != null;
+    const htmlIconsHome = procRow.filter((a) => {
+        const href = a.getAttribute('href') || '';
+        if (/acao=anotacao_registrar/i.test(href)) return false;
+        if (/marcador/i.test(href)) return false;
+        if (a.querySelector('img.imagemStatus[src*="marcador"]')) return false;
+        return true;
+    }).map((a) => a.outerHTML).join('');
 
-    return '<tr data-tagname="SemGrupo" data-index="' + index + '" data-id_procedimento="' + id + '" class="' + tagsClass + ' ' + tagDatesClass + '">'
+    return '<tr data-tagname="SemGrupo" data-index="' + index + '" data-id_procedimento="' + id + '">'
         + '<td align="center"><input type="checkbox" data-act="row-check" id="monitoradoPro_' + id + '" name="monitoradoPro" value="' + id + '"></td>'
         + '<td align="left">'
         + '<a class="followLinkProcesso bLink" style="text-decoration:underline;" href="' + linkDoc + '"><i class="' + iconProcesso + ' bLink" style="text-decoration:underline;" title="' + tipsProcesso + '"></i> ' + esc(value.processo) + '</a>'
         + '<a class="newLink followLink followLinkNewtab" href="' + linkDoc + '" title="Abrir em nova aba" target="_blank"><i class="fas fa-external-link-alt" style="font-size:90%;text-decoration:underline;"></i></a>'
         + '<div class="info_icons_monitorado">' + htmlIconsHome + '</div>'
         + '</td>'
-        + '<td align="left" class="tdmonitorado_dates ' + (datesHtml.trim() === '' ? 'info_dates_follow_empty' : '') + '">'
-        + '<span class="info_dates_monitorado">' + datesHtml + '</span>'
-        + '<a class="newLink followLink followLinkDates followLinkDatesEdit" data-act="dates-show" title="Editar prazo"><i class="fas fa-pencil-alt"></i></a>'
-        + '<a class="newLink followLink followLinkDates followLinkDatesAdd" data-act="dates-show" title="Adicionar prazo"><i class="fas fa-stopwatch"></i></a>'
-        + '<span class="info_dates_monitorado_txt" style="display:none;">'
-        + '<input value="' + datesVal + '" data-act="dates-hide-blur" data-key="dates" type="date" class="monitoradoDatesPro" name="monitoradoDatesPro">'
-        + '<a class="newLink" data-act="dates-hide" style="padding:2px;margin:0 2px;" title="Salvar"><i class="fas fa-thumbs-up"></i></a>'
-        + '<a class="newLink monitoradoConfigDates" data-act="dates-config" style="padding:2px;margin:0 2px;" title="Opções"><i class="fas fa-cog"></i></a>'
-        + '</span>'
-        + '</td>'
-        + '<td align="left" class="tdmonitorado_tags ' + (tagsHtml.trim() === '' ? 'info_tags_follow_empty' : '') + '" data-etiqueta-mode="monitorado">'
-        + '<span class="info_tags_follow">' + tagsHtml + '</span>'
-        + '<span class="info_tags_follow_txt" style="display:none"><input value="' + tagsMonitorado + '" class="monitoradoTagsPro" name="monitoradoTagsPro"></span>'
-        + '<a class="newLink followLink followLinkTags followLinkTagsEdit" data-act="tags-show" title="Editar etiqueta"><i class="fas fa-pencil-alt"></i></a>'
-        + '<a class="newLink followLink followLinkTags followLinkTagsAdd" data-act="tags-show" title="Adicionar etiqueta"><i class="fas fa-tags"></i></a>'
-        + '</td>'
-        + '<td class="tdmonitorado_map ' + (hasMap ? '' : 'info_maps_follow_empty') + '">'
-        + '<span class="info_maps_follow">' + (hasMap ? '<a class="newLink" data-act="map-single-ro"><i class="fas fa-map-marked azulColor"></i></a>' : '') + '</span>'
-        + '<a class="newLink followLink followLinkMaps followLinkMapsEdit" data-act="map-single" title="Editar mapa"><i class="fas fa-pencil-alt"></i></a>'
-        + '<a class="newLink followLink followLinkMaps followLinkMapsAdd" data-act="map-single" title="Adicionar mapa"><i class="fas fa-map-marker-alt"></i></a>'
-        + '</td>'
-        + '<td class="content_desc">'
-        + '<span class="info_txt" style="display:none"><input data-act="desc-blur" data-key="desc" value="' + esc(value.descricao) + '" name="monitoradoDescriptionPro"></span>'
-        + '<span class="info">' + esc(value.descricao) + '</span>'
-        + '<a class="newLink followLink followLinkDesc" data-act="desc-edit" title="Editar especificação"><i class="fas fa-pencil-alt"></i></a>'
-        + '</td>'
-        + '<td>' + esc(value.tipo_procedimento)
+        // Prazo: espelho read-only da célula nativa de controle de prazo (#P{id} .prazoBoxDisplay).
+        + '<td align="left" class="tdmonitorado_native" data-native="prazo"></td>'
+        // Marcador: espelho read-only do marcador nativo do SEI na linha de controle.
+        + '<td align="left" class="tdmonitorado_native" data-native="marcador"></td>'
+        // Anotação: espelho read-only da anotação nativa (#P{id} .seipro-sticknote-note-cell).
+        + '<td class="tdmonitorado_native" data-native="anotacao"></td>'
+        // Tipo de Processo: vem do processo (tooltip do link nativo), não do store.
+        + '<td class="tdmonitorado_tipo"><span data-native="tipo"></span>'
         + '<a class="newLink followLink followLinkTags followLinkMonitoradoRemove" data-act="remove-row" title="Remover dos Processos Monitorados"><i class="fas fa-trash-alt"></i></a>'
         + '</td>'
         + '<td class="td_monitorado_category">'
@@ -97,7 +79,7 @@ function rowHtml(value, index, arrayProcessosUnidade) {
         + '<a class="newLink followLink followLinkTags followLinkMonitoradoCategory" data-act="category-edit" title="Editar categoria"><i class="fas fa-pencil-alt"></i></a>'
         + '</td>'
         + '<td align="center" data-order="' + order + '">'
-        + '<a class="newLink sorterTrMonitorado" style="margin-right:20px;cursor:grab;"><span class="fa-layers fa-fw"><i class="fas fa-bars cinzaColor"></i>'
+        + '<a class="newLink seipro-monitorado-sorter" style="margin-right:20px;cursor:grab;"><span class="fa-layers fa-fw"><i class="fas fa-bars cinzaColor"></i>'
         + (issetOrder ? '<span class="fa-layers-counter">' + value.order + '</span>' : '') + '</span></a>'
         + '</td>'
         + '</tr>';
@@ -111,10 +93,12 @@ function panelHtml() {
     const iconHide = hidden ? 'display:none;' : '';
     const all = sortedMonitorados();
     const selectedCategoryView = opt('panelMonitoradosView') || '';
-    const list = selectedCategoryView !== '' ? jp.search(all, "[?categoria=='" + selectedCategoryView + "']") : all;
+    const listCat = selectedCategoryView !== '' ? jp.search(all, "[?categoria=='" + selectedCategoryView + "']") : all;
+    // Só mostra favoritos cujo processo está na lista de controle visível (#P{id}).
+    // Os demais continuam persistidos, mas só reaparecem quando voltam à lista.
+    const list = (listCat || []).filter((m) => document.getElementById('P' + m.id_procedimento));
     if (!list || !list.length) return null;
     const count = list.length + (list.length === 1 ? ' registro:' : ' registros:');
-    const checkMaps = jp.search(all, 'length([?not_null(latlng)])') > 0;
     const arrayProcessosUnidade = (typeof globalRef.getProcessoUnidadePro === 'function') ? globalRef.getProcessoUnidadePro() : [];
     const th = isNewSEI() ? 'infraTh' : '';
     const checkImg = isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif';
@@ -126,7 +110,6 @@ function panelHtml() {
         + '<th class="tituloControle ' + th + '" style="width:210px;">Processo</th>'
         + '<th class="tituloControle ' + th + ' tituloFilter" data-filter-type="date" style="width:150px;">Prazo</th>'
         + '<th class="tituloControle ' + th + ' tituloFilter" data-filter-type="etiqueta" style="width:150px;">Marcador</th>'
-        + '<th class="tituloControle ' + th + ' tituloFilter" data-filter-type="etiqueta" style="width:80px;">Mapa</th>'
         + '<th class="tituloControle ' + th + '">Anotação</th>'
         + '<th class="tituloControle ' + th + '">Tipo de Processo</th>'
         + '<th class="tituloControle ' + th + '">Categoria</th>'
@@ -154,7 +137,6 @@ function panelHtml() {
         + '<a class="newLink iconMonitorados_remove" data-act="remove-selected" title="Remover processos monitorados" style="margin:0;font-size:14pt;display:none"><span class="fa-layers fa-fw"><i class="fas fa-trash-alt"></i><span class="fa-layers-counter">1</span></span></a>'
         + '<span style="display:block;float:right;width:200px;">' + selectCategory + '</span>'
         + '<a class="newLink iconMonitorados_update" data-act="update" title="Atualizar Informações" style="margin-right:10px;font-size:14pt;float:right;"><i class="fas fa-sync-alt"></i></a>'
-        + '<a class="newLink iconMonitorados_maps" data-act="map-multiple" title="Mapa de processos monitorados" style="margin:0;font-size:14pt;float:right;' + (checkMaps ? '' : 'display:none;') + '"><i class="fas fa-map-marker-alt"></i></a>'
         + '<a class="newLink iconMonitorados_config" data-act="config" title="Configurações" style="margin:0;font-size:14pt;float:right;"><i class="fas fa-cog"></i></a>'
         + '</div>'
         + '<div class="tabelaPanelScroll">' + table + '</div>'
@@ -165,6 +147,81 @@ function positionBeforeControl() {
     const panel = qs('#monitoradosPro');
     const control = qs('#processosSEIPro');
     if (panel && control) control.parentNode.insertBefore(panel, control);
+}
+
+// ---- Espelho read-only das células nativas (#P{id}) -------------------------
+// Seletores das fontes nativas na linha de controle do SEI:
+//  - prazo:    célula .prazoBoxDisplay (feature controlar-prazos)
+//  - anotação: célula .seipro-sticknote-note-cell (feature anotacao-controle)
+//  - marcador: marcador nativo do SEI na célula do processo
+const NATIVE_SRC = {
+    prazo: '.prazoBoxDisplay',
+    anotacao: '.seipro-sticknote-note-cell',
+    // O marcador nativo é um <img class="imagemStatus" src="svg/marcador_*.svg"> dentro
+    // de um <a> com o tooltip do nome do marcador. Casamos o img e subimos p/ a âncora.
+    marcador: 'img.imagemStatus[src*="marcador"]'
+};
+
+// Sanitiza um clone: remove ids (evita duplicados) e handlers que dependem de
+// ids/estado nativos (onclick/data-act). Mantém classes, estilo, título e
+// onmouseover/onmouseout (tooltips do SEI usam globais da própria página).
+function sanitizeClone(node) {
+    if (node.removeAttribute) { node.removeAttribute('id'); node.removeAttribute('onclick'); node.removeAttribute('data-act'); }
+    if (node.querySelectorAll) {
+        node.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
+        node.querySelectorAll('[onclick]').forEach((e) => e.removeAttribute('onclick'));
+        node.querySelectorAll('[data-act]').forEach((e) => e.removeAttribute('data-act'));
+    }
+    return node;
+}
+
+// Tipo de processo a partir do link nativo: o tooltip é
+// infraTooltipMostrar('<interessado>','<tipo>') — pegamos o 2º argumento.
+function tipoFromNativeRow(nativeRow) {
+    const a = nativeRow.querySelector('a[href*="procedimento_trabalhar"]');
+    const oc = (a && a.getAttribute('onmouseover')) || '';
+    const m = oc.match(/infraTooltipMostrar\((["'])([\s\S]*?)\1\s*,\s*(["'])([\s\S]*?)\3/);
+    return m ? m[4] : '';
+}
+
+// Preenche os placeholders [data-native] de cada linha a partir do processo nativo
+// (#P{id}): prazo/marcador/anotação por clone read-only; tipo por texto do tooltip.
+function mirrorNativeCells() {
+    qsa('#monitoradoTablePro tbody tr[data-id_procedimento]').forEach((tr) => {
+        const id = tr.getAttribute('data-id_procedimento');
+        const nativeRow = document.getElementById('P' + id);
+        qsa('[data-native]', tr).forEach((cell) => {
+            cell.textContent = '';
+            if (!nativeRow) return;
+            const kind = cell.getAttribute('data-native');
+            if (kind === 'tipo') { cell.textContent = tipoFromNativeRow(nativeRow); return; }
+            let src = nativeRow.querySelector(NATIVE_SRC[kind]);
+            if (!src) return;
+            if (kind === 'marcador') src = src.closest('a') || src; // sobe ao <a> p/ manter o tooltip
+            const clone = sanitizeClone(src.cloneNode(true));
+            // prazo/anotação: a fonte é a TD nativa → copia seus filhos. marcador: é o próprio elemento.
+            if (clone.tagName === 'TD') Array.from(clone.childNodes).forEach((n) => cell.appendChild(n));
+            else cell.appendChild(clone);
+        });
+    });
+}
+
+// Reaplica o espelho quando a origem (tabelas nativas de controle) muda — prazo
+// editado, marcador/anotação alterados etc. Debounce via rAF; ignora mutações da
+// própria tabela de monitorados para não recursar.
+let nativeMirrorObserver = null;
+function installNativeMirror() {
+    if (nativeMirrorObserver) return;
+    const natives = qsa('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
+    if (!natives.length) return;
+    let pending = false;
+    nativeMirrorObserver = new MutationObserver((records) => {
+        if (pending) return;
+        if (records.every((r) => r.target.closest && r.target.closest('#monitoradoTablePro'))) return;
+        pending = true;
+        requestAnimationFrame(() => { pending = false; mirrorNativeCells(); });
+    });
+    natives.forEach((t) => nativeMirrorObserver.observe(t, { childList: true, subtree: true, characterData: true }));
 }
 
 export function setPanelMonitorados(mode) {
@@ -185,12 +242,6 @@ export function setPanelMonitorados(mode) {
         // orderDivPanel (shared) insere o painel respeitando a ordem salva.
         if (typeof globalRef.orderDivPanel === 'function') globalRef.orderDivPanel(built.html, built.idOrder, 'monitoradosPro');
         positionBeforeControl();
-        if (typeof globalRef.L === 'undefined') {
-            if (typeof globalRef.loadStylePro === 'function') globalRef.loadStylePro(globalRef.URL_SPRO + 'css/leaflet.css');
-            if (globalRef.jQuery) globalRef.jQuery.getScript(globalRef.URL_SPRO + 'js/lib/leaflet.js', function (d, ts, jqxhr) {
-                if (typeof globalRef.L === 'object' && jqxhr.status === 200) globalRef.jQuery.getScript(globalRef.URL_SPRO + 'js/lib/leaflet-geocoder.js');
-            });
-        }
         if (opt('panelSortPro') && typeof globalRef.initSortDivPanel === 'function') globalRef.initSortDivPanel();
     } else { // refresh
         const cur = qs('#monitoradosPro');
@@ -204,6 +255,9 @@ export function setPanelMonitorados(mode) {
     if (typeof globalRef.initFunctionsPanelMonitorado === 'function') globalRef.initFunctionsPanelMonitorado();
     if (typeof globalRef.checkFileSystemInit === 'function') globalRef.checkFileSystemInit();
     if (typeof globalRef.appendStarOnProcess === 'function') globalRef.appendStarOnProcess();
+    // Espelha prazo/marcador/anotação das linhas nativas e mantém sincronizado com a origem.
+    mirrorNativeCells();
+    installNativeMirror();
 }
 
 // ---- Dispatcher delegado (revive os botões; roteia data-act -> handler) ----
@@ -211,20 +265,13 @@ export function setPanelMonitorados(mode) {
 // compartilhada); mapas já são da feature. Trocar o alvo conforme cada porte.
 const CLICK = {
     'select-all': (el) => g('getSelectAllTr') && g('getSelectAllTr')(el, 'SemGrupo'),
-    'dates-show': (el) => g('showDatesMonitorado') && g('showDatesMonitorado')(el, 'show'),
-    'dates-hide': (el) => g('showDatesMonitorado') && g('showDatesMonitorado')(el, 'hide'),
-    'dates-config': (el) => g('openBoxConfigDates') && g('openBoxConfigDates')(el),
-    'tags-show': (el) => g('showFollowEtiqueta') && g('showFollowEtiqueta')(el, 'show', 'monitorado'),
-    'map-single-ro': (el) => g('openBoxSingleMap') && g('openBoxSingleMap')(el, true),
-    'map-single': (el) => g('openBoxSingleMap') && g('openBoxSingleMap')(el),
-    'desc-edit': (el) => g('editFollowDesc') && g('editFollowDesc')(el, 'monitorado'),
+    // prazo/marcador/anotação agora são espelho do nativo (read-only) — sem editores aqui.
     'remove-row': (el) => g('removeMonitoradoPainelPro') && g('removeMonitoradoPainelPro')(el, el.closest('tr') && el.closest('tr').dataset.id_procedimento),
     'category-edit': (el) => g('editCategoryMonitorado') && g('editCategoryMonitorado')(el, el.closest('tr') && el.closest('tr').dataset.id_procedimento),
     'toggle-show': () => g('toggleTablePro') && g('toggleTablePro')('#monitoradosProDiv', 'show'),
     'toggle-hide': () => g('toggleTablePro') && g('toggleTablePro')('#monitoradosProDiv', 'hide'),
     'remove-selected': (el) => g('removeMonitoradoPainelPro') && g('removeMonitoradoPainelPro')(el),
     'update': (el) => g('updateMonitorados') && g('updateMonitorados')(el),
-    'map-multiple': () => g('openBoxMultipleMap') && g('openBoxMultipleMap')(),
     'config': (el) => g('openConfigMonitorados') && g('openConfigMonitorados')(el)
 };
 
@@ -239,18 +286,18 @@ export function bindPanelDispatcher(root = document) {
     });
     root.addEventListener('change', (ev) => {
         const el = ev.target.closest('[data-act="row-check"]');
-        if (el && g('followSelecionarItens')) g('followSelecionarItens')(el);
-    });
-    root.addEventListener('focusout', (ev) => {
-        const el = ev.target.closest('[data-act]');
-        if (!el || !el.closest('#monitoradosPro')) return;
-        if (el.dataset.act === 'dates-hide-blur' && g('showDatesMonitorado')) g('showDatesMonitorado')(el, 'hide');
-        if (el.dataset.act === 'desc-blur' && g('saveFollowDesc')) g('saveFollowDesc')(el, 'monitorado');
-    });
-    root.addEventListener('keydown', (ev) => {
-        const el = ev.target.closest('[data-act]');
-        if (!el || !el.closest('#monitoradosPro')) return;
-        if (el.dataset.key === 'dates' && g('keyDatesMonitorado')) g('keyDatesMonitorado')(ev);
-        if (el.dataset.key === 'desc' && g('keyFollowDesc')) g('keyFollowDesc')(ev, 'monitorado');
+        if (!el) return;
+        // Espelha a seleção no checkbox NATIVO do mesmo processo (#P{id}); o .click()
+        // dispara o infraSelecionarItens nativo, então os comandos do SEI (Enviar
+        // Processo etc.) passam a enxergar os favoritos selecionados aqui.
+        const nativeRow = document.getElementById('P' + el.value);
+        const nativeCb = nativeRow && nativeRow.querySelector('input[type=checkbox]');
+        if (nativeCb && nativeCb.checked !== el.checked) nativeCb.click();
+        if (g('followSelecionarItens')) g('followSelecionarItens')(el);
     });
 }
+
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    setPanelMonitorados
+};

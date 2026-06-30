@@ -1,4 +1,4 @@
-import { aliasGlobal, globalRef } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import { qs, qsa, elFromHtml } from './dom.js';
 import { openModal } from '../../shared/ui/modal.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore, getOptionsConfigDate } from './store.js';
@@ -20,7 +20,7 @@ const moment = () => globalRef.moment;
 const preview = () => { if (typeof globalRef.configDatesPreview === 'function') globalRef.configDatesPreview(); };
 
 function appendNewdoclist(nameDoc) {
-    return '<span class="dateboxDoc"><i class="far fa-file-alt" style="color:#777;padding-right:3px;"></i> ' + nameDoc
+    return '<span class="seipro-monitorado-datebox"><i class="far fa-file-alt" style="color:#777;padding-right:3px;"></i> ' + nameDoc
         + ' <i class="fas fa-times seipro-newdoc-remove" style="color:#F783AD;padding-left:3px;cursor:pointer"></i></span>';
 }
 function appendArrayNewdoclist(listArray) {
@@ -142,7 +142,7 @@ function docsChange(el) {
     const nameDoc = el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '';
     const valueDoc = parseInt((el.value || '').trim());
     const listEl = byId('configDatesBox_newdoclist');
-    const selected = qsa('.dateboxDoc', listEl).map((s) => s.textContent.trim());
+    const selected = qsa('.seipro-monitorado-datebox', listEl).map((s) => s.textContent.trim());
     if (valueDoc === 0) { listEl.innerHTML = ''; return; }
     if (!selected.includes(nameDoc)) {
         if (selected.length > 10) { alert('Atingido o limite de documentos para pesquisa (10)'); return; }
@@ -159,7 +159,7 @@ function getConfigDates() {
     duenumber = (duemode === 'depois') ? duenumber : -Math.abs(duenumber);
     const newdoc = chk('newdoc');
     const listEl = byId('configDatesBox_newdoclist');
-    const newdoclist = newdoc && listEl ? qsa('.dateboxDoc', listEl).map((s) => s.textContent.trim()) : [];
+    const newdoclist = newdoc && listEl ? qsa('.seipro-monitorado-datebox', listEl).map((s) => s.textContent.trim()) : [];
     const countdays = chk('countdays'), duedate = chk('duedate'), duesetdate = chk('duesetdate');
     const listdocsSel = byId('configDatesBox_listdocs');
     const listdocs = listdocsSel && listdocsSel.options[listdocsSel.selectedIndex] ? listdocsSel.options[listdocsSel.selectedIndex].getAttribute('data-id-protocolo') : undefined;
@@ -187,7 +187,7 @@ function applyAndClose(triggerEl, remove, ref) {
         if (info) { info.innerHTML = remove ? '' : g('getDatesPreview')(config); info.style.display = ''; }
         const txt = qs('.info_dates_monitorado_txt', tr); if (txt) txt.style.display = 'none';
         const editLink = qs('.followLinkDatesEdit', tr); if (editLink) editLink.style.display = '';
-        const dateInput = qs('.monitoradoDatesPro', tr); if (dateInput) dateInput.value = remove ? '' : config.date;
+        const dateInput = qs('.seipro-monitorado-dates', tr); if (dateInput) dateInput.value = remove ? '' : config.date;
     }
     store.monitorados[idx].configdate = config;
     persistMonitoradoStore(store);
@@ -261,7 +261,7 @@ function bindForm(body, id_procedimento) {
         const adv = ev.target.closest('[data-act="advanced"]');
         if (adv) { ev.preventDefault(); advanced(adv); return; }
         const rm = ev.target.closest('.seipro-newdoc-remove');
-        if (rm) { const sp = rm.closest('.dateboxDoc'); if (sp) sp.remove(); }
+        if (rm) { const sp = rm.closest('.seipro-monitorado-datebox'); if (sp) sp.remove(); }
     });
 }
 
@@ -270,7 +270,7 @@ export function openBoxConfigDates(triggerEl) {
     const id_procedimento = tr ? parseInt(tr.getAttribute('data-id_procedimento')) : NaN;
     const store = getStoreMonitoradoPro();
     const idx = findMonitoradoIndex(store, id_procedimento);
-    const dateInputEl = triggerEl && triggerEl.closest('.info_dates_monitorado_txt') ? triggerEl.closest('.info_dates_monitorado_txt').querySelector('.monitoradoDatesPro') : null;
+    const dateInputEl = triggerEl && triggerEl.closest('.info_dates_monitorado_txt') ? triggerEl.closest('.info_dates_monitorado_txt').querySelector('.seipro-monitorado-dates') : null;
     const dateInput = dateInputEl ? (dateInputEl.value || '').trim() : '';
     const configdate = getOptionsConfigDate(idx);
     configdate.date = (dateInput === '') ? configdate.date : dateInput;
@@ -312,17 +312,18 @@ function updateCountTableMonitorado() {
     if (cap) cap.textContent = rows.length + (rows.length === 1 ? ' registro:' : ' registros:');
 }
 
-export function installDatas() {
-    aliasGlobal('openBoxConfigDates', openBoxConfigDates);
-    // Compat: nomes ainda chamados por HTML/JS legado durante a transição.
-    aliasGlobal('getConfigDatesMonitorado', getConfigDates);
-    aliasGlobal('configDatesSwitchChange', switchChange);
-    aliasGlobal('configDatesSwitchIcon', switchIcon);
-    aliasGlobal('configDatesAdvanced', advanced);
-    aliasGlobal('configDatesDocsChange', docsChange);
-    aliasGlobal('configDatesSetUpdate', setUpdate);
-    aliasGlobal('updateSelectMonitorados', updateSelect);
-    aliasGlobal('waitMonitoradoProcessData', waitProcessData);
-    aliasGlobal('actionMonitoradoCheckbox', actionMonitoradoCheckbox);
-    aliasGlobal('updateCountTableMonitorado', updateCountTableMonitorado);
-}
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+// Nomes globais (esquerda) ainda chamados por HTML/JS legado durante a transição.
+export const legacyApi = {
+    openBoxConfigDates,
+    getConfigDatesMonitorado: getConfigDates,
+    configDatesSwitchChange: switchChange,
+    configDatesSwitchIcon: switchIcon,
+    configDatesAdvanced: advanced,
+    configDatesDocsChange: docsChange,
+    configDatesSetUpdate: setUpdate,
+    updateSelectMonitorados: updateSelect,
+    waitMonitoradoProcessData: waitProcessData,
+    actionMonitoradoCheckbox,
+    updateCountTableMonitorado
+};

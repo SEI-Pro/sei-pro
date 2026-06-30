@@ -1,4 +1,4 @@
-import { aliasGlobal, globalRef } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import { qs } from './dom.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore, getConfigDatetimeMonitorado } from './store.js';
 
@@ -86,10 +86,11 @@ function restoreMonitoradoServer(data) {
     }
 }
 
-export function installServer() {
-    aliasGlobal('checkFileSystemInit', checkFileSystemInit);
-    aliasGlobal('checkFileRemoteMonitorado', checkFileRemoteMonitorado);
-    aliasGlobal('checkFileLocalMonitorado', checkFileLocalMonitorado);
-    aliasGlobal('getRemoteFileMonitorado', getRemoteFileMonitorado);
-    aliasGlobal('restoreMonitoradoServer', restoreMonitoradoServer);
-}
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    checkFileSystemInit,
+    checkFileRemoteMonitorado,
+    checkFileLocalMonitorado,
+    getRemoteFileMonitorado,
+    restoreMonitoradoServer
+};

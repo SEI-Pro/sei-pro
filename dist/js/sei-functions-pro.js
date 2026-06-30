@@ -986,15 +986,13 @@ function forceOnLoadBodyPage() {
     if (!onloadAttr || typeof $().resizable === 'undefined' || $('.sparkling-modal-frame').length) return;
     if (window.__seiProForceOnLoadBodyPageLock) return;
     window.__seiProForceOnLoadBodyPageLock = true;
-    try {
-        new Function(onloadAttr)();
-    } catch (e) {
-        // new Function é bloqueado pela CSP da extensão no mundo isolado — degrada.
-    } finally {
-        setTimeout(function(){
-            window.__seiProForceOnLoadBodyPageLock = false;
-        }, 1000);
-    }
+    // new Function(onloadAttr)() REMOVIDO: a CSP da extensão bloqueia eval no mundo
+    // isolado (aviso "unsafe-eval") e o onload nativo referencia globais do mundo
+    // MAIN, inacessíveis aqui — sempre degradava para no-op. O navegador já executa
+    // o onload do <body> no load da página. (Esta função hoje não tem call-site.)
+    setTimeout(function(){
+        window.__seiProForceOnLoadBodyPageLock = false;
+    }, 1000);
 }
 function downloadTableCSV(element, nameFile) {
   var titles = [];
@@ -6148,7 +6146,8 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
         updateSelectConcluirProjetoEtapa();
     } else if (mode == 'monitorados') {
         parent.updateSelectMonitorados();
-        parent.initAppendIconMonitorados();
+        // initAppendIconMonitorados migrado p/ ESM (monitorados/boot.js); alias no parent.
+        if (typeof parent.initAppendIconMonitorados === 'function') parent.initAppendIconMonitorados();
         console.log('updateSelectMonitorados');
     } else if (mode == 'dados') {
         //loopIDProcedimentos();

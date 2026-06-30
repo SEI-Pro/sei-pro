@@ -428,34 +428,9 @@ function initScrollToElement(TimeOut = 9000) {
         }, 500);
     }
 }
-function initAppendIconMonitorados(TimeOut = 9000) {
-    var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
-    if (TimeOut <= 0 || parent.window.name != '' ||  table.length == 0) { return; }
-    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconMonitorados !== 'undefined' && typeof getStoreMonitoradoPro !== 'undefined') {
-        if (checkConfigValue('gerenciarmonitorados')) {
-            setAppendIconMonitorados();
-        }
-    } else {
-        setTimeout(function(){ 
-            initAppendIconMonitorados(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initAppendIconMonitorados => '+TimeOut); 
-        }, 500);
-    }
-}
-function setAppendIconMonitorados() {
-    var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
-    if (table.length > 0) {
-        table.find('tbody tr').each(function(){
-            var _this = $(this);
-            var td = _this.find('td').eq(2);
-            var id_procedimento = td.find('a[href*="acao=procedimento_trabalhar"]').attr('href');
-                id_procedimento = (typeof id_procedimento !== 'undefined') ? String(getParamsUrlPro(id_procedimento).id_procedimento) : false;
-            var iconStar = (id_procedimento) ? htmlIconMonitorados(id_procedimento, 'left') : '';
-                td.find('.iconMonitoradoPro').remove();
-                td.prepend(iconStar);
-        });
-    }
-}
+// initAppendIconMonitorados / setAppendIconMonitorados migrados para ESM
+// (src/features/monitorados/boot.js); expostos como globais via
+// monitorados/legacy-api.js. Os call-sites abaixo usam os aliases.
 function setOnClickExcluirProcBloco() {
     var table = $('#frmRelBlocoProtocoloLista .infraTable');
     if (table.length > 0) {
@@ -1009,7 +984,10 @@ function initSeiProAll() {
     initSetMomentPtBr();
     initTablePesquisaDownload();
     initReplaceSelectAll();
-    initAppendIconMonitorados();
+    // Migrado p/ ESM (monitorados/boot.js): o alias só existe onde o monitorados.bundle
+    // co-injeta (blocos das listas de bloco/acompanhamento). Guarda evita ReferenceError
+    // em páginas só-bloco-0 (que não têm a tabela-alvo de qualquer forma).
+    if (typeof initAppendIconMonitorados === 'function') initAppendIconMonitorados();
     initQuickViewSearch();
     initObserveUrlPage();
     initSlimPro();

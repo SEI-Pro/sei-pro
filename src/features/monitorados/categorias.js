@@ -1,4 +1,4 @@
-import { aliasGlobal, globalRef } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import { qs, qsa } from './dom.js';
 import { openModal } from '../../shared/ui/modal.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore } from './store.js';
@@ -100,12 +100,6 @@ function changeCategoryMonitorado(selectEl) {
 }
 
 export function installCategorias() {
-    aliasGlobal('selectCategoryMonitorado', selectCategoryMonitorado);
-    aliasGlobal('editCategoryMonitorado', editCategoryMonitorado);
-    aliasGlobal('changePanelCategoryMonitorado', changePanelCategoryMonitorado);
-    aliasGlobal('changeCategoryMonitorado', changeCategoryMonitorado);
-    aliasGlobal('saveCategoryMonitorado', saveCategoryMonitorado);
-
     if (globalRef.__seiproMonitoradoCategoriaBound) return;
     globalRef.__seiproMonitoradoCategoriaBound = true;
     document.addEventListener('change', (ev) => {
@@ -115,3 +109,12 @@ export function installCategorias() {
         else if (el.dataset.act === 'category-change') changeCategoryMonitorado(el);
     });
 }
+
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    selectCategoryMonitorado,
+    editCategoryMonitorado,
+    changePanelCategoryMonitorado,
+    changeCategoryMonitorado,
+    saveCategoryMonitorado
+};

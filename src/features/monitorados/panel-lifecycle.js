@@ -1,8 +1,7 @@
-import { aliasGlobal, globalRef } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import { qs, qsa } from './dom.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore } from './store.js';
 import { findMonitoradoIndex } from './domain.js';
-import { createTagsInput } from '../../shared/ui/tags-input.js';
 import { createSortable } from '../../shared/ui/sortable.js';
 import { createSortableTable } from '../../shared/ui/sortable-table.js';
 
@@ -21,36 +20,17 @@ import { createSortableTable } from '../../shared/ui/sortable-table.js';
 
 const g = (n) => globalRef[n];
 
-function initTags(table) {
-    qsa('.monitoradoTagsPro', table).forEach((input) => {
-        if (input.dataset.seiproTagsInit === '1') return;
-        input.dataset.seiproTagsInit = '1';
-        const persist = () => { if (typeof g('saveFollowEtiqueta') === 'function') g('saveFollowEtiqueta')(input); };
-        createTagsInput(input, {
-            delimiter: ';', placeholder: 'Adicionar etiqueta', limit: 8, minChars: 2, maxChars: 100,
-            source: () => (typeof g('sugestEtiquetaPro') === 'function' ? g('sugestEtiquetaPro')('monitorado') : []),
-            onAdd: persist, onRemove: persist
-        });
-    });
-}
-
 function initTable(table) {
     const dateExtract = (cell) => { const d = cell.querySelector('.dateboxDisplay'); return d ? d.getAttribute('data-time-sorter') : cell.textContent.trim(); };
     const orderExtract = (cell) => parseInt(cell.getAttribute('data-order')) || 0;
+    // Sem filtros por coluna (a barra de busca/segunda linha foi removida a pedido):
+    // mantém só ordenação. Sem nenhuma coluna filter:true, o primitivo não renderiza
+    // a .seipro-filter-row.
     return createSortableTable(table, {
-        headers: { 0: { sorter: false }, 1: { filter: true }, 2: { filter: true }, 3: { filter: true }, 4: { filter: true } },
+        headers: { 0: { sorter: false } },
         textExtraction: { 2: dateExtract, 8: orderExtract },
         saveKey: 'monitorados',
-        onSortEnd: () => { if (g('checkboxRangerSelectShift')) g('checkboxRangerSelectShift')('#monitoradoTablePro'); },
-        onFilterEnd: (count) => {
-            const cap = qs('caption', table);
-            if (cap) cap.textContent = cap.textContent.replace(/\d+/g, count);
-            qsa('tbody tr', table).forEach((tr) => {
-                const inp = tr.querySelector('td input');
-                if (inp) inp.disabled = (tr.style.display === 'none');
-            });
-            if (g('checkboxRangerSelectShift')) g('checkboxRangerSelectShift')('#monitoradoTablePro');
-        }
+        onSortEnd: () => { if (g('checkboxRangerSelectShift')) g('checkboxRangerSelectShift')('#monitoradoTablePro'); }
     });
 }
 
@@ -58,7 +38,7 @@ function initRowSortable(table) {
     const tbody = table.tBodies[0];
     if (!tbody) return;
     createSortable(tbody, {
-        items: 'tr', handle: '.sorterTrMonitorado',
+        items: 'tr', handle: '.seipro-monitorado-sorter',
         onUpdate: (rows) => {
             const store = getStoreMonitoradoPro();
             rows.forEach((tr, index) => {
@@ -97,7 +77,6 @@ function initFunctionsPanelMonitorado() {
     const table = qs('#monitoradoTablePro');
     if (!table || table.dataset.seiproInit === '1') return;
     table.dataset.seiproInit = '1';
-    initTags(table);
     initTable(table);
     initRowSortable(table);
     initSelectionObserver(table);
@@ -105,6 +84,7 @@ function initFunctionsPanelMonitorado() {
     if (typeof g('checkFileRemoteMonitorado') === 'function') g('checkFileRemoteMonitorado')('get');
 }
 
-export function installPanelLifecycle() {
-    aliasGlobal('initFunctionsPanelMonitorado', initFunctionsPanelMonitorado);
-}
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    initFunctionsPanelMonitorado
+};

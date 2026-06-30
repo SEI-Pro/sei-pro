@@ -1550,22 +1550,8 @@ function getChangeTypeProc(idTypeProc, txtTypeProc) {
         alertaBoxPro('Sucess', 'check-circle', 'Informa\u00E7\u00F5es editadas com sucesso!');
     }
 }
-function initPanelMonitorados(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof localStorageRestorePro !== 'undefined' && typeof setPanelMonitorados !== 'undefined' && typeof orderDivPanel !== 'undefined') { 
-        if (checkConfigValue('gerenciarmonitorados') && typeof getStoreMonitoradoPro() !== 'undefined' && getStoreMonitoradoPro().hasOwnProperty('monitorados')) {
-            setTimeout(function(){ 
-                setPanelMonitorados('insert');
-                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('setPanelMonitorados');
-            }, 500);
-        }
-    } else {
-        setTimeout(function(){ 
-            initPanelMonitorados(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initPanelMonitorados'); 
-        }, 500);
-    }
-}
+// initPanelMonitorados migrado para ESM (src/features/monitorados/boot.js); exposto
+// como global via monitorados/legacy-api.js. O call-site abaixo usa o alias.
 function checkLoadConfigSheets(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined') { 
@@ -2009,18 +1995,14 @@ function forceTableHomeDestroy(Timeout = 3000) {
     }
 }
 function forceOnLoadBody() {
-    // new Function é bloqueado pela CSP da extensão no mundo isolado; este hack
-    // (rodar o onload do <body> do SEI) degrada para no-op quando indisponível.
-    var onload;
-    try { onload = new Function($('body').attr('onload')); }
-    catch (e) { onload = function () {}; }
-    if (typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() && typeof $.modalLink === 'undefined' && !$('.sparkling-modal-frame').length) {
-        $.get($('script[src*="jquery.modalLink"]').attr('src'), function(){
-            onload();
-        });
-    } else {
-        onload();
-    }
+    // No-op intencional. Antes rodava o onload nativo do <body> do SEI via
+    // new Function($('body').attr('onload')) — removido porque:
+    //  1) a CSP da extensão bloqueia eval/new Function no mundo isolado, gerando o
+    //     aviso "unsafe-eval" no console (e a chamada sempre caía no catch);
+    //  2) o código desse onload referencia globais do mundo MAIN da página
+    //     (infra*), inacessíveis a partir do content script isolado.
+    // O onload real do <body> já é executado pelo próprio navegador ao carregar a
+    // página; não há o que re-disparar daqui. modalLink já é carregado eager.
 }
 function observeAreaTela(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -3181,7 +3163,9 @@ function initSeiPro() {
         initTableSorterHome();
         insertGroupTable();
         replaceSelectAll();
-        initPanelMonitorados();
+        // Migrado p/ ESM (monitorados/boot.js); alias provido pelo monitorados.bundle
+        // (co-injetado nestes blocos). Guarda por segurança de ordem de carga.
+        if (typeof initPanelMonitorados === 'function') initPanelMonitorados();
         checkLoadConfigSheets();
         insertDivPanel();
         setTimeout(() => {

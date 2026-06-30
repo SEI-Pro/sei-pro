@@ -293,7 +293,8 @@ function loadScriptPro() {
             showAutoReportNoticePro();
             if (typeof moment !== 'undefined' && typeof moment().isoAddWeekdaysFromSet === 'undefined') $.getScript(getUrlExtension("js/lib/moment-weekday-calc.js"));
             // $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
-            if (typeof loadMonitoradosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-monitorados.js"));
+            // Monitorados migrado para ESM (js/monitorados.bundle.js, carregado pelo manifest).
+            // O $.getScript de sei-pro-monitorados.js foi removido — o arquivo não existe mais.
             loadLocalConfigScriptPro().finally(function() {
                 if (typeof loadAtividadesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
             });

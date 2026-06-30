@@ -1,4 +1,4 @@
-import { aliasGlobal, globalRef } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import { qs, qsa, elFromHtml } from './dom.js';
 import { openModal } from '../../shared/ui/modal.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore } from './store.js';
@@ -26,7 +26,7 @@ function appendStarOnProcess() {
         }
         const td = tr.querySelectorAll('td')[1];
         if (!td) return;
-        qsa('.iconMonitoradoPro', td).forEach((n) => n.remove());
+        qsa('.seipro-monitorado-icon', td).forEach((n) => n.remove());
         td.style.verticalAlign = 'middle';
         if (id) td.insertAdjacentElement('afterbegin', elFromHtml(iconHtml(id)));
     });
@@ -80,10 +80,11 @@ function actionToolbarMonitoradoPro(this_, triggerButton) {
     else if (action === 'descricao' && g('editMonitoradoDesc')) g('editMonitoradoDesc')(this_);
 }
 
-export function installExtras() {
-    aliasGlobal('appendStarOnProcess', appendStarOnProcess);
-    aliasGlobal('openConfigMonitorados', openConfigMonitorados);
-    aliasGlobal('removeMonitorado', removeMonitorado);
-    aliasGlobal('updateIndexTableMonitorado', updateIndexTableMonitorado);
-    aliasGlobal('actionToolbarMonitoradoPro', actionToolbarMonitoradoPro);
-}
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    appendStarOnProcess,
+    openConfigMonitorados,
+    removeMonitorado,
+    updateIndexTableMonitorado,
+    actionToolbarMonitoradoPro
+};

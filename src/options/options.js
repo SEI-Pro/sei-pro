@@ -229,12 +229,8 @@ function restore_options() {
         } else {
             $('#newdocDefault_table').hide();
         }
-        if(jmespath.search(dataValuesConfig, "[?name=='gerenciarfavoritos'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='gerenciarfavoritos'].value | [0]") === null) {
-            $('#favoritesPro_beforeControl').show();
-        } else {
-            $('#favoritesPro_beforeControl').hide();
-            $('#itemConfigGeral_favoritosacimacontrole').prop('checked', false);
-        }
+        // Dependência "Processos Monitorados" → migrada para a feature
+        // (src/features/monitorados/options.js, bundle monitorados-options).
         if(jmespath.search(dataValuesConfig, "[?name=='uploaddocsexternos'].value | [0]") || jmespath.search(dataValuesConfig, "[?name=='uploaddocsexternos'].value | [0]") === null) {
             $('#uploadDoc_sortBefore').show();
         } else {
@@ -402,14 +398,10 @@ function changeConfigGeral() {
             arrayShowItensMenu.push({name: $(this).attr('data-name'), value: $(this).val()});
         }
     });
-    if ($('#itemConfigGeral_newdocdefault').is(':checked')) { $('#newdocDefault_table').show(); } else { $('#newdocDefault_table').hide(); } 
-    if ($('#itemConfigGeral_gerenciarfavoritos').is(':checked')) {
-        $('#favoritesPro_beforeControl').show();
-    } else {
-        $('#favoritesPro_beforeControl').hide();
-        $('#itemConfigGeral_favoritosacimacontrole').prop('checked',false);
-    }
-    if ($('#itemConfigGeral_uploaddocsexternos').is(':checked')) { 
+    if ($('#itemConfigGeral_newdocdefault').is(':checked')) { $('#newdocDefault_table').show(); } else { $('#newdocDefault_table').hide(); }
+    // Dependência "Processos Monitorados" → migrada para a feature
+    // (src/features/monitorados/options.js, bundle monitorados-options).
+    if ($('#itemConfigGeral_uploaddocsexternos').is(':checked')) {
         $('#uploadDoc_sortBefore').show(); 
     } else { 
         $('#uploadDoc_sortBefore').hide(); 

@@ -1,4 +1,4 @@
-import { aliasGlobal, globalRef } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import { qs, qsa, frameDoc } from './dom.js';
 import { openModal } from '../../shared/ui/modal.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore } from './store.js';
@@ -153,7 +153,7 @@ export function syncMonitoradoProProcessData(id_procedimento, d) {
 }
 export function checkDataMonitoradoPro(this_, mode, id_procedimento) {
     const treeDoc = frameDoc('ifrArvore');
-    const target = this_ || (treeDoc && treeDoc.getElementById('iconMonitoradoPro_' + id_procedimento));
+    const target = this_ || (treeDoc && treeDoc.getElementById('seipro-monitorado-icon_' + id_procedimento));
     let saved = false;
     const storeWhenReady = (d) => {
         setDados(d || dados());
@@ -236,13 +236,17 @@ function bindProcessSync() {
 
 export function installCommands() {
     bindProcessSync();
-    aliasGlobal('actMonitoradoPro', actMonitoradoPro);
-    aliasGlobal('storeMonitoradoPro', storeMonitoradoPro);
-    aliasGlobal('addMonitoradoPro', addMonitoradoPro);
-    aliasGlobal('removeMonitoradoPro', removeMonitoradoPro);
-    aliasGlobal('removeMonitoradoPainelPro', removeMonitoradoPainelPro);
-    aliasGlobal('updateMonitorados', updateMonitorados);
-    aliasGlobal('checkDataMonitoradoPro', checkDataMonitoradoPro);
-    aliasGlobal('syncMonitoradoProProcessData', syncMonitoradoProProcessData);
-    aliasGlobal('getFallbackMonitoradoRowData', getFallbackMonitoradoRowData);
 }
+
+// Compat legada: aliased em legacy-api.js (único ponto com aliasGlobal da feature).
+export const legacyApi = {
+    actMonitoradoPro,
+    storeMonitoradoPro,
+    addMonitoradoPro,
+    removeMonitoradoPro,
+    removeMonitoradoPainelPro,
+    updateMonitorados,
+    checkDataMonitoradoPro,
+    syncMonitoradoProProcessData,
+    getFallbackMonitoradoRowData
+};
