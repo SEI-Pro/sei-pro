@@ -1,5 +1,45 @@
 # Changelog — SEI Pro PRF
 
+## [2.0.0] - 2026-06-30
+
+Versão major de reestruturação interna (**isolated-first** + migração incremental para módulos ESM). O comportamento das funcionalidades existentes foi preservado; a mudança principal é a arquitetura de build e manutenção.
+
+### Adicionado
+
+- **Nova arquitetura de build:** empacotamento com **esbuild** (`scripts/build.mjs`); `src/` como fonte única da verdade e `dist/` apenas como saída gerada
+- **Content scripts no mundo isolado** (isolated-first): núcleo (`core-stack`), SEI adapters e plataforma carregados antes dos `init_*.js`
+- **Features migradas para ESM** (domain / io / view / bundles dedicados):
+  - Processos Monitorados (referência completa da nova arquitetura)
+  - Mostrar anotação na tela de controle de processos (`anotacao-controle`)
+  - Filtrar a página pelo campo de pesquisa rápida (`quick-filter`)
+  - Permitir marcar processos como "Não Visualizado" (`nao-lido`)
+  - Controlar Prazos e preview de datas (`controlar-prazos`, `prazo-preview`)
+  - Enviar Múltiplos Documentos Externos (`docs-lote`)
+  - Informações adicionais na árvore do processo (`arvore-info`, já bundlada)
+- **Primitivos vanilla reutilizáveis** em `src/shared/ui/`: modal, sortable, sortable-table, tags-input, prazo-preview
+- **CSS por feature** extraído de `sei-pro.css`: `monitorados.css`, `anotacao-controle.css`, `quick-filter.css`, `controlar-prazos.css`, `prazo-preview.css`
+- **Página de opções** migrada para `src/options/`; dependência Processos Monitorados ↔ sub-opção delegada a `monitorados-options.bundle.js`
+- **Testes unitários** ampliados (domínio, IO, primitivos de UI, guards estruturais de migração)
+- **`DEVELOPMENT.md`** reescrito com anatomia de feature, regras de camada e checklist de migração
+
+### Alterado
+
+- Scripts legados fundacionais (`sei-pro.js`, `sei-functions-pro.js`, `init_*.js`, etc.) passaram a viver em `src/` e são copiados verbatim para `dist/js/` até cada feature ser decomposta
+- **Opções habilitadas por padrão** na interface (instalação nova / config vazia): Processos Monitorados, Marcar como "Não Visualizado", Enviar Múltiplos Documentos Externos, Informações adicionais na árvore, Filtrar pela pesquisa rápida, Mostrar anotação no controle e Autopreencher senha no login
+- Login: fluxo de autopreencher senha alinhado ao bundle `login` e ao mundo isolado
+- Anotações no controle: classes renomeadas para prefixo `.seipro-sticknote-*` (BEM)
+
+### Corrigido
+
+- **Controlar Prazos:** erros de sintaxe na extração do CSS para `controlar-prazos.css` e regras órfãs em `sei-pro.css` que quebravam o `display: none` do link de prazo até o hover
+- **Opções — Processos Monitorados:** IDs legados (`gerenciarfavoritos` / `favoritesPro_beforeControl`) substituídos pelos nomes atuais; sub-opção volta a esconder/desmarcar ao desligar o master
+- **Núcleo:** guards para dependências do mundo MAIN, `reloadModalLink` sem `globalEval` (CSP) e runtime sem fallbacks mortos do mundo MAIN
+
+### Removido
+
+- Pipeline **Vite + CRXJS** (substituído por esbuild; a tentativa anterior minificava legados in-place e destruía a fonte)
+- Fluxo de desenvolvimento que editava `dist/` à mão como fonte
+
 ## [1.7.17] - 2026-06-17
 
 ### Removido
