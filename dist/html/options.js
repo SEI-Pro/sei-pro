@@ -115,7 +115,15 @@ function getRuntimeApi() {
     return null;
 }
 function isDefaultEnabledConfigOption(name) {
-    return ['filtrarpaginapelapesquisarapida'].indexOf(String(name || '')) !== -1;
+    return [
+        'filtrarpaginapelapesquisarapida',
+        'gerenciarmonitorados',
+        'marcar_naolido',
+        'uploaddocsexternos',
+        'infoarvore',
+        'mostraranotacaocontrole',
+        'autopreenchersenha'
+    ].indexOf(String(name || '')) !== -1;
 }
 function syncProcessNotificationOption() {
     var runtimeApi = getRuntimeApi();

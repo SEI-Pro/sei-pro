@@ -21,6 +21,11 @@ tr td.prazoBoxDisplay a.addControlePrazo:hover {
     text-decoration: none;
 }
 tr td.prazoBoxDisplay a.addControlePrazo {
+    display: none;
+    padding: 0 5px;
+    border-radius: 5px;
+    user-select: none;
+}
 
 td.prazoBoxDisplay {
     width: 5em !important;
@@ -59,4 +64,5 @@ td.prazoBoxDisplay a.addControlePrazo span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
 

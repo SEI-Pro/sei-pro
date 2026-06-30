@@ -1897,7 +1897,19 @@
       try {
         session().setItem(item, JSON.stringify(result));
       } catch (e) {
-        console.log("Local Storage is full:", item);
+        if (Array.isArray(result) && result.length > 1) {
+          let trimmed = result;
+          for (let attempt = 0; attempt < 16 && trimmed.length > 1; attempt++) {
+            trimmed = trimmed.slice(Math.ceil(trimmed.length / 2));
+            try {
+              session().setItem(item, JSON.stringify(trimmed));
+              console.warn('[SeiPro] sessionStorage cheio em "' + item + '": entradas antigas podadas, mantidas ' + trimmed.length + ".");
+              return;
+            } catch (e2) {
+            }
+          }
+        }
+        console.warn('[SeiPro] sessionStorage cheio: grava\xE7\xE3o de "' + item + '" descartada.');
       }
     }
     function sessionStorageRemovePro(item) {
