@@ -46,7 +46,7 @@ describe('platform/webstore', () => {
         expect(w.hybridStorageRestorePro('h')).toEqual({ v: 42 });
     });
 
-    it('sessionStorageStorePro: ao estourar a cota, poda entradas antigas e mantém as recentes', () => {
+    it('sessionStorageStorePro: ao estourar a cota, poda entradas antigas e mantém as recentes (rede de segurança)', () => {
         // sessionStorage falso com cota: setItem lança se o valor exceder maxLen.
         const backing = new Map();
         const maxLen = 200; // caracteres
@@ -59,15 +59,11 @@ describe('platform/webstore', () => {
             getItem(k) { return backing.has(k) ? backing.get(k) : null; },
             removeItem(k) { backing.delete(k); }
         };
-        const warns = [];
-        const origWarn = console.warn;
-        console.warn = (...a) => warns.push(a.join(' '));
         try {
             // 100 entradas: a entrada i carrega seu índice; as recentes ficam no fim.
             const arr = Array.from({ length: 100 }, (_, i) => ({ id: i, pad: 'x'.repeat(10) }));
             w.sessionStorageStorePro('dadosSessionProcessoPro', arr);
         } finally {
-            console.warn = origWarn;
             globalRef.sessionStorage = realSession;
         }
         const saved = JSON.parse(backing.get('dadosSessionProcessoPro'));
@@ -76,25 +72,57 @@ describe('platform/webstore', () => {
         expect(saved.length).toBeLessThan(100);          // podou
         expect(saved[saved.length - 1].id).toBe(99);     // manteve a MAIS recente
         expect(saved[0].id).toBeGreaterThan(0);          // descartou as mais antigas (frente)
-        expect(warns.some((m) => m.includes('podadas'))).toBe(true);
     });
 
-    it('sessionStorageStorePro: valor não-array que não cabe é descartado com aviso (sem lançar)', () => {
+    it('sessionStorageStorePro: valor não-array que não cabe é descartado sem lançar', () => {
         const realSession = globalRef.sessionStorage;
         globalRef.sessionStorage = {
             setItem() { const e = new Error('quota'); e.name = 'QuotaExceededError'; throw e; },
             getItem() { return null; },
             removeItem() {}
         };
-        const warns = [];
-        const origWarn = console.warn;
-        console.warn = (...a) => warns.push(a.join(' '));
         try {
             expect(() => w.sessionStorageStorePro('grande', { blob: 'z' })).not.toThrow();
         } finally {
-            console.warn = origWarn;
             globalRef.sessionStorage = realSession;
         }
-        expect(warns.some((m) => m.includes('descartada'))).toBe(true);
+    });
+
+    it('boundArrayForStorage: limita por QUANTIDADE mantendo as mais recentes', () => {
+        const arr = Array.from({ length: 40 }, (_, i) => ({ id: i }));
+        const out = w.boundArrayForStorage(arr, 10, Infinity);
+        expect(out.length).toBe(10);
+        expect(out[0].id).toBe(30);            // descartou as 30 mais antigas
+        expect(out[out.length - 1].id).toBe(39); // manteve a mais recente
+    });
+
+    it('boundArrayForStorage: limita por TAMANHO serializado (descarta as antigas)', () => {
+        // Cada entrada ~1000 chars; teto pequeno força poucas entradas.
+        const arr = Array.from({ length: 20 }, (_, i) => ({ id: i, pad: 'x'.repeat(1000) }));
+        const out = w.boundArrayForStorage(arr, 1000, 3500);
+        expect(out.length).toBeGreaterThan(0);
+        expect(out.length).toBeLessThan(20);
+        expect(out[out.length - 1].id).toBe(19); // manteve a mais recente
+    });
+
+    it('boundArrayForStorage: nunca esvazia (mantém ao menos 1 mesmo acima do teto)', () => {
+        const arr = [{ id: 0, pad: 'x'.repeat(10000) }, { id: 1, pad: 'y'.repeat(10000) }];
+        const out = w.boundArrayForStorage(arr, 1000, 100);
+        expect(out.length).toBe(1);
+        expect(out[0].id).toBe(1);
+    });
+
+    it('sessionStorageStoreBoundedPro: grava proativamente limitado (sem depender de exceção de cota)', () => {
+        const arr = Array.from({ length: 50 }, (_, i) => ({ id: i }));
+        w.sessionStorageStoreBoundedPro('dadosSessionProcessoPro', arr, { maxEntries: 25 });
+        const saved = w.sessionStorageRestorePro('dadosSessionProcessoPro');
+        expect(saved.length).toBe(25);
+        expect(saved[saved.length - 1].id).toBe(49);
+        expect(saved[0].id).toBe(25);
+    });
+
+    it('sessionStorageStoreBoundedPro: valor não-array delega ao store comum', () => {
+        w.sessionStorageStoreBoundedPro('obj', { a: 1 });
+        expect(w.sessionStorageRestorePro('obj')).toEqual({ a: 1 });
     });
 });

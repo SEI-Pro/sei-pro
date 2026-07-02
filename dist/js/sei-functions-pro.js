@@ -8390,7 +8390,14 @@ function setSessionProcessosPro(dadosProcessoPro) {
     } else {
         dadosSessionProcessoPro = [dadosProcessoPro_push];
     }
-    sessionStorageStorePro('dadosSessionProcessoPro', dadosSessionProcessoPro);
+    // Cache que cresce (uma entrada por processo visitado). Grava com limite PROATIVO
+    // (quantidade + tamanho) para não estourar a cota do sessionStorage — o que antes
+    // gerava poda reativa e ruído no console/coletor de erros do Chrome.
+    if (typeof sessionStorageStoreBoundedPro === 'function') {
+        sessionStorageStoreBoundedPro('dadosSessionProcessoPro', dadosSessionProcessoPro, { maxEntries: 25 });
+    } else {
+        sessionStorageStorePro('dadosSessionProcessoPro', dadosSessionProcessoPro);
+    }
 
     if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
         window.dispatchEvent(new CustomEvent('sei-pro-process-session-updated', {

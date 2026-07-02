@@ -1959,6 +1959,18 @@
     function sessionStorageRestorePro(item) {
       return JSON.parse(session().getItem(item));
     }
+    function debugLog() {
+      const logger = getSeiPro().core.logger;
+      if (logger && typeof logger.debug === "function") logger.debug.apply(logger, arguments);
+    }
+    function boundArrayForStorage(arr, maxEntries, maxChars) {
+      let out = arr;
+      if (out.length > maxEntries) out = out.slice(out.length - maxEntries);
+      while (out.length > 1 && JSON.stringify(out).length > maxChars) {
+        out = out.slice(1);
+      }
+      return out;
+    }
     function sessionStorageStorePro(item, result) {
       try {
         session().setItem(item, JSON.stringify(result));
@@ -1969,14 +1981,28 @@
             trimmed = trimmed.slice(Math.ceil(trimmed.length / 2));
             try {
               session().setItem(item, JSON.stringify(trimmed));
-              console.warn('[SeiPro] sessionStorage cheio em "' + item + '": entradas antigas podadas, mantidas ' + trimmed.length + ".");
+              debugLog('[SeiPro] sessionStorage: "' + item + '" excedeu a cota; entradas antigas podadas, mantidas ' + trimmed.length + ".");
               return;
             } catch (e2) {
             }
           }
         }
-        console.warn('[SeiPro] sessionStorage cheio: grava\xE7\xE3o de "' + item + '" descartada.');
+        debugLog('[SeiPro] sessionStorage: grava\xE7\xE3o de "' + item + '" descartada (cota cheia).');
       }
+    }
+    function sessionStorageStoreBoundedPro(item, result, options) {
+      options = options || {};
+      const maxEntries = options.maxEntries || 25;
+      const maxChars = options.maxChars || 3e6;
+      if (!Array.isArray(result)) {
+        sessionStorageStorePro(item, result);
+        return;
+      }
+      const bounded = boundArrayForStorage(result, maxEntries, maxChars);
+      if (bounded.length < result.length) {
+        debugLog('[SeiPro] sessionStorage: "' + item + '" limitado de ' + result.length + " para " + bounded.length + " entradas (cache proativo).");
+      }
+      sessionStorageStorePro(item, bounded);
     }
     function sessionStorageRemovePro(item) {
       session().removeItem(item);
@@ -2006,6 +2032,8 @@
       sessionStorageRestorePro,
       sessionStorageStorePro,
       sessionStorageRemovePro,
+      sessionStorageStoreBoundedPro,
+      boundArrayForStorage,
       hybridStorageRestorePro,
       hybridStorageRemovePro,
       hybridStorageStorePro
@@ -2016,6 +2044,7 @@
     aliasGlobal("localStorageRemovePro", localStorageRemovePro);
     aliasGlobal("sessionStorageRestorePro", sessionStorageRestorePro);
     aliasGlobal("sessionStorageStorePro", sessionStorageStorePro);
+    aliasGlobal("sessionStorageStoreBoundedPro", sessionStorageStoreBoundedPro);
     aliasGlobal("sessionStorageRemovePro", sessionStorageRemovePro);
     aliasGlobal("hybridStorageRestorePro", hybridStorageRestorePro);
     aliasGlobal("hybridStorageRemovePro", hybridStorageRemovePro);

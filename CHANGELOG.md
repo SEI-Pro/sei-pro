@@ -1,5 +1,19 @@
 # Changelog — SEI Pro PRF
 
+## [2.0.3] - 2026-07-02
+
+Gestão proativa do cache de sessão de processos e redução de ruído no console/coletor de erros do Chrome.
+
+### Adicionado
+
+- **Escrita limitada de cache** (`SeiPro.core.webstore.sessionStorageStoreBoundedPro` + `boundArrayForStorage`): limita arrays-cache por quantidade e por tamanho serializado **antes** de gravar, evitando estourar a cota do `sessionStorage` (~5MB) — em vez de depender de capturar `QuotaExceededError`
+- Testes unitários do bounding proativo e da rede de segurança reativa (`tests/platform/webstore.test.js`)
+
+### Alterado
+
+- **Cache `dadosSessionProcessoPro` (`setSessionProcessosPro`):** passa a gravar com limite proativo (máx. 25 processos / ~3MB), mantendo os mais recentes. Elimina a poda reativa recorrente que gerava o aviso "sessionStorage cheio" no console
+- **Ruído de log:** mensagens de manutenção do `sessionStorage` (poda/limite) rebaixadas de `console.warn` para `SeiPro.core.logger.debug` (condicionado a `debugpage`), para não poluir o console nem o coletor de erros da extensão no Chrome em uso normal
+
 ## [2.0.2] - 2026-07-02
 
 Correções de condições de corrida no legado (relatadas via reporte automático de erro) e melhoria de arquitetura na montagem da capa do processo.
