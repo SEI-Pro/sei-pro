@@ -11,6 +11,7 @@
 import { createNamespace } from './namespace.js';
 import { createRuntime } from '../platform/runtime.js';
 import { installUtil } from './util.js';
+import { installAsync } from './async.js';
 import { installBootstrap } from './bootstrap.js';
 import { installConfig } from './config.js';
 import { installValidacao } from './validacao.js';
@@ -47,6 +48,7 @@ export function installCoreStack() {
     createNamespace();
     createRuntime();
     installUtil();
+    installAsync();
     installBootstrap();
     installConfig();
     installValidacao();

@@ -1,5 +1,23 @@
 # Changelog — SEI Pro PRF
 
+## [2.0.2] - 2026-07-02
+
+Correções de condições de corrida no legado (relatadas via reporte automático de erro) e melhoria de arquitetura na montagem da capa do processo.
+
+### Adicionado
+
+- **Primitivo de espera reutilizável** (`SeiPro.core.async`, `src/core/async.js`): `retryWithProgress` (retry ciente de progresso + backoff exponencial + teto wall-clock), `clearRetry` e `nudgeOnce` (registro único de listeners para caminho orientado a evento) — consolida o padrão de "poll cego" que estava espalhado pelo legado
+- Testes unitários do primitivo (`tests/core/async.test.js`)
+
+### Corrigido
+
+- **`infraTooltipOcultar is not defined` (`sei-functions-pro.js`):** chamadas diretas à função nativa do SEI (linhas de `breakDadosProcedimentosControlar`, `newTabDadosProcedimentosControlar`, filtros de Kanban/tabela e etiquetas) passam a ser guardadas com `typeof`, evitando `ReferenceError` quando a página do SEI ainda não carregou seus scripts nativos (`readyState=interactive`)
+- **`ifrVisualizacaoWindow.$ is not a function` (`replaceSelectAllVisualizacao`):** valida que o jQuery do iframe de visualização existe antes de usá-lo e reagenda via o parâmetro `TimeOut` (antes ignorado) até o iframe ficar pronto, eliminando o crash e garantindo a aplicação do `chosen`
+
+### Alterado
+
+- **Capa do processo (`setCapaProcesso`):** pré-condições reduzidas de 5 → 3 (dado da sessão, id e o container `#divArvoreHtml` — sinal direto de que a capa está exibida, confirmado no DOM real do SEI 4.1+); `ifrArvore`/`rootSelected` deixam de bloquear a montagem (viram sinais opcionais). Retry, nudge por evento e limpeza agora delegam ao primitivo compartilhado `SeiPro.core.async`, tornando a montagem resiliente a recursos que chegam dispersos no tempo (cargas lentas / `reset=1`)
+
 ## [2.0.1] - 2026-06-30
 
 Correções de estabilização pós-**2.0.0** (mundo isolado): regressões observadas no SEI real após a migração isolated-first, sem mudança de escopo arquitetural.

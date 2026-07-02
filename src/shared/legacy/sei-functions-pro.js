@@ -7574,63 +7574,69 @@ function setCapaProcesso(loop = true) {
     // Robusto à versão: divInformacao do flag isNewSEI pode estar errado (ver acima);
     // tenta os dois ids (novo: #divArvoreInformacao, antigo: #divInformacao).
     var infoProcNode = ifrVisualizacao.find('#divArvoreInformacao, #divInformacao').get(0);
+    // Sinal DIRETO de que a capa está exibida e é montável: o container #divArvoreHtml
+    // só existe no frame de visualização quando a raiz (capa) está aberta — some quando
+    // um documento é selecionado (confirmado no DOM real do SEI 4.1+). Substitui as
+    // antigas pré-condições ifrArvore + rootSelected (indiretas, via nó selecionado na
+    // árvore) por esta, que é o próprio alvo de montagem da capa.
+    var coverContainer = ifrVisualizacao.find('#divArvoreHtml');
+    var coverPresent = coverContainer.length > 0;
+    // rootSelected fica como sinal OPCIONAL (não bloqueia): serve apenas para distinguir
+    // "usuário vendo um documento" de "capa ainda carregando" no ramo de retry.
     var rootSelected = !!(id_procedimento && ifrArvore.find('#span'+id_procedimento).hasClass('infraArvoreNoSelecionado'));
-    var capaReady = !!prop && !!id_procedimento && ifrVisualizacao.length > 0 && ifrArvore.length > 0 && rootSelected;
 
-    function retryCapaProcesso(reason) {
-        if (!loop) return;
-        var stateKey = '__SEI_PRO_CAPA_PROCESSO_RETRY__';
-        var state = window[stateKey] || (window[stateKey] = {});
-        var retryKey = id_procedimento || 'pending';
-        var retryState = state[retryKey] || { count: 0, timer: null };
-        if (retryState.timer) clearTimeout(retryState.timer);
-        if (retryState.count >= 20) {
-            console.warn('[SEI Pro]', 'setCapaProcesso: retry limit reached for', retryKey, 'reason=', reason);
-            retryState.timer = null;
-            state[retryKey] = retryState;
-            return;
-        }
-        retryState.count++;
-        retryState.timer = setTimeout(function () {
-            retryState.timer = null;
-            state[retryKey] = retryState;
+    // Pré-condições REAIS (3): dado do processo, identidade e o container da capa.
+    var capaReady = !!prop && !!id_procedimento && coverPresent;
+    // Progresso (0..3) — como as 3 chegam dispersas no tempo, mantém o retry vivo
+    // enquanto houver avanço (ver retryWithProgress em src/core/async.js).
+    var capaProgress = (prop ? 1 : 0) + (id_procedimento ? 1 : 0) + (coverPresent ? 1 : 0);
+
+    // Caminho primário orientado a evento: reage no instante em que o dado do processo
+    // é gravado na sessão (a pré-condição que mais falta). Idempotente: setCapaProcesso
+    // remove a capa anterior antes de montar. Usa o primitivo compartilhado core/async.
+    if (loop && typeof nudgeOnce === 'function') {
+        nudgeOnce('__SEI_PRO_CAPA_NUDGE__', ['sei-pro-process-session-updated'], function () {
             setCapaProcesso(true);
-        }, 400);
-        state[retryKey] = retryState;
+        });
+    }
+
+    // Rede de segurança: retry ciente de progresso + backoff exponencial + teto
+    // wall-clock, delegado ao primitivo compartilhado SeiPro.core.async (reusável).
+    function retryCapaProcesso(reason) {
+        if (!loop || typeof retryWithProgress !== 'function') return;
+        retryWithProgress({
+            bag: (window.__SEI_PRO_CAPA_PROCESSO_RETRY__ || (window.__SEI_PRO_CAPA_PROCESSO_RETRY__ = {})),
+            key: id_procedimento || 'pending',
+            progress: capaProgress,
+            reason: reason,
+            run: function () { setCapaProcesso(true); },
+            onGiveUp: function (info) {
+                console.warn('[SEI Pro]', 'setCapaProcesso: retry limit reached for', info.key, 'reason=', info.reason, 'progress=', info.progress + '/3', 'elapsed=', info.elapsed + 'ms');
+            }
+        });
     }
 
     if (!capaReady) {
-        // Este documento não é o HOST da capa se não tem nem o frame da árvore nem o
-        // de visualização (ex.: setCapaProcesso disparado de DENTRO de um iframe via
-        // parent.setCapaProcesso, ou em frame aninhado). Aí não há capa para montar —
-        // sai sem retentar, evitando o warning espúrio "faltando ifrArvore" que persistia
-        // mesmo com a capa montando corretamente no contexto pai.
-        if (ifrArvore.length === 0 && $('#ifrConteudoVisualizacao').length === 0 && $($ifrVisualizacao).length === 0) {
+        // Não é o HOST da capa se não há nenhum frame relevante (ex.: setCapaProcesso
+        // disparado de DENTRO de um iframe aninhado via parent.setCapaProcesso). Aí não
+        // há capa para montar — sai sem retentar.
+        if (ifrVisualizacao.length === 0 && $('#ifrConteudoVisualizacao').length === 0 && $($ifrVisualizacao).length === 0 && ifrArvore.length === 0) {
             return;
         }
-        if (!prop || !id_procedimento || ifrVisualizacao.length === 0 || ifrArvore.length === 0) {
-            // Diagnóstico: reporta QUAL pré-condição falhou, em vez do genérico
-            // "data/frame not ready" (que não dizia se faltava o dado do processo,
-            // o id, ou um dos iframes). `prop` vem de pullDadosProcessoSession() →
-            // cache dadosSessionProcessoPro; se faltar, suspeitar do sessionStorage.
-            var capaMissing = [];
-            if (!prop) capaMissing.push('prop(dadosProcessoSession)');
-            if (!id_procedimento) capaMissing.push('id_procedimento');
-            if (ifrVisualizacao.length === 0) capaMissing.push('ifrVisualizacao');
-            if (ifrArvore.length === 0) capaMissing.push('ifrArvore');
-            retryCapaProcesso('data/frame not ready: faltando ' + capaMissing.join(', '));
-        } else if (!rootSelected) {
-            // Se outro nó da árvore (um documento) já está selecionado e a capa
-            // não está visível, o usuário está vendo um documento — não há capa
-            // para montar. Sai sem reretentar para evitar 20 tentativas inúteis
-            // e o aviso "root not selected yet" a cada documento aberto.
-            var otherNodeSelected = ifrArvore.find('.infraArvoreNoSelecionado').length > 0;
-            var capaVisible = !!infoProcNode;
-            if (otherNodeSelected && !capaVisible) {
-                return;
-            }
-            retryCapaProcesso('root not selected yet');
+        // Usuário está vendo um DOCUMENTO: frame de visualização carregado, sem o
+        // container da capa (#divArvoreHtml) e com outro nó da árvore selecionado. Não
+        // há capa para montar — sai sem retentar, evitando tentativas a cada documento.
+        if (!coverPresent && ifrVisualizacao.length > 0 && !rootSelected && ifrArvore.find('.infraArvoreNoSelecionado').length > 0) {
+            return;
         }
+        // Caso contrário, algo ainda está carregando. Diagnóstico do que falta: `prop`
+        // vem de pullDadosProcessoSession() → cache dadosSessionProcessoPro (se faltar,
+        // suspeitar do sessionStorage); o container é o alvo de montagem no frame de viz.
+        var capaMissing = [];
+        if (!prop) capaMissing.push('prop(dadosProcessoSession)');
+        if (!id_procedimento) capaMissing.push('id_procedimento');
+        if (!coverPresent) capaMissing.push('capaContainer(#divArvoreHtml)');
+        retryCapaProcesso('não pronto: faltando ' + capaMissing.join(', '));
         return;
     }
 
@@ -7886,13 +7892,11 @@ function setCapaProcesso(loop = true) {
     capaRoot.appendChild(obsField.field);
 
     ifrVisualizacao.find('#capaProcessoPro').remove();
-    if (window.__SEI_PRO_CAPA_PROCESSO_RETRY__ && window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento]) {
-        if (window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento].timer) clearTimeout(window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento].timer);
-        delete window.__SEI_PRO_CAPA_PROCESSO_RETRY__[id_procedimento];
-    }
+    // Capa montada: encerra o retry desta chave (cancela timer e limpa estado).
+    if (typeof clearRetry === 'function') clearRetry(id_procedimento, window.__SEI_PRO_CAPA_PROCESSO_RETRY__);
 
-    if (rootSelected) {
-        ifrVisualizacao.find('#divArvoreHtml').prepend(capaRoot);
+    if (coverPresent) {
+        coverContainer.prepend(capaRoot);
         ifrVisualizacao.find(divInformacao).hide();
         if (SeiPro.sei.adapter.isSEI5()) ifrVisualizacao.find('#divArvoreHtml').removeClass('d-flex');
         replaceColorsIcons(ifrVisualizacao.find('#tagUserColorPro'));

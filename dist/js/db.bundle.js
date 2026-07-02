@@ -194,6 +194,82 @@
     return util;
   }
 
+  // src/core/async.js
+  var DEFAULT_BAG_KEY = "__SEI_PRO_RETRY__";
+  function resolveBag(bag) {
+    if (bag) return bag;
+    if (typeof globalRef === "undefined") return {};
+    return globalRef[DEFAULT_BAG_KEY] || (globalRef[DEFAULT_BAG_KEY] = {});
+  }
+  function retryWithProgress(opts) {
+    opts = opts || {};
+    const run = opts.run;
+    const progress = typeof opts.progress === "number" ? opts.progress : 0;
+    const key = opts.key != null ? opts.key : "default";
+    const bag = resolveBag(opts.bag);
+    const minDelay = opts.minDelay || 300;
+    const maxDelay = opts.maxDelay || 2e3;
+    const wallClockMs = opts.wallClockMs || 3e4;
+    const noProgressLimit = opts.noProgressLimit || 15;
+    const st = bag[key] || { count: 0, timer: null, startTime: Date.now(), bestProgress: -1, gaveUp: false };
+    if (st.timer) {
+      clearTimeout(st.timer);
+      st.timer = null;
+    }
+    if (progress > st.bestProgress) {
+      st.bestProgress = progress;
+      st.count = 0;
+      st.gaveUp = false;
+    }
+    if (st.gaveUp) {
+      bag[key] = st;
+      return false;
+    }
+    const elapsed = Date.now() - st.startTime;
+    if (st.count >= noProgressLimit || elapsed >= wallClockMs) {
+      st.gaveUp = true;
+      st.timer = null;
+      bag[key] = st;
+      if (typeof opts.onGiveUp === "function") {
+        opts.onGiveUp({ key, progress: st.bestProgress, elapsed, reason: opts.reason });
+      }
+      return false;
+    }
+    const delay = Math.min(minDelay * Math.pow(2, st.count), maxDelay);
+    st.count++;
+    st.timer = setTimeout(function() {
+      st.timer = null;
+      bag[key] = st;
+      if (typeof run === "function") run();
+    }, delay);
+    bag[key] = st;
+    return true;
+  }
+  function clearRetry(key, bag) {
+    bag = resolveBag(bag);
+    key = key != null ? key : "default";
+    if (bag[key]) {
+      if (bag[key].timer) clearTimeout(bag[key].timer);
+      delete bag[key];
+    }
+  }
+  function nudgeOnce(flagKey, eventNames, handler) {
+    if (typeof globalRef === "undefined" || typeof globalRef.addEventListener !== "function") return;
+    if (globalRef[flagKey]) return;
+    globalRef[flagKey] = true;
+    (eventNames || []).forEach(function(name) {
+      globalRef.addEventListener(name, handler);
+    });
+  }
+  function installAsync() {
+    const async = { retryWithProgress, clearRetry, nudgeOnce };
+    getSeiPro().core.async = async;
+    aliasGlobal("retryWithProgress", retryWithProgress);
+    aliasGlobal("clearRetry", clearRetry);
+    aliasGlobal("nudgeOnce", nudgeOnce);
+    return async;
+  }
+
   // src/core/bootstrap.js
   function installBootstrap() {
     function setSessionNameSpace(param) {
@@ -2652,6 +2728,7 @@
     createNamespace();
     createRuntime();
     installUtil();
+    installAsync();
     installBootstrap();
     installConfig();
     installValidacao();
