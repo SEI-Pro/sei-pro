@@ -8110,7 +8110,7 @@ function setResizeIfrArvore() {
 }
 function _infraTooltipMostrar(_this, text) {
     if (!$(_this).find('.text').is(':visible')) {
-        infraTooltipMostrar(text);
+        if (typeof infraTooltipMostrar === 'function') infraTooltipMostrar(text);
     }
 }
 function setResizeAreaTelaD() {

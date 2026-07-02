@@ -2426,7 +2426,7 @@ function initSeiProArvore(loop = true) {
     if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined' && parent.checkConfigValue('uploaddocsexternos')) {
         initUploadArvore();
     }
-    if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined' && parent.verifyConfigValue('menususpenso')) {
+    if (typeof localStorageRestorePro === "function" && typeof parent.checkConfigValue !== 'undefined' && typeof parent.hideMenuSistemaView === 'function' && parent.verifyConfigValue('menususpenso')) {
         parent.hideMenuSistemaView();
     }
     if (typeof parent.setClickUrlAmigavel !== 'undefined'  && parent.verifyConfigValue('urlamigavel')) {

@@ -331,9 +331,9 @@ function updateTipSelectAll(this_) {
         text = (typeof data.index != 'undefined' && data.index == 1) ? 'Remover Sele\u00E7\u00E3o' : text;
     $(this_).attr('onmouseenter','return infraTooltipMostrar(\''+text+'\')');
     if (_this.is(':hover')) {
-        infraTooltipMostrar(text);
+        if (typeof infraTooltipMostrar === 'function') infraTooltipMostrar(text);
     } else {
-        infraTooltipOcultar();
+        if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     }
 }
 function replaceSelectAll() {
@@ -528,7 +528,7 @@ function orderbyTableGroup(this_) {
         setOptionsPro('orderbyTableGroup',setOrder);
         _this.attr('data-order',setOrder);
         _this.find('i').attr('class','fas fa-sort-numeric-'+data.order == 'asc' ? 'down' : 'up');
-        infraTooltipOcultar();
+        if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
         updateGroupTable($('#selectGroupTablePro'));
 }
 function getArrayProcessoRecebido(href) {
@@ -2523,7 +2523,7 @@ function pinKanbanItensProc(this_, id_protocolo) {
             $('#processosKanban .kanban-item[data-eid="'+id_protocolo+'"] .kanban-pinboard a').removeClass('newLink_active').attr('onmouseover', 'return infraTooltipMostrar(\'Fixar no topo\')');
             updateOrderKanbanBoardProc();
         }
-        infraTooltipOcultar();
+        if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     }
 }
 function updateOrderKanbanBoardProc() {

@@ -1,5 +1,14 @@
 # Changelog — SEI Pro PRF
 
+## [2.0.4] - 2026-07-02
+
+Estabilização adicional do legado contra condições de corrida no carregamento da página do SEI (`readyState=interactive`), com foco nos reportes automáticos de erro recebidos em produção (versões 2.0.1 e anteriores).
+
+### Corrigido
+
+- **Tooltips nativos do SEI (`sei-pro.js`, `sei-functions-pro.js`):** chamadas diretas a `infraTooltipMostrar` / `infraTooltipOcultar` passam a ser guardadas com `typeof` em `updateTipSelectAll`, `orderbyTableGroup`, `pinKanbanItensProc` e `_infraTooltipMostrar`, evitando `ReferenceError` no hover/interação enquanto os scripts nativos do SEI ainda não carregaram
+- **`parent.hideMenuSistemaView` (`sei-pro-arvore.js`):** verificação `typeof parent.hideMenuSistemaView === 'function'` antes da chamada no fluxo `menususpenso` do iframe da árvore, evitando `TypeError` quando o core já carregou mas o legado do `parent` ainda não
+
 ## [2.0.3] - 2026-07-02
 
 Gestão proativa do cache de sessão de processos e redução de ruído no console/coletor de erros do Chrome.
@@ -26,6 +35,8 @@ Correções de condições de corrida no legado (relatadas via reporte automáti
 ### Corrigido
 
 - **`infraTooltipOcultar is not defined` (`sei-functions-pro.js`):** chamadas diretas à função nativa do SEI (linhas de `breakDadosProcedimentosControlar`, `newTabDadosProcedimentosControlar`, filtros de Kanban/tabela e etiquetas) passam a ser guardadas com `typeof`, evitando `ReferenceError` quando a página do SEI ainda não carregou seus scripts nativos (`readyState=interactive`)
+- **`infraTooltipMostrar is not defined` (`sei-pro.js`, `sei-functions-pro.js`):** chamadas diretas às funções nativas de tooltip do SEI em `updateTipSelectAll`, `orderbyTableGroup`, `pinKanbanItensProc` e `_infraTooltipMostrar` passam a ser guardadas com `typeof`, evitando `ReferenceError` no hover/interação enquanto os scripts nativos do SEI ainda não carregaram (`readyState=interactive`)
+- **`parent.hideMenuSistemaView is not a function` (`sei-pro-arvore.js`):** a chamada do `menususpenso` a partir do iframe da árvore passa a checar `typeof parent.hideMenuSistemaView === 'function'` (como as chamadas vizinhas já fazem), evitando `TypeError` na janela em que o core já carregou (`verifyConfigValue`) mas o legado `sei-functions-pro.js` do `parent` ainda não (`readyState=interactive`)
 - **`ifrVisualizacaoWindow.$ is not a function` (`replaceSelectAllVisualizacao`):** valida que o jQuery do iframe de visualização existe antes de usá-lo e reagenda via o parâmetro `TimeOut` (antes ignorado) até o iframe ficar pronto, eliminando o crash e garantindo a aplicação do `chosen`
 
 ### Alterado
