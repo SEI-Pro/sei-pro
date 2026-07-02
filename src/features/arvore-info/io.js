@@ -10,6 +10,8 @@
  *  - 1 retry automático em erro transiente de rede ("Failed to fetch"/NetworkError).
  */
 
+import { escapeComponent } from '../../core/texto.js';
+
 export const PAGE_CACHE_TTL_MS = 60 * 1000;
 
 export function createIo(deps) {
@@ -53,12 +55,21 @@ export function createIo(deps) {
 
     // Submit a native SEI form parsed from a fetched page, with overrides for specific fields.
     // Returns a Promise that resolves to the response's parsed HTML (Latin-1 decoded).
+    //
+    // Encoding: SEI is ISO-8859-1. We must NOT use FormData here — a FormData body is sent
+    // as multipart/form-data with UTF-8 values, so accented chars arrive as 2 bytes and get
+    // mangled by the Latin-1 backend (uppercase Ç/Ê collapse to "Ã": "OPERAÇÃO"→"OPERAÃÃO").
+    // Instead build an application/x-www-form-urlencoded; charset=ISO-8859-1 body via
+    // escapeComponent() (Latin-1 %XX), matching every other SEI write in the project.
     function submitForm(docA, overrides) {
         var form = docA.querySelector('form');
         if (!form) return Promise.reject(new Error('form not found in fetched page'));
         var action = form.getAttribute('action') || '';
         var absAction = new URL(action, docA.baseURI || win.location.href).href;
-        var fd = new FormData();
+        var parts = [];
+        function appendField(name, value) {
+            parts.push(escapeComponent(name) + '=' + escapeComponent(value != null ? String(value) : ''));
+        }
         var inputs = form.querySelectorAll('input, textarea, select, button');
         var submitEl = null;
         inputs.forEach(function (el) {
@@ -71,16 +82,16 @@ export function createIo(deps) {
             if (!name) return;
             if (overrides.hasOwnProperty(name)) return;
             if (type === 'checkbox' || type === 'radio') {
-                if (el.checked || el.getAttribute('checked') !== null) fd.append(name, el.value || 'on');
+                if (el.checked || el.getAttribute('checked') !== null) appendField(name, el.value || 'on');
             } else if (el.tagName === 'SELECT') {
                 var sel = el.querySelector('option[selected]') || el.options[el.selectedIndex];
-                if (sel) fd.append(name, sel.value);
+                if (sel) appendField(name, sel.value);
             } else {
-                fd.append(name, el.value != null ? el.value : '');
+                appendField(name, el.value != null ? el.value : '');
             }
         });
         if (submitEl) {
-            fd.append(submitEl.getAttribute('name'), submitEl.value || submitEl.textContent.trim() || 'Salvar');
+            appendField(submitEl.getAttribute('name'), submitEl.value || submitEl.textContent.trim() || 'Salvar');
             log('submitForm: including submit button', submitEl.getAttribute('name'));
         } else {
             warn('submitForm: no named submit button found — server may reject');
@@ -88,10 +99,15 @@ export function createIo(deps) {
         Object.keys(overrides).forEach(function (k) {
             var v = overrides[k];
             if (v === false || v == null) return; // omit (unchecked checkboxes)
-            fd.append(k, v === true ? 'on' : v);
+            appendField(k, v === true ? 'on' : v);
         });
         log('submitForm →', absAction.split('?')[0]);
-        return fetch(absAction, { method: 'POST', credentials: 'include', body: fd })
+        return fetch(absAction, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=ISO-8859-1' },
+            body: parts.join('&')
+        })
             .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
             .then(function (buf) { return new DOMParser().parseFromString(new TextDecoder('iso-8859-1').decode(buf), 'text/html'); });
     }

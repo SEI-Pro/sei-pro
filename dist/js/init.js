@@ -95,7 +95,7 @@ function showAutoReportNoticePro() {
         if (!isSEIProPRFHost()) return;
 
         var text = 'Aviso sobre relatórios automáticos:<br><br>'
-            + 'Os erros não tratados da extensão podem ser enviados automaticamente para suporte após a instalação inicial e após atualizações.<br><br>'
+            + 'Os erros não tratados podem ser enviados automaticamente para o suporte após a instalação inicial e após atualizações.<br><br>'
             + 'Esse envio contém a URL da página, a mensagem do erro e os logs técnicos relacionados ao problema.<br><br>'
             + 'A extensão não faz coleta intencional de dados pessoais para esse relatório automático, mas os logs podem refletir o contexto técnico da página no momento do erro.<br><br>'
             + 'O botão manual de bug continua disponível para quando você quiser descrever um problema ou sugestão.';

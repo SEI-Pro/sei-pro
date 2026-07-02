@@ -8,6 +8,8 @@ Estabilização adicional do legado contra condições de corrida no carregament
 
 - **Tooltips nativos do SEI (`sei-pro.js`, `sei-functions-pro.js`):** chamadas diretas a `infraTooltipMostrar` / `infraTooltipOcultar` passam a ser guardadas com `typeof` em `updateTipSelectAll`, `orderbyTableGroup`, `pinKanbanItensProc` e `_infraTooltipMostrar`, evitando `ReferenceError` no hover/interação enquanto os scripts nativos do SEI ainda não carregaram
 - **`parent.hideMenuSistemaView` (`sei-pro-arvore.js`):** verificação `typeof parent.hideMenuSistemaView === 'function'` antes da chamada no fluxo `menususpenso` do iframe da árvore, evitando `TypeError` quando o core já carregou mas o legado do `parent` ainda não
+- **Corrupção de acentuadas maiúsculas ao salvar anotações (`arvore-info/io.js`):** o `submitForm` gravava via `FormData` (multipart, sempre UTF-8) contra o backend do SEI que é ISO-8859-1, corrompendo `Ç`/`Ê` maiúsculos (ex.: "OPERAÇÃO" → "OPERAÃÃO", "CIÊNCIA" → "CIÃNCIA") tanto no controle de processos quanto na árvore. Passa a montar o corpo como `application/x-www-form-urlencoded; charset=ISO-8859-1` via `escapeComponent` (Latin-1 `%XX`), alinhando-se à convenção de todos os outros writes do projeto. Cobertura em `tests/features/arvore-info/io.test.js`
+- **Ruído de "Extension context invalidated" no coletor (`platform/report.js`):** o relatório automático passa a ignorar esse erro, que é benigno e inevitável quando a extensão é recarregada/atualizada enquanto uma aba antiga ainda roda o content script (toda chamada a `chrome.runtime.*` como `getURL` passa a lançar). Não é acionável — a aba só precisa ser recarregada — e antes inundava o coletor. Cobertura em `tests/platform/report.test.js`
 
 ## [2.0.3] - 2026-07-02
 

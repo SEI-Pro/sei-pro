@@ -203,6 +203,11 @@ export function installReport() {
         const normalized = String(textError || '').trim();
         if (!normalized) return;
         if (/Relat[oó]rio enviado|Erro ao enviar relat[oó]rio|Falha ao enviar relat[oó]rio/i.test(normalized)) return;
+        // Benigno e inevitável: a extensão foi recarregada/atualizada enquanto uma aba
+        // antiga ainda roda o content script. A partir daí toda chamada a chrome.runtime.*
+        // (getURL, sendMessage, …) lança "Extension context invalidated". Não é acionável
+        // — a aba só precisa ser recarregada — e pode inundar o coletor. Ignorar no report.
+        if (/Extension context (?:invalidated|was invalidated)|context invalidated/i.test(normalized)) return;
         const signature = getErrorSignature(normalized);
         const state = getAutoReportState();
         if (state.sent[signature]) return;

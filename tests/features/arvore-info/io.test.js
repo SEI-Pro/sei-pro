@@ -69,3 +69,54 @@ describe('io.fetchPage — cache', () => {
     expect(PAGE_CACHE_TTL_MS).toBe(60 * 1000);
   });
 });
+
+describe('io.submitForm — encoding ISO-8859-1', () => {
+  function fakeDoc(fields, action) {
+    var els = fields.map(function (f) {
+      return {
+        tagName: f.tagName || 'INPUT',
+        value: f.value,
+        checked: !!f.checked,
+        getAttribute: function (a) {
+          if (a === 'name') return f.name;
+          if (a === 'type') return f.type || 'text';
+          if (a === 'checked') return f.checked ? '' : null;
+          return null;
+        }
+      };
+    });
+    var form = {
+      getAttribute: function (a) { return a === 'action' ? (action || 'controlador.php') : null; },
+      querySelectorAll: function () { return { forEach: function (cb) { els.forEach(cb); } }; }
+    };
+    return {
+      baseURI: 'https://sei/base',
+      querySelector: function (sel) { return sel === 'form' ? form : null; }
+    };
+  }
+
+  it('envia x-www-form-urlencoded; charset=ISO-8859-1 (nunca FormData/multipart)', async () => {
+    let captured = null;
+    globalThis.fetch = vi.fn().mockImplementation((url, opts) => { captured = opts; return Promise.resolve(okResponse()); });
+    const io = createIo({ win: { location: { href: 'https://sei/' } } });
+    const doc = fakeDoc([{ name: 'btnSalvar', type: 'submit', value: 'Salvar' }]);
+
+    await io.submitForm(doc, { txaDescricao: 'OPERAÇÃO', chkSinPrioridade: 'on' });
+
+    expect(captured.method).toBe('POST');
+    expect(captured.headers['Content-Type']).toBe('application/x-www-form-urlencoded; charset=ISO-8859-1');
+    expect(typeof captured.body).toBe('string');
+    expect(captured.body instanceof FormData).toBe(false);
+  });
+
+  it('codifica Ç/Ê maiúsculos como %XX Latin-1 (regressão OPERAÇÃO→OPERAÃÃO)', async () => {
+    let captured = null;
+    globalThis.fetch = vi.fn().mockImplementation((url, opts) => { captured = opts; return Promise.resolve(okResponse()); });
+    const io = createIo({ win: { location: { href: 'https://sei/' } } });
+
+    await io.submitForm(fakeDoc([]), { txaDescricao: 'OPERAÇÃO CIÊNCIA' });
+
+    // Ç=U+00C7→%C7, Ã=U+00C3→%C3, Ê=U+00CA→%CA (Latin-1), espaço→%20
+    expect(captured.body).toContain('txaDescricao=OPERA%C7%C3O%20CI%CANCIA');
+  });
+});

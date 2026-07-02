@@ -26,6 +26,12 @@
     return m ? m[1] : null;
   }
 
+  // src/core/texto.js
+  function escapeComponent(str) {
+    return escape(str).replace(/\+/g, "%2B");
+  }
+  var COMBINING_MARKS_RE = new RegExp("[\\u0300-\\u036f]", "g");
+
   // src/features/arvore-info/io.js
   var PAGE_CACHE_TTL_MS = 60 * 1e3;
   function createIo(deps) {
@@ -72,7 +78,10 @@
       if (!form) return Promise.reject(new Error("form not found in fetched page"));
       var action = form.getAttribute("action") || "";
       var absAction = new URL(action, docA.baseURI || win.location.href).href;
-      var fd = new FormData();
+      var parts = [];
+      function appendField(name, value) {
+        parts.push(escapeComponent(name) + "=" + escapeComponent(value != null ? String(value) : ""));
+      }
       var inputs = form.querySelectorAll("input, textarea, select, button");
       var submitEl = null;
       inputs.forEach(function(el) {
@@ -85,16 +94,16 @@
         if (!name) return;
         if (overrides.hasOwnProperty(name)) return;
         if (type === "checkbox" || type === "radio") {
-          if (el.checked || el.getAttribute("checked") !== null) fd.append(name, el.value || "on");
+          if (el.checked || el.getAttribute("checked") !== null) appendField(name, el.value || "on");
         } else if (el.tagName === "SELECT") {
           var sel = el.querySelector("option[selected]") || el.options[el.selectedIndex];
-          if (sel) fd.append(name, sel.value);
+          if (sel) appendField(name, sel.value);
         } else {
-          fd.append(name, el.value != null ? el.value : "");
+          appendField(name, el.value != null ? el.value : "");
         }
       });
       if (submitEl) {
-        fd.append(submitEl.getAttribute("name"), submitEl.value || submitEl.textContent.trim() || "Salvar");
+        appendField(submitEl.getAttribute("name"), submitEl.value || submitEl.textContent.trim() || "Salvar");
         log("submitForm: including submit button", submitEl.getAttribute("name"));
       } else {
         warn("submitForm: no named submit button found \u2014 server may reject");
@@ -102,10 +111,15 @@
       Object.keys(overrides).forEach(function(k) {
         var v = overrides[k];
         if (v === false || v == null) return;
-        fd.append(k, v === true ? "on" : v);
+        appendField(k, v === true ? "on" : v);
       });
       log("submitForm \u2192", absAction.split("?")[0]);
-      return fetch(absAction, { method: "POST", credentials: "include", body: fd }).then(function(r) {
+      return fetch(absAction, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=ISO-8859-1" },
+        body: parts.join("&")
+      }).then(function(r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.arrayBuffer();
       }).then(function(buf) {

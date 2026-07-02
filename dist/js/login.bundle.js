@@ -1854,6 +1854,7 @@
       const normalized = String(textError || "").trim();
       if (!normalized) return;
       if (/Relat[oó]rio enviado|Erro ao enviar relat[oó]rio|Falha ao enviar relat[oó]rio/i.test(normalized)) return;
+      if (/Extension context (?:invalidated|was invalidated)|context invalidated/i.test(normalized)) return;
       const signature = getErrorSignature(normalized);
       const state = getAutoReportState();
       if (state.sent[signature]) return;

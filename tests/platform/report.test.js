@@ -69,4 +69,15 @@ describe('platform/report', () => {
         expect(send).not.toHaveBeenCalled();
         vi.useRealTimers();
     });
+
+    it('não reporta "Extension context invalidated" (extensão recarregada com aba antiga)', () => {
+        vi.useFakeTimers();
+        const send = vi.fn(() => Promise.resolve({ ok: true }));
+        const r = setup(send);
+        r.scheduleAutomaticErrorReport('Uncaught Error: Extension context invalidated.', 'window.error');
+        r.scheduleAutomaticErrorReport('Error: Extension context was invalidated.', 'window.error');
+        vi.advanceTimersByTime(2000);
+        expect(send).not.toHaveBeenCalled();
+        vi.useRealTimers();
+    });
 });
