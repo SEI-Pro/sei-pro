@@ -3106,7 +3106,7 @@ function getDadosProcedimentosControlar() {
 function newTabDadosProcedimentosControlar() {  
     var href = window.location.href+'#&acao_pro=pesquisa_agrupamento';
     cancelDadosProcedimentosControlar();
-    infraTooltipOcultar();
+    if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     setOptionsPro('newTabSearchProcedimentos', true);
     newTab = window.open(href,'Pesquisa de Processos','height=100,width=400,toolbar=0,menubar=0,location=0');
     if (window.focus) {newTab.focus()}
@@ -3258,7 +3258,7 @@ function endProcessGroupTable() {
 }
 function breakDadosProcedimentosControlar() {
     cancelDadosProcedimentosControlar();
-    infraTooltipOcultar();
+    if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     var valueSelect = $('#selectGroupTablePro').val();
     if (valueSelect == 'arrivaldate' || valueSelect == 'acessdate' || valueSelect == 'senddate' || valueSelect == 'senddepart' || valueSelect == 'createdate') { 
         localStorageStorePro('selectGroupTablePro', '');
@@ -3738,7 +3738,7 @@ function filterTagKanban(this_) {
     }
     // console.log('$$$$$$ tagName', tagName);
     _parent.find('.kanban-container').animate({scrollTop: 0}, 500);
-    infraTooltipOcultar();
+    if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     updateCountKanbanBoard();
 }
 function filterTagTable(this_) {
@@ -3786,7 +3786,7 @@ function filterTagTable(this_) {
         updateCountTableMonitorado();
         th_head.find('.tablesorter-header-inner').append(htmlFilter);
         setOptionsPro('filterTag_'+typeTable, tagName_);
-        infraTooltipOcultar();
+        if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
 }
 // getRecentDateRow migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function normalizeAreaTela() {
@@ -3919,7 +3919,7 @@ function showFollowEtiqueta(this_, status, mode) {
     } else {
         td.removeClass('info_tags_follow_empty');
     }
-    infraTooltipOcultar();
+    if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     if(status == 'show') {
         var btnClose =  '<a class="newLink btnCloseEtiqueta" onclick="parent.showFollowEtiqueta(this, \'close\', \''+mode+'\')" onmouseover="return infraTooltipMostrar(\'Fechar\');" onmouseout="return infraTooltipOcultar();">'+
                         '   <i class="fas fa-check-square cinzaColor" style="font-size: 100%;"></i>'+
@@ -4100,7 +4100,7 @@ function saveFollowEtiqueta() {
             storeMonitorados['monitorados'][monitoradoIndex].etiquetas = tags;
             localStorageStorePro('configDataMonitoradosPro', storeMonitorados);
         }
-        infraTooltipOcultar();
+        if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     }
 }
 // normalizeNameTag migrada para SeiPro.core.texto (src/core/texto.js) — Fase 6
@@ -10762,9 +10762,15 @@ function setReplaceSelectAllVisualizacao() {
     }
 }
 function replaceSelectAllVisualizacao(TimeOut = 9000) {
+    if (TimeOut <= 0) return;
     var ifrVisualizacao = $($ifrVisualizacao)[0];
+    if (!ifrVisualizacao) return;
     var ifrVisualizacaoWindow = ifrVisualizacao.contentWindow;
-    if (typeof ifrVisualizacaoWindow !== 'undefined' && typeof ifrVisualizacaoWindow.$().chosen === 'undefined' ) {
+    if (!ifrVisualizacaoWindow || typeof ifrVisualizacaoWindow.$ !== 'function') {
+        setTimeout(function() { replaceSelectAllVisualizacao(TimeOut - 300); }, 300);
+        return;
+    }
+    if (typeof ifrVisualizacaoWindow.$().chosen === 'undefined' ) {
         getScriptIframe(ifrVisualizacao, URL_SPRO+"js/lib/chosen.jquery.min.js", function(){
             getScriptIframe(ifrVisualizacao, URL_SPRO+"js/sei-pro-visualizacao-chosen.js", function(){
                 if (typeof ifrVisualizacaoWindow.replaceSelectOnVisualizacao !== 'undefined') ifrVisualizacaoWindow.replaceSelectOnVisualizacao();
