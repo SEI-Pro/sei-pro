@@ -11,7 +11,7 @@ describe('migration: background fetch adapter stays isolated', () => {
     const fetchHandler = readFileSync(join(rootDir, 'src/background/fetch-handler.js'), 'utf8');
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
 
-    expect(background).toMatch(/importScripts\(\s*['"]storage-handler\.js['"]\s*,\s*['"]fetch-handler\.js['"]\s*\)/);
+    expect(background).toMatch(/importScripts\(\s*['"]storage-handler\.js['"]\s*,\s*['"]fetch-handler\.js['"]\s*,\s*['"]bug-report-handler\.js['"]\s*\)/);
     expect(background).toMatch(/SeiProBackgroundFetch\.handleFetchMessage\(message, sender, sendResponse, browser\)/);
     expect(fetchHandler).toMatch(/function handleFetchMessage\(message, sender, sendResponse, browserApi\)/);
     expect(fetchHandler).toMatch(/global\.SeiProBackgroundFetch\s*=/);
