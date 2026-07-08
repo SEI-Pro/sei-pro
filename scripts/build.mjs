@@ -105,6 +105,7 @@ const legacyFiles = [
     'src/bootstrap/init_visualizacao_html.js',
     'src/bootstrap/init-flags.js',
     'src/bootstrap/getscript-isolated.js',
+    'src/background/storage-handler.js',
     'src/background/background.js' // service worker (manifest: js/background.js)
 ];
 

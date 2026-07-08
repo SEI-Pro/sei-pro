@@ -10,6 +10,10 @@ const SEI_PRO_PROCESS_NOTIFICATIONS_KEY = 'seiProProcessNotifications';
 const SEI_PRO_PROCESS_NOTIFICATION_ID = 'sei-pro-new-process';
 const SEI_PRO_BUG_REPORT_TIMEOUT_MS = 15000;
 
+if (typeof importScripts === 'function') {
+    importScripts('storage-handler.js');
+}
+
 function handleInstalled(details) {
     if (details.reason === 'install') {
         browser.tabs.create({ url: 'https://sei-pro.github.io/sei-pro/' });
@@ -159,29 +163,6 @@ function isAllowedFetchUrl(url) {
     }
 }
 
-// Guard against a handler responding twice (e.g. if a browser implementation
-// fired both the callback and the Promise of a storage call).
-function respondOnce(sendResponse) {
-    var done = false;
-    return function (payload) {
-        if (done) return;
-        done = true;
-        sendResponse(payload);
-    };
-}
-
-function storageErrorMessage(error) {
-    return error && error.message ? error.message : String(error);
-}
-
-// Normalize browser.storage results across Chrome (callback) and Firefox
-// (Promise) MV3 implementations: settle from whichever path the engine uses.
-function settleStorage(result, onDone, onError) {
-    if (result && typeof result.then === 'function') {
-        result.then(onDone, onError);
-    }
-}
-
 function buildBugReportPayloadJson(payload) {
     try {
         return JSON.stringify(payload || {});
@@ -252,46 +233,12 @@ browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         return true;
     }
 
-    if (action === 'storageGet') {
-        var areaGet = message.area === 'session' ? 'session' : (message.area === 'local' ? 'local' : 'sync');
-        var storageGetApi = browser.storage[areaGet];
-        if (!storageGetApi || typeof storageGetApi.get !== 'function') {
-            sendResponse({ ok: false, error: 'Storage area unavailable' });
+    if (action === 'storageGet' || action === 'storageSet' || action === 'storageRemove') {
+        if (!globalThis.SeiProBackgroundStorage || typeof globalThis.SeiProBackgroundStorage.handleStorageMessage !== 'function') {
+            sendResponse({ ok: false, error: 'Storage handler unavailable' });
             return false;
         }
-        var respGet = respondOnce(sendResponse);
-        var okGet = function (items) { respGet({ ok: true, data: items }); };
-        var errGet = function (e) { respGet({ ok: false, error: storageErrorMessage(e) }); };
-        settleStorage(storageGetApi.get(message.keys || null, okGet), okGet, errGet);
-        return true;
-    }
-
-    if (action === 'storageSet') {
-        var areaSet = message.area === 'session' ? 'session' : (message.area === 'local' ? 'local' : 'sync');
-        var storageSetApi = browser.storage[areaSet];
-        if (!storageSetApi || typeof storageSetApi.set !== 'function') {
-            sendResponse({ ok: false, error: 'Storage area unavailable' });
-            return false;
-        }
-        var respSet = respondOnce(sendResponse);
-        var okSet = function () { respSet({ ok: true, data: true }); };
-        var errSet = function (e) { respSet({ ok: false, error: storageErrorMessage(e) }); };
-        settleStorage(storageSetApi.set(message.items || {}, okSet), okSet, errSet);
-        return true;
-    }
-
-    if (action === 'storageRemove') {
-        var areaRemove = message.area === 'session' ? 'session' : (message.area === 'local' ? 'local' : 'sync');
-        var storageRemoveApi = browser.storage[areaRemove];
-        if (!storageRemoveApi || typeof storageRemoveApi.remove !== 'function') {
-            sendResponse({ ok: false, error: 'Storage area unavailable' });
-            return false;
-        }
-        var respRemove = respondOnce(sendResponse);
-        var okRemove = function () { respRemove({ ok: true, data: true }); };
-        var errRemove = function (e) { respRemove({ ok: false, error: storageErrorMessage(e) }); };
-        settleStorage(storageRemoveApi.remove(message.keys || [], okRemove), okRemove, errRemove);
-        return true;
+        return globalThis.SeiProBackgroundStorage.handleStorageMessage(action, message, sendResponse, browser);
     }
 
     if (action === 'enviarRelatorioBug') {
