@@ -811,7 +811,7 @@
     });
   }
 
-  // src/features/controlar-prazos/index.js
+  // src/features/controlar-prazos/legacy-api.js
   [domain_exports, io_exports, view_exports].forEach(function(mod) {
     Object.keys(mod).forEach(function(name) {
       if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);

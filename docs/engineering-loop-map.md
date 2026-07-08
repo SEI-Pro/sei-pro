@@ -15,7 +15,7 @@ Limitação: análise estática aproximada; callbacks, chamadas dinâmicas e str
 
 ## Resumo
 
-- Arquivos JS analisados: **128**.
+- Arquivos JS analisados: **129**.
 - Funções extraídas: **2998**.
 - Opções/configurações encontradas: **72**.
 - Funções compartilhadas por mais de uma opção: **608**.
