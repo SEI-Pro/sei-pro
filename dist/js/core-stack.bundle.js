@@ -2766,18 +2766,6 @@
       processDataReady: monitoradoProcessDataReady,
       processPayloadReady: monitoradoProcessPayloadReady
     });
-    aliasGlobal("getStoreMonitoradoPro", getStoreMonitoradoPro);
-    aliasGlobal("getOptionsConfigDate", getOptionsConfigDate);
-    aliasGlobal("persistMonitoradoStore", persistMonitoradoStore);
-    aliasGlobal("scheduleMonitoradoRemote", scheduleMonitoradoRemote);
-    aliasGlobal("flushMonitoradoRemote", flushMonitoradoRemote);
-    aliasGlobal("getConfigDatetimeMonitorado", getConfigDatetimeMonitorado);
-    aliasGlobal("saveConfigMonitorado", saveConfigMonitorado);
-    aliasGlobal("defaultConfigDate", defaultConfigDate);
-    aliasGlobal("defaultMonitoradoStore", defaultMonitoradoStore);
-    aliasGlobal("findMonitoradoIndex", findMonitoradoIndex);
-    aliasGlobal("monitoradoProcessDataReady", monitoradoProcessDataReady);
-    aliasGlobal("monitoradoProcessPayloadReady", monitoradoProcessPayloadReady);
     if (typeof globalRef.addEventListener === "function" && !globalRef.__seiProMonitoradoFlushBound) {
       globalRef.__seiProMonitoradoFlushBound = true;
       globalRef.addEventListener("pagehide", function() {
@@ -2791,7 +2779,25 @@
     return monitorados;
   }
 
+  // src/features/monitorados/store-legacy-api.js
+  function installMonitoradoStoreLegacyApi() {
+    const monitorados = installMonitoradoStore();
+    aliasGlobal("getStoreMonitoradoPro", getStoreMonitoradoPro);
+    aliasGlobal("getOptionsConfigDate", getOptionsConfigDate);
+    aliasGlobal("persistMonitoradoStore", persistMonitoradoStore);
+    aliasGlobal("scheduleMonitoradoRemote", scheduleMonitoradoRemote);
+    aliasGlobal("flushMonitoradoRemote", flushMonitoradoRemote);
+    aliasGlobal("getConfigDatetimeMonitorado", getConfigDatetimeMonitorado);
+    aliasGlobal("saveConfigMonitorado", saveConfigMonitorado);
+    aliasGlobal("defaultConfigDate", defaultConfigDate);
+    aliasGlobal("defaultMonitoradoStore", defaultMonitoradoStore);
+    aliasGlobal("findMonitoradoIndex", findMonitoradoIndex);
+    aliasGlobal("monitoradoProcessDataReady", monitoradoProcessDataReady);
+    aliasGlobal("monitoradoProcessPayloadReady", monitoradoProcessPayloadReady);
+    return monitorados;
+  }
+
   // src/content/core-stack.js
   installCoreStack();
-  installMonitoradoStore();
+  installMonitoradoStoreLegacyApi();
 })();

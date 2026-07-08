@@ -1,4 +1,4 @@
-import { aliasGlobal, getSeiPro, globalRef } from '../../core/global.js';
+import { getSeiPro, globalRef } from '../../core/global.js';
 import { isJson } from '../../core/serial.js';
 import {
     defaultConfigDate,
@@ -115,20 +115,6 @@ export function installMonitoradoStore() {
         processDataReady: monitoradoProcessDataReady,
         processPayloadReady: monitoradoProcessPayloadReady
     });
-
-    // Aliases globais — preservam os call-sites do legado (view + outros arquivos).
-    aliasGlobal('getStoreMonitoradoPro', getStoreMonitoradoPro);
-    aliasGlobal('getOptionsConfigDate', getOptionsConfigDate);
-    aliasGlobal('persistMonitoradoStore', persistMonitoradoStore);
-    aliasGlobal('scheduleMonitoradoRemote', scheduleMonitoradoRemote);
-    aliasGlobal('flushMonitoradoRemote', flushMonitoradoRemote);
-    aliasGlobal('getConfigDatetimeMonitorado', getConfigDatetimeMonitorado);
-    aliasGlobal('saveConfigMonitorado', saveConfigMonitorado);
-    aliasGlobal('defaultConfigDate', defaultConfigDate);
-    aliasGlobal('defaultMonitoradoStore', defaultMonitoradoStore);
-    aliasGlobal('findMonitoradoIndex', findMonitoradoIndex);
-    aliasGlobal('monitoradoProcessDataReady', monitoradoProcessDataReady);
-    aliasGlobal('monitoradoProcessPayloadReady', monitoradoProcessPayloadReady);
 
     // Flush imediato ao sair da página (localStorage já é síncrono; isto garante o backup remoto).
     if (typeof globalRef.addEventListener === 'function' && !globalRef.__seiProMonitoradoFlushBound) {

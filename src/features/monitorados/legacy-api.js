@@ -21,11 +21,8 @@ import { legacyApi as visualizacao } from './visualizacao.js';
  * próprias bindings; aqui apenas iteramos e aliasamos. Nenhum aliasGlobal vive nos
  * módulos de domain/io/view.
  *
- * EXCEÇÃO documentada — store.js: seus aliasGlobal ficam em store.js porque o store
- * é instalado via core-stack (installMonitoradoStore), carregado em TODOS os contextos
- * — inclusive blocos que carregam sei-functions-pro.js mas NÃO o monitorados.bundle
- * (procedimento_visualizar, arvore_visualizar, editor_montar…), onde o legado chama
- * getStoreMonitoradoPro. Mover esses aliases para cá os perderia nesses contextos.
+ * Os aliases do store ficam em store-legacy-api.js, carregado pelo core-stack,
+ * porque precisam existir também em contextos que não carregam monitorados.bundle.
  *
  * TODO: remover cada grupo quando o respectivo call-site legado migrar.
  */
