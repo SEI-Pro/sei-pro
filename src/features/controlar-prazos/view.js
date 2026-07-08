@@ -65,7 +65,7 @@ export function updateControlePrazoNativeRow(tr, prazoInfo, dateValue, hrefNativ
     }
 
     if (htmlDatePreview) {
-        _tr.find('td.prazoBoxDisplay').html(htmlDatePreview).attr('data-time-sorter', dateSort);
+        _tr.find('td.seipro-prazo-box-display').html(htmlDatePreview).attr('data-time-sorter', dateSort);
     }
 }
 export function getControlePrazoNativeTargetRows(this_) {
@@ -192,7 +192,7 @@ export function setControlePrazoNativo(mode, this_, form, href, param = false, c
 
     if (_this && _this.closest('.kanban-item').length) {
         var id = _this.closest('.kanban-item').attr('data-eid');
-        var _addEl = $('#P'+id+' td.prazoBoxDisplay [data-seipro-add-prazo]')[0];
+        var _addEl = $('#P'+id+' td.seipro-prazo-box-display [data-seipro-add-prazo]')[0];
         if (_addEl) addControlePrazo(_addEl);
         return false;
     }
@@ -227,7 +227,7 @@ export function setControlePrazoNativo(mode, this_, form, href, param = false, c
 
     function submitNativeForRow(row, next) {
         var _row = $(row);
-        var prevCell = _row.find('td.prazoBoxDisplay').html();
+        var prevCell = _row.find('td.seipro-prazo-box-display').html();
         var rowInfo = getControlePrazoNativeInfo(_row);
         var rowTrabalharHref = _row.find('a[href*="procedimento_trabalhar"]').attr('href');
         var idProc = rowInfo && rowInfo.id_procedimento ? rowInfo.id_procedimento : getParamsUrlPro(rowTrabalharHref).id_procedimento;
@@ -236,7 +236,7 @@ export function setControlePrazoNativo(mode, this_, form, href, param = false, c
                                 !!_idControlePrazo ||
                                 !!(rowInfo && rowInfo.id_controle_prazo);
 
-        _row.find('td.prazoBoxDisplay').html('<i class="fas fa-sync fa-spin '+(SeiPro.sei.adapter.isNewSEI() ? 'brancoColor' : 'azulColor')+'"></i>');
+        _row.find('td.seipro-prazo-box-display').html('<i class="fas fa-sync fa-spin '+(SeiPro.sei.adapter.isNewSEI() ? 'brancoColor' : 'azulColor')+'"></i>');
 
         // Com prazo existente, a linha já expõe o link hasheado (com id_controle_prazo) → usa direto.
         // SEM prazo, resolvemos o link nativo "Definir Controle de Prazo" do processo sob demanda
@@ -246,13 +246,13 @@ export function setControlePrazoNativo(mode, this_, form, href, param = false, c
             runIframe(existingHref);
         } else if (_mode === 'concluir') {
             // Concluir exige prazo existente; sem ele não há o que concluir.
-            _row.find('td.prazoBoxDisplay').html(prevCell);
+            _row.find('td.seipro-prazo-box-display').html(prevCell);
             failCount++;
             next();
         } else {
             fetchControlePrazoDefinirHref(rowTrabalharHref).then(function(resolvedHref){
                 if (!resolvedHref) {
-                    _row.find('td.prazoBoxDisplay').html(prevCell);
+                    _row.find('td.seipro-prazo-box-display').html(prevCell);
                     failCount++;
                     next();
                     return;
@@ -284,7 +284,7 @@ export function setControlePrazoNativo(mode, this_, form, href, param = false, c
             if (ok) {
                 renderRowFromResult(resultDoc);
             } else {
-                _row.find('td.prazoBoxDisplay').html(prevCell);
+                _row.find('td.seipro-prazo-box-display').html(prevCell);
                 failCount++;
             }
             if (typeof next === 'function') next();
@@ -439,7 +439,7 @@ export function addControlePrazo(this_ = false) {
         var _this = $(this_);
         if (_this.closest('.kanban-item').length) {
             var id = _this.closest('.kanban-item').attr('data-eid');
-            var _addEl = $('#P'+id+' td.prazoBoxDisplay [data-seipro-add-prazo]')[0];
+            var _addEl = $('#P'+id+' td.seipro-prazo-box-display [data-seipro-add-prazo]')[0];
             if (_addEl) addControlePrazo(_addEl);
             // console.log(id);
             return false;
@@ -494,10 +494,10 @@ export function configDatesSwitchChangePrazo(this_) {
 export function reconcileControlePrazoColspan() {
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').each(function(){
         var t = $(this);
-        var bodyRow = t.find('tbody tr').not('.tableHeader').filter(function(){ return $(this).find('td.prazoBoxDisplay').length > 0; }).first();
+        var bodyRow = t.find('tbody tr').not('.tableHeader').filter(function(){ return $(this).find('td.seipro-prazo-box-display').length > 0; }).first();
         var headRow = t.find('thead tr').not('.tablesorter-filter-row').first();
         if (bodyRow.length === 0 || headRow.length === 0) return;
-        if (headRow.find('th.prazoBoxDisplay').length === 0) return;
+        if (headRow.find('th.seipro-prazo-box-display').length === 0) return;
         var bodyCols = bodyRow.find('td').length;
         var headCols = 0, mainTh = null, maxSpan = 0;
         headRow.find('th').each(function(){
@@ -529,8 +529,8 @@ export function setControlePrazo(force = false) {
     var prazoColumnWidth = '5em';
     var thead = tblProcessos.find('thead');
     if (
-        tblProcessos.find('tbody tr').not('.tableHeader').find('td.prazoBoxDisplay').length == 0 ||
-        tblProcessos.find('thead tr').find('th.prazoBoxDisplay').length < 2 ||
+        tblProcessos.find('tbody tr').not('.tableHeader').find('td.seipro-prazo-box-display').length == 0 ||
+        tblProcessos.find('thead tr').find('th.seipro-prazo-box-display').length < 2 ||
         force == true
         ) {
         if (thead.length == 0) {
@@ -549,14 +549,14 @@ export function setControlePrazo(force = false) {
             thead = tblProcessos.find('thead');
         }
 
-            tblProcessos.find('.prazoBoxDisplay').remove();
-            tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="prazoBoxDisplay" style="text-align: center;"></td>');
+            tblProcessos.find('.seipro-prazo-box-display').remove();
+            tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="seipro-prazo-box-display" style="text-align: center;"></td>');
 
         if ( thead.length > 0 ) {
-            thead.find('tr').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
+            thead.find('tr').append('<th class="tituloControle tablesorter-header seipro-prazo-box-display '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
         } else {
-            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.prazoBoxDisplay').remove();
-            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.seipro-prazo-box-display').remove();
+            $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header seipro-prazo-box-display '+(SeiPro.sei.adapter.isNewSEI() ? 'infraTh' : '')+'" style="width: '+prazoColumnWidth+';min-width: '+prazoColumnWidth+';max-width: '+prazoColumnWidth+';"> Prazos</th>');
         }
     }
     scheduleControlePrazoColspanReconcile();
@@ -567,13 +567,13 @@ export function setControlePrazo(force = false) {
         // Oculta o ícone de prazo NATIVO da linha (ao lado da estrela): a coluna "Prazos"
         // já exibe o prazo. Mantém no DOM (display:none) para a leitura continuar funcionando.
         $(this).find('a[href*="controle_prazo_definir"], img[src*="controle_prazo"]').filter(function(){
-            return $(this).closest('td.prazoBoxDisplay').length === 0;
+            return $(this).closest('td.seipro-prazo-box-display').length === 0;
         }).css('display', 'none');
         if (nativeInfo) {
             var nativeDate = nativeInfo.dateFinished || nativeInfo.dateDue || nativeInfo.dateSort;
             var htmlDateNative = renderControlePrazoNativePreview(nativeInfo, nativeDate, nativeInfo.href);
             $(this).removeClass('infraTrAtrasada').removeClass('infraTrAlerta');
-            $(this).find('td.prazoBoxDisplay').html(htmlDateNative).attr('data-time-sorter', nativeInfo.dateSort || nativeDate).attr('data-id-controle-prazo', nativeInfo.id_controle_prazo || '');
+            $(this).find('td.seipro-prazo-box-display').html(htmlDateNative).attr('data-time-sorter', nativeInfo.dateSort || nativeDate).attr('data-id-controle-prazo', nativeInfo.id_controle_prazo || '');
             if (!nativeInfo.concluido) {
                 if (nativeInfo.vencido) {
                     $(this).addClass('infraTrAtrasada');
@@ -607,7 +607,7 @@ export function setControlePrazo(force = false) {
                             };
             var htmlDatePreview = getDatesPreview(config)
                 .replace('onclick="addControlePrazo(this)"', 'data-seipro-add-prazo="1"');
-            $(this).find('td.prazoBoxDisplay').html(htmlDatePreview);
+            $(this).find('td.seipro-prazo-box-display').html(htmlDatePreview);
             if ($(htmlDatePreview).hasClass('tagTableText_date_atrasado')) {
                 // $(this).css('background-color','#fff1f0');
                 $(this).addClass('infraTrAtrasada');
@@ -616,11 +616,11 @@ export function setControlePrazo(force = false) {
                 $(this).addClass('infraTrAlerta');
             }
         } else if (!_checkbox.is(':disabled')) {
-            var htmlDateAdd =   '<a class="addControlePrazo" data-seipro-add-prazo="1">'+
+            var htmlDateAdd =   '<a class="seipro-add-controle-prazo" data-seipro-add-prazo="1">'+
                                 '   <i class="fas fa-clock azulColor"></i>'+
                                 '   <span style="font-size: 9pt;color: #666;font-style: italic;">Adicionar prazo</span>'+
                                 '</a>';
-            $(this).find('td.prazoBoxDisplay').html(htmlDateAdd);
+            $(this).find('td.seipro-prazo-box-display').html(htmlDateAdd);
         }
     });
 }

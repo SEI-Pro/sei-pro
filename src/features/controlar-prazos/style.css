@@ -1,33 +1,33 @@
 /*
  * CSS da feature "Controlar Prazos" (gerenciarprazos) — controle de prazo na
- * LISTA DE PROCESSOS. Classes próprias da feature: a.addControlePrazo e
- * td/th.prazoBoxDisplay (coluna de prazo). Pareado com sei-pro-controle-prazo.js.
+ * LISTA DE PROCESSOS. Classes próprias da feature: a.seipro-add-controle-prazo e
+ * td/th.seipro-prazo-box-display (coluna de prazo). Pareado com sei-pro-controle-prazo.js.
  */
-.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo i,
-.newSEI .tabelaControle .infraTrClara.infraTrMarcada .addControlePrazo span {
+.newSEI .tabelaControle .infraTrClara.infraTrMarcada .seipro-add-controle-prazo i,
+.newSEI .tabelaControle .infraTrClara.infraTrMarcada .seipro-add-controle-prazo span {
     color: var(--pure-0) !important;
 }
 
-tr:hover td.prazoBoxDisplay a.addControlePrazo,
-tr.infraTrMarcada td.prazoBoxDisplay a.addControlePrazo {
+tr:hover td.seipro-prazo-box-display a.seipro-add-controle-prazo,
+tr.infraTrMarcada td.seipro-prazo-box-display a.seipro-add-controle-prazo {
     display: inline-block;
 }
-tr.infraTrSelecionada td.prazoBoxDisplay a.addControlePrazo {
+tr.infraTrSelecionada td.seipro-prazo-box-display a.seipro-add-controle-prazo {
     display: inline-block;
     background-color: rgb(232, 232, 232);
     color: rgb(68, 68, 68);
 }
-tr td.prazoBoxDisplay a.addControlePrazo:hover {
+tr td.seipro-prazo-box-display a.seipro-add-controle-prazo:hover {
     text-decoration: none;
 }
-tr td.prazoBoxDisplay a.addControlePrazo {
+tr td.seipro-prazo-box-display a.seipro-add-controle-prazo {
     display: none;
     padding: 0 5px;
     border-radius: 5px;
     user-select: none;
 }
 
-td.prazoBoxDisplay {
+td.seipro-prazo-box-display {
     width: 5em !important;
     min-width: 5em !important;
     max-width: 5em !important;
@@ -35,31 +35,31 @@ td.prazoBoxDisplay {
     text-align: center;
 }
 
-td.prazoBoxDisplay {
+td.seipro-prazo-box-display {
     width: 5em !important;
     min-width: 5em !important;
     max-width: 5em !important;
 }
-th.prazoBoxDisplay .tablesorter-header-inner {
+th.seipro-prazo-box-display .tablesorter-header-inner {
     display: flex !important;
     width: 100%;
     justify-content: flex-end;
     padding-right: 0 !important;
     text-align: right !important;
 }
-td.prazoBoxDisplay .dateboxDisplay,
-td.prazoBoxDisplay a.addControlePrazo {
+td.seipro-prazo-box-display .dateboxDisplay,
+td.seipro-prazo-box-display a.seipro-add-controle-prazo {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     max-width: 100%;
 }
-td.prazoBoxDisplay a.addControlePrazo {
+td.seipro-prazo-box-display a.seipro-add-controle-prazo {
     width: 100%;
     overflow: hidden;
     justify-content: center;
 }
-td.prazoBoxDisplay a.addControlePrazo span {
+td.seipro-prazo-box-display a.seipro-add-controle-prazo span {
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;

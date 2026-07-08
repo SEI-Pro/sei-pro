@@ -289,7 +289,7 @@
     if (panel && control) control.parentNode.insertBefore(panel, control);
   }
   var NATIVE_SRC = {
-    prazo: ".prazoBoxDisplay",
+    prazo: ".seipro-prazo-box-display",
     anotacao: ".seipro-sticknote-note-cell",
     // O marcador nativo é um <img class="imagemStatus" src="svg/marcador_*.svg"> dentro
     // de um <a> com o tooltip do nome do marcador. Casamos o img e subimos p/ a âncora.

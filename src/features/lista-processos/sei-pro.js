@@ -79,7 +79,7 @@ function getGroupTableLabelFromLink(linkElem, acaoType) {
         var dadosAcomp = getArrayProcessoRecebido(href);
         title = (dadosAcomp && typeof dadosAcomp.acompanhamentoesp !== 'undefined') ? dadosAcomp.acompanhamentoesp : '';
     } else if (acaoType == 'deadline') {
-        title = $link.closest('tr').find('td.prazoBoxDisplay .dateboxDisplay').data('time-sorter');
+        title = $link.closest('tr').find('td.seipro-prazo-box-display .dateboxDisplay').data('time-sorter');
         title = (typeof title !== 'undefined' && title !== null) ? String(title).trim() : '';
         if (title !== '' && typeof moment === 'function') {
             title = moment(title, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm');
@@ -163,7 +163,7 @@ function getListTypes(acaoType) {
                         dataRecebido =  (acaoType == 'acessdate') ? getArrayProcessoRecebido($(this).attr('href')).datetime : dataRecebido;
                         dataRecebido =  (acaoType == 'senddate') ? getArrayProcessoRecebido($(this).attr('href')).datesend : dataRecebido;
                         dataRecebido =  (acaoType == 'createdate') ? getArrayProcessoRecebido($(this).attr('href')).datageracao : dataRecebido;
-                        dataRecebido =  (acaoType == 'deadline') ? $(this).closest('tr').find('td.prazoBoxDisplay .dateboxDisplay').data('time-sorter') : dataRecebido;
+                        dataRecebido =  (acaoType == 'deadline') ? $(this).closest('tr').find('td.seipro-prazo-box-display .dateboxDisplay').data('time-sorter') : dataRecebido;
                         dataRecebido = (typeof dataRecebido !== 'undefined' && dataRecebido != '') ? moment(dataRecebido,'YYYY-MM-DD HH:mm:ss') : '';
                         
                     if (dataRecebido != '' && dataRecebido.isBetween(startDateWeek, endDateWeek) ) { tag = (orderbyTableGroup == 'asc' ? 'l' : 'k')+'.Essa semana'; }
@@ -508,7 +508,7 @@ function getTableOnTag(type) {
         $('#tblProcessosRecebidos').find('caption.infraCaption').show().append(titleCaption);
         $('#tblProcessosRecebidos').find('thead').show().find('.tablesorter-headerRow').append(newColumns);
         $('#tblProcessosRecebidos').find('tbody').find('.tableHeader, .infraCaption').remove();
-        $('#tblProcessosRecebidos').find('thead').find('.prazoBoxDisplay').remove();
+        $('#tblProcessosRecebidos').find('thead').find('.seipro-prazo-box-display').remove();
         tableHomeDestroy(true);
     }
     if (type != '' && type != 'all') {
@@ -2261,7 +2261,7 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
                             html_icons: $(this).find('td').eq(1).html(),
                             html_proc: $(this).find('td').eq(2).html(),
                             html_atribuicao: $(this).find('td').eq(3).html(),
-                            html_prazo: $(this).find('td.prazoBoxDisplay').html(),
+                            html_prazo: $(this).find('td.seipro-prazo-box-display').html(),
                             color: $(this).data('color') ? $(this).css('color') : false
                         }
                     }

@@ -252,7 +252,7 @@
       }
     }
     if (htmlDatePreview) {
-      _tr.find("td.prazoBoxDisplay").html(htmlDatePreview).attr("data-time-sorter", dateSort);
+      _tr.find("td.seipro-prazo-box-display").html(htmlDatePreview).attr("data-time-sorter", dateSort);
     }
   }
   function getControlePrazoNativeTargetRows(this_) {
@@ -341,7 +341,7 @@
     }
     if (_this && _this.closest(".kanban-item").length) {
       var id = _this.closest(".kanban-item").attr("data-eid");
-      var _addEl = $("#P" + id + " td.prazoBoxDisplay [data-seipro-add-prazo]")[0];
+      var _addEl = $("#P" + id + " td.seipro-prazo-box-display [data-seipro-add-prazo]")[0];
       if (_addEl) addControlePrazo(_addEl);
       return false;
     }
@@ -371,23 +371,23 @@
     }
     function submitNativeForRow(row, next) {
       var _row = $(row);
-      var prevCell = _row.find("td.prazoBoxDisplay").html();
+      var prevCell = _row.find("td.seipro-prazo-box-display").html();
       var rowInfo = getControlePrazoNativeInfo(_row);
       var rowTrabalharHref = _row.find('a[href*="procedimento_trabalhar"]').attr("href");
       var idProc = rowInfo && rowInfo.id_procedimento ? rowInfo.id_procedimento : getParamsUrlPro(rowTrabalharHref).id_procedimento;
       var existingHref = getControlePrazoNativeHref(_row, idProc, _idControlePrazo || rowInfo && rowInfo.id_controle_prazo);
       var hasExistingForm = _row.find('a[href*="controle_prazo_definir"]').length > 0 || !!_idControlePrazo || !!(rowInfo && rowInfo.id_controle_prazo);
-      _row.find("td.prazoBoxDisplay").html('<i class="fas fa-sync fa-spin ' + (SeiPro.sei.adapter.isNewSEI() ? "brancoColor" : "azulColor") + '"></i>');
+      _row.find("td.seipro-prazo-box-display").html('<i class="fas fa-sync fa-spin ' + (SeiPro.sei.adapter.isNewSEI() ? "brancoColor" : "azulColor") + '"></i>');
       if (existingHref && hasExistingForm) {
         runIframe(existingHref);
       } else if (_mode === "concluir") {
-        _row.find("td.prazoBoxDisplay").html(prevCell);
+        _row.find("td.seipro-prazo-box-display").html(prevCell);
         failCount++;
         next();
       } else {
         fetchControlePrazoDefinirHref(rowTrabalharHref).then(function(resolvedHref) {
           if (!resolvedHref) {
-            _row.find("td.prazoBoxDisplay").html(prevCell);
+            _row.find("td.seipro-prazo-box-display").html(prevCell);
             failCount++;
             next();
             return;
@@ -418,7 +418,7 @@
           if (ok) {
             renderRowFromResult(resultDoc);
           } else {
-            _row.find("td.prazoBoxDisplay").html(prevCell);
+            _row.find("td.seipro-prazo-box-display").html(prevCell);
             failCount++;
           }
           if (typeof next === "function") next();
@@ -572,7 +572,7 @@
       var _this = $(this_);
       if (_this.closest(".kanban-item").length) {
         var id = _this.closest(".kanban-item").attr("data-eid");
-        var _addEl = $("#P" + id + " td.prazoBoxDisplay [data-seipro-add-prazo]")[0];
+        var _addEl = $("#P" + id + " td.seipro-prazo-box-display [data-seipro-add-prazo]")[0];
         if (_addEl) addControlePrazo(_addEl);
         return false;
       }
@@ -620,11 +620,11 @@
     $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").each(function() {
       var t = $(this);
       var bodyRow = t.find("tbody tr").not(".tableHeader").filter(function() {
-        return $(this).find("td.prazoBoxDisplay").length > 0;
+        return $(this).find("td.seipro-prazo-box-display").length > 0;
       }).first();
       var headRow = t.find("thead tr").not(".tablesorter-filter-row").first();
       if (bodyRow.length === 0 || headRow.length === 0) return;
-      if (headRow.find("th.prazoBoxDisplay").length === 0) return;
+      if (headRow.find("th.seipro-prazo-box-display").length === 0) return;
       var bodyCols = bodyRow.find("td").length;
       var headCols = 0, mainTh = null, maxSpan = 0;
       headRow.find("th").each(function() {
@@ -659,7 +659,7 @@
     var tblProcessos = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
     var prazoColumnWidth = "5em";
     var thead = tblProcessos.find("thead");
-    if (tblProcessos.find("tbody tr").not(".tableHeader").find("td.prazoBoxDisplay").length == 0 || tblProcessos.find("thead tr").find("th.prazoBoxDisplay").length < 2 || force == true) {
+    if (tblProcessos.find("tbody tr").not(".tableHeader").find("td.seipro-prazo-box-display").length == 0 || tblProcessos.find("thead tr").find("th.seipro-prazo-box-display").length < 2 || force == true) {
       if (thead.length == 0) {
         tblProcessos.each(function() {
           var headerRow = $(this).find("tbody tr").not(".tableHeader").first();
@@ -675,13 +675,13 @@
         });
         thead = tblProcessos.find("thead");
       }
-      tblProcessos.find(".prazoBoxDisplay").remove();
-      tblProcessos.find("tbody tr").not(".tableHeader").append('<td class="prazoBoxDisplay" style="text-align: center;"></td>');
+      tblProcessos.find(".seipro-prazo-box-display").remove();
+      tblProcessos.find("tbody tr").not(".tableHeader").append('<td class="seipro-prazo-box-display" style="text-align: center;"></td>');
       if (thead.length > 0) {
-        thead.find("tr").append('<th class="tituloControle tablesorter-header prazoBoxDisplay ' + (SeiPro.sei.adapter.isNewSEI() ? "infraTh" : "") + '" style="width: ' + prazoColumnWidth + ";min-width: " + prazoColumnWidth + ";max-width: " + prazoColumnWidth + ';"> Prazos</th>');
+        thead.find("tr").append('<th class="tituloControle tablesorter-header seipro-prazo-box-display ' + (SeiPro.sei.adapter.isNewSEI() ? "infraTh" : "") + '" style="width: ' + prazoColumnWidth + ";min-width: " + prazoColumnWidth + ";max-width: " + prazoColumnWidth + ';"> Prazos</th>');
       } else {
-        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").find(".prazoBoxDisplay").remove();
-        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").not(".tableHeader").append('<th class="tituloControle tablesorter-header prazoBoxDisplay ' + (SeiPro.sei.adapter.isNewSEI() ? "infraTh" : "") + '" style="width: ' + prazoColumnWidth + ";min-width: " + prazoColumnWidth + ";max-width: " + prazoColumnWidth + ';"> Prazos</th>');
+        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").find(".seipro-prazo-box-display").remove();
+        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").not(".tableHeader").append('<th class="tituloControle tablesorter-header seipro-prazo-box-display ' + (SeiPro.sei.adapter.isNewSEI() ? "infraTh" : "") + '" style="width: ' + prazoColumnWidth + ";min-width: " + prazoColumnWidth + ";max-width: " + prazoColumnWidth + ';"> Prazos</th>');
       }
     }
     scheduleControlePrazoColspanReconcile();
@@ -690,13 +690,13 @@
       var _processo = $(this).find('a[href*="procedimento_trabalhar"]');
       var nativeInfo = typeof parseControlePrazoNativo === "function" ? getControlePrazoNativeInfo(this) : false;
       $(this).find('a[href*="controle_prazo_definir"], img[src*="controle_prazo"]').filter(function() {
-        return $(this).closest("td.prazoBoxDisplay").length === 0;
+        return $(this).closest("td.seipro-prazo-box-display").length === 0;
       }).css("display", "none");
       if (nativeInfo) {
         var nativeDate = nativeInfo.dateFinished || nativeInfo.dateDue || nativeInfo.dateSort;
         var htmlDateNative = renderControlePrazoNativePreview(nativeInfo, nativeDate, nativeInfo.href);
         $(this).removeClass("infraTrAtrasada").removeClass("infraTrAlerta");
-        $(this).find("td.prazoBoxDisplay").html(htmlDateNative).attr("data-time-sorter", nativeInfo.dateSort || nativeDate).attr("data-id-controle-prazo", nativeInfo.id_controle_prazo || "");
+        $(this).find("td.seipro-prazo-box-display").html(htmlDateNative).attr("data-time-sorter", nativeInfo.dateSort || nativeDate).attr("data-id-controle-prazo", nativeInfo.id_controle_prazo || "");
         if (!nativeInfo.concluido) {
           if (nativeInfo.vencido) {
             $(this).addClass("infraTrAtrasada");
@@ -725,15 +725,15 @@
           action: "addControlePrazo(this)"
         };
         var htmlDatePreview = getDatesPreview(config).replace('onclick="addControlePrazo(this)"', 'data-seipro-add-prazo="1"');
-        $(this).find("td.prazoBoxDisplay").html(htmlDatePreview);
+        $(this).find("td.seipro-prazo-box-display").html(htmlDatePreview);
         if ($(htmlDatePreview).hasClass("tagTableText_date_atrasado")) {
           $(this).addClass("infraTrAtrasada");
         } else if (dateTag.format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")) {
           $(this).addClass("infraTrAlerta");
         }
       } else if (!_checkbox.is(":disabled")) {
-        var htmlDateAdd = '<a class="addControlePrazo" data-seipro-add-prazo="1">   <i class="fas fa-clock azulColor"></i>   <span style="font-size: 9pt;color: #666;font-style: italic;">Adicionar prazo</span></a>';
-        $(this).find("td.prazoBoxDisplay").html(htmlDateAdd);
+        var htmlDateAdd = '<a class="seipro-add-controle-prazo" data-seipro-add-prazo="1">   <i class="fas fa-clock azulColor"></i>   <span style="font-size: 9pt;color: #666;font-style: italic;">Adicionar prazo</span></a>';
+        $(this).find("td.seipro-prazo-box-display").html(htmlDateAdd);
       }
     });
   }

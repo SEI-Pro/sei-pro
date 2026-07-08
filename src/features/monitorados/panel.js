@@ -63,7 +63,7 @@ function rowHtml(value, index, arrayProcessosUnidade) {
         + '<a class="newLink followLink followLinkNewtab" href="' + linkDoc + '" title="Abrir em nova aba" target="_blank"><i class="fas fa-external-link-alt" style="font-size:90%;text-decoration:underline;"></i></a>'
         + '<div class="info_icons_monitorado">' + htmlIconsHome + '</div>'
         + '</td>'
-        // Prazo: espelho read-only da célula nativa de controle de prazo (#P{id} .prazoBoxDisplay).
+        // Prazo: espelho read-only da célula nativa de controle de prazo (#P{id} .seipro-prazo-box-display).
         + '<td align="left" class="tdmonitorado_native" data-native="prazo"></td>'
         // Marcador: espelho read-only do marcador nativo do SEI na linha de controle.
         + '<td align="left" class="tdmonitorado_native" data-native="marcador"></td>'
@@ -151,11 +151,11 @@ function positionBeforeControl() {
 
 // ---- Espelho read-only das células nativas (#P{id}) -------------------------
 // Seletores das fontes nativas na linha de controle do SEI:
-//  - prazo:    célula .prazoBoxDisplay (feature controlar-prazos)
+//  - prazo:    célula .seipro-prazo-box-display (feature controlar-prazos)
 //  - anotação: célula .seipro-sticknote-note-cell (feature anotacao-controle)
 //  - marcador: marcador nativo do SEI na célula do processo
 const NATIVE_SRC = {
-    prazo: '.prazoBoxDisplay',
+    prazo: '.seipro-prazo-box-display',
     anotacao: '.seipro-sticknote-note-cell',
     // O marcador nativo é um <img class="imagemStatus" src="svg/marcador_*.svg"> dentro
     // de um <a> com o tooltip do nome do marcador. Casamos o img e subimos p/ a âncora.
