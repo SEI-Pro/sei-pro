@@ -6,5 +6,10 @@
  * A composição vive em src/core/stack.js (reusada pelas entries).
  */
 import { installCoreStack } from '../core/stack.js';
+import { installMonitoradoStore } from '../features/monitorados/store.js';
 
 installCoreStack();
+// Ponte transitória do bloco legado amplo: aliases globais de Processos
+// Monitorados ainda precisam existir antes de sei-functions-pro/init*. Mantém a
+// dependência de feature fora de src/core/stack.js até haver entries por contexto.
+installMonitoradoStore();

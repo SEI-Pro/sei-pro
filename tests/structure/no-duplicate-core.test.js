@@ -80,3 +80,10 @@ describe('migration: no duplicate definitions of migrated helpers', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe('migration: core layer dependency direction', () => {
+  it('src/core/stack.js does not import feature modules directly', () => {
+    const stack = readFileSync(join(srcDir, 'core/stack.js'), 'utf8');
+    expect(stack).not.toMatch(/from\s+['"]\.\.\/features\//);
+  });
+});

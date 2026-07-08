@@ -2477,154 +2477,6 @@
     return tooltip;
   }
 
-  // src/features/monitorados/domain.js
-  function defaultConfigDate() {
-    const moment = globalRef.moment;
-    return {
-      date: moment().format("YYYY-MM-DD"),
-      listdocs: false,
-      dateDue: moment().add(5, "d").format("YYYY-MM-DD"),
-      countdown: true,
-      countdays: false,
-      workday: false,
-      setdate: true,
-      duenumber: 5,
-      duecounter: "corrido",
-      duemode: "depois",
-      duesetdate: false,
-      duedate: false,
-      newdoc: true,
-      selectdoc: false,
-      advanced: false,
-      displayformat: false,
-      displayicon: false,
-      displaydue: false,
-      displaydue_txt: "Vencimento:",
-      displaytip: "",
-      deliverydoc: false,
-      deliverydoc_style: "",
-      newdoclist: []
-    };
-  }
-  function defaultMonitoradoStore() {
-    return { monitorados: [], config: { colortags: [] } };
-  }
-  function findMonitoradoIndex(store, id_procedimento) {
-    if (!store || !store.monitorados) return -1;
-    return store.monitorados.findIndex(function(obj) {
-      return String(obj.id_procedimento) === String(id_procedimento);
-    });
-  }
-  function monitoradoProcessDataReady(id_procedimento, dados) {
-    return typeof dados !== "undefined" && dados && Object.keys(dados).length > 0 && dados.constructor === Object && typeof dados.listAndamento !== "undefined" && dados.listAndamento !== null && dados.hasOwnProperty("listAndamento") && typeof dados.listAndamento.id_procedimento !== "undefined" && dados.listAndamento.id_procedimento !== null && dados.listAndamento.hasOwnProperty("id_procedimento") && String(dados.listAndamento.id_procedimento) == String(id_procedimento) && typeof dados.propProcesso !== "undefined" && dados.propProcesso !== null;
-  }
-  function monitoradoProcessPayloadReady(id_procedimento, dados) {
-    return monitoradoProcessDataReady(id_procedimento, dados) && typeof dados.listDocumentosAssinados !== "undefined" && Array.isArray(dados.listDocumentosAssinados);
-  }
-
-  // src/features/monitorados/store.js
-  var STORE_KEY = "configDataMonitoradosPro";
-  var storeState = null;
-  var storeLastRaw = null;
-  var remoteTimer = null;
-  function getStoreMonitoradoPro() {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw === storeLastRaw && storeState !== null) {
-      return storeState;
-    }
-    const parsed = raw && isJson(raw) ? JSON.parse(raw) : false;
-    storeState = parsed && Object.keys(parsed).length > 0 ? parsed : defaultMonitoradoStore();
-    storeLastRaw = raw;
-    return storeState;
-  }
-  function getOptionsConfigDate(index) {
-    const store = getStoreMonitoradoPro();
-    const item = index >= 0 && store["monitorados"][index] ? store["monitorados"][index] : false;
-    const hasConfig = item && item["configdate"] && Object.keys(item["configdate"]).length > 0;
-    return hasConfig ? item["configdate"] : defaultConfigDate();
-  }
-  function persistMonitoradoStore(store, options) {
-    const moment = globalRef.moment;
-    options = options || {};
-    storeState = store || getStoreMonitoradoPro();
-    if (!storeState.config) storeState.config = { colortags: [] };
-    storeState.config.datetime = moment().format("YYYY-MM-DD HH:mm:ss");
-    storeLastRaw = JSON.stringify(storeState);
-    localStorage.setItem(STORE_KEY, storeLastRaw);
-    if (options.remote !== false) scheduleMonitoradoRemote();
-  }
-  function scheduleMonitoradoRemote() {
-    if (remoteTimer) clearTimeout(remoteTimer);
-    remoteTimer = setTimeout(function() {
-      remoteTimer = null;
-      flushMonitoradoRemote();
-    }, 800);
-  }
-  function flushMonitoradoRemote() {
-    const jmespath = globalRef.jmespath;
-    const store = getStoreMonitoradoPro();
-    if (typeof store === "undefined" || !store.hasOwnProperty("monitorados")) return;
-    if (typeof globalRef.perfilLoginAtiv === "undefined" || globalRef.perfilLoginAtiv === null) return;
-    const sendMonitorados = { monitorados: [], config: { colortags: [] } };
-    sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
-    sendMonitorados.config.colortags = store.config.colortags;
-    globalRef.getServerAtividades({
-      config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
-      action: "set_monitorados"
-    }, "set_monitorados");
-    globalRef.setLocalFilePro(getStoreMonitoradoPro());
-  }
-  function getConfigDatetimeMonitorado() {
-    const store = getStoreMonitoradoPro();
-    persistMonitoradoStore(store, { remote: false });
-    return store;
-  }
-  function saveConfigMonitorado() {
-    persistMonitoradoStore(getStoreMonitoradoPro());
-  }
-  function installMonitoradoStore() {
-    const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
-    Object.assign(monitorados, {
-      // store / io
-      getStore: getStoreMonitoradoPro,
-      getOptionsConfigDate,
-      persist: persistMonitoradoStore,
-      scheduleRemote: scheduleMonitoradoRemote,
-      flushRemote: flushMonitoradoRemote,
-      getConfigDatetime: getConfigDatetimeMonitorado,
-      save: saveConfigMonitorado,
-      // domain (puro)
-      defaultConfigDate,
-      defaultStore: defaultMonitoradoStore,
-      findIndex: findMonitoradoIndex,
-      processDataReady: monitoradoProcessDataReady,
-      processPayloadReady: monitoradoProcessPayloadReady
-    });
-    aliasGlobal("getStoreMonitoradoPro", getStoreMonitoradoPro);
-    aliasGlobal("getOptionsConfigDate", getOptionsConfigDate);
-    aliasGlobal("persistMonitoradoStore", persistMonitoradoStore);
-    aliasGlobal("scheduleMonitoradoRemote", scheduleMonitoradoRemote);
-    aliasGlobal("flushMonitoradoRemote", flushMonitoradoRemote);
-    aliasGlobal("getConfigDatetimeMonitorado", getConfigDatetimeMonitorado);
-    aliasGlobal("saveConfigMonitorado", saveConfigMonitorado);
-    aliasGlobal("defaultConfigDate", defaultConfigDate);
-    aliasGlobal("defaultMonitoradoStore", defaultMonitoradoStore);
-    aliasGlobal("findMonitoradoIndex", findMonitoradoIndex);
-    aliasGlobal("monitoradoProcessDataReady", monitoradoProcessDataReady);
-    aliasGlobal("monitoradoProcessPayloadReady", monitoradoProcessPayloadReady);
-    if (typeof globalRef.addEventListener === "function" && !globalRef.__seiProMonitoradoFlushBound) {
-      globalRef.__seiProMonitoradoFlushBound = true;
-      globalRef.addEventListener("pagehide", function() {
-        if (remoteTimer) {
-          clearTimeout(remoteTimer);
-          remoteTimer = null;
-          flushMonitoradoRemote();
-        }
-      });
-    }
-    return monitorados;
-  }
-
   // src/shared/ui/prazo-preview.js
   function getDatesPreview(config, dateduepreview = false) {
     const moment = globalRef.moment, $ = globalRef.$, getDateSemantic2 = globalRef.getDateSemantic, getDateBoxState2 = globalRef.getDateBoxState, getProgressPercent2 = globalRef.getProgressPercent, getConfigDatesMonitorado = globalRef.getConfigDatesMonitorado, configDatesSetUpdate = globalRef.configDatesSetUpdate;
@@ -2787,11 +2639,159 @@
     installAdapter();
     installUrls();
     installTooltip();
-    installMonitoradoStore();
     installPrazoPreview();
     installLegacyInlineBridge();
   }
 
+  // src/features/monitorados/domain.js
+  function defaultConfigDate() {
+    const moment = globalRef.moment;
+    return {
+      date: moment().format("YYYY-MM-DD"),
+      listdocs: false,
+      dateDue: moment().add(5, "d").format("YYYY-MM-DD"),
+      countdown: true,
+      countdays: false,
+      workday: false,
+      setdate: true,
+      duenumber: 5,
+      duecounter: "corrido",
+      duemode: "depois",
+      duesetdate: false,
+      duedate: false,
+      newdoc: true,
+      selectdoc: false,
+      advanced: false,
+      displayformat: false,
+      displayicon: false,
+      displaydue: false,
+      displaydue_txt: "Vencimento:",
+      displaytip: "",
+      deliverydoc: false,
+      deliverydoc_style: "",
+      newdoclist: []
+    };
+  }
+  function defaultMonitoradoStore() {
+    return { monitorados: [], config: { colortags: [] } };
+  }
+  function findMonitoradoIndex(store, id_procedimento) {
+    if (!store || !store.monitorados) return -1;
+    return store.monitorados.findIndex(function(obj) {
+      return String(obj.id_procedimento) === String(id_procedimento);
+    });
+  }
+  function monitoradoProcessDataReady(id_procedimento, dados) {
+    return typeof dados !== "undefined" && dados && Object.keys(dados).length > 0 && dados.constructor === Object && typeof dados.listAndamento !== "undefined" && dados.listAndamento !== null && dados.hasOwnProperty("listAndamento") && typeof dados.listAndamento.id_procedimento !== "undefined" && dados.listAndamento.id_procedimento !== null && dados.listAndamento.hasOwnProperty("id_procedimento") && String(dados.listAndamento.id_procedimento) == String(id_procedimento) && typeof dados.propProcesso !== "undefined" && dados.propProcesso !== null;
+  }
+  function monitoradoProcessPayloadReady(id_procedimento, dados) {
+    return monitoradoProcessDataReady(id_procedimento, dados) && typeof dados.listDocumentosAssinados !== "undefined" && Array.isArray(dados.listDocumentosAssinados);
+  }
+
+  // src/features/monitorados/store.js
+  var STORE_KEY = "configDataMonitoradosPro";
+  var storeState = null;
+  var storeLastRaw = null;
+  var remoteTimer = null;
+  function getStoreMonitoradoPro() {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw === storeLastRaw && storeState !== null) {
+      return storeState;
+    }
+    const parsed = raw && isJson(raw) ? JSON.parse(raw) : false;
+    storeState = parsed && Object.keys(parsed).length > 0 ? parsed : defaultMonitoradoStore();
+    storeLastRaw = raw;
+    return storeState;
+  }
+  function getOptionsConfigDate(index) {
+    const store = getStoreMonitoradoPro();
+    const item = index >= 0 && store["monitorados"][index] ? store["monitorados"][index] : false;
+    const hasConfig = item && item["configdate"] && Object.keys(item["configdate"]).length > 0;
+    return hasConfig ? item["configdate"] : defaultConfigDate();
+  }
+  function persistMonitoradoStore(store, options) {
+    const moment = globalRef.moment;
+    options = options || {};
+    storeState = store || getStoreMonitoradoPro();
+    if (!storeState.config) storeState.config = { colortags: [] };
+    storeState.config.datetime = moment().format("YYYY-MM-DD HH:mm:ss");
+    storeLastRaw = JSON.stringify(storeState);
+    localStorage.setItem(STORE_KEY, storeLastRaw);
+    if (options.remote !== false) scheduleMonitoradoRemote();
+  }
+  function scheduleMonitoradoRemote() {
+    if (remoteTimer) clearTimeout(remoteTimer);
+    remoteTimer = setTimeout(function() {
+      remoteTimer = null;
+      flushMonitoradoRemote();
+    }, 800);
+  }
+  function flushMonitoradoRemote() {
+    const jmespath = globalRef.jmespath;
+    const store = getStoreMonitoradoPro();
+    if (typeof store === "undefined" || !store.hasOwnProperty("monitorados")) return;
+    if (typeof globalRef.perfilLoginAtiv === "undefined" || globalRef.perfilLoginAtiv === null) return;
+    const sendMonitorados = { monitorados: [], config: { colortags: [] } };
+    sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
+    sendMonitorados.config.colortags = store.config.colortags;
+    globalRef.getServerAtividades({
+      config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
+      action: "set_monitorados"
+    }, "set_monitorados");
+    globalRef.setLocalFilePro(getStoreMonitoradoPro());
+  }
+  function getConfigDatetimeMonitorado() {
+    const store = getStoreMonitoradoPro();
+    persistMonitoradoStore(store, { remote: false });
+    return store;
+  }
+  function saveConfigMonitorado() {
+    persistMonitoradoStore(getStoreMonitoradoPro());
+  }
+  function installMonitoradoStore() {
+    const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
+    Object.assign(monitorados, {
+      // store / io
+      getStore: getStoreMonitoradoPro,
+      getOptionsConfigDate,
+      persist: persistMonitoradoStore,
+      scheduleRemote: scheduleMonitoradoRemote,
+      flushRemote: flushMonitoradoRemote,
+      getConfigDatetime: getConfigDatetimeMonitorado,
+      save: saveConfigMonitorado,
+      // domain (puro)
+      defaultConfigDate,
+      defaultStore: defaultMonitoradoStore,
+      findIndex: findMonitoradoIndex,
+      processDataReady: monitoradoProcessDataReady,
+      processPayloadReady: monitoradoProcessPayloadReady
+    });
+    aliasGlobal("getStoreMonitoradoPro", getStoreMonitoradoPro);
+    aliasGlobal("getOptionsConfigDate", getOptionsConfigDate);
+    aliasGlobal("persistMonitoradoStore", persistMonitoradoStore);
+    aliasGlobal("scheduleMonitoradoRemote", scheduleMonitoradoRemote);
+    aliasGlobal("flushMonitoradoRemote", flushMonitoradoRemote);
+    aliasGlobal("getConfigDatetimeMonitorado", getConfigDatetimeMonitorado);
+    aliasGlobal("saveConfigMonitorado", saveConfigMonitorado);
+    aliasGlobal("defaultConfigDate", defaultConfigDate);
+    aliasGlobal("defaultMonitoradoStore", defaultMonitoradoStore);
+    aliasGlobal("findMonitoradoIndex", findMonitoradoIndex);
+    aliasGlobal("monitoradoProcessDataReady", monitoradoProcessDataReady);
+    aliasGlobal("monitoradoProcessPayloadReady", monitoradoProcessPayloadReady);
+    if (typeof globalRef.addEventListener === "function" && !globalRef.__seiProMonitoradoFlushBound) {
+      globalRef.__seiProMonitoradoFlushBound = true;
+      globalRef.addEventListener("pagehide", function() {
+        if (remoteTimer) {
+          clearTimeout(remoteTimer);
+          remoteTimer = null;
+          flushMonitoradoRemote();
+        }
+      });
+    }
+    return monitorados;
+  }
+
   // src/content/core-stack.js
   installCoreStack();
+  installMonitoradoStore();
 })();

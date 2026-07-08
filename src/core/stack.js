@@ -2,7 +2,7 @@
  * Composição da stack core + sei + platform sobre window.SeiPro.
  *
  * Reusável por todas as entries (src/entries/*). Cada entry chama
- * installCoreStack() e em seguida instala as features daquele contexto de página.
+ * installCoreStack() e em seguida instala as features/bridges daquele contexto.
  * O install é idempotente (getSeiPro guarda; aliasGlobal só define se ausente).
  *
  * Refundação isolated-first: roda SOMENTE no mundo isolado do content script
@@ -40,7 +40,6 @@ import { installVersion } from '../sei/version.js';
 import { installAdapter } from '../sei/adapter.js';
 import { installUrls } from '../sei/urls.js';
 import { installTooltip } from '../sei/tooltip.js';
-import { installMonitoradoStore } from '../features/monitorados/store.js';
 import { installPrazoPreview } from '../shared/ui/prazo-preview.js';
 import { installLegacyInlineBridge } from '../platform/legacy-inline-bridge.js';
 
@@ -77,7 +76,6 @@ export function installCoreStack() {
     installAdapter();
     installUrls();
     installTooltip();
-    installMonitoradoStore(); // store cross-page de Processos Monitorados (view fica no legado)
     installPrazoPreview();    // view compartilhada de etiqueta/preview de prazo (getDatesPreview/…)
     installLegacyInlineBridge(); // ponte estrita p/ onclick="nossaFuncao(...)" do legado ainda não migrado
 }

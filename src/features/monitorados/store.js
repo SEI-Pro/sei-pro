@@ -17,9 +17,10 @@ import {
  * escritas externas (sync de servidor, etiquetas, outras abas) são sempre refletidas.
  * A persistência remota (servidor Apps Script + FileSystem) é agrupada com debounce.
  *
- * É INFRAESTRUTURA cross-page: lido por sei-pro.js / sei-pro-all.js / sei-functions-pro.js
- * em blocos do manifest onde a view (sei-pro-monitorados.js) nem carrega — por isso é
- * instalado pela stack do core-stack (presente em todo bloco), não por um bundle da feature.
+ * É uma ponte cross-page do bloco legado: lido por sei-pro.js / sei-pro-all.js /
+ * sei-functions-pro.js em blocos do manifest onde a view (monitorados.bundle.js)
+ * nem carrega. Por isso é instalado por src/content/core-stack.js, não por
+ * src/core/stack.js nem pelo bundle visível da feature.
  *
  * Dependências de runtime (moment, jmespath, getServerAtividades, setLocalFilePro,
  * encodeJSON_toHex, perfilLoginAtiv) são lidas lazy via globalRef no momento da chamada.
