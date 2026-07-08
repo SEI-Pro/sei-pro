@@ -400,7 +400,7 @@ Configuração proposta:
 
 - Nome: `sei-pro-prf-engineering-loop-migration`
 - Workdir: `/home/tadeu/repos/sei-pro-prf`
-- Schedule: `every 1h` ou `0 * * * *` — ambos são válidos; evitar apenas cron de 6 campos.
+- Schedule atual: `*/30 * * * *` — roda a cada 30 minutos nos minutos 00/30. Também seriam válidas frases `every`, mas usar cron de 5 campos evita ambiguidade e permite defasagem com o checker. Evitar cron de 6 campos.
 - Repeat: alto/recorrente, por exemplo `9999`
 - Skill: atualizar e reutilizar a skill existente `sei-pro-prf-refactoring-loop`, em vez de criar uma skill nova e fragmentar o procedimento.
 - Modelo: `openai-codex` / `gpt-5.5`, conforme decisão posterior do usuário. Manter contenção no prompt: uma única fatia pequena, sem re-arquitetar além do item escolhido, build/test obrigatório e commit pequeno.
@@ -410,7 +410,7 @@ Configuração proposta:
 
 - Nome: `sei-pro-prf-engineering-loop-verification`
 - Workdir: `/home/tadeu/repos/sei-pro-prf`
-- Schedule: `every 2h` ou expressão cron de 5 campos defasada 30min do job de migração, por exemplo `30 */2 * * *` se esse ritmo for desejado. Evitar cron de 6 campos.
+- Schedule atual: `15,45 * * * *` — roda a cada 30 minutos, defasado 15 minutos da migração. Evitar cron de 6 campos.
 - Skill: a mesma skill existente `sei-pro-prf-refactoring-loop`, atualizada para os novos arquivos do loop.
 - Modelo: `opencode-go` / `glm-5.2`
 - Saída esperada: item revisado como `review_passed` ou `review_failed_needs_fix`.

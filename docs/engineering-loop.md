@@ -175,10 +175,10 @@ Novos jobs do repo correto:
 
 | Job | Schedule | Modelo | Workdir |
 |---|---|---|---|
-| `sei-pro-prf-engineering-loop-migration` | `0 * * * *` | `openai-codex/gpt-5.5` | `/home/tadeu/repos/sei-pro-prf` |
-| `sei-pro-prf-engineering-loop-verification` | `30 * * * *` | `opencode-go/glm-5.2` | `/home/tadeu/repos/sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-migration` | `*/30 * * * *` | `openai-codex/gpt-5.5` | `/home/tadeu/repos/sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-verification` | `15,45 * * * *` | `opencode-go/glm-5.2` | `/home/tadeu/repos/sei-pro-prf` |
 
-A verificação roda 30 minutos depois da migração para revisar a fatia recém-produzida.
+A migração roda a cada 30 minutos nos minutos 00/30. A verificação também roda a cada 30 minutos, defasada para os minutos 15/45, para revisar a fatia recém-produzida sem concorrer com o maker.
 
 Em Hermes TUI, `deliver=local` salva o output em cron, mas não entrega mensagem no chat. Se for necessário notificar por gateway, configurar `deliver` explicitamente para uma plataforma conectada.
 
