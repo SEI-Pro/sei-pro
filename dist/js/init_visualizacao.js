@@ -28,6 +28,3 @@ if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei
 if (typeof loadSEIProVisualizacao === 'undefined') $.getScript(getUrlExtension("js/sei-pro-visualizacao.js"));
 
 
-
-
-
