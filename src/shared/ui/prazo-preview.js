@@ -1,4 +1,4 @@
-import { aliasGlobal, getSeiPro, globalRef } from '../../core/global.js';
+import { getSeiPro, globalRef } from '../../core/global.js';
 
 /**
  * Infra de VIEW compartilhada de "preview de prazo / etiqueta de data".
@@ -8,7 +8,8 @@ import { aliasGlobal, getSeiPro, globalRef } from '../../core/global.js';
  * Kanban de atividades, monitorados e prescrições. Por ser compartilhada, NÃO
  * mora na pasta de nenhuma feature — vive em src/shared/ui e é instalada no
  * core-stack (carregado 1º em todo bloco), expondo `SeiPro.shared.prazoPreview`
- * + aliases globais (getDatesPreview/…) para o legado, e import direto p/ ESM.
+ * para código novo. Aliases globais (getDatesPreview/…) ficam isolados em
+ * `prazo-preview-legacy-api.js` para compatibilidade incremental do legado.
  *
  * Núcleo PURO de cálculo fica em src/core/prazos.js e src/core/datas.js
  * (getDateSemantic, getDateBoxState, getProgressPercent) — aqui é só montagem de
@@ -87,8 +88,5 @@ export function installPrazoPreview() {
     const prazoPreview = { getDatesPreview, getProgressPreview, configDatesPreview };
     getSeiPro().shared = getSeiPro().shared || {};
     getSeiPro().shared.prazoPreview = prazoPreview;
-    aliasGlobal('getDatesPreview', getDatesPreview);
-    aliasGlobal('getProgressPreview', getProgressPreview);
-    aliasGlobal('configDatesPreview', configDatesPreview);
     return prazoPreview;
 }

@@ -41,6 +41,7 @@ import { installAdapter } from '../sei/adapter.js';
 import { installUrls } from '../sei/urls.js';
 import { installTooltip } from '../sei/tooltip.js';
 import { installPrazoPreview } from '../shared/ui/prazo-preview.js';
+import { installPrazoPreviewLegacyApi } from '../shared/ui/prazo-preview-legacy-api.js';
 import { installLegacyInlineBridge } from '../platform/legacy-inline-bridge.js';
 
 export function installCoreStack() {
@@ -76,6 +77,7 @@ export function installCoreStack() {
     installAdapter();
     installUrls();
     installTooltip();
-    installPrazoPreview();    // view compartilhada de etiqueta/preview de prazo (getDatesPreview/…)
+    installPrazoPreview();    // view compartilhada de etiqueta/preview de prazo
+    installPrazoPreviewLegacyApi(); // aliases getDatesPreview/… usados pelo legado
     installLegacyInlineBridge(); // ponte estrita p/ onclick="nossaFuncao(...)" do legado ainda não migrado
 }

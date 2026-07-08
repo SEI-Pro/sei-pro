@@ -2530,10 +2530,14 @@
     const prazoPreview = { getDatesPreview, getProgressPreview, configDatesPreview };
     getSeiPro().shared = getSeiPro().shared || {};
     getSeiPro().shared.prazoPreview = prazoPreview;
+    return prazoPreview;
+  }
+
+  // src/shared/ui/prazo-preview-legacy-api.js
+  function installPrazoPreviewLegacyApi() {
     aliasGlobal("getDatesPreview", getDatesPreview);
     aliasGlobal("getProgressPreview", getProgressPreview);
     aliasGlobal("configDatesPreview", configDatesPreview);
-    return prazoPreview;
   }
 
   // src/platform/legacy-inline-bridge.js
@@ -2640,6 +2644,7 @@
     installUrls();
     installTooltip();
     installPrazoPreview();
+    installPrazoPreviewLegacyApi();
     installLegacyInlineBridge();
   }
 

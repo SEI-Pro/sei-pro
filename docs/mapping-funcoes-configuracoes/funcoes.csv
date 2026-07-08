@@ -192,7 +192,7 @@ src/core/serial.js:18:tryParseJsonObject,src/core/serial.js,18,tryParseJsonObjec
 src/core/serial.js:29:convertJsonBools,src/core/serial.js,29,convertJsonBools,core,,moderno,,,não,2
 src/core/serial.js:33:isBase64,src/core/serial.js,33,isBase64,core,,moderno,,,não,2
 src/core/serial.js:41:installSerial,src/core/serial.js,41,installSerial,core,,moderno,,,não,2
-src/core/stack.js:46:installCoreStack,src/core/stack.js,46,installCoreStack,core,,moderno,,,não,36
+src/core/stack.js:47:installCoreStack,src/core/stack.js,47,installCoreStack,core,,moderno,,,não,36
 src/core/sticknote.js:18:parseSticknoteHomeLabel,src/core/sticknote.js,18,parseSticknoteHomeLabel,core,,moderno,,,não,8
 src/core/sticknote.js:45:normalizeSticknoteHomeText,src/core/sticknote.js,45,normalizeSticknoteHomeText,core,,moderno,,,não,3
 src/core/sticknote.js:66:parseSticknoteChecklistLine,src/core/sticknote.js,66,parseSticknoteChecklistLine,core,,moderno,,,não,3
@@ -2965,10 +2965,11 @@ src/shared/legacy/sei-pro-icons.js:26:initIconEntidade,src/shared/legacy/sei-pro
 src/shared/legacy/sei-pro-icons.js:35:setTimeout,src/shared/legacy/sei-pro-icons.js,35,setTimeout,shared-legacy,,legado,debugpage,debugpage,não,3
 src/shared/ui/modal.js:18:openModal,src/shared/ui/modal.js,18,openModal,shared,ui,moderno,,notificacaonovoprocesso,não,7
 src/shared/ui/modal.js:40:close,src/shared/ui/modal.js,40,close,shared,ui,moderno,,notificacaonovoprocesso,não,12
-src/shared/ui/prazo-preview.js:19:getDatesPreview,src/shared/ui/prazo-preview.js,19,getDatesPreview,shared,ui,moderno,,,não,11
-src/shared/ui/prazo-preview.js:59:configDatesPreview,src/shared/ui/prazo-preview.js,59,configDatesPreview,shared,ui,moderno,,,não,8
-src/shared/ui/prazo-preview.js:67:getProgressPreview,src/shared/ui/prazo-preview.js,67,getProgressPreview,shared,ui,moderno,,,não,2
-src/shared/ui/prazo-preview.js:86:installPrazoPreview,src/shared/ui/prazo-preview.js,86,installPrazoPreview,shared,ui,moderno,,,não,2
+src/shared/ui/prazo-preview-legacy-api.js:10:installPrazoPreviewLegacyApi,src/shared/ui/prazo-preview-legacy-api.js,10,installPrazoPreviewLegacyApi,shared,ui,moderno,,,não,1
+src/shared/ui/prazo-preview.js:20:getDatesPreview,src/shared/ui/prazo-preview.js,20,getDatesPreview,shared,ui,moderno,,,não,11
+src/shared/ui/prazo-preview.js:60:configDatesPreview,src/shared/ui/prazo-preview.js,60,configDatesPreview,shared,ui,moderno,,,não,8
+src/shared/ui/prazo-preview.js:68:getProgressPreview,src/shared/ui/prazo-preview.js,68,getProgressPreview,shared,ui,moderno,,,não,2
+src/shared/ui/prazo-preview.js:87:installPrazoPreview,src/shared/ui/prazo-preview.js,87,installPrazoPreview,shared,ui,moderno,,,não,1
 src/shared/ui/sortable-table.js:18:compareValues,src/shared/ui/sortable-table.js,18,compareValues,shared,ui,moderno,,,não,5
 src/shared/ui/sortable-table.js:25:createSortableTable,src/shared/ui/sortable-table.js,25,createSortableTable,shared,ui,moderno,,,não,1
 src/shared/ui/sortable-table.js:35:cfg,src/shared/ui/sortable-table.js,35,cfg,shared,ui,moderno,,,não,0
