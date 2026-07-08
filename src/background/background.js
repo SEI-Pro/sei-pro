@@ -8,21 +8,14 @@ const isChrome = (typeof browser === 'undefined');
 if (isChrome) { var browser = chrome; }
 
 if (typeof importScripts === 'function') {
-    importScripts('storage-handler.js', 'fetch-handler.js', 'bug-report-handler.js', 'process-notification-handler.js');
+    importScripts('storage-handler.js', 'fetch-handler.js', 'bug-report-handler.js', 'process-notification-handler.js', 'install-handler.js');
 }
 
 function handleInstalled(details) {
-    if (details.reason === 'install') {
-        browser.tabs.create({ url: 'https://sei-pro.github.io/sei-pro/' });
-        browser.storage.local.set({ InstallOrUpdate: true });
-    } else if (details.reason === 'update') {
-        browser.storage.local.get('CheckTypes', function(item) {
-            browser.storage.local.set({ InstallOrUpdate: true });
-            if (!item.CheckTypes || item.CheckTypes.indexOf('hidemsgupdate') === -1) {
-                // browser.tabs.create({ url: 'https://sei-pro.github.io/sei-pro/pages/HISTORICO.html' });
-            }
-        });
+    if (!globalThis.SeiProBackgroundInstall || typeof globalThis.SeiProBackgroundInstall.handleInstalled !== 'function') {
+        return;
     }
+    globalThis.SeiProBackgroundInstall.handleInstalled(details, browser);
 }
 
 browser.runtime.onInstalled.addListener(handleInstalled);

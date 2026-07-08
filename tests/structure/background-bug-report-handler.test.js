@@ -11,7 +11,7 @@ describe('migration: background bug report adapter stays isolated', () => {
     const bugReportHandler = readFileSync(join(rootDir, 'src/background/bug-report-handler.js'), 'utf8');
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
 
-    expect(background).toContain("importScripts('storage-handler.js', 'fetch-handler.js', 'bug-report-handler.js', 'process-notification-handler.js')");
+    expect(background).toContain("importScripts('storage-handler.js', 'fetch-handler.js', 'bug-report-handler.js', 'process-notification-handler.js', 'install-handler.js')");
     expect(background).toMatch(/SeiProBackgroundBugReport\.handleBugReportMessage\(message, sender, sendResponse\)/);
     expect(background).not.toMatch(/function isAllowedBugReportSender\(/);
     expect(bugReportHandler).toMatch(/function handleBugReportMessage\(message, sender, sendResponse\)/);
