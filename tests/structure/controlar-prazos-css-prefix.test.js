@@ -55,4 +55,13 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(panel).not.toMatch(/iconMonitorados_remove/);
     expect(lifecycle).not.toMatch(/iconMonitorados_remove/);
   });
+
+  it('uses a seipro-prefixed class for the refresh action hook', () => {
+    const panel = read('src/features/monitorados/panel.js');
+
+    expect(panel).toContain('seipro-monitorados-update');
+    expect(panel).toContain('data-act="update"');
+
+    expect(panel).not.toMatch(/iconMonitorados_update/);
+  });
 });

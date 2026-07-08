@@ -136,7 +136,7 @@ function panelHtml() {
         + '<div id="monitoradosProActions" style="top:0;position:absolute;z-index:9999;left:190px;width:calc(100% - 230px)">'
         + '<a class="newLink seipro-monitorados-remove-selected" data-act="remove-selected" title="Remover processos monitorados" style="margin:0;font-size:14pt;display:none"><span class="fa-layers fa-fw"><i class="fas fa-trash-alt"></i><span class="fa-layers-counter">1</span></span></a>'
         + '<span style="display:block;float:right;width:200px;">' + selectCategory + '</span>'
-        + '<a class="newLink iconMonitorados_update" data-act="update" title="Atualizar Informações" style="margin-right:10px;font-size:14pt;float:right;"><i class="fas fa-sync-alt"></i></a>'
+        + '<a class="newLink seipro-monitorados-update" data-act="update" title="Atualizar Informações" style="margin-right:10px;font-size:14pt;float:right;"><i class="fas fa-sync-alt"></i></a>'
         + '<a class="newLink iconMonitorados_config" data-act="config" title="Configurações" style="margin:0;font-size:14pt;float:right;"><i class="fas fa-cog"></i></a>'
         + '</div>'
         + '<div class="tabelaPanelScroll">' + table + '</div>'
