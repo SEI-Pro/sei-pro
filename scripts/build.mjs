@@ -110,6 +110,7 @@ const legacyFiles = [
     'src/background/bug-report-handler.js',
     'src/background/process-notification-handler.js',
     'src/background/install-handler.js',
+    'src/background/router.js',
     'src/background/background.js' // service worker (manifest: js/background.js)
 ];
 

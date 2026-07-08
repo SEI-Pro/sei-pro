@@ -1,5 +1,6 @@
 id,arquivo,linha,funcao,camada,feature,moderno_ou_legado,opcoes_diretas,opcoes_mapeadas,compartilhada,chamadas_detectadas_qtd
-src/background/background.js:14:handleInstalled,src/background/background.js,14,handleInstalled,background,,legado,,,não,7
+src/background/background.js:14:handleInstalled,src/background/background.js,14,handleInstalled,background,,legado,,,não,0
+src/background/background.js:21:handleMessage,src/background/background.js,21,handleMessage,background,,legado,,,não,2
 src/background/bug-report-handler.js:14:isAllowedBugReportSender,src/background/bug-report-handler.js,14,isAllowedBugReportSender,background,,legado,,,não,1
 src/background/bug-report-handler.js:23:buildBugReportPayloadJson,src/background/bug-report-handler.js,23,buildBugReportPayloadJson,background,,legado,,,não,1
 src/background/bug-report-handler.js:31:fetchWithTimeout,src/background/bug-report-handler.js,31,fetchWithTimeout,background,,legado,,agruparlista;atalhopublicacoeseletronicas;autopreenchersenha;certidaosigilo;certidaosigilo_nomedoc;citacaodoc;combinacaoteclas;contadoricone;coresmarcadores;debugpage;disablequery;ditado;editarimagens;editarlinks;escrivainterativa;especificaprocesso;ferramentasia;filtrarpaginapelapesquisarapida;filtroporatribuicao;gerenciaratividades;gerenciarformularios;gerenciarmonitorados;gerenciarprazos;gerenciarprescricoes;gerenciarprojetos;infoarvore;marcar_naolido;menususpenso;mostraranotacaocontrole;newdocdefault;newdocespec;newdocformat;newdocname;newdocnivel;newdocobs;newdocsigilo;newdoctoday;newproc_selfunidade;nomesusuarios;ocultarpaginacaosuperior;ordernartabela;qualidadeimagens;removepaginacao;resizearvore;revisaotexto;rolageminfinita;salvamentoautomatico;sincronizarprocessos;substituiselecao;uploaddocsexternos;urlamigavel,sim,7
@@ -21,6 +22,7 @@ src/background/process-notification-handler.js:77:getProcessNotificationState,sr
 src/background/process-notification-handler.js:88:setProcessNotificationState,src/background/process-notification-handler.js,88,setProcessNotificationState,background,,legado,,,não,4
 src/background/process-notification-handler.js:110:syncProcessNotificationConfig,src/background/process-notification-handler.js,110,syncProcessNotificationConfig,background,,legado,,,não,2
 src/background/process-notification-handler.js:117:handleProcessNotificationMessage,src/background/process-notification-handler.js,117,handleProcessNotificationMessage,background,,legado,,,não,2
+src/background/router.js:12:handleMessage,src/background/router.js,12,handleMessage,background,,legado,,,não,5
 src/background/storage-handler.js:12:respondOnce,src/background/storage-handler.js,12,respondOnce,background,,legado,,,não,1
 src/background/storage-handler.js:21:storageErrorMessage,src/background/storage-handler.js,21,storageErrorMessage,background,,legado,,,não,2
 src/background/storage-handler.js:27:settleStorage,src/background/storage-handler.js,27,settleStorage,background,,legado,,,não,1
