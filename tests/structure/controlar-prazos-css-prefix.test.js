@@ -44,4 +44,15 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(panel).not.toMatch(/tableMonitorados/);
     expect(legacyShared).not.toMatch(/\.tableMonitorados\b/);
   });
+
+  it('uses a seipro-prefixed class for the bulk remove action hook', () => {
+    const panel = read('src/features/monitorados/panel.js');
+    const lifecycle = read('src/features/monitorados/panel-lifecycle.js');
+
+    expect(panel).toContain('seipro-monitorados-remove-selected');
+    expect(lifecycle).toContain('.seipro-monitorados-remove-selected');
+
+    expect(panel).not.toMatch(/iconMonitorados_remove/);
+    expect(lifecycle).not.toMatch(/iconMonitorados_remove/);
+  });
 });

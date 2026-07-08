@@ -63,7 +63,7 @@ function initSelectionObserver(table) {
     const update = () => {
         const count = qsa('tr.infraTrMarcada', table).length;
         const actions = qs('#monitoradosProActions');
-        const icon = actions && actions.querySelector('.iconMonitorados_remove');
+        const icon = actions && actions.querySelector('.seipro-monitorados-remove-selected');
         if (!icon) return;
         icon.style.display = count > 0 ? '' : 'none';
         const counter = icon.querySelector('.fa-layers-counter');
