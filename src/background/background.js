@@ -11,7 +11,7 @@ const SEI_PRO_PROCESS_NOTIFICATION_ID = 'sei-pro-new-process';
 const SEI_PRO_BUG_REPORT_TIMEOUT_MS = 15000;
 
 if (typeof importScripts === 'function') {
-    importScripts('storage-handler.js');
+    importScripts('storage-handler.js', 'fetch-handler.js');
 }
 
 function handleInstalled(details) {
@@ -141,28 +141,6 @@ function isAllowedBugReportSender(sender) {
     }
 }
 
-// Hosts the generic `fetch` action is permitted to reach. The service worker runs
-// with host permissions, so an unrestricted fetch action would let any injected
-// script use the extension as a cross-origin proxy. The action rejects anything
-// not matched here. Keep this list tight — only hosts a migrated call-site
-// actually delegates to belong here (see PLANO_MIGRACAO_ARQUITETURA.md, Fase 4).
-const SEI_PRO_FETCH_ALLOWED_HOSTS = [
-    'generativelanguage.googleapis.com' // Gemini — resolveCaptchaAI (Fase 4 piloto)
-];
-
-// Only accept messages that originated from this extension's own content scripts.
-function isAllowedSender(sender) {
-    return !!(sender && sender.id === browser.runtime.id && sender.url);
-}
-
-function isAllowedFetchUrl(url) {
-    try {
-        return SEI_PRO_FETCH_ALLOWED_HOSTS.indexOf(new URL(url).hostname) !== -1;
-    } catch (e) {
-        return false;
-    }
-}
-
 function buildBugReportPayloadJson(payload) {
     try {
         return JSON.stringify(payload || {});
@@ -205,32 +183,11 @@ browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     }
 
     if (action === 'fetch') {
-        if (!isAllowedSender(sender)) {
-            sendResponse({ ok: false, error: 'Remetente não autorizado' });
+        if (!globalThis.SeiProBackgroundFetch || typeof globalThis.SeiProBackgroundFetch.handleFetchMessage !== 'function') {
+            sendResponse({ ok: false, error: 'Fetch handler unavailable' });
             return false;
         }
-        if (!message || !message.url) {
-            sendResponse({ ok: false, error: 'URL ausente' });
-            return false;
-        }
-        if (!isAllowedFetchUrl(message.url)) {
-            sendResponse({ ok: false, error: 'URL não permitida' });
-            return false;
-        }
-        fetchWithTimeout(message.url, message.options || {}, SEI_PRO_BUG_REPORT_TIMEOUT_MS)
-            .then(function (response) {
-                return response.text().then(function (body) {
-                    sendResponse({
-                        ok: response.ok,
-                        status: response.status,
-                        body: body
-                    });
-                });
-            })
-            .catch(function (error) {
-                sendResponse({ ok: false, error: error.message });
-            });
-        return true;
+        return globalThis.SeiProBackgroundFetch.handleFetchMessage(message, sender, sendResponse, browser);
     }
 
     if (action === 'storageGet' || action === 'storageSet' || action === 'storageRemove') {
