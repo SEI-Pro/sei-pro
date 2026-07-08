@@ -29,3 +29,19 @@ describe('migration: controlar-prazos CSS classes stay prefixed', () => {
     expect(monitoradosPanel).not.toMatch(/prazoBoxDisplay/);
   });
 });
+
+describe('migration: monitorados CSS classes stay prefixed', () => {
+  it('uses a seipro-prefixed class for the monitorados table facade', () => {
+    const css = read('src/features/monitorados/monitorados.css');
+    const panel = read('src/features/monitorados/panel.js');
+    const legacyShared = read('src/shared/legacy/sei-functions-pro.js');
+
+    expect(css).toContain('.seipro-table-monitorados');
+    expect(panel).toContain('seipro-table-monitorados');
+    expect(legacyShared).toContain('.seipro-table-monitorados tbody');
+
+    expect(css).not.toMatch(/\.tableMonitorados\b/);
+    expect(panel).not.toMatch(/tableMonitorados/);
+    expect(legacyShared).not.toMatch(/\.tableMonitorados\b/);
+  });
+});

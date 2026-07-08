@@ -4,7 +4,7 @@
    .tableAtividades/.tableFavoritos, overrides de kanban/projeto/AI) permanecem no
    sei-pro.css ate suas features migrarem. */
 
-.tableMonitorados {
+.seipro-table-monitorados {
     position: relative;
     margin-top: 20px !important;
 }
@@ -13,12 +13,12 @@
    (tr nativa = rgb(21,95,155), texto #ecf0f1). Sobrepõe os overrides cinzas do
    legado (.tableFollow/.panelHomePro th.tituloControle, ambos !important).
    monitorados.css carrega depois de sei-pro.css → vence por ordem de origem. */
-.tableMonitorados th.tituloControle {
+.seipro-table-monitorados th.tituloControle {
     background-color: rgb(21, 95, 155) !important;
     color: #ecf0f1 !important;
 }
-.tableMonitorados th.tituloControle a,
-.tableMonitorados th.tituloControle i {
+.seipro-table-monitorados th.tituloControle a,
+.seipro-table-monitorados th.tituloControle i {
     color: #ecf0f1 !important;
 }
 
@@ -45,7 +45,7 @@
     width: 100% !important;
 }
 
-.tableMonitorados .newLink .fa-layers-counter {
+.seipro-table-monitorados .newLink .fa-layers-counter {
     background: #b7b7b7;
 }
 
@@ -62,7 +62,7 @@ td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after
     font-style: italic;
 }
 
-.tableMonitorados td.tdmonitorado_tags.info_tags_follow_empty:hover .info_tags_follow:after {
+.seipro-table-monitorados td.tdmonitorado_tags.info_tags_follow_empty:hover .info_tags_follow:after {
     content: "Adicionar etiqueta";
     position: absolute;
     right: 40px;

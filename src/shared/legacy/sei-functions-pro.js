@@ -3995,7 +3995,7 @@ function selectIconEtiqueta(this_, tagName, mode) {
             ? $('.tableAtividades').is(':visible') 
                 ? $('.tableAtividades tbody, .atividadeInfo') 
                 : $('.kanbanAtividade, .atividadeInfo')
-            : $('.tableMonitorados tbody');
+            : $('.seipro-table-monitorados tbody');
         table = ($($ifrVisualizacao).contents().find('.monitoradosLabelOptions').length > 0) ? $($ifrVisualizacao).contents().find('.monitoradosLabelOptions table') : table;
         table = (mode == 'options') ? $('#dialogBoxPro') : table;
     var icon = $(this_).find('.iconListTxt').text();

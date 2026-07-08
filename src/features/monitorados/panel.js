@@ -103,7 +103,7 @@ function panelHtml() {
     const th = isNewSEI() ? 'infraTh' : '';
     const checkImg = isNewSEI() ? 'svg/check.svg' : 'imagens/check.gif';
 
-    let table = '<table class="tableInfo tableZebra infraTable tableFollow tableMonitorados tabelaControle" data-name-table="Processos Monitorados" data-tabletype="monitorados" id="monitoradoTablePro">'
+    let table = '<table class="tableInfo tableZebra infraTable tableFollow seipro-table-monitorados tabelaControle" data-name-table="Processos Monitorados" data-tabletype="monitorados" id="monitoradoTablePro">'
         + '<caption class="infraCaption" style="text-align:left;">' + count + '</caption>'
         + '<thead><tr class="tableHeader">'
         + '<th class="tituloControle ' + th + '" style="width:50px;" align="center"><span class="lblInfraCheck" aria-hidden="true"></span><a id="lnkInfraCheck" data-act="select-all"><img src="/infra_css/' + checkImg + '" id="imgRecebidosCheck" title="Selecionar Tudo" alt="Selecionar Tudo" class="infraImg"></a></th>'
