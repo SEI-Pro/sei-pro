@@ -8,7 +8,7 @@
 // infra de diálogo compartilhada com sei-functions-pro. Classes próprias desta feature
 // usam o prefixo `.seipro-`.
 
-const wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv">${inner}</div>`;
+const wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv seipro-doclote-dialog">${inner}</div>`;
 
 // 1/6 — seleção do documento modelo / texto padrão. `credito` é o trecho opcional
 // (creditação) que a view injeta conforme restrictConfigValue.

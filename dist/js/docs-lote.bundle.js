@@ -364,7 +364,7 @@
   };
 
   // src/features/docs-lote/templates.js
-  var wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv">${inner}</div>`;
+  var wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv seipro-doclote-dialog">${inner}</div>`;
   function selecaoDocBox(credito = "") {
     return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm">
                     <tr>
