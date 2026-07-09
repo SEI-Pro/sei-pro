@@ -133,4 +133,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/\$\('\.suggestions'\)/);
     expect(ai).not.toMatch(/\$\('\.suggestions'\)\.append/);
   });
+
+  it('uses a seipro-prefixed hook for removing favorite AI suggestions while preserving the favorite prompt data contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="seipro-ai-remove-suggestion far fa-trash cinzaColor"');
+    expect(ai).toContain(".on('click', '.seipro-ai-remove-suggestion'");
+    expect(ai).toContain('data-index="${i}"');
+    expect(ai).toContain('removeFavoritePromptByIndex($(this).data(\'index\'))');
+
+    expect(ai).not.toMatch(/class="suggestion_actions_remove/);
+    expect(ai).not.toMatch(/\.on\('click', '\.suggestion_actions_remove'/);
+  });
 });

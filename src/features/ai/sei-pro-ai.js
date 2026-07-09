@@ -2230,14 +2230,14 @@ const getSessionTextProcesso = (num_processo_format) => {
                 const htmlToText = extractHTMLWithBRandSpanFromString(v);
                 return `
                     <div data-send="false" data-index="${i}" data-type="personalizado" class="suggestion_actions seipro-ai-suggestion-action">
-                        <i data-index="${i}" style="position: absolute;right: 0;top: 0;z-index: 99;padding: 1em;" class="suggestion_actions_remove far fa-trash cinzaColor"></i>
+                        <i data-index="${i}" style="position: absolute;right: 0;top: 0;z-index: 99;padding: 1em;" class="seipro-ai-remove-suggestion far fa-trash cinzaColor"></i>
                         <i style="margin-bottom: 1em;text-align: center;display: block;" class="fas fa-star cinzaColor"></i> ${htmlToText}
                     </div>`;
             }).join();
             $('.seipro-ai-suggestions').append(normalizeHTML(htmlFav));
         }
 
-        $(document).off('click', '.suggestion_actions_remove').on('click', '.suggestion_actions_remove', function(event) {
+        $(document).off('click', '.seipro-ai-remove-suggestion').on('click', '.seipro-ai-remove-suggestion', function(event) {
             removeFavoritePromptByIndex($(this).data('index'));
             addFavoriteSuggestion();
         });
