@@ -1691,7 +1691,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         <span style="font-size:9pt;color:#888;margin-left:8px;">Sobrescreve a sele\u00E7\u00E3o acima</span>
                     </td>
                 </tr>
-                <tr class="configAI_advancedconfigs" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
+                <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
                     <td class="label">
                         <label for="configAI_system_instruction">
                             Instru\u00E7\u00E3o do sistema:
@@ -1701,7 +1701,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         <textarea id="configAI_system_instruction" style="width: 93%;" rows="3">${getSystemInstructionAI}</textarea>
                     </td>
                 </tr>
-                <tr class="configAI_advancedconfigs" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
+                <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_temperature">
                             <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
@@ -1723,7 +1723,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         <input type="number" value="${getMaxTokensAI}" id="configAI_max_tokens" style="width: 80%;" min="1" max="4095" step="1">
                     </td>
                 </tr>
-                <tr class="configAI_advancedconfigs" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
+                <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
                     <td class="label">
                         <label for="configAI_top_p">
                             <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
@@ -1745,7 +1745,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         <input type="number" value="${getFrequencyPenaltyAI}" id="configAI_frequency_penalty" style="width: 80%;" min="0" max="2" step=".1">
                     </td>
                 </tr>
-                <tr class="configAI_advancedconfigs" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
+                <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
                     <td class="label">
                         <label for="configAI_presence_penalty">
                             <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
@@ -1773,9 +1773,9 @@ const getSessionTextProcesso = (num_processo_format) => {
                     $(document).off('change', '#configAI_advancedconfigs').on('change', '#configAI_advancedconfigs', function(event) {
                         event.preventDefault();
                         if ($(this).is(':checked')) {
-                            $('.configAI_advancedconfigs').show();
+                            $('.seipro-ai-advanced-config-row').show();
                         } else {
-                            $('.configAI_advancedconfigs').hide();
+                            $('.seipro-ai-advanced-config-row').hide();
                         }
                     }); 
 
