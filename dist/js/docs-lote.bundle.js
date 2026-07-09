@@ -463,7 +463,7 @@
             `;
     return `
             <div id="divTableDataCrossing">
-                <div style="max-height: 300px;overflow-y: auto;">
+                <div class="seipro-doclote-crossing-scroll" style="max-height: 300px;overflow-y: auto;">
                     <table id="tableDataCrossing" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow">
                         <thead>
                             <th class="tituloControle" style="width: 47%;">${csvFileName}</th>
