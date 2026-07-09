@@ -76,7 +76,7 @@ function rowHtml(value, index, arrayProcessosUnidade) {
         + '<td class="seipro-monitorado-category-cell">'
         + '<span class="seipro-monitorado-category-text">' + (categoria ? esc(categoria) : '') + '</span>'
         + '<span class="seipro-monitorado-category-editor" style="display:none"></span>'
-        + '<a class="newLink followLink followLinkTags followLinkMonitoradoCategory" data-act="category-edit" title="Editar categoria"><i class="fas fa-pencil-alt"></i></a>'
+        + '<a class="newLink followLink followLinkTags seipro-monitorado-category-edit" data-act="category-edit" title="Editar categoria"><i class="fas fa-pencil-alt"></i></a>'
         + '</td>'
         + '<td align="center" data-order="' + order + '">'
         + '<a class="newLink seipro-monitorado-sorter" style="margin-right:20px;cursor:grab;"><span class="fa-layers fa-fw"><i class="fas fa-bars cinzaColor"></i>'

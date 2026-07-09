@@ -107,11 +107,14 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
 
     expect(panel).toContain('seipro-monitorado-category-text');
     expect(panel).toContain('seipro-monitorado-category-editor');
+    expect(panel).toContain('seipro-monitorado-category-edit');
+    expect(panel).toContain('data-act="category-edit"');
     expect(categorias).toContain('.seipro-monitorado-category-text');
     expect(categorias).toContain('.seipro-monitorado-category-editor');
 
     expect(panel).not.toMatch(/td_monitorado_category/);
     expect(panel).not.toMatch(/info_category(_txt)?/);
+    expect(panel).not.toMatch(/followLinkMonitoradoCategory/);
     expect(categorias).not.toMatch(/info_category(_txt)?/);
   });
 
