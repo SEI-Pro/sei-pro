@@ -27,7 +27,7 @@
     overflow-x: hidden;
 }
 
-#monitoradosProDiv .tabelaPanelScroll {
+#monitoradosProDiv .seipro-monitorados-scroll {
     overflow: visible !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
@@ -37,7 +37,7 @@
     padding-bottom: 0;
 }
 
-#monitoradosProDiv .tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
+#monitoradosProDiv .seipro-monitorados-scroll .ui-resizable-handle.ui-resizable-s {
     display: none !important;
 }
 

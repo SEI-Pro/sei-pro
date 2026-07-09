@@ -211,4 +211,15 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(css).not.toMatch(/tdmonitorado_dates|info_dates_follow_empty/);
     expect(prazoRow).not.toMatch(/info_dates_follow_empty/);
   });
+
+  it('uses a seipro-prefixed class for the monitorados scroll wrapper', () => {
+    const panel = read('src/features/monitorados/panel.js');
+    const css = read('src/features/monitorados/monitorados.css');
+
+    expect(panel).toContain('seipro-monitorados-scroll');
+    expect(css).toContain('.seipro-monitorados-scroll');
+
+    expect(panel).not.toMatch(/tabelaPanelScroll/);
+    expect(css).not.toMatch(/tabelaPanelScroll/);
+  });
 });

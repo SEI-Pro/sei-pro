@@ -139,7 +139,7 @@ function panelHtml() {
         + '<a class="newLink seipro-monitorados-update" data-act="update" title="Atualizar Informações" style="margin-right:10px;font-size:14pt;float:right;"><i class="fas fa-sync-alt"></i></a>'
         + '<a class="newLink seipro-monitorados-config" data-act="config" title="Configurações" style="margin:0;font-size:14pt;float:right;"><i class="fas fa-cog"></i></a>'
         + '</div>'
-        + '<div class="tabelaPanelScroll">' + table + '</div>'
+        + '<div class="seipro-monitorados-scroll">' + table + '</div>'
         + '</div></div>' };
 }
 
