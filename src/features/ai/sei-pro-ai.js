@@ -1084,7 +1084,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         : '';
         const htmlCreatDoc = !frmEditor.length 
         ? `
-            <div class="create_doc_response_ai" data-tooltip="Criar documento SEI" data-response="${respost_id}">
+            <div class="seipro-ai-create-doc-response" data-tooltip="Criar documento SEI" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-file-check"></i></a>
             </div>
             `
@@ -1245,7 +1245,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             addDocResponseAI(this);
         });
         // DELEGAÇÃO DE EVENTO PARA COPIAR RESPOSTAS
-        $(document).off('click', '.create_doc_response_ai').on('click', '.create_doc_response_ai', function(event) {
+        $(document).off('click', '.seipro-ai-create-doc-response').on('click', '.seipro-ai-create-doc-response', function(event) {
             event.preventDefault();
             createDocResponseAI(this);
         });
