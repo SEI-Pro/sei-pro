@@ -73,4 +73,16 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
 
     expect(panel).not.toMatch(/iconMonitorados_config/);
   });
+
+  it('uses a seipro-prefixed class for the prazo config action hook', () => {
+    const visualizacao = read('src/features/monitorados/visualizacao.js');
+    const prazoRow = read('src/features/monitorados/prazo-row.js');
+
+    expect(visualizacao).toContain('seipro-monitorado-config-dates');
+    expect(visualizacao).toContain('data-act="dates-config"');
+    expect(prazoRow).toContain('.seipro-monitorado-config-dates');
+
+    expect(visualizacao).not.toMatch(/monitoradoConfigDates/);
+    expect(prazoRow).not.toMatch(/monitoradoConfigDates/);
+  });
 });

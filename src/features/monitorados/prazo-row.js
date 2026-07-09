@@ -36,7 +36,7 @@ function showDatesMonitorado(el, mode) {
     if (el.closest('#frmAtividadeListar')) { updateDatesMonitorado(el); return; }
     const tr = el.closest('tr');
     const table = el.closest('table');
-    const configBtn = tr && qs('.monitoradoConfigDates', tr);
+    const configBtn = tr && qs('.seipro-monitorado-config-dates', tr);
     if (!(configBtn && configBtn.matches(':hover'))) {
         if (table) {
             qsa('.info_dates_monitorado', table).forEach((n) => { n.style.display = ''; });

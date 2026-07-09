@@ -40,7 +40,7 @@ export function monitoradosLabelOptions(id_procedimento) {
         + '<td>' + catSelect + '</td>'
         + '<td style="vertical-align:bottom;" class="label"><label class="last" for="monitoradoPrazoSend"><i class="iconPopup iconSwitch fas fa-stopwatch cinzaColor" style="float:initial;"></i>Prazo:</label></td>'
         + '<td><span class="info_dates_monitorado_txt"><input id="monitoradoPrazoSend" value="' + dateVal + '" style="width:120px;background:#f9fafa;" data-act="dates-hide-blur" data-key="dates" type="date" class="seipro-monitorado-dates" name="monitoradoPrazoSend">'
-        + '<a class="newLink monitoradoConfigDates" data-act="dates-config" style="padding:5px 8px;margin:8px 2px 0 10px;font-size:10pt;" title="Opções"><i class="fas fa-cog"></i></a></span></td>'
+        + '<a class="newLink seipro-monitorado-config-dates" data-act="dates-config" style="padding:5px 8px;margin:8px 2px 0 10px;font-size:10pt;" title="Opções"><i class="fas fa-cog"></i></a></span></td>'
         + '</tr>'
         + '<tr data-id_procedimento="' + id_procedimento + '" data-index="0" style="height:40px;">'
         + '<td align="left" class="tdmonitorado_tags" data-etiqueta-mode="monitorado" colspan="4">'
