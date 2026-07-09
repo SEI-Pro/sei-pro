@@ -1094,7 +1094,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             <div class="copy_response_ai seipro-ai-copy-response" data-tooltip="Copiar texto simples" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-copy"></i></a>
             </div>
-            <div class="copy_html_response_ai" data-tooltip="Copiar texto formatado (para colar em documentos)" data-response="${respost_id}">
+            <div class="seipro-ai-copy-html-response" data-tooltip="Copiar texto formatado (para colar em documentos)" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-file-alt"></i></a>
             </div>
             <div class="speech_response_ai" data-tooltip="Ouvir em voz alta" data-response="${respost_id}">
@@ -1257,7 +1257,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         });
 
         // DELEGAÇÃO DE EVENTO PARA COPIAR RESPOSTAS (TEXTO FORMATADO PARA DOCUMENTOS)
-        $(document).off('click', '.copy_html_response_ai').on('click', '.copy_html_response_ai', function(event) {
+        $(document).off('click', '.seipro-ai-copy-html-response').on('click', '.seipro-ai-copy-html-response', function(event) {
             event.preventDefault();
             copyHtmlResponseAI(this);
         });
