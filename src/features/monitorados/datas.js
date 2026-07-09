@@ -21,7 +21,8 @@ const preview = () => { if (typeof globalRef.configDatesPreview === 'function') 
 const configDateClassByType = {
     selectdoc: 'seipro-monitorado-dates-selectdoc',
     setdate: 'seipro-monitorado-dates-setdate',
-    countdays: 'seipro-monitorado-dates-countdays'
+    countdays: 'seipro-monitorado-dates-countdays',
+    newdoc: 'seipro-monitorado-dates-newdoc'
 };
 const configDateClass = (type) => configDateClassByType[type] || ('configDates_' + type);
 
@@ -75,8 +76,8 @@ function formHtml(configdate, id_procedimento, store, monitoradoIndex) {
         + '<tr class="hrForm"><td colspan="4"></td></tr>'
         + '<tr style="height:40px;"><td colspan="2">Sinalizar a partir:</td></tr>'
         + swRow('fa-pen-fancy', 'Da assinatura de um novo documento (EM BREVE)', 'newdoc', 'newdoc', configdate.newdoc)
-        + '<tr class="configDates_newdoc"><td colspan="2"><span id="configDatesBox_newdoclist">' + appendArrayNewdoclist(configdate.newdoclist) + '</span></td></tr>'
-        + '<tr style="height:40px;' + sw(configdate.newdoc, '', 'display:none') + '" class="configDates_newdoc"><td colspan="2"><select id="configDatesBox_listnewdoc" data-act="docs-change"><option value="0">Qualquer tipo de documento</option>' + tiposOptions + '</select></td></tr>'
+        + '<tr class="seipro-monitorado-dates-newdoc"><td colspan="2"><span id="configDatesBox_newdoclist">' + appendArrayNewdoclist(configdate.newdoclist) + '</span></td></tr>'
+        + '<tr style="height:40px;' + sw(configdate.newdoc, '', 'display:none') + '" class="seipro-monitorado-dates-newdoc"><td colspan="2"><select id="configDatesBox_listnewdoc" data-act="docs-change"><option value="0">Qualquer tipo de documento</option>' + tiposOptions + '</select></td></tr>'
         + '<tr style="height:10px;"><td colspan="2"></td></tr>'
         + swRow('fa-hourglass-half', 'Do número de dias decorridos', 'duedate', 'duedate', configdate.duedate)
         + '<tr style="height:40px;' + sw(configdate.duedate, '', 'display:none') + '" class="configDates_duedate"><td colspan="2">'

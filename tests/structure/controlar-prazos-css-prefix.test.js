@@ -185,20 +185,23 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(css).not.toMatch(/info_tags_follow_empty/);
   });
 
-  it('uses seipro-prefixed classes for the monitorado date modal setdate/selectdoc rows', () => {
+  it('uses seipro-prefixed classes for monitorado date modal rows', () => {
     const datas = read('src/features/monitorados/datas.js');
 
     expect(datas).toContain('seipro-monitorado-dates-selectdoc');
     expect(datas).toContain('seipro-monitorado-dates-setdate');
     expect(datas).toContain('seipro-monitorado-dates-countdays');
+    expect(datas).toContain('seipro-monitorado-dates-newdoc');
     expect(datas).toContain("selectdoc: 'seipro-monitorado-dates-selectdoc'");
     expect(datas).toContain("setdate: 'seipro-monitorado-dates-setdate'");
     expect(datas).toContain("countdays: 'seipro-monitorado-dates-countdays'");
+    expect(datas).toContain("newdoc: 'seipro-monitorado-dates-newdoc'");
     expect(datas).toContain("qsa('.' + configDateClass(opt))");
 
     expect(datas).not.toMatch(/class=\"configDates_selectdoc\"/);
     expect(datas).not.toMatch(/class=\"configDates_setdate\"/);
     expect(datas).not.toMatch(/class=\"configDates_countdays\"/);
+    expect(datas).not.toMatch(/class=\"configDates_newdoc\"/);
     expect(datas).not.toMatch(/\.configDates_\s*\+\s*opt/);
   });
 
