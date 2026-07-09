@@ -22,7 +22,8 @@ const configDateClassByType = {
     selectdoc: 'seipro-monitorado-dates-selectdoc',
     setdate: 'seipro-monitorado-dates-setdate',
     countdays: 'seipro-monitorado-dates-countdays',
-    newdoc: 'seipro-monitorado-dates-newdoc'
+    newdoc: 'seipro-monitorado-dates-newdoc',
+    duedate: 'seipro-monitorado-dates-duedate'
 };
 const configDateClass = (type) => configDateClassByType[type] || ('configDates_' + type);
 
@@ -80,12 +81,12 @@ function formHtml(configdate, id_procedimento, store, monitoradoIndex) {
         + '<tr style="height:40px;' + sw(configdate.newdoc, '', 'display:none') + '" class="seipro-monitorado-dates-newdoc"><td colspan="2"><select id="configDatesBox_listnewdoc" data-act="docs-change"><option value="0">Qualquer tipo de documento</option>' + tiposOptions + '</select></td></tr>'
         + '<tr style="height:10px;"><td colspan="2"></td></tr>'
         + swRow('fa-hourglass-half', 'Do número de dias decorridos', 'duedate', 'duedate', configdate.duedate)
-        + '<tr style="height:40px;' + sw(configdate.duedate, '', 'display:none') + '" class="configDates_duedate"><td colspan="2">'
+        + '<tr style="height:40px;' + sw(configdate.duedate, '', 'display:none') + '" class="seipro-monitorado-dates-duedate"><td colspan="2">'
         + '<input type="number" data-act="preview" id="configDatesBox_duenumber" value="' + duenumber + '" style="width:40px;margin-left:35px !important;" min="0"> dias '
         + '<select id="configDatesBox_duecounter" data-act="preview" style="width:auto;"><option value="corrido" ' + sw(configdate.duecounter === 'corrido', 'selected', '') + '>corridos</option><option value="util" ' + sw(configdate.duecounter === 'util', 'selected', '') + '>úteis</option></select>'
         + '<select id="configDatesBox_duemode" data-act="preview" style="width:auto;"><option value="depois" ' + sw(configdate.duemode === 'depois', 'selected', '') + '>depois</option><option value="antes" ' + sw(configdate.duemode === 'antes', 'selected', '') + '>antes</option></select>'
         + '<span class="seipro-monitorado-dates-selectdoc" style="display:none">da data de assinatura</span><span class="seipro-monitorado-dates-setdate">da data de referência</span></td></tr>'
-        + '<tr style="height:10px;" class="configDates_duedate"><td colspan="2"></td></tr>'
+        + '<tr style="height:10px;" class="seipro-monitorado-dates-duedate"><td colspan="2"></td></tr>'
         + swRow('fa-calendar-alt', 'De uma data de vencimento específica', 'duesetdate', 'duesetdate', configdate.duesetdate)
         + '<tr style="height:40px;' + sw(configdate.duesetdate, '', 'display:none') + '" class="configDates_duesetdate"><td><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i> Data de vencimento</td>'
         + '<td><input type="date" data-act="preview" id="configDatesBox_duesetdt" value="' + configdate.dateDue + '" style="width:130px;float:right;"></td></tr>'
