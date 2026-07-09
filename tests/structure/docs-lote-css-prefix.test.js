@@ -45,4 +45,16 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
 
     expect(templates).not.toMatch(/divInputForceNames/);
   });
+
+  it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
+    const view = read('src/features/docs-lote/view.js');
+    const legacy = read('src/shared/legacy/sei-functions-pro.js');
+
+    expect(view).toContain('seipro-doclote-field-error');
+    expect(view).toContain('Arquivo inválido! Selecione um documento no formato "CSV".');
+    expect(view).toContain('Não existe correspondência no arquivo CSV informado!');
+
+    expect(view).not.toMatch(/class="noFieldsError/);
+    expect(legacy).toContain('noFieldsError');
+  });
 });

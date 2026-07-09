@@ -650,7 +650,7 @@
       $("#fieldList").append(lista);
       if (!txtModelo) $("#btnConfirmAnalysis").prop("disabled", false).removeClass("ui-button-disabled ui-state-disabled");
     } else {
-      $("#fieldList").append(`<small class="noFieldsError">N\xE3o foi identificado nenhum campo din\xE2mico no documento modelo informado. Verifique se os mesmos foram redigidos corretamente com o padr\xE3o ##nome do campo##.</small>`);
+      $("#fieldList").append(`<small class="seipro-doclote-field-error">N\xE3o foi identificado nenhum campo din\xE2mico no documento modelo informado. Verifique se os mesmos foram redigidos corretamente com o padr\xE3o ##nome do campo##.</small>`);
     }
     centralizeDialogBox(window.dialogBoxPro);
   }
@@ -707,7 +707,7 @@
     }
   }
   function docsLote_printFieldError() {
-    $("#dialogBoxDocLote").append(`<p class="noFieldsError"><i class="fas fa-exclamation-triangle vermelhoColor"></i> N\xE3o foi identificado nenhum cabe\xE7alho no arquivo enviado. <br><br>\u{1F914} Verifique se a planilha n\xE3o est\xE1 vazia.</p>`);
+    $("#dialogBoxDocLote").append(`<p class="seipro-doclote-field-error"><i class="fas fa-exclamation-triangle vermelhoColor"></i> N\xE3o foi identificado nenhum cabe\xE7alho no arquivo enviado. <br><br>\u{1F914} Verifique se a planilha n\xE3o est\xE1 vazia.</p>`);
     $("#btnConfirmAnalysis").prop("disabled", true).addClass("ui-button-disabled ui-state-disabled");
   }
   async function docsLote_printDataCrossing() {
@@ -722,7 +722,7 @@
       }
     });
     if (!S.dataCrossing[0]) {
-      $("#dialogBoxDocLote").html(`<p class="noFieldsError"><i class="fas fa-exclamation-triangle vermelhoColor"></i> N\xE3o existe correspond\xEAncia no arquivo CSV informado!</p>`);
+      $("#dialogBoxDocLote").html(`<p class="seipro-doclote-field-error"><i class="fas fa-exclamation-triangle vermelhoColor"></i> N\xE3o existe correspond\xEAncia no arquivo CSV informado!</p>`);
       $("#btnConfirm").prop("disabled", true).addClass("ui-button-disabled ui-state-disabled");
     } else {
       let tbody = "";
@@ -983,7 +983,7 @@
           if (file.name.substring(file.name.lastIndexOf("."), file.name.length).toLocaleLowerCase().trim() === ".csv") {
             docLoteModalAnaliseCSV(nrDoc, $("#inputBD")[0].files[0], nrTxtPadrao);
           } else {
-            $("#inputBD").after(`<small class="noFieldsError">Arquivo inv\xE1lido! Selecione um documento no formato "CSV".</small>`);
+            $("#inputBD").after(`<small class="seipro-doclote-field-error">Arquivo inv\xE1lido! Selecione um documento no formato "CSV".</small>`);
           }
         }
       }]

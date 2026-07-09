@@ -120,7 +120,7 @@ async function docsLote_fillModelAnalysis(matches, selectedDoc, txtModelo = fals
         $('#fieldList').append(lista);
         if (!txtModelo) $('#btnConfirmAnalysis').prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
     } else {
-        $('#fieldList').append(`<small class="noFieldsError">Não foi identificado nenhum campo dinâmico no documento modelo informado. Verifique se os mesmos foram redigidos corretamente com o padrão ##nome do campo##.</small>`);
+        $('#fieldList').append(`<small class="seipro-doclote-field-error">Não foi identificado nenhum campo dinâmico no documento modelo informado. Verifique se os mesmos foram redigidos corretamente com o padrão ##nome do campo##.</small>`);
     }
     centralizeDialogBox(window.dialogBoxPro);
 }
@@ -180,7 +180,7 @@ function docsLote_fillCSVAnalysis(parseData, filename) {
 }
 
 function docsLote_printFieldError() {
-    $('#dialogBoxDocLote').append(`<p class="noFieldsError"><i class="fas fa-exclamation-triangle vermelhoColor"></i> Não foi identificado nenhum cabeçalho no arquivo enviado. <br><br>🤔 Verifique se a planilha não está vazia.</p>`);
+    $('#dialogBoxDocLote').append(`<p class="seipro-doclote-field-error"><i class="fas fa-exclamation-triangle vermelhoColor"></i> Não foi identificado nenhum cabeçalho no arquivo enviado. <br><br>🤔 Verifique se a planilha não está vazia.</p>`);
     $('#btnConfirmAnalysis').prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
 }
 
@@ -196,7 +196,7 @@ async function docsLote_printDataCrossing() {
     });
 
     if (!S.dataCrossing[0]) {
-        $('#dialogBoxDocLote').html(`<p class="noFieldsError"><i class="fas fa-exclamation-triangle vermelhoColor"></i> Não existe correspondência no arquivo CSV informado!</p>`);
+        $('#dialogBoxDocLote').html(`<p class="seipro-doclote-field-error"><i class="fas fa-exclamation-triangle vermelhoColor"></i> Não existe correspondência no arquivo CSV informado!</p>`);
         $('#btnConfirm').prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
     } else {
         let tbody = '';
@@ -463,7 +463,7 @@ function docLoteModalSelecaoBaseDados(nrDoc, csvFile, nrTxtPadrao) {
                     if (file.name.substring(file.name.lastIndexOf('.'), file.name.length).toLocaleLowerCase().trim() === '.csv') {
                         docLoteModalAnaliseCSV(nrDoc, $('#inputBD')[0].files[0], nrTxtPadrao);
                     } else {
-                        $('#inputBD').after(`<small class="noFieldsError">Arquivo inválido! Selecione um documento no formato "CSV".</small>`);
+                        $('#inputBD').after(`<small class="seipro-doclote-field-error">Arquivo inválido! Selecione um documento no formato "CSV".</small>`);
                     }
                 }
             }]
