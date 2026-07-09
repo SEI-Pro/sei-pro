@@ -178,7 +178,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
 
 // Barra de ações da tabela de resultado. Botões usam classes `.seipro-*` (delegação),
 // não onclick inline.
-export const resultFilterBar = `<div class="btn-group filterTablePro" role="group" style="margin: 10px 0;">
+export const resultFilterBar = `<div class="btn-group seipro-doclote-result-actions" role="group" style="margin: 10px 0;">
                                             <button type="button" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar" class="btn btn-sm btn-light seipro-doclote-download">
                                                 <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>
                                                 <span class="text">Baixar</span>

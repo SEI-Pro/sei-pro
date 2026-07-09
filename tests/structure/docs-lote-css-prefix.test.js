@@ -59,4 +59,15 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).not.toMatch(/class="noFieldsError/);
     expect(legacy).toContain('noFieldsError');
   });
+
+  it('uses a seipro-prefixed class for the result action bar emitted by Docs em Lote', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('seipro-doclote-result-actions');
+    expect(templates).toContain('seipro-doclote-download');
+    expect(templates).toContain('seipro-doclote-copy');
+    expect(templates).toContain('id="tableDataResult"');
+
+    expect(templates).not.toMatch(/class="btn-group filterTablePro/);
+  });
 });
