@@ -53,7 +53,7 @@
     display: none !important;
 }
 
-td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after {
+.seipro-table-monitorados td.seipro-monitorado-dates-empty:hover .info_dates_monitorado:after {
     content: "Adicionar prazo";
     position: absolute;
     right: 40px;

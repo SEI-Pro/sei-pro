@@ -178,4 +178,17 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(datas).not.toMatch(/info_dates_monitorado_txt/);
     expect(prazoRow).not.toMatch(/info_dates_monitorado_txt/);
   });
+
+  it('uses a seipro-prefixed class for the monitorado date empty-state hook', () => {
+    const css = read('src/features/monitorados/monitorados.css');
+    const prazoRow = read('src/features/monitorados/prazo-row.js');
+
+    expect(css).toContain('.seipro-monitorado-dates-empty');
+    expect(prazoRow).toContain('seipro-monitorado-dates-empty');
+    expect(css).toContain('.info_dates_monitorado');
+    expect(prazoRow).toContain('.info_dates_monitorado');
+
+    expect(css).not.toMatch(/tdmonitorado_dates|info_dates_follow_empty/);
+    expect(prazoRow).not.toMatch(/info_dates_follow_empty/);
+  });
 });

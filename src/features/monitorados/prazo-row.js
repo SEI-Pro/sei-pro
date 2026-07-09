@@ -56,7 +56,7 @@ function showDatesMonitorado(el, mode) {
     if (tr) {
         const td = el.closest('td');
         const info = qs('.info_dates_monitorado', tr);
-        if (td) td.classList.toggle('info_dates_follow_empty', !(info && info.textContent.trim() !== ''));
+        if (td) td.classList.toggle('seipro-monitorado-dates-empty', !(info && info.textContent.trim() !== ''));
     }
 }
 
