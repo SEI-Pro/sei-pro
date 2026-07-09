@@ -64,11 +64,11 @@ function rowHtml(value, index, arrayProcessosUnidade) {
         + '<div class="info_icons_monitorado">' + htmlIconsHome + '</div>'
         + '</td>'
         // Prazo: espelho read-only da célula nativa de controle de prazo (#P{id} .seipro-prazo-box-display).
-        + '<td align="left" class="tdmonitorado_native" data-native="prazo"></td>'
-        // Marcador: espelho read-only do marcador nativo do SEI na linha de controle.
-        + '<td align="left" class="tdmonitorado_native" data-native="marcador"></td>'
+        + '<td align="left" class="seipro-monitorado-native-cell" data-native="prazo"></td>'
+        // Marcador: espelho read-only do marcador nativo do SEI.
+        + '<td align="left" class="seipro-monitorado-native-cell" data-native="marcador"></td>'
         // Anotação: espelho read-only da anotação nativa (#P{id} .seipro-sticknote-note-cell).
-        + '<td class="tdmonitorado_native" data-native="anotacao"></td>'
+        + '<td class="seipro-monitorado-native-cell" data-native="anotacao"></td>'
         // Tipo de Processo: vem do processo (tooltip do link nativo), não do store.
         + '<td class="tdmonitorado_tipo"><span data-native="tipo"></span>'
         + '<a class="newLink followLink followLinkTags followLinkMonitoradoRemove" data-act="remove-row" title="Remover dos Processos Monitorados"><i class="fas fa-trash-alt"></i></a>'
