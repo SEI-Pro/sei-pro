@@ -1091,7 +1091,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         : '';
         const actionsResponse = `
             ${htmlIconChat}
-            <div class="copy_response_ai" data-tooltip="Copiar texto simples" data-response="${respost_id}">
+            <div class="copy_response_ai seipro-ai-copy-response" data-tooltip="Copiar texto simples" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-copy"></i></a>
             </div>
             <div class="copy_html_response_ai" data-tooltip="Copiar texto formatado (para colar em documentos)" data-response="${respost_id}">
@@ -1251,7 +1251,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         });
         
         // DELEGAÇÃO DE EVENTO PARA COPIAR RESPOSTAS (TEXTO SIMPLES)
-        $(document).off('click', '.copy_response_ai').on('click', '.copy_response_ai', function(event) {
+        $(document).off('click', '.seipro-ai-copy-response').on('click', '.seipro-ai-copy-response', function(event) {
             event.preventDefault();
             copyResponseAI(this);
         });
@@ -1263,7 +1263,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         });
 
         // DELEGAÇÃO DE EVENTO PARA LER RESPOSTA EM VOZ ALTA
-        $(document).off('dblclick', '.copy_response_ai').on('dblclick', '.copy_response_ai', function(event) {
+        $(document).off('dblclick', '.seipro-ai-copy-response').on('dblclick', '.seipro-ai-copy-response', function(event) {
             event.preventDefault();
             // CANCELA A LEITURA EM VOZ ALTA
             synth.cancel();

@@ -81,4 +81,17 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/class="create_doc_response_ai"/);
     expect(ai).not.toMatch(/\.create_doc_response_ai/);
   });
+
+  it('adds a seipro-prefixed hook for copying plain-text AI responses while preserving legacy styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="copy_response_ai seipro-ai-copy-response"');
+    expect(ai).toContain(".on('click', '.seipro-ai-copy-response'");
+    expect(ai).toContain(".on('dblclick', '.seipro-ai-copy-response'");
+    expect(ai).toContain('copyResponseAI(this)');
+    expect(ai).toContain('data-response="${respost_id}"');
+
+    expect(ai).not.toMatch(/\.on\('click', '\.copy_response_ai'/);
+    expect(ai).not.toMatch(/\.on\('dblclick', '\.copy_response_ai'/);
+  });
 });
