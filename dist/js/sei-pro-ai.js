@@ -1137,7 +1137,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const iconChat = currentPlataform == 'openai' ? iconChatGPT : currentPlataform == 'ollama' ? iconOllama : iconGemini;
         const htmlIconChat = `<img src="${iconChat}" style="width: 30px;border-radius: 5px;position: absolute;top: -3px;left: -50px;">`;
         const htmlResponseBox = `
-            <div id="responseBot_${respost_id}" class="response_bot response_${currentPlataform} loading" data-preload="${preload}">
+            <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} loading" data-preload="${preload}">
                 ${htmlIconChat}
                 <div class="loadingio-spinner-pulse">
                     <div class="ldio">
@@ -1228,7 +1228,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             historyDialogArray.push(html);
             sessionStorage.setItem('historyDialogAI', JSON.stringify(historyDialogArray));
         } else if (mode == 'restore') {
-            $('#response_ai .seipro-ai-user-response, #response_ai .response_bot').remove();
+            $('#response_ai .seipro-ai-user-response, #response_ai .seipro-ai-bot-response').remove();
             $('#historyDialogAI').after(sanitizeHTML(historyDialogArray.join(''))).remove();
             initFunctionsChat();
         } else if (mode == 'check' && historyDialogArray.length) {
@@ -1275,7 +1275,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             const _this = $(this);
             
             // SELECIONA O TEXTO A SER LIDO
-            const text_speech = _this.closest('.response_bot').text().trim();
+            const text_speech = _this.closest('.seipro-ai-bot-response').text().trim();
 
             if (synth.speaking) {
                 // EVITA SOBREPOSIÇÃO DE VOZES
@@ -1354,7 +1354,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const iconChat = currentPlataform == 'openai' ? iconChatGPT : currentPlataform == 'ollama' ? iconOllama : iconGemini;
         const htmlIconChat = `<img src="${iconChat}" style="width: 30px;border-radius: 5px;position: absolute;top: -3px;left: -50px;">`;
         const response_bot = `
-            <div id="responseBot_${respost_id}" class="response_bot response_${currentPlataform} loading">
+            <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} loading">
                 ${htmlIconChat}
                 <span class='response_bot_content'> 
                     <p>${error_text}</p>

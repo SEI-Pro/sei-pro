@@ -40,9 +40,21 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai).toContain('class="seipro-ai-user-response"');
-    expect(ai).toContain("$('#response_ai .seipro-ai-user-response, #response_ai .response_bot').remove()");
+    expect(ai).toContain("$('#response_ai .seipro-ai-user-response, #response_ai .seipro-ai-bot-response').remove()");
 
     expect(ai).not.toMatch(/class="response_user"/);
     expect(ai).not.toMatch(/#response_ai \.response_user/);
+  });
+
+  it('adds a seipro-prefixed hook for bot chat responses while preserving legacy response styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('response_bot seipro-ai-bot-response response_${currentPlataform} loading');
+    expect(ai).toContain("$('#response_ai .seipro-ai-user-response, #response_ai .seipro-ai-bot-response').remove()");
+    expect(ai).toContain("_this.closest('.seipro-ai-bot-response').text().trim()");
+    expect(ai).toContain('response_bot_content');
+
+    expect(ai).not.toMatch(/#response_ai \.response_bot/);
+    expect(ai).not.toMatch(/closest\('\.response_bot'\)/);
   });
 });
