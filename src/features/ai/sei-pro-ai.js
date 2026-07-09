@@ -1097,7 +1097,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             <div class="seipro-ai-copy-html-response" data-tooltip="Copiar texto formatado (para colar em documentos)" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-file-alt"></i></a>
             </div>
-            <div class="speech_response_ai" data-tooltip="Ouvir em voz alta" data-response="${respost_id}">
+            <div class="speech_response_ai seipro-ai-speech-response" data-tooltip="Ouvir em voz alta" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-volume-down"></i></a>
             </div>
             ${htmlAddDoc}
@@ -1270,7 +1270,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         });
 
         // DELEGAÇÃO DE EVENTO PARA LER RESPOSTA EM VOZ ALTA
-        $(document).off('click', '.speech_response_ai').on('click', '.speech_response_ai', function(event) {
+        $(document).off('click', '.seipro-ai-speech-response').on('click', '.seipro-ai-speech-response', function(event) {
             event.preventDefault();
             const _this = $(this);
             

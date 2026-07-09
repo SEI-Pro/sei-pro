@@ -106,4 +106,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/class="copy_html_response_ai"/);
     expect(ai).not.toMatch(/\.copy_html_response_ai/);
   });
+
+  it('adds a seipro-prefixed hook for speech playback while preserving legacy styling and data-response', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="speech_response_ai seipro-ai-speech-response"');
+    expect(ai).toContain(".on('click', '.seipro-ai-speech-response'");
+    expect(ai).toContain("_this.closest('.seipro-ai-bot-response').text().trim()");
+    expect(ai).toContain('data-response="${respost_id}"');
+
+    expect(ai).not.toMatch(/\.on\('click', '\.speech_response_ai'/);
+  });
 });
