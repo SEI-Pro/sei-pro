@@ -45,7 +45,7 @@ export function monitoradosLabelOptions(id_procedimento) {
         + '<tr data-id_procedimento="' + id_procedimento + '" data-index="0" style="height:40px;">'
         + '<td align="left" class="seipro-monitorado-tags-cell" data-etiqueta-mode="monitorado" colspan="4">'
         + '<span class="info_tags_follow">' + tagsHtml + '</span>'
-        + '<span class="info_tags_follow_txt" style="display:none;margin-top:-8px !important;"><input value="' + tagsMonitorado + '" class="monitoradoTagsPro" name="monitoradoTagsPro"></span>'
+        + '<span class="info_tags_follow_txt" style="display:none;margin-top:-8px !important;"><input value="' + tagsMonitorado + '" class="seipro-monitorado-tags-input" name="monitoradoTagsPro"></span>'
         + '<a class="newLink followLinkTagsAdd_send" data-act="tags-show" style="font-size:10pt;"><i class="fas fa-tags"></i> Adicionar etiqueta</a>'
         + '</td></tr></table>';
 }
@@ -97,7 +97,7 @@ export function getMonitoradosEnviarProcesso() {
         g('loadStylePro')((localStorage.getItem('seiSlim') ? globalRef.URL_SPRO + 'css/fontawesome.pro.min.css' : globalRef.URL_SPRO + 'css/fontawesome.min.css'), head, idoc);
     }
     bindVisDispatcher(idoc, id);
-    const tagInput = idoc.querySelector('.monitoradoTagsPro');
+    const tagInput = idoc.querySelector('.seipro-monitorado-tags-input');
     if (tagInput && !tagInput.dataset.seiproTagsInit) {
         tagInput.dataset.seiproTagsInit = '1';
         const persist = () => { if (typeof g('saveFollowEtiqueta') === 'function') g('saveFollowEtiqueta')(tagInput); };

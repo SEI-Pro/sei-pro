@@ -298,7 +298,7 @@ function actionMonitoradoCheckbox(el) {
         if (g('actMonitoradoPro')) g('actMonitoradoPro')(false, 'remove');
         if (optionsDiv) {
             optionsDiv.style.display = 'none';
-            optionsDiv.querySelectorAll('.selectPro, #monitoradoPrazoSend, .monitoradoTagsPro').forEach((i) => { i.value = ''; });
+            optionsDiv.querySelectorAll('.selectPro, #monitoradoPrazoSend, .seipro-monitorado-tags-input').forEach((i) => { i.value = ''; });
             optionsDiv.querySelectorAll('.info_tags_follow').forEach((n) => { n.innerHTML = ''; });
             optionsDiv.querySelectorAll('div.tagsinput .tag').forEach((n) => n.remove());
         }
