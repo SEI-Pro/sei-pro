@@ -770,13 +770,13 @@
   }
   function updateTablePrazoProcesso() {
     var tblProcessos = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
-    if (tblProcessos.find("tbody tr").not(".tableHeader").find("td.prazosBoxDisplay").length == 0) {
-      tblProcessos.find("tbody tr").not(".tableHeader").append('<td class="prazosBoxDisplay" style="text-align: right;"></td>');
+    if (tblProcessos.find("tbody tr").not(".tableHeader").find("td.seipro-prazo-box-display").length == 0) {
+      tblProcessos.find("tbody tr").not(".tableHeader").append('<td class="seipro-prazo-box-display" style="text-align: right;"></td>');
       if (tblProcessos.find("thead").length > 0) {
-        tblProcessos.find("thead tr").append('<th class="tituloControle tablesorter-header prazosBoxDisplay">Prazos</th>');
+        tblProcessos.find("thead tr").append('<th class="tituloControle tablesorter-header seipro-prazo-box-display">Prazos</th>');
       } else {
-        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").find(".prazosBoxDisplay").remove();
-        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").not(".tableHeader").append('<th class="tituloControle tablesorter-header prazosBoxDisplay">Prazos</th>');
+        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").find(".seipro-prazo-box-display").remove();
+        $("#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first").not(".tableHeader").append('<th class="tituloControle tablesorter-header seipro-prazo-box-display">Prazos</th>');
       }
       if ($(".tabelaControle").find("tr").hasClass("tableHeader")) {
         $(".tabelaControle").find("tr.tableHeader").each(function() {
@@ -805,7 +805,7 @@
         htmlDatePrazo = htmlDatePrazo ? $("<div>" + htmlDatePrazo + "</div>").find(".dateboxDisplay").html() : htmlDatePrazo;
         var dateSorter = htmlDatePrazo ? datePrazo || datePrazoDue : "";
         var htmlPrazo = htmlDatePrazo ? '<span class="info_dates_monitorado">    <span class="dateboxDisplay">        ' + htmlDatePrazo + "    </span></span>" : "";
-        $(this).find("td.prazosBoxDisplay").html(htmlPrazo).attr("data-time-sorter", dateSorter);
+        $(this).find("td.seipro-prazo-box-display").html(htmlPrazo).attr("data-time-sorter", dateSorter);
         console.log({ url: linkTag, text: textTag, data: datePrazo, datadue: datePrazoDue, html: htmlDatePrazo });
       }
     });

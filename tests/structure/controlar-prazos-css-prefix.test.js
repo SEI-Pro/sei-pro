@@ -23,10 +23,10 @@ describe('migration: controlar-prazos CSS classes stay prefixed', () => {
     expect(listaProcessos).toContain('seipro-prazo-box-display');
     expect(monitoradosPanel).toContain('seipro-prazo-box-display');
 
-    expect(view).not.toMatch(/prazoBoxDisplay/);
-    expect(css).not.toMatch(/prazoBoxDisplay|\.addControlePrazo\b/);
-    expect(listaProcessos).not.toMatch(/prazoBoxDisplay/);
-    expect(monitoradosPanel).not.toMatch(/prazoBoxDisplay/);
+    expect(view).not.toMatch(/prazoBoxDisplay|prazosBoxDisplay/);
+    expect(css).not.toMatch(/prazoBoxDisplay|prazosBoxDisplay|\.addControlePrazo\b/);
+    expect(listaProcessos).not.toMatch(/prazoBoxDisplay|prazosBoxDisplay/);
+    expect(monitoradosPanel).not.toMatch(/prazoBoxDisplay|prazosBoxDisplay/);
   });
 });
 
