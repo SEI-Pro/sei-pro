@@ -192,7 +192,7 @@ export function actMonitoradoPro(this_, mode) {
         const htmlBox = (typeof g('monitoradosLabelOptions') === 'function') ? g('monitoradosLabelOptions')(id_procedimento) : '';
         openModal({
             title: 'Opções: Processos Monitorados', width: 650,
-            content: '<strong class="iframeSucessPro" style="background:#f9efad;font-size:10pt;padding:10px;border-radius:5px;margin:0 0 10px 0;display:block;color:#404040;"><i class="fas fa-check-circle azulColor" style="margin-right:5px;"></i> Processo adicionado com sucesso no painel de Processos Monitorados (página inicial do SEI)</strong>' + htmlBox,
+            content: '<strong class="seipro-monitorado-success-message" style="background:#f9efad;font-size:10pt;padding:10px;border-radius:5px;margin:0 0 10px 0;display:block;color:#404040;"><i class="fas fa-check-circle azulColor" style="margin-right:5px;"></i> Processo adicionado com sucesso no painel de Processos Monitorados (página inicial do SEI)</strong>' + htmlBox,
             buttons: [{ text: 'Ok', class: 'confirm', onClick: (ref) => ref.close() }]
         });
     }

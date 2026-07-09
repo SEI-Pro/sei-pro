@@ -242,6 +242,13 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(prazoRow).not.toMatch(/info_dates_follow_empty/);
   });
 
+  it('uses a seipro-prefixed class for the monitorado success message hook', () => {
+    const commands = read('src/features/monitorados/commands.js');
+
+    expect(commands).toContain('seipro-monitorado-success-message');
+    expect(commands).not.toMatch(/iframeSucessPro/);
+  });
+
   it('uses a seipro-prefixed class for the monitorados scroll wrapper', () => {
     const panel = read('src/features/monitorados/panel.js');
     const css = read('src/features/monitorados/monitorados.css');

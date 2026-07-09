@@ -1112,7 +1112,7 @@
       openModal({
         title: "Op\xE7\xF5es: Processos Monitorados",
         width: 650,
-        content: '<strong class="iframeSucessPro" style="background:#f9efad;font-size:10pt;padding:10px;border-radius:5px;margin:0 0 10px 0;display:block;color:#404040;"><i class="fas fa-check-circle azulColor" style="margin-right:5px;"></i> Processo adicionado com sucesso no painel de Processos Monitorados (p\xE1gina inicial do SEI)</strong>' + htmlBox,
+        content: '<strong class="seipro-monitorado-success-message" style="background:#f9efad;font-size:10pt;padding:10px;border-radius:5px;margin:0 0 10px 0;display:block;color:#404040;"><i class="fas fa-check-circle azulColor" style="margin-right:5px;"></i> Processo adicionado com sucesso no painel de Processos Monitorados (p\xE1gina inicial do SEI)</strong>' + htmlBox,
         buttons: [{ text: "Ok", class: "confirm", onClick: (ref) => ref.close() }]
       });
     }
