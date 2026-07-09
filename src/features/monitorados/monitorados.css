@@ -62,7 +62,7 @@ td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after
     font-style: italic;
 }
 
-.seipro-table-monitorados td.tdmonitorado_tags.info_tags_follow_empty:hover .info_tags_follow:after {
+.seipro-table-monitorados td.seipro-monitorado-tags-cell.info_tags_follow_empty:hover .info_tags_follow:after {
     content: "Adicionar etiqueta";
     position: absolute;
     right: 40px;
@@ -71,7 +71,7 @@ td.tdmonitorado_dates.info_dates_follow_empty:hover .info_dates_monitorado:after
     font-style: italic;
 }
 
-td.tdmonitorado_tags {
+td.seipro-monitorado-tags-cell {
     padding-right: 20px;
     min-width: 120px;
 }

@@ -43,7 +43,7 @@ export function monitoradosLabelOptions(id_procedimento) {
         + '<a class="newLink seipro-monitorado-config-dates" data-act="dates-config" style="padding:5px 8px;margin:8px 2px 0 10px;font-size:10pt;" title="Opções"><i class="fas fa-cog"></i></a></span></td>'
         + '</tr>'
         + '<tr data-id_procedimento="' + id_procedimento + '" data-index="0" style="height:40px;">'
-        + '<td align="left" class="tdmonitorado_tags" data-etiqueta-mode="monitorado" colspan="4">'
+        + '<td align="left" class="seipro-monitorado-tags-cell" data-etiqueta-mode="monitorado" colspan="4">'
         + '<span class="info_tags_follow">' + tagsHtml + '</span>'
         + '<span class="info_tags_follow_txt" style="display:none;margin-top:-8px !important;"><input value="' + tagsMonitorado + '" class="monitoradoTagsPro" name="monitoradoTagsPro"></span>'
         + '<a class="newLink followLinkTagsAdd_send" data-act="tags-show" style="font-size:10pt;"><i class="fas fa-tags"></i> Adicionar etiqueta</a>'

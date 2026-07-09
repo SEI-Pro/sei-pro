@@ -121,4 +121,16 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(visualizacao).not.toMatch(/monitoradoConfigDates/);
     expect(prazoRow).not.toMatch(/monitoradoConfigDates/);
   });
+
+  it('uses a seipro-prefixed class for the monitorado tags cell', () => {
+    const visualizacao = read('src/features/monitorados/visualizacao.js');
+    const css = read('src/features/monitorados/monitorados.css');
+
+    expect(visualizacao).toContain('seipro-monitorado-tags-cell');
+    expect(visualizacao).toContain('data-etiqueta-mode="monitorado"');
+    expect(css).toContain('.seipro-monitorado-tags-cell');
+
+    expect(visualizacao).not.toMatch(/tdmonitorado_tags/);
+    expect(css).not.toMatch(/tdmonitorado_tags/);
+  });
 });
