@@ -514,7 +514,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 `)
                 .trigger('chosen:updated');
 
-            $('.suggestions').fadeIn();
+            $('.seipro-ai-suggestions').fadeIn();
             getHistoryDialog('check');
 
             if (frmEditor.length) $('#docAISelect_chosen').addClass('prompt_editor_sei');
@@ -1232,7 +1232,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             $('#historyDialogAI').after(sanitizeHTML(historyDialogArray.join(''))).remove();
             initFunctionsChat();
         } else if (mode == 'check' && historyDialogArray.length) {
-            $('.suggestions').after(`<div id="historyDialogAI"><i class="fas fa-history" style="color: #666;"></i> Ver Hist\u00F3rico</div>`);
+            $('.seipro-ai-suggestions').after(`<div id="historyDialogAI"><i class="fas fa-history" style="color: #666;"></i> Ver Hist\u00F3rico</div>`);
         }
     };
 
@@ -1890,21 +1890,21 @@ const getSessionTextProcesso = (num_processo_format) => {
                     <div class="icon_ia"></div>
                     Ol\u00E1! Como posso ajud\u00E1-lo hoje?
                 </div>
-                <div class="suggestions" style="display:none;">
-                    <div class="suggestion_actions" data-type="resume" data-send="true" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
+                <div class="suggestions seipro-ai-suggestions" style="display:none;">
+                    <div class="suggestion_actions seipro-ai-suggestion-action" data-type="resume" data-send="true" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
                         <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Resumir todo o processo
                     </div>
-                    <div class="suggestion_actions" data-type="sugira_encaminhamento" data-id_documento="all" data-send="true" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
+                    <div class="suggestion_actions seipro-ai-suggestion-action" data-type="sugira_encaminhamento" data-id_documento="all" data-send="true" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
                         <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Sugerir um encaminhamento
                     </div>
                     ${
                         frmEditor.length ? `
-                        <div class="suggestion_actions" data-type="erros_gramaticais" data-send="true" data-id_documento="text_doc" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
+                        <div class="suggestion_actions seipro-ai-suggestion-action" data-type="erros_gramaticais" data-send="true" data-id_documento="text_doc" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
                             <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Localizar erros gramaticais
                         </div>
                         ` : ``
                     }
-                    <div class="suggestion_actions" data-type="dados_sensiveis" data-send="true" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
+                    <div class="suggestion_actions seipro-ai-suggestion-action" data-type="dados_sensiveis" data-send="true" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
                         <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Encontrar dados sens\u00EDveis (LGPD)
                     </div>
                 </div>
@@ -1964,7 +1964,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         $('#configAI_model').html(sanitizeHTML(optionsModels()));
                     });
 
-                    $(document).off('click', '.suggestion_actions').on('click', '.suggestion_actions', function(event) {
+                    $(document).off('click', '.seipro-ai-suggestion-action').on('click', '.seipro-ai-suggestion-action', function(event) {
                         event.preventDefault();
                         if ($(this).data('send')) {
                             initAI(this, $(this).data());
@@ -2223,18 +2223,18 @@ const getSessionTextProcesso = (num_processo_format) => {
     const addFavoriteSuggestion = () => {
         const favoriteArray = JSON.parse(localStorageRestorePro('favoritePromptAI')) ?? [];
         
-        $('.suggestions').find('.suggestion_actions[data-type="personalizado"]').remove();
+        $('.seipro-ai-suggestions').find('.seipro-ai-suggestion-action[data-type="personalizado"]').remove();
 
         if (favoriteArray.length) {
             const htmlFav = $.map(favoriteArray, function(v, i){
                 const htmlToText = extractHTMLWithBRandSpanFromString(v);
                 return `
-                    <div data-send="false" data-index="${i}" data-type="personalizado" class="suggestion_actions">
+                    <div data-send="false" data-index="${i}" data-type="personalizado" class="suggestion_actions seipro-ai-suggestion-action">
                         <i data-index="${i}" style="position: absolute;right: 0;top: 0;z-index: 99;padding: 1em;" class="suggestion_actions_remove far fa-trash cinzaColor"></i>
                         <i style="margin-bottom: 1em;text-align: center;display: block;" class="fas fa-star cinzaColor"></i> ${htmlToText}
                     </div>`;
             }).join();
-            $('.suggestions').append(normalizeHTML(htmlFav));
+            $('.seipro-ai-suggestions').append(normalizeHTML(htmlFav));
         }
 
         $(document).off('click', '.suggestion_actions_remove').on('click', '.suggestion_actions_remove', function(event) {

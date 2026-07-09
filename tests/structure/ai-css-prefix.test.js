@@ -117,4 +117,20 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '\.speech_response_ai'/);
   });
+
+  it('adds seipro-prefixed hooks for AI suggestion cards while preserving legacy styling classes and data contracts', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="suggestions seipro-ai-suggestions"');
+    expect(ai).toContain('class="suggestion_actions seipro-ai-suggestion-action"');
+    expect(ai).toContain(".on('click', '.seipro-ai-suggestion-action'");
+    expect(ai).toContain("$('.seipro-ai-suggestions').find('.seipro-ai-suggestion-action[data-type=\"personalizado\"]').remove()");
+    expect(ai).toContain("$('.seipro-ai-suggestions').append(normalizeHTML(htmlFav))");
+    expect(ai).toContain('data-send="true"');
+    expect(ai).toContain('data-type="resume"');
+
+    expect(ai).not.toMatch(/\.on\('click', '\.suggestion_actions'/);
+    expect(ai).not.toMatch(/\$\('\.suggestions'\)/);
+    expect(ai).not.toMatch(/\$\('\.suggestions'\)\.append/);
+  });
 });
