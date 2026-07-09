@@ -526,7 +526,7 @@
                                         </div>`;
   function resultTable(theadRows, tbodyRows) {
     return `
-                            <div style="max-height: 350px;max-width: 850px;overflow: auto;">
+                            <div class="seipro-doclote-result-scroll" style="max-height: 350px;max-width: 850px;overflow: auto;">
                                 <table id="tableDataResult" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow">
                                     <thead>
                                         ${theadRows}

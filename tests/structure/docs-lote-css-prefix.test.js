@@ -67,6 +67,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(legacy).toContain('noFieldsError');
   });
 
+  it('uses a seipro-prefixed class for the result table scroll wrapper while preserving the result table contract', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('seipro-doclote-result-scroll');
+    expect(templates).toContain('id="tableDataResult"');
+    expect(templates).toContain('class="seiProForm tableInfo tableZebra tableFollow"');
+  });
+
   it('uses a seipro-prefixed class for the result action bar emitted by Docs em Lote', () => {
     const templates = read('src/features/docs-lote/templates.js');
 
