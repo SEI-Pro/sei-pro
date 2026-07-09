@@ -20,7 +20,8 @@ const moment = () => globalRef.moment;
 const preview = () => { if (typeof globalRef.configDatesPreview === 'function') globalRef.configDatesPreview(); };
 const configDateClassByType = {
     selectdoc: 'seipro-monitorado-dates-selectdoc',
-    setdate: 'seipro-monitorado-dates-setdate'
+    setdate: 'seipro-monitorado-dates-setdate',
+    countdays: 'seipro-monitorado-dates-countdays'
 };
 const configDateClass = (type) => configDateClassByType[type] || ('configDates_' + type);
 
@@ -69,7 +70,7 @@ function formHtml(configdate, id_procedimento, store, monitoradoIndex) {
         + '<tr style="height:40px;"><td colspan="2">Visualizar o resultado:</td></tr>'
         + swRow('fa-stopwatch', 'Em tempo relativo', 'countdown', 'countdown', configdate.countdown)
         + swRow('fa-calendar-day', 'Em número de dias', 'countdays', 'countdays', configdate.countdays)
-        + '<tr style="height:40px;' + sw(configdate.countdays, '', 'display:none') + '" class="configDates_countdays"><td><i class="iconPopup iconSwitch fas fa-briefcase ' + sw(configdate.workday, 'azulColor', 'cinzaColor') + '"></i> Calcular em dias úteis</td>'
+        + '<tr style="height:40px;' + sw(configdate.countdays, '', 'display:none') + '" class="seipro-monitorado-dates-countdays"><td><i class="iconPopup iconSwitch fas fa-briefcase ' + sw(configdate.workday, 'azulColor', 'cinzaColor') + '"></i> Calcular em dias úteis</td>'
         + '<td><div class="onoffswitch" style="float:right;"><input type="checkbox" data-act="switch-icon" class="onoffswitch-checkbox" id="configDatesBox_workday" data-type="workday" tabindex="0" ' + (configdate.workday ? 'checked' : '') + '><label class="onoff-switch-label" for="configDatesBox_workday"></label></div></td></tr>'
         + '<tr class="hrForm"><td colspan="4"></td></tr>'
         + '<tr style="height:40px;"><td colspan="2">Sinalizar a partir:</td></tr>'
