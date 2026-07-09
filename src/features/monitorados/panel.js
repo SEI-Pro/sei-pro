@@ -70,7 +70,7 @@ function rowHtml(value, index, arrayProcessosUnidade) {
         // Anotação: espelho read-only da anotação nativa (#P{id} .seipro-sticknote-note-cell).
         + '<td class="seipro-monitorado-native-cell" data-native="anotacao"></td>'
         // Tipo de Processo: vem do processo (tooltip do link nativo), não do store.
-        + '<td class="tdmonitorado_tipo"><span data-native="tipo"></span>'
+        + '<td class="seipro-monitorado-type-cell"><span data-native="tipo"></span>'
         + '<a class="newLink followLink followLinkTags followLinkMonitoradoRemove" data-act="remove-row" title="Remover dos Processos Monitorados"><i class="fas fa-trash-alt"></i></a>'
         + '</td>'
         + '<td class="td_monitorado_category">'
