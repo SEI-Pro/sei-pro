@@ -5,8 +5,8 @@
 // Nota de transição: o markup preserva as classes GLOBAIS compartilhadas do SEI Pro
 // (seiProForm, tableInfo, tituloControle, onoffswitch, dialogBoxDiv, #dialogBoxDocLote…)
 // e os estilos inline herdados do legado — renomeá-los para `.seipro-*` quebraria a
-// infra de diálogo compartilhada com sei-functions-pro. As únicas classes NOVAS criadas
-// aqui (hooks de delegação da tabela de resultado) já usam o prefixo `.seipro-`.
+// infra de diálogo compartilhada com sei-functions-pro. Classes próprias desta feature
+// usam o prefixo `.seipro-`.
 
 const wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv">${inner}</div>`;
 
@@ -97,7 +97,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
             </tr>
             <tr>
                 <td style="width: 50px;">
-                    <div class="divInputForceNames" style="margin: 10px 0; font-size: 9pt;transform: scale(0.9);">
+                    <div class="seipro-doclote-force-names" style="margin: 10px 0; font-size: 9pt;transform: scale(0.9);">
                         <div class="onoffswitch" style="float: left;margin-right: 1em;">
                         <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="checkForceNames" data-type="setdate" tabindex="0">
                         <label class="onoff-switch-label" for="checkForceNames"></label>
