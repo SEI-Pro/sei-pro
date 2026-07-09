@@ -23,7 +23,8 @@ const configDateClassByType = {
     setdate: 'seipro-monitorado-dates-setdate',
     countdays: 'seipro-monitorado-dates-countdays',
     newdoc: 'seipro-monitorado-dates-newdoc',
-    duedate: 'seipro-monitorado-dates-duedate'
+    duedate: 'seipro-monitorado-dates-duedate',
+    duesetdate: 'seipro-monitorado-dates-duesetdate'
 };
 const configDateClass = (type) => configDateClassByType[type] || ('configDates_' + type);
 
@@ -88,7 +89,7 @@ function formHtml(configdate, id_procedimento, store, monitoradoIndex) {
         + '<span class="seipro-monitorado-dates-selectdoc" style="display:none">da data de assinatura</span><span class="seipro-monitorado-dates-setdate">da data de referência</span></td></tr>'
         + '<tr style="height:10px;" class="seipro-monitorado-dates-duedate"><td colspan="2"></td></tr>'
         + swRow('fa-calendar-alt', 'De uma data de vencimento específica', 'duesetdate', 'duesetdate', configdate.duesetdate)
-        + '<tr style="height:40px;' + sw(configdate.duesetdate, '', 'display:none') + '" class="configDates_duesetdate"><td><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i> Data de vencimento</td>'
+        + '<tr style="height:40px;' + sw(configdate.duesetdate, '', 'display:none') + '" class="seipro-monitorado-dates-duesetdate"><td><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i> Data de vencimento</td>'
         + '<td><input type="date" data-act="preview" id="configDatesBox_duesetdt" value="' + configdate.dateDue + '" style="width:130px;float:right;"></td></tr>'
         + '</table>'
         + '<table style="font-size:10pt;width:100%;" class="seiProForm"><tr class="hrForm"><td colspan="4"></td></tr>'
