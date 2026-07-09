@@ -91,9 +91,12 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     const panel = read('src/features/monitorados/panel.js');
 
     expect(panel).toContain('seipro-monitorado-type-cell');
+    expect(panel).toContain('seipro-monitorado-remove-row');
+    expect(panel).toContain('data-act="remove-row"');
     expect(panel).toContain('data-native="tipo"');
 
     expect(panel).not.toMatch(/tdmonitorado_tipo/);
+    expect(panel).not.toMatch(/followLinkMonitoradoRemove/);
   });
 
   it('uses a seipro-prefixed class for the monitorado category cell', () => {
