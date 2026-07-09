@@ -116,7 +116,7 @@ async function docsLote_fillModelAnalysis(matches, selectedDoc, txtModelo = fals
         let lista = `<ul class="seipro-doclote-analysis-text" style="max-height: 250px;overflow-y: auto;">\n`;
         matches.forEach((field) => { lista += `<li>${field.replaceAll('#', '')}</li>\n`; });
         lista += '</ul>';
-        $('#fieldList').append(`<p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Campos dinâmicos detectados:</p>`);
+        $('#fieldList').append(`<p class="seipro-doclote-analysis-text seipro-doclote-field-title"><i class='fas fa-hashtag cinzaColor'></i> Campos dinâmicos detectados:</p>`);
         $('#fieldList').append(lista);
         if (!txtModelo) $('#btnConfirmAnalysis').prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
     } else {
@@ -167,8 +167,8 @@ function docsLote_fillCSVAnalysis(parseData, filename) {
             S.CSVHeaders.forEach((field) => { lista += `<li>${field}</li>\n`; });
             lista += '</ul>';
             $('#fieldListCSV').append(`
-                <p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-layer-group cinzaColor'></i> Quantidade de registros: ${S.CSVData.length}</p>
-                <p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Cabeçalhos detectados:</p>
+                <p class="seipro-doclote-analysis-text seipro-doclote-field-title"><i class='fas fa-layer-group cinzaColor'></i> Quantidade de registros: ${S.CSVData.length}</p>
+                <p class="seipro-doclote-analysis-text seipro-doclote-field-title"><i class='fas fa-hashtag cinzaColor'></i> Cabeçalhos detectados:</p>
                 ${lista}`);
             $('#btnConfirmAnalysis').prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
         } else {

@@ -646,7 +646,7 @@
 `;
       });
       lista += "</ul>";
-      $("#fieldList").append(`<p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Campos din\xE2micos detectados:</p>`);
+      $("#fieldList").append(`<p class="seipro-doclote-analysis-text seipro-doclote-field-title"><i class='fas fa-hashtag cinzaColor'></i> Campos din\xE2micos detectados:</p>`);
       $("#fieldList").append(lista);
       if (!txtModelo) $("#btnConfirmAnalysis").prop("disabled", false).removeClass("ui-button-disabled ui-state-disabled");
     } else {
@@ -695,8 +695,8 @@
         });
         lista += "</ul>";
         $("#fieldListCSV").append(`
-                <p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-layer-group cinzaColor'></i> Quantidade de registros: ${S.CSVData.length}</p>
-                <p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Cabe\xE7alhos detectados:</p>
+                <p class="seipro-doclote-analysis-text seipro-doclote-field-title"><i class='fas fa-layer-group cinzaColor'></i> Quantidade de registros: ${S.CSVData.length}</p>
+                <p class="seipro-doclote-analysis-text seipro-doclote-field-title"><i class='fas fa-hashtag cinzaColor'></i> Cabe\xE7alhos detectados:</p>
                 ${lista}`);
         $("#btnConfirmAnalysis").prop("disabled", false).removeClass("ui-button-disabled ui-state-disabled");
       } else {
