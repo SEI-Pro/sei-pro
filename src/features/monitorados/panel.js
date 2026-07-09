@@ -73,7 +73,7 @@ function rowHtml(value, index, arrayProcessosUnidade) {
         + '<td class="seipro-monitorado-type-cell"><span data-native="tipo"></span>'
         + '<a class="newLink followLink followLinkTags followLinkMonitoradoRemove" data-act="remove-row" title="Remover dos Processos Monitorados"><i class="fas fa-trash-alt"></i></a>'
         + '</td>'
-        + '<td class="td_monitorado_category">'
+        + '<td class="seipro-monitorado-category-cell">'
         + '<span class="info_category_txt">' + (categoria ? esc(categoria) : '') + '</span>'
         + '<span class="info_category" style="display:none"></span>'
         + '<a class="newLink followLink followLinkTags followLinkMonitoradoCategory" data-act="category-edit" title="Editar categoria"><i class="fas fa-pencil-alt"></i></a>'

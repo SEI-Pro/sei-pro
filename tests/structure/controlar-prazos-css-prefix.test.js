@@ -94,6 +94,16 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(panel).not.toMatch(/tdmonitorado_tipo/);
   });
 
+  it('uses a seipro-prefixed class for the monitorado category cell', () => {
+    const panel = read('src/features/monitorados/panel.js');
+
+    expect(panel).toContain('seipro-monitorado-category-cell');
+    expect(panel).toContain('info_category_txt');
+    expect(panel).toContain('info_category');
+
+    expect(panel).not.toMatch(/td_monitorado_category/);
+  });
+
   it('uses a seipro-prefixed class for the prazo config action hook', () => {
     const visualizacao = read('src/features/monitorados/visualizacao.js');
     const prazoRow = read('src/features/monitorados/prazo-row.js');
