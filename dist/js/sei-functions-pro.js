@@ -3914,10 +3914,12 @@ function showFollowEtiqueta(this_, status, mode) {
     table.find('.info_tags_follow_txt').hide();
     table.find('.followLinkTags').show();
     table.find('.btnCloseEtiqueta').remove();
+    var emptyTagsClass = td.hasClass('seipro-monitorado-tags-cell') || mode == 'monitorado' ? 'seipro-monitorado-tags-empty' : 'info_tags_follow_empty';
+    td.removeClass(emptyTagsClass == 'seipro-monitorado-tags-empty' ? 'info_tags_follow_empty' : 'seipro-monitorado-tags-empty');
     if (td_info_tags_follow.length > 0 && td_info_tags_follow.html().trim() == '') {
-        td.addClass('info_tags_follow_empty');
+        td.addClass(emptyTagsClass);
     } else {
-        td.removeClass('info_tags_follow_empty');
+        td.removeClass(emptyTagsClass);
     }
     if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     if(status == 'show') {

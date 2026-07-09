@@ -172,6 +172,17 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(datas).not.toMatch(/\.monitoradoTagsPro/);
   });
 
+  it('uses a seipro-prefixed class for the monitorado tags empty-state hook', () => {
+    const css = read('src/features/monitorados/monitorados.css');
+    const legacyShared = read('src/shared/legacy/sei-functions-pro.js');
+
+    expect(css).toContain('seipro-monitorado-tags-empty');
+    expect(legacyShared).toContain('seipro-monitorado-tags-empty');
+    expect(legacyShared).toContain("info_tags_follow_empty");
+
+    expect(css).not.toMatch(/info_tags_follow_empty/);
+  });
+
   it('uses a seipro-prefixed class for the monitorado date editor hook', () => {
     const visualizacao = read('src/features/monitorados/visualizacao.js');
     const datas = read('src/features/monitorados/datas.js');
