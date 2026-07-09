@@ -905,7 +905,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         if (selectPromptVal === 'personalizado') data_protocolo.type = 'personalizado';
 
         // GERA CAIXA DE DIÁLOGO DO USUÁRIO
-        const response_user = sanitizeHTML(`<div class="response_user">${selectPromptText} ${selectDocAiText}</div>`);
+        const response_user = sanitizeHTML(`<div class="seipro-ai-user-response">${selectPromptText} ${selectDocAiText}</div>`);
             // container.find('.welcome').remove();
             container.append(response_user);
             container[0].scrollTop = container[0].scrollHeight;
@@ -1228,7 +1228,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             historyDialogArray.push(html);
             sessionStorage.setItem('historyDialogAI', JSON.stringify(historyDialogArray));
         } else if (mode == 'restore') {
-            $('#response_ai .response_user, #response_ai .response_bot').remove();
+            $('#response_ai .seipro-ai-user-response, #response_ai .response_bot').remove();
             $('#historyDialogAI').after(sanitizeHTML(historyDialogArray.join(''))).remove();
             initFunctionsChat();
         } else if (mode == 'check' && historyDialogArray.length) {
