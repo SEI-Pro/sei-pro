@@ -338,13 +338,13 @@ const addDocToMultiList = () => {
     const $multiList = $('#docAIMultiList');
     // Evita duplicatas
     let duplicate = false;
-    $multiList.find('.doc-ai-tag').each(function() {
+    $multiList.find('.seipro-ai-doc-tag').each(function() {
         if ($(this).data('id_documento') === (data.id_documento || val) && $(this).data('num_processo') === (data.num_processo || '')) {
             duplicate = true;
         }
     });
     if (duplicate) return;
-    const $tag = $('<span class="doc-ai-tag"></span>')
+    const $tag = $('<span class="seipro-ai-doc-tag"></span>')
         .css({display:'inline-flex', alignItems:'center', background:'#e8f4fd', border:'1px solid #b0d0e8', borderRadius:'3px', padding:'2px 8px', fontSize:'11px', margin:'2px 3px', maxWidth:'100%', boxSizing:'border-box'})
         .data('id_documento', data.id_documento || val)
         .data('num_processo', data.num_processo || '')
@@ -868,7 +868,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const selectDocAiOption = selectDocAi.find('option:selected');
 
         // SUPORTE A SELEÇÃO MÚLTIPLA DE DOCUMENTOS
-        const multiTagDocs = $('#docAIMultiList .doc-ai-tag');
+        const multiTagDocs = $('#docAIMultiList .seipro-ai-doc-tag');
         let multiDocs = null;
         if (!set_protocolo && multiTagDocs.length > 1) {
             multiDocs = [];
@@ -1994,8 +1994,8 @@ const getSessionTextProcesso = (num_processo_format) => {
                     // DELEGAÇÃO DE EVENTO PARA REMOVER DOCUMENTO DA SELEÇÃO MÚLTIPLA
                     $(document).off('click', '.doc-ai-tag-remove').on('click', '.doc-ai-tag-remove', function(event) {
                         event.preventDefault();
-                        $(this).closest('.doc-ai-tag').remove();
-                        if ($('#docAIMultiList .doc-ai-tag').length === 0) {
+                        $(this).closest('.seipro-ai-doc-tag').remove();
+                        if ($('#docAIMultiList .seipro-ai-doc-tag').length === 0) {
                             $('#docAIMultiList').hide();
                         }
                         resizeBoxAIActions();
