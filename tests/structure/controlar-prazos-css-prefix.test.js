@@ -185,6 +185,17 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(css).not.toMatch(/info_tags_follow_empty/);
   });
 
+  it('uses a seipro-prefixed class for the monitorado select-document date rows', () => {
+    const datas = read('src/features/monitorados/datas.js');
+
+    expect(datas).toContain('seipro-monitorado-dates-selectdoc');
+    expect(datas).toContain("selectdoc: 'seipro-monitorado-dates-selectdoc'");
+    expect(datas).toContain("qsa('.' + configDateClass(opt))");
+
+    expect(datas).not.toMatch(/class=\"configDates_selectdoc\"/);
+    expect(datas).not.toMatch(/\.configDates_\s*\+\s*opt/);
+  });
+
   it('uses a seipro-prefixed class for the monitorado date editor hook', () => {
     const visualizacao = read('src/features/monitorados/visualizacao.js');
     const datas = read('src/features/monitorados/datas.js');
