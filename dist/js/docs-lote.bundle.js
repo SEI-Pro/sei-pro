@@ -604,7 +604,7 @@
     S.selectedModel = selectedDoc;
     S.dynamicFields = matches.map((field) => field.trim());
     $("#dialogBoxDocLote").append(`<div id='fieldList'></div>`);
-    $("#fieldList").append(`<p class="textAnalysis"><i class='fas fa-${txtModelo ? "keyboard" : "file-alt"} cinzaColor'></i> ${txtModelo ? "Texto Padr\xE3o" : "Documento"} : ${selectedDoc.nome}</p>`);
+    $("#fieldList").append(`<p class="seipro-doclote-analysis-text"><i class='fas fa-${txtModelo ? "keyboard" : "file-alt"} cinzaColor'></i> ${txtModelo ? "Texto Padr\xE3o" : "Documento"} : ${selectedDoc.nome}</p>`);
     if (txtModelo) {
       $("#btnConfirmAnalysis").prop("disabled", true).addClass("ui-button-disabled ui-state-disabled");
       const tiposDocumentos = await getTypeSEI("documentos");
@@ -612,10 +612,10 @@
         return '<option value="' + v.id + '">' + v.name + "</option>";
       }).join("") : false;
       $("#fieldList").append(`
-            <p class="textAnalysis">
+            <p class="seipro-doclote-analysis-text">
                 <i class='fas fa-file-alt cinzaColor'></i> Tipo de Documento:
             </p>
-            <p class="textAnalysis">
+            <p class="seipro-doclote-analysis-text">
                 <select style="width:300px" id="tipoDocumentoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposDocumentos}</select>
             </p>
             `);
@@ -639,14 +639,14 @@
       });
     }
     if (matches.length) {
-      let lista = `<ul class="textAnalysis" style="max-height: 250px;overflow-y: auto;">
+      let lista = `<ul class="seipro-doclote-analysis-text" style="max-height: 250px;overflow-y: auto;">
 `;
       matches.forEach((field) => {
         lista += `<li>${field.replaceAll("#", "")}</li>
 `;
       });
       lista += "</ul>";
-      $("#fieldList").append(`<p class="textAnalysis dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Campos din\xE2micos detectados:</p>`);
+      $("#fieldList").append(`<p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Campos din\xE2micos detectados:</p>`);
       $("#fieldList").append(lista);
       if (!txtModelo) $("#btnConfirmAnalysis").prop("disabled", false).removeClass("ui-button-disabled ui-state-disabled");
     } else {
@@ -685,9 +685,9 @@
     if (typeof S.CSVData[0] !== "undefined" && S.CSVData[0] !== null) {
       S.CSVHeaders = Object.keys(S.CSVData[0]).filter(Boolean);
       $("#dialogBoxDocLote").append(`<div id='fieldListCSV'></div>`);
-      $("#fieldListCSV").append(`<p class="textAnalysis"><i class='fas fa-file-csv azulColor'></i> Arquivo: ${filename}</p>`);
+      $("#fieldListCSV").append(`<p class="seipro-doclote-analysis-text"><i class='fas fa-file-csv azulColor'></i> Arquivo: ${filename}</p>`);
       if (S.CSVHeaders.length) {
-        let lista = `<ul class="textAnalysis" style="max-height: 250px;overflow-y: auto;">
+        let lista = `<ul class="seipro-doclote-analysis-text" style="max-height: 250px;overflow-y: auto;">
 `;
         S.CSVHeaders.forEach((field) => {
           lista += `<li>${field}</li>
@@ -695,8 +695,8 @@
         });
         lista += "</ul>";
         $("#fieldListCSV").append(`
-                <p class="textAnalysis dFielTitle"><i class='fas fa-layer-group cinzaColor'></i> Quantidade de registros: ${S.CSVData.length}</p>
-                <p class="textAnalysis dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Cabe\xE7alhos detectados:</p>
+                <p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-layer-group cinzaColor'></i> Quantidade de registros: ${S.CSVData.length}</p>
+                <p class="seipro-doclote-analysis-text dFielTitle"><i class='fas fa-hashtag cinzaColor'></i> Cabe\xE7alhos detectados:</p>
                 ${lista}`);
         $("#btnConfirmAnalysis").prop("disabled", false).removeClass("ui-button-disabled ui-state-disabled");
       } else {

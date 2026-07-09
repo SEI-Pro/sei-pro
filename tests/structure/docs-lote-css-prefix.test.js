@@ -23,4 +23,16 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).not.toMatch(/containerTipoProcessoSelect/);
     expect(view).not.toMatch(/containerTipoProcessoSelect/);
   });
+
+  it('uses a seipro-prefixed class for analysis text emitted by the wizard', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain('seipro-doclote-analysis-text');
+    expect(view).toContain('id="tipoDocumentoSelect"');
+    expect(view).toContain('id=\'fieldList\'');
+    expect(view).toContain('id=\'fieldListCSV\'');
+
+    expect(view).not.toMatch(/class="textAnalysis/);
+    expect(view).not.toMatch(/`<ul class="textAnalysis/);
+  });
 });
