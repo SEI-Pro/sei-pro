@@ -162,4 +162,20 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(visualizacao).not.toMatch(/querySelector\('\.monitoradoTagsPro'\)/);
     expect(datas).not.toMatch(/\.monitoradoTagsPro/);
   });
+
+  it('uses a seipro-prefixed class for the monitorado date editor hook', () => {
+    const visualizacao = read('src/features/monitorados/visualizacao.js');
+    const datas = read('src/features/monitorados/datas.js');
+    const prazoRow = read('src/features/monitorados/prazo-row.js');
+
+    expect(visualizacao).toContain('seipro-monitorado-dates-editor');
+    expect(visualizacao).toContain('seipro-monitorado-dates');
+    expect(visualizacao).toContain('name="monitoradoPrazoSend"');
+    expect(datas).toContain('.seipro-monitorado-dates-editor');
+    expect(prazoRow).toContain('.seipro-monitorado-dates-editor');
+
+    expect(visualizacao).not.toMatch(/info_dates_monitorado_txt/);
+    expect(datas).not.toMatch(/info_dates_monitorado_txt/);
+    expect(prazoRow).not.toMatch(/info_dates_monitorado_txt/);
+  });
 });

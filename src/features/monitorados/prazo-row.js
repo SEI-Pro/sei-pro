@@ -40,7 +40,7 @@ function showDatesMonitorado(el, mode) {
     if (!(configBtn && configBtn.matches(':hover'))) {
         if (table) {
             qsa('.info_dates_monitorado', table).forEach((n) => { n.style.display = ''; });
-            qsa('.info_dates_monitorado_txt', table).forEach((n) => { n.style.display = 'none'; });
+            qsa('.seipro-monitorado-dates-editor', table).forEach((n) => { n.style.display = 'none'; });
             qsa('.followLinkDates', table).forEach((n) => { n.style.display = ''; });
         }
         if (typeof globalRef.infraTooltipOcultar === 'function') globalRef.infraTooltipOcultar();
@@ -50,7 +50,7 @@ function showDatesMonitorado(el, mode) {
         const td = el.closest('td');
         if (td) qsa('.followLinkDates', td).forEach((n) => { n.style.display = 'none'; });
         qsa('.info_dates_monitorado', tr).forEach((n) => { n.style.display = 'none'; });
-        const txt = qs('.info_dates_monitorado_txt', tr);
+        const txt = qs('.seipro-monitorado-dates-editor', tr);
         if (txt) { txt.style.display = 'inline-flex'; const inp = qs('input.seipro-monitorado-dates', txt); if (inp) { inp.focus(); inp.click(); } }
     }
     if (tr) {

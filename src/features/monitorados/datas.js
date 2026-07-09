@@ -185,7 +185,7 @@ function applyAndClose(triggerEl, remove, ref) {
     if (!inAtividade && tr) {
         const info = qs('.info_dates_monitorado', tr);
         if (info) { info.innerHTML = remove ? '' : g('getDatesPreview')(config); info.style.display = ''; }
-        const txt = qs('.info_dates_monitorado_txt', tr); if (txt) txt.style.display = 'none';
+        const txt = qs('.seipro-monitorado-dates-editor', tr); if (txt) txt.style.display = 'none';
         const editLink = qs('.followLinkDatesEdit', tr); if (editLink) editLink.style.display = '';
         const dateInput = qs('.seipro-monitorado-dates', tr); if (dateInput) dateInput.value = remove ? '' : config.date;
     }
@@ -270,7 +270,7 @@ export function openBoxConfigDates(triggerEl) {
     const id_procedimento = tr ? parseInt(tr.getAttribute('data-id_procedimento')) : NaN;
     const store = getStoreMonitoradoPro();
     const idx = findMonitoradoIndex(store, id_procedimento);
-    const dateInputEl = triggerEl && triggerEl.closest('.info_dates_monitorado_txt') ? triggerEl.closest('.info_dates_monitorado_txt').querySelector('.seipro-monitorado-dates') : null;
+    const dateInputEl = triggerEl && triggerEl.closest('.seipro-monitorado-dates-editor') ? triggerEl.closest('.seipro-monitorado-dates-editor').querySelector('.seipro-monitorado-dates') : null;
     const dateInput = dateInputEl ? (dateInputEl.value || '').trim() : '';
     const configdate = getOptionsConfigDate(idx);
     configdate.date = (dateInput === '') ? configdate.date : dateInput;
