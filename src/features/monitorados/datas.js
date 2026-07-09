@@ -19,7 +19,8 @@ const byId = (id) => document.getElementById(id);
 const moment = () => globalRef.moment;
 const preview = () => { if (typeof globalRef.configDatesPreview === 'function') globalRef.configDatesPreview(); };
 const configDateClassByType = {
-    selectdoc: 'seipro-monitorado-dates-selectdoc'
+    selectdoc: 'seipro-monitorado-dates-selectdoc',
+    setdate: 'seipro-monitorado-dates-setdate'
 };
 const configDateClass = (type) => configDateClassByType[type] || ('configDates_' + type);
 
@@ -59,7 +60,7 @@ function formHtml(configdate, id_procedimento, store, monitoradoIndex) {
         + '<tr style="height:40px;' + sw(configdate.selectdoc, '', 'display:none') + '" class="seipro-monitorado-dates-selectdoc"><td colspan="2"><select data-act="setupdate" id="configDatesBox_listdocs">' + docsOptions + '</select></td></tr>'
         + '<tr style="height:10px;display:none" class="seipro-monitorado-dates-selectdoc"><td colspan="2"></td></tr>'
         + swRow('fa-calendar-check', 'De uma data específica', 'setdate', 'setdate', configdate.setdate)
-        + '<tr style="height:40px;' + sw(configdate.setdate, '', 'display:none') + '" class="configDates_setdate"><td><i class="iconPopup fas fa-clock cinzaColor"></i> Data referencial</td>'
+        + '<tr style="height:40px;' + sw(configdate.setdate, '', 'display:none') + '" class="seipro-monitorado-dates-setdate"><td><i class="iconPopup fas fa-clock cinzaColor"></i> Data referencial</td>'
         + '<td><input type="date" data-act="preview" id="configDatesBox_date" value="' + configdate.date + '" style="width:130px;float:right;"></td></tr>'
         + '<tr style="height:10px;"><td colspan="2"><a class="newLink ' + sw(configdate.advanced, 'newLink_active', '') + '" data-act="advanced" style="font-size:10pt;cursor:pointer;margin:5px 0 0 0;float:right;"><i class="fas fa-wrench cinzaColor"></i> Opções avançadas</a></td></tr>'
         + '</table>'
@@ -81,7 +82,7 @@ function formHtml(configdate, id_procedimento, store, monitoradoIndex) {
         + '<input type="number" data-act="preview" id="configDatesBox_duenumber" value="' + duenumber + '" style="width:40px;margin-left:35px !important;" min="0"> dias '
         + '<select id="configDatesBox_duecounter" data-act="preview" style="width:auto;"><option value="corrido" ' + sw(configdate.duecounter === 'corrido', 'selected', '') + '>corridos</option><option value="util" ' + sw(configdate.duecounter === 'util', 'selected', '') + '>úteis</option></select>'
         + '<select id="configDatesBox_duemode" data-act="preview" style="width:auto;"><option value="depois" ' + sw(configdate.duemode === 'depois', 'selected', '') + '>depois</option><option value="antes" ' + sw(configdate.duemode === 'antes', 'selected', '') + '>antes</option></select>'
-        + '<span class="seipro-monitorado-dates-selectdoc" style="display:none">da data de assinatura</span><span class="configDates_setdate">da data de referência</span></td></tr>'
+        + '<span class="seipro-monitorado-dates-selectdoc" style="display:none">da data de assinatura</span><span class="seipro-monitorado-dates-setdate">da data de referência</span></td></tr>'
         + '<tr style="height:10px;" class="configDates_duedate"><td colspan="2"></td></tr>'
         + swRow('fa-calendar-alt', 'De uma data de vencimento específica', 'duesetdate', 'duesetdate', configdate.duesetdate)
         + '<tr style="height:40px;' + sw(configdate.duesetdate, '', 'display:none') + '" class="configDates_duesetdate"><td><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i> Data de vencimento</td>'
