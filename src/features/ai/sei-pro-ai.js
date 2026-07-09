@@ -1077,7 +1077,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const btnSendAI = $('#btnSendAI');
         const htmlAddDoc = frmEditor.length 
         ? `
-            <div class="add_doc_response_ai" data-tooltip="Adicionar texto no documento" data-response="${respost_id}">
+            <div class="seipro-ai-add-doc-response" data-tooltip="Adicionar texto no documento" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-share-all fa-rotate-90"></i></a>
             </div>
             `
@@ -1240,7 +1240,7 @@ const getSessionTextProcesso = (num_processo_format) => {
     const initFunctionsChat = () => {
         
         // DELEGAÇÃO DE EVENTO PARA COPIAR RESPOSTAS
-        $(document).off('click', '.add_doc_response_ai').on('click', '.add_doc_response_ai', function(event) {
+        $(document).off('click', '.seipro-ai-add-doc-response').on('click', '.seipro-ai-add-doc-response', function(event) {
             event.preventDefault();
             addDocResponseAI(this);
         });
