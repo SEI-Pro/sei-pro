@@ -61,7 +61,7 @@ function rowHtml(value, index, arrayProcessosUnidade) {
         + '<td align="left">'
         + '<a class="followLinkProcesso bLink" style="text-decoration:underline;" href="' + linkDoc + '"><i class="' + iconProcesso + ' bLink" style="text-decoration:underline;" title="' + tipsProcesso + '"></i> ' + esc(value.processo) + '</a>'
         + '<a class="newLink followLink followLinkNewtab" href="' + linkDoc + '" title="Abrir em nova aba" target="_blank"><i class="fas fa-external-link-alt" style="font-size:90%;text-decoration:underline;"></i></a>'
-        + '<div class="info_icons_monitorado">' + htmlIconsHome + '</div>'
+        + '<div class="seipro-monitorado-native-icons">' + htmlIconsHome + '</div>'
         + '</td>'
         // Prazo: espelho read-only da célula nativa de controle de prazo (#P{id} .seipro-prazo-box-display).
         + '<td align="left" class="seipro-monitorado-native-cell" data-native="prazo"></td>'
