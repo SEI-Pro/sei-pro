@@ -59,7 +59,7 @@ function rowHtml(value, index, arrayProcessosUnidade) {
     return '<tr data-tagname="SemGrupo" data-index="' + index + '" data-id_procedimento="' + id + '">'
         + '<td align="center"><input type="checkbox" data-act="row-check" id="monitoradoPro_' + id + '" name="monitoradoPro" value="' + id + '"></td>'
         + '<td align="left">'
-        + '<a class="followLinkProcesso bLink" style="text-decoration:underline;" href="' + linkDoc + '"><i class="' + iconProcesso + ' bLink" style="text-decoration:underline;" title="' + tipsProcesso + '"></i> ' + esc(value.processo) + '</a>'
+        + '<a class="seipro-monitorado-process-link bLink" style="text-decoration:underline;" href="' + linkDoc + '"><i class="' + iconProcesso + ' bLink" style="text-decoration:underline;" title="' + tipsProcesso + '"></i> ' + esc(value.processo) + '</a>'
         + '<a class="newLink followLink followLinkNewtab" href="' + linkDoc + '" title="Abrir em nova aba" target="_blank"><i class="fas fa-external-link-alt" style="font-size:90%;text-decoration:underline;"></i></a>'
         + '<div class="seipro-monitorado-native-icons">' + htmlIconsHome + '</div>'
         + '</td>'
