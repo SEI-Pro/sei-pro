@@ -290,7 +290,7 @@ export function openBoxConfigDates(triggerEl) {
 // Checkbox "Manter em Processos Monitorados" (tela de visualização do processo).
 function actionMonitoradoCheckbox(el) {
     const box = el.closest('.infraDivCheckbox');
-    const optionsDiv = box ? box.querySelector('.monitoradosLabelOptions') : null;
+    const optionsDiv = box ? box.querySelector('.seipro-monitorados-label-options') : null;
     if (el.checked) {
         if (g('actMonitoradoPro')) g('actMonitoradoPro')(false, 'add');
         if (optionsDiv) optionsDiv.style.display = '';

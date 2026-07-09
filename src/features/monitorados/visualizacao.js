@@ -89,7 +89,7 @@ export function getMonitoradosEnviarProcesso() {
             '<div id="divSinAdicionarMonitorados" class="infraDivCheckbox" style="position:absolute;top:100%;left:0;">'
             + '<input type="checkbox" id="chkSindicionarMonitorados" data-act="vis-checkbox" name="chkSindicionarMonitorados" class="infraCheckbox" tabindex="510" ' + (value ? 'checked' : '') + '>'
             + '<label id="lblSinAdicionarMonitorados" for="chkSindicionarMonitorados" class="infraLabelCheckbox">Manter processo em Processos Monitorados</label>'
-            + '<div class="monitoradosLabelOptions seiProForm" style="display:' + (value ? 'block' : 'none') + ';font-size:9pt;clear:both;">' + monitoradosLabelOptions(id) + '</div></div>');
+            + '<div class="seipro-monitorados-label-options seiProForm" style="display:' + (value ? 'block' : 'none') + ';font-size:9pt;clear:both;">' + monitoradosLabelOptions(id) + '</div></div>');
     }
     if (typeof g('loadStylePro') === 'function') {
         const head = idoc.head;
