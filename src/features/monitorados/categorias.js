@@ -38,8 +38,8 @@ function selectCategoryMonitorado(select = '', func = false, newItem = false, id
 // Pencil da coluna Categoria: alterna entre texto e <select> inline.
 function editCategoryMonitorado(el, id_procedimento) {
     const td = el.closest('td');
-    const catElem = qs('.info_category', td);
-    const catTxt = qs('.info_category_txt', td);
+    const catElem = qs('.seipro-monitorado-category-editor', td);
+    const catTxt = qs('.seipro-monitorado-category-text', td);
     const icon = el.querySelector('i');
     if (catElem && catElem.offsetParent !== null) {
         catElem.style.display = 'none';
@@ -85,8 +85,8 @@ function promptNewCategory(selectEl) {
             // Cancelado: reverte a célula da linha (volta ao texto).
             const td = selectEl.closest('td');
             if (td) {
-                const catElem = qs('.info_category', td);
-                const catTxt = qs('.info_category_txt', td);
+                const catElem = qs('.seipro-monitorado-category-editor', td);
+                const catTxt = qs('.seipro-monitorado-category-text', td);
                 if (catElem) { catElem.style.display = 'none'; catElem.innerHTML = ''; }
                 if (catTxt) catTxt.style.display = '';
             }
