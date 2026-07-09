@@ -150,16 +150,19 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(seiFunctions).not.toMatch(/\.monitoradosLabelOptions/);
   });
 
-  it('uses a seipro-prefixed class for the monitorado tags input hook', () => {
+  it('uses seipro-prefixed classes for monitorado tags input and add hook', () => {
     const visualizacao = read('src/features/monitorados/visualizacao.js');
     const datas = read('src/features/monitorados/datas.js');
 
     expect(visualizacao).toContain('seipro-monitorado-tags-input');
+    expect(visualizacao).toContain('seipro-monitorado-tags-add');
+    expect(visualizacao).toContain('data-act="tags-show"');
     expect(datas).toContain('.seipro-monitorado-tags-input');
     expect(visualizacao).toContain('name="monitoradoTagsPro"');
 
     expect(visualizacao).not.toMatch(/class="monitoradoTagsPro"/);
     expect(visualizacao).not.toMatch(/querySelector\('\.monitoradoTagsPro'\)/);
+    expect(visualizacao).not.toMatch(/followLinkTagsAdd_send/);
     expect(datas).not.toMatch(/\.monitoradoTagsPro/);
   });
 
