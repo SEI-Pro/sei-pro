@@ -158,13 +158,13 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
                                 <label for="newProcs">Criar cada documento em um novo processo</label>
                             </td>
                         </tr>
-                        <tr style="display:none" class="containerTipoProcessoSelect">
+                        <tr style="display:none" class="seipro-doclote-process-type-fields">
                             <td colspan="2">
                                 <p style="font-size: 1.2em;"><i class="fas fa-folder-open cinzaColor"></i> Tipo de Processo:</p>
                                 <select id="tipoProcessoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposProcessos}</select>
                             </td>
                         </tr>
-                        <tr style="display:none" class="containerTipoProcessoSelect">
+                        <tr style="display:none" class="seipro-doclote-process-type-fields">
                             <td colspan="2">
                                 <p style="font-size: 1.2em;"><i class="fas fa-comment-dots cinzaColor"></i> Especificação do processo: (Disponível campos dinâmicos da planilha)</p>
                                 <input type="text" class="infraText" id="txtEspecificacaoProcesso" style="width: 480px;padding: 0.8em;" placeholder="Ex: Certificado de ##nome_aluno##">

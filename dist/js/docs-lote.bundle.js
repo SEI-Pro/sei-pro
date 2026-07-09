@@ -497,13 +497,13 @@
                                 <label for="newProcs">Criar cada documento em um novo processo</label>
                             </td>
                         </tr>
-                        <tr style="display:none" class="containerTipoProcessoSelect">
+                        <tr style="display:none" class="seipro-doclote-process-type-fields">
                             <td colspan="2">
                                 <p style="font-size: 1.2em;"><i class="fas fa-folder-open cinzaColor"></i> Tipo de Processo:</p>
                                 <select id="tipoProcessoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposProcessos}</select>
                             </td>
                         </tr>
-                        <tr style="display:none" class="containerTipoProcessoSelect">
+                        <tr style="display:none" class="seipro-doclote-process-type-fields">
                             <td colspan="2">
                                 <p style="font-size: 1.2em;"><i class="fas fa-comment-dots cinzaColor"></i> Especifica\xE7\xE3o do processo: (Dispon\xEDvel campos din\xE2micos da planilha)</p>
                                 <input type="text" class="infraText" id="txtEspecificacaoProcesso" style="width: 480px;padding: 0.8em;" placeholder="Ex: Certificado de ##nome_aluno##">
@@ -774,10 +774,10 @@
   }
   function changeNewProcs(this_) {
     if ($(this_).is(":checked")) {
-      $(".containerTipoProcessoSelect").show();
+      $(".seipro-doclote-process-type-fields").show();
       checkTipoProcessoSelect();
     } else {
-      $(".containerTipoProcessoSelect").hide();
+      $(".seipro-doclote-process-type-fields").hide();
       $("#btnConfirm").prop("disabled", false).removeClass("ui-button-disabled ui-state-disabled");
     }
   }

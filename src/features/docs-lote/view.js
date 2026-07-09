@@ -241,10 +241,10 @@ async function docsLote_printDataCrossing() {
 // Handlers antes inline (onchange) — agora chamados pela delegação acima.
 function changeNewProcs(this_) {
     if ($(this_).is(':checked')) {
-        $('.containerTipoProcessoSelect').show();
+        $('.seipro-doclote-process-type-fields').show();
         checkTipoProcessoSelect();
     } else {
-        $('.containerTipoProcessoSelect').hide();
+        $('.seipro-doclote-process-type-fields').hide();
         $('#btnConfirm').prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
     }
 }
