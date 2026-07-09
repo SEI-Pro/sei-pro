@@ -194,6 +194,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(datas).toContain('seipro-monitorado-dates-newdoc');
     expect(datas).toContain('seipro-monitorado-dates-duedate');
     expect(datas).toContain('seipro-monitorado-dates-duesetdate');
+    expect(datas).toContain('seipro-monitorado-dates-advanced');
     expect(datas).toContain("selectdoc: 'seipro-monitorado-dates-selectdoc'");
     expect(datas).toContain("setdate: 'seipro-monitorado-dates-setdate'");
     expect(datas).toContain("countdays: 'seipro-monitorado-dates-countdays'");
@@ -208,6 +209,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
     expect(datas).not.toMatch(/class=\"configDates_newdoc\"/);
     expect(datas).not.toMatch(/class=\"configDates_duedate\"/);
     expect(datas).not.toMatch(/class=\"configDates_duesetdate\"/);
+    expect(datas).not.toMatch(/configDates_advanced/);
     expect(datas).not.toMatch(/\.configDates_\s*\+\s*opt/);
   });
 

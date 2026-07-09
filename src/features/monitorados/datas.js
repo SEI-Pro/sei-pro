@@ -68,7 +68,7 @@ function formHtml(configdate, id_procedimento, store, monitoradoIndex) {
         + '<td><input type="date" data-act="preview" id="configDatesBox_date" value="' + configdate.date + '" style="width:130px;float:right;"></td></tr>'
         + '<tr style="height:10px;"><td colspan="2"><a class="newLink ' + sw(configdate.advanced, 'newLink_active', '') + '" data-act="advanced" style="font-size:10pt;cursor:pointer;margin:5px 0 0 0;float:right;"><i class="fas fa-wrench cinzaColor"></i> Opções avançadas</a></td></tr>'
         + '</table>'
-        + '<table style="font-size:10pt;width:100%;' + sw(configdate.advanced, '', 'display:none') + '" class="seiProForm configDates_advanced">'
+        + '<table style="font-size:10pt;width:100%;' + sw(configdate.advanced, '', 'display:none') + '" class="seiProForm seipro-monitorado-dates-advanced">'
         + '<tr class="hrForm"><td colspan="4"></td></tr>'
         + '<tr style="height:40px;"><td colspan="2">Visualizar o resultado:</td></tr>'
         + swRow('fa-stopwatch', 'Em tempo relativo', 'countdown', 'countdown', configdate.countdown)
@@ -135,7 +135,7 @@ function switchIcon(el) {
     preview();
 }
 function advanced(el) {
-    qsa('.configDates_advanced').forEach((n) => { n.style.display = (n.style.display === 'none') ? '' : 'none'; });
+    qsa('.seipro-monitorado-dates-advanced').forEach((n) => { n.style.display = (n.style.display === 'none') ? '' : 'none'; });
     el.classList.toggle('newLink_active');
 }
 function setUpdate(mode) {
