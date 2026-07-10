@@ -27,13 +27,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai).toContain('seipro-ai-doc-tag');
-    expect(ai).toContain('doc-ai-tag-remove');
+    expect(ai).toContain('seipro-ai-doc-tag-remove');
     expect(ai).toContain("$('#docAIMultiList .seipro-ai-doc-tag')");
     expect(ai).toContain("$(this).closest('.seipro-ai-doc-tag').remove()");
 
     expect(ai).not.toMatch(/class="doc-ai-tag"/);
+    expect(ai).not.toMatch(/class="[^\"]*doc-ai-tag-remove/);
     expect(ai).not.toMatch(/#docAIMultiList \.doc-ai-tag/);
     expect(ai).not.toMatch(/closest\('\.doc-ai-tag'\)/);
+    expect(ai).not.toMatch(/\.on\('click', '\.doc-ai-tag-remove'/);
   });
 
   it('uses a seipro-prefixed hook for user chat responses while preserving history restore', () => {

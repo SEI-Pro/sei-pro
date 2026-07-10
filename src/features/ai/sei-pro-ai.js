@@ -351,7 +351,7 @@ const addDocToMultiList = () => {
         .data('id_procedimento', data.id_procedimento || '')
         .data('name', name)
         .append(document.createTextNode(name + '\u00a0'))
-        .append($('<i class="fas fa-times-circle doc-ai-tag-remove"></i>').css({cursor:'pointer', color:'#888', fontSize:'10px'}));
+        .append($('<i class="fas fa-times-circle seipro-ai-doc-tag-remove"></i>').css({cursor:'pointer', color:'#888', fontSize:'10px'}));
     $multiList.append($tag).css({display:'flex', flexWrap:'wrap', flexBasis:'100%', width:'100%', marginTop:'5px'});
     resizeBoxAIActions();
 };
@@ -1992,7 +1992,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     });
 
                     // DELEGAÇÃO DE EVENTO PARA REMOVER DOCUMENTO DA SELEÇÃO MÚLTIPLA
-                    $(document).off('click', '.doc-ai-tag-remove').on('click', '.doc-ai-tag-remove', function(event) {
+                    $(document).off('click', '.seipro-ai-doc-tag-remove').on('click', '.seipro-ai-doc-tag-remove', function(event) {
                         event.preventDefault();
                         $(this).closest('.seipro-ai-doc-tag').remove();
                         if ($('#docAIMultiList .seipro-ai-doc-tag').length === 0) {
