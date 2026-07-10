@@ -1886,7 +1886,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         // CONTEÚDO HTML QUE SERÁ INSERIDO
         const htmlBox = `
             <div id="response_ai" style="overflow-y: auto; calc(${bodyHeight-300}px - 110px)">
-                <div class="welcome">
+                <div class="welcome seipro-ai-welcome">
                     <div class="icon_ia seipro-ai-icon"></div>
                     Ol\u00E1! Como posso ajud\u00E1-lo hoje?
                 </div>

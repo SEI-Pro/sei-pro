@@ -188,4 +188,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/class="dialogBoxAI"/);
   });
+
+  it('adds a seipro-prefixed hook for the AI welcome block while preserving legacy welcome styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="welcome seipro-ai-welcome"');
+    expect(ai).toContain('class="icon_ia seipro-ai-icon"');
+
+    expect(ai).not.toMatch(/class="welcome"/);
+  });
 });
