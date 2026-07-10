@@ -349,4 +349,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="ciente_disclaimer"');
     expect(ai).toContain('for="ciente_disclaimer"');
   });
+
+  it('adds a seipro-prefixed hook for the AI system instruction field while preserving config id and persistence', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="configAI_system_instruction" class="seipro-ai-system-instruction"');
+    expect(ai).toContain('for="configAI_system_instruction"');
+    expect(ai).toContain("setOptionsPro('setSystemInstructionAI', $('#configAI_system_instruction').val())");
+  });
 });

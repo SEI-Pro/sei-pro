@@ -1698,7 +1698,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td colspan="3">
-                        <textarea id="configAI_system_instruction" style="width: 93%;" rows="3">${getSystemInstructionAI}</textarea>
+                        <textarea id="configAI_system_instruction" class="seipro-ai-system-instruction" style="width: 93%;" rows="3">${getSystemInstructionAI}</textarea>
                     </td>
                 </tr>
                 <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
