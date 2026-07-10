@@ -217,4 +217,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/class="prompt_type"/);
   });
+
+  it('uses a seipro-prefixed hook for the AI document selector while preserving the document select id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="docAISelect" class="seipro-ai-doc-select"');
+    expect(ai).toContain("$('#docAISelect_chosen')");
+    expect(ai).toContain("$(document).off('change', '#docAISelect')");
+
+    expect(ai).not.toMatch(/class="prompt_doc"/);
+  });
 });
