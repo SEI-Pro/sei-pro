@@ -1911,7 +1911,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             </div>
             <div id="boxAIActions">
                 <div class="seipro-ai-prompt-bar" style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; position:relative;">
-                    <select id="promptAISelect" class="prompt_type" style="width: 250px;">
+                    <select id="promptAISelect" class="seipro-ai-prompt-select" style="width: 250px;">
                         <option value="personalizado">(...) Fa\u00E7a seu pr\u00F3prio prompt...</option>
                         ${buildPromptOptions()}
                     </select>

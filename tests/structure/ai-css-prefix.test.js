@@ -208,4 +208,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/class="input_prompt"/);
   });
+
+  it('uses a seipro-prefixed hook for the AI prompt selector while preserving the prompt select id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="promptAISelect" class="seipro-ai-prompt-select"');
+    expect(ai).toContain('buildPromptOptions()');
+
+    expect(ai).not.toMatch(/class="prompt_type"/);
+  });
 });
