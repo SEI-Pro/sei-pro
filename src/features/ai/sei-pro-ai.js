@@ -314,14 +314,14 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-s
 const copyResponseAI = (this_) => {
     const _this = $(this_);
     const id_response = _this.data('response');
-    copyTextWithBR($(`#responseBot_${id_response} .response_bot_content`));
+    copyTextWithBR($(`#responseBot_${id_response} .seipro-ai-response-content`));
 };
 
 // FUNÇÃO PARA COPIAR O TEXTO GERADO PELA IA COM FORMATAÇÃO (PARA COLAR EM DOCUMENTOS)
 const copyHtmlResponseAI = (this_) => {
     const _this = $(this_);
     const id_response = _this.data('response');
-    const htmlContent = $(`#responseBot_${id_response} .response_bot_content`).html();
+    const htmlContent = $(`#responseBot_${id_response} .seipro-ai-response-content`).html();
     copyToClipboardHTML(htmlContent);
     _this.find('i').attr('class', 'far fa-check azulColor');
     setTimeout(() => _this.find('i').attr('class', 'far fa-file-alt'), 1500);
@@ -361,7 +361,7 @@ const createDocResponseAI = (this_) => {
     const _this = $(this_);
     const id_response = _this.data('response');
     const tiposDocumentos = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.tiposDocumentos !== 'undefined' && dadosProcessoPro.tiposDocumentos.length ? $.map(dadosProcessoPro.tiposDocumentos, function(v){ return '<option value="'+v.id+'">'+v.name+'</option>' }).join('') : false;
-    const htmlResponse = $(`#responseBot_${id_response} .response_bot_content`).html();
+    const htmlResponse = $(`#responseBot_${id_response} .seipro-ai-response-content`).html();
     const $htmlResponse = $(`<div>${htmlResponse}</div>`);
     const contentDocument = $htmlResponse.find('p').addClass('Texto_Justificado_Recuo_Primeira_Linha').end().html();
 
@@ -422,7 +422,7 @@ const createDocResponseAI = (this_) => {
 const addDocResponseAI = (this_) => {
     const _this = $(this_);
     const id_response = _this.data('response');
-    const htmlResponse = $(`#responseBot_${id_response} .response_bot_content`).html();
+    const htmlResponse = $(`#responseBot_${id_response} .seipro-ai-response-content`).html();
     if (frmEditor.length) {
         const pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
         const pClass = oEditor ? pElement.attr('class') : 'Texto_Alinhado_Esquerda';
@@ -1114,13 +1114,13 @@ const getSessionTextProcesso = (num_processo_format) => {
             text = responseText.slice(0, ++i);
             if (i > 2000) stopType = true;
             if (text === responseText || stopType) {
-                responseBox.html(sanitizeHTML(`${actionsResponse}<span class='response_bot_content'>${markdownToHTML(stopType ? responseText : text)}</span>`));
+                responseBox.html(sanitizeHTML(`${actionsResponse}<span class='response_bot_content seipro-ai-response-content'>${markdownToHTML(stopType ? responseText : text)}</span>`));
                 scrollToElement(container, responseBox);
                 initFunctionsChat();
                 getHistoryDialog('push',responseBox[0].outerHTML);
                 return;
             }
-            responseBox.html(sanitizeHTML(markdownToHTML(`${htmlIconChat}<span class='response_bot_content'>${text}</span><span class="blinker">&#32;</span>`)));
+            responseBox.html(sanitizeHTML(markdownToHTML(`${htmlIconChat}<span class='response_bot_content seipro-ai-response-content'>${text}</span><span class="blinker">&#32;</span>`)));
 
             container[0].scrollTop = container[0].scrollHeight;
             const char = text.slice(-1);
@@ -1356,7 +1356,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const response_bot = `
             <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} loading">
                 ${htmlIconChat}
-                <span class='response_bot_content'> 
+                <span class='response_bot_content seipro-ai-response-content'>
                     <p>${error_text}</p>
                 </span>
             </div>`;

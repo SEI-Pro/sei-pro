@@ -159,4 +159,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/input_prompt\.find\('\.prompt_ref_doc'\)/);
     expect(ai).not.toMatch(/class="prompt_ref_doc doc_\$\{hash_doc\}"/);
   });
+
+  it('adds a seipro-prefixed hook for AI response content while preserving legacy content styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain("response_bot_content seipro-ai-response-content");
+    expect(ai).toContain("$(`#responseBot_${id_response} .seipro-ai-response-content`).html()");
+    expect(ai).toContain("copyTextWithBR($(`#responseBot_${id_response} .seipro-ai-response-content`))");
+
+    expect(ai).not.toMatch(/`#responseBot_\$\{id_response\} \.response_bot_content`/);
+  });
 });
