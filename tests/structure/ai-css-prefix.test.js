@@ -227,4 +227,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/class="prompt_doc"/);
   });
+
+  it('adds a seipro-prefixed hook for the custom-prompt document selector mode while preserving legacy CSS state', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain("addClass('prompt_personal seipro-ai-personal-prompt-mode')");
+    expect(ai).toContain("removeClass('prompt_personal seipro-ai-personal-prompt-mode')");
+    expect(ai).toContain('id="promptAIPersonal"');
+    expect(ai).toContain('id="docAISelect" class="seipro-ai-doc-select"');
+  });
 });

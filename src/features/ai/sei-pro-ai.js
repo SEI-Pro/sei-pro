@@ -2014,7 +2014,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         $('#favoritePromptAI').hide();
                         $('#promptAISelect').val('resume').trigger('chosen:updated').trigger('change');
                         $('#boxAIActions').removeAttr('style');
-                        $('#docAISelect_chosen').removeClass('prompt_personal').css('width',300);
+                        $('#docAISelect_chosen').removeClass('prompt_personal seipro-ai-personal-prompt-mode').css('width',300);
                         $('#docAISelect').find('option[value="add_documento"]').remove().end().find(`option:eq(${frmEditor.length ? 4 : 3})`).prop('selected', true).end().trigger('chosen:updated');
                         resizeBoxAIActions();
                     });
@@ -2065,7 +2065,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                             $('#favoritePromptAI').show();
                             $('#promptAIPersonal').prop('contenteditable',true).show().focus();
                             $('#docAISelect').find('option[value="add_documento"]').remove().end().prepend(`<option value="add_documento">Selecione um documento para adicionar no prompt...</option>`).val('add_documento').trigger('chosen:updated');
-                            $('#docAISelect_chosen').addClass('prompt_personal').css('width', 500);
+                            $('#docAISelect_chosen').addClass('prompt_personal seipro-ai-personal-prompt-mode').css('width', 500);
                             resizeBoxAIActions();
 
                             $(document).off('change', '#docAISelect').on('change', '#docAISelect', function(event) {
