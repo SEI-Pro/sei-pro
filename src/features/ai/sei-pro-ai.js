@@ -1871,7 +1871,7 @@ const getSessionTextProcesso = (num_processo_format) => {
 
         // BOTÃO PARA TROCA DE PLATAFORMAS (APARECE SE 2+ PLATAFORMAS CONFIGURADAS)
         const btnChangePlataform = _configuredPlatforms.length > 1
-            ? `<a class="newLink" id="btnChangeSelectedAI" data-tooltip="Alterar plataforma ativa"><i class="fas fa-exchange-alt"></i></a>`
+            ? `<a class="newLink seipro-ai-switch-platform" id="btnChangeSelectedAI" data-tooltip="Alterar plataforma ativa"><i class="fas fa-exchange-alt"></i></a>`
             : '';
 
         // CONTEÚDO DO BOTÃO DE SELEÇÃO DE PLATAFORMA PRINCIPAL
@@ -2019,7 +2019,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         resizeBoxAIActions();
                     });
                 
-                    $(document).off('click', '#btnChangeSelectedAI').on('click', '#btnChangeSelectedAI', function(event) {
+                    $(document).off('click', '.seipro-ai-switch-platform').on('click', '.seipro-ai-switch-platform', function(event) {
                         event.preventDefault();
                         // CICLA ENTRE TODAS AS PLATAFORMAS CONFIGURADAS
                         const configured = ['openai', 'gemini', 'ollama'].filter(p =>

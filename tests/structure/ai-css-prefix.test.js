@@ -441,4 +441,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#btnSendAI'/);
   });
+
+  it('adds a seipro-prefixed hook for switching AI platforms while preserving the legacy id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="newLink seipro-ai-switch-platform" id="btnChangeSelectedAI"');
+    expect(ai).toContain(".on('click', '.seipro-ai-switch-platform'");
+    expect(ai).toContain("setOptionsPro('plataformAI_current', nextPlataform)");
+
+    expect(ai).not.toMatch(/\.on\('click', '#btnChangeSelectedAI'/);
+  });
 });
