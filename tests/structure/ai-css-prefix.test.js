@@ -255,4 +255,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/class="[^\"]*gemini_token/);
     expect(ai).not.toMatch(/hasClass\('gemini_token'\)/);
   });
+
+  it('uses a seipro-prefixed hook for the OpenAI token save button while preserving platform detection', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-openai-token"');
+    expect(ai).toContain("hasClass('seipro-ai-openai-token') ? 'openai'");
+    expect(ai).toContain('id="plataformAI_uiElement"');
+    expect(ai).toContain('id="cke_inputSecretKey_textInput"');
+
+    expect(ai).not.toMatch(/class="[^\"]*openai_token/);
+    expect(ai).not.toMatch(/hasClass\('openai_token'\)/);
+  });
 });

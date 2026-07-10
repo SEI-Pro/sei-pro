@@ -200,7 +200,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     <input tabindex="3" style="font-size: 1.2em;" placeholder="Insira o valor para a chave secreta" class="cke_dialog_ui_input_text" id="cke_inputSecretKey_textInput" type="password" aria-labelledby="cke_inputSecretKey_label">
                 </td>
                 <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">
-                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel openai_token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
+                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-openai-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
                     <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
@@ -2468,6 +2468,7 @@ const saveTokenOpenAI = (this_, mode = 'insert', plataform = false) => {
     const type_plataform = plataform ? plataform
         : $('#plataformAI_uiElement').hasClass('seipro-ai-gemini-token') ? 'gemini'
         : $('#plataformAI_uiElement').hasClass('ollama_token') ? 'ollama'
+        : $('#plataformAI_uiElement').hasClass('seipro-ai-openai-token') ? 'openai'
         : 'openai';
 
     let token, url_plataform, ollamaInitialModel;
