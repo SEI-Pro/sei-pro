@@ -1921,7 +1921,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     <select id="docAISelect" class="seipro-ai-doc-select" style="width: 300px;">
                         <option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados...</option>
                     </select>
-                    <a class="newLink" id="btnAddDocAI" data-tooltip="Adicionar \u00e0 sele\u00e7\u00e3o m\u00faltipla"><i class="fas fa-plus-circle"></i></a>
+                    <a class="newLink seipro-ai-add-document" id="btnAddDocAI" data-tooltip="Adicionar \u00e0 sele\u00e7\u00e3o m\u00faltipla"><i class="fas fa-plus-circle"></i></a>
                     <a class="newLink" id="btnConfigAI" data-tooltip="Configura\u00E7\u00F5es Gerais"><i class="fas fa-cog"></i></a>
                     <span style="flex:1;"></span>
                     ${btnSecondPlataform}
@@ -1986,7 +1986,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     });
                 
                     // DELEGAÇÃO DE EVENTO PARA ADICIONAR DOCUMENTO À SELEÇÃO MÚLTIPLA
-                    $(document).off('click', '#btnAddDocAI').on('click', '#btnAddDocAI', function(event) {
+                    $(document).off('click', '.seipro-ai-add-document').on('click', '.seipro-ai-add-document', function(event) {
                         event.preventDefault();
                         addDocToMultiList();
                     });

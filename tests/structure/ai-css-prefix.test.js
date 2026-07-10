@@ -411,4 +411,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).toContain('class="blinker seipro-ai-typing-cursor"');
   });
+
+  it('adds a seipro-prefixed hook for adding documents while preserving the legacy id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="newLink seipro-ai-add-document" id="btnAddDocAI"');
+    expect(ai).toContain(".on('click', '.seipro-ai-add-document'");
+    expect(ai).toContain('addDocToMultiList()');
+
+    expect(ai).not.toMatch(/\.on\('click', '#btnAddDocAI'/);
+  });
 });
