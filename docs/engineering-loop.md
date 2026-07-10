@@ -175,10 +175,12 @@ Novos jobs do repo correto:
 
 | Job | Schedule | Modelo | Workdir |
 |---|---|---|---|
-| `sei-pro-prf-engineering-loop-migration` | `*/30 * * * *` | `openai-codex/gpt-5.5` | `/home/tadeu/repos/sei-pro-prf` |
-| `sei-pro-prf-engineering-loop-verification` | `15,45 * * * *` | `opencode-go/glm-5.2` | `/home/tadeu/repos/sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-migration` | `*/30 * * * *` | `openai-codex/gpt-5.6-terra` — medium desejado | `/home/tadeu/repos/sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-verification` | `15,45 * * * *` | `openai-codex/gpt-5.6-luna` — high desejado | `/home/tadeu/repos/sei-pro-prf` |
 
 A migração roda a cada 30 minutos nos minutos 00/30. A verificação também roda a cada 30 minutos, defasada para os minutos 15/45, para revisar a fatia recém-produzida sem concorrer com o maker.
+
+O Hermes 0.18 não oferece `reasoning_effort` por cron job. Assim, `medium` e `high` são os níveis desejados registrados nos prompts; o parâmetro efetivo continua vindo da configuração global.
 
 Em Hermes TUI, `deliver=local` salva o output em cron, mas não entrega mensagem no chat. Se for necessário notificar por gateway, configurar `deliver` explicitamente para uma plataforma conectada.
 

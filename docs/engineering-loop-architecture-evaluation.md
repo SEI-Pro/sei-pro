@@ -140,9 +140,10 @@ Manter pinagem explícita de provider/model no cron job para evitar drift de con
 
 Decisão atual, após confirmação do usuário:
 
-- Migração autônoma: `openai-codex` / `gpt-5.5`, pinado explicitamente no cron job. Embora seja um modelo mais forte, a preferência atual é usá-lo para obter melhor qualidade nas fatias de migração.
+- Migração autônoma: `openai-codex` / `gpt-5.6-terra`, pinado explicitamente no cron job, com nível medium desejado.
 - Contenção de escopo: o prompt do job, o board e a skill devem reforçar execução de **uma única fatia pequena por run**, gate obrigatório e commit pequeno, para compensar o risco de o modelo ampliar demais o escopo.
-- Verificação/checker: `opencode-go` / `glm-5.2`, pinado explicitamente, mantendo independência entre maker e checker.
+- Verificação/checker: `openai-codex` / `gpt-5.6-luna`, pinado explicitamente, com nível high desejado e independência entre maker e checker.
+- Limitação do Hermes 0.18: `reasoning_effort` não é configurável por cron job; medium/high são instruções operacionais no prompt e o parâmetro efetivo é global.
 
 ---
 
@@ -403,7 +404,7 @@ Configuração proposta:
 - Schedule atual: `*/30 * * * *` — roda a cada 30 minutos nos minutos 00/30. Também seriam válidas frases `every`, mas usar cron de 5 campos evita ambiguidade e permite defasagem com o checker. Evitar cron de 6 campos.
 - Repeat: alto/recorrente, por exemplo `9999`
 - Skill: atualizar e reutilizar a skill existente `sei-pro-prf-refactoring-loop`, em vez de criar uma skill nova e fragmentar o procedimento.
-- Modelo: `openai-codex` / `gpt-5.5`, conforme decisão posterior do usuário. Manter contenção no prompt: uma única fatia pequena, sem re-arquitetar além do item escolhido, build/test obrigatório e commit pequeno.
+- Modelo: `openai-codex` / `gpt-5.6-terra`, com nível medium desejado no prompt. Manter contenção: uma única fatia pequena, sem re-arquitetar além do item escolhido, build/test obrigatório e commit pequeno.
 - Saída esperada: commit pequeno + board atualizado, ou relatório de bloqueio.
 
 ### Job de verificação
@@ -412,7 +413,7 @@ Configuração proposta:
 - Workdir: `/home/tadeu/repos/sei-pro-prf`
 - Schedule atual: `15,45 * * * *` — roda a cada 30 minutos, defasado 15 minutos da migração. Evitar cron de 6 campos.
 - Skill: a mesma skill existente `sei-pro-prf-refactoring-loop`, atualizada para os novos arquivos do loop.
-- Modelo: `opencode-go` / `glm-5.2`
+- Modelo: `openai-codex` / `gpt-5.6-luna`, com nível high desejado no prompt
 - Saída esperada: item revisado como `review_passed` ou `review_failed_needs_fix`.
 
 Observação operacional: em Hermes TUI, cron jobs locais salvam output, mas não entregam mensagem ao chat. Se quisermos notificação ativa, é preciso configurar `deliver` para gateway conectado.
