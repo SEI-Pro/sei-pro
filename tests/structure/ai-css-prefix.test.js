@@ -357,4 +357,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="configAI_system_instruction"');
     expect(ai).toContain("setOptionsPro('setSystemInstructionAI', $('#configAI_system_instruction').val())");
   });
+
+  it('adds a seipro-prefixed hook for the AI temperature field while preserving config id and persistence', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="configAI_temperature" class="seipro-ai-temperature-input"');
+    expect(ai).toContain('for="configAI_temperature"');
+    expect(ai).toContain("setOptionsPro('setTemperatureAI', $('#configAI_temperature').val())");
+  });
 });

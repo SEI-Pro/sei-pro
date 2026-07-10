@@ -1710,7 +1710,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td style="width: 30%;">
-                        <input type="number" value="${getTemperatureAI}" id="configAI_temperature" style="width: 80%;" min="0" max="2" step=".1">
+                        <input type="number" value="${getTemperatureAI}" id="configAI_temperature" class="seipro-ai-temperature-input" style="width: 80%;" min="0" max="2" step=".1">
                     </td>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_max_tokens">
