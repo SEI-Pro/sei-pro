@@ -153,7 +153,7 @@ const consentAI = sanitizeHTML(`<table role="presentation" cellspacing="0" borde
     <tbody>
         <tr>
             <td role="presentation" class="cke_dialog_ui_vbox_child">
-                <div id="cke_382_uiElement" class="cke_dialog_ui_text editorTextDisclaimer">
+                <div id="cke_382_uiElement" class="cke_dialog_ui_text editorTextDisclaimer seipro-ai-consent-disclaimer">
                     <p>1. N\u00E3o utilize intelig\u00EAncia artificial para contextos complexos, envolvendo informa\u00E7\u00F5es sigilosas, restritas ou que possa impactar decis\u00F5es cr\u00EDticas.</p>
                     <p>2. \u00C9 importante sempre uma verifica\u00E7\u00E3o humana das respostas geradas automaticamente.</p>
                     <p>3. A assinatura de documentos gerados com o aux\u00EDlio de IA s\u00E3o de inteira resposabilidade do signat\u00E1rio.</p>

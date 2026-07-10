@@ -329,4 +329,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("setOptionsPro('setModelOpenAI', $('#configAI_model').val())");
     expect(ai).toContain("setOptionsPro('setModelGemini', $('#configAI_model').val())");
   });
+
+  it('adds a seipro-prefixed hook for the AI consent disclaimer while preserving legacy disclaimer styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="cke_382_uiElement" class="cke_dialog_ui_text editorTextDisclaimer seipro-ai-consent-disclaimer"');
+    expect(ai).toContain('id="ciente_disclaimer"');
+    expect(ai).toContain('for="ciente_disclaimer"');
+  });
 });
