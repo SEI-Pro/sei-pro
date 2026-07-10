@@ -373,4 +373,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="configAI_max_tokens"');
     expect(ai).toContain("setOptionsPro('setMaxTokenAI', $('#configAI_max_tokens').val())");
   });
+
+  it('adds a seipro-prefixed hook for the AI top-p field while preserving config id and persistence', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="configAI_top_p" class="seipro-ai-top-p-input"');
+    expect(ai).toContain('for="configAI_top_p"');
+    expect(ai).toContain("setOptionsPro('setTopPAI', $('#configAI_top_p').val())");
+  });
 });

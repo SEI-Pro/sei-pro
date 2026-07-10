@@ -1732,7 +1732,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td>
-                        <input type="number" value="${getTopPAI}" id="configAI_top_p" style="width: 80%;" min="0" max="1" step=".1">
+                        <input type="number" value="${getTopPAI}" id="configAI_top_p" class="seipro-ai-top-p-input" style="width: 80%;" min="0" max="1" step=".1">
                     </td>
                     <td class="label">
                         <label for="configAI_frequency_penalty">
