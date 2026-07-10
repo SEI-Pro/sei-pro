@@ -281,7 +281,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     </label>
                 </td>
                 <td style="padding:6px 10px;position:relative;">
-                    <input tabindex="2" style="font-size: 1.1em;width:100%;" placeholder="Deixe em branco se n\u00E3o houver autentica\u00E7\u00E3o" class="cke_dialog_ui_input_text passReveal" id="cke_inputOllamaKey_textInput" type="password">
+                    <input tabindex="2" style="font-size: 1.1em;width:100%;" placeholder="Deixe em branco se n\u00E3o houver autentica\u00E7\u00E3o" class="cke_dialog_ui_input_text passReveal seipro-ai-ollama-key-input" id="cke_inputOllamaKey_textInput" type="password">
                 </td>
             </tr>
             <tr>

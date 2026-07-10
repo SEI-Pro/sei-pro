@@ -451,4 +451,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#btnChangeSelectedAI'/);
   });
+
+  it('adds a seipro-prefixed hook to the Ollama key input while preserving legacy password behavior', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="cke_inputOllamaKey_textInput"');
+    expect(ai).toContain('class="cke_dialog_ui_input_text passReveal seipro-ai-ollama-key-input"');
+    expect(ai).toContain('type="password"');
+  });
 });
