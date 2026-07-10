@@ -517,7 +517,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             $('.seipro-ai-suggestions').fadeIn();
             getHistoryDialog('check');
 
-            if (frmEditor.length) $('#docAISelect_chosen').addClass('prompt_editor_sei');
+            if (frmEditor.length) $('#docAISelect_chosen').addClass('prompt_editor_sei seipro-ai-editor-doc-mode');
 
                 $('#promptAISelect').val(getOptionsPro('currentPromptAISelect') ?? 'resume').trigger('chosen:updated').trigger('change');
                 
