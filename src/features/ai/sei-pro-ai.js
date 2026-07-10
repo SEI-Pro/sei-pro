@@ -1678,7 +1678,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </div>
                     </td>
                 </tr>
-                <tr id="configAI_ollama_model_row" ${currentPlataform == 'ollama' ? '' : 'style="display:none;"'}>
+                <tr id="configAI_ollama_model_row" class="seipro-ai-manual-model-row" ${currentPlataform == 'ollama' ? '' : 'style="display:none;"'}>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_manual_model">
                             <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;"
