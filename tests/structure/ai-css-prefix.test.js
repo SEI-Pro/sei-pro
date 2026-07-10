@@ -397,4 +397,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="configAI_presence_penalty"');
     expect(ai).toContain("setOptionsPro('setPresencePenaltyAI', $('#configAI_presence_penalty').val())");
   });
+
+  it('adds a seipro-prefixed hook for the Ollama manual-model input while preserving id and persistence', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="configAI_manual_model" class="seipro-ai-manual-model-input"');
+    expect(ai).toContain('for="configAI_manual_model"');
+    expect(ai).toContain("setOptionsPro('setModelOllama', modelToSave)");
+  });
 });

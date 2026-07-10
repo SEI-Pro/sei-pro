@@ -1687,7 +1687,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td colspan="3">
-                        <input type="text" id="configAI_manual_model" style="width: 60%;margin: 0 !important;" placeholder="ex: llama3.2, mistral, gpt-4, claude-3..." value="${getCurrentModelOllama}">
+                        <input type="text" id="configAI_manual_model" class="seipro-ai-manual-model-input" style="width: 60%;margin: 0 !important;" placeholder="ex: llama3.2, mistral, gpt-4, claude-3..." value="${getCurrentModelOllama}">
                         <span style="font-size:9pt;color:#888;margin-left:8px;">Sobrescreve a sele\u00E7\u00E3o acima</span>
                     </td>
                 </tr>
