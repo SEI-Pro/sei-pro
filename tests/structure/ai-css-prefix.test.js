@@ -421,4 +421,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#btnAddDocAI'/);
   });
+
+  it('adds a seipro-prefixed hook for the AI configuration button while preserving the legacy id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="newLink seipro-ai-config-button" id="btnConfigAI"');
+    expect(ai).toContain(".on('click', '.seipro-ai-config-button'");
+    expect(ai).toContain('configAI(this)');
+
+    expect(ai).not.toMatch(/\.on\('click', '#btnConfigAI'/);
+  });
 });

@@ -1922,7 +1922,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         <option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados...</option>
                     </select>
                     <a class="newLink seipro-ai-add-document" id="btnAddDocAI" data-tooltip="Adicionar \u00e0 sele\u00e7\u00e3o m\u00faltipla"><i class="fas fa-plus-circle"></i></a>
-                    <a class="newLink" id="btnConfigAI" data-tooltip="Configura\u00E7\u00F5es Gerais"><i class="fas fa-cog"></i></a>
+                    <a class="newLink seipro-ai-config-button" id="btnConfigAI" data-tooltip="Configura\u00E7\u00F5es Gerais"><i class="fas fa-cog"></i></a>
                     <span style="flex:1;"></span>
                     ${btnSecondPlataform}
                     ${btnChangePlataform}
@@ -1958,7 +1958,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     });
 
                     // DELEGAÇÃO DE EVENTOS PARA ONCLICK E AFINS
-                    $(document).off('click', '#btnConfigAI').on('click', '#btnConfigAI', function(event) {
+                    $(document).off('click', '.seipro-ai-config-button').on('click', '.seipro-ai-config-button', function(event) {
                         event.preventDefault();
                         configAI(this);
                         $('#configAI_model').html(sanitizeHTML(optionsModels()));
