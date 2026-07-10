@@ -1610,9 +1610,9 @@ const getSessionTextProcesso = (num_processo_format) => {
 
     // Adiciona animação de ideia do botpro 
     const botProIdea = () => {
-        adicionarVideoWebM({webmSrc: URL_SPRO+'icons/menu/botpro_idea.webm', largura: 200, id: 'botPro', alvo: '.icon_ia' });
+        adicionarVideoWebM({webmSrc: URL_SPRO+'icons/menu/botpro_idea.webm', largura: 200, id: 'botPro', alvo: '.seipro-ai-icon' });
         setTimeout(() => {
-            adicionarVideoWebM({webmSrc: URL_SPRO+'icons/menu/botpro.webm', largura: 200, id: 'botPro', alvo: '.icon_ia' });
+            adicionarVideoWebM({webmSrc: URL_SPRO+'icons/menu/botpro.webm', largura: 200, id: 'botPro', alvo: '.seipro-ai-icon' });
         }, 4500);
     }
 
@@ -1887,7 +1887,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const htmlBox = `
             <div id="response_ai" style="overflow-y: auto; calc(${bodyHeight-300}px - 110px)">
                 <div class="welcome">
-                    <div class="icon_ia"></div>
+                    <div class="icon_ia seipro-ai-icon"></div>
                     Ol\u00E1! Como posso ajud\u00E1-lo hoje?
                 </div>
                 <div class="suggestions seipro-ai-suggestions" style="display:none;">
@@ -2140,7 +2140,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         webmSrc: URL_SPRO+'icons/menu/botpro.webm',
                         largura: 200,
                         id: 'botPro',
-                        alvo: '.icon_ia'
+                        alvo: '.seipro-ai-icon'
                       });
                 },
                 close: function() {

@@ -169,4 +169,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/`#responseBot_\$\{id_response\} \.response_bot_content`/);
   });
+
+  it('adds a seipro-prefixed hook for the BotPro animation target while preserving legacy icon styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="icon_ia seipro-ai-icon"');
+    expect(ai).toContain("alvo: '.seipro-ai-icon'");
+    expect(ai).toContain("adicionarVideoWebM({webmSrc: URL_SPRO+'icons/menu/botpro_idea.webm'");
+
+    expect(ai).not.toContain("alvo: '.icon_ia'");
+    expect(ai).not.toMatch(/class="icon_ia"/);
+  });
 });
