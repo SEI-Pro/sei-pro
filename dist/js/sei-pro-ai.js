@@ -1664,7 +1664,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td style="width: 30%;">
-                        <select id="configAI_model" style="width: 90%;margin: 0 !important;">${optionsModels()}</select>
+                        <select id="configAI_model" class="seipro-ai-model-select" style="width: 90%;margin: 0 !important;">${optionsModels()}</select>
                     </td>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_advancedconfigs">

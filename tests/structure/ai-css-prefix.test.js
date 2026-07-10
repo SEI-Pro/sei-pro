@@ -319,4 +319,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="configAI_manual_model"');
     expect(ai).toContain("setOptionsPro('setModelOllama', modelToSave)");
   });
+
+  it('adds a seipro-prefixed hook for the AI model select while preserving config id and persistence flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="configAI_model" class="seipro-ai-model-select"');
+    expect(ai).toContain('for="configAI_model"');
+    expect(ai).toContain('optionsModels()');
+    expect(ai).toContain("setOptionsPro('setModelOpenAI', $('#configAI_model').val())");
+    expect(ai).toContain("setOptionsPro('setModelGemini', $('#configAI_model').val())");
+  });
 });
