@@ -330,6 +330,18 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("setOptionsPro('setModelGemini', $('#configAI_model').val())");
   });
 
+  it('adds a seipro-prefixed hook for the AI history restore link while preserving the legacy id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="historyDialogAI" class="seipro-ai-history-link"');
+    expect(ai).toContain("$('.seipro-ai-history-link').after(sanitizeHTML(historyDialogArray.join(''))).remove()");
+    expect(ai).toContain(".on('click', '.seipro-ai-history-link'");
+    expect(ai).toContain("sessionStorage.getItem('historyDialogAI')");
+
+    expect(ai).not.toMatch(/\.on\('click', '#historyDialogAI'/);
+    expect(ai).not.toMatch(/\$\('#historyDialogAI'\)\.after/);
+  });
+
   it('adds a seipro-prefixed hook for the AI consent disclaimer while preserving legacy disclaimer styling', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

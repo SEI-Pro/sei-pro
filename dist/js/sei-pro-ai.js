@@ -1229,10 +1229,10 @@ const getSessionTextProcesso = (num_processo_format) => {
             sessionStorage.setItem('historyDialogAI', JSON.stringify(historyDialogArray));
         } else if (mode == 'restore') {
             $('#response_ai .seipro-ai-user-response, #response_ai .seipro-ai-bot-response').remove();
-            $('#historyDialogAI').after(sanitizeHTML(historyDialogArray.join(''))).remove();
+            $('.seipro-ai-history-link').after(sanitizeHTML(historyDialogArray.join(''))).remove();
             initFunctionsChat();
         } else if (mode == 'check' && historyDialogArray.length) {
-            $('.seipro-ai-suggestions').after(`<div id="historyDialogAI"><i class="fas fa-history" style="color: #666;"></i> Ver Hist\u00F3rico</div>`);
+            $('.seipro-ai-suggestions').after(`<div id="historyDialogAI" class="seipro-ai-history-link"><i class="fas fa-history" style="color: #666;"></i> Ver Hist\u00F3rico</div>`);
         }
     };
 
@@ -2095,7 +2095,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         }
                     });
 
-                    $(document).off('click', '#historyDialogAI').on('click', '#historyDialogAI', function(event) {
+                    $(document).off('click', '.seipro-ai-history-link').on('click', '.seipro-ai-history-link', function(event) {
                         getHistoryDialog('restore');
                     });
 
