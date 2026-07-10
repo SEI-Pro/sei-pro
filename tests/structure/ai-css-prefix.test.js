@@ -281,4 +281,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/class="[^\"]*ollama_token/);
     expect(ai).not.toMatch(/hasClass\('ollama_token'\)/);
   });
+
+  it('uses a seipro-prefixed hook for the typing animation checkbox while preserving config ids and legacy switch styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="configAI_typing_box"');
+    expect(ai).toContain('for="configAI_typing_box"');
+    expect(ai).toContain('class="seipro-ai-typing-toggle infraLinkOrgao"');
+    expect(ai).toContain("setOptionsPro('setTypingAI', $('#configAI_typing_box').is(':checked') ? 'checked' : '')");
+
+    expect(ai).not.toMatch(/class="[^\"]*resume_doc/);
+  });
 });
