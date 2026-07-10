@@ -1754,7 +1754,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td>
-                        <input type="number" value="${getPresencePenaltyAI}" id="configAI_presence_penalty" style="width: 80%;" min="0" max="2" step=".1">
+                        <input type="number" value="${getPresencePenaltyAI}" id="configAI_presence_penalty" class="seipro-ai-presence-penalty-input" style="width: 80%;" min="0" max="2" step=".1">
                     </td>
                 </tr>
             </table>`;

@@ -389,4 +389,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="configAI_frequency_penalty"');
     expect(ai).toContain("setOptionsPro('setFrequencyPenaltyAI', $('#configAI_frequency_penalty').val())");
   });
+
+  it('adds a seipro-prefixed hook for the AI presence penalty field while preserving config id and persistence', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="configAI_presence_penalty" class="seipro-ai-presence-penalty-input"');
+    expect(ai).toContain('for="configAI_presence_penalty"');
+    expect(ai).toContain("setOptionsPro('setPresencePenaltyAI', $('#configAI_presence_penalty').val())");
+  });
 });
