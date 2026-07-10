@@ -180,4 +180,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toContain("alvo: '.icon_ia'");
     expect(ai).not.toMatch(/class="icon_ia"/);
   });
+
+  it('adds a seipro-prefixed hook for the AI dialog wrapper while preserving legacy dialog styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="dialogBoxAI seipro-ai-dialog"');
+
+    expect(ai).not.toMatch(/class="dialogBoxAI"/);
+  });
 });

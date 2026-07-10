@@ -1936,7 +1936,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const sanitizedHtml = sanitizeHTML(htmlBox);
         
         dialogBoxPro = $('#dialogBoxPro')
-            .html(`<div class="dialogBoxAI">${sanitizedHtml}</div>`)
+            .html(`<div class="dialogBoxAI seipro-ai-dialog">${sanitizedHtml}</div>`)
             .dialog({
                 title: 'Analisar texto por intelig\u00EAncia artificial ' + (currentPlataform == 'openai' ? '(ChatGPT)' : currentPlataform == 'ollama' ? '(Ollama)' : '(Gemini)'),
                 width: 980,
