@@ -405,4 +405,10 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="configAI_manual_model"');
     expect(ai).toContain("setOptionsPro('setModelOllama', modelToSave)");
   });
+
+  it('adds a seipro-prefixed hook for the AI typing cursor while preserving legacy styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="blinker seipro-ai-typing-cursor"');
+  });
 });

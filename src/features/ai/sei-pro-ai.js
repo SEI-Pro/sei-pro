@@ -1120,7 +1120,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 getHistoryDialog('push',responseBox[0].outerHTML);
                 return;
             }
-            responseBox.html(sanitizeHTML(markdownToHTML(`${htmlIconChat}<span class='response_bot_content seipro-ai-response-content'>${text}</span><span class="blinker">&#32;</span>`)));
+            responseBox.html(sanitizeHTML(markdownToHTML(`${htmlIconChat}<span class='response_bot_content seipro-ai-response-content'>${text}</span><span class="blinker seipro-ai-typing-cursor">&#32;</span>`)));
 
             container[0].scrollTop = container[0].scrollHeight;
             const char = text.slice(-1);
