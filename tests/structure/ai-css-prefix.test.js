@@ -267,4 +267,18 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/class="[^\"]*openai_token/);
     expect(ai).not.toMatch(/hasClass\('openai_token'\)/);
   });
+
+  it('uses a seipro-prefixed hook for the Ollama token save button while preserving platform detection', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-ollama-token"');
+    expect(ai).toContain("hasClass('seipro-ai-ollama-token') ? 'ollama'");
+    expect(ai).toContain('id="plataformAI_uiElement"');
+    expect(ai).toContain('id="cke_inputOllamaUrl_textInput"');
+    expect(ai).toContain('id="cke_inputOllamaKey_textInput"');
+    expect(ai).toContain('id="cke_inputOllamaModel_textInput"');
+
+    expect(ai).not.toMatch(/class="[^\"]*ollama_token/);
+    expect(ai).not.toMatch(/hasClass\('ollama_token'\)/);
+  });
 });

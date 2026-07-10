@@ -297,7 +297,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-s
             </tr>
             <tr>
                 <td colspan="2" style="padding:10px;text-align:right;">
-                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel ollama_token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
+                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-ollama-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
                     <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
@@ -2467,7 +2467,7 @@ const saveTokenOpenAI = (this_, mode = 'insert', plataform = false) => {
     const _parent = _this.closest('#plataformAI_info');
     const type_plataform = plataform ? plataform
         : $('#plataformAI_uiElement').hasClass('seipro-ai-gemini-token') ? 'gemini'
-        : $('#plataformAI_uiElement').hasClass('ollama_token') ? 'ollama'
+        : $('#plataformAI_uiElement').hasClass('seipro-ai-ollama-token') ? 'ollama'
         : $('#plataformAI_uiElement').hasClass('seipro-ai-openai-token') ? 'openai'
         : 'openai';
 
