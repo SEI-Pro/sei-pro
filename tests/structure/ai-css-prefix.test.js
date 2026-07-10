@@ -145,4 +145,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/class="suggestion_actions_remove/);
     expect(ai).not.toMatch(/\.on\('click', '\.suggestion_actions_remove'/);
   });
+
+  it('adds a seipro-prefixed hook for prompt document references while preserving legacy styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('prompt_ref_doc seipro-ai-prompt-ref-doc doc_${hash_doc}');
+    expect(ai).toContain("input_prompt.find('.seipro-ai-prompt-ref-doc')");
+    expect(ai).toContain('data-id_documento="all"');
+    expect(ai).toContain('contenteditable="false"');
+
+    expect(ai).not.toMatch(/input_prompt\.find\('\.prompt_ref_doc'\)/);
+    expect(ai).not.toMatch(/class="prompt_ref_doc doc_\$\{hash_doc\}"/);
+  });
 });

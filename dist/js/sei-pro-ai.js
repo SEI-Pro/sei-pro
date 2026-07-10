@@ -783,7 +783,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 if (prompt_f) prompt_footer += `\n${prompt_f}\n`;
             }
         } else if (data_protocolo.type == 'personalizado' && !data_protocolo.send) {
-            const elements = input_prompt.find('.prompt_ref_doc');
+            const elements = input_prompt.find('.seipro-ai-prompt-ref-doc');
             for (const v of elements) {
                 const data_input = $(v).data();
                 const prompt_f = await getFooterPrompt(data_input, respost_id);
@@ -1432,7 +1432,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             const hash_doc = randomString(8);
             return (value == 'processo') 
                 ?
-            `<span class="prompt_ref_doc doc_${hash_doc}" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}" contenteditable="false">Todo o processo (${getNumProcesso()})</span>` : false;
+            `<span class="prompt_ref_doc seipro-ai-prompt-ref-doc doc_${hash_doc}" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}" contenteditable="false">Todo o processo (${getNumProcesso()})</span>` : false;
         };
 
         const tagDocValue = (value) => {
@@ -1462,7 +1462,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             } else if (hasNumber(value)) {
                 docValue = docs[i];
             }
-            return_ = `<span class="prompt_ref_doc doc_${hash_doc}" data-num_processo="${docValue.num_processo ?? false}" data-nr_sei="${docValue.nr_sei ?? false}" data-id_procedimento="${docValue.id_protocolo ?? false}" data-id_documento="${docValue.id_documento ?? false}" contenteditable="false">${docValue.nome_documento ?? docValue.documento } (${docValue.nr_sei})</span>`;
+            return_ = `<span class="prompt_ref_doc seipro-ai-prompt-ref-doc doc_${hash_doc}" data-num_processo="${docValue.num_processo ?? false}" data-nr_sei="${docValue.nr_sei ?? false}" data-id_procedimento="${docValue.id_protocolo ?? false}" data-id_documento="${docValue.id_documento ?? false}" contenteditable="false">${docValue.nome_documento ?? docValue.documento } (${docValue.nr_sei})</span>`;
             return return_;
         };
 
@@ -2078,7 +2078,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                                         const data = docSelected.data() ?? false;
                                         const nomeDoc = docSelected.text().trim() ?? false;
                                         if (nomeDoc) {
-                                            insertTextAtCursor(`<span class="prompt_ref_doc doc_${hash_doc}" data-nr_sei="${data.nr_sei ?? false}" data-num_processo="${data.num_processo ?? false}" data-id_procedimento="${data.id_procedimento ?? false}" data-id_documento="${data.id_documento ?? false}" contenteditable="false">${nomeDoc}</span>`);
+                                            insertTextAtCursor(`<span class="prompt_ref_doc seipro-ai-prompt-ref-doc doc_${hash_doc}" data-nr_sei="${data.nr_sei ?? false}" data-num_processo="${data.num_processo ?? false}" data-id_procedimento="${data.id_procedimento ?? false}" data-id_documento="${data.id_documento ?? false}" contenteditable="false">${nomeDoc}</span>`);
                                             $(this).val('add_documento').trigger('chosen:updated');
                                         }
                                     }
