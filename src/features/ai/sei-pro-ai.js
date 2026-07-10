@@ -1927,7 +1927,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     ${btnSecondPlataform}
                     ${btnChangePlataform}
                     ${btnMainPlataform}
-                    <a class="newLink" id="btnSendAI" style="padding: 8px 15px 7px 5px;"><i class="fas fa-paper-plane"></i> Enviar <sup style="opacity: 0.7;">(${navigator.platform.startsWith('Mac') ? '\u2318' : 'Ctr'} \u23CE)</sup></a>
+                    <a class="newLink seipro-ai-send-button" id="btnSendAI" style="padding: 8px 15px 7px 5px;"><i class="fas fa-paper-plane"></i> Enviar <sup style="opacity: 0.7;">(${navigator.platform.startsWith('Mac') ? '\u2318' : 'Ctr'} \u23CE)</sup></a>
                     <div id="docAIMultiList" style="display:none; flex-basis:100%; margin-top:5px; flex-wrap:wrap;"></div>
                 </div>
             </div>`;
@@ -1980,7 +1980,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         }
                     });
                 
-                    $(document).off('click', '#btnSendAI').on('click', '#btnSendAI', function(event) {
+                    $(document).off('click', '.seipro-ai-send-button').on('click', '.seipro-ai-send-button', function(event) {
                         event.preventDefault();
                         initAI(this);
                     });
