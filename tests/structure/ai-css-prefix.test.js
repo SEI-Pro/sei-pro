@@ -243,4 +243,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("addClass('prompt_editor_sei seipro-ai-editor-doc-mode')");
     expect(ai).toContain('id="docAISelect" class="seipro-ai-doc-select"');
   });
+
+  it('uses a seipro-prefixed hook for the Gemini token save button while preserving platform detection', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-gemini-token"');
+    expect(ai).toContain("hasClass('seipro-ai-gemini-token') ? 'gemini'");
+    expect(ai).toContain('id="plataformAI_uiElement"');
+    expect(ai).toContain('id="cke_inputSecretKey_textInput"');
+
+    expect(ai).not.toMatch(/class="[^\"]*gemini_token/);
+    expect(ai).not.toMatch(/hasClass\('gemini_token'\)/);
+  });
 });
