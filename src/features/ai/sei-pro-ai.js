@@ -1720,7 +1720,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td style="width: 30%;">
-                        <input type="number" value="${getMaxTokensAI}" id="configAI_max_tokens" style="width: 80%;" min="1" max="4095" step="1">
+                        <input type="number" value="${getMaxTokensAI}" id="configAI_max_tokens" class="seipro-ai-max-tokens-input" style="width: 80%;" min="1" max="4095" step="1">
                     </td>
                 </tr>
                 <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
