@@ -292,7 +292,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     </label>
                 </td>
                 <td style="padding:6px 10px;">
-                    <input tabindex="3" style="font-size: 1.1em;width:100%;" placeholder="ex: llama3.2, mistral, gpt-4..." class="cke_dialog_ui_input_text" id="cke_inputOllamaModel_textInput" type="text">
+                    <input tabindex="3" style="font-size: 1.1em;width:100%;" placeholder="ex: llama3.2, mistral, gpt-4..." class="cke_dialog_ui_input_text seipro-ai-ollama-model-input" id="cke_inputOllamaModel_textInput" type="text">
                 </td>
             </tr>
             <tr>
