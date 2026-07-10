@@ -1742,7 +1742,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td>
-                        <input type="number" value="${getFrequencyPenaltyAI}" id="configAI_frequency_penalty" style="width: 80%;" min="0" max="2" step=".1">
+                        <input type="number" value="${getFrequencyPenaltyAI}" id="configAI_frequency_penalty" class="seipro-ai-frequency-penalty-input" style="width: 80%;" min="0" max="2" step=".1">
                     </td>
                 </tr>
                 <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
