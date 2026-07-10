@@ -459,4 +459,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="cke_dialog_ui_input_text passReveal seipro-ai-ollama-key-input"');
     expect(ai).toContain('type="password"');
   });
+
+  it('adds a seipro-prefixed hook to the Ollama URL input while preserving its id and default endpoint', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="cke_inputOllamaUrl_textInput"');
+    expect(ai).toContain('class="cke_dialog_ui_input_text seipro-ai-ollama-url-input"');
+    expect(ai).toContain('value="http://localhost:11434/"');
+    expect(ai).toContain("_parent.find('#cke_inputOllamaUrl_textInput')");
+  });
 });

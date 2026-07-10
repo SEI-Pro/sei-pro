@@ -270,7 +270,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     <label for="cke_inputOllamaUrl_textInput"><b>URL do servidor:</b></label>
                 </td>
                 <td style="padding:6px 10px;">
-                    <input tabindex="1" style="font-size: 1.1em;width:100%;" placeholder="http://localhost:11434/" value="http://localhost:11434/" class="cke_dialog_ui_input_text" id="cke_inputOllamaUrl_textInput" type="text">
+                    <input tabindex="1" style="font-size: 1.1em;width:100%;" placeholder="http://localhost:11434/" value="http://localhost:11434/" class="cke_dialog_ui_input_text seipro-ai-ollama-url-input" id="cke_inputOllamaUrl_textInput" type="text">
                 </td>
             </tr>
             <tr>
