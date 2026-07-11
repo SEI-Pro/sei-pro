@@ -1915,7 +1915,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         <option value="personalizado">(...) Fa\u00E7a seu pr\u00F3prio prompt...</option>
                         ${buildPromptOptions()}
                     </select>
-                    <a class="newLink" id="btnReturnSelectPromptAI" style="display:none;"><i class="fas fa-chevron-left"></i></a>
+                    <a class="newLink seipro-ai-return-prompt-select" id="btnReturnSelectPromptAI" style="display:none;"><i class="fas fa-chevron-left"></i></a>
                     <div id="promptAIPersonal" style="display:none;"></div>
                     <div id="favoritePromptAI" style="display:none;"><i class="far fa-star azulColor"></i></div>
                     <select id="docAISelect" class="seipro-ai-doc-select" style="width: 300px;">
@@ -2006,7 +2006,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         cancelLoopGetAIAction();
                     });
 
-                    $(document).off('click', '#btnReturnSelectPromptAI').on('click', '#btnReturnSelectPromptAI', function(event) {
+                    $(document).off('click', '.seipro-ai-return-prompt-select').on('click', '.seipro-ai-return-prompt-select', function(event) {
                         event.preventDefault();
                         $('#promptAISelect_chosen, #docAISelect_chosen').show();
                         $('#btnReturnSelectPromptAI').hide();

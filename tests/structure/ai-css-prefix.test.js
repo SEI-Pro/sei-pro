@@ -485,4 +485,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai.match(/id=\"cke_inputSecretKey_textInput\"/g)).toHaveLength(2);
     expect(ai.match(/type=\"password\" aria-labelledby=\"cke_inputSecretKey_label\"/g)).toHaveLength(2);
   });
+
+  it('adds a seipro-prefixed hook for returning from a custom prompt while preserving the legacy id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="newLink seipro-ai-return-prompt-select" id="btnReturnSelectPromptAI"');
+    expect(ai).toContain(".on('click', '.seipro-ai-return-prompt-select'");
+    expect(ai).toContain("$('#btnReturnSelectPromptAI').hide()");
+    expect(ai).toContain("$('#promptAISelect').val('resume')");
+
+    expect(ai).not.toMatch(/\.on\('click', '#btnReturnSelectPromptAI'/);
+  });
 });
