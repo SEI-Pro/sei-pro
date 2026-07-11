@@ -477,4 +477,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("getOptionsPro('setModelOllama')");
     expect(ai).toContain("_parent.find('#cke_inputOllamaModel_textInput')");
   });
+
+  it('adds a seipro-prefixed hook to OpenAI and Gemini secret-key inputs while preserving their password contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/seipro-ai-secret-key-input/g)).toHaveLength(2);
+    expect(ai.match(/id=\"cke_inputSecretKey_textInput\"/g)).toHaveLength(2);
+    expect(ai.match(/type=\"password\" aria-labelledby=\"cke_inputSecretKey_label\"/g)).toHaveLength(2);
+  });
 });
