@@ -1505,17 +1505,17 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <tbody>
                     <tr class="cke_dialog_ui_hbox">
                         <td role="presentation" style="width:33%; padding:10px 0; text-align:center;">
-                            <a style="user-select: none;padding: 0.6em 1em !important;font-size: 1em;" title="ChatGPT (OpenAI)" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm" role="button" id="selectPlataformAI_openai">
+                            <a style="user-select: none;padding: 0.6em 1em !important;font-size: 1em;" title="ChatGPT (OpenAI)" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm seipro-ai-platform-selector" role="button" id="selectPlataformAI_openai" data-platform="openai">
                                 <img src="${iconChatGPT}" style="width: 30px;vertical-align: middle;margin: 0 10px 0 0;background-color: #fff;border-radius: 5px;"><span id="selectPlataformAI_openai_label" style="color:#fff" class="cke_dialog_ui_button">ChatGPT (OpenAI)</span>
                             </a>
                         </td>
                         <td role="presentation" style="width:33%; padding:10px 0; text-align:center;">
-                            <a style="user-select: none;padding: 0.6em 1em !important;font-size: 1em;" title="Gemini (Google)" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm" role="button" id="selectPlataformAI_gemini">
+                            <a style="user-select: none;padding: 0.6em 1em !important;font-size: 1em;" title="Gemini (Google)" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm seipro-ai-platform-selector" role="button" id="selectPlataformAI_gemini" data-platform="gemini">
                                 <img src="${iconGemini}" style="width: 30px;vertical-align: middle;margin: 0 10px 0 0;background-color: #fff;border-radius: 5px;"><span id="selectPlataformAI_gemini_label" style="color:#fff" class="cke_dialog_ui_button">Gemini (Google)</span>
                             </a>
                         </td>
                         <td role="presentation" style="width:33%; padding:10px 0; text-align:center;">
-                            <a style="user-select: none;padding: 0.6em 1em !important;font-size: 1em;" title="Ollama (Local)" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm" role="button" id="selectPlataformAI_ollama">
+                            <a style="user-select: none;padding: 0.6em 1em !important;font-size: 1em;" title="Ollama (Local)" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm seipro-ai-platform-selector" role="button" id="selectPlataformAI_ollama" data-platform="ollama">
                                 <img src="${iconOllama}" style="width: 30px;vertical-align: middle;margin: 0 10px 0 0;background-color: #fff;border-radius: 5px;"><span id="selectPlataformAI_ollama_label" style="color:#fff" class="cke_dialog_ui_button">Ollama (Local)</span>
                             </a>
                         </td>
@@ -1533,17 +1533,17 @@ const getSessionTextProcesso = (num_processo_format) => {
                 open: () => {
 
                     // DELEGAÇÃO DE EVENTOS PARA ELEMENTOS DINÂMICOS
-                    $(document).off('click', '#selectPlataformAI_gemini').on('click', '#selectPlataformAI_gemini', (event) => {
+                    $(document).off('click', '.seipro-ai-platform-selector[data-platform="gemini"]').on('click', '.seipro-ai-platform-selector[data-platform="gemini"]', (event) => {
                         event.preventDefault();
                         boxAIStoreToken('gemini');
                     });
 
-                    $(document).off('click', '#selectPlataformAI_openai').on('click', '#selectPlataformAI_openai', (event) => {
+                    $(document).off('click', '.seipro-ai-platform-selector[data-platform="openai"]').on('click', '.seipro-ai-platform-selector[data-platform="openai"]', (event) => {
                         event.preventDefault();
                         boxAIStoreToken('openai');
                     });
 
-                    $(document).off('click', '#selectPlataformAI_ollama').on('click', '#selectPlataformAI_ollama', (event) => {
+                    $(document).off('click', '.seipro-ai-platform-selector[data-platform="ollama"]').on('click', '.seipro-ai-platform-selector[data-platform="ollama"]', (event) => {
                         event.preventDefault();
                         boxAIStoreToken('ollama');
                     });

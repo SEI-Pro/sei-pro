@@ -521,4 +521,21 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("$('#btnMainPlataform').find('img').attr('src', _getIconFor(nextPlataform))");
     expect(ai).toContain('seipro-ai-platform-status');
   });
+
+  it('adds a seipro-prefixed hook to platform choices while preserving platform ids and token flows', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/seipro-ai-platform-selector/g)).toHaveLength(9);
+    expect(ai).toContain('id="selectPlataformAI_openai" data-platform="openai"');
+    expect(ai).toContain('id="selectPlataformAI_gemini" data-platform="gemini"');
+    expect(ai).toContain('id="selectPlataformAI_ollama" data-platform="ollama"');
+    expect(ai).toContain(".on('click', '.seipro-ai-platform-selector[data-platform=\"openai\"]'");
+    expect(ai).toContain(".on('click', '.seipro-ai-platform-selector[data-platform=\"gemini\"]'");
+    expect(ai).toContain(".on('click', '.seipro-ai-platform-selector[data-platform=\"ollama\"]'");
+    expect(ai).toContain("boxAIStoreToken('openai')");
+    expect(ai).toContain("boxAIStoreToken('gemini')");
+    expect(ai).toContain("boxAIStoreToken('ollama')");
+
+    expect(ai).not.toMatch(/\.on\('click', '#selectPlataformAI_(openai|gemini|ollama)'/);
+  });
 });
