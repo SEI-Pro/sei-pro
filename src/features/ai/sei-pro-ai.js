@@ -1877,7 +1877,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         // CONTEÚDO DO BOTÃO DE SELEÇÃO DE PLATAFORMA PRINCIPAL
         const btnMainPlataform = `<a class="newLink" id="btnMainPlataform" style="position: relative;background-color: #fff;border-radius: 5px;padding: 0 20px 0 5px;">
                                         <img src="${iconMainPlataform}" style="width: 30px;background-color: #fff;border-radius: 5px;">
-                                        <i class="fas fa-circle animate-flicker fa-xs verdeColor" style="position: absolute; right: 0px; top: 5px; transform: scale(0.6);"></i>
+                                        <i class="fas fa-circle animate-flicker fa-xs verdeColor seipro-ai-platform-status" style="position: absolute; right: 0px; top: 5px; transform: scale(0.6);"></i>
                                     </a>`;
         // CONTEÚDO DO BOTÃO DE SELEÇÃO DE PLATAFORMA SECUNDÁRIA
         const btnSecondPlataform = `<a class="newLink" id="btnSecondPlataform" ${!btnChangePlataform ? `data-tooltip="Configurar plataforma alternativa"` : ''} data-plataform="${_nextPlatform}" style="background-color: #fff;border-radius: 5px;padding: 0 5px; opacity: ${btnChangePlataform ? 1 : 0.5};">

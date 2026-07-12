@@ -496,4 +496,10 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#btnReturnSelectPromptAI'/);
   });
+
+  it('adds a seipro-prefixed hook for the active AI platform status while preserving legacy animation styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="fas fa-circle animate-flicker fa-xs verdeColor seipro-ai-platform-status"');
+  });
 });
