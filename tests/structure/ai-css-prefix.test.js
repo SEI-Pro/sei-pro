@@ -702,4 +702,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#plataformAI_uiElement'/);
   });
+
+  it('adds a seipro-prefixed hook for the AI configuration form while preserving shared legacy form styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="seiProForm seipro-ai-config-form"');
+    expect(ai).toContain('id="configAI_model" class="seipro-ai-model-select"');
+    expect(ai).toContain('id="configAI_advancedconfigs"');
+  });
 });

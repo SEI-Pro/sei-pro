@@ -1630,7 +1630,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const getCurrentModelOllama = getOptionsPro('setModelOllama') || '';
 
         const htmlBox = `
-            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
+            <table style="font-size: 10pt;width: 100%;" class="seiProForm seipro-ai-config-form">
                 <tr>
                     <td class="label">
                         <label for="configAI_typing_box">
