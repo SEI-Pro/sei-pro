@@ -595,4 +595,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("localStorageStorePro('promptAIPersonal', $(this).html())");
     expect(ai).toContain("$('#promptAIPersonal').html(localStorageRestorePro('promptAIPersonal') || '')");
   });
+
+  it('adds a seipro-prefixed hook for pending AI responses while preserving legacy loading styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/loading seipro-ai-response-pending/g)).toHaveLength(2);
+    expect(ai).toContain('class="response_bot seipro-ai-bot-response response_${currentPlataform} loading seipro-ai-response-pending"');
+    expect(ai).toContain("responseBox.removeClass('loading')");
+  });
 });
