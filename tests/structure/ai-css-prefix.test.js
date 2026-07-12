@@ -659,4 +659,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="dialogBoxProcessoAI"');
     expect(ai).toContain("title: 'Pesquisar documentos em processo'");
   });
+
+  it('adds a seipro-prefixed hook for the create-document type selector while preserving legacy form styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="dialogBoxDiv seiProForm seipro-ai-create-document-type-selector"');
+    expect(ai).toContain('id="docTipoSelect"');
+    expect(ai).toContain("initChosenReplace('box_init', this, true)");
+  });
 });
