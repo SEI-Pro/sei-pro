@@ -762,4 +762,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("_this.closest('#plataformAI_info')");
     expect(ai).toContain("$('#plataformAI_info').css('white-space','initial')");
   });
+
+  it('delegates prompt changes through the feature hook while preserving the prompt select id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="promptAISelect" class="seipro-ai-prompt-select"');
+    expect(ai).toContain(".on('change', '.seipro-ai-prompt-select'");
+    expect(ai).toContain("$('#promptAISelect').val('resume')");
+
+    expect(ai).not.toMatch(/\.on\('change', '#promptAISelect'/);
+  });
 });

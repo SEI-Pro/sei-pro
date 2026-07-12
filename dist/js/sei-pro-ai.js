@@ -2056,7 +2056,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         if (!hasCredentials) boxAIStoreToken(plataform);
                     });
                 
-                    $(document).on('change', '#promptAISelect', function() {
+                    $(document).on('change', '.seipro-ai-prompt-select', function() {
                         const _this = $(this);
                         const _value = _this.val();
                         if (_value == 'personalizado') {
