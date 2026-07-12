@@ -1917,7 +1917,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     </select>
                     <a class="newLink seipro-ai-return-prompt-select" id="btnReturnSelectPromptAI" style="display:none;"><i class="fas fa-chevron-left"></i></a>
                     <div id="promptAIPersonal" style="display:none;"></div>
-                    <div id="favoritePromptAI" style="display:none;"><i class="far fa-star azulColor"></i></div>
+                    <div id="favoritePromptAI" class="seipro-ai-favorite-prompt" style="display:none;"><i class="far fa-star azulColor"></i></div>
                     <select id="docAISelect" class="seipro-ai-doc-select" style="width: 300px;">
                         <option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados...</option>
                     </select>
@@ -2088,7 +2088,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         setOptionsPro('currentPromptAISelect', _value);
                     });
 
-                    $(document).off('click', '#favoritePromptAI').on('click', '#favoritePromptAI', function(event) {
+                    $(document).off('click', '.seipro-ai-favorite-prompt').on('click', '.seipro-ai-favorite-prompt', function(event) {
                         if (!checkFavoriteExists()) {
                             saveFavoritePrompt();
                             $(this).find('i').attr('class','fas fa-star azulColor');

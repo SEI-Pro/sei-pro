@@ -559,4 +559,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="alertBoxDiv seipro-ai-config-dialog"');
     expect(ai).toContain("title: 'Intelig\\u00EAncia artificial: Configura\\u00E7\\u00F5es Gerais '");
   });
+
+  it('adds a seipro-prefixed hook for saving custom favorite prompts while preserving the legacy id and storage flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="favoritePromptAI" class="seipro-ai-favorite-prompt"');
+    expect(ai).toContain(".on('click', '.seipro-ai-favorite-prompt'");
+    expect(ai).toContain("$('#favoritePromptAI').show()");
+    expect(ai).toContain("localStorageStorePro('favoritePromptAI'");
+
+    expect(ai).not.toMatch(/\.on\('click', '#favoritePromptAI'/);
+  });
 });
