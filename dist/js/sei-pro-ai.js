@@ -175,7 +175,7 @@ const consentAI = sanitizeHTML(`<table role="presentation" cellspacing="0" borde
 </table>`);
 
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DA API OPENAI
-const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-space: break-spaces;color: #616161;">
+const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" class="seipro-ai-token-form" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="font-size: 11pt;line-height: 12pt;color: #616161;">
         <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
     </div>
@@ -214,7 +214,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-s
 </div>`);
 
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DA API OPENAI
-const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" style="white-space: break-spaces;color: #616161;">
+const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" class="seipro-ai-token-form" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="font-size: 11pt;line-height: 12pt;color: #616161;">
         <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://gemini.google.com/app" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">Gemini</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
     </div>
@@ -258,7 +258,7 @@ const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" style="white-s
 </div>`);
 
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DO OLLAMA / LITELLM (LOCAL/SERVIDOR)
-const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-space: break-spaces;color: #616161;">
+const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" class="seipro-ai-token-form" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="font-size: 11pt;line-height: 12pt;color: #616161;">
         <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Configure o acesso ao <b>Ollama</b> (local) ou a um servidor compat\u00EDvel com a API OpenAI, como o <b>LiteLLM</b>.<br><br>
         <span style="margin-left: 20px;"></span>Preencha os campos abaixo com as informa\u00E7\u00F5es do seu servidor:<br><br>

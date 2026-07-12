@@ -751,4 +751,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="fas fa-sync-alt fa-spin seipro-ai-token-loading"');
     expect(ai).toContain("$('#plataformAI_load').show()");
   });
+
+  it('adds a shared feature hook to credential forms while preserving their legacy id and token flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/id="plataformAI_info" class="seipro-ai-token-form"/g)).toHaveLength(3);
+    expect(ai).toContain('const disclaimerOpenAI');
+    expect(ai).toContain('const disclaimerGemini');
+    expect(ai).toContain('const disclaimerOllama');
+    expect(ai).toContain("_this.closest('#plataformAI_info')");
+    expect(ai).toContain("$('#plataformAI_info').css('white-space','initial')");
+  });
 });
