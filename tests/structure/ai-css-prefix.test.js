@@ -620,4 +620,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('onclick="window.location.reload()"');
     expect(ai).toContain('id="plataformAI_uiElement"');
   });
+
+  it('adds a seipro-prefixed hook for platform credential notices while preserving legacy dialogs', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice/g)).toHaveLength(8);
+    expect(ai.match(/id="plataformAI_alert"/g)).toHaveLength(3);
+    expect(ai).toContain('produtos da OpenAI');
+    expect(ai).toContain('produtos da Google');
+    expect(ai).toContain('Compatível com Ollama, LiteLLM');
+  });
 });
