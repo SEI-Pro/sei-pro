@@ -382,7 +382,7 @@ const createDocResponseAI = (this_) => {
             const sanitizedHTML = sanitizeHTML(htmlBox);
         
             alertBoxPro = $('#alertaBoxPro')
-                .html(`<div class="alertBoxDiv" style="max-height: 500px;">${sanitizedHTML}</div>`)
+                .html(`<div class="alertBoxDiv seipro-ai-create-document-alert" style="max-height: 500px;">${sanitizedHTML}</div>`)
                 .dialog({
                     width: 450,
                     title: 'Criar documento SEI',

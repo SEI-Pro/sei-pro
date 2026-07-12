@@ -625,8 +625,10 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai).toContain('class="dialogBoxDiv seiProForm seipro-ai-create-document-dialog"');
+    expect(ai).toContain('class="alertBoxDiv seipro-ai-create-document-alert"');
     expect(ai).toContain('id="docTipoSelect"');
     expect(ai).toContain("initChosenReplace('box_init', this, true)");
+    expect(ai).toContain("title: 'Criar documento SEI'");
   });
 
   it('adds a seipro-prefixed hook for platform credential notices while preserving legacy dialogs', () => {
