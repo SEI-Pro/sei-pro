@@ -1499,7 +1499,7 @@ const getSessionTextProcesso = (num_processo_format) => {
     // FUNÇÃO PARA EXIBIR SELEÇÃO DE PLATAFORMA DE IA
     const boxSelectPlataformAI = () => {
 
-        const htmlBox = sanitizeHTML(`<div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
+        const htmlBox = sanitizeHTML(`<div class="dialogBoxDiv seipro-ai-platform-picker-dialog" style="font-size: 11pt;line-height: 12pt;color: #616161;">
             <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Selecione a <b>Plataforma de Intelig\u00EAncia Artificial</b> de sua prefer\u00EAncia<br><br>
             <table role="presentation" class="cke_dialog_ui_hbox" style="width: 100%;">
                 <tbody>

@@ -603,4 +603,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="response_bot seipro-ai-bot-response response_${currentPlataform} loading seipro-ai-response-pending"');
     expect(ai).toContain("responseBox.removeClass('loading')");
   });
+
+  it('adds a seipro-prefixed hook for the AI platform picker while preserving legacy dialog styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="dialogBoxDiv seipro-ai-platform-picker-dialog"');
+    expect(ai).toContain('Selecione a <b>Plataforma de Intelig\\u00EAncia Artificial</b>');
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm seipro-ai-platform-selector"');
+  });
 });
