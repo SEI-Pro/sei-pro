@@ -223,7 +223,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).toContain('id="docAISelect" class="seipro-ai-doc-select"');
     expect(ai).toContain("$('#docAISelect_chosen')");
-    expect(ai).toContain("$(document).off('change', '#docAISelect')");
+    expect(ai).toContain("$(document).off('change', '.seipro-ai-doc-select')");
 
     expect(ai).not.toMatch(/class="prompt_doc"/);
   });
@@ -782,5 +782,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("$('#promptAISelect').val('resume')");
 
     expect(ai).not.toMatch(/\.on\('change', '#promptAISelect'/);
+  });
+
+  it('delegates custom-prompt document changes through the feature hook while preserving the document select id', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="docAISelect" class="seipro-ai-doc-select"');
+    expect(ai).toContain(".on('change', '.seipro-ai-doc-select'");
+    expect(ai).toContain("boxAISearchProcesso()");
+    expect(ai).toContain("$(this).val('add_documento').trigger('chosen:updated')");
+
+    expect(ai).not.toMatch(/\.on\('change', '#docAISelect'/);
   });
 });

@@ -2068,7 +2068,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                             $('#docAISelect_chosen').addClass('prompt_personal seipro-ai-personal-prompt-mode').css('width', 500);
                             resizeBoxAIActions();
 
-                            $(document).off('change', '#docAISelect').on('change', '#docAISelect', function(event) {
+                            $(document).off('change', '.seipro-ai-doc-select').on('change', '.seipro-ai-doc-select', function(event) {
                                 if ($(this).val() == 'outro_processo') {
                                     boxAISearchProcesso();
                                 } else {
