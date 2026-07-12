@@ -578,4 +578,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("$('#boxAIActions').removeAttr('style')");
     expect(ai).toContain("$('#boxAIActions').css('height', heightPromptBox + 70)");
   });
+
+  it('adds a seipro-prefixed hook to AI platform information links while preserving legacy link styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/linkDialog seipro-ai-platform-info-link/g)).toHaveLength(5);
+    expect(ai).toContain('https://chat.openai.com/chat');
+    expect(ai).toContain('https://gemini.google.com/app');
+  });
 });

@@ -177,10 +177,10 @@ const consentAI = sanitizeHTML(`<table role="presentation" cellspacing="0" borde
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DA API OPENAI
 const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-        <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
+        <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
     </div>
     <div class="alertaAttencionPro dialogBoxDiv" style="margin-left:20px;font-size: 11pt;line-height: 12pt;color: #616161;">
-        1. Acesse o site da OpenAI (<a href="https://platform.openai.com/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://platform.openai.com/</a>) e clique em "Sign Up" no canto superior direito da tela.<br><br>
+        1. Acesse o site da OpenAI (<a href="https://platform.openai.com/" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">https://platform.openai.com/</a>) e clique em "Sign Up" no canto superior direito da tela.<br><br>
         2. Preencha o formul\u00E1rio de cadastro com seus dados pessoais e crie uma senha.<br>
         Tamb\u00E9m \u00E9 poss\u00EDvel logar com sua conta Google ou Microsoft.<br><br>
         3. Verifique seu e-mail e clique no link de confirma\u00E7\u00E3o enviado pela OpenAI.<br><br>
@@ -190,7 +190,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-s
         7. Clique em "Create new secret key" para gerar sua chave de API.<br><br>
         8. Guarde sua chave secreta de API em um local seguro, pois ela s\u00F3 ser\u00E1 exibida uma vez.<br><br>
         9. Para come\u00E7ar a usar sua chave, adicione suas informa\u00E7\u00F5es de pagamento em "Billing" se necess\u00E1rio.<br>
-        Consulte as condi\u00E7\u00F5es de precifica\u00E7\u00E3o da plataforma em: <a href="https://platform.openai.com/" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://openai.com/pricing</a><br><br>
+        Consulte as condi\u00E7\u00F5es de precifica\u00E7\u00E3o da plataforma em: <a href="https://platform.openai.com/" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">https://openai.com/pricing</a><br><br>
         10. Cole-a no campo abaixo:<br><br>
     </div>
     <table role="presentation" class="cke_dialog_ui_hbox">
@@ -216,11 +216,11 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-s
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DA API OPENAI
 const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-        <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://gemini.google.com/app" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">Gemini</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
+        <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://gemini.google.com/app" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">Gemini</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
     </div>
     <div class="alertaAttencionPro dialogBoxDiv" style="margin-left:20px;font-size: 11pt;line-height: 12pt;color: #616161;">
         1. Acesse o Google AI Studio<br>
-        Entre no site <a href="https://aistudio.google.com/app/apikey" class="linkDialog" style="font-style: italic;font-size: 11pt;" target="_blank">https://aistudio.google.com/app/apikey</a>. <br>
+        Entre no site <a href="https://aistudio.google.com/app/apikey" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">https://aistudio.google.com/app/apikey</a>. <br>
         Caso voc\u00EA n\u00E3o possua uma conta, fa\u00E7a seu cadastro utilizando sua conta Google.<br><br>
 
         2. Crie uma chave de API (Get API Key).<br><br>
