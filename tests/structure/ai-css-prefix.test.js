@@ -621,6 +621,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="plataformAI_uiElement"');
   });
 
+  it('adds a seipro-prefixed hook for the token reload action while preserving its legacy button contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-reload-button"');
+    expect(ai).toContain('onclick="window.location.reload()"');
+    expect(ai).toContain('id="plataformAI_uiElement"');
+    expect(ai).toContain("$('#plataformAI_uiElement').addClass('newLink newLink_confirm')");
+  });
+
   it('adds a seipro-prefixed hook for the create-document dialog while preserving legacy dialog styling and document selector', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

@@ -2496,7 +2496,7 @@ const saveTokenOpenAI = (this_, mode = 'insert', plataform = false) => {
             <div class="alertaAttencionPro dialogBoxDiv seipro-ai-token-success-dialog" style="font-size: 11pt; line-height: 15pt; color: #616161;">
                 <i class="fas fa-check-circle verdeColor" style="margin-right: 5px;"></i>
                 Credenciais carregadas com sucesso! Recarregue a p\u00E1gina.
-                <a style="user-select: none; margin-left: 20px;" onclick="window.location.reload()" title="Recarregar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
+                <a style="user-select: none; margin-left: 20px;" onclick="window.location.reload()" title="Recarregar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-reload-button" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                     <span id="plataformAI_label" class="cke_dialog_ui_button">Recarregar</span>
                 </a>
             </div>`;
