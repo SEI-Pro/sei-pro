@@ -723,4 +723,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="configAI_presence_penalty"');
     expect(ai).toContain('data-tooltip=');
   });
+
+  it('adds a feature hook to the AI consent checkbox wrapper while preserving the checkbox contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="cke_383_uiElement" class="cke_dialog_ui_checkbox seipro-ai-consent-checkbox-wrapper"');
+    expect(ai).toContain('class="cke_dialog_ui_checkbox_input seipro-ai-consent-toggle"');
+    expect(ai).toContain('id="ciente_disclaimer"');
+    expect(ai).toContain('for="ciente_disclaimer"');
+    expect(ai).toContain("setOptionsPro('consentimentoIA', true)");
+  });
 });

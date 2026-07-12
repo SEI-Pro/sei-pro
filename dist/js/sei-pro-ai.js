@@ -165,7 +165,7 @@ const consentAI = sanitizeHTML(`<table role="presentation" cellspacing="0" borde
         </tr>
         <tr>
             <td role="presentation" class="cke_dialog_ui_vbox_child">
-                <span id="cke_383_uiElement" class="cke_dialog_ui_checkbox">
+                <span id="cke_383_uiElement" class="cke_dialog_ui_checkbox seipro-ai-consent-checkbox-wrapper">
                     <input class="cke_dialog_ui_checkbox_input seipro-ai-consent-toggle" type="checkbox" aria-labelledby="cke_381_label" id="ciente_disclaimer">
                     <label id="cke_381_label" for="ciente_disclaimer">Estou ciente e entendo os riscos</label>
                 </span>
