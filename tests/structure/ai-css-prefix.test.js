@@ -570,4 +570,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#favoritePromptAI'/);
   });
+
+  it('adds a seipro-prefixed hook for the AI actions container while preserving id-based layout updates', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="boxAIActions" class="seipro-ai-actions-container"');
+    expect(ai).toContain("$('#boxAIActions').removeAttr('style')");
+    expect(ai).toContain("$('#boxAIActions').css('height', heightPromptBox + 70)");
+  });
 });
