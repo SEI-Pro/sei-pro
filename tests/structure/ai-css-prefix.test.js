@@ -513,4 +513,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#btnSecondPlataform'/);
   });
+
+  it('adds a seipro-prefixed hook for the primary AI platform button while preserving the active platform display', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="newLink seipro-ai-primary-platform-button" id="btnMainPlataform"');
+    expect(ai).toContain("$('#btnMainPlataform').find('img').attr('src', _getIconFor(nextPlataform))");
+    expect(ai).toContain('seipro-ai-platform-status');
+  });
 });
