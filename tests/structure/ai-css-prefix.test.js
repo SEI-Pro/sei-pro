@@ -763,6 +763,17 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("$('#plataformAI_info').css('white-space','initial')");
   });
 
+  it('adds a shared feature hook to credential field tables while preserving CKEditor layout and token actions', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/cke_dialog_ui_hbox seipro-ai-token-fields/g)).toHaveLength(3);
+    expect(ai).toContain('class="cke_dialog_ui_hbox seipro-ai-token-fields"');
+    expect(ai).toContain('class="cke_dialog_ui_hbox seipro-ai-token-fields" style="width:100%;"');
+    expect(ai).toContain('seipro-ai-token-save-button seipro-ai-openai-token');
+    expect(ai).toContain('seipro-ai-token-save-button seipro-ai-gemini-token');
+    expect(ai).toContain('seipro-ai-token-save-button seipro-ai-ollama-token');
+  });
+
   it('delegates prompt changes through the feature hook while preserving the prompt select id', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

@@ -193,7 +193,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
         Consulte as condi\u00E7\u00F5es de precifica\u00E7\u00E3o da plataforma em: <a href="https://platform.openai.com/" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">https://openai.com/pricing</a><br><br>
         10. Cole-a no campo abaixo:<br><br>
     </div>
-    <table role="presentation" class="cke_dialog_ui_hbox">
+    <table role="presentation" class="cke_dialog_ui_hbox seipro-ai-token-fields">
         <tbody>
             <tr class="cke_dialog_ui_hbox">
                 <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px">
@@ -237,7 +237,7 @@ const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
 
         10. Cole a chave de API no campo abaixo:<br><br>
     </div>
-    <table role="presentation" class="cke_dialog_ui_hbox">
+    <table role="presentation" class="cke_dialog_ui_hbox seipro-ai-token-fields">
         <tbody>
             <tr class="cke_dialog_ui_hbox">
                 <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px">
@@ -263,7 +263,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
         <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Configure o acesso ao <b>Ollama</b> (local) ou a um servidor compat\u00EDvel com a API OpenAI, como o <b>LiteLLM</b>.<br><br>
         <span style="margin-left: 20px;"></span>Preencha os campos abaixo com as informa\u00E7\u00F5es do seu servidor:<br><br>
     </div>
-    <table role="presentation" class="cke_dialog_ui_hbox" style="width:100%;">
+    <table role="presentation" class="cke_dialog_ui_hbox seipro-ai-token-fields" style="width:100%;">
         <tbody>
             <tr>
                 <td style="width:25%;padding:6px 10px;vertical-align:middle;font-size:10pt;color:#616161;">
