@@ -640,4 +640,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('produtos da Google');
     expect(ai).toContain('Compatível com Ollama, LiteLLM');
   });
+
+  it('adds a seipro-prefixed hook for the process search dialog while preserving legacy form contracts', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="dialogBoxDiv seiProForm seipro-ai-process-search-dialog"');
+    expect(ai).toContain('id="dialogBoxProcessoAI"');
+    expect(ai).toContain("title: 'Pesquisar documentos em processo'");
+    expect(ai).toContain("appendAutocompleteProc(this, $('#dialogBoxProcessoAI'))");
+    expect(ai).toContain("appendDocAISelect(false, $('#dialogBoxProcessoAI').val())");
+  });
 });

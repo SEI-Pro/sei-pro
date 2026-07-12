@@ -2177,7 +2177,7 @@ const getSessionTextProcesso = (num_processo_format) => {
 
     const boxAISearchProcesso = () => {
         const htmlBox = `
-                <div class="dialogBoxDiv seiProForm">
+                <div class="dialogBoxDiv seiProForm seipro-ai-process-search-dialog">
                     <div style="font-size: 10pt;margin: 1em;">
                         Digite o n\u00FAmero do processo
                     </div>
