@@ -713,4 +713,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="configAI_model" class="seipro-ai-model-select"');
     expect(ai).toContain('id="configAI_advancedconfigs"');
   });
+
+  it('adds a feature hook to AI configuration info icons while preserving shared tooltip styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/seipro-ai-config-info-icon/g)).toHaveLength(7);
+    expect(ai).toContain('class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon"');
+    expect(ai).toContain('for="configAI_model"');
+    expect(ai).toContain('for="configAI_presence_penalty"');
+    expect(ai).toContain('data-tooltip=');
+  });
 });

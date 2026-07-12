@@ -1658,7 +1658,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <tr>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_model">
-                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
+                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon" style="float: right;"
                             data-tooltip="O modelo que ir\u00E1 gerar a conclus\u00E3o. Alguns modelos s\u00E3o adequados para tarefas de linguagem natural, outros s\u00E3o especializados em c\u00F3digo."></i>
                             Modelo:
                         </label>
@@ -1681,7 +1681,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <tr id="configAI_ollama_model_row" class="seipro-ai-manual-model-row" ${currentPlataform == 'ollama' ? '' : 'style="display:none;"'}>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_manual_model">
-                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;"
+                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon" style="float: right;"
                             data-tooltip="Digite o nome exato do modelo a ser usado. Substitui a sele\u00E7\u00E3o do dropdown acima. \u00DAtil para LiteLLM ou modelos personalizados."></i>
                             Modelo manual:
                         </label>
@@ -1704,7 +1704,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_temperature">
-                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
+                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon" style="float: right;"
                             data-tooltip="Controla a aleatoriedade: a redu\u00E7\u00E3o resulta em conclus\u00F5es menos aleat\u00F3rias. \u00C0 medida que a temperatura se aproxima de zero, o modelo se tornar\u00E1 determin\u00EDstico e repetitivo."></i>
                             Temperatura:
                         </label>
@@ -1714,7 +1714,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     </td>
                     <td style="text-align: left;height: 40px;width: 20%;" class="label">
                         <label for="configAI_max_tokens">
-                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
+                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon" style="float: right;"
                             data-tooltip="O n\u00FAmero m\u00E1ximo de tokens a serem gerados e compartilhados entre o prompt e a conclus\u00E3o. O limite exato varia de acordo com o modelo. (Um token tem aproximadamente 4 caracteres para texto em ingl\u00EAs padr\u00E3o)"></i>
                             Comprimento m\u00E1ximo:
                         </label>
@@ -1726,7 +1726,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
                     <td class="label">
                         <label for="configAI_top_p">
-                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
+                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon" style="float: right;"
                             data-tooltip="Controla a diversidade por meio de amostragem nuclear: 0,5 significa que metade de todas as op\u00E7\u00F5es ponderadas por verossimilhan\u00E7a s\u00E3o consideradas."></i>
                             Parte superior P:
                         </label>
@@ -1736,7 +1736,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     </td>
                     <td class="label">
                         <label for="configAI_frequency_penalty">
-                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
+                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon" style="float: right;"
                             data-tooltip="Quanto penalizar novos tokens com base na frequ\u00EAncia existente no texto at\u00E9 o momento. Diminuir a probabilidade far\u00E1 o modelo repetir a mesma linha literalmente."></i>
                             Penalidade de Frequ\u00EAncia:
                         </label>
@@ -1748,7 +1748,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <tr class="seipro-ai-advanced-config-row" ${getAdvancedConfigs == 'checked' ? '' : 'style="display:none;"'}>
                     <td class="label">
                         <label for="configAI_presence_penalty">
-                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor" style="float: right;" 
+                            <i class="iconPopup iconSwitch fas fa-info-circle cinzaColor seipro-ai-config-info-icon" style="float: right;"
                             data-tooltip="Quanto penalizar novos tokens com base no fato de eles aparecerem no texto at\u00E9 o momento. Aumenta a probabilidade far\u00E1 o modelo falar sobre novos t\u00F3picos."></i>
                             Penalidade de Presen\u00E7a:
                         </label>
