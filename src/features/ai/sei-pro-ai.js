@@ -203,7 +203,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-openai-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
-                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
+                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin seipro-ai-token-loading" style="margin-left: 10px; display:none"></i>
                 </td>
             </tr>
         </tbody>
@@ -247,7 +247,7 @@ const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-gemini-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
-                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
+                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin seipro-ai-token-loading" style="margin-left: 10px; display:none"></i>
                 </td>
             </tr>
         </tbody>
@@ -300,7 +300,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-ollama-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
-                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
+                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin seipro-ai-token-loading" style="margin-left: 10px; display:none"></i>
                 </td>
             </tr>
         </tbody>

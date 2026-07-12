@@ -733,4 +733,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="ciente_disclaimer"');
     expect(ai).toContain("setOptionsPro('consentimentoIA', true)");
   });
+
+  it('adds a feature hook to credential loading indicators while preserving legacy spinner and id contracts', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/seipro-ai-token-loading/g)).toHaveLength(3);
+    expect(ai.match(/id="plataformAI_load"/g)).toHaveLength(3);
+    expect(ai).toContain('class="fas fa-sync-alt fa-spin seipro-ai-token-loading"');
+    expect(ai).toContain("$('#plataformAI_load').show()");
+  });
 });
