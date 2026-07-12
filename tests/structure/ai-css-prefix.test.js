@@ -502,4 +502,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).toContain('class="fas fa-circle animate-flicker fa-xs verdeColor seipro-ai-platform-status"');
   });
+
+  it('adds a seipro-prefixed hook for the secondary AI platform button while preserving rotation behavior', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="newLink seipro-ai-secondary-platform-button" id="btnSecondPlataform"');
+    expect(ai).toContain(".on('click', '.seipro-ai-secondary-platform-button'");
+    expect(ai).toContain("$('#btnSecondPlataform').attr('data-plataform', nextNextPlataform)");
+    expect(ai).toContain("data-plataform=\"${_nextPlatform}\"");
+
+    expect(ai).not.toMatch(/\.on\('click', '#btnSecondPlataform'/);
+  });
 });

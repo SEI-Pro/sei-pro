@@ -1880,7 +1880,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                                         <i class="fas fa-circle animate-flicker fa-xs verdeColor seipro-ai-platform-status" style="position: absolute; right: 0px; top: 5px; transform: scale(0.6);"></i>
                                     </a>`;
         // CONTEÚDO DO BOTÃO DE SELEÇÃO DE PLATAFORMA SECUNDÁRIA
-        const btnSecondPlataform = `<a class="newLink" id="btnSecondPlataform" ${!btnChangePlataform ? `data-tooltip="Configurar plataforma alternativa"` : ''} data-plataform="${_nextPlatform}" style="background-color: #fff;border-radius: 5px;padding: 0 5px; opacity: ${btnChangePlataform ? 1 : 0.5};">
+        const btnSecondPlataform = `<a class="newLink seipro-ai-secondary-platform-button" id="btnSecondPlataform" ${!btnChangePlataform ? `data-tooltip="Configurar plataforma alternativa"` : ''} data-plataform="${_nextPlatform}" style="background-color: #fff;border-radius: 5px;padding: 0 5px; opacity: ${btnChangePlataform ? 1 : 0.5};">
                                         <img src="${iconSecondaryPlataform}" style="width: 30px;background-color: #fff;border-radius: 5px;">
                                     </a>`;
         // CONTEÚDO HTML QUE SERÁ INSERIDO
@@ -2047,7 +2047,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         dialogBoxPro.dialog('option', 'title', 'Analisar texto por intelig\u00EAncia artificial (' + (nextPlataform == 'openai' ? 'ChatGPT' : nextPlataform == 'ollama' ? 'Ollama' : 'Gemini') + ')');
                     });
                 
-                    $(document).off('click', '#btnSecondPlataform').on('click', '#btnSecondPlataform', function(event) {
+                    $(document).off('click', '.seipro-ai-secondary-platform-button').on('click', '.seipro-ai-secondary-platform-button', function(event) {
                         event.preventDefault();
                         const plataform = $(this).attr('data-plataform');
                         const hasCredentials = (plataform == 'openai' && !!perfilOpenAI)
