@@ -586,4 +586,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('https://chat.openai.com/chat');
     expect(ai).toContain('https://gemini.google.com/app');
   });
+
+  it('adds a seipro-prefixed hook for the custom prompt editor while preserving its id and persistence flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="promptAIPersonal" class="seipro-ai-personal-prompt-editor"');
+    expect(ai).toContain("$('#promptAIPersonal').prop('contenteditable',true).show().focus()");
+    expect(ai).toContain("localStorageStorePro('promptAIPersonal', $(this).html())");
+    expect(ai).toContain("$('#promptAIPersonal').html(localStorageRestorePro('promptAIPersonal') || '')");
+  });
 });

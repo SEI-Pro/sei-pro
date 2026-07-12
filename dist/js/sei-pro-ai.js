@@ -1916,7 +1916,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         ${buildPromptOptions()}
                     </select>
                     <a class="newLink seipro-ai-return-prompt-select" id="btnReturnSelectPromptAI" style="display:none;"><i class="fas fa-chevron-left"></i></a>
-                    <div id="promptAIPersonal" style="display:none;"></div>
+                    <div id="promptAIPersonal" class="seipro-ai-personal-prompt-editor" style="display:none;"></div>
                     <div id="favoritePromptAI" class="seipro-ai-favorite-prompt" style="display:none;"><i class="far fa-star azulColor"></i></div>
                     <select id="docAISelect" class="seipro-ai-doc-select" style="width: 300px;">
                         <option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados...</option>
