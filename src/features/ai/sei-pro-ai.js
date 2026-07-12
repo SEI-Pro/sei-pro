@@ -1770,7 +1770,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 open: function () {
                     
                     // DELEGAÇÃO DE EVENTO ONCLICK PARA SELETOR DE CONFIGURAÇÕES AVANÇADAS
-                    $(document).off('change', '#configAI_advancedconfigs').on('change', '#configAI_advancedconfigs', function(event) {
+                    $(document).off('change', '.seipro-ai-advanced-config-toggle').on('change', '.seipro-ai-advanced-config-toggle', function(event) {
                         event.preventDefault();
                         if ($(this).is(':checked')) {
                             $('.seipro-ai-advanced-config-row').show();

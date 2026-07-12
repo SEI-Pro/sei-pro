@@ -308,7 +308,10 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="configAI_advancedconfigs"');
     expect(ai).toContain('for="configAI_advancedconfigs"');
     expect(ai).toContain('class="seipro-ai-advanced-config-toggle infraLinkOrgao"');
+    expect(ai).toContain(".on('change', '.seipro-ai-advanced-config-toggle'");
     expect(ai).toContain("setOptionsPro('setAdvancedConfigs', $('#configAI_advancedconfigs').is(':checked') ? 'checked' : '')");
+
+    expect(ai).not.toMatch(/\.on\('change', '#configAI_advancedconfigs'/);
   });
 
   it('adds a seipro-prefixed hook for the Ollama manual-model row while preserving config ids and persistence', () => {
