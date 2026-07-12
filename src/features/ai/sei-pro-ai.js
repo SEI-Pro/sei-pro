@@ -200,7 +200,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     <input tabindex="3" style="font-size: 1.2em;" placeholder="Insira o valor para a chave secreta" class="cke_dialog_ui_input_text seipro-ai-secret-key-input" id="cke_inputSecretKey_textInput" type="password" aria-labelledby="cke_inputSecretKey_label">
                 </td>
                 <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">
-                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-openai-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
+                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-openai-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
                     <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
@@ -244,7 +244,7 @@ const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" style="white-s
                     <input tabindex="3" style="font-size: 1.2em;" placeholder="Insira o valor para a chave secreta" class="cke_dialog_ui_input_text seipro-ai-secret-key-input" id="cke_inputSecretKey_textInput" type="password" aria-labelledby="cke_inputSecretKey_label">
                 </td>
                 <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">
-                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-gemini-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
+                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-gemini-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
                     <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
@@ -297,7 +297,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" style="white-s
             </tr>
             <tr>
                 <td colspan="2" style="padding:10px;text-align:right;">
-                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-ollama-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
+                    <a style="user-select: none;" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-ollama-token" role="button" aria-labelledby="plataformAI_label" id="plataformAI_uiElement">
                         <span id="plataformAI_label" class="cke_dialog_ui_button">Salvar</span>
                     </a>
                     <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
@@ -1566,7 +1566,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 open: () => {
 
                     // DELEGAÇÃO DE EVENTOS PARA ELEMENTOS DINÂMICOS
-                    $(document).off('click', '#plataformAI_uiElement').on('click', '#plataformAI_uiElement', (event) => {
+                    $(document).off('click', '.seipro-ai-token-save-button').on('click', '.seipro-ai-token-save-button', (event) => {
                         event.preventDefault();
                         saveTokenOpenAI(event.currentTarget);
                     });

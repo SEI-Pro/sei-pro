@@ -247,7 +247,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
   it('uses a seipro-prefixed hook for the Gemini token save button while preserving platform detection', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
-    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-gemini-token"');
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-gemini-token"');
     expect(ai).toContain("hasClass('seipro-ai-gemini-token') ? 'gemini'");
     expect(ai).toContain('id="plataformAI_uiElement"');
     expect(ai).toContain('id="cke_inputSecretKey_textInput"');
@@ -259,7 +259,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
   it('uses a seipro-prefixed hook for the OpenAI token save button while preserving platform detection', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
-    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-openai-token"');
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-openai-token"');
     expect(ai).toContain("hasClass('seipro-ai-openai-token') ? 'openai'");
     expect(ai).toContain('id="plataformAI_uiElement"');
     expect(ai).toContain('id="cke_inputSecretKey_textInput"');
@@ -271,7 +271,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
   it('uses a seipro-prefixed hook for the Ollama token save button while preserving platform detection', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
-    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-ollama-token"');
+    expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_cancel seipro-ai-token-save-button seipro-ai-ollama-token"');
     expect(ai).toContain("hasClass('seipro-ai-ollama-token') ? 'ollama'");
     expect(ai).toContain('id="plataformAI_uiElement"');
     expect(ai).toContain('id="cke_inputOllamaUrl_textInput"');
@@ -675,5 +675,21 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="dialogBoxDiv seiProForm seipro-ai-create-document-type-selector"');
     expect(ai).toContain('id="docTipoSelect"');
     expect(ai).toContain("initChosenReplace('box_init', this, true)");
+  });
+
+  it('adds a shared feature hook to token save buttons while preserving platform contracts', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/seipro-ai-token-save-button/g)).toHaveLength(5);
+    expect(ai).toContain('seipro-ai-token-save-button seipro-ai-openai-token');
+    expect(ai).toContain('seipro-ai-token-save-button seipro-ai-gemini-token');
+    expect(ai).toContain('seipro-ai-token-save-button seipro-ai-ollama-token');
+    expect(ai).toContain(".on('click', '.seipro-ai-token-save-button'");
+    expect(ai).toContain('id="plataformAI_uiElement"');
+    expect(ai).toContain("hasClass('seipro-ai-openai-token') ? 'openai'");
+    expect(ai).toContain("hasClass('seipro-ai-gemini-token') ? 'gemini'");
+    expect(ai).toContain("hasClass('seipro-ai-ollama-token') ? 'ollama'");
+
+    expect(ai).not.toMatch(/\.on\('click', '#plataformAI_uiElement'/);
   });
 });
