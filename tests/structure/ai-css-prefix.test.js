@@ -545,4 +545,11 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="loadingio-spinner-pulse seipro-ai-response-loading"');
     expect(ai).toContain('class="ldio"');
   });
+
+  it('adds a seipro-prefixed hook for the AI response list while preserving id-based layout updates', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="response_ai" class="seipro-ai-response-list"');
+    expect(ai).toContain("$('#response_ai').css('height'");
+  });
 });
