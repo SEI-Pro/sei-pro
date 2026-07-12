@@ -552,4 +552,11 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="response_ai" class="seipro-ai-response-list"');
     expect(ai).toContain("$('#response_ai').css('height'");
   });
+
+  it('adds a seipro-prefixed hook for the AI configuration dialog while preserving legacy dialog styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="alertBoxDiv seipro-ai-config-dialog"');
+    expect(ai).toContain("title: 'Intelig\\u00EAncia artificial: Configura\\u00E7\\u00F5es Gerais '");
+  });
 });

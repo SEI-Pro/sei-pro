@@ -1763,7 +1763,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const sanitizedHTML = sanitizeHTML(htmlBox);
 
         alertBoxPro = $('#alertaBoxPro')
-            .html(`<div class="alertBoxDiv" style="max-height: 500px;">${sanitizedHTML}</div>`)
+            .html(`<div class="alertBoxDiv seipro-ai-config-dialog" style="max-height: 500px;">${sanitizedHTML}</div>`)
             .dialog({
                 width: 700,
                 title: 'Intelig\u00EAncia artificial: Configura\u00E7\u00F5es Gerais ' + (currentPlataform == 'openai' ? '(ChatGPT)' : currentPlataform == 'ollama' ? '(Ollama)' : '(Gemini)'),
