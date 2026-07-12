@@ -369,7 +369,7 @@ const createDocResponseAI = (this_) => {
 
         const htmlBox = `
                 <div class="dialogBoxDiv seiProForm seipro-ai-create-document-dialog">
-                    <div style="font-size: 10pt;margin: 1em;">
+                    <div class="seipro-ai-create-document-type-label" style="font-size: 10pt;margin: 1em;">
                         Selecione o tipo de documento
                     </div>
                     <div class="dialogBoxDiv seiProForm seipro-ai-create-document-type-selector">

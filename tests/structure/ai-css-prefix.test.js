@@ -690,6 +690,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("initChosenReplace('box_init', this, true)");
   });
 
+  it('adds a seipro-prefixed hook for the create-document type label while preserving the selector flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="seipro-ai-create-document-type-label"');
+    expect(ai).toContain('Selecione o tipo de documento');
+    expect(ai).toContain('id="docTipoSelect"');
+    expect(ai).toContain("title: 'Criar documento SEI'");
+  });
+
   it('adds a shared feature hook to token save buttons while preserving platform contracts', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
