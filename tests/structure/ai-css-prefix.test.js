@@ -538,4 +538,11 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('click', '#selectPlataformAI_(openai|gemini|ollama)'/);
   });
+
+  it('adds a seipro-prefixed hook for the response loading indicator while preserving legacy spinner styling', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="loadingio-spinner-pulse seipro-ai-response-loading"');
+    expect(ai).toContain('class="ldio"');
+  });
 });

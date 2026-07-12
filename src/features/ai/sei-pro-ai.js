@@ -1139,7 +1139,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const htmlResponseBox = `
             <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} loading" data-preload="${preload}">
                 ${htmlIconChat}
-                <div class="loadingio-spinner-pulse">
+                <div class="loadingio-spinner-pulse seipro-ai-response-loading">
                     <div class="ldio">
                         <div></div><div></div><div></div>
                     </div>
