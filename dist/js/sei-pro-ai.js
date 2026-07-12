@@ -2189,7 +2189,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const sanitizedHTML = sanitizeHTML(htmlBox);
     
         alertBoxPro = $('#alertaBoxPro')
-            .html(`<div class="alertBoxDiv" style="max-height: 500px;">${sanitizedHTML}</div>`)
+            .html(`<div class="alertBoxDiv seipro-ai-process-search-alert" style="max-height: 500px;">${sanitizedHTML}</div>`)
             .dialog({
                 width: 450,
                 title: 'Pesquisar documentos em processo',
