@@ -350,6 +350,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('for="ciente_disclaimer"');
   });
 
+  it('adds a seipro-prefixed hook for the AI consent toggle while preserving its acceptance flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="cke_dialog_ui_checkbox_input seipro-ai-consent-toggle"');
+    expect(ai).toContain('id="ciente_disclaimer"');
+    expect(ai).toContain('for="ciente_disclaimer"');
+    expect(ai).toContain("if ($('#ciente_disclaimer').is(':checked'))");
+    expect(ai).toContain("setOptionsPro('consentimentoIA', true)");
+  });
+
   it('adds a seipro-prefixed hook for the AI system instruction field while preserving config id and persistence', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
