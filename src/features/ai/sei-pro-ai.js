@@ -373,7 +373,7 @@ const createDocResponseAI = (this_) => {
                         Selecione o tipo de documento
                     </div>
                     <div class="dialogBoxDiv seiProForm seipro-ai-create-document-type-selector">
-                        <select id="docTipoSelect"><option value="">&nbsp;</option>${tiposDocumentos}</select>
+                        <select id="docTipoSelect" class="seipro-ai-create-document-type-select"><option value="">&nbsp;</option>${tiposDocumentos}</select>
                     </div>
                 </div>
             `;
