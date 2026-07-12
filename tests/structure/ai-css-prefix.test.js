@@ -611,4 +611,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('Selecione a <b>Plataforma de Intelig\\u00EAncia Artificial</b>');
     expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm seipro-ai-platform-selector"');
   });
+
+  it('adds a seipro-prefixed hook for the token success dialog while preserving legacy confirmation contracts', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="alertaAttencionPro dialogBoxDiv seipro-ai-token-success-dialog"');
+    expect(ai).toContain('Credenciais carregadas com sucesso!');
+    expect(ai).toContain('onclick="window.location.reload()"');
+    expect(ai).toContain('id="plataformAI_uiElement"');
+  });
 });
