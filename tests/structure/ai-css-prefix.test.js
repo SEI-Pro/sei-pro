@@ -839,4 +839,12 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('mousedown', '#docAISelect'/);
   });
+
+  it('adds a feature hook to the multi-document list while preserving its legacy id and tag flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="docAIMultiList" class="seipro-ai-document-list"');
+    expect(ai).toContain("$('#docAIMultiList .seipro-ai-doc-tag')");
+    expect(ai).toContain("$('#docAIMultiList').hide()");
+  });
 });
