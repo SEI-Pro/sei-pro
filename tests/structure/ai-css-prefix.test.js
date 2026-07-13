@@ -789,6 +789,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('id="configAI_advancedconfigs"');
   });
 
+  it('adds a feature hook to the AI configuration reset action while preserving reset defaults', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain("text: 'Resetar configura\\u00E7\\u00F5es'");
+    expect(ai).toContain("class: 'seipro-ai-config-reset-button'");
+    expect(ai).toContain("setOptionsPro('setModelOpenAI', 'gpt-4')");
+    expect(ai).toContain("setOptionsPro('setAdvancedConfigs', '')");
+  });
+
   it('adds a feature hook to AI configuration info icons while preserving shared tooltip styling', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

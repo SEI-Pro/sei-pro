@@ -1783,6 +1783,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 },
                 buttons: [{
                     text: 'Resetar configura\u00E7\u00F5es',
+                    class: 'seipro-ai-config-reset-button',
                     click: () => {
                         if (currentPlataform == 'openai')
                             setOptionsPro('setModelOpenAI', 'gpt-4');
