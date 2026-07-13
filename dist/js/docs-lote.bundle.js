@@ -374,7 +374,7 @@
                     </tr>
                     <tr>
                         <td class="required">
-                            <select id="docLoteSelect"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>
+                            <select id="docLoteSelect" class="seipro-doclote-model-select"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>
                         </td>
                     </tr>
                     <tr>
