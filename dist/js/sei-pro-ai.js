@@ -1504,7 +1504,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             <i class="fas fa-info-circle azulColor seipro-ai-info-icon" style="margin-right: 5px;"></i> Selecione a <b>Plataforma de Intelig\u00EAncia Artificial</b> de sua prefer\u00EAncia<br><br>
             <table role="presentation" class="cke_dialog_ui_hbox seipro-ai-platform-picker-table" style="width: 100%;">
                 <tbody>
-                    <tr class="cke_dialog_ui_hbox">
+                    <tr class="cke_dialog_ui_hbox seipro-ai-platform-picker-options">
                         <td role="presentation" style="width:33%; padding:10px 0; text-align:center;">
                             <a style="user-select: none;padding: 0.6em 1em !important;font-size: 1em;" title="ChatGPT (OpenAI)" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm seipro-ai-platform-selector" role="button" id="selectPlataformAI_openai" data-platform="openai">
                                 <img src="${iconChatGPT}" style="width: 30px;vertical-align: middle;margin: 0 10px 0 0;background-color: #fff;border-radius: 5px;"><span id="selectPlataformAI_openai_label" style="color:#fff" class="cke_dialog_ui_button">ChatGPT (OpenAI)</span>
