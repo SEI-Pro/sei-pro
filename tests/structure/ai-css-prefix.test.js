@@ -818,4 +818,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).not.toMatch(/\.on\('change', '#docAISelect'/);
   });
+
+  it('delegates document-selector cursor preservation through the feature hook', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="docAISelect" class="seipro-ai-doc-select"');
+    expect(ai).toContain(".on('mousedown', '.seipro-ai-doc-select'");
+    expect(ai).toContain('saveCursorPosition()');
+
+    expect(ai).not.toMatch(/\.on\('mousedown', '#docAISelect'/);
+  });
 });

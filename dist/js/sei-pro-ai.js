@@ -2118,7 +2118,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     });
 
                     // TAMBÉM SALVA A POSIÇÃO DO CURSOR ANTES DO SELECT GANHAR FOCO
-                    $(document).on('mousedown', '#docAISelect', function () {
+                    $(document).on('mousedown', '.seipro-ai-doc-select', function () {
                         saveCursorPosition(); // ISSO É O QUE FAZ FUNCIONAR DE VERDADE
                     });
 
