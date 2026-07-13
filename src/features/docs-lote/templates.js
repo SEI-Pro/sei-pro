@@ -161,7 +161,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
                         <tr style="display:none" class="seipro-doclote-process-type-fields">
                             <td colspan="2">
                                 <p style="font-size: 1.2em;"><i class="fas fa-folder-open cinzaColor"></i> Tipo de Processo:</p>
-                                <select id="tipoProcessoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposProcessos}</select>
+                                <select id="tipoProcessoSelect" class="seipro-doclote-process-type-select"><option value="">Selecione um tipo de documento</option>${selectTiposProcessos}</select>
                             </td>
                         </tr>
                         <tr style="display:none" class="seipro-doclote-process-type-fields">
