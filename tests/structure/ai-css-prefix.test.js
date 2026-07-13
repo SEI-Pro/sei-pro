@@ -907,4 +907,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('data-type="erros_gramaticais"');
     expect(ai).toContain('data-type="dados_sensiveis"');
   });
+
+  it('adds a feature hook to favorite suggestion icons while preserving the favorite card contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="fas fa-star cinzaColor seipro-ai-favorite-suggestion-icon"');
+    expect(ai).toContain('data-type="personalizado" class="suggestion_actions seipro-ai-suggestion-action"');
+    expect(ai).toContain('class="seipro-ai-remove-suggestion far fa-trash cinzaColor"');
+    expect(ai).toContain("localStorageRestorePro('favoritePromptAI')");
+  });
 });

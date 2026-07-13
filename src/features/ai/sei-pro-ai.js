@@ -2233,7 +2233,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 return `
                     <div data-send="false" data-index="${i}" data-type="personalizado" class="suggestion_actions seipro-ai-suggestion-action">
                         <i data-index="${i}" style="position: absolute;right: 0;top: 0;z-index: 99;padding: 1em;" class="seipro-ai-remove-suggestion far fa-trash cinzaColor"></i>
-                        <i style="margin-bottom: 1em;text-align: center;display: block;" class="fas fa-star cinzaColor"></i> ${htmlToText}
+                        <i style="margin-bottom: 1em;text-align: center;display: block;" class="fas fa-star cinzaColor seipro-ai-favorite-suggestion-icon"></i> ${htmlToText}
                     </div>`;
             }).join();
             $('.seipro-ai-suggestions').append(normalizeHTML(htmlFav));
