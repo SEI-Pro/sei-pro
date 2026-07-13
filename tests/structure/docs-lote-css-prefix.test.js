@@ -112,6 +112,16 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain('getDocsArvore_fillSelect');
   });
 
+  it('delegates model-document changes through the feature hook while preserving the selection flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain(".on('change', '.seipro-doclote-model-select'");
+    expect(view).toContain("$('#textoPadraoSelect').val('').trigger('chosen:updated')");
+    expect(view).toContain("$('#btnSelecaoDoc').prop('disabled', false)");
+
+    expect(view).not.toMatch(/\$\('#docLoteSelect'\)\s*\.on\('change'/);
+  });
+
   it('adds a seipro-prefixed hook to the standard-text selector while preserving its mutual reset flow', () => {
     const templates = read('src/features/docs-lote/templates.js');
     const view = read('src/features/docs-lote/view.js');

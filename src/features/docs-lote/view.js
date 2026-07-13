@@ -377,15 +377,15 @@ export function docLoteModalSelecaoDoc() {
                 if (typeof URL_SPRO !== 'undefined' && typeof Papa === 'undefined') $.getScript(`${URL_SPRO}js/lib/papaparse.js`);
                 $('#btnSelecaoDoc').prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
                 $('#docLoteSelect')
-                    .on('change', () => {
-                        $('#textoPadraoSelect').val('').trigger('chosen:updated');
-                        $('#btnSelecaoDoc').prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
-                    })
                     .chosen({
                         placeholder_text_single: ' ',
                         no_results_text: 'Nenhum resultado encontrado',
                         normalize_search_text: function (text) { return removeAcentos(text.toLowerCase()); }
                     });
+                $(document).off('change', '.seipro-doclote-model-select').on('change', '.seipro-doclote-model-select', () => {
+                    $('#textoPadraoSelect').val('').trigger('chosen:updated');
+                    $('#btnSelecaoDoc').prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
+                });
                 $('#textoPadraoSelect').chosen({
                     placeholder_text_single: ' ',
                     no_results_text: 'Nenhum resultado encontrado',
