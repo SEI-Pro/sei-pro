@@ -287,6 +287,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
 
     expect(ai).toContain('id="configAI_typing_box"');
     expect(ai).toContain('for="configAI_typing_box"');
+    expect(ai).toContain('class="infraAncoraSigla seipro-ai-typing-toggle-wrapper"');
     expect(ai).toContain('class="seipro-ai-typing-toggle infraLinkOrgao"');
     expect(ai).toContain("setOptionsPro('setTypingAI', $('#configAI_typing_box').is(':checked') ? 'checked' : '')");
 

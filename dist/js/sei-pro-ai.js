@@ -1639,7 +1639,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td>
-                        <div class="infraAncoraSigla" style="display: inline-block;transform: scale(0.7);">
+                        <div class="infraAncoraSigla seipro-ai-typing-toggle-wrapper" style="display: inline-block;transform: scale(0.7);">
                             <input id="configAI_typing_box" type="checkbox" name="infraAncoraSigla" class="seipro-ai-typing-toggle infraLinkOrgao" ${getTypingAI}>
                             <label class="infraTd" for="configAI_typing_box"></label>
                         </div>
