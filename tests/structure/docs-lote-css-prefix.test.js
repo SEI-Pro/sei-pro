@@ -44,6 +44,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).not.toMatch(/\.on\('change', '#newProcs'/);
   });
 
+  it('adds a feature hook to the new-process switch wrapper while preserving its shared switch contract', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('class="onoffswitch seipro-doclote-new-process-switch"');
+    expect(templates).toContain('class="onoffswitch-checkbox seipro-doclote-new-process-toggle" id="newProcs"');
+    expect(templates).toContain('class="onoff-switch-label" for="newProcs"');
+  });
+
   it('delegates the process-type selector through a feature hook while preserving its legacy id and validation flow', () => {
     const templates = read('src/features/docs-lote/templates.js');
     const view = read('src/features/docs-lote/view.js');
