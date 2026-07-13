@@ -768,6 +768,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('data-tooltip=');
   });
 
+  it('adds a feature hook to AI information icons while preserving legacy icon styling and platform templates', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/fas fa-info-circle azulColor seipro-ai-info-icon/g)).toHaveLength(4);
+    expect(ai).toContain('const disclaimerOpenAI');
+    expect(ai).toContain('const disclaimerGemini');
+    expect(ai).toContain('const disclaimerOllama');
+    expect(ai).toContain('Selecione a <b>Plataforma de Intelig\\u00EAncia Artificial</b>');
+  });
+
   it('adds a feature hook to the AI consent checkbox wrapper while preserving the checkbox contract', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

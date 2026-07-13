@@ -177,7 +177,7 @@ const consentAI = sanitizeHTML(`<table role="presentation" cellspacing="0" borde
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DA API OPENAI
 const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" class="seipro-ai-token-form" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-        <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
+        <i class="fas fa-info-circle azulColor seipro-ai-info-icon" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://chat.openai.com/chat" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">ChatGPT</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
     </div>
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="margin-left:20px;font-size: 11pt;line-height: 12pt;color: #616161;">
         1. Acesse o site da OpenAI (<a href="https://platform.openai.com/" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">https://platform.openai.com/</a>) e clique em "Sign Up" no canto superior direito da tela.<br><br>
@@ -216,7 +216,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DA API OPENAI
 const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" class="seipro-ai-token-form" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-        <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://gemini.google.com/app" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">Gemini</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
+        <i class="fas fa-info-circle azulColor seipro-ai-info-icon" style="margin-right: 5px;"></i> Aproveite todo o potencial da intelig\u00EAncia artificial do <a href="https://gemini.google.com/app" class="linkDialog seipro-ai-platform-info-link" style="font-style: italic;font-size: 11pt;" target="_blank">Gemini</a> diretamente no editor de documentos do SEI. <br><br><span style="margin-left: 20px;"></span>Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:<br><br>
     </div>
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="margin-left:20px;font-size: 11pt;line-height: 12pt;color: #616161;">
         1. Acesse o Google AI Studio<br>
@@ -260,7 +260,7 @@ const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
 // HTML SANITIZADO COM INSTRUÇÕES DE USO DO OLLAMA / LITELLM (LOCAL/SERVIDOR)
 const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" class="seipro-ai-token-form" style="white-space: break-spaces;color: #616161;">
     <div class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-        <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Configure o acesso ao <b>Ollama</b> (local) ou a um servidor compat\u00EDvel com a API OpenAI, como o <b>LiteLLM</b>.<br><br>
+        <i class="fas fa-info-circle azulColor seipro-ai-info-icon" style="margin-right: 5px;"></i> Configure o acesso ao <b>Ollama</b> (local) ou a um servidor compat\u00EDvel com a API OpenAI, como o <b>LiteLLM</b>.<br><br>
         <span style="margin-left: 20px;"></span>Preencha os campos abaixo com as informa\u00E7\u00F5es do seu servidor:<br><br>
     </div>
     <table role="presentation" class="cke_dialog_ui_hbox seipro-ai-token-fields" style="width:100%;">
@@ -1501,7 +1501,7 @@ const getSessionTextProcesso = (num_processo_format) => {
     const boxSelectPlataformAI = () => {
 
         const htmlBox = sanitizeHTML(`<div class="dialogBoxDiv seipro-ai-platform-picker-dialog" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-            <i class="fas fa-info-circle azulColor" style="margin-right: 5px;"></i> Selecione a <b>Plataforma de Intelig\u00EAncia Artificial</b> de sua prefer\u00EAncia<br><br>
+            <i class="fas fa-info-circle azulColor seipro-ai-info-icon" style="margin-right: 5px;"></i> Selecione a <b>Plataforma de Intelig\u00EAncia Artificial</b> de sua prefer\u00EAncia<br><br>
             <table role="presentation" class="cke_dialog_ui_hbox" style="width: 100%;">
                 <tbody>
                     <tr class="cke_dialog_ui_hbox">
