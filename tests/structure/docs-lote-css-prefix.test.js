@@ -263,4 +263,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#nomesDoc').chosen");
     expect(view).toContain("placeholder_text_single: ' '");
   });
+
+  it('adds a feature hook to the Docs em Lote credit while preserving its attribution link', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('class="seipro-doclote-credit"');
+    expect(templates).toContain('href="https://github.com/tcgontijo" target="_blank"');
+    expect(templates).toContain('Código-fonte gentilmente cedido por');
+    expect(templates).toContain('PluriDocs SEI!');
+  });
 });

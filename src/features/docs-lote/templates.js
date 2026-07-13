@@ -38,7 +38,7 @@ export function selecaoDocBox(credito = '') {
                 ${credito}`);
 }
 
-export const creditoTcgontijo = '<div style="margin: 10px 0;font-size: 8pt;color: #888;">Código-fonte gentilmente cedido por <a href="https://github.com/tcgontijo" target="_blank" style="color: #00c;">tcgontijo</a> | PluriDocs SEI!<div>';
+export const creditoTcgontijo = '<div class="seipro-doclote-credit" style="margin: 10px 0;font-size: 8pt;color: #888;">Código-fonte gentilmente cedido por <a href="https://github.com/tcgontijo" target="_blank" style="color: #00c;">tcgontijo</a> | PluriDocs SEI!<div>';
 
 // 2/6, 4/6, 5/6 — caixas com texto curto.
 export const analiseDocModeloBox = () => wrap(`<p>Análise do documento modelo:</p>`);
