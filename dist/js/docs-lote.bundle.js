@@ -462,7 +462,7 @@
             </tr>
             `;
     return `
-            <div id="divTableDataCrossing">
+            <div id="divTableDataCrossing" class="seipro-doclote-crossing-panel">
                 <div class="seipro-doclote-crossing-scroll" style="max-height: 300px;overflow-y: auto;">
                     <table id="tableDataCrossing" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow">
                         <thead>

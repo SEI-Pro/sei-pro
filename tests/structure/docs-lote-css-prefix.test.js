@@ -155,6 +155,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).toContain('class="seiProForm tableInfo tableZebra tableFollow"');
   });
 
+  it('adds a seipro-prefixed hook to the data-crossing panel while preserving its legacy id', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('id="divTableDataCrossing" class="seipro-doclote-crossing-panel"');
+    expect(templates).toContain('id="tableDataCrossing"');
+    expect(templates).toContain('id="newProcs"');
+  });
+
   it('uses a seipro-prefixed class for the result action bar emitted by Docs em Lote', () => {
     const templates = read('src/features/docs-lote/templates.js');
 
