@@ -85,6 +85,15 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#inputBD')[0].files[0]");
   });
 
+  it('adds a seipro-prefixed hook to the model-analysis loader while preserving its legacy id and spinner', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id='loaderAnalysis' class=\"seipro-doclote-analysis-loader\"");
+    expect(view).toContain("if (!$('#loaderAnalysis')[0])");
+    expect(view).toContain('fas fa-spinner fa-spin azulColor');
+    expect(view).toContain("$('#loaderAnalysis').remove()");
+  });
+
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
     const view = read('src/features/docs-lote/view.js');
     const legacy = read('src/shared/legacy/sei-functions-pro.js');
