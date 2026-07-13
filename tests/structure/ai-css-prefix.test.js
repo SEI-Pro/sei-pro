@@ -679,7 +679,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai).toContain('class="dialogBoxDiv seiProForm seipro-ai-process-search-dialog"');
-    expect(ai).toContain('id="dialogBoxProcessoAI"');
+    expect(ai).toContain('id="dialogBoxProcessoAI" class="seipro-ai-process-search-input"');
     expect(ai).toContain("title: 'Pesquisar documentos em processo'");
     expect(ai).toContain("appendAutocompleteProc(this, $('#dialogBoxProcessoAI'))");
     expect(ai).toContain("appendDocAISelect(false, $('#dialogBoxProcessoAI').val())");

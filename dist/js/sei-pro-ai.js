@@ -2181,7 +2181,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     <div style="font-size: 10pt;margin: 1em;">
                         Digite o n\u00FAmero do processo
                     </div>
-                    <input id="dialogBoxProcessoAI" type="text" style="font-size: 10pt; width: 80%;">
+                    <input id="dialogBoxProcessoAI" class="seipro-ai-process-search-input" type="text" style="font-size: 10pt; width: 80%;">
                 </div>
             `;
 
