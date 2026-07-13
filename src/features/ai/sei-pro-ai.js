@@ -1919,7 +1919,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     </select>
                     <a class="newLink seipro-ai-return-prompt-select" id="btnReturnSelectPromptAI" style="display:none;"><i class="fas fa-chevron-left"></i></a>
                     <div id="promptAIPersonal" class="seipro-ai-personal-prompt-editor" style="display:none;"></div>
-                    <div id="favoritePromptAI" class="seipro-ai-favorite-prompt" style="display:none;"><i class="far fa-star azulColor"></i></div>
+                    <div id="favoritePromptAI" class="seipro-ai-favorite-prompt" style="display:none;"><i class="far fa-star azulColor seipro-ai-favorite-prompt-icon"></i></div>
                     <select id="docAISelect" class="seipro-ai-doc-select" style="width: 300px;">
                         <option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados...</option>
                     </select>
@@ -2093,7 +2093,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     $(document).off('click', '.seipro-ai-favorite-prompt').on('click', '.seipro-ai-favorite-prompt', function(event) {
                         if (!checkFavoriteExists()) {
                             saveFavoritePrompt();
-                            $(this).find('i').attr('class','fas fa-star azulColor');
+                            $(this).find('.seipro-ai-favorite-prompt-icon').attr('class','fas fa-star azulColor seipro-ai-favorite-prompt-icon');
                         }
                     });
 
@@ -2110,7 +2110,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         // SALVA A POSIÇÃO DO CURSOR QUANDO O USUÁRIO DIGITA OU CLICA NO EDITOR
                         saveCursorPosition();
                         // ATUALIZA O ÍCONE DE FAVORITO
-                        $('#favoritePromptAI').find('i').attr('class', (checkFavoriteExists() ? 'fas' : 'far') + ' fa-star azulColor');
+                        $('#favoritePromptAI').find('.seipro-ai-favorite-prompt-icon').attr('class', (checkFavoriteExists() ? 'fas' : 'far') + ' fa-star azulColor seipro-ai-favorite-prompt-icon');
 
                         if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
                             initAI(this);

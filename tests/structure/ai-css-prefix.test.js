@@ -601,7 +601,11 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai).toContain('id="favoritePromptAI" class="seipro-ai-favorite-prompt"');
+    expect(ai).toContain('class="far fa-star azulColor seipro-ai-favorite-prompt-icon"');
     expect(ai).toContain(".on('click', '.seipro-ai-favorite-prompt'");
+    expect(ai).toContain("$(this).find('.seipro-ai-favorite-prompt-icon')");
+    expect(ai).toContain("$('#favoritePromptAI').find('.seipro-ai-favorite-prompt-icon')");
+    expect(ai).toContain("' fa-star azulColor seipro-ai-favorite-prompt-icon'");
     expect(ai).toContain("$('#favoritePromptAI').show()");
     expect(ai).toContain("localStorageStorePro('favoritePromptAI'");
 
