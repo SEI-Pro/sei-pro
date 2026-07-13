@@ -10,11 +10,14 @@ function read(relPath) {
 }
 
 describe('migration: docs-lote CSS classes stay prefixed', () => {
-  it('adds a seipro-prefixed hook to the Docs em Lote dialog wrapper while preserving the shared dialog class', () => {
+  it('adds a feature hook to the initial document-selection panel while preserving the shared form class', () => {
     const templates = read('src/features/docs-lote/templates.js');
 
+    expect(templates).toContain('class="seiProForm seipro-doclote-selection-panel"');
     expect(templates).toContain('id="dialogBoxDocLote"');
     expect(templates).toContain('class="dialogBoxDiv seipro-doclote-dialog"');
+    expect(templates).toContain('id="docLoteSelect" class="seipro-doclote-model-select"');
+    expect(templates).toContain('id="textoPadraoSelect" class="seipro-doclote-template-select"');
   });
 
   it('uses a seipro-prefixed class for the new-process type rows', () => {

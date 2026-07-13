@@ -13,7 +13,7 @@ const wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv seipro-d
 // 1/6 — seleção do documento modelo / texto padrão. `credito` é o trecho opcional
 // (creditação) que a view injeta conforme restrictConfigValue.
 export function selecaoDocBox(credito = '') {
-    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm">
+    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm seipro-doclote-selection-panel">
                     <tr>
                         <td style="vertical-align: top;text-align: left;height: 40px;" class="label">
                             <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> Selecione abaixo, dentre os documentos constantes na árvore do processo, o modelo para reprodução em lote:</label>

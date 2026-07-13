@@ -366,7 +366,7 @@
   // src/features/docs-lote/templates.js
   var wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv seipro-doclote-dialog">${inner}</div>`;
   function selecaoDocBox(credito = "") {
-    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm">
+    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm seipro-doclote-selection-panel">
                     <tr>
                         <td style="vertical-align: top;text-align: left;height: 40px;" class="label">
                             <label for="docLoteSelect"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i> Selecione abaixo, dentre os documentos constantes na \xE1rvore do processo, o modelo para reprodu\xE7\xE3o em lote:</label>
