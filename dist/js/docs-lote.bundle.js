@@ -667,7 +667,7 @@
   }
   function docsLote_CSVAnalysis(file) {
     $("#fieldListCSV").remove();
-    if (!$("#loaderAnalysisCSV")[0]) $("#dialogBoxDocLote").append(`<div id='loaderAnalysisCSV' style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>`);
+    if (!$("#loaderAnalysisCSV")[0]) $("#dialogBoxDocLote").append(`<div id='loaderAnalysisCSV' class="seipro-doclote-csv-analysis-loader" style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>`);
     Papa.parse(file, {
       header: true,
       skipEmptyLines: "greedy",
