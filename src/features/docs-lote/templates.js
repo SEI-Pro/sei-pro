@@ -43,7 +43,7 @@ export const creditoTcgontijo = '<div class="seipro-doclote-credit" style="margi
 // 2/6, 4/6, 5/6 — caixas com texto curto.
 export const analiseDocModeloBox = () => wrap(`<p class="seipro-doclote-analysis-title">Análise do documento modelo:</p>`);
 export const analiseCsvBox = () => wrap(`<p class="seipro-doclote-analysis-csv-title">Análise da base de dados:</p>`);
-export const cruzamentoDadosBox = () => wrap(`<p>Segue abaixo o relacionamento entre cabeçalhos da base de dados e os campos dinâmicos do documento modelo:</p>`);
+export const cruzamentoDadosBox = () => wrap(`<p class="seipro-doclote-crossing-intro">Segue abaixo o relacionamento entre cabeçalhos da base de dados e os campos dinâmicos do documento modelo:</p>`);
 
 // 3/6 — upload do CSV.
 export function selecaoBaseDadosBox() {

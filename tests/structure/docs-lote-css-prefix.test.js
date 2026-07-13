@@ -290,6 +290,12 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).toContain('PluriDocs SEI!');
   });
 
+  it('adds a feature hook to the crossing-panel introduction while preserving its text', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('class="seipro-doclote-crossing-intro">Segue abaixo o relacionamento entre cabeçalhos da base de dados e os campos dinâmicos do documento modelo:</p>');
+  });
+
   it('adds a feature hook to the execution cancel action while preserving its legacy id and abort flow', () => {
     const view = read('src/features/docs-lote/view.js');
 
