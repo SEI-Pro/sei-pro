@@ -393,12 +393,11 @@ export function docLoteModalSelecaoDoc() {
                 });
                 docsLote_getDocsArvore(true);
                 S.docsCriados = [];
-                $('#textoPadraoSelect')
-                    .on('change', () => {
+                $(document).off('change', '.seipro-doclote-template-select').on('change', '.seipro-doclote-template-select', () => {
                         $('#docLoteSelect').val('').trigger('chosen:updated');
                         $('#btnSelecaoDoc').prop('disabled', false).removeClass('ui-button-disabled ui-state-disabled');
-                    })
-                    .html('<option value="">&nbsp;</option>');
+                });
+                $('#textoPadraoSelect').html('<option value="">&nbsp;</option>');
                 txtPadrao_getList().then((listTxtPadrao) => {
                     S.listTxtPadraoDoc = listTxtPadrao;
                     $('#textoPadraoSelect').append(listTxtPadrao.map((item) => `<option value="${item.id}">${item.name}</option>`).join(''));

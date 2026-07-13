@@ -132,6 +132,16 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#docLoteSelect').val('').trigger('chosen:updated')");
   });
 
+  it('delegates standard-text changes through the feature hook while preserving the model reset flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain(".on('change', '.seipro-doclote-template-select'");
+    expect(view).toContain("$('#docLoteSelect').val('').trigger('chosen:updated')");
+    expect(view).toContain("$('#btnSelecaoDoc').prop('disabled', false)");
+
+    expect(view).not.toMatch(/\$\('#textoPadraoSelect'\)\s*\.on\('change'/);
+  });
+
   it('adds a seipro-prefixed hook to the CSV upload input while preserving its file contract', () => {
     const templates = read('src/features/docs-lote/templates.js');
     const view = read('src/features/docs-lote/view.js');
