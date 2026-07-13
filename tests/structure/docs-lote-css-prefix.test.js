@@ -212,6 +212,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).toContain('<p>${textError}</p>');
   });
 
+  it('adds a feature hook to the model-analysis stage title while preserving its text', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('class="seipro-doclote-analysis-title">Análise do documento modelo:</p>');
+    expect(templates).not.toContain('<p>Análise do documento modelo:</p>');
+  });
+
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
     const view = read('src/features/docs-lote/view.js');
     const legacy = read('src/shared/legacy/sei-functions-pro.js');

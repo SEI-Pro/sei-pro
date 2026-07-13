@@ -391,7 +391,7 @@
                 ${credito}`);
   }
   var creditoTcgontijo = '<div class="seipro-doclote-credit" style="margin: 10px 0;font-size: 8pt;color: #888;">C\xF3digo-fonte gentilmente cedido por <a href="https://github.com/tcgontijo" target="_blank" style="color: #00c;">tcgontijo</a> | PluriDocs SEI!<div>';
-  var analiseDocModeloBox = () => wrap(`<p>An\xE1lise do documento modelo:</p>`);
+  var analiseDocModeloBox = () => wrap(`<p class="seipro-doclote-analysis-title">An\xE1lise do documento modelo:</p>`);
   var analiseCsvBox = () => wrap(`<p>An\xE1lise da base de dados:</p>`);
   var cruzamentoDadosBox = () => wrap(`<p>Segue abaixo o relacionamento entre cabe\xE7alhos da base de dados e os campos din\xE2micos do documento modelo:</p>`);
   function selecaoBaseDadosBox() {
