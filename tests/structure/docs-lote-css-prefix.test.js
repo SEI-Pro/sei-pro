@@ -55,6 +55,18 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).not.toMatch(/\.on\('change', '#tipoProcessoSelect'/);
   });
 
+  it('delegates the model document-type selector through a feature hook while preserving the analysis flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain('id="tipoDocumentoSelect" class="seipro-doclote-document-type-select"');
+    expect(view).toContain(".on('change', '.seipro-doclote-document-type-select'");
+    expect(view).toContain("const id_tipo_documento = $('#tipoDocumentoSelect').val()");
+    expect(view).toContain('S.selectedModel.id_tipo_documento = id_tipo_documento');
+    expect(view).toContain("$('#btnConfirmAnalysis').prop('disabled', false)");
+
+    expect(view).not.toMatch(/\$\('#tipoDocumentoSelect'\)\.on\('change'/);
+  });
+
   it('uses seipro-prefixed classes for analysis text and headings emitted by the wizard', () => {
     const view = read('src/features/docs-lote/view.js');
 

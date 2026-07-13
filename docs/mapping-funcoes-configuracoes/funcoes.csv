@@ -1295,7 +1295,7 @@ src/features/docs-lote/view.js:37:docsLote_getDocsArvore,src/features/docs-lote/
 src/features/docs-lote/view.js:48:docsLote_docAnalysis,src/features/docs-lote/view.js,48,docsLote_docAnalysis,feature,docs-lote,moderno,,notificacaonovoprocesso,não,4
 src/features/docs-lote/view.js:57:selectedDoc,src/features/docs-lote/view.js,57,selectedDoc,feature,docs-lote,moderno,,,não,2
 src/features/docs-lote/view.js:58:selectedTxtPadrao,src/features/docs-lote/view.js,58,selectedTxtPadrao,feature,docs-lote,moderno,,notificacaonovoprocesso,não,14
-src/features/docs-lote/view.js:77:docsLote_fillModelAnalysis,src/features/docs-lote/view.js,77,docsLote_fillModelAnalysis,feature,docs-lote,moderno,,,não,12
+src/features/docs-lote/view.js:77:docsLote_fillModelAnalysis,src/features/docs-lote/view.js,77,docsLote_fillModelAnalysis,feature,docs-lote,moderno,,,não,13
 src/features/docs-lote/view.js:105:tipoDocumento,src/features/docs-lote/view.js,105,tipoDocumento,feature,docs-lote,moderno,,,não,8
 src/features/docs-lote/view.js:129:docsLote_detectEncodingCSV,src/features/docs-lote/view.js,129,docsLote_detectEncodingCSV,feature,docs-lote,moderno,,,não,7
 src/features/docs-lote/view.js:141:docsLote_CSVAnalysis,src/features/docs-lote/view.js,141,docsLote_CSVAnalysis,feature,docs-lote,moderno,,notificacaonovoprocesso,não,5

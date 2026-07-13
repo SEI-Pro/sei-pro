@@ -91,7 +91,7 @@ async function docsLote_fillModelAnalysis(matches, selectedDoc, txtModelo = fals
                 <i class='fas fa-file-alt cinzaColor'></i> Tipo de Documento:
             </p>
             <p class="seipro-doclote-analysis-text">
-                <select style="width:300px" id="tipoDocumentoSelect"><option value="">Selecione um tipo de documento</option>${selectTiposDocumentos}</select>
+                <select style="width:300px" id="tipoDocumentoSelect" class="seipro-doclote-document-type-select"><option value="">Selecione um tipo de documento</option>${selectTiposDocumentos}</select>
             </p>
             `);
 
@@ -100,7 +100,7 @@ async function docsLote_fillModelAnalysis(matches, selectedDoc, txtModelo = fals
             no_results_text: 'Nenhum resultado encontrado',
             normalize_search_text: function (text) { return removeAcentos(text.toLowerCase()); }
         });
-        $('#tipoDocumentoSelect').on('change', function () {
+        $(document).off('change', '.seipro-doclote-document-type-select').on('change', '.seipro-doclote-document-type-select', function () {
             const id_tipo_documento = $('#tipoDocumentoSelect').val();
             const tipoDocumento = tiposDocumentos.find((tipo) => tipo.id === id_tipo_documento);
             if (tipoDocumento) {
