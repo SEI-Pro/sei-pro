@@ -957,7 +957,7 @@
       open: () => {
         docsLote_detectEncodingCSV();
         $("#btnEnviaCSV").prop("disabled", true).addClass("ui-button-disabled ui-state-disabled");
-        $("#inputBD").change(() => {
+        $(document).off("change.docsLoteAdvance", ".seipro-doclote-csv-input").on("change.docsLoteAdvance", ".seipro-doclote-csv-input", () => {
           $("#btnEnviaCSV").prop("disabled", false).removeClass("ui-button-disabled ui-state-disabled");
         });
       },
