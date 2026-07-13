@@ -1502,7 +1502,7 @@ const getSessionTextProcesso = (num_processo_format) => {
 
         const htmlBox = sanitizeHTML(`<div class="dialogBoxDiv seipro-ai-platform-picker-dialog" style="font-size: 11pt;line-height: 12pt;color: #616161;">
             <i class="fas fa-info-circle azulColor seipro-ai-info-icon" style="margin-right: 5px;"></i> Selecione a <b>Plataforma de Intelig\u00EAncia Artificial</b> de sua prefer\u00EAncia<br><br>
-            <table role="presentation" class="cke_dialog_ui_hbox" style="width: 100%;">
+            <table role="presentation" class="cke_dialog_ui_hbox seipro-ai-platform-picker-table" style="width: 100%;">
                 <tbody>
                     <tr class="cke_dialog_ui_hbox">
                         <td role="presentation" style="width:33%; padding:10px 0; text-align:center;">

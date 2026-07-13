@@ -637,6 +637,15 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="cke_dialog_ui_button cke_dialog_ui_button_ok newLink newLink_confirm seipro-ai-platform-selector"');
   });
 
+  it('adds a feature hook for the AI platform picker table while preserving CKEditor layout and platform choices', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="cke_dialog_ui_hbox seipro-ai-platform-picker-table"');
+    expect(ai).toContain('id="selectPlataformAI_openai" data-platform="openai"');
+    expect(ai).toContain('id="selectPlataformAI_gemini" data-platform="gemini"');
+    expect(ai).toContain('id="selectPlataformAI_ollama" data-platform="ollama"');
+  });
+
   it('adds a seipro-prefixed hook for the token success dialog while preserving legacy confirmation contracts', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
