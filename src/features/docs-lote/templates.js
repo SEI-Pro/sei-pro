@@ -31,7 +31,7 @@ export function selecaoDocBox(credito = '') {
                     </tr>
                     <tr>
                         <td>
-                            <select id="textoPadraoSelect"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>
+                            <select id="textoPadraoSelect" class="seipro-doclote-template-select"><option><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados... </option></select>
                         </td>
                     </tr>
                 </table>
