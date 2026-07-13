@@ -2197,7 +2197,7 @@ const getSessionTextProcesso = (num_processo_format) => {
 
                     appendAutocompleteProc(this, $('#dialogBoxProcessoAI'));
 
-                    $(document).off('keypress', '#dialogBoxProcessoAI').on('keypress', '#dialogBoxProcessoAI', function(event) {
+                    $(document).off('keypress', '.seipro-ai-process-search-input').on('keypress', '.seipro-ai-process-search-input', function(event) {
                         if (event.which == 13) $(this).closest('.ui-dialog').find('.confirm.ui-button').trigger('click')
                     });
                 },

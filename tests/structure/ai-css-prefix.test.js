@@ -683,6 +683,9 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("title: 'Pesquisar documentos em processo'");
     expect(ai).toContain("appendAutocompleteProc(this, $('#dialogBoxProcessoAI'))");
     expect(ai).toContain("appendDocAISelect(false, $('#dialogBoxProcessoAI').val())");
+    expect(ai).toContain(".on('keypress', '.seipro-ai-process-search-input'");
+
+    expect(ai).not.toMatch(/\.on\('keypress', '#dialogBoxProcessoAI'/);
   });
 
   it('adds a seipro-prefixed hook for the process search alert wrapper while preserving legacy dialog styling', () => {
