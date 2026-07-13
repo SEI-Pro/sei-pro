@@ -316,6 +316,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
   it('adds a seipro-prefixed hook for the advanced-config checkbox while preserving config ids and legacy switch styling', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
+    expect(ai).toContain('class="infraAncoraSigla seipro-ai-advanced-config-toggle-wrapper"');
     expect(ai).toContain('id="configAI_advancedconfigs"');
     expect(ai).toContain('for="configAI_advancedconfigs"');
     expect(ai).toContain('class="seipro-ai-advanced-config-toggle infraLinkOrgao"');
