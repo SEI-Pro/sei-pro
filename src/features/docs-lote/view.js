@@ -21,7 +21,7 @@ export function installDocsLoteDelegation() {
     if (window.__SEI_PRO_DOCLOTE_DELEGATION__) return;
     window.__SEI_PRO_DOCLOTE_DELEGATION__ = true;
     // Antes: onchange="changeNewProcs(this)" no #newProcs.
-    $(document).on('change', '#newProcs', function () { changeNewProcs(this); });
+    $(document).on('change', '.seipro-doclote-new-process-toggle', function () { changeNewProcs(this); });
     // Antes: onchange="checkTipoProcessoSelect()" no #tipoProcessoSelect.
     $(document).on('change', '#tipoProcessoSelect', function () { checkTipoProcessoSelect(); });
     // Antes: onclick="downloadTablePro(this)" / "copyTablePro(this)" na tabela de resultado.

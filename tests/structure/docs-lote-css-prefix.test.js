@@ -31,6 +31,19 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).not.toMatch(/containerTipoProcessoSelect/);
   });
 
+  it('delegates the new-process toggle through a feature hook while preserving its legacy id and execution flow', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(templates).toContain('class="onoffswitch-checkbox seipro-doclote-new-process-toggle" id="newProcs"');
+    expect(templates).toContain('for="newProcs"');
+    expect(view).toContain(".on('change', '.seipro-doclote-new-process-toggle'");
+    expect(view).toContain("createNewProcs: $('#newProcs').is(':checked')");
+    expect(view).toContain("$('.seipro-doclote-process-type-fields').show()");
+
+    expect(view).not.toMatch(/\.on\('change', '#newProcs'/);
+  });
+
   it('uses seipro-prefixed classes for analysis text and headings emitted by the wizard', () => {
     const view = read('src/features/docs-lote/view.js');
 

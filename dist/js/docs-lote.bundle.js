@@ -488,7 +488,7 @@
                             <td style="width: 50px;">
                                 <div style="margin: 10px 0;font-size: 9pt;display: inline-block;transform: scale(0.9);float: left;">
                                     <div class="onoffswitch" style="float: left;margin-right: 1em;margin-left: 0;">
-                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="newProcs" data-type="setdate" tabindex="0">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox seipro-doclote-new-process-toggle" id="newProcs" data-type="setdate" tabindex="0">
                                         <label class="onoff-switch-label" for="newProcs"></label>
                                     </div>
                                 </div>
@@ -546,7 +546,7 @@
   function installDocsLoteDelegation() {
     if (window.__SEI_PRO_DOCLOTE_DELEGATION__) return;
     window.__SEI_PRO_DOCLOTE_DELEGATION__ = true;
-    $(document).on("change", "#newProcs", function() {
+    $(document).on("change", ".seipro-doclote-new-process-toggle", function() {
       changeNewProcs(this);
     });
     $(document).on("change", "#tipoProcessoSelect", function() {
