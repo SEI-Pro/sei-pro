@@ -723,6 +723,17 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("title: 'Criar documento SEI'");
   });
 
+  it('delegates the create-document Chosen selector through a feature hook while preserving its id and submit flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain("$('#docTipoSelect_chosen').addClass('seipro-ai-create-document-type-chosen')");
+    expect(ai).toContain(".on('keypress', '.seipro-ai-create-document-type-chosen'");
+    expect(ai).toContain("$('#docTipoSelect').val()");
+    expect(ai).toContain("$(this).closest('.ui-dialog').find('.confirm.ui-button').trigger('click')");
+
+    expect(ai).not.toMatch(/\.on\('keypress', '#docTipoSelect_chosen'/);
+  });
+
   it('adds a shared feature hook to token save buttons while preserving platform contracts', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

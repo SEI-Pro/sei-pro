@@ -389,8 +389,9 @@ const createDocResponseAI = (this_) => {
                     open: function(){
                         initChosenReplace('box_init', this, true);
                         $('#docTipoSelect').trigger('chosen:updated').trigger('chosen:activate');
+                        $('#docTipoSelect_chosen').addClass('seipro-ai-create-document-type-chosen');
 
-                        $(document).off('keypress', '#docTipoSelect_chosen').on('keypress', '#docTipoSelect_chosen', function(event) {
+                        $(document).off('keypress', '.seipro-ai-create-document-type-chosen').on('keypress', '.seipro-ai-create-document-type-chosen', function(event) {
                             if (event.which == 13) $(this).closest('.ui-dialog').find('.confirm.ui-button').trigger('click')
                         });
                     },
