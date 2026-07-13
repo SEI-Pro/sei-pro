@@ -148,8 +148,9 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
 
     expect(templates).toContain('id="inputBD" class="seipro-doclote-csv-input" type="file" accept=".csv, text/csv"');
     expect(templates).toContain('for="inputBD"');
-    expect(view).toContain("$('#inputBD').on('change'");
+    expect(view).toContain(".on('change.docsLoteEncoding', '.seipro-doclote-csv-input'");
     expect(view).toContain("$('#inputBD')[0].files[0]");
+    expect(view).toContain('jschardet.detect(csvResult.toString()).encoding.toLowerCase()');
   });
 
   it('adds a seipro-prefixed hook to the model-analysis loader while preserving its legacy id and spinner', () => {

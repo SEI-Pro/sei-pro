@@ -655,7 +655,7 @@
     centralizeDialogBox(window.dialogBoxPro);
   }
   function docsLote_detectEncodingCSV() {
-    $("#inputBD").on("change", function() {
+    $(document).off("change.docsLoteEncoding", ".seipro-doclote-csv-input").on("change.docsLoteEncoding", ".seipro-doclote-csv-input", function() {
       const file = $(this)[0].files[0];
       const reader = new FileReader();
       reader.onload = function(e) {
