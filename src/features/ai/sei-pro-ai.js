@@ -1894,20 +1894,20 @@ const getSessionTextProcesso = (num_processo_format) => {
                 </div>
                 <div class="suggestions seipro-ai-suggestions" style="display:none;">
                     <div class="suggestion_actions seipro-ai-suggestion-action" data-type="resume" data-send="true" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
-                        <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Resumir todo o processo
+                        <i class="fas fa-magic azulColor seipro-ai-suggestion-icon" style="margin-bottom: 1em; display:block;"></i> Resumir todo o processo
                     </div>
                     <div class="suggestion_actions seipro-ai-suggestion-action" data-type="sugira_encaminhamento" data-id_documento="all" data-send="true" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
-                        <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Sugerir um encaminhamento
+                        <i class="fas fa-magic azulColor seipro-ai-suggestion-icon" style="margin-bottom: 1em; display:block;"></i> Sugerir um encaminhamento
                     </div>
                     ${
                         frmEditor.length ? `
                         <div class="suggestion_actions seipro-ai-suggestion-action" data-type="erros_gramaticais" data-send="true" data-id_documento="text_doc" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
-                            <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Localizar erros gramaticais
+                            <i class="fas fa-magic azulColor seipro-ai-suggestion-icon" style="margin-bottom: 1em; display:block;"></i> Localizar erros gramaticais
                         </div>
                         ` : ``
                     }
                     <div class="suggestion_actions seipro-ai-suggestion-action" data-type="dados_sensiveis" data-send="true" data-id_documento="all" data-id_procedimento="${getIdProcedimento()}" data-num_processo="${getNumProcesso()}">
-                        <i class="fas fa-magic azulColor" style="margin-bottom: 1em; display:block;"></i> Encontrar dados sens\u00EDveis (LGPD)
+                        <i class="fas fa-magic azulColor seipro-ai-suggestion-icon" style="margin-bottom: 1em; display:block;"></i> Encontrar dados sens\u00EDveis (LGPD)
                     </div>
                 </div>
             </div>

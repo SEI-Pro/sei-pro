@@ -897,4 +897,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("$('#docAIMultiList .seipro-ai-doc-tag')");
     expect(ai).toContain("$('#docAIMultiList').hide()");
   });
+
+  it('adds a feature hook to standard AI suggestion icons while preserving their legacy icon styling and suggestion contracts', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/fas fa-magic azulColor seipro-ai-suggestion-icon/g)).toHaveLength(4);
+    expect(ai).toContain('data-type="resume" data-send="true"');
+    expect(ai).toContain('data-type="sugira_encaminhamento"');
+    expect(ai).toContain('data-type="erros_gramaticais"');
+    expect(ai).toContain('data-type="dados_sensiveis"');
+  });
 });
