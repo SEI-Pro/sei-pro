@@ -303,6 +303,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("setOptionsPro('setBetaModelsAI', $('#configAI_betamodels').is(':checked') ? 'checked' : '')");
   });
 
+  it('adds a seipro-prefixed hook for the beta-models toggle wrapper while preserving its legacy switch contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="infraAncoraSigla seipro-ai-beta-models-toggle-wrapper"');
+    expect(ai).toContain('id="configAI_betamodels"');
+    expect(ai).toContain('for="configAI_betamodels"');
+    expect(ai).toContain('class="seipro-ai-beta-models-toggle infraLinkOrgao"');
+    expect(ai).toContain("setOptionsPro('setBetaModelsAI', $('#configAI_betamodels').is(':checked') ? 'checked' : '')");
+  });
+
   it('adds a seipro-prefixed hook for the advanced-config checkbox while preserving config ids and legacy switch styling', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

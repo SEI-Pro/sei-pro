@@ -1650,7 +1650,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td>
-                        <div class="infraAncoraSigla" style="display: inline-block;transform: scale(0.7);">
+                        <div class="infraAncoraSigla seipro-ai-beta-models-toggle-wrapper" style="display: inline-block;transform: scale(0.7);">
                             <input id="configAI_betamodels" type="checkbox" name="infraAncoraSigla" class="seipro-ai-beta-models-toggle infraLinkOrgao" ${getBetaModels}>
                             <label class="infraTd" for="configAI_betamodels"></label>
                         </div>
