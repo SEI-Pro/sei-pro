@@ -72,7 +72,7 @@ export function loaderBox() {
 }
 
 export function erroBox(textError = '') {
-    return wrap(`<div>
+    return wrap(`<div class="seipro-doclote-error-dialog">
                         <p><i class="fas fa-exclamation-triangle vermelhoColor"></i> Eita! Algo deu errado na replicação de documentos 😔</p>
                         <br>
                         <p>Verifique as configurações selecionadas e tente novamente.</p>

@@ -124,6 +124,15 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#progress').html");
   });
 
+  it('adds a seipro-prefixed hook to the execution error dialog while preserving its message contract', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('<div class="seipro-doclote-error-dialog">');
+    expect(templates).toContain('Eita! Algo deu errado na replicação de documentos');
+    expect(templates).toContain('Verifique as configurações selecionadas e tente novamente.');
+    expect(templates).toContain('<p>${textError}</p>');
+  });
+
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
     const view = read('src/features/docs-lote/view.js');
     const legacy = read('src/shared/legacy/sei-functions-pro.js');
