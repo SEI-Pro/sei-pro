@@ -55,7 +55,7 @@ export function selecaoBaseDadosBox() {
                     </tr>
                     <tr>
                         <td class="required">
-                            <input id="inputBD" type="file" accept=".csv, text/csv"></input>
+                            <input id="inputBD" class="seipro-doclote-csv-input" type="file" accept=".csv, text/csv"></input>
                         </td>
                     </tr>
                 </table>`);

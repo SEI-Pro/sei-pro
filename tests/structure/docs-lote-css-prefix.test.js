@@ -75,6 +75,16 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#docLoteSelect').val('').trigger('chosen:updated')");
   });
 
+  it('adds a seipro-prefixed hook to the CSV upload input while preserving its file contract', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(templates).toContain('id="inputBD" class="seipro-doclote-csv-input" type="file" accept=".csv, text/csv"');
+    expect(templates).toContain('for="inputBD"');
+    expect(view).toContain("$('#inputBD').on('change'");
+    expect(view).toContain("$('#inputBD')[0].files[0]");
+  });
+
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
     const view = read('src/features/docs-lote/view.js');
     const legacy = read('src/shared/legacy/sei-functions-pro.js');
