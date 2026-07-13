@@ -920,4 +920,13 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('class="seipro-ai-remove-suggestion far fa-trash cinzaColor"');
     expect(ai).toContain("localStorageRestorePro('favoritePromptAI')");
   });
+
+  it('adds a shared feature hook to credential warning icons while preserving each platform notice', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai.match(/fas fa-exclamation-triangle seipro-ai-token-warning-icon/g)).toHaveLength(3);
+    expect(ai).toContain('produtos da OpenAI');
+    expect(ai).toContain('produtos da Google');
+    expect(ai).toContain('Compatível com Ollama, LiteLLM');
+  });
 });

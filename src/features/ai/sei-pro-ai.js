@@ -209,7 +209,7 @@ const disclaimerOpenAI = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
         </tbody>
     </table>
     <div id="plataformAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;" class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice">
-        <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>${NAMESPACE_SPRO} n\u00E3o fomenta ou recebe financiamento para a utiliza\u00E7\u00E3o dos produtos da OpenAI. Recomenda-se o seu uso meramente did\u00E1tico
+        <i class="fas fa-exclamation-triangle seipro-ai-token-warning-icon" style="margin-right: 5px;"></i>${NAMESPACE_SPRO} n\u00E3o fomenta ou recebe financiamento para a utiliza\u00E7\u00E3o dos produtos da OpenAI. Recomenda-se o seu uso meramente did\u00E1tico
     </div>
 </div>`);
 
@@ -253,7 +253,7 @@ const disclaimerGemini = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
         </tbody>
     </table>
     <div id="plataformAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;" class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice">
-        <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>${NAMESPACE_SPRO} n\u00E3o fomenta ou recebe financiamento para a utiliza\u00E7\u00E3o dos produtos da Google. Recomenda-se o seu uso meramente did\u00E1tico
+        <i class="fas fa-exclamation-triangle seipro-ai-token-warning-icon" style="margin-right: 5px;"></i>${NAMESPACE_SPRO} n\u00E3o fomenta ou recebe financiamento para a utiliza\u00E7\u00E3o dos produtos da Google. Recomenda-se o seu uso meramente did\u00E1tico
     </div>
 </div>`);
 
@@ -306,7 +306,7 @@ const disclaimerOllama = sanitizeHTML(`<div id="plataformAI_info" class="seipro-
         </tbody>
     </table>
     <div id="plataformAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;" class="alertaAttencionPro dialogBoxDiv seipro-ai-platform-credential-notice">
-        <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>Compatível com Ollama, LiteLLM e qualquer servidor com API no padr\u00E3o OpenAI (<code>/v1/chat/completions</code>).
+        <i class="fas fa-exclamation-triangle seipro-ai-token-warning-icon" style="margin-right: 5px;"></i>Compatível com Ollama, LiteLLM e qualquer servidor com API no padr\u00E3o OpenAI (<code>/v1/chat/completions</code>).
     </div>
 </div>`);
 
