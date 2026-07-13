@@ -2099,7 +2099,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                         getHistoryDialog('restore');
                     });
 
-                    $(document).off('keyup change mouseup keydown', '#promptAIPersonal').on('keyup change mouseup keydown', '#promptAIPersonal', function(event) {
+                    $(document).off('keyup change mouseup keydown', '.seipro-ai-personal-prompt-editor').on('keyup change mouseup keydown', '.seipro-ai-personal-prompt-editor', function(event) {
 
                         // REDIMENSIONA A CAIXA DE DIÁLOGO
                         resizeBoxAIActions();

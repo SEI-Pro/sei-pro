@@ -419,6 +419,18 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("setOptionsPro('setModelOllama', modelToSave)");
   });
 
+  it('delegates custom-prompt editor events through the feature hook while preserving persistence and send behavior', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('id="promptAIPersonal" class="seipro-ai-personal-prompt-editor"');
+    expect(ai).toContain(".on('keyup change mouseup keydown', '.seipro-ai-personal-prompt-editor'");
+    expect(ai).toContain("localStorageStorePro('promptAIPersonal', $(this).html())");
+    expect(ai).toContain('saveCursorPosition()');
+    expect(ai).toContain('initAI(this)');
+
+    expect(ai).not.toMatch(/\.on\('keyup change mouseup keydown', '#promptAIPersonal'/);
+  });
+
   it('adds a seipro-prefixed hook for the AI typing cursor while preserving legacy styling', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
