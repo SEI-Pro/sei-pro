@@ -244,4 +244,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
 
     expect(templates).not.toMatch(/class="btn-group filterTablePro/);
   });
+
+  it('adds a feature hook to the process-specification input while preserving its execution contract', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(templates).toContain('class="infraText seipro-doclote-process-specification-input" id="txtEspecificacaoProcesso"');
+    expect(templates).toContain('placeholder="Ex: Certificado de ##nome_aluno##"');
+    expect(view).toContain("txtEspecificacaoProcesso: $('#txtEspecificacaoProcesso').val()");
+  });
 });

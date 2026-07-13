@@ -167,7 +167,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
                         <tr style="display:none" class="seipro-doclote-process-type-fields">
                             <td colspan="2">
                                 <p style="font-size: 1.2em;"><i class="fas fa-comment-dots cinzaColor"></i> Especificação do processo: (Disponível campos dinâmicos da planilha)</p>
-                                <input type="text" class="infraText" id="txtEspecificacaoProcesso" style="width: 480px;padding: 0.8em;" placeholder="Ex: Certificado de ##nome_aluno##">
+                                <input type="text" class="infraText seipro-doclote-process-specification-input" id="txtEspecificacaoProcesso" style="width: 480px;padding: 0.8em;" placeholder="Ex: Certificado de ##nome_aluno##">
                             </td>
                         </tr>
                     </tbody>
