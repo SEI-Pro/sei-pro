@@ -99,7 +99,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
                 <td style="width: 50px;">
                     <div class="seipro-doclote-force-names" style="margin: 10px 0; font-size: 9pt;transform: scale(0.9);">
                         <div class="onoffswitch" style="float: left;margin-right: 1em;">
-                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="checkForceNames" data-type="setdate" tabindex="0">
+                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox seipro-doclote-force-names-toggle" id="checkForceNames" data-type="setdate" tabindex="0">
                         <label class="onoff-switch-label" for="checkForceNames"></label>
                     </div>
                 </td>

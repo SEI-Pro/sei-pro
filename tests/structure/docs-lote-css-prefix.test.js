@@ -68,6 +68,17 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).not.toMatch(/divInputForceNames/);
   });
 
+  it('adds a feature hook to the force-names toggle while preserving its execution contract', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(templates).toContain('class="onoffswitch-checkbox seipro-doclote-force-names-toggle" id="checkForceNames"');
+    expect(templates).toContain('name="onoffswitch"');
+    expect(templates).toContain('data-type="setdate"');
+    expect(templates).toContain('for="checkForceNames"');
+    expect(view).toContain("forceNames: $('#checkForceNames').is(':checked')");
+  });
+
   it('adds a seipro-prefixed hook to the model document selector while preserving its legacy id', () => {
     const templates = read('src/features/docs-lote/templates.js');
     const view = read('src/features/docs-lote/view.js');
