@@ -287,4 +287,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).toContain('Código-fonte gentilmente cedido por');
     expect(templates).toContain('PluriDocs SEI!');
   });
+
+  it('adds a feature hook to the execution cancel action while preserving its legacy id and abort flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id: 'cancelExecute'");
+    expect(view).toContain("class: 'seipro-doclote-cancel-execution'");
+    expect(view).toContain('docsLote_abortAjax()');
+    expect(view).toContain("$('#cancelExecute').hide()");
+  });
 });

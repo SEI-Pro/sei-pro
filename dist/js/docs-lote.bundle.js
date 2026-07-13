@@ -1006,6 +1006,7 @@
       buttons: [{
         text: "Cancelar",
         id: "cancelExecute",
+        class: "seipro-doclote-cancel-execution",
         icon: "ui-icon-cancel",
         click: function() {
           docsLote_abortAjax();
