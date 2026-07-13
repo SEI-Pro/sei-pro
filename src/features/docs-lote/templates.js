@@ -193,7 +193,7 @@ export const resultFilterBar = `<div class="btn-group seipro-doclote-result-acti
 export function resultTable(theadRows, tbodyRows) {
     return `
                             <div class="seipro-doclote-result-scroll" style="max-height: 350px;max-width: 850px;overflow: auto;">
-                                <table id="tableDataResult" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow">
+                                <table id="tableDataResult" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow seipro-doclote-result-table">
                                     <thead>
                                         ${theadRows}
                                     </thead>
