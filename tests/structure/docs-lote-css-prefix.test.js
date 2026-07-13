@@ -103,6 +103,17 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#loaderAnalysisCSV').remove()");
   });
 
+  it('adds a seipro-prefixed hook to the execution loader while preserving its progress contract', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(templates).toContain('id="preparingProgressCircular" class="seipro-doclote-execution-loader"');
+    expect(templates).toContain('id="preparingProgress"');
+    expect(templates).toContain('fas fa-spinner fa-spin azulColor');
+    expect(view).toContain("$('#preparingProgressCircular').remove()");
+    expect(view).toContain('docsLote_execute(paramData)');
+  });
+
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
     const view = read('src/features/docs-lote/view.js');
     const legacy = read('src/shared/legacy/sei-functions-pro.js');
