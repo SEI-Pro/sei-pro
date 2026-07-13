@@ -253,4 +253,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).toContain('placeholder="Ex: Certificado de ##nome_aluno##"');
     expect(view).toContain("txtEspecificacaoProcesso: $('#txtEspecificacaoProcesso').val()");
   });
+
+  it('adds a feature hook to both document-name selectors while preserving their chosen flow', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(templates.match(/id="nomesDoc" class="seipro-doclote-document-name-select"/g)).toHaveLength(2);
+    expect(templates).toContain('${selectData}</select>');
+    expect(view).toContain("$('#nomesDoc').chosen");
+    expect(view).toContain("placeholder_text_single: ' '");
+  });
 });

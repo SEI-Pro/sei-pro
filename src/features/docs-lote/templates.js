@@ -92,7 +92,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
             </tr>
             <tr>
                 <td colspan="2">
-                    <select id="nomesDoc">${selectData}</select>
+                    <select id="nomesDoc" class="seipro-doclote-document-name-select">${selectData}</select>
                 </td>
             </tr>
             <tr>
@@ -117,7 +117,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
             </tr>
             <tr>
                 <td>
-                    <select id="nomesDoc">${selectData}</select>
+                    <select id="nomesDoc" class="seipro-doclote-document-name-select">${selectData}</select>
                 </td>
             </tr>
             `;
