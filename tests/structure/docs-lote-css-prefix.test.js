@@ -315,4 +315,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain('docsLote_abortAjax()');
     expect(view).toContain("$('#cancelExecute').hide()");
   });
+
+  it('adds a feature hook to the execution completion message while preserving its text and result flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain('seipro-doclote-execution-complete');
+    expect(view).toContain('Progresso finalizado! 👏');
+    expect(view).toContain("$('#progress').html");
+    expect(view).toContain('${tableResult}');
+  });
 });

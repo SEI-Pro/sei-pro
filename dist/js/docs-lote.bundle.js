@@ -851,7 +851,7 @@
             const tableResult = resultTable(theadRows, tbodyRows);
             $("#preparingProgressCircular").remove();
             $("#cancelExecute").hide();
-            $("#progress").html(`<h4 style="text-align:center;margin: 30px 0 10px 0; font-size: 1.5rem;"><i class="fas fa-check-circle verdeColor" style="font-size: 1em;"></i> Progresso finalizado! \u{1F44F}</h4>${tableResult}`);
+            $("#progress").html(`<h4 class="seipro-doclote-execution-complete" style="text-align:center;margin: 30px 0 10px 0; font-size: 1.5rem;"><i class="fas fa-check-circle verdeColor" style="font-size: 1em;"></i> Progresso finalizado! \u{1F44F}</h4>${tableResult}`);
             window.dialogBoxPro.dialog("option", "width", 870);
             window.dialogBoxPro.dialog("option", "height", 500);
             $("#tableDataResult").find("thead").prepend(htmlFilterDoclote);
