@@ -395,7 +395,7 @@
   var analiseCsvBox = () => wrap(`<p class="seipro-doclote-analysis-csv-title">An\xE1lise da base de dados:</p>`);
   var cruzamentoDadosBox = () => wrap(`<p class="seipro-doclote-crossing-intro">Segue abaixo o relacionamento entre cabe\xE7alhos da base de dados e os campos din\xE2micos do documento modelo:</p>`);
   function selecaoBaseDadosBox() {
-    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm">
+    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm seipro-doclote-csv-selection-panel">
                     <tr>
                         <td style="vertical-align: top;text-align: left;height: 40px;" class="label">
                             <label for="inputBD"><i class="iconPopup iconSwitch fas fa-upload cinzaColor"></i>Selecione um arquivo no formato CSV para servir como base de dados para a gera\xE7\xE3o de documentos em lote:</label>

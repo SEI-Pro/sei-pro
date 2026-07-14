@@ -284,6 +284,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("placeholder_text_single: ' '");
   });
 
+  it('adds a feature hook to the CSV-selection panel while preserving its shared form class', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('class="seiProForm seipro-doclote-csv-selection-panel"');
+    expect(templates).toContain('id="inputBD" class="seipro-doclote-csv-input"');
+    expect(templates).toContain('accept=".csv, text/csv"');
+  });
+
   it('adds a feature hook to the Docs em Lote credit while preserving its attribution link', () => {
     const templates = read('src/features/docs-lote/templates.js');
 

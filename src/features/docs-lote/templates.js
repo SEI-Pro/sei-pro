@@ -47,7 +47,7 @@ export const cruzamentoDadosBox = () => wrap(`<p class="seipro-doclote-crossing-
 
 // 3/6 — upload do CSV.
 export function selecaoBaseDadosBox() {
-    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm">
+    return wrap(`<table style="font-size: 10pt;width: 100%;" class="seiProForm seipro-doclote-csv-selection-panel">
                     <tr>
                         <td style="vertical-align: top;text-align: left;height: 40px;" class="label">
                             <label for="inputBD"><i class="iconPopup iconSwitch fas fa-upload cinzaColor"></i>Selecione um arquivo no formato CSV para servir como base de dados para a geração de documentos em lote:</label>
