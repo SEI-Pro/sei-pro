@@ -941,6 +941,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("localStorageRestorePro('favoritePromptAI')");
   });
 
+  it('adds a feature hook to the plain-text response copy icon while preserving the action contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="far fa-copy seipro-ai-copy-response-icon"');
+    expect(ai).toContain('class="copy_response_ai seipro-ai-copy-response"');
+    expect(ai).toContain(".on('click', '.seipro-ai-copy-response'");
+    expect(ai).toContain('copyResponseAI(this)');
+    expect(ai).toContain('data-response="${respost_id}"');
+  });
+
   it('adds a shared feature hook to credential warning icons while preserving each platform notice', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

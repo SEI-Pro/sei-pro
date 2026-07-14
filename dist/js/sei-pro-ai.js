@@ -1093,7 +1093,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const actionsResponse = `
             ${htmlIconChat}
             <div class="copy_response_ai seipro-ai-copy-response" data-tooltip="Copiar texto simples" data-response="${respost_id}">
-                <a class="newLink"><i class="far fa-copy"></i></a>
+                <a class="newLink"><i class="far fa-copy seipro-ai-copy-response-icon"></i></a>
             </div>
             <div class="seipro-ai-copy-html-response" data-tooltip="Copiar texto formatado (para colar em documentos)" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-file-alt"></i></a>
