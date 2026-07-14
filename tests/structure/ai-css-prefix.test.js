@@ -489,6 +489,14 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).not.toMatch(/\.on\('click', '#btnSendAI'/);
   });
 
+  it('preserves a prefixed hook on the mutable send-button icon', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="fas fa-paper-plane seipro-ai-send-button-icon"');
+    expect(ai).toContain("attr('class','fas fa-spin fa-spinner seipro-ai-send-button-icon')");
+    expect(ai).toContain("attr('class','fas fa-paper-plane seipro-ai-send-button-icon')");
+  });
+
   it('adds a seipro-prefixed hook for switching AI platforms while preserving the legacy id', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 

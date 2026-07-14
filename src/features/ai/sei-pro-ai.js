@@ -913,7 +913,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             getHistoryDialog('push',response_user);
 
         // ADICIONA LOAD NO BOTÃO DE ENVIO
-        btnSendAI.removeClass('newLink_confirm').find('i').attr('class','fas fa-spin fa-spinner');
+        btnSendAI.removeClass('newLink_confirm').find('i').attr('class','fas fa-spin fa-spinner seipro-ai-send-button-icon');
 
         const prompt_footer = await makeFooterPrompt(data_protocolo, respost_id, multiDocs);
 
@@ -1106,7 +1106,7 @@ const getSessionTextProcesso = (num_processo_format) => {
             `;
 
             responseBox.removeClass('loading');
-            btnSendAI.addClass('newLink_confirm').find('i').attr('class','fas fa-paper-plane');
+            btnSendAI.addClass('newLink_confirm').find('i').attr('class','fas fa-paper-plane seipro-ai-send-button-icon');
             botProIdea();
 
         // ANIMAÇÃO DE TEXTO DIGITANDO
@@ -1929,7 +1929,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                     ${btnSecondPlataform}
                     ${btnChangePlataform}
                     ${btnMainPlataform}
-                    <a class="newLink seipro-ai-send-button" id="btnSendAI" style="padding: 8px 15px 7px 5px;"><i class="fas fa-paper-plane"></i> Enviar <sup style="opacity: 0.7;">(${navigator.platform.startsWith('Mac') ? '\u2318' : 'Ctr'} \u23CE)</sup></a>
+                    <a class="newLink seipro-ai-send-button" id="btnSendAI" style="padding: 8px 15px 7px 5px;"><i class="fas fa-paper-plane seipro-ai-send-button-icon"></i> Enviar <sup style="opacity: 0.7;">(${navigator.platform.startsWith('Mac') ? '\u2318' : 'Ctr'} \u23CE)</sup></a>
                     <div id="docAIMultiList" class="seipro-ai-document-list" style="display:none; flex-basis:100%; margin-top:5px; flex-wrap:wrap;"></div>
                 </div>
             </div>`;
