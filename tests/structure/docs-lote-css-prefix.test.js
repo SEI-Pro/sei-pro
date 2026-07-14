@@ -206,6 +206,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#progress').html");
   });
 
+  it('adds a feature hook to the initial preparation message while preserving its legacy id and text', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('id="preparingProgress" class="seipro-doclote-preparing-progress">Preparando ambiente</p>');
+    expect(templates).not.toContain('id="preparingProgress">Preparando ambiente</p>');
+  });
+
   it('adds a seipro-prefixed hook to the execution error dialog while preserving its message contract', () => {
     const templates = read('src/features/docs-lote/templates.js');
 

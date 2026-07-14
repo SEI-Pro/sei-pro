@@ -413,7 +413,7 @@
                         <div style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>
                     </div>
                     <div id="progress" class="seipro-doclote-execution-progress">
-                        <p style="text-align:center" id="preparingProgress">Preparando ambiente</p>
+                        <p style="text-align:center" id="preparingProgress" class="seipro-doclote-preparing-progress">Preparando ambiente</p>
                     </div>`);
   }
   function erroBox(textError = "") {
