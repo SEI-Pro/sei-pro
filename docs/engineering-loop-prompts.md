@@ -49,6 +49,11 @@ Commit with:
 Update the board row to migrated_pending_review (Epic id + Step P*).
 Fill Smoke scope from SMOKE_TEST.md when DOM/manifest/CSS/feature UI is touched.
 Never claim manual smoke passed.
+
+After a successful commit, publish it with:
+  git push origin master
+
+Push only after all gates pass; never use --force or rewrite remote history. If push fails, preserve the local commit and record the exact failure as blocked.
 ```
 
 ---
@@ -87,6 +92,11 @@ If rejected: mark review_failed_needs_fix with an objective reason and commit bo
 
 Do NOT implement a new migration slice in this job.
 Do NOT claim manual smoke passed.
+
+After a successful board commit, publish it with:
+  git push origin master
+
+Push only after all gates pass; never use --force or rewrite remote history. If push fails, preserve the local board commit and record the exact failure as blocked.
 ```
 
 ---

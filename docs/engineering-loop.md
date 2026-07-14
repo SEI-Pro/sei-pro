@@ -189,8 +189,11 @@ Ordem obrigatória:
 7. Registrar no board (Épico, Passo P*, estado).
 8. Implementar só essa fatia.
 9. Rodar gates.
-10. Commitar.
-11. Atualizar board → `migrated_pending_review`.
+10. Commitar a fatia.
+11. Executar `git push origin master` após gates e commit passarem.
+12. Atualizar board → `migrated_pending_review`.
+
+Se o push falhar, preservar o commit local, registrar o erro como `blocked` e não usar force push.
 
 Ajudante: `node scripts/engineering-loop-next.mjs` imprime a sugestão; o maker deve segui-la salvo conflito com (1)–(2).
 
@@ -209,8 +212,10 @@ node scripts/engineering-loop-next.mjs --check-board
 ```
 
 4. Verificar `DEVELOPMENT.md`, escada P*, banimentos e gates extras da tabela acima.
-5. Aprovar → `review_passed` + commit do board.  
-   Reprovar → `review_failed_needs_fix` + motivo objetivo + commit do board.
+5. Aprovar → `review_passed` + commit do board + `git push origin master`.
+   Reprovar → `review_failed_needs_fix` + motivo objetivo + commit do board + `git push origin master`.
+
+Se o push falhar, preservar o commit local, registrar o erro como `blocked` e não usar force push.
 
 O checker **não** implementa fatia nova.  
 O checker **deve reprovar** fatia cosméticasem avanço de escada se a política de banimento estiver ativa.
