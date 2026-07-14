@@ -28,6 +28,20 @@ describe('migration: controlar-prazos CSS classes stay prefixed', () => {
     expect(listaProcessos).not.toMatch(/prazoBoxDisplay|prazosBoxDisplay/);
     expect(monitoradosPanel).not.toMatch(/prazoBoxDisplay|prazosBoxDisplay/);
   });
+
+  it('closes the feature-owned CSS batch without unprefixed residual classes', () => {
+    const css = read('src/features/controlar-prazos/style.css');
+    const view = read('src/features/controlar-prazos/view.js');
+
+    const featureClasses = [...css.matchAll(/\.([a-z][a-z0-9-]*prazo[a-z0-9-]*)/gi)].map((match) => match[1]);
+    expect(featureClasses.length).toBeGreaterThan(0);
+    expect(featureClasses).toEqual(expect.arrayContaining([
+      'seipro-prazo-box-display',
+      'seipro-add-controle-prazo'
+    ]));
+    expect(featureClasses.every((className) => className.startsWith('seipro-'))).toBe(true);
+    expect(view).not.toMatch(/class=\"[^\"]*\b(?:prazoBoxDisplay|prazosBoxDisplay|addControlePrazo)\b/);
+  });
 });
 
 describe('migration: monitorados CSS classes stay prefixed', () => {
