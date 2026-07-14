@@ -19,7 +19,11 @@ import {
     normalizeSticknoteHomeText,
     parseSticknoteChecklistLine
 } from '../../core/sticknote.js';
-import { sticknoteChecklistClass, buildChecklistTooltipHtml } from './domain.js';
+import {
+    sticknoteChecklistClass,
+    buildChecklistTooltipHtml,
+    buildSticknoteHomeRecord
+} from './domain.js';
 import { fetchSticknotePriority } from './io.js';
 
 // --- Dependências legadas/core resolvidas de window (mesmo mundo isolado).
@@ -134,7 +138,7 @@ function replaceSticknoteHome() {
             link.setAttribute('data-sticknote-text', texttip);
             link.setAttribute('data-sticknote-user', usertip);
             if (id_protocolo) {
-                arraySticknoteHome.push({ id_protocolo: id_protocolo, usertip: usertip, texttip: texttip });
+                arraySticknoteHome.push(buildSticknoteHomeRecord(id_protocolo, texttip, usertip));
             }
         }
     });

@@ -7,7 +7,21 @@
  * VIEW desta feature: classes de checklist e montagem do HTML escapado do
  * tooltip. Renderização real (inserir células, ler atributos) fica na view.
  */
-import { parseSticknoteChecklistLine } from '../../core/sticknote.js';
+import { normalizeSticknoteHomeText, parseSticknoteChecklistLine } from '../../core/sticknote.js';
+
+// Monta o registro puro que a lista legada persiste em `arraySticknoteHome`.
+// Centraliza a forma do payload e a normalização final do texto antes de sair da
+// feature, sem levar DOM, storage ou jQuery para o domínio.
+export function buildSticknoteHomeRecord(id_protocolo, texttip, usertip) {
+    if (!id_protocolo) {
+        return false;
+    }
+    return {
+        id_protocolo: id_protocolo,
+        usertip: (typeof usertip === 'string') ? usertip : '',
+        texttip: normalizeSticknoteHomeText(texttip)
+    };
+}
 
 // Classe CSS do item de checklist na renderização inline do card.
 export function sticknoteChecklistClass(item) {

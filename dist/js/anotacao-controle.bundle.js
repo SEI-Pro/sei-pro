@@ -123,6 +123,16 @@
   }
 
   // src/features/anotacao-controle/domain.js
+  function buildSticknoteHomeRecord(id_protocolo, texttip, usertip) {
+    if (!id_protocolo) {
+      return false;
+    }
+    return {
+      id_protocolo,
+      usertip: typeof usertip === "string" ? usertip : "",
+      texttip: normalizeSticknoteHomeText(texttip)
+    };
+  }
   function sticknoteChecklistClass(item) {
     if (!item.isItem) {
       return "";
@@ -260,7 +270,7 @@
         link.setAttribute("data-sticknote-text", texttip);
         link.setAttribute("data-sticknote-user", usertip);
         if (id_protocolo) {
-          arraySticknoteHome.push({ id_protocolo, usertip, texttip });
+          arraySticknoteHome.push(buildSticknoteHomeRecord(id_protocolo, texttip, usertip));
         }
       }
     });

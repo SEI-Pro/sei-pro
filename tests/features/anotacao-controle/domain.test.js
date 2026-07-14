@@ -1,5 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { sticknoteChecklistClass, buildChecklistTooltipHtml } from '../../../src/features/anotacao-controle/domain.js';
+import {
+    sticknoteChecklistClass,
+    buildChecklistTooltipHtml,
+    buildSticknoteHomeRecord
+} from '../../../src/features/anotacao-controle/domain.js';
+
+describe('anotacao-controle domain — buildSticknoteHomeRecord', () => {
+    it('retorna false sem protocolo, evitando registros órfãos', () => {
+        expect(buildSticknoteHomeRecord('', 'texto', 'usuário')).toBe(false);
+    });
+
+    it('preserva o payload legado e normaliza quebras/NBSP do texto', () => {
+        expect(buildSticknoteHomeRecord('123', '  linha 1\\r\\n\\r\\nlinha 2  ', null))
+            .toEqual({
+                id_protocolo: '123',
+                usertip: '',
+                texttip: ['linha 1', 'linha 2'].join(String.fromCharCode(10, 10))
+            });
+    });
+
+    it('preserva usuário válido e aceita protocolo numérico', () => {
+        expect(buildSticknoteHomeRecord(456, 'anotação', 'Maria'))
+            .toEqual({ id_protocolo: 456, usertip: 'Maria', texttip: 'anotação' });
+    });
+});
 
 describe('anotacao-controle domain — sticknoteChecklistClass', () => {
     it('vazio quando não é item de checklist', () => {
