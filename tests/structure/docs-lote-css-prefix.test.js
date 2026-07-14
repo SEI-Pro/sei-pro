@@ -359,4 +359,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("txtEspecificacaoProcesso: $('#txtEspecificacaoProcesso').val()");
     expect(view).toContain('docLoteModalLoader(paramData)');
   });
+
+  it('adds a feature hook to crossing-table headers while preserving the shared header class and content', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates.match(/class="tituloControle seipro-doclote-crossing-table-header"/g)).toHaveLength(3);
+    expect(templates).toContain('${csvFileName}');
+    expect(templates).toContain('${modeloNome}');
+    expect(templates).toContain('class="tituloControle seipro-doclote-crossing-table-header"></th>');
+  });
 });

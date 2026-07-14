@@ -127,9 +127,9 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
                 <div class="seipro-doclote-crossing-scroll" style="max-height: 300px;overflow-y: auto;">
                     <table id="tableDataCrossing" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow seipro-doclote-crossing-table">
                         <thead>
-                            <th class="tituloControle" style="width: 47%;">${csvFileName}</th>
-                            <th class="tituloControle"></th>
-                            <th class="tituloControle" style="width: 47%;">${modeloNome}</th>
+                            <th class="tituloControle seipro-doclote-crossing-table-header" style="width: 47%;">${csvFileName}</th>
+                            <th class="tituloControle seipro-doclote-crossing-table-header"></th>
+                            <th class="tituloControle seipro-doclote-crossing-table-header" style="width: 47%;">${modeloNome}</th>
                         </thead>
                         <tbody>
                             ${tbody}
