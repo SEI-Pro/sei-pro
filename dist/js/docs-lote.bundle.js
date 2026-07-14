@@ -1022,7 +1022,7 @@
       width: 600,
       buttons: [{
         text: "OK",
-        class: "ui-state-active",
+        class: "ui-state-active seipro-doclote-error-confirm",
         click: function() {
           resetDialogBoxPro("dialogBoxPro");
         }

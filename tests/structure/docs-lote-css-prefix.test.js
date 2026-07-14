@@ -325,7 +325,15 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain('${tableResult}');
   });
 
-  it('adds a feature hook to generated document links while preserving the legacy link contract', () => {
+  it('adds a feature hook to the execution error confirmation action while preserving its reset flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("class: 'ui-state-active seipro-doclote-error-confirm'");
+    expect(view).toContain("text: 'OK'");
+    expect(view).toContain("resetDialogBoxPro('dialogBoxPro')");
+  });
+
+  it('adds feature hooks to generated document links while preserving the legacy link contract', () => {
     const view = read('src/features/docs-lote/view.js');
 
     expect(view).toContain('class="bLink seipro-doclote-generated-document-link"');
