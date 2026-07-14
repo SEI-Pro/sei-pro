@@ -50,7 +50,7 @@ async function docsLote_docAnalysis(protocolo, nrTxtPadrao) {
     S.dynamicFields = [];
 
     if (!$('#loaderAnalysis')[0]) {
-        $('#dialogBoxDocLote').append(`<div id='loaderAnalysis' class="seipro-doclote-analysis-loader" style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>`);
+        $('#dialogBoxDocLote').append(`<div id='loaderAnalysis' class="seipro-doclote-analysis-loader" style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor seipro-doclote-analysis-spinner" style="scale:3;"></i></div>`);
         $('#btnConfirmAnalysis').prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
     }
 

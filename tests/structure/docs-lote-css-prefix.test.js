@@ -178,8 +178,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     const view = read('src/features/docs-lote/view.js');
 
     expect(view).toContain("id='loaderAnalysis' class=\"seipro-doclote-analysis-loader\"");
+    expect(view).toContain('fas fa-spinner fa-spin azulColor seipro-doclote-analysis-spinner');
     expect(view).toContain("if (!$('#loaderAnalysis')[0])");
-    expect(view).toContain('fas fa-spinner fa-spin azulColor');
     expect(view).toContain("$('#loaderAnalysis').remove()");
   });
 
