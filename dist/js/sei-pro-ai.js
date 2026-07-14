@@ -1079,7 +1079,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const htmlAddDoc = frmEditor.length 
         ? `
             <div class="seipro-ai-add-doc-response" data-tooltip="Adicionar texto no documento" data-response="${respost_id}">
-                <a class="newLink"><i class="far fa-share-all fa-rotate-90"></i></a>
+                <a class="newLink"><i class="far fa-share-all fa-rotate-90 seipro-ai-add-doc-response-icon"></i></a>
             </div>
             `
         : '';

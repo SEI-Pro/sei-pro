@@ -64,6 +64,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai).toContain('class="seipro-ai-add-doc-response"');
+    expect(ai).toContain('class="far fa-share-all fa-rotate-90 seipro-ai-add-doc-response-icon"');
     expect(ai).toContain(".on('click', '.seipro-ai-add-doc-response'");
     expect(ai).toContain('data-response="${respost_id}"');
     expect(ai).toContain('addDocResponseAI(this)');
