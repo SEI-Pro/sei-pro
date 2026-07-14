@@ -217,6 +217,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     const templates = read('src/features/docs-lote/templates.js');
 
     expect(templates).toContain('<div class="seipro-doclote-error-dialog">');
+    expect(templates).toContain('class="fas fa-exclamation-triangle vermelhoColor seipro-doclote-error-icon"');
     expect(templates).toContain('Eita! Algo deu errado na replicação de documentos');
     expect(templates).toContain('Verifique as configurações selecionadas e tente novamente.');
     expect(templates).toContain('<p>${textError}</p>');

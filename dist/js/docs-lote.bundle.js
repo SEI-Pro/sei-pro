@@ -418,7 +418,7 @@
   }
   function erroBox(textError = "") {
     return wrap(`<div class="seipro-doclote-error-dialog">
-                        <p><i class="fas fa-exclamation-triangle vermelhoColor"></i> Eita! Algo deu errado na replica\xE7\xE3o de documentos \u{1F614}</p>
+                        <p><i class="fas fa-exclamation-triangle vermelhoColor seipro-doclote-error-icon"></i> Eita! Algo deu errado na replica\xE7\xE3o de documentos \u{1F614}</p>
                         <br>
                         <p>Verifique as configura\xE7\xF5es selecionadas e tente novamente.</p>
                         <p>${textError}</p>
