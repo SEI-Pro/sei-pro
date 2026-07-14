@@ -51,7 +51,7 @@ describe('migration: AI CSS classes stay prefixed', () => {
   it('adds a seipro-prefixed hook for bot chat responses while preserving legacy response styling', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
-    expect(ai).toContain('response_bot seipro-ai-bot-response response_${currentPlataform} loading');
+    expect(ai).toContain('response_bot seipro-ai-bot-response response_${currentPlataform} seipro-ai-platform-response loading');
     expect(ai).toContain("$('#response_ai .seipro-ai-user-response, #response_ai .seipro-ai-bot-response').remove()");
     expect(ai).toContain("_this.closest('.seipro-ai-bot-response').text().trim()");
     expect(ai).toContain('response_bot_content');
@@ -659,7 +659,8 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai.match(/loading seipro-ai-response-pending/g)).toHaveLength(2);
-    expect(ai).toContain('class="response_bot seipro-ai-bot-response response_${currentPlataform} loading seipro-ai-response-pending"');
+    expect(ai.match(/seipro-ai-platform-response/g)).toHaveLength(2);
+    expect(ai).toContain('class="response_bot seipro-ai-bot-response response_${currentPlataform} seipro-ai-platform-response loading seipro-ai-response-pending"');
     expect(ai).toContain("responseBox.removeClass('loading')");
   });
 

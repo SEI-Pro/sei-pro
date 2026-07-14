@@ -1138,7 +1138,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const iconChat = currentPlataform == 'openai' ? iconChatGPT : currentPlataform == 'ollama' ? iconOllama : iconGemini;
         const htmlIconChat = `<img src="${iconChat}" style="width: 30px;border-radius: 5px;position: absolute;top: -3px;left: -50px;">`;
         const htmlResponseBox = `
-            <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} loading seipro-ai-response-pending" data-preload="${preload}">
+            <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} seipro-ai-platform-response loading seipro-ai-response-pending" data-preload="${preload}">
                 ${htmlIconChat}
                 <div class="loadingio-spinner-pulse seipro-ai-response-loading">
                     <div class="ldio">
@@ -1355,7 +1355,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const iconChat = currentPlataform == 'openai' ? iconChatGPT : currentPlataform == 'ollama' ? iconOllama : iconGemini;
         const htmlIconChat = `<img src="${iconChat}" style="width: 30px;border-radius: 5px;position: absolute;top: -3px;left: -50px;">`;
         const response_bot = `
-            <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} loading seipro-ai-response-pending">
+            <div id="responseBot_${respost_id}" class="response_bot seipro-ai-bot-response response_${currentPlataform} seipro-ai-platform-response loading seipro-ai-response-pending">
                 ${htmlIconChat}
                 <span class='response_bot_content seipro-ai-response-content'>
                     <p>${error_text}</p>
