@@ -49,6 +49,42 @@ export function findMonitoradoIndex(store, id_procedimento) {
     });
 }
 
+// Constrói o registro persistido ao adicionar um processo, sem ler DOM/globais.
+export function buildMonitoradoItem(id_procedimento, dados = {}) {
+    const andamento = dados.listAndamento || {};
+    const prop = dados.propProcesso || {};
+    return {
+        id_procedimento: andamento.id_procedimento ?? id_procedimento,
+        processo: andamento.processo,
+        andamento: andamento.andamento || [],
+        documentos: dados.listDocumentosAssinados || [],
+        tipo_procedimento: prop.hdnNomeTipoProcedimento || '',
+        assuntos: prop.selAssuntos_select || [],
+        interessados: prop.selInteressadosProcedimento || [],
+        descricao: prop.txtDescricao || '',
+        order: -1,
+        categoria: ''
+    };
+}
+
+// Transições puras do toggle: removem duplicata antes de adicionar e não mutam a entrada.
+export function addMonitoradoToStore(store, id_procedimento, dados = {}) {
+    const next = { ...store, monitorados: (store.monitorados || []).filter(
+        (item) => String(item.id_procedimento) !== String(id_procedimento)
+    ) };
+    next.monitorados.push(buildMonitoradoItem(id_procedimento, dados));
+    return next;
+}
+
+export function removeMonitoradoFromStore(store, id_procedimento) {
+    return {
+        ...store,
+        monitorados: (store.monitorados || []).filter(
+            (item) => String(item.id_procedimento) !== String(id_procedimento)
+        )
+    };
+}
+
 // `dados` da sessão do processo está completo o bastante para uso? (predicado puro)
 export function monitoradoProcessDataReady(id_procedimento, dados) {
     return (

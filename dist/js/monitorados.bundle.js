@@ -103,6 +103,37 @@
       return String(obj.id_procedimento) === String(id_procedimento);
     });
   }
+  function buildMonitoradoItem(id_procedimento, dados2 = {}) {
+    const andamento = dados2.listAndamento || {};
+    const prop = dados2.propProcesso || {};
+    return {
+      id_procedimento: andamento.id_procedimento ?? id_procedimento,
+      processo: andamento.processo,
+      andamento: andamento.andamento || [],
+      documentos: dados2.listDocumentosAssinados || [],
+      tipo_procedimento: prop.hdnNomeTipoProcedimento || "",
+      assuntos: prop.selAssuntos_select || [],
+      interessados: prop.selInteressadosProcedimento || [],
+      descricao: prop.txtDescricao || "",
+      order: -1,
+      categoria: ""
+    };
+  }
+  function addMonitoradoToStore(store, id_procedimento, dados2 = {}) {
+    const next = { ...store, monitorados: (store.monitorados || []).filter(
+      (item) => String(item.id_procedimento) !== String(id_procedimento)
+    ) };
+    next.monitorados.push(buildMonitoradoItem(id_procedimento, dados2));
+    return next;
+  }
+  function removeMonitoradoFromStore(store, id_procedimento) {
+    return {
+      ...store,
+      monitorados: (store.monitorados || []).filter(
+        (item) => String(item.id_procedimento) !== String(id_procedimento)
+      )
+    };
+  }
   function monitoradoProcessDataReady(id_procedimento, dados2) {
     return typeof dados2 !== "undefined" && dados2 && Object.keys(dados2).length > 0 && dados2.constructor === Object && typeof dados2.listAndamento !== "undefined" && dados2.listAndamento !== null && dados2.hasOwnProperty("listAndamento") && typeof dados2.listAndamento.id_procedimento !== "undefined" && dados2.listAndamento.id_procedimento !== null && dados2.listAndamento.hasOwnProperty("id_procedimento") && String(dados2.listAndamento.id_procedimento) == String(id_procedimento) && typeof dados2.propProcesso !== "undefined" && dados2.propProcesso !== null;
   }
@@ -928,30 +959,13 @@
     }
   }
   function removeMonitoradoPro(id_procedimento, store = false) {
-    store = store || getStoreMonitoradoPro();
-    store.monitorados = store.monitorados.filter((item) => item.id_procedimento != id_procedimento);
-    return store;
+    return removeMonitoradoFromStore(store || getStoreMonitoradoPro(), id_procedimento);
   }
   function addMonitoradoPro(id_procedimento = false) {
-    let store = getStoreMonitoradoPro();
+    const store = getStoreMonitoradoPro();
     const d = dados() || {};
     const id = id_procedimento || (d.listAndamento ? d.listAndamento.id_procedimento : false);
-    if (id !== false) store = removeMonitoradoPro(id, store);
-    const andamento = d.listAndamento || {};
-    const prop = d.propProcesso || {};
-    store.monitorados.push({
-      id_procedimento: andamento.id_procedimento,
-      processo: andamento.processo,
-      andamento: andamento.andamento || [],
-      documentos: d.listDocumentosAssinados || [],
-      tipo_procedimento: prop.hdnNomeTipoProcedimento || "",
-      assuntos: prop.selAssuntos_select || [],
-      interessados: prop.selInteressadosProcedimento || [],
-      descricao: prop.txtDescricao || "",
-      order: -1,
-      categoria: ""
-    });
-    return store;
+    return addMonitoradoToStore(store, id, d);
   }
   function storeMonitoradoPro(mode, id_procedimento) {
     const store = mode === "add" ? addMonitoradoPro(id_procedimento) : removeMonitoradoPro(id_procedimento);

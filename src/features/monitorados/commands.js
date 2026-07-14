@@ -2,7 +2,13 @@ import { globalRef } from '../../core/global.js';
 import { qs, qsa, frameDoc } from './dom.js';
 import { openModal } from '../../shared/ui/modal.js';
 import { getStoreMonitoradoPro, persistMonitoradoStore } from './store.js';
-import { findMonitoradoIndex, monitoradoProcessDataReady, monitoradoProcessPayloadReady } from './domain.js';
+import {
+    findMonitoradoIndex,
+    addMonitoradoToStore,
+    removeMonitoradoFromStore,
+    monitoradoProcessDataReady,
+    monitoradoProcessPayloadReady
+} from './domain.js';
 
 /**
  * Monitorados — comandos de add/remover + sincronização de dados do processo,
@@ -30,29 +36,13 @@ function visualizacaoDoc() {
 
 // ---- Store commands ----
 export function removeMonitoradoPro(id_procedimento, store = false) {
-    store = store || getStoreMonitoradoPro();
-    store.monitorados = store.monitorados.filter((item) => item.id_procedimento != id_procedimento);
-    return store;
+    return removeMonitoradoFromStore(store || getStoreMonitoradoPro(), id_procedimento);
 }
 export function addMonitoradoPro(id_procedimento = false) {
-    let store = getStoreMonitoradoPro();
+    const store = getStoreMonitoradoPro();
     const d = dados() || {};
     const id = id_procedimento || (d.listAndamento ? d.listAndamento.id_procedimento : false);
-    if (id !== false) store = removeMonitoradoPro(id, store);
-    const andamento = d.listAndamento || {};
-    const prop = d.propProcesso || {};
-    store.monitorados.push({
-        id_procedimento: andamento.id_procedimento,
-        processo: andamento.processo,
-        andamento: andamento.andamento || [],
-        documentos: d.listDocumentosAssinados || [],
-        tipo_procedimento: prop.hdnNomeTipoProcedimento || '',
-        assuntos: prop.selAssuntos_select || [],
-        interessados: prop.selInteressadosProcedimento || [],
-        descricao: prop.txtDescricao || '',
-        order: -1, categoria: ''
-    });
-    return store;
+    return addMonitoradoToStore(store, id, d);
 }
 export function storeMonitoradoPro(mode, id_procedimento) {
     const store = (mode === 'add') ? addMonitoradoPro(id_procedimento) : removeMonitoradoPro(id_procedimento);

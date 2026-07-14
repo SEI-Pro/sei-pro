@@ -2,6 +2,9 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import {
     defaultMonitoradoStore,
     findMonitoradoIndex,
+    buildMonitoradoItem,
+    addMonitoradoToStore,
+    removeMonitoradoFromStore,
     monitoradoProcessDataReady,
     monitoradoProcessPayloadReady
 } from '@src/features/monitorados/domain.js';
@@ -30,6 +33,32 @@ describe('monitorados/domain (puro)', () => {
         expect(findMonitoradoIndex({}, 1)).toBe(-1);
     });
 
+    it('transições puras do toggle constroem, substituem e removem por id', () => {
+        const original = {
+            monitorados: [{ id_procedimento: '10', processo: 'antigo' }],
+            config: { colortags: [] }
+        };
+        const dados = {
+            listAndamento: { id_procedimento: 10, processo: 'Processo 10', andamento: ['a'] },
+            listDocumentosAssinados: [{ id: 1 }],
+            propProcesso: {
+                hdnNomeTipoProcedimento: 'Ofício',
+                selAssuntos_select: ['assunto'],
+                selInteressadosProcedimento: ['interessado'],
+                txtDescricao: 'descrição'
+            }
+        };
+        expect(buildMonitoradoItem(10, dados)).toMatchObject({
+            id_procedimento: 10, processo: 'Processo 10', tipo_procedimento: 'Ofício', order: -1, categoria: ''
+        });
+        const added = addMonitoradoToStore(original, 10, dados);
+        expect(added.monitorados).toHaveLength(1);
+        expect(added.monitorados[0].processo).toBe('Processo 10');
+        expect(original.monitorados[0].processo).toBe('antigo');
+        const removed = removeMonitoradoFromStore(added, '10');
+        expect(removed.monitorados).toEqual([]);
+        expect(added.monitorados).toHaveLength(1);
+    });
     it('monitoradoProcessDataReady exige listAndamento.id_procedimento casando + propProcesso', () => {
         const ok = { listAndamento: { id_procedimento: 5, andamento: [] }, propProcesso: {} };
         expect(monitoradoProcessDataReady(5, ok)).toBe(true);
