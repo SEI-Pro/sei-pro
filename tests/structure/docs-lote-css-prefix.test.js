@@ -405,4 +405,12 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).toContain('${modeloNome}');
     expect(templates).toContain('class="tituloControle seipro-doclote-crossing-table-header"></th>');
   });
+
+  it('adds a feature hook to the document-analysis confirmation while preserving its id and callback', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id: 'btnConfirmAnalysis'");
+    expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-analysis-confirm'");
+    expect(view).toContain('docLoteModalSelecaoBaseDados(nrDoc, null, nrTxtPadrao)');
+  });
 });

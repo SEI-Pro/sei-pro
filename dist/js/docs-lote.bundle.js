@@ -1099,7 +1099,7 @@
         id: "btnConfirmAnalysis",
         text: "Avan\xE7ar",
         icon: "ui-icon-arrowthick-1-e",
-        class: "confirm ui-state-active",
+        class: "confirm ui-state-active seipro-doclote-analysis-confirm",
         click: function() {
           docLoteModalSelecaoBaseDados(nrDoc, null, nrTxtPadrao);
         }

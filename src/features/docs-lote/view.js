@@ -574,7 +574,7 @@ function docLoteModalAnaliseDocModelo(nrDoc, nrTxtPadrao) {
                 id: 'btnConfirmAnalysis',
                 text: 'Avançar',
                 icon: 'ui-icon-arrowthick-1-e',
-                class: 'confirm ui-state-active',
+                class: 'confirm ui-state-active seipro-doclote-analysis-confirm',
                 click: function () { docLoteModalSelecaoBaseDados(nrDoc, null, nrTxtPadrao); }
             }]
         });
