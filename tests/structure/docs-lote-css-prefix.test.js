@@ -254,6 +254,15 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(templates).toContain('id="newProcs"');
   });
 
+  it('adds a feature hook to the crossing table while preserving its legacy id and shared table classes', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('id="tableDataCrossing" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow seipro-doclote-crossing-table"');
+    expect(templates).toContain('id="divTableDataCrossing" class="seipro-doclote-crossing-panel"');
+    expect(templates).toContain('class="seipro-doclote-crossing-scroll"');
+    expect(templates).not.toMatch(/id="tableDataCrossing"[^>]*class="seiProForm tableInfo tableZebra tableFollow"/);
+  });
+
   it('uses a seipro-prefixed class for the result action bar emitted by Docs em Lote', () => {
     const templates = read('src/features/docs-lote/templates.js');
 
