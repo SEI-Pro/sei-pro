@@ -26,6 +26,7 @@ import { installQuickFilter } from './quickfilter.js';
 import { installQuickFilterDom } from './quickfilter-dom.js';
 import { installSticknote } from './sticknote.js';
 import { installDocsLote } from './docslote.js';
+import { installDocsLoteLegacyApi } from './docslote-legacy-api.js';
 import { installUi } from './ui.js';
 import { installMessaging } from '../platform/messaging.js';
 import { installStorage } from '../platform/storage.js';
@@ -67,6 +68,7 @@ export function installCoreStack() {
     installQuickFilterDom();
     installSticknote();
     installDocsLote();
+    installDocsLoteLegacyApi();
     installUi();
     installMessaging();
     installStorage();

@@ -1366,10 +1366,14 @@
       parseDocsLoteDocTitle
     };
     getSeiPro().core.docslote = docslote;
+    return docslote;
+  }
+
+  // src/core/docslote-legacy-api.js
+  function installDocsLoteLegacyApi() {
     aliasGlobal("docsLote_specialChars", docsLoteSpecialChars);
     aliasGlobal("docsLote_normalChars_utf8", docsLoteNormalCharsUtf8);
     aliasGlobal("docsLote_normalChars_iso", docsLoteNormalCharsIso);
-    return docslote;
   }
 
   // src/core/ui.js
@@ -2633,6 +2637,7 @@
     installQuickFilterDom();
     installSticknote();
     installDocsLote();
+    installDocsLoteLegacyApi();
     installUi();
     installMessaging();
     installStorage();

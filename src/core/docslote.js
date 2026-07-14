@@ -1,4 +1,4 @@
-import { aliasGlobal, getSeiPro } from './global.js';
+import { getSeiPro } from './global.js';
 
 /**
  * Núcleo PURO da feature "Enviar Múltiplos Documentos Externos"
@@ -68,13 +68,6 @@ export function installDocsLote() {
     };
 
     getSeiPro().core.docslote = docslote;
-
-    // Aliases globais dos mapas — sem consumidores após a migração da feature para
-    // o bundle docs-lote (que usa SeiPro.core.docslote.*). Mantidos por ora; podem
-    // ser removidos em uma limpeza futura.
-    aliasGlobal('docsLote_specialChars', docsLoteSpecialChars);
-    aliasGlobal('docsLote_normalChars_utf8', docsLoteNormalCharsUtf8);
-    aliasGlobal('docsLote_normalChars_iso', docsLoteNormalCharsIso);
 
     return docslote;
 }

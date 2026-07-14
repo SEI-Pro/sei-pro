@@ -123,11 +123,12 @@ src/core/datas.js:40:calculeDatesDurationTemplate,src/core/datas.js,40,calculeDa
 src/core/datas.js:51:calculeDatesDuration,src/core/datas.js,51,calculeDatesDuration,core,,moderno,,notificacaonovoprocesso,não,11
 src/core/datas.js:71:getDateSemantic,src/core/datas.js,71,getDateSemantic,core,,moderno,,notificacaonovoprocesso,não,11
 src/core/datas.js:113:installDatas,src/core/datas.js,113,installDatas,core,,moderno,,,não,2
+src/core/docslote-legacy-api.js:11:installDocsLoteLegacyApi,src/core/docslote-legacy-api.js,11,installDocsLoteLegacyApi,core,,moderno,,,não,1
 src/core/docslote.js:26:getDocsLoteNormalChars,src/core/docslote.js,26,getDocsLoteNormalChars,core,,moderno,,,não,2
 src/core/docslote.js:32:hasDocsLoteSpecialChars,src/core/docslote.js,32,hasDocsLoteSpecialChars,core,,moderno,,,não,6
 src/core/docslote.js:40:encodeDocsLoteSpecialChars,src/core/docslote.js,40,encodeDocsLoteSpecialChars,core,,moderno,,,não,4
 src/core/docslote.js:48:parseDocsLoteDocTitle,src/core/docslote.js,48,parseDocsLoteDocTitle,core,,moderno,,,não,2
-src/core/docslote.js:59:installDocsLote,src/core/docslote.js,59,installDocsLote,core,,moderno,,,não,3
+src/core/docslote.js:59:installDocsLote,src/core/docslote.js,59,installDocsLote,core,,moderno,,,não,1
 src/core/feriados.js:13:easterDay,src/core/feriados.js,13,easterDay,core,,moderno,,,não,2
 src/core/feriados.js:29:getHolidaysBr,src/core/feriados.js,29,getHolidaysBr,core,,moderno,,notificacaonovoprocesso,não,4
 src/core/feriados.js:63:getHolidayBetweenDates,src/core/feriados.js,63,getHolidayBetweenDates,core,,moderno,,notificacaonovoprocesso,não,7
@@ -192,7 +193,7 @@ src/core/serial.js:18:tryParseJsonObject,src/core/serial.js,18,tryParseJsonObjec
 src/core/serial.js:29:convertJsonBools,src/core/serial.js,29,convertJsonBools,core,,moderno,,,não,2
 src/core/serial.js:33:isBase64,src/core/serial.js,33,isBase64,core,,moderno,,,não,2
 src/core/serial.js:41:installSerial,src/core/serial.js,41,installSerial,core,,moderno,,,não,2
-src/core/stack.js:47:installCoreStack,src/core/stack.js,47,installCoreStack,core,,moderno,,,não,36
+src/core/stack.js:48:installCoreStack,src/core/stack.js,48,installCoreStack,core,,moderno,,,não,37
 src/core/sticknote.js:18:parseSticknoteHomeLabel,src/core/sticknote.js,18,parseSticknoteHomeLabel,core,,moderno,,,não,8
 src/core/sticknote.js:45:normalizeSticknoteHomeText,src/core/sticknote.js,45,normalizeSticknoteHomeText,core,,moderno,,,não,3
 src/core/sticknote.js:66:parseSticknoteChecklistLine,src/core/sticknote.js,66,parseSticknoteChecklistLine,core,,moderno,,,não,3
