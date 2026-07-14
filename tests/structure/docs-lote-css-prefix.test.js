@@ -368,6 +368,16 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain('${v.url_doc || \'\'}');
   });
 
+  it('adds a feature hook to the CSV confirmation action while preserving its upload and analysis flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id: 'btnEnviaCSV'");
+    expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-csv-confirm'");
+    expect(view).toContain("const file = $('#inputBD')[0].files[0]");
+    expect(view).toContain('docLoteModalAnaliseCSV');
+    expect(view).toContain('seipro-doclote-field-error');
+  });
+
   it('adds a feature hook to the crossing confirmation action while preserving its shared button class and execution payload', () => {
     const view = read('src/features/docs-lote/view.js');
 

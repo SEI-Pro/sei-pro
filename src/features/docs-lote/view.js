@@ -455,7 +455,7 @@ function docLoteModalSelecaoBaseDados(nrDoc, csvFile, nrTxtPadrao) {
                 text: 'Avançar',
                 disabled: true,
                 icon: 'ui-icon-arrowthick-1-e',
-                class: 'confirm ui-state-active',
+                class: 'confirm ui-state-active seipro-doclote-csv-confirm',
                 click: () => {
                     $('#baseDados small').remove();
                     const file = $('#inputBD')[0].files[0];
