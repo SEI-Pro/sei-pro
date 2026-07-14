@@ -451,7 +451,7 @@
             ` : `
             <tr>
                 <td>
-                    <div style="margin: 10px 0;display: inline-block;">
+                    <div class="seipro-doclote-force-names" style="margin: 10px 0;display: inline-block;">
                     <p style="font-size: 1.2em;">Nome do documento na \xE1rvore de processos <a class="newLink" style="font-size: 0.8em;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar('Somente alguns tipos de documentos suportam a propriedade <b>N\xFAmero</b> que quando preenchida exibe o valor na \xE1rvore de processos logo ap\xF3s o tipo. Exemplo: Anexo Contrato (Anexo = tipo e Contrato = N\xFAmero)')"><i class="fas fa-info-circle colorAzul"></i></a></p>
                 </td>
             </tr>

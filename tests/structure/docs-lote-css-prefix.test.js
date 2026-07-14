@@ -92,10 +92,10 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).not.toMatch(/dFielTitle/);
   });
 
-  it('uses a seipro-prefixed class for the force-name option wrapper', () => {
+  it('uses a seipro-prefixed class for both force-name option wrappers', () => {
     const templates = read('src/features/docs-lote/templates.js');
 
-    expect(templates).toContain('seipro-doclote-force-names');
+    expect(templates.match(/class="seipro-doclote-force-names"/g)).toHaveLength(2);
     expect(templates).toContain('id="checkForceNames"');
     expect(templates).toContain('for="checkForceNames"');
 

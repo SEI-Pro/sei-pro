@@ -111,7 +111,7 @@ export function dataCrossingPanel({ csvFileName, modeloNome, tbody, selectData, 
         : `
             <tr>
                 <td>
-                    <div style="margin: 10px 0;display: inline-block;">
+                    <div class="seipro-doclote-force-names" style="margin: 10px 0;display: inline-block;">
                     <p style="font-size: 1.2em;">Nome do documento na árvore de processos <a class="newLink" style="font-size: 0.8em;" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar('Somente alguns tipos de documentos suportam a propriedade <b>Número</b> que quando preenchida exibe o valor na árvore de processos logo após o tipo. Exemplo: Anexo Contrato (Anexo = tipo e Contrato = Número)')"><i class="fas fa-info-circle colorAzul"></i></a></p>
                 </td>
             </tr>
