@@ -831,11 +831,11 @@
             const htmlFilterDoclote = resultFilterBar;
             let theadRows = "<tr>";
             theadRows += $.map(Object.keys(S.docsCriados[0].data_doc), function(k) {
-              return `<th class="tituloControle">${k}</th>`;
+              return `<th class="tituloControle seipro-doclote-result-table-header">${k}</th>`;
             }).join("");
-            theadRows += '   <th class="tituloControle" style="white-space: nowrap;">nome_documento_gerado</th>';
-            theadRows += '   <th class="tituloControle" style="white-space: nowrap;">numero_sei_gerado</th>';
-            theadRows += '   <th class="tituloControle" style="white-space: nowrap;">link_documento_gerado</th>';
+            theadRows += '   <th class="tituloControle seipro-doclote-result-table-header" style="white-space: nowrap;">nome_documento_gerado</th>';
+            theadRows += '   <th class="tituloControle seipro-doclote-result-table-header" style="white-space: nowrap;">numero_sei_gerado</th>';
+            theadRows += '   <th class="tituloControle seipro-doclote-result-table-header" style="white-space: nowrap;">link_documento_gerado</th>';
             theadRows += "</tr>";
             const tbodyRows = $.map(S.docsCriados, function(v) {
               let _return = "<tr>";

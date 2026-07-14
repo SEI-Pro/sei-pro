@@ -342,6 +342,16 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("resetDialogBoxPro('dialogBoxPro')");
   });
 
+  it('adds a feature hook to generated result-table headers while preserving the shared header class and content', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain('tituloControle seipro-doclote-result-table-header');
+    expect(view).toContain('nome_documento_gerado');
+    expect(view).toContain('numero_sei_gerado');
+    expect(view).toContain('link_documento_gerado');
+    expect(view).not.toContain('`<th class="tituloControle">${k}</th>`');
+  });
+
   it('adds feature hooks to generated document links while preserving the legacy link contract', () => {
     const view = read('src/features/docs-lote/view.js');
 
