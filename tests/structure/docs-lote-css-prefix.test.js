@@ -187,6 +187,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     const view = read('src/features/docs-lote/view.js');
 
     expect(view).toContain("id='loaderAnalysisCSV' class=\"seipro-doclote-csv-analysis-loader\"");
+    expect(view).toContain('fas fa-spinner fa-spin azulColor seipro-doclote-csv-analysis-spinner');
     expect(view).toContain("if (!$('#loaderAnalysisCSV')[0])");
     expect(view).toContain('fas fa-spinner fa-spin azulColor');
     expect(view).toContain("$('#loaderAnalysisCSV').remove()");
