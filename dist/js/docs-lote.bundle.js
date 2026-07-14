@@ -935,7 +935,7 @@
         id: "btnSelecaoDoc",
         text: "Avan\xE7ar",
         icon: "ui-icon-arrowthick-1-e",
-        class: "confirm ui-state-active",
+        class: "confirm ui-state-active seipro-doclote-selection-confirm",
         click: function() {
           if ($(this).find("small")[0]) {
             resetDialogBoxPro("dialogBoxPro");

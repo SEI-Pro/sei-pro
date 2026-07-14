@@ -378,6 +378,15 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain('docLoteModalLoader(paramData)');
   });
 
+  it('adds a feature hook to the initial selection confirmation while preserving its id and callback flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id: 'btnSelecaoDoc'");
+    expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-selection-confirm'");
+    expect(view).toContain("const nrDoc = $('#docLoteSelect').find('option:selected').data('id_documento')");
+    expect(view).toContain('docLoteModalAnaliseDocModelo(nrDoc, nrTxtPadrao)');
+  });
+
   it('adds a feature hook to crossing-table headers while preserving the shared header class and content', () => {
     const templates = read('src/features/docs-lote/templates.js');
 
