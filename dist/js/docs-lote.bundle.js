@@ -1131,7 +1131,7 @@
         id: "btnConfirmAnalysisCSV",
         text: "Avan\xE7ar",
         icon: "ui-icon-arrowthick-1-e",
-        class: "confirm ui-state-active",
+        class: "confirm ui-state-active seipro-doclote-csv-analysis-confirm",
         click: function() {
           docLoteModalCruzamentoDados(nrDoc, csvFile, nrTxtPadrao);
         }

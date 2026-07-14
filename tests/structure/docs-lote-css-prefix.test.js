@@ -413,4 +413,12 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-analysis-confirm'");
     expect(view).toContain('docLoteModalSelecaoBaseDados(nrDoc, null, nrTxtPadrao)');
   });
+
+  it('adds a feature hook to the CSV-analysis confirmation while preserving its id and callback', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id: 'btnConfirmAnalysisCSV'");
+    expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-csv-analysis-confirm'");
+    expect(view).toContain('docLoteModalCruzamentoDados(nrDoc, csvFile, nrTxtPadrao)');
+  });
 });
