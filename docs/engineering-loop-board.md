@@ -1,9 +1,45 @@
 # Engineering Loop Board — SEI Pro PRF
 
 > Atualize este arquivo a cada execução do loop.  
+> Política: `docs/engineering-loop.md` (épicos + escada P0–P7).  
+> Sugestão automática: `node scripts/engineering-loop-next.mjs`  
+> Prompts Hermes: `docs/engineering-loop-prompts.md`  
 > Estados válidos: `pending_migration`, `migration_in_progress`, `migrated_pending_review`, `review_in_progress`, `review_failed_needs_fix`, `review_passed`, `blocked`.
 
-## Board
+## Program shift (E2)
+
+A série **A1-011…A1-205** (CSS micro-hooks) está **encerrada como seleção dinâmica**.  
+Novas fatias devem seguir a **Epic queue** abaixo. Micro-hooks CSS novos = `blocked` / rejeitados pelo checker enquanto houver P1–P5 abertos.
+
+Exceção de drenagem: A1-205 pode ser aprovada/rejeitada pelo checker; depois disso, não abrir A1-206+.
+
+## Epic queue (programa ativo)
+
+| Épico | Prioridade | Contexto | Passo atual | Estado | Próxima fatia | Smoke scope | Observações |
+|---|---:|---|---|---|---|---|---|
+| E-controlar-prazos-close | 1 | lista-processos | P1 | pending_migration | Ver E2-001: testes de `domain.js` + gaps de domínio | SMOKE_TEST §1 (coluna Prazos) | Feature já tem domain/io/view/legacy-api; falta cobertura de teste e fechar gaps |
+| E-docs-lote-close | 2 | arvore | P4 | pending_migration | Após E-controlar-prazos-close: remover duplicatas legadas / fechar bridge | SMOKE_TEST §2 (Docs em Lote) | CSS micro-hooks A1 já cobriram muito de P6; foco em limpeza legada |
+| E-nao-lido-close | 3 | lista-processos | P1 | pending_migration | Ampliar testes + gaps domain/io | SMOKE_TEST §1 | Semi-migrado |
+| E-anotacao-controle-close | 4 | lista-processos | P1 | pending_migration | Ampliar testes + gaps | SMOKE_TEST §1 | Semi-migrado |
+| E-lista-favoritos | 5 | lista-processos | P0 | pending_migration | Inventário de favoritos em `sei-pro.js` (globais/call-sites/config) | SMOKE_TEST §1 (favoritos) | Primeiro corte do monolito da lista |
+| E-lista-agrupamento | 6 | lista-processos | P0 | pending_migration | (após favoritos) inventário agrupamento | SMOKE_TEST §1 | |
+| E-arvore-dropzone | 7 | arvore | P0 | pending_migration | (depois dos closes) inventário dropzone em `sei-pro-arvore.js` | SMOKE_TEST §2 | |
+| E-arvore-menus | 8 | arvore | P0 | pending_migration | inventário menus rápidos | SMOKE_TEST §2 | |
+| E-editor-toolbar | 9 | editor | P0 | pending_migration | inventário toolbar em `sei-pro-editor.js` | SMOKE_TEST §3 | |
+| E-functions-datas | 10 | global | P0 | pending_migration | inventário cluster datas/prazos em `sei-functions-pro.js` | SMOKE_TEST §1/§5 | |
+| E-entry-lista | 11 | lista-processos | P0 | pending_migration | só quando ≥2 features da lista estiverem fechadas | SMOKE_TEST §1 | Entry `src/entries/lista.js` |
+| CSS-micro-hooks-A1 | 99 | global | P6 | blocked | — | n/a | Bloqueado: não selecionar novos hooks CSS unitários. P6 só em lote no fim do épico. |
+
+## Fatias E2 semeadas (maker pega daqui)
+
+| ID | Prioridade | Tipo | Contexto | Feature/Camada | Fatia | Estado | Commit migração | Commit verificação | Fonte | Gate | Smoke scope | Observações |
+|---|---:|---|---|---|---|---|---|---|---|---|---|---|
+| E2-001 | 1 | feature | lista-processos | `E-controlar-prazos-close` / P1 | Adicionar `tests/features/controlar-prazos/domain.test.js` cobrindo exports puros de `src/features/controlar-prazos/domain.js`; corrigir gaps óbvios de pureza se o teste revelar | pending_migration |  |  | `docs/engineering-loop.md` fila de épicos; feature semi-migrada sem domain tests | `git diff --check`; `npm test`; vitest no novo arquivo | SMOKE_TEST §1 — coluna Prazos (humano, não bloquear o gate auto) | **Primeira fatia do programa E2.** Não fazer CSS. |
+| E2-002 | 2 | feature | lista-processos | `E-controlar-prazos-close` / P4–P5 | Auditar call-sites de `initControlePrazo` / aliases; garantir `legacy-api.js` completo; remover definições duplicadas se ainda existirem no legado | pending_migration |  |  | depende E2-001 | `npm test`; guards de legacy-api | SMOKE_TEST §1 | Só após E2-001 `review_passed` |
+| E2-003 | 3 | feature | lista-processos | `E-controlar-prazos-close` / P6 | Fechar CSS residual de controlar-prazos **em lote** (não 1 classe): classes próprias restantes → `.seipro-*` | pending_migration |  |  | depende E2-002 | `npm test`; `tests/structure/controlar-prazos-css-prefix.test.js` | SMOKE_TEST §1 | Só após E2-002; se já estiver 100% prefixado, marcar review_passed com evidência e avançar épico |
+| E2-010 | 10 | feature | lista-processos | `E-lista-favoritos` / P0 | Inventariar favoritos em `src/features/lista-processos/sei-pro.js`: funções, globais, config flags, DOM; registrar no board/observações do épico | pending_migration |  |  | fila após fechar controlar-prazos | `node scripts/engineering-loop-map.mjs --check`; docs no board | SMOKE_TEST §1 | Não implementar extração ainda — só inventário P0 |
+
+## Board (histórico L0 / A1)
 
 | ID | Prioridade | Tipo | Contexto | Feature/Camada | Fatia | Estado | Commit migração | Commit verificação | Fonte | Gate | Smoke scope | Observações |
 |---|---:|---|---|---|---|---|---|---|---|---|---|---|
@@ -344,12 +380,16 @@
 
 | A1-204 | 204 | feature | editor | `ai` / CSS prefixado | Adicionar hook prefixado ao ícone mutável de envio de prompt (`seipro-ai-send-button-icon`), preservando estados de carregamento/conclusão | review_passed | d8f18a6 | (este commit) | `DEVELOPMENT.md` linhas 123-126; seleção dinâmica após A1-203 e produtor/consumidor de `btnSendAI` em `src/features/ai/sei-pro-ai.js` | `git diff --check` ✅; `npx vitest run tests/structure/ai-css-prefix.test.js` ✅ (1 arquivo, 96 testes); `npm test` ✅ (60 arquivos, 551 testes); `node scripts/engineering-loop-map.mjs --check` ✅ | Smoke manual necessário: `SMOKE_TEST.md` seção 3 (Editor de documentos), abrir o modal de IA, enviar prompt, confirmar ícone de carregamento e restauração do ícone de envio sem erro novo | Hook aditivo no ícone do botão; a classe `seipro-ai-send-button-icon` é emitida inicialmente e preservada nas duas reescritas de classe (spinner durante envio e paper-plane após conclusão). Id `btnSendAI`, delegação `.seipro-ai-send-button`, `initAI(this)` e classes legadas permanecem. Saída gerada limitada à cópia verbatim `dist/js/sei-pro-ai.js`; sem churn incidental em `dist/js/init_visualizacao.js`. Próxima ação do checker: revisão aprovada após diff focado do commit `d8f18a6`; as três emissões/mutações do hook foram confirmadas em `src/features/ai/sei-pro-ai.js`, preservando o estado inicial, spinner e restauração do paper-plane. `src/` é a fonte da verdade, `dist/` não foi editado manualmente e `cmp -s src/features/ai/sei-pro-ai.js dist/js/sei-pro-ai.js` ✅. Gates checker no checkout atual: `git status --short` ✅ antes/depois; `git diff --check` ✅; `npm test` ✅ (60 arquivos, 551 testes); `node scripts/engineering-loop-map.mjs --check` ✅; `git diff --exit-code HEAD -- dist/js/sei-pro-ai.js` ✅; `git diff --exit-code HEAD -- dist/js/init_visualizacao.js` ✅. Smoke manual permanece necessário conforme seção 3. Aprovado; próxima ação: aguardar nova migração pendente.
 
-| A1-205 | 205 | feature | editor | `ai` / CSS prefixado | Adicionar hook prefixado à classe dinâmica de plataforma da resposta (`seipro-ai-platform-response`), preservando a classe dinâmica legada | migrated_pending_review | (este commit) |  | `DEVELOPMENT.md` linhas 123-126; seleção dinâmica após A1-204 e inventário de classes emitidas em `src/features/ai/sei-pro-ai.js` | `git diff --check` ✅; `npm test` ✅ (60 arquivos, 551 testes); `node scripts/engineering-loop-map.mjs --check` ✅; `cmp -s src/features/ai/sei-pro-ai.js dist/js/sei-pro-ai.js` ✅ | Smoke manual necessário: `SMOKE_TEST.md` seção 3 (Editor de documentos), abrir o modal de IA, enviar prompt e confirmar que a resposta do bot exibe a plataforma ativa sem erro novo | Compatibilidade preservada: as duas ocorrências da classe dinâmica `response_${currentPlataform}` (resposta normal e mensagem de erro) continuam presentes; foi adicionado somente o hook aditivo `seipro-ai-platform-response` a ambos os produtores. `response_bot`, `seipro-ai-bot-response`, `loading`, `seipro-ai-response-pending`, `response_bot_content`, `seipro-ai-response-content` e os ids `responseBot_${respost_id}` permanecem. Saída gerada limitada à cópia verbatim `dist/js/sei-pro-ai.js`; sem churn incidental em `dist/js/init_visualizacao.js`. Próxima ação: checker revisar A1-205. |
+| A1-205 | 205 | feature | editor | `ai` / CSS prefixado | Adicionar hook prefixado à classe dinâmica de plataforma da resposta (`seipro-ai-platform-response`), preservando a classe dinâmica legada | migrated_pending_review | (este commit) |  | `DEVELOPMENT.md` linhas 123-126; seleção dinâmica após A1-204 e inventário de classes emitidas em `src/features/ai/sei-pro-ai.js` | `git diff --check` ✅; `npm test` ✅ (60 arquivos, 551 testes); `node scripts/engineering-loop-map.mjs --check` ✅; `cmp -s src/features/ai/sei-pro-ai.js dist/js/sei-pro-ai.js` ✅ | Smoke manual necessário: `SMOKE_TEST.md` seção 3 (Editor de documentos), abrir o modal de IA, enviar prompt e confirmar que a resposta do bot exibe a plataforma ativa sem erro novo | **Última fatia da era A1 CSS micro-hooks.** Checker pode aprovar/rejeitar. Depois: **não** abrir A1-206+; maker segue Epic queue (E2-001). Hook aditivo `seipro-ai-platform-response` preservando `response_${currentPlataform}`. |
 
 ## Regras de atualização
 
-- O migration job deve marcar no máximo uma linha por execução como `migration_in_progress` e depois `migrated_pending_review`, ou registrar bloqueio objetivo.
-- O verification job deve revisar apenas linhas `migrated_pending_review` e alterar para `review_passed` ou `review_failed_needs_fix`.
-- Se um job escolher uma fatia dinâmica que ainda não está no board, deve adicionar a linha antes ou durante a implementação.
-- Não remover histórico; adicionar observações em vez de apagar decisões relevantes.
-- `Commit migração` e `Commit verificação` podem ser preenchidos com hash curto após commit.
+- Política canônica: `docs/engineering-loop.md`. Seleção via Epic queue + `node scripts/engineering-loop-next.mjs`.
+- O migration job marca no máximo uma linha por execução como `migration_in_progress` e depois `migrated_pending_review`, ou registra `blocked` objetivo.
+- O verification job revisa apenas `migrated_pending_review` → `review_passed` ou `review_failed_needs_fix`.
+- Preferir fatias **E2-*** / épico. Não selecionar novos micro-hooks CSS (banimento).
+- Ao avançar um épico, atualizar a tabela **Epic queue** (Passo atual, Estado, Próxima fatia).
+- Se um job criar fatia nova, adicionar linha E2-* (não A1-*).
+- Não remover histórico; adicionar observações.
+- `Commit migração` e `Commit verificação`: hash curto após commit.
+- P1+ exige teste Vitest novo/ampliado; checker reprova cosmético sem avanço de escada.

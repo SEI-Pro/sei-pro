@@ -286,22 +286,28 @@ e esperada durante a transição.
 
 ### Ordem de prioridade para migração
 
-Quando for migrar uma feature existente, seguir nesta ordem:
+O loop automatizado (Hermes) segue **épicos + escada P0–P7** em `docs/engineering-loop.md`
+e a fila em `docs/engineering-loop-board.md` (programa E2). CSS `.seipro-*` é o passo **P6
+em lote**, não a fila principal.
+
+Quando for migrar uma feature existente (humano ou maker), seguir nesta ordem:
 
 1. **Tirar dependências de feature de dentro de `core/stack.js`** — `installMonitoradoStore`
    não deveria estar lá; mover para `shared/` ou para o entry do contexto que precisa dele.
 2. **Mapear a superfície legada:** nomes globais, `onclick` existentes, config flags, blocos do
-   manifest, CSS carregado e páginas SEI afetadas.
+   manifest, CSS carregado e páginas SEI afetadas. (**P0**)
 3. **Criar ou reaproveitar entry específico** em `src/entries/` quando o contexto já estiver
    pronto para bundle próprio. Se ainda depender do bloco legado, manter o bundle da feature
    no manifest atual e documentar a transição.
 4. **Separar domain / io / view / templates / index / legacy-api** conforme anatomia acima.
+   (**P1–P5** — cada passo com teste Vitest quando aplicável.)
 5. **Substituir handlers inline novos por delegação**. Handlers inline antigos podem continuar
    só enquanto houver `legacy-api.js`.
-6. **Prefixar todo CSS** da feature com `.seipro-` e copiar no build via `featureCss`.
+6. **Prefixar todo CSS** da feature com `.seipro-` **em lote** e copiar no build via `featureCss`.
+   (**P6** — proibido micro-hook unitário enquanto P1–P5 de épicos ativos estiverem abertos.)
 7. **Remover definição duplicada do legado** depois de expor compatibilidade em `legacy-api.js`.
 8. **Testar** domain/io com vitest; quando houver DOM relevante, usar jsdom/fixture; finalizar
-   com smoke test manual no SEI real.
+   com smoke test manual no SEI real. (**P7**)
 9. **Marcar `legacy-api.js`** com TODO explícito de remoção e condição de remoção.
 
 Para feature nova, começar diretamente no formato novo. Não criar função solta em
