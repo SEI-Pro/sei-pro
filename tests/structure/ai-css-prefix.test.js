@@ -104,6 +104,9 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain(".on('click', '.seipro-ai-copy-html-response'");
     expect(ai).toContain('copyHtmlResponseAI(this)');
     expect(ai).toContain('data-response="${respost_id}"');
+    expect(ai).toContain('seipro-ai-copy-html-response-icon');
+    expect(ai).toContain("_this.find('i').attr('class', 'far fa-check azulColor seipro-ai-copy-html-response-icon')");
+    expect(ai).toContain("_this.find('i').attr('class', 'far fa-file-alt seipro-ai-copy-html-response-icon')");
 
     expect(ai).not.toMatch(/class="copy_html_response_ai"/);
     expect(ai).not.toMatch(/\.copy_html_response_ai/);

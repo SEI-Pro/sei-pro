@@ -323,8 +323,8 @@ const copyHtmlResponseAI = (this_) => {
     const id_response = _this.data('response');
     const htmlContent = $(`#responseBot_${id_response} .seipro-ai-response-content`).html();
     copyToClipboardHTML(htmlContent);
-    _this.find('i').attr('class', 'far fa-check azulColor');
-    setTimeout(() => _this.find('i').attr('class', 'far fa-file-alt'), 1500);
+    _this.find('i').attr('class', 'far fa-check azulColor seipro-ai-copy-html-response-icon');
+    setTimeout(() => _this.find('i').attr('class', 'far fa-file-alt seipro-ai-copy-html-response-icon'), 1500);
 };
 
 // FUNÇÃO PARA ADICIONAR DOCUMENTO À SELEÇÃO MÚLTIPLA
