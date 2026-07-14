@@ -397,7 +397,7 @@ const createDocResponseAI = (this_) => {
                     },
                     buttons: [{
                         text: "Criar",
-                        class: 'confirm ui-state-active',
+                        class: 'confirm ui-state-active seipro-ai-create-document-confirm',
                         click: async function() {
                             loadingButtonConfirm(true);
                             const id_tipo_documento = $('#docTipoSelect').val();

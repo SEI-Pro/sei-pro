@@ -768,6 +768,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain("title: 'Criar documento SEI'");
   });
 
+  it('adds a feature hook to the create-document confirmation while preserving the legacy button flow', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain("class: 'confirm ui-state-active seipro-ai-create-document-confirm'");
+    expect(ai).toContain("title: 'Criar documento SEI'");
+    expect(ai).toContain('loadingButtonConfirm(true)');
+    expect(ai).toContain("$('#docTipoSelect').val()");
+    expect(ai).toContain('setNewDoc(id_procedimento, id_tipo_documento, true, false)');
+  });
+
   it('delegates the create-document Chosen selector through a feature hook while preserving its id and submit flow', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
