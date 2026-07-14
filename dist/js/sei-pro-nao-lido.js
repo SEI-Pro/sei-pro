@@ -129,6 +129,22 @@
     if (erros.length === total) return erros[0];
     return erros.length + " de " + total + " processo(s) n\xE3o puderam ser marcados: " + erros[0];
   }
+  function buildProcessoTrabalharUrl(urlHost, idProcedimento) {
+    return urlHost.replace("controlador.php", "") + "controlador.php?acao=procedimento_trabalhar&id_procedimento=" + String(idProcedimento);
+  }
+  function buildMarcarAndamentoOverrides() {
+    return {
+      txaDescricao: "Processo marcado como n\xE3o visualizado",
+      sbmSalvar: "Salvar"
+    };
+  }
+  function buildEnviarProcessoOverrides(idUnidade2, siglaUnidadeAtual2) {
+    return {
+      selUnidades: idUnidade2,
+      hdnUnidades: idUnidade2 + "\xB1" + siglaUnidadeAtual2,
+      sbmEnviar: "Enviar"
+    };
+  }
 
   // src/features/nao-lido/view.js
   function setProcessoNaoLidoLoading(display = true) {
@@ -170,7 +186,7 @@
   async function marcarUmProcessoNaoLido(id_procedimento) {
     var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
     var tr = tableProc.find("tr#P" + id_procedimento);
-    var href = url_host.replace("controlador.php", "") + "controlador.php?acao=procedimento_trabalhar&id_procedimento=" + String(id_procedimento);
+    var href = buildProcessoTrabalharUrl(url_host, id_procedimento);
     var htmlTrabalhar = await getSeiHtml(href);
     var urlArvore = $(htmlTrabalhar).find("#ifrArvore").attr("src");
     if (!urlArvore) throw "N\xE3o foi poss\xEDvel localizar a \xE1rvore do processo selecionado.";
@@ -181,20 +197,19 @@
     if (!urlAndamento || !urlEnviar) throw "N\xE3o foi poss\xEDvel localizar as a\xE7\xF5es necess\xE1rias no processo selecionado.";
     var formAndamento = $(await getSeiHtml(urlAndamento)).find("#frmAtividadeListar");
     if (formAndamento.length === 0) throw "N\xE3o foi poss\xEDvel carregar o formul\xE1rio de andamento do processo.";
-    var resAndamento = await postSeiForm(formAndamento.attr("action"), serializeSeiForm(formAndamento, {
-      txaDescricao: "Processo marcado como n\xE3o visualizado",
-      sbmSalvar: "Salvar"
-    }));
+    var resAndamento = await postSeiForm(
+      formAndamento.attr("action"),
+      serializeSeiForm(formAndamento, buildMarcarAndamentoOverrides())
+    );
     if (!isAjaxRedirectAction(resAndamento.xhr, "procedimento_consultar_historico", "procedimento_atualizar_andamento")) {
       throw "Falha ao salvar o andamento do processo.";
     }
     var formEnviar = $(await getSeiHtml(urlEnviar)).find("#frmAtividadeListar");
     if (formEnviar.length === 0) throw "N\xE3o foi poss\xEDvel carregar o formul\xE1rio de envio do processo.";
-    var resEnviar = await postSeiForm(formEnviar.attr("action"), serializeSeiForm(formEnviar, {
-      selUnidades: idUnidade,
-      hdnUnidades: idUnidade + "\xB1" + siglaUnidadeAtual,
-      sbmEnviar: "Enviar"
-    }));
+    var resEnviar = await postSeiForm(
+      formEnviar.attr("action"),
+      serializeSeiForm(formEnviar, buildEnviarProcessoOverrides(idUnidade, siglaUnidadeAtual))
+    );
     if (!isAjaxRedirectAction(resEnviar.xhr, "arvore_visualizar", "procedimento_enviar")) {
       throw "N\xE3o foi poss\xEDvel confirmar a marca\xE7\xE3o como n\xE3o visualizado.";
     }

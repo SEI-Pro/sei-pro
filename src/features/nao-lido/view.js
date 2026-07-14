@@ -11,7 +11,13 @@
  * delegado (installNaoLido), não onclick inline.
  */
 import { serializeSeiForm, getSeiHtml, postSeiForm } from './io.js';
-import { prefixNaoVisualizadoTooltip, buildErrosNaoLidoMessage } from './domain.js';
+import {
+    prefixNaoVisualizadoTooltip,
+    buildErrosNaoLidoMessage,
+    buildProcessoTrabalharUrl,
+    buildMarcarAndamentoOverrides,
+    buildEnviarProcessoOverrides
+} from './domain.js';
 import { on } from '../../dom/index.js';
 
 export function setProcessoNaoLidoLoading(display = true) {
@@ -58,7 +64,7 @@ export function failProcessoNaoLido(message) {
 export async function marcarUmProcessoNaoLido(id_procedimento) {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     var tr = tableProc.find('tr#P' + id_procedimento);
-    var href = url_host.replace('controlador.php', '') + 'controlador.php?acao=procedimento_trabalhar&id_procedimento=' + String(id_procedimento);
+    var href = buildProcessoTrabalharUrl(url_host, id_procedimento);
 
     var htmlTrabalhar = await getSeiHtml(href);
     var urlArvore = $(htmlTrabalhar).find('#ifrArvore').attr('src');
@@ -73,10 +79,8 @@ export async function marcarUmProcessoNaoLido(id_procedimento) {
     // 1) Atualizar Andamento
     var formAndamento = $(await getSeiHtml(urlAndamento)).find('#frmAtividadeListar');
     if (formAndamento.length === 0) throw 'Não foi possível carregar o formulário de andamento do processo.';
-    var resAndamento = await postSeiForm(formAndamento.attr('action'), serializeSeiForm(formAndamento, {
-        txaDescricao: 'Processo marcado como não visualizado',
-        sbmSalvar: 'Salvar'
-    }));
+    var resAndamento = await postSeiForm(formAndamento.attr('action'),
+        serializeSeiForm(formAndamento, buildMarcarAndamentoOverrides()));
     if (!isAjaxRedirectAction(resAndamento.xhr, 'procedimento_consultar_historico', 'procedimento_atualizar_andamento')) {
         throw 'Falha ao salvar o andamento do processo.';
     }
@@ -84,11 +88,8 @@ export async function marcarUmProcessoNaoLido(id_procedimento) {
     // 2) Enviar Processo de volta para a própria unidade
     var formEnviar = $(await getSeiHtml(urlEnviar)).find('#frmAtividadeListar');
     if (formEnviar.length === 0) throw 'Não foi possível carregar o formulário de envio do processo.';
-    var resEnviar = await postSeiForm(formEnviar.attr('action'), serializeSeiForm(formEnviar, {
-        selUnidades: idUnidade,
-        hdnUnidades: idUnidade + '±' + siglaUnidadeAtual,
-        sbmEnviar: 'Enviar'
-    }));
+    var resEnviar = await postSeiForm(formEnviar.attr('action'),
+        serializeSeiForm(formEnviar, buildEnviarProcessoOverrides(idUnidade, siglaUnidadeAtual)));
     if (!isAjaxRedirectAction(resEnviar.xhr, 'arvore_visualizar', 'procedimento_enviar')) {
         throw 'Não foi possível confirmar a marcação como não visualizado.';
     }

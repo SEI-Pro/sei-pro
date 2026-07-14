@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { prefixNaoVisualizadoTooltip, buildErrosNaoLidoMessage } from '../../../src/features/nao-lido/domain.js';
+import {
+    prefixNaoVisualizadoTooltip,
+    buildErrosNaoLidoMessage,
+    buildProcessoTrabalharUrl,
+    buildMarcarAndamentoOverrides,
+    buildEnviarProcessoOverrides
+} from '../../../src/features/nao-lido/domain.js';
 
 describe('nao-lido domain — prefixNaoVisualizadoTooltip', () => {
     it('prefixa "(Não Visualizado) " dentro do infraTooltipMostrar', () => {
@@ -37,5 +43,27 @@ describe('nao-lido domain — buildErrosNaoLidoMessage', () => {
     it('falha parcial → resumo N de TOTAL + primeira mensagem', () => {
         expect(buildErrosNaoLidoMessage(['Falha A'], 3))
             .toBe('1 de 3 processo(s) não puderam ser marcados: Falha A');
+    });
+});
+
+describe('nao-lido domain — requests da marcação', () => {
+    it('monta a URL do processo sem alterar o host legado', () => {
+        expect(buildProcessoTrabalharUrl('https://sei.test/controlador.php', 42))
+            .toBe('https://sei.test/controlador.php?acao=procedimento_trabalhar&id_procedimento=42');
+    });
+
+    it('mantém o payload legado de atualizar andamento', () => {
+        expect(buildMarcarAndamentoOverrides()).toEqual({
+            txaDescricao: 'Processo marcado como não visualizado',
+            sbmSalvar: 'Salvar'
+        });
+    });
+
+    it('monta o payload legado de envio para a unidade atual', () => {
+        expect(buildEnviarProcessoOverrides('7', 'DIPRO')).toEqual({
+            selUnidades: '7',
+            hdnUnidades: '7±DIPRO',
+            sbmEnviar: 'Enviar'
+        });
     });
 });

@@ -27,3 +27,28 @@ export function buildErrosNaoLidoMessage(erros, total) {
     if (erros.length === total) return erros[0];
     return erros.length + ' de ' + total + ' processo(s) não puderam ser marcados: ' + erros[0];
 }
+
+// Monta a URL da página de trabalho sem depender do DOM ou do runtime do SEI.
+// A view continua responsável por buscar a árvore e executar as requisições.
+export function buildProcessoTrabalharUrl(urlHost, idProcedimento) {
+    return urlHost.replace('controlador.php', '')
+        + 'controlador.php?acao=procedimento_trabalhar&id_procedimento='
+        + String(idProcedimento);
+}
+
+// Payloads puros das duas ações que efetivam a marcação. Mantê-los no domínio
+// evita que a view misture regras de negócio com a fronteira jQuery/XHR.
+export function buildMarcarAndamentoOverrides() {
+    return {
+        txaDescricao: 'Processo marcado como não visualizado',
+        sbmSalvar: 'Salvar'
+    };
+}
+
+export function buildEnviarProcessoOverrides(idUnidade, siglaUnidadeAtual) {
+    return {
+        selUnidades: idUnidade,
+        hdnUnidades: idUnidade + '±' + siglaUnidadeAtual,
+        sbmEnviar: 'Enviar'
+    };
+}
