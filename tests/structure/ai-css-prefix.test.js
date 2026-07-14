@@ -116,6 +116,11 @@ describe('migration: AI CSS classes stay prefixed', () => {
     const ai = read('src/features/ai/sei-pro-ai.js');
 
     expect(ai).toContain('class="speech_response_ai seipro-ai-speech-response"');
+    expect(ai).toContain('seipro-ai-speech-response-icon');
+    expect(ai).toContain("_this.find('i').attr('class', 'far fa-volume-up azulColor seipro-ai-speech-response-icon')");
+    expect(ai).toContain("_this.find('i').attr('class', 'far fa-volume-down seipro-ai-speech-response-icon')");
+    expect(ai).toContain("_this.find('i').attr('class', 'far fa-stop-circle laranjaColor seipro-ai-speech-response-icon')");
+    expect(ai).toContain("_this.find('i').attr('class', 'far fa-times-circle vermelhoColor seipro-ai-speech-response-icon')");
     expect(ai).toContain(".on('click', '.seipro-ai-speech-response'");
     expect(ai).toContain("_this.closest('.seipro-ai-bot-response').text().trim()");
     expect(ai).toContain('data-response="${respost_id}"');

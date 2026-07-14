@@ -1099,7 +1099,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <a class="newLink"><i class="far fa-file-alt"></i></a>
             </div>
             <div class="speech_response_ai seipro-ai-speech-response" data-tooltip="Ouvir em voz alta" data-response="${respost_id}">
-                <a class="newLink"><i class="far fa-volume-down"></i></a>
+                <a class="newLink"><i class="far fa-volume-down seipro-ai-speech-response-icon"></i></a>
             </div>
             ${htmlAddDoc}
             ${htmlCreatDoc}
@@ -1289,18 +1289,18 @@ const getSessionTextProcesso = (num_processo_format) => {
 
                 // EVENTOS
                 utterance.onstart = () => {
-                    _this.find('i').attr('class', 'far fa-volume-up azulColor');
+                    _this.find('i').attr('class', 'far fa-volume-up azulColor seipro-ai-speech-response-icon');
                 };
 
                 utterance.onend = () => {
-                    _this.find('i').attr('class', 'far fa-volume-down');
+                    _this.find('i').attr('class', 'far fa-volume-down seipro-ai-speech-response-icon');
                 };
                 
                 utterance.onerror = (e) => {
                     if (e.error == 'interrupted') 
-                        _this.find('i').attr('class', 'far fa-stop-circle laranjaColor');
+                        _this.find('i').attr('class', 'far fa-stop-circle laranjaColor seipro-ai-speech-response-icon');
                     else
-                        _this.find('i').attr('class', 'far fa-times-circle vermelhoColor');
+                        _this.find('i').attr('class', 'far fa-times-circle vermelhoColor seipro-ai-speech-response-icon');
                     console.error("Erro na fala:", e);
                 };
         
