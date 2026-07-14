@@ -317,7 +317,7 @@ async function docsLote_execute(param) {
                         _return += $.map(v.data_doc, function (d) { return `<td style="white-space: nowrap;">${d}</td>`; }).join('');
                         _return += `   <td style="white-space: nowrap;">${v.nome_documento || ''} ${v.data_doc[param.docsNames] || ''}</td>`;
                         _return += `   <td style="white-space: nowrap;">${v.nr_sei || ''}</td>`;
-                        _return += `   <td style="white-space: nowrap;"><a href="${v.url_doc || ''}" target="_blank" class="bLink" style="font-size: 9pt;">${v.url_doc || ''}</a></td>`;
+                        _return += `   <td style="white-space: nowrap;"><a href="${v.url_doc || ''}" target="_blank" class="bLink seipro-doclote-generated-document-link" style="font-size: 9pt;">${v.url_doc || ''}</a></td>`;
                         _return += '</tr>';
                         return _return;
                     }).join('');

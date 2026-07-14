@@ -324,4 +324,12 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#progress').html");
     expect(view).toContain('${tableResult}');
   });
+
+  it('adds a feature hook to generated document links while preserving the legacy link contract', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain('class="bLink seipro-doclote-generated-document-link"');
+    expect(view).toContain('target="_blank"');
+    expect(view).toContain('${v.url_doc || \'\'}');
+  });
 });
