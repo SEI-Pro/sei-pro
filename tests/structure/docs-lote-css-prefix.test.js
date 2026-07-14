@@ -167,6 +167,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).not.toMatch(/\$\('#inputBD'\)\.change\(/);
   });
 
+  it('adds a feature hook to the execution spinner while preserving its legacy icon classes', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+
+    expect(templates).toContain('fas fa-spinner fa-spin azulColor seipro-doclote-execution-spinner');
+    expect(templates).toContain('id="preparingProgressCircular" class="seipro-doclote-execution-loader"');
+  });
+
   it('adds a seipro-prefixed hook to the model-analysis loader while preserving its legacy id and spinner', () => {
     const view = read('src/features/docs-lote/view.js');
 

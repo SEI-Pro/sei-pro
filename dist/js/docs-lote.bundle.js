@@ -410,7 +410,7 @@
   }
   function loaderBox() {
     return wrap(`<div style="margin-top: 35px;" id="preparingProgressCircular" class="seipro-doclote-execution-loader">
-                        <div style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor" style="scale:3;"></i></div>
+                        <div style='height: 40px; text-align: center; display: block;'><i class="fas fa-spinner fa-spin azulColor seipro-doclote-execution-spinner" style="scale:3;"></i></div>
                     </div>
                     <div id="progress" class="seipro-doclote-execution-progress">
                         <p style="text-align:center" id="preparingProgress" class="seipro-doclote-preparing-progress">Preparando ambiente</p>
