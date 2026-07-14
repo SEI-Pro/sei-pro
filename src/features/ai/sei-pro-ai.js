@@ -1086,7 +1086,7 @@ const getSessionTextProcesso = (num_processo_format) => {
         const htmlCreatDoc = !frmEditor.length 
         ? `
             <div class="seipro-ai-create-doc-response" data-tooltip="Criar documento SEI" data-response="${respost_id}">
-                <a class="newLink"><i class="far fa-file-check"></i></a>
+                <a class="newLink"><i class="far fa-file-check seipro-ai-create-doc-response-icon"></i></a>
             </div>
             `
         : '';
