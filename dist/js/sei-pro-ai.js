@@ -1096,7 +1096,7 @@ const getSessionTextProcesso = (num_processo_format) => {
                 <a class="newLink"><i class="far fa-copy seipro-ai-copy-response-icon"></i></a>
             </div>
             <div class="seipro-ai-copy-html-response" data-tooltip="Copiar texto formatado (para colar em documentos)" data-response="${respost_id}">
-                <a class="newLink"><i class="far fa-file-alt"></i></a>
+                <a class="newLink"><i class="far fa-file-alt seipro-ai-copy-html-response-icon"></i></a>
             </div>
             <div class="speech_response_ai seipro-ai-speech-response" data-tooltip="Ouvir em voz alta" data-response="${respost_id}">
                 <a class="newLink"><i class="far fa-volume-down seipro-ai-speech-response-icon"></i></a>

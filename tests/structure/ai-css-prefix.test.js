@@ -959,4 +959,16 @@ describe('migration: AI CSS classes stay prefixed', () => {
     expect(ai).toContain('produtos da Google');
     expect(ai).toContain('Compatível com Ollama, LiteLLM');
   });
+
+  it('adds a feature hook to the formatted-response copy icon while preserving its action contract', () => {
+    const ai = read('src/features/ai/sei-pro-ai.js');
+
+    expect(ai).toContain('class="far fa-file-alt seipro-ai-copy-html-response-icon"');
+    expect(ai).toContain('class="seipro-ai-copy-html-response"');
+    expect(ai).toContain(".on('click', '.seipro-ai-copy-html-response'");
+    expect(ai).toContain('copyHtmlResponseAI(this)');
+    expect(ai).toContain('data-response="${respost_id}"');
+    expect(ai).toContain("_this.find('i').attr('class', 'far fa-check azulColor seipro-ai-copy-html-response-icon')");
+    expect(ai).not.toMatch(/class="far fa-file-alt"/);
+  });
 });
