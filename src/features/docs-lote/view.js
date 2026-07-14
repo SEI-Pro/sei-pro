@@ -78,7 +78,7 @@ async function docsLote_fillModelAnalysis(matches, selectedDoc, txtModelo = fals
     S.selectedModel = selectedDoc;
     S.dynamicFields = matches.map((field) => field.trim());
 
-    $('#dialogBoxDocLote').append(`<div id='fieldList'></div>`);
+    $('#dialogBoxDocLote').append(`<div id='fieldList' class="seipro-doclote-model-analysis-fields"></div>`);
     $('#fieldList').append(`<p class="seipro-doclote-analysis-text"><i class='fas fa-${txtModelo ? 'keyboard' : 'file-alt'} cinzaColor'></i> ${txtModelo ? 'Texto Padrão' : 'Documento'} : ${selectedDoc.nome}</p>`);
     if (txtModelo) {
         $('#btnConfirmAnalysis').prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');

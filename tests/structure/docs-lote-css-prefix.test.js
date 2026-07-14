@@ -421,4 +421,12 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-csv-analysis-confirm'");
     expect(view).toContain('docLoteModalCruzamentoDados(nrDoc, csvFile, nrTxtPadrao)');
   });
+
+  it('adds a feature hook to the model-analysis fields container while preserving its legacy id and render flow', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id='fieldList' class=\"seipro-doclote-model-analysis-fields\"");
+    expect(view).toContain("$('#fieldList').append");
+    expect(view).toContain('seipro-doclote-analysis-text');
+  });
 });
