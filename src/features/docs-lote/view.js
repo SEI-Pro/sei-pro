@@ -530,7 +530,7 @@ function docLoteModalCruzamentoDados(nrDoc, csvFile, nrTxtPadrao) {
                 id: 'btnConfirm',
                 text: 'Iniciar',
                 icon: 'ui-icon-play',
-                class: 'confirm ui-state-active',
+                class: 'confirm ui-state-active seipro-doclote-crossing-confirm',
                 click: function () {
                     const paramData = {
                         docsNames: $('#nomesDoc').val(),

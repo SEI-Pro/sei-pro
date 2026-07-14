@@ -340,4 +340,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain('target="_blank"');
     expect(view).toContain('${v.url_doc || \'\'}');
   });
+
+  it('adds a feature hook to the crossing confirmation action while preserving its shared button class and execution payload', () => {
+    const view = read('src/features/docs-lote/view.js');
+
+    expect(view).toContain("id: 'btnConfirm'");
+    expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-crossing-confirm'");
+    expect(view).toContain("docsNames: $('#nomesDoc').val()");
+    expect(view).toContain("txtEspecificacaoProcesso: $('#txtEspecificacaoProcesso').val()");
+    expect(view).toContain('docLoteModalLoader(paramData)');
+  });
 });
