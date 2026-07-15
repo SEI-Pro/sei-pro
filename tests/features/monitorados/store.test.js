@@ -111,4 +111,52 @@ describe('monitorados/store (IO localStorage, sem remoto)', () => {
         expect(cfg).toHaveProperty('countdown', true);
         expect(cfg).toHaveProperty('duecounter', 'corrido');
     });
+
+    it('flushMonitoradoRemote não envia nem faz backup sem perfil autenticado', () => {
+        const search = () => [{ id_procedimento: 1 }];
+        const send = () => { throw new Error('não deveria enviar'); };
+        const backup = () => { throw new Error('não deveria fazer backup'); };
+        globalThis.jmespath = { search };
+        globalThis.getServerAtividades = send;
+        globalThis.setLocalFilePro = backup;
+        globalThis.perfilLoginAtiv = undefined;
+        store.persistMonitoradoStore({ monitorados: [{ id_procedimento: 1 }], config: { colortags: [] } }, { remote: false });
+
+        expect(() => store.flushMonitoradoRemote()).not.toThrow();
+    });
+
+    it('flushMonitoradoRemote serializa a lista remota e preserva o backup local', () => {
+        const sent = [];
+        const backups = [];
+        globalThis.jmespath = {
+            search: (items, expression) => {
+                expect(items).toHaveLength(1);
+                expect(expression).toContain('id_procedimento');
+                return [{ id_procedimento: items[0].id_procedimento, processo: items[0].processo }];
+            }
+        };
+        globalThis.perfilLoginAtiv = { login: 'tester' };
+        globalThis.encodeJSON_toHex = (value) => `hex:${value}`;
+        globalThis.getServerAtividades = (payload, action) => sent.push({ payload, action });
+        globalThis.setLocalFilePro = (value) => backups.push(value);
+        const source = {
+            monitorados: [{ id_procedimento: 7, processo: 'P-7', documentos: [{ id: 9 }] }],
+            config: { colortags: ['azul'] }
+        };
+        store.persistMonitoradoStore(source, { remote: false });
+        store.flushMonitoradoRemote();
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0].action).toBe('set_monitorados');
+        expect(sent[0].payload.action).toBe('set_monitorados');
+        const encoded = decodeURIComponent(sent[0].payload.config);
+        expect(encoded).toContain('hex:');
+        const payloadJson = encoded.replace(/^hex:/, '');
+        expect(JSON.parse(payloadJson)).toEqual({
+            monitorados: [{ id_procedimento: 7, processo: 'P-7' }],
+            config: { colortags: ['azul'] }
+        });
+        expect(backups).toHaveLength(1);
+        expect(backups[0].monitorados[0].id_procedimento).toBe(7);
+    });
 });
