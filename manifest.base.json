@@ -378,6 +378,7 @@
         "js/lib/tesseract.min.js",
         "js/sei-functions-pro.js",
         "js/sei-pro-icons.js",
+        "js/arvore-menu-domain.bundle.js",
         "js/sei-pro-arvore.js",
         "js/init_arvore.js",
         "js/quick-filter-tree.bundle.js"

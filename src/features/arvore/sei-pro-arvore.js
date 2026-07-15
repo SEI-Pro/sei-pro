@@ -12,10 +12,16 @@ var stickNoteDivSelected = 0;
 const pathArvore = parent.isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
 const anchorDoc = parent.isSEI_5 ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]';
 
+function resolveArvoreMenuCatalogs(stored, defaults) {
+    var resolver = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreMenus && SeiPro.features.arvoreMenus.resolveMenuCatalogs;
+    if (resolver) return resolver(stored, defaults);
+    return defaults;
+}
+
 function getSelectedItensPanelArvore() {
-    return ( typeof localStorageRestorePro('configViewFlashPanelArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashPanelArvorePro')) )
-        ? localStorageRestorePro('configViewFlashPanelArvorePro')
-        : [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]];
+    var defaults = { panel: [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]] };
+    var stored = { panel: (typeof localStorageRestorePro === 'function') ? localStorageRestorePro('configViewFlashPanelArvorePro') : undefined };
+    return resolveArvoreMenuCatalogs(stored, defaults).panel;
 }
 selectedItensPanelArvore = getSelectedItensPanelArvore();
 
@@ -81,11 +87,23 @@ function initToolbarDocs(TimeOut = 9000) {
     }
 }
 function setToolbarDocs() {
-    var selectedItensMenu = ( typeof localStorageRestorePro('configViewFlashMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashMenuPro')) ) ? localStorageRestorePro('configViewFlashMenuPro') : [['Copiar n\u00FAmero do processo'],['Copiar link do processo'],['Enviar Documento Externo'],['A\u00E7\u00F5es em lote'],['Atribuir Processo'],['Add/Remover Urg\u00EAncia']];
-    var selectedItensDocMenu = ( typeof localStorageRestorePro('configViewFlashDocMenuPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocMenuPro')) ) ? localStorageRestorePro('configViewFlashDocMenuPro') : [['Copiar n\u00FAmero SEI'],['Copiar nome do documento'],['Copiar link do documento'],['Duplicar documento'],['Copiar para...']];
-    var selectedItensDocArvore = ( typeof localStorageRestorePro('configViewFlashDocArvorePro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configViewFlashDocArvorePro')) ) ? localStorageRestorePro('configViewFlashDocArvorePro') : [["Copiar n\u00FAmero SEI"],["Copiar link do documento"],["Duplicar documento"]];
-        selectedItensPanelArvore = getSelectedItensPanelArvore();
-    
+    var defaults = {
+        process: [['Copiar número do processo'],['Copiar link do processo'],['Enviar Documento Externo'],['Ações em lote'],['Atribuir Processo'],['Add/Remover Urgência']],
+        document: [['Copiar número SEI'],['Copiar nome do documento'],['Copiar link do documento'],['Duplicar documento'],['Copiar para...']],
+        tree: [['Copiar número SEI'],['Copiar link do documento'],['Duplicar documento']],
+        panel: getSelectedItensPanelArvore()
+    };
+    var stored = {
+        process: localStorageRestorePro('configViewFlashMenuPro'),
+        document: localStorageRestorePro('configViewFlashDocMenuPro'),
+        tree: localStorageRestorePro('configViewFlashDocArvorePro')
+    };
+    var catalogs = resolveArvoreMenuCatalogs(stored, defaults);
+    var selectedItensMenu = catalogs.process;
+    var selectedItensDocMenu = catalogs.document;
+    var selectedItensDocArvore = catalogs.tree;
+        selectedItensPanelArvore = catalogs.panel;
+
     var htmlToolbarProc =   '<div id="toolbar-options-proc" class="hidden">';
         if (getOptionsPro('optionsFlashMenu_menuproc') != 'disabled') {
             $.each(selectedItensMenu,function(index, value){

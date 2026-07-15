@@ -48,6 +48,7 @@ const entryBundles = readdirSync(entriesDir)
 const bundles = [
     { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
+    { entry: 'src/features/arvore/index.js', out: 'dist/js/arvore-menu-domain.bundle.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/docs-lote/index.js', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.js', out: 'dist/js/quick-filter-list.bundle.js' },
