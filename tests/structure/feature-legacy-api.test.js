@@ -73,4 +73,32 @@ describe('migration: feature legacy aliases stay isolated', () => {
     expect(storeLegacyApi).toMatch(/aliasGlobal\(\s*['"]getStoreMonitoradoPro['"]/);
     expect(storeLegacyApi).toMatch(/installMonitoradoStore\s*\(/);
   });
+
+  it('monitorados exposes the toggle and boot globals through one bridge with the current manifest order', () => {
+    const index = readFileSync(join(featuresDir, 'monitorados/index.js'), 'utf8');
+    const legacyApi = readFileSync(join(featuresDir, 'monitorados/legacy-api.js'), 'utf8');
+    const icon = readFileSync(join(featuresDir, 'monitorados/icon.js'), 'utf8');
+    const commands = readFileSync(join(featuresDir, 'monitorados/commands.js'), 'utf8');
+    const boot = readFileSync(join(featuresDir, 'monitorados/boot.js'), 'utf8');
+    const manifest = JSON.parse(readFileSync(join(rootDir, 'manifest.base.json'), 'utf8'));
+
+    expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
+    expect(index).not.toMatch(/\baliasGlobal\s*\(/);
+    expect(legacyApi).toMatch(/import\s+\{\s*aliasGlobal\s*\}/);
+    expect(legacyApi).toMatch(/\bicon\b[\s\S]*\bcommands\b/);
+    expect(legacyApi).toMatch(/initPanelMonitorados[\s\S]*initAppendIconMonitorados[\s\S]*setAppendIconMonitorados/);
+    expect(legacyApi).toMatch(/aliasGlobal\(name, fn\)/);
+    expect(icon).toMatch(/export const legacyApi = \{[\s\S]*insertIconMonitorados: initIcon[\s\S]*appendIconMonitorados: mountIcon/);
+    expect(commands).toMatch(/export const legacyApi = \{[\s\S]*actMonitoradoPro/);
+    expect(boot).toMatch(/export function initPanelMonitorados/);
+    expect(boot).toMatch(/export function initAppendIconMonitorados/);
+
+    const relevantBlocks = manifest.content_scripts
+      .map((block) => block.js || [])
+      .filter((scripts) => scripts.includes('js/sei-pro.js') && scripts.includes('js/monitorados.bundle.js'));
+    expect(relevantBlocks.length).toBe(2);
+    for (const scripts of relevantBlocks) {
+      expect(scripts.indexOf('js/sei-pro.js')).toBeLessThan(scripts.indexOf('js/monitorados.bundle.js'));
+    }
+  });
 });
