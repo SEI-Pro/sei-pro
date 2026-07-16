@@ -7,6 +7,7 @@ import {
 } from './domain.js';
 import { readArvoreMenuConfig } from './io.js';
 import { fetchUploadPage, postUploadForm, postSavedUpload } from './io.js';
+import { bindUploadArvoreNativeDragEvents } from './view.js';
 
 const namespace = globalThis.SeiPro = globalThis.SeiPro || {};
 namespace.features = namespace.features || {};
@@ -19,3 +20,4 @@ namespace.features.arvoreUpload = {
     extractUploadExtensions,
     sortUploadFiles
 };
+namespace.features.arvoreUploadView = { bindUploadArvoreNativeDragEvents };

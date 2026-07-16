@@ -1145,6 +1145,19 @@ function bindUploadArvoreNativeDragEvents() {
     if (uploadArvoreDragBound) return;
     uploadArvoreDragBound = true;
 
+    var uploadView = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadView;
+    if (uploadView && uploadView.bindUploadArvoreNativeDragEvents) {
+        uploadView.bindUploadArvoreNativeDragEvents({
+            root: document,
+            $: $,
+            hasUploadFiles: hasUploadFiles,
+            openModalDropzone: openModalDropzone,
+            cancelUpload: dropzoneCancelInfo,
+            getDropzone: function() { return arvoreDropzone; }
+        });
+        return;
+    }
+
     $(document)
         .off('.uploadArvorePro')
         .on('dragenter.uploadArvorePro dragover.uploadArvorePro', function(e) {

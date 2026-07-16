@@ -8,6 +8,7 @@ import {
     sortUploadFiles
 } from '@src/features/arvore/domain.js';
 import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload } from '@src/features/arvore/io.js';
+import { bindUploadArvoreNativeDragEvents } from '@src/features/arvore/view.js';
 
 const fallback = [['Copiar número'], ['Ações em lote']];
 
@@ -108,5 +109,58 @@ describe('arvore/domain — upload', () => {
         expect(sortUploadFiles(files, (file) => file.position))
             .toEqual([{ position: 1 }, { position: 2 }]);
         expect(files).toEqual([{ position: 2 }, { position: 1 }]);
+    });
+});
+
+describe('arvore/view — eventos nativos do upload', () => {
+    it('previne navegação, abre a área e entrega arquivos ao Dropzone', () => {
+        const handlers = {};
+        const root = {};
+        const wrapper = {
+            off: () => wrapper,
+            on: (events, handler) => {
+                events.split(' ').forEach((event) => { handlers[event] = handler; });
+                return wrapper;
+            }
+        };
+        const dropzone = { handleFiles: (files) => { dropzone.files = files; } };
+        const opened = [];
+        const cancelled = [];
+        bindUploadArvoreNativeDragEvents({
+            root,
+            $: (value) => { expect(value).toBe(root); return wrapper; },
+            hasUploadFiles: (transfer) => Boolean(transfer && transfer.files.length),
+            openModalDropzone: () => opened.push(true),
+            cancelUpload: () => cancelled.push(true),
+            getDropzone: () => dropzone
+        });
+        const event = {
+            originalEvent: { dataTransfer: { files: [{ name: 'doc.pdf' }] } },
+            preventDefault: () => { event.prevented = true; }
+        };
+        handlers['dragover.uploadArvorePro'](event);
+        handlers['drop.uploadArvorePro'](event);
+        expect(event.prevented).toBe(true);
+        expect(opened).toHaveLength(1);
+        expect(cancelled).toHaveLength(1);
+        expect(dropzone.files).toEqual([{ name: 'doc.pdf' }]);
+    });
+
+    it('cancela ao sair pela borda da janela', () => {
+        const handlers = {};
+        const wrapper = {
+            off: () => wrapper,
+            on: (events, handler) => {
+                events.split(' ').forEach((event) => { handlers[event] = handler; });
+                return wrapper;
+            }
+        };
+        let cancelled = 0;
+        bindUploadArvoreNativeDragEvents({
+            root: {}, $: () => wrapper, hasUploadFiles: () => false,
+            openModalDropzone: () => {}, cancelUpload: () => { cancelled += 1; }, getDropzone: () => null
+        });
+        handlers['dragleave.uploadArvorePro']({ originalEvent: { clientX: 0, clientY: 0 } });
+        expect(cancelled).toBe(1);
     });
 });

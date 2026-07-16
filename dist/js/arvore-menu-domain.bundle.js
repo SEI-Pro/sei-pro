@@ -93,6 +93,40 @@
     return xhr;
   }
 
+  // src/features/arvore/view.js
+  function bindUploadArvoreNativeDragEvents({
+    root,
+    $,
+    hasUploadFiles: hasUploadFiles2,
+    openModalDropzone,
+    cancelUpload,
+    getDropzone
+  }) {
+    const documentRoot = $(root);
+    documentRoot.off(".uploadArvorePro").on("dragenter.uploadArvorePro dragover.uploadArvorePro", (event) => {
+      const originalEvent = event.originalEvent;
+      const dataTransfer = originalEvent ? originalEvent.dataTransfer : null;
+      if (!hasUploadFiles2(dataTransfer)) return;
+      event.preventDefault();
+      openModalDropzone();
+    }).on("dragleave.uploadArvorePro", (event) => {
+      const originalEvent = event.originalEvent;
+      if (originalEvent && originalEvent.clientX <= 0 && originalEvent.clientY <= 0) {
+        cancelUpload();
+      }
+    }).on("drop.uploadArvorePro", (event) => {
+      const originalEvent = event.originalEvent;
+      const dataTransfer = originalEvent ? originalEvent.dataTransfer : null;
+      if (!hasUploadFiles2(dataTransfer)) return;
+      event.preventDefault();
+      cancelUpload();
+      const dropzone = getDropzone();
+      if (dropzone && typeof dropzone.handleFiles === "function") {
+        dropzone.handleFiles(Array.from(dataTransfer.files));
+      }
+    });
+  }
+
   // src/features/arvore/index.js
   var namespace = globalThis.SeiPro = globalThis.SeiPro || {};
   namespace.features = namespace.features || {};
@@ -105,4 +139,5 @@
     extractUploadExtensions,
     sortUploadFiles
   };
+  namespace.features.arvoreUploadView = { bindUploadArvoreNativeDragEvents };
 })();
