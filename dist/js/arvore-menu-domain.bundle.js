@@ -116,10 +116,6 @@
   }
 
   // src/features/arvore/view.js
-  var view_exports = {};
-  __export(view_exports, {
-    bindUploadArvoreNativeDragEvents: () => bindUploadArvoreNativeDragEvents
-  });
   function bindUploadArvoreNativeDragEvents({
     root,
     $,
@@ -163,9 +159,21 @@
 
   // src/features/arvore/legacy-api.js
   function installArvoreLegacyApi() {
-    [domain_exports, io_exports, view_exports].forEach((mod) => {
+    [domain_exports, io_exports].forEach((mod) => {
       Object.keys(mod).forEach((name) => {
         if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
+      });
+    });
+    aliasGlobal("bindUploadArvoreNativeDragEvents", () => {
+      if (globalThis.uploadArvoreDragBound) return;
+      globalThis.uploadArvoreDragBound = true;
+      bindUploadArvoreNativeDragEvents({
+        root: document,
+        $: globalThis.$,
+        hasUploadFiles: globalThis.hasUploadFiles,
+        openModalDropzone: globalThis.openModalDropzone,
+        cancelUpload: globalThis.dropzoneCancelInfo,
+        getDropzone: () => globalThis.arvoreDropzone
       });
     });
   }

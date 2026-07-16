@@ -11,9 +11,24 @@ import * as io from './io.js';
 import * as view from './view.js';
 
 export function installArvoreLegacyApi() {
-    [domain, io, view].forEach((mod) => {
+    [domain, io].forEach((mod) => {
         Object.keys(mod).forEach((name) => {
             if (typeof mod[name] === 'function') aliasGlobal(name, mod[name]);
+        });
+    });
+
+    // A fachada legada chama este helper sem argumentos; o adapter view recebe
+    // explicitamente as dependências que antes ficavam no monólito.
+    aliasGlobal('bindUploadArvoreNativeDragEvents', () => {
+        if (globalThis.uploadArvoreDragBound) return;
+        globalThis.uploadArvoreDragBound = true;
+        view.bindUploadArvoreNativeDragEvents({
+            root: document,
+            $: globalThis.$,
+            hasUploadFiles: globalThis.hasUploadFiles,
+            openModalDropzone: globalThis.openModalDropzone,
+            cancelUpload: globalThis.dropzoneCancelInfo,
+            getDropzone: () => globalThis.arvoreDropzone
         });
     });
 }

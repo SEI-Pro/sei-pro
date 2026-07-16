@@ -1141,56 +1141,6 @@ function loadUploadArvore() {
         arvoreDropzone.options.acceptedFiles = extUpload;
     }
 }
-function bindUploadArvoreNativeDragEvents() {
-    if (uploadArvoreDragBound) return;
-    uploadArvoreDragBound = true;
-
-    var uploadView = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadView;
-    if (uploadView && uploadView.bindUploadArvoreNativeDragEvents) {
-        uploadView.bindUploadArvoreNativeDragEvents({
-            root: document,
-            $: $,
-            hasUploadFiles: hasUploadFiles,
-            openModalDropzone: openModalDropzone,
-            cancelUpload: dropzoneCancelInfo,
-            getDropzone: function() { return arvoreDropzone; }
-        });
-        return;
-    }
-
-    $(document)
-        .off('.uploadArvorePro')
-        .on('dragenter.uploadArvorePro dragover.uploadArvorePro', function(e) {
-            var originalEvent = e.originalEvent;
-            var dataTransfer = originalEvent ? originalEvent.dataTransfer : null;
-            if (!hasUploadFiles(dataTransfer)) return;
-
-            // Prevent the browser from navigating to the dropped file.
-            e.preventDefault();
-            openModalDropzone();
-        })
-        .on('dragleave.uploadArvorePro', function(e) {
-            var originalEvent = e.originalEvent;
-            if (
-                originalEvent &&
-                originalEvent.clientX <= 0 &&
-                originalEvent.clientY <= 0
-            ) {
-                dropzoneCancelInfo();
-            }
-        })
-        .on('drop.uploadArvorePro', function(e) {
-            var originalEvent = e.originalEvent;
-            var dataTransfer = originalEvent ? originalEvent.dataTransfer : null;
-            if (!hasUploadFiles(dataTransfer)) return;
-
-            e.preventDefault();
-            dropzoneCancelInfo();
-            if (arvoreDropzone && typeof arvoreDropzone.handleFiles === 'function') {
-                arvoreDropzone.handleFiles(Array.from(dataTransfer.files));
-            }
-        });
-}
 function statusUploadArvore(this_) {
     $(this_).find('i').attr('class', 'fas fa-sync-alt fa-spin azulColor');
     $(this_).removeAttr('onclick');

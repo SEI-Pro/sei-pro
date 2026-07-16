@@ -17,11 +17,14 @@ describe('migration: arvore upload legacy facade', () => {
     expect(bridge).toContain("import * as io from './io.js';");
     expect(bridge).toContain("import * as view from './view.js';");
     expect(bridge).toMatch(/aliasGlobal\(name, mod\[name\]\)/);
+    expect(bridge).toContain("aliasGlobal('bindUploadArvoreNativeDragEvents'");
+    expect(bridge).toContain('view.bindUploadArvoreNativeDragEvents({');
   });
 
-  it('não duplica no legado os helpers IO/view exportados pela feature', () => {
+  it('não duplica no legado os helpers dos adapters exportados pela feature', () => {
     const legacy = read('src/features/arvore/sei-pro-arvore.js');
     for (const name of [
+      'bindUploadArvoreNativeDragEvents',
       'fetchUploadPage',
       'postUploadForm',
       'postSavedUpload',
