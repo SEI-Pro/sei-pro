@@ -95,8 +95,24 @@
     return resultado.join("\n");
   }
 
+  // src/features/editor/io.js
+  function extractTextFromHtml(html, {
+    parseHtml,
+    extract = extractTextWithNumbering
+  } = {}) {
+    if (typeof parseHtml !== "function") {
+      throw new TypeError("extractTextFromHtml requer parseHtml");
+    }
+    const document = parseHtml(String(html ?? ""));
+    const paragraphs = Array.from(document.querySelectorAll("p"), (paragraph) => ({
+      className: paragraph.className,
+      textContent: paragraph.textContent
+    }));
+    return extract(paragraphs);
+  }
+
   // src/features/editor/index.js
   var root = getSeiPro();
   root.features = root.features || {};
-  root.features.editor = { extractTextWithNumbering };
+  root.features.editor = { extractTextWithNumbering, extractTextFromHtml };
 })();

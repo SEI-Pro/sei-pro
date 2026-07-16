@@ -675,13 +675,24 @@ function setBgTableColor(this_) {
     }
 }
 function extrairTextoComNumeracao(html) {
+    const editorFeature = SeiPro.features && SeiPro.features.editor;
+    if (editorFeature && typeof editorFeature.extractTextFromHtml === 'function') {
+        return editorFeature.extractTextFromHtml(html, {
+            parseHtml: (source) => {
+                const parser = new DOMParser();
+                return parser.parseFromString(source, 'text/html');
+            },
+            extract: editorFeature.extractTextWithNumbering
+        });
+    }
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const paragrafos = Array.from(doc.querySelectorAll('p'), (p) => ({
         className: p.className,
         textContent: p.textContent
     }));
-    const extractor = SeiPro.features && SeiPro.features.editor && SeiPro.features.editor.extractTextWithNumbering;
+    const extractor = editorFeature && editorFeature.extractTextWithNumbering;
     return (extractor || ((items) => items.map(({ textContent }) => textContent.trim()).join('\n')))(paragrafos);
 }
 function getAllTextEditor(extract_number = false) {

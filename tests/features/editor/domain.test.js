@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { extractTextWithNumbering } from '@src/features/editor/domain.js';
+import { extractTextFromHtml } from '@src/features/editor/io.js';
 
 describe('editor/domain — extractTextWithNumbering', () => {
     it('numera itens e parágrafos respeitando a hierarquia', () => {
@@ -25,5 +26,36 @@ describe('editor/domain — extractTextWithNumbering', () => {
     it('preserva parágrafos sem classe e remove espaços externos', () => {
         expect(extractTextWithNumbering([{ className: '', textContent: '  texto simples  ' }]))
             .toBe('texto simples');
+    });
+});
+
+describe('editor/io — extractTextFromHtml', () => {
+    it('injeta o parser e normaliza parágrafos antes de chamar o domínio', () => {
+        const parseHtml = (html) => ({
+            html,
+            querySelectorAll: () => [
+                { className: 'Item_Nivel1', textContent: '  Primeiro  ' },
+                { className: '', textContent: ' Segundo ' }
+            ]
+        });
+        const extract = (paragraphs) => paragraphs.map(({ className, textContent }) => `${className}:${textContent}`).join('|');
+
+        expect(extractTextFromHtml(' <p>conteúdo</p> ', { parseHtml, extract }))
+            .toBe('Item_Nivel1:  Primeiro  |: Segundo ');
+    });
+
+    it('usa o domínio de numeração por padrão e preserva o HTML como string', () => {
+        let receivedHtml;
+        const parseHtml = (html) => {
+            receivedHtml = html;
+            return { querySelectorAll: () => [{ className: 'Item_Nivel1', textContent: 'Texto' }] };
+        };
+
+        expect(extractTextFromHtml(null, { parseHtml })).toBe('1. Texto');
+        expect(receivedHtml).toBe('');
+    });
+
+    it('falha cedo quando a dependência de parsing não é fornecida', () => {
+        expect(() => extractTextFromHtml('<p>x</p>')).toThrow('requer parseHtml');
     });
 });
