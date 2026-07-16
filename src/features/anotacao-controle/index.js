@@ -13,6 +13,7 @@
  * que vivia embutido. Roda no mundo isolado, mesmo `window` do sei-pro.js.
  */
 import { initReplaceSticknoteHome, renderSticknoteHomeInline, replaceSticknoteHome } from './view.js';
+import './legacy-api.js';
 
 (function (win) {
     'use strict';

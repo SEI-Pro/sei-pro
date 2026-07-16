@@ -1,4 +1,18 @@
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // src/features/anotacao-controle/view.js
+  var view_exports = {};
+  __export(view_exports, {
+    initReplaceSticknoteHome: () => initReplaceSticknoteHome,
+    renderSticknoteHomeInline: () => renderSticknoteHomeInline,
+    replaceSticknoteHome: () => replaceSticknoteHome
+  });
+
   // src/dom/index.js
   function qs(selector, root) {
     return (root || document).querySelector(selector);
@@ -65,6 +79,14 @@
     if (node && node.parentNode) node.parentNode.removeChild(node);
   }
 
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
+
   // src/core/texto.js
   function normalizeMojibakeUtf8(value) {
     value = typeof value === "string" ? value : "";
@@ -123,6 +145,14 @@
   }
 
   // src/features/anotacao-controle/domain.js
+  var domain_exports = {};
+  __export(domain_exports, {
+    buildChecklistTooltipHtml: () => buildChecklistTooltipHtml,
+    buildSticknoteCardHtml: () => buildSticknoteCardHtml,
+    buildSticknoteHomeRecord: () => buildSticknoteHomeRecord,
+    parseSticknoteHomeAttributes: () => parseSticknoteHomeAttributes,
+    sticknoteChecklistClass: () => sticknoteChecklistClass
+  });
   function buildSticknoteHomeRecord(id_protocolo, texttip, usertip) {
     if (!id_protocolo) {
       return false;
@@ -192,6 +222,10 @@
   }
 
   // src/features/anotacao-controle/io.js
+  var io_exports = {};
+  __export(io_exports, {
+    fetchSticknotePriority: () => fetchSticknotePriority
+  });
   function fetchSticknotePriority(href) {
     return fetch(href, { credentials: "same-origin" }).then(function(response) {
       return response.text();
@@ -581,6 +615,13 @@
       }, 500);
     }
   }
+
+  // src/features/anotacao-controle/legacy-api.js
+  [domain_exports, io_exports, view_exports].forEach(function(mod) {
+    Object.keys(mod).forEach(function(name) {
+      if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
+    });
+  });
 
   // src/features/anotacao-controle/index.js
   (function(win) {
