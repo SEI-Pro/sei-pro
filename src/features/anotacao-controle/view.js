@@ -15,14 +15,13 @@
  */
 import { qs, qsa, el, remove } from '../../dom/index.js';
 import {
-    parseSticknoteHomeLabel,
-    normalizeSticknoteHomeText,
-    parseSticknoteChecklistLine
+    normalizeSticknoteHomeText
 } from '../../core/sticknote.js';
 import {
-    sticknoteChecklistClass,
     buildChecklistTooltipHtml,
-    buildSticknoteHomeRecord
+    buildSticknoteHomeRecord,
+    parseSticknoteHomeAttributes,
+    buildSticknoteCardHtml
 } from './domain.js';
 import { fetchSticknotePriority } from './io.js';
 
@@ -107,19 +106,10 @@ function clampToTwoLines(card) {
 // valor já canônico — por isso não há (e não deve haver) re-normalização espalhada.
 // normalizeMojibakeUtf8 é idempotente e guardada (não altera texto já correto).
 function resolveSticknoteHomeParsed(link) {
-    var ariaLabel = link.getAttribute('aria-label');
-    if (ariaLabel) {
-        var parsed = parseSticknoteHomeLabel(ariaLabel);
-        if (parsed) {
-            return { text: normalizeMojibakeUtf8(parsed.text), user: normalizeMojibakeUtf8(parsed.user) };
-        }
-    }
-    var tooltip = link.getAttribute('onmouseover');
-    tooltip = (tooltip != null) ? tooltip.split("'") : false;
-    if (tooltip) {
-        return { text: normalizeMojibakeUtf8(tooltip[1] || ''), user: normalizeMojibakeUtf8(tooltip[3] || '') };
-    }
-    return false;
+    return parseSticknoteHomeAttributes(
+        link.getAttribute('aria-label'),
+        link.getAttribute('onmouseover')
+    );
 }
 function replaceSticknoteHome() {
     var arraySticknoteHome = [];
@@ -143,29 +133,6 @@ function replaceSticknoteHome() {
         }
     });
     setOptionsPro('arraySticknoteHome', arraySticknoteHome);
-}
-// Renderiza o texto da anotação como HTML de parágrafos para o card inline,
-// aplicando o estilo de checklist (stickNoteCheck/stickNoteChecked) por linha.
-function formatDadosAnotacaoHome(value) {
-    // value já chega canônico (vem de getSticknoteHomeText); só normaliza espaços.
-    value = normalizeSticknoteHomeText(value);
-    if (value === '') {
-        return '';
-    }
-    if (value.indexOf('\n') === -1) {
-        var single = parseSticknoteChecklistLine(value);
-        return '<div' + sticknoteChecklistClass(single) + '>' + replaceTextToProcessoSEI(single.text) + '</div>';
-    }
-    var result = '';
-    value.split('\n').forEach(function (v, i) {
-        if (v != '') {
-            var item = parseSticknoteChecklistLine(v);
-            result += '<div' + sticknoteChecklistClass(item) + '>' + replaceTextToProcessoSEI(item.text) + '</div>';
-        } else if (i != 0 || i != value.length - 1) {
-            result += '<div><br></div>';
-        }
-    });
-    return result;
 }
 function getSticknoteHomeLinks() {
     return findIn(processTables(), 'a[href*="acao=anotacao_registrar"]');
@@ -374,7 +341,7 @@ function renderSticknoteHomeInline() {
         qsa('.seipro-sticknote-card', noteCell).forEach(remove);
         var inline = el('div', {
             className: 'seipro-sticknote-card ' + (priority ? 'seipro-sticknote-card--priority' : ''),
-            innerHTML: formatDadosAnotacaoHome(texttip)
+            innerHTML: buildSticknoteCardHtml(texttip, replaceTextToProcessoSEI)
         });
         noteCell.insertBefore(inline, noteCell.firstChild);
         clampToTwoLines(inline);

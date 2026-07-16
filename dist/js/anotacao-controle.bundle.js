@@ -153,6 +153,43 @@
       return "<div" + style + ">" + icon + item.text + "</div>";
     }).join("");
   }
+  function parseSticknoteHomeAttributes(ariaLabel, onmouseover) {
+    if (ariaLabel) {
+      var parsed = parseSticknoteHomeLabel(ariaLabel);
+      if (parsed) {
+        return { text: normalizeMojibakeUtf8(parsed.text), user: normalizeMojibakeUtf8(parsed.user) };
+      }
+    }
+    var tooltip = onmouseover != null ? onmouseover.split("'") : false;
+    if (tooltip) {
+      return {
+        text: normalizeMojibakeUtf8(tooltip[1] || ""),
+        user: normalizeMojibakeUtf8(tooltip[3] || "")
+      };
+    }
+    return false;
+  }
+  function buildSticknoteCardHtml(value, replaceText) {
+    value = normalizeSticknoteHomeText(value);
+    if (value === "") return "";
+    var transform = typeof replaceText === "function" ? replaceText : function(text) {
+      return text;
+    };
+    if (value.indexOf("\n") === -1) {
+      var single = parseSticknoteChecklistLine(value);
+      return "<div" + sticknoteChecklistClass(single) + ">" + transform(single.text) + "</div>";
+    }
+    var result = "";
+    value.split("\n").forEach(function(line, i) {
+      if (line !== "") {
+        var item = parseSticknoteChecklistLine(line);
+        result += "<div" + sticknoteChecklistClass(item) + ">" + transform(item.text) + "</div>";
+      } else if (i !== 0 || i !== value.length - 1) {
+        result += "<div><br></div>";
+      }
+    });
+    return result;
+  }
 
   // src/features/anotacao-controle/io.js
   function fetchSticknotePriority(href) {
@@ -168,9 +205,6 @@
   // src/features/anotacao-controle/view.js
   function getParamsUrlPro(u) {
     return window.getParamsUrlPro(u);
-  }
-  function normalizeMojibakeUtf82(v) {
-    return window.normalizeMojibakeUtf8 ? window.normalizeMojibakeUtf8(v) : v;
   }
   function setOptionsPro(k, v) {
     return window.setOptionsPro(k, v);
@@ -242,19 +276,10 @@
     card.appendChild(toggle);
   }
   function resolveSticknoteHomeParsed(link) {
-    var ariaLabel = link.getAttribute("aria-label");
-    if (ariaLabel) {
-      var parsed = parseSticknoteHomeLabel(ariaLabel);
-      if (parsed) {
-        return { text: normalizeMojibakeUtf82(parsed.text), user: normalizeMojibakeUtf82(parsed.user) };
-      }
-    }
-    var tooltip = link.getAttribute("onmouseover");
-    tooltip = tooltip != null ? tooltip.split("'") : false;
-    if (tooltip) {
-      return { text: normalizeMojibakeUtf82(tooltip[1] || ""), user: normalizeMojibakeUtf82(tooltip[3] || "") };
-    }
-    return false;
+    return parseSticknoteHomeAttributes(
+      link.getAttribute("aria-label"),
+      link.getAttribute("onmouseover")
+    );
   }
   function replaceSticknoteHome() {
     var arraySticknoteHome = [];
@@ -275,26 +300,6 @@
       }
     });
     setOptionsPro("arraySticknoteHome", arraySticknoteHome);
-  }
-  function formatDadosAnotacaoHome(value) {
-    value = normalizeSticknoteHomeText(value);
-    if (value === "") {
-      return "";
-    }
-    if (value.indexOf("\n") === -1) {
-      var single = parseSticknoteChecklistLine(value);
-      return "<div" + sticknoteChecklistClass(single) + ">" + replaceTextToProcessoSEI(single.text) + "</div>";
-    }
-    var result = "";
-    value.split("\n").forEach(function(v, i) {
-      if (v != "") {
-        var item = parseSticknoteChecklistLine(v);
-        result += "<div" + sticknoteChecklistClass(item) + ">" + replaceTextToProcessoSEI(item.text) + "</div>";
-      } else if (i != 0 || i != value.length - 1) {
-        result += "<div><br></div>";
-      }
-    });
-    return result;
   }
   function getSticknoteHomeLinks() {
     return findIn(processTables(), 'a[href*="acao=anotacao_registrar"]');
@@ -513,7 +518,7 @@
       qsa(".seipro-sticknote-card", noteCell).forEach(remove);
       var inline = el("div", {
         className: "seipro-sticknote-card " + (priority ? "seipro-sticknote-card--priority" : ""),
-        innerHTML: formatDadosAnotacaoHome(texttip)
+        innerHTML: buildSticknoteCardHtml(texttip, replaceTextToProcessoSEI)
       });
       noteCell.insertBefore(inline, noteCell.firstChild);
       clampToTwoLines(inline);

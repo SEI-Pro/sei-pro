@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
     sticknoteChecklistClass,
     buildChecklistTooltipHtml,
-    buildSticknoteHomeRecord
+    buildSticknoteHomeRecord,
+    parseSticknoteHomeAttributes,
+    buildSticknoteCardHtml
 } from '../../../src/features/anotacao-controle/domain.js';
 
 describe('anotacao-controle domain — buildSticknoteHomeRecord', () => {
@@ -55,5 +57,30 @@ describe('anotacao-controle domain — buildChecklistTooltipHtml', () => {
     it('renderiza item concluído com risco e check', () => {
         expect(buildChecklistTooltipHtml('[X] feito'))
             .toBe('<div style=\\"text-decoration: line-through;\\"><i class=\\"fas fa-check-square\\"></i> feito</div>');
+    });
+});
+
+describe('anotacao-controle domain — helpers de render/view', () => {
+    it('prioriza aria-label e normaliza texto e usuário', () => {
+        expect(parseSticknoteHomeAttributes(
+            'Anotação / ação / usuário em 01/02/2026 03:04',
+            "infraTooltipMostrar('ignorado','ignorado')"
+        )).toEqual({ text: 'ação', user: 'usuário' });
+    });
+
+    it('usa o tooltip legado quando não há aria-label válido', () => {
+        expect(parseSticknoteHomeAttributes(
+            '',
+            "infraTooltipMostrar('linha 1\\nlinha 2','Maria')"
+        )).toEqual({ text: ['linha 1', 'linha 2'].join(String.fromCharCode(92, 110)), user: 'Maria' });
+    });
+
+    it('retorna false quando não existem atributos utilizáveis', () => {
+        expect(parseSticknoteHomeAttributes('', null)).toBe(false);
+    });
+
+    it('monta card puro e injeta apenas a transformação recebida', () => {
+        expect(buildSticknoteCardHtml('[ ] tarefa\n\nfeito', (text) => '[' + text + ']'))
+            .toBe('<div class="stickNoteCheck">[tarefa]</div><div><br></div><div>[feito]</div>');
     });
 });
