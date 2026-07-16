@@ -52,12 +52,16 @@ function dropzoneCancelInfo(e) {
     return false;
 }
 function hasUploadFiles(dataTransfer) {
+    var helper = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.hasUploadFiles;
+    if (helper) return helper(dataTransfer);
     if (!dataTransfer) return false;
     if (dataTransfer.files && dataTransfer.files.length > 0) return true;
     if (!dataTransfer.types) return false;
     return Array.prototype.indexOf.call(dataTransfer.types, 'Files') !== -1;
 }
 function encodeUrlUploadArvore(response, params) {
+    var serializer = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.serializeUploadAttachment;
+    if (serializer) return serializer(response, params, infraFormatarTamanhoBytes);
     var id = response[0];
     var nome = response[1];
     var dthora = response[4];
@@ -1184,9 +1188,10 @@ function sortUploadArvore() {
         opacity: 0.5,
         update: function(event, ui) {
             var files = arvoreDropzone.getQueuedFiles();
-            files.sort(function(a, b){
+            var sorter = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.sortUploadFiles;
+            files = sorter ? sorter(files, function(file) { return $(file.previewElement).index(); }) : files.sort(function(a, b){
                 return ($(a.previewElement).index() > $(b.previewElement).index()) ? 1 : -1;
-            })
+            });
             arvoreDropzone.removeAllFiles();
             arvoreDropzone.handleFiles(files);
         }
@@ -1289,6 +1294,8 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
                     userUnidade = {user: paramV[1], unidade: paramV[2]};
                 }
             });
+        var extractor = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.extractUploadExtensions;
+        extUpload = extractor ? extractor(htmlAnexo.split('\n')) : extUpload;
         var param = {};
             form.find("input[type=hidden]").each(function () {
                 if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
