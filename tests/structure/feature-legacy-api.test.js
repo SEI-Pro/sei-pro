@@ -98,7 +98,25 @@ describe('migration: feature legacy aliases stay isolated', () => {
       .filter((scripts) => scripts.includes('js/sei-pro.js') && scripts.includes('js/monitorados.bundle.js'));
     expect(relevantBlocks.length).toBe(2);
     for (const scripts of relevantBlocks) {
+      expect(scripts.indexOf('js/core-stack.bundle.js')).toBeGreaterThanOrEqual(0);
+      expect(scripts.indexOf('js/sei-functions-pro.js')).toBeLessThan(scripts.indexOf('js/sei-pro.js'));
       expect(scripts.indexOf('js/sei-pro.js')).toBeLessThan(scripts.indexOf('js/monitorados.bundle.js'));
+      expect(scripts.indexOf('js/monitorados.bundle.js')).toBeLessThan(scripts.indexOf('js/init.js'));
     }
+  });
+
+  it('mantém o wire de favoritos entre entry, build e call-sites legados', () => {
+    const index = readFileSync(join(featuresDir, 'monitorados/index.js'), 'utf8');
+    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
+    const legacyLista = readFileSync(join(featuresDir, 'lista-processos/sei-pro.js'), 'utf8');
+    const legacyAll = readFileSync(join(featuresDir, 'todas-paginas/sei-pro-all.js'), 'utf8');
+    const legacyShared = readFileSync(join(rootDir, 'src/shared/legacy/sei-functions-pro.js'), 'utf8');
+
+    expect(build).toMatch(/entry:\s*'src\/features\/monitorados\/index\.js',\s*out:\s*'dist\/js\/monitorados\.bundle\.js'/);
+    expect(index).toMatch(/bindToggle\(document,\s*actMonitoradoPro\)/);
+    expect(legacyLista).toMatch(/typeof initPanelMonitorados === 'function'\) initPanelMonitorados\(\)/);
+    expect(legacyLista).toMatch(/appendStarOnProcess\(\)/);
+    expect(legacyAll).toMatch(/typeof initAppendIconMonitorados === 'function'\) initAppendIconMonitorados\(\)/);
+    expect(legacyShared).toMatch(/typeof parent\.initAppendIconMonitorados === 'function'\) parent\.initAppendIconMonitorados\(\)/);
   });
 });
