@@ -5,12 +5,6 @@ import { join } from 'node:path';
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
-function manifestWithNaoLido() {
-  return JSON.parse(read('manifest.base.json')).content_scripts.filter((entry) =>
-    entry.js.includes('js/sei-pro-nao-lido.js')
-  );
-}
-
 describe('migration: nao-lido legacy facade', () => {
   it('keeps the entry wired through the dedicated legacy bridge', () => {
     const index = read('src/features/nao-lido/index.js');
@@ -36,21 +30,47 @@ describe('migration: nao-lido legacy facade', () => {
   });
 
   it('loads the feature bundle after the legacy lista-processos script in every context', () => {
-    const entries = manifestWithNaoLido();
+    const manifest = JSON.parse(read('manifest.base.json'));
+    const entries = manifest.content_scripts.filter((entry) =>
+      entry.js.includes('js/sei-pro-nao-lido.js')
+    );
 
-    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.length).toBe(2);
     for (const entry of entries) {
-      const legacyIndex = entry.js.indexOf('js/sei-pro.js');
+      const requiredBeforeFeature = [
+        'js/core-stack.bundle.js',
+        'js/sei-functions-pro.js',
+        'js/sei-pro.js'
+      ];
       const bundleIndex = entry.js.indexOf('js/sei-pro-nao-lido.js');
-      expect(legacyIndex).toBeGreaterThanOrEqual(0);
-      expect(bundleIndex).toBeGreaterThan(legacyIndex);
+
+      for (const dependency of requiredBeforeFeature) {
+        const dependencyIndex = entry.js.indexOf(dependency);
+        expect(dependencyIndex, `${dependency} must be present`).toBeGreaterThanOrEqual(0);
+        expect(bundleIndex, `${dependency} must load before nao-lido`).toBeGreaterThan(dependencyIndex);
+      }
+      expect(entry.js[bundleIndex]).toBe('js/sei-pro-nao-lido.js');
+      expect(entry.js.includes('js/sei-pro-nao-lido.js')).toBe(true);
     }
+  });
+
+  it('keeps the legacy producer on the data-act contract without inline action handlers', () => {
+    const legacy = read('src/features/lista-processos/sei-pro.js');
+    const view = read('src/features/nao-lido/view.js');
+
+    expect(legacy).toContain('data-act="nao-lido-marcar"');
+    expect(legacy).not.toMatch(/data-act="nao-lido-marcar"[^>]*on(click|change)=/);
+    expect(view).toMatch(/on\(target, ['\"]click['\"], ['\"]\[data-act=.*nao-lido-marcar/);
+    expect(view).toContain('marcarProcessoNaoLido();');
   });
 
   it('keeps the ESM bundle and generated output contract', () => {
     const build = read('scripts/build.mjs');
+    const index = read('src/features/nao-lido/index.js');
 
     expect(build).toContain("{ entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' }");
-    expect(read('src/features/nao-lido/index.js')).toContain('installNaoLido(document)');
+    expect(index).toContain("import './legacy-api.js';");
+    expect(index).toContain('installNaoLido(document)');
+    expect(index).toContain("ready(function () { installNaoLido(document); });");
   });
 });
