@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { extractTextWithNumbering } from '@src/features/editor/domain.js';
 import { extractTextFromHtml } from '@src/features/editor/io.js';
+import { bindEditorFocus, collectEditorText } from '@src/features/editor/view.js';
 
 describe('editor/domain — extractTextWithNumbering', () => {
     it('numera itens e parágrafos respeitando a hierarquia', () => {
@@ -57,5 +58,32 @@ describe('editor/io — extractTextFromHtml', () => {
 
     it('falha cedo quando a dependência de parsing não é fornecida', () => {
         expect(() => extractTextFromHtml('<p>x</p>')).toThrow('requer parseHtml');
+    });
+});
+
+describe('editor/view — orchestration', () => {
+    it('coleta todos os editores e aplica a estratégia de texto selecionada', () => {
+        const instances = {
+            first: { getData: () => '<p>um</p>' },
+            second: { getData: () => '<p>dois</p>' }
+        };
+        expect(collectEditorText(instances, {
+            readText: (html) => html.replace(/<[^>]+>/g, '').toUpperCase()
+        })).toBe('UMDOIS');
+        expect(collectEditorText(instances, {
+            extractNumber: true,
+            extractNumbered: (html) => `N:${html}`
+        })).toBe('N:<p>um</p>N:<p>dois</p>');
+    });
+
+    it('instala o handler de foco em cada instância e informa a contagem', () => {
+        const handlers = [];
+        const instances = {
+            first: { on: (event, handler) => handlers.push([event, handler]) },
+            second: { on: (event, handler) => handlers.push([event, handler]) }
+        };
+        const onFocus = () => {};
+        expect(bindEditorFocus(instances, onFocus)).toBe(2);
+        expect(handlers).toEqual([['focus', onFocus], ['focus', onFocus]]);
     });
 });

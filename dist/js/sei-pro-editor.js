@@ -696,14 +696,23 @@ function extrairTextoComNumeracao(html) {
     return (extractor || ((items) => items.map(({ textContent }) => textContent.trim()).join('\n')))(paragrafos);
 }
 function getAllTextEditor(extract_number = false) {
-    let textEditor = '';
+    const editorFeature = SeiPro.features && SeiPro.features.editor;
+    if (editorFeature && typeof editorFeature.collectEditorText === 'function') {
+        return editorFeature.collectEditorText(CKEDITOR.instances, {
+            extractNumber: extract_number,
+            extractNumbered: extrairTextoComNumeracao,
+            readHtml: (instance) => instance.getData(),
+            readText: (html) => $('<div>').html(html).text()
+        });
+    }
 
+    let textEditor = '';
     for (var id in CKEDITOR.instances) {
-        textEditor += extract_number 
+        textEditor += extract_number
             ? extrairTextoComNumeracao(CKEDITOR.instances[id].getData())
             : $('<div>').html(CKEDITOR.instances[id].getData()).text();
     }
-return textEditor
+    return textEditor;
 }
 function getSelectedHtmlFromCKEditor() {
     const selection = oEditor.getSelection();
@@ -719,11 +728,17 @@ function getSelectedHtmlFromCKEditor() {
     return '';
 }
 function setCKEDITOR_instances(force = false) {
-    for(var id in CKEDITOR.instances) {
+    const editorFeature = SeiPro.features && SeiPro.features.editor;
+    const onFocus = function(e) { setCKEDITOR_SEIPRO(e); };
+    if (editorFeature && typeof editorFeature.bindEditorFocus === 'function') {
+        editorFeature.bindEditorFocus(CKEDITOR.instances, onFocus);
+    } else {
+        for(var id in CKEDITOR.instances) {
+            CKEDITOR.instances[id].on('focus', onFocus);
+        }
+    }
+    for (var id in CKEDITOR.instances) {
         CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere \u00BA no mac (option+0)
-        CKEDITOR.instances[id].on('focus', function(e) {
-            setCKEDITOR_SEIPRO(e);
-        });
     }
     if (force) {
         setCKEDITOR_SEIPRO({editor: force});

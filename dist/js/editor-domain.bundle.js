@@ -111,8 +111,35 @@
     return extract(paragraphs);
   }
 
+  // src/features/editor/view.js
+  function collectEditorText(instances = {}, {
+    extractNumber = false,
+    readHtml = (instance) => instance.getData(),
+    readText = (html) => String(html).replace(/<[^>]*>/g, ""),
+    extractNumbered = (html) => html
+  } = {}) {
+    let text = "";
+    for (const id in instances) {
+      const html = readHtml(instances[id], id);
+      text += extractNumber ? extractNumbered(html, id) : readText(html, id);
+    }
+    return text;
+  }
+  function bindEditorFocus(instances = {}, onFocus = () => {
+  }) {
+    for (const id in instances) {
+      instances[id].on("focus", onFocus);
+    }
+    return Object.keys(instances).length;
+  }
+
   // src/features/editor/index.js
   var root = getSeiPro();
   root.features = root.features || {};
-  root.features.editor = { extractTextWithNumbering, extractTextFromHtml };
+  root.features.editor = {
+    extractTextWithNumbering,
+    extractTextFromHtml,
+    bindEditorFocus,
+    collectEditorText
+  };
 })();
