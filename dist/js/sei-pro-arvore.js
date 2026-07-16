@@ -332,15 +332,20 @@ function getToolbarPro(click) {
             ? $('a[id*="anchor"][target="ifrVisualizacao"].infraArvoreNo')
             : $(`a[target="${ifrVisualizacao_}"]`).eq(0);
             
-        elemProc.toolbar({
-            content: '#toolbar-options-proc',
-            position: 'bottom',
-            //event: 'click', hideOnClick: true,
-            adjustment: 5,
-            style: 'menu'
-        }).on('toolbarItemClick', function( event, triggerButton ) {
-            actionToolbarPro($(this), triggerButton);
-        });
+        const toolbarView = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadView && SeiPro.features.arvoreUploadView.bindArvoreToolbarProcess;
+        if (toolbarView) {
+            toolbarView({ element: elemProc, onAction: actionToolbarPro });
+        } else {
+            elemProc.toolbar({
+                content: '#toolbar-options-proc',
+                position: 'bottom',
+                //event: 'click', hideOnClick: true,
+                adjustment: 5,
+                style: 'menu'
+            }).on('toolbarItemClick', function( event, triggerButton ) {
+                actionToolbarPro($(this), triggerButton);
+            });
+        }
         if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
             if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)|| (parent.isSEI_5 && $('a[data-serialtip*="popover"]').length)) {
                 $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').each(function(){ $(this).addClass('clipboard') });

@@ -41,6 +41,8 @@ describe('migration: arvore upload legacy facade', () => {
     expect(build).toContain("{ entry: 'src/features/arvore/index.js', out: 'dist/js/arvore-menu-domain.bundle.js' }");
     expect(build).toContain("'src/features/arvore/sei-pro-arvore.js'");
     expect(index).toContain('namespace.features.arvoreUploadIO');
+    expect(index).toContain("import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents } from './view.js';");
+    expect(index).toContain('namespace.features.arvoreUploadView = { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents };');
   });
 
   it('preserva o wire da árvore no manifest e os call-sites legados', () => {

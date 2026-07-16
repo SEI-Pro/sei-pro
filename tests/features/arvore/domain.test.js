@@ -8,7 +8,7 @@ import {
     sortUploadFiles
 } from '@src/features/arvore/domain.js';
 import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload } from '@src/features/arvore/io.js';
-import { bindUploadArvoreNativeDragEvents } from '@src/features/arvore/view.js';
+import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents } from '@src/features/arvore/view.js';
 import { installArvoreLegacyApi } from '@src/features/arvore/legacy-api.js';
 
 const fallback = [['Copiar número'], ['Ações em lote']];
@@ -126,6 +126,30 @@ describe('arvore/domain — upload', () => {
     });
 });
 
+describe('arvore/view — toolbar de processo', () => {
+    it('instala as opções e encaminha o evento para a ação legada', () => {
+        const handlers = {};
+        const chain = {
+            on: (event, handler) => { handlers[event] = handler; return chain; }
+        };
+        const element = {
+            toolbar: (options) => {
+                expect(options).toEqual({
+                    content: '#toolbar-options-proc',
+                    position: 'bottom',
+                    adjustment: 5,
+                    style: 'menu'
+                });
+                return chain;
+            }
+        };
+        const calls = [];
+        expect(bindArvoreToolbarProcess({ element, onAction: (...args) => calls.push(args) })).toBe(chain);
+        const trigger = { id: 'toolbar-action' };
+        handlers.toolbarItemClick.call({ id: 'processo' }, {}, trigger);
+        expect(calls).toEqual([[{ id: 'processo' }, trigger]]);
+    });
+});
 describe('arvore/view — eventos nativos do upload', () => {
     it('previne navegação, abre a área e entrega arquivos ao Dropzone', () => {
         const handlers = {};

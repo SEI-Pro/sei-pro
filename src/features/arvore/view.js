@@ -2,6 +2,18 @@
  * Instala a borda de eventos nativos do upload da árvore.
  * A implementação recebe as dependências para permanecer testável sem a página do SEI.
  */
+
+export function bindArvoreToolbarProcess({ element, onAction }) {
+    return element.toolbar({
+        content: '#toolbar-options-proc',
+        position: 'bottom',
+        adjustment: 5,
+        style: 'menu'
+    }).on('toolbarItemClick', function (event, triggerButton) {
+        onAction(this, triggerButton);
+    });
+}
+
 export function bindUploadArvoreNativeDragEvents({
     root,
     $,

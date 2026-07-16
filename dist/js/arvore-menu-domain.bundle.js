@@ -116,6 +116,16 @@
   }
 
   // src/features/arvore/view.js
+  function bindArvoreToolbarProcess({ element, onAction }) {
+    return element.toolbar({
+      content: "#toolbar-options-proc",
+      position: "bottom",
+      adjustment: 5,
+      style: "menu"
+    }).on("toolbarItemClick", function(event, triggerButton) {
+      onAction(this, triggerButton);
+    });
+  }
   function bindUploadArvoreNativeDragEvents({
     root,
     $,
@@ -190,6 +200,6 @@
     extractUploadExtensions,
     sortUploadFiles
   };
-  namespace.features.arvoreUploadView = { bindUploadArvoreNativeDragEvents };
+  namespace.features.arvoreUploadView = { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents };
   installArvoreLegacyApi();
 })();
