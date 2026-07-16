@@ -41,18 +41,7 @@ function handleClientLoadPro(TimeOut = 3000) {
 }
 
 //// Agrupamento de lista de processos
-function extractGroupTableTooltipToArray(elem) {
-    if (typeof elem === 'undefined' || elem === null || elem === '') {
-        return false;
-    }
 
-    elem = $("<div>").html(elem).text();
-    elem = elem.replace(/<[^>]*>?/gm, '');
-    elem = elem.replace('return infraTooltipMostrar(', '').replace(');', '').replace(/["']/g, '"');
-
-    var array = (elem != '' && isJson('['+elem+']')) ? JSON.parse('['+elem+']') : [];
-    return (array.length > 0) ? array : false;
-}
 function getGroupTableLabelFromLink(linkElem, acaoType) {
     var $link = $(linkElem);
     var href = $link.attr('href');
@@ -409,13 +398,7 @@ function removeAllTags(forceFilter = false, n) {
         }, 1000);
     }
 }
-function getTagName(tagName, type) {
-	var tagName_ = (typeof tagName !== 'undefined' && tagName != '' ) ? removeAcentos(tagName).replace(/\ /g, '') : 'SemGrupo' ;
-		tagName = (typeof tagName === 'undefined' || tagName == '' ) ? ' ' : tagName;
-        tagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
-        tagName = ( type == 'tags' && tagName.indexOf('#') !== -1 ) ? tagName.replace(extractHexColor(tagName),'') : tagName;
-    return tagName_;
-}
+
 function getUniqueTableTag(i, tagName, type) {
 	var tagName_ = getTagName(tagName, type);
     var txtTagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;

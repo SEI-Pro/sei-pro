@@ -61,6 +61,7 @@ const bundles = [
     // Marcar como "Não Visualizado": decomposta em io/view; saída nova (manifest
     // blocos 3 e 4, após sei-pro.js). Globais preservados via aliasGlobal.
     { entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' },
+    { entry: 'src/features/lista-agrupamento/index.js', out: 'dist/js/lista-agrupamento.bundle.js' },
     // Página de opções — fatia de "Processos Monitorados" (dependência entre os
     // switches gerenciarmonitorados ↔ monitoradosacimacontrole). Carregado por
     // html/options.html ao lado do options.js genérico.
