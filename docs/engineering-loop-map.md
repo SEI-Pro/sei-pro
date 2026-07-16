@@ -15,17 +15,17 @@ Limitação: análise estática aproximada; callbacks, chamadas dinâmicas e str
 
 ## Resumo
 
-- Arquivos JS analisados: **146**.
-- Funções extraídas: **3046**.
+- Arquivos JS analisados: **148**.
+- Funções extraídas: **3048**.
 - Opções/configurações encontradas: **72**.
 - Funções compartilhadas por mais de uma opção: **614**.
-- Funções sem vínculo estático com opções: **2042**.
+- Funções sem vínculo estático com opções: **2044**.
 
 ## Funções por camada
 
 | Camada | Funções |
 |---|---:|
-| `feature` | 1944 |
+| `feature` | 1946 |
 | `shared-legacy` | 674 |
 | `core` | 158 |
 | `platform` | 64 |
@@ -49,7 +49,7 @@ Limitação: análise estática aproximada; callbacks, chamadas dinâmicas e str
 | `filterProjetos` | `src/features/projetos/sei-pro-projetos.js:1908` | `feature` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
 | `getChartPlanosTrabalho` | `src/features/atividades/sei-pro-atividades.js:1704` | `feature` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
 | `getContentDocSEI` | `src/shared/legacy/sei-functions-pro.js:1831` | `shared-legacy` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
-| `getDialogPlataformAI` | `src/features/editor/sei-pro-editor.js:6321` | `feature` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
+| `getDialogPlataformAI` | `src/features/editor/sei-pro-editor.js:6230` | `feature` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
 | `getServerAtividades` | `src/features/atividades/sei-pro-atividades.js:135` | `feature` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
 | `getTabConfig` | `src/features/atividades/sei-pro-atividades.js:3881` | `feature` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
 | `getTabReport` | `src/features/atividades/sei-pro-atividades.js:3554` | `feature` | 52 | `agruparlista`, `atalhopublicacoeseletronicas`, `autopreenchersenha`, `certidaosigilo`, `certidaosigilo_nomedoc`, `citacaodoc`, `combinacaoteclas`, `contadoricone`, `coresmarcadores`, `debugpage`, `disablequery`, `ditado` ... |
