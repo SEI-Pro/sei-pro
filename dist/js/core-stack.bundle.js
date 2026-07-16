@@ -2759,6 +2759,35 @@
     installLegacyInlineBridge();
   }
 
+  // src/shared/legacy/datas-view.js
+  function recordDataRecebimento(listAndamento, context = {}) {
+    const datas = getSeiPro().core && getSeiPro().core.datas;
+    if (!datas || typeof datas.buildDataRecebimentoRecord !== "function" || typeof datas.persistDataRecebimentoRecord !== "function") return false;
+    const {
+      unidadeAtual = "",
+      datetime = "",
+      observacoes = "",
+      acompanhamentoesp = "",
+      restore,
+      store,
+      isEmptyObject
+    } = context;
+    const record = datas.buildDataRecebimentoRecord(listAndamento, unidadeAtual, {
+      datetime,
+      observacoes,
+      acompanhamentoesp
+    });
+    if (!record) return false;
+    datas.persistDataRecebimentoRecord(record, { restore, store, isEmptyObject });
+    return true;
+  }
+  function installDatasView() {
+    const seiPro = getSeiPro();
+    seiPro.shared = seiPro.shared || {};
+    seiPro.shared.datasView = { recordDataRecebimento };
+    return seiPro.shared.datasView;
+  }
+
   // src/features/monitorados/domain.js
   function defaultConfigDate() {
     const moment = globalRef.moment;
@@ -2915,5 +2944,6 @@
 
   // src/content/core-stack.js
   installCoreStack();
+  installDatasView();
   installMonitoradoStoreLegacyApi();
 })();

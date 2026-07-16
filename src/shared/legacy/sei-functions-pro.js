@@ -5871,6 +5871,19 @@ function getDadosAndamentoPro(href) {
 }
 // randomDate migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function getDataRecebimentoPro(listAndamento, listProc = false, acompanhamentoEsp = '') {
+    var datasView = typeof SeiPro !== 'undefined' && SeiPro.shared && SeiPro.shared.datasView;
+    if (datasView && typeof datasView.recordDataRecebimento === 'function') {
+        datasView.recordDataRecebimento(listAndamento, {
+            unidadeAtual: siglaUnidadeAtual,
+            datetime: moment().format('YYYY-MM-DD HH:mm:ss'),
+            observacoes: typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.txaObservacoes !== 'undefined' ? dadosProcessoPro.propProcesso.txaObservacoes : '',
+            acompanhamentoesp: acompanhamentoEsp,
+            restore: localStorageRestorePro,
+            store: localStorageStorePro,
+            isEmptyObject: $.isEmptyObject
+        });
+        return;
+    }
     var datasCore = typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.datas;
     if (datasCore && typeof datasCore.buildDataRecebimentoRecord === 'function') {
         var dataRecebimentoCore = datasCore.buildDataRecebimentoRecord(listAndamento, siglaUnidadeAtual, {
