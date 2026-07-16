@@ -17,6 +17,10 @@ export function installArvoreLegacyApi() {
         });
     });
 
+    // O toolbar legado recebe o adapter por alias para não redefinir o binding
+    // no monólito; a ação continua sendo fornecida pelo call-site legado.
+    aliasGlobal('bindArvoreToolbarProcess', view.bindArvoreToolbarProcess);
+
     // A fachada legada chama este helper sem argumentos; o adapter view recebe
     // explicitamente as dependências que antes ficavam no monólito.
     aliasGlobal('bindUploadArvoreNativeDragEvents', () => {

@@ -333,8 +333,11 @@ function getToolbarPro(click) {
             : $(`a[target="${ifrVisualizacao_}"]`).eq(0);
             
         const toolbarView = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadView && SeiPro.features.arvoreUploadView.bindArvoreToolbarProcess;
-        if (toolbarView) {
-            toolbarView({ element: elemProc, $, onAction: actionToolbarPro });
+        const toolbarBinder = typeof bindArvoreToolbarProcess === 'function'
+            ? bindArvoreToolbarProcess
+            : toolbarView;
+        if (toolbarBinder) {
+            toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });
         } else {
             elemProc.toolbar({
                 content: '#toolbar-options-proc',

@@ -174,6 +174,7 @@
         if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
       });
     });
+    aliasGlobal("bindArvoreToolbarProcess", bindArvoreToolbarProcess);
     aliasGlobal("bindUploadArvoreNativeDragEvents", () => {
       if (globalThis.uploadArvoreDragBound) return;
       globalThis.uploadArvoreDragBound = true;
