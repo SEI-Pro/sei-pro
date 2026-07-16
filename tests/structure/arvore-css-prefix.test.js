@@ -35,6 +35,23 @@ describe('migration: arvore P6 CSS em lote', () => {
     expect(legacy).not.toMatch(/class="(?:arvore|dropzone|upload)[A-Za-z0-9_-]*"/);
   });
 
+  it('audita os produtores de menu e preserva classes compartilhadas sem inventar CSS próprio', () => {
+    const legacy = read('src/features/arvore/sei-pro-arvore.js');
+    const sharedMenuClasses = ['hidden', 'tool-item-gray', 'info'];
+
+    for (const className of sharedMenuClasses) {
+      expect(legacy).toContain(`class="${className}"`);
+    }
+    expect(legacy).toContain("button.addClass('tool-item-active')");
+    expect(legacy).toContain("button.removeClass('tool-item-active')");
+    expect(legacy).toContain(".removeClass('highlight')");
+    expect(legacy).toContain(".addClass('highlight')");
+
+    // These hooks belong to the toolbar/SEI integration; no arvore-owned
+    // stylesheet or unprefixed feature hook is introduced by the P6 audit.
+    expect(legacy).not.toMatch(/class="(?:toolbar|menu|arvore)[A-Za-z0-9_-]*"/);
+  });
+
   it('mantém Dropzone, bundle legado e CSS externo carregados no contexto da árvore', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const entries = manifest.content_scripts.filter(({ js = [] }) =>
