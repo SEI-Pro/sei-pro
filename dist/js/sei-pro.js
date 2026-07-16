@@ -759,8 +759,11 @@ function initUpdateGroupTable(this_) {
 
         if (!valueSelect || valueSelect == 'all' || valueSelect == '') {
             setOptionsPro('panelProcessosView', 'Tabela');
-            setTimeout(function(){ 
-                $('#processosProActions').find('.btn[data-value="Tabela"]').trigger('click');
+            setTimeout(function(){
+                // Chamada direta no mundo isolado — não usar .trigger('click') em
+                // botão com handler legado (avaliaria onclick no MAIN).
+                var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
+                if (btnTabela) getPanelProc(btnTabela);
             }, 500);
         } 
 
@@ -2143,10 +2146,12 @@ function setObserveUrlChange() {
 function selectPanelKanbanHome() {
     var type = storeGroupTablePro();
         type = (!type || type == 'all' || type == '') ? false : true;
+    // data-act (não onclick): handlers inline rodam no mundo MAIN e não enxergam
+    // getPanelProc no content script isolado — ver DEVELOPMENT.md (isolated-first).
     var html =  '<div id="processosProActions" class="panelHome panelHomeProcessos" style="'+(type ? 'display: inline-block;' : 'display:none;')+' vertical-align: middle; margin-left: 10px; width: auto;">'+
                 '    <div class="btn-group processosBtnPanel" role="group" style="margin-right: 10px;">'+
-                '       <button type="button" onclick="getPanelProc(this)" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelProcessosView') == 'Tabela' || !getOptionsPro('panelProcessosView') ? 'active' : '')+'"><i class="fas fa-table" style="color: #888;"></i> <span class="text">Tabela</span></button>'+
-                '       <button type="button" onclick="getPanelProc(this)" title="D\u00EA um duplo clique para atualizar o quadro" ondblclick="removeDataPanelProc(this)" data-value="Quadro" class="btn btn-sm btn-light '+(getOptionsPro('panelProcessosView') == 'Quadro' ? 'active' : '')+'"><i class="fas fa-project-diagram" style="color: #888;"></i> <span class="text">Quadro</span></button>'+
+                '       <button type="button" data-act="panel-proc" data-value="Tabela" class="btn btn-sm btn-light '+(getOptionsPro('panelProcessosView') == 'Tabela' || !getOptionsPro('panelProcessosView') ? 'active' : '')+'"><i class="fas fa-table" style="color: #888;"></i> <span class="text">Tabela</span></button>'+
+                '       <button type="button" data-act="panel-proc" data-act-dbl="panel-proc-refresh" title="D\u00EA um duplo clique para atualizar o quadro" data-value="Quadro" class="btn btn-sm btn-light '+(getOptionsPro('panelProcessosView') == 'Quadro' ? 'active' : '')+'"><i class="fas fa-project-diagram" style="color: #888;"></i> <span class="text">Quadro</span></button>'+
                 '    </div>'+
                 '</div>';
     return html;
@@ -2188,6 +2193,25 @@ function getPanelProc(this_) {
     }
     setOptionsPro('panelProcessosView', mode);
 }
+// Delegação isolated-world para os botões Tabela/Quadro (substitui onclick/ondblclick).
+function installPanelProcDelegation(root) {
+    var target = root || document;
+    if (target.__seiproPanelProcBound) return;
+    target.__seiproPanelProcBound = true;
+    target.addEventListener('click', function (ev) {
+        var el = ev.target && ev.target.closest && ev.target.closest('[data-act="panel-proc"]');
+        if (!el || !target.contains(el)) return;
+        ev.preventDefault();
+        getPanelProc(el);
+    });
+    target.addEventListener('dblclick', function (ev) {
+        var el = ev.target && ev.target.closest && ev.target.closest('[data-act-dbl="panel-proc-refresh"]');
+        if (!el || !target.contains(el)) return;
+        ev.preventDefault();
+        removeDataPanelProc(el);
+    });
+}
+installPanelProcDelegation(document);
 function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof jKanban !== 'undefined') { 
@@ -2204,7 +2228,9 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
     if (typeof jKanban === 'undefined') $.getScript(URL_SPRO+"js/lib/jkanban.min.js");
     if (!type || type == 'all' || type == '') {
         setOptionsPro('panelProcessosView', 'Tabela');
-        $('#processosProActions').find('.btn[data-value="Tabela"]').trigger('click');
+        // Chamada direta no mundo isolado (evita .trigger('click') → MAIN onclick).
+        var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
+        if (btnTabela) getPanelProc(btnTabela);
     } else {
         var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
         if (type == 'users') {

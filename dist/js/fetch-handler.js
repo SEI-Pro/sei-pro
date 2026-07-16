@@ -15,7 +15,7 @@
     // with host permissions, so an unrestricted fetch action would let any injected
     // script use the extension as a cross-origin proxy. The action rejects anything
     // not matched here. Keep this list tight — only hosts a migrated call-site
-    // actually delegates to belong here (see PLANO_MIGRACAO_ARQUITETURA.md, Fase 4).
+    // actually delegates to belong here (see DEVELOPMENT.md — platform / background).
     const SEI_PRO_FETCH_ALLOWED_HOSTS = [
         'generativelanguage.googleapis.com' // Gemini — resolveCaptchaAI (Fase 4 piloto)
     ];

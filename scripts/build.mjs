@@ -106,6 +106,7 @@ const legacyFiles = [
     'src/bootstrap/init_visualizacao_html.js',
     'src/bootstrap/init-flags.js',
     'src/bootstrap/getscript-isolated.js',
+    'src/platform/inline-stubs-main.js',
     'src/background/storage-handler.js',
     'src/background/fetch-handler.js',
     'src/background/bug-report-handler.js',

@@ -227,6 +227,12 @@ Regras:
 - Não usar `onclick`, `onchange` ou atributos inline novos. Usar `addEventListener` ou
   delegação com `on(root, 'click', '[data-act="..."]', handler)`.
 - Ações em HTML gerado usam `data-act`, `data-id`, `data-*`; a view traduz para comandos.
+- Correções em legado que ainda tenham `onclick="fn(this)"` devem **remover o atributo**
+  e instalar delegação no mundo isolado (ex.: `nao-lido-marcar`, `panel-proc`). Não
+  “consertar” com shim no MAIN nem ampliar a gramática de `legacy-inline-bridge` —
+  a bridge só cobre o que ainda não foi migrado e falha com jQuery `.trigger('click')`.
+- Em código legado, preferir chamar a função diretamente no isolated world em vez de
+  `$el.trigger('click')` quando o botão ainda tinha (ou poderia ter) handler inline.
 
 ---
 
@@ -364,12 +370,18 @@ ordem de scripts, `matches`, `exclude_matches`, CSS e permissões.
 
 ### Violations conhecidas (dívida técnica a corrigir)
 
-| Arquivo | Problema | Correção |
+Atualizado em 2026-07-15. Itens já resolvidos (A1-001…A1-010 / E2) saíram da tabela.
+
+| Arquivo / área | Problema | Correção |
 |---|---|---|
-| `src/core/stack.js:42` | importa `features/monitorados/store.js` — direção errada | mover `installMonitoradoStore` para os entries que precisam |
-| `src/features/*/index.js` (vários) | `aliasGlobal` espalhado fora de `legacy-api.js` | consolidar em `legacy-api.js` |
-| `src/features/*/*.css` e `src/shared/ui/*.css` | classes sem prefixo `.seipro-` | renomear sistematicamente quando tocar na feature |
-| `src/background/background.js` | monolítico (router + storage + fetch + notify) | extrair `background/router.js`, `storage-handler.js`, etc. antes de crescer mais |
+| `src/content/core-stack.js` | ainda importa `monitorados/store-legacy-api` (ponte transitória) | mover instalação para entry/contexto quando `src/entries/lista.js` existir |
+| `src/features/lista-processos/sei-pro.js`, `shared/legacy/sei-functions-pro.js`, `atividades/*` | ~centenas de `onclick`/`onchange` inline → MAIN world | migrar para `data-act` + delegação (padrão `nao-lido` / `panel-proc`); **não** expandir `legacy-inline-bridge` |
+| `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar; bridge não é arquitetura-alvo |
+| Features/CSS legados sem `.seipro-*` | classes próprias ainda sem prefixo em monolitos | **P6 em lote** no fim do épico (`docs/engineering-loop.md`); proibido micro-hook unitário |
+| Manifest / `init*.js` | blocos duplicados, sem registry | médio prazo: `src/app/` (contexts + feature-registry + boot) |
+| Monolitos (~56k LOC) | `atividades`, `sei-functions-pro`, `editor`, `lista-processos`, `ai`, `arvore` | fila de épicos E2 em `docs/engineering-loop-board.md` (P0–P7) |
+
+**Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install).
 
 ---
 

@@ -1,7 +1,7 @@
 # Smoke Test Manual — SEI Pro PRF
 
 > Rede de segurança mínima para fechar fases da migração arquitetural
-> (ver `PLANO_MIGRACAO_ARQUITETURA.md`). Os testes Vitest cobrem funções **puras**;
+> (ver `DEVELOPMENT.md`). Os testes Vitest cobrem funções **puras**;
 > **não** cobrem efeitos de DOM, carregamento de CSS por página, nem a ordem real de
 > injeção dos content scripts. Este checklist cobre essa lacuna — foi a ausência dele
 > que deixou a regressão do `loadStyleDesign` passar batida.
@@ -10,7 +10,7 @@
 
 1. `npm run build` — gera `dist/js/core-stack.bundle.js` + `dist/manifest.json`.
    **Carregar `dist/` sem buildar testa um bundle desatualizado.**
-2. `npm test` — 58 testes verdes.
+2. `npm test` — suite Vitest verde (pretest já roda o build).
 3. Carregar `dist/` como extensão desempacotada:
    - Chrome/Edge: `chrome://extensions` → "Carregar sem compactação".
    - Firefox: `about:debugging` → "Carregar extensão temporária".
@@ -90,7 +90,8 @@ do tipo:
 
 Se aparecer, significa que um arquivo carregado via `$.getScript` tentou usar storage/SW
 no mundo errado — anote **qual ação** e **qual feature** disparou; é o gatilho para
-implementar a ponte MAIN→isolado (com validação de origem). Ver `PLANO_MIGRACAO_ARQUITETURA.md` §4.
+implementar a ponte MAIN→isolado (com validação de origem). Ver `DEVELOPMENT.md`
+(princípio isolated-first e `legacy-inline-bridge`).
 
 ## Execuções registradas
 

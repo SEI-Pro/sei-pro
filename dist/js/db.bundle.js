@@ -2584,11 +2584,63 @@
   function eventTypeForAttr(attr) {
     return attr.slice(2);
   }
+  function installNoopStubListeners(win) {
+    if (!win || win.__SEI_PRO_MAIN_INLINE_STUBS__) return;
+    win.__SEI_PRO_MAIN_INLINE_STUBS__ = true;
+    const doc = win.document;
+    if (!doc || typeof doc.addEventListener !== "function") return;
+    HANDLER_ATTRS.forEach(function(attr) {
+      const type = eventTypeForAttr(attr);
+      doc.addEventListener(type, function(event) {
+        const el = findHandlerTarget(event.target, attr);
+        if (!el) return;
+        const val = el.getAttribute(attr) || "";
+        const m = CALL_RE.exec(val);
+        if (!m) return;
+        const fnName = m[1];
+        if (/^infra/i.test(fnName)) return;
+        if (typeof win[fnName] === "function") return;
+        win[fnName] = function() {
+        };
+      }, true);
+    });
+  }
+  function injectMainWorldNoopStubs(doc, win) {
+    if (!doc || !doc.documentElement) return;
+    if (doc.documentElement.getAttribute("data-seipro-inline-stubs") === "1") return;
+    var getURL = null;
+    try {
+      if (win && win.chrome && win.chrome.runtime && typeof win.chrome.runtime.getURL === "function") {
+        getURL = win.chrome.runtime.getURL.bind(win.chrome.runtime);
+      } else if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getURL === "function") {
+        getURL = chrome.runtime.getURL.bind(chrome.runtime);
+      }
+    } catch (e) {
+    }
+    if (!getURL) return;
+    doc.documentElement.setAttribute("data-seipro-inline-stubs", "1");
+    const script = doc.createElement("script");
+    script.src = getURL("js/inline-stubs-main.js");
+    script.async = false;
+    script.onload = function() {
+      script.remove();
+    };
+    script.onerror = function() {
+      doc.documentElement.removeAttribute("data-seipro-inline-stubs");
+      script.remove();
+    };
+    doc.documentElement.appendChild(script);
+  }
   function installLegacyInlineBridge(win) {
     const w = win || globalRef;
     if (!w.document || typeof w.document.addEventListener !== "function") return;
     if (w.__SEI_PRO_LEGACY_INLINE_BRIDGE__) return;
     w.__SEI_PRO_LEGACY_INLINE_BRIDGE__ = true;
+    installNoopStubListeners(w);
+    try {
+      injectMainWorldNoopStubs(w.document, w);
+    } catch (e) {
+    }
     HANDLER_ATTRS.forEach(function(attr) {
       const type = eventTypeForAttr(attr);
       w.document.addEventListener(type, function(event) {
@@ -2597,6 +2649,7 @@
         const attrValue = el.getAttribute(attr);
         const parsed = parseStrictCall(attrValue, el);
         if (!parsed) return;
+        if (/^infra/i.test(parsed.fnName)) return;
         const fn = w[parsed.fnName];
         if (typeof fn !== "function") return;
         el.removeAttribute(attr);

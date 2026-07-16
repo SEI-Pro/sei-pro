@@ -56,7 +56,14 @@ describe('legacy-inline-bridge — installLegacyInlineBridge (comportamento DOM 
     beforeEach(() => {
         document.body.innerHTML = '';
         delete window.__SEI_PRO_LEGACY_INLINE_BRIDGE__;
+        delete window.__SEI_PRO_MAIN_INLINE_STUBS__;
         delete window.minhaFuncaoLegada;
+        delete window.updateTipSelectAll;
+        delete window.setSelectAllTr;
+        delete window.getSelectAllTr;
+        if (document.documentElement) {
+            document.documentElement.removeAttribute('data-seipro-inline-stubs');
+        }
     });
 
     it('intercepta onclick="nossaFuncao(this)" e chama a função real (a função NÃO existe nativamente, então sem a ponte lançaria ReferenceError)', () => {
@@ -141,5 +148,17 @@ describe('legacy-inline-bridge — installLegacyInlineBridge (comportamento DOM 
         document.body.innerHTML = '<a id="x" onclick="minhaFuncaoLegada(this)">clica</a>';
         document.getElementById('x').click();
         expect(count).toBe(1); // se tivesse duplicado, seria 2
+    });
+
+    it('instala companion MAIN que cria stub no-op sob demanda (evita ReferenceError no mundo da página)', () => {
+        installLegacyInlineBridge(window);
+        expect(window.__SEI_PRO_MAIN_INLINE_STUBS__).toBe(true);
+        // Função ainda não existe no MAIN — o companion deve criar stub no capture
+        expect(typeof window.updateTipSelectAll).toBe('undefined');
+        document.body.innerHTML = '<a id="x" onmouseover="updateTipSelectAll(this)">x</a>';
+        withSuppressedWindowErrors(function () {
+            document.getElementById('x').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+        });
+        expect(typeof window.updateTipSelectAll).toBe('function');
     });
 });

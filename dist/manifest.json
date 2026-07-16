@@ -107,7 +107,15 @@
         "*://*.org/sei/*controlador_externo.php*",
         "*://sip-sei.ans.gov.br/login.php*",
         "*://sip-sei.ans.gov.br/controlador.php*",
-        "*://sip-sei.ans.gov.br/controlador_externo.php*"
+        "*://sip-sei.ans.gov.br/controlador_externo.php*",
+        "*://*.br/*controlador.php?acao=editor_montar*",
+        "*://*.br/*controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://*.br/*controlador.php?acao=secao_modelo_alterar*",
+        "*://*.br/*controlador.php?acao=texto_padrao_interno_cadastrar*",
+        "*://*.org/*controlador.php?acao=editor_montar*",
+        "*://*.org/*controlador.php?acao=texto_padrao_interno_alterar*",
+        "*://*.org/*controlador.php?acao=secao_modelo_alterar*",
+        "*://*.org/*controlador.php?acao=texto_padrao_interno_cadastrar*"
       ]
     },
     {
@@ -624,6 +632,7 @@
         "js/lib/tesseract.min.js",
         "js/lib/mammoth.browser.min.js",
         "js/lib/modalLink.js",
+        "js/inline-stubs-main.js",
         "js/sei-functions-pro.js",
         "js/sei-pro-config-local.js",
         "js/sei-pro-atividades.js",

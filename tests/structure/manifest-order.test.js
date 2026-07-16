@@ -99,3 +99,39 @@ describe('feature bundle: arvore-info (Informações adicionais na árvore)', ()
         expect(coreBefore, 'core-stack loads before arvore-info in the same frame').toBe(true);
     });
 });
+
+// Guard against double injection of sei-functions-pro.js on editor pages
+// (SyntaxError: Identifier 'loadFunctionsPro' has already been declared).
+const EDITOR_ACTIONS = [
+    'editor_montar',
+    'texto_padrao_interno_alterar',
+    'secao_modelo_alterar',
+    'texto_padrao_interno_cadastrar'
+];
+
+describe('manifest: editor pages avoid duplicate sei-functions-pro', () => {
+    it('has a dedicated editor content_scripts block with sei-functions-pro', () => {
+        const manifest = readManifest();
+        const editorBlocks = (manifest.content_scripts || []).filter(
+            (cs) => Array.isArray(cs.matches) &&
+                cs.matches.some((m) => m.includes('acao=editor_montar')) &&
+                Array.isArray(cs.js) && cs.js.includes('js/sei-functions-pro.js')
+        );
+        expect(editorBlocks.length, 'dedicated editor block').toBe(1);
+    });
+
+    it('excludes editor actions from the broad init_all content_scripts block', () => {
+        const manifest = readManifest();
+        const broad = (manifest.content_scripts || []).find(
+            (cs) => Array.isArray(cs.js) && cs.js.includes('js/init_all.js')
+        );
+        expect(broad, 'broad init_all block exists').toBeTruthy();
+        const excludes = broad.exclude_matches || [];
+        for (const action of EDITOR_ACTIONS) {
+            expect(
+                excludes.some((m) => m.includes(`acao=${action}`)),
+                `broad block excludes acao=${action}`
+            ).toBe(true);
+        }
+    });
+});

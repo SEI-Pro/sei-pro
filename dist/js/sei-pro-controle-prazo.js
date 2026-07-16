@@ -238,7 +238,7 @@
     var tdProcesso = _tr.find("td").eq(1);
     var tooltipText = buildControlePrazoNativeTooltip(prazoInfo, dateValue);
     var nativeHref = hrefNative || prazoInfo && prazoInfo.href || "";
-    var nativeSrc = prazoInfo && prazoInfo.concluido ? "controle_prazo2.svg" : "controle_prazo1.svg";
+    var nativeSrc = prazoInfo && prazoInfo.concluido ? "svg/controle_prazo2.svg" : "svg/controle_prazo1.svg";
     var nativeIcon = nativeHref ? '<a href="' + nativeHref + '" onmouseover="return infraTooltipMostrar(' + quoteInlineJsText(tooltipText) + `,'Controle de Prazo');" onmouseout="return infraTooltipOcultar();"><img src="` + nativeSrc + '" class="imagemStatus"></a>' : '<img src="' + nativeSrc + '" class="imagemStatus" onmouseover="return infraTooltipMostrar(' + quoteInlineJsText(tooltipText) + `,'Controle de Prazo');" onmouseout="return infraTooltipOcultar();">`;
     var htmlDatePreview = renderControlePrazoNativePreview(prazoInfo, dateValue, nativeHref);
     tdProcesso.find('a[href*="andamento_marcador_gerenciar"], a[href*="controle_prazo_definir"], a[href*="acao=controle_prazo_definir"], img[src*="controle_prazo"]').remove();
@@ -364,7 +364,7 @@
     }
     function buildNativeIconHtml(prazoInfo, hrefNative, dateValue) {
       var tooltipText = buildControlePrazoNativeTooltip(prazoInfo, dateValue);
-      var src = prazoInfo && prazoInfo.concluido ? "controle_prazo2.svg" : "controle_prazo1.svg";
+      var src = prazoInfo && prazoInfo.concluido ? "svg/controle_prazo2.svg" : "svg/controle_prazo1.svg";
       var hrefIcon = hrefNative || prazoInfo && prazoInfo.href || "";
       var html = hrefIcon ? '<a href="' + hrefIcon + '" onmouseover="return infraTooltipMostrar(' + quoteInlineJsText(tooltipText) + `,'Controle de Prazo');" onmouseout="return infraTooltipOcultar();"><img src="` + src + '" class="imagemStatus"></a>' : '<img src="' + src + '" class="imagemStatus" onmouseover="return infraTooltipMostrar(' + quoteInlineJsText(tooltipText) + `,'Controle de Prazo');" onmouseout="return infraTooltipOcultar();">`;
       return html;
@@ -462,7 +462,7 @@
               concluido: concluded,
               vencido: false,
               status: concluded ? "concluido" : "ativo",
-              src: concluded ? "controle_prazo2.svg" : "controle_prazo1.svg",
+              src: concluded ? "svg/controle_prazo2.svg" : "svg/controle_prazo1.svg",
               href: rowHref,
               id_procedimento: idProc,
               id_controle_prazo: _idControlePrazo

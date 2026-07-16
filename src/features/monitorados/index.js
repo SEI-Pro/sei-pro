@@ -10,16 +10,15 @@ import './legacy-api.js'; // único ponto com aliasGlobal — expõe a compat gl
 /**
  * Processos Monitorados — ENTRY do bundle ESM (reescrita vanilla, isolated-world).
  *
- * Estado da reescrita (incremental, carregável a cada etapa):
- *   ✓ domain.js / store.js   — núcleo puro + IO (instalados via core-stack)
- *   ✓ dom.js                 — helpers vanilla + delegação
- *   ✓ icon.js                — ícone-estrela (add/remover) com clique DELEGADO
- *   … pendente               — panel, datas, categorias, maps, sync, server, CSS
+ * Estado da reescrita:
+ *   ✓ domain.js / store.js     — núcleo puro + IO (store legado via core-stack)
+ *   ✓ dom.js                   — helpers vanilla + delegação
+ *   ✓ icon.js / panel.js       — estrela + painel (data-act)
+ *   ✓ datas / categorias / commands / visualizacao / CSS `.seipro-*`
+ *   ✓ legacy-api.js            — único ponto com aliasGlobal
  *
- * Enquanto painel/diálogo não são portados, o clique do ícone delega ao fluxo
- * legado window.actMonitoradoPro (mesmo mundo isolado), e os pontos de entrada
- * chamados por OUTROS arquivos (insertIconMonitorados/appendIconMonitorados)
- * são servidos pela versão vanilla via aliasGlobal — substituindo o legado.
+ * Pontos de entrada legados (insertIconMonitorados/appendIconMonitorados/actMonitoradoPro)
+ * continuam via aliasGlobal até os call-sites migrarem.
  */
 
 const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});

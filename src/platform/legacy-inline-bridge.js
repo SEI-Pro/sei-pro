@@ -23,6 +23,13 @@
  *   - qualquer args que não seja this/literal simples
  * Esses casos precisam de migração manual para data-act — nunca DEVEM ser
  * "adivinhados" por regex (risco de chamar a coisa errada silenciosamente).
+ *
+ * Chrome isolated-world quirk (2026-07): `removeAttribute('onclick')` from the
+ * content-script world does NOT clear the MAIN-world IDL event handler compiled
+ * from that attribute. The inline call still runs in MAIN and throws
+ * ReferenceError. Mitigação: um companion no mundo MAIN instala stubs no-op
+ * sob demanda (capture) para nomes que ainda não existem lá — a ponte isolada
+ * continua executando a função real.
  */
 import { globalRef } from '../core/global.js';
 
@@ -76,6 +83,64 @@ function eventTypeForAttr(attr) {
     return attr.slice(2); // 'onclick' -> 'click'
 }
 
+/**
+ * No-op stub listeners for the current window. Covers jsdom (single world) and
+ * is harmless in the Chrome isolated world (our real functions already exist).
+ * The MAIN-world companion below is what silences ReferenceError in production.
+ */
+function installNoopStubListeners(win) {
+    if (!win || win.__SEI_PRO_MAIN_INLINE_STUBS__) return;
+    win.__SEI_PRO_MAIN_INLINE_STUBS__ = true;
+    const doc = win.document;
+    if (!doc || typeof doc.addEventListener !== 'function') return;
+
+    HANDLER_ATTRS.forEach(function (attr) {
+        const type = eventTypeForAttr(attr);
+        doc.addEventListener(type, function (event) {
+            const el = findHandlerTarget(event.target, attr);
+            if (!el) return;
+            const val = el.getAttribute(attr) || '';
+            const m = CALL_RE.exec(val);
+            if (!m) return;
+            const fnName = m[1];
+            if (/^infra/i.test(fnName)) return;
+            if (typeof win[fnName] === 'function') return;
+            win[fnName] = function () {};
+        }, true);
+    });
+}
+
+/**
+ * Injects inline-stubs-main.js into the page MAIN world via web_accessible
+ * extension URL (MV3-safe). Inline <script> text often does not execute when
+ * inserted from an isolated content script; an external chrome-extension:// src does.
+ */
+function injectMainWorldNoopStubs(doc, win) {
+    if (!doc || !doc.documentElement) return;
+    if (doc.documentElement.getAttribute('data-seipro-inline-stubs') === '1') return;
+
+    var getURL = null;
+    try {
+        if (win && win.chrome && win.chrome.runtime && typeof win.chrome.runtime.getURL === 'function') {
+            getURL = win.chrome.runtime.getURL.bind(win.chrome.runtime);
+        } else if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getURL === 'function') {
+            getURL = chrome.runtime.getURL.bind(chrome.runtime);
+        }
+    } catch (e) { /* ignore */ }
+    if (!getURL) return;
+
+    doc.documentElement.setAttribute('data-seipro-inline-stubs', '1');
+    const script = doc.createElement('script');
+    script.src = getURL('js/inline-stubs-main.js');
+    script.async = false;
+    script.onload = function () { script.remove(); };
+    script.onerror = function () {
+        doc.documentElement.removeAttribute('data-seipro-inline-stubs');
+        script.remove();
+    };
+    doc.documentElement.appendChild(script);
+}
+
 export function installLegacyInlineBridge(win) {
     const w = win || globalRef;
     // Sandboxes de teste (vm.runInNewContext, sem jsdom) não têm document/DOM —
@@ -84,6 +149,13 @@ export function installLegacyInlineBridge(win) {
     if (!w.document || typeof w.document.addEventListener !== 'function') return;
     if (w.__SEI_PRO_LEGACY_INLINE_BRIDGE__) return;
     w.__SEI_PRO_LEGACY_INLINE_BRIDGE__ = true;
+
+    installNoopStubListeners(w);
+    try {
+        injectMainWorldNoopStubs(w.document, w);
+    } catch (e) {
+        // CSP or detached document — isolated bridge still runs; MAIN may throw.
+    }
 
     HANDLER_ATTRS.forEach(function (attr) {
         const type = eventTypeForAttr(attr);
@@ -97,16 +169,13 @@ export function installLegacyInlineBridge(win) {
             // verdade. Só interceptamos quando o alvo é uma função NOSSA.
             const parsed = parseStrictCall(attrValue, el);
             if (!parsed) return; // fora da gramática estrita — não mexe, deixa o navegador tentar
+            if (/^infra/i.test(parsed.fnName)) return; // nativo SEI — não interceptar
             const fn = w[parsed.fnName];
             if (typeof fn !== 'function') return; // não é nossa (ou não existe) — deixa pra página
 
-            // Remove o atributo ANTES da fase de captura terminar: o navegador nunca
-            // chega a avaliar o onclick quebrado na fase de destino (dispatch de evento
-            // é síncrono). Restaura logo depois via microtask — a dispatch já terminou
-            // nesse ponto, então o elemento continua clicável da próxima vez (sem isso,
-            // um botão clicado 2x ficaria inerte no 2º clique). NÃO usar stopPropagation
-            // aqui — bloquearia também outros listeners legítimos e não-relacionados
-            // (delegados em ancestrais) que devem continuar normais.
+            // Best-effort: remove attribute during capture. In Chrome this does NOT
+            // clear the MAIN IDL handler (see file header); MAIN stubs cover that.
+            // Restore after dispatch so repeated clicks keep working.
             el.removeAttribute(attr);
             Promise.resolve().then(function () { el.setAttribute(attr, attrValue); });
             if (type === 'click') event.preventDefault(); // evita salto de scroll em <a href="#">

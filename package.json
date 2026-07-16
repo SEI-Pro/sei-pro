@@ -14,7 +14,7 @@
     "loop:next": "node scripts/engineering-loop-next.mjs",
     "loop:next:check": "node scripts/engineering-loop-next.mjs --check-board"
   },
-  "//build": "Fase 5: esbuild bundla SOMENTE src/content/core-stack.js -> dist/js/core-stack.bundle.js (IIFE, não minificado) e copia manifest.base.json -> dist/manifest.json. NÃO usa outDir === dist/ para os legados nem passa arquivos legíveis pelo bundler (foi o que destruiu a fonte na 1ª tentativa). Ver PLANO_MIGRACAO_ARQUITETURA.md §5 Fase 5.",
+  "//build": "esbuild bundla entries ESM (core-stack, features, login/db) e copia legados verbatim para dist/. Fonte da verdade: src/. Ver DEVELOPMENT.md.",
   "devDependencies": {
     "esbuild": "^0.28.1",
     "jsdom": "^29.1.1",

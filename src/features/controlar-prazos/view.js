@@ -48,7 +48,8 @@ export function updateControlePrazoNativeRow(tr, prazoInfo, dateValue, hrefNativ
     var tdProcesso = _tr.find('td').eq(1);
     var tooltipText = buildControlePrazoNativeTooltip(prazoInfo, dateValue);
     var nativeHref = hrefNative || (prazoInfo && prazoInfo.href) || '';
-    var nativeSrc = (prazoInfo && prazoInfo.concluido) ? 'controle_prazo2.svg' : 'controle_prazo1.svg';
+    // SEI serves these icons under /sei/svg/ (bare controle_prazo1.svg → 404).
+    var nativeSrc = (prazoInfo && prazoInfo.concluido) ? 'svg/controle_prazo2.svg' : 'svg/controle_prazo1.svg';
     var nativeIcon = (nativeHref ? '<a href="'+nativeHref+'" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();"><img src="'+nativeSrc+'" class="imagemStatus"></a>' : '<img src="'+nativeSrc+'" class="imagemStatus" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();">');
     var htmlDatePreview = renderControlePrazoNativePreview(prazoInfo, dateValue, nativeHref);
 
@@ -217,7 +218,7 @@ export function setControlePrazoNativo(mode, this_, form, href, param = false, c
 
     function buildNativeIconHtml(prazoInfo, hrefNative, dateValue) {
         var tooltipText = buildControlePrazoNativeTooltip(prazoInfo, dateValue);
-        var src = (prazoInfo && prazoInfo.concluido) ? 'controle_prazo2.svg' : 'controle_prazo1.svg';
+        var src = (prazoInfo && prazoInfo.concluido) ? 'svg/controle_prazo2.svg' : 'svg/controle_prazo1.svg';
         var hrefIcon = hrefNative || (prazoInfo && prazoInfo.href) || '';
         var html = (hrefIcon)
             ? '<a href="'+hrefIcon+'" onmouseover="return infraTooltipMostrar('+quoteInlineJsText(tooltipText)+',\'Controle de Prazo\');" onmouseout="return infraTooltipOcultar();"><img src="'+src+'" class="imagemStatus"></a>'
@@ -331,7 +332,7 @@ export function setControlePrazoNativo(mode, this_, form, href, param = false, c
                     concluido: concluded,
                     vencido: false,
                     status: concluded ? 'concluido' : 'ativo',
-                    src: concluded ? 'controle_prazo2.svg' : 'controle_prazo1.svg',
+                    src: concluded ? 'svg/controle_prazo2.svg' : 'svg/controle_prazo1.svg',
                     href: rowHref,
                     id_procedimento: idProc,
                     id_controle_prazo: _idControlePrazo

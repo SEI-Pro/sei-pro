@@ -1,23 +1,24 @@
-# background — ainda NÃO migrado para `src/`
+# background — service worker (MV3)
 
-Não procure aqui a fonte do service worker. **A fonte da verdade é
-[`dist/js/background.js`](../../dist/js/background.js)** — mantida verbatim e
-referenciada pelo `manifest.base.json` como `js/background.js`.
+**Fonte da verdade:** `src/background/` (não editar `dist/js/background*.js` à mão).
+O build copia estes arquivos verbatim para `dist/js/` via `scripts/build.mjs`.
 
-## Por quê
+## Layout atual
 
-A migração para `src/` (camada core+sei bundlada por esbuild — Fase 5) cobre só os
-**content scripts** (`src/content/core-stack.js`). O service worker ficou de fora
-de propósito: hoje ele não importa nenhum módulo de `core/`, então bundlá-lo via
-esbuild não traria ganho — só um segundo entrypoint e risco.
+| Arquivo | Papel |
+|---|---|
+| `background.js` | Fachada fina: `importScripts` + listeners `onInstalled` / `onMessage` |
+| `router.js` | Roteamento de mensagens → handlers |
+| `storage-handler.js` | `storageGet` / `storageSet` / `storageRemove` |
+| `fetch-handler.js` | proxy `fetch` com validação de host |
+| `bug-report-handler.js` | `enviarRelatorioBug` |
+| `process-notification-handler.js` | badge / notificações de processos |
+| `install-handler.js` | welcome page + flag `InstallOrUpdate` |
 
-Existia aqui um `index.js` (reescrita ESM dormente). Foi **removido** porque era
-funcionalmente idêntico ao `dist/js/background.js`, sem nenhum consumidor
-(build/manifest/testes não o referenciavam) — uma armadilha de divergência (risco
-de editar a fonte errada). Ver `PLANO_MIGRACAO_ARQUITETURA.md` §5 Fase 5.
+Ainda é **classic SW** (`importScripts`), não ESM bundlado. Isso é intencional enquanto
+os handlers não compartilham módulos ESM com `core/`.
 
-## Quando migrar
+## Arquitetura
 
-Vale trazer o background para `src/` e adicioná-lo ao `scripts/build.mjs` **se** ele
-passar a compartilhar módulos com `core/` (ex.: a allowlist de hosts, o wrapper de
-storage). Aí o ganho de reúso justifica o segundo entrypoint do bundler.
+Contrato geral: `DEVELOPMENT.md` (camadas, isolated-first, `legacy-api`).
+Programa de migração: `docs/engineering-loop.md` + board.
