@@ -28,3 +28,30 @@ export function readArvoreMenuConfig({ restore, getOption }) {
     ]));
     return { stored, enabled };
 }
+
+// Fronteira IO do upload da árvore: transporte injetável, sem assumir jQuery global.
+
+function requireAjax(ajax) {
+    if (typeof ajax !== 'function') throw new TypeError('ajax dependency is required');
+    return ajax;
+}
+
+export function fetchUploadPage({ ajax, url, onSuccess }) {
+    return requireAjax(ajax)({ url }).done(onSuccess);
+}
+
+export function postUploadForm({ ajax, url, data, onSuccess }) {
+    return requireAjax(ajax)({ method: 'POST', data, url }).done(onSuccess);
+}
+
+export function postSavedUpload({ ajax, xhrFactory, url, data, onSuccess }) {
+    const xhr = xhrFactory();
+    requireAjax(ajax)({
+        method: 'POST',
+        data,
+        url,
+        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+        xhr: () => xhr
+    }).done((htmlResult, _status, responseXhr) => onSuccess(htmlResult, responseXhr || xhr));
+    return xhr;
+}

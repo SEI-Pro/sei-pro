@@ -71,12 +71,34 @@
     ]));
     return { stored, enabled };
   }
+  function requireAjax(ajax) {
+    if (typeof ajax !== "function") throw new TypeError("ajax dependency is required");
+    return ajax;
+  }
+  function fetchUploadPage({ ajax, url, onSuccess }) {
+    return requireAjax(ajax)({ url }).done(onSuccess);
+  }
+  function postUploadForm({ ajax, url, data, onSuccess }) {
+    return requireAjax(ajax)({ method: "POST", data, url }).done(onSuccess);
+  }
+  function postSavedUpload({ ajax, xhrFactory, url, data, onSuccess }) {
+    const xhr = xhrFactory();
+    requireAjax(ajax)({
+      method: "POST",
+      data,
+      url,
+      contentType: "application/x-www-form-urlencoded; charset=ISO-8859-1",
+      xhr: () => xhr
+    }).done((htmlResult, _status, responseXhr) => onSuccess(htmlResult, responseXhr || xhr));
+    return xhr;
+  }
 
   // src/features/arvore/index.js
   var namespace = globalThis.SeiPro = globalThis.SeiPro || {};
   namespace.features = namespace.features || {};
   namespace.features.arvoreMenus = { resolveMenuCatalogs };
   namespace.features.arvoreMenuIO = { readArvoreMenuConfig };
+  namespace.features.arvoreUploadIO = { fetchUploadPage, postUploadForm, postSavedUpload };
   namespace.features.arvoreUpload = {
     hasUploadFiles,
     serializeUploadAttachment,

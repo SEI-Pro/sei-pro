@@ -1238,25 +1238,33 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
     } else if (mode == 'save' && result) {
         var href = result.urlForm;
         var param = result.paramsForm;
-        var xhr = new XMLHttpRequest();
-        $.ajax({
-            method: 'POST',
-            data: param,
-            url: href,
-            contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
-            xhr: function() {
-                 return xhr;
-            },
-        }).done(function (htmlResult) {
+        var onSaved = function (htmlResult, xhr) {
             var status = (xhr.responseURL.indexOf('acao=arvore_visualizar&acao_origem=documento_receber') !== -1) ? true : false;
             if (status) {
                 sendUploadArvore('upload', false, arrayDropzone, _containerUpload);
                 getInfoArvoreLastDoc(htmlResult, xhr.responseURL, arrayDropzone, _containerUpload);
                 // console.log('status',status);
             } else {
-                elem.addClass("dz-error").find('.dz-error-message span').text('N\u00E3o foi poss\u00EDvel fazer o upload do arquivo');
+                elem.addClass("dz-error").find('.dz-error-message span').text('Não foi possível fazer o upload do arquivo');
             }
-        });
+        };
+        var uploadIO = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadIO;
+        if (uploadIO && uploadIO.postSavedUpload) {
+            uploadIO.postSavedUpload({ ajax: $.ajax, xhrFactory: function() { return new XMLHttpRequest(); }, url: href, data: param, onSuccess: onSaved });
+        } else {
+            var xhr = new XMLHttpRequest();
+            $.ajax({
+                method: 'POST',
+                data: param,
+                url: href,
+                contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+                xhr: function() {
+                     return xhr;
+                },
+            }).done(function (htmlResult) {
+                onSaved(htmlResult, xhr);
+            });
+        }
     }
 }
 function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
@@ -1268,18 +1276,26 @@ function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDro
             }
         });
         param.hdnIdSerie = -1;
-    $.ajax({ 
-        method: 'POST',
-        data: param,
-        url: urlForm
-    }).done(function (htmlAnexo) {
+    var uploadIO = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadIO;
+    var onSuccess = function (htmlAnexo) {
         submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
-    });
+    };
+    if (uploadIO && uploadIO.postUploadForm) {
+        uploadIO.postUploadForm({ ajax: $.ajax, url: urlForm, data: param, onSuccess: onSuccess });
+    } else {
+        $.ajax({ method: 'POST', data: param, url: urlForm }).done(onSuccess);
+    }
 }
 function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
-    $.ajax({ url: urlDocExterno }).done(function (htmlAnexo) {
+    var uploadIO = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadIO;
+    var onSuccess = function (htmlAnexo) {
         submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
-    });
+    };
+    if (uploadIO && uploadIO.fetchUploadPage) {
+        uploadIO.fetchUploadPage({ ajax: $.ajax, url: urlDocExterno, onSuccess: onSuccess });
+    } else {
+        $.ajax({ url: urlDocExterno }).done(onSuccess);
+    }
 }
 function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
         var $htmlAnexo = $(htmlAnexo);
