@@ -1,6 +1,9 @@
 import { installListaAgrupamentoDomain } from './domain.js';
 import { installListaAgrupamentoIO } from './io.js';
+import { installListaAgrupamentoView } from './view.js';
 import './legacy-api.js';
 
-installListaAgrupamentoDomain(typeof window !== 'undefined' ? window : globalThis);
-installListaAgrupamentoIO(typeof window !== 'undefined' ? window : globalThis);
+const globalRef = typeof window !== 'undefined' ? window : globalThis;
+installListaAgrupamentoDomain(globalRef);
+installListaAgrupamentoIO(globalRef);
+installListaAgrupamentoView(globalRef);

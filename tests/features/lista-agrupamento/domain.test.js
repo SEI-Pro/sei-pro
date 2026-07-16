@@ -11,6 +11,10 @@ import {
     readReceivedProcess,
     readSelectedGroup
 } from '../../../src/features/lista-agrupamento/io.js';
+import {
+    toggleGroupTable,
+    installListaAgrupamentoView
+} from '../../../src/features/lista-agrupamento/view.js';
 
 describe('lista-agrupamento domain', () => {
     it('extrai os valores do tooltip legado e remove a chamada wrapper', () => {
@@ -52,5 +56,27 @@ describe('lista-agrupamento domain', () => {
         expect(readSelectedGroup(restore)).toEqual(['arrivaldate']);
         expect(readReceivedProcess(restore, getParams, jmespath, '/x')).toEqual(records[0]);
         expect(readReceivedProcess(() => [], getParams, jmespath, '/x')).toBe('');
+    });
+
+    it('instala a view no namespace da feature e delega o evento de recolher', () => {
+        const target = {};
+        installListaAgrupamentoView(target);
+        expect(target.SeiPro.features.listaAgrupamentoView.toggleGroupTable).toBe(toggleGroupTable);
+
+        const calls = [];
+        const rows = { hide: () => calls.push('rows.hide'), show: () => calls.push('rows.show') };
+        const show = { hide: () => calls.push('show.hide'), show: () => calls.push('show.show') };
+        const hide = { hide: () => calls.push('hide.hide'), show: () => calls.push('hide.show') };
+        const table = { find: (selector) => selector.startsWith('tr[') ? rows : null };
+        const controls = { find: (selector) => selector.includes('show') ? show : hide };
+        const current = {
+            data: () => ({ action: 'hide', htagname: 'Orgao' }),
+            closest: (selector) => selector === 'table' ? table : controls
+        };
+        const writes = [];
+        toggleGroupTable({}, () => current, (tag) => writes.push(['persist', tag]), (tag) => writes.push(['clear', tag]));
+
+        expect(calls).toEqual(['rows.hide', 'show.show', 'hide.hide']);
+        expect(writes).toEqual([['persist', 'Orgao']]);
     });
 });

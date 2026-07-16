@@ -63,6 +63,9 @@ function clearGroupCollapsedLegacy(tagName) {
     if (io && typeof io.clearGroupCollapsed === 'function') return io.clearGroupCollapsed(removeOptionsPro, tagName);
     removeOptionsPro('panelGroup_'+tagName);
 }
+function listaAgrupamentoView() {
+    return typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.listaAgrupamentoView;
+}
 
 function getGroupTableLabelFromLink(linkElem, acaoType) {
     var $link = $(linkElem);
@@ -448,6 +451,10 @@ function getUniqueTableTag(i, tagName, type) {
         }
 }
 function toggleGroupTablePro(this_) {
+    var view = listaAgrupamentoView();
+    if (view && typeof view.toggleGroupTable === 'function') {
+        return view.toggleGroupTable(this_, $, persistGroupCollapsedLegacy, clearGroupCollapsedLegacy);
+    }
     var _this = $(this_);
     var data = _this.data();
     if (data.action == 'hide') {

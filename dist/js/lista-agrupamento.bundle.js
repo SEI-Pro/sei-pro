@@ -20,10 +20,10 @@
   function getTagName(tagName, type) {
     return tagName !== void 0 && tagName !== "" ? removeAcentos(tagName).replace(/\ /g, "") : "SemGrupo";
   }
-  function installListaAgrupamentoDomain(globalRef2 = globalThis) {
-    globalRef2.SeiPro = globalRef2.SeiPro || {};
-    globalRef2.SeiPro.features = globalRef2.SeiPro.features || {};
-    globalRef2.SeiPro.features.listaAgrupamento = {
+  function installListaAgrupamentoDomain(globalRef3 = globalThis) {
+    globalRef3.SeiPro = globalRef3.SeiPro || {};
+    globalRef3.SeiPro.features = globalRef3.SeiPro.features || {};
+    globalRef3.SeiPro.features.listaAgrupamento = {
       extractGroupTableTooltipToArray,
       getTagName
     };
@@ -53,10 +53,10 @@
     if (!id || !jmespath || typeof jmespath.search !== "function") return "";
     return jmespath.search(records, "[?id_procedimento=='" + id + "'] | [0]") || "";
   }
-  function installListaAgrupamentoIO(globalRef2 = globalThis) {
-    globalRef2.SeiPro = globalRef2.SeiPro || {};
-    globalRef2.SeiPro.features = globalRef2.SeiPro.features || {};
-    globalRef2.SeiPro.features.listaAgrupamentoIO = {
+  function installListaAgrupamentoIO(globalRef3 = globalThis) {
+    globalRef3.SeiPro = globalRef3.SeiPro || {};
+    globalRef3.SeiPro.features = globalRef3.SeiPro.features || {};
+    globalRef3.SeiPro.features.listaAgrupamentoIO = {
       readGroupOrder,
       isGroupCollapsed,
       persistGroupCollapsed,
@@ -64,6 +64,30 @@
       readSelectedGroup,
       readReceivedProcess
     };
+  }
+
+  // src/features/lista-agrupamento/view.js
+  function toggleGroupTable(this_, $, persistGroupCollapsed2, clearGroupCollapsed2) {
+    if (typeof $ !== "function") return false;
+    const current = $(this_);
+    const data = current.data();
+    const table = current.closest("table");
+    const controls = current.closest("span");
+    const isHide = data.action === "hide";
+    table.find('tr[data-tagname="' + data.htagname + '"]')[isHide ? "hide" : "show"]();
+    controls.find('a[data-action="show"]')[isHide ? "show" : "hide"]();
+    controls.find('a[data-action="hide"]')[isHide ? "hide" : "show"]();
+    if (isHide) {
+      if (typeof persistGroupCollapsed2 === "function") persistGroupCollapsed2(data.htagname);
+    } else if (typeof clearGroupCollapsed2 === "function") {
+      clearGroupCollapsed2(data.htagname);
+    }
+    return true;
+  }
+  function installListaAgrupamentoView(globalRef3 = globalThis) {
+    globalRef3.SeiPro = globalRef3.SeiPro || {};
+    globalRef3.SeiPro.features = globalRef3.SeiPro.features || {};
+    globalRef3.SeiPro.features.listaAgrupamentoView = { toggleGroupTable };
   }
 
   // src/core/global.js
@@ -79,6 +103,8 @@
   aliasGlobal("getTagName", getTagName);
 
   // src/features/lista-agrupamento/index.js
-  installListaAgrupamentoDomain(typeof window !== "undefined" ? window : globalThis);
-  installListaAgrupamentoIO(typeof window !== "undefined" ? window : globalThis);
+  var globalRef2 = typeof window !== "undefined" ? window : globalThis;
+  installListaAgrupamentoDomain(globalRef2);
+  installListaAgrupamentoIO(globalRef2);
+  installListaAgrupamentoView(globalRef2);
 })();
