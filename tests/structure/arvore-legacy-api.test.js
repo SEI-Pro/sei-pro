@@ -55,20 +55,30 @@ describe('migration: arvore upload legacy facade', () => {
       js.includes('js/sei-pro-arvore.js')
     );
 
-    expect(contexts.length).toBeGreaterThan(0);
+    expect(contexts).toHaveLength(1);
     for (const context of contexts) {
       const scripts = context.js;
       const dependency = scripts.indexOf('js/sei-functions-pro.js');
       const bundle = scripts.indexOf('js/arvore-menu-domain.bundle.js');
       const legacy = scripts.indexOf('js/sei-pro-arvore.js');
+      const init = scripts.indexOf('js/init_arvore.js');
+      const quickFilter = scripts.indexOf('js/quick-filter-tree.bundle.js');
       expect(dependency).toBeGreaterThanOrEqual(0);
       expect(bundle).toBeGreaterThan(dependency);
       expect(legacy).toBeGreaterThan(bundle);
+      expect(init).toBeGreaterThan(legacy);
+      expect(quickFilter).toBeGreaterThan(init);
     }
+
+    const build = read('scripts/build.mjs');
+    expect(build).toContain("{ entry: 'src/features/arvore/index.js', out: 'dist/js/arvore-menu-domain.bundle.js' }");
+    expect(build).toContain("'src/features/arvore/sei-pro-arvore.js'");
 
     const legacy = read('src/features/arvore/sei-pro-arvore.js');
     expect(legacy).toContain('bindUploadArvoreNativeDragEvents();');
     expect(legacy).toContain('SeiPro.features.arvoreUploadIO');
     expect(legacy).toContain('SeiPro.features.arvoreUpload');
+    expect(legacy).toContain('actionToolbarPro($(this), triggerButton);');
+    expect(legacy).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
   });
 });
