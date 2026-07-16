@@ -1,6 +1,7 @@
 import { globalRef } from '../../core/global.js';
 import { qs, qsa, elFromHtml, frameDoc, waitFor } from './dom.js';
 import { getStoreMonitoradoPro } from './store.js';
+import { getMonitoradoToggleAction, isMonitoradoToggle } from './view.js';
 
 /**
  * Monitorados — ícone-estrela no topo da árvore do processo (adicionar/remover).
@@ -59,15 +60,20 @@ export function mountIcon() {
 // Usada tanto na árvore (initIcon) quanto na tela de controle de processos, onde
 // a estrela é inserida por appendStarOnProcess no MESMO document do content script
 // (por isso precisa ser ligada em `document`, não só no doc da árvore).
-export function bindToggle(doc) {
+export function bindToggle(doc, onToggle) {
     if (!doc || doc.__seiproMonitoradoIconBound) return;
     doc.__seiproMonitoradoIconBound = true;
     doc.addEventListener('click', function (ev) {
-        const icon = ev.target.closest('[data-act="monitorado-toggle"]');
-        if (!icon) return;
+        const icon = ev.target.closest ? ev.target.closest('[data-act="monitorado-toggle"]') : null;
+        if (!isMonitoradoToggle(icon)) return;
+        const action = getMonitoradoToggleAction(icon);
+        if (!action) return;
         ev.preventDefault();
-        if (typeof globalRef.actMonitoradoPro === 'function') {
-            globalRef.actMonitoradoPro(icon, icon.dataset.mode || 'add');
+        const handler = onToggle || ((target, mode) => {
+            if (typeof globalRef.actMonitoradoPro === 'function') globalRef.actMonitoradoPro(target, mode);
+        });
+        if (typeof handler === 'function') {
+            handler(icon, action.mode, action.id_procedimento);
         }
     });
 }

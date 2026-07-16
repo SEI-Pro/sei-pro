@@ -199,6 +199,19 @@
     return store;
   }
 
+  // src/features/monitorados/view.js
+  function getMonitoradoToggleAction(target) {
+    if (!target || typeof target.getAttribute !== "function") return null;
+    const id = target.getAttribute("data-id_procedimento");
+    if (id == null || id === "") return null;
+    const mode = target.getAttribute("data-mode") || "add";
+    if (mode !== "add" && mode !== "remove") return null;
+    return { id_procedimento: id, mode };
+  }
+  function isMonitoradoToggle(target) {
+    return !!target && typeof target.matches === "function" && target.matches('[data-act="monitorado-toggle"]');
+  }
+
   // src/features/monitorados/icon.js
   var TARGET_SEL = 'a[target="ifrConteudoVisualizacao"], a[target="ifrVisualizacao"]';
   function processAnchor(treeDoc) {
@@ -227,15 +240,20 @@
     qsa(".seipro-monitorado-icon", treeDoc).forEach((n) => n.remove());
     anchor.insertAdjacentElement("afterend", elFromHtml(iconHtml(id)));
   }
-  function bindToggle(doc) {
+  function bindToggle(doc, onToggle) {
     if (!doc || doc.__seiproMonitoradoIconBound) return;
     doc.__seiproMonitoradoIconBound = true;
     doc.addEventListener("click", function(ev) {
-      const icon = ev.target.closest('[data-act="monitorado-toggle"]');
-      if (!icon) return;
+      const icon = ev.target.closest ? ev.target.closest('[data-act="monitorado-toggle"]') : null;
+      if (!isMonitoradoToggle(icon)) return;
+      const action = getMonitoradoToggleAction(icon);
+      if (!action) return;
       ev.preventDefault();
-      if (typeof globalRef.actMonitoradoPro === "function") {
-        globalRef.actMonitoradoPro(icon, icon.dataset.mode || "add");
+      const handler = onToggle || ((target, mode) => {
+        if (typeof globalRef.actMonitoradoPro === "function") globalRef.actMonitoradoPro(target, mode);
+      });
+      if (typeof handler === "function") {
+        handler(icon, action.mode, action.id_procedimento);
       }
     });
   }
@@ -2034,5 +2052,5 @@
   installCommands();
   installVisualizacao();
   bindPanelDispatcher(document);
-  bindToggle(document);
+  bindToggle(document, actMonitoradoPro);
 })();

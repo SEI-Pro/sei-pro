@@ -3,7 +3,7 @@ import { initIcon, mountIcon, iconHtml, bindToggle } from './icon.js';
 import { setPanelMonitorados, bindPanelDispatcher } from './panel.js';
 import { openBoxConfigDates } from './datas.js';
 import { installCategorias } from './categorias.js';
-import { installCommands } from './commands.js';
+import { installCommands, actMonitoradoPro } from './commands.js';
 import { installVisualizacao } from './visualizacao.js';
 import './legacy-api.js'; // único ponto com aliasGlobal — expõe a compat global da feature
 
@@ -39,4 +39,4 @@ bindPanelDispatcher(document);
 // a estrela é inserida por appendStarOnProcess no document do content script, mas o
 // bindPanelDispatcher só trata cliques dentro de #monitoradosPro. Liga a delegação do
 // toggle no document para que adicionar/remover dos monitorados funcione na lista.
-bindToggle(document);
+bindToggle(document, actMonitoradoPro);
