@@ -18,9 +18,19 @@ function resolveArvoreMenuCatalogs(stored, defaults) {
     return defaults;
 }
 
+function readArvoreMenuConfig() {
+    var io = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreMenuIO && SeiPro.features.arvoreMenuIO.readArvoreMenuConfig;
+    if (!io) return null;
+    return io({
+        restore: localStorageRestorePro,
+        getOption: getOptionsPro
+    });
+}
+
 function getSelectedItensPanelArvore() {
     var defaults = { panel: [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]] };
-    var stored = { panel: (typeof localStorageRestorePro === 'function') ? localStorageRestorePro('configViewFlashPanelArvorePro') : undefined };
+    var config = readArvoreMenuConfig();
+    var stored = config ? { panel: config.stored.panel } : { panel: (typeof localStorageRestorePro === 'function') ? localStorageRestorePro('configViewFlashPanelArvorePro') : undefined };
     return resolveArvoreMenuCatalogs(stored, defaults).panel;
 }
 selectedItensPanelArvore = getSelectedItensPanelArvore();
@@ -97,7 +107,8 @@ function setToolbarDocs() {
         tree: [['Copiar número SEI'],['Copiar link do documento'],['Duplicar documento']],
         panel: getSelectedItensPanelArvore()
     };
-    var stored = {
+    var config = readArvoreMenuConfig();
+    var stored = config ? config.stored : {
         process: localStorageRestorePro('configViewFlashMenuPro'),
         document: localStorageRestorePro('configViewFlashDocMenuPro'),
         tree: localStorageRestorePro('configViewFlashDocArvorePro')
@@ -109,7 +120,7 @@ function setToolbarDocs() {
         selectedItensPanelArvore = catalogs.panel;
 
     var htmlToolbarProc =   '<div id="toolbar-options-proc" class="hidden">';
-        if (getOptionsPro('optionsFlashMenu_menuproc') != 'disabled') {
+        if (!config || config.enabled.process) {
             $.each(selectedItensMenu,function(index, value){
                 var data = getTreeLinkByName(value[0], {treeModel: {links: arrayLinksArvore}});
                 if ( data !== null ) {
@@ -123,7 +134,7 @@ function setToolbarDocs() {
         htmlToolbarProc +=  '</div>';
     
     var htmlToolbarDoc =    '';
-    if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
+    if (!config || config.enabled.document) {
         htmlToolbarDoc =    '<div id="toolbar-options-doc" class="hidden">';
         $.each(selectedItensDocMenu,function(index, value){
             var data = (typeof jmespath !== 'undefined') ? jmespath.search(iconsFlashDocMenu, "[?name=='"+value[0]+"'] | [0]") : null;
@@ -137,7 +148,7 @@ function setToolbarDocs() {
         htmlToolbarDoc +=  '</div>';
     }
 
-    if (getOptionsPro('optionsFlashMenu_iconstree') != 'disabled') {
+    if (!config || config.enabled.tree) {
         $.each(reverseArray(selectedItensDocArvore),function(index, value){
             var data = (typeof jmespath !== 'undefined') ? jmespath.search(iconsFlashDocArvore, "[?name=='"+value[0]+"'] | [0]") : null;
             if ( data !== null ) {

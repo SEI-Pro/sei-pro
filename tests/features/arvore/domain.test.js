@@ -7,6 +7,7 @@ import {
     extractUploadExtensions,
     sortUploadFiles
 } from '@src/features/arvore/domain.js';
+import { readArvoreMenuConfig } from '@src/features/arvore/io.js';
 
 const fallback = [['Copiar número'], ['Ações em lote']];
 
@@ -28,6 +29,29 @@ describe('arvore/domain — resolveMenuCatalogs', () => {
         const defaults = { process: fallback, document: [['Copiar nome']] };
         expect(resolveMenuCatalogs({ process: [['Copiar número']], document: [] }, defaults))
             .toEqual({ process: [['Copiar número']], document: [['Copiar nome']] });
+    });
+});
+
+describe('arvore/io — readArvoreMenuConfig', () => {
+    it('lê os quatro catálogos e converte opções disabled em flags', () => {
+        const restored = {
+            configViewFlashMenuPro: [['Ações em lote']],
+            configViewFlashDocMenuPro: [['Copiar link']],
+            configViewFlashDocArvorePro: undefined,
+            configViewFlashPanelArvorePro: [['Marcador']]
+        };
+        const seenStorage = [];
+        const seenOptions = [];
+        const config = readArvoreMenuConfig({
+            restore: (key) => { seenStorage.push(key); return restored[key]; },
+            getOption: (key) => { seenOptions.push(key); return key.endsWith('iconstree') ? 'disabled' : 'enabled'; }
+        });
+
+        expect(config.stored.process).toEqual([['Ações em lote']]);
+        expect(config.stored.tree).toBeUndefined();
+        expect(config.enabled).toEqual({ process: true, document: true, tree: false, panel: true });
+        expect(seenStorage).toHaveLength(4);
+        expect(seenOptions).toHaveLength(4);
     });
 });
 

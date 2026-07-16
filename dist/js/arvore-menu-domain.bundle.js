@@ -47,10 +47,36 @@
     return files.slice().sort((a, b) => getPosition(a) > getPosition(b) ? 1 : -1);
   }
 
+  // src/features/arvore/io.js
+  var MENU_STORAGE_KEYS = {
+    process: "configViewFlashMenuPro",
+    document: "configViewFlashDocMenuPro",
+    tree: "configViewFlashDocArvorePro",
+    panel: "configViewFlashPanelArvorePro"
+  };
+  var MENU_OPTION_KEYS = {
+    process: "optionsFlashMenu_menuproc",
+    document: "optionsFlashMenu_menudoc",
+    tree: "optionsFlashMenu_iconstree",
+    panel: "optionsFlashMenu_panelinfo"
+  };
+  function readArvoreMenuConfig({ restore, getOption }) {
+    const stored = Object.fromEntries(Object.entries(MENU_STORAGE_KEYS).map(([name, key]) => [
+      name,
+      restore(key)
+    ]));
+    const enabled = Object.fromEntries(Object.entries(MENU_OPTION_KEYS).map(([name, key]) => [
+      name,
+      getOption(key) !== "disabled"
+    ]));
+    return { stored, enabled };
+  }
+
   // src/features/arvore/index.js
   var namespace = globalThis.SeiPro = globalThis.SeiPro || {};
   namespace.features = namespace.features || {};
   namespace.features.arvoreMenus = { resolveMenuCatalogs };
+  namespace.features.arvoreMenuIO = { readArvoreMenuConfig };
   namespace.features.arvoreUpload = {
     hasUploadFiles,
     serializeUploadAttachment,
