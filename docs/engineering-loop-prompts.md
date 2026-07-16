@@ -25,9 +25,9 @@ Before choosing work, run:
 Selection order (mandatory):
 1) Oldest/most critical review_failed_needs_fix
 2) Highest-priority pending_migration in the Epic queue
-3) Next ladder step of the ACTIVE epic
+3) Next ladder step of the ACTIVE / incomplete epic (P0–P6). If engineering-loop-next prints "(next for E-…)", CREATE the E2-* board row if missing, then implement it — do NOT idle
 4) Never pick cosmetic CSS micro-hooks / additive seipro-* class-only slices while any epic has P1–P5 open
-5) If nothing auto-viable, set blocked with an objective reason and stop — do NOT invent CSS hooks
+5) Mark blocked ONLY when next prints "(none)" AND remaining epics are P7-complete or objectively blocked (prerequisite). Empty pending_migration alone is NOT a reason to block — seed the suggested epic step. Never invent CSS hooks
 
 Slice rules:
 - One slice per run, one functional commit

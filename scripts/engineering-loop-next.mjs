@@ -150,13 +150,16 @@ function main() {
             ? 'Highest-priority pending_migration (Epic queue / seeded slice)'
             : 'Pending migration exists but only CSS-like — check ban policy';
     } else {
-        // Walk epic order from epic queue section
+        // Walk epic order from epic queue section.
+        // review_passed only completes an epic at P7; earlier steps mean "continue ladder".
         for (const epicId of EPIC_ORDER) {
             const eq = epicQueue.find((e) => e.epic === epicId);
             if (!eq) continue;
             const st = (eq.state || '').toLowerCase();
-            if (['review_passed', 'done', 'completed'].includes(st)) continue;
+            const step = (eq.step || '').toUpperCase();
+            if (['done', 'completed'].includes(st)) continue;
             if (st === 'blocked') continue;
+            if (st === 'review_passed' && step === 'P7') continue;
             suggestion = {
                 id: `(next for ${epicId})`,
                 epic: epicId,
@@ -166,7 +169,9 @@ function main() {
                 feature: epicId,
                 type: 'epic'
             };
-            reason = `Continue active epic ${epicId} at ${eq.step}`;
+            reason = st === 'review_passed'
+                ? `Continue epic ${epicId}: ${step} done — seed/implement next ladder step`
+                : `Continue active epic ${epicId} at ${eq.step}`;
             break;
         }
     }

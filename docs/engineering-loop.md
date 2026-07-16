@@ -176,6 +176,26 @@ node scripts/engineering-loop-next.mjs
 
 ---
 
+## Continuidade automática (anti-stall)
+
+O loop **não** pode parar só porque a fila de `pending_migration` esvaziou.
+
+Semântica na **Epic queue**:
+
+| Estado do épico | Passo | Significado |
+|---|---|---|
+| `active` | P0–P6 | Épico em andamento; maker deve pegar a **Próxima fatia** |
+| `review_passed` | P0–P6 | Passo atual já aprovado; **ainda não é fim** — avançar para P(n+1) |
+| `review_passed` | **P7** | Épico concluído (smoke humano pode restar) |
+| `blocked` | qualquer | Só com motivo objetivo (ex.: pré-requisito de outro épico); **não** usar para “fila vazia” |
+
+Regras de seed (maker **ou** humano):
+
+1. Ao aprovar/terminar P(n) (n < 7), garantir que exista uma linha `E2-*` em `pending_migration` para P(n+1), **ou** implementá-la na mesma execução após criar a linha.
+2. `node scripts/engineering-loop-next.mjs` sugere o próximo épico incompleto mesmo sem seed; o maker **cria** a linha no board e executa — **não** marca `blocked` por ausência de seed.
+3. Preferir manter **2–4** fatias `pending_migration` à frente na ordem da fila (pipeline), para o cron não idle.
+4. `blocked` só quando: pré-requisito externo, só smoke humano, ou risco arquitetural documentado.
+
 ## Seleção do migration job
 
 Ordem obrigatória:
@@ -183,15 +203,15 @@ Ordem obrigatória:
 1. Corrigir o `review_failed_needs_fix` mais antigo/crítico.
 2. Executar o `pending_migration` **mais prioritário da Epic queue** (ou item manual marcado por humano).
 3. Se o épico ativo tem próximo passo P0–P6 pendente, **continuar esse épico** (criar a linha da fatia se ainda não existir).
-4. Se o épico ativo está completo, abrir o **próximo épico** da fila e criar a fatia P0/P1.
+4. Se o épico ativo está completo (P7 `review_passed`), abrir o **próximo épico** da fila e criar a fatia P0/P1.
 5. **Não** cair em seleção “menor CSS seguro”.
-6. Se não houver fatia automática viável (só smoke humano), registrar `blocked` objetivo e parar — não inventar micro-CSS.
+6. Se `engineering-loop-next` sugerir `(next for E-…)`, **seed + implementar** essa fatia. Só registrar `blocked` se a sugestão for `(none)` **e** todos os épicos restantes forem P7 ou `blocked` com motivo válido — nunca inventar micro-CSS.
 7. Registrar no board (Épico, Passo P*, estado).
 8. Implementar só essa fatia.
 9. Rodar gates.
 10. Commitar a fatia.
 11. Executar `git push origin master` após gates e commit passarem.
-12. Atualizar board → `migrated_pending_review`.
+12. Atualizar board → `migrated_pending_review` e, se possível, deixar a próxima `pending_migration` já semeada.
 
 Se o push falhar, preservar o commit local, registrar o erro como `blocked` e não usar force push.
 
