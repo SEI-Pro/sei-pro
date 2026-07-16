@@ -437,4 +437,28 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
     expect(view).toContain("$('#fieldList').append");
     expect(view).toContain('seipro-doclote-analysis-text');
   });
+
+  it('audits the complete Docs em Lote markup for unprefixed feature-owned classes', () => {
+    const templates = read('src/features/docs-lote/templates.js');
+    const view = read('src/features/docs-lote/view.js');
+    const source = `${templates}\n${view}`;
+    const sharedClasses = new Set([
+      'dialogBoxDiv', 'seiProForm', 'label', 'required', 'iconPopup', 'iconSwitch',
+      'fas', 'fa-file-alt', 'fa-keyboard', 'fa-upload', 'fa-sync', 'fa-spin',
+      'fa-spinner', 'fa-exclamation-triangle', 'fa-folder-open', 'fa-comment-dots',
+      'fa-download', 'fa-copy', 'fa-file-csv', 'fa-layer-group', 'fa-arrow-right',
+      'fa-hashtag', 'fa-check-circle', 'fa-info-circle', 'cinzaColor', 'azulColor', 'vermelhoColor',
+      'verdeColor', 'colorAzul', 'infraText', 'newLink', 'onoffswitch', 'onoffswitch-checkbox',
+      'onoff-switch-label', 'tableInfo', 'tableZebra', 'tableFollow', 'tituloControle',
+      'btn-group', 'btn', 'btn-sm', 'btn-light', 'text', 'confirm', 'ui-state-active',
+      'bLink', '?',
+    ]);
+    const classes = [...source.matchAll(/class(?:Name)?\s*[:=]\s*[`'\"]([^`'\"]+)[`'\"]/g)]
+      .flatMap(([, value]) => value.split(/\s+/))
+      .filter((value) => value && !value.includes('${') && !sharedClasses.has(value));
+
+    expect(classes.length).toBeGreaterThan(0);
+    expect(classes.every((value) => value.startsWith('seipro-doclote-'))).toBe(true);
+    expect(source).not.toMatch(/(?:textAnalysis|divInputForceNames|noFieldsError|dFielTitle|filterTablePro|containerTipoProcessoSelect)/);
+  });
 });
