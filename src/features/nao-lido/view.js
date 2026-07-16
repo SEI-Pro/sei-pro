@@ -16,12 +16,15 @@ import {
     buildErrosNaoLidoMessage,
     buildProcessoTrabalharUrl,
     buildMarcarAndamentoOverrides,
-    buildEnviarProcessoOverrides
+    buildEnviarProcessoOverrides,
+    resolveSelectedProcessoId,
+    getNaoLidoLoadingMode
 } from './domain.js';
 import { on } from '../../dom/index.js';
 
 export function setProcessoNaoLidoLoading(display = true) {
-    if ($('body').hasClass('seiSlim')) {
+    var mode = getNaoLidoLoadingMode($('body').hasClass('seiSlim'));
+    if (mode === 'icon-toggle') {
         $(divComandos+' .iconNaoLido').toggleClass('iconLoading', display);
     } else {
         setIconLoadinBtnSEI($('.iconNaoLido'), display);
@@ -30,28 +33,22 @@ export function setProcessoNaoLidoLoading(display = true) {
 
 export function getSelectedProcessoNaoLido() {
     var listId = getListIdProtocoloSelected();
-    if (listId && listId.length > 0) {
-        return listId[0];
-    }
+    var row = {};
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     var markedRow = tableProc.find('tr.infraTrMarcada').first();
     if (markedRow.length > 0) {
         var checkboxValue = markedRow.find(elemCheckbox).val();
-        if (typeof checkboxValue !== 'undefined' && checkboxValue !== null && checkboxValue !== '') {
-            return checkboxValue;
-        }
+        if (typeof checkboxValue !== 'undefined') row.checkboxValue = checkboxValue;
         var linkProcesso = markedRow.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').first();
         if (linkProcesso.length > 0) {
             var paramsProcesso = getParamsUrlPro(linkProcesso.attr('href'));
             if (paramsProcesso && typeof paramsProcesso.id_procedimento !== 'undefined') {
-                return paramsProcesso.id_procedimento;
+                row.linkProcessoId = paramsProcesso.id_procedimento;
             }
         }
-        if (markedRow.attr('id')) {
-            return markedRow.attr('id').replace(/^P/, '');
-        }
+        row.rowId = markedRow.attr('id');
     }
-    return false;
+    return resolveSelectedProcessoId(listId, row);
 }
 
 export function failProcessoNaoLido(message) {

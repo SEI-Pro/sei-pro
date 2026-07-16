@@ -4,7 +4,9 @@ import {
     buildErrosNaoLidoMessage,
     buildProcessoTrabalharUrl,
     buildMarcarAndamentoOverrides,
-    buildEnviarProcessoOverrides
+    buildEnviarProcessoOverrides,
+    resolveSelectedProcessoId,
+    getNaoLidoLoadingMode
 } from '../../../src/features/nao-lido/domain.js';
 
 describe('nao-lido domain — prefixNaoVisualizadoTooltip', () => {
@@ -45,6 +47,22 @@ describe('nao-lido domain — buildErrosNaoLidoMessage', () => {
             .toBe('1 de 3 processo(s) não puderam ser marcados: Falha A');
     });
 });
+
+describe('nao-lido domain — seleção e loading da view', () => {
+    it('prioriza a seleção em lote e preserva os fallbacks da linha', () => {
+        expect(resolveSelectedProcessoId(['12', '13'], { checkboxValue: '99' })).toBe('12');
+        expect(resolveSelectedProcessoId([], { checkboxValue: '99', linkProcessoId: '88', rowId: 'P77' })).toBe('99');
+        expect(resolveSelectedProcessoId([], { linkProcessoId: 88, rowId: 'P77' })).toBe(88);
+        expect(resolveSelectedProcessoId([], { rowId: 'P77' })).toBe('77');
+        expect(resolveSelectedProcessoId([], {})).toBe(false);
+    });
+
+    it('seleciona o contrato visual correto para SEI Slim e botão padrão', () => {
+        expect(getNaoLidoLoadingMode(true)).toBe('icon-toggle');
+        expect(getNaoLidoLoadingMode(false)).toBe('sei-button');
+    });
+});
+
 
 describe('nao-lido domain — requests da marcação', () => {
     it('monta a URL do processo sem alterar o host legado', () => {

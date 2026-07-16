@@ -145,10 +145,25 @@
       sbmEnviar: "Enviar"
     };
   }
+  function resolveSelectedProcessoId(listIds, row = {}) {
+    if (Array.isArray(listIds) && listIds.length > 0) return listIds[0];
+    if (row.checkboxValue !== void 0 && row.checkboxValue !== null && row.checkboxValue !== "") {
+      return row.checkboxValue;
+    }
+    if (row.linkProcessoId !== void 0 && row.linkProcessoId !== null) {
+      return row.linkProcessoId;
+    }
+    if (row.rowId) return String(row.rowId).replace(/^P/, "");
+    return false;
+  }
+  function getNaoLidoLoadingMode(isSlim) {
+    return isSlim ? "icon-toggle" : "sei-button";
+  }
 
   // src/features/nao-lido/view.js
   function setProcessoNaoLidoLoading(display = true) {
-    if ($("body").hasClass("seiSlim")) {
+    var mode = getNaoLidoLoadingMode($("body").hasClass("seiSlim"));
+    if (mode === "icon-toggle") {
       $(divComandos + " .iconNaoLido").toggleClass("iconLoading", display);
     } else {
       setIconLoadinBtnSEI($(".iconNaoLido"), display);
@@ -156,28 +171,22 @@
   }
   function getSelectedProcessoNaoLido() {
     var listId = getListIdProtocoloSelected();
-    if (listId && listId.length > 0) {
-      return listId[0];
-    }
+    var row = {};
     var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
     var markedRow = tableProc.find("tr.infraTrMarcada").first();
     if (markedRow.length > 0) {
       var checkboxValue = markedRow.find(elemCheckbox).val();
-      if (typeof checkboxValue !== "undefined" && checkboxValue !== null && checkboxValue !== "") {
-        return checkboxValue;
-      }
+      if (typeof checkboxValue !== "undefined") row.checkboxValue = checkboxValue;
       var linkProcesso = markedRow.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').first();
       if (linkProcesso.length > 0) {
         var paramsProcesso = getParamsUrlPro(linkProcesso.attr("href"));
         if (paramsProcesso && typeof paramsProcesso.id_procedimento !== "undefined") {
-          return paramsProcesso.id_procedimento;
+          row.linkProcessoId = paramsProcesso.id_procedimento;
         }
       }
-      if (markedRow.attr("id")) {
-        return markedRow.attr("id").replace(/^P/, "");
-      }
+      row.rowId = markedRow.attr("id");
     }
-    return false;
+    return resolveSelectedProcessoId(listId, row);
   }
   function failProcessoNaoLido(message) {
     setProcessoNaoLidoLoading(false);

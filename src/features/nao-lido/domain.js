@@ -52,3 +52,22 @@ export function buildEnviarProcessoOverrides(idUnidade, siglaUnidadeAtual) {
         sbmEnviar: 'Enviar'
     };
 }
+
+// Resolve a seleção da lista sem conhecer DOM/jQuery. A lista de checkboxes tem
+// prioridade; os candidatos da linha marcada mantêm a ordem de fallback legada.
+export function resolveSelectedProcessoId(listIds, row = {}) {
+    if (Array.isArray(listIds) && listIds.length > 0) return listIds[0];
+    if (row.checkboxValue !== undefined && row.checkboxValue !== null && row.checkboxValue !== '') {
+        return row.checkboxValue;
+    }
+    if (row.linkProcessoId !== undefined && row.linkProcessoId !== null) {
+        return row.linkProcessoId;
+    }
+    if (row.rowId) return String(row.rowId).replace(/^P/, '');
+    return false;
+}
+
+// A view só precisa escolher qual contrato visual legado aplicar.
+export function getNaoLidoLoadingMode(isSlim) {
+    return isSlim ? 'icon-toggle' : 'sei-button';
+}
