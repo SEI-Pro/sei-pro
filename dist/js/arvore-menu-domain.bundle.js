@@ -1,5 +1,20 @@
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // src/features/arvore/domain.js
+  var domain_exports = {};
+  __export(domain_exports, {
+    extractUploadExtensions: () => extractUploadExtensions,
+    hasUploadFiles: () => hasUploadFiles,
+    resolveMenuCatalogs: () => resolveMenuCatalogs,
+    resolveMenuSelection: () => resolveMenuSelection,
+    serializeUploadAttachment: () => serializeUploadAttachment,
+    sortUploadFiles: () => sortUploadFiles
+  });
   function isMenuEntry(value) {
     return Array.isArray(value) && typeof value[0] === "string" && value[0].trim() !== "";
   }
@@ -48,6 +63,13 @@
   }
 
   // src/features/arvore/io.js
+  var io_exports = {};
+  __export(io_exports, {
+    fetchUploadPage: () => fetchUploadPage,
+    postSavedUpload: () => postSavedUpload,
+    postUploadForm: () => postUploadForm,
+    readArvoreMenuConfig: () => readArvoreMenuConfig
+  });
   var MENU_STORAGE_KEYS = {
     process: "configViewFlashMenuPro",
     document: "configViewFlashDocMenuPro",
@@ -94,6 +116,10 @@
   }
 
   // src/features/arvore/view.js
+  var view_exports = {};
+  __export(view_exports, {
+    bindUploadArvoreNativeDragEvents: () => bindUploadArvoreNativeDragEvents
+  });
   function bindUploadArvoreNativeDragEvents({
     root,
     $,
@@ -127,6 +153,23 @@
     });
   }
 
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
+
+  // src/features/arvore/legacy-api.js
+  function installArvoreLegacyApi() {
+    [domain_exports, io_exports, view_exports].forEach((mod) => {
+      Object.keys(mod).forEach((name) => {
+        if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
+      });
+    });
+  }
+
   // src/features/arvore/index.js
   var namespace = globalThis.SeiPro = globalThis.SeiPro || {};
   namespace.features = namespace.features || {};
@@ -140,4 +183,5 @@
     sortUploadFiles
   };
   namespace.features.arvoreUploadView = { bindUploadArvoreNativeDragEvents };
+  installArvoreLegacyApi();
 })();

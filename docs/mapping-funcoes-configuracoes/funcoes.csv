@@ -485,6 +485,7 @@ src/features/arvore/io.js:34:requireAjax,src/features/arvore/io.js,34,requireAja
 src/features/arvore/io.js:39:fetchUploadPage,src/features/arvore/io.js,39,fetchUploadPage,feature,arvore,moderno,,,não,2
 src/features/arvore/io.js:43:postUploadForm,src/features/arvore/io.js,43,postUploadForm,feature,arvore,moderno,,,não,2
 src/features/arvore/io.js:47:postSavedUpload,src/features/arvore/io.js,47,postSavedUpload,feature,arvore,moderno,,newdocformat;newdocname;newdocnivel;newdocsigilo,sim,4
+src/features/arvore/legacy-api.js:13:installArvoreLegacyApi,src/features/arvore/legacy-api.js,13,installArvoreLegacyApi,feature,arvore,moderno,,,não,3
 src/features/arvore/sei-pro-arvore.js:15:resolveArvoreMenuCatalogs,src/features/arvore/sei-pro-arvore.js,15,resolveArvoreMenuCatalogs,feature,arvore,moderno,,,não,1
 src/features/arvore/sei-pro-arvore.js:21:readArvoreMenuConfig,src/features/arvore/sei-pro-arvore.js,21,readArvoreMenuConfig,feature,arvore,moderno,,,não,1
 src/features/arvore/sei-pro-arvore.js:30:getSelectedItensPanelArvore,src/features/arvore/sei-pro-arvore.js,30,getSelectedItensPanelArvore,feature,arvore,moderno,,,não,3

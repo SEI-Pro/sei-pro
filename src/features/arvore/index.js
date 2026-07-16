@@ -8,6 +8,7 @@ import {
 import { readArvoreMenuConfig } from './io.js';
 import { fetchUploadPage, postUploadForm, postSavedUpload } from './io.js';
 import { bindUploadArvoreNativeDragEvents } from './view.js';
+import { installArvoreLegacyApi } from './legacy-api.js';
 
 const namespace = globalThis.SeiPro = globalThis.SeiPro || {};
 namespace.features = namespace.features || {};
@@ -21,3 +22,4 @@ namespace.features.arvoreUpload = {
     sortUploadFiles
 };
 namespace.features.arvoreUploadView = { bindUploadArvoreNativeDragEvents };
+installArvoreLegacyApi();

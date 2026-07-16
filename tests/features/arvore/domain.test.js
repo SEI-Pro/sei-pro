@@ -9,8 +9,22 @@ import {
 } from '@src/features/arvore/domain.js';
 import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload } from '@src/features/arvore/io.js';
 import { bindUploadArvoreNativeDragEvents } from '@src/features/arvore/view.js';
+import { installArvoreLegacyApi } from '@src/features/arvore/legacy-api.js';
 
 const fallback = [['Copiar número'], ['Ações em lote']];
+
+describe('arvore/legacy-api — instalação', () => {
+    it('expõe os helpers migrados como aliases sem alterar os módulos de origem', () => {
+        const previous = globalThis.fetchUploadPage;
+        delete globalThis.fetchUploadPage;
+        installArvoreLegacyApi();
+        expect(globalThis.fetchUploadPage).toBe(fetchUploadPage);
+        expect(globalThis.postUploadForm).toBe(postUploadForm);
+        expect(globalThis.postSavedUpload).toBe(postSavedUpload);
+        if (previous === undefined) delete globalThis.fetchUploadPage;
+        else globalThis.fetchUploadPage = previous;
+    });
+});
 
 describe('arvore/domain — resolveMenuSelection', () => {
     it('preserva a forma legada e descarta entradas inválidas', () => {
