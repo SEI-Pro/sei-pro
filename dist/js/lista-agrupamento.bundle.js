@@ -29,6 +29,43 @@
     };
   }
 
+  // src/features/lista-agrupamento/io.js
+  function readGroupOrder(getOptions, fallback = "asc") {
+    const value = typeof getOptions === "function" ? getOptions("orderbyTableGroup") : void 0;
+    return value || fallback;
+  }
+  function isGroupCollapsed(getOptions, tagName) {
+    return typeof getOptions === "function" && Boolean(getOptions("panelGroup_" + tagName));
+  }
+  function persistGroupCollapsed(setOptions, tagName) {
+    if (typeof setOptions === "function") setOptions("panelGroup_" + tagName, true);
+  }
+  function clearGroupCollapsed(removeOptions, tagName) {
+    if (typeof removeOptions === "function") removeOptions("panelGroup_" + tagName);
+  }
+  function readSelectedGroup(restore) {
+    return typeof restore === "function" ? restore("selectGroupTablePro") : void 0;
+  }
+  function readReceivedProcess(restore, getParams, jmespath, href) {
+    const stored = typeof restore === "function" ? restore("configDataRecebimentoPro") : void 0;
+    const records = stored && typeof stored === "object" ? stored : [];
+    const id = typeof getParams === "function" ? String(getParams(href || "").id_procedimento) : false;
+    if (!id || !jmespath || typeof jmespath.search !== "function") return "";
+    return jmespath.search(records, "[?id_procedimento=='" + id + "'] | [0]") || "";
+  }
+  function installListaAgrupamentoIO(globalRef2 = globalThis) {
+    globalRef2.SeiPro = globalRef2.SeiPro || {};
+    globalRef2.SeiPro.features = globalRef2.SeiPro.features || {};
+    globalRef2.SeiPro.features.listaAgrupamentoIO = {
+      readGroupOrder,
+      isGroupCollapsed,
+      persistGroupCollapsed,
+      clearGroupCollapsed,
+      readSelectedGroup,
+      readReceivedProcess
+    };
+  }
+
   // src/core/global.js
   var globalRef = typeof window !== "undefined" ? window : globalThis;
   function aliasGlobal(name, value) {
@@ -43,4 +80,5 @@
 
   // src/features/lista-agrupamento/index.js
   installListaAgrupamentoDomain(typeof window !== "undefined" ? window : globalThis);
+  installListaAgrupamentoIO(typeof window !== "undefined" ? window : globalThis);
 })();

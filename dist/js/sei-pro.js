@@ -42,6 +42,28 @@ function handleClientLoadPro(TimeOut = 3000) {
 
 //// Agrupamento de lista de processos
 
+function listaAgrupamentoIO() {
+    return typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.listaAgrupamentoIO;
+}
+function readGroupOrderLegacy() {
+    var io = listaAgrupamentoIO();
+    return io && typeof io.readGroupOrder === 'function' ? io.readGroupOrder(getOptionsPro, 'asc') : (getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc');
+}
+function isGroupCollapsedLegacy(tagName) {
+    var io = listaAgrupamentoIO();
+    return io && typeof io.isGroupCollapsed === 'function' ? io.isGroupCollapsed(getOptionsPro, tagName) : getOptionsPro('panelGroup_'+tagName);
+}
+function persistGroupCollapsedLegacy(tagName) {
+    var io = listaAgrupamentoIO();
+    if (io && typeof io.persistGroupCollapsed === 'function') return io.persistGroupCollapsed(setOptionsPro, tagName);
+    setOptionsPro('panelGroup_'+tagName, true);
+}
+function clearGroupCollapsedLegacy(tagName) {
+    var io = listaAgrupamentoIO();
+    if (io && typeof io.clearGroupCollapsed === 'function') return io.clearGroupCollapsed(removeOptionsPro, tagName);
+    removeOptionsPro('panelGroup_'+tagName);
+}
+
 function getGroupTableLabelFromLink(linkElem, acaoType) {
     var $link = $(linkElem);
     var href = $link.attr('href');
@@ -81,7 +103,7 @@ function getProcessoLinkFromGroupRow(row) {
     return $(row).find('a[href*="acao=procedimento_trabalhar"], a[href*="controlador.php?acao=procedimento_trabalhar"]').first();
 }
 function getListTypes(acaoType) {
-    var orderbyTableGroup = getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc';
+    var orderbyTableGroup = readGroupOrderLegacy();
     var arrayTag = [''];
     if (acaoType == 'tags') {
     	var acaoType_ = 'acao=andamento_marcador_gerenciar';
@@ -208,7 +230,7 @@ function getListTypes(acaoType) {
             var tag_ = (typeof tag !== 'undefined' && tag != '' ) ? removeAcentos(tag).replace(/\ /g, '') : 'SemGrupo';
             var tr_tag = $(this).closest('tr')
                 tr_tag.attr('data-tagname', tag_);
-                if (getOptionsPro('panelGroup_'+tag_))  tr_tag.hide();
+                if (isGroupCollapsedLegacy(tag_))  tr_tag.hide();
 
             arrayTag.push(tag);
         }
@@ -216,7 +238,7 @@ function getListTypes(acaoType) {
     return uniqPro(arrayTag).sort();
 }
 function appendGerados(type) {
-    var orderbyDesc = (getOptionsPro('orderbyTableGroup') == 'desc') ? true : false;
+    var orderbyDesc = (readGroupOrderLegacy() == 'desc') ? true : false;
     $('#divGerados table tr').not('.tablesorter-filter-row').each(function(index){
         if ( $(this).find('th').length == 0 ) {
             var outerHTML = $('<div>').append($(this).clone().addClass('typeGerados')).html();
@@ -432,12 +454,12 @@ function toggleGroupTablePro(this_) {
         _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').hide();
         _this.closest('span').find('a[data-action="show"]').show();
         _this.closest('span').find('a[data-action="hide"]').hide();
-        setOptionsPro('panelGroup_'+data.htagname, true);
+        persistGroupCollapsedLegacy(data.htagname);
     } else {
         _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').show();
         _this.closest('span').find('a[data-action="show"]').hide();
         _this.closest('span').find('a[data-action="hide"]').show();
-        removeOptionsPro('panelGroup_'+data.htagname);
+        clearGroupCollapsedLegacy(data.htagname);
     }
 }
 function getTableOnTag(type) {
@@ -495,7 +517,7 @@ function getTableOnTag(type) {
         tableHomeDestroy(true);
     }
     if (type != '' && type != 'all') {
-        var orderbyTableGroup = getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc';
+        var orderbyTableGroup = readGroupOrderLegacy();
         $('#processoToCSV').after('<a class="newLink" data-order="'+orderbyTableGroup+'" onclick="orderbyTableGroup(this)" id="orderbyTableGroup" onmouseover="return infraTooltipMostrar(\'Classificar dados pela ordem '+(orderbyTableGroup == 'asc' ? 'decrescente' : 'crescente')+'\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-sort-numeric-'+(orderbyTableGroup == 'asc' ? 'up' : 'down')+' cinzaColor"></i></a>');
     }
     if (SeiPro.sei.adapter.isNewSEI() && type != '') {
@@ -515,6 +537,10 @@ function orderbyTableGroup(this_) {
         updateGroupTable($('#selectGroupTablePro'));
 }
 function getArrayProcessoRecebido(href) {
+    var io = listaAgrupamentoIO();
+    if (io && typeof io.readReceivedProcess === 'function') {
+        return io.readReceivedProcess(localStorageRestorePro, getParamsUrlPro, jmespath, href);
+    }
     var storeRecebimento = (typeof localStorageRestorePro !== 'undefined' && typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
     var id_procedimento = (typeof getParamsUrlPro !== 'undefined') ? String(getParamsUrlPro(href).id_procedimento) : false;
     var dadosRecebido = (typeof jmespath !== 'undefined' && jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
@@ -522,7 +548,8 @@ function getArrayProcessoRecebido(href) {
 }
 function updateGroupTablePro(valueSelect, mode) {
     //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
-    var selectGroup = localStorageRestorePro('selectGroupTablePro');
+    var io = listaAgrupamentoIO();
+    var selectGroup = io && typeof io.readSelectedGroup === 'function' ? io.readSelectedGroup(localStorageRestorePro) : localStorageRestorePro('selectGroupTablePro');
     if ($.isArray(selectGroup) && selectGroup.length > 0) {
         if (jmespath.search(selectGroup, "[?unidade=='"+siglaUnidadeAtual+"'].unidade | length(@)") > 0) {
             for (i = 0; i < selectGroup.length; i++) {
@@ -554,7 +581,8 @@ function updateGroupTablePro(valueSelect, mode) {
 function storeGroupTablePro() {
     if (typeof localStorageRestorePro !== "undefined" && localStorageRestorePro('selectGroupTablePro') != null) {
         //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
-        var selectGroup = localStorageRestorePro('selectGroupTablePro');
+        var io = listaAgrupamentoIO();
+    var selectGroup = io && typeof io.readSelectedGroup === 'function' ? io.readSelectedGroup(localStorageRestorePro) : localStorageRestorePro('selectGroupTablePro');
         if ($.isArray(selectGroup) && typeof jmespath !== 'undefined' && jmespath.search(selectGroup, "[?unidade=='"+siglaUnidadeAtual+"'].unidade | [0]") == siglaUnidadeAtual ) {
             return jmespath.search(selectGroup, "[?unidade=='"+siglaUnidadeAtual+"'].selected | [0]");
         } else if (!$.isArray(selectGroup)) {
