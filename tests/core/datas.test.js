@@ -83,6 +83,32 @@ describe('getRecentDateRow', () => {
   });
 });
 
+describe('buildDataRecebimentoRecord', () => {
+  const base = {
+    id_procedimento: '42', processo: '123.456', andamento: [
+      { unidade: 'ABC', datahora: '2024-01-03 10:00:00', descricao: 'Processo público gerado', descricao_alt: '' },
+      { unidade: 'ABC', datahora: '2024-01-04 11:00:00', descricao: 'Processo remetido pela unidade XYZ', descricao_alt: 'Unidade remetente' },
+      { unidade: 'ABC', datahora: '2024-01-05 12:00:00', descricao: 'Processo recebido na unidade', descricao_alt: '' }
+    ]
+  };
+
+  it('normaliza geração, remessa e recebimento no primeiro registro aplicável', () => {
+    expect(datas.buildDataRecebimentoRecord(base, 'ABC', {
+      datetime: '2024-01-06 00:00:00', observacoes: 'obs', acompanhamentoesp: 'sim'
+    })).toEqual({
+      id_procedimento: '42', processo: '123.456', datahora: '2024-01-03 10:00:00', unidade: 'ABC',
+      descricao: 'Processo público gerado', datetime: '2024-01-06 00:00:00',
+      datesend: '2024-01-04 11:00:00', descricaosend: 'Processo remetido pela unidade XYZ',
+      unidadesend: 'XYZ', unidadesendfull: 'Unidade remetente - XYZ', datageracao: '2024-01-03 10:00:00',
+      descricaodatageracao: 'Processo público gerado', observacoes: 'obs', acompanhamentoesp: 'sim'
+    });
+  });
+
+  it('retorna null quando não há recebimento/geração na unidade', () => {
+    expect(datas.buildDataRecebimentoRecord(base, 'DEF')).toBeNull();
+  });
+});
+
 describe('calculeDatesDuration', () => {
   it('datas iguais → "hoje"', () => {
     expect(datas.calculeDatesDuration('2024-01-01', '2024-01-01', false)).toBe('hoje');

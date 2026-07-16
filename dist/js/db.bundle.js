@@ -826,6 +826,45 @@
     duration_ = countdays && diff_d == 0 ? day_formated + " " + day_txt : duration_;
     return duration_;
   }
+  function buildDataRecebimentoRecord(listAndamento, unidadeAtual, options = {}) {
+    const andamento = listAndamento && Array.isArray(listAndamento.andamento) ? listAndamento.andamento : [];
+    const { datetime = "", observacoes = "", acompanhamentoesp = "" } = options;
+    let datesend = "", descricaosend = "", unidadesend = "", unidadesendfull = "";
+    let datageracao = "", descricaodatageracao = "";
+    const geracao = andamento.find((item) => item.descricao && (item.descricao.indexOf("Processo p\xFAblico gerado") !== -1 || item.descricao.indexOf("Processo restrito gerado") !== -1));
+    if (geracao) {
+      datageracao = geracao.datahora;
+      descricaodatageracao = geracao.descricao;
+    }
+    const remessa = andamento.find((item) => item.unidade === unidadeAtual && item.descricao && item.descricao.indexOf("Processo remetido pela unidade") !== -1);
+    if (remessa) {
+      datesend = remessa.datahora;
+      descricaosend = remessa.descricao;
+      unidadesend = remessa.descricao.replace("Processo remetido pela unidade", "").trim();
+      unidadesendfull = remessa.descricao_alt !== "" ? remessa.descricao_alt + " - " + unidadesend : "";
+    }
+    const recebimento = andamento.find((item) => {
+      if (item.unidade !== unidadeAtual || !item.descricao) return false;
+      return item.descricao === "Processo recebido na unidade" || item.descricao === "Reabertura do processo na unidade" || item.descricao === "Processo p\xFAblico gerado" || item.descricao.indexOf("Processo restrito gerado") !== -1;
+    });
+    if (!recebimento) return null;
+    return {
+      id_procedimento: listAndamento.id_procedimento,
+      processo: listAndamento.processo,
+      datahora: recebimento.datahora,
+      unidade: recebimento.unidade,
+      descricao: recebimento.descricao,
+      datetime,
+      datesend,
+      descricaosend,
+      unidadesend,
+      unidadesendfull,
+      datageracao,
+      descricaodatageracao,
+      observacoes,
+      acompanhamentoesp
+    };
+  }
   function getDateSemantic(config) {
     const moment = globalRef.moment;
     const jmespath = globalRef.jmespath;
@@ -864,6 +903,7 @@
       getRecentDateRow,
       calculeDatesDurationTemplate,
       calculeDatesDuration,
+      buildDataRecebimentoRecord,
       getDateSemantic
     };
     getSeiPro().core.datas = datas;

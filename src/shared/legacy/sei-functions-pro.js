@@ -5871,7 +5871,25 @@ function getDadosAndamentoPro(href) {
 }
 // randomDate migrada para SeiPro.core.datas (src/core/datas.js) — Fase 6
 function getDataRecebimentoPro(listAndamento, listProc = false, acompanhamentoEsp = '') {
-    var dataRecebimento = [];
+    var datasCore = typeof SeiPro !== 'undefined' && SeiPro.core && SeiPro.core.datas;
+    if (datasCore && typeof datasCore.buildDataRecebimentoRecord === 'function') {
+        var dataRecebimentoCore = datasCore.buildDataRecebimentoRecord(listAndamento, siglaUnidadeAtual, {
+            datetime: moment().format('YYYY-MM-DD HH:mm:ss'),
+            observacoes: typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.txaObservacoes !== 'undefined' ? dadosProcessoPro.propProcesso.txaObservacoes : '',
+            acompanhamentoesp: acompanhamentoEsp
+        });
+        if (dataRecebimentoCore) {
+            var storeRecebimentoCore = (typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro'))) ? localStorageRestorePro('configDataRecebimentoPro') : [];
+            var objIndexCore = -1;
+            $.each(storeRecebimentoCore, function(i, v) {
+                if (v.id_procedimento == listAndamento.id_procedimento) { objIndexCore = i; return false; }
+            });
+            if (objIndexCore == -1) storeRecebimentoCore.push(dataRecebimentoCore);
+            else storeRecebimentoCore[objIndexCore] = dataRecebimentoCore;
+            localStorageStorePro('configDataRecebimentoPro', storeRecebimentoCore);
+        }
+        return;
+    }
     var datesend = '',
         descricaosend = '',
         acompanhamentoesp = acompanhamentoEsp,
