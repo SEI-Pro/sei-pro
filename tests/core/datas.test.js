@@ -109,6 +109,31 @@ describe('buildDataRecebimentoRecord', () => {
   });
 });
 
+describe('persistDataRecebimentoRecord', () => {
+  it('insere um registro usando dependências de storage injetadas', () => {
+    const calls = [];
+    const record = { id_procedimento: '42', descricao: 'novo' };
+    expect(datas.persistDataRecebimentoRecord(record, {
+      restore: () => [],
+      store: (key, value) => calls.push([key, value])
+    })).toEqual([record]);
+    expect(calls).toEqual([['configDataRecebimentoPro', [record]]]);
+  });
+
+  it('substitui pelo id_procedimento sem mutar o array lido', () => {
+    const previous = [{ id_procedimento: '42', descricao: 'antigo' }, { id_procedimento: '99' }];
+    let stored;
+    const record = { id_procedimento: 42, descricao: 'atualizado' };
+    const result = datas.persistDataRecebimentoRecord(record, {
+      restore: () => previous,
+      store: (_key, value) => { stored = value; }
+    });
+    expect(result).toEqual([record, previous[1]]);
+    expect(stored).toBe(result);
+    expect(previous[0].descricao).toBe('antigo');
+  });
+});
+
 describe('calculeDatesDuration', () => {
   it('datas iguais → "hoje"', () => {
     expect(datas.calculeDatesDuration('2024-01-01', '2024-01-01', false)).toBe('hoje');

@@ -107,6 +107,23 @@ export function buildDataRecebimentoRecord(listAndamento, unidadeAtual, options 
     };
 }
 
+/**
+ * Persiste um registro de recebimento substituindo a entrada do mesmo processo.
+ * A borda injeta leitura/escrita para manter este adapter livre de storage e jQuery.
+ */
+export function persistDataRecebimentoRecord(record, dependencies = {}) {
+    const { restore, store, isEmptyObject = (value) => value && typeof value === 'object' && Object.keys(value).length === 0 } = dependencies;
+    if (!record || typeof restore !== 'function' || typeof store !== 'function') return [];
+    const saved = restore('configDataRecebimentoPro');
+    const records = (typeof saved !== 'undefined' && saved !== null && !isEmptyObject(saved)) ? saved : [];
+    const next = Array.isArray(records) ? records.slice() : [];
+    const index = next.findIndex((item) => item && item.id_procedimento == record.id_procedimento);
+    if (index === -1) next.push(record);
+    else next[index] = record;
+    store('configDataRecebimentoPro', next);
+    return next;
+}
+
 // Semântica de prazo: dado um config { date, dateTo, countdays, workday, due... },
 // devolve { date, dateref, duedate, alertdate, calcalert, duecalcref }.
 // Usa getHolidayBetweenDates (feriados) + calculeDatesDuration (local) e, no modo
@@ -161,6 +178,7 @@ export function installDatas() {
         calculeDatesDurationTemplate,
         calculeDatesDuration,
         buildDataRecebimentoRecord,
+        persistDataRecebimentoRecord,
         getDateSemantic
     };
 

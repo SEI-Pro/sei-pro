@@ -865,6 +865,18 @@
       acompanhamentoesp
     };
   }
+  function persistDataRecebimentoRecord(record, dependencies = {}) {
+    const { restore, store, isEmptyObject = (value) => value && typeof value === "object" && Object.keys(value).length === 0 } = dependencies;
+    if (!record || typeof restore !== "function" || typeof store !== "function") return [];
+    const saved = restore("configDataRecebimentoPro");
+    const records = typeof saved !== "undefined" && saved !== null && !isEmptyObject(saved) ? saved : [];
+    const next = Array.isArray(records) ? records.slice() : [];
+    const index = next.findIndex((item) => item && item.id_procedimento == record.id_procedimento);
+    if (index === -1) next.push(record);
+    else next[index] = record;
+    store("configDataRecebimentoPro", next);
+    return next;
+  }
   function getDateSemantic(config) {
     const moment = globalRef.moment;
     const jmespath = globalRef.jmespath;
@@ -904,6 +916,7 @@
       calculeDatesDurationTemplate,
       calculeDatesDuration,
       buildDataRecebimentoRecord,
+      persistDataRecebimentoRecord,
       getDateSemantic
     };
     getSeiPro().core.datas = datas;
