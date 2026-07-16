@@ -42,4 +42,27 @@ describe('migration: arvore upload legacy facade', () => {
     expect(build).toContain("'src/features/arvore/sei-pro-arvore.js'");
     expect(index).toContain('namespace.features.arvoreUploadIO');
   });
+
+  it('preserva o wire da árvore no manifest e os call-sites legados', () => {
+    const manifest = JSON.parse(read('manifest.base.json'));
+    const contexts = manifest.content_scripts.filter(({ js = [] }) =>
+      js.includes('js/sei-pro-arvore.js')
+    );
+
+    expect(contexts.length).toBeGreaterThan(0);
+    for (const context of contexts) {
+      const scripts = context.js;
+      const dependency = scripts.indexOf('js/sei-functions-pro.js');
+      const bundle = scripts.indexOf('js/arvore-menu-domain.bundle.js');
+      const legacy = scripts.indexOf('js/sei-pro-arvore.js');
+      expect(dependency).toBeGreaterThanOrEqual(0);
+      expect(bundle).toBeGreaterThan(dependency);
+      expect(legacy).toBeGreaterThan(bundle);
+    }
+
+    const legacy = read('src/features/arvore/sei-pro-arvore.js');
+    expect(legacy).toContain('bindUploadArvoreNativeDragEvents();');
+    expect(legacy).toContain('SeiPro.features.arvoreUploadIO');
+    expect(legacy).toContain('SeiPro.features.arvoreUpload');
+  });
 });
