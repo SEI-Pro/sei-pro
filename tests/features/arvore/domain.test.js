@@ -144,10 +144,15 @@ describe('arvore/view — toolbar de processo', () => {
             }
         };
         const calls = [];
-        expect(bindArvoreToolbarProcess({ element, onAction: (...args) => calls.push(args) })).toBe(chain);
+        const jqueryElement = { jquery: true, id: 'processo' };
+        const $ = (element) => {
+            expect(element).toEqual({ id: 'processo' });
+            return jqueryElement;
+        };
+        expect(bindArvoreToolbarProcess({ element, $, onAction: (...args) => calls.push(args) })).toBe(chain);
         const trigger = { id: 'toolbar-action' };
         handlers.toolbarItemClick.call({ id: 'processo' }, {}, trigger);
-        expect(calls).toEqual([[{ id: 'processo' }, trigger]]);
+        expect(calls).toEqual([[jqueryElement, trigger]]);
     });
 });
 describe('arvore/view — eventos nativos do upload', () => {

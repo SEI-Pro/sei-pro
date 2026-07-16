@@ -116,14 +116,14 @@
   }
 
   // src/features/arvore/view.js
-  function bindArvoreToolbarProcess({ element, onAction }) {
+  function bindArvoreToolbarProcess({ element, $, onAction }) {
     return element.toolbar({
       content: "#toolbar-options-proc",
       position: "bottom",
       adjustment: 5,
       style: "menu"
     }).on("toolbarItemClick", function(event, triggerButton) {
-      onAction(this, triggerButton);
+      onAction($(this), triggerButton);
     });
   }
   function bindUploadArvoreNativeDragEvents({

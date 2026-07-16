@@ -334,7 +334,7 @@ function getToolbarPro(click) {
             
         const toolbarView = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadView && SeiPro.features.arvoreUploadView.bindArvoreToolbarProcess;
         if (toolbarView) {
-            toolbarView({ element: elemProc, onAction: actionToolbarPro });
+            toolbarView({ element: elemProc, $, onAction: actionToolbarPro });
         } else {
             elemProc.toolbar({
                 content: '#toolbar-options-proc',
