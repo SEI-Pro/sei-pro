@@ -101,6 +101,15 @@
   // src/features/lista-agrupamento/legacy-api.js
   aliasGlobal("extractGroupTableTooltipToArray", extractGroupTableTooltipToArray);
   aliasGlobal("getTagName", getTagName);
+  function toggleGroupTableLegacy(this_) {
+    return toggleGroupTable(
+      this_,
+      globalRef.$ || globalRef.jQuery,
+      (tagName) => persistGroupCollapsed(globalRef.setOptionsPro, tagName),
+      (tagName) => clearGroupCollapsed(globalRef.removeOptionsPro, tagName)
+    );
+  }
+  aliasGlobal("toggleGroupTablePro", toggleGroupTableLegacy);
 
   // src/features/lista-agrupamento/index.js
   var globalRef2 = typeof window !== "undefined" ? window : globalThis;

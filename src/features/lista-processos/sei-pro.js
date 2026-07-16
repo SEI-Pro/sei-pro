@@ -63,10 +63,6 @@ function clearGroupCollapsedLegacy(tagName) {
     if (io && typeof io.clearGroupCollapsed === 'function') return io.clearGroupCollapsed(removeOptionsPro, tagName);
     removeOptionsPro('panelGroup_'+tagName);
 }
-function listaAgrupamentoView() {
-    return typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.listaAgrupamentoView;
-}
-
 function getGroupTableLabelFromLink(linkElem, acaoType) {
     var $link = $(linkElem);
     var href = $link.attr('href');
@@ -449,25 +445,6 @@ function getUniqueTableTag(i, tagName, type) {
             // tbRecebidos.find('tr').eq(0).hide(); 
             tbRecebidos.find('caption').hide(); 
         }
-}
-function toggleGroupTablePro(this_) {
-    var view = listaAgrupamentoView();
-    if (view && typeof view.toggleGroupTable === 'function') {
-        return view.toggleGroupTable(this_, $, persistGroupCollapsedLegacy, clearGroupCollapsedLegacy);
-    }
-    var _this = $(this_);
-    var data = _this.data();
-    if (data.action == 'hide') {
-        _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').hide();
-        _this.closest('span').find('a[data-action="show"]').show();
-        _this.closest('span').find('a[data-action="hide"]').hide();
-        persistGroupCollapsedLegacy(data.htagname);
-    } else {
-        _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').show();
-        _this.closest('span').find('a[data-action="show"]').hide();
-        _this.closest('span').find('a[data-action="hide"]').show();
-        clearGroupCollapsedLegacy(data.htagname);
-    }
 }
 function getTableOnTag(type) {
     $('#divRecebidos table tbody tr').each(function(index){
