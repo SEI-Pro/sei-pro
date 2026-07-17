@@ -3177,6 +3177,20 @@ function storeVersionSEI() {
         getSeiVersionPro();
     else if (typeof setSeiVersionPro !== 'undefined') setSeiVersionPro();
 }
+function getListaEntryContextLegacy() {
+    var entry = typeof SeiPro !== 'undefined' && SeiPro.entries && SeiPro.entries.lista;
+    if (!entry || typeof entry.composeListaFeatures !== 'function') return false;
+    return entry.composeListaFeatures({
+        hasProcessTables: $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0,
+        hasTreeFrame: $('#ifrArvore').length > 0,
+        enabled: {
+            'controlar-prazos': typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarprazos') : true,
+            'nao-lido': true,
+            monitorados: typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarmonitorados') : true
+        }
+    });
+}
+
 function initSeiPro() {
     if (typeof checkHostLimit !== 'function') {
         setTimeout(function(){
@@ -3185,7 +3199,9 @@ function initSeiPro() {
         }, 300);
         return;
     }
-	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
+    var listaEntryContext = getListaEntryContextLegacy();
+	if ((listaEntryContext && listaEntryContext.context === 'lista-processos') ||
+        (!listaEntryContext && $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0)) {
         bindProcessoPaginacaoSuperiorVisibility();
         if (typeof URL_SPRO !== 'undefined' && typeof SimpleTableCellEdition === 'undefined') $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
         if (typeof URL_SPRO !== 'undefined' && (typeof moment === 'undefined' || typeof moment.duration === 'undefined')) $.getScript((URL_SPRO+"js/lib/moment-duration-format.min.js"));

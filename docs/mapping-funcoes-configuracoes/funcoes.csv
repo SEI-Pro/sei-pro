@@ -267,6 +267,9 @@ src/dom/index.js:134:parseHTML,src/dom/index.js,134,parseHTML,dom,,legado,,,não
 src/dom/index.js:141:parseDocument,src/dom/index.js,141,parseDocument,dom,,legado,,,não,3
 src/dom/index.js:146:show,src/dom/index.js,146,show,dom,,legado,,,não,0
 src/dom/index.js:147:hide,src/dom/index.js,147,hide,dom,,legado,,,não,0
+src/entries/lista.js:20:composeListaFeatures,src/entries/lista.js,20,composeListaFeatures,entry,lista,moderno,,,não,0
+src/entries/lista.js:26:features,src/entries/lista.js,26,features,entry,lista,moderno,,,não,2
+src/entries/lista.js:38:installListaEntryDomain,src/entries/lista.js,38,installListaEntryDomain,entry,lista,moderno,,,não,0
 src/features/ai/sei-pro-ai.js:101:isOpenAICompatible,src/features/ai/sei-pro-ai.js,101,isOpenAICompatible,feature,ai,moderno,,,não,0
 src/features/ai/sei-pro-ai.js:103:conversationSystem,src/features/ai/sei-pro-ai.js,103,conversationSystem,feature,ai,moderno,,,não,1
 src/features/ai/sei-pro-ai.js:112:buildMessage,src/features/ai/sei-pro-ai.js,112,buildMessage,feature,ai,moderno,,,não,1
@@ -1868,8 +1871,9 @@ src/features/lista-processos/sei-pro.js:3144:sendUploadArvoreHomeStart,src/featu
 src/features/lista-processos/sei-pro.js:3147:sortUploadArvore,src/features/lista-processos/sei-pro.js,3147,sortUploadArvore,feature,lista-processos,moderno,,gerenciarprescricoes;gerenciarprojetos;notificacaonovoprocesso,sim,10
 src/features/lista-processos/sei-pro.js:3172:storeLinkUsuarioSistema,src/features/lista-processos/sei-pro.js,3172,storeLinkUsuarioSistema,feature,lista-processos,moderno,,,não,2
 src/features/lista-processos/sei-pro.js:3175:storeVersionSEI,src/features/lista-processos/sei-pro.js,3175,storeVersionSEI,feature,lista-processos,moderno,,,não,2
-src/features/lista-processos/sei-pro.js:3180:initSeiPro,src/features/lista-processos/sei-pro.js,3180,initSeiPro,feature,lista-processos,moderno,,,não,0
-src/features/lista-processos/sei-pro.js:3182:setTimeout,src/features/lista-processos/sei-pro.js,3182,setTimeout,feature,lista-processos,moderno,debugpage,contadoricone;debugpage;disablequery;especificaprocesso;filtrarpaginapelapesquisarapida;gerenciarformularios;gerenciarprazos;gerenciarprojetos;nomesusuarios;ocultarpaginacaosuperior;ordernartabela;sincronizarprocessos;urlamigavel,sim,46
+src/features/lista-processos/sei-pro.js:3180:getListaEntryContextLegacy,src/features/lista-processos/sei-pro.js,3180,getListaEntryContextLegacy,feature,lista-processos,moderno,gerenciarmonitorados;gerenciarprazos,filtrarpaginapelapesquisarapida;gerenciarmonitorados;gerenciarprazos,sim,2
+src/features/lista-processos/sei-pro.js:3194:initSeiPro,src/features/lista-processos/sei-pro.js,3194,initSeiPro,feature,lista-processos,moderno,,,não,0
+src/features/lista-processos/sei-pro.js:3196:setTimeout,src/features/lista-processos/sei-pro.js,3196,setTimeout,feature,lista-processos,moderno,debugpage,contadoricone;debugpage;disablequery;especificaprocesso;filtrarpaginapelapesquisarapida;gerenciarformularios;gerenciarmonitorados;gerenciarprazos;gerenciarprojetos;nomesusuarios;ocultarpaginacaosuperior;ordernartabela;sincronizarprocessos;urlamigavel,sim,47
 src/features/login/index.js:13:sei,src/features/login/index.js,13,sei,feature,login,moderno,,,não,1
 src/features/login/index.js:14:verifyConfigValue,src/features/login/index.js,14,verifyConfigValue,feature,login,moderno,,,não,1
 src/features/login/index.js:15:isLoginPageNewSei,src/features/login/index.js,15,isLoginPageNewSei,feature,login,moderno,,,não,1
