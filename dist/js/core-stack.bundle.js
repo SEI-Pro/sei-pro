@@ -2781,6 +2781,12 @@
     datas.persistDataRecebimentoRecord(record, { restore, store, isEmptyObject });
     return true;
   }
+  function installDatasView() {
+    const seiPro = getSeiPro();
+    seiPro.shared = seiPro.shared || {};
+    seiPro.shared.datasView = { recordDataRecebimento };
+    return seiPro.shared.datasView;
+  }
 
   // src/shared/legacy/datas-legacy-api.js
   function getDataRecebimentoProLegacy(listAndamento, listProc = false, acompanhamentoEsp = "") {
@@ -2960,6 +2966,7 @@
 
   // src/content/core-stack.js
   installCoreStack();
+  installDatasView();
   installDatasLegacyApi();
   installMonitoradoStoreLegacyApi();
 })();
