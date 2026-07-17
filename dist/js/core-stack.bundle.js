@@ -2781,11 +2781,27 @@
     datas.persistDataRecebimentoRecord(record, { restore, store, isEmptyObject });
     return true;
   }
-  function installDatasView() {
-    const seiPro = getSeiPro();
-    seiPro.shared = seiPro.shared || {};
-    seiPro.shared.datasView = { recordDataRecebimento };
-    return seiPro.shared.datasView;
+
+  // src/shared/legacy/datas-legacy-api.js
+  function getDataRecebimentoProLegacy(listAndamento, listProc = false, acompanhamentoEsp = "") {
+    const processo = globalRef.dadosProcessoPro;
+    const observacoes = processo && processo.propProcesso && processo.propProcesso.txaObservacoes !== void 0 ? processo.propProcesso.txaObservacoes : "";
+    const moment = globalRef.moment;
+    const datetime = typeof moment === "function" ? moment().format("YYYY-MM-DD HH:mm:ss") : "";
+    const $ = globalRef.$;
+    return recordDataRecebimento(listAndamento, {
+      unidadeAtual: globalRef.siglaUnidadeAtual || "",
+      datetime,
+      observacoes,
+      acompanhamentoesp: acompanhamentoEsp,
+      restore: globalRef.localStorageRestorePro,
+      store: globalRef.localStorageStorePro,
+      isEmptyObject: $ && $.isEmptyObject
+    });
+  }
+  function installDatasLegacyApi() {
+    aliasGlobal("getDataRecebimentoPro", getDataRecebimentoProLegacy);
+    return getDataRecebimentoProLegacy;
   }
 
   // src/features/monitorados/domain.js
@@ -2944,6 +2960,6 @@
 
   // src/content/core-stack.js
   installCoreStack();
-  installDatasView();
+  installDatasLegacyApi();
   installMonitoradoStoreLegacyApi();
 })();
