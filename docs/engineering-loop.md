@@ -252,10 +252,10 @@ chore(loop): <descrição curta> [sei-pro-prf-loop]
 
 ## Cron jobs
 
-| Job | Schedule | Papel | Workdir |
+| Job | Schedule | Modelo | Workdir |
 |---|---|---|---|
-| `sei-pro-prf-engineering-loop-migration` | `*/30 * * * *` (ou `0 * * * *` se fatias P1–P4 pedirem mais tempo) | Maker | repo `sei-pro-prf` |
-| `sei-pro-prf-engineering-loop-verification` | `15,45 * * * *` | Checker | repo `sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-migration` | `*/30 * * * *` | `kimi-coding/kimi-k2.7-code` | `/home/tadeu/repos/sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-verification` | `15,45 * * * *` | `deepseek/deepseek-4` | `/home/tadeu/repos/sei-pro-prf` |
 
 Prompts canônicos: `docs/engineering-loop-prompts.md`. A skill Hermes `sei-pro-prf-refactoring-loop` deve apontar para este arquivo + `engineering-loop.md`.
 

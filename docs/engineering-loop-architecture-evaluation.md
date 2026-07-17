@@ -140,8 +140,8 @@ Manter pinagem explícita de provider/model no cron job para evitar drift de con
 
 Decisão operacional atual:
 
-- Migração/maker: `openai-codex` / `gpt-5.6-luna`, pinado explicitamente no cron job.
-- Verificação/checker: `openai-codex` / `gpt-5.6-luna`, também pinado explicitamente.
+- Migração/maker: `kimi-coding` / `kimi-k2.7-code`, pinado explicitamente no cron job.
+- Verificação/checker: `deepseek` / `deepseek-4`, pinado explicitamente no cron job.
 - Contenção de escopo: o prompt, o board e a skill exigem uma única fatia, gates obrigatórios e commit pequeno.
 - Cadência: maker nos minutos 00/30; checker nos minutos 15/45.
 - A configuração do campo `model` do scheduler é a fonte da verdade; os prompts não duplicam nomes de modelo.
@@ -406,15 +406,16 @@ Configuração proposta:
 - Repeat: alto/recorrente, por exemplo `9999`
 - Skill: atualizar e reutilizar a skill existente `sei-pro-prf-refactoring-loop`, em vez de criar uma skill nova e fragmentar o procedimento.
 - Modelo: `openai-codex` / `gpt-5.6-luna`, pinado no scheduler; o prompt não duplica o nome do modelo. Manter contenção: uma única fatia pequena, build/test obrigatório e commit pequeno.
-- Saída esperada: commit pequeno + board atualizado, ou relatório de bloqueio.
+- Modelo: `kimi-coding` / `kimi-k2.7-code`, pinado no scheduler; o prompt não duplica o nome do modelo. Manter contenção: uma única fatia pequena, sem re-arquitetar além do item escolhido, build/test obrigatório e commit pequeno.
 
 ### Job de verificação
 
 - Nome: `sei-pro-prf-engineering-loop-verification`
 - Workdir: `/home/tadeu/repos/sei-pro-prf`
-- Schedule atual: `15,45 * * * *` — roda a cada 30 minutos, defasado 15 minutos da migração. Evitar cron de 6 campos.
+- Schedule: `15,45 * * * *` ou expressão cron de 5 campos defasada 15 minutos do job de migração. Evitar cron de 6 campos.
+- Repeat: alto/recorrente, por exemplo `9999`
 - Skill: a mesma skill existente `sei-pro-prf-refactoring-loop`, atualizada para os novos arquivos do loop.
-- Modelo: `openai-codex` / `gpt-5.6-luna`, pinado no scheduler; o prompt não duplica o nome do modelo.
+- Modelo: `deepseek` / `deepseek-4`, pinado no scheduler; o prompt não duplica o nome do modelo.
 - Saída esperada: item revisado como `review_passed` ou `review_failed_needs_fix`.
 
 Observação operacional: em Hermes TUI, cron jobs locais salvam output, mas não entregam mensagem ao chat. Se quisermos notificação ativa, é preciso configurar `deliver` para gateway conectado.
