@@ -21,6 +21,22 @@ describe('entry da lista — ponte legacy-api', () => {
         expect(legacy).toContain('if (runListaProcessosViewLegacy())');
     });
 
+    it('mantém a entry sem CSS próprio e preserva a responsabilidade dos bundles de feature', () => {
+        const entry = read('src/entries/lista.js');
+        const view = read('src/entries/lista/view.js');
+        const io = read('src/entries/lista/io.js');
+        const bridge = read('src/entries/lista/legacy-api.js');
+
+        for (const source of [entry, view, io, bridge]) {
+            expect(source).not.toMatch(/import\s+['\"]\.\/.*\.css['\"]/);
+            expect(source).not.toMatch(/class(?:Name)?\s*[:=]|class=|class\\s*\\+/);
+        }
+        expect(entry).not.toContain('seipro-');
+        expect(view).not.toContain('seipro-');
+        expect(read('src/features/monitorados/monitorados.css')).toContain('.seipro-');
+        expect(read('manifest.base.json')).toContain('css/monitorados.css');
+    });
+
     it('mantém o bundle da entry antes da fachada legada nos contextos de lista', () => {
         const manifest = JSON.parse(read('manifest.base.json'));
         const entries = manifest.content_scripts.filter((item) => item.js.includes('js/lista.bundle.js'));
