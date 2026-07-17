@@ -3177,67 +3177,6 @@ function storeVersionSEI() {
         getSeiVersionPro();
     else if (typeof setSeiVersionPro !== 'undefined') setSeiVersionPro();
 }
-function getListaEntryContextLegacy() {
-    var entry = typeof SeiPro !== 'undefined' && SeiPro.entries && SeiPro.entries.lista;
-    if (!entry || typeof entry.composeListaFeatures !== 'function') return false;
-    var inputs = typeof entry.readListaEntryInputs === 'function'
-        ? entry.readListaEntryInputs({
-            root: document,
-            checkConfigValue: typeof checkConfigValue === 'function' ? checkConfigValue : undefined
-        })
-        : {
-            hasProcessTables: $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0,
-            hasTreeFrame: $('#ifrArvore').length > 0,
-            enabled: {
-                'controlar-prazos': typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarprazos') : true,
-                'nao-lido': true,
-                monitorados: typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarmonitorados') : true
-            }
-        };
-    return entry.composeListaFeatures(inputs);
-}
-function runListaProcessosViewLegacy() {
-    var entry = typeof SeiPro !== 'undefined' && SeiPro.entries && SeiPro.entries.lista;
-    var view = entry && entry.runListaProcessosView;
-    if (typeof view !== 'function') return false;
-    view({
-        urlSpro: typeof URL_SPRO !== 'undefined' ? URL_SPRO : undefined,
-        hasSimpleTableCellEdition: typeof SimpleTableCellEdition !== 'undefined',
-        hasMomentDuration: typeof moment !== 'undefined' && typeof moment.duration !== 'undefined',
-        loadScript: function (url) { if (typeof $ === 'function') $.getScript(url); },
-        schedule: function (fn, delay) { setTimeout(fn, delay); },
-        sessionStorage: typeof sessionStorage !== 'undefined' ? sessionStorage : undefined,
-        bindProcessoPaginacaoSuperiorVisibility: bindProcessoPaginacaoSuperiorVisibility,
-        initTableSorterHome: initTableSorterHome,
-        insertGroupTable: insertGroupTable,
-        replaceSelectAll: replaceSelectAll,
-        initPanelMonitorados: typeof initPanelMonitorados === 'function' ? initPanelMonitorados : undefined,
-        checkLoadConfigSheets: checkLoadConfigSheets,
-        insertDivPanel: insertDivPanel,
-        initNewTabProcesso: initNewTabProcesso,
-        syncHomeProcessCaption: syncHomeProcessCaption,
-        forceOnLoadBody: forceOnLoadBody,
-        observeAreaTela: observeAreaTela,
-        initAnotacaoControle: function () {
-            if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle) SeiPro.features.anotacaoControle.init();
-        },
-        initReplaceNewIcons: initReplaceNewIcons,
-        initControlePrazo: initControlePrazo,
-        initViewEspecifacaoProcesso: initViewEspecifacaoProcesso,
-        initFullnameAtribuicao: initFullnameAtribuicao,
-        initFaviconNrProcesso: initFaviconNrProcesso,
-        addAcompanhamentoEspIcon: addAcompanhamentoEspIcon,
-        initAllMarcadoresHome: initAllMarcadoresHome,
-        initUrgentePro: initUrgentePro,
-        initNaoVisualizadoPro: initNaoVisualizadoPro,
-        initProcessNotificationsPro: typeof initProcessNotificationsPro === 'function' ? initProcessNotificationsPro : undefined,
-        storeLinkUsuarioSistema: storeLinkUsuarioSistema,
-        storeVersionSEI: storeVersionSEI,
-        getConfigHost: typeof getConfigHost !== 'undefined' ? getConfigHost : undefined
-    });
-    return true;
-}
-
 function initSeiPro() {
     if (typeof checkHostLimit !== 'function') {
         setTimeout(function(){

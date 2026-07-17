@@ -68,6 +68,85 @@
     return true;
   }
 
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
+
+  // src/entries/lista/legacy-api.js
+  function getListaEntryContextLegacy() {
+    const entry = globalRef.SeiPro && globalRef.SeiPro.entries && globalRef.SeiPro.entries.lista;
+    if (!entry || typeof entry.composeListaFeatures !== "function") return false;
+    const checkConfigValue = globalRef.checkConfigValue;
+    const root = globalRef.document;
+    const inputs = typeof entry.readListaEntryInputs === "function" ? entry.readListaEntryInputs({
+      root,
+      checkConfigValue: typeof checkConfigValue === "function" ? checkConfigValue : void 0
+    }) : {
+      hasProcessTables: Boolean(globalRef.$ && globalRef.$("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").length),
+      hasTreeFrame: Boolean(globalRef.$ && globalRef.$("#ifrArvore").length),
+      enabled: {
+        "controlar-prazos": typeof checkConfigValue === "function" ? checkConfigValue("gerenciarprazos") : true,
+        "nao-lido": true,
+        monitorados: typeof checkConfigValue === "function" ? checkConfigValue("gerenciarmonitorados") : true
+      }
+    };
+    return entry.composeListaFeatures(inputs);
+  }
+  function runListaProcessosViewLegacy() {
+    const entry = globalRef.SeiPro && globalRef.SeiPro.entries && globalRef.SeiPro.entries.lista;
+    const view = entry && entry.runListaProcessosView;
+    if (typeof view !== "function") return false;
+    const $ = globalRef.$ || globalRef.jQuery;
+    const moment = globalRef.moment;
+    const deps = {
+      urlSpro: globalRef.URL_SPRO,
+      hasSimpleTableCellEdition: typeof globalRef.SimpleTableCellEdition !== "undefined",
+      hasMomentDuration: typeof moment !== "undefined" && typeof moment.duration !== "undefined",
+      loadScript: (url) => {
+        if (typeof $ === "function" && typeof $.getScript === "function") $.getScript(url);
+      },
+      schedule: (fn, delay) => globalRef.setTimeout(fn, delay),
+      sessionStorage: globalRef.sessionStorage,
+      bindProcessoPaginacaoSuperiorVisibility: globalRef.bindProcessoPaginacaoSuperiorVisibility,
+      initTableSorterHome: globalRef.initTableSorterHome,
+      insertGroupTable: globalRef.insertGroupTable,
+      replaceSelectAll: globalRef.replaceSelectAll,
+      initPanelMonitorados: typeof globalRef.initPanelMonitorados === "function" ? globalRef.initPanelMonitorados : void 0,
+      checkLoadConfigSheets: globalRef.checkLoadConfigSheets,
+      insertDivPanel: globalRef.insertDivPanel,
+      initNewTabProcesso: globalRef.initNewTabProcesso,
+      syncHomeProcessCaption: globalRef.syncHomeProcessCaption,
+      forceOnLoadBody: globalRef.forceOnLoadBody,
+      observeAreaTela: globalRef.observeAreaTela,
+      initAnotacaoControle: () => {
+        if (globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.anotacaoControle) {
+          globalRef.SeiPro.features.anotacaoControle.init();
+        }
+      },
+      initReplaceNewIcons: globalRef.initReplaceNewIcons,
+      initControlePrazo: globalRef.initControlePrazo,
+      initViewEspecifacaoProcesso: globalRef.initViewEspecifacaoProcesso,
+      initFullnameAtribuicao: globalRef.initFullnameAtribuicao,
+      initFaviconNrProcesso: globalRef.initFaviconNrProcesso,
+      addAcompanhamentoEspIcon: globalRef.addAcompanhamentoEspIcon,
+      initAllMarcadoresHome: globalRef.initAllMarcadoresHome,
+      initUrgentePro: globalRef.initUrgentePro,
+      initNaoVisualizadoPro: globalRef.initNaoVisualizadoPro,
+      initProcessNotificationsPro: typeof globalRef.initProcessNotificationsPro === "function" ? globalRef.initProcessNotificationsPro : void 0,
+      storeLinkUsuarioSistema: globalRef.storeLinkUsuarioSistema,
+      storeVersionSEI: globalRef.storeVersionSEI,
+      getConfigHost: typeof globalRef.getConfigHost !== "undefined" ? globalRef.getConfigHost : void 0
+    };
+    view(deps);
+    return true;
+  }
+  aliasGlobal("getListaEntryContextLegacy", getListaEntryContextLegacy);
+  aliasGlobal("runListaProcessosViewLegacy", runListaProcessosViewLegacy);
+
   // src/entries/lista.js
   var LISTA_FEATURES = Object.freeze([
     "lista-processos",
@@ -91,10 +170,10 @@
     }
     return { context: "desconhecido", features: [] };
   }
-  function installListaEntryDomain(globalRef = globalThis) {
-    globalRef.SeiPro = globalRef.SeiPro || {};
-    globalRef.SeiPro.entries = globalRef.SeiPro.entries || {};
-    globalRef.SeiPro.entries.lista = { composeListaFeatures, readListaEntryInputs, runListaProcessosView };
+  function installListaEntryDomain(globalRef2 = globalThis) {
+    globalRef2.SeiPro = globalRef2.SeiPro || {};
+    globalRef2.SeiPro.entries = globalRef2.SeiPro.entries || {};
+    globalRef2.SeiPro.entries.lista = { composeListaFeatures, readListaEntryInputs, runListaProcessosView };
   }
   installListaEntryDomain(typeof window !== "undefined" ? window : globalThis);
 })();

@@ -10,6 +10,7 @@
 
 import { readListaEntryInputs } from './lista/io.js';
 import { runListaProcessosView } from './lista/view.js';
+import './lista/legacy-api.js';
 
 const LISTA_FEATURES = Object.freeze([
     'lista-processos',
