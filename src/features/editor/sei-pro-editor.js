@@ -80,7 +80,7 @@ function htmlButton(status) {
     
  */
     const htmlButtonTable = 
-        '<div class="divQuickTable" style="display:none;"></div>' +
+        '<div class="seipro-editor-quick-table" style="display:none;"></div>' +
         htmlButtonPro(
             'getQuickTableButtom',
             'quicktable',
@@ -117,7 +117,7 @@ function htmlButton(status) {
         );
     
     const htmlButtonBeforeList = 
-        '<div class="divAlignText" style="display:none;">' +
+        '<div class="seipro-editor-align-menu" style="display:none;">' +
             htmlButtonPro(
                 'getAlignLeftButtom',
                 'align_left_pro',
@@ -560,11 +560,11 @@ function addStyleIframes(TimeOut = 9000) {
             });
             setCKEDITOR_instances();
             $('head').append("<style type='text/css' data-style='seipro'> "
-                            +"  .divAlignText { display:none; background-image: -webkit-linear-gradient(top,#fff,#e4e4e4); position: absolute; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
-                            +"  .divQuickTable { display:none; position: absolute; background: #f1f1f1; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
-                            +"  .divQuickTable td { height: 15px; width: 15px; border: 1px solid #ccc; background: #fff; }"
-                            +"  .divQuickTable .quickTableInfo { text-align: center; padding: 5px; color: #777; }"
-                            +"  .divQuickTable .td_hover { background: #72bae2; }"
+                            +"  .seipro-editor-align-menu { display:none; background-image: -webkit-linear-gradient(top,#fff,#e4e4e4); position: absolute; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
+                            +"  .seipro-editor-quick-table { display:none; position: absolute; background: #f1f1f1; display: initial; margin-top: 25px; box-shadow: 0 0 3px rgba(0,0,0,.15); border-radius: 3px; border: 1px solid #b6b6b6; }"
+                            +"  .seipro-editor-quick-table td { height: 15px; width: 15px; border: 1px solid #ccc; background: #fff; }"
+                            +"  .seipro-editor-quick-table .seipro-editor-quick-table-info { text-align: center; padding: 5px; color: #777; }"
+                            +"  .seipro-editor-quick-table .seipro-editor-quick-table-hover { background: #72bae2; }"
                             +"</style>");
             
         } else {
@@ -882,14 +882,14 @@ function setAlignText(this_, mode) {
 }
 function openAlignText(this_) {
     if ($(this_).hasClass('cke_button_on')) {
-        $(this_).addClass('cke_button_off').removeClass('cke_button_on').closest('.cke_top').find('.divAlignText').hide();
+        $(this_).addClass('cke_button_off').removeClass('cke_button_on').closest('.cke_top').find('.seipro-editor-align-menu').hide();
     } else {
-        $(this_).addClass('cke_button_on').removeClass('cke_button_off').closest('.cke_top').find('.divAlignText').show();
+        $(this_).addClass('cke_button_on').removeClass('cke_button_off').closest('.cke_top').find('.seipro-editor-align-menu').show();
     }
 }
 function closeAlignText() {  
     //var idEditor = $('#idEditor').val();
-    $('#cke_'+idEditor).find('.getAlignButtom').addClass('cke_button_off').removeClass('cke_button_on').closest('.cke_top').find('.divAlignText').hide();
+    $('#cke_'+idEditor).find('.getAlignButtom').addClass('cke_button_off').removeClass('cke_button_on').closest('.cke_top').find('.seipro-editor-align-menu').hide();
 }
 
 // Modifica o tamanho da fonte
@@ -1553,7 +1553,7 @@ function editImgPro( editor ) {
 
 // Adiciona tabela rapida
 function hideQuickTable() {
-    $('.divQuickTable').each(function(){
+    $('.seipro-editor-quick-table').each(function(){
         $(this).html('').hide();
     })
     $('.getQuickTableButtom').addClass('cke_button_off').removeClass('cke_button_on');
@@ -1562,7 +1562,7 @@ function quickTableOver(this_) {
     var rowThis = parseInt($(this_).attr('data-row'));
     var colThis = parseInt($(this_).attr('data-col'));
     var table = $(this_).closest('table');
-        table.find('td').removeClass('td_hover');
+        table.find('td').removeClass('seipro-editor-quick-table-hover');
     
     if ( rowThis >= 3 && parseInt(table.find('tr:last td:first').attr('data-row')) > rowThis+1 ) {
         table.find('tr:last').remove();
@@ -1576,24 +1576,24 @@ function quickTableOver(this_) {
         var rowTd = parseInt($(this).attr('data-row'));
         var colTd = parseInt($(this).attr('data-col'));
         if ( rowTd <= rowThis && colTd <= colThis ) {
-            $(this).addClass('td_hover');
+            $(this).addClass('seipro-editor-quick-table-hover');
         }
     });
-    $(this_).closest('.divQuickTable').find('.quickTableInfo').html('Tabela '+(rowThis+1)+'x'+(colThis+1));
+    $(this_).closest('.seipro-editor-quick-table').find('.seipro-editor-quick-table-info').html('Tabela '+(rowThis+1)+'x'+(colThis+1));
     
     if ( rowThis == parseInt(table.attr('data-row')) && rowThis < 49 ) { 
         var tableAppend = $(this_).closest('table');
         var rowLast = tableAppend.find('tr:last');
         var rowNew = rowLast.clone().appendTo(tableAppend);
             rowNew.find('td').each(function(index){
-                $(this).attr('data-row', (rowThis+1)).attr('data-col', index).removeClass('td_hover');
+                $(this).attr('data-row', (rowThis+1)).attr('data-col', index).removeClass('seipro-editor-quick-table-hover');
             });
             tableAppend.attr('data-row', (rowThis+1));
     }
     if ( colThis == parseInt(table.attr('data-col')) && colThis < 49 ) {
         var tableAppend = $(this_).closest('table');
             tableAppend.find('tr :last-child').each(function(){
-                var colNew = $(this).clone().attr('data-col', (colThis+1)).removeClass('td_hover');
+                var colNew = $(this).clone().attr('data-col', (colThis+1)).removeClass('seipro-editor-quick-table-hover');
                 var colNew_ = $(this).parent().append(colNew);
             });
             tableAppend.attr('data-col', (colThis+1));
@@ -1602,10 +1602,10 @@ function quickTableOver(this_) {
 function getQuickTable(this_) {
     var rowDefault = 5;
     var colDefault = 5;
-    var divQuickTable = $(this_).closest('.cke_toolgroup').find('.divQuickTable');
+    const quickTableContainer = $(this_).closest('.cke_toolgroup').find('.seipro-editor-quick-table');
 
     if ( $(this_).hasClass('cke_button_off') ) {
-    var htmlTable = '<div class="quickTableInfo">Inserir Tabela</div>';
+    var htmlTable = '<div class="seipro-editor-quick-table-info">Inserir Tabela</div>';
         htmlTable += '<table data-row="'+(rowDefault-1)+'" data-col="'+(colDefault-1)+'">';
         for (var i = 0; i < rowDefault; i++) {
             htmlTable += '<tr>';
@@ -1615,7 +1615,7 @@ function getQuickTable(this_) {
             htmlTable += '</tr>';
         }
         htmlTable += '</table>';
-        divQuickTable.html(htmlTable).show();
+        quickTableContainer.html(htmlTable).show();
         $(this_).removeClass('cke_button_off').addClass('cke_button_on');
     } else {
         hideQuickTable();
