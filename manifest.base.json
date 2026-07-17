@@ -564,6 +564,7 @@
         "js/getscript-isolated.js",
         "js/init-flags.js",
         "js/sei-functions-pro.js",
+        "js/editor-domain.bundle.js",
         "js/init.js"
       ],
       "css": [
