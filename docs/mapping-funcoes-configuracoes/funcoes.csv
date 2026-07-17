@@ -1352,6 +1352,7 @@ src/features/editor/domain.js:22:toRoman,src/features/editor/domain.js,22,toRoma
 src/features/editor/domain.js:37:toLetter,src/features/editor/domain.js,37,toLetter,feature,editor,moderno,,,não,9
 src/features/editor/io.js:8:extractTextFromHtml,src/features/editor/io.js,8,extractTextFromHtml,feature,editor,moderno,,,não,3
 src/features/editor/io.js:17:paragraphs,src/features/editor/io.js,17,paragraphs,feature,editor,moderno,,,não,3
+src/features/editor/legacy-api.js:13:installEditorLegacyApi,src/features/editor/legacy-api.js,13,installEditorLegacyApi,feature,editor,moderno,,,não,3
 src/features/editor/sei-pro-editor.js:33:setParamEditor,src/features/editor/sei-pro-editor.js,33,setParamEditor,feature,editor,moderno,,,não,7
 src/features/editor/sei-pro-editor.js:41:htmlButton,src/features/editor/sei-pro-editor.js,41,htmlButton,feature,editor,moderno,citacaodoc;ditado;ferramentasia;revisaotexto,citacaodoc;ditado;ferramentasia;filtrarpaginapelapesquisarapida;revisaotexto,sim,8
 src/features/editor/sei-pro-editor.js:378:addButton,src/features/editor/sei-pro-editor.js,378,addButton,feature,editor,moderno,,,não,0

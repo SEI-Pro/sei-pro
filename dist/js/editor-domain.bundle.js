@@ -1,4 +1,10 @@
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // src/core/global.js
   var globalRef = typeof window !== "undefined" ? window : globalThis;
   function getSeiPro() {
@@ -9,8 +15,17 @@
     globalRef.SeiPro.state = globalRef.SeiPro.state || {};
     return globalRef.SeiPro;
   }
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
 
   // src/features/editor/domain.js
+  var domain_exports = {};
+  __export(domain_exports, {
+    extractTextWithNumbering: () => extractTextWithNumbering
+  });
   function extractTextWithNumbering(paragraphs = []) {
     const resultado = [];
     const counters = {
@@ -96,6 +111,10 @@
   }
 
   // src/features/editor/io.js
+  var io_exports = {};
+  __export(io_exports, {
+    extractTextFromHtml: () => extractTextFromHtml
+  });
   function extractTextFromHtml(html, {
     parseHtml,
     extract = extractTextWithNumbering
@@ -112,6 +131,11 @@
   }
 
   // src/features/editor/view.js
+  var view_exports = {};
+  __export(view_exports, {
+    bindEditorFocus: () => bindEditorFocus,
+    collectEditorText: () => collectEditorText
+  });
   function collectEditorText(instances = {}, {
     extractNumber = false,
     readHtml = (instance) => instance.getData(),
@@ -133,6 +157,15 @@
     return Object.keys(instances).length;
   }
 
+  // src/features/editor/legacy-api.js
+  function installEditorLegacyApi() {
+    [domain_exports, io_exports, view_exports].forEach((mod) => {
+      Object.keys(mod).forEach((name) => {
+        if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
+      });
+    });
+  }
+
   // src/features/editor/index.js
   var root = getSeiPro();
   root.features = root.features || {};
@@ -142,4 +175,5 @@
     bindEditorFocus,
     collectEditorText
   };
+  installEditorLegacyApi();
 })();
