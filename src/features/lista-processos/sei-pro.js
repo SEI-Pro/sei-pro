@@ -3196,6 +3196,47 @@ function getListaEntryContextLegacy() {
         };
     return entry.composeListaFeatures(inputs);
 }
+function runListaProcessosViewLegacy() {
+    var entry = typeof SeiPro !== 'undefined' && SeiPro.entries && SeiPro.entries.lista;
+    var view = entry && entry.runListaProcessosView;
+    if (typeof view !== 'function') return false;
+    view({
+        urlSpro: typeof URL_SPRO !== 'undefined' ? URL_SPRO : undefined,
+        hasSimpleTableCellEdition: typeof SimpleTableCellEdition !== 'undefined',
+        hasMomentDuration: typeof moment !== 'undefined' && typeof moment.duration !== 'undefined',
+        loadScript: function (url) { if (typeof $ === 'function') $.getScript(url); },
+        schedule: function (fn, delay) { setTimeout(fn, delay); },
+        sessionStorage: typeof sessionStorage !== 'undefined' ? sessionStorage : undefined,
+        bindProcessoPaginacaoSuperiorVisibility: bindProcessoPaginacaoSuperiorVisibility,
+        initTableSorterHome: initTableSorterHome,
+        insertGroupTable: insertGroupTable,
+        replaceSelectAll: replaceSelectAll,
+        initPanelMonitorados: typeof initPanelMonitorados === 'function' ? initPanelMonitorados : undefined,
+        checkLoadConfigSheets: checkLoadConfigSheets,
+        insertDivPanel: insertDivPanel,
+        initNewTabProcesso: initNewTabProcesso,
+        syncHomeProcessCaption: syncHomeProcessCaption,
+        forceOnLoadBody: forceOnLoadBody,
+        observeAreaTela: observeAreaTela,
+        initAnotacaoControle: function () {
+            if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle) SeiPro.features.anotacaoControle.init();
+        },
+        initReplaceNewIcons: initReplaceNewIcons,
+        initControlePrazo: initControlePrazo,
+        initViewEspecifacaoProcesso: initViewEspecifacaoProcesso,
+        initFullnameAtribuicao: initFullnameAtribuicao,
+        initFaviconNrProcesso: initFaviconNrProcesso,
+        addAcompanhamentoEspIcon: addAcompanhamentoEspIcon,
+        initAllMarcadoresHome: initAllMarcadoresHome,
+        initUrgentePro: initUrgentePro,
+        initNaoVisualizadoPro: initNaoVisualizadoPro,
+        initProcessNotificationsPro: typeof initProcessNotificationsPro === 'function' ? initProcessNotificationsPro : undefined,
+        storeLinkUsuarioSistema: storeLinkUsuarioSistema,
+        storeVersionSEI: storeVersionSEI,
+        getConfigHost: typeof getConfigHost !== 'undefined' ? getConfigHost : undefined
+    });
+    return true;
+}
 
 function initSeiPro() {
     if (typeof checkHostLimit !== 'function') {
@@ -3208,38 +3249,43 @@ function initSeiPro() {
     var listaEntryContext = getListaEntryContextLegacy();
 	if ((listaEntryContext && listaEntryContext.context === 'lista-processos') ||
         (!listaEntryContext && $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0)) {
-        bindProcessoPaginacaoSuperiorVisibility();
-        if (typeof URL_SPRO !== 'undefined' && typeof SimpleTableCellEdition === 'undefined') $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
-        if (typeof URL_SPRO !== 'undefined' && (typeof moment === 'undefined' || typeof moment.duration === 'undefined')) $.getScript((URL_SPRO+"js/lib/moment-duration-format.min.js"));
-        initTableSorterHome();
-        insertGroupTable();
-        replaceSelectAll();
-        // Migrado p/ ESM (monitorados/boot.js); alias provido pelo monitorados.bundle
-        // (co-injetado nestes blocos). Guarda por segurança de ordem de carga.
-        if (typeof initPanelMonitorados === 'function') initPanelMonitorados();
-        checkLoadConfigSheets();
-        insertDivPanel();
-        setTimeout(() => {
-            initNewTabProcesso();
-            syncHomeProcessCaption();
-        }, 2000);
-        forceOnLoadBody();
-        observeAreaTela();
-        // Feature migrada p/ src/features/anotacao-controle (bundle isolado).
-        if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle) SeiPro.features.anotacaoControle.init();
-        initReplaceNewIcons();
-        initControlePrazo();
-        initViewEspecifacaoProcesso(); 
-        initFullnameAtribuicao();
-        initFaviconNrProcesso();
-        addAcompanhamentoEspIcon();
-        initAllMarcadoresHome();
-        initUrgentePro();
-        initNaoVisualizadoPro();
-        if (typeof initProcessNotificationsPro === 'function') initProcessNotificationsPro();
-        storeLinkUsuarioSistema();
-        storeVersionSEI();
-        if (sessionStorage.getItem('configHost_Pro') === null && typeof getConfigHost !== 'undefined') getConfigHost();
+        if (runListaProcessosViewLegacy()) {
+            // A entry ESM assume a orquestração quando o bundle está disponível.
+            // O bloco abaixo permanece como fallback para load orders antigos.
+        } else {
+            bindProcessoPaginacaoSuperiorVisibility();
+            if (typeof URL_SPRO !== 'undefined' && typeof SimpleTableCellEdition === 'undefined') $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
+            if (typeof URL_SPRO !== 'undefined' && (typeof moment === 'undefined' || typeof moment.duration === 'undefined')) $.getScript((URL_SPRO+"js/lib/moment-duration-format.min.js"));
+            initTableSorterHome();
+            insertGroupTable();
+            replaceSelectAll();
+            // Migrado p/ ESM (monitorados/boot.js); alias provido pelo monitorados.bundle
+            // (co-injetado nestes blocos). Guarda por segurança de ordem de carga.
+            if (typeof initPanelMonitorados === 'function') initPanelMonitorados();
+            checkLoadConfigSheets();
+            insertDivPanel();
+            setTimeout(() => {
+                initNewTabProcesso();
+                syncHomeProcessCaption();
+            }, 2000);
+            forceOnLoadBody();
+            observeAreaTela();
+            // Feature migrada p/ src/features/anotacao-controle (bundle isolado).
+            if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle) SeiPro.features.anotacaoControle.init();
+            initReplaceNewIcons();
+            initControlePrazo();
+            initViewEspecifacaoProcesso();
+            initFullnameAtribuicao();
+            initFaviconNrProcesso();
+            addAcompanhamentoEspIcon();
+            initAllMarcadoresHome();
+            initUrgentePro();
+            initNaoVisualizadoPro();
+            if (typeof initProcessNotificationsPro === 'function') initProcessNotificationsPro();
+            storeLinkUsuarioSistema();
+            storeVersionSEI();
+            if (sessionStorage.getItem('configHost_Pro') === null && typeof getConfigHost !== 'undefined') getConfigHost();
+        }
 	} else if ( $("#ifrArvore").length > 0 ) {
         if (!checkHostLimit()) initDadosProcesso();
         initObserveUrlChange();

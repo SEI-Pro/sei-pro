@@ -15,17 +15,17 @@ Limitação: análise estática aproximada; callbacks, chamadas dinâmicas e str
 
 ## Resumo
 
-- Arquivos JS analisados: **160**.
-- Funções extraídas: **3092**.
+- Arquivos JS analisados: **161**.
+- Funções extraídas: **3097**.
 - Opções/configurações encontradas: **72**.
-- Funções compartilhadas por mais de uma opção: **614**.
-- Funções sem vínculo estático com opções: **2086**.
+- Funções compartilhadas por mais de uma opção: **616**.
+- Funções sem vínculo estático com opções: **2089**.
 
 ## Funções por camada
 
 | Camada | Funções |
 |---|---:|
-| `feature` | 1976 |
+| `feature` | 1978 |
 | `shared-legacy` | 677 |
 | `core` | 164 |
 | `platform` | 64 |
@@ -35,7 +35,7 @@ Limitação: análise estática aproximada; callbacks, chamadas dinâmicas e str
 | `options` | 28 |
 | `sei` | 28 |
 | `dom` | 16 |
-| `entry` | 5 |
+| `entry` | 8 |
 
 ## Funções compartilhadas mais relevantes
 

@@ -4,6 +4,7 @@ import {
     installListaEntryDomain
 } from '../../../src/entries/lista.js';
 import { readListaEntryInputs } from '../../../src/entries/lista/io.js';
+import { runListaProcessosView } from '../../../src/entries/lista/view.js';
 
 describe('entry da lista de processos', () => {
     it('compõe as features do contexto de processos e mantém a ordem do legado', () => {
@@ -36,6 +37,47 @@ describe('entry da lista de processos', () => {
         installListaEntryDomain(target);
         expect(target.SeiPro.entries.lista.composeListaFeatures).toBe(composeListaFeatures);
         expect(target.SeiPro.entries.lista.readListaEntryInputs).toBe(readListaEntryInputs);
+        expect(target.SeiPro.entries.lista.runListaProcessosView).toBe(runListaProcessosView);
+    });
+
+    it('orquestra a view da lista com ordem, carregamento e sessão explícitos', () => {
+        const calls = [];
+        const loaded = [];
+        const storage = { getItem: (key) => { calls.push(`storage:${key}`); return null; } };
+        const deps = {
+            urlSpro: '/ext/',
+            hasSimpleTableCellEdition: false,
+            hasMomentDuration: false,
+            loadScript: (url) => loaded.push(url),
+            schedule: (fn, delay) => { calls.push(`schedule:${delay}`); fn(); },
+            sessionStorage: storage
+        };
+        [
+            'bindProcessoPaginacaoSuperiorVisibility', 'initTableSorterHome', 'insertGroupTable',
+            'replaceSelectAll', 'initPanelMonitorados', 'checkLoadConfigSheets', 'insertDivPanel',
+            'initNewTabProcesso', 'syncHomeProcessCaption', 'forceOnLoadBody', 'observeAreaTela',
+            'initAnotacaoControle', 'initReplaceNewIcons', 'initControlePrazo',
+            'initViewEspecifacaoProcesso', 'initFullnameAtribuicao', 'initFaviconNrProcesso',
+            'addAcompanhamentoEspIcon', 'initAllMarcadoresHome', 'initUrgentePro',
+            'initNaoVisualizadoPro', 'initProcessNotificationsPro', 'storeLinkUsuarioSistema',
+            'storeVersionSEI', 'getConfigHost'
+        ].forEach((name) => { deps[name] = () => calls.push(name); });
+
+        expect(runListaProcessosView(deps)).toBe(true);
+        expect(loaded).toEqual([
+            '/ext/js/lib/jquery-table-edit.min.js',
+            '/ext/js/lib/moment-duration-format.min.js'
+        ]);
+        expect(calls).toEqual([
+            'bindProcessoPaginacaoSuperiorVisibility', 'initTableSorterHome', 'insertGroupTable',
+            'replaceSelectAll', 'initPanelMonitorados', 'checkLoadConfigSheets', 'insertDivPanel',
+            'schedule:2000', 'initNewTabProcesso', 'syncHomeProcessCaption', 'forceOnLoadBody',
+            'observeAreaTela', 'initAnotacaoControle', 'initReplaceNewIcons', 'initControlePrazo',
+            'initViewEspecifacaoProcesso', 'initFullnameAtribuicao', 'initFaviconNrProcesso',
+            'addAcompanhamentoEspIcon', 'initAllMarcadoresHome', 'initUrgentePro',
+            'initNaoVisualizadoPro', 'initProcessNotificationsPro', 'storeLinkUsuarioSistema',
+            'storeVersionSEI', 'storage:configHost_Pro', 'getConfigHost'
+        ]);
     });
 
     it('lê a superfície DOM e as flags da lista por dependências explícitas', () => {

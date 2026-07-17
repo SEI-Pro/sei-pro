@@ -9,6 +9,7 @@
  */
 
 import { readListaEntryInputs } from './lista/io.js';
+import { runListaProcessosView } from './lista/view.js';
 
 const LISTA_FEATURES = Object.freeze([
     'lista-processos',
@@ -40,7 +41,7 @@ export function composeListaFeatures({
 export function installListaEntryDomain(globalRef = globalThis) {
     globalRef.SeiPro = globalRef.SeiPro || {};
     globalRef.SeiPro.entries = globalRef.SeiPro.entries || {};
-    globalRef.SeiPro.entries.lista = { composeListaFeatures, readListaEntryInputs };
+    globalRef.SeiPro.entries.lista = { composeListaFeatures, readListaEntryInputs, runListaProcessosView };
 }
 
 installListaEntryDomain(typeof window !== 'undefined' ? window : globalThis);
