@@ -26,8 +26,24 @@ describe('entry da lista — ponte legacy-api', () => {
         const entries = manifest.content_scripts.filter((item) => item.js.includes('js/lista.bundle.js'));
         expect(entries.length).toBe(2);
         for (const item of entries) {
-            expect(item.js.indexOf('js/lista.bundle.js')).toBeLessThan(item.js.indexOf('js/sei-pro.js'));
+            const requiredOrder = [
+                'js/core-stack.bundle.js',
+                'js/sei-functions-pro.js',
+                'js/lista-agrupamento.bundle.js',
+                'js/lista.bundle.js',
+                'js/sei-pro.js',
+                'js/sei-pro-controle-prazo.js',
+                'js/sei-pro-nao-lido.js',
+                'js/monitorados.bundle.js',
+                'js/init.js'
+            ];
+            const positions = requiredOrder.map((script) => item.js.indexOf(script));
+            expect(positions.every((position) => position >= 0)).toBe(true);
+            expect(positions).toEqual([...positions].sort((a, b) => a - b));
         }
-        expect(read('scripts/build.mjs')).toContain("src/entries/' + f");
+        const build = read('scripts/build.mjs');
+        expect(build).toContain("src/entries/' + f");
+        expect(build).toContain("out: 'dist/js/' + f.replace(/\\.js$/, '.bundle.js')");
+        expect(build).toContain("'src/features/lista-processos/sei-pro.js'");
     });
 });
