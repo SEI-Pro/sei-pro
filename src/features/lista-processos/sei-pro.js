@@ -3180,15 +3180,21 @@ function storeVersionSEI() {
 function getListaEntryContextLegacy() {
     var entry = typeof SeiPro !== 'undefined' && SeiPro.entries && SeiPro.entries.lista;
     if (!entry || typeof entry.composeListaFeatures !== 'function') return false;
-    return entry.composeListaFeatures({
-        hasProcessTables: $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0,
-        hasTreeFrame: $('#ifrArvore').length > 0,
-        enabled: {
-            'controlar-prazos': typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarprazos') : true,
-            'nao-lido': true,
-            monitorados: typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarmonitorados') : true
-        }
-    });
+    var inputs = typeof entry.readListaEntryInputs === 'function'
+        ? entry.readListaEntryInputs({
+            root: document,
+            checkConfigValue: typeof checkConfigValue === 'function' ? checkConfigValue : undefined
+        })
+        : {
+            hasProcessTables: $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0,
+            hasTreeFrame: $('#ifrArvore').length > 0,
+            enabled: {
+                'controlar-prazos': typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarprazos') : true,
+                'nao-lido': true,
+                monitorados: typeof checkConfigValue === 'function' ? checkConfigValue('gerenciarmonitorados') : true
+            }
+        };
+    return entry.composeListaFeatures(inputs);
 }
 
 function initSeiPro() {

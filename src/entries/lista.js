@@ -8,6 +8,8 @@
  * fallback para load orders antigos.
  */
 
+import { readListaEntryInputs } from './lista/io.js';
+
 const LISTA_FEATURES = Object.freeze([
     'lista-processos',
     'lista-agrupamento',
@@ -38,7 +40,7 @@ export function composeListaFeatures({
 export function installListaEntryDomain(globalRef = globalThis) {
     globalRef.SeiPro = globalRef.SeiPro || {};
     globalRef.SeiPro.entries = globalRef.SeiPro.entries || {};
-    globalRef.SeiPro.entries.lista = { composeListaFeatures };
+    globalRef.SeiPro.entries.lista = { composeListaFeatures, readListaEntryInputs };
 }
 
 installListaEntryDomain(typeof window !== 'undefined' ? window : globalThis);

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { composeListaFeatures, installListaEntryDomain } from '../../../src/entries/lista.js';
+import {
+    composeListaFeatures,
+    installListaEntryDomain
+} from '../../../src/entries/lista.js';
+import { readListaEntryInputs } from '../../../src/entries/lista/io.js';
 
 describe('entry da lista de processos', () => {
     it('compõe as features do contexto de processos e mantém a ordem do legado', () => {
@@ -31,5 +35,30 @@ describe('entry da lista de processos', () => {
         const target = {};
         installListaEntryDomain(target);
         expect(target.SeiPro.entries.lista.composeListaFeatures).toBe(composeListaFeatures);
+        expect(target.SeiPro.entries.lista.readListaEntryInputs).toBe(readListaEntryInputs);
+    });
+
+    it('lê a superfície DOM e as flags da lista por dependências explícitas', () => {
+        const selectors = new Set(['#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado']);
+        const calls = [];
+        const root = { querySelector: (selector) => selectors.has(selector) ? {} : null };
+        const inputs = readListaEntryInputs({
+            root,
+            checkConfigValue: (name) => {
+                calls.push(name);
+                return name !== 'gerenciarprazos';
+            }
+        });
+
+        expect(inputs).toEqual({
+            hasProcessTables: true,
+            hasTreeFrame: false,
+            enabled: {
+                'controlar-prazos': false,
+                'nao-lido': true,
+                monitorados: true
+            }
+        });
+        expect(calls).toEqual(['gerenciarprazos', 'gerenciarmonitorados']);
     });
 });
