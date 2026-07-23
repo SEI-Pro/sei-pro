@@ -254,8 +254,8 @@ chore(loop): <descrição curta> [sei-pro-prf-loop]
 
 | Job | Schedule | Modelo | Workdir |
 |---|---|---|---|
-| `sei-pro-prf-engineering-loop-migration` | `*/30 * * * *` | `kimi-coding/kimi-k2.7-code` | `/home/tadeu/repos/sei-pro-prf` |
-| `sei-pro-prf-engineering-loop-verification` | `15,45 * * * *` | `deepseek/deepseek-4` | `/home/tadeu/repos/sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-migration` | `*/30 * * * *` | `openai-codex/gpt-5.4-mini` | `/home/tadeu/repos/sei-pro-prf` |
+| `sei-pro-prf-engineering-loop-verification` | `15,45 * * * *` | `openai-codex/gpt-5.4-mini` | `/home/tadeu/repos/sei-pro-prf` |
 
 Prompts canônicos: `docs/engineering-loop-prompts.md`. A skill Hermes `sei-pro-prf-refactoring-loop` deve apontar para este arquivo + `engineering-loop.md`.
 
