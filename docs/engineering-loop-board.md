@@ -19,7 +19,7 @@ Micro-hooks CSS novos continuam **banidos**.
 |---|---|---:|---|---|---|
 | Épico | Prioridade | Passo atual | Smoke scope | Observações |  |
 | --- | ---: | --- | --- | --- |  |
-| E-controlar-prazos-close | 1 | P7 | SMOKE_TEST §1 (coluna Prazos) | E2-001…E2-003 aprovados; P1–P6 concluídos; smoke manual permanece pendente |  |
+| E-controlar-prazos-close | 1 | blocked | Aguardar smoke manual no SEI real | E2-001…E2-003 aprovados; P1–P6 concluídos; P7 depende de SMOKE_TEST §1 (coluna Prazos); smoke manual permanece pendente | SMOKE_TEST §1 (coluna Prazos) |
 | E-docs-lote-close | 2 | P7 | SMOKE_TEST §2 (Docs em Lote) | P4 (E2-012) e P5 (E2-025) aprovados. P6 concluído por auditoria em lote e guarda estrutural; próximo: P7/smoke humano. Smoke manual permanece pendente. |  |
 | E-nao-lido-close | 3 | P7 | SMOKE_TEST §1 | P1/P2 (E2-013/014), P3 (E2-027), P4 (E2-035), P5 (E2-040) e P6 (E2-042) aprovados. Checker 2026-07-16: E2-042 aprovado; auditoria P6 em lote e guarda estrutural confirmadas, sem CSS próprio residual ou micro-hook novo; smoke manual permanece pendente. |  |
 | E-anotacao-controle-close | 4 | P7 | SMOKE_TEST §1 | P1–P5 (E2-015/016, E2-028/036 e E2-043) aprovados. Checker 2026-07-16: E2-043 aprovado; wire, ordem de carregamento, CSS do contexto e call-sites legados confirmados. E2-044/P6 aprovado no checker: auditoria em lote e guarda estrutural confirmadas, sem CSS próprio residual. Bloqueado para automação: P7 exige smoke manual no SEI real, indisponível neste job; não inventar fatia automática. |  |
