@@ -1,4 +1,5 @@
 import { aliasGlobal, getSeiPro, globalRef } from './global.js';
+import { isDefaultEnabledConfigOption } from '../shared/config-defaults.js';
 
 export function installConfig() {
     function readConfigBasePro() {
@@ -50,9 +51,10 @@ export function installConfig() {
         return queryConfigValue(name);
     }
 
-    // Features que vêm habilitadas por padrão quando a config está AUSENTE.
+    // Features that default ON when the config entry is absent.
+    // Shared with the options page via src/shared/config-defaults.js.
     function isDefaultEnabledConfigValue(name) {
-        return ['filtrarpaginapelapesquisarapida'].indexOf(String(name || '')) !== -1;
+        return isDefaultEnabledConfigOption(name);
     }
 
     // Semântica "default-enabled" (porte VERBATIM do legado — Fase 6):

@@ -37,11 +37,13 @@ Execute `npm test` antes de fechar mudanças.
 ### O build (`scripts/build.mjs`)
 
 - **Bundles ESM** (esbuild, IIFE legível, sem minificação): `src/content/core-stack.js`,
-  cada `src/entries/*.js` e os `index.js` das features bundladas
-  (`arvore-info`, `quick-highlight`, `anotacao-controle`, `monitorados`).
+  cada `src/entries/*.js`, os `index.js` das features bundladas
+  (`arvore-info`, `quick-highlight`, `anotacao-controle`, `monitorados`, …) e
+  `src/options/index.js` → `dist/js/options.bundle.js`.
 - **Legados** (`legacyFiles`): copiados verbatim de `src/.../<nome>.js` para `dist/js/<nome>.js`.
   Não passam pelo bundler (compartilham ~1300 globais e dependem da ordem do manifest).
 - **CSS de feature** (`featureCss`): `src/features/<x>/*.css` → `dist/css/`.
+- **Options shell**: `src/options/options.html` + `page.css` → `dist/html/` (sem copiar JS legado).
 - **Manifest**: `manifest.base.json` é a fonte; `dist/manifest.json` é cópia.
 
 ---
@@ -56,7 +58,7 @@ carregada **primeiro** em cada bloco de content script via `manifest.json`:
 | Namespace | `core/namespace.js`, `core/global.js` | `window.SeiPro`, `aliasGlobal`, aliases de estado |
 | Runtime | `platform/runtime.js` | `getUrlExtension`, manifest, path da extensão |
 | Util | `core/util.js` | Funções puras (`compareVersionNumbers`, `getParamsUrlPro`, …) |
-| Config | `core/config.js` | `verifyConfigValue`, `getConfigValue`, `checkConfigValue` |
+| Config | `core/config.js` + `shared/config-defaults.js` | `verifyConfigValue`, `getConfigValue`, `checkConfigValue`; defaults shared with options UI |
 | UI | `core/ui.js` | `loadFontIcons`, `loadStyleDesign`, … |
 | Messaging/Storage/Net | `platform/messaging.js`, `storage.js`, `net.js` | fachadas delegadas ao service worker |
 | Logger/Report | `platform/logger.js`, `report.js` | log/erro condicionados a `debugpage` |
@@ -101,6 +103,10 @@ src/
 │   │   └── monitorados.css        #   CSS da feature
 │   ├── arvore-info/ · quick-highlight/ · anotacao-controle/   # outras já bundladas
 │   ├── atividades/ · lista-processos/ · editor/ · ai/ · …     # ainda legadas (1 .js global)
+├── options/                       # ★ PÁGINA DE CONFIGURAÇÃO (extension page)
+│   ├── domain.js · io.js · view.js · index.js  # vanilla ESM → options.bundle.js
+│   ├── options.html · page.css                 # shell + estilos (sem jQuery)
+│   └── (feature plugs: features/*/options.js)  # ex.: monitorados-options.bundle.js
 ├── bootstrap/                     # init*.js, getscript-isolated, init-flags (glue de carga)
 └── background/background.js       # service worker (MV3)
 

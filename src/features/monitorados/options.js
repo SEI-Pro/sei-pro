@@ -6,7 +6,7 @@
 // quando o master está desligado, a sub-opção é escondida e desmarcada.
 //
 // Vanilla, mundo isolado, sem jQuery. Carregado por html/options.html ao lado do
-// options.js genérico (que cuida do load/save de TODOS os switches).
+// options.bundle.js (que cuida do load/save de TODOS os switches).
 //
 // Corrige uma sobra da renomeação favoritos→monitorados: o options.js dirigia
 // esta dependência com os nomes ANTIGOS (#favoritesPro_beforeControl /

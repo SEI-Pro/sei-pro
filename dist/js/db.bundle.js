@@ -310,6 +310,20 @@
     return bootstrap;
   }
 
+  // src/shared/config-defaults.js
+  var DEFAULT_ENABLED_CONFIG_OPTIONS = [
+    "filtrarpaginapelapesquisarapida",
+    "gerenciarmonitorados",
+    "marcar_naolido",
+    "uploaddocsexternos",
+    "infoarvore",
+    "mostraranotacaocontrole",
+    "autopreenchersenha"
+  ];
+  function isDefaultEnabledConfigOption(name) {
+    return DEFAULT_ENABLED_CONFIG_OPTIONS.indexOf(String(name || "")) !== -1;
+  }
+
   // src/core/config.js
   function installConfig() {
     function readConfigBasePro() {
@@ -350,7 +364,7 @@
       return queryConfigValue(name);
     }
     function isDefaultEnabledConfigValue(name) {
-      return ["filtrarpaginapelapesquisarapida"].indexOf(String(name || "")) !== -1;
+      return isDefaultEnabledConfigOption(name);
     }
     function checkConfigValue(name) {
       var configBasePro = readConfigBasePro();

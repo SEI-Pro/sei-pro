@@ -63,9 +63,11 @@ const bundles = [
     { entry: 'src/features/editor/index.js', out: 'dist/js/editor-domain.bundle.js' },
     { entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' },
     { entry: 'src/features/lista-agrupamento/index.js', out: 'dist/js/lista-agrupamento.bundle.js' },
+    // Options page (extension settings UI) — full vanilla bundle.
+    { entry: 'src/options/index.js', out: 'dist/js/options.bundle.js' },
     // Página de opções — fatia de "Processos Monitorados" (dependência entre os
     // switches gerenciarmonitorados ↔ monitoradosacimacontrole). Carregado por
-    // html/options.html ao lado do options.js genérico.
+    // html/options.html ao lado do options.bundle.js.
     { entry: 'src/features/monitorados/options.js', out: 'dist/js/monitorados-options.bundle.js' },
     ...entryBundles
 ];
@@ -143,12 +145,10 @@ function copyFeatureCss() {
     }
 }
 
-// Options page (extension settings UI). Lives in src/options/ as legacy; copied
-// verbatim to dist/html/. The monitorados-specific behavior is bundled separately
-// (monitorados-options.bundle.js) and loaded by options.html.
+// Options page shell + CSS. Logic ships as dist/js/options.bundle.js (ESM→IIFE).
+// monitorados-options.bundle.js remains a feature plug loaded after the main bundle.
 const htmlFiles = [
     { src: 'src/options/options.html', out: 'dist/html/options.html' },
-    { src: 'src/options/options.js', out: 'dist/html/options.js' },
     { src: 'src/options/page.css', out: 'dist/html/page.css' }
 ];
 

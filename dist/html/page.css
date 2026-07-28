@@ -269,3 +269,39 @@ i.laranjaColor {
         display: none;
     }
 }
+
+/* Vanilla tabs (replaces jQuery UI tabs on the options page) */
+.seipro-options-tabs > ul {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    border-bottom: 1px solid #ddd;
+    gap: 2px;
+}
+.seipro-options-tabs > ul > li {
+    margin: 0;
+}
+.seipro-options-tabs > ul > li > a {
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #555;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    font-size: 11pt;
+}
+.seipro-options-tabs > ul > li.seipro-options-tab-active > a,
+.seipro-options-tabs > ul > li > a[aria-selected="true"] {
+    color: #3367d6;
+    background: #fff;
+    border-color: #ddd;
+    font-weight: bold;
+    position: relative;
+    top: 1px;
+}
+.seipro-options-tabs.options-search-mode > ul {
+    display: none !important;
+}
