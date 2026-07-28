@@ -1,19 +1,62 @@
-var actionTest = 'ondblclick="removeCacheGroupTable(this)"';
-var totalSecondsTest = 0;
-var totalSecondsTestText = '';
-var timerTest;
-var tableHomePro = [];
-var kanbanProcessos = false;
-var kanbanProcessosMoving = false;
-var containerUpload = 'body';
-var arvoreDropzone = false;
-var contentW = false;
-var pathArvore = typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
-var elemCheckbox = typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? '.infraCheckboxInput' : '.infraCheckbox';
-const objProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro(false, true) : false;
-const arrayProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro() : false;
+/**
+ * Lista de processos — migrated monolito body (ESM exports).
+ *
+ * State: ./state.js. Pure helpers: ./domain.js. IO: ./io.js. Templates: ./templates.js.
+ * jQuery / SEI globals come from the lista page content-script environment.
+ */
+import { installListaProcessosState } from './state.js';
+import {
+    normalizeHomeFilterText as domainNormalizeHomeFilterText,
+    normalizeHomeFilterKey as domainNormalizeHomeFilterKey,
+    quoteInlineJsText as domainQuoteInlineJsText,
+    rewriteHomeFilterCaption
+} from './domain.js';
+import { listaAgrupamentoIO as listaAgrupamentoIOModule, readGroupOrder } from './io.js';
+import * as templates from './templates.js';
 
-function setTimeTest() {
+installListaProcessosState();
+
+export function normalizeHomeFilterText(value) {
+    return domainNormalizeHomeFilterText(value);
+}
+export function normalizeHomeFilterKey(value) {
+    return domainNormalizeHomeFilterKey(value);
+}
+export function normalizeProcessoAtribuicaoText(link) {
+    var target = $(link);
+    var title = target.attr('title');
+    if (typeof title !== 'undefined' && title !== '') {
+        title = title.replace('Atribu\u00EDdo para', '').trim().split(/(\s).+\s/).join('');
+        if (title) {
+            return title;
+        }
+    }
+    return target.text().trim();
+}
+export function listaAgrupamentoIO() {
+    return listaAgrupamentoIOModule();
+}
+export function readGroupOrderLegacy() {
+    return readGroupOrder(typeof getOptionsPro === 'function' ? getOptionsPro : null, 'asc');
+}
+export function quoteInlineJsText(text) {
+    return domainQuoteInlineJsText(text);
+}
+
+// Load-time processo maps (guarded — getProcessoUnidadePro may load later)
+export let objProcessosUnidadePro = false;
+export let arrayProcessosUnidadePro = false;
+try {
+    if (typeof getProcessoUnidadePro !== 'undefined') {
+        objProcessosUnidadePro = getProcessoUnidadePro(false, true);
+        arrayProcessosUnidadePro = getProcessoUnidadePro();
+    }
+} catch (e) {
+    objProcessosUnidadePro = false;
+    arrayProcessosUnidadePro = false;
+}
+
+export function setTimeTest() {
     ++totalSecondsTest;
     var hours = Math.floor((totalSecondsTest % (60 * 60 * 24)) / (3600));
     var minutes = Math.floor((totalSecondsTest % (60 * 60)) / 60);
@@ -21,7 +64,7 @@ function setTimeTest() {
     totalSecondsTestText = pad(hours,2)+':'+pad(minutes,2)+':'+pad(seconds,2);
 }
 // On load, called to load the auth2 library and API client library.
-function handleClientLoadPro(TimeOut = 3000) {
+export function handleClientLoadPro(TimeOut = 3000) {
     if (TimeOut <= 0) { return; }
     if ((typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined' || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined') && typeof gapi !== 'undefined' && typeof initClientPro !== 'undefined') { 
         gapi.load('client:auth2', initClientPro);
@@ -42,28 +85,21 @@ function handleClientLoadPro(TimeOut = 3000) {
 
 //// Agrupamento de lista de processos
 
-function listaAgrupamentoIO() {
-    return typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.listaAgrupamentoIO;
-}
-function readGroupOrderLegacy() {
-    var io = listaAgrupamentoIO();
-    return io && typeof io.readGroupOrder === 'function' ? io.readGroupOrder(getOptionsPro, 'asc') : (getOptionsPro('orderbyTableGroup') ? getOptionsPro('orderbyTableGroup') : 'asc');
-}
-function isGroupCollapsedLegacy(tagName) {
+export function isGroupCollapsedLegacy(tagName) {
     var io = listaAgrupamentoIO();
     return io && typeof io.isGroupCollapsed === 'function' ? io.isGroupCollapsed(getOptionsPro, tagName) : getOptionsPro('panelGroup_'+tagName);
 }
-function persistGroupCollapsedLegacy(tagName) {
+export function persistGroupCollapsedLegacy(tagName) {
     var io = listaAgrupamentoIO();
     if (io && typeof io.persistGroupCollapsed === 'function') return io.persistGroupCollapsed(setOptionsPro, tagName);
     setOptionsPro('panelGroup_'+tagName, true);
 }
-function clearGroupCollapsedLegacy(tagName) {
+export function clearGroupCollapsedLegacy(tagName) {
     var io = listaAgrupamentoIO();
     if (io && typeof io.clearGroupCollapsed === 'function') return io.clearGroupCollapsed(removeOptionsPro, tagName);
     removeOptionsPro('panelGroup_'+tagName);
 }
-function getGroupTableLabelFromLink(linkElem, acaoType) {
+export function getGroupTableLabelFromLink(linkElem, acaoType) {
     var $link = $(linkElem);
     var href = $link.attr('href');
     if (typeof href === 'undefined' || href === '') {
@@ -98,10 +134,10 @@ function getGroupTableLabelFromLink(linkElem, acaoType) {
 
     return (typeof title !== 'undefined' && title !== null) ? String(title).trim() : '';
 }
-function getProcessoLinkFromGroupRow(row) {
+export function getProcessoLinkFromGroupRow(row) {
     return $(row).find('a[href*="acao=procedimento_trabalhar"], a[href*="controlador.php?acao=procedimento_trabalhar"]').first();
 }
-function getListTypes(acaoType) {
+export function getListTypes(acaoType) {
     var orderbyTableGroup = readGroupOrderLegacy();
     var arrayTag = [''];
     if (acaoType == 'tags') {
@@ -236,7 +272,7 @@ function getListTypes(acaoType) {
     });
     return uniqPro(arrayTag).sort();
 }
-function appendGerados(type) {
+export function appendGerados(type) {
     var orderbyDesc = (readGroupOrderLegacy() == 'desc') ? true : false;
     $('#divGerados table tr').not('.tablesorter-filter-row').each(function(index){
         if ( $(this).find('th').length == 0 ) {
@@ -275,12 +311,12 @@ function appendGerados(type) {
     }).appendTo(tbody);
     if ($('#divRecebidosAreaPaginacaoInferior a').length == 0) { $('#divRecebidosAreaPaginacaoInferior').hide() }
 }
-function removeDuplicateValue(element) {
+export function removeDuplicateValue(element) {
     if ($(element).length) {
         $(element).val(uniqPro($(element).val().split(',')).join(','));
     }
 }
-function setSelectAllTr(this_, tagname = false) {
+export function setSelectAllTr(this_, tagname = false) {
     var limit = 100;
     var index = (typeof $(this_).data('index') !== 'undefined') ? $(this_).data('index') : 0;
     var tagname_select = (tagname) ? 'tr[data-tagname="'+tagname+'"]:visible' : 'tr:visible';
@@ -324,7 +360,7 @@ function setSelectAllTr(this_, tagname = false) {
         });
     }
 }
-function getSelectAllTr(this_, tagname) {
+export function getSelectAllTr(this_, tagname) {
     if ($(this_).closest('table').find('tr[data-tagname="SemGrupo"]:visible input[type=checkbox]:checked').length > 0) {
         setSelectAllTr(this_, 'SemGrupo');
     } else {
@@ -333,7 +369,7 @@ function getSelectAllTr(this_, tagname) {
     removeDuplicateValue('#hdnRecebidosItensSelecionados');
     removeDuplicateValue('#hdnGeradosItensSelecionados');
 }
-function updateTipSelectAll(this_) {
+export function updateTipSelectAll(this_) {
     var _this = $(this_);
     var data = _this.data();
     var table = _this.closest('table');
@@ -346,13 +382,13 @@ function updateTipSelectAll(this_) {
         if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     }
 }
-function replaceSelectAll() {
+export function replaceSelectAll() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     if ( tableProc.length > 0 ) {
         tableProc.find('#lnkInfraCheck').after('<a onclick="setSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI() ? 'svg/check.svg': 'imagens/check.gif')+'" class="infraImg"></a>').remove();
     }
 }
-function cleanConfigDataRecebimento() {
+export function cleanConfigDataRecebimento() {
     var storeRecebimento = ( typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
     var array_procedimentos = [];
     $('#frmProcedimentoControlar').find('a.processoVisualizado').each(function(i) {
@@ -368,7 +404,7 @@ function cleanConfigDataRecebimento() {
     }
     localStorageStorePro('configDataRecebimentoPro', storeRecebimento);
 }
-function removeAllTags(forceFilter = false, n) {
+export function removeAllTags(forceFilter = false, n) {
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('.especifProc').remove();
 	$('#divRecebidos table tbody').find('.tagintable').remove();
 	$('#divRecebidos table tbody tr').each(function(index){ 
@@ -420,7 +456,7 @@ function removeAllTags(forceFilter = false, n) {
     }
 }
 
-function getUniqueTableTag(i, tagName, type) {
+export function getUniqueTableTag(i, tagName, type) {
 	var tagName_ = getTagName(tagName, type);
     var txtTagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
 	var tbRecebidos = $('#divRecebidos table');
@@ -446,7 +482,7 @@ function getUniqueTableTag(i, tagName, type) {
             tbRecebidos.find('caption').hide(); 
         }
 }
-function getTableOnTag(type) {
+export function getTableOnTag(type) {
     $('#divRecebidos table tbody tr').each(function(index){
         var processoLink = getProcessoLinkFromGroupRow(this);
     	var dataTag = $(this).attr('data-tagname');
@@ -510,7 +546,7 @@ function getTableOnTag(type) {
         $('#divTabelaProcesso').removeClass('displayInitial');
     }
 }
-function orderbyTableGroup(this_) {
+export function orderbyTableGroup(this_) {
     var _this = $(this_);
     var data = _this.data();
     var setOrder = data.order == 'asc' ? 'desc' : 'asc';
@@ -520,7 +556,7 @@ function orderbyTableGroup(this_) {
         if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
         updateGroupTable($('#selectGroupTablePro'));
 }
-function getArrayProcessoRecebido(href) {
+export function getArrayProcessoRecebido(href) {
     var io = listaAgrupamentoIO();
     if (io && typeof io.readReceivedProcess === 'function') {
         return io.readReceivedProcess(localStorageRestorePro, getParamsUrlPro, jmespath, href);
@@ -530,7 +566,7 @@ function getArrayProcessoRecebido(href) {
     var dadosRecebido = (typeof jmespath !== 'undefined' && jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
     return dadosRecebido;
 }
-function updateGroupTablePro(valueSelect, mode) {
+export function updateGroupTablePro(valueSelect, mode) {
     //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
     var io = listaAgrupamentoIO();
     var selectGroup = io && typeof io.readSelectedGroup === 'function' ? io.readSelectedGroup(localStorageRestorePro) : localStorageRestorePro('selectGroupTablePro');
@@ -562,7 +598,7 @@ function updateGroupTablePro(valueSelect, mode) {
         }
     }
 }
-function storeGroupTablePro() {
+export function storeGroupTablePro() {
     if (typeof localStorageRestorePro !== "undefined" && localStorageRestorePro('selectGroupTablePro') != null) {
         //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
         var io = listaAgrupamentoIO();
@@ -578,7 +614,7 @@ function storeGroupTablePro() {
         return false;
     }
 }
-function insertGroupTable(TimeOut = 9000) {
+export function insertGroupTable(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (
         typeof window.__SEI_PRO_CONFIG_READY__ === 'boolean' &&
@@ -649,7 +685,7 @@ function insertGroupTable(TimeOut = 9000) {
                            '     <option value="acompanhamentoesp" '+statusTableAcompEsp+'>Agrupar processos por acompanhamento especial</option>'+
                            '  </select>'+
                            '  '+panelKanbanHome+
-                           '  <a class="newLink" onclick="getTableProcessosCSV()" id="processoToCSV" onmouseover="return infraTooltipMostrar(\'Exportar informa\u00E7\u00F5es de processos em planilha CSV\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-file-download cinzaColor"></i></a>';
+                           '  '+templates.csvExportLinkHtml();
         }
 
         htmlControl += '</div>';
@@ -688,7 +724,7 @@ function insertGroupTable(TimeOut = 9000) {
         }
     }, 500);
 }
-function initChosenFilterHome(TimeOut = 9000) {
+export function initChosenFilterHome(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof $().chosen !== 'undefined') { 
         setTimeout(() => {
@@ -711,7 +747,7 @@ function initChosenFilterHome(TimeOut = 9000) {
         }, 500);
     }
 }
-function removeCacheGroupTable(this_) {
+export function removeCacheGroupTable(this_) {
     localStorageRemovePro('configDataRecebimentoPro');
     console.log('localStorageRemovePro');
     $(this_).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
@@ -719,11 +755,11 @@ function removeCacheGroupTable(this_) {
     //$('#selectGroupTablePro').val('');
     //updateGroupTable($('#selectGroupTablePro'));
 }
-function hideProcessoPaginacaoSuperior() {
+export function hideProcessoPaginacaoSuperior() {
     if (typeof verifyConfigValue !== 'function') { return; }
     $('body').toggleClass('seiProHideProcessoPaginacaoSuperior', !!verifyConfigValue('ocultarpaginacaosuperior'));
 }
-function bindProcessoPaginacaoSuperiorVisibility() {
+export function bindProcessoPaginacaoSuperiorVisibility() {
     hideProcessoPaginacaoSuperior();
 }
 if (typeof window !== 'undefined') {
@@ -733,7 +769,7 @@ if (typeof window !== 'undefined') {
         window.addEventListener('sei-pro-config-ready', bindProcessoPaginacaoSuperiorVisibility, { once: true });
     }
 }
-function updateGroupTable(this_) {
+export function updateGroupTable(this_) {
     hideProcessoPaginacaoSuperior();
     if (typeof checkConfigValue !== 'undefined' && verifyConfigValue('removepaginacao')) {
         initProcessoPaginacao(this_);
@@ -746,7 +782,7 @@ function updateGroupTable(this_) {
         }, 1200);
     }
 }
-function initUpdateGroupTable(this_) {
+export function initUpdateGroupTable(this_) {
     hideProcessoPaginacaoSuperior();
     if (typeof checkConfigValue !== 'undefined' && checkConfigValue('agruparlista')) {
         var valueSelect = $(this_).val();
@@ -786,13 +822,13 @@ function initUpdateGroupTable(this_) {
         }
     }
 }
-function getTableTag(type) {
+export function getTableTag(type) {
     var listTags = getListTypes(type);
     $.each(listTags, function (i, val) {
         getUniqueTableTag(i, val, type);
     });
 }
-function initTableTag(type = '') {
+export function initTableTag(type = '') {
     cleanConfigDataRecebimento();
 	removeAllTags(false, 1);
 	if ( type != '' ) {
@@ -824,31 +860,15 @@ function initTableTag(type = '') {
         }
     }, 1000);
 }
-function urgenteProMoveOnTop() {
+export function urgenteProMoveOnTop() {
     $("#tblProcessosRecebidos tbody").prepend($('#tblProcessosRecebidos tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').closest('tr'));
     $("#tblProcessosGerados tbody").prepend($('#tblProcessosGerados tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').closest('tr'));
     $("#tblProcessosDetalhado tbody").prepend($('#tblProcessosDetalhado tbody a.urgentePro[href*="controlador.php?acao=procedimento_trabalhar"]').closest('tr'));
 }
-function checkLoadedTableSorter() {
+export function checkLoadedTableSorter() {
     return typeof tableHomePro !== 'undefined' && typeof tableHomePro[0] !== 'undefined' && typeof tableHomePro[0].data('tablesorter') !== 'undefined' && typeof tableHomePro[0].data('tablesorter').$filters !== 'undefined';
 }
-function normalizeHomeFilterText(value) {
-    return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9 ]/gi, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase();
-}
-function normalizeHomeFilterKey(value) {
-    return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]/gi, '')
-        .toLowerCase();
-}
-function updateHomeFilterCaption(table, filteredRows) {
+export function updateHomeFilterCaption(table, filteredRows) {
     var caption = table.find('caption.infraCaption').eq(0);
     if (caption.length === 0) {
         return;
@@ -870,20 +890,13 @@ function updateHomeFilterCaption(table, filteredRows) {
                 !row.hasClass('infraCaption') &&
                 row.find('a[href*="acao=procedimento_trabalhar"]').length > 0;
         }).length;
-    var singular = (visibleRows === 1) ? 'registro' : 'registros';
-    var updatedCaption = String(baseCaption).replace(/\(\s*\d+\s+registros?\s*\)/i, '('+visibleRows+' '+singular+')');
-
-    if (updatedCaption === baseCaption) {
-        updatedCaption = String(baseCaption).replace(/\d+/, visibleRows);
-    }
-
-    caption.text(updatedCaption);
+    caption.text(rewriteHomeFilterCaption(baseCaption, visibleRows));
 }
-function syncHomeProcessCaption() {
+export function syncHomeProcessCaption() {
     updateHomeFilterCaption($('#tblProcessosRecebidos'));
     updateHomeFilterCaption($('#tblProcessosGerados'));
 }
-function updateVisibleHeadersForHomeFilter(table) {
+export function updateVisibleHeadersForHomeFilter(table) {
     var currentHeader = null;
     var hasVisibleRows = false;
 
@@ -907,7 +920,7 @@ function updateVisibleHeadersForHomeFilter(table) {
         currentHeader.toggle(hasVisibleRows);
     }
 }
-function getHomeRowTagValue(row) {
+export function getHomeRowTagValue(row) {
     var tagName = row.attr('data-tagname');
     if (typeof tagName !== 'undefined' && tagName !== null && tagName !== '') {
         return String(tagName);
@@ -932,7 +945,7 @@ function getHomeRowTagValue(row) {
 
     return 'SemGrupo';
 }
-function rowMatchesHomeFilter(row, value, dataType) {
+export function rowMatchesHomeFilter(row, value, dataType) {
     var normalizedValue = normalizeHomeFilterText(value);
 
     if (dataType == 'user') {
@@ -961,7 +974,7 @@ function rowMatchesHomeFilter(row, value, dataType) {
 
     return true;
 }
-function applyHomeFilterFallback(value, dataType) {
+export function applyHomeFilterFallback(value, dataType) {
     var tables = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     var normalizedType = String(dataType || 'clean');
     var normalizedValue = String(value || '');
@@ -984,7 +997,7 @@ function applyHomeFilterFallback(value, dataType) {
         updateHomeFilterCaption(table);
     });
 }
-function getFilterTableHome(this_) {
+export function getFilterTableHome(this_) {
     var _this = $(this_);
     var value = _this.val() || '';
     var data = _this.find('option:selected').data() || {};
@@ -1049,18 +1062,7 @@ function getFilterTableHome(this_) {
         _this.trigger('chosen:updated');
     }
 }
-function normalizeProcessoAtribuicaoText(link) {
-    var target = $(link);
-    var title = target.attr('title');
-    if (typeof title !== 'undefined' && title !== '') {
-        title = title.replace('Atribu\u00EDdo para', '').trim().split(/(\s).+\s/).join("");
-        if (title) {
-            return title;
-        }
-    }
-    return target.text().trim();
-}
-function selectFilterTableHome(includeUserFilters = true) {
+export function selectFilterTableHome(includeUserFilters = true) {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
         tableProc.find('a[href*="acao=procedimento_atribuicao_listar"]').map(function(){ return normalizeProcessoAtribuicaoText(this) }).get();
 
@@ -1085,7 +1087,7 @@ function selectFilterTableHome(includeUserFilters = true) {
         }).get();
         marcadores = (typeof marcadores !== 'undefined' && marcadores !== null) ? uniqPro(marcadores) : [];
 
-    var html =  '<select id="filterTableHome" class="selectPro" style="width:250px;margin-right:20px !important;" onchange="getFilterTableHome(this)" data-placeholder="Filtrar processos...">'+
+    var html =  templates.homeFilterSelectHtml() +
                 '   <option value="" data-type="clean">&nbsp;</option>'+
                 '   <option value="all" data-type="clean">Todos os processos</option>'+
                 '   <option value="(N\u00E3o visualizado)" data-type="proc">Processos n\u00E3o visualizados</option>';
@@ -1119,7 +1121,7 @@ function selectFilterTableHome(includeUserFilters = true) {
         html += '</select>';
     return html;
 }
-function getAssignmentFilterOptionsHome() {
+export function getAssignmentFilterOptionsHome() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     var users = tableProc.find('a[href*="acao=procedimento_atribuicao_listar"]').map(function(){
         return normalizeProcessoAtribuicaoText(this);
@@ -1129,9 +1131,9 @@ function getAssignmentFilterOptionsHome() {
 
     return users;
 }
-function selectAssignmentFilterHome() {
+export function selectAssignmentFilterHome() {
     var users = getAssignmentFilterOptionsHome();
-    var html =  '<select id="filterAssignmentTableHome" class="selectPro" style="width:250px;margin-right:20px !important;" onchange="getFilterAssignmentTableHome(this)" data-placeholder="Filtrar atribui\u00E7\u00E3o...">'+
+    var html =  templates.assignmentFilterSelectHtml() +
                 '   <option value="">&nbsp;</option>'+
                 '   <option value="">Todos os processos</option>'+
                 '   <option value="__unassigned__">Processos sem atribui\u00E7\u00E3o</option>';
@@ -1141,14 +1143,14 @@ function selectAssignmentFilterHome() {
     html += '</select>';
     return html;
 }
-function getProcessoAtribuicaoValue(row) {
+export function getProcessoAtribuicaoValue(row) {
     var link = row.find('a[href*="acao=procedimento_atribuicao_listar"]').first();
     if (link.length === 0) {
         return '';
     }
     return normalizeProcessoAtribuicaoText(link);
 }
-function updateVisibleHeadersForAssignmentFilter(table) {
+export function updateVisibleHeadersForAssignmentFilter(table) {
     var currentHeader = null;
     var hasVisibleRows = false;
 
@@ -1172,7 +1174,7 @@ function updateVisibleHeadersForAssignmentFilter(table) {
         currentHeader.toggle(hasVisibleRows);
     }
 }
-function applyAssignmentFilterHomeFallback(value) {
+export function applyAssignmentFilterHomeFallback(value) {
     var filterValue = value || '';
     var tables = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
 
@@ -1195,7 +1197,7 @@ function applyAssignmentFilterHomeFallback(value) {
         updateVisibleHeadersForAssignmentFilter(table);
     });
 }
-function getFilterAssignmentTableHome(this_) {
+export function getFilterAssignmentTableHome(this_) {
     var value = $(this_).val() || '';
     sessionStorageStorePro('filterAssignmentTableHome', value);
 
@@ -1210,7 +1212,7 @@ function getFilterAssignmentTableHome(this_) {
         applyAssignmentFilterHomeFallback(value);
     }
 }
-function restoreAssignmentFilterHome() {
+export function restoreAssignmentFilterHome() {
     var target = $('#filterAssignmentTableHome');
     if (target.length === 0) {
         return;
@@ -1229,7 +1231,7 @@ function restoreAssignmentFilterHome() {
 }
 // Feature "Filtrar a página pelo campo de pesquisa rápida" (config filtrarpaginapelapesquisarapida)
 // migrada para src/features/quick-filter/ (bundle quick-filter-list.bundle.js, self-boot). — Fase 6.
-function initDadosProcesso(TimeOut = 9000) {
+export function initDadosProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro === 'function') { 
         var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
@@ -1248,7 +1250,7 @@ function initDadosProcesso(TimeOut = 9000) {
 }
 
 // REMOVE PAGINACAO DA PAGINA
-function getProcessosPaginacao(this_, index, tipo) {
+export function getProcessosPaginacao(this_, index, tipo) {
     var form = $('#frmProcedimentoControlar');
     var href = form.attr('action');
     var param = {};
@@ -1296,7 +1298,7 @@ function getProcessosPaginacao(this_, index, tipo) {
             }
     });
 }
-function checkProcessoPaginacao(this_, tipo) {
+export function checkProcessoPaginacao(this_, tipo) {
     var pgnAtual = $('#hdn'+tipo+'PaginaAtual');
     if ( parseInt(pgnAtual.val()) > 0) {
          pgnAtual.val(0);
@@ -1306,7 +1308,7 @@ function checkProcessoPaginacao(this_, tipo) {
         $('#div'+tipo+' .infraAreaPaginacao').find('a, select').hide();
     }
 }
-function initProcessoPaginacao(this_) {
+export function initProcessoPaginacao(this_) {
     if ($('.infraAreaPaginacao a').is(':visible')) {
         if ($('#divRecebidosAreaPaginacaoSuperior a').is(':visible')) {
             checkProcessoPaginacao(this_, 'Recebidos');
@@ -1319,7 +1321,7 @@ function initProcessoPaginacao(this_) {
     }
 }
 /*
-function observeHistoryBrowserPro() {
+export function observeHistoryBrowserPro() {
     (function(history){
         var pushState = history.pushState;
         history.pushState = function(state) {
@@ -1353,7 +1355,7 @@ function observeHistoryBrowserPro() {
     };
 }
 */
-function initNewTabProcesso(TimeOut = 9000) {
+export function initNewTabProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof verifyConfigValue !== 'undefined') { 
         getNewTabProcesso();
@@ -1364,7 +1366,7 @@ function initNewTabProcesso(TimeOut = 9000) {
         }, 500);
     }
 }
-function getNewTabProcesso() {
+export function getNewTabProcesso() {
     var iconLabel = localStorage.getItem('iconLabel');
     var iconBoxSlim = localStorage.getItem('seiSlim');
     var observerTableControle = new MutationObserver(function(mutations) {
@@ -1462,7 +1464,7 @@ function getNewTabProcesso() {
         });
     }, 500);
 }
-function openListNewTab(this_) {
+export function openListNewTab(this_) {
     var listNewTag = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find(elemCheckbox+':checked').map(function(){ return $(this).val() }).get();
     if (listNewTag.length > 0) {
         $.each(listNewTag, function(index, value){
@@ -1476,7 +1478,7 @@ function openListNewTab(this_) {
         })
     }
 }
-function dialogChangeTypeProc(this_) {
+export function dialogChangeTypeProc(this_) {
     initListTypesSEI(function (){
         var htmlOption = $.map(arrayListTypesSEI.selectTipoProc, function(v){
             return '<option value="'+v.value+'">'+v.name+'</option>';
@@ -1515,13 +1517,13 @@ function dialogChangeTypeProc(this_) {
             }]
     });
 }
-function changeTypeProc(this_) {
+export function changeTypeProc(this_) {
     var idTypeProc = $('#dialogBoxTipoProc').val();
     var txtTypeProc = $('#dialogBoxTipoProc').find('option:selected').text();
         getChangeTypeProc(idTypeProc, txtTypeProc);
         loadingButtonConfirm(true);
 }
-function getChangeTypeProc(idTypeProc, txtTypeProc) {
+export function getChangeTypeProc(idTypeProc, txtTypeProc) {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     var listProcs = tableProc.find(elemCheckbox+':checked').map(function(){ return $(this).val() }).get();
     if (listProcs.length > 0) {
@@ -1550,7 +1552,7 @@ function getChangeTypeProc(idTypeProc, txtTypeProc) {
 }
 // initPanelMonitorados migrado para ESM (src/features/monitorados/boot.js); exposto
 // como global via monitorados/legacy-api.js. O call-site abaixo usa o alias.
-function checkLoadConfigSheets(TimeOut = 9000) {
+export function checkLoadConfigSheets(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined') { 
         if (
@@ -1568,7 +1570,7 @@ function checkLoadConfigSheets(TimeOut = 9000) {
         }, 500);
     }
 }
-function orderDivPanel(html, idOrder, name) {
+export function orderDivPanel(html, idOrder, name) {
     if (typeof getParamsUrlPro(window.location.href).acao_pro === 'undefined') {
         if ($('.panelHomePro').length > 0) {
             $('.panelHomePro').each(function(){
@@ -1587,7 +1589,7 @@ function orderDivPanel(html, idOrder, name) {
         //$('#'+name).find('.infraBarraLocalizacao').append('<span>'+idOrder+'</span>');
     }
 }
-function insertDivPanelControleProc() {
+export function insertDivPanelControleProc() {
     var elementControleProc = SeiPro.sei.adapter.isNewSEI() ? 'collapseTabelaProcesso' : 'frmProcedimentoControlar';
     var statusView = ( getOptionsPro(elementControleProc) == 'hide' ) ? 'none' : 'initial';
     var statusIconShow = ( getOptionsPro(elementControleProc) == 'hide' ) ? '' : 'display:none;';
@@ -1612,13 +1614,13 @@ function insertDivPanelControleProc() {
         if (!checkLoadedTableSorter() && (typeof storeGroupTablePro() === 'undefined' || storeGroupTablePro() == '')) removeAllTags(false, 3);
     }
 }
-function insertDivPanel() {
+export function insertDivPanel() {
     if ($('#panelHomePro').length == 0 && $('#tblMarcadores').length == 0) { 
         $('#frmProcedimentoControlar').after('<div id="panelHomePro" style="display: inline-block; width: 100%;"></div>'); 
         initSortDivPanel();
     }
 }
-function initSortDivPanel(TimeOut = 9000) {
+export function initSortDivPanel(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof $('#panelHomePro').sortable !== 'undefined' && typeof getOptionsPro !== 'undefined' && typeof setSortDivPanel !== 'undefined' && typeof $().moveTo !== 'undefined') { 
         if ($('#tblMarcadores').length == 0) {
@@ -1636,7 +1638,7 @@ function initSortDivPanel(TimeOut = 9000) {
 }
 
 // GERA LISTA DE PROCESSOS EM CSV
-function getTableProcessosCSV() {
+export function getTableProcessosCSV() {
     var htmlTable = '<table>'+
                     '   <thead>'+
                     '       <tr>'+
@@ -1724,14 +1726,14 @@ function getTableProcessosCSV() {
     downloadTableCSV($(htmlTable), 'ListaProcessos_SEIPro');
 }
 
-function copyTableResultProtocoloSEI() {
+export function copyTableResultProtocoloSEI() {
     var htmlTable = $('.tableResultProtocoloSEI')[0].outerHTML;
         copyToClipboardHTML(htmlTable);
 }
-function downloadTableResultProtocoloSEI() {
+export function downloadTableResultProtocoloSEI() {
     downloadTableCSV($('.tableResultProtocoloSEI'), 'PesquisaProtocolo_SEIPro');
 }
-function initFilterTableProcessos(this_, TimeOut = 9000) {
+export function initFilterTableProcessos(this_, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (checkLoadedTableSorter()) { 
         filterTableProcessos(this_);
@@ -1743,7 +1745,7 @@ function initFilterTableProcessos(this_, TimeOut = 9000) {
         }, 1500);
     }
 }
-function filterTableProcessos(this_) {
+export function filterTableProcessos(this_) {
     var _this = $(this_);
     var _parent = _this.closest('thead');
     var table = _this.closest('table');
@@ -1757,7 +1759,7 @@ function filterTableProcessos(this_) {
         _this.addClass('newLink_active');
     }
 }
-function initTableSorterHome(TimeOut = 1000) {
+export function initTableSorterHome(TimeOut = 1000) {
     if (TimeOut <= 0) { return; }
     if (
         typeof corrigeTableSEI !== 'undefined' && 
@@ -1776,7 +1778,7 @@ function initTableSorterHome(TimeOut = 1000) {
         }, 500);
     }
 }
-function setTableSorterHome() {
+export function setTableSorterHome() {
     var observerFilterHome = new MutationObserver(function(mutations) {
         var _this = $(mutations[0].target);
         var _parent = _this.closest('table');
@@ -1839,7 +1841,6 @@ function setTableSorterHome() {
                     var _this = $('#'+$(this).attr('id'));
                     var sortListArray = (typeof sortListSaved !== 'undefined' && sortListSaved && typeof sortListSaved[elemID] !== 'undefined') ? sortListSaved[elemID].sortList : [];
                     var configSorter = {
-                        sortLocaleCompare : true,
                         textExtraction: {
                             1: function (elem, table, cellIndex) {
                                 var text_return = '';
@@ -1969,7 +1970,7 @@ function setTableSorterHome() {
             }, 1000);
         }
 }
-function tableHomeDestroy(reload = false, tableHomeTimeout = 3000) {
+export function tableHomeDestroy(reload = false, tableHomeTimeout = 3000) {
     if (tableHomePro.length > 0) {
         $.each(tableHomePro, function(i){
             tableHomePro[i].trigger("destroy");
@@ -1987,7 +1988,7 @@ function tableHomeDestroy(reload = false, tableHomeTimeout = 3000) {
         initTableSorterHome();
     }
 }
-function forceTableHomeDestroy(Timeout = 3000) {
+export function forceTableHomeDestroy(Timeout = 3000) {
     if (Timeout <= 0) { return; }
     var force = false;
     $.each(tableHomePro, function(i){
@@ -2000,7 +2001,7 @@ function forceTableHomeDestroy(Timeout = 3000) {
         if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload forceTableHomeDestroy => '+TimeOut);
     }
 }
-function forceOnLoadBody() {
+export function forceOnLoadBody() {
     // No-op intencional. Antes rodava o onload nativo do <body> do SEI via
     // new Function($('body').attr('onload')) — removido porque:
     //  1) a CSP da extensão bloqueia eval/new Function no mundo isolado, gerando o
@@ -2010,7 +2011,7 @@ function forceOnLoadBody() {
     // O onload real do <body> já é executado pelo próprio navegador ao carregar a
     // página; não há o que re-disparar daqui. modalLink já é carregado eager.
 }
-function observeAreaTela(TimeOut = 9000) {
+export function observeAreaTela(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof setResizeAreaTelaD !== 'undefined') { 
         new ResizeObserver(setResizeAreaTelaD).observe(divInfraAreaTelaD);
@@ -2028,7 +2029,7 @@ function observeAreaTela(TimeOut = 9000) {
 // Núcleo puro: src/core/sticknote.js. View: anotacao-controle/view.js.
 // Acionada via SeiPro.features.anotacaoControle.init()/render() (ver call-sites acima).
 // ============================================================================
-function initFullnameAtribuicao(TimeOut = 9000) {
+export function initFullnameAtribuicao(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined') { 
         if (verifyConfigValue('nomesusuarios')) {
@@ -2041,7 +2042,7 @@ function initFullnameAtribuicao(TimeOut = 9000) {
         }, 500);
     }
 }
-function initViewEspecifacaoProcesso(TimeOut = 9000) {
+export function initViewEspecifacaoProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof checkConfigValue !== 'undefined') { 
         if (verifyConfigValue('especificaprocesso')) {
@@ -2054,7 +2055,7 @@ function initViewEspecifacaoProcesso(TimeOut = 9000) {
         }, 500);
     }
 }
-function initFaviconNrProcesso(TimeOut = 9000) {
+export function initFaviconNrProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof Favico !== 'undefined' && typeof checkConfigValue !== 'undefined') { 
         if (checkConfigValue('contadoricone')) {
@@ -2067,7 +2068,7 @@ function initFaviconNrProcesso(TimeOut = 9000) {
         }, 500);
     }
 }
-function initReloadModalLink(TimeOut = 9000) {
+export function initReloadModalLink(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof reloadModalLink !== 'undefined') { 
         reloadModalLink();
@@ -2078,7 +2079,7 @@ function initReloadModalLink(TimeOut = 9000) {
         }, 500);
     }
 }
-function initReplaceNewIcons(TimeOut = 9000) {
+export function initReplaceNewIcons(TimeOut = 9000) {
     if (typeof isNewSEI !== 'undefined' && SeiPro.sei.adapter.isNewSEI()) $(divComandos+' a').addClass('botaoSEI');
     if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
     if (typeof replaceNewIcons === 'function') {
@@ -2090,7 +2091,7 @@ function initReplaceNewIcons(TimeOut = 9000) {
         }, 500);
     }
 }
-function initObserveUrlChange(TimeOut = 9000) {
+export function initObserveUrlChange(TimeOut = 9000) {
     if (TimeOut <= 0 || parent.window.name != '') { return; }
     if (typeof parent.verifyConfigValue === 'function') {
         setObserveUrlChange();
@@ -2101,7 +2102,7 @@ function initObserveUrlChange(TimeOut = 9000) {
         }, 500);
     }
 }
-function setObserveUrlChange() {
+export function setObserveUrlChange() {
     if (parent.verifyConfigValue('urlamigavel')) {
         $(window).bind('hashchange', function() {
             var ifrArvore = $('#ifrArvore').contents();
@@ -2138,7 +2139,7 @@ function setObserveUrlChange() {
         });
     }
 }
-function selectPanelKanbanHome() {
+export function selectPanelKanbanHome() {
     var type = storeGroupTablePro();
         type = (!type || type == 'all' || type == '') ? false : true;
     // data-act (não onclick): handlers inline rodam no mundo MAIN e não enxergam
@@ -2151,12 +2152,12 @@ function selectPanelKanbanHome() {
                 '</div>';
     return html;
 }
-function removeDataPanelProc(_this) {
+export function removeDataPanelProc(_this) {
     removeOptionsPro('listaMarcadores');
     removeOptionsPro('arrayListUsersSEI');
     getPanelProc(_this);
 }
-function getPanelProc(this_) {
+export function getPanelProc(this_) {
     var data = $(this_).data();
     var mode = data.value;
     $(this_).closest('#processosProActions').find('.btn.active').removeClass('active');
@@ -2189,7 +2190,7 @@ function getPanelProc(this_) {
     setOptionsPro('panelProcessosView', mode);
 }
 // Delegação isolated-world para os botões Tabela/Quadro (substitui onclick/ondblclick).
-function installPanelProcDelegation(root) {
+export function installPanelProcDelegation(root) {
     var target = root || document;
     if (target.__seiproPanelProcBound) return;
     target.__seiproPanelProcBound = true;
@@ -2207,7 +2208,7 @@ function installPanelProcDelegation(root) {
     });
 }
 installPanelProcDelegation(document);
-function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut = 9000) {
+export function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof jKanban !== 'undefined') { 
         addKanbanProc(type, loop);
@@ -2219,7 +2220,7 @@ function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut = 9000
         }, 500);
     }
 }
-function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
+export function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
     if (typeof jKanban === 'undefined') $.getScript(URL_SPRO+"js/lib/jkanban.min.js");
     if (!type || type == 'all' || type == '') {
         setOptionsPro('panelProcessosView', 'Tabela');
@@ -2514,7 +2515,7 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
         }
     }
 }
-function cancelMoveKanbanItensProc() {
+export function cancelMoveKanbanItensProc() {
     var itemMove = kanbanProcessosMoving;
     if (itemMove && $('#processosKanban').is(':visible')) {
         var item = jmespath.search(kanbanProcessos.options.boards,"[?id=='"+itemMove.source+"'] | [0].item | [?id=='"+itemMove.id+"'] | [0]");
@@ -2523,7 +2524,7 @@ function cancelMoveKanbanItensProc() {
             kanbanProcessos.addElement(itemMove.source, item, itemMove.order);
     }
 }
-function pinKanbanItensProc(this_, id_protocolo) {
+export function pinKanbanItensProc(this_, id_protocolo) {
     var _this = $(this_);
     var _parent = _this.closest('.kanban-board');
     var _hasActive = _this.hasClass('newLink_active');
@@ -2547,7 +2548,7 @@ function pinKanbanItensProc(this_, id_protocolo) {
         if (typeof infraTooltipOcultar === 'function') infraTooltipOcultar();
     }
 }
-function updateOrderKanbanBoardProc() {
+export function updateOrderKanbanBoardProc() {
     var type = storeGroupTablePro();
     var arrayOrder = $('#processosKanban .kanban-board').map(function(){
                         var _this = $(this);
@@ -2558,7 +2559,7 @@ function updateOrderKanbanBoardProc() {
     setOptionsPro('panelProcessosOrder_'+type, arrayOrder);
     // console.log('panelProcessosOrder_'+type, arrayOrder);
 }
-function collapseKanbanBoardProc(this_) {
+export function collapseKanbanBoardProc(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.kanban-board');
     var _data = _parent.data();
@@ -2566,7 +2567,7 @@ function collapseKanbanBoardProc(this_) {
         _parent.find('.kanban-collapse i').attr('class', _data.collapse ? 'fas fa-plus-square azulColor' : 'fas fa-minus-square cinzaColor');
         updateOrderKanbanBoardProc();
 }
-function updateCountKanbanBoardProc() {
+export function updateCountKanbanBoardProc() {
     if (!kanbanProcessos || !kanbanProcessos.options || !$.isArray(kanbanProcessos.options.boards)) {
         return;
     }
@@ -2577,7 +2578,7 @@ function updateCountKanbanBoardProc() {
             elemBoard.attr('data-collapse',v.collapse).find('.kanban-title-board').attr('data-count',countBoard).after(iconCollapse);
     });
 }
-function addAcompanhamentoEspIcon() {
+export function addAcompanhamentoEspIcon() {
     var storeRecebimento = (typeof localStorageRestorePro !== 'undefined' &&  typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
     var array_procedimentos = [];
     $('.acompanhamentoesp_icon').remove();
@@ -2589,10 +2590,7 @@ function addAcompanhamentoEspIcon() {
         }
     });
 }
-function quoteInlineJsText(text) {
-    return '\'' + String(text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, '\\n') + '\'';
-}
-function getListaMarcadores(html) {
+export function getListaMarcadores(html) {
     var indexSelected = 0;
     var selectTags = html.find('#selMarcador').find('option').map(function(i, v){ 
                         if ($(this).is(':selected')) indexSelected = i-1;
@@ -2606,7 +2604,7 @@ function getListaMarcadores(html) {
         }
     return {array: selectTags, indexSelected: indexSelected};
 }
-function configDatesSwitchChangeHome(this_) {
+export function configDatesSwitchChangeHome(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.ui-dialog');
     if (_this.is(':checked')) {
@@ -2621,7 +2619,7 @@ function configDatesSwitchChangeHome(this_) {
         _this.closest('tr').find('.iconSwitch').removeClass('azulColor');
     }
 }
-function getMapaControleProcesso() {
+export function getMapaControleProcesso() {
     return $('#tblProcessosRecebidos').find('tbody tr').not('.tableHeader').not('.infraCaption').map(function(){
         let _this = $(this);
         let _td = _this.find('td');
@@ -2647,7 +2645,7 @@ function getMapaControleProcesso() {
         return _return;
     }).get();
 }
-function updateCountIconDist() {
+export function updateCountIconDist() {
     var counter = $('#distribAutTablePro').find('input[type="checkbox"]:checked').length;
     if (counter > 0) {
         $('.iconConfig_distrib').find('.fa-layers-counter').text(counter).show();
@@ -2665,7 +2663,7 @@ function updateCountIconDist() {
 // var conteudoDist = await txtPadrao_getConfig('DISTRIBUICAO_AUTOMATICA_SEIPRO');
 // console.log(conteudoDist);
 
-var txtPadrao_getList = async () => {
+export const txtPadrao_getList = async () => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
     var listTxtPadrao = $(htmlTxtPadrao).find('#divInfraAreaTabela table.infraTable tr').map(function(){
         var td = $(this).find('td');
@@ -2685,13 +2683,13 @@ var txtPadrao_getList = async () => {
     }).get();
     return listTxtPadrao;
 }
-var txtPadrao_newLink = async () => {
+export const txtPadrao_newLink = async () => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
     var urlNew = $(htmlTxtPadrao).find('#btnNovo').attr('onclick');
         urlNew = typeof urlNew !== 'undefined' && urlNew.indexOf("'") !== -1 ? urlNew.split("'")[1] : false;
     return urlNew;
 }
-var txtPadrao_getConfig = async (idTxt) => {
+export const txtPadrao_getConfig = async (idTxt) => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
     var urlView = $(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td').eq(2).text() == '[_'+idTxt+']') return $(this).find('a[href*="acao=texto_padrao_interno_consultar"]').attr('href') }).get();
         urlView = typeof urlView !== 'undefined' && urlView !== null && urlView.length ? urlView[0] : false;
@@ -2707,7 +2705,7 @@ var txtPadrao_getConfig = async (idTxt) => {
         return false;
     };
 }
-var txtPadrao_setConfig = async (data) => {
+export const txtPadrao_setConfig = async (data) => {
     var htmlTxtPadrao = await $.get(urlTxtPadrao);
     var urlEdit = $(htmlTxtPadrao).find('.infraAreaTabela tr').map(function(){ if ($(this).find('td').eq(2).text() == '[_'+data.nome+']') return $(this).find('a[href*="acao=texto_padrao_interno_alterar"]').attr('href') }).get();
         urlEdit = typeof urlEdit !== 'undefined' && urlEdit !== null && urlEdit.length ? urlEdit[0] : false;
@@ -2718,7 +2716,7 @@ var txtPadrao_setConfig = async (data) => {
     var createConfig = await txtPadrao_createConfig(form, urlForm, data);
     return createConfig;
 }
-var txtPadrao_createConfig = async (form, urlForm, data) => {
+export const txtPadrao_createConfig = async (form, urlForm, data) => {
     let params = {};
         form.find("input[type=hidden]").each(function () {
             if ($(this).attr('name') && $(this).attr('id').includes('hdn')) {
@@ -2751,7 +2749,7 @@ var txtPadrao_createConfig = async (form, urlForm, data) => {
     });
     return htmlTxtPadraoCreated;
 }
-var getTableDistribAutomatica = async () => {
+export const getTableDistribAutomatica = async () => {
     var dadosDistribuicao = await txtPadrao_getConfig('DISTRIBUICAO_AUTOMATICA_SEIPRO');
         window.dadosDistribuicaoAut = dadosDistribuicao;
     var htmlBox =       '<div id="boxDistribAut" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
@@ -2893,7 +2891,7 @@ var getTableDistribAutomatica = async () => {
     });
 
 }
-function setAtribuicaoAutomatica() {
+export function setAtribuicaoAutomatica() {
 
     var htmlBox =       '<div id="boxDistribAut" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">'+
                         '</div>';
@@ -2916,7 +2914,7 @@ function setAtribuicaoAutomatica() {
 // Reconcilia a soma de colspans do cabeçalho com o nº de tds do corpo (a coluna "Prazos"
 // desalinha porque o cabeçalho do SEI usa colspan e outras features [anotação] adicionam th
 // sem casar com o corpo). Ajusta o th principal (maior colspan) de cada tabela.
-function getAllMarcadoresHome() {
+export function getAllMarcadoresHome() {
     var arrayMarcadores = [];
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('tr').each(function(){
         var _processo = $(this).find('a[href*="acao=procedimento_trabalhar"]');
@@ -2939,7 +2937,7 @@ function getAllMarcadoresHome() {
     });
     sessionStorageStorePro('dadosMarcadoresProcessoPro', arrayMarcadores);
 }
-function initAllMarcadoresHome(TimeOut = 9000) {
+export function initAllMarcadoresHome(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof getParamsUrlPro !== 'undefined') { 
         getAllMarcadoresHome();
@@ -2952,7 +2950,7 @@ function initAllMarcadoresHome(TimeOut = 9000) {
 }
 // initNaoVisualizadoPro migrada para src/features/nao-lido/view.js (feature
 // marcar_naolido). Global preservado via aliasGlobal no bundle js/sei-pro-nao-lido.js.
-function initUrgentePro() {
+export function initUrgentePro() {
     $('a div.urgentePro').remove();
     $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]')
         .prepend('<div class="urgentePro"></div>')
@@ -2961,14 +2959,14 @@ function initUrgentePro() {
         .addClass('urgentePro');
 }
 
-function initUploadFilesInProcess() {
+export function initUploadFilesInProcess() {
     if (typeof Dropzone === 'function') {
         setUploadFilesInProcess();
     } else {
         $.getScript(URL_SPRO+"js/lib/dropzone.min.js",function(){ setUploadFilesInProcess() });
     }
 }
-function getListIdProtocoloSelected() {
+export function getListIdProtocoloSelected() {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
     var listId = tableProc.find(elemCheckbox+':checked').map(function(){ return $(this).val() }).get();
     if (listId.length === 0) {
@@ -2982,14 +2980,14 @@ function getListIdProtocoloSelected() {
     }
     return (listId.length > 0) ? listId : false;
 }
-function setUploadFilesInProcess(load_upload = true) {
+export function setUploadFilesInProcess(load_upload = true) {
     var listId = getListIdProtocoloSelected();
     if (listId.length > 0) {
         $('#frmCheckerProcessoPro').remove();
         loadIframeProcessUpload(listId[0], load_upload);
     }
 }
-function loadIframeProcessUpload(idProcedimento, load_upload = true) {
+export function loadIframeProcessUpload(idProcedimento, load_upload = true) {
     if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
     
     var url = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento;
@@ -3006,11 +3004,11 @@ function loadIframeProcessUpload(idProcedimento, load_upload = true) {
             }
     });
 }
-function completeIdProtocoloSelected() {
+export function completeIdProtocoloSelected() {
     var listId = getListIdProtocoloSelected();
         $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('tr#P'+listId[0]).find(elemCheckbox+':checked').trigger('click');
 }
-function nextUploadFilesInProcess() {
+export function nextUploadFilesInProcess() {
     completeIdProtocoloSelected();
 
     if (getListIdProtocoloSelected()) {
@@ -3021,14 +3019,14 @@ function nextUploadFilesInProcess() {
         alertaBoxPro('Sucess', 'check-circle', 'Arquivos enviados com sucesso!');
     }
 }
-function removeUploadFilesInProcess() {
+export function removeUploadFilesInProcess() {
     $('#uploadListPro').remove();
     $('.dz-infoupload-home').remove();
     $(containerUpload).data('index',0);
     if (typeof arvoreDropzone !== 'undefined' && typeof arvoreDropzone.destroy === 'function') arvoreDropzone.destroy();
     $(containerUpload).unbind('click');
 }
-function onClickRemoveDragHoverHome() {
+export function onClickRemoveDragHoverHome() {
     $(containerUpload).on('click', function(){
         if ($(this).hasClass('dz-drag-hover')) {
             $(this).removeClass('dz-drag-hover');
@@ -3036,7 +3034,7 @@ function onClickRemoveDragHoverHome() {
         }
     })
 }
-function cleanUploadFilesInProcess() {
+export function cleanUploadFilesInProcess() {
     $('#uploadListPro').html('');
     $(containerUpload).data('index',0);
     if (typeof arvoreDropzone.files !== 'undefined' && arvoreDropzone.files.length) {
@@ -3045,7 +3043,7 @@ function cleanUploadFilesInProcess() {
         });
     }
 }
-function getUploadFilesInProcess() {
+export function getUploadFilesInProcess() {
     var _containerUpload = $(containerUpload);
     var html =  '<div id="uploadListPro"></div>'+
                 '<div id="dz-infoupload" class="dz-infoupload dz-infoupload-home">'+
@@ -3141,10 +3139,10 @@ function getUploadFilesInProcess() {
         arvoreDropzone.options.acceptedFiles = extUpload;
     }
 }
-function sendUploadArvoreHomeStart() {
+export function sendUploadArvoreHomeStart() {
     contentW.sendUploadArvore('upload', false, arvoreDropzone, $(containerUpload));
 }
-function sortUploadArvore() {
+export function sortUploadArvore() {
     var htmlUpload =    '<div id="divUploadDoc" class="panelDadosArvore" style="margin: 15px 0; padding: 1.2em 0 0 0 !important;">'+
                         '   <a style="cursor:pointer;" onclick="sendUploadArvoreHomeStart();" class="newLink newLink_confirm">'+
                         '       <i class="fas fa-upload azulColor"></i>'+
@@ -3169,15 +3167,15 @@ function sortUploadArvore() {
         }
     }).after(htmlUpload);
 }
-function storeLinkUsuarioSistema() {
+export function storeLinkUsuarioSistema() {
     if (typeof setOptionsPro !== 'undefined') setOptionsPro('usuarioSistema',$('#lnkUsuarioSistema').attr('title'));
 }
-function storeVersionSEI() {
+export function storeVersionSEI() {
     if (typeof getSeiVersionPro !== 'undefined' && getSeiVersionPro()) 
         getSeiVersionPro();
     else if (typeof setSeiVersionPro !== 'undefined') setSeiVersionPro();
 }
-function initSeiPro() {
+export function initSeiPro() {
     if (typeof checkHostLimit !== 'function') {
         setTimeout(function(){
             initSeiPro();
@@ -3252,4 +3250,3 @@ function initSeiPro() {
         }
     });
 }
-$(document).ready(function () { initSeiPro() });

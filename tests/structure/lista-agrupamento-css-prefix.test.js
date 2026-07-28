@@ -9,7 +9,7 @@ const source = (file) => readFileSync(join(rootDir, file), 'utf8');
 describe('migration: lista-agrupamento CSS audit', () => {
   it('confirma que o agrupamento não introduz stylesheet ou classes próprias não prefixadas', () => {
     const featureDir = join(rootDir, 'src/features/lista-agrupamento');
-    const legacy = source('src/features/lista-processos/sei-pro.js');
+    const legacy = source('src/features/lista-processos/body.js');
 
     expect(existsSync(join(featureDir, 'style.css'))).toBe(false);
     expect(existsSync(join(featureDir, 'lista-agrupamento.css'))).toBe(false);
@@ -17,7 +17,7 @@ describe('migration: lista-agrupamento CSS audit', () => {
   });
 
   it('preserva os hooks compartilhados e os contratos funcionais do agrupamento', () => {
-    const legacy = source('src/features/lista-processos/sei-pro.js');
+    const legacy = source('src/features/lista-processos/body.js');
     const shared = source('src/shared/legacy/sei-functions-pro.js');
 
     expect(legacy).toMatch(/id=\\?"selectGroupTablePro\\?"[^>]*class=\\?"groupTable selectPro\\?"/);

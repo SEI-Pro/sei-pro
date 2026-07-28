@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { qs, qsa, exists, el, on, remove, empty, closest, parseHTML, parseDocument } from '@src/dom/index.js';
+import { qs, qsa, exists, el, on, remove, empty, closest, parseHTML, parseDocument, ready } from '@src/dom/index.js';
 
 describe('dom helper (substituto do jQuery)', () => {
     it('qs/qsa/exists selecionam no escopo dado', () => {
@@ -64,5 +64,14 @@ describe('dom helper (substituto do jQuery)', () => {
         expect(frag.querySelector('p.z').textContent).toBe('oi');
         const doc = parseDocument('<html><body><h1>T</h1></body></html>');
         expect(doc.querySelector('h1').textContent).toBe('T');
+    });
+
+    it('ready defers when the document is already interactive/complete', async () => {
+        expect(document.readyState).not.toBe('loading');
+        const fn = vi.fn();
+        ready(fn);
+        expect(fn).not.toHaveBeenCalled();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(fn).toHaveBeenCalledOnce();
     });
 });

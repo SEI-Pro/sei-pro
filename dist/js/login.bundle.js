@@ -2781,10 +2781,14 @@
     return Array.prototype.slice.call((root || document).querySelectorAll(selector));
   }
   function ready(fn) {
+    if (typeof document === "undefined") {
+      fn();
+      return;
+    }
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn, { once: true });
     } else {
-      fn();
+      setTimeout(fn, 0);
     }
   }
   function show(node) {

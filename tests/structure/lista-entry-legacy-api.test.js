@@ -10,7 +10,7 @@ describe('entry da lista — ponte legacy-api', () => {
     it('instala os wrappers legados na entry e remove as duplicatas do monólito', () => {
         const entry = read('src/entries/lista.js');
         const bridge = read('src/entries/lista/legacy-api.js');
-        const legacy = read('src/features/lista-processos/sei-pro.js');
+        const legacy = read('src/features/lista-processos/body.js');
 
         expect(entry).toContain("import './lista/legacy-api.js';");
         expect(bridge).toContain("aliasGlobal('getListaEntryContextLegacy'");
@@ -60,6 +60,7 @@ describe('entry da lista — ponte legacy-api', () => {
         const build = read('scripts/build.mjs');
         expect(build).toContain("src/entries/' + f");
         expect(build).toContain("out: 'dist/js/' + f.replace(/\\.js$/, '.bundle.js')");
-        expect(build).toContain("'src/features/lista-processos/sei-pro.js'");
+        expect(build).toContain("{ entry: 'src/features/lista-processos/index.js', out: 'dist/js/sei-pro.js' }");
+        expect(build).not.toContain("'src/features/lista-processos/sei-pro.js'");
     });
 });

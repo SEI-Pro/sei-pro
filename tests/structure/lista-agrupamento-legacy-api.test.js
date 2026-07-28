@@ -10,7 +10,7 @@ describe('migration: lista-agrupamento legacy bridge', () => {
   it('centraliza os aliases e a fachada de toggle na ponte', () => {
     const bridge = source('src/features/lista-agrupamento/legacy-api.js');
     const index = source('src/features/lista-agrupamento/index.js');
-    const legacy = source('src/features/lista-processos/sei-pro.js');
+    const legacy = source('src/features/lista-processos/body.js');
 
     expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
     expect(bridge).toMatch(/import \{ aliasGlobal, globalRef \}/);
@@ -42,6 +42,7 @@ describe('migration: lista-agrupamento legacy bridge', () => {
 
     expect(build).toMatch(/entry:\s*'src\/features\/lista-agrupamento\/index\.js'/);
     expect(build).toMatch(/out:\s*'dist\/js\/lista-agrupamento\.bundle\.js'/);
-    expect(build).toMatch(/'src\/features\/lista-processos\/sei-pro\.js'/);
+    expect(build).toMatch(/entry:\s*'src\/features\/lista-processos\/index\.js'/);
+    expect(build).not.toMatch(/'src\/features\/lista-processos\/sei-pro\.js'/);
   });
 });

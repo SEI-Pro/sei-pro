@@ -25,7 +25,7 @@ describe('migration: anotacao-controle legacy facade', () => {
   });
 
   it('does not duplicate the migrated helpers in the lista-processos monolith', () => {
-    const legacy = read('src/features/lista-processos/sei-pro.js');
+    const legacy = read('src/features/lista-processos/body.js');
     const domain = read('src/features/anotacao-controle/domain.js');
     const io = read('src/features/anotacao-controle/io.js');
     const view = read('src/features/anotacao-controle/view.js');
@@ -61,7 +61,7 @@ describe('migration: anotacao-controle legacy facade', () => {
   });
 
   it('keeps the migrated lifecycle call-sites on the feature namespace', () => {
-    const legacy = read('src/features/lista-processos/sei-pro.js');
+    const legacy = read('src/features/lista-processos/body.js');
 
     expect(legacy).toContain('SeiPro.features.anotacaoControle.init()');
     expect(legacy).toContain('SeiPro.features.anotacaoControle.render()');

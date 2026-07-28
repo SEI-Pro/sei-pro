@@ -14,14 +14,17 @@ export function bindArvoreToolbarProcess({ element, $, onAction }) {
     });
 }
 
-export function bindUploadArvoreNativeDragEvents({
-    root,
-    $,
-    hasUploadFiles,
-    openModalDropzone,
-    cancelUpload,
-    getDropzone
-}) {
+export function bindUploadArvoreNativeDragEvents(deps = {}) {
+    const root = deps.root || document;
+    const $ = deps.$ || globalThis.$;
+    const hasUploadFiles = deps.hasUploadFiles || globalThis.hasUploadFiles;
+    const openModalDropzone = deps.openModalDropzone || globalThis.openModalDropzone;
+    const cancelUpload = deps.cancelUpload || globalThis.dropzoneCancelInfo;
+    const getDropzone = deps.getDropzone || (() => globalThis.arvoreDropzone);
+
+    if (typeof $ !== 'function' || typeof hasUploadFiles !== 'function') return;
+    if (typeof openModalDropzone !== 'function' || typeof cancelUpload !== 'function') return;
+
     const documentRoot = $(root);
     documentRoot
         .off('.uploadArvorePro')

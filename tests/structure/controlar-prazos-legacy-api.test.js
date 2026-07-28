@@ -24,7 +24,7 @@ describe('migration: controlar-prazos legacy surface', () => {
 
   it('keeps the legacy entry and call-sites on the established global API', () => {
     const entry = source('index.js');
-    const lista = readFileSync(join(rootDir, 'src/features/lista-processos/sei-pro.js'), 'utf8');
+    const lista = readFileSync(join(rootDir, 'src/features/lista-processos/body.js'), 'utf8');
 
     expect(entry).toMatch(/import ['"]\.\/legacy-api\.js['"]/);
     expect(lista.match(/\binitControlePrazo\s*\(/g)).toHaveLength(3);

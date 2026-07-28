@@ -7,10 +7,14 @@
 
   // src/dom/index.js
   function ready(fn) {
+    if (typeof document === "undefined") {
+      fn();
+      return;
+    }
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn, { once: true });
     } else {
-      fn();
+      setTimeout(fn, 0);
     }
   }
 
@@ -226,14 +230,15 @@
       onAction($2(this), triggerButton);
     });
   }
-  function bindUploadArvoreNativeDragEvents({
-    root,
-    $: $2,
-    hasUploadFiles: hasUploadFiles3,
-    openModalDropzone: openModalDropzone2,
-    cancelUpload,
-    getDropzone
-  }) {
+  function bindUploadArvoreNativeDragEvents(deps = {}) {
+    const root = deps.root || document;
+    const $2 = deps.$ || globalThis.$;
+    const hasUploadFiles3 = deps.hasUploadFiles || globalThis.hasUploadFiles;
+    const openModalDropzone2 = deps.openModalDropzone || globalThis.openModalDropzone;
+    const cancelUpload = deps.cancelUpload || globalThis.dropzoneCancelInfo;
+    const getDropzone = deps.getDropzone || (() => globalThis.arvoreDropzone);
+    if (typeof $2 !== "function" || typeof hasUploadFiles3 !== "function") return;
+    if (typeof openModalDropzone2 !== "function" || typeof cancelUpload !== "function") return;
     const documentRoot = $2(root);
     documentRoot.off(".uploadArvorePro").on("dragenter.uploadArvorePro dragover.uploadArvorePro", (event) => {
       const originalEvent = event.originalEvent;
@@ -1519,7 +1524,14 @@
     }).on("dragleave", function(e) {
       $(containerUpload).addClass("dz-drag-hover");
     });
-    bindUploadArvoreNativeDragEvents();
+    bindUploadArvoreNativeDragEvents({
+      root: document,
+      $: globalThis.$,
+      hasUploadFiles: hasUploadFiles2,
+      openModalDropzone,
+      cancelUpload: dropzoneCancelInfo,
+      getDropzone: () => arvoreDropzone
+    });
     var extUpload = localStorageRestorePro("arvoreDropzone_acceptedFiles");
     if (extUpload !== null) {
       arvoreDropzone.options.acceptedFiles = extUpload;

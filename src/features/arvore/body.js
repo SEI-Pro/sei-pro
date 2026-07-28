@@ -1124,7 +1124,14 @@ export function loadUploadArvore() {
     }).on('dragleave', function(e) {
         $(containerUpload).addClass('dz-drag-hover');
     });
-    bindUploadArvoreNativeDragEvents();
+    bindUploadArvoreNativeDragEvents({
+        root: document,
+        $: globalThis.$,
+        hasUploadFiles: hasUploadFiles,
+        openModalDropzone: openModalDropzone,
+        cancelUpload: dropzoneCancelInfo,
+        getDropzone: () => arvoreDropzone
+    });
     var extUpload = localStorageRestorePro('arvoreDropzone_acceptedFiles');
     if (extUpload !== null) {
         arvoreDropzone.options.acceptedFiles = extUpload;

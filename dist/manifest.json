@@ -232,6 +232,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/lista-processos.css",
         "css/quick-filter.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",
@@ -335,6 +336,7 @@
         "js/quick-filter-list.bundle.js"
       ],
       "css": [
+        "css/lista-processos.css",
         "css/quick-filter.css",
         "css/anotacao-controle.css",
         "css/monitorados.css"

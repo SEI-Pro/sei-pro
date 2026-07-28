@@ -49,6 +49,7 @@ const bundles = [
     { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
     { entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' },
+    { entry: 'src/features/lista-processos/index.js', out: 'dist/js/sei-pro.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/docs-lote/index.js', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.js', out: 'dist/js/quick-filter-list.bundle.js' },
@@ -87,7 +88,7 @@ function optionsFor({ entry, out }) {
 // lives under src/; dist/js holds only generated output. Adding a file here is a
 // pure relocation — behavior is unchanged until the feature is decomposed later.
 const legacyFiles = [
-    'src/features/lista-processos/sei-pro.js',
+    // lista-processos migrada para bundle ESM (sei-pro.js) — não copiar mais o legado.
     'src/features/atividades/sei-pro-atividades.js',
     'src/features/editor/sei-pro-editor.js',
     'src/features/ai/sei-pro-ai.js',
@@ -135,7 +136,8 @@ const featureCss = [
     { src: 'src/shared/ui/prazo-preview.css', out: 'dist/css/prazo-preview.css' },
     { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' },
     { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' },
-    { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' }
+    { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' },
+    { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' }
 ];
 
 function copyFeatureCss() {

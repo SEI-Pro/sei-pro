@@ -18,7 +18,7 @@ describe('migration: nao-lido legacy facade', () => {
   });
 
   it('does not duplicate the migrated globals in the legacy lista-processos monolith', () => {
-    const legacy = read('src/features/lista-processos/sei-pro.js');
+    const legacy = read('src/features/lista-processos/body.js');
     const view = read('src/features/nao-lido/view.js');
     const io = read('src/features/nao-lido/io.js');
 
@@ -55,7 +55,7 @@ describe('migration: nao-lido legacy facade', () => {
   });
 
   it('keeps the legacy producer on the data-act contract without inline action handlers', () => {
-    const legacy = read('src/features/lista-processos/sei-pro.js');
+    const legacy = read('src/features/lista-processos/body.js');
     const view = read('src/features/nao-lido/view.js');
 
     expect(legacy).toContain('data-act="nao-lido-marcar"');

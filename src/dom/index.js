@@ -117,12 +117,24 @@ export function closest(node, selector) {
     return node && node.closest ? node.closest(selector) : null;
 }
 
-/** Executa quando o DOM estiver pronto (equivalente a $(fn)). */
+/**
+ * Executa quando o DOM estiver pronto (equivalente a $(fn) / jQuery ready).
+ *
+ * Important: when the document is already past "loading" (typical for MV3
+ * content_scripts at document_idle), defer with setTimeout(0) instead of
+ * calling synchronously. Sync ready would run mid-manifest injection — before
+ * later scripts in the same content_script block (controle-prazo, anotacao,
+ * monitorados, …) have installed their globals.
+ */
 export function ready(fn) {
+    if (typeof document === 'undefined') {
+        fn();
+        return;
+    }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', fn, { once: true });
     } else {
-        fn();
+        setTimeout(fn, 0);
     }
 }
 

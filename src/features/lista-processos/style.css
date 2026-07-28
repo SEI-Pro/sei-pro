@@ -1,0 +1,21 @@
+/**
+ * Lista de processos — feature-owned CSS (.seipro-lista-*).
+ * Shared SEI / tableSorter / chosen hooks remain in dist/css/sei-pro.css.
+ */
+
+.seipro-lista-filter,
+.seipro-lista-filter-assignment {
+    width: 250px;
+    margin-right: 20px !important;
+}
+
+.seipro-lista-csv {
+    margin: 0;
+    font-size: 10pt;
+    float: right;
+}
+
+/* Home filter hide (class set by body; keep selector available for overrides) */
+tr.seiProHomeFilterHidden {
+    display: none !important;
+}
