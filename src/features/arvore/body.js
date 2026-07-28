@@ -1,94 +1,95 @@
-const loadSEIProArvore = true;
-var arrayLinksArvore = [];
-var arrayLinksArvoreAll = [];
-var arrayIconsView = [];
-var arrayLinksPage = [];
-var arvoreDropzone = false;
-var containerUpload = 'body';
-var uploadArvoreDragBound = false;
-var delayAjax = false;
-var selectedItensPanelArvore = false;
-var stickNoteDivSelected = 0;
-const pathArvore = parent.isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
-const anchorDoc = parent.isSEI_5 ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]';
+/**
+ * Árvore — migrated monolito body (ESM exports).
+ *
+ * State lives on globalThis via ./state.js (installed before this module loads).
+ * Pure helpers: ./domain.js. IO: ./io.js. Templates: ./templates.js.
+ * jQuery / Dropzone / SEI globals come from the tree iframe environment.
+ *
+ * Thin wrappers below prefer SeiPro.features.* / domain adapters when present.
+ */
+import { installArvoreState } from './state.js';
+import {
+    resolveMenuCatalogs,
+    hasUploadFiles as domainHasUploadFiles,
+    serializeUploadAttachment,
+    extractUploadExtensions,
+    sortUploadFiles,
+    getLinksInText as domainGetLinksInText,
+    resolveDropzoneIcon,
+    formatAnotacaoToParagraphs,
+    buildArvoreInitSignature,
+    sticknotePresetRankIconHtml as domainSticknotePresetRankIconHtml
+} from './domain.js';
+import { readArvoreMenuConfig as readArvoreMenuConfigIO } from './io.js';
+import { fetchUploadPage, postUploadForm, postSavedUpload } from './io.js';
+import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents } from './view.js';
+import * as templates from './templates.js';
 
-function resolveArvoreMenuCatalogs(stored, defaults) {
-    var resolver = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreMenus && SeiPro.features.arvoreMenus.resolveMenuCatalogs;
-    if (resolver) return resolver(stored, defaults);
-    return defaults;
+installArvoreState();
+
+export function resolveArvoreMenuCatalogs(stored, defaults) {
+    return resolveMenuCatalogs(stored, defaults);
 }
 
-function readArvoreMenuConfig() {
-    var io = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreMenuIO && SeiPro.features.arvoreMenuIO.readArvoreMenuConfig;
-    if (!io) return null;
-    return io({
+export function readArvoreMenuConfig() {
+    if (typeof localStorageRestorePro !== 'function' || typeof getOptionsPro !== 'function') {
+        return null;
+    }
+    return readArvoreMenuConfigIO({
         restore: localStorageRestorePro,
         getOption: getOptionsPro
     });
 }
 
-function getSelectedItensPanelArvore() {
+export function getSelectedItensPanelArvore() {
     var defaults = { panel: [["Anota\u00E7\u00F5es"],["Marcador"],["Acompanhamento Especial"],["Tipo de Procedimento"],["Assuntos"],["Interessados"],["Atribui\u00E7\u00E3o"],["N\u00EDvel de Acesso"],["Observa\u00E7\u00F5es"]] };
-    var config = readArvoreMenuConfig();
+    var config = null;
+    try {
+        config = readArvoreMenuConfig();
+    } catch (e) {
+        config = null;
+    }
     var stored = config ? { panel: config.stored.panel } : { panel: (typeof localStorageRestorePro === 'function') ? localStorageRestorePro('configViewFlashPanelArvorePro') : undefined };
     return resolveArvoreMenuCatalogs(stored, defaults).panel;
 }
-selectedItensPanelArvore = getSelectedItensPanelArvore();
+try {
+    selectedItensPanelArvore = getSelectedItensPanelArvore();
+} catch (e) {
+    selectedItensPanelArvore = false;
+}
 
-function isSparklingModalVisible() {
+export function isSparklingModalVisible() {
     return typeof parent.$ === 'function' &&
         parent.$('#divInfraSparklingModalContent').length > 0 &&
         parent.$('#divInfraSparklingModalContent').is(':visible');
 }
 
-function initCSSArvore() {
-    if ( $('head').find('style[data-style="seipro"]').length == 0 ) {
-        $('head').prepend("<style type='text/css' data-style='seipro'> "
-            +"   #divMsgClipboard.msgGeral.msgSucesso { "
-            +"      margin-top: -50px !important;"
-            +"      padding: .4em;"
-            +"      border: .2em solid #d9d9d9;"
-            +"      background: #ffffaa;"
-            +"      box-shadow: 0 0 5px #a0a0a0;"
-            +"    } "
-            +"</style>");
+export function initCSSArvore() {
+    // Styles live in style.css (bundled / copied). Keep a tiny fallback inject
+    // only when the stylesheet was not loaded into this iframe.
+    if ($('head').find('link[data-seipro-arvore-css], style[data-style="seipro-arvore"]').length > 0) return;
+    if ($('head').find('style[data-style="seipro"]').length == 0) {
+        $('head').prepend(
+            "<style type='text/css' data-style='seipro-arvore'>" +
+            templates.clipboardSuccessStyleCss() +
+            "</style>"
+        );
     }
 }
-function dropzoneCancelInfo(e) {
+export function dropzoneCancelInfo(e) {
     if (typeof e !== 'undefined'){
         e.stopImmediatePropagation();
     }
     $(containerUpload).removeClass('dz-drag-hover');
     return false;
 }
-function hasUploadFiles(dataTransfer) {
-    var helper = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.hasUploadFiles;
-    if (helper) return helper(dataTransfer);
-    if (!dataTransfer) return false;
-    if (dataTransfer.files && dataTransfer.files.length > 0) return true;
-    if (!dataTransfer.types) return false;
-    return Array.prototype.indexOf.call(dataTransfer.types, 'Files') !== -1;
+export function hasUploadFiles(dataTransfer) {
+    return domainHasUploadFiles(dataTransfer);
 }
-function encodeUrlUploadArvore(response, params) {
-    var serializer = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.serializeUploadAttachment;
-    if (serializer) return serializer(response, params, infraFormatarTamanhoBytes);
-    var id = response[0];
-    var nome = response[1];
-    var dthora = response[4];
-    var tamanho = response[3];
-    var tamanho_formatado = infraFormatarTamanhoBytes(parseInt(tamanho));
-    var plus = '\u00B1';
-    var hdnAnexos = id+plus+nome+plus+dthora+plus+tamanho+plus+tamanho_formatado+plus+params.userUnidade.user+plus+params.userUnidade.unidade;
-        hdnAnexos = (hdnAnexos.indexOf(' ') !== -1) ? hdnAnexos.replace(/ /g,'+') : hdnAnexos;
-        hdnAnexos = encodeURIComponent(hdnAnexos);
-        hdnAnexos = (hdnAnexos.indexOf('%C2') !== -1) ? hdnAnexos.replace(/%C2/g,'') : hdnAnexos;
-        hdnAnexos = (hdnAnexos.indexOf('%2B') !== -1) ? hdnAnexos.replace(/%2B/g,'+') : hdnAnexos;
-
-        console.log(hdnAnexos);
-
-    return hdnAnexos;
+export function encodeUrlUploadArvore(response, params) {
+    return serializeUploadAttachment(response, params, infraFormatarTamanhoBytes);
 }
-function initToolbarDocs(TimeOut = 9000) {
+export function initToolbarDocs(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof jmespath !== 'undefined' && typeof $().toolbar !== 'undefined') { 
         setToolbarDocs();
@@ -100,7 +101,7 @@ function initToolbarDocs(TimeOut = 9000) {
         }, 500);
     }
 }
-function setToolbarDocs() {
+export function setToolbarDocs() {
     var defaults = {
         process: [['Copiar número do processo'],['Copiar link do processo'],['Enviar Documento Externo'],['Ações em lote'],['Atribuir Processo'],['Add/Remover Urgência']],
         document: [['Copiar número SEI'],['Copiar nome do documento'],['Copiar link do documento'],['Duplicar documento'],['Copiar para...']],
@@ -164,13 +165,13 @@ function setToolbarDocs() {
     getToolbarPro(click); 
     getTooltipOnSign();
 }
-function getTooltipOnSign() {
+export function getTooltipOnSign() {
     $('img[id*="iconA"], img[id*="iconCD"], img[id*="iconNA"]').each(function(){ 
         var title = (typeof $(this).attr('title') !== 'undefined') ? $(this).attr('title').replace(/(\r\n|\n|\r)/gm, "<br>") : false;
         if (title) $(this).attr('onmouseover', 'return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()').removeAttr('title');
     });
 }
-function getLinksPage() {
+export function getLinksPage() {
     var links = [];
     $('script').not('[src*="js"]').each(function(index, value){
         if ($(this).text().indexOf('Nos[0].acoes = ') !== -1) {
@@ -188,7 +189,7 @@ function getLinksPage() {
     });
     return links;
 }
-function actionToolbarPro(this_, triggerButton) {
+export function actionToolbarPro(this_, triggerButton) {
     var button = $(triggerButton);
     var name_action = button.attr('data-action');
     var id_protocolo = this_.attr('id').replace('anchorImg', '').replace('anchor', '');      
@@ -311,12 +312,12 @@ function actionToolbarPro(this_, triggerButton) {
         closeToolbarPro();
     }, 2000);
 }
-function closeToolbarPro() {
+export function closeToolbarPro() {
     $('.tool-container.tool-bottom.toolbar-menu.animate-standard:visible').css({'opacity': 0, display:'none'});
     $(`.clipboard .highlight, a[target="${ifrVisualizacao_}"].highlight`).removeClass('highlight');
     $('#divMsgClipboard').hide();
 }
-function checkToolbarToClose() {
+export function checkToolbarToClose() {
     setTimeout(function () { 
         if ( $('.tool-container.tool-bottom.toolbar-menu.animate-standard:hover').length == 0 ) {
             closeToolbarPro();
@@ -326,7 +327,7 @@ function checkToolbarToClose() {
         }
     }, 1000);
 }
-function getToolbarPro(click) {
+export function getToolbarPro(click) {
     if ( typeof parent.dadosProcessoPro !== 'undefined') {
         let elemProc = isSEI_5
             ? $('a[id*="anchor"][target="ifrVisualizacao"].infraArvoreNo')
@@ -366,7 +367,7 @@ function getToolbarPro(click) {
         }
     }
 }
-function actionToolbarDocs(_this, click) {
+export function actionToolbarDocs(_this, click) {
     _this.toolbar({
         content: '#toolbar-options-doc',
         position: 'bottom',
@@ -443,7 +444,7 @@ function actionToolbarDocs(_this, click) {
         }
     }); 
 }
-function getLinksArvorePasta(nomePasta) {
+export function getLinksArvorePasta(nomePasta) {
     var arrayLinksArvoreAll = getTreeLinksAllSession();
     var href = (nomePasta) ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('procedimento_paginar') !== -1 && v.indexOf('no_pai='+nomePasta) !== -1) }) : [];
     if (href.length > 0) {
@@ -468,34 +469,14 @@ function getLinksArvorePasta(nomePasta) {
         });
     }
 }
-function getLinksInText(text) {
-    var array = [];
-    var index = 0;
-    text.split("'").filter(function(el) { return el.indexOf('controlador.php') !== -1 }).map(function(v){
-        if (v.indexOf('\"') !== -1) {
-            v.split('"').filter(function(i){ return i.indexOf('controlador.php') !== -1}).map(function(j){
-                var link = j.replace(/[\\"]/g, '');
-                var ldownload = (link.indexOf('documento_download_anexo') !== -1 && link.indexOf('arvore=1') === -1 && typeof parent.getParamsUrlPro !== 'undefined' && typeof parent.getParamsUrlPro(array[index-2]).id_documento !== 'undefined') ? '#&_fake_acao=documento_visualizar&_id_documento='+parent.getParamsUrlPro(array[index-2]).id_documento : '';
-                array.push(link+ldownload);
-                index++;
-            });
-            return false;
-        } else {
-            var link = v.replace(/[\\"]/g, '');
-            var ldownload = (link.indexOf('documento_download_anexo') !== -1 && link.indexOf('arvore=1') === -1 && typeof parent.getParamsUrlPro !== 'undefined' &&  typeof parent.getParamsUrlPro(array[index-2]).id_documento !== 'undefined') ? '#&_fake_acao=documento_visualizar&_id_documento='+parent.getParamsUrlPro(array[index-2]).id_documento : '';
-            array.push(link+ldownload);
-            index++;
-            return false;
-        }
+export function getLinksInText(text) {
+    return domainGetLinksInText(text, function(prevLink) {
+        if (typeof parent.getParamsUrlPro === 'undefined' || !prevLink) return null;
+        var params = parent.getParamsUrlPro(prevLink);
+        return params && params.id_documento ? params.id_documento : null;
     });
-    array = (array.length > 0) 
-        ?   array.sort().filter(function(item, pos, ary) {
-                return !pos || item != ary[pos - 1];
-            }) 
-        : [];
-    return array;
 }
-function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = false) {
+export function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = false) {
     var arrayIconsView = getTreeIconsViewSession();
     var listIconsView = (checkIconsView && arrayIconsView.length > 0) ? jmespath.search(arrayIconsView, "[?id_documento==`"+id_documento+"`] | [0].icones") : null;
         listIconsView = (listIconsView === null) ? [] : listIconsView;
@@ -544,7 +525,7 @@ function updateLinksToolbar(toolbar, listLinks, id_documento, checkIconsView = f
 
     });
 }
-function getLinksArvore() {
+export function getLinksArvore() {
     var linksArvore = [];
     $('script').each(function(i){
         if (typeof $(this).attr('src') === 'undefined' && $(this).html().indexOf('Nos[0].acoes') !== -1) { 
@@ -601,7 +582,7 @@ function getLinksArvore() {
     }
     return linksArvore;
 }
-function initChangeUrl() {
+export function initChangeUrl() {
     $(`a[target="${ifrVisualizacao_}"]`).unbind('click').click(function (e) {
         //e.preventDefault();
         var params_url = getParamsUrlPro($(this).attr('href'));
@@ -616,7 +597,7 @@ function initChangeUrl() {
         }
     });
 }
-function addIconActionsArvore(param) {
+export function addIconActionsArvore(param) {
     $(containerUpload).find('.action-'+param.mode).remove();
     $(containerUpload).find(`a[target="${ifrVisualizacao_}"]`).each(function(){
         var name = (param.alt == '') ? param.name : param.alt;
@@ -644,7 +625,7 @@ function addIconActionsArvore(param) {
         }
     });
 }    
-function getActionsArvore(this_) {
+export function getActionsArvore(this_) {
     var _this = $(this_);
     var doc = _this.prevAll(`a[target="${ifrVisualizacao_}"]`).eq(0);
     var mode = _this.data('action');
@@ -657,7 +638,7 @@ function getActionsArvore(this_) {
             $('#divInfraTooltip .infraTooltipTexto').text(_this.data('title'));
         }, 1000);
 }
-function callActionsArvore(doc, mode) {
+export function callActionsArvore(doc, mode) {
     var nameDoc = doc.text().trim();
     var nr_sei = getNrSei(nameDoc);
     var documento = parent.getNomeSei(nameDoc);
@@ -803,7 +784,7 @@ function callActionsArvore(doc, mode) {
     // console.log('copyToClipboard', {id_documento: id_documento, mode: mode, nameDoc: nameDoc, nr_sei: nr_sei, documento: documento});
     // console.log(mode, doc.text(), nr_sei);
 }
-function getDadosDoc(doc, newproc = false, openEditor = true, callback = false, callback_error = false, removeMinuta = false) {    
+export function getDadosDoc(doc, newproc = false, openEditor = true, callback = false, callback_error = false, removeMinuta = false) {    
     var paraUrl = getParamsUrlPro(doc.attr('href'));
     var nameDoc = doc.text().trim();
         nameDoc = removeMinuta ? nameDoc.replace(/[-\s]?\bminuta\b/gi, '').trim() : nameDoc;
@@ -851,7 +832,7 @@ function getDadosDoc(doc, newproc = false, openEditor = true, callback = false, 
         }
     }
 }
-function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, openEditor = true, callback = false, callback_error = false) {
+export function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, openEditor = true, callback = false, callback_error = false) {
     // console.log('getDuplicateDoc', nameDoc, paramDoc, newproc);
     if (newproc) {
         var arrayCurrentCloneDoc = {
@@ -919,7 +900,7 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
         }
     }
 }
-function ajaxPostDuplicateArvore($html, value, nr_sei, paramDoc, openEditor, callback, callback_error) {
+export function ajaxPostDuplicateArvore($html, value, nr_sei, paramDoc, openEditor, callback, callback_error) {
     var urlForm = $html.find('#frmDocumentoEscolherTipo').attr('action');
     var param = {};
         $html.find('#frmDocumentoEscolherTipo').find("input[type=hidden]").map(function () {
@@ -936,12 +917,12 @@ function ajaxPostDuplicateArvore($html, value, nr_sei, paramDoc, openEditor, cal
         saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error);
     });
 }
-function ajaxGetDuplicateArvore(urlDoc, nr_sei, paramDoc, openEditor, callback, callback_error) {
+export function ajaxGetDuplicateArvore(urlDoc, nr_sei, paramDoc, openEditor, callback, callback_error) {
     $.ajax({ url: urlDoc }).done(function (htmlDoc) {
         saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error);
     });
 }
-function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error) {
+export function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, callback_error) {
     var $htmlDoc = $(htmlDoc);
     var form = $htmlDoc.find('#frmDocumentoCadastro');
     var hrefForm = form.attr('action');
@@ -1052,19 +1033,19 @@ function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callback, ca
         }
     });
 }
-function openAlertDuplicateDoc(textAlert) {
+export function openAlertDuplicateDoc(textAlert) {
     if ($(containerUpload).find('.loading-action-doc').length > 0) {
         $(containerUpload).find('.loading-action-doc').attr('onmouseover','return infraTooltipMostrar(\''+textAlert+'\');').attr('onmouseout', 'return infraTooltipOcultar();').find('i').attr('class', 'fas fa-exclamation-circle vermelhoColor') 
     } else {
         parent.alertaBoxPro('Error', 'exclamation-triangle', textAlert);
     }
 }
-function setLoadingActionDoc(id_documento) {
-    var html = '<span class="loading-action-doc" data-id="'+id_documento+'"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>';
+export function setLoadingActionDoc(id_documento) {
+    var html = templates.loadingActionDocHtml(id_documento);
     $(containerUpload).find('.loading-action-doc').remove();
     $('#anchor'+id_documento).before(html);
 }
-function loadUploadArvore() {
+export function loadUploadArvore() {
     if (typeof Dropzone !== 'undefined') {
         Dropzone.autoDiscover = false;
     }
@@ -1149,11 +1130,11 @@ function loadUploadArvore() {
         arvoreDropzone.options.acceptedFiles = extUpload;
     }
 }
-function statusUploadArvore(this_) {
+export function statusUploadArvore(this_) {
     $(this_).find('i').attr('class', 'fas fa-sync-alt fa-spin azulColor');
     $(this_).removeAttr('onclick');
 }
-function sortUploadArvore() {
+export function sortUploadArvore() {
     var htmlUpload =    '<div id="divUploadDoc" class="panelDadosArvore" style="margin-top: 15px; padding: 1.2em 0 0 0 !important;">'+
                         '   <a style="cursor:pointer;" onclick="sendUploadArvore(\'upload\'); statusUploadArvore(this)" class="newLink newLink_confirm">'+
                         '       <i class="fas fa-upload azulColor"></i>'+
@@ -1179,7 +1160,7 @@ function sortUploadArvore() {
         }
     }).after(htmlUpload);
 }
-function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+export function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
     var indexUpload = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
     var elem = _containerUpload.find('.dz-preview').eq(indexUpload);
         elem = (elem.length == 0) ? $('.dz-preview', parent.parent.document).eq(indexUpload) : elem;
@@ -1238,7 +1219,7 @@ function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, 
         }
     }
 }
-function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+export function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
     var urlForm = $html.find('#frmDocumentoEscolherTipo').attr('action');
     var param = {};
         $html.find('#frmDocumentoEscolherTipo').find("input[type=hidden]").map(function () {
@@ -1257,7 +1238,7 @@ function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDro
         $.ajax({ method: 'POST', data: param, url: urlForm }).done(onSuccess);
     }
 }
-function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
+export function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
     var uploadIO = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadIO;
     var onSuccess = function (htmlAnexo) {
         submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
@@ -1268,7 +1249,7 @@ function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDrop
         $.ajax({ url: urlDocExterno }).done(onSuccess);
     }
 }
-function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
+export function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
         var $htmlAnexo = $(htmlAnexo);
         var form = $htmlAnexo.find('#frmDocumentoCadastro');
         var hrefForm = form.attr('action');
@@ -1392,7 +1373,7 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
             arrayDropzone.processQueue();
         // console.log('param###', arrayDropzone.options, param, nameDoc, nameFile, selSerieSelected, selSerie, tipoDoc);
 }
-function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+export function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
     var indexUpload = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
     var param = getParamsUrlPro(urlParent);
     var queuedFiles = (typeof arrayDropzone.getQueuedFiles === 'function') ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
@@ -1431,7 +1412,7 @@ function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropz
         }
     });
 }
-function dropzoneAlertBoxInfo() {
+export function dropzoneAlertBoxInfo() {
     if (typeof arvoreDropzone.getAcceptedFiles === 'function') {
         var accepted = arvoreDropzone.getAcceptedFiles();
         var rejected = arvoreDropzone.getRejectedFiles();
@@ -1462,39 +1443,26 @@ function dropzoneAlertBoxInfo() {
         }
     }
 }
-function dropzoneDivInfoHover() {
-var html =  '<div id="dz-infoupload" class="dz-infoupload">'+
-            '   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>'+
-            '   <span class="cancel" onclick="parent.parent.dropzoneCancelInfo(event); return false;">'+
-            '       <i class="far fa-times-circle icon"></i>'+
-            '       <span class="label">CANCELAR</span>'+
-            '   </span>'+
-            '</div>';
+export function dropzoneDivInfoHover() {
+    var html = templates.dropzoneInfoHoverHtml();
     if ($(containerUpload).find('.dz-infoupload').length == 0) {
         $(containerUpload).prepend(html).data('index', 0);
+        $(containerUpload).find('[data-seipro-arvore-action="dropzone-cancel"]').on('click', function(event) {
+            dropzoneCancelInfo(event);
+            return false;
+        });
     }
 }
-function dropzoneNormalizeImg(file) {
-    var urlIcon = parent.isNewSEI ? 'svg/documento_pdf.svg' : '/infra_css/imagens/pdf.gif';
-        urlIcon = (file.type.indexOf('image/') !== -1) ? (parent.isNewSEI ? 'svg/documento_imagem.svg' : '/infra_css/imagens/imagem.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('video/') !== -1) ? (parent.isNewSEI ? 'svg/documento_video.svg' : '/infra_css/imagens/video.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('audio/') !== -1) ? (parent.isNewSEI ? 'svg/documento_audio.svg' : '/infra_css/imagens/audio.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('application/zip') !== -1) ? (parent.isNewSEI ? 'svg/documento_zip.svg' : '/infra_css/imagens/zip.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('text/htm') !== -1) ? (parent.isNewSEI ? 'svg/documento_html.svg' : '/infra_css/imagens/html.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('text/plain') !== -1) ? (parent.isNewSEI ? 'svg/documento_txt.svg' : '/infra_css/imagens/txt.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('word') !== -1) ? (parent.isNewSEI ? 'svg/documento_doc.svg' : '/infra_css/imagens/doc.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('officedocument.presentation') !== -1) ? (parent.isNewSEI ? 'svg/documento_powerpoint.svg' : '/infra_css/imagens/pps.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('text/csv') !== -1) ? (parent.isNewSEI ? 'svg/documento_excel.svg' : '/infra_css/imagens/xls.gif') : urlIcon;
-        urlIcon = (file.type.indexOf('sheet') !== -1) ? (parent.isNewSEI ? 'svg/documento_excel.svg' : '/infra_css/imagens/xls.gif') : urlIcon;
-
+export function dropzoneNormalizeImg(file) {
+    var urlIcon = resolveDropzoneIcon(file && file.type, parent.isNewSEI);
     $('#divArvore').find('.dz-preview').last().find('.dz-link-icon').attr('src', urlIcon).closest('a').attr('data-img',urlIcon);
     $('#divArvore').find('img[src*="joinbottom.gif"]').last().attr('src', pathArvore+'join.gif');
     $('#divArvore').find('img[src*="join.gif"]').last().attr('src', pathArvore+'joinbottom.gif');
 }
-function openModalDropzone() {
+export function openModalDropzone() {
     $(containerUpload).addClass('dz-drag-hover');
 }
-function initUploadArvore(TimeOut = 9000) {
+export function initUploadArvore(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof Dropzone !== 'undefined' && typeof Dropzone === "function" && $("div#divArvore").length > 0) {
         if (typeof arvoreDropzone !== 'object') {
@@ -1507,7 +1475,7 @@ function initUploadArvore(TimeOut = 9000) {
         }, 500);
     }
 }
-function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') {
+export function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var textarea = _parent.find('.stickNotePro');
@@ -1574,7 +1542,7 @@ function sticknoteUpdate(this_, value, type, priority = false, mode = 'insert') 
         });
     }
 }
-function sticknoteRemove(this_) {
+export function sticknoteRemove(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     if (_parent.find('.stickNotePro').text().trim() != '') {
@@ -1582,7 +1550,7 @@ function sticknoteRemove(this_) {
         _parent.find('.removeStickConfirm, .removeStickCancel').show();
     }
 }
-function sticknoteRemoveConfirm(this_) {
+export function sticknoteRemoveConfirm(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     sticknoteUpdate(this_, '', 'remove');
@@ -1590,13 +1558,13 @@ function sticknoteRemoveConfirm(this_) {
     _parent.find('.removeStickNote').toggleClass('fa-trash-alt fa-spinner').addClass('fa-spin').show();
     _parent.addClass('stickEmpty').removeClass('priority');
 }
-function sticknoteRemoveCancel(this_) {
+export function sticknoteRemoveCancel(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     _parent.find('.removeStickConfirm, .removeStickCancel').hide();
     _parent.find('.removeStickNote').show();
 }
-function sticknoteSave_(this_) {
+export function sticknoteSave_(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     // console.log('sticknoteSave_',_parent.find('.actions:hover').length);
@@ -1606,7 +1574,7 @@ function sticknoteSave_(this_) {
         }, 500);
     }
 }
-function sticknoteSave(this_) {
+export function sticknoteSave(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var textarea = _parent.find('.stickNotePro');
@@ -1618,7 +1586,7 @@ function sticknoteSave(this_) {
         _parent.find('.saveStickNote').toggleClass('fa-save fa-spinner').addClass('fa-spin');
     }
 }
-function sticknoteCancel(this_) {
+export function sticknoteCancel(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     _parent.find('.editStickNote').show();
@@ -1640,7 +1608,7 @@ function sticknoteCancel(this_) {
     }
     stickNoteDivSelected = 0;
 }
-function sticknoteEdit(this_) {
+export function sticknoteEdit(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     _parent.find('.editStickNote').hide();
@@ -1656,7 +1624,7 @@ function sticknoteEdit(this_) {
     var textarea = _parent.find('.stickNotePro');
         textarea.prop('contenteditable',true).data('oldValue', formatDadosAnotacao(textarea[0].outerHTML, 'line') ).focus();
 }
-function sticknoteSaveDate(this_) {
+export function sticknoteSaveDate(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var inputDate = _parent.find('.setDateStickNote_input');
@@ -1683,12 +1651,12 @@ function sticknoteSaveDate(this_) {
     inputDate.hide();
 }
 
-function sticknoteSetDateKey(e, this_) {
+export function sticknoteSetDateKey(e, this_) {
     if(e.which == 13) {
         $(this_).closest('.stickDadosArvore').find('.setDateStickNote').trigger('click');
     }
 }
-function sticknoteSetDate(this_) {
+export function sticknoteSetDate(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var textarea = _parent.find('.stickNotePro');
@@ -1710,13 +1678,13 @@ function sticknoteSetDate(this_) {
         }
     }
 }
-function getSticknoteUser() {
+export function getSticknoteUser() {
     var id_protocolo = getParamsUrlPro(window.location.href).id_procedimento;
     var userStick = (getOptionsPro('arraySticknoteHome') && typeof id_protocolo !== 'undefined') ? jmespath.search(getOptionsPro('arraySticknoteHome'),"[?id_protocolo=='"+id_protocolo+"'] | [0]") : null;
     userStick = (userStick !== null) ? userStick.usertip : false;
     return userStick;
 }
-function sticknoteDates(this_) {
+export function sticknoteDates(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var textarea = _parent.find('.stickNotePro');
@@ -1728,7 +1696,7 @@ function sticknoteDates(this_) {
     var htmlStick = userStick ? '<span class="dateboxDisplay" style="'+(checkDate !== null && moment(checkDate[0], 'DD/MM/YYYY') < moment() ? 'background: #fac3c4 !important;' : '')+'" >'+userStick+'</span>' : '';
     _parent.find('.stickNoteDate').html(htmlStick);
 }
-function sticknotePriority(this_) {
+export function sticknotePriority(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var _stick = $('.stickNotePro');
@@ -1743,17 +1711,15 @@ function sticknotePriority(this_) {
         }, 0);
     }
 }
-function sticknotePresetRankIconHtml(label, text, bars) {
-    return (
-        '<i class="fas seipro-sticknote-preset" title="' + label + '" aria-label="' + label + '" role="button" onclick="sticknoteQuickPreset(this, \'' + text + '\')" onmouseover="return infraTooltipMostrar(\'' + label + '\');" onmouseout="return infraTooltipOcultar();" style="cursor:pointer;color:#666;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;line-height:1;font-size:0;">' +
-            '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" style="width:30px;height:30px;display:block;pointer-events:none;">' +
-                '<circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.25"></circle>' +
-                bars +
-            '</svg>' +
-        '</i>'
-    );
+export function sticknotePresetRankIconHtml(label, text, bars) {
+    // Keep legacy onclick for iframe/parent call-sites; also expose data attr for future delegation.
+    return domainSticknotePresetRankIconHtml(label, text, bars)
+        .replace(
+            'data-seipro-sticknote-preset="' + text + '"',
+            'data-seipro-sticknote-preset="' + text + '" onclick="sticknoteQuickPreset(this, \'' + text + '\')" onmouseover="return infraTooltipMostrar(\'' + label + '\');" onmouseout="return infraTooltipOcultar();"'
+        );
 }
-function sticknoteQuickPreset(this_, value) {
+export function sticknoteQuickPreset(this_, value) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var textarea = _parent.find('.stickNotePro');
@@ -1761,7 +1727,7 @@ function sticknoteQuickPreset(this_, value) {
     var mode = (current !== '') ? 'increment' : 'insert';
     sticknoteUpdate(this_, value, 'preset', _parent.hasClass('priority'), mode);
 }
-function removeFormatting(this_) {
+export function removeFormatting(this_) {
     var _this = $(this_);
     setTimeout(function(){ 
         var line = formatDadosAnotacao(_this[0].outerHTML, 'line');
@@ -1771,7 +1737,7 @@ function removeFormatting(this_) {
         // console.log('pasting', line, paragraph);
     }, 100);
 }
-function checkLimitTextArvore(this_) {
+export function checkLimitTextArvore(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.stickDadosArvore');
     var maxlength = _this.attr('maxlength');
@@ -1780,7 +1746,7 @@ function checkLimitTextArvore(this_) {
     _parent.find('.countLimit').html(textCount);
     sticknotePosition();
 }
-function formatDadosAnotacao(value, type, paste = false) {
+export function formatDadosAnotacao(value, type, paste = false) {
     var result = '';
     if (type == 'line') {
         value = normalizeMojibakeUtf8(value);
@@ -1796,35 +1762,14 @@ function formatDadosAnotacao(value, type, paste = false) {
                     return '\n';
                 } 
             }).get().join('');
-        // var othesLines = elem.find('div, p, br').map(function(v){ if ($(this).text().trim() != '') { return $(this).text()+'\n' } }).get().join('');
         result = (othesLines != '') ? fistLine+'\n'+othesLines : fistLine;
-    } else if ('paragraph') {
+    } else if (type == 'paragraph' || type === 'paragraph') {
         value = normalizeMojibakeUtf8(value);
-        if (value.indexOf('\n') !== -1) {
-            $.each(value.trim().split('\n'), function(i, v){
-                if (v != '') {
-                    var check = (v.indexOf('[ ]') !== -1) ? ' class="stickNoteCheck"' : '';
-                        check = (v.indexOf('[X]') !== -1) ? ' class="stickNoteCheck stickNoteChecked"' : check;
-                    var text = (v.indexOf('[ ]') !== -1) ? v.replace('[ ]','').trim() : v;
-                        text = (v.indexOf('[X]') !== -1) ? v.replace('[X]','').trim() : text;
-                    result += '<div'+check+'>'+replaceTextToProcessoSEI(text)+'</div>';
-                } else if (i != 0 || i != value.length-1) {
-                    result += '<div><br></div>';
-                }
-            });
-        } else {
-            if (value != '') {
-                var check = (value.indexOf('[ ]') !== -1) ? ' class="stickNoteCheck"' : '';
-                    check = (value.indexOf('[X]') !== -1) ? ' class="stickNoteCheck stickNoteChecked"' : check;
-                var text = (value.indexOf('[ ]') !== -1) ? value.replace('[ ]','').trim() : value;
-                    text = (value.indexOf('[X]') !== -1) ? value.replace('[X]','').trim() : text;
-                result = '<div'+check+'>'+replaceTextToProcessoSEI(text)+'</div>';
-            }
-        }
+        result = formatAnotacaoToParagraphs(value, replaceTextToProcessoSEI);
     }
     return result;
 }
-function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
+export function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
     var anotacaoClass = (anotacaoTxt == '') ? 'stickEmpty' : '';
     var priorityClass = (checkPrioridade) ? 'priority' : '';
         anotacaoTxt = (anotacaoTxt == '') ? '<div></div>' : formatDadosAnotacao(anotacaoTxt, 'paragraph');
@@ -1863,7 +1808,7 @@ function setDadosAnotacao(anotacaoTxt, checkPrioridade) {
     sticknoteDates($('.stickNotePro')[0]);
     setStickNoteCheck();
 }
-function sticknotePosition() {
+export function sticknotePosition() {
     if (window.getSelection().type == 'Range') {
         var base = $(window.getSelection().baseNode).closest('div').index();
         var extend = $(window.getSelection().extentNode).closest('div').index();
@@ -1874,7 +1819,7 @@ function sticknotePosition() {
     }
     // console.log(stickNoteDivSelected);
 }
-function sticknoteCheck(this_) {
+export function sticknoteCheck(this_) {
     // console.log(stickNoteDivSelected);
     if (typeof stickNoteDivSelected == 'object') {
         $('.stickNotePro div').each(function(index){
@@ -1886,7 +1831,7 @@ function sticknoteCheck(this_) {
         sticknoteToggleCheck(stickNoteDivSelected);
     }
 }
-function sticknoteToggleCheck(id) {
+export function sticknoteToggleCheck(id) {
     var selected = $('.stickNotePro div').eq(id);
     if (selected.hasClass('stickNoteCheck')) {
         selected.removeClass('stickNoteCheck').removeClass('stickNoteChecked');
@@ -1901,7 +1846,7 @@ function sticknoteToggleCheck(id) {
         }
     }
 }
-function setStickNoteCheck() {
+export function setStickNoteCheck() {
     $('.stickNotePro div').unbind().on("click", function () {
         var _this = $(this);
         var _parent = $('.stickNotePro');
@@ -1918,7 +1863,7 @@ function setStickNoteCheck() {
         }
     });
 }
-function getUrlAnotacaoArvore() {
+export function getUrlAnotacaoArvore() {
     if (typeof jmespath === 'undefined') return false;
 
     var url = getTreeLinkUrlByName('Anotações', null, true);
@@ -1934,7 +1879,7 @@ function getUrlAnotacaoArvore() {
 
     return url || false;
 }
-function getDadosAnotacao() {
+export function getDadosAnotacao() {
     var urlAnotacao = getUrlAnotacaoArvore();
     if (urlAnotacao && !parent.checkHostLimit()) {
         $.ajax({ url: urlAnotacao }).done(function (html) {
@@ -1947,7 +1892,7 @@ function getDadosAnotacao() {
         setDadosAnotacao('', false);
     }
 }
-function togglePanelDadosArvore(this_) {
+export function togglePanelDadosArvore(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.panelDadosArvore');
     _this.toggleClass('fa-chevron-down fa-chevron-right');
@@ -1957,7 +1902,7 @@ function togglePanelDadosArvore(this_) {
         setOptionsPro('panelDadosArvorePro_'+type, state);
       });
 }
-function getDadosInteressadosArvore(this_) {
+export function getDadosInteressadosArvore(this_) {
     var _this = $(this_);
     var data = _this.data();
     if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
@@ -2054,7 +1999,7 @@ function getDadosInteressadosArvore(this_) {
         });
     }
 }
-function optionSearchInteressado(this_) {
+export function optionSearchInteressado(this_) {
     var _this = $(this_);
     var data = _this.data();
     var _parent = _this.closest('.dadosInteressados');
@@ -2069,7 +2014,7 @@ function optionSearchInteressado(this_) {
     }
     _this.find('i').toggleClass('fa-check-square fa-square');
 }
-function initAtividadesProcesso(TimeOut = 9000) {
+export function initAtividadesProcesso(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (isSparklingModalVisible()) {
         setTimeout(function(){ 
@@ -2092,7 +2037,7 @@ function initAtividadesProcesso(TimeOut = 9000) {
         }, 500);
     }
 }
-function setAtividadesProcesso() {
+export function setAtividadesProcesso() {
     var htmlAtividades = getAtividadesProcessoArvore();
     $('.panelDadosArvore_atividades').remove();
     $('.panelDadosArvore').eq(0).before(htmlAtividades);
@@ -2106,7 +2051,7 @@ function setAtividadesProcesso() {
         });
     }
 }
-function filterTagKanbanArvore(this_) {
+export function filterTagKanbanArvore(this_) {
     var _this = $(this_);
     var _parent = _this.closest('.panelDadosArvore_atividades');
     var head = _parent.find('.panelArvoreHead');
@@ -2135,7 +2080,7 @@ function filterTagKanbanArvore(this_) {
         _parent.find('.kanban-item').show();
     }
 }
-function getAtividadesProcessoArvore() {
+export function getAtividadesProcessoArvore() {
     var htmlAtividades = '';
     var htmlInfoAtividades = '';
     if (parent.arrayAtividadesProcPro.length > 0) {
@@ -2175,7 +2120,7 @@ function getAtividadesProcessoArvore() {
     }
     return htmlAtividades;
 }
-function breakDocTwoLines() {
+export function breakDocTwoLines() {
     if ($('.breackline_doc').length > 0) { $('.breackline_doc').remove(); }
     $('#divArvore').find(`a[target="${ifrVisualizacao_}"]`).each(function(index){
         var checkLast = (index == $('#divArvore').find(`a[target="${ifrVisualizacao_}"]`).length-1) ? true : false;
@@ -2192,7 +2137,7 @@ function breakDocTwoLines() {
         $(this).after('<span class="breackline_doc"><br>'+paddingLastFolder+imgDivPasta+imgDiv+nrSEI+'</span>');
     });
 }
-function initBreakDocTwoLines(TimeOut = 9000) {
+export function initBreakDocTwoLines(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (isSparklingModalVisible()) {
         setTimeout(function(){ 
@@ -2213,7 +2158,7 @@ function initBreakDocTwoLines(TimeOut = 9000) {
 // Tree-specific variant: applies seiSlim classes + initAnchorImg + retry loop.
 // Distinct from the canonical SeiPro.core.ui.loadStyleDesign(body, secondClass, options);
 // kept local (renamed) to avoid a global name collision with different semantics.
-function loadStyleDesignArvore(loop = 3) {
+export function loadStyleDesignArvore(loop = 3) {
     if (localStorage.getItem('seiSlim')) {
         var body = document.body;
         body.classList.add("seiSlim");
@@ -2231,7 +2176,7 @@ function loadStyleDesignArvore(loop = 3) {
         }
     }
 }
-function initNumericDocsPro(loop = true) {
+export function initNumericDocsPro(loop = true) {
     var sumP = getSumDocsPasta(loop);
     $('.numericDocsPro').remove();
     var folderDiv = $('.infraArvore[id*="divPASTA"]');
@@ -2253,7 +2198,7 @@ function initNumericDocsPro(loop = true) {
         });
     }
 }
-function getSumDocsPasta(loop) {
+export function getSumDocsPasta(loop) {
     if (parent.getOptionsPro('sumDocsPasta')) {
         return parent.getOptionsPro('sumDocsPasta');
     } else {
@@ -2272,13 +2217,13 @@ function getSumDocsPasta(loop) {
         return sumDocsPasta;
     }
 }
-function checkProcessoSigiloso() {
+export function checkProcessoSigiloso() {
     if ($('a[id*="anchorNA"] img[src*="_sigiloso"]').length > 0) {
         var id_protocolo = getParamsUrlPro(window.location.href).id_procedimento;
         sessionStorageStorePro('processo_sigiloso_'+id_protocolo,true);
     }
 }
-function initPanelPrescricaoProcesso() {
+export function initPanelPrescricaoProcesso() {
     var prescData = parent.arrayPrescricoesProcPro;
     var tipos_prescricao = typeof jmespath !== 'undefined' ? jmespath.search(prescData,"[*].id_tipo_prescricao") : null;
         tipos_prescricao = tipos_prescricao !== null ? parent.uniqPro(tipos_prescricao) : null;
@@ -2334,7 +2279,7 @@ function initPanelPrescricaoProcesso() {
         })
     }
 }
-function initAnchorImg() {
+export function initAnchorImg() {
     $('a[id*="anchorImg"], a[id*="anchorA"], a[id*="ancjoinPASTA"]').each(function(){
         var img = $(this).find('img').attr('src');
         if (img !== null) $(this).attr('data-img', img);
@@ -2346,20 +2291,20 @@ function initAnchorImg() {
         return ($(this).closest('.anchorSpacePro').length == 0) ? '<span class="anchorSpacePro" data-img="'+$(this).attr('src')+'"></span>' : false;
     });
 }
-function getArvoreInitSignature() {
+export function getArvoreInitSignature() {
     var anchors = $('a[id*="anchor"][target="'+ifrVisualizacao_+'"]');
     if (!anchors.length) return '';
-    return anchors.map(function() {
-        return [
-            $(this).attr('id') || '',
-            $(this).attr('href') || ''
-        ].join('|');
-    }).get().join('::');
+    return buildArvoreInitSignature(anchors.map(function() {
+        return {
+            id: $(this).attr('id') || '',
+            href: $(this).attr('href') || ''
+        };
+    }).get());
 }
 // Feature "Filtrar a página pelo campo de pesquisa rápida" (config filtrarpaginapelapesquisarapida)
 // migrada para src/features/quick-filter/ (bundle quick-filter-tree.bundle.js, self-boot no ifrArvore). — Fase 6.
 /*
-function initOnClickPasta() {
+export function initOnClickPasta() {
     $('a[id*="ancjoinPASTA"]').on('click', function(){
         initAnchorImg();
         console.log('initOnClickPasta');
@@ -2374,7 +2319,7 @@ function initOnClickPasta() {
     });
 }
 */
-function initSeiProArvore(loop = true) {
+export function initSeiProArvore(loop = true) {
     if (typeof jmespath === 'undefined') {
         if (!window.__SEI_PRO_JMESPATH_LOADING__ && typeof parent.URL_SPRO !== 'undefined') {
             window.__SEI_PRO_JMESPATH_LOADING__ = true;
@@ -2517,5 +2462,3 @@ function initSeiProArvore(loop = true) {
         console.log('parent.getUrlAcaoPro(duplicar_documento)',parent.getUrlAcaoPro('duplicar_documento'));
     }
 }
-
-$(document).ready(function () { initSeiProArvore() });

@@ -1,37 +1,40 @@
 /**
- * Árvore — ponte de compatibilidade para os adapters de upload.
+ * Árvore — ponte de compatibilidade com o legado.
  *
- * Os módulos domain/io/view permanecem a fonte da implementação; esta ponte
- * mantém aliases globais para call-sites legados que ainda resolvem helpers por
- * nome durante a transição.
+ * AliasGlobal de TODOS os exports do body + domain/io/view adapters, para que
+ * o parent frame, onclick inline e lista-processos/atividades continuem
+ * resolvendo funções por nome no contentWindow da ifrArvore.
  */
 import { aliasGlobal } from '../../core/global.js';
 import * as domain from './domain.js';
 import * as io from './io.js';
 import * as view from './view.js';
+import * as body from './body.js';
+import { installArvoreState } from './state.js';
 
 export function installArvoreLegacyApi() {
+    installArvoreState();
+
     [domain, io].forEach((mod) => {
         Object.keys(mod).forEach((name) => {
             if (typeof mod[name] === 'function') aliasGlobal(name, mod[name]);
         });
     });
 
-    // O toolbar legado recebe o adapter por alias para não redefinir o binding
-    // no monólito; a ação continua sendo fornecida pelo call-site legado.
-    aliasGlobal('bindArvoreToolbarProcess', view.bindArvoreToolbarProcess);
+    Object.keys(body).forEach((name) => {
+        if (typeof body[name] === 'function') aliasGlobal(name, body[name]);
+    });
 
-    // A fachada legada chama este helper sem argumentos; o adapter view recebe
-    // explicitamente as dependências que antes ficavam no monólito.
+    aliasGlobal('bindArvoreToolbarProcess', view.bindArvoreToolbarProcess);
     aliasGlobal('bindUploadArvoreNativeDragEvents', () => {
         if (globalThis.uploadArvoreDragBound) return;
         globalThis.uploadArvoreDragBound = true;
         view.bindUploadArvoreNativeDragEvents({
             root: document,
             $: globalThis.$,
-            hasUploadFiles: globalThis.hasUploadFiles,
-            openModalDropzone: globalThis.openModalDropzone,
-            cancelUpload: globalThis.dropzoneCancelInfo,
+            hasUploadFiles: globalThis.hasUploadFiles || domain.hasUploadFiles,
+            openModalDropzone: globalThis.openModalDropzone || body.openModalDropzone,
+            cancelUpload: globalThis.dropzoneCancelInfo || body.dropzoneCancelInfo,
             getDropzone: () => globalThis.arvoreDropzone
         });
     });

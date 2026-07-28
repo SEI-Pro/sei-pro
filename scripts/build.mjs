@@ -48,7 +48,7 @@ const entryBundles = readdirSync(entriesDir)
 const bundles = [
     { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
-    { entry: 'src/features/arvore/index.js', out: 'dist/js/arvore-menu-domain.bundle.js' },
+    { entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/docs-lote/index.js', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.js', out: 'dist/js/quick-filter-list.bundle.js' },
@@ -89,7 +89,6 @@ function optionsFor({ entry, out }) {
 const legacyFiles = [
     'src/features/lista-processos/sei-pro.js',
     'src/features/atividades/sei-pro-atividades.js',
-    'src/features/arvore/sei-pro-arvore.js',
     'src/features/editor/sei-pro-editor.js',
     'src/features/ai/sei-pro-ai.js',
     'src/features/todas-paginas/sei-pro-all.js',
@@ -135,7 +134,8 @@ const featureCss = [
     { src: 'src/features/monitorados/monitorados.css', out: 'dist/css/monitorados.css' },
     { src: 'src/shared/ui/prazo-preview.css', out: 'dist/css/prazo-preview.css' },
     { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' },
-    { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' }
+    { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' },
+    { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' }
 ];
 
 function copyFeatureCss() {

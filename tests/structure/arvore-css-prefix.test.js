@@ -5,54 +5,34 @@ import { join } from 'node:path';
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
-describe('migration: arvore P6 CSS em lote', () => {
-  it('confirma que a árvore não introduz stylesheet próprio não prefixado', () => {
-    const featureDir = join(rootDir, 'src/features/arvore');
-    expect(existsSync(join(featureDir, 'style.css'))).toBe(false);
-    expect(existsSync(join(featureDir, 'arvore.css'))).toBe(false);
+describe('migration: arvore CSS', () => {
+  it('ships a prefixed feature stylesheet', () => {
+    const cssPath = join(rootDir, 'src/features/arvore/style.css');
+    expect(existsSync(cssPath)).toBe(true);
+    const css = read('src/features/arvore/style.css');
+    expect(css).toContain('.seipro-arvore-');
+    expect(css).toContain('#divMsgClipboard.msgGeral.msgSucesso');
   });
 
   it('preserva os hooks externos e compartilhados necessários ao upload e à árvore', () => {
-    const legacy = read('src/features/arvore/sei-pro-arvore.js');
+    const body = read('src/features/arvore/body.js');
     const sharedLegacy = read('src/shared/legacy/sei-functions-pro.js');
     const arvoreInfo = read('src/features/arvore-info/index.js');
 
-    // Dropzone owns dz-* hooks; panel/notes/tree hooks are shared with SEI,
-    // arvore-info, lista-processos, or shared legacy behavior.
-    expect(legacy).toContain("previewsContainer: '#divArvore'");
-    expect(legacy).toContain("items: '.dz-file-preview'");
-    expect(legacy).toContain("handle: '.dz-filename'");
-    expect(legacy).toContain('class="action-doc action-');
-    expect(legacy).toContain('class="loading-action-doc"');
-    expect(legacy).toContain('class="panelDadosArvore');
-    expect(legacy).toContain('class="stickDadosArvore');
-    expect(legacy).toContain('class="anchorJoinPro"');
+    expect(body).toContain("previewsContainer: '#divArvore'");
+    expect(body).toContain("items: '.dz-file-preview'");
+    expect(body).toContain("handle: '.dz-filename'");
+    expect(body).toContain('class="action-doc action-');
+    expect(body).toContain('loading-action-doc');
+    expect(body).toContain('class="panelDadosArvore');
+    expect(body).toContain('class="stickDadosArvore');
+    expect(body).toContain('class="anchorJoinPro"');
     expect(sharedLegacy).toContain('.action-doc[data-id=');
     expect(sharedLegacy).toContain("closest('.no_notifyPro')");
     expect(arvoreInfo).toContain("querySelector('.panelDadosArvore')");
-
-    // No unreviewed feature-owned class is introduced by the P6 audit.
-    expect(legacy).not.toMatch(/class="(?:arvore|dropzone|upload)[A-Za-z0-9_-]*"/);
   });
 
-  it('audita os produtores de menu e preserva classes compartilhadas sem inventar CSS próprio', () => {
-    const legacy = read('src/features/arvore/sei-pro-arvore.js');
-    const sharedMenuClasses = ['hidden', 'tool-item-gray', 'info'];
-
-    for (const className of sharedMenuClasses) {
-      expect(legacy).toContain(`class="${className}"`);
-    }
-    expect(legacy).toContain("button.addClass('tool-item-active')");
-    expect(legacy).toContain("button.removeClass('tool-item-active')");
-    expect(legacy).toContain(".removeClass('highlight')");
-    expect(legacy).toContain(".addClass('highlight')");
-
-    // These hooks belong to the toolbar/SEI integration; no arvore-owned
-    // stylesheet or unprefixed feature hook is introduced by the P6 audit.
-    expect(legacy).not.toMatch(/class="(?:toolbar|menu|arvore)[A-Za-z0-9_-]*"/);
-  });
-
-  it('mantém Dropzone, bundle legado e CSS externo carregados no contexto da árvore', () => {
+  it('carrega Dropzone, bundle e CSS da árvore no contexto do manifest', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const entries = manifest.content_scripts.filter(({ js = [] }) =>
       js.includes('js/sei-pro-arvore.js')
@@ -63,6 +43,7 @@ describe('migration: arvore P6 CSS em lote', () => {
       expect(entry.js).toContain('js/sei-pro-arvore.js');
       expect(entry.js).toContain('js/lib/dropzone.min.js');
       expect(entry.css).toContain('css/dropzone.min.css');
+      expect(entry.css).toContain('css/arvore.css');
     }
   });
 });

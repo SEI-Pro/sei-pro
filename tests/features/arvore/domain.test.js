@@ -5,7 +5,11 @@ import {
     hasUploadFiles,
     serializeUploadAttachment,
     extractUploadExtensions,
-    sortUploadFiles
+    sortUploadFiles,
+    getLinksInText,
+    resolveDropzoneIcon,
+    formatAnotacaoToParagraphs,
+    buildArvoreInitSignature
 } from '@src/features/arvore/domain.js';
 import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload } from '@src/features/arvore/io.js';
 import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents } from '@src/features/arvore/view.js';
@@ -155,6 +159,35 @@ describe('arvore/view — toolbar de processo', () => {
         expect(calls).toEqual([[jqueryElement, trigger]]);
     });
 });
+describe('arvore/domain — links / icons / notes / signature', () => {
+    it('extrai links controlador.php e deduplica', () => {
+        const text = "foo 'controlador.php?acao=x' bar 'controlador.php?acao=x' baz 'controlador.php?acao=y'";
+        expect(getLinksInText(text)).toEqual([
+            'controlador.php?acao=x',
+            'controlador.php?acao=y'
+        ]);
+    });
+
+    it('resolve ícones Dropzone por MIME', () => {
+        expect(resolveDropzoneIcon('image/png', true)).toContain('documento_imagem');
+        expect(resolveDropzoneIcon('application/pdf', false)).toContain('pdf.gif');
+        expect(resolveDropzoneIcon('application/zip', true)).toContain('documento_zip');
+    });
+
+    it('formata anotação em parágrafos com checklist', () => {
+        expect(formatAnotacaoToParagraphs('[X] Feito\n[ ] Pendente', (t) => t))
+            .toBe('<div class="stickNoteCheck stickNoteChecked">Feito</div><div class="stickNoteCheck">Pendente</div>');
+    });
+
+    it('monta assinatura de init a partir de âncoras', () => {
+        expect(buildArvoreInitSignature([
+            { id: 'a1', href: '/x' },
+            { id: 'a2', href: '/y' }
+        ])).toBe('a1|/x::a2|/y');
+        expect(buildArvoreInitSignature([])).toBe('');
+    });
+});
+
 describe('arvore/view — eventos nativos do upload', () => {
     it('previne navegação, abre a área e entrega arquivos ao Dropzone', () => {
         const handlers = {};

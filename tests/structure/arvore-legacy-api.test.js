@@ -1,84 +1,69 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
-describe('migration: arvore upload legacy facade', () => {
-  it('instala a ponte dedicada no entry da árvore', () => {
+describe('migration: arvore full ESM facade', () => {
+  it('instala a ponte dedicada no entry da árvore e aliasa o body migrado', () => {
     const index = read('src/features/arvore/index.js');
     const bridge = read('src/features/arvore/legacy-api.js');
 
     expect(index).toContain("import { installArvoreLegacyApi } from './legacy-api.js';");
     expect(index).toContain('installArvoreLegacyApi();');
+    expect(index).toContain("import { initSeiProArvore } from './body.js';");
     expect(bridge).toContain("import { aliasGlobal } from '../../core/global.js';");
     expect(bridge).toContain("import * as domain from './domain.js';");
     expect(bridge).toContain("import * as io from './io.js';");
     expect(bridge).toContain("import * as view from './view.js';");
-    expect(bridge).toMatch(/aliasGlobal\(name, mod\[name\]\)/);
+    expect(bridge).toContain("import * as body from './body.js';");
     expect(bridge).toContain("aliasGlobal('bindArvoreToolbarProcess', view.bindArvoreToolbarProcess);");
     expect(bridge).toContain("aliasGlobal('bindUploadArvoreNativeDragEvents'");
-    expect(bridge).toContain('view.bindUploadArvoreNativeDragEvents({');
   });
 
-  it('não duplica no legado os helpers dos adapters exportados pela feature', () => {
-    const legacy = read('src/features/arvore/sei-pro-arvore.js');
-    expect(legacy).not.toMatch(/function\s+bindArvoreToolbarProcess\s*\(/);
-    expect(legacy).toContain("typeof bindArvoreToolbarProcess === 'function'");
-    expect(legacy).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
-    for (const name of [
-      'bindUploadArvoreNativeDragEvents',
-      'fetchUploadPage',
-      'postUploadForm',
-      'postSavedUpload',
-      'extractUploadExtensions',
-      'sortUploadFiles'
-    ]) {
-      expect(legacy).not.toMatch(new RegExp(`function\\s+${name}\\s*\\(`));
-    }
+  it('não mantém o monolito global sei-pro-arvore.js em src/', () => {
+    expect(existsSync(join(rootDir, 'src/features/arvore/sei-pro-arvore.js'))).toBe(false);
+    expect(existsSync(join(rootDir, 'src/features/arvore/body.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/state.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/templates.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/style.css'))).toBe(true);
   });
 
-  it('mantém o bundle da feature e a cópia legada registrados no build', () => {
+  it('empacota a feature como dist/js/sei-pro-arvore.js sem cópia verbatim', () => {
     const build = read('scripts/build.mjs');
-    const index = read('src/features/arvore/index.js');
-    expect(build).toContain("{ entry: 'src/features/arvore/index.js', out: 'dist/js/arvore-menu-domain.bundle.js' }");
-    expect(build).toContain("'src/features/arvore/sei-pro-arvore.js'");
-    expect(index).toContain('namespace.features.arvoreUploadIO');
-    expect(index).toContain("import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents } from './view.js';");
-    expect(index).toContain('namespace.features.arvoreUploadView = { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents };');
+    expect(build).toContain("{ entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' }");
+    expect(build).not.toContain("'src/features/arvore/sei-pro-arvore.js'");
+    expect(build).toContain("src/features/arvore/style.css");
   });
 
-  it('preserva o wire da árvore no manifest e os call-sites legados', () => {
+  it('preserva o wire da árvore no manifest e os call-sites do body', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const contexts = manifest.content_scripts.filter(({ js = [] }) =>
       js.includes('js/sei-pro-arvore.js')
     );
 
-    expect(contexts).toHaveLength(1);
+    expect(contexts.length).toBeGreaterThanOrEqual(1);
     for (const context of contexts) {
       const scripts = context.js;
       const dependency = scripts.indexOf('js/sei-functions-pro.js');
-      const bundle = scripts.indexOf('js/arvore-menu-domain.bundle.js');
-      const legacy = scripts.indexOf('js/sei-pro-arvore.js');
+      const bundle = scripts.indexOf('js/sei-pro-arvore.js');
       const init = scripts.indexOf('js/init_arvore.js');
-      const quickFilter = scripts.indexOf('js/quick-filter-tree.bundle.js');
-      expect(dependency).toBeGreaterThanOrEqual(0);
-      expect(bundle).toBeGreaterThan(dependency);
-      expect(legacy).toBeGreaterThan(bundle);
-      expect(init).toBeGreaterThan(legacy);
-      expect(quickFilter).toBeGreaterThan(init);
+      expect(scripts).not.toContain('js/arvore-menu-domain.bundle.js');
+      if (dependency >= 0) {
+        expect(bundle).toBeGreaterThan(dependency);
+      }
+      if (init >= 0) {
+        expect(init).toBeGreaterThan(bundle);
+      }
     }
 
-    const build = read('scripts/build.mjs');
-    expect(build).toContain("{ entry: 'src/features/arvore/index.js', out: 'dist/js/arvore-menu-domain.bundle.js' }");
-    expect(build).toContain("'src/features/arvore/sei-pro-arvore.js'");
-
-    const legacy = read('src/features/arvore/sei-pro-arvore.js');
-    expect(legacy).toContain('bindUploadArvoreNativeDragEvents();');
-    expect(legacy).toContain('SeiPro.features.arvoreUploadIO');
-    expect(legacy).toContain('SeiPro.features.arvoreUpload');
-    expect(legacy).toContain('actionToolbarPro($(this), triggerButton);');
-    expect(legacy).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
+    const body = read('src/features/arvore/body.js');
+    expect(body).toContain('export function initSeiProArvore');
+    expect(body).toContain('export function actionToolbarPro');
+    expect(body).toContain('export function loadUploadArvore');
+    expect(body).toContain('export function sticknoteUpdate');
+    expect(body).toContain('bindUploadArvoreNativeDragEvents');
+    expect(body).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
   });
 });

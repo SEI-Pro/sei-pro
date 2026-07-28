@@ -390,13 +390,13 @@
         "js/lib/tesseract.min.js",
         "js/sei-functions-pro.js",
         "js/sei-pro-icons.js",
-        "js/arvore-menu-domain.bundle.js",
         "js/sei-pro-arvore.js",
         "js/init_arvore.js",
         "js/quick-filter-tree.bundle.js"
       ],
       "css": [
         "css/sei-pro.css",
+        "css/arvore.css",
         "css/quick-filter.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",

@@ -1,0 +1,39 @@
+/**
+ * Árvore — feature-owned CSS (prefix .seipro-arvore-*).
+ * Shared Dropzone (dz-*) and SEI panel hooks stay in dist/css/sei-pro.css /
+ * dropzone.min.css. This sheet covers styles formerly injected by initCSSArvore
+ * plus new prefixed chrome introduced during the migration.
+ */
+
+/* Clipboard toast tweak previously injected via <style data-style="seipro"> */
+#divMsgClipboard.msgGeral.msgSucesso {
+    margin-top: -50px !important;
+    padding: 0.4em;
+    border: 0.2em solid #d9d9d9;
+    background: #ffffaa;
+    box-shadow: 0 0 5px #a0a0a0;
+}
+
+.seipro-arvore-dz-info {
+    /* structural hook; visual rules remain in sei-pro.css .dz-infoupload */
+}
+
+.seipro-arvore-loading-action {
+    display: inline-block;
+}
+
+.seipro-arvore-upload-confirm a {
+    cursor: pointer;
+}
+
+.seipro-arvore-sticknote-preset {
+    cursor: pointer;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    line-height: 1;
+    font-size: 0;
+}
