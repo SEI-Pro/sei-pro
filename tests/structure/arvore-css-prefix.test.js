@@ -16,7 +16,7 @@ describe('migration: arvore CSS', () => {
 
   it('preserva os hooks externos e compartilhados necessários ao upload e à árvore', () => {
     const body = read('src/features/arvore/body.js');
-    const sharedLegacy = read('src/shared/legacy/sei-functions-pro.js');
+    const sharedLegacy = read('src/features/sei-functions/body.js');
     const arvoreInfo = read('src/features/arvore-info/index.js');
 
     expect(body).toContain("previewsContainer: '#divArvore'");

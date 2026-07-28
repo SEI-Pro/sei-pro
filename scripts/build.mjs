@@ -50,6 +50,7 @@ const bundles = [
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
     { entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.js', out: 'dist/js/sei-pro.js' },
+    { entry: 'src/features/sei-functions/index.js', out: 'dist/js/sei-functions-pro.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/docs-lote/index.js', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.js', out: 'dist/js/quick-filter-list.bundle.js' },
@@ -89,6 +90,7 @@ function optionsFor({ entry, out }) {
 // pure relocation — behavior is unchanged until the feature is decomposed later.
 const legacyFiles = [
     // lista-processos migrada para bundle ESM (sei-pro.js) — não copiar mais o legado.
+    // sei-functions-pro migrada para bundle ESM — não copiar mais o legado.
     'src/features/atividades/sei-pro-atividades.js',
     'src/features/editor/sei-pro-editor.js',
     'src/features/ai/sei-pro-ai.js',
@@ -99,7 +101,7 @@ const legacyFiles = [
     'src/features/visualizacao/sei-pro-visualizacao-chosen.js',
     'src/features/legis/sei-legis.js',
     // docs-lote migrada para bundle ESM (docs-lote.bundle.js) — não copiar mais o legado.
-    'src/shared/legacy/sei-functions-pro.js',
+    // sei-functions-pro migrada para bundle ESM (sei-functions-pro.js) — não copiar mais o legado.
     'src/shared/legacy/sei-pro-icons.js',
     'src/shared/legacy/sei-pro-db-transition.js',
     'src/bootstrap/init.js',
@@ -137,7 +139,8 @@ const featureCss = [
     { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' },
     { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' },
     { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' },
-    { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' }
+    { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' },
+    { src: 'src/features/sei-functions/style.css', out: 'dist/css/sei-functions.css' }
 ];
 
 function copyFeatureCss() {

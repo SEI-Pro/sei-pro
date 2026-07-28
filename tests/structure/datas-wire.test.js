@@ -34,9 +34,10 @@ describe('migration: datas wire', () => {
 
     it('mantém entry e cópia legada registrados no build e os call-sites globais', () => {
         const build = read('scripts/build.mjs');
-        const legacy = read('src/shared/legacy/sei-functions-pro.js');
+        const legacy = read('src/features/sei-functions/body.js');
         expect(build).toContain("{ entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' }");
-        expect(build).toContain("'src/shared/legacy/sei-functions-pro.js'");
+        expect(build).toContain("{ entry: 'src/features/sei-functions/index.js', out: 'dist/js/sei-functions-pro.js' }");
+        expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
         expect(legacy).toContain('getDataRecebimentoPro(listAndamento, listProc, acompanhamentoEsp);');
         expect(legacy).toContain('getDataRecebimentoPro(listAndamento, false, acompanhamentoEsp);');
         expect(legacy).toContain('getDataRecebimentoPro(listAndamento);');

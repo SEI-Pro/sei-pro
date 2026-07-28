@@ -110,7 +110,7 @@ describe('migration: feature legacy aliases stay isolated', () => {
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
     const legacyLista = readFileSync(join(featuresDir, 'lista-processos/body.js'), 'utf8');
     const legacyAll = readFileSync(join(featuresDir, 'todas-paginas/sei-pro-all.js'), 'utf8');
-    const legacyShared = readFileSync(join(rootDir, 'src/shared/legacy/sei-functions-pro.js'), 'utf8');
+    const legacyShared = readFileSync(join(rootDir, 'src/features/sei-functions/body.js'), 'utf8');
 
     expect(build).toMatch(/entry:\s*'src\/features\/monitorados\/index\.js',\s*out:\s*'dist\/js\/monitorados\.bundle\.js'/);
     expect(index).toMatch(/bindToggle\(document,\s*actMonitoradoPro\)/);

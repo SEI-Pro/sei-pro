@@ -242,7 +242,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
 
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
     const view = read('src/features/docs-lote/view.js');
-    const legacy = read('src/shared/legacy/sei-functions-pro.js');
+    const legacy = read('src/features/sei-functions/body.js');
 
     expect(view).toContain('seipro-doclote-field-error');
     expect(view).toContain('Arquivo inválido! Selecione um documento no formato "CSV".');

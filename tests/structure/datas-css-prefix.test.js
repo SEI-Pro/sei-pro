@@ -8,7 +8,7 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 describe('migration: datas CSS audit', () => {
   it('mantém a prévia de prazo como componente compartilhado, sem CSS próprio de datas', () => {
     const sharedCss = read('src/shared/ui/prazo-preview.css');
-    const legacy = read('src/shared/legacy/sei-functions-pro.js');
+    const legacy = read('src/features/sei-functions/body.js');
 
     expect(sharedCss).toContain('.dateboxDisplay');
     expect(sharedCss).toContain('.dateBoxIcon');

@@ -33,7 +33,7 @@ describe('migration: controlar-prazos legacy surface', () => {
   });
 
   it('does not redefine the migrated prazo functions in shared legacy code', () => {
-    const sharedLegacy = readFileSync(join(rootDir, 'src/shared/legacy/sei-functions-pro.js'), 'utf8');
+    const sharedLegacy = readFileSync(join(rootDir, 'src/features/sei-functions/body.js'), 'utf8');
     const migratedNames = ['initControlePrazo', 'addControlePrazo', 'setControlePrazo', 'updateTablePrazoProcesso'];
 
     for (const name of migratedNames) {

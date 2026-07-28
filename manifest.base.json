@@ -75,6 +75,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/sei-functions.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",
         "css/fontawesome.pro.min.css",
@@ -232,6 +233,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/sei-functions.css",
         "css/lista-processos.css",
         "css/quick-filter.css",
         "css/prazo-preview.css",
@@ -336,6 +338,7 @@
         "js/quick-filter-list.bundle.js"
       ],
       "css": [
+        "css/sei-functions.css",
         "css/lista-processos.css",
         "css/quick-filter.css",
         "css/anotacao-controle.css",
@@ -398,6 +401,7 @@
       ],
       "css": [
         "css/sei-pro.css",
+        "css/sei-functions.css",
         "css/arvore.css",
         "css/quick-filter.css",
         "css/prazo-preview.css",
@@ -482,6 +486,9 @@
       ],
       "exclude_matches": [
         "*://sei.sp1.gov.br/*"
+      ],
+      "css": [
+        "css/sei-functions.css"
       ]
     },
     {
@@ -559,6 +566,9 @@
       ],
       "exclude_matches": [
         "*://sei.sp1.gov.br/*"
+      ],
+      "css": [
+        "css/sei-functions.css"
       ]
     },
     {
@@ -572,7 +582,8 @@
         "js/init.js"
       ],
       "css": [
-        "css/sei-pro.css"
+        "css/sei-pro.css",
+        "css/sei-functions.css"
       ],
       "run_at": "document_end",
       "matches": [

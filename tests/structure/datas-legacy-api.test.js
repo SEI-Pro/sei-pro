@@ -17,7 +17,7 @@ describe('migration: datas legacy api', () => {
   });
 
   it('removes the duplicate implementation from sei-functions-pro', () => {
-    const legacy = read('src/shared/legacy/sei-functions-pro.js');
+    const legacy = read('src/features/sei-functions/body.js');
     const bridge = read('src/shared/legacy/datas-legacy-api.js');
     const view = read('src/shared/legacy/datas-view.js');
 
