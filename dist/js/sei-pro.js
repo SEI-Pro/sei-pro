@@ -280,6 +280,381 @@
     return `<a class="newLink seipro-lista-csv" onclick="getTableProcessosCSV()" id="processoToCSV" onmouseover="return infraTooltipMostrar('Exportar informa\xE7\xF5es de processos em planilha CSV');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-file-download cinzaColor"></i></a>`;
   }
 
+  // src/shared/ui/file-queue.js
+  function extensionAllowed(fileName, acceptCsv) {
+    if (!acceptCsv) return true;
+    const name = String(fileName || "").toLowerCase();
+    const allowed = String(acceptCsv).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (allowed.length === 0) return true;
+    return allowed.some((ext) => ext.startsWith(".") ? name.endsWith(ext) : name.endsWith("." + ext));
+  }
+  function formatFileSize(bytes) {
+    const n = Number(bytes) || 0;
+    if (n < 1024) return n + " b";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KiB";
+    return (n / (1024 * 1024)).toFixed(1) + " MiB";
+  }
+  function uploadFormFile({
+    url,
+    file,
+    fileName,
+    paramName = "filArquivo",
+    timeout = 9e5,
+    onProgress,
+    xhrFactory = () => new XMLHttpRequest()
+  }) {
+    return new Promise((resolve, reject) => {
+      const xhr = xhrFactory();
+      const form = new FormData();
+      form.append(paramName, file, fileName || file.name);
+      xhr.open("POST", url, true);
+      xhr.timeout = timeout;
+      xhr.withCredentials = true;
+      if (xhr.upload && typeof onProgress === "function") {
+        xhr.upload.onprogress = (event) => {
+          if (!event.lengthComputable) return;
+          onProgress(event.loaded / event.total, event);
+        };
+      }
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr);
+        else reject({ xhr, message: "HTTP " + xhr.status });
+      };
+      xhr.onerror = () => reject({ xhr, message: "Network error" });
+      xhr.ontimeout = () => reject({ xhr, message: "Timeout" });
+      xhr.send(form);
+    });
+  }
+  function toPublicFile(item) {
+    const file = item.file;
+    file.previewElement = item.previewElement;
+    file.status = item.status;
+    file.uploadName = item.uploadName;
+    file.xhr = item.xhr;
+    file._queueItem = item;
+    return file;
+  }
+  function createFileQueue(opts = {}) {
+    const items = [];
+    const listeners = {};
+    const options = {
+      url: opts.url || "",
+      params: opts.params || {},
+      acceptedFiles: opts.accept || opts.acceptedFiles || null,
+      paramName: opts.paramName || "filArquivo",
+      timeout: opts.timeout || 9e5
+    };
+    const renameFile = typeof opts.renameFile === "function" ? opts.renameFile : (f) => f.name;
+    const createPreview = typeof opts.createPreview === "function" ? opts.createPreview : null;
+    const previewsContainer = typeof opts.previewsContainer === "string" ? typeof document !== "undefined" ? document.querySelector(opts.previewsContainer) : null : opts.previewsContainer || null;
+    let clickableEl = null;
+    let fileInput = null;
+    let processing = false;
+    let destroyed = false;
+    function emit(event, ...args) {
+      const list = listeners[event] || [];
+      list.forEach((fn) => {
+        try {
+          fn(...args);
+        } catch (_e) {
+        }
+      });
+      const OPT_BY_EVENT = {
+        addedfile: "onAddedFile",
+        addedfiles: "onAddedFiles",
+        removedfile: "onRemovedFile",
+        success: "onSuccess",
+        error: "onError"
+      };
+      const optName = OPT_BY_EVENT[event] || "on" + event.charAt(0).toUpperCase() + event.slice(1);
+      if (typeof opts[optName] === "function") {
+        try {
+          opts[optName](...args);
+        } catch (_e) {
+        }
+      }
+    }
+    function bindClickable() {
+      const clickable = opts.clickable;
+      if (!clickable || typeof document === "undefined") return;
+      clickableEl = typeof clickable === "string" ? document.querySelector(clickable) : clickable;
+      if (!clickableEl) return;
+      fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      if (options.acceptedFiles) fileInput.accept = options.acceptedFiles;
+      (clickableEl.ownerDocument || document).body.appendChild(fileInput);
+      clickableEl.addEventListener("click", onClickableClick);
+      fileInput.addEventListener("change", onFileInputChange);
+    }
+    function onClickableClick(event) {
+      event.preventDefault();
+      if (fileInput) fileInput.click();
+    }
+    function onFileInputChange() {
+      if (!fileInput || !fileInput.files) return;
+      handleFiles(Array.from(fileInput.files));
+      fileInput.value = "";
+    }
+    function setAcceptedFiles(csv) {
+      options.acceptedFiles = csv || null;
+      if (fileInput) fileInput.accept = options.acceptedFiles || "";
+    }
+    function addItem(file) {
+      const uploadName = renameFile(file);
+      const accepted = extensionAllowed(uploadName || file.name, options.acceptedFiles);
+      const item = {
+        file,
+        uploadName,
+        status: accepted ? "queued" : "rejected",
+        previewElement: null,
+        xhr: null,
+        errorMessage: accepted ? "" : "Tipo de arquivo n\xE3o permitido"
+      };
+      if (createPreview) {
+        item.previewElement = createPreview(item);
+        if (item.previewElement && previewsContainer) {
+          previewsContainer.appendChild(item.previewElement);
+        }
+        if (!accepted && item.previewElement) {
+          item.previewElement.classList.add("dz-error", "seipro-file-error");
+          const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
+          if (err) err.textContent = item.errorMessage;
+        }
+        const removeBtn = item.previewElement && item.previewElement.querySelector("[data-seipro-file-remove], [data-dz-remove]");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            removeItem(item);
+          });
+        }
+      }
+      items.push(item);
+      emit("addedfile", toPublicFile(item));
+      return item;
+    }
+    function removeItem(item) {
+      const idx = items.indexOf(item);
+      if (idx === -1) return;
+      items.splice(idx, 1);
+      if (item.previewElement && item.previewElement.parentNode) {
+        item.previewElement.parentNode.removeChild(item.previewElement);
+      }
+      emit("removedfile", toPublicFile(item));
+    }
+    function handleFiles(fileList) {
+      if (destroyed) return;
+      const list = Array.from(fileList || []);
+      const added = list.map(addItem);
+      emit("addedfiles", added.map(toPublicFile));
+      return added.map(toPublicFile);
+    }
+    function getQueuedFiles() {
+      return items.filter((i2) => i2.status === "queued").map(toPublicFile);
+    }
+    function getAcceptedFiles() {
+      return items.filter((i2) => i2.status === "success").map(toPublicFile);
+    }
+    function getRejectedFiles() {
+      return items.filter((i2) => i2.status === "error" || i2.status === "rejected").map(toPublicFile);
+    }
+    function removeAllFiles() {
+      [...items].forEach(removeItem);
+    }
+    function setProgress(item, ratio) {
+      if (!item.previewElement) return;
+      item.previewElement.classList.add("dz-processing", "seipro-file-processing");
+      const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
+      if (bar) bar.style.width = Math.round(ratio * 100) + "%";
+    }
+    function markError(item, message) {
+      item.status = "error";
+      item.errorMessage = message || "Erro no envio";
+      if (item.previewElement) {
+        item.previewElement.classList.add("dz-error", "seipro-file-error");
+        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
+        const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
+        if (err) err.textContent = item.errorMessage;
+      }
+    }
+    function markSuccess(item) {
+      item.status = "success";
+      if (item.previewElement) {
+        item.previewElement.classList.add("dz-success", "dz-complete", "seipro-file-success");
+        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
+        const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
+        if (bar) bar.style.width = "100%";
+      }
+    }
+    function processQueue() {
+      if (destroyed || processing) return Promise.resolve();
+      const next = items.find((i2) => i2.status === "queued");
+      if (!next) return Promise.resolve();
+      if (!options.url) {
+        markError(next, "URL de upload n\xE3o configurada");
+        emit("error", toPublicFile(next));
+        if (typeof opts.onError === "function") opts.onError(toPublicFile(next), next.errorMessage);
+        return Promise.resolve();
+      }
+      processing = true;
+      next.status = "uploading";
+      setProgress(next, 0);
+      return uploadFormFile({
+        url: options.url,
+        file: next.file,
+        fileName: next.uploadName,
+        paramName: options.paramName,
+        timeout: options.timeout,
+        onProgress: (ratio) => setProgress(next, ratio),
+        xhrFactory: opts.xhrFactory || (() => new XMLHttpRequest())
+      }).then((xhr) => {
+        next.xhr = xhr;
+        markSuccess(next);
+        const pub = toPublicFile(next);
+        emit("success", pub);
+      }).catch((err) => {
+        next.xhr = err && err.xhr ? err.xhr : null;
+        markError(next, err && err.message || "Erro no envio");
+        emit("error", toPublicFile(next));
+      }).finally(() => {
+        processing = false;
+      });
+    }
+    function destroy() {
+      destroyed = true;
+      if (clickableEl) clickableEl.removeEventListener("click", onClickableClick);
+      if (fileInput && fileInput.parentNode) fileInput.parentNode.removeChild(fileInput);
+      removeAllFiles();
+      clickableEl = null;
+      fileInput = null;
+    }
+    function on(event, handler) {
+      if (!listeners[event]) listeners[event] = [];
+      listeners[event].push(handler);
+      return api;
+    }
+    const api = {
+      files: items,
+      options,
+      handleFiles,
+      addFile: (file) => toPublicFile(addItem(file)),
+      getQueuedFiles,
+      getAcceptedFiles,
+      getRejectedFiles,
+      removeAllFiles,
+      processQueue,
+      destroy,
+      on,
+      setAcceptedFiles,
+      /** Reorder queue to match DOM order of preview elements. */
+      reorderByPreview(orderedElements) {
+        const map = new Map(items.map((i2) => [i2.previewElement, i2]));
+        const next = [];
+        orderedElements.forEach((el) => {
+          const item = map.get(el);
+          if (item) next.push(item);
+        });
+        items.forEach((i2) => {
+          if (!next.includes(i2)) next.push(i2);
+        });
+        items.length = 0;
+        next.forEach((i2) => items.push(i2));
+      }
+    };
+    Object.defineProperty(api, "files", {
+      get() {
+        return items.map(toPublicFile);
+      }
+    });
+    bindClickable();
+    return api;
+  }
+
+  // src/shared/ui/sortable.js
+  function insertionTarget(y, rows) {
+    for (const row of rows) {
+      const r = row.getBoundingClientRect();
+      if (y < r.top + r.height / 2) return row;
+    }
+    return null;
+  }
+  function createSortable(container, opts = {}) {
+    const itemsSel = opts.items || "tr";
+    const handleSel = opts.handle || null;
+    let dragged = null;
+    function rows() {
+      return Array.prototype.slice.call(container.querySelectorAll(itemsSel));
+    }
+    function onDown(e) {
+      const handle = handleSel ? e.target.closest(handleSel) : e.target.closest(itemsSel);
+      if (!handle) return;
+      const row = handle.closest(itemsSel);
+      if (!row || !container.contains(row)) return;
+      dragged = row;
+      row.classList.add("seipro-sorting");
+      row.style.opacity = "0.5";
+      try {
+        handle.setPointerCapture(e.pointerId);
+      } catch (_) {
+      }
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp, { once: true });
+      e.preventDefault();
+    }
+    function onMove(e) {
+      if (!dragged) return;
+      const others = rows().filter((r) => r !== dragged);
+      const before = insertionTarget(e.clientY, others);
+      if (before) dragged.parentNode.insertBefore(dragged, before);
+      else dragged.parentNode.appendChild(dragged);
+    }
+    function onUp(e) {
+      if (!dragged) return;
+      dragged.classList.remove("seipro-sorting");
+      dragged.style.opacity = "";
+      const handle = handleSel ? e.target.closest(handleSel) : dragged;
+      if (handle) handle.removeEventListener("pointermove", onMove);
+      dragged = null;
+      if (typeof opts.onUpdate === "function") opts.onUpdate(rows());
+    }
+    container.addEventListener("pointerdown", onDown);
+    return { destroy() {
+      container.removeEventListener("pointerdown", onDown);
+    } };
+  }
+
+  // src/features/arvore/domain.js
+  function resolveDropzoneIcon(fileType, _isNewSEI) {
+    const type = String(fileType || "");
+    const gif = (name) => `/infra_css/imagens/${name}.gif`;
+    let urlIcon = gif("pdf");
+    if (type.indexOf("image/") !== -1) urlIcon = gif("imagem");
+    else if (type.indexOf("video/") !== -1) urlIcon = gif("video");
+    else if (type.indexOf("audio/") !== -1) urlIcon = gif("audio");
+    else if (type.indexOf("application/zip") !== -1) urlIcon = gif("zip");
+    else if (type.indexOf("text/htm") !== -1) urlIcon = gif("html");
+    else if (type.indexOf("text/plain") !== -1) urlIcon = gif("txt");
+    else if (type.indexOf("word") !== -1) urlIcon = gif("doc");
+    else if (type.indexOf("officedocument.presentation") !== -1) urlIcon = gif("pps");
+    else if (type.indexOf("text/csv") !== -1 || type.indexOf("sheet") !== -1) urlIcon = gif("xls");
+    return urlIcon;
+  }
+
+  // src/features/arvore/templates.js
+  function dropzoneInfoHoverHtml() {
+    return '<div id="dz-infoupload" class="dz-infoupload seipro-arvore-dz-info" data-seipro-arvore-upload-overlay>   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>   <span class="cancel seipro-arvore-dz-cancel" data-seipro-arvore-action="dropzone-cancel">       <i class="far fa-times-circle icon"></i>       <span class="label">CANCELAR</span>   </span></div>';
+  }
+  function uploadPreviewHomeHtml(opts = {}) {
+    const ifrTarget = opts.ifrTarget || "ifrVisualizacao";
+    const iconSrc = opts.iconSrc || "/infra_css/imagens/pdf.gif";
+    const iconData = opts.iconData || "imagens/pdf.gif";
+    const sizeLabel = formatFileSize(opts.size || 0);
+    const name = opts.name || "";
+    return '<div class="dz-preview dz-file-preview seipro-arvore-file-preview">   <div class="dz-details">       <span class="dz-error-mark"><i data-seipro-file-remove data-dz-remove class="fas fa-trash vermelhoColor" style="margin: 5px 8px;cursor: pointer; font-size: 10pt;"></i></span>       <span class="dz-error-message"><span data-seipro-file-error data-dz-errormessage></span></span>       <span class="dz-progress"><span class="dz-upload" data-seipro-file-progress data-dz-uploadprogress></span></span>       <a id="anchorImgID" data-img="' + iconData + '" style="margin-left: -4px;" class="clipboard">           <img class="dz-link-icon" src="' + iconSrc + '" align="absbottom" id="iconID">       </a>       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>       <a id="anchorID" target="' + ifrTarget + '" class="dz-filename">           <span data-dz-name title="">' + name.replace(/</g, "&lt;") + '</span>       </a>       <span class="dz-size" data-dz-size>' + sizeLabel + '</span>       <span class="dz-remove" data-seipro-file-remove data-dz-remove><i class="fas fa-trash-alt vermelhoColor" style="cursor:pointer"></i></span>   </div></div>';
+  }
+
   // src/features/lista-processos/body.js
   installListaProcessosState();
   function normalizeHomeFilterText2(value) {
@@ -2818,14 +3193,7 @@
     $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]').prepend('<div class="urgentePro"></div>').addClass("urgentePro").closest("tr").addClass("urgentePro");
   }
   function initUploadFilesInProcess() {
-    if (typeof Dropzone === "function") {
-      setUploadFilesInProcess();
-    } else {
-      if (typeof loadStylePro === "function") loadStylePro(URL_SPRO + "css/dropzone.min.css");
-      $.getScript(URL_SPRO + "js/lib/dropzone.min.js", function() {
-        setUploadFilesInProcess();
-      });
-    }
+    setUploadFilesInProcess();
   }
   function getListIdProtocoloSelected() {
     var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
@@ -2883,112 +3251,152 @@
   }
   function removeUploadFilesInProcess() {
     $("#uploadListPro").remove();
-    $(".dz-infoupload-home").remove();
-    $(containerUpload).data("index", 0);
-    if (typeof arvoreDropzone !== "undefined" && typeof arvoreDropzone.destroy === "function") arvoreDropzone.destroy();
-    $(containerUpload).unbind("click");
+    $(".dz-infoupload-home, [data-seipro-arvore-upload-overlay]").remove();
+    var root = typeof containerUpload === "string" ? document.querySelector(containerUpload) : containerUpload;
+    if (root && root.dataset) root.dataset.seiproUploadIndex = "0";
+    if (typeof arvoreDropzone !== "undefined" && arvoreDropzone && typeof arvoreDropzone.destroy === "function") arvoreDropzone.destroy();
+    arvoreDropzone = false;
   }
   function onClickRemoveDragHoverHome() {
-    $(containerUpload).on("click", function() {
-      if ($(this).hasClass("dz-drag-hover")) {
-        $(this).removeClass("dz-drag-hover");
-        $(containerUpload).unbind("click");
+    var root = document.querySelector(containerUpload) || document.body;
+    function handler() {
+      if (root.classList.contains("dz-drag-hover") || root.classList.contains("seipro-arvore-upload-hover")) {
+        root.classList.remove("dz-drag-hover", "seipro-arvore-upload-hover");
+        root.removeEventListener("click", handler);
       }
-    });
+    }
+    root.addEventListener("click", handler);
   }
   function cleanUploadFilesInProcess() {
-    $("#uploadListPro").html("");
-    $(containerUpload).data("index", 0);
-    if (typeof arvoreDropzone.files !== "undefined" && arvoreDropzone.files.length) {
-      $.each(arvoreDropzone.files, function(i2, v) {
-        arvoreDropzone.addFile(v);
+    var list = document.getElementById("uploadListPro");
+    if (list) list.innerHTML = "";
+    var root = document.querySelector(containerUpload) || document.body;
+    if (root && root.dataset) root.dataset.seiproUploadIndex = "0";
+    if (arvoreDropzone && arvoreDropzone.files && arvoreDropzone.files.length) {
+      var kept = arvoreDropzone.files.slice();
+      arvoreDropzone.removeAllFiles();
+      kept.forEach(function(f) {
+        arvoreDropzone.addFile(f);
       });
     }
   }
   function getUploadFilesInProcess() {
+    var root = document.querySelector(containerUpload) || document.body;
     var _containerUpload = $(containerUpload);
-    var html = '<div id="uploadListPro"></div><div id="dz-infoupload" class="dz-infoupload dz-infoupload-home">   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>   <span class="cancel" onclick="dropzoneCancelInfo(event); removeUploadFilesInProcess(); return false;">       <i class="far fa-times-circle icon"></i>       <span class="label">CANCELAR</span>   </span></div>';
-    if (_containerUpload.find(".dz-infoupload").length == 0) {
-      _containerUpload.find(divComandos).after(html).data("index", 0);
-    }
-    arvoreDropzone = new Dropzone(containerUpload, {
-      url: url_host,
-      createImageThumbnails: false,
-      autoProcessQueue: false,
-      parallelUploads: 1,
-      clickable: "#dz-infoupload",
-      previewsContainer: "#uploadListPro",
-      timeout: 9e5,
-      paramName: "filArquivo",
-      renameFile: function(file) {
-        return parent.removeAcentos(file.name).replace(/[&\/\\#+()$~%'":*?<>{}]/g, "_");
-      },
-      previewTemplate: '<div class="dz-preview dz-file-preview">   <div class="dz-details">       <span class="dz-error-mark"><i data-dz-remove class="fas fa-trash vermelhoColor" style="margin: 5px 8px;cursor: pointer; font-size: 10pt;"></i></span>       <span class="dz-error-message"><span data-dz-errormessage></span></span>       <span class="dz-progress">           <span class="dz-upload" data-dz-uploadprogress></span>       </span>       <a id="anchorImgID" data-img="' + (parent.isNewSEI ? "svg/documento_pdf.svg" : "imagens/pdf.gif") + '" style="margin-left: -4px;" class="clipboard" title="Clique para copiar o n\xFAmero do protocolo para a \xE1rea de transfer\xEAncia">           <img class="dz-link-icon" src="/infra_css/' + (parent.isNewSEI ? "svg/documento_pdf.svg" : "imagens/pdf.gif") + '" align="absbottom" id="iconID">       </a>       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>       <a id="anchorID" target="' + ifrVisualizacao_ + '" class="dz-filename">           <span data-dz-name title="" id="spanID"></span>       </a>       <span class="dz-size" data-dz-size></span>       <span class="dz-remove" data-dz-remove><i class="fas fa-trash-alt vermelhoColor" style="cursor:pointer"></i></span>   </div></div>',
-      dictDefaultMessage: "Solte aqui os arquivos para enviar",
-      dictFallbackMessage: "Seu navegador n\xE3o suporta uploads de arrastar e soltar.",
-      dictFallbackText: "Por favor, use o formul\xE1rio abaixo para enviar seus arquivos como antigamente.",
-      dictFileTooBig: "O arquivo \xE9 muito grande ({{filesize}}MB). Tamanho m\xE1ximo permitido: {{maxFilesize}}MB.",
-      dictInvalidFileType: "Voc\xEA n\xE3o pode fazer upload de arquivos desse tipo.",
-      dictResponseError: "O servidor respondeu com o c\xF3digo {{statusCode}}.",
-      dictCancelUpload: "Cancelar envio",
-      dictCancelUploadConfirmation: "Tem certeza de que deseja cancelar este envio?",
-      dictRemoveFile: "Remover arquivo",
-      dictMaxFilesExceeded: "Voc\xEA s\xF3 pode fazer upload de {{maxFiles}} arquivos."
-    });
-    arvoreDropzone.on("addedfiles", function(files) {
-      dropzoneCancelInfo();
-      if (verifyConfigValue("sortbeforeupload") && arvoreDropzone.getQueuedFiles().length > 1) {
-        sortUploadArvore();
+    if (!document.getElementById("uploadListPro")) {
+      var list = document.createElement("div");
+      list.id = "uploadListPro";
+      var overlayWrap = document.createElement("div");
+      overlayWrap.innerHTML = dropzoneInfoHoverHtml();
+      var overlayEl = overlayWrap.firstElementChild;
+      overlayEl.classList.add("dz-infoupload-home");
+      var cancelBtn = overlayEl.querySelector('[data-seipro-arvore-action="dropzone-cancel"]');
+      if (cancelBtn) {
+        cancelBtn.addEventListener("click", function(event) {
+          event.preventDefault();
+          if (typeof dropzoneCancelInfo === "function") dropzoneCancelInfo(event);
+          removeUploadFilesInProcess();
+        });
+      }
+      var anchor = root.querySelector(divComandos);
+      if (!anchor && _containerUpload.find(divComandos).length) anchor = _containerUpload.find(divComandos)[0];
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(list, anchor.nextSibling);
+        anchor.parentNode.insertBefore(overlayEl, list.nextSibling);
       } else {
+        root.appendChild(list);
+        root.appendChild(overlayEl);
+      }
+      if (root.dataset) root.dataset.seiproUploadIndex = "0";
+    }
+    function createHomePreview(item) {
+      var iconPath = resolveDropzoneIcon(item.file.type, SeiPro.sei.adapter.isNewSEI());
+      var iconSrc = iconPath.indexOf("svg/") === 0 || iconPath.indexOf("imagens/") === 0 ? "/infra_css/" + iconPath.replace(/^\/infra_css\//, "") : iconPath.startsWith("/") ? iconPath : "/infra_css/" + iconPath;
+      var wrap = document.createElement("div");
+      wrap.innerHTML = uploadPreviewHomeHtml({
+        newSEI: SeiPro.sei.adapter.isNewSEI(),
+        ifrTarget: typeof ifrVisualizacao_ !== "undefined" ? ifrVisualizacao_ : "ifrVisualizacao",
+        iconSrc,
+        iconData: iconPath,
+        size: item.file.size,
+        name: item.uploadName || item.file.name
+      });
+      return wrap.firstElementChild;
+    }
+    arvoreDropzone = createFileQueue({
+      previewsContainer: document.getElementById("uploadListPro"),
+      clickable: "#dz-infoupload",
+      paramName: "filArquivo",
+      timeout: 9e5,
+      renameFile: function(file) {
+        var remove = typeof removeAcentos === "function" ? removeAcentos : function(s) {
+          return s;
+        };
+        return remove(file.name).replace(/[&\/\\#+()$~%'":*?<>{}]/g, "_");
+      },
+      createPreview: createHomePreview,
+      onAddedFiles: function() {
+        if (typeof dropzoneCancelInfo === "function") dropzoneCancelInfo();
+        if (verifyConfigValue("sortbeforeupload") && arvoreDropzone.getQueuedFiles().length > 1) {
+          sortUploadArvore();
+        } else {
+          contentW.sendUploadArvore("upload", false, arvoreDropzone, _containerUpload);
+        }
+      },
+      onSuccess: function(file) {
+        var params = arvoreDropzone.options.params;
+        var response = String(file.xhr.response || "").split("#");
+        params.paramsForm.hdnAnexos = encodeUrlUploadArvore(response, params);
+        var postData = "";
+        for (var k in params.paramsForm) {
+          if (postData !== "") postData = postData + "&";
+          var valor = k == "hdnAnexos" ? params.paramsForm[k] : escapeComponent(params.paramsForm[k]);
+          valor = k == "txtNumero" && typeof encodeURI_toHex === "function" ? encodeURI_toHex(String(params.paramsForm[k]).normalize("NFC")) : valor;
+          postData = postData + k + "=" + valor;
+        }
+        params.paramsForm = postData;
+        contentW.sendUploadArvore("save", params, arvoreDropzone, _containerUpload);
+      },
+      onError: function() {
         contentW.sendUploadArvore("upload", false, arvoreDropzone, _containerUpload);
       }
-    }).on("addedfile", function(file) {
-    }).on("removedfile", function(file) {
-    }).on("success", function(result) {
-      var params = arvoreDropzone.options.params;
-      var response = result.xhr.response.split("#");
-      params.paramsForm.hdnAnexos = encodeUrlUploadArvore(response, params);
-      var postData = "";
-      for (var k in params.paramsForm) {
-        if (postData !== "") postData = postData + "&";
-        var valor = k == "hdnAnexos" ? params.paramsForm[k] : escapeComponent(params.paramsForm[k]);
-        valor = k == "txtNumero" ? parent.encodeURI_toHex(params.paramsForm[k].normalize("NFC")) : valor;
-        postData = postData + k + "=" + valor;
-      }
-      params.paramsForm = postData;
-      contentW.sendUploadArvore("save", params, arvoreDropzone, _containerUpload);
-    }).on("error", function(e) {
-      contentW.sendUploadArvore("upload", false, arvoreDropzone, _containerUpload);
-    }).on("dragleave", function(e) {
-      _containerUpload.addClass("dz-drag-hover");
+    });
+    root.addEventListener("dragleave", function() {
+      root.classList.add("dz-drag-hover", "seipro-arvore-upload-hover");
       onClickRemoveDragHoverHome();
     });
     var extUpload = localStorageRestorePro("arvoreDropzone_acceptedFiles");
-    if (extUpload !== null) {
-      arvoreDropzone.options.acceptedFiles = extUpload;
+    if (extUpload !== null && typeof arvoreDropzone.setAcceptedFiles === "function") {
+      arvoreDropzone.setAcceptedFiles(extUpload);
     }
   }
   function sendUploadArvoreHomeStart() {
     contentW.sendUploadArvore("upload", false, arvoreDropzone, $(containerUpload));
   }
   function sortUploadArvore() {
-    var htmlUpload = '<div id="divUploadDoc" class="panelDadosArvore" style="margin: 15px 0; padding: 1.2em 0 0 0 !important;">   <a style="cursor:pointer;" onclick="sendUploadArvoreHomeStart();" class="newLink newLink_confirm">       <i class="fas fa-upload azulColor"></i>       <span style="font-size:1.2em;color: #fff;"> Enviar documentos</span>   </a></div>';
-    $("#divUploadDoc").remove();
-    $("#uploadListPro").sortable({
+    var htmlUpload = '<div id="divUploadDoc" class="panelDadosArvore seipro-arvore-upload-confirm" style="margin: 15px 0; padding: 1.2em 0 0 0 !important;">   <a style="cursor:pointer;" data-seipro-arvore-action="send-upload-home" class="newLink newLink_confirm">       <i class="fas fa-upload azulColor"></i>       <span style="font-size:1.2em;color: #fff;"> Enviar documentos</span>   </a></div>';
+    var old = document.getElementById("divUploadDoc");
+    if (old) old.remove();
+    var list = document.getElementById("uploadListPro");
+    if (!list) return;
+    list.insertAdjacentHTML("afterend", htmlUpload);
+    createSortable(list, {
       items: ".dz-file-preview",
-      cursor: "grabbing",
       handle: ".dz-filename",
-      forceHelperSize: true,
-      opacity: 0.5,
-      update: function(event, ui) {
-        var files = arvoreDropzone.getQueuedFiles();
-        files.sort(function(a, b) {
-          return $(a.previewElement).index() > $(b.previewElement).index() ? 1 : -1;
-        });
-        arvoreDropzone.removeAllFiles();
-        arvoreDropzone.handleFiles(files);
+      onUpdate: function(ordered) {
+        if (arvoreDropzone && typeof arvoreDropzone.reorderByPreview === "function") {
+          arvoreDropzone.reorderByPreview(ordered);
+        }
       }
-    }).after(htmlUpload);
+    });
+    var sendBtn = document.querySelector('[data-seipro-arvore-action="send-upload-home"]');
+    if (sendBtn && !sendBtn.__bound) {
+      sendBtn.__bound = true;
+      sendBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        sendUploadArvoreHomeStart();
+      });
+    }
   }
   function storeLinkUsuarioSistema() {
     if (typeof setOptionsPro !== "undefined") setOptionsPro("usuarioSistema", $("#lnkUsuarioSistema").attr("title"));

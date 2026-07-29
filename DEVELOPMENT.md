@@ -289,7 +289,8 @@ Eventos candidatos, ainda não implementados como bus: `monitorados:updated`,
 
 Ao migrar uma feature que usa jQuery UI / tablesorter / chosen / plugins legados:
 criar ou reusar um primitivo vanilla em `src/shared/ui/`. Primitivos existentes:
-`modal.js`, `sortable.js`, `sortable-table.js`, `tags-input.js`, `prazo-preview.js`.
+`modal.js`, `sortable.js`, `sortable-table.js`, `tags-input.js`, `prazo-preview.js`,
+`file-queue.js` (upload / drag-drop, substitui Dropzone).
 
 Features legadas continuam usando os plugins jQuery em paralelo — duplicação temporária
 e esperada durante a transição.
@@ -414,7 +415,7 @@ um helper migrado não seja redefinido no legado.
 | frappe-gantt | Gráfico de Gantt (projetos) |
 | jKanban | Board Kanban |
 | Chart.js | Gráficos |
-| Dropzone.js | Upload drag & drop |
+| (removido) Dropzone.js | Substituído por `src/shared/ui/file-queue.js` (vanilla) |
 | PDF.js | Leitura de PDFs |
 | Tesseract.js | OCR |
 | DOMPurify | Sanitização de HTML |

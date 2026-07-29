@@ -11,9 +11,14 @@ import {
     formatAnotacaoToParagraphs,
     buildArvoreInitSignature
 } from '@src/features/arvore/domain.js';
-import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload } from '@src/features/arvore/io.js';
-import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents } from '@src/features/arvore/view.js';
+import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload, fetchText } from '@src/features/arvore/io.js';
+import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents, bindUploadConfirmActions } from '@src/features/arvore/view.js';
 import { installArvoreLegacyApi } from '@src/features/arvore/legacy-api.js';
+import {
+    parseInfraUploadMeta,
+    resolveUploadSerie,
+    buildUploadDocumentTitle
+} from '@src/features/arvore/domain.js';
 
 const fallback = [['Copiar número'], ['Ações em lote']];
 
@@ -96,14 +101,22 @@ describe('arvore/io — upload transport', () => {
         expect(received).toEqual(['response', 'response']);
     });
 
-    it('mantém xhr customizado e entrega a resposta do POST final', () => {
-        const { ajax, calls } = deferredRequest();
-        const xhr = { responseURL: '/arvore_visualizar&acao_origem=documento_receber' };
+    it('posta o formulário final via XHR ISO-8859-1 e entrega responseURL', async () => {
         const received = [];
-        expect(postSavedUpload({ ajax, xhrFactory: () => xhr, url: '/salvar', data: 'a=1', onSuccess: (...args) => received.push(args) })).toBe(xhr);
-        expect(calls[0].contentType).toContain('ISO-8859-1');
-        expect(calls[0].xhr()).toBe(xhr);
-        expect(received).toEqual([['response', xhr]]);
+        const xhr = {
+            responseURL: '/arvore_visualizar&acao_origem=documento_receber',
+            responseText: 'ok',
+            open() {},
+            setRequestHeader() {},
+            send() { this.onload(); }
+        };
+        await postSavedUpload({
+            xhrFactory: () => xhr,
+            url: '/salvar',
+            data: 'a=1',
+            onSuccess: (...args) => received.push(args)
+        });
+        expect(received).toEqual([['ok', xhr]]);
     });
 });
 
@@ -168,10 +181,10 @@ describe('arvore/domain — links / icons / notes / signature', () => {
         ]);
     });
 
-    it('resolve ícones Dropzone por MIME', () => {
-        expect(resolveDropzoneIcon('image/png', true)).toContain('documento_imagem');
-        expect(resolveDropzoneIcon('application/pdf', false)).toContain('pdf.gif');
-        expect(resolveDropzoneIcon('application/zip', true)).toContain('documento_zip');
+    it('resolve ícones Dropzone por MIME (GIF — SVG documento_* 404 na PRF)', () => {
+        expect(resolveDropzoneIcon('image/png', true)).toBe('/infra_css/imagens/imagem.gif');
+        expect(resolveDropzoneIcon('application/pdf', true)).toBe('/infra_css/imagens/pdf.gif');
+        expect(resolveDropzoneIcon('application/zip', false)).toBe('/infra_css/imagens/zip.gif');
     });
 
     it('formata anotação em parágrafos com checklist', () => {
@@ -189,33 +202,29 @@ describe('arvore/domain — links / icons / notes / signature', () => {
 });
 
 describe('arvore/view — eventos nativos do upload', () => {
-    it('previne navegação, abre a área e entrega arquivos ao Dropzone', () => {
-        const handlers = {};
-        const root = {};
-        const wrapper = {
-            off: () => wrapper,
-            on: (events, handler) => {
-                events.split(' ').forEach((event) => { handlers[event] = handler; });
-                return wrapper;
-            }
+    it('previne navegação, abre a área e entrega arquivos à fila', () => {
+        const listeners = {};
+        const root = {
+            __seiproUploadDragBound: false,
+            addEventListener: (type, fn) => { listeners[type] = fn; },
+            removeEventListener: () => {}
         };
         const dropzone = { handleFiles: (files) => { dropzone.files = files; } };
         const opened = [];
         const cancelled = [];
         bindUploadArvoreNativeDragEvents({
             root,
-            $: (value) => { expect(value).toBe(root); return wrapper; },
-            hasUploadFiles: (transfer) => Boolean(transfer && transfer.files.length),
+            hasUploadFiles: (transfer) => Boolean(transfer && transfer.files && transfer.files.length),
             openModalDropzone: () => opened.push(true),
             cancelUpload: () => cancelled.push(true),
             getDropzone: () => dropzone
         });
         const event = {
-            originalEvent: { dataTransfer: { files: [{ name: 'doc.pdf' }] } },
+            dataTransfer: { files: [{ name: 'doc.pdf' }], dropEffect: 'none' },
             preventDefault: () => { event.prevented = true; }
         };
-        handlers['dragover.uploadArvorePro'](event);
-        handlers['drop.uploadArvorePro'](event);
+        listeners.dragover(event);
+        listeners.drop(event);
         expect(event.prevented).toBe(true);
         expect(opened).toHaveLength(1);
         expect(cancelled).toHaveLength(1);
@@ -223,20 +232,92 @@ describe('arvore/view — eventos nativos do upload', () => {
     });
 
     it('cancela ao sair pela borda da janela', () => {
-        const handlers = {};
-        const wrapper = {
-            off: () => wrapper,
-            on: (events, handler) => {
-                events.split(' ').forEach((event) => { handlers[event] = handler; });
-                return wrapper;
-            }
+        const listeners = {};
+        const root = {
+            __seiproUploadDragBound: false,
+            addEventListener: (type, fn) => { listeners[type] = fn; },
+            removeEventListener: () => {}
         };
         let cancelled = 0;
         bindUploadArvoreNativeDragEvents({
-            root: {}, $: () => wrapper, hasUploadFiles: () => false,
-            openModalDropzone: () => {}, cancelUpload: () => { cancelled += 1; }, getDropzone: () => null
+            root,
+            hasUploadFiles: () => false,
+            openModalDropzone: () => {},
+            cancelUpload: () => { cancelled += 1; },
+            getDropzone: () => null
         });
-        handlers['dragleave.uploadArvorePro']({ originalEvent: { clientX: 0, clientY: 0 } });
+        listeners.dragleave({ clientX: 0, clientY: 0 });
         expect(cancelled).toBe(1);
+    });
+});
+
+describe('arvore/domain — upload SEI helpers', () => {
+    it('extrai meta do infraUpload e resolve série/título', () => {
+        const html = [
+            "objUpload = new infraUpload('frmDocumentoCadastro','filArquivo','controlador.php?acao=infra_upload','z');",
+            'arrExt = "pdf";',
+            "objTabelaAnexos.adicionar([arr['nome_upload'],arr['nome'],arr['data_hora'],arr['tamanho'],infraFormatarTamanhoBytes(arr['tamanho']),'Alice' ,'Unidade']);"
+        ].join('\n');
+        const meta = parseInfraUploadMeta(html);
+        expect(meta.urlUpload).toContain('infra_upload');
+        expect(meta.extensions).toEqual(['.pdf']);
+        expect(meta.userUnidade).toEqual({ user: 'Alice', unidade: 'Unidade' });
+        const serie = resolveUploadSerie({
+            fileName: 'Anexo contrato.pdf',
+            seriesOptions: [{ name: 'anexo', value: '9' }, { name: 'oficio', value: '1' }],
+            defaultDocName: '',
+            removeAccents: (s) => s
+        });
+        expect(serie.selSerie).toBe('9');
+        expect(buildUploadDocumentTitle('Anexo contrato.pdf', 'anexo')).toBe('contrato');
+    });
+});
+
+describe('arvore/io — fetchText', () => {
+    it('fetchText usa fetch injetável', async () => {
+        const html = await fetchText('/page', {
+            fetch: async (url) => {
+                expect(url).toBe('/page');
+                return '<html></html>';
+            }
+        });
+        expect(html).toBe('<html></html>');
+    });
+});
+
+describe('arvore/view — bindUploadConfirmActions', () => {
+    it('delega cancelar e enviar sem onclick inline', () => {
+        const cancelled = [];
+        const sent = [];
+        const statuses = [];
+        const listeners = [];
+        const root = {
+            __seiproArvoreUploadActionsBound: false,
+            addEventListener: (_type, listener) => { listeners.push(listener); },
+            removeEventListener: () => {},
+            contains: () => true
+        };
+        const cancelEl = {
+            closest: (sel) => (sel.includes('dropzone-cancel') ? cancelEl : null)
+        };
+        const sendEl = {
+            tagName: 'A',
+            getAttribute: (name) => (name === 'data-seipro-arvore-action' ? 'send-upload' : null),
+            closest: (sel) => (sel.includes('send-upload') ? sendEl : null)
+        };
+        bindUploadConfirmActions({
+            root,
+            onCancel: (e) => cancelled.push(e.type),
+            onSend: (el) => sent.push(el.getAttribute('data-seipro-arvore-action')),
+            onStatus: (el) => statuses.push(el.tagName)
+        });
+        expect(listeners.length).toBe(2);
+        listeners.forEach((listener) => {
+            listener({ type: 'click', target: cancelEl, preventDefault() {} });
+            listener({ type: 'click', target: sendEl, preventDefault() {} });
+        });
+        expect(cancelled).toEqual(['click']);
+        expect(sent).toEqual(['send-upload']);
+        expect(statuses).toEqual(['A']);
     });
 });

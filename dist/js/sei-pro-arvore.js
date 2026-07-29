@@ -6,6 +6,24 @@
   };
 
   // src/dom/index.js
+  function on(target, type, selectorOrHandler, maybeHandler) {
+    const delegated = typeof selectorOrHandler === "string";
+    const selector = delegated ? selectorOrHandler : null;
+    const handler = delegated ? maybeHandler : selectorOrHandler;
+    function listener(event) {
+      if (!delegated) {
+        return handler.call(target, event);
+      }
+      const match = event.target && event.target.closest ? event.target.closest(selector) : null;
+      if (match && target.contains(match)) {
+        return handler.call(match, event, match);
+      }
+    }
+    target.addEventListener(type, listener);
+    return function off() {
+      target.removeEventListener(type, listener);
+    };
+  }
   function ready(fn) {
     if (typeof document === "undefined") {
       fn();
@@ -16,6 +34,9 @@
     } else {
       setTimeout(fn, 0);
     }
+  }
+  function parseDocument(html) {
+    return new DOMParser().parseFromString(html, "text/html");
   }
 
   // src/features/arvore/state.js
@@ -44,13 +65,19 @@
   var domain_exports = {};
   __export(domain_exports, {
     buildArvoreInitSignature: () => buildArvoreInitSignature,
+    buildUploadDocumentTitle: () => buildUploadDocumentTitle,
     extractUploadExtensions: () => extractUploadExtensions,
+    findArvoreUpdateTargets: () => findArvoreUpdateTargets,
+    findDocumentoNoInArvoreHtml: () => findDocumentoNoInArvoreHtml,
     formatAnotacaoToParagraphs: () => formatAnotacaoToParagraphs,
     getLinksInText: () => getLinksInText,
     hasUploadFiles: () => hasUploadFiles,
+    parseArvoreDocumentoNoLine: () => parseArvoreDocumentoNoLine,
+    parseInfraUploadMeta: () => parseInfraUploadMeta,
     resolveDropzoneIcon: () => resolveDropzoneIcon,
     resolveMenuCatalogs: () => resolveMenuCatalogs,
     resolveMenuSelection: () => resolveMenuSelection,
+    resolveUploadSerie: () => resolveUploadSerie,
     serializeUploadAttachment: () => serializeUploadAttachment,
     sortUploadFiles: () => sortUploadFiles,
     sticknotePresetRankIconHtml: () => sticknotePresetRankIconHtml
@@ -76,14 +103,14 @@
     if (!dataTransfer.types) return false;
     return Array.prototype.indexOf.call(dataTransfer.types, "Files") !== -1;
   }
-  function serializeUploadAttachment(response, params, formatBytes) {
+  function serializeUploadAttachment(response, params, formatBytes2) {
     const tamanho = response[3];
     const value = [
       response[0],
       response[1],
       response[4],
       tamanho,
-      formatBytes(Number.parseInt(tamanho, 10)),
+      formatBytes2(Number.parseInt(tamanho, 10)),
       params.userUnidade.user,
       params.userUnidade.unidade
     ].join("\xB1");
@@ -97,6 +124,96 @@
       }
       return extensions;
     }, []);
+  }
+  function parseInfraUploadMeta(html) {
+    const lines = String(html || "").split("\n");
+    let urlUpload = "";
+    let userUnidade = { user: "", unidade: "" };
+    const userRegex = /\s*objTabelaAnexos\.adicionar\(\[arr\['nome_upload'\],arr\['nome'\],arr\['data_hora'\],arr\['tamanho'],infraFormatarTamanhoBytes\(arr\['tamanho'\]\),'(.+?)' ,'(.+?)']\);/;
+    lines.forEach((value) => {
+      if (value.indexOf("objUpload = new infraUpload") !== -1) {
+        const quoted = value.match(/'([^']+)'/g) || [];
+        const parts = quoted.map((q) => q.slice(1, -1));
+        urlUpload = parts.find((s) => /controlador|upload/i.test(s)) || parts[2] || parts[3] || "";
+      }
+      if (value.indexOf("objTabelaAnexos.adicionar") !== -1) {
+        const paramV = userRegex.exec(value);
+        if (paramV) userUnidade = { user: paramV[1], unidade: paramV[2] };
+      }
+    });
+    return {
+      urlUpload,
+      extensions: extractUploadExtensions(lines),
+      userUnidade
+    };
+  }
+  function resolveUploadSerie({
+    fileName,
+    seriesOptions,
+    defaultDocName,
+    removeAccents
+  }) {
+    const normalize = typeof removeAccents === "function" ? (s) => removeAccents(String(s || "").trim().toLowerCase().replace(/_|:/g, " ")) : (s) => String(s || "").trim().toLowerCase().replace(/_|:/g, " ");
+    const nameFileReg = normalize(fileName);
+    let valueSerie = false;
+    let matched = null;
+    for (const opt of seriesOptions || []) {
+      const nameOption = normalize(opt.name);
+      const nameOptionReg = nameOption.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const reg = new RegExp("^\\b" + nameOptionReg, "igm");
+      if (reg.test(nameFileReg)) {
+        valueSerie = opt.value;
+        matched = opt;
+        break;
+      }
+    }
+    const findByName = (needle) => (seriesOptions || []).find((v) => normalize(v.name) === needle);
+    let selSerieDefault = defaultDocName ? findByName(String(defaultDocName).trim().toLowerCase().replace(/_|:/g, " ")) : findByName("anexo");
+    if (!selSerieDefault) {
+      selSerieDefault = (seriesOptions || []).find((v) => normalize(v.name).indexOf("anexo") !== -1);
+    }
+    if (!selSerieDefault) selSerieDefault = (seriesOptions || [])[0];
+    const selSerie = valueSerie || selSerieDefault && selSerieDefault.value;
+    const selSerieSelected = matched || selSerieDefault;
+    return { selSerie, selSerieSelected };
+  }
+  function buildUploadDocumentTitle(fileName, serieName) {
+    let nameDoc = String(fileName || "").normalize("NFC");
+    if (serieName) {
+      const reg = new RegExp("^\\b" + String(serieName).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "igm");
+      if (reg.test(nameDoc)) nameDoc = nameDoc.replace(reg, "").trim();
+    }
+    const dot = nameDoc.lastIndexOf(".");
+    if (dot !== -1) nameDoc = nameDoc.substring(0, dot);
+    nameDoc = nameDoc.length > 50 ? nameDoc.replace(/^(.{50}[^\s]*).*/, "$1") : nameDoc;
+    nameDoc = nameDoc.length > 50 ? nameDoc.substring(0, 49) : nameDoc;
+    return nameDoc;
+  }
+  function parseArvoreDocumentoNoLine(line) {
+    const parts = String(line || "").split('"');
+    return {
+      href: parts[7] || "",
+      title: parts[11] || "",
+      icon: parts[15] || ""
+    };
+  }
+  function findArvoreUpdateTargets(html, idProcedimento, idDocumento) {
+    const lines = String(html || "").split("\n");
+    let urlArvore = "";
+    for (const value of lines) {
+      if (value.indexOf("atualizarArvore('controlador.php?acao=procedimento_visualizar&acao_origem=arvore_visualizar&id_procedimento=" + idProcedimento + "&id_documento=" + idDocumento) !== -1 || value.indexOf("var linkMontarArvoreProcessoDocumento") !== -1) {
+        urlArvore = value.split("'")[1] || "";
+        break;
+      }
+    }
+    return { urlArvore };
+  }
+  function findDocumentoNoInArvoreHtml(htmlArvore, idDocumento, idProcedimento) {
+    const needle = 'new infraArvoreNo("DOCUMENTO","' + idDocumento + '","' + idProcedimento + '"';
+    for (const value of String(htmlArvore || "").split("\n")) {
+      if (value.indexOf(needle) !== -1) return parseArvoreDocumentoNoLine(value);
+    }
+    return null;
   }
   function sortUploadFiles(files, getPosition) {
     return files.slice().sort((a, b) => getPosition(a) > getPosition(b) ? 1 : -1);
@@ -122,22 +239,19 @@
     if (array.length === 0) return [];
     return array.sort().filter((item, pos, ary) => !pos || item !== ary[pos - 1]);
   }
-  function resolveDropzoneIcon(fileType, isNewSEI2) {
+  function resolveDropzoneIcon(fileType, _isNewSEI) {
     const type = String(fileType || "");
-    const svg = (name) => isNewSEI2 ? `svg/${name}.svg` : `/infra_css/imagens/${name}.gif`;
-    let urlIcon = isNewSEI2 ? "svg/documento_pdf.svg" : "/infra_css/imagens/pdf.gif";
-    if (type.indexOf("image/") !== -1) urlIcon = svg(isNewSEI2 ? "documento_imagem" : "imagem");
-    else if (type.indexOf("video/") !== -1) urlIcon = svg(isNewSEI2 ? "documento_video" : "video");
-    else if (type.indexOf("audio/") !== -1) urlIcon = svg(isNewSEI2 ? "documento_audio" : "audio");
-    else if (type.indexOf("application/zip") !== -1) urlIcon = svg(isNewSEI2 ? "documento_zip" : "zip");
-    else if (type.indexOf("text/htm") !== -1) urlIcon = svg(isNewSEI2 ? "documento_html" : "html");
-    else if (type.indexOf("text/plain") !== -1) urlIcon = svg(isNewSEI2 ? "documento_txt" : "txt");
-    else if (type.indexOf("word") !== -1) urlIcon = svg(isNewSEI2 ? "documento_doc" : "doc");
-    else if (type.indexOf("officedocument.presentation") !== -1) {
-      urlIcon = isNewSEI2 ? "svg/documento_powerpoint.svg" : "/infra_css/imagens/pps.gif";
-    } else if (type.indexOf("text/csv") !== -1 || type.indexOf("sheet") !== -1) {
-      urlIcon = svg(isNewSEI2 ? "documento_excel" : "xls");
-    }
+    const gif = (name) => `/infra_css/imagens/${name}.gif`;
+    let urlIcon = gif("pdf");
+    if (type.indexOf("image/") !== -1) urlIcon = gif("imagem");
+    else if (type.indexOf("video/") !== -1) urlIcon = gif("video");
+    else if (type.indexOf("audio/") !== -1) urlIcon = gif("audio");
+    else if (type.indexOf("application/zip") !== -1) urlIcon = gif("zip");
+    else if (type.indexOf("text/htm") !== -1) urlIcon = gif("html");
+    else if (type.indexOf("text/plain") !== -1) urlIcon = gif("txt");
+    else if (type.indexOf("word") !== -1) urlIcon = gif("doc");
+    else if (type.indexOf("officedocument.presentation") !== -1) urlIcon = gif("pps");
+    else if (type.indexOf("text/csv") !== -1 || type.indexOf("sheet") !== -1) urlIcon = gif("xls");
     return urlIcon;
   }
   function formatAnotacaoToParagraphs(value, linkify) {
@@ -169,10 +283,17 @@
   // src/features/arvore/io.js
   var io_exports = {};
   __export(io_exports, {
+    fetchText: () => fetchText,
     fetchUploadPage: () => fetchUploadPage,
+    findDocumentoReceberHref: () => findDocumentoReceberHref,
+    isEscolherTipoPostFlow: () => isEscolherTipoPostFlow,
+    parseUploadPageHtml: () => parseUploadPageHtml,
+    postFormData: () => postFormData,
     postSavedUpload: () => postSavedUpload,
     postUploadForm: () => postUploadForm,
-    readArvoreMenuConfig: () => readArvoreMenuConfig
+    readArvoreMenuConfig: () => readArvoreMenuConfig,
+    readDocumentoCadastroFields: () => readDocumentoCadastroFields,
+    readEscolherTipoForm: () => readEscolherTipoForm
   });
   var MENU_STORAGE_KEYS = {
     process: "configViewFlashMenuPro",
@@ -197,26 +318,172 @@
     ]));
     return { stored, enabled };
   }
-  function requireAjax(ajax) {
-    if (typeof ajax !== "function") throw new TypeError("ajax dependency is required");
-    return ajax;
+  function defaultFetch(url, init) {
+    return fetch(url, { credentials: "same-origin", ...init }).then((r) => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    });
   }
-  function fetchUploadPage({ ajax, url, onSuccess }) {
-    return requireAjax(ajax)({ url }).done(onSuccess);
+  function fetchText(url, deps = {}) {
+    const doFetch = deps.fetch || defaultFetch;
+    return doFetch(url).then((html) => {
+      if (typeof deps.onSuccess === "function") deps.onSuccess(html);
+      return html;
+    });
   }
-  function postUploadForm({ ajax, url, data, onSuccess }) {
-    return requireAjax(ajax)({ method: "POST", data, url }).done(onSuccess);
+  function fetchUploadPage({ ajax, url, onSuccess, fetch: fetchImpl }) {
+    if (typeof fetchImpl === "function" || !ajax) {
+      return fetchText(url, { fetch: fetchImpl, onSuccess });
+    }
+    return ajax({ url }).done(onSuccess);
   }
-  function postSavedUpload({ ajax, xhrFactory, url, data, onSuccess }) {
-    const xhr = xhrFactory();
-    requireAjax(ajax)({
+  function postFormData(url, data, deps = {}) {
+    const body = typeof data === "string" ? data : Object.keys(data || {}).map((k) => encodeURIComponent(k) + "=" + encodeURIComponent(data[k])).join("&");
+    const doFetch = deps.fetch || ((u, init) => fetch(u, { credentials: "same-origin", ...init }).then((r) => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    }));
+    return doFetch(url, {
       method: "POST",
-      data,
-      url,
-      contentType: "application/x-www-form-urlencoded; charset=ISO-8859-1",
-      xhr: () => xhr
-    }).done((htmlResult, _status, responseXhr) => onSuccess(htmlResult, responseXhr || xhr));
-    return xhr;
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body
+    }).then((html) => {
+      if (typeof deps.onSuccess === "function") deps.onSuccess(html);
+      return html;
+    });
+  }
+  function postUploadForm({ ajax, url, data, onSuccess, fetch: fetchImpl }) {
+    if (typeof fetchImpl === "function" || !ajax) {
+      return postFormData(url, data, { fetch: fetchImpl, onSuccess });
+    }
+    return ajax({ method: "POST", data, url }).done(onSuccess);
+  }
+  function postSavedUpload({ url, data, onSuccess, xhrFactory = () => new XMLHttpRequest() }) {
+    const xhr = xhrFactory();
+    return new Promise((resolve, reject) => {
+      xhr.open("POST", url, true);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=ISO-8859-1");
+      xhr.onload = () => {
+        const html = xhr.responseText;
+        if (typeof onSuccess === "function") onSuccess(html, xhr);
+        resolve({ html, xhr });
+      };
+      xhr.onerror = () => reject(new Error("Network error"));
+      xhr.send(data);
+    });
+  }
+  function readDocumentoCadastroFields(doc) {
+    const form = doc.querySelector("#frmDocumentoCadastro");
+    if (!form) return { hrefForm: "", fields: {}, seriesOptions: [], checkedNivel: null };
+    const fields = {};
+    form.querySelectorAll("input[type=hidden]").forEach((el) => {
+      if (el.name && el.id && el.id.indexOf("hdn") !== -1) fields[el.name] = el.value;
+    });
+    form.querySelectorAll("input[type=text]").forEach((el) => {
+      if (el.id && el.id.indexOf("txt") !== -1) fields[el.id] = el.value;
+    });
+    form.querySelectorAll("select").forEach((el) => {
+      if (el.id && el.id.indexOf("sel") !== -1) fields[el.id] = el.value;
+    });
+    form.querySelectorAll("input[type=radio]").forEach((el) => {
+      if (el.name && el.name.indexOf("rdo") !== -1 && el.checked) fields[el.name] = el.value;
+    });
+    const seriesOptions = [];
+    form.querySelectorAll("#selSerie option").forEach((opt) => {
+      if (opt.textContent.trim() !== "") {
+        seriesOptions.push({ name: opt.textContent.trim().toLowerCase().replace(/_|:/g, " "), value: opt.value });
+      }
+    });
+    const checkedNivel = form.querySelector('input[name="rdoNivelAcesso"]:checked');
+    return {
+      hrefForm: form.getAttribute("action") || "",
+      fields,
+      seriesOptions,
+      checkedNivel: checkedNivel ? checkedNivel.value : null
+    };
+  }
+  function readEscolherTipoForm(doc) {
+    const form = doc.querySelector("#frmDocumentoEscolherTipo");
+    if (!form) return { urlForm: "", param: {} };
+    const param = {};
+    form.querySelectorAll("input[type=hidden]").forEach((el) => {
+      if (el.name && el.id && el.id.indexOf("hdn") !== -1) param[el.name] = el.value;
+    });
+    param.hdnIdSerie = -1;
+    return { urlForm: form.getAttribute("action") || "", param };
+  }
+  function findDocumentoReceberHref(doc) {
+    const a = doc.querySelector('#tblSeries a[href*="controlador.php?acao=documento_receber"]');
+    return a ? a.getAttribute("href") : null;
+  }
+  function isEscolherTipoPostFlow(doc) {
+    const a = doc.querySelector("#tblSeries a.ancoraOpcao");
+    return a && a.getAttribute("href") === "#";
+  }
+  function parseUploadPageHtml(html) {
+    const doc = parseDocument(html);
+    return {
+      doc,
+      meta: parseInfraUploadMeta(html),
+      cadastro: readDocumentoCadastroFields(doc),
+      escolherTipo: readEscolherTipoForm(doc),
+      documentoReceberHref: findDocumentoReceberHref(doc),
+      isPostFlow: isEscolherTipoPostFlow(doc)
+    };
+  }
+
+  // src/shared/ui/sortable.js
+  function insertionTarget(y, rows) {
+    for (const row of rows) {
+      const r = row.getBoundingClientRect();
+      if (y < r.top + r.height / 2) return row;
+    }
+    return null;
+  }
+  function createSortable(container, opts = {}) {
+    const itemsSel = opts.items || "tr";
+    const handleSel = opts.handle || null;
+    let dragged = null;
+    function rows() {
+      return Array.prototype.slice.call(container.querySelectorAll(itemsSel));
+    }
+    function onDown(e) {
+      const handle = handleSel ? e.target.closest(handleSel) : e.target.closest(itemsSel);
+      if (!handle) return;
+      const row = handle.closest(itemsSel);
+      if (!row || !container.contains(row)) return;
+      dragged = row;
+      row.classList.add("seipro-sorting");
+      row.style.opacity = "0.5";
+      try {
+        handle.setPointerCapture(e.pointerId);
+      } catch (_) {
+      }
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp, { once: true });
+      e.preventDefault();
+    }
+    function onMove(e) {
+      if (!dragged) return;
+      const others = rows().filter((r) => r !== dragged);
+      const before = insertionTarget(e.clientY, others);
+      if (before) dragged.parentNode.insertBefore(dragged, before);
+      else dragged.parentNode.appendChild(dragged);
+    }
+    function onUp(e) {
+      if (!dragged) return;
+      dragged.classList.remove("seipro-sorting");
+      dragged.style.opacity = "";
+      const handle = handleSel ? e.target.closest(handleSel) : dragged;
+      if (handle) handle.removeEventListener("pointermove", onMove);
+      dragged = null;
+      if (typeof opts.onUpdate === "function") opts.onUpdate(rows());
+    }
+    container.addEventListener("pointerdown", onDown);
+    return { destroy() {
+      container.removeEventListener("pointerdown", onDown);
+    } };
   }
 
   // src/features/arvore/view.js
@@ -232,36 +499,135 @@
   }
   function bindUploadArvoreNativeDragEvents(deps = {}) {
     const root = deps.root || document;
-    const $2 = deps.$ || globalThis.$;
-    const hasUploadFiles3 = deps.hasUploadFiles || globalThis.hasUploadFiles;
-    const openModalDropzone2 = deps.openModalDropzone || globalThis.openModalDropzone;
-    const cancelUpload = deps.cancelUpload || globalThis.dropzoneCancelInfo;
-    const getDropzone = deps.getDropzone || (() => globalThis.arvoreDropzone);
-    if (typeof $2 !== "function" || typeof hasUploadFiles3 !== "function") return;
+    const hasUploadFiles3 = deps.hasUploadFiles;
+    const openModalDropzone2 = deps.openModalDropzone;
+    const cancelUpload = deps.cancelUpload;
+    const getDropzone = deps.getDropzone || (() => null);
+    if (typeof hasUploadFiles3 !== "function") return;
     if (typeof openModalDropzone2 !== "function" || typeof cancelUpload !== "function") return;
-    const documentRoot = $2(root);
-    documentRoot.off(".uploadArvorePro").on("dragenter.uploadArvorePro dragover.uploadArvorePro", (event) => {
-      const originalEvent = event.originalEvent;
-      const dataTransfer = originalEvent ? originalEvent.dataTransfer : null;
+    if (root.__seiproUploadDragBound) return;
+    root.__seiproUploadDragBound = true;
+    const onDragOver = (event) => {
+      const dataTransfer = event.dataTransfer;
       if (!hasUploadFiles3(dataTransfer)) return;
       event.preventDefault();
+      if (dataTransfer) dataTransfer.dropEffect = "copy";
       openModalDropzone2();
-    }).on("dragleave.uploadArvorePro", (event) => {
-      const originalEvent = event.originalEvent;
-      if (originalEvent && originalEvent.clientX <= 0 && originalEvent.clientY <= 0) {
-        cancelUpload();
-      }
-    }).on("drop.uploadArvorePro", (event) => {
-      const originalEvent = event.originalEvent;
-      const dataTransfer = originalEvent ? originalEvent.dataTransfer : null;
+    };
+    const onDragLeave = (event) => {
+      if (event.clientX <= 0 && event.clientY <= 0) cancelUpload();
+    };
+    const onDrop = (event) => {
+      const dataTransfer = event.dataTransfer;
       if (!hasUploadFiles3(dataTransfer)) return;
       event.preventDefault();
       cancelUpload();
       const dropzone = getDropzone();
       if (dropzone && typeof dropzone.handleFiles === "function") {
-        dropzone.handleFiles(Array.from(dataTransfer.files));
+        dropzone.handleFiles(Array.from(dataTransfer.files || []));
+      }
+    };
+    root.addEventListener("dragenter", onDragOver);
+    root.addEventListener("dragover", onDragOver);
+    root.addEventListener("dragleave", onDragLeave);
+    root.addEventListener("drop", onDrop);
+    return () => {
+      root.removeEventListener("dragenter", onDragOver);
+      root.removeEventListener("dragover", onDragOver);
+      root.removeEventListener("dragleave", onDragLeave);
+      root.removeEventListener("drop", onDrop);
+      root.__seiproUploadDragBound = false;
+    };
+  }
+  function bindUploadConfirmActions(deps = {}) {
+    const root = deps.root || document;
+    if (!root || root.__seiproArvoreUploadActionsBound) return;
+    root.__seiproArvoreUploadActionsBound = true;
+    const onCancel = deps.onCancel;
+    const onSend = deps.onSend;
+    const onStatus = deps.onStatus;
+    on(root, "click", '[data-seipro-arvore-action="dropzone-cancel"]', (event) => {
+      event.preventDefault();
+      if (typeof onCancel === "function") onCancel(event);
+    });
+    on(root, "click", '[data-seipro-arvore-action="send-upload"]', (event, match) => {
+      event.preventDefault();
+      if (typeof onStatus === "function") onStatus(match);
+      if (typeof onSend === "function") onSend(match);
+    });
+  }
+  function setUploadHover(container, on2) {
+    if (!container) return;
+    container.classList.toggle("dz-drag-hover", !!on2);
+    container.classList.toggle("seipro-arvore-upload-hover", !!on2);
+  }
+  function ensureUploadOverlay(container, html) {
+    if (!container) return null;
+    let overlay = container.querySelector("#dz-infoupload, [data-seipro-arvore-upload-overlay]");
+    if (!overlay) {
+      container.insertAdjacentHTML("afterbegin", html);
+      overlay = container.querySelector("#dz-infoupload, [data-seipro-arvore-upload-overlay]");
+      container.dataset.seiproUploadIndex = container.dataset.seiproUploadIndex || "0";
+    }
+    return overlay;
+  }
+  function setPreviewError(previewEl, message) {
+    if (!previewEl) return;
+    previewEl.classList.add("dz-error", "seipro-file-error");
+    const span = previewEl.querySelector("[data-seipro-file-error], .dz-error-message span");
+    if (span) span.textContent = message || "";
+  }
+  function updatePreviewAfterSave(previewEl, { idDocumento, href, title, icon, ifrTarget }) {
+    if (!previewEl) return;
+    const link = previewEl.querySelector('a.dz-filename, a[target="' + (ifrTarget || "ifrVisualizacao") + '"]');
+    if (link) {
+      link.setAttribute("href", href || "");
+      link.id = "anchor" + idDocumento;
+      const span = link.querySelector("span");
+      if (span) {
+        span.textContent = title || "";
+        span.id = "span" + idDocumento;
+      }
+    }
+    const imgAnchor = previewEl.querySelector('a#anchorImgID, a[id^="anchorImg"]');
+    if (imgAnchor) {
+      imgAnchor.id = "anchorImg" + idDocumento;
+      const img = imgAnchor.querySelector("img");
+      if (img) {
+        img.src = icon || img.src;
+        img.id = "icon" + idDocumento;
+      }
+    }
+  }
+  function bindUploadSortable(container, { onReorder } = {}) {
+    if (!container) return null;
+    return createSortable(container, {
+      items: ".dz-file-preview, .seipro-arvore-file-preview",
+      handle: ".dz-filename",
+      onUpdate: (ordered) => {
+        if (typeof onReorder === "function") onReorder(ordered);
       }
     });
+  }
+  function statusUploadButton(el) {
+    if (!el) return;
+    const icon = el.querySelector("i");
+    if (icon) icon.className = "fas fa-sync-alt fa-spin azulColor";
+    el.removeAttribute("onclick");
+  }
+  function qsUploadPreview(root, index) {
+    const list = (root || document).querySelectorAll(".dz-preview, .seipro-arvore-file-preview");
+    return list[index] || null;
+  }
+  function getUploadIndex(container) {
+    if (!container) return 0;
+    const raw = container.dataset ? container.dataset.seiproUploadIndex : null;
+    if (raw != null) return parseInt(raw, 10) || 0;
+    return 0;
+  }
+  function setUploadIndex(container, index) {
+    if (!container) return;
+    if (container.dataset) container.dataset.seiproUploadIndex = String(index);
   }
 
   // src/core/global.js
@@ -279,20 +645,13 @@
     actionToolbarPro: () => actionToolbarPro,
     addIconActionsArvore: () => addIconActionsArvore,
     ajaxGetDuplicateArvore: () => ajaxGetDuplicateArvore,
-    ajaxGetUploadArvore: () => ajaxGetUploadArvore,
     ajaxPostDuplicateArvore: () => ajaxPostDuplicateArvore,
-    ajaxPostUploadArvore: () => ajaxPostUploadArvore,
     breakDocTwoLines: () => breakDocTwoLines,
     callActionsArvore: () => callActionsArvore,
     checkLimitTextArvore: () => checkLimitTextArvore,
     checkProcessoSigiloso: () => checkProcessoSigiloso,
     checkToolbarToClose: () => checkToolbarToClose,
     closeToolbarPro: () => closeToolbarPro,
-    dropzoneAlertBoxInfo: () => dropzoneAlertBoxInfo,
-    dropzoneCancelInfo: () => dropzoneCancelInfo,
-    dropzoneDivInfoHover: () => dropzoneDivInfoHover,
-    dropzoneNormalizeImg: () => dropzoneNormalizeImg,
-    encodeUrlUploadArvore: () => encodeUrlUploadArvore,
     filterTagKanbanArvore: () => filterTagKanbanArvore,
     formatDadosAnotacao: () => formatDadosAnotacao,
     getActionsArvore: () => getActionsArvore,
@@ -302,7 +661,6 @@
     getDadosDoc: () => getDadosDoc,
     getDadosInteressadosArvore: () => getDadosInteressadosArvore,
     getDuplicateDoc: () => getDuplicateDoc,
-    getInfoArvoreLastDoc: () => getInfoArvoreLastDoc,
     getLinksArvore: () => getLinksArvore,
     getLinksArvorePasta: () => getLinksArvorePasta,
     getLinksInText: () => getLinksInText2,
@@ -313,7 +671,6 @@
     getToolbarPro: () => getToolbarPro,
     getTooltipOnSign: () => getTooltipOnSign,
     getUrlAnotacaoArvore: () => getUrlAnotacaoArvore,
-    hasUploadFiles: () => hasUploadFiles2,
     initAnchorImg: () => initAnchorImg,
     initAtividadesProcesso: () => initAtividadesProcesso,
     initBreakDocTwoLines: () => initBreakDocTwoLines,
@@ -323,25 +680,19 @@
     initPanelPrescricaoProcesso: () => initPanelPrescricaoProcesso,
     initSeiProArvore: () => initSeiProArvore,
     initToolbarDocs: () => initToolbarDocs,
-    initUploadArvore: () => initUploadArvore,
     isSparklingModalVisible: () => isSparklingModalVisible,
     loadStyleDesignArvore: () => loadStyleDesignArvore,
-    loadUploadArvore: () => loadUploadArvore,
     openAlertDuplicateDoc: () => openAlertDuplicateDoc,
-    openModalDropzone: () => openModalDropzone,
     optionSearchInteressado: () => optionSearchInteressado,
     readArvoreMenuConfig: () => readArvoreMenuConfig2,
     removeFormatting: () => removeFormatting,
     resolveArvoreMenuCatalogs: () => resolveArvoreMenuCatalogs,
     saveDuplicateArvore: () => saveDuplicateArvore,
-    sendUploadArvore: () => sendUploadArvore,
     setAtividadesProcesso: () => setAtividadesProcesso,
     setDadosAnotacao: () => setDadosAnotacao,
     setLoadingActionDoc: () => setLoadingActionDoc,
     setStickNoteCheck: () => setStickNoteCheck,
     setToolbarDocs: () => setToolbarDocs,
-    sortUploadArvore: () => sortUploadArvore,
-    statusUploadArvore: () => statusUploadArvore,
     sticknoteCancel: () => sticknoteCancel,
     sticknoteCheck: () => sticknoteCheck,
     sticknoteDates: () => sticknoteDates,
@@ -360,10 +711,301 @@
     sticknoteSetDateKey: () => sticknoteSetDateKey,
     sticknoteToggleCheck: () => sticknoteToggleCheck,
     sticknoteUpdate: () => sticknoteUpdate,
-    submitUploadArvore: () => submitUploadArvore,
     togglePanelDadosArvore: () => togglePanelDadosArvore,
     updateLinksToolbar: () => updateLinksToolbar
   });
+
+  // src/shared/ui/file-queue.js
+  function extensionAllowed(fileName, acceptCsv) {
+    if (!acceptCsv) return true;
+    const name = String(fileName || "").toLowerCase();
+    const allowed = String(acceptCsv).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (allowed.length === 0) return true;
+    return allowed.some((ext) => ext.startsWith(".") ? name.endsWith(ext) : name.endsWith("." + ext));
+  }
+  function formatFileSize(bytes) {
+    const n = Number(bytes) || 0;
+    if (n < 1024) return n + " b";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KiB";
+    return (n / (1024 * 1024)).toFixed(1) + " MiB";
+  }
+  function uploadFormFile({
+    url,
+    file,
+    fileName,
+    paramName = "filArquivo",
+    timeout = 9e5,
+    onProgress,
+    xhrFactory = () => new XMLHttpRequest()
+  }) {
+    return new Promise((resolve, reject) => {
+      const xhr = xhrFactory();
+      const form = new FormData();
+      form.append(paramName, file, fileName || file.name);
+      xhr.open("POST", url, true);
+      xhr.timeout = timeout;
+      xhr.withCredentials = true;
+      if (xhr.upload && typeof onProgress === "function") {
+        xhr.upload.onprogress = (event) => {
+          if (!event.lengthComputable) return;
+          onProgress(event.loaded / event.total, event);
+        };
+      }
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr);
+        else reject({ xhr, message: "HTTP " + xhr.status });
+      };
+      xhr.onerror = () => reject({ xhr, message: "Network error" });
+      xhr.ontimeout = () => reject({ xhr, message: "Timeout" });
+      xhr.send(form);
+    });
+  }
+  function toPublicFile(item) {
+    const file = item.file;
+    file.previewElement = item.previewElement;
+    file.status = item.status;
+    file.uploadName = item.uploadName;
+    file.xhr = item.xhr;
+    file._queueItem = item;
+    return file;
+  }
+  function createFileQueue(opts = {}) {
+    const items = [];
+    const listeners = {};
+    const options = {
+      url: opts.url || "",
+      params: opts.params || {},
+      acceptedFiles: opts.accept || opts.acceptedFiles || null,
+      paramName: opts.paramName || "filArquivo",
+      timeout: opts.timeout || 9e5
+    };
+    const renameFile = typeof opts.renameFile === "function" ? opts.renameFile : (f) => f.name;
+    const createPreview = typeof opts.createPreview === "function" ? opts.createPreview : null;
+    const previewsContainer = typeof opts.previewsContainer === "string" ? typeof document !== "undefined" ? document.querySelector(opts.previewsContainer) : null : opts.previewsContainer || null;
+    let clickableEl = null;
+    let fileInput = null;
+    let processing = false;
+    let destroyed = false;
+    function emit(event, ...args) {
+      const list = listeners[event] || [];
+      list.forEach((fn) => {
+        try {
+          fn(...args);
+        } catch (_e) {
+        }
+      });
+      const OPT_BY_EVENT = {
+        addedfile: "onAddedFile",
+        addedfiles: "onAddedFiles",
+        removedfile: "onRemovedFile",
+        success: "onSuccess",
+        error: "onError"
+      };
+      const optName = OPT_BY_EVENT[event] || "on" + event.charAt(0).toUpperCase() + event.slice(1);
+      if (typeof opts[optName] === "function") {
+        try {
+          opts[optName](...args);
+        } catch (_e) {
+        }
+      }
+    }
+    function bindClickable() {
+      const clickable = opts.clickable;
+      if (!clickable || typeof document === "undefined") return;
+      clickableEl = typeof clickable === "string" ? document.querySelector(clickable) : clickable;
+      if (!clickableEl) return;
+      fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      if (options.acceptedFiles) fileInput.accept = options.acceptedFiles;
+      (clickableEl.ownerDocument || document).body.appendChild(fileInput);
+      clickableEl.addEventListener("click", onClickableClick);
+      fileInput.addEventListener("change", onFileInputChange);
+    }
+    function onClickableClick(event) {
+      event.preventDefault();
+      if (fileInput) fileInput.click();
+    }
+    function onFileInputChange() {
+      if (!fileInput || !fileInput.files) return;
+      handleFiles(Array.from(fileInput.files));
+      fileInput.value = "";
+    }
+    function setAcceptedFiles(csv) {
+      options.acceptedFiles = csv || null;
+      if (fileInput) fileInput.accept = options.acceptedFiles || "";
+    }
+    function addItem(file) {
+      const uploadName = renameFile(file);
+      const accepted = extensionAllowed(uploadName || file.name, options.acceptedFiles);
+      const item = {
+        file,
+        uploadName,
+        status: accepted ? "queued" : "rejected",
+        previewElement: null,
+        xhr: null,
+        errorMessage: accepted ? "" : "Tipo de arquivo n\xE3o permitido"
+      };
+      if (createPreview) {
+        item.previewElement = createPreview(item);
+        if (item.previewElement && previewsContainer) {
+          previewsContainer.appendChild(item.previewElement);
+        }
+        if (!accepted && item.previewElement) {
+          item.previewElement.classList.add("dz-error", "seipro-file-error");
+          const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
+          if (err) err.textContent = item.errorMessage;
+        }
+        const removeBtn = item.previewElement && item.previewElement.querySelector("[data-seipro-file-remove], [data-dz-remove]");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            removeItem(item);
+          });
+        }
+      }
+      items.push(item);
+      emit("addedfile", toPublicFile(item));
+      return item;
+    }
+    function removeItem(item) {
+      const idx = items.indexOf(item);
+      if (idx === -1) return;
+      items.splice(idx, 1);
+      if (item.previewElement && item.previewElement.parentNode) {
+        item.previewElement.parentNode.removeChild(item.previewElement);
+      }
+      emit("removedfile", toPublicFile(item));
+    }
+    function handleFiles(fileList) {
+      if (destroyed) return;
+      const list = Array.from(fileList || []);
+      const added = list.map(addItem);
+      emit("addedfiles", added.map(toPublicFile));
+      return added.map(toPublicFile);
+    }
+    function getQueuedFiles() {
+      return items.filter((i) => i.status === "queued").map(toPublicFile);
+    }
+    function getAcceptedFiles() {
+      return items.filter((i) => i.status === "success").map(toPublicFile);
+    }
+    function getRejectedFiles() {
+      return items.filter((i) => i.status === "error" || i.status === "rejected").map(toPublicFile);
+    }
+    function removeAllFiles() {
+      [...items].forEach(removeItem);
+    }
+    function setProgress(item, ratio) {
+      if (!item.previewElement) return;
+      item.previewElement.classList.add("dz-processing", "seipro-file-processing");
+      const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
+      if (bar) bar.style.width = Math.round(ratio * 100) + "%";
+    }
+    function markError(item, message) {
+      item.status = "error";
+      item.errorMessage = message || "Erro no envio";
+      if (item.previewElement) {
+        item.previewElement.classList.add("dz-error", "seipro-file-error");
+        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
+        const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
+        if (err) err.textContent = item.errorMessage;
+      }
+    }
+    function markSuccess(item) {
+      item.status = "success";
+      if (item.previewElement) {
+        item.previewElement.classList.add("dz-success", "dz-complete", "seipro-file-success");
+        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
+        const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
+        if (bar) bar.style.width = "100%";
+      }
+    }
+    function processQueue() {
+      if (destroyed || processing) return Promise.resolve();
+      const next = items.find((i) => i.status === "queued");
+      if (!next) return Promise.resolve();
+      if (!options.url) {
+        markError(next, "URL de upload n\xE3o configurada");
+        emit("error", toPublicFile(next));
+        if (typeof opts.onError === "function") opts.onError(toPublicFile(next), next.errorMessage);
+        return Promise.resolve();
+      }
+      processing = true;
+      next.status = "uploading";
+      setProgress(next, 0);
+      return uploadFormFile({
+        url: options.url,
+        file: next.file,
+        fileName: next.uploadName,
+        paramName: options.paramName,
+        timeout: options.timeout,
+        onProgress: (ratio) => setProgress(next, ratio),
+        xhrFactory: opts.xhrFactory || (() => new XMLHttpRequest())
+      }).then((xhr) => {
+        next.xhr = xhr;
+        markSuccess(next);
+        const pub = toPublicFile(next);
+        emit("success", pub);
+      }).catch((err) => {
+        next.xhr = err && err.xhr ? err.xhr : null;
+        markError(next, err && err.message || "Erro no envio");
+        emit("error", toPublicFile(next));
+      }).finally(() => {
+        processing = false;
+      });
+    }
+    function destroy() {
+      destroyed = true;
+      if (clickableEl) clickableEl.removeEventListener("click", onClickableClick);
+      if (fileInput && fileInput.parentNode) fileInput.parentNode.removeChild(fileInput);
+      removeAllFiles();
+      clickableEl = null;
+      fileInput = null;
+    }
+    function on2(event, handler) {
+      if (!listeners[event]) listeners[event] = [];
+      listeners[event].push(handler);
+      return api;
+    }
+    const api = {
+      files: items,
+      options,
+      handleFiles,
+      addFile: (file) => toPublicFile(addItem(file)),
+      getQueuedFiles,
+      getAcceptedFiles,
+      getRejectedFiles,
+      removeAllFiles,
+      processQueue,
+      destroy,
+      on: on2,
+      setAcceptedFiles,
+      /** Reorder queue to match DOM order of preview elements. */
+      reorderByPreview(orderedElements) {
+        const map = new Map(items.map((i) => [i.previewElement, i]));
+        const next = [];
+        orderedElements.forEach((el) => {
+          const item = map.get(el);
+          if (item) next.push(item);
+        });
+        items.forEach((i) => {
+          if (!next.includes(i)) next.push(i);
+        });
+        items.length = 0;
+        next.forEach((i) => items.push(i));
+      }
+    };
+    Object.defineProperty(api, "files", {
+      get() {
+        return items.map(toPublicFile);
+      }
+    });
+    bindClickable();
+    return api;
+  }
 
   // src/features/arvore/templates.js
   function clipboardSuccessStyleCss() {
@@ -378,10 +1020,389 @@
     ].join("\n");
   }
   function dropzoneInfoHoverHtml() {
-    return '<div id="dz-infoupload" class="dz-infoupload seipro-arvore-dz-info">   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>   <span class="cancel seipro-arvore-dz-cancel" data-seipro-arvore-action="dropzone-cancel">       <i class="far fa-times-circle icon"></i>       <span class="label">CANCELAR</span>   </span></div>';
+    return '<div id="dz-infoupload" class="dz-infoupload seipro-arvore-dz-info" data-seipro-arvore-upload-overlay>   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>   <span class="cancel seipro-arvore-dz-cancel" data-seipro-arvore-action="dropzone-cancel">       <i class="far fa-times-circle icon"></i>       <span class="label">CANCELAR</span>   </span></div>';
   }
   function loadingActionDocHtml(idDocumento) {
     return '<span class="loading-action-doc seipro-arvore-loading-action" data-id="' + idDocumento + '"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>';
+  }
+  function uploadConfirmBarHtml() {
+    return '<div id="divUploadDoc" class="panelDadosArvore seipro-arvore-upload-confirm" style="margin-top: 15px; padding: 1.2em 0 0 0 !important;">   <a style="cursor:pointer;" data-seipro-arvore-action="send-upload" class="newLink newLink_confirm">       <i class="fas fa-upload azulColor"></i>       <span>Enviar documentos</span>   </a></div>';
+  }
+  function uploadPreviewHtml(opts = {}) {
+    const hasPasta = !!opts.hasPasta;
+    const pathArvore2 = opts.pathArvore || "/infra_js/arvore/";
+    const ifrTarget = opts.ifrTarget || "ifrVisualizacao";
+    const iconSrc = opts.iconSrc || "/infra_css/imagens/pdf.gif";
+    const iconData = opts.iconData || "imagens/pdf.gif";
+    const sizeLabel = formatFileSize(opts.size || 0);
+    const name = opts.name || "";
+    return '<div class="dz-preview dz-file-preview seipro-arvore-file-preview">   <div class="dz-details">       <span class="dz-error-mark"' + (hasPasta ? ' style="left:30px"' : "") + '>           <i data-seipro-file-remove data-dz-remove class="fas fa-trash vermelhoColor" style="margin: 5px 8px;cursor: pointer; font-size: 10pt;"></i>       </span>       <span class="dz-error-message"' + (hasPasta ? ' style="left:30px"' : "") + '>           <span data-seipro-file-error data-dz-errormessage></span>       </span>       <span class="dz-progress">           <span class="dz-upload" data-seipro-file-progress data-dz-uploadprogress></span>       </span>' + (hasPasta ? '<img style="margin-left: -3px;" src="' + pathArvore2 + 'empty.gif" align="absbottom">' : "") + '       <span class="anchorJoinPro" data-img="' + pathArvore2 + 'joinbottom.gif">           <img src="' + pathArvore2 + 'join.gif" align="absbottom">       </span>       <a id="anchorImgID" data-img="' + iconData + '" style="margin-left: -4px;" class="clipboard" title="Clique para copiar o n\xFAmero do protocolo para a \xE1rea de transfer\xEAncia">           <img class="dz-link-icon" src="' + iconSrc + '" align="absbottom" id="iconID">       </a>       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>       <a id="anchorID" target="' + ifrTarget + '" class="dz-filename">           <span data-dz-name title="">' + name.replace(/</g, "&lt;") + '</span>       </a>       <span class="dz-size" data-dz-size>' + sizeLabel + '</span>       <span class="dz-remove" data-seipro-file-remove data-dz-remove><i class="fas fa-trash-alt vermelhoColor" style="cursor:pointer"></i></span>   </div></div>';
+  }
+
+  // src/features/arvore/upload.js
+  var upload_exports = {};
+  __export(upload_exports, {
+    ajaxGetUploadArvore: () => ajaxGetUploadArvore,
+    ajaxPostUploadArvore: () => ajaxPostUploadArvore,
+    dropzoneAlertBoxInfo: () => dropzoneAlertBoxInfo,
+    dropzoneCancelInfo: () => dropzoneCancelInfo,
+    dropzoneDivInfoHover: () => dropzoneDivInfoHover,
+    dropzoneNormalizeImg: () => dropzoneNormalizeImg,
+    encodeUrlUploadArvore: () => encodeUrlUploadArvore,
+    formatFileSize: () => formatFileSize,
+    getInfoArvoreLastDoc: () => getInfoArvoreLastDoc,
+    hasUploadFiles: () => hasUploadFiles2,
+    initUploadArvore: () => initUploadArvore,
+    loadUploadArvore: () => loadUploadArvore,
+    openModalDropzone: () => openModalDropzone,
+    sendUploadArvore: () => sendUploadArvore,
+    sortUploadArvore: () => sortUploadArvore,
+    statusUploadArvore: () => statusUploadArvore,
+    submitUploadArvore: () => submitUploadArvore
+  });
+  installArvoreState();
+  function uploadRoot() {
+    return typeof document !== "undefined" ? document.querySelector(containerUpload) || document.body : null;
+  }
+  function renameUploadFile(file) {
+    const remove = typeof parent !== "undefined" && parent.removeAcentos || typeof globalThis.removeAcentos === "function" && globalThis.removeAcentos || ((s) => s);
+    return remove(file.name).replace(/[&\/\\#+()$~%'":*?<>{}]/g, "_");
+  }
+  function formatBytes(n) {
+    if (typeof infraFormatarTamanhoBytes === "function") return infraFormatarTamanhoBytes(n);
+    return formatFileSize(n);
+  }
+  function getIfrTarget() {
+    return typeof ifrVisualizacao_ !== "undefined" && ifrVisualizacao_ || "ifrVisualizacao";
+  }
+  function dropzoneCancelInfo(e) {
+    if (e && typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+    setUploadHover(uploadRoot(), false);
+    return false;
+  }
+  function hasUploadFiles2(dataTransfer) {
+    return hasUploadFiles(dataTransfer);
+  }
+  function encodeUrlUploadArvore(response, params) {
+    return serializeUploadAttachment(response, params, formatBytes);
+  }
+  function openModalDropzone() {
+    setUploadHover(uploadRoot(), true);
+  }
+  function statusUploadArvore(el) {
+    statusUploadButton(el);
+  }
+  function dropzoneDivInfoHover() {
+    const root = uploadRoot();
+    ensureUploadOverlay(root, dropzoneInfoHoverHtml());
+    bindUploadConfirmActions({
+      root: document,
+      onCancel: dropzoneCancelInfo,
+      onSend: () => sendUploadArvore("upload"),
+      onStatus: statusUploadArvore
+    });
+  }
+  function dropzoneNormalizeImg(file) {
+    const preview = file && file.previewElement || document.querySelector("#divArvore .dz-preview:last-child");
+    if (!preview) return;
+    const urlIcon = resolveDropzoneIcon(file && file.type, parent.isNewSEI);
+    const img = preview.querySelector(".dz-link-icon");
+    const anchor = img && img.closest("a");
+    if (img) img.setAttribute("src", urlIcon.startsWith("/") || urlIcon.startsWith("svg/") ? urlIcon.startsWith("svg/") ? "/infra_css/" + urlIcon : urlIcon : "/infra_css/" + urlIcon);
+    if (anchor) anchor.setAttribute("data-img", urlIcon);
+    const joins = document.querySelectorAll('#divArvore img[src*="joinbottom.gif"], #divArvore img[src*="join.gif"]');
+    const lastJoin = document.querySelector("#divArvore .dz-preview:last-child .anchorJoinPro img");
+    if (lastJoin) {
+      lastJoin.setAttribute("src", pathArvore + "joinbottom.gif");
+    }
+    void joins;
+  }
+  function createTreePreview(item) {
+    const root = uploadRoot();
+    const hasPasta = !!(root && root.querySelector('a[id*="anchorImgPASTA"]'));
+    const iconPath = resolveDropzoneIcon(item.file.type, parent.isNewSEI);
+    const iconSrc = iconPath.indexOf("svg/") === 0 || iconPath.indexOf("imagens/") === 0 ? "/infra_css/" + iconPath.replace(/^\/infra_css\//, "") : iconPath.startsWith("/") ? iconPath : "/infra_css/" + iconPath;
+    const wrap = document.createElement("div");
+    wrap.innerHTML = uploadPreviewHtml({
+      hasPasta,
+      pathArvore,
+      newSEI: parent.isNewSEI,
+      ifrTarget: getIfrTarget(),
+      iconSrc,
+      iconData: iconPath,
+      size: item.file.size,
+      name: item.uploadName || item.file.name
+    });
+    return wrap.firstElementChild;
+  }
+  function loadUploadArvore() {
+    dropzoneDivInfoHover();
+    const previews = document.querySelector("#divArvore");
+    const accepted = typeof localStorageRestorePro === "function" ? localStorageRestorePro("arvoreDropzone_acceptedFiles") : null;
+    arvoreDropzone = createFileQueue({
+      previewsContainer: previews,
+      clickable: "#dz-infoupload",
+      paramName: "filArquivo",
+      accept: accepted,
+      timeout: 9e5,
+      renameFile: renameUploadFile,
+      createPreview: createTreePreview,
+      onAddedFiles: () => {
+        dropzoneCancelInfo();
+        const queued = arvoreDropzone.getQueuedFiles();
+        if (typeof verifyConfigValue === "function" && verifyConfigValue("sortbeforeupload") && queued.length > 1) {
+          sortUploadArvore();
+        } else {
+          sendUploadArvore("upload", false);
+        }
+      },
+      onAddedFile: (file) => dropzoneNormalizeImg(file),
+      onRemovedFile: (file) => dropzoneNormalizeImg(file),
+      onSuccess: (file) => {
+        const params = arvoreDropzone.options.params;
+        if (!params || !file.xhr) return;
+        const response = String(file.xhr.response || "").split("#");
+        params.paramsForm.hdnAnexos = typeof parent !== "undefined" && parent.parent && typeof parent.parent.encodeUrlUploadArvore === "function" ? parent.parent.encodeUrlUploadArvore(response, params) : encodeUrlUploadArvore(response, params);
+        let postData = "";
+        for (const k of Object.keys(params.paramsForm)) {
+          if (postData !== "") postData += "&";
+          let valor = k === "hdnAnexos" ? params.paramsForm[k] : typeof escapeComponent === "function" ? escapeComponent(params.paramsForm[k]) : encodeURIComponent(params.paramsForm[k]);
+          if (k === "txtNumero" && typeof parent.encodeURI_toHex === "function") {
+            valor = parent.encodeURI_toHex(String(params.paramsForm[k]).normalize("NFC"));
+          }
+          postData += k + "=" + valor;
+        }
+        params.paramsForm = postData;
+        sendUploadArvore("save", params);
+      },
+      onError: () => {
+        sendUploadArvore("upload");
+      }
+    });
+    bindUploadArvoreNativeDragEvents({
+      root: document,
+      hasUploadFiles: hasUploadFiles2,
+      openModalDropzone,
+      cancelUpload: dropzoneCancelInfo,
+      getDropzone: () => arvoreDropzone
+    });
+  }
+  function sortUploadArvore() {
+    const bar = uploadConfirmBarHtml();
+    const existing = document.getElementById("divUploadDoc");
+    if (existing) existing.remove();
+    const tree = document.getElementById("divArvore");
+    if (!tree) return;
+    tree.insertAdjacentHTML("afterend", bar);
+    bindUploadSortable(tree, {
+      onReorder: (ordered) => {
+        if (arvoreDropzone && typeof arvoreDropzone.reorderByPreview === "function") {
+          arvoreDropzone.reorderByPreview(ordered);
+        }
+      }
+    });
+    bindUploadConfirmActions({
+      root: document,
+      onCancel: dropzoneCancelInfo,
+      onSend: () => sendUploadArvore("upload"),
+      onStatus: statusUploadArvore
+    });
+  }
+  function previewAt(index, rootEl) {
+    const root = rootEl || uploadRoot() || document;
+    let el = qsUploadPreview(root, index);
+    if (!el && typeof parent !== "undefined" && parent.parent && parent.parent.document) {
+      el = qsUploadPreview(parent.parent.document, index);
+    }
+    return el;
+  }
+  function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = null) {
+    const container = _containerUpload || uploadRoot() || document.body;
+    const containerEl = container && container.jquery ? container[0] : container;
+    const indexUpload = getUploadIndex(containerEl);
+    const elem = previewAt(indexUpload, containerEl);
+    const queue = arrayDropzone && typeof arrayDropzone.getQueuedFiles === "function" ? arrayDropzone : typeof parent !== "undefined" && parent.parent && parent.parent.arvoreDropzone;
+    const queuedFiles = queue && typeof queue.getQueuedFiles === "function" ? queue.getQueuedFiles() : [];
+    if (mode === "upload" && queuedFiles.length > 0) {
+      let href = null;
+      try {
+        href = jmespath.search(getTreeLinksSession(), "[?name=='Incluir Documento'].url | [0]");
+      } catch (_e) {
+        href = null;
+      }
+      if (href) {
+        fetchText(href).then((html) => {
+          const parsed = parseUploadPageHtml(html);
+          if (parsed.documentoReceberHref) {
+            ajaxGetUploadArvore(parsed.documentoReceberHref, queuedFiles, mode, result, queue, containerEl);
+          } else if (parsed.isPostFlow) {
+            ajaxPostUploadArvore(parsed.doc, queuedFiles, mode, result, queue, containerEl);
+          } else {
+            setPreviewError(elem, "Link para upload n\xE3o encontrado");
+          }
+        }).catch(() => setPreviewError(elem, "Link para upload n\xE3o encontrado"));
+      } else {
+        setPreviewError(elem, "Link para incluir documento n\xE3o encontrado. Processo est\xE1 aberto na unidade?");
+      }
+    } else if (mode === "save" && result) {
+      const href = result.urlForm;
+      const param = result.paramsForm;
+      postSavedUpload({
+        url: href,
+        data: param,
+        onSuccess: (htmlResult, xhr) => {
+          const status = (xhr.responseURL || "").indexOf("acao=arvore_visualizar&acao_origem=documento_receber") !== -1;
+          if (status) {
+            sendUploadArvore("upload", false, queue, containerEl);
+            getInfoArvoreLastDoc(htmlResult, xhr.responseURL, queue, containerEl);
+          } else {
+            setPreviewError(elem, "N\xE3o foi poss\xEDvel fazer o upload do arquivo");
+          }
+        }
+      });
+    }
+  }
+  function ajaxPostUploadArvore(docOrJquery, queuedFiles, mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = null) {
+    const doc = docOrJquery && docOrJquery.querySelector ? docOrJquery : docOrJquery && docOrJquery[0] ? parseDocument(docOrJquery[0].outerHTML || "") : parseDocument("");
+    let escolher;
+    if (docOrJquery && docOrJquery.querySelector) {
+      escolher = readEscolherTipoForm(docOrJquery);
+    } else if (docOrJquery && typeof docOrJquery.find === "function") {
+      const html = docOrJquery[0] ? docOrJquery[0].ownerDocument ? new XMLSerializer().serializeToString(docOrJquery[0].ownerDocument) : "" : "";
+      escolher = readEscolherTipoForm(parseDocument(html || String(docOrJquery.html && docOrJquery.html() || "")));
+    } else {
+      escolher = readEscolherTipoForm(doc);
+    }
+    postFormData(escolher.urlForm, escolher.param).then((htmlAnexo) => {
+      submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
+    });
+  }
+  function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
+    fetchText(urlDocExterno).then((htmlAnexo) => {
+      submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
+    });
+  }
+  function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
+    const parsed = parseUploadPageHtml(htmlAnexo);
+    const meta = parsed.meta || parseInfraUploadMeta(htmlAnexo);
+    const cadastro = parsed.cadastro;
+    const param = { ...cadastro.fields };
+    const extUpload = meta.extensions || [];
+    if (extUpload.length > 0 && arrayDropzone) {
+      if (typeof arrayDropzone.setAcceptedFiles === "function") arrayDropzone.setAcceptedFiles(extUpload.join(","));
+      else if (arrayDropzone.options) arrayDropzone.options.acceptedFiles = extUpload.join(",");
+      if (typeof parent !== "undefined" && parent.parent && typeof parent.parent.localStorageStorePro === "function") {
+        parent.parent.localStorageStorePro("arvoreDropzone_acceptedFiles", extUpload.join(","));
+      }
+    }
+    const nexFileQueued = queuedFiles[0];
+    if (!nexFileQueued) return;
+    const modified = nexFileQueued.lastModifiedDate || (nexFileQueued.lastModified ? new Date(nexFileQueued.lastModified) : /* @__PURE__ */ new Date());
+    const txtDataElaboracao = typeof moment === "function" ? moment(modified).format("DD/MM/YYYY") : modified.toLocaleDateString("pt-BR");
+    const nameFile = nexFileQueued.name;
+    const removeAccents = typeof parent !== "undefined" && parent.parent && parent.parent.removeAcentos || typeof parent !== "undefined" && parent.removeAcentos || ((s) => s);
+    const { selSerie, selSerieSelected } = resolveUploadSerie({
+      fileName: nameFile,
+      seriesOptions: cadastro.seriesOptions,
+      defaultDocName: typeof getConfigValue === "function" ? getConfigValue("newdocname") : "",
+      removeAccents
+    });
+    const nameDoc = buildUploadDocumentTitle(nameFile, selSerieSelected && selSerieSelected.name);
+    let valueSigilo = typeof parent !== "undefined" && parent.parent && typeof parent.parent.getConfigValue === "function" ? parent.parent.getConfigValue("newdocsigilo") : "";
+    valueSigilo = valueSigilo && valueSigilo.indexOf("|") !== -1 ? valueSigilo.split("|") : false;
+    const checkCfg = (k) => typeof parent !== "undefined" && parent.parent && parent.parent.checkConfigValue ? parent.parent.checkConfigValue(k) : typeof checkConfigValue === "function" && checkConfigValue(k);
+    const getCfg = (k) => typeof parent !== "undefined" && parent.parent && parent.parent.getConfigValue ? parent.parent.getConfigValue(k) : typeof getConfigValue === "function" && getConfigValue(k);
+    const valueNivelAcesso = checkCfg("newdocnivel") ? "0" : valueSigilo ? valueSigilo[1] : "0";
+    param.selSerie = selSerie;
+    param.hdnIdSerie = selSerie;
+    param.rdoNivelAcesso = cadastro.checkedNivel != null ? cadastro.checkedNivel : valueNivelAcesso;
+    param.hdnStaNivelAcessoLocal = param.rdoNivelAcesso;
+    param.rdoFormato = checkCfg("newdocformat") && getCfg("newdocformat") && String(getCfg("newdocformat")).indexOf("digitalizado") !== -1 ? "D" : "N";
+    param.hdnFlagDocumentoCadastro = "2";
+    param.hdnIdHipoteseLegal = valueSigilo ? valueSigilo[0] : param.selHipoteseLegal;
+    param.selHipoteseLegal = param.hdnIdHipoteseLegal;
+    param.selTipoConferencia = checkCfg("newdocformat") && getCfg("newdocformat") && String(getCfg("newdocformat")).indexOf("digitalizado") !== -1 && String(getCfg("newdocformat")).indexOf("_") !== -1 ? String(getCfg("newdocformat")).split("_")[1] : "";
+    param.hdnIdTipoConferencia = param.selTipoConferencia;
+    param.txaObservacoes = "";
+    param.txtDataElaboracao = txtDataElaboracao;
+    param.txtNumero = typeof escapeComponent === "function" ? escapeComponent(nameDoc) : encodeURIComponent(nameDoc);
+    arrayDropzone.options.url = meta.urlUpload;
+    arrayDropzone.options.params = {
+      urlForm: cadastro.hrefForm,
+      paramsForm: param,
+      userUnidade: meta.userUnidade
+    };
+    arrayDropzone.processQueue();
+  }
+  function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropzone, _containerUpload = null) {
+    const containerEl = _containerUpload && _containerUpload.jquery ? _containerUpload[0] : _containerUpload || uploadRoot();
+    const indexUpload = getUploadIndex(containerEl);
+    const param = typeof getParamsUrlPro === "function" ? getParamsUrlPro(urlParent) : {};
+    const queue = arrayDropzone && typeof arrayDropzone.getQueuedFiles === "function" ? arrayDropzone : parent.parent && parent.parent.arvoreDropzone;
+    const queuedFiles = queue && queue.getQueuedFiles ? queue.getQueuedFiles() : [];
+    const { urlArvore } = findArvoreUpdateTargets(dataResult, param.id_procedimento, param.id_documento);
+    if (!urlArvore) return;
+    fetchText(urlArvore).then((htmlArvore) => {
+      const node = findDocumentoNoInArvoreHtml(htmlArvore, param.id_documento, param.id_procedimento);
+      const elem = previewAt(indexUpload, containerEl);
+      if (node && elem) {
+        updatePreviewAfterSave(elem, {
+          idDocumento: param.id_documento,
+          href: node.href,
+          title: node.title,
+          icon: node.icon,
+          ifrTarget: getIfrTarget()
+        });
+        if (typeof parent !== "undefined" && parent.parent && typeof parent.parent.scrollToElementArvore === "function") {
+          setTimeout(() => parent.parent.scrollToElementArvore(param.id_documento), 500);
+        }
+      }
+      setUploadIndex(containerEl, indexUpload + 1);
+      if (queuedFiles.length === 0) {
+        dropzoneAlertBoxInfo();
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+        if (typeof parent !== "undefined" && parent.parent && typeof parent.parent.nextUploadFilesInProcess === "function" && parent.parent.arvoreDropzone) {
+          parent.parent.nextUploadFilesInProcess();
+        }
+      }
+    });
+  }
+  function dropzoneAlertBoxInfo() {
+    if (!arvoreDropzone || typeof arvoreDropzone.getAcceptedFiles !== "function") return;
+    const accepted = arvoreDropzone.getAcceptedFiles();
+    const rejected = arvoreDropzone.getRejectedFiles();
+    let html = "";
+    const htmlRejected = rejected.length > 0 ? '<div style="margin: 10px 0;"><i class="fas fa-exclamation-triangle vermelhoColor" style="margin-right: 5px;"></i>' + rejected.length + " " + (rejected.length === 1 ? "arquivo rejeitado" : "arquivos rejeitados") + " pelo SEI:" + rejected.map((value) => {
+      const msg = value._queueItem && value._queueItem.errorMessage || value.previewElement && value.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span") && value.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span").textContent || "";
+      return '<div style="font-size: 9pt; background: #eaeaea; border-radius: 5px; padding: 5px; margin: 8px 5px;"><i class="fas fa-file cinzaColor" style="margin-right: 5px;"></i>' + value.name + '<span style="background: #fff0f0;display: block;margin-top: 5px;padding: 3px 5px;border-radius: 5px;color: #f54040;">' + msg + "</span></div>";
+    }).join("") + "</div>" : "";
+    const htmlNotify = '<div>   <span id="no_notify" class="no_notifyPro" data-notify="upload" style="font-size: 8pt; margin: 10px 0; display: block;">       <input data-seipro-arvore-action="no-notify-upload" type="checkbox" id="no_notifyPro_input">       <label class="txt_cinza" id="no_notifyPro_label" for="no_notifyPro_input">           Ok, n\xE3o avisar novamente.       </label>   </span></div>';
+    if (accepted.length > 0) {
+      html = accepted.length + " " + (accepted.length === 1 ? "arquivo enviado" : "arquivos enviados") + " com sucesso!";
+      html = rejected.length > 0 ? html + htmlRejected : html + htmlNotify;
+      if (!getOptionsPro("noNotify_upload") || rejected.length > 0) {
+        parent.alertaBoxPro("Sucess", "check-circle", html);
+      }
+    } else if (rejected.length > 0) {
+      parent.alertaBoxPro("Error", "exclamation-triangle", htmlRejected);
+    }
+  }
+  function initUploadArvore(TimeOut = 9e3) {
+    if (TimeOut <= 0) return;
+    if (document.querySelector("div#divArvore")) {
+      if (typeof arvoreDropzone !== "object" || !arvoreDropzone) {
+        loadUploadArvore();
+      }
+      return;
+    }
+    setTimeout(() => {
+      initUploadArvore(TimeOut - 100);
+      if (typeof verifyConfigValue !== "undefined" && verifyConfigValue("debugpage")) {
+        console.log("Reload initUploadArvore => " + TimeOut);
+      }
+    }, 500);
   }
 
   // src/features/arvore/body.js
@@ -424,19 +1445,6 @@
         "<style type='text/css' data-style='seipro-arvore'>" + clipboardSuccessStyleCss() + "</style>"
       );
     }
-  }
-  function dropzoneCancelInfo(e) {
-    if (typeof e !== "undefined") {
-      e.stopImmediatePropagation();
-    }
-    $(containerUpload).removeClass("dz-drag-hover");
-    return false;
-  }
-  function hasUploadFiles2(dataTransfer) {
-    return hasUploadFiles(dataTransfer);
-  }
-  function encodeUrlUploadArvore(response, params) {
-    return serializeUploadAttachment(response, params, infraFormatarTamanhoBytes);
   }
   function initToolbarDocs(TimeOut = 9e3) {
     if (TimeOut <= 0) {
@@ -1466,403 +2474,6 @@
     $(containerUpload).find(".loading-action-doc").remove();
     $("#anchor" + id_documento).before(html);
   }
-  function loadUploadArvore() {
-    if (typeof Dropzone !== "undefined") {
-      Dropzone.autoDiscover = false;
-    }
-    dropzoneDivInfoHover();
-    arvoreDropzone = new Dropzone(containerUpload, {
-      url: url_host,
-      createImageThumbnails: false,
-      autoProcessQueue: false,
-      parallelUploads: 1,
-      clickable: "#dz-infoupload",
-      previewsContainer: "#divArvore",
-      timeout: 9e5,
-      paramName: "filArquivo",
-      renameFile: function(file) {
-        return parent.removeAcentos(file.name).replace(/[&\/\\#+()$~%'":*?<>{}]/g, "_");
-      },
-      previewTemplate: '<div class="dz-preview dz-file-preview">   <div class="dz-details">       <span class="dz-error-mark" ' + ($(containerUpload).find('a[id*="anchorImgPASTA"]').length > 0 ? 'style="left:30px"' : "") + '><i data-dz-remove class="fas fa-trash vermelhoColor" style="margin: 5px 8px;cursor: pointer; font-size: 10pt;"></i></span>       <span class="dz-error-message" ' + ($(containerUpload).find('a[id*="anchorImgPASTA"]').length > 0 ? 'style="left:30px"' : "") + '><span data-dz-errormessage></span></span>       <span class="dz-progress">           <span class="dz-upload" data-dz-uploadprogress></span>       </span>' + ($(containerUpload).find('a[id*="anchorImgPASTA"]').length > 0 ? '<img style="margin-left: -3px;" src="' + pathArvore + 'empty.gif" align="absbottom">' : "") + '       <span class="anchorJoinPro" data-img="' + pathArvore + 'joinbottom.gif"><img src="' + pathArvore + 'join.gif" align="absbottom"></span>       <a id="anchorImgID" data-img="' + (parent.isNewSEI ? "svg/documento_pdf.svg" : "imagens/pdf.gif") + '" style="margin-left: -4px;" class="clipboard" title="Clique para copiar o n\xFAmero do protocolo para a \xE1rea de transfer\xEAncia">           <img class="dz-link-icon" src="/infra_css/' + (parent.isNewSEI ? "svg/documento_pdf.svg" : "imagens/pdf.gif") + '" align="absbottom" id="iconID">       </a>       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>       <a id="anchorID" target="' + ifrVisualizacao_ + '" class="dz-filename">           <span data-dz-name title="" id="spanID"></span>       </a>       <span class="dz-size" data-dz-size></span>       <span class="dz-remove" data-dz-remove><i class="fas fa-trash-alt vermelhoColor" style="cursor:pointer"></i></span>   </div></div>',
-      dictDefaultMessage: "Solte aqui os arquivos para enviar",
-      dictFallbackMessage: "Seu navegador n\xE3o suporta uploads de arrastar e soltar.",
-      dictFallbackText: "Por favor, use o formul\xE1rio abaixo para enviar seus arquivos como antigamente.",
-      dictFileTooBig: "O arquivo \xE9 muito grande ({{filesize}}MB). Tamanho m\xE1ximo permitido: {{maxFilesize}}MB.",
-      dictInvalidFileType: "Voc\xEA n\xE3o pode fazer upload de arquivos desse tipo.",
-      dictResponseError: "O servidor respondeu com o c\xF3digo {{statusCode}}.",
-      dictCancelUpload: "Cancelar envio",
-      dictCancelUploadConfirmation: "Tem certeza de que deseja cancelar este envio?",
-      dictRemoveFile: "Remover arquivo",
-      dictMaxFilesExceeded: "Voc\xEA s\xF3 pode fazer upload de {{maxFiles}} arquivos."
-    });
-    arvoreDropzone.on("addedfiles", function(files) {
-      dropzoneCancelInfo();
-      if (verifyConfigValue("sortbeforeupload") && arvoreDropzone.getQueuedFiles().length > 1) {
-        sortUploadArvore();
-      } else {
-        sendUploadArvore("upload", false);
-      }
-    }).on("addedfile", function(file) {
-      dropzoneNormalizeImg(file);
-    }).on("removedfile", function(file) {
-      dropzoneNormalizeImg(file);
-    }).on("success", function(result) {
-      var params = arvoreDropzone.options.params;
-      var response = result.xhr.response.split("#");
-      params.paramsForm.hdnAnexos = parent.parent.encodeUrlUploadArvore(response, params);
-      var postData = "";
-      for (var k in params.paramsForm) {
-        if (postData !== "") postData = postData + "&";
-        var valor = k == "hdnAnexos" ? params.paramsForm[k] : escapeComponent(params.paramsForm[k]);
-        valor = k == "txtNumero" ? parent.encodeURI_toHex(params.paramsForm[k].normalize("NFC")) : valor;
-        postData = postData + k + "=" + valor;
-      }
-      params.paramsForm = postData;
-      sendUploadArvore("save", params);
-    }).on("error", function(e) {
-      sendUploadArvore("upload");
-    }).on("dragleave", function(e) {
-      $(containerUpload).addClass("dz-drag-hover");
-    });
-    bindUploadArvoreNativeDragEvents({
-      root: document,
-      $: globalThis.$,
-      hasUploadFiles: hasUploadFiles2,
-      openModalDropzone,
-      cancelUpload: dropzoneCancelInfo,
-      getDropzone: () => arvoreDropzone
-    });
-    var extUpload = localStorageRestorePro("arvoreDropzone_acceptedFiles");
-    if (extUpload !== null) {
-      arvoreDropzone.options.acceptedFiles = extUpload;
-    }
-  }
-  function statusUploadArvore(this_) {
-    $(this_).find("i").attr("class", "fas fa-sync-alt fa-spin azulColor");
-    $(this_).removeAttr("onclick");
-  }
-  function sortUploadArvore() {
-    var htmlUpload = `<div id="divUploadDoc" class="panelDadosArvore" style="margin-top: 15px; padding: 1.2em 0 0 0 !important;">   <a style="cursor:pointer;" onclick="sendUploadArvore('upload'); statusUploadArvore(this)" class="newLink newLink_confirm">       <i class="fas fa-upload azulColor"></i>       <span style="font-size:1.2em;color: #fff;"> Enviar documentos</span>   </a></div>`;
-    $("#divUploadDoc").remove();
-    $("#divArvore").sortable({
-      items: ".dz-file-preview",
-      cursor: "grabbing",
-      handle: ".dz-filename",
-      forceHelperSize: true,
-      opacity: 0.5,
-      update: function(event, ui) {
-        var files = arvoreDropzone.getQueuedFiles();
-        var sorter = typeof SeiPro !== "undefined" && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.sortUploadFiles;
-        files = sorter ? sorter(files, function(file) {
-          return $(file.previewElement).index();
-        }) : files.sort(function(a, b) {
-          return $(a.previewElement).index() > $(b.previewElement).index() ? 1 : -1;
-        });
-        arvoreDropzone.removeAllFiles();
-        arvoreDropzone.handleFiles(files);
-      }
-    }).after(htmlUpload);
-  }
-  function sendUploadArvore(mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
-    var indexUpload = typeof _containerUpload.data("index") !== "undefined" ? parseInt(_containerUpload.data("index")) : 0;
-    var elem = _containerUpload.find(".dz-preview").eq(indexUpload);
-    elem = elem.length == 0 ? $(".dz-preview", parent.parent.document).eq(indexUpload) : elem;
-    var queuedFiles = typeof arrayDropzone.getQueuedFiles === "function" ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
-    if (mode == "upload" && queuedFiles.length > 0) {
-      var href = jmespath.search(getTreeLinksSession(), "[?name=='Incluir Documento'].url | [0]");
-      if (href !== null) {
-        $.ajax({ url: href }).done(function(html) {
-          let $html = $(html);
-          var urlDocExterno = $html.find("#tblSeries").find('a[href*="controlador.php?acao=documento_receber"]').attr("href");
-          var checkPost = $html.find("#tblSeries").find("a.ancoraOpcao").attr("href");
-          checkPost = typeof checkPost !== "undefined" && checkPost == "#" ? true : false;
-          if (typeof urlDocExterno !== "undefined") {
-            ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload);
-          } else {
-            if (checkPost) {
-              ajaxPostUploadArvore($html, queuedFiles, mode, result, arrayDropzone, _containerUpload);
-            } else {
-              elem.addClass("dz-error").find(".dz-error-message span").text("Link para upload n\xE3o encontrado");
-            }
-          }
-        });
-      } else {
-        elem.addClass("dz-error").find(".dz-error-message span").text("Link para incluir documento n\xE3o encontrado. Processo est\xE1 aberto na unidade?");
-      }
-    } else if (mode == "save" && result) {
-      var href = result.urlForm;
-      var param = result.paramsForm;
-      var onSaved = function(htmlResult, xhr2) {
-        var status = xhr2.responseURL.indexOf("acao=arvore_visualizar&acao_origem=documento_receber") !== -1 ? true : false;
-        if (status) {
-          sendUploadArvore("upload", false, arrayDropzone, _containerUpload);
-          getInfoArvoreLastDoc(htmlResult, xhr2.responseURL, arrayDropzone, _containerUpload);
-        } else {
-          elem.addClass("dz-error").find(".dz-error-message span").text("N\xE3o foi poss\xEDvel fazer o upload do arquivo");
-        }
-      };
-      var uploadIO = typeof SeiPro !== "undefined" && SeiPro.features && SeiPro.features.arvoreUploadIO;
-      if (uploadIO && uploadIO.postSavedUpload) {
-        uploadIO.postSavedUpload({ ajax: $.ajax, xhrFactory: function() {
-          return new XMLHttpRequest();
-        }, url: href, data: param, onSuccess: onSaved });
-      } else {
-        var xhr = new XMLHttpRequest();
-        $.ajax({
-          method: "POST",
-          data: param,
-          url: href,
-          contentType: "application/x-www-form-urlencoded; charset=ISO-8859-1",
-          xhr: function() {
-            return xhr;
-          }
-        }).done(function(htmlResult) {
-          onSaved(htmlResult, xhr);
-        });
-      }
-    }
-  }
-  function ajaxPostUploadArvore($html, queuedFiles, mode, result = false, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
-    var urlForm = $html.find("#frmDocumentoEscolherTipo").attr("action");
-    var param = {};
-    $html.find("#frmDocumentoEscolherTipo").find("input[type=hidden]").map(function() {
-      if ($(this).attr("name") && $(this).attr("id").indexOf("hdn") !== -1) {
-        param[$(this).attr("name")] = $(this).val();
-      }
-    });
-    param.hdnIdSerie = -1;
-    var uploadIO = typeof SeiPro !== "undefined" && SeiPro.features && SeiPro.features.arvoreUploadIO;
-    var onSuccess = function(htmlAnexo) {
-      submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
-    };
-    if (uploadIO && uploadIO.postUploadForm) {
-      uploadIO.postUploadForm({ ajax: $.ajax, url: urlForm, data: param, onSuccess });
-    } else {
-      $.ajax({ method: "POST", data: param, url: urlForm }).done(onSuccess);
-    }
-  }
-  function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
-    var uploadIO = typeof SeiPro !== "undefined" && SeiPro.features && SeiPro.features.arvoreUploadIO;
-    var onSuccess = function(htmlAnexo) {
-      submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
-    };
-    if (uploadIO && uploadIO.fetchUploadPage) {
-      uploadIO.fetchUploadPage({ ajax: $.ajax, url: urlDocExterno, onSuccess });
-    } else {
-      $.ajax({ url: urlDocExterno }).done(onSuccess);
-    }
-  }
-  function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
-    var $htmlAnexo = $(htmlAnexo);
-    var form = $htmlAnexo.find("#frmDocumentoCadastro");
-    var hrefForm = form.attr("action");
-    var urlUpload = "";
-    var extUpload = [];
-    var userUnidade = "";
-    $.each(htmlAnexo.split("\n"), function(index, value) {
-      if (value.indexOf("objUpload = new infraUpload") !== -1) {
-        urlUpload = value.split("'")[3];
-      }
-      if (value.indexOf("arrExt") !== -1) {
-        if (typeof value.split('"')[1] !== "undefined") {
-          extUpload.push("." + value.split('"')[1]);
-        }
-      }
-      if (value.indexOf("objTabelaAnexos.adicionar") !== -1) {
-        var regex = /\s*objTabelaAnexos\.adicionar\(\[arr\['nome_upload'\],arr\['nome'\],arr\['data_hora'\],arr\['tamanho'],infraFormatarTamanhoBytes\(arr\['tamanho'\]\),'(.+?)' ,'(.+?)']\);/gm;
-        var paramV = regex.exec(value);
-        if (paramV === null) return null;
-        userUnidade = { user: paramV[1], unidade: paramV[2] };
-      }
-    });
-    var extractor = typeof SeiPro !== "undefined" && SeiPro.features && SeiPro.features.arvoreUpload && SeiPro.features.arvoreUpload.extractUploadExtensions;
-    extUpload = extractor ? extractor(htmlAnexo.split("\n")) : extUpload;
-    var param = {};
-    form.find("input[type=hidden]").each(function() {
-      if ($(this).attr("name") && $(this).attr("id").indexOf("hdn") !== -1) {
-        param[$(this).attr("name")] = $(this).val();
-      }
-    });
-    form.find("input[type=text]").each(function() {
-      if ($(this).attr("id") && $(this).attr("id").indexOf("txt") !== -1) {
-        param[$(this).attr("id")] = $(this).val();
-      }
-    });
-    form.find("select").each(function() {
-      if ($(this).attr("id") && $(this).attr("id").indexOf("sel") !== -1) {
-        param[$(this).attr("id")] = $(this).val();
-      }
-    });
-    form.find("input[type=radio]").each(function() {
-      if ($(this).attr("name") && $(this).attr("name").indexOf("rdo") !== -1) {
-        param[$(this).attr("name")] = $(this).val();
-      }
-    });
-    if (extUpload.length > 0) {
-      arrayDropzone.options.acceptedFiles = extUpload.join(",");
-      parent.parent.localStorageStorePro("arvoreDropzone_acceptedFiles", extUpload.join(","));
-    }
-    var nexFileQueued = queuedFiles[0];
-    var txtDataElaboracao = typeof nexFileQueued !== "undefined" && typeof nexFileQueued.lastModifiedDate !== "undefined" ? moment(nexFileQueued.lastModifiedDate).format("DD/MM/YYYY") : moment().format("DD/MM/YYYY");
-    var nameFile = nexFileQueued.name;
-    var nameFile_reg = parent.parent.removeAcentos(nameFile.trim().toLowerCase().replace(/_|:/g, " "));
-    var valueSerie = false;
-    var tipoDoc = [];
-    form.find("#selSerie option").each(function(v) {
-      if ($(this).text().trim() != "") {
-        var nameOption = $(this).text().trim().toLowerCase().replace(/_|:/g, " ");
-        var nameOptionReg = escapeRegExp(parent.parent.removeAcentos(nameOption));
-        var reg2 = new RegExp("^\\b" + nameOptionReg, "igm");
-        tipoDoc.push({ name: nameOption, value: $(this).val() });
-        if (reg2.test(nameFile_reg)) {
-          valueSerie = $(this).val();
-          return false;
-        }
-      }
-    });
-    var selSerieDefault = getConfigValue("newdocname") ? $.map(tipoDoc, function(value) {
-      if (value.name == getConfigValue("newdocname").trim().toLowerCase().replace(/_|:/g, " ")) {
-        return value;
-      }
-    })[0] : $.map(tipoDoc, function(value) {
-      if (value.name == "anexo") {
-        return value;
-      }
-    })[0];
-    selSerieDefault = typeof selSerieDefault !== "undefined" ? selSerieDefault : $.map(tipoDoc, function(value) {
-      if (value.name.indexOf("anexo") !== -1) {
-        return value;
-      }
-    })[0];
-    selSerieDefault = typeof selSerieDefault === "undefined" ? tipoDoc[0] : selSerieDefault;
-    var selSerie = valueSerie ? valueSerie : selSerieDefault.value;
-    var selSerieSelected = $.map(tipoDoc, function(value) {
-      if (value.value == valueSerie) {
-        return value;
-      }
-    })[0];
-    selSerieSelected = typeof selSerieSelected !== "undefined" ? selSerieSelected : selSerieDefault;
-    var nameDoc = nameFile.normalize("NFC");
-    var reg = new RegExp("^\\b" + selSerieSelected.name, "igm");
-    if (reg.test(nameDoc)) {
-      nameDoc = nameDoc.replace(reg, "").trim();
-    }
-    nameDoc = nameDoc.substring(0, nameDoc.lastIndexOf("."));
-    nameDoc = nameDoc.length > 50 ? nameDoc.replace(/^(.{50}[^\s]*).*/, "$1") : nameDoc;
-    nameDoc = nameDoc.length > 50 ? nameDoc.substring(0, 49) : nameDoc;
-    var valueSigilo = parent.parent.getConfigValue("newdocsigilo");
-    valueSigilo = valueSigilo != "" && valueSigilo.indexOf("|") !== -1 ? valueSigilo.split("|") : false;
-    var valueNivelAcesso = checkConfigValue("newdocnivel") ? "0" : valueSigilo ? valueSigilo[1] : "0";
-    param.selSerie = selSerie;
-    param.hdnIdSerie = selSerie;
-    param.rdoNivelAcesso = form.find('input[name="rdoNivelAcesso"]:checked').length > 0 ? form.find('input[name="rdoNivelAcesso"]:checked').val() : valueNivelAcesso;
-    param.hdnStaNivelAcessoLocal = param.rdoNivelAcesso;
-    param.rdoFormato = parent.parent.checkConfigValue("newdocformat") && parent.parent.getConfigValue("newdocformat") && parent.parent.getConfigValue("newdocformat").indexOf("digitalizado") !== -1 ? "D" : "N";
-    param.hdnFlagDocumentoCadastro = "2";
-    param.hdnIdHipoteseLegal = valueSigilo ? valueSigilo[0] : param.selHipoteseLegal;
-    param.selHipoteseLegal = param.hdnIdHipoteseLegal;
-    param.selTipoConferencia = parent.parent.checkConfigValue("newdocformat") && parent.parent.getConfigValue("newdocformat") && parent.parent.getConfigValue("newdocformat").indexOf("digitalizado") !== -1 && parent.parent.getConfigValue("newdocformat").indexOf("_") !== -1 ? parent.parent.getConfigValue("newdocformat").split("_")[1] : "";
-    param.hdnIdTipoConferencia = param.selTipoConferencia;
-    param.txaObservacoes = "";
-    param.txtDataElaboracao = txtDataElaboracao;
-    param.txtNumero = escapeComponent(nameDoc);
-    arrayDropzone.options.url = urlUpload;
-    arrayDropzone.options.params = {
-      urlForm: hrefForm,
-      paramsForm: param,
-      userUnidade
-    };
-    arrayDropzone.processQueue();
-  }
-  function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
-    var indexUpload = typeof _containerUpload.data("index") !== "undefined" ? parseInt(_containerUpload.data("index")) : 0;
-    var param = getParamsUrlPro(urlParent);
-    var queuedFiles = typeof arrayDropzone.getQueuedFiles === "function" ? arrayDropzone.getQueuedFiles() : parent.parent.arvoreDropzone.getQueuedFiles();
-    $.each(dataResult.split("\n"), function(index, value) {
-      if (value.indexOf("atualizarArvore('controlador.php?acao=procedimento_visualizar&acao_origem=arvore_visualizar&id_procedimento=" + param.id_procedimento + "&id_documento=" + param.id_documento) !== -1 || value.indexOf("var linkMontarArvoreProcessoDocumento") !== -1) {
-        urlArvore = value.split("'")[1];
-        $.ajax({ url: urlArvore }).done(function(htmlArvore) {
-          var arrayArvore = [];
-          $.each(htmlArvore.split("\n"), function(index2, value2) {
-            if (value2.indexOf('new infraArvoreNo("DOCUMENTO","' + param.id_documento + '","' + param.id_procedimento + '"') !== -1) {
-              arrayArvore = value2.split('"');
-              return false;
-            }
-          });
-          var elem = _containerUpload.find(".dz-preview").eq(indexUpload);
-          elem.find(`a[target="${ifrVisualizacao_}"]`).attr("href", arrayArvore[7]).attr("id", "anchor" + param.id_documento).find("span").text(arrayArvore[11]).attr("span" + param.id_documento);
-          elem.find("a#anchorImgID").attr("id", "anchorImg" + param.id_documento).find("img").attr("src", arrayArvore[15]).attr("id", "icon" + param.id_documento);
-          setTimeout(function() {
-            parent.parent.scrollToElementArvore(param.id_documento);
-          }, 500);
-          console.log(param.id_documento, $("#anchor" + param.id_documento).length);
-          _containerUpload.data("index", indexUpload + 1);
-          if (queuedFiles.length == 0) {
-            dropzoneAlertBoxInfo();
-            setTimeout(function() {
-              window.location.reload();
-            }, 500);
-            if (typeof parent.parent.nextUploadFilesInProcess === "function" && parent.parent.arvoreDropzone) parent.parent.nextUploadFilesInProcess();
-          }
-        });
-        return false;
-      }
-    });
-  }
-  function dropzoneAlertBoxInfo() {
-    if (typeof arvoreDropzone.getAcceptedFiles === "function") {
-      var accepted = arvoreDropzone.getAcceptedFiles();
-      var rejected = arvoreDropzone.getRejectedFiles();
-      var html = "";
-      var htmlRejected = rejected.length > 0 ? '<div style="margin: 10px 0;"><i class="fas fa-exclamation-triangle vermelhoColor" style="margin-right: 5px;"></i>' + rejected.length + " " + (rejected.length == 1 ? "arquivo rejeitado" : "arquivos rejeitados") + " pelo SEI:" + $.map(arvoreDropzone.getRejectedFiles(), function(value) {
-        return '<div style="font-size: 9pt; background: #eaeaea; border-radius: 5px; padding: 5px; margin: 8px 5px;"><i class="fas fa-file cinzaColor" style="margin-right: 5px;"></i>' + value.name + '<span style="background: #fff0f0;display: block;margin-top: 5px;padding: 3px 5px;border-radius: 5px;color: #f54040;">' + $(value.previewElement.children).find(".dz-error-message span").text() + "</span></div>";
-      }).join("") + "</div>" : "";
-      var htmlNotify = '<div>   <span id="no_notify" class="no_notifyPro" data-notify="upload" style="font-size: 8pt; margin: 10px 0; display: block;">       <input onchange="noNotifyPro(this)" type="checkbox" id="no_notifyPro_input">       <label class="txt_cinza" id="no_notifyPro_label" for="no_notifyPro_input">           Ok, n\xE3o avisar novamente.       </label>   </span></div>';
-      if (accepted.length > 0) {
-        html = accepted.length + " " + (accepted.length == 1 ? "arquivo enviado" : "arquivos enviados") + " com sucesso!";
-        html = rejected.length > 0 ? html + htmlRejected : html + htmlNotify;
-        if (!getOptionsPro("noNotify_upload") || rejected.length > 0) {
-          parent.alertaBoxPro("Sucess", "check-circle", html);
-        }
-      } else {
-        parent.alertaBoxPro("Error", "exclamation-triangle", html);
-      }
-    }
-  }
-  function dropzoneDivInfoHover() {
-    var html = dropzoneInfoHoverHtml();
-    if ($(containerUpload).find(".dz-infoupload").length == 0) {
-      $(containerUpload).prepend(html).data("index", 0);
-      $(containerUpload).find('[data-seipro-arvore-action="dropzone-cancel"]').on("click", function(event) {
-        dropzoneCancelInfo(event);
-        return false;
-      });
-    }
-  }
-  function dropzoneNormalizeImg(file) {
-    var urlIcon = resolveDropzoneIcon(file && file.type, parent.isNewSEI);
-    $("#divArvore").find(".dz-preview").last().find(".dz-link-icon").attr("src", urlIcon).closest("a").attr("data-img", urlIcon);
-    $("#divArvore").find('img[src*="joinbottom.gif"]').last().attr("src", pathArvore + "join.gif");
-    $("#divArvore").find('img[src*="join.gif"]').last().attr("src", pathArvore + "joinbottom.gif");
-  }
-  function openModalDropzone() {
-    $(containerUpload).addClass("dz-drag-hover");
-  }
-  function initUploadArvore(TimeOut = 9e3) {
-    if (TimeOut <= 0) {
-      return;
-    }
-    if (typeof Dropzone !== "undefined" && typeof Dropzone === "function" && $("div#divArvore").length > 0) {
-      if (typeof arvoreDropzone !== "object") {
-        loadUploadArvore();
-      }
-    } else {
-      setTimeout(function() {
-        initUploadArvore(TimeOut - 100);
-        if (typeof verifyConfigValue !== "undefined" && verifyConfigValue("debugpage")) console.log("Reload initUploadArvore => " + TimeOut);
-      }, 500);
-    }
-  }
   function sticknoteUpdate(this_, value, type, priority = false, mode = "insert") {
     var _this = $(this_);
     var _parent = _this.closest(".stickDadosArvore");
@@ -2271,8 +2882,8 @@
           var result = [];
           conteudo.find(isNewSEI ? "table.pesquisaResultado tr" : "table.resultado").each(function(i) {
             var tr = isNewSEI ? $(this) : $(this).find("tr");
-            var urlArvore2 = isNewSEI ? tr.find("a.protocoloNormal").attr("href") : tr.eq(0).find("a.arvore").attr("href");
-            var paramsUrl = typeof urlArvore2 !== "undefined" ? getParamsUrlPro(url_host.replace("controlador.php", "") + urlArvore2) : false;
+            var urlArvore = isNewSEI ? tr.find("a.protocoloNormal").attr("href") : tr.eq(0).find("a.arvore").attr("href");
+            var paramsUrl = typeof urlArvore !== "undefined" ? getParamsUrlPro(url_host.replace("controlador.php", "") + urlArvore) : false;
             var urlTable = paramsUrl ? url_host + "?acao=procedimento_trabalhar&id_procedimento=" + paramsUrl.id_procedimento + (typeof paramsUrl.id_documento !== "undefined" ? "&id_documento=" + paramsUrl.id_documento : "") : false;
             if (isNewSEI && i % 3 == 0) {
               var nomeProcesso = urlTable ? '<a href="' + urlTable + '" target="_blank">' + tr.find("td.pesquisaTituloEsquerda span").text().replace("N\xBA", "").trim() + "</a>" : tr.find("td.pesquisaTituloEsquerda span").text().replace("N\xBA", "").trim();
@@ -2702,7 +3313,7 @@
   // src/features/arvore/legacy-api.js
   function installArvoreLegacyApi() {
     installArvoreState();
-    [domain_exports, io_exports].forEach((mod) => {
+    [domain_exports, io_exports, upload_exports].forEach((mod) => {
       Object.keys(mod).forEach((name) => {
         if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
       });
@@ -2711,6 +3322,7 @@
       if (typeof body_exports[name] === "function") aliasGlobal(name, body_exports[name]);
     });
     aliasGlobal("bindArvoreToolbarProcess", bindArvoreToolbarProcess);
+    aliasGlobal("bindUploadConfirmActions", bindUploadConfirmActions);
     aliasGlobal("bindUploadArvoreNativeDragEvents", () => {
       if (globalThis.uploadArvoreDragBound) return;
       globalThis.uploadArvoreDragBound = true;
@@ -2731,7 +3343,14 @@
   namespace.features = namespace.features || {};
   namespace.features.arvoreMenus = { resolveMenuCatalogs };
   namespace.features.arvoreMenuIO = { readArvoreMenuConfig };
-  namespace.features.arvoreUploadIO = { fetchUploadPage, postUploadForm, postSavedUpload };
+  namespace.features.arvoreUploadIO = {
+    fetchUploadPage,
+    postUploadForm,
+    postSavedUpload,
+    fetchText,
+    postFormData,
+    parseUploadPageHtml
+  };
   namespace.features.arvoreUpload = {
     hasUploadFiles,
     serializeUploadAttachment,
@@ -2740,9 +3359,17 @@
     getLinksInText,
     resolveDropzoneIcon,
     formatAnotacaoToParagraphs,
-    buildArvoreInitSignature
+    buildArvoreInitSignature,
+    parseInfraUploadMeta,
+    resolveUploadSerie,
+    buildUploadDocumentTitle,
+    ...upload_exports
   };
-  namespace.features.arvoreUploadView = { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents };
+  namespace.features.arvoreUploadView = {
+    bindArvoreToolbarProcess,
+    bindUploadArvoreNativeDragEvents,
+    bindUploadConfirmActions
+  };
   installArvoreLegacyApi();
   ready(function() {
     initSeiProArvore();

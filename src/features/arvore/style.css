@@ -1,8 +1,8 @@
 /**
  * Árvore — feature-owned CSS (prefix .seipro-arvore-*).
- * Shared Dropzone (dz-*) and SEI panel hooks stay in dist/css/sei-pro.css /
- * dropzone.min.css. This sheet covers styles formerly injected by initCSSArvore
- * plus new prefixed chrome introduced during the migration.
+ * Queue preview still uses legacy dz-* class names as visual hooks so
+ * sei-pro.css keeps styling the upload list; structural hooks are
+ * data-seipro-* / .seipro-arvore-*. Dropzone.js was removed.
  */
 
 /* Clipboard toast tweak previously injected via <style data-style="seipro"> */

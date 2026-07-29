@@ -1,26 +1,40 @@
-// Big-bang do núcleo (isolated-first): todos os arquivos/libs locais da extensão
-// são carregados EAGER como content scripts isolados pelo manifest. Este shim
-// neutraliza os $.getScript(URL_SPRO/chrome-extension://...) espalhados pelo
-// legado — como o alvo já está presente no mundo isolado, vira um no-op que
-// resolve imediatamente (mantendo .done()/callback). $.getScript de URLs remotas
-// (não-locais) segue o comportamento original.
+// Shim de $.getScript para o mundo isolado.
+//
+// - URL remota → getScript original
+// - chrome-extension:// de lib LAZY (Chart, Gantt, Mammoth, Tesseract, jschardet)
+//   → carga real (WAR; não está nos content_scripts)
+// - chrome-extension:// de tudo mais (já eager no manifest) → no-op
+//   (re-executar sei-functions-pro etc. via ajax+eval quebra globais como frmEditor)
 //
 // Carregado pelo manifest logo após o jQuery, antes dos arquivos legados.
 (function () {
     if (typeof window.jQuery === 'undefined' || !window.jQuery.getScript) return;
     var $ = window.jQuery;
-    if ($.__seiProGetScriptNoop) return;
+    if ($.__seiProGetScriptIsolated) return;
     var original = $.getScript;
+
+    // Libs removidas do eager load — precisam de getScript real a partir da WAR.
+    var LAZY_RE = /\/js\/lib\/(frappe-gantt|chart\.min|mammoth\.browser\.min|tesseract\.min|jschardet\.min)(\.js)?(\?|$)/i;
+
+    function isExtensionUrl(u) {
+        return typeof u === 'string' && u.indexOf('chrome-extension://') === 0;
+    }
+
+    function isLazyExtensionLib(u) {
+        return isExtensionUrl(u) && LAZY_RE.test(u);
+    }
+
     $.getScript = function (url, callback) {
         var u = typeof url === 'string' ? url : (url && url.url) || '';
-        if (u.indexOf('chrome-extension://') !== 0) {
+        if (!isExtensionUrl(u) || isLazyExtensionLib(u)) {
             return original.apply($, arguments);
         }
-        // Arquivo local já carregado eager via manifest → resolve já.
+        // Eager content script já presente no isolated world.
         if (typeof callback === 'function') {
             try { callback(undefined, 'success'); } catch (e) { /* segue */ }
         }
         return $.Deferred().resolve().promise();
     };
     $.__seiProGetScriptNoop = true;
+    $.__seiProGetScriptIsolated = true;
 })();

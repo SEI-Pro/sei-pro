@@ -18,6 +18,7 @@ describe('migration: arvore full ESM facade', () => {
     expect(bridge).toContain("import * as io from './io.js';");
     expect(bridge).toContain("import * as view from './view.js';");
     expect(bridge).toContain("import * as body from './body.js';");
+    expect(bridge).toContain("import * as upload from './upload.js';");
     expect(bridge).toContain("aliasGlobal('bindArvoreToolbarProcess', view.bindArvoreToolbarProcess);");
     expect(bridge).toContain("aliasGlobal('bindUploadArvoreNativeDragEvents'");
   });
@@ -25,6 +26,7 @@ describe('migration: arvore full ESM facade', () => {
   it('não mantém o monolito global sei-pro-arvore.js em src/', () => {
     expect(existsSync(join(rootDir, 'src/features/arvore/sei-pro-arvore.js'))).toBe(false);
     expect(existsSync(join(rootDir, 'src/features/arvore/body.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/upload.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/state.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/templates.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/style.css'))).toBe(true);
@@ -59,11 +61,15 @@ describe('migration: arvore full ESM facade', () => {
     }
 
     const body = read('src/features/arvore/body.js');
+    const upload = read('src/features/arvore/upload.js');
     expect(body).toContain('export function initSeiProArvore');
     expect(body).toContain('export function actionToolbarPro');
-    expect(body).toContain('export function loadUploadArvore');
+    expect(body).toContain("from './upload.js'");
+    expect(upload).toContain('export function loadUploadArvore');
+    expect(upload).toContain('export function initUploadArvore');
+    expect(upload).toContain('createFileQueue');
+    expect(upload).toContain('bindUploadArvoreNativeDragEvents');
     expect(body).toContain('export function sticknoteUpdate');
-    expect(body).toContain('bindUploadArvoreNativeDragEvents');
     expect(body).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
   });
 });

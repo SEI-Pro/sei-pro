@@ -16,29 +16,34 @@ describe('migration: arvore CSS', () => {
 
   it('preserva os hooks externos e compartilhados necessários ao upload e à árvore', () => {
     const body = read('src/features/arvore/body.js');
+    const upload = read('src/features/arvore/upload.js');
+    const view = read('src/features/arvore/view.js');
+    const templates = read('src/features/arvore/templates.js');
     const sharedLegacy = read('src/features/sei-functions/body.js');
     const arvoreInfo = read('src/features/arvore-info/index.js');
 
-    expect(body).toContain("previewsContainer: '#divArvore'");
-    expect(body).toContain("items: '.dz-file-preview'");
-    expect(body).toContain("handle: '.dz-filename'");
+    expect(upload).toContain('createFileQueue');
+    expect(upload).toContain('previewsContainer');
+    expect(view).toContain("items: '.dz-file-preview, .seipro-arvore-file-preview'");
+    expect(view).toContain("handle: '.dz-filename'");
     expect(body).toContain('class="action-doc action-');
     expect(body).toContain('loading-action-doc');
     expect(body).toContain('class="panelDadosArvore');
     expect(body).toContain('class="stickDadosArvore');
-    expect(body).toContain('class="anchorJoinPro"');
+    expect(templates).toContain('anchorJoinPro');
     expect(sharedLegacy).toContain('.action-doc[data-id=');
     expect(sharedLegacy).toContain("closest('.no_notifyPro')");
     expect(arvoreInfo).toContain("querySelector('.panelDadosArvore')");
   });
 
-  it('carrega bundle e CSS da árvore no manifest; Dropzone fica lazy (WAR + init_arvore)', () => {
+  it('carrega bundle e CSS da árvore no manifest; upload usa file-queue (sem Dropzone)', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const entries = manifest.content_scripts.filter(({ js = [] }) =>
       js.includes('js/sei-pro-arvore.js')
     );
     const war = (manifest.web_accessible_resources || []).flatMap((r) => r.resources || []);
     const initArvore = read('src/bootstrap/init_arvore.js');
+    const upload = read('src/features/arvore/upload.js');
 
     expect(entries.length).toBeGreaterThan(0);
     for (const entry of entries) {
@@ -47,9 +52,8 @@ describe('migration: arvore CSS', () => {
       expect(entry.css).not.toContain('css/dropzone.min.css');
       expect(entry.css).toContain('css/arvore.css');
     }
-    expect(war).toContain('js/lib/dropzone.min.js');
-    expect(war).toContain('css/dropzone.min.css');
-    expect(initArvore).toContain("js/lib/dropzone.min.js");
-    expect(initArvore).toContain('css/dropzone.min.css');
+    expect(war).not.toContain('js/lib/dropzone.min.js');
+    expect(initArvore).not.toContain('dropzone.min.js');
+    expect(upload).toContain('createFileQueue');
   });
 });
