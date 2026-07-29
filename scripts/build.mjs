@@ -66,6 +66,8 @@ const bundles = [
     { entry: 'src/features/editor/index.js', out: 'dist/js/editor-domain.bundle.js' },
     { entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' },
     { entry: 'src/features/lista-agrupamento/index.js', out: 'dist/js/lista-agrupamento.bundle.js' },
+    // Projetos (Gantt): domain/store/view; saida mantem nome legado js/sei-pro-projetos.js
+    { entry: 'src/features/projetos/index.js', out: 'dist/js/sei-pro-projetos.js' },
     // Options page (extension settings UI) — full vanilla bundle.
     { entry: 'src/options/index.js', out: 'dist/js/options.bundle.js' },
     // Página de opções — fatia de "Processos Monitorados" (dependência entre os
@@ -96,7 +98,7 @@ const legacyFiles = [
     'src/features/editor/sei-pro-editor.js',
     'src/features/ai/sei-pro-ai.js',
     'src/features/todas-paginas/sei-pro-all.js',
-    'src/features/projetos/sei-pro-projetos.js',
+    // projetos migrado para bundle ESM (sei-pro-projetos.js) — nao copiar mais o legado.
     'src/features/prescricoes/sei-pro-prescricoes.js',
     'src/features/visualizacao/sei-pro-visualizacao.js',
     'src/features/visualizacao/sei-pro-visualizacao-chosen.js',
@@ -142,7 +144,8 @@ const featureCss = [
     { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' },
     { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' },
     { src: 'src/features/sei-functions/style.css', out: 'dist/css/sei-functions.css' },
-    { src: 'src/features/atividades/style.css', out: 'dist/css/atividades.css' }
+    { src: 'src/features/atividades/style.css', out: 'dist/css/atividades.css' },
+    { src: 'src/features/projetos/projetos.css', out: 'dist/css/projetos.css' }
 ];
 
 function copyFeatureCss() {
@@ -173,6 +176,31 @@ function syncManifest() {
     );
 }
 
+// Third-party libs live under vendor/ (source of truth) and are copied into
+// dist/js/lib + dist/css on every build. Do not edit dist/js/lib by hand.
+const vendorLibs = [
+    {
+        src: 'vendor/frappe-gantt/frappe-gantt.umd.js',
+        out: 'dist/js/lib/frappe-gantt.js'
+    },
+    {
+        src: 'vendor/frappe-gantt/frappe-gantt.es.js',
+        out: 'dist/js/lib/frappe-gantt.esm.js'
+    },
+    {
+        src: 'vendor/frappe-gantt/frappe-gantt.css',
+        out: 'dist/css/frappe-gantt.css'
+    }
+];
+
+function copyVendorLibs() {
+    mkdirSync(path.join(root, 'dist/js/lib'), { recursive: true });
+    mkdirSync(path.join(root, 'dist/css'), { recursive: true });
+    for (const { src, out } of vendorLibs) {
+        copyFileSync(path.join(root, src), path.join(root, out));
+    }
+}
+
 const outNames = bundles.map((b) => path.basename(b.out)).join(' + ');
 
 if (watch) {
@@ -184,6 +212,7 @@ if (watch) {
     copyLegacy();
     copyFeatureCss();
     copyHtml();
+    copyVendorLibs();
     syncManifest();
     console.log('build: watching src/ — ' + outNames + ' (+ ' + legacyFiles.length + ' legacy copies)');
 } else {
@@ -191,6 +220,7 @@ if (watch) {
     copyLegacy();
     copyFeatureCss();
     copyHtml();
+    copyVendorLibs();
     syncManifest();
-    console.log('build: ' + outNames + ' + ' + legacyFiles.length + ' legacy + manifest -> dist/');
+    console.log('build: ' + outNames + ' + ' + legacyFiles.length + ' legacy + vendor + manifest -> dist/');
 }

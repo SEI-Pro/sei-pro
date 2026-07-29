@@ -1,5 +1,18 @@
 # Changelog — SEI Pro PRF
 
+## [2.2.0] - 2026-07-29
+
+O **Gerenciar Projetos** (Gantt na página inicial) volta a funcionar sem Google Sheets. Os projetos ficam salvos na própria extensão; se você já usa a API de Atividades, a sincronização remota continua disponível.
+
+### Adicionado
+
+- Painel de projetos local-first, com dados de demonstração para começar na hora
+- Portfolio, visão por responsável, filtros/relatórios e exportação/importação em JSON
+
+### Alterado
+
+- Removida a dependência do Google Sheets / OAuth para Projetos (fluxo antigo descontinuado)
+
 ## [2.1.0] - 2026-07-29
 
 Mais um passo na modernização interna iniciada na 2.0: o comportamento das funcionalidades permanece o mesmo, com a extensão mais leve e estável no dia a dia.

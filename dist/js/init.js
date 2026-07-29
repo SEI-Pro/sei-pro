@@ -117,18 +117,12 @@ function showAutoReportNoticePro() {
 }
 function loadScriptDataBasePro(dataValues) { 
     var dataValues = localStorageRestorePro('configBasePro');
-    var dataValues_ProjetosSheets = jmespath.search(dataValues, "[?baseTipo=='projetos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_FormulariosSheets = jmespath.search(dataValues, "[?baseTipo=='formularios'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_ProcessosSheets = jmespath.search(dataValues, "[?baseTipo=='processos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_OpenAI = jmespath.search(dataValues, "[?baseTipo=='openai'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
     var dataValues_Gemini = jmespath.search(dataValues, "[?baseTipo=='gemini'] | [?conexaoTipo=='api'] | [?KEY_USER!='']");
     var dataValues_AtividadesAPI = jmespath.search(dataValues, "[?baseTipo=='atividades'] | [?conexaoTipo=='api'||conexaoTipo=='googleapi']");
-    // console.log(dataValues, dataValues_ProjetosSheets);
-    if (dataValues_ProjetosSheets.length > 0 && checkConfigValue('gerenciarprojetos')) {
-        // loadDataBaseSheetsProjetosPro(dataValues_ProjetosSheets);
-    } else {
-        localStorageRemovePro('loadEtapasSheet');
-    }
+    // Projetos Sheets path removed — feature is local-first (see src/features/projetos/).
     if (dataValues_FormulariosSheets.length > 0 && checkConfigValue('gerenciarformularios')) {
         loadDataBaseSheetsFormulariosPro(dataValues_FormulariosSheets);
     } else {
@@ -187,25 +181,7 @@ function loadDataBaseApiAtividadesPro(dataValues) {
         removeLocalStorageAtividades();
     }
 }
-/* function loadDataBaseSheetsProjetosPro(dataValues) { 
-            // dataValues = ( jmespath.search(dataValues, "[?baseTipo=='projetos'] | length(@)") > 0 ) ? jmespath.search(dataValues, "[?baseTipo=='projetos']") : dataValues;
-    var dataPerfil = [];
-    var perfilSelected = (getOptionsPro('configBaseSelectedPro')) ? getOptionsPro('configBaseSelectedPro') : 0;
-    for (var i = 0; i < dataValues.length; i++) {
-        if ( dataValues[i].baseName == perfilSelected || ( perfilSelected == 0 && i == 0 ) ) { dataPerfil = dataValues[i]; }
-    }
-
-    if (    typeof dataPerfil.spreadsheetId !== 'undefined' &&
-            typeof dataPerfil.CLIENT_ID !== 'undefined' &&
-            typeof dataPerfil.API_KEY !== 'undefined' ) {
-            setSessionGoogle(dataPerfil.baseTipo, {CLIENT_ID_PRO: dataPerfil.CLIENT_ID, API_KEY_PRO: dataPerfil.API_KEY, spreadsheetIdProjetos_Pro: dataPerfil.spreadsheetId});
-            $.getScript(getUrlExtension("js/sei-gantt.js"));
-    } else {
-        console.log('loadDataBaseSheetsProjetosPro','ERROR!!!');
-        localStorage.removeItem('loadEtapasSheet');
-        removeOptionsPro('configBaseSelectedPro');
-    }
-}
+/* Sheets loaders for formularios/processos (projetos Sheets path removed).
 function loadDataBaseSheetsFormulariosPro(dataValues) { 
     var dataPerfil = [];
     var perfilSelected = (getOptionsPro('configBaseSelectedFormPro')) ? getOptionsPro('configBaseSelectedFormPro') : 0;
@@ -254,7 +230,6 @@ function loadDataBaseProStorage(items) {
             var dataValues = JSON.parse(items.dataValues);
             loadScriptDataBasePro(dataValues);
         } else {
-            localStorageRemovePro('loadEtapasSheet');
             removeLocalStorageAtividades();
         }
     }
@@ -298,7 +273,7 @@ function loadScriptPro() {
             loadLocalConfigScriptPro().finally(function() {
                 if (typeof loadAtividadesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
             });
-            if (typeof loadProjetosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-projetos.js"));
+            // Projetos is a content_script bundle (js/sei-pro-projetos.js) — no getScript.
             if (typeof loadPrescricoesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-prescricoes.js"));
             // Feature-heavy libs: lazy (not eager in content_scripts). CSS via loadStylePro.
             if (typeof Gantt === 'undefined') {

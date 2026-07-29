@@ -34,12 +34,13 @@ Registre data, versão do SEI e navegador.
 - [ ] Favoritos: marcar/desmarcar persiste após refresh.
 - [ ] Prazos / contadores de data exibidos corretamente.
 - [ ] Kanban abre e arrasta cartões.
-- [ ] Integração Google Sheets (se configurada) ainda autentica.
+- [x] **Projetos (Gantt)** — com `gerenciarprojetos` ligado: painel aparece na home; demo seed carrega; criar/editar etapa; arrastar barra confirma reprogramação; portfolio / filtro / export JSON abrem sem erro. Console sem referência a Google Sheets. _(2026-07-29 · v2.2.0)_
+- [ ] Integração Google Sheets (se configurada para formularios/sync) ainda autentica.
 - [ ] Notificação de novos processos (badge no ícone) atualiza.
 
 ### 2. Árvore de documentos (`init_arvore.js` — dentro do `ifrArvore`)
 - [ ] Menus de ação rápida aparecem ao passar sobre os documentos.
-- [ ] Upload via drag-and-drop (dropzone) abre e envia.
+- [ ] Upload via drag-and-drop (file-queue) abre e envia.
 - [ ] Anotações e informações do documento exibem.
 - [ ] Detecção de versão dentro do iframe OK (`parent.isNewSEI` — não migrado de propósito).
 - [ ] **Filtro/realce rápido na árvore** (digitar no campo de pesquisa rápida realça/filtra os
@@ -94,6 +95,9 @@ implementar a ponte MAIN→isolado (com validação de origem). Ver `DEVELOPMENT
 (princípio isolated-first e `legacy-inline-bridge`).
 
 ## Execuções registradas
+
+### 2026-07-29 · Chrome (macOS) · SEI 5.x — Projetos (Gantt) v2.2.0 — ✅ PASSOU
+Painel local-first na home com `gerenciarprojetos`; demo seed; criar/editar etapa; drag com confirmação; portfolio / filtro / export JSON. Console sem Google Sheets.
 
 ### 2026-06-18 · Chrome (macOS) · SEI 5.x produção PRF (`sei.prf.gov.br`) — ✅ PASSOU
 Após `npm run build` + reload da extensão. Capturado o console (apenas erros + logs) em cada página:

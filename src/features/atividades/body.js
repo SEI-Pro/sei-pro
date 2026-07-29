@@ -29,6 +29,31 @@ export function getAppsScriptUrlAtiv() {
 export function getLabIdTables(type) {
     return domainGetLabIdTables(type);
 }
+
+/**
+ * Bridge: push remote/atividades projeto payloads into the Projetos feature store
+ * and refresh its panel. Prefer replaceProjetos + initProjetos (legacy-api aliases).
+ */
+export function syncProjetosFeatureFromAtividades(projetos, opts) {
+    opts = opts || {};
+    var list = Array.isArray(projetos) ? projetos : [];
+    var tipos = opts.tipos || null;
+    try {
+        if (typeof replaceProjetos === 'function' && list.length) {
+            replaceProjetos(list, tipos);
+        }
+    } catch (e) { /* feature may not be loaded yet */ }
+    try {
+        if (typeof initProjetos === 'function') {
+            initProjetos(opts.mode || 'refresh', list, opts.id_projeto);
+        } else if (typeof refreshProjetosPanel === 'function') {
+            refreshProjetosPanel();
+        }
+    } catch (e2) { /* noop */ }
+    if (opts.id_projeto && typeof selectProjetoTab === 'function') {
+        setTimeout(function () { selectProjetoTab(opts.id_projeto); }, 200);
+    }
+}
 /** @see ./domain.js */
 export function getNumMonthsBetween2Dates(value) {
     return domainGetNumMonthsBetween2Dates(value);
@@ -461,12 +486,21 @@ export function getServerAtividades(param, mode) {
                                 )
                                     ? 'update'
                                     : 'insert';
-                                initProjetos(mode_update, arrayConfigAtividades.projetos, ativData.id_projeto);
+                                // Projetos feature owns the panel; sync store + refresh via its public API.
+                                syncProjetosFeatureFromAtividades(arrayConfigAtividades.projetos, {
+                                    mode: mode_update,
+                                    id_projeto: ativData.id_projeto,
+                                    tipos: arrayConfigAtividades.tipos_projetos
+                                });
                                 loadingButtonConfirm(false);
                                 resetDialogBoxPro('dialogBoxPro');
                                 alertaBoxPro('Sucess', 'check-circle', txtAlert + ' com sucesso!');
                             }
-                            if (mode == 'save_projeto' || mode == 'clone_projeto') setTimeout(() => { $('#projetosGanttTabs li[aria-controls="svgtab_' + ativData.id_projeto + '"] a').trigger('click'); }, 800);
+                            if ((mode == 'save_projeto' || mode == 'clone_projeto') && ativData.id_projeto) {
+                                setTimeout(function () {
+                                    if (typeof selectProjetoTab === 'function') selectProjetoTab(ativData.id_projeto);
+                                }, 400);
+                            }
 
                         } else if (mode.indexOf('config_') !== -1) {
                             loadingButtonConfirm(false);
@@ -694,7 +728,11 @@ export function getServerAtividades(param, mode) {
                                 }
                             }
                             if (verifyConfigValue('gerenciarprojetos') && checkCapacidade('view_projetos') && isInitOffset) {
-                                initProjetos($('#projetosGanttDiv').is(':visible') ? 'refresh' : 'insert');
+                                var projetosPanel = (arrayConfigAtividades && arrayConfigAtividades.projetos) ? arrayConfigAtividades.projetos : [];
+                                syncProjetosFeatureFromAtividades(projetosPanel, {
+                                    mode: (document.getElementById('projetosGantt') ? 'refresh' : 'insert'),
+                                    tipos: arrayConfigAtividades && arrayConfigAtividades.tipos_projetos
+                                });
                             }
 
                         } else if (mode == 'pause_atividade_lista') {

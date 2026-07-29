@@ -705,9 +705,9 @@
     if (TimeOut2 <= 0) {
       return;
     }
-    if ((typeof spreadsheetIdProjetos_Pro !== "undefined" || typeof spreadsheetIdFormularios_Pro !== "undefined" || typeof spreadsheetIdSyncProcessos_Pro !== "undefined") && typeof gapi !== "undefined" && typeof initClientPro !== "undefined") {
+    if ((typeof spreadsheetIdFormularios_Pro !== "undefined" || typeof spreadsheetIdSyncProcessos_Pro !== "undefined") && typeof gapi !== "undefined" && typeof initClientPro !== "undefined") {
       gapi.load("client:auth2", initClientPro);
-    } else if (typeof spreadsheetIdProjetos_Pro !== "undefined" && spreadsheetIdProjetos_Pro === false || typeof spreadsheetIdFormularios_Pro !== "undefined" && spreadsheetIdFormularios_Pro === false || typeof spreadsheetIdSyncProcessos_Pro !== "undefined" && spreadsheetIdSyncProcessos_Pro === false) {
+    } else if (typeof spreadsheetIdFormularios_Pro !== "undefined" && spreadsheetIdFormularios_Pro === false || typeof spreadsheetIdSyncProcessos_Pro !== "undefined" && spreadsheetIdSyncProcessos_Pro === false) {
       console.log("notConfig handleClientLoadPro");
       return;
     } else {
@@ -1979,7 +1979,7 @@
       return;
     }
     if (typeof checkConfigValue !== "undefined") {
-      if (checkConfigValue("gerenciarprojetos") && typeof spreadsheetIdProjetos_Pro !== "undefined" && spreadsheetIdProjetos_Pro !== false && spreadsheetIdProjetos_Pro !== "undefined" || checkConfigValue("gerenciarformularios") && typeof spreadsheetIdFormularios_Pro !== "undefined" && spreadsheetIdFormularios_Pro !== false && spreadsheetIdFormularios_Pro !== "undefined" || checkConfigValue("sincronizarprocessos") && typeof spreadsheetIdSyncProcessos_Pro !== "undefined" && spreadsheetIdSyncProcessos_Pro !== false && spreadsheetIdSyncProcessos_Pro !== "undefined") {
+      if (checkConfigValue("gerenciarformularios") && typeof spreadsheetIdFormularios_Pro !== "undefined" && spreadsheetIdFormularios_Pro !== false && spreadsheetIdFormularios_Pro !== "undefined" || checkConfigValue("sincronizarprocessos") && typeof spreadsheetIdSyncProcessos_Pro !== "undefined" && spreadsheetIdSyncProcessos_Pro !== false && spreadsheetIdSyncProcessos_Pro !== "undefined") {
         handleClientLoadPro();
       }
     } else {

@@ -585,6 +585,7 @@
     startCancelAtividadeLote: () => startCancelAtividadeLote,
     statusIconsAtividade: () => statusIconsAtividade,
     storeLocalDataConfigArray: () => storeLocalDataConfigArray,
+    syncProjetosFeatureFromAtividades: () => syncProjetosFeatureFromAtividades,
     tableConfigKeyUsers: () => tableConfigKeyUsers,
     tempoProporcionalTabEntregasPlanos: () => tempoProporcionalTabEntregasPlanos,
     toggleContatos: () => toggleContatos,
@@ -639,6 +640,30 @@
   }
   function getLabIdTables2(type) {
     return getLabIdTables(type);
+  }
+  function syncProjetosFeatureFromAtividades(projetos, opts) {
+    opts = opts || {};
+    var list = Array.isArray(projetos) ? projetos : [];
+    var tipos = opts.tipos || null;
+    try {
+      if (typeof replaceProjetos === "function" && list.length) {
+        replaceProjetos(list, tipos);
+      }
+    } catch (e) {
+    }
+    try {
+      if (typeof initProjetos === "function") {
+        initProjetos(opts.mode || "refresh", list, opts.id_projeto);
+      } else if (typeof refreshProjetosPanel === "function") {
+        refreshProjetosPanel();
+      }
+    } catch (e2) {
+    }
+    if (opts.id_projeto && typeof selectProjetoTab === "function") {
+      setTimeout(function() {
+        selectProjetoTab(opts.id_projeto);
+      }, 200);
+    }
   }
   function getNumMonthsBetween2Dates2(value) {
     return getNumMonthsBetween2Dates(value);
@@ -1115,14 +1140,20 @@
                 storeLocalDataConfigArray(arrayConfigAtividades);
                 if (ativData.refresh_page) {
                   var mode_update = mode == "save_projeto_etapa" || mode == "delete_projeto_etapa" || mode == "update_projeto_etapa" || mode == "edit_projeto_etapa" ? "update" : "insert";
-                  initProjetos(mode_update, arrayConfigAtividades.projetos, ativData.id_projeto);
+                  syncProjetosFeatureFromAtividades(arrayConfigAtividades.projetos, {
+                    mode: mode_update,
+                    id_projeto: ativData.id_projeto,
+                    tipos: arrayConfigAtividades.tipos_projetos
+                  });
                   loadingButtonConfirm(false);
                   resetDialogBoxPro("dialogBoxPro");
                   alertaBoxPro("Sucess", "check-circle", txtAlert + " com sucesso!");
                 }
-                if (mode == "save_projeto" || mode == "clone_projeto") setTimeout(() => {
-                  $('#projetosGanttTabs li[aria-controls="svgtab_' + ativData.id_projeto + '"] a').trigger("click");
-                }, 800);
+                if ((mode == "save_projeto" || mode == "clone_projeto") && ativData.id_projeto) {
+                  setTimeout(function() {
+                    if (typeof selectProjetoTab === "function") selectProjetoTab(ativData.id_projeto);
+                  }, 400);
+                }
               } else if (mode.indexOf("config_") !== -1) {
                 loadingButtonConfirm(false);
                 if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && (mode == "config_users" || mode == "config_unidades" || mode == "config_tipos_modalidades" || mode == "config_tipos_capacidades" || mode == "config_perfis" || mode == "config_tipos_prescricoes" || mode == "config_entidades")) {
@@ -1315,7 +1346,11 @@
                   }
                 }
                 if (verifyConfigValue("gerenciarprojetos") && checkCapacidade("view_projetos") && isInitOffset) {
-                  initProjetos($("#projetosGanttDiv").is(":visible") ? "refresh" : "insert");
+                  var projetosPanel = arrayConfigAtividades && arrayConfigAtividades.projetos ? arrayConfigAtividades.projetos : [];
+                  syncProjetosFeatureFromAtividades(projetosPanel, {
+                    mode: document.getElementById("projetosGantt") ? "refresh" : "insert",
+                    tipos: arrayConfigAtividades && arrayConfigAtividades.tipos_projetos
+                  });
                 }
               } else if (mode == "pause_atividade_lista") {
                 loadingButtonConfirm(false);

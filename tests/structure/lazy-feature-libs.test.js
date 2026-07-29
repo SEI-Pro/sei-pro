@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rootDir = process.cwd();
@@ -54,5 +54,13 @@ describe('lazy feature libs (not eager content_scripts)', () => {
         expect(initArvore).not.toContain('dropzone.min.js');
         expect(upload).toContain("from '../../shared/ui/file-queue.js'");
         expect(upload).toContain('createFileQueue');
+    });
+
+    it('does not keep Dropzone orphan bootstrap or packaged assets', () => {
+        expect(existsSync(join(rootDir, 'src/features/bootstrap'))).toBe(false);
+        expect(existsSync(join(rootDir, 'dist/js/lib/dropzone.min.js'))).toBe(false);
+        expect(existsSync(join(rootDir, 'dist/css/dropzone.min.css'))).toBe(false);
+        expect(war).not.toContain('js/lib/dropzone.min.js');
+        expect(war).not.toContain('css/dropzone.min.css');
     });
 });

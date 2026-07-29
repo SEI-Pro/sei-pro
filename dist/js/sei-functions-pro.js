@@ -140,8 +140,6 @@
       { name: "Bloco Interno", icon: "fas fa-book", alt: "Bloco Interno" },
       { name: "Acompanhamento Especial", icon: "fas fa-eye", alt: "Acompanhamento Especial" }
     ];
-    g.rangeProjetosPro = "Projetos";
-    g.rangeEtapasPro = "Etapas";
     g.rangeFeriadosNacionaisPro = "FeriadosNacionais";
     g.rangeConfigGeral = "ConfigGeral";
     g.CLIENT_ID_PRO = false;

@@ -1,2048 +1,2582 @@
-const loadProjetosPro = true;
-var taskSelect = {macroetapa: [], responsavel: [], grupo: []};
+(() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
 
-function initProjetos(mode = 'insert', arrayProjetos = arrayConfigAtividades.projetos, query_id_projeto = false, TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof Gantt !== 'undefined') {
-        setProjetos(mode, arrayProjetos, query_id_projeto);
-    } else {
-        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) {
-            if (typeof loadStylePro === 'function') loadStylePro(URL_SPRO + 'css/frappe-gantt.css');
-            $.getScript(URL_SPRO+"js/lib/frappe-gantt.js");
-        }
-        setTimeout(function(){ 
-            initProjetos(mode, arrayProjetos, query_id_projeto, TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initProjetos'); 
-        }, 500);
-    } 
-}
-function setProjetos(mode = 'insert', arrayProjetos = arrayConfigAtividades.projetos, query_id_projeto = false) {
-    if (!$('#ifrArvore').length) {
-        var btnGroup = '<div class="btn-group" role="group" style="float: right;margin-right: 10px;">'+
-                       '   <button type="button" data-value="Day" class="btn btn-sm btn-light">Dia</button>'+
-                       '      <button type="button" data-value="Week" class="btn btn-sm btn-light">Semana</button>'+
-                       '      <button type="button" data-value="Month" class="btn btn-sm btn-light active">M\u00EAs</button>'+
-                       '</div>';
-        var htmlSelectTipoProjeto = (typeof arrayProjetos !== 'undefined' && arrayProjetos !== null && arrayProjetos.length) ? '<select id="selectTipoProjetoPro" style="max-width: 260px;" class="infraText txtsheetsSelect selectPro" id="tipoProjetoGantt">'+getOptionsTiposProjetos(getOptionsPro('idTipoProjetoSelected'))+'</select>' : '';
-
-        var idOrder = (getOptionsPro('orderPanelHome') && jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='projetosGantt'].index | length(@)") > 0) ? jmespath.search(getOptionsPro('orderPanelHome'), "[?name=='projetosGantt'].index | [0]") : '';
-        var htmlProjetosGantt = '<div class="panelHomePro" style="display: inline-block; width: 100%;" id="projetosGantt" data-order="'+idOrder+'">'+
-                                '   <div class="infraBarraLocalizacao titlePanelHome"><i class="fa fa-tasks azulColor" style="margin: 0 5px; font-size: 1.1em;"></i> Projetos'+
-                                '       <a class="newLink" id="projetosGanttDiv_showIcon" onclick="toggleTablePro(\'#projetosGanttDiv\',\'show\')" onmouseover="return infraTooltipMostrar(\'Mostrar Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+(getOptionsPro('projetosGanttDiv') == 'hide' ? '' : 'display:none;')+'"><i class="fas fa-plus-square cinzaColor"></i></a>'+
-                                '       <a class="newLink" id="projetosGanttDiv_hideIcon" onclick="toggleTablePro(\'#projetosGanttDiv\',\'hide\')" onmouseover="return infraTooltipMostrar(\'Recolher Tabela\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt; '+(getOptionsPro('projetosGanttDiv') == 'hide' ? 'display:none;' : '')+'"><i class="fas fa-minus-square cinzaColor"></i></a>'+
-                                '   </div>'+
-                                '   <div id="projetosGanttDiv" style="width: 100%;'+(getOptionsPro('projetosGanttDiv') == 'hide' ? 'display:none;' : 'display: inline-table;')+'">'+
-                                '   	<div id="projetosProActions" class="panelHome panelHomeProjeto"  style="position: absolute;z-index: 19999;left: 200px;width: calc(100% - 220px);top: 0;">'+
-                                btnGroup+htmlSelectTipoProjeto+
-                                '           <a class="newLink iconAtividade_update" onclick="updateAtividade_(this)" onmouseover="return infraTooltipMostrar(\'Atualizar Informa\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
-                                '               <i class="fas fa-sync-alt"></i>'+
-                                '           </a>'+
-                                '           <a class="newLink iconboxProjeto iconProjeto_config" onclick="openProjetoConfig()" onmouseover="return infraTooltipMostrar(\'Configura\u00E7\u00F5es\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;float: right;">'+
-                                '               <i class="fas fa-cog"></i>'+
-                                '           </a>'+
-                                '           <a class="newLink iconBoxProjeto iconBoxSlim iconProjeto_add" onclick="saveProjeto()" title="Adicionar Novo Projeto" onmouseover="return infraTooltipMostrar(\'Adicionar Novo Projeto\');" onmouseout="return infraTooltipOcultar();" style="margin: 0; font-size: 14pt;">'+
-                                '               <i class="fas fa-plus"></i>'+
-                                '           </a>'+
-                                '           <a class="newLink iconBoxProjeto iconBoxSlim iconProjeto_filter" onclick="openFilterProjeto()" title="Gerar Relat\u00F3rio Filtrado" onmouseover="return infraTooltipMostrar(\'Gerar Relat\u00F3rio Filtrado\');" onmouseout="return infraTooltipOcultar();" style="margin: 0; font-size: 14pt;">'+
-                                '               <i class="fas fa-filter"></i>'+
-                                '           </a>'+
-                                '   	</div>'+
-                                '        <div id="projetosTabs">'+
-                                '            <ul></ul>'+
-                                '        </div>'+
-                                '   </div>'+
-                                '</div>';
-
-		if ( mode == 'insert' ) {
-			if ( $('#projetosGantt').length > 0 ) { $('#projetosGantt').remove(); }
-            orderDivPanel(htmlProjetosGantt, idOrder, 'projetosGantt');
-            if (getOptionsPro('panelSortPro')) {
-                initSortDivPanel();
-            }
-        } else if ( mode == 'refresh' ) {
-			$('#projetosGantt').attr('id', 'projetosGantt_temp');
-			$('#projetosGantt_temp').after(htmlProjetosGantt);
-			$('#projetosGantt_temp').remove();
-		}
-
-            ganttProject = (mode == 'update') ? ganttProject : [];
-        
-        var width = $('#projetosGanttDiv').width();    
-        var dadosProjetosSelected = (getOptionsPro('idTipoProjetoSelected')) ? (jmespath.search(arrayProjetos, "[?id_tipo_projeto==`"+getOptionsPro('idTipoProjetoSelected')+"`]")) : arrayProjetos;
-            dadosProjetosSelected = dadosProjetosSelected !== null && dadosProjetosSelected.length ? dadosProjetosSelected : arrayProjetos;
-    
-        var dadosProjetos = (getOptionsPro('stateArquivadosGantt')) 
-                                ? jmespath.search(dadosProjetosSelected, "sort_by([*],&nome_projeto) | [*]")
-                                : jmespath.search(dadosProjetosSelected, "sort_by([*],&nome_projeto) | [?ativo==`true`]");
-
-        if ( typeof dadosProjetos !== 'undefined' && dadosProjetos.length > 0 ) {
-            $.each(dadosProjetos, function (index, value) {
-                var stateOrderGantt = getOptionsPro('stateOrderGantt');
-                    stateOrderGantt = !stateOrderGantt ? 'data_inicio' : stateOrderGantt;
-                var permiteEdicao = checkPermissionProjeto(value) && checkCapacidade('update_projeto_etapa');
-                var dadosEtapas = value.etapas;
-                if (dadosEtapas && dadosEtapas.length > 0 ) {
-                    dadosEtapas = stateOrderGantt == 'data_inicio' ? dadosEtapas.sort(function(a, b){
-                                    var aa = a.data_inicio_programado.split('/').reverse().join(),
-                                        bb = b.data_inicio_programado.split('/').reverse().join();
-                                    return aa < bb ? -1 : (aa > bb ? 1 : 0);
-                                    }) : dadosEtapas;
-                    dadosEtapas = stateOrderGantt == 'nome_etapa' ? dadosEtapas.sort((a, b) => a.nome_etapa.localeCompare(b.nome_etapa)) : dadosEtapas;
-                    dadosEtapas = stateOrderGantt == 'id_etapa' ? dadosEtapas.sort((a, b) => a.id_etapa - b.id_etapa) : dadosEtapas;
-                    var task = [];
-
-                    $.each(dadosEtapas, function (i, v) {
-                        var start = moment(v.data_inicio_programado, 'YYYY-MM-DD HH:mm:ss');
-                        var end = moment(v.data_fim_programado, 'YYYY-MM-DD HH:mm:ss');
-                        var progresso_execucao = v.progresso_execucao;
-
-                        if ( v.data_inicio_progresso_automatico != '0000-00-00 00:00:00' && v.data_fim_execucao == '0000-00-00 00:00:00' && progresso_execucao < 100 ) {
-                            var percentProgress = ganttAutoProgressPercent(moment(v.data_inicio_progresso_automatico,'YYYY-MM-DD HH:mm:ss'), moment(v.data_fim_progresso_automatico,'YYYY-MM-DD HH:mm:ss'));
-                            if (v.data_inicio_progresso_automatico != '0000-00-00 00:00:00' && percentProgress < 100 && percentProgress != progresso_execucao && percentProgress >= 0 ) {
-                                progresso_execucao = percentProgress;
-                                setTimeout(() => { updateProgressoProjeto(v.id_projeto, v.id_etapa, progresso_execucao) }, 1000);
-                            }
-                        }
-
-                        var customClass = ( moment() <= end && moment() >= start ) ? 'bar-ongoing' : 'bar-inday';   
-                            customClass = ( progresso_execucao < 100 && end < moment() ) ? 'bar-delay' : customClass;
-                            customClass = ( v.data_fim_execucao != '0000-00-00 00:00:00' ) ? 'bar-complete' : customClass;
-
-                        var taskProjeto = {
-                                            id: v.id_etapa.toString(),
-                                            etapa: v,
-                                            index: i,
-                                            show_full_popup: true,
-                                            name: v.nome_etapa,
-                                            start: moment(v.data_inicio_programado, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD'),
-                                            end: moment(v.data_fim_programado, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD'),
-                                            progress: progresso_execucao ? progresso_execucao : 0,
-                                            dependencies: v.id_dependencia ? [v.id_dependencia.toString()] : [],
-                                            custom_class: customClass
-                                        };
-
-                        task.push(taskProjeto);
-
-                        if (getOptionsPro('stateExecucaoGantt') && v.data_inicio_execucao != '0000-00-00 00:00:00' && v.data_fim_execucao != '0000-00-00 00:00:00') {
-                            var taskProjetoExec = {
-                                                id: v.id_etapa.toString()+'_',
-                                                etapa: v,
-                                                index: i,
-                                                show_full_popup: false,
-                                                name: v.nome_etapa,
-                                                start: moment(v.data_inicio_execucao, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD'),
-                                                end: moment(v.data_fim_execucao, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD'),
-                                                progress: progresso_execucao ? progresso_execucao : 0,
-                                                dependencies: [v.id_etapa.toString()],
-                                                custom_class: 'bar-executed'
-                                            };
-                                task.push(taskProjetoExec);
-                        }
-
-                        if (v.macroetapa) taskSelect.macroetapa.push(v.macroetapa);
-                        if (v.responsavel) taskSelect.responsavel.push(v.responsavel);
-                        if (v.grupo) taskSelect.grupo.push(v.grupo);
-                    });
-                    var toolbarProjetosGantt =  '<div class="Gantt_Toolbar" style="display: inline-block; position: absolute; z-index: 9; width: 98%;">'+
-                                                (checkCapacidade('save_projeto_etapa') && permiteEdicao ? 
-                                                '   <a class="newLink boxConfig" data-id_projeto="'+value.id_projeto+'"  data-id_etapa="0" onclick="saveEtapa(this)" onmouseover="return infraTooltipMostrar(\'Adicionar Etapa\');" onmouseout="return infraTooltipOcultar();" style="margin: 0; font-size: 14pt;float: right;"><i class="fas fa-plus-circle"></i></a>'+
-                                                '' : '')+
-                                                (checkCapacidade('edit_projeto') && permiteEdicao ? 
-                                                '   <a class="newLink boxConfig" data-id_projeto="'+value.id_projeto+'" onclick="saveProjeto(this)" onmouseover="return infraTooltipMostrar(\'Editar Projeto\');" onmouseout="return infraTooltipOcultar();" style="margin: 0; font-size: 14pt;float: right;"><i class="fas fa-edit"></i></a>'+
-                                                '' : '')+
-                                                (checkCapacidade('share_projeto') && arrayConfigAtivUnidade.sigla_unidade == value.sigla_unidade ? 
-                                                '   <a class="newLink boxConfig" data-id_projeto="'+value.id_projeto+'" onclick="shareProjeto(this)" onmouseover="return infraTooltipMostrar(\'Compartilhar Projeto\');" onmouseout="return infraTooltipOcultar();" style="margin: 0; font-size: 14pt;float: right;"><i class="fas fa-share-square"></i></a>'+
-                                                '' : '')+
-                                                '</div>';
-
-                    var nameDisplayUnidade = (arrayConfigAtivUnidade.sigla_unidade != value.sigla_unidade) ? '<span class="tagState">'+value.sigla_unidade+'</span>' : '';
-                    var nameDisplayState = (!jmespath.search(arrayProjetos, "[?id_projeto==`"+value.id_projeto+"`] | [0].ativo") ) ? '<span class="tagState">ARQUIVADO</span>' : '';
-                    var svgProjetosGantt =   '<div id="svgtab_'+value.id_projeto+'" class="resizeObserve">'+toolbarProjetosGantt+'<svg id="gantt_'+value.id_projeto+'" class="svg_gantt"></svg></div>';
-                    var liTabsProjetosGantt = '<li><a href="#svgtab_'+value.id_projeto+'">'+value.nome_projeto+nameDisplayUnidade+nameDisplayState+'</a></li>';
-
-                    if (mode != 'update') {
-                        $('#projetosTabs #svgtab_'+value.id_projeto).remove();
-                        $('#projetosTabs a[href="#svgtab_'+value.id_projeto+'"]').remove();
-                        
-                        $('#projetosTabs ul').append(liTabsProjetosGantt);
-                        $('#projetosTabs').append(svgProjetosGantt);
-                    }
-
-                    var gantt = (mode == 'update') ? false : new Gantt("#gantt_"+value.id_projeto, task ,{
-                        header_height: 50,
-                        column_width: 10,
-                        step: 24,
-                        language: 'en',
-                        language: 'ptBr',
-                        view_modes: ['Day', 'Week', 'Month'],
-                        bar_height: 15,
-                        bar_corner_radius: 3,
-                        arrow_curve: 5,
-                        padding: 18,
-                        id_projeto: value.id_projeto,
-                        edit_task: permiteEdicao && getOptionsPro('stateVisualGantt'),
-                        view_mode: 'Month',   
-                        date_format: 'YYYY-MM-DD HH:mm:ss',
-                        custom_popup_html: function(task) {
-                            return customPopupHtmlProjeto(task, arrayProjetos, permiteEdicao);
-                        },
-                        on_click: function (task) {
-                            // console.log('on_click',task);
-                        },
-                        on_date_change: function(task, start, end) {
-                            if (checkCapacidade('update_projeto_etapa')) updateDatesProjetos(task, start, end);
-                        },
-                        on_progress_change: function(task, progresso_execucao) {
-                            if (checkCapacidade('update_projeto_etapa')) updateProgressoProjeto(task.etapa.id_projeto, task.etapa.id_etapa, progresso_execucao);
-                        },
-                        on_view_change: function(mode) {
-                            // console.log('on_view_change',mode);
-                        }
-                    });
-                    if ( mode == 'update' && query_id_projeto == value.id_projeto) {
-                        objIndexProj = (typeof ganttProject === 'undefined' || ganttProject.length == 0) ? -1 : ganttProject.findIndex((obj => obj.options.id_projeto == value.id_projeto));
-                        if (objIndexProj !== -1) {
-                            var scrollGantt = $('#svgtab_'+value.id_projeto+' .gantt-container').scrollLeft();
-                                ganttProject[objIndexProj].hide_popup();
-                                ganttProject[objIndexProj].refresh(task);
-                                $('#svgtab_'+value.id_projeto+' .gantt-container').scrollLeft(scrollGantt);
-                        }
-                    } else {
-                        if (gantt) ganttProject.push(gantt);
-                    }
-                }
-            });
-            var taskMacroetapa = uniqPro(taskSelect.macroetapa);
-            var taskResponsavel = uniqPro(taskSelect.responsavel);
-            var taskGrupo = uniqPro(taskSelect.grupo);
-                taskSelect = {macroetapa: taskMacroetapa, responsavel: taskResponsavel, grupo: taskGrupo};
-        } else {
-            var htmlFallback =  '<div class="dataFallback" style="z-index: 9" data-text="Nenhum projeto dispon\u00EDvel">'+
-                                '   <div style="position: absolute;top: calc(50% - 60px);width: 100%;text-align: center;">'+
-                                '       <a class="newLink iconProjeto_add" data-icon="fas fa-tasks icon-parent" onclick="saveProjeto()" onmouseover="return infraTooltipMostrar(\'Adicionar Novo Projeto\');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 14pt;">'+
-                                '           <span class="fa-layers fa-fw">'+
-                                '               <i class="fas fa-tasks icon-parent"></i>'+
-                                '               <i class="fas fa-plus-circle fa-layers-counter fa-layers-bottom"></i>'+
-                                '           </span>'+
-                                '       </a>'+
-                                '   </div>'+
-                                '</div>';
-
-            $('#projetosTabs ul').append(htmlFallback);
-        }
-        if (mode != 'update') {
-            $('.gantt-container').css('max-width',(width-20));
-            $("#projetosGantt .btn-group").on("click", "button", function() {
-                $btn = $(this);
-                var mode = $btn.data('value');
-                $btn.parent().find('button').removeClass('active'); 
-                $btn.addClass('active');
-                $.each(ganttProject, function (index, value) {
-                    value.change_view_mode(mode);
-                });
-            });
-            
-            setTimeout(function(){ 
-                if ($().tabs ) { 
-                    $('#projetosTabs').tabs({
-                        activate: function (event, ui) {
-                            var active = $(this).tabs( "option", "active" );
-                            setOptionsPro('projetosGanttActiveTabs', active);
-                            scrollProjetoGanttToFirstBar();
-                            resetDialogBoxPro('dialogBoxPro');
-                        }
-                    }); 
-                    var activeTab = ( getOptionsPro('projetosGanttActiveTabs') && parseInt(getOptionsPro('projetosGanttActiveTabs')) >= 0 ) ? parseInt(getOptionsPro('projetosGanttActiveTabs')) : 0;
-                    $('#projetosTabs').tabs( "option", "active",  activeTab);
-                }
-                $('#selectTipoProjetoPro').on('change', function(){
-                        setOptionsPro('idTipoProjetoSelected', $('option:selected', this).val());
-                        setProjetos('refresh');
-                }).chosen("destroy").chosen({
-                    placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado',
-                    normalize_search_text: function(text) {
-                        return removeAcentos(text.toLowerCase());
-                    }
-                });
-                scrollProjetoGanttToFirstBar();
-                normalizeAreaTela();
-            }, 300);
-        }
-    } else {
-        $('#projetosGantt').remove();
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function getSeiPro() {
+    globalRef.SeiPro = globalRef.SeiPro || {};
+    globalRef.SeiPro.core = globalRef.SeiPro.core || {};
+    globalRef.SeiPro.sei = globalRef.SeiPro.sei || {};
+    globalRef.SeiPro.features = globalRef.SeiPro.features || {};
+    globalRef.SeiPro.state = globalRef.SeiPro.state || {};
+    return globalRef.SeiPro;
+  }
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
     }
-}
-function resizeHeightCanvasProjeto(id_projeto) {
-    setTimeout(() => {
-        $('#svgtab_'+id_projeto+' .gantt-container').attr('style','max-width:'+$('#svgtab_'+id_projeto+' .gantt-container').css('max-width'));
-        $('#svgtab_'+id_projeto+' .gantt-container').css('height',$('#svgtab_'+id_projeto+' .gantt-container')[0].scrollHeight+20);
+  }
+
+  // src/core/serial.js
+  function isJson(str2) {
+    try {
+      JSON.parse(str2);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  // src/features/projetos/domain/datas.js
+  var EMPTY = "0000-00-00 00:00:00";
+  var EMPTY_DATE = "0000-00-00";
+  function isEmptyDate(value) {
+    if (value == null || value === "") return true;
+    const s = String(value).trim();
+    return s === EMPTY || s === EMPTY_DATE || s.startsWith("0000-00-00");
+  }
+  function parseDate(value) {
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
+    }
+    if (value == null || value === "") return null;
+    if (typeof value === "number") {
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    const s = String(value).trim();
+    if (isEmptyDate(s)) return null;
+    const local = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (local) {
+      return new Date(+local[1], +local[2] - 1, +local[3], +local[4], +local[5], +(local[6] || 0));
+    }
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (m) {
+      return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+    }
+    const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (br) {
+      return new Date(+br[3], +br[2] - 1, +br[1], +(br[4] || 0), +(br[5] || 0), +(br[6] || 0));
+    }
+    const fallback = new Date(s);
+    return Number.isNaN(fallback.getTime()) ? null : fallback;
+  }
+  function pad(n, w = 2) {
+    return String(n).padStart(w, "0");
+  }
+  function formatDateTime(value) {
+    const d = parseDate(value);
+    if (!d) return EMPTY;
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+  function formatDate(value) {
+    const d = parseDate(value);
+    if (!d) return "";
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function formatDateTimeLocal(value) {
+    const d = parseDate(value);
+    if (!d) return "";
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function formatDisplay(value, withTime = false) {
+    const d = parseDate(value);
+    if (!d) return "";
+    const base = pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
+    if (!withTime) return base;
+    return base + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function today() {
+    const n = /* @__PURE__ */ new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  }
+  function startOfDay(value) {
+    const d = parseDate(value);
+    if (!d) return null;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  function addDays(value, days) {
+    const d = parseDate(value);
+    if (!d) return null;
+    const out = new Date(d.getTime());
+    out.setDate(out.getDate() + days);
+    return out;
+  }
+  function diffDays(start, end) {
+    const a = startOfDay(start);
+    const b = startOfDay(end);
+    if (!a || !b) return 0;
+    return Math.round((b.getTime() - a.getTime()) / 864e5);
+  }
+  function isSameDay(a, b) {
+    const x = startOfDay(a);
+    const y = startOfDay(b);
+    if (!x || !y) return false;
+    return x.getTime() === y.getTime();
+  }
+  function minDate(a, b) {
+    const x = parseDate(a);
+    const y = parseDate(b);
+    if (!x) return y;
+    if (!y) return x;
+    return x.getTime() <= y.getTime() ? x : y;
+  }
+  function maxDate(a, b) {
+    const x = parseDate(a);
+    const y = parseDate(b);
+    if (!x) return y;
+    if (!y) return x;
+    return x.getTime() >= y.getTime() ? x : y;
+  }
+  function emptyDateSentinel() {
+    return EMPTY;
+  }
+
+  // src/features/projetos/domain/model.js
+  var _seq = 1;
+  function nextLocalId(prefix = "") {
+    return Number(String(Date.now()).slice(-8) + String(_seq++).padStart(3, "0"));
+  }
+  function resetLocalIdSeq() {
+    _seq = 1;
+  }
+  function num(v, fallback = 0) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  function str(v, fallback = "") {
+    return v == null ? fallback : String(v);
+  }
+  function bool(v, fallback = true) {
+    if (v == null) return fallback;
+    if (typeof v === "boolean") return v;
+    if (v === "true" || v === 1 || v === "1") return true;
+    if (v === "false" || v === 0 || v === "0") return false;
+    return !!v;
+  }
+  function normalizePredecessoras(etapa) {
+    if (Array.isArray(etapa.predecessoras) && etapa.predecessoras.length) {
+      return etapa.predecessoras.map((p) => ({
+        id_etapa: num(p.id_etapa),
+        tipo: ["FS", "SS", "FF", "SF"].includes(p.tipo) ? p.tipo : "FS",
+        lag_dias: num(p.lag_dias, 0)
+      })).filter((p) => p.id_etapa);
+    }
+    const dep = num(etapa.id_dependencia, 0);
+    if (dep) return [{ id_etapa: dep, tipo: "FS", lag_dias: 0 }];
+    return [];
+  }
+  function normalizeEtapa(raw = {}, idProjeto = 0) {
+    const id_etapa = num(raw.id_etapa) || nextLocalId("e");
+    const predecessoras = normalizePredecessoras(raw);
+    const id_dependencia = predecessoras.length ? predecessoras[0].id_etapa : num(raw.id_dependencia, 0) || false;
+    return {
+      id_etapa,
+      id_projeto: num(raw.id_projeto, idProjeto) || idProjeto,
+      nome_etapa: str(raw.nome_etapa, "Nova etapa"),
+      id_dependencia,
+      predecessoras,
+      data_inicio_programado: isEmptyDate(raw.data_inicio_programado) ? emptyDateSentinel() : formatDateTime(raw.data_inicio_programado),
+      data_fim_programado: isEmptyDate(raw.data_fim_programado) ? emptyDateSentinel() : formatDateTime(raw.data_fim_programado),
+      data_inicio_execucao: isEmptyDate(raw.data_inicio_execucao) ? emptyDateSentinel() : formatDateTime(raw.data_inicio_execucao),
+      data_fim_execucao: isEmptyDate(raw.data_fim_execucao) ? emptyDateSentinel() : formatDateTime(raw.data_fim_execucao),
+      data_inicio_progresso_automatico: isEmptyDate(raw.data_inicio_progresso_automatico) ? emptyDateSentinel() : formatDateTime(raw.data_inicio_progresso_automatico),
+      data_fim_progresso_automatico: isEmptyDate(raw.data_fim_progresso_automatico) ? emptyDateSentinel() : formatDateTime(raw.data_fim_progresso_automatico),
+      progresso_execucao: Math.max(0, Math.min(100, num(raw.progresso_execucao, 0))),
+      macroetapa: str(raw.macroetapa),
+      responsavel: str(raw.responsavel),
+      grupo: str(raw.grupo),
+      etiqueta: str(raw.etiqueta),
+      checklist: Array.isArray(raw.checklist) ? raw.checklist : raw.checklist || [],
+      observacoes: str(raw.observacoes),
+      documento_relacionado: str(raw.documento_relacionado),
+      id_documento_sei: raw.id_documento_sei || false,
+      documento_sei: str(raw.documento_sei),
+      id_demandas: raw.id_demandas || [],
+      id_demandas_titles: raw.id_demandas_titles || [],
+      data_pausa: isEmptyDate(raw.data_pausa) ? emptyDateSentinel() : formatDateTime(raw.data_pausa),
+      data_retomada: isEmptyDate(raw.data_retomada) ? emptyDateSentinel() : formatDateTime(raw.data_retomada),
+      marco: bool(raw.marco, false),
+      calendario: raw.calendario === "util" ? "util" : "corrido"
+    };
+  }
+  function normalizeProjeto(raw = {}) {
+    const id_projeto = num(raw.id_projeto) || nextLocalId("p");
+    const etapas = Array.isArray(raw.etapas) ? raw.etapas.map((e) => normalizeEtapa(e, id_projeto)) : [];
+    return {
+      id_projeto,
+      nome_projeto: str(raw.nome_projeto, "Novo projeto"),
+      id_tipo_projeto: num(raw.id_tipo_projeto, 0),
+      nome_tipo_projeto: str(raw.nome_tipo_projeto),
+      processo_sei: raw.processo_sei || false,
+      id_procedimento: raw.id_procedimento || false,
+      ativo: bool(raw.ativo, true),
+      sigla_unidade: str(raw.sigla_unidade),
+      id_unidade: num(raw.id_unidade, 0),
+      etapas,
+      projetos_compartilhados: Array.isArray(raw.projetos_compartilhados) ? raw.projetos_compartilhados : []
+    };
+  }
+  function defaultStore() {
+    return {
+      version: 1,
+      projetos: [],
+      tipos_projetos: [],
+      updated_at: formatDateTime(/* @__PURE__ */ new Date())
+    };
+  }
+  function findProjeto(projetos, id) {
+    const idn = num(id);
+    return (projetos || []).find((p) => p.id_projeto === idn) || null;
+  }
+  function findEtapa(projeto, idEtapa) {
+    if (!projeto || !Array.isArray(projeto.etapas)) return null;
+    const idn = num(idEtapa);
+    return projeto.etapas.find((e) => e.id_etapa === idn) || null;
+  }
+  function cloneProjetoDeep(projeto, overrides = {}) {
+    const base = normalizeProjeto(JSON.parse(JSON.stringify(projeto || {})));
+    const id_projeto = overrides.id_projeto || nextLocalId("p");
+    base.id_projeto = id_projeto;
+    if (overrides.nome_projeto) base.nome_projeto = overrides.nome_projeto;
+    else base.nome_projeto = (base.nome_projeto || "Projeto") + " (copia)";
+    const idMap = /* @__PURE__ */ new Map();
+    base.etapas = base.etapas.map((e) => {
+      const novo = nextLocalId("e");
+      idMap.set(e.id_etapa, novo);
+      return { ...e, id_etapa: novo, id_projeto };
     });
-}
-function customPopupHtmlProjeto(task, arrayProjetos = arrayConfigAtividades.projetos, permiteEdicao = false) {
-    var etapa = task.etapa;
-    resizeHeightCanvasProjeto(etapa.id_projeto);
-    var txtDateAutoProgress = (etapa.data_inicio_progresso_automatico != '0000-00-00 00:00:00' ) ? moment(etapa.data_inicio_progresso_automatico,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+' \u00E0 '+moment(etapa.data_fim_progresso_automatico,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : '';
-    var htmlAutoProgress = (etapa.data_inicio_progresso_automatico != '0000-00-00 00:00:00') 
-            ?   '<a class="ui-button ui-corner-all ui-widget ui-state-active" style="margin-left: 15px; color: #2b2b2b; text-decoration: none;padding: 3px; height: 15px;" data-id_etapa="'+etapa.id_etapa+'" data-id_projeto="'+etapa.id_projeto+'" data-mode="edit" onclick="setAutoProgressProjeto(this)" onmouseover="return infraTooltipMostrar(\'Editar execu\u00E7\u00E3o autom\u00E1tica de etapa ('+txtDateAutoProgress+') \');" onmouseout="return infraTooltipOcultar();">'+
-                '       <i class="fas fa-cog brancoColor"></i>'+
-                '   </a>' 
-            :   '<a class="ui-button ui-corner-all ui-widget" style="margin-left: 15px; color: #2b2b2b; text-decoration: none;padding: 3px; height: 15px;" data-id_etapa="'+etapa.id_etapa+'" data-id_projeto="'+etapa.id_projeto+'" data-mode="config" onclick="setAutoProgressProjeto(this)" onmouseover="return infraTooltipMostrar(\'Configurar execu\u00E7\u00E3o autom\u00E1tica de etapa\');" onmouseout="return infraTooltipOcultar();">'+
-                '   <i class="fas fa-cog cinzaColor"></i>'+
-                '</a>';
-        htmlAutoProgress = (etapa.data_inicio_execucao != '0000-00-00 00:00:00' && etapa.data_fim_execucao == '0000-00-00 00:00:00' && !etapa.id_demandas && permiteEdicao && task.show_full_popup) ? htmlAutoProgress : '';
-    var htmlPercent = (etapa.data_inicio_execucao != '0000-00-00 00:00:00' && etapa.data_fim_execucao == '0000-00-00 00:00:00' && !etapa.id_demandas && permiteEdicao && task.show_full_popup) 
-            ? '<input onchange="changePercentRange(this)" data-id_etapa="'+etapa.id_etapa+'" data-id_projeto="'+etapa.id_projeto+'" oninput="changePercentRange(this)" type="range" value="'+(etapa.progresso_execucao || 0)+'" min="0" max="100" step="25" style="width: calc( 100% - 20px) !important; border: none; padding: 0 !important;" name="progresso_execucao">' 
-            : 
-                (etapa.data_inicio_execucao == '0000-00-00 00:00:00' && etapa.data_fim_execucao == '0000-00-00 00:00:00' && !etapa.id_demandas && permiteEdicao && task.show_full_popup) 
-                ? 
-                    '<span>'+
-                    '   <a class="ui-button ui-corner-all ui-widget" style="margin-left: 15px; color: #2b2b2b; text-decoration: none;padding: 3px 10px; height: 15px;" onclick="showExecucaoEtapa(this)">'+
-                    '       <i class="fas fa-play cinzaColor" style="margin: 0 5px;"></i> Iniciar execu\u00E7\u00E3o'+
-                    '   </a>'+
-                    '</span>'+
-                    '<span style="display:none;" class="span_data_inicio_execucao">'+
-                    '   <input type="datetime-local" id="proj_data_inicio_execucao" style="display: inline;width: 120px;padding: 6px !important;" data-key="data_inicio_execucao" value="'+moment().format('YYYY-MM-DDTHH:mm')+'">'+
-                    '   <a class="ui-button ui-corner-all ui-widget" style="color: #2b2b2b;text-decoration: none;padding: 7px;" data-id_etapa="'+etapa.id_etapa+'" data-id_projeto="'+etapa.id_projeto+'" data-mode="init" onclick="setExecucaoEtapa(this)" onmouseover="return infraTooltipMostrar(\'Salvar\');" onmouseout="return infraTooltipOcultar();">'+
-                    '       <i class="fas fa-check cinzaColor"></i>'+
-                    '   </a>'+
-                    '</span>'
-                : '';
-        htmlPercent = ((etapa.data_inicio_execucao != '0000-00-00 00:00:00' &&  etapa.data_inicio_progresso_automatico != '0000-00-00 00:00:00') || !permiteEdicao || !task.show_full_popup ) ? '' : htmlPercent;
-    
-    var htmlEtiqueta = (etapa.etiqueta) 
-            ? etapa.etiqueta.indexOf(',') !== -1
-                ? $.map(etapa.etiqueta.split(','), function(v){
-                    return getHtmlEtiqueta(v)
-                }).join('')
-                : getHtmlEtiqueta(etapa.etiqueta)
-            : '';
-        
-    var htmlDocumento_Rel = (etapa.documento_relacionado) 
-            ?   '<tr>'+
-                '   <td colspan="2">'+
-                '       <p>'+
-                '           <i class="iconPopup fas fa-file-alt cinzaColor"></i> '+
-                '           <span class="boxInfo">'+
-                '               <strong>'+
-                '                   <a style="font-size: 12px;" onmouseover="return infraTooltipMostrar(\'Visualiza\u00E7\u00E3o r\u00E1pida\');" onmouseout="return infraTooltipOcultar();" '+(etapa.documento_sei ? 'onclick="openSEINrPro(this, \''+etapa.documento_sei+'\')"' : '')+'>'+
-                (etapa.documento_relacionado ? etapa.documento_relacionado : '' )+
-                '                       <i class="fas fa-eye bLink" style="font-size: 80%;vertical-align: top;margin-left: 5px;"></i>'+
-                '                   </a>'+
-                '               </strong>'+
-                '           </span>'+
-                '       </p>'+
-                '   </td>'+
-                '</tr>' 
-            : '';
-    var htmlObservacao = (etapa.observacoes) 
-            ?   '<tr>'+
-                '   <td colspan="2">'+
-                '       <p>'+
-                '           <i class="iconPopup fas fa-comment-alt cinzaColor"></i> '+
-                '           <strong style="font-style: italic; color: #585858;">'+
-                '               <span class="boxInfo">'+(etapa.observacoes || '')+'</span>'+
-                '           </strong>'+
-                '       </p>'+
-                '   </td>'+
-                '</tr>' 
-            : '';
-
-    var html = '<div class="details-container seiProForm">'+
-               '   <table class="tableInfo">'+
-               '      <tr>'+
-               '        <td colspan="2">'+
-               '            <h5>'+
-               '                <input type="hidden" value="'+etapa.id_projeto+'" id="dtBoxIDProjeto"><i class="iconPopup fas fa-project-diagram cinzaColor"></i> '+
-               '                <span class="boxInfo" style="font-size: 11pt;font-weight: bold;width: 270px;display: inline-block;margin-top: 8px;">'+(etapa.nome_etapa || '')+'</span>'+
-               '                <a style="float: right; margin: -4px -4px 0 0; padding: 5px;" onclick="closeAllPopupsProjeto()">'+
-               '                    <i class="far fa-times-circle cinzaColor"></i>'+
-               '                </a>'+
-               (permiteEdicao && task.show_full_popup ?
-               '                <a style="float: right; margin: -4px -4px 0 0; padding: 5px;" data-id_projeto="'+etapa.id_projeto+'" data-id_etapa="'+etapa.id_etapa+'" onclick="saveEtapa(this)">'+
-               '                    <i class="far fa-edit cinzaColor"></i>'+  
-               '                </a>'+
-               '' : '')+
-               '            </h5>'+
-               '        </td>'+
-               '      </tr>'+
-               (etapa.id_procedimento ?
-               '      <tr>'+
-               '        <td colspan="3">'+
-               '            <h5>'+
-               '                <i class="iconPopup fas fa-folder-open cinzaColor"></i> '+
-               '                <p class="boxInfo">'+
-               '                    <a target="_blank" href="controlador.php?acao=procedimento_trabalhar&id_procedimento='+etapa.id_procedimento+'">'+(etapa.processo_sei || '')+' '+
-               '                        <i class="fas fa-external-link-alt bLink" style="font-size: 90%;"></i>'+
-               '                    </a>'+
-               '                </p>'+
-               '            </h5>'+
-               '        </td>'+
-               '      </tr>'+
-               '' : '')+
-               '      <tr>'+
-               '        <td>'+
-               '            <p style="display: inline-flex;">'+
-               '                <i class="iconPopup fas fa-percentage cinzaColor"></i>  '+
-               '                <span style="padding: 3px 5px 0 0; width: 115px;">'+
-               '                    <span class="gantt-percent" style="width: 25px; display: inline-block; text-align: right;">'+(etapa.progresso_execucao || 0)+'</span>% Executado'+
-               '                </span>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p style="display: inline-flex;">'+htmlPercent+htmlAutoProgress+'</p>'+
-               '        </td>'+
-               '      </tr>'+
-               (etapa.id_demandas && typeof etapa.id_demandas_titles !== 'undefined' && etapa.id_demandas_titles.length ?
-               '      <tr>'+
-               '        <td colspan="2">'+
-               '            <p>'+
-               '                <i class="iconPopup fas fa-check-circle cinzaColor"></i> Demandas Vinculadas:'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '      <tr>'+
-               '        <td colspan="2">'+
-               '            <p>'+
-               '                <div class="boxInfo" style="overflow-y: auto;max-height: 250px;">'+
-                                    $.map(etapa.id_demandas_titles, function(v){ 
-                                        var click = (jmespath.search(arrayAtividadesPro,"[?id_demanda==`"+v.id_demanda+"`] | [0]") !== null) ? 'onclick="infoAtividade('+v.id_demanda+')"' : '';
-                                        return '<a class="newLink" style="font-size: 9pt;color: initial;text-decoration: inherit;background-color: #f5f5f5;margin: 5px 0;line-height: 15pt;" '+click+'>'+getDemandaVinculadaBox(v)+'</a>'
-                                    }).join('')+
-               '                </div>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '' : '')+
-               '      <tr>'+
-               (task.show_full_popup ?
-               '      <tr>'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup fas fa-clock cinzaColor"></i> In\u00EDcio da Etapa:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+moment(etapa.data_inicio_programado,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '      <tr>'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup far fa-clock cinzaColor"></i> Fim da Etapa:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+moment(etapa.data_fim_programado,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '' : '')+
-               (etapa.data_inicio_execucao != '0000-00-00 00:00:00' ? 
-               '      <tr>'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup fas fa-hourglass-start cinzaColor"></i> In\u00EDcio da Execu\u00E7\u00E3o:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+moment(etapa.data_inicio_execucao,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '' : '')+
-               (etapa.data_fim_execucao != '0000-00-00 00:00:00' ? 
-               '      <tr>'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup far fa-hourglass-end cinzaColor"></i> Fim da Execu\u00E7\u00E3o:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+moment(etapa.data_fim_execucao,'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm')+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '' : '')+
-               '      <tr>'+
-               '        <td colspan="3" style="height: 10px !important;border-top: 1px solid #ccc;">'+
-               '            <a style="float: right;margin-top: -14px;background: #fff;padding: 5px;border-radius: 5px;" onclick="showProjetoDetalhe(this);resizeHeightCanvasProjeto('+etapa.id_projeto+');">'+
-               '                <i class="fas cinzaColor fa-plus-circle"></i>'+
-               '            </a>'+
-               '        </td>'+
-               '      </tr>'+
-               '      <tr class="detalheBox" style="display:none">'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup fas fa-user-tie cinzaColor"></i> Respons\u00E1vel:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+(etapa.responsavel || '')+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '      <tr class="detalheBox" style="display:none">'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup fas fa-layer-group cinzaColor"></i> Macroetapa:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+(etapa.macroetapa || '')+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '      <tr class="detalheBox" style="display:none">'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup fas fa-retweet cinzaColor"></i> Depend\u00EAncia:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+( jmespath.search(arrayProjetos,"[].etapas | [] | [?id_etapa==`"+etapa.id_dependencia+"`] | [0].nome_etapa") || '' )+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '      <tr class="detalheBox" style="display:none">'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup far fa-object-group cinzaColor"></i> Grupo:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo">'+(etapa.grupo || '')+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '      <tr class="detalheBox" style="display:none">'+
-               '        <td>'+
-               '            <p>'+
-               '                <i class="iconPopup fas fa-tags cinzaColor"></i> Etiqueta:'+
-               '            </p>'+
-               '        </td>'+
-               '        <td>'+
-               '            <p>'+
-               '                <span class="boxInfo info_tags_follow">'+htmlEtiqueta+'</span>'+
-               '            </p>'+
-               '        </td>'+
-               '      </tr>'+
-               '      '+htmlDocumento_Rel+htmlObservacao+
-               (etapa.data_inicio_execucao != '0000-00-00 00:00:00' && etapa.data_fim_execucao != '0000-00-00 00:00:00' && permiteEdicao && task.show_full_popup ?
-               '      <tr class="detalheBox" style="display:none">'+
-               '        <td colspan="2" style="height: 30px !important;">'+
-               '            <a class="ui-button ui-corner-all ui-widget" style="color: #2b2b2b; text-decoration: none; float: right;" data-id_etapa="'+etapa.id_etapa+'" data-id_projeto="'+etapa.id_projeto+'" onclick="cancelCompleteEtapa(this)">'+
-               '            <i style="margin-right: 3px;" class="fas fa-times-circle vermelhoColor"></i>Cancelar Conclus\u00E3o da Etapa'+
-               '            </a>'+
-               '        </td>'+
-               '      </tr>'+
-               '' : '')+
-               (etapa.data_inicio_execucao != '0000-00-00 00:00:00' && etapa.data_fim_execucao == '0000-00-00 00:00:00' && !etapa.id_demandas && permiteEdicao && task.show_full_popup ?
-               '      <tr>'+
-               '        <td colspan="2" style="height: 30px !important;">'+
-               '            <a class="ui-button ui-corner-all ui-widget" style="color: #2b2b2b; text-decoration: none; float: right;" data-id_etapa="'+etapa.id_etapa+'" data-id_projeto="'+etapa.id_projeto+'" onclick="completeEtapa(this)">'+
-               '            <i style="margin-right: 3px;" class="fas fa-check-circle verdeColor"></i>Concluir Etapa'+
-               '            </a>'+
-               '        </td>'+
-               '      </tr>'+
-               '' : '')+
-               '   </table>'+
-               '</div>';
-    return html;
-}
-function openProjetoConfig() {
-    var stateVisualGantt = ( (typeof ganttProject[0] !== 'undefined' && ganttProject[0].options.edit_task == true) || ( getOptionsPro('stateVisualGantt') == true ) ) ? 'checked' : '';
-    var stateArquivadosGantt = getOptionsPro('stateArquivadosGantt') ? 'checked' : '';
-    var stateExecucaoGantt = getOptionsPro('stateExecucaoGantt') ? 'checked' : '';
-    var statePanelSortPro = ( getOptionsPro('panelSortPro') ) ? 'checked' : '';
-    var textBox =   '<table style="font-size: 10pt;width: 100%;">'+
-                    '   <tr style="height: 40px;">'+
-                    '       <td colspan="2">'+
-                    '           <table style="font-size: 10pt;width: 100%;">'+
-                    '              <tr style="height: 40px;">'+
-                    '                  <td><i class="iconPopup fas fa-sort-alpha-up cinzaColor"></i> Ordena\u00E7\u00E3o das etapas</td>'+
-                    '                  <td style="text-align:right;">'+
-                    '                      <select id="editOrdemProjetos" onchange="changeOrdemProjetos(this)">'+
-                    '                           <option value="data_inicio" '+(!getOptionsPro('stateOrderGantt') || getOptionsPro('stateOrderGantt') == 'data_inicio' ? 'selected' : '')+'>Data de in\u00EDcio</option>'+
-                    '                           <option value="nome_etapa" '+(getOptionsPro('stateOrderGantt') == 'nome_etapa' ? 'selected' : '')+'>Nome da etapa</option>'+
-                    '                           <option value="id_etapa" '+(getOptionsPro('stateOrderGantt') == 'id_etapa' ? 'selected' : '')+'>Data de cadastro</option>'+
-                    '                      </select>'+
-                    '                  </td>'+
-                    '              </tr>'+
-                    '           </table>'+
-                    '       </td>'+
-                    '   </tr>'+
-                    '   <tr style="height: 40px;">'+
-                    '       <td><i class="iconPopup fas fa-hand-paper cinzaColor"></i> Ativar modo de edi\u00E7\u00E3o visual (arrastar e soltar)</td>'+
-                    '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="changeVisualProjetos(this)" name="onoffswitch" class="onoffswitch-checkbox" id="editVisualProjetos" tabindex="0" '+stateVisualGantt+'>'+
-                    '               <label class="onoff-switch-label" for="editVisualProjetos"></label>'+
-                    '           </div>'+
-                    '       </td>'+
-                    '   </tr>'+
-                    '   <tr style="height: 40px;">'+
-                    '       <td><i class="iconPopup fas fa-check-double cinzaColor"></i> Visualizar datas de execu\u00E7\u00E3o em etapas distintas</td>'+
-                    '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="changeExecucaoProjetos(this)" name="onoffswitch" class="onoffswitch-checkbox" id="editExecucaoProjetos" tabindex="0" '+stateExecucaoGantt+'>'+
-                    '               <label class="onoff-switch-label" for="editExecucaoProjetos"></label>'+
-                    '           </div>'+
-                    '       </td>'+
-                    '   </tr>'+
-                    '   <tr style="height: 40px;">'+
-                    '       <td><i class="iconPopup fas fa-archive cinzaColor"></i> Visualizar projetos arquivados</td>'+
-                    '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="viewProjetosArquivados(this)" name="onoffswitch" class="onoffswitch-checkbox" id="viewProjetosArquivados" tabindex="0" '+stateArquivadosGantt+'>'+
-                    '               <label class="onoff-switch-label" for="viewProjetosArquivados"></label>'+
-                    '           </div>'+
-                    '       </td>'+
-                    '   </tr>'+
-                    '   <tr style="height: 40px;">'+
-                    '       <td><i class="iconPopup far fa-hand-rock cinzaColor"></i> Ordenar pain\u00E9is de gest\u00E3o arrastando e soltando</td>'+
-                    '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="changePanelSortPro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="panelSortPro" tabindex="0" '+statePanelSortPro+'>'+
-                    '               <label class="onoff-switch-label" for="panelSortPro"></label>'+
-                    '           </div>'+
-                    '       </td>'+
-                    '   </tr>'+
-                    '</table>';
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+textBox+'</span>')
-        .dialog({
-        	width: 450,
-            title: 'Configura\u00E7\u00F5es de Projetos',
-            open: function() { 
-                initChosenReplace('box_init', this, true);
-            },
-        	buttons: [{
-                text: "Ok",
-                class: 'confirm',
-                click: function() {
-                    $(this).dialog('close');
-                }
-            }]
+    base.etapas = base.etapas.map((e) => {
+      const pred = (e.predecessoras || []).map((p) => ({
+        ...p,
+        id_etapa: idMap.get(p.id_etapa) || p.id_etapa
+      }));
+      return {
+        ...e,
+        predecessoras: pred,
+        id_dependencia: pred.length ? pred[0].id_etapa : false
+      };
     });
-}
-function changeProjetoProcesso(this_) {
-	var _this = $(this_);
-    var _parent = _this.closest('table');
-    var selected = _this.find('option:selected');
-    var id_procedimento = selected.data('id_procedimento');
-    var processo_sei = _this.val();
-    if (processo_sei != '0') {
-        _parent.find('#proj_processo_sei').val(processo_sei);
-        _parent.find('#proj_id_procedimento').val(id_procedimento);
-    } else {
-        _parent.find('#proj_id_procedimento').val('');
-        _parent.find('#proj_select_processo_sei').hide();
-        _parent.find('#proj_select_processo_sei_chosen').hide();
-        _parent.find('#proj_processo_sei').show().val('').focus();
-    }
-}
-function changePercentRange(this_) {
-	var _this = $(this_);
-	var data = _this.data();
-    var id_etapa = data.id_etapa;
-    var id_projeto = data.id_projeto;
-	var progresso_execucao = parseInt(_this.val());
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        $(this_).closest('tr').find('.gantt-percent').text(progresso_execucao);
-        updateProgressoProjeto(id_projeto, id_etapa, progresso_execucao);
-    }
-}
-function updateProgressoProjeto(id_projeto, id_etapa, progresso_execucao) {
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        var action = 'update_projeto_etapa';
-        var param = {
-            action: action, 
-            mode: 'progresso_execucao',
-            id_projeto: id_projeto,
-            id_etapa: id_etapa,
-            progresso_execucao: progresso_execucao
-        };
-        getServerAtividades(param, action);
-
-        var container = $('#svgtab_'+id_projeto+' .gantt-container');
-        var widthMax = container.find('g.bar-wrapper[data-id="'+id_etapa+'"]').find('.bar').attr('width');
-        var widthProgress = Math.round(parseFloat(widthMax)*(progresso_execucao/100));
-            container.find('g.bar-wrapper[data-id="'+id_etapa+'"]').find('.bar-progress').attr('width', widthProgress);
-
-        for (i = 0; i < ganttProject.length; i++) {
-            for (j = 0; j < ganttProject[i].tasks.length; j++) {
-                if (ganttProject[i].tasks[j].id === id_etapa.toString() ) {
-                    ganttProject[i].tasks[j].progress = progresso_execucao;
-                    ganttProject[i].tasks[j].etapa.progresso_execucao = progresso_execucao;
-                }
-            }
-        }
-    }
-}
-function setAutoProgressProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
-	var _this = $(this_);
-	var data = _this.data();
-    var id_etapa = data.id_etapa;
-    var id_etapa = typeof data !== 'undefined' ? data.id_etapa : undefined;
-        id_etapa = typeof id_etapa !== 'undefined' ? id_etapa : 0;
-    var id_projeto = typeof data !== 'undefined' ? data.id_projeto : undefined;
-        id_projeto = typeof id_projeto !== 'undefined' ? id_projeto : 0;
-
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        var mode = typeof data !== 'undefined' ? data.mode : undefined;
-            mode = typeof mode !== 'undefined' ? mode : 'config';
-        var value = valueEtapa(id_projeto, id_etapa);
-        var dataInicio = (value.data_inicio_progresso_automatico != '0000-00-00 00:00:00' ) ? moment(value.data_inicio_progresso_automatico,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : moment().format('YYYY-MM-DDTHH:mm');
-        var dataFim = (value.data_fim_progresso_automatico != '0000-00-00 00:00:00' ) ? moment(value.data_fim_progresso_automatico,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : moment().add(1,'months').format('YYYY-MM-DDTHH:mm');
-
-        var htmlBox =   '<div id="boxProjeto" class="atividadeWork" data-projeto="'+id_projeto+'" data-etapa="'+id_etapa+'">'+
-                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;width: 230px;" class="label">'+
-                        '               <label for="proj_data_inicio_progresso_automatico"><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i>In\u00EDcio da Execu\u00E7\u00E3o (autom\u00E1tico):</label>'+
-                        '           </td>'+
-                        '           <td class="required date">'+
-                        '               <input type="datetime-local" id="proj_data_inicio_progresso_automatico" onchange="updateDatesRange(this);checkThisAtivRequiredFields(this)" data-range="inicio" data-key="data_inicio_progresso_automatico" value="'+dataInicio+'" max="'+dataFim+'" required>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '           <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_data_fim_progresso_automatico"><i class="iconPopup iconSwitch fas fa-clock cinzaColor" style="float: initial;"></i>Fim da Execu\u00E7\u00E3o (autom\u00E1tico):</label>'+
-                        '           </td>'+
-                        '           <td class="required date">'+
-                        '               <input type="datetime-local" id="proj_data_fim_progresso_automatico" onchange="updateDatesRange(this);checkThisAtivRequiredFields(this)" data-range="fim" data-key="data_fim_progresso_automatico" min="'+dataInicio+'" value="'+dataFim+'" required>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '   </table>'+
-                        '</div>';
-
-        var btnActions = ( mode == 'edit' ) ? 
-                    [{
-                    text: "Excluir",
-                    icon: "ui-icon-trash", 
-                    click: function() {
-                        if (checkAtivRequiredFields($('#proj_data_inicio_progresso_automatico')[0], 'mark')) {
-                            getAutoProgressProjeto(this, 'delete');
-                        }
-                    }},{
-                    text: "Editar",
-                    icon: "ui-icon-disk",
-                    class: 'confirm',
-                    click: function() {
-                        if (checkAtivRequiredFields($('#proj_data_inicio_progresso_automatico')[0], 'mark')) {
-                            getAutoProgressProjeto(this);
-                        }
-                    }}]
-                        :
-                    [{
-                    text: "Salvar",
-                    icon: 'ui-icon-disk',
-                    class: 'confirm',
-                    click: function() {
-                        if (checkAtivRequiredFields($('#proj_data_inicio_progresso_automatico')[0], 'mark')) {
-                            getAutoProgressProjeto(this);
-                        }
-                    }}];
-                    
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv">'+htmlBox+'</span>')
-            .dialog({
-                width: 500,
-                title: 'Execu\u00E7\u00E3o autom\u00E1tica de etapa',
-                open: function() { 
-                    updateButtonConfirm(this, true);
-                    prepareFieldsReplace(this);
-                },
-                buttons: btnActions
+    base.ativo = true;
+    return base;
+  }
+  function validateEtapaDates(etapa) {
+    const start = parseDate(etapa.data_inicio_programado);
+    const end = parseDate(etapa.data_fim_programado);
+    if (!start || !end) return { ok: false, error: "Datas programadas obrigatorias" };
+    if (end.getTime() < start.getTime()) return { ok: false, error: "Fim anterior ao inicio" };
+    return { ok: true };
+  }
+  function tiposFromProjetos(projetos) {
+    const map = /* @__PURE__ */ new Map();
+    for (const p of projetos || []) {
+      if (p.id_tipo_projeto && !map.has(p.id_tipo_projeto)) {
+        map.set(p.id_tipo_projeto, {
+          id_tipo_projeto: p.id_tipo_projeto,
+          nome_tipo_projeto: p.nome_tipo_projeto || String(p.id_tipo_projeto)
         });
+      }
     }
-}
-function getAutoProgressProjeto(this_, mode = 'insert') {
-    var _parent = $(this_);
-    var id_projeto = _parent.find('#boxProjeto').data('projeto');
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        var id_etapa = _parent.find('#boxProjeto').data('etapa');
-        var data_inicio_progresso_automatico = _parent.find('[data-key="data_inicio_progresso_automatico"]').val();
-            data_inicio_progresso_automatico = typeof data_inicio_progresso_automatico !== 'undefined' ? moment(data_inicio_progresso_automatico,'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-            data_inicio_progresso_automatico = mode == 'delete' ? '0000-00-00 00:00:00' : data_inicio_progresso_automatico;
-        var data_fim_progresso_automatico = _parent.find('[data-key="data_fim_progresso_automatico"]').val();
-            data_fim_progresso_automatico = typeof data_fim_progresso_automatico !== 'undefined' ? moment(data_fim_progresso_automatico,'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-            data_fim_progresso_automatico = mode == 'delete' ? '0000-00-00 00:00:00' : data_fim_progresso_automatico;
+    return [...map.values()];
+  }
 
-        var action = 'update_projeto_etapa';
-        var param = {
-            action: action, 
-            mode: 'progresso_automatico',
-            id_projeto: id_projeto,
-            id_etapa: id_etapa,
-            data_inicio_progresso_automatico: data_inicio_progresso_automatico,
-            data_fim_progresso_automatico: data_fim_progresso_automatico
-        };
-        getServerAtividades(param, action);
-    }
-}
-function viewProjetosArquivados(this_) {
-    setOptionsPro('stateArquivadosGantt', $(this_).is(':checked'));
-    if ($(this_).is(':checked')) {
-        setTimeout(() => {
-            updateAtividade_(false);
-            loadingButtonConfirm(false);
-            $('#projetosProActions .iconAtividade_update').addClass('fa-spin');
-        }, 1000);
-    } else {
-        setProjetos('refresh');
-    }
-}
-function updateDatesProjetos(task, start, end) {
-    if (checkPermissionProjeto(valueProjeto(task.etapa.id_projeto))) {
-        var action = 'update_projeto_etapa';
-        var param = {
-            action: action, 
-            mode: 'data_programado',
-            id_projeto: task.etapa.id_projeto,
-            id_etapa: task.etapa.id_etapa,
-            data_inicio_programado: moment(start).format('YYYY-MM-DD HH:mm:ss'),
-            data_fim_programado: moment(end).format('YYYY-MM-DD HH:mm:ss')
-        };
-        getServerAtividades(param, action);
-
-        for (i = 0; i < ganttProject.length; i++) {
-            for (j = 0; j < ganttProject[i].tasks.length; j++) {
-                if (ganttProject[i].tasks[j].id === task.id ) {
-                    ganttProject[i].tasks[j]._start = start;
-                    ganttProject[i].tasks[j].start = moment(start).format('YYYY-MM-DD');
-                    ganttProject[i].tasks[j].etapa.data_inicio_programado = moment(start).format('YYYY-MM-DD HH:mm:ss');
-                    ganttProject[i].tasks[j]._end = end;
-                    ganttProject[i].tasks[j].end = moment(end).format('YYYY-MM-DD');
-                    ganttProject[i].tasks[j].etapa.data_fim_programado = moment(end).format('YYYY-MM-DD HH:mm:ss');
-                }
-            }
+  // src/features/projetos/seed.js
+  function buildDemoProjetos(now = today()) {
+    const t0 = addDays(now, -14);
+    const p1 = normalizeProjeto({
+      id_projeto: 9001,
+      nome_projeto: "Demo \u2014 Modernizacao SEI Pro",
+      id_tipo_projeto: 1,
+      nome_tipo_projeto: "Interno",
+      ativo: true,
+      sigla_unidade: "DEMO",
+      etapas: [
+        {
+          id_etapa: 1,
+          nome_etapa: "Levantamento de requisitos",
+          macroetapa: "Planejamento",
+          responsavel: "Ana",
+          grupo: "Produto",
+          data_inicio_programado: formatDateTime(t0),
+          data_fim_programado: formatDateTime(addDays(t0, 4)),
+          data_inicio_execucao: formatDateTime(t0),
+          data_fim_execucao: formatDateTime(addDays(t0, 5)),
+          progresso_execucao: 100,
+          calendario: "util"
+        },
+        {
+          id_etapa: 2,
+          nome_etapa: "Arquitetura e prototipo",
+          macroetapa: "Planejamento",
+          responsavel: "Bruno",
+          id_dependencia: 1,
+          predecessoras: [{ id_etapa: 1, tipo: "FS", lag_dias: 0 }],
+          data_inicio_programado: formatDateTime(addDays(t0, 5)),
+          data_fim_programado: formatDateTime(addDays(t0, 12)),
+          progresso_execucao: 60,
+          data_inicio_progresso_automatico: formatDateTime(addDays(t0, 5)),
+          data_fim_progresso_automatico: formatDateTime(addDays(t0, 12)),
+          calendario: "util"
+        },
+        {
+          id_etapa: 3,
+          nome_etapa: "Migracao do modulo Projetos",
+          macroetapa: "Execucao",
+          responsavel: "Ana",
+          id_dependencia: 2,
+          predecessoras: [{ id_etapa: 2, tipo: "FS", lag_dias: 0 }],
+          data_inicio_programado: formatDateTime(addDays(t0, 13)),
+          data_fim_programado: formatDateTime(addDays(t0, 27)),
+          progresso_execucao: 35,
+          calendario: "util"
+        },
+        {
+          id_etapa: 4,
+          nome_etapa: "Marco \u2014 Go-live interno",
+          macroetapa: "Entrega",
+          responsavel: "Bruno",
+          marco: true,
+          id_dependencia: 3,
+          predecessoras: [{ id_etapa: 3, tipo: "FS", lag_dias: 0 }],
+          data_inicio_programado: formatDateTime(addDays(t0, 28)),
+          data_fim_programado: formatDateTime(addDays(t0, 28)),
+          progresso_execucao: 0,
+          calendario: "util"
+        },
+        {
+          id_etapa: 5,
+          nome_etapa: "Documentacao e smoke test",
+          macroetapa: "Entrega",
+          responsavel: "Carla",
+          id_dependencia: 3,
+          predecessoras: [{ id_etapa: 3, tipo: "SS", lag_dias: 2 }],
+          data_inicio_programado: formatDateTime(addDays(t0, 20)),
+          data_fim_programado: formatDateTime(addDays(t0, 30)),
+          progresso_execucao: 10,
+          calendario: "corrido"
         }
-	}
-}
-function changeExecucaoProjetos(this_) {
-    setOptionsPro('stateExecucaoGantt', $(this_).is(':checked'));
-    setProjetos('refresh');
-}
-function changeOrdemProjetos(this_) {
-    var _this = $(this_);
-    var value = _this.val();
-    setOptionsPro('stateOrderGantt', value);
-    setProjetos('refresh');
-}
-function changeVisualProjetos(this_) {
-    var stateVisualGantt = $(this_).is(':checked');
-    $.each(ganttProject, function (index, value) {
-        var permiteEdicao = checkPermissionProjeto(valueProjeto(ganttProject[index].options.id_projeto));
-        var editTask = stateVisualGantt && permiteEdicao ? true : false;
-            ganttProject[index].options.edit_task = editTask;
-            ganttProject[index].hide_popup();
-            ganttProject[index].refresh(ganttProject[index].tasks);
+      ]
     });
-    setOptionsPro('stateVisualGantt', stateVisualGantt);
-}
-function scrollProjetoGanttToFirstBar() {
-    for (i = 0; i < ganttProject.length; i++) {
-        var scrollLeft = ganttProject[i].bars[0].x-20;
-        var windowDiv = $('#'+ganttProject[i].$svg.id).closest('.gantt-container');
-            windowDiv.animate({scrollLeft: scrollLeft}, 500);
-    }
-}
-function showProjetoDetalhe(this_) {
-    var _this = $(this_);
-        _this.closest('table').find('.detalheBox').toggle();
-    if ( _this.find('i').hasClass('fa-plus-circle') ) {
-        _this.find('i').attr('class','fas cinzaColor fa-minus-circle');
+    const p2 = normalizeProjeto({
+      id_projeto: 9002,
+      nome_projeto: "Demo \u2014 Capacitacao da equipe",
+      id_tipo_projeto: 2,
+      nome_tipo_projeto: "Capacitacao",
+      ativo: true,
+      sigla_unidade: "DEMO",
+      etapas: [
+        {
+          id_etapa: 11,
+          nome_etapa: "Material de apoio",
+          macroetapa: "Preparacao",
+          responsavel: "Carla",
+          data_inicio_programado: formatDateTime(addDays(now, -7)),
+          data_fim_programado: formatDateTime(addDays(now, 3)),
+          progresso_execucao: 80
+        },
+        {
+          id_etapa: 12,
+          nome_etapa: "Oficina pratica",
+          macroetapa: "Execucao",
+          responsavel: "Ana",
+          id_dependencia: 11,
+          predecessoras: [{ id_etapa: 11, tipo: "FS", lag_dias: 1 }],
+          data_inicio_programado: formatDateTime(addDays(now, 4)),
+          data_fim_programado: formatDateTime(addDays(now, 5)),
+          progresso_execucao: 0
+        }
+      ]
+    });
+    return [p1, p2];
+  }
+  function demoTipos() {
+    return [
+      { id_tipo_projeto: 1, nome_tipo_projeto: "Interno" },
+      { id_tipo_projeto: 2, nome_tipo_projeto: "Capacitacao" }
+    ];
+  }
+
+  // src/features/projetos/store.js
+  var STORE_KEY = "configDataProjetosPro";
+  var storeState = null;
+  var storeLastRaw = null;
+  function getStoreProjetos() {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw === storeLastRaw && storeState !== null) return storeState;
+    const parsed = raw && isJson(raw) ? JSON.parse(raw) : false;
+    if (parsed && Array.isArray(parsed.projetos)) {
+      storeState = {
+        version: parsed.version || 1,
+        projetos: parsed.projetos.map((p) => normalizeProjeto(p)),
+        tipos_projetos: parsed.tipos_projetos || tiposFromProjetos(parsed.projetos),
+        updated_at: parsed.updated_at || formatDateTime(/* @__PURE__ */ new Date()),
+        seeded: !!parsed.seeded
+      };
     } else {
-        _this.find('i').attr('class','fas cinzaColor fa-plus-circle');
+      storeState = defaultStore();
     }
-}
-function getOptionsTiposProjetos(val_selected = false, arrayProjetos = arrayConfigAtividades.projetos) {
-    var arrayTiposProjetos = uniqPro(jmespath.search(arrayProjetos, "[*].id_tipo_projeto")); 
-    var optionSelectTipoProjeto = ( arrayTiposProjetos.length > 0 ) 
-        ? 
-            $.map(arrayTiposProjetos, function(v){ 
-                var selected = (val_selected && val_selected == v) ? 'selected' : '';
-                var tipo_projeto = jmespath.search(arrayConfigAtividades.tipos_projetos, "[?id_tipo_projeto==`"+v+"`] | [0].tipo_projeto");
-                    tipo_projeto = tipo_projeto === null ? '' : tipo_projeto;
-                return '<option '+selected+' value="'+v+'">'+tipo_projeto+'</option>';
-            }).join('') 
-        : '';
-    return '<option>&nbsp;</option>'+optionSelectTipoProjeto;
-}
-function saveProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
-    var _this = $(this_);
-    var data = _this.data();
-    var id_projeto = typeof data !== 'undefined' ? data.id_projeto : undefined;
-        id_projeto = typeof id_projeto !== 'undefined' ? id_projeto : 0;
-    var value = valueProjeto(id_projeto);
-    if (checkPermissionProjeto(value) || id_projeto == 0) {
-        var textLabel = (id_projeto == 0) ? 'Inserir Novo' : 'Editar';
-        var optionProcessos = $.map(getProcessoUnidadePro(false, true),function(v){
-                                    return '<option data-id_procedimento="'+v.id_procedimento+'" value="'+v.processo_sei+'">'+v.especificacao+' ('+v.processo_sei+')</option>';
-                                }).join('');
+    storeLastRaw = raw;
+    return storeState;
+  }
+  function persistStoreProjetos(store) {
+    storeState = store || getStoreProjetos();
+    storeState.updated_at = formatDateTime(/* @__PURE__ */ new Date());
+    storeLastRaw = JSON.stringify(storeState);
+    localStorage.setItem(STORE_KEY, storeLastRaw);
+    return storeState;
+  }
+  function ensureDemoSeed(force = false) {
+    const store = getStoreProjetos();
+    if (!force && store.projetos.length > 0) return store;
+    if (!force && store.seeded) return store;
+    store.projetos = buildDemoProjetos();
+    store.tipos_projetos = demoTipos();
+    store.seeded = true;
+    return persistStoreProjetos(store);
+  }
+  function listProjetos() {
+    return getStoreProjetos().projetos.slice();
+  }
+  function replaceProjetos(projetos, tipos) {
+    const store = getStoreProjetos();
+    store.projetos = (projetos || []).map((p) => normalizeProjeto(p));
+    if (tipos) store.tipos_projetos = tipos;
+    else store.tipos_projetos = tiposFromProjetos(store.projetos);
+    return persistStoreProjetos(store);
+  }
+  function ok(return_row, extra = {}) {
+    return { status: 1, return_row, ...extra };
+  }
+  function err(msg) {
+    return { status: 0, status_txt: msg || "Erro ao processar projeto" };
+  }
+  function dispatchProjetoAction(param = {}) {
+    const action = param.action;
+    const store = getStoreProjetos();
+    if (action === "save_projeto") {
+      const projeto = normalizeProjeto({
+        id_projeto: 0,
+        nome_projeto: param.nome_projeto,
+        id_tipo_projeto: param.id_tipo_projeto,
+        nome_tipo_projeto: param.nome_tipo_projeto,
+        processo_sei: param.processo_sei,
+        id_procedimento: param.id_procedimento,
+        ativo: true,
+        sigla_unidade: param.sigla_unidade || "",
+        etapas: []
+      });
+      projeto.id_projeto = nextLocalId("p");
+      store.projetos.push(projeto);
+      store.tipos_projetos = tiposFromProjetos(store.projetos);
+      persistStoreProjetos(store);
+      return ok([projeto], { id_projeto: projeto.id_projeto });
+    }
+    if (action === "edit_projeto") {
+      const p = findProjeto(store.projetos, param.id_projeto);
+      if (!p) return err("Projeto nao encontrado");
+      p.nome_projeto = param.nome_projeto || p.nome_projeto;
+      p.id_tipo_projeto = param.id_tipo_projeto != null ? Number(param.id_tipo_projeto) : p.id_tipo_projeto;
+      p.nome_tipo_projeto = param.nome_tipo_projeto || p.nome_tipo_projeto;
+      p.processo_sei = param.processo_sei !== void 0 ? param.processo_sei : p.processo_sei;
+      p.id_procedimento = param.id_procedimento !== void 0 ? param.id_procedimento : p.id_procedimento;
+      persistStoreProjetos(store);
+      return ok([p], { id_projeto: p.id_projeto });
+    }
+    if (action === "save_etapa" || action === "save_projeto_etapa") {
+      const p = findProjeto(store.projetos, param.id_projeto);
+      if (!p) return err("Projeto nao encontrado");
+      const etapa = normalizeEtapa({
+        ...param,
+        id_etapa: 0,
+        id_projeto: p.id_projeto
+      }, p.id_projeto);
+      etapa.id_etapa = nextLocalId("e");
+      const v = validateEtapaDates(etapa);
+      if (!v.ok) return err(v.error);
+      p.etapas.push(etapa);
+      persistStoreProjetos(store);
+      return ok([p], { id_projeto: p.id_projeto, id_etapa: etapa.id_etapa });
+    }
+    if (action === "update_projeto_etapa" || action === "edit_etapa") {
+      const p = findProjeto(store.projetos, param.id_projeto);
+      if (!p) return err("Projeto nao encontrado");
+      const e = findEtapa(p, param.id_etapa);
+      if (!e) return err("Etapa nao encontrada");
+      const fields = [
+        "nome_etapa",
+        "id_dependencia",
+        "predecessoras",
+        "data_inicio_programado",
+        "data_fim_programado",
+        "data_inicio_execucao",
+        "data_fim_execucao",
+        "data_inicio_progresso_automatico",
+        "data_fim_progresso_automatico",
+        "progresso_execucao",
+        "macroetapa",
+        "responsavel",
+        "grupo",
+        "etiqueta",
+        "checklist",
+        "observacoes",
+        "documento_relacionado",
+        "id_documento_sei",
+        "documento_sei",
+        "id_demandas",
+        "marco",
+        "calendario",
+        "data_pausa",
+        "data_retomada"
+      ];
+      for (const f of fields) {
+        if (param[f] !== void 0) e[f] = param[f];
+      }
+      const normalized = normalizeEtapa(e, p.id_projeto);
+      Object.assign(e, normalized);
+      persistStoreProjetos(store);
+      return ok([p], { id_projeto: p.id_projeto, id_etapa: e.id_etapa });
+    }
+    if (action === "delete_projeto_etapa") {
+      const p = findProjeto(store.projetos, param.id_projeto);
+      if (!p) return err("Projeto nao encontrado");
+      p.etapas = p.etapas.filter((e) => e.id_etapa !== Number(param.id_etapa));
+      persistStoreProjetos(store);
+      return ok([p], { id_projeto: p.id_projeto });
+    }
+    if (action === "delete_projeto") {
+      store.projetos = store.projetos.filter((p) => p.id_projeto !== Number(param.id_projeto));
+      persistStoreProjetos(store);
+      return ok([], { id_projeto: param.id_projeto });
+    }
+    if (action === "clone_projeto") {
+      const p = findProjeto(store.projetos, param.id_projeto);
+      if (!p) return err("Projeto nao encontrado");
+      const clone = cloneProjetoDeep(p);
+      store.projetos.push(clone);
+      persistStoreProjetos(store);
+      return ok([clone], { id_projeto: clone.id_projeto });
+    }
+    if (action === "archive_projeto") {
+      const p = findProjeto(store.projetos, param.id_projeto);
+      if (!p) return err("Projeto nao encontrado");
+      p.ativo = param.ativo != null ? !!param.ativo : !p.ativo;
+      persistStoreProjetos(store);
+      return ok([p], { id_projeto: p.id_projeto });
+    }
+    if (action === "share_projeto") {
+      const p = findProjeto(store.projetos, param.id_projeto);
+      if (!p) return err("Projeto nao encontrado");
+      p.projetos_compartilhados = Array.isArray(param.projetos_compartilhados) ? param.projetos_compartilhados : p.projetos_compartilhados || [];
+      persistStoreProjetos(store);
+      return ok([p], { id_projeto: p.id_projeto });
+    }
+    if (action === "import_projeto") {
+      try {
+        const projeto = normalizeProjeto(param.projeto || param);
+        projeto.id_projeto = nextLocalId("p");
+        store.projetos.push(projeto);
+        persistStoreProjetos(store);
+        return ok([projeto], { id_projeto: projeto.id_projeto });
+      } catch (e) {
+        return err(e.message || "Falha ao importar");
+      }
+    }
+    return err("Acao desconhecida: " + action);
+  }
+  function installProjetosStore() {
+    const ns2 = getSeiPro().features.projetos || (getSeiPro().features.projetos = {});
+    ns2.store = {
+      getStoreProjetos,
+      persistStoreProjetos,
+      ensureDemoSeed,
+      listProjetos,
+      replaceProjetos,
+      dispatchProjetoAction
+    };
+    return ns2.store;
+  }
+  var LOCAL_CAPACIDADES = [
+    "view_projetos",
+    "save_projeto",
+    "edit_projeto",
+    "save_projeto_etapa",
+    "update_projeto_etapa",
+    "delete_projeto",
+    "delete_projeto_etapa",
+    "clone_projeto",
+    "archive_projeto",
+    "share_projeto"
+  ];
+  function hasLocalCapacidade(name) {
+    return LOCAL_CAPACIDADES.includes(name);
+  }
 
-        var htmlBox =  '<div id="boxProjeto" class="atividadeWork" data-projeto="'+(value && value.id_projeto ? value.id_projeto : 0)+'">'+
-                    '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                    '      <tr>'+
-                    '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                    '               <label for="proj_nome_projeto"><i class="iconPopup iconSwitch fas fa-tasks cinzaColor"></i>Nome do Projeto:</label>'+
-                    '           </td>'+
-                    '           <td class="required" colspan="3">'+
-                    '               <input type="text" data-key="nome_projeto" id="proj_nome_projeto" class="data_extract" value="'+(value && value.nome_projeto ? value.nome_projeto : '')+'" required>'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '      <tr>'+
-                    '           <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                    '               <label for="proj_processo_sei"><i class="iconPopup iconSwitch fas fa-folder-open cinzaColor" style="float: initial;"></i>Processo SEI:</label>'+
-                    '           </td>'+
-                    '           <td style="text-align: left;width: 200px; max-width: 250px;">'+
-                    '               <select id="proj_select_processo_sei" style="font-size: 1em; max-width: 250px;" onchange="changeProjetoProcesso(this)"><option>&nbsp;</option>'+optionProcessos+'<option value="0">:: OUTRO PROCESSO ::</option></select>'+
-                    '               <input type="text" style="display:none" id="proj_processo_sei" maxlength="255" onchange="changeProtocoloBoxAtiv(this)" data-key="processo_sei" value="'+(value && value.processo_sei ? value.processo_sei : '' )+'">'+
-                    '               <input type="hidden" id="proj_id_procedimento" data-key="id_procedimento" data-param="id_procedimento" value="'+(value && value.id_procedimento ? value.id_procedimento : '' )+'">'+
-                    '           </td>'+
-                    '           <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                    '               <label class="last" for="proj_id_tipo_projeto"><i class="iconPopup iconSwitch fas fa-flag-checkered cinzaColor" style="float: initial;"></i>Tipo do Projeto:</label>'+
-                    '           </td>'+
-                    '           <td style="text-align: left;">'+
-                    '               <select class="data_extract" style="font-size: 1em;" data-key="id_tipo_projeto" onchange="addNewItemSelect(this)" id="proj_id_tipo_projeto">'+getOptionsTiposProjetos(value && value.id_tipo_projeto ? value.id_tipo_projeto : false)+'<option value="0">:: NOVO ITEM ::</option></select>'+
-                    '           </td>'+
-                    '      </tr>'+
-                    '   </table>'+
-                    '</div>';
+  // src/dom/index.js
+  function qs(selector, root) {
+    return (root || document).querySelector(selector);
+  }
+  function qsa(selector, root) {
+    return Array.prototype.slice.call((root || document).querySelectorAll(selector));
+  }
+  function el(tag, props, children) {
+    const node = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function(key) {
+        const value = props[key];
+        if (value == null) return;
+        if (key === "className") {
+          node.className = value;
+          return;
+        }
+        if (key === "class") {
+          node.className = value;
+          return;
+        }
+        if (key === "textContent" || key === "text") {
+          node.textContent = value;
+          return;
+        }
+        if (key === "innerHTML" || key === "html") {
+          node.innerHTML = value;
+          return;
+        }
+        if (key === "style" && typeof value === "object") {
+          Object.keys(value).forEach(function(p) {
+            node.style[p] = value[p];
+          });
+          return;
+        }
+        if (key === "dataset" && typeof value === "object") {
+          Object.keys(value).forEach(function(d) {
+            node.dataset[d] = value[d];
+          });
+          return;
+        }
+        if (key === "on" && typeof value === "object") {
+          Object.keys(value).forEach(function(t) {
+            node.addEventListener(t, value[t]);
+          });
+          return;
+        }
+        node.setAttribute(key, value);
+      });
+    }
+    appendChildren(node, children);
+    return node;
+  }
+  function appendChildren(node, children) {
+    if (children == null) return node;
+    const list = Array.isArray(children) ? children : [children];
+    list.forEach(function(c) {
+      if (c == null) return;
+      node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return node;
+  }
+  function on(target, type, selectorOrHandler, maybeHandler) {
+    const delegated = typeof selectorOrHandler === "string";
+    const selector = delegated ? selectorOrHandler : null;
+    const handler = delegated ? maybeHandler : selectorOrHandler;
+    function listener(event) {
+      if (!delegated) {
+        return handler.call(target, event);
+      }
+      const match = event.target && event.target.closest ? event.target.closest(selector) : null;
+      if (match && target.contains(match)) {
+        return handler.call(match, event, match);
+      }
+    }
+    target.addEventListener(type, listener);
+    return function off() {
+      target.removeEventListener(type, listener);
+    };
+  }
+  function ready(fn) {
+    if (typeof document === "undefined") {
+      fn();
+      return;
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn, { once: true });
+    } else {
+      setTimeout(fn, 0);
+    }
+  }
 
-        var textButton = value && value.ativo ? ['Arquivar', 'ui-icon-arrowthickstop-1-s'] : ['Reativar', 'ui-icon-arrowthickstop-1-n'];
-        var btnDialogBoxPro = ( id_projeto == 0 ) 
-                ? [{
-                        text: 'Inserir Projeto',
-                        icon: 'ui-icon-disk',
-                        class: 'confirm',
-                        click: function() {
-                            saveProjetoSend(this, 'save');
-                        }
-                    }]
-                : [{
-                        text: 'Editar Projeto',
-                        class: 'confirm',
-                        icon: 'ui-icon-pencil',
-                        click: function() {
-                            saveProjetoSend(this, 'edit');
-                        }
-                    }];
+  // src/shared/ui/tabs.js
+  function createTabs(root, opts = {}) {
+    if (!root) throw new Error("createTabs: root required");
+    const o = Object.assign({ onChange: null, selected: null }, opts);
+    let tablist = root.querySelector('[role="tablist"]');
+    const panels = [];
+    if (Array.isArray(o.items) && o.items.length) {
+      root.innerHTML = "";
+      root.classList.add("seipro-tabs");
+      tablist = document.createElement("div");
+      tablist.setAttribute("role", "tablist");
+      tablist.className = "seipro-tabs__list";
+      root.appendChild(tablist);
+      o.items.forEach((item, i) => {
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.setAttribute("role", "tab");
+        tab.id = "seipro-tab-" + item.id;
+        tab.setAttribute("aria-controls", "seipro-panel-" + item.id);
+        tab.setAttribute("aria-selected", i === 0 ? "true" : "false");
+        tab.tabIndex = i === 0 ? 0 : -1;
+        tab.className = "seipro-tabs__tab";
+        tab.textContent = item.label;
+        tab.dataset.tabId = String(item.id);
+        tablist.appendChild(tab);
+        const panel = document.createElement("div");
+        panel.setAttribute("role", "tabpanel");
+        panel.id = "seipro-panel-" + item.id;
+        panel.setAttribute("aria-labelledby", tab.id);
+        panel.className = "seipro-tabs__panel";
+        panel.hidden = i !== 0;
+        if (typeof item.content === "string") panel.innerHTML = item.content;
+        else if (item.content instanceof Node) panel.appendChild(item.content);
+        root.appendChild(panel);
+        panels.push(panel);
+      });
+    } else {
+      root.classList.add("seipro-tabs");
+      if (!tablist) {
+        tablist = document.createElement("div");
+        tablist.setAttribute("role", "tablist");
+        tablist.className = "seipro-tabs__list";
+        root.insertBefore(tablist, root.firstChild);
+      }
+      root.querySelectorAll('[role="tabpanel"]').forEach((p) => panels.push(p));
+    }
+    const tabs = () => [...tablist.querySelectorAll('[role="tab"]')];
+    function select(id) {
+      const idStr = String(id);
+      tabs().forEach((tab) => {
+        const on2 = tab.dataset.tabId === idStr || tab.getAttribute("aria-controls") === "seipro-panel-" + idStr;
+        tab.setAttribute("aria-selected", on2 ? "true" : "false");
+        tab.tabIndex = on2 ? 0 : -1;
+        const panel = document.getElementById(tab.getAttribute("aria-controls"));
+        if (panel) panel.hidden = !on2;
+      });
+      if (typeof o.onChange === "function") o.onChange(idStr);
+    }
+    function onKey(ev) {
+      const list = tabs();
+      const i = list.indexOf(ev.target);
+      if (i < 0) return;
+      let next = i;
+      if (ev.key === "ArrowRight") next = (i + 1) % list.length;
+      else if (ev.key === "ArrowLeft") next = (i - 1 + list.length) % list.length;
+      else if (ev.key === "Home") next = 0;
+      else if (ev.key === "End") next = list.length - 1;
+      else return;
+      ev.preventDefault();
+      list[next].focus();
+      select(list[next].dataset.tabId);
+    }
+    function onClick(ev) {
+      const tab = ev.target.closest('[role="tab"]');
+      if (!tab || !tablist.contains(tab)) return;
+      select(tab.dataset.tabId);
+    }
+    tablist.addEventListener("click", onClick);
+    tablist.addEventListener("keydown", onKey);
+    const initial = o.selected || tabs()[0] && tabs()[0].dataset.tabId;
+    if (initial) select(initial);
+    return {
+      select,
+      selected: () => {
+        const t = tabs().find((x) => x.getAttribute("aria-selected") === "true");
+        return t ? t.dataset.tabId : null;
+      },
+      destroy() {
+        tablist.removeEventListener("click", onClick);
+        tablist.removeEventListener("keydown", onKey);
+      }
+    };
+  }
 
-                    if (checkCapacidade('archive_projeto') && id_projeto > 0 && checkPermissionProjeto(value)) {
-                        btnDialogBoxPro.unshift({
-                            text: textButton[0],
-                            icon: textButton[1],
-                            click: function() {
-                                archiveProjeto(id_projeto, textButton[0]);
-                            }
-                        });
-                    }
-                    if (checkCapacidade('clone_projeto') && id_projeto > 0 && checkPermissionProjeto(value) && value && value.ativo) {
-                        btnDialogBoxPro.unshift({
-                            text: 'Duplicar',
-                            icon: 'ui-icon-copy',
-                            click: function() {
-                                cloneProjeto(id_projeto);
-                            }
-                        });
-                    }
-                    if (checkCapacidade('delete_projeto') && id_projeto > 0 && checkPermissionProjeto(value) && value && !value.ativo) {
-                        btnDialogBoxPro.unshift({
-                            text: 'Deletar',
-                            icon: 'ui-icon-trash',
-                            click: function() {
-                                deleteProjeto(id_projeto);
-                            }
-                        });
-                    }
-        
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html('<div class="dialogBoxDiv">'+htmlBox+'</span>')
-            .dialog({
-                title: textLabel+" Projeto",
-                width: 780,
-                open: function() { 
-                    updateButtonConfirm(this, true);
-                    prepareFieldsReplace(this);
-                },
-                buttons: btnDialogBoxPro
+  // src/features/projetos/domain/calendario.js
+  function easterSunday(year) {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = (h + l - 7 * m + 114) % 31 + 1;
+    return new Date(year, month - 1, day);
+  }
+  function holidayEntry(date, label) {
+    return { date: startOfDay(date), label, iso: formatDate(date) };
+  }
+  function holidaysBr(year) {
+    const easter = easterSunday(year);
+    return [
+      holidayEntry(new Date(year, 0, 1), "Ano Novo"),
+      holidayEntry(addDays(easter, -48), "Carnaval"),
+      holidayEntry(addDays(easter, -47), "Carnaval"),
+      holidayEntry(addDays(easter, -2), "Paixao de Cristo"),
+      holidayEntry(easter, "Pascoa"),
+      holidayEntry(new Date(year, 3, 21), "Tiradentes"),
+      holidayEntry(addDays(easter, 60), "Corpus Christi"),
+      holidayEntry(new Date(year, 4, 1), "Dia do Trabalho"),
+      holidayEntry(new Date(year, 8, 7), "Independencia"),
+      holidayEntry(new Date(year, 9, 12), "Nossa Senhora Aparecida"),
+      holidayEntry(new Date(year, 10, 2), "Finados"),
+      holidayEntry(new Date(year, 10, 15), "Proclamacao da Republica"),
+      holidayEntry(new Date(year, 10, 20), "Consciencia Negra"),
+      holidayEntry(new Date(year, 11, 25), "Natal")
+    ];
+  }
+  function holidaysBetween(start, end, extra = []) {
+    const a = startOfDay(start);
+    const b = startOfDay(end);
+    if (!a || !b) return [];
+    const from = a.getTime() <= b.getTime() ? a : b;
+    const to = a.getTime() <= b.getTime() ? b : a;
+    const out = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (let y = from.getFullYear(); y <= to.getFullYear(); y++) {
+      for (const h of holidaysBr(y)) {
+        if (h.date.getTime() >= from.getTime() && h.date.getTime() <= to.getTime() && !seen.has(h.iso)) {
+          seen.add(h.iso);
+          out.push(h);
+        }
+      }
+    }
+    for (const e of extra || []) {
+      const d = parseDate(e.date || e.feriado_data || e);
+      if (!d) continue;
+      const iso = formatDate(d);
+      if (d.getTime() >= from.getTime() && d.getTime() <= to.getTime() && !seen.has(iso)) {
+        seen.add(iso);
+        out.push(holidayEntry(d, e.label || e.nome_feriado || e.dia || "Feriado"));
+      }
+    }
+    return out.sort((x, y) => x.date - y.date);
+  }
+  function isWeekend(date) {
+    const d = startOfDay(date);
+    if (!d) return false;
+    const day = d.getDay();
+    return day === 0 || day === 6;
+  }
+  function isHoliday(date, holidayList) {
+    const d = startOfDay(date);
+    if (!d) return false;
+    const iso = formatDate(d);
+    return (holidayList || []).some((h) => (h.iso || formatDate(h.date || h)) === iso);
+  }
+  function isBusinessDay(date, holidayList) {
+    return !isWeekend(date) && !isHoliday(date, holidayList);
+  }
+  function nextBusinessDay(date, holidayList) {
+    let d = startOfDay(date);
+    if (!d) return null;
+    let guard = 0;
+    while (!isBusinessDay(d, holidayList) && guard < 3660) {
+      d = addDays(d, 1);
+      guard++;
+    }
+    return d;
+  }
+  function addBusinessDays(start, n, holidayList) {
+    let d = nextBusinessDay(start, holidayList);
+    if (!d) return null;
+    const steps = Math.max(0, Math.floor(n));
+    for (let i = 0; i < steps; i++) {
+      d = nextBusinessDay(addDays(d, 1), holidayList);
+    }
+    return d;
+  }
+  function countBusinessDays(start, end, holidayList) {
+    let a = startOfDay(start);
+    let b = startOfDay(end);
+    if (!a || !b) return 0;
+    if (a.getTime() > b.getTime()) {
+      const t = a;
+      a = b;
+      b = t;
+    }
+    let count = 0;
+    let cur = a;
+    while (cur.getTime() <= b.getTime()) {
+      if (isBusinessDay(cur, holidayList)) count++;
+      cur = addDays(cur, 1);
+    }
+    return count;
+  }
+  function ganttHolidayOptions(rangeStart, rangeEnd, opts = {}) {
+    const list = holidaysBetween(rangeStart, rangeEnd, opts.extra || []);
+    const highlight = {};
+    highlight["var(--g-weekend-highlight-color)"] = "weekend";
+    highlight["var(--g-holiday-highlight-color, #ffecb3)"] = list.map((h) => ({
+      date: h.iso,
+      label: h.label
+    }));
+    const ignore = opts.ignoreNonBusiness ? ["weekend", ...list.map((h) => h.iso)] : [];
+    return {
+      holidays: highlight,
+      ignore,
+      is_weekend: (d) => isWeekend(d),
+      holidayList: list
+    };
+  }
+
+  // src/features/projetos/domain/progress.js
+  function autoProgressPercent(start, end, now = today()) {
+    const a = parseDate(start);
+    const b = parseDate(end);
+    const n = parseDate(now) || today();
+    if (!a || !b) return 0;
+    if (b.getTime() <= a.getTime()) return n >= b ? 100 : 0;
+    if (n <= a) return 0;
+    if (n >= b) return 100;
+    const total = b.getTime() - a.getTime();
+    const done = n.getTime() - a.getTime();
+    return Math.max(0, Math.min(100, Math.round(done / total * 100)));
+  }
+  function effectiveProgress(etapa, now = today()) {
+    const stored = Math.max(0, Math.min(100, Number(etapa.progresso_execucao) || 0));
+    const hasAuto = !isEmptyDate(etapa.data_inicio_progresso_automatico) && isEmptyDate(etapa.data_fim_execucao) && stored < 100;
+    if (!hasAuto) return { progress: stored, auto: false, changed: false };
+    const pct = autoProgressPercent(
+      etapa.data_inicio_progresso_automatico,
+      etapa.data_fim_progresso_automatico,
+      now
+    );
+    if (pct < 0 || pct === stored) return { progress: stored, auto: true, changed: false };
+    return { progress: pct, auto: true, changed: pct !== stored };
+  }
+  function barStatus(etapa, opts = {}) {
+    const now = parseDate(opts.now) || today();
+    const start = parseDate(etapa.data_inicio_programado);
+    const end = parseDate(etapa.data_fim_programado);
+    const progress = opts.progress != null ? opts.progress : effectiveProgress(etapa, now).progress;
+    if (etapa.marco) return "milestone";
+    if (!isEmptyDate(etapa.data_fim_execucao)) return "complete";
+    if (opts.executedBar) return "executed";
+    if (progress < 100 && end && end < now) return "delay";
+    if (start && end && now >= start && now <= end) return "ongoing";
+    if (etapa.critico) return "critical";
+    return "inday";
+  }
+  function baselineDeviation(etapa) {
+    const plannedEnd = parseDate(etapa.data_fim_programado);
+    const actualEnd = parseDate(etapa.data_fim_execucao);
+    if (!plannedEnd || !actualEnd || isEmptyDate(etapa.data_fim_execucao)) {
+      return { days: null, late: false, early: false };
+    }
+    const days = diffDays(plannedEnd, actualEnd);
+    return { days, late: days > 0, early: days < 0 };
+  }
+  function expectedProgress(etapa, now = today()) {
+    return autoProgressPercent(etapa.data_inicio_programado, etapa.data_fim_programado, now);
+  }
+  function deadlineAlerts(etapas, opts = {}) {
+    const now = parseDate(opts.now) || today();
+    const warnDays = opts.warnDays == null ? 3 : opts.warnDays;
+    const alerts = [];
+    for (const e of etapas || []) {
+      if (!isEmptyDate(e.data_fim_execucao)) continue;
+      const end = parseDate(e.data_fim_programado);
+      if (!end) continue;
+      const daysLeft = diffDays(now, end);
+      const progress = effectiveProgress(e, now).progress;
+      if (daysLeft < 0 && progress < 100) {
+        alerts.push({
+          level: "overdue",
+          id_etapa: e.id_etapa,
+          id_projeto: e.id_projeto,
+          nome_etapa: e.nome_etapa,
+          days: daysLeft,
+          message: "Etapa atrasada em " + Math.abs(daysLeft) + " dia(s)"
         });
+      } else if (daysLeft >= 0 && daysLeft <= warnDays && progress < 100) {
+        alerts.push({
+          level: "warning",
+          id_etapa: e.id_etapa,
+          id_projeto: e.id_projeto,
+          nome_etapa: e.nome_etapa,
+          days: daysLeft,
+          message: "Prazo em " + daysLeft + " dia(s)"
+        });
+      }
     }
-}
-function saveEtapa(this_, arrayProjetos = arrayConfigAtividades.projetos) {
-    var _this = $(this_);
-    var data = _this.data();
-    var id_projeto = typeof data !== 'undefined' ? data.id_projeto : undefined;
-        id_projeto = typeof id_projeto !== 'undefined' ? id_projeto : 0;
-    var valueP = valueProjeto(id_projeto);
+    return alerts;
+  }
 
-    if (checkPermissionProjeto(valueP)) {
-        var id_etapa = typeof data !== 'undefined' ? data.id_etapa : undefined;
-            id_etapa = typeof id_etapa !== 'undefined' ? id_etapa : 0;
-        var value = valueEtapa(id_projeto, id_etapa);
-        var textLabel = (id_etapa == 0) ? 'Inserir Nova' : 'Editar';
-        var projeto_processo_sei = valueP && valueP.processo_sei ? valueP.processo_sei : '';
-        var projeto_id_procedimento = valueP && valueP.id_procedimento ? valueP.id_procedimento : '';
+  // src/features/projetos/domain/schedule.js
+  function durationDays(etapa, holidayList) {
+    const start = startOfDay(etapa.data_inicio_programado);
+    const end = startOfDay(etapa.data_fim_programado);
+    if (!start || !end) return etapa.marco ? 0 : 1;
+    if (etapa.marco) return 0;
+    if (etapa.calendario === "util") {
+      return Math.max(1, countBusinessDays(start, end, holidayList));
+    }
+    return Math.max(1, diffDays(start, end) + 1);
+  }
+  function endFromStart(start, duration, calendario, holidayList) {
+    if (duration <= 0) return start;
+    if (calendario === "util") {
+      return addBusinessDays(start, duration - 1, holidayList);
+    }
+    return addDays(start, duration - 1);
+  }
+  function constraintDate(pred, tipo, lag, holidayList) {
+    const pStart = startOfDay(pred.data_inicio_programado);
+    const pEnd = startOfDay(pred.data_fim_programado);
+    if (!pStart || !pEnd) return null;
+    let base;
+    if (tipo === "SS") base = pStart;
+    else if (tipo === "FF" || tipo === "SF") base = pEnd;
+    else base = addDays(pEnd, 1);
+    if (lag) {
+      base = addDays(base, lag);
+    }
+    return base;
+  }
+  function topologicalSort(etapas) {
+    const byId = new Map((etapas || []).map((e) => [e.id_etapa, e]));
+    const indeg = /* @__PURE__ */ new Map();
+    const adj = /* @__PURE__ */ new Map();
+    for (const e of byId.values()) {
+      indeg.set(e.id_etapa, 0);
+      adj.set(e.id_etapa, []);
+    }
+    for (const e of byId.values()) {
+      for (const p of normalizePredecessoras(e)) {
+        if (!byId.has(p.id_etapa)) continue;
+        adj.get(p.id_etapa).push(e.id_etapa);
+        indeg.set(e.id_etapa, (indeg.get(e.id_etapa) || 0) + 1);
+      }
+    }
+    const q = [...indeg.entries()].filter(([, d]) => d === 0).map(([id]) => id);
+    const order = [];
+    while (q.length) {
+      const id = q.shift();
+      order.push(id);
+      for (const n of adj.get(id) || []) {
+        indeg.set(n, indeg.get(n) - 1);
+        if (indeg.get(n) === 0) q.push(n);
+      }
+    }
+    if (order.length !== byId.size) {
+      const leftover = [...byId.keys()].filter((id) => !order.includes(id));
+      return { order: order.map((id) => byId.get(id)), cycle: leftover };
+    }
+    return { order: order.map((id) => byId.get(id)), cycle: null };
+  }
+  function computeSchedule(etapas, opts = {}) {
+    const list = (etapas || []).map((e) => ({ ...e, predecessoras: normalizePredecessoras(e) }));
+    if (!list.length) {
+      return { etapas: [], criticalIds: [], projectFinish: null, cycle: null };
+    }
+    const rangeStart = list.reduce((min, e) => {
+      const d = parseDate(e.data_inicio_programado);
+      return !d || min && d >= min ? min || d : d;
+    }, null);
+    const rangeEnd = list.reduce((max, e) => {
+      const d = parseDate(e.data_fim_programado);
+      return !d || max && d <= max ? max || d : d;
+    }, null);
+    const holidayList = opts.holidayList || holidaysBetween(
+      rangeStart || /* @__PURE__ */ new Date(),
+      addDays(rangeEnd || /* @__PURE__ */ new Date(), 365) || /* @__PURE__ */ new Date()
+    );
+    const { order, cycle } = topologicalSort(list);
+    if (cycle) {
+      return {
+        etapas: list.map((e) => ({ ...e, folga: null, critico: false })),
+        criticalIds: [],
+        projectFinish: null,
+        cycle
+      };
+    }
+    const byId = new Map(order.map((e) => [e.id_etapa, { ...e }]));
+    for (const e of order) {
+      const cur = byId.get(e.id_etapa);
+      const dur = durationDays(cur, holidayList);
+      cur._duration = dur;
+      let es = startOfDay(cur.data_inicio_programado);
+      for (const p of cur.predecessoras) {
+        const pred = byId.get(p.id_etapa);
+        if (!pred) continue;
+        const c = constraintDate(pred, p.tipo, p.lag_dias, holidayList);
+        if (c && (!es || c.getTime() > es.getTime())) es = c;
+      }
+      if (!es) es = startOfDay(/* @__PURE__ */ new Date());
+      if (cur.calendario === "util") {
+        while (!isBusinessDay(es, holidayList)) es = addDays(es, 1);
+      }
+      const ef = endFromStart(es, dur, cur.calendario, holidayList);
+      cur._es = es;
+      cur._ef = ef;
+    }
+    let projectFinish = null;
+    for (const e of byId.values()) {
+      if (!projectFinish || e._ef.getTime() > projectFinish.getTime()) projectFinish = e._ef;
+    }
+    const rev = [...order].reverse();
+    for (const e of rev) {
+      const cur = byId.get(e.id_etapa);
+      let lf = projectFinish;
+      for (const other of byId.values()) {
+        for (const p of other.predecessoras) {
+          if (p.id_etapa !== cur.id_etapa) continue;
+          const succEs = other._es;
+          if (p.tipo === "FS") {
+            const cand = addDays(succEs, -1 - (p.lag_dias || 0));
+            if (!lf || cand.getTime() < lf.getTime()) lf = cand;
+          } else if (p.tipo === "SS") {
+            const cand = addDays(succEs, -(p.lag_dias || 0));
+            const candLf = endFromStart(cand, cur._duration, cur.calendario, holidayList);
+            if (!lf || candLf.getTime() < lf.getTime()) lf = candLf;
+          } else if (p.tipo === "FF" || p.tipo === "SF") {
+            const cand = addDays(other._ef, -(p.lag_dias || 0));
+            if (!lf || cand.getTime() < lf.getTime()) lf = cand;
+          }
+        }
+      }
+      if (!lf) lf = projectFinish;
+      const ls = cur._duration <= 0 ? lf : cur.calendario === "util" ? (() => {
+        let d = lf;
+        let left = cur._duration - 1;
+        while (left > 0) {
+          d = addDays(d, -1);
+          if (isBusinessDay(d, holidayList)) left--;
+        }
+        while (!isBusinessDay(d, holidayList)) d = addDays(d, -1);
+        return d;
+      })() : addDays(lf, -(cur._duration - 1));
+      cur._lf = lf;
+      cur._ls = ls;
+      cur.folga = diffDays(cur._es, cur._ls);
+      cur.critico = cur.folga === 0;
+    }
+    const criticalIds = [...byId.values()].filter((e) => e.critico).map((e) => e.id_etapa);
+    const enriched = order.map((e) => {
+      const cur = byId.get(e.id_etapa);
+      return {
+        ...cur,
+        data_inicio_programado: formatDateTime(cur._es),
+        data_fim_programado: formatDateTime(cur._ef),
+        folga: cur.folga,
+        critico: cur.critico
+      };
+    });
+    return {
+      etapas: enriched,
+      criticalIds,
+      projectFinish: projectFinish ? formatDateTime(projectFinish) : null,
+      cycle: null
+    };
+  }
+  function cascadeMove(etapas, idEtapa, newStart, newEnd, opts = {}) {
+    const list = (etapas || []).map((e) => ({ ...e, predecessoras: normalizePredecessoras(e) }));
+    const target = list.find((e) => e.id_etapa === Number(idEtapa));
+    if (!target) return list;
+    const oldStart = startOfDay(target.data_inicio_programado);
+    const ns2 = startOfDay(newStart) || oldStart;
+    const ne = startOfDay(newEnd) || startOfDay(target.data_fim_programado);
+    const delta = oldStart ? diffDays(oldStart, ns2) : 0;
+    target.data_inicio_programado = formatDateTime(ns2);
+    target.data_fim_programado = formatDateTime(ne);
+    if (!opts.moveDependencies) return list;
+    const { order } = topologicalSort(list);
+    const byId = new Map(list.map((e) => [e.id_etapa, e]));
+    const holidayList = opts.holidayList || [];
+    for (const e of order) {
+      if (e.id_etapa === target.id_etapa) continue;
+      const cur = byId.get(e.id_etapa);
+      let minStart = startOfDay(cur.data_inicio_programado);
+      for (const p of cur.predecessoras) {
+        const pred = byId.get(p.id_etapa);
+        if (!pred) continue;
+        const c = constraintDate(pred, p.tipo, p.lag_dias, holidayList);
+        if (c && (!minStart || c.getTime() > minStart.getTime())) minStart = c;
+      }
+      const curStart = startOfDay(cur.data_inicio_programado);
+      if (minStart && curStart && minStart.getTime() > curStart.getTime()) {
+        const shift = diffDays(curStart, minStart);
+        cur.data_inicio_programado = formatDateTime(minStart);
+        cur.data_fim_programado = formatDateTime(addDays(startOfDay(cur.data_fim_programado), shift));
+      } else if (delta && opts.shiftAll) {
+        cur.data_inicio_programado = formatDateTime(addDays(curStart, delta));
+        cur.data_fim_programado = formatDateTime(addDays(startOfDay(cur.data_fim_programado), delta));
+      }
+    }
+    return list;
+  }
+  function macroetapaSummaries(etapas) {
+    const groups = /* @__PURE__ */ new Map();
+    for (const e of etapas || []) {
+      const key = (e.macroetapa || "").trim() || "(sem macroetapa)";
+      if (!groups.has(key)) {
+        groups.set(key, {
+          macroetapa: key,
+          etapas: [],
+          data_inicio: null,
+          data_fim: null,
+          progresso: 0,
+          critico: false
+        });
+      }
+      groups.get(key).etapas.push(e);
+    }
+    const out = [];
+    for (const g of groups.values()) {
+      let start = null;
+      let end = null;
+      let progSum = 0;
+      let durSum = 0;
+      let critico = false;
+      for (const e of g.etapas) {
+        const s = parseDate(e.data_inicio_programado);
+        const f = parseDate(e.data_fim_programado);
+        if (s && (!start || s < start)) start = s;
+        if (f && (!end || f > end)) end = f;
+        const d = Math.max(1, diffDays(s, f) + 1);
+        progSum += (e.progresso_execucao || 0) * d;
+        durSum += d;
+        if (e.critico) critico = true;
+      }
+      out.push({
+        macroetapa: g.macroetapa,
+        data_inicio_programado: start ? formatDateTime(start) : null,
+        data_fim_programado: end ? formatDateTime(end) : null,
+        progresso_execucao: durSum ? Math.round(progSum / durSum) : 0,
+        critico,
+        count: g.etapas.length
+      });
+    }
+    return out;
+  }
+  function groupByResponsavel(projetos) {
+    const map = /* @__PURE__ */ new Map();
+    for (const p of projetos || []) {
+      for (const e of p.etapas || []) {
+        const key = (e.responsavel || "").trim() || "(sem responsavel)";
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push({ ...e, nome_projeto: p.nome_projeto, id_projeto: p.id_projeto });
+      }
+    }
+    return [...map.entries()].map(([responsavel, etapas]) => ({ responsavel, etapas }));
+  }
 
-        var optionSelectResponsavel = (taskSelect && taskSelect.responsavel.length > 0 ) ? $.map(taskSelect.responsavel, function(v){ return ( value.responsavel == v ) ? '<option selected>'+v+'</option>' : '<option>'+v+'</option>' }).join('') : '';
-        var optionSelectMacroetapa = (taskSelect && taskSelect.macroetapa.length > 0 ) ? $.map(taskSelect.macroetapa, function(v){ return ( value.macroetapa == v ) ? '<option selected>'+v+'</option>' : '<option>'+v+'</option>' }).join('') : '';
-        var optionSelectGrupo = (taskSelect && taskSelect.grupo.length > 0 ) ? $.map(taskSelect.grupo, function(v){ return ( value.grupo == v ) ? '<option selected>'+v+'</option>' : '<option>'+v+'</option>' }).join('') : '';
-        var optionSelectDependencies = $.map(valueP.etapas, function(v){ if (v.id_etapa != value.id_etapa) { return ( value && value.id_dependencia == v.id_etapa ) ? '<option selected value="'+v.id_etapa+'">'+v.nome_etapa+'</option>' : '<option value="'+v.id_etapa+'">'+v.nome_etapa+'</option>' } }).join('');
+  // src/features/projetos/domain/filters.js
+  function sortProjetos(projetos, { includeArquivados: includeArquivados2 = false, idTipo = null } = {}) {
+    let list = Array.isArray(projetos) ? projetos.slice() : [];
+    if (idTipo != null && idTipo !== "" && idTipo !== false) {
+      const idn = Number(idTipo);
+      list = list.filter((p) => p.id_tipo_projeto === idn);
+    }
+    if (!includeArquivados2) {
+      list = list.filter((p) => p.ativo !== false);
+    }
+    return list.sort((a, b) => String(a.nome_projeto || "").localeCompare(String(b.nome_projeto || ""), "pt-BR"));
+  }
+  function sortEtapas(etapas, orderBy = "data_inicio") {
+    const list = Array.isArray(etapas) ? etapas.slice() : [];
+    if (orderBy === "nome_etapa") {
+      return list.sort((a, b) => String(a.nome_etapa || "").localeCompare(String(b.nome_etapa || ""), "pt-BR"));
+    }
+    if (orderBy === "id_etapa") {
+      return list.sort((a, b) => (a.id_etapa || 0) - (b.id_etapa || 0));
+    }
+    return list.sort((a, b) => {
+      const aa = parseDate(a.data_inicio_programado);
+      const bb = parseDate(b.data_inicio_programado);
+      if (!aa && !bb) return 0;
+      if (!aa) return 1;
+      if (!bb) return -1;
+      return aa - bb;
+    });
+  }
+  function findProjetoById(projetos, id) {
+    const idn = Number(id);
+    return (projetos || []).find((p) => p.id_projeto === idn) || null;
+  }
+  function findEtapaById(projeto, idEtapa) {
+    if (!projeto || !Array.isArray(projeto.etapas)) return null;
+    const idn = Number(idEtapa);
+    return projeto.etapas.find((e) => e.id_etapa === idn) || null;
+  }
+  function findEtapaNome(projetos, idEtapa) {
+    const idn = Number(idEtapa);
+    for (const p of projetos || []) {
+      const e = (p.etapas || []).find((x) => x.id_etapa === idn);
+      if (e) return e.nome_etapa;
+    }
+    return "";
+  }
+  function tiposOptions(projetos, tipos = []) {
+    const map = /* @__PURE__ */ new Map();
+    for (const t of tipos || []) {
+      if (t && t.id_tipo_projeto) map.set(t.id_tipo_projeto, t);
+    }
+    for (const p of projetos || []) {
+      if (p.id_tipo_projeto && !map.has(p.id_tipo_projeto)) {
+        map.set(p.id_tipo_projeto, {
+          id_tipo_projeto: p.id_tipo_projeto,
+          nome_tipo_projeto: p.nome_tipo_projeto || String(p.id_tipo_projeto)
+        });
+      }
+    }
+    return [...map.values()].sort(
+      (a, b) => String(a.nome_tipo_projeto).localeCompare(String(b.nome_tipo_projeto), "pt-BR")
+    );
+  }
+  function filterEtapas(etapas, filter = {}) {
+    return (etapas || []).filter((e) => {
+      if (filter.responsavel && e.responsavel !== filter.responsavel) return false;
+      if (filter.macroetapa && e.macroetapa !== filter.macroetapa) return false;
+      if (filter.grupo && e.grupo !== filter.grupo) return false;
+      if (filter.etiqueta) {
+        const tags = String(e.etiqueta || "").split(/[;,]/).map((t) => t.trim()).filter(Boolean);
+        if (!tags.includes(filter.etiqueta)) return false;
+      }
+      if (filter.critico && !e.critico) return false;
+      if (filter.atraso) {
+        const end = parseDate(e.data_fim_programado);
+        if (!end || end >= /* @__PURE__ */ new Date() || e.progresso_execucao >= 100) return false;
+      }
+      if (filter.q) {
+        const q = String(filter.q).toLowerCase();
+        const hay = [e.nome_etapa, e.responsavel, e.macroetapa, e.grupo, e.observacoes].join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+  function uniqueFieldValues(etapas, field) {
+    const set = /* @__PURE__ */ new Set();
+    for (const e of etapas || []) {
+      const v = (e[field] || "").trim();
+      if (v) set.add(v);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }
+  function flattenEtapas(projetos) {
+    const out = [];
+    for (const p of projetos || []) {
+      for (const e of p.etapas || []) {
+        out.push({
+          ...e,
+          id_projeto: p.id_projeto,
+          nome_projeto: p.nome_projeto,
+          sigla_unidade: p.sigla_unidade
+        });
+      }
+    }
+    return out;
+  }
+  function exportProjetoJson(projeto) {
+    return JSON.parse(JSON.stringify(projeto || {}));
+  }
+  function exportEtapasCsv(etapas) {
+    const cols = [
+      "id_projeto",
+      "nome_projeto",
+      "id_etapa",
+      "nome_etapa",
+      "macroetapa",
+      "responsavel",
+      "data_inicio_programado",
+      "data_fim_programado",
+      "progresso_execucao",
+      "critico",
+      "folga"
+    ];
+    const esc = (v) => {
+      const s = v == null ? "" : String(v);
+      return /["\n,;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const lines = [cols.join(";")];
+    for (const e of etapas || []) {
+      lines.push(cols.map((c) => esc(e[c])).join(";"));
+    }
+    return lines.join("\n");
+  }
+  function importProjetoJson(text) {
+    const data = typeof text === "string" ? JSON.parse(text) : text;
+    if (!data || typeof data !== "object") throw new Error("JSON invalido");
+    if (!data.nome_projeto && !data.etapas) throw new Error("Formato de projeto nao reconhecido");
+    return data;
+  }
 
-        var htmlSelectResponsavel = '<select id="proj_responsavel" onchange="addNewItemSelect(this)" data-key="responsavel"><option>&nbsp;</option><option value="0">:: NOVO ITEM ::</option>'+optionSelectResponsavel+'</select>';
-        var htmlSelectMacroetapa = '<select id="proj_macroetapa" onchange="addNewItemSelect(this)" data-key="macroetapa"><option>&nbsp;</option><option value="0">:: NOVO ITEM ::</option>'+optionSelectMacroetapa+'</select>';
-        var htmlSelectDependencies = '<select id="proj_dependencia" data-key="id_dependencia"><option>&nbsp;</option>'+optionSelectDependencies+'</select>';
-        var htmlSelectGrupo = '<select id="proj_grupo" onchange="addNewItemSelect(this)" data-key="grupo"><option>&nbsp;</option><option value="0">:: NOVO ITEM ::</option>'+optionSelectGrupo+'</select>';
+  // src/features/projetos/gantt-adapter.js
+  function depIds(etapa) {
+    const preds = normalizePredecessoras(etapa);
+    return preds.map((p) => String(p.id_etapa));
+  }
+  function projetoToGanttTasks(projeto, opts = {}) {
+    let etapas = sortEtapas(projeto.etapas || [], opts.orderBy || "data_inicio");
+    let criticalIds = /* @__PURE__ */ new Set();
+    if (opts.applySchedule !== false) {
+      const scheduled = computeSchedule(etapas);
+      etapas = scheduled.etapas;
+      criticalIds = new Set(scheduled.criticalIds || []);
+    }
+    const rangeStart = etapas.reduce((min, e) => {
+      const d = parseDate(e.data_inicio_programado);
+      return !d || min && d < min ? d || min : min;
+    }, null);
+    const rangeEnd = etapas.reduce((max, e) => {
+      const d = parseDate(e.data_fim_programado);
+      return !d || max && d > max ? d || max : max;
+    }, null);
+    const holidayOpts = ganttHolidayOptions(
+      rangeStart || /* @__PURE__ */ new Date(),
+      rangeEnd || /* @__PURE__ */ new Date(),
+      { ignoreNonBusiness: !!opts.ignoreNonBusiness }
+    );
+    const tasks = [];
+    if (opts.showMacro) {
+      for (const m of macroetapaSummaries(etapas)) {
+        if (!m.data_inicio_programado || !m.data_fim_programado) continue;
+        tasks.push({
+          id: "macro_" + m.macroetapa,
+          name: m.macroetapa,
+          start: formatDate(m.data_inicio_programado),
+          end: formatDate(m.data_fim_programado),
+          progress: m.progresso_execucao,
+          dependencies: [],
+          custom_class: "seipro-projetos-bar--macro" + (m.critico ? " seipro-projetos-bar--critical" : ""),
+          _meta: { kind: "macro", macroetapa: m.macroetapa }
+        });
+      }
+    }
+    for (const e of etapas) {
+      const { progress } = effectiveProgress(e);
+      const status = barStatus({ ...e, critico: criticalIds.has(e.id_etapa) || e.critico }, { progress });
+      const start = formatDate(e.data_inicio_programado);
+      const end = formatDate(e.data_fim_programado);
+      if (!start || !end) continue;
+      tasks.push({
+        id: String(e.id_etapa),
+        name: e.nome_etapa,
+        start,
+        end,
+        progress,
+        dependencies: depIds(e),
+        custom_class: "seipro-projetos-bar--" + status,
+        expected_progress: expectedProgress(e),
+        _meta: {
+          kind: "etapa",
+          etapa: e,
+          id_projeto: projeto.id_projeto,
+          critico: criticalIds.has(e.id_etapa) || !!e.critico,
+          folga: e.folga
+        }
+      });
+      if (opts.showExecucao && !isEmptyDate(e.data_inicio_execucao) && !isEmptyDate(e.data_fim_execucao)) {
+        tasks.push({
+          id: String(e.id_etapa) + "_exec",
+          name: e.nome_etapa + " (execucao)",
+          start: formatDate(e.data_inicio_execucao),
+          end: formatDate(e.data_fim_execucao),
+          progress,
+          dependencies: [String(e.id_etapa)],
+          custom_class: "seipro-projetos-bar--executed",
+          _meta: { kind: "executed", etapa: e, id_projeto: projeto.id_projeto }
+        });
+      }
+    }
+    return { tasks, holidayOpts, etapas, criticalIds: [...criticalIds] };
+  }
+  function portfolioToGanttTasks(projetos) {
+    const tasks = [];
+    for (const p of projetos || []) {
+      if (!p.etapas || !p.etapas.length) continue;
+      const starts = p.etapas.map((e) => parseDate(e.data_inicio_programado)).filter(Boolean);
+      const ends = p.etapas.map((e) => parseDate(e.data_fim_programado)).filter(Boolean);
+      if (!starts.length || !ends.length) continue;
+      const start = new Date(Math.min(...starts.map((d) => d.getTime())));
+      const end = new Date(Math.max(...ends.map((d) => d.getTime())));
+      const prog = Math.round(
+        p.etapas.reduce((s, e) => s + (e.progresso_execucao || 0), 0) / p.etapas.length
+      );
+      tasks.push({
+        id: "proj_" + p.id_projeto,
+        name: p.nome_projeto,
+        start: formatDate(start),
+        end: formatDate(end),
+        progress: prog,
+        dependencies: [],
+        custom_class: "seipro-projetos-bar--portfolio",
+        _meta: { kind: "projeto", projeto: p }
+      });
+    }
+    return tasks;
+  }
+  function taskDatesToEtapaPatch(task) {
+    const start = parseDate(task._start || task.start);
+    const end = parseDate(task._end || task.end);
+    return {
+      id_etapa: Number(String(task.id).replace(/_exec$/, "")),
+      data_inicio_programado: start,
+      data_fim_programado: end,
+      progresso_execucao: task.progress
+    };
+  }
+  function buildGanttOptions({ editable = true, holidayOpts = {}, onClick, onDateChange, onProgressChange, popup } = {}) {
+    return {
+      language: "pt-BR",
+      view_mode: "Month",
+      view_mode_select: true,
+      today_button: true,
+      container_height: "auto",
+      scroll_to: "today",
+      bar_height: 18,
+      bar_corner_radius: 3,
+      padding: 16,
+      move_dependencies: true,
+      show_expected_progress: true,
+      readonly: !editable,
+      readonly_dates: !editable,
+      readonly_progress: !editable,
+      holidays: holidayOpts.holidays,
+      ignore: holidayOpts.ignore || [],
+      popup_on: "click",
+      popup: popup || void 0,
+      on_click: onClick,
+      on_date_change: onDateChange,
+      on_progress_change: onProgressChange
+    };
+  }
 
-        var dataInicio = value && value.data_inicio_programado ? moment(value.data_inicio_programado,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : moment().format('YYYY-MM-DDTHH:mm');
-        var dataFim = value && value.data_fim_programado ? moment(value.data_fim_programado,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : moment().add(1,'months').format('YYYY-MM-DDTHH:mm');
-        var optionSelectAtividade = typeof arrayAtividadesPro !== 'undefined' && arrayAtividadesPro && arrayAtividadesPro != 0 && arrayAtividadesPro.length
-                                    ?   $.map(arrayAtividadesPro, function(v){ 
-                                            return (id_etapa > 0 && $.inArray(v.id_demanda.toString(), value.id_demandas) !== -1 ? '' : '<option value="'+v.id_demanda+'">'+getTitleDialogBox(v)+'</option>')
-                                        }).join('') 
-                                    :   '';
-            optionSelectAtividade = (id_etapa > 0 && typeof value.id_demandas_titles !== 'undefined' && value.id_demandas_titles.length) 
-                                    ?   $.map(value.id_demandas_titles, function(v){ 
-                                            return '<option value="'+v.id_demanda+'" selected>'+getTitleDialogBox(v)+'</option>'
-                                        }).join('')+optionSelectAtividade
-                                    : optionSelectAtividade;
+  // src/features/projetos/templates.js
+  function panelShellHtml() {
+    return '<div class="panelHomePro seipro-projetos" id="projetosGantt" style="display:inline-block;width:100%;">  <div class="infraBarraLocalizacao titlePanelHome seipro-projetos__title">    <i class="fa fa-tasks azulColor" style="margin:0 5px;font-size:1.1em;"></i> Projetos    <button type="button" class="newLink seipro-projetos__toggle" data-act="toggle-panel" title="Recolher/mostrar" aria-label="Recolher painel">      <i class="fas fa-minus-square cinzaColor"></i>    </button>  </div>  <div id="projetosGanttDiv" class="seipro-projetos__body" style="width:100%;display:inline-table;">    <div class="seipro-projetos__toolbar" id="projetosProActions">      <button type="button" class="newLink" data-act="add-projeto" title="Adicionar projeto"><i class="fas fa-plus"></i></button>      <button type="button" class="newLink" data-act="open-filter" title="Relatorio filtrado"><i class="fas fa-filter"></i></button>      <button type="button" class="newLink" data-act="open-portfolio" title="Visao de portfolio"><i class="fas fa-th-large"></i></button>      <button type="button" class="newLink" data-act="open-responsavel" title="Por responsavel"><i class="fas fa-users"></i></button>      <button type="button" class="newLink" data-act="toggle-arquivados" title="Mostrar arquivados"><i class="fas fa-archive"></i></button>      <button type="button" class="newLink" data-act="export-json" title="Exportar JSON"><i class="fas fa-file-export"></i></button>      <button type="button" class="newLink" data-act="import-json" title="Importar JSON"><i class="fas fa-file-import"></i></button>      <button type="button" class="newLink" data-act="refresh" title="Atualizar"><i class="fas fa-sync-alt"></i></button>      <label class="seipro-projetos__tipo-label">Tipo         <select id="selectTipoProjetoPro" class="infraText seipro-projetos__tipo" data-act="filter-tipo"></select>      </label>    </div>    <div id="projetosAlerts" class="seipro-projetos__alerts" aria-live="polite"></div>    <div id="projetosTabs" class="seipro-projetos__tabs"></div>  </div></div>';
+  }
+  function emptyStateHtml() {
+    return '<div class="seipro-projetos__empty">  <p>Nenhum projeto ainda. Clique em <strong>+</strong> para criar, ou use os dados de demonstracao.</p>  <button type="button" class="newLink" data-act="seed-demo">Carregar demonstracao</button></div>';
+  }
+  function projetoFormHtml(projeto = {}, tipos = []) {
+    const opts = ['<option value="">\u2014</option>'].concat(tipos.map((t) => {
+      const sel = Number(projeto.id_tipo_projeto) === Number(t.id_tipo_projeto) ? " selected" : "";
+      return '<option value="' + t.id_tipo_projeto + '"' + sel + ">" + escapeHtml(t.nome_tipo_projeto) + "</option>";
+    }));
+    return '<form class="seipro-projetos-form seiProForm" data-form="projeto">  <input type="hidden" name="id_projeto" value="' + (projeto.id_projeto || 0) + '">  <table style="width:100%;font-size:10pt;">    <tr><td class="label"><label>Nome</label></td>        <td class="required"><input class="infraText" name="nome_projeto" required value="' + escapeAttr(projeto.nome_projeto || "") + '"></td></tr>    <tr><td class="label"><label>Tipo</label></td>        <td><select class="infraText" name="id_tipo_projeto">' + opts.join("") + '</select></td></tr>    <tr><td class="label"><label>Processo SEI</label></td>        <td><input class="infraText" name="processo_sei" value="' + escapeAttr(projeto.processo_sei || "") + '"></td></tr>  </table></form>';
+  }
+  function etapaFormHtml(etapa = {}, projeto = {}) {
+    const deps = (projeto.etapas || []).filter((e) => e.id_etapa !== etapa.id_etapa).map((e) => {
+      const sel = Number(etapa.id_dependencia) === Number(e.id_etapa) ? " selected" : "";
+      return '<option value="' + e.id_etapa + '"' + sel + ">" + escapeHtml(e.nome_etapa) + "</option>";
+    });
+    return '<form class="seipro-projetos-form seiProForm" data-form="etapa">  <input type="hidden" name="id_projeto" value="' + (projeto.id_projeto || 0) + '">  <input type="hidden" name="id_etapa" value="' + (etapa.id_etapa || 0) + '">  <table style="width:100%;font-size:10pt;">    <tr><td class="label"><label>Nome</label></td>        <td class="required"><input class="infraText" name="nome_etapa" required value="' + escapeAttr(etapa.nome_etapa || "") + '"></td></tr>    <tr><td class="label"><label>Inicio programado</label></td>        <td class="required"><input type="datetime-local" name="data_inicio_programado" required></td></tr>    <tr><td class="label"><label>Fim programado</label></td>        <td class="required"><input type="datetime-local" name="data_fim_programado" required></td></tr>    <tr><td class="label"><label>Predecessora (FS)</label></td>        <td><select class="infraText" name="id_dependencia"><option value="">\u2014</option>' + deps.join("") + '</select></td></tr>    <tr><td class="label"><label>Macroetapa</label></td>        <td><input class="infraText" name="macroetapa" value="' + escapeAttr(etapa.macroetapa || "") + '"></td></tr>    <tr><td class="label"><label>Responsavel</label></td>        <td><input class="infraText" name="responsavel" value="' + escapeAttr(etapa.responsavel || "") + '"></td></tr>    <tr><td class="label"><label>Grupo</label></td>        <td><input class="infraText" name="grupo" value="' + escapeAttr(etapa.grupo || "") + '"></td></tr>    <tr><td class="label"><label>Etiquetas</label></td>        <td><input class="infraText" name="etiqueta" id="proj_etiqueta" value="' + escapeAttr(etapa.etiqueta || "") + '"></td></tr>    <tr><td class="label"><label>Calendario</label></td>        <td><select class="infraText" name="calendario">              <option value="corrido"' + (etapa.calendario !== "util" ? " selected" : "") + '>Dias corridos</option>              <option value="util"' + (etapa.calendario === "util" ? " selected" : "") + '>Dias uteis (feriados BR)</option>            </select></td></tr>    <tr><td class="label"><label>Marco</label></td>        <td><label><input type="checkbox" name="marco" value="1"' + (etapa.marco ? " checked" : "") + '> Entrega / prazo legal</label></td></tr>    <tr><td class="label"><label>Progresso %</label></td>        <td><input type="number" min="0" max="100" class="infraText" name="progresso_execucao" value="' + (etapa.progresso_execucao || 0) + '"></td></tr>    <tr><td class="label"><label>Observacoes</label></td>        <td><textarea class="infraText" name="observacoes" rows="3">' + escapeHtml(etapa.observacoes || "") + "</textarea></td></tr>  </table></form>";
+  }
+  function popupDetailsHtml(etapa, meta = {}) {
+    const dev = baselineDeviation(etapa);
+    const rows = [
+      ["Responsavel", etapa.responsavel || "\u2014"],
+      ["Macroetapa", etapa.macroetapa || "\u2014"],
+      ["Programado", formatDisplay(etapa.data_inicio_programado, true) + " \u2192 " + formatDisplay(etapa.data_fim_programado, true)],
+      ["Progresso", (meta.progress != null ? meta.progress : etapa.progresso_execucao) + "%"],
+      ["Folga", meta.folga != null ? meta.folga + " dia(s)" : etapa.folga != null ? etapa.folga + " dia(s)" : "\u2014"],
+      ["Critico", meta.critico || etapa.critico ? "Sim" : "Nao"],
+      ["Desvio", dev.days == null ? "\u2014" : dev.days + " dia(s)"]
+    ];
+    return '<table class="seipro-projetos-popup">' + rows.map(
+      (r) => "<tr><th>" + r[0] + "</th><td>" + escapeHtml(String(r[1])) + "</td></tr>"
+    ).join("") + "</table>";
+  }
+  function a11yTableHtml(etapas) {
+    const head = "<thead><tr><th>Etapa</th><th>Inicio</th><th>Fim</th><th>%</th><th>Responsavel</th><th>Critico</th></tr></thead>";
+    const body = (etapas || []).map(
+      (e) => "<tr><td>" + escapeHtml(e.nome_etapa) + "</td><td>" + escapeHtml(formatDisplay(e.data_inicio_programado)) + "</td><td>" + escapeHtml(formatDisplay(e.data_fim_programado)) + "</td><td>" + (e.progresso_execucao || 0) + "</td><td>" + escapeHtml(e.responsavel || "") + "</td><td>" + (e.critico ? "Sim" : "") + "</td></tr>"
+    ).join("");
+    return '<table class="seipro-projetos-a11y infraTable">' + head + "<tbody>" + body + "</tbody></table>";
+  }
+  function shareTableHtml(shares = []) {
+    const rows = (shares || []).map(
+      (s, i) => '<tr data-index="' + i + '"><td contenteditable="true" data-field="usuario">' + escapeHtml(s.usuario || "") + '</td><td contenteditable="true" data-field="permissao">' + escapeHtml(s.permissao || "leitura") + '</td><td><button type="button" class="newLink" data-act="share-remove" data-index="' + i + '"><i class="fas fa-trash"></i></button></td></tr>'
+    ).join("");
+    return '<div class="seipro-projetos-share">  <table class="infraTable" id="seiproProjetosShareTable"><thead><tr><th>Usuario</th><th>Permissao</th><th></th></tr></thead>  <tbody>' + rows + '</tbody></table>  <button type="button" class="newLink" data-act="share-add"><i class="fas fa-plus"></i> Adicionar</button></div>';
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/'/g, "&#39;");
+  }
+  function elFromHtml(html) {
+    const wrap = el("div", { html });
+    return wrap.firstElementChild || wrap;
+  }
 
-        var htmlBox =   '<div id="boxProjeto" class="atividadeWork" data-projeto="'+id_projeto+'" data-etapa="'+id_etapa+'">'+
-                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_nome_etapa"><i class="iconPopup iconSwitch fas fa-bars cinzaColor"></i>Nome da Etapa:</label>'+
-                        '           </td>'+
-                        '           <td class="required" style="width: 250px;">'+
-                        '               <input type="text" id="proj_nome_etapa" maxlength="255" onchange="checkThisAtivRequiredFields(this)" data-key="nome_etapa" value="'+(value && value.nome_etapa ? value.nome_etapa : '' )+'" required>'+
-                        '           </td>'+
-                        '           <td style="vertical-align: bottom;" class="label">'+
-                        '               <label class="last" for="proj_dependencia"><i class="iconPopup iconSwitch fas fa-retweet cinzaColor" style="float: initial;"></i>Depend\u00EAncia:</label>'+
-                        '           </td>'+
-                        '           <td style="width: 250px;">'+
-                        '               '+htmlSelectDependencies+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_data_inicio_programado"><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i>In\u00EDcio da Etapa (programado):</label>'+
-                        '           </td>'+
-                        '           <td class="required date">'+
-                        '               <input type="datetime-local" id="proj_data_inicio_programado" onchange="updateDatesRange(this);checkThisAtivRequiredFields(this)" data-range="inicio" data-key="data_inicio_programado" value="'+dataInicio+'" max="'+dataFim+'" required>'+
-                        '           </td>'+
-                        '           <td style="vertical-align: bottom;" class="label">'+
-                        '               <label class="last" for="proj_data_fim_programado"><i class="iconPopup iconSwitch fas fa-clock cinzaColor" style="float: initial;"></i>Fim da Etapa (programado):</label>'+
-                        '           </td>'+
-                        '           <td class="required date">'+
-                        '               <input type="datetime-local" id="proj_data_fim_programado" onchange="updateDatesRange(this);checkThisAtivRequiredFields(this)" data-range="fim" data-key="data_fim_programado" min="'+dataInicio+'" value="'+dataFim+'" required>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        (value.data_fim_execucao == '0000-00-00 00:00:00' || id_etapa == 0  ?
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_id_demandas"><i class="iconPopup iconSwitch fas fa-check-circle cinzaColor"></i>Demanda Vinculada:</label>'+
-                        '           </td>'+
-                        '           <td colspan="3" style="text-align:left;">'+
-                        '               <select id="proj_id_demandas" onchange="getSelectedItemBox(this)" data-placeholder="Selecione uma ou mais demandas de vincula\u00E7\u00E3o (opcional)" multiple="multiple" data-key="id_demandas"><option>&nbsp;</option>'+optionSelectAtividade+'</select>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '' : '')+
-                        '      <tr id="previewItemAtividade" style="display:none;">'+
-                        '           <td colspan="2">'+
-                        '               <div class="preview_atividade" style="padding: 20px;background-color: #f4f5f5;border-radius: 5px;margin-top: 10px;"></div>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr style="height: 20px;"><td colspan="4"></td></tr>'+
-                        '      <tr style="height: 10px;" class="hrForm">'+
-                        '        <td colspan="4">'+
-                        '            <a class="newLink newLink_active" style="font-size: 10pt;cursor: pointer;margin: -12px 0 0 0;float: right; background-color: #fff;" onclick="showProjetoDetalhe(this)">'+
-                        '                <i class="fas cinzaColor fa-plus-circle"></i> Op\u00E7\u00F5es'+
-                        '            </a>'+
-                        '        </td>'+
-                        '      </tr>'+
-                        '      <tr class="detalheBox" style="display:none">'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_responsavel"><i class="iconPopup iconSwitch fas fa-user-tie cinzaColor"></i>Respons\u00E1vel:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               '+htmlSelectResponsavel+
-                        '           </td>'+
-                        '           <td style="vertical-align: bottom;" class="label">'+
-                        '               <label class="last" for="proj_observacoes"><i class="iconPopup iconSwitch fas fa-comment-alt cinzaColor" style="float: initial;"></i>Observa\u00E7\u00F5es:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <input type="text" id="proj_observacoes" maxlength="255" data-key="observacoes" value="'+(value && value.observacoes ? value.observacoes : '' )+'">'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr class="detalheBox" style="display:none">'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_macroetapa"><i class="iconPopup iconSwitch fas fa-layer-group cinzaColor"></i>Macroetapa:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               '+htmlSelectMacroetapa+
-                        '           </td>'+
-                        '           <td style="vertical-align: bottom;" class="label">'+
-                        '               <label class="last" for="proj_grupo"><i class="iconPopup iconSwitch fas fa-object-group cinzaColor" style="float: initial;"></i>Grupo:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               '+htmlSelectGrupo+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr class="detalheBox" style="display:none">'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_etiqueta"><i class="iconPopup iconSwitch fas fa-tags cinzaColor"></i>Etiqueta:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <input type="text" id="proj_etiqueta" data-key="etiqueta" value="'+(value && value.etiqueta ? value.etiqueta : '' )+'">'+
-                        '           </td>'+
-                        '           <td style="vertical-align: bottom;" class="label">'+
-                        '               <label class="last" for="proj_processo_sei"><i class="iconPopup iconSwitch fas fa-folder-open cinzaColor" style="float: initial;"></i>Processo SEI:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <input type="text" id="proj_processo_sei" maxlength="255" onchange="changeProtocoloBoxAtiv(this)" data-key="processo_sei" value="'+(value && value.processo_sei ? value.processo_sei : (id_etapa == 0 ? projeto_processo_sei : '') )+'">'+
-                        '               <input type="hidden" id="proj_id_procedimento" data-key="id_procedimento" data-param="id_procedimento" value="'+(value && value.id_procedimento ? value.id_procedimento : (id_etapa == 0 ? projeto_id_procedimento : '') )+'">'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '   </table>'+
-                        '</div>';
+  // src/features/projetos/io.js
+  function hasRemoteBackend() {
+    return !!(globalRef.urlServerAtiv && globalRef.userHashAtiv);
+  }
+  function runProjetoAction(param, localDispatch) {
+    if (hasRemoteBackend() && typeof globalRef.getServerAtividades === "function") {
+      return new Promise((resolve) => {
+        try {
+          globalRef.getServerAtividades(param, param.action);
+          resolve({ status: 1, remote: true });
+        } catch (e) {
+          resolve(localDispatch(param));
+        }
+      });
+    }
+    return Promise.resolve(localDispatch(param));
+  }
 
-        var btnDialogBoxPro = (id_etapa == 0) 
-                ? [{
-                        text: 'Inserir Etapa',
-                        icon: 'ui-icon-disk',
-                        class: 'confirm',
-                        click: function() {
-                            if (checkAtivRequiredFields($('#proj_nome_etapa')[0], 'mark')) {
-                                saveEtapaSend(this, 'save');
-                            }
-                        }
-                    }]
-                : [{
-                        text: 'Editar Etapa',
-                        class: 'confirm',
-                        icon: 'ui-icon-pencil',
-                        click: function() {
-                            saveEtapaSend(this, 'edit');
-                        }
-                    }];
+  // src/features/projetos/view/helpers.js
+  var ganttLoading = null;
+  function can(name) {
+    if (typeof globalRef.checkCapacidade === "function" && hasRemoteBackend()) {
+      try {
+        return !!globalRef.checkCapacidade(name);
+      } catch (e) {
+      }
+    }
+    return hasLocalCapacidade(name);
+  }
+  function formToObject(form) {
+    const data = {};
+    new FormData(form).forEach((v, k) => {
+      data[k] = v;
+    });
+    if (form.querySelector('[name="marco"]')) {
+      data.marco = !!form.querySelector('[name="marco"]').checked;
+    }
+    return data;
+  }
+  function act(action, param) {
+    return runProjetoAction({ action, ...param }, dispatchProjetoAction);
+  }
+  function escapeText(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function downloadText(filename, text, mime) {
+    const blob = new Blob([text], { type: mime || "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function getExtensionUrl() {
+    if (typeof globalRef.getUrlExtension === "function") return globalRef.getUrlExtension("");
+    if (globalRef.URL_SPRO) return globalRef.URL_SPRO;
+    try {
+      return chrome.runtime.getURL("");
+    } catch (e) {
+      return "";
+    }
+  }
+  function loadStyle(href) {
+    if (typeof globalRef.loadStylePro === "function") {
+      globalRef.loadStylePro(href);
+      return;
+    }
+    if (document.querySelector('link[href="' + href + '"]')) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+  function loadGanttLib() {
+    if (globalRef.Gantt) return Promise.resolve(globalRef.Gantt);
+    if (ganttLoading) return ganttLoading;
+    const base = getExtensionUrl();
+    loadStyle(base + "css/frappe-gantt.css");
+    ganttLoading = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = base + "js/lib/frappe-gantt.js";
+      s.onload = () => resolve(globalRef.Gantt);
+      s.onerror = () => reject(new Error("Falha ao carregar frappe-gantt"));
+      document.head.appendChild(s);
+    });
+    return ganttLoading;
+  }
 
-            if (checkCapacidade('delete_projeto_etapa') && id_etapa != 0) {
-                btnDialogBoxPro.unshift({
-                    text: 'Deletar etapa',
-                    icon: 'ui-icon-trash',
-                    click: function() {
-                        deleteProjetoEtapa(this);
-                    }
-                });
+  // src/shared/ui/modal.js
+  function openModal({ title = "", content = "", width = 600, buttons, onOpen, onClose, className = "" } = {}) {
+    document.querySelectorAll(".seipro-modal").forEach((m) => m.remove());
+    const overlay = document.createElement("div");
+    overlay.className = "seipro-modal " + className;
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100000;display:flex;align-items:center;justify-content:center;";
+    overlay.innerHTML = '<div class="dialogBoxDiv seipro-modal-box" role="dialog" aria-modal="true" style="background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:95vw;max-height:95vh;overflow:auto;width:' + width + 'px;"><div class="seipro-modal-head" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #eee;font-weight:bold;"><span class="seipro-modal-title">' + title + '</span><i class="fas fa-times" data-modal-close style="cursor:pointer;color:#888;"></i></div><div class="seipro-modal-body" style="padding:14px;"></div><div class="seipro-modal-buttons" style="display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #eee;"></div></div>';
+    const body = overlay.querySelector(".seipro-modal-body");
+    if (typeof content === "string") body.innerHTML = content;
+    else if (content instanceof Node) body.appendChild(content);
+    const ref = { el: overlay, body, close };
+    let onKey;
+    function close() {
+      document.removeEventListener("keydown", onKey, true);
+      if (typeof onClose === "function") {
+        try {
+          onClose(ref);
+        } catch (e) {
+        }
+      }
+      overlay.remove();
+    }
+    onKey = (ev) => {
+      if (ev.key === "Escape") {
+        ev.stopPropagation();
+        close();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    overlay.addEventListener("click", (ev) => {
+      if (ev.target === overlay || ev.target.closest("[data-modal-close]")) close();
+    });
+    const btnRow = overlay.querySelector(".seipro-modal-buttons");
+    (buttons || [{ text: "Fechar", onClick: (r) => r.close() }]).forEach((b) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "newLink " + (b.class || "");
+      btn.textContent = b.text;
+      btn.style.cssText = "cursor:pointer;padding:4px 12px;";
+      btn.addEventListener("click", () => b.onClick(ref));
+      btnRow.appendChild(btn);
+    });
+    document.body.appendChild(overlay);
+    if (typeof onOpen === "function") onOpen(ref);
+    return ref;
+  }
+
+  // src/features/projetos/view/projeto-form.js
+  function openProjetoForm(projeto, { onSaved } = {}) {
+    const store = getStoreProjetos();
+    const isEdit = !!(projeto && projeto.id_projeto);
+    openModal({
+      title: isEdit ? "Editar projeto" : "Novo projeto",
+      width: 520,
+      content: projetoFormHtml(projeto || {}, store.tipos_projetos || tiposOptions(store.projetos)),
+      buttons: [
+        {
+          text: "Salvar",
+          class: "infraButton",
+          onClick(ref) {
+            const form = ref.body.querySelector("form");
+            if (!form.checkValidity()) {
+              form.reportValidity();
+              return;
             }
-
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html('<div class="dialogBoxDiv">'+htmlBox+'</span>')
-            .dialog({
-                title: textLabel+" Etapa",
-                width: 830,
-                open: function() { 
-                    // updateButtonConfirm(this, true);
-                    prepareFieldsReplace(this);
-                    $('#proj_etiqueta').tagsInput({
-                        interactive: true,
-                        placeholder: 'Adicionar',
-                        hide: true,
-                        delimiter: [','],
-                        unique: true,
-                        removeWithBackspace: true,
-                    });
-                    $('#proj_id_demandas').chosen("destroy").chosen({
-                        placeholder_text_single: 'Selecione uma ou mais demandas de vincula\u00E7\u00E3o (opcional)',
-                        no_results_text: 'Nenhum resultado encontrado',
-                        normalize_search_text: function(text) {
-                            return removeAcentos(text.toLowerCase());
-                        }
-                    });
-                },
-                buttons: btnDialogBoxPro
-        });
-    }
-}
-function showExecucaoEtapa(this_) {
-    $(this_).closest('span').hide();
-    $(this_).closest('td').find('.span_data_inicio_execucao').show();
-}
-function setExecucaoEtapa(this_) {
-    var _this = $(this_);
-    var _parent = _this.closest('td');
-    var data = _this.data();
-    var id_projeto = typeof data !== 'undefined' ? data.id_projeto : undefined;
-        id_projeto = typeof id_projeto !== 'undefined' ? id_projeto : 0;
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        var id_etapa = typeof data !== 'undefined' ? data.id_etapa : undefined;
-            id_etapa = typeof id_etapa !== 'undefined' ? id_etapa : 0;
-        var data_inicio_execucao = _parent.find('[data-key="data_inicio_execucao"]').val();
-            data_inicio_execucao = typeof data_inicio_execucao !== 'undefined' ? moment(data_inicio_execucao,'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-        if (id_projeto && id_etapa && data_inicio_execucao) {
-            var action = 'update_projeto_etapa';
-            var param = {
-                action: action, 
-                mode: 'data_inicio_execucao',
-                id_projeto: id_projeto,
-                id_etapa: id_etapa,
-                data_inicio_execucao: data_inicio_execucao
-            };
-            getServerAtividades(param, action);
-            _this.find('i').attr('class','fas fa-spinner fa-spin cinzaColor');
-        }
-    }
-}
-function saveEtapaSend(this_, mode) {
-    var _parent = $(this_);
-    var id_projeto = _parent.find('#boxProjeto').data('projeto');
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        var id_etapa = _parent.find('#boxProjeto').data('etapa');
-        var nome_etapa = _parent.find('[data-key="nome_etapa"]').val();
-            nome_etapa = typeof nome_etapa !== 'undefined' && nome_etapa.trim() != '' ? nome_etapa : false;
-        var id_dependencia = _parent.find('[data-key="id_dependencia"]').val();
-            id_dependencia = (id_dependencia.trim() == '') ? false : id_dependencia;
-        var data_inicio_programado = _parent.find('[data-key="data_inicio_programado"]').val();
-            data_inicio_programado = typeof data_inicio_programado !== 'undefined' ? moment(data_inicio_programado,'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-        var data_fim_programado = _parent.find('[data-key="data_fim_programado"]').val();
-            data_fim_programado = typeof data_fim_programado !== 'undefined' ? moment(data_fim_programado,'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-        var responsavel = _parent.find('[data-key="responsavel"]').val();
-            responsavel = (responsavel.trim() == '') ? false : responsavel;
-        var observacoes = _parent.find('[data-key="observacoes"]').val();
-            observacoes = (observacoes.trim() == '') ? false : observacoes;
-        var macroetapa = _parent.find('[data-key="macroetapa"]').val();
-            macroetapa = (macroetapa.trim() == '') ? false : macroetapa;
-        var grupo = _parent.find('[data-key="grupo"]').val();
-            grupo = (grupo.trim() == '') ? false : grupo;
-        var etiqueta = _parent.find('[data-key="etiqueta"]').val();
-            etiqueta = (etiqueta.trim() == '') ? false : etiqueta;
-        var processo_sei = _parent.find('[data-key="processo_sei"]').val();
-            processo_sei = (processo_sei.trim() == '') ? false : processo_sei;
-        var id_procedimento = _parent.find('[data-key="id_procedimento"]').val();
-            id_procedimento = (id_procedimento.trim() == '') ? false : id_procedimento;
-        var id_demandas = _parent.find('[data-key="id_demandas"]').val();
-            id_demandas = ($.isArray(id_demandas) &&  id_demandas.length) ? id_demandas : false;
-        
-        var action = (mode == 'save') ? 'save_projeto_etapa' : 'edit_projeto_etapa';
-        var param = {
-            action: action, 
-            id_projeto: parseInt(id_projeto),
-            id_etapa: parseInt(id_etapa),
-            nome_etapa: nome_etapa,
-            id_dependencia: id_dependencia,
-            data_inicio_programado: data_inicio_programado,
-            data_fim_programado: data_fim_programado,
-            responsavel: responsavel,
-            observacoes: observacoes,
-            macroetapa: macroetapa,
-            grupo: grupo,
-            etiqueta: etiqueta,
-            processo_sei: processo_sei,
-            id_procedimento: id_procedimento,
-            id_demandas: JSON.stringify(id_demandas)
-        };
-        if (id_projeto && nome_etapa && data_inicio_programado && data_fim_programado) getServerAtividades(param, action);
-    }
-}
-function deleteProjetoEtapa(this_) {
-    var _parent = $(this_);
-    var id_projeto = _parent.find('#boxProjeto').data('projeto');
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        confirmaFraseBoxPro('Tem certeza que deseja <b style="font-weight: bold;">DELETAR</b> a etapa?', 'SIM', 
-        function(){
-            var id_etapa = _parent.find('#boxProjeto').data('etapa');
-            var action = 'delete_projeto_etapa';
-            var param = {
-                action: action, 
-                id_projeto: parseInt(id_projeto),
-                id_etapa: parseInt(id_etapa)
-            };
-            if (id_projeto && id_etapa) getServerAtividades(param, action);
-        });
-    }
-}
-function cloneProjeto(id_projeto) {
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        confirmaFraseBoxPro('Tem certeza que deseja <b style="font-weight: bold;">DUPLICAR</b> o projeto?', 'SIM', 
-        function(){
-            var action = 'clone_projeto';
-            var param = {
-                action: action, 
-                id_projeto: id_projeto
-            };
-            getServerAtividades(param, action);
-            resetDialogBoxPro('dialogBoxPro');
-        });
-    }
-}
-function deleteProjeto(id_projeto) {
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        confirmaFraseBoxPro('Tem certeza que deseja <b style="font-weight: bold;">DELETAR</b> o projeto?', 'SIM', 
-        function(){
-            var action = 'delete_projeto';
-            var param = {
-                action: action, 
-                id_projeto: id_projeto
-            };
-            getServerAtividades(param, action);
-            resetDialogBoxPro('dialogBoxPro');
-        });
-    }
-}
-function archiveProjeto(id_projeto, textButton) {
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        confirmaFraseBoxPro('Tem certeza que deseja <b style="font-weight: bold;">'+textButton.toUpperCase()+'</b> o projeto?', 'SIM', 
-        function(){
-            var action = 'archive_projeto';
-            var param = {
-                action: action, 
-                mode: textButton,
-                id_projeto: id_projeto
-            };
-            getServerAtividades(param, action);
-            resetDialogBoxPro('dialogBoxPro');
-        });
-    }
-}
-function saveProjetoSend(this_, mode) {
-    var _parent = $(this_);
-    var id_projeto = _parent.find('#boxProjeto').data('projeto');
-    if (checkPermissionProjeto(valueProjeto(id_projeto)) || id_projeto == 0) {
-        var nome_projeto = _parent.find('[data-key="nome_projeto"]').val();
-        var id_tipo_projeto = _parent.find('[data-key="id_tipo_projeto"]').val();
-            id_tipo_projeto = (id_tipo_projeto.trim() == '' || !isNumeric(id_tipo_projeto)) ? 0 : id_tipo_projeto;
-        var nome_tipo_projeto = _parent.find('[data-key="id_tipo_projeto"] option:selected').text();
-            nome_tipo_projeto = (nome_tipo_projeto.trim() == '') ? 0 : nome_tipo_projeto;
-        var processo_sei = _parent.find('[data-key="processo_sei"]').val();
-            processo_sei = (processo_sei.trim() == '') ? false : processo_sei;
-        var id_procedimento = _parent.find('[data-key="id_procedimento"]').val();
-            id_procedimento = (id_procedimento.trim() == '') ? false : id_procedimento;
-
-        var action = (mode == 'save') ? 'save_projeto' : 'edit_projeto';
-        var param = {
-            action: action, 
-            nome_projeto: nome_projeto,
-            id_projeto: id_projeto,
-            nome_tipo_projeto: nome_tipo_projeto,
-            processo_sei: processo_sei,
-            id_procedimento: id_procedimento,
-            id_tipo_projeto: parseInt(id_tipo_projeto)
-        };
-        getServerAtividades(param, action);
-    }
-}
-function completeEtapa(this_, arrayProjetos = arrayConfigAtividades.projetos) {
-    var _this = $(this_);
-    var data = _this.data();
-    var id_projeto = typeof data !== 'undefined' ? data.id_projeto : undefined;
-        id_projeto = typeof id_projeto !== 'undefined' ? id_projeto : 0;
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        var id_etapa = typeof data !== 'undefined' ? data.id_etapa : undefined;
-            id_etapa = typeof id_etapa !== 'undefined' ? id_etapa : 0;
-        var value = valueEtapa(id_projeto, id_etapa);
-
-        var dataInicio = value && value.data_inicio_execucao && value.data_inicio_execucao != '0000-00-00 00:00:00' ? moment(value.data_inicio_execucao,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : moment().format('YYYY-MM-DDTHH:mm');
-        var dataFim = value && value.data_fim_execucao && value.data_fim_execucao != '0000-00-00 00:00:00' ? moment(value.data_fim_execucao,'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DDTHH:mm') : moment().add(1,'months').format('YYYY-MM-DDTHH:mm');
-        var htmlSelectDocSEI = '<select id="proj_documento_relacionado" onchange="changeDocumentoRelacionado(this)" data-key="documento_relacionado"><option>&nbsp;</option></select>';
-
-        var htmlBox =   '<div id="boxProjeto" class="atividadeWork" data-projeto="'+id_projeto+'" data-etapa="'+id_etapa+'">'+
-                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom;text-align: left;width: 160px;" class="label">'+
-                        '               <label for="proj_data_inicio_execucao"><i class="iconPopup iconSwitch fas fa-hourglass-start cinzaColor"></i>In\u00EDcio da Execu\u00E7\u00E3o:</label>'+
-                        '           </td>'+
-                        '           <td class="required date">'+
-                        '               <input type="datetime-local" id="proj_data_inicio_execucao" onchange="updateDatesRange(this);checkThisAtivRequiredFields(this)" data-range="inicio" data-key="data_inicio_execucao" value="'+dataInicio+'" max="'+dataFim+'" required>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_data_fim_execucao"><i class="iconPopup iconSwitch fas fa-hourglass-end cinzaColor" style="float: initial;"></i>Fim da Execu\u00E7\u00E3o:</label>'+
-                        '           </td>'+
-                        '           <td class="required date">'+
-                        '               <input type="datetime-local" id="proj_data_fim_execucao" onchange="updateDatesRange(this);checkThisAtivRequiredFields(this)" data-range="fim" data-key="data_fim_execucao" min="'+dataInicio+'" value="'+dataFim+'" required>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: bottom; text-align: left;" class="label">'+
-                        '               <label for="proj_documento_relacionado"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i>Documento Relacionado:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               '+htmlSelectDocSEI+
-                        '               <input type="hidden" id="proj_id_documento_sei" data-key="id_documento_sei" value="'+(value.id_documento_sei ? value.id_documento_sei : 0)+'">'+
-                        '               <input type="hidden" id="proj_documento_sei" data-key="documento_sei" value="'+(value.documento_sei ? value.documento_sei : 0)+'">'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '   </table>'+
-                        '</div>';
-
-        var btnDialogBoxPro = [{
-                        text: 'Concluir Etapa',
-                        class: 'confirm',
-                        icon: 'ui-icon-pencil',
-                        click: function() {
-                            if (checkAtivRequiredFields($('#proj_data_inicio_execucao')[0], 'mark')) {
-                                completeEtapaSend(this);
-                            }
-                        }
-                    }];
-
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html('<div class="dialogBoxDiv">'+htmlBox+'</span>')
-            .dialog({
-                title: "Concluir Etapa",
-                width: 550,
-                open: function() { 
-                    updateButtonConfirm(this, true);
-                    prepareFieldsReplace(this);
-                    if (typeof value.id_procedimento !== 'undefined' && value.id_procedimento) {
-                        $("#proj_documento_relacionado")
-                            .empty()
-                            .append($('<option>Carrengando documentos...<option/>'))
-                            .chosen("destroy").chosen({
-                                placeholder_text_single: ' ', 
-                                no_results_text: 'Nenhum resultado encontrado',
-                                normalize_search_text: function(text) {
-                                    return removeAcentos(text.toLowerCase());
-                                } 
-                            });
-                        $('#proj_documento_relacionado_chosen').addClass('chosenLoading');
-                        getDadosIframeProcessoPro(String(value.id_procedimento), 'projeto');
-                    }
-                },
-                buttons: btnDialogBoxPro
-        });
-    }
-}
-function completeEtapaSend(this_) {
-    var _parent = $(this_);
-    var id_projeto = _parent.find('#boxProjeto').data('projeto');
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        var id_etapa = _parent.find('#boxProjeto').data('etapa');
-        var data_inicio_execucao = _parent.find('[data-key="data_inicio_execucao"]').val();
-            data_inicio_execucao = typeof data_inicio_execucao !== 'undefined' ? moment(data_inicio_execucao,'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-        var data_fim_execucao = _parent.find('[data-key="data_fim_execucao"]').val();
-            data_fim_execucao = typeof data_fim_execucao !== 'undefined' ? moment(data_fim_execucao,'YYYY-MM-DDTHH:mm').format('YYYY-MM-DD HH:mm:ss') : false;
-        var documento_relacionado = _parent.find('[data-key="documento_relacionado"]').val();
-            documento_relacionado = (documento_relacionado.trim() == '') ? false : documento_relacionado;
-        var documento_sei = _parent.find('[data-key="documento_sei"]').val();
-            documento_sei = (parseInt(documento_sei) > 0) ? documento_sei : false;
-        var id_documento_sei = _parent.find('[data-key="id_documento_sei"]').val();
-            id_documento_sei = (parseInt(id_documento_sei) > 0) ? id_documento_sei : false;
-
-        var action = 'update_projeto_etapa';
-        var param = {
-            action: action, 
-            mode: 'complete_execucao',
-            id_projeto: id_projeto,
-            id_etapa: id_etapa,
-            data_inicio_execucao: data_inicio_execucao,
-            data_fim_execucao: data_fim_execucao,
-            documento_relacionado: documento_relacionado,
-            documento_sei: documento_sei,
-            id_documento_sei: id_documento_sei
-        };
-        getServerAtividades(param, action);
-    }
-}
-function cancelCompleteEtapa(this_) {
-    var _this = $(this_);
-    var data = _this.data();
-    var id_projeto = typeof data !== 'undefined' ? data.id_projeto : undefined;
-        id_projeto = typeof id_projeto !== 'undefined' ? id_projeto : 0;
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        confirmaFraseBoxPro('Tem certeza que deseja <b style="font-weight: bold;">CANCELAR</b> a conclus\u00E3o da etapa?', 'SIM', 
-        function(){
-            var id_etapa = typeof data !== 'undefined' ? data.id_etapa : undefined;
-                id_etapa = typeof id_etapa !== 'undefined' ? id_etapa : 0;
-
-            var action = 'update_projeto_etapa';
-            var param = {
-                action: action, 
-                mode: 'cancel_complete_execucao',
-                id_projeto: id_projeto,
-                id_etapa: id_etapa
-            };
-            getServerAtividades(param, action);
-        });
-    }
-}
-function getDemandaVinculadaBox(v, full = false) {
-    var value = jmespath.search(arrayAtividadesPro,"[?id_demanda==`"+v.id_demanda+"`] | [0]");
-        value = value === null ? false : value;
-    var nome_atividade = (v.nome_atividade && v.nome_atividade.length > 50) 
-                            ? v.nome_atividade.replace(/^(.{50}[^\s]*).*/, "$1")+'...' 
-                            : (v.nome_atividade ? v.nome_atividade : '');
-    var assunto = (v.assunto && v.assunto.length > 50) 
-                            ? v.assunto.replace(/^(.{50}[^\s]*).*/, "$1")+'...' 
-                            : (v.assunto ? v.assunto : '');
-    var nameAtiv = (full) 
-                    ? (v.assunto ? v.assunto +' / ': '')+v.nome_atividade
-                    : (assunto ? assunto : '')+(nome_atividade != '' ? ' / '+nome_atividade : '');
-    var iconAtiv = (v.data_inicio == '0000-00-00 00:00:00') ? '<i class="fas fa-stop-circle cinzaColor"></i> N\u00E3o iniciada ' : '';
-        iconAtiv = (v.data_inicio != '0000-00-00 00:00:00') ? '<i class="fas fa-play-circle azulColor"></i> Iniciada ' : iconAtiv;
-        iconAtiv = (v.data_entrega != '0000-00-00 00:00:00') ? '<i class="fas fa-check-circle verdeColor"></i> Entregue ' : iconAtiv;
-        iconAtiv = (v.data_entrega == '0000-00-00 00:00:00' && v.data_pausa != '0000-00-00 00:00:00' && v.data_retomada == '0000-00-00 00:00:00') ? '<i class="fas fa-pause-circle laranjaColor"></i> Pausada ' : iconAtiv;
-
-    var statusAtiv = (v.data_entrega == '0000-00-00 00:00:00' && moment(v.prazo_entrega, "YYYY-MM-DD HH:mm:ss") < moment() ) ? ' (Em atraso) ' : '';
-
-    var itensCompletosChecklist = (value && typeof value.checklist !== 'undefined' && value.checklist !== null && value.checklist.length ) ? jmespath.search(value.checklist, "[?data_fim!='0000-00-00 00:00:00'] | length(@)")  : false;
-    var progressChecklist = (itensCompletosChecklist) ? (itensCompletosChecklist/value.checklist.length)*100  : false;
-    var htmlProgressChecklist = (v.data_entrega == '0000-00-00 00:00:00' && progressChecklist) 
-            ?   '<div class="info_checklist">'+
-                '   <div class="checklist_progress ui-progressbar ui-corner-all ui-widget ui-widget-content">'+
-                '       <div class="ui-progressbar-value ui-corner-left ui-widget-header" style="width: '+progressChecklist+'%;"></div>'+
-                '   </div>'+
-                '</div>' 
-            : '';
-
-    var displayTitle =  '<span class="type-id">#'+v.id_demanda+'</span> '+iconAtiv+statusAtiv+'<br>'+(v.nome_requisicao ? v.nome_requisicao+' - ' : '')+(v.requisicao_sei ? '('+v.requisicao_sei+') - ' : '')+(v.apelido ? v.apelido+' ' : '');
-        displayTitle = (displayTitle != '') ? displayTitle+'/ '+nameAtiv : nameAtiv;
-        displayTitle = displayTitle+htmlProgressChecklist;
-
-    return displayTitle;
-}
-function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
-    var _this = $(this_);
-    var data = _this.data();
-    var id_projeto = typeof data !== 'undefined' ? data.id_projeto : undefined;
-        id_projeto = typeof id_projeto !== 'undefined' ? id_projeto : 0;
-    var value = valueProjeto(id_projeto);
-    if (checkPermissionProjeto(value)) {
-
-        var htmlBox =   '<div id="boxProjeto" class="atividadeWork" data-projeto="'+id_projeto+'">'+
-                        '   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine">'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
-                        '               <label><i class="iconPopup iconSwitch fas fa-briefcase cinzaColor"></i>Unidades:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <div class="tabelaPanelScroll" style="max-height: 200px;">'+
-                        '                   <table id="shareBox_unidade" data-format="obj_mult" data-key="unidade" style="font-size: 8pt !important;width: 100%;" class="tableOptionConfig tableSortable seiProForm tableDialog tableInfo tableZebra tableFollow tableAtividades shareBoxProjeto">'+
-                        '                        <thead>'+
-                        '                            <tr>'+
-                        '                                <th colspan="3" style="text-align: right;">'+
-                        '                                    <a class="newLink addConfigItem" onclick="addConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;">'+
-                        '                                        <i class="fas fa-plus-circle cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                        '                                        Adicionar novo item'+
-                        '                                    </a>'+
-                        '                                </th>'+
-                        '                            </tr>'+
-                        '                            <tr class="tableHeader">'+
-                        '                                <th class="tituloControle">Unidade</th>'+
-                        '                                <th class="tituloControle" style="width: 50px;">Pode editar</th>'+
-                        '                                <th class="tituloControle" style="width: 50px;"></th>'+
-                        '                            </tr>'+
-                        '                        </thead>'+
-                        '                        <tbody>';
-        var unidade = (value.projetos_compartilhados !== null && typeof value.projetos_compartilhados !== 'undefined') ? value.projetos_compartilhados : false;
-            unidade = unidade ? jmespath.search(unidade,"[?id_unidade]") : unidade;
-        var unidade_len = (unidade) ? unidade.length : 0;
-        if (unidade) {
-            $.each(unidade, function(i, v){
-                htmlBox +=  '                           <tr data-index="'+i+'" data-id="'+v.id_projeto_compartilhado+'" data-id_projeto="'+id_projeto+'" data-value="'+v.id_unidade+'" data-edicao="'+v.edicao+'" data-key="id_unidade" style="text-align: left;">'+
-                            '                               <td class="" data-type="num_switch" data-key="unidade" style="padding: 0 10px;">'+unicodeToChar(v.sigla_unidade+' - '+v.nome_unidade)+'</td>'+
-                            '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                            '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
-                            '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="unidade" class="onoffswitch-checkbox switch_unidadeDefault switch_unidadeDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
-                            '                                      <label class="onoff-switch-label" for="changeItemConfig_unidades_'+i+'"></label>'+
-                            '                                  </div>'+
-                            '                               </td>'+
-                            '                               <td style="width: 50px; text-align: center;">'+
-                            '                                    <i class="fas fa-trash-alt cinzaColor removeTrConfig" data-mode="remove_share" data-key="unidade" style="cursor: pointer;float: right;margin-right: 20px;" onclick="shareProjetoSend(this)"></i>'+
-                            '                               </td>'+ 
-                            '                           </tr>';
+            const data = formToObject(form);
+            const action = isEdit ? "edit_projeto" : "save_projeto";
+            act(action, data).then(() => {
+              ref.close();
+              if (typeof onSaved === "function") onSaved();
             });
-        }
-        htmlBox +=      '                           <tr data-index="'+unidade_len+'" data-id="new" data-id_projeto="'+id_projeto+'" data-value="" data-key="id_unidade" data-edicao="0" style="text-align: left;">'+
-                        '                               <td class="editCellSelect" data-type="num" data-key="unidade" style="padding: 0 10px;"></td>'+
-                        '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                        '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
-                        '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="unidade" class="onoffswitch-checkbox switch_unidadeDefault switch_unidadeDefault_'+unidade_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+unidade_len+'" tabindex="0">'+
-                        '                                      <label class="onoff-switch-label" for="changeItemConfig_unidades_'+unidade_len+'"></label>'+
-                        '                                  </div>'+
-                        '                               </td>'+
-                        '                               <td style="width: 50px; text-align: center;">'+
-                        '                                    <i class="fas fa-trash-alt cinzaColor removeTrConfig" data-mode="remove_share" data-key="unidade" style="cursor: pointer;float: right;margin-right: 20px;" onclick="shareProjetoSend(this)"></i>'+
-                        '                               </td>'+ 
-                        '                           </tr>'+
-                        '                       </tbody>'+
-                        '                   </table>'+
-                        '                </div>'+
-                        '           </td>'+
-                        '      </tr>'+
-                        '      <tr>'+
-                        '          <td style="vertical-align: middle; text-align: left;" class="label">'+
-                        '               <label><i class="iconPopup iconSwitch fas fa-users cinzaColor"></i>Usu\u00E1rios:</label>'+
-                        '           </td>'+
-                        '           <td>'+
-                        '               <div class="tabelaPanelScroll" style="max-height: 200px;">'+
-                        '                   <table id="shareBox_usuario" data-format="obj_mult" data-key="usuario" style="font-size: 8pt !important;width: 100%;" class="tableOptionConfig tableSortable seiProForm tableDialog tableInfo tableZebra tableFollow tableAtividades">'+
-                        '                        <thead>'+
-                        '                            <tr>'+
-                        '                                <th colspan="3" style="text-align: right;">'+
-                        '                                    <a class="newLink addConfigItem" onclick="addConfigItem(this)" style="cursor: pointer; margin: 5px;display: inline-block;">'+
-                        '                                        <i class="fas fa-plus-circle cinzaColor" style="padding-right: 3px; cursor: pointer; font-size: 12pt;"></i>'+
-                        '                                        Adicionar novo item'+
-                        '                                    </a>'+
-                        '                                </th>'+
-                        '                            </tr>'+
-                        '                            <tr class="tableHeader">'+
-                        '                                <th class="tituloControle">Usu\u00E1rio</th>'+
-                        '                                <th class="tituloControle" style="width: 50px;">Pode editar</th>'+
-                        '                                <th class="tituloControle" style="width: 50px;"></th>'+
-                        '                            </tr>'+
-                        '                        </thead>'+
-                        '                        <tbody>';
-        var usuario = (value.projetos_compartilhados !== null && typeof value.projetos_compartilhados !== 'undefined') ? value.projetos_compartilhados : false;
-            usuario = usuario ? jmespath.search(usuario,"[?id_user]") : usuario;
-        var usuario_len = (usuario) ? usuario.length : 0;
-        if (usuario) {
-            $.each(usuario, function(i, v){
-                htmlBox +=  '                           <tr data-index="'+i+'" data-id="'+v.id_projeto_compartilhado+'" data-id_projeto="'+id_projeto+'" data-value="'+v.id_user+'" data-edicao="'+v.edicao+'" data-key="id_user" style="text-align: left;">'+
-                            '                               <td class="" data-type="num_switch" data-key="usuario" style="padding: 0 10px;">'+unicodeToChar(v.nome_completo)+'</td>'+
-                            '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                            '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
-                            '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="usuario" class="onoffswitch-checkbox switch_usuarioDefault switch_usuarioDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
-                            '                                      <label class="onoff-switch-label" for="changeItemConfig_usuarios_'+i+'"></label>'+
-                            '                                  </div>'+
-                            '                               </td>'+
-                            '                               <td style="width: 50px; text-align: center;">'+
-                            '                                    <i class="fas fa-trash-alt cinzaColor removeTrConfig" data-mode="remove_share" data-key="usuario" style="cursor: pointer;float: right;margin-right: 20px;" onclick="shareProjetoSend(this)"></i>'+
-                            '                               </td>'+ 
-                            '                           </tr>';
-            });
-        }
-        htmlBox +=      '                            <tr data-index="'+usuario_len+'" data-id="new" data-id_projeto="'+id_projeto+'" data-value="" data-key="id_user" data-edicao="0" style="text-align: left;">'+
-                        '                                <td class="editCellSelect" data-type="num" data-key="usuario" style="padding: 0 10px;"></td>'+
-                        '                                <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                        '                                   <div class="onoffswitch" style="transform: scale(0.8);">'+
-                        '                                       <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="usuario" class="onoffswitch-checkbox switch_usuarioDefault switch_usuarioDefault_'+usuario_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+usuario_len+'" tabindex="0">'+
-                        '                                       <label class="onoff-switch-label" for="changeItemConfig_usuarios_'+usuario_len+'"></label>'+
-                        '                                   </div>'+
-                        '                                </td>'+
-                        '                                <td style="width: 50px; text-align: center;">'+
-                        '                                     <i class="fas fa-trash-alt cinzaColor removeTrConfig" data-mode="remove_share" data-key="usuario" style="cursor: pointer;float: right;margin-right: 20px;" onclick="shareProjetoSend(this)"></i>'+
-                        '                                </td>'+ 
-                        '                            </tr>'+
-                        '                        </tbody>'+
-                        '                    </table>'+
-                        '               </td>'+
-                        '          </tr>'+
-                        '       </table>'+
-                        '   </div>'+
-                        '</div>';
+          }
+        },
+        { text: "Cancelar", onClick: (r) => r.close() }
+      ]
+    });
+  }
 
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html('<div class="dialogBoxDiv">'+htmlBox+'</span>')
-            .dialog({
-                title: "Compartilhar Projeto",
-                width: 900,
-                open: function() { 
-                    updateButtonConfirm(this, true);
-
-                    if (typeof arrayConfigAtividades.unidades_all === 'undefined' || typeof arrayConfigAtividades.usuarios_all === 'undefined') {
-                        var action = 'share_projeto';
-                        var param = {
-                            action: action,
-                            mode: 'list_select'
-                        };
-                        getServerAtividades(param, action);
-                    }
-
-                    var configShareEditor = {
-                        internals: {
-                            renderEditor: (elem, oldVal) => {
-                                var _this = $(elem);
-                                var data = _this.data();
-                                var value = valueProjeto(_this.closest('tr').data('id_projeto'));
-                                var projetos_compartilhados = value && value.projetos_compartilhados 
-                                        ? data.key == 'usuario'
-                                            ? jmespath.search(value.projetos_compartilhados,"[?id_user].id_user")
-                                            : jmespath.search(value.projetos_compartilhados,"[?id_unidade].id_unidade")
-                                        : null;
-                                    projetos_compartilhados = projetos_compartilhados === null ? [] : projetos_compartilhados;
-
-                                var arraySelect = (data.key == 'unidade' && typeof arrayConfigAtividades.unidades_all !== 'undefined' && arrayConfigAtividades.unidades_all !== null && arrayConfigAtividades.unidades_all.length) ? arrayConfigAtividades.unidades_all : [];
-                                    arraySelect = (data.key == 'usuario' && typeof arrayConfigAtividades.usuarios_all !== 'undefined' && arrayConfigAtividades.usuarios_all !== null && arrayConfigAtividades.usuarios_all.length) ? arrayConfigAtividades.usuarios_all : arraySelect;
-                                    var htmlOptions = $.map(arraySelect, function(v){
-                                                                return data.key == 'unidade' 
-                                                                    ? $.inArray(v.id_unidade, projetos_compartilhados) !== -1 ? '' : '<option value="'+v.id_unidade+'">'+v.sigla_unidade+' - '+v.nome_unidade+'</option>'
-                                                                    : $.inArray(v.id_user, projetos_compartilhados) !== -1 ? '' : '<option value="'+v.id_user+'">'+v.nome_completo+'</option>';
-
-                                                        }).join('');
-                                _this.html(`<select data-old="`+oldVal+`" data-type="unidade" data-mode="insert_`+data.key+`" onchange="shareTableNewItem(this)" name="shareTableNewItem"><option value="0">&nbsp;</option>`+htmlOptions).find('select').focus().chosen({
-                                    placeholder_text_single: ' ',
-                                    no_results_text: 'Nenhum resultado encontrado',
-                                    normalize_search_text: function(text) {
-                                        return removeAcentos(text.toLowerCase());
-                                    }
-                                });
-                                if (checkBrowser() == 'Firefox') _this.find('.chosen-container').addClass('chosen-repair-firefox');
-                            },
-                            renderValue: (elem, formattedNewVal) => { 
-                                var _this = $(elem);
-                                if (formattedNewVal != 'new') {
-                                    _this.text(formattedNewVal); 
-                                }
-                            },
-                            extractEditorValue: (elem) => { 
-                                return extractEditorValue_(elem); 
-                            },
-                        }
-                    };
-
-                    shareEditorUnidade = new SimpleTableCellEditor('shareBox_unidade');
-                    shareEditorUnidade.SetEditableClass("editCellSelect", configShareEditor);
-                    shareEditorUsuario = new SimpleTableCellEditor('shareBox_usuario');
-                    shareEditorUsuario.SetEditableClass("editCellSelect", configShareEditor);
-                }
-        });
+  // src/shared/ui/tags-input.js
+  function createTagsInput(input, opts = {}) {
+    const o = Object.assign({
+      delimiter: ";",
+      placeholder: "Adicionar",
+      minChars: 1,
+      maxChars: 100,
+      limit: 0,
+      unique: true,
+      removeWithBackspace: true,
+      source: [],
+      // array de sugestões ou função () => array
+      renderLabel: null,
+      // (tag) => HTML do conteúdo da pill (sem o x)
+      onAdd: null,
+      onRemove: null,
+      onChange: null
+    }, opts);
+    const doc = o.doc || input.ownerDocument || document;
+    const dropRoot = o.dropdownRoot || doc.body;
+    let tags = String(input.value || "").split(o.delimiter).map((t) => t.trim()).filter(Boolean);
+    const wrap = doc.createElement("div");
+    wrap.className = "seipro-tagsinput";
+    wrap.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:1px solid #ccc;border-radius:4px;padding:3px;min-height:28px;";
+    const inner = doc.createElement("input");
+    inner.type = "text";
+    inner.placeholder = o.placeholder;
+    inner.className = "seipro-tagsinput-entry";
+    inner.style.cssText = "border:0;outline:0;flex:1;min-width:80px;font-size:inherit;background:transparent;";
+    input.style.display = "none";
+    input.insertAdjacentElement("afterend", wrap);
+    const dropdown = doc.createElement("div");
+    dropdown.className = "seipro-tagsinput-suggest";
+    dropdown.style.cssText = "position:absolute;z-index:100001;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);max-height:160px;overflow:auto;display:none;font-size:11px;";
+    dropRoot.appendChild(dropdown);
+    function sync() {
+      input.value = tags.join(o.delimiter);
+      if (typeof o.onChange === "function") o.onChange(tags.slice(), input);
     }
-}
-function extractEditorValue_(elem) {
-    var _this = $(elem);
-        _this.data('newvalue',_this.find('select').val());
-        _this.closest('tr').attr('data-value',_this.find('select').val()).data('value', _this.find('select').val());
-        shareProjetoSend(elem, _this.closest('tr').data());
-    return _this.find('select').find('option:selected').text().trim(); 
-}
-function shareProjetoSend(this_, data = false) {
-    var _this = $(this_);
-    var data_this = _this.data();
-    var tr = _this.closest('tr');
-    var table = _this.closest('table');
-        data = !data ? tr.data() : data;
-    var id_projeto = (typeof data !== 'undefined' && typeof data.id_projeto !== 'undefined') ? data.id_projeto : false;
+    function pill(tag) {
+      const el2 = doc.createElement("span");
+      el2.className = "tag seipro-tag";
+      el2.style.cssText = "display:inline-flex;align-items:center;gap:3px;background:#eef;border-radius:3px;padding:1px 6px;";
+      el2.innerHTML = typeof o.renderLabel === "function" ? o.renderLabel(tag) : escapeText2(tag);
+      const x = doc.createElement("i");
+      x.className = "fas fa-times seipro-tag-remove";
+      x.style.cssText = "cursor:pointer;font-size:.8em;opacity:.7;";
+      x.addEventListener("click", () => remove(tag));
+      el2.appendChild(x);
+      el2.dataset.tag = tag;
+      return el2;
+    }
+    function render() {
+      wrap.querySelectorAll(".seipro-tag").forEach((n) => n.remove());
+      tags.forEach((t) => wrap.insertBefore(pill(t), inner));
+    }
+    function add(raw) {
+      const tag = String(raw || "").trim();
+      if (tag.length < o.minChars || tag.length > o.maxChars) return false;
+      if (o.unique && tags.indexOf(tag) !== -1) return false;
+      if (o.limit > 0 && tags.length >= o.limit) return false;
+      tags.push(tag);
+      render();
+      sync();
+      if (typeof o.onAdd === "function") o.onAdd(tag, tags.slice());
+      return true;
+    }
+    function remove(tag) {
+      const i = tags.indexOf(tag);
+      if (i === -1) return;
+      tags.splice(i, 1);
+      render();
+      sync();
+      if (typeof o.onRemove === "function") o.onRemove(tag, tags.slice());
+    }
+    function sources() {
+      return (typeof o.source === "function" ? o.source() : o.source) || [];
+    }
+    function hideSuggest() {
+      dropdown.style.display = "none";
+      dropdown.innerHTML = "";
+    }
+    function showSuggest() {
+      const q = inner.value.trim().toLowerCase();
+      if (!q) return hideSuggest();
+      const matches = sources().filter((s) => String(s).toLowerCase().indexOf(q) !== -1 && tags.indexOf(String(s)) === -1).slice(0, 8);
+      if (!matches.length) return hideSuggest();
+      dropdown.innerHTML = "";
+      matches.forEach((m) => {
+        const item = doc.createElement("div");
+        item.textContent = m;
+        item.style.cssText = "padding:4px 8px;cursor:pointer;";
+        item.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          add(m);
+          inner.value = "";
+          hideSuggest();
+        });
+        dropdown.appendChild(item);
+      });
+      const r = inner.getBoundingClientRect();
+      dropdown.style.left = r.left + (doc.defaultView ? doc.defaultView.scrollX : 0) + "px";
+      dropdown.style.top = r.bottom + (doc.defaultView ? doc.defaultView.scrollY : 0) + "px";
+      dropdown.style.minWidth = r.width + "px";
+      dropdown.style.display = "block";
+    }
+    inner.addEventListener("input", showSuggest);
+    inner.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === o.delimiter) {
+        e.preventDefault();
+        if (inner.value.trim()) {
+          add(inner.value);
+          inner.value = "";
+          hideSuggest();
+        }
+      } else if (e.key === "Backspace" && inner.value === "" && o.removeWithBackspace && tags.length) {
+        remove(tags[tags.length - 1]);
+      }
+    });
+    inner.addEventListener("blur", () => {
+      setTimeout(hideSuggest, 150);
+      if (inner.value.trim()) {
+        add(inner.value);
+        inner.value = "";
+      }
+    });
+    wrap.addEventListener("click", () => inner.focus());
+    wrap.appendChild(inner);
+    render();
+    return {
+      getTags: () => tags.slice(),
+      add,
+      remove,
+      destroy() {
+        hideSuggest();
+        dropdown.remove();
+        wrap.remove();
+        input.style.display = "";
+      }
+    };
+  }
+  function escapeText2(s) {
+    return String(s).replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]);
+  }
 
-    if (checkPermissionProjeto(valueProjeto(id_projeto))) {
-        if (data.id == 'new' && data.value > 0) {
-            var action = 'share_projeto';
-            var param = {
-                action: action,
-                mode: 'insert_'+data_this.key,
-                key: data_this.key,
-                id_projeto: id_projeto,
-                id_unidade: data_this.key == 'unidade' ? data.value : false,
-                id_user: data_this.key == 'usuario' ? data.value : false,
-                edicao: data.edicao
-            };
-            getServerAtividades(param, action);
-            tr.find('td').eq(0).addClass('editCellLoading');
-        } else if (data_this.mode == 'remove_share') {
-            confirmaBoxPro('Tem certeza que deseja excluir este item?', function(){
-                var action = 'share_projeto';
-                var param = {
-                    action: action,
-                    mode: data_this.mode,
-                    key: data_this.key,
-                    id_projeto: id_projeto,
-                    id_projeto_compartilhado: data.id,
-                    id_unidade: data_this.key == 'unidade' ? data.value : false,
-                    id_user: data_this.key == 'usuario' ? data.value : false
-                };
-                getServerAtividades(param, action);
-                tr.find('td').eq(0).addClass('editCellLoading');
-            }, 'Excluir');
-        } else if (data_this.mode == 'change_edicao') {
-            if (data.value == '') {
-                var _td = $('#shareBox_'+data_this.key).find('.editCellSelect.inEdit');
-                var textResult = extractEditorValue_(_td[0]);
-                    _td.text(textResult);
-                    _td.closest('tr').find('.onoffswitch-checkbox').prop('checked',false);
-                    if (textResult == '') $(this_).prop('checked',false);
+  // src/features/projetos/view/etapa-form.js
+  function openEtapaForm(projeto, etapa, { onSaved } = {}) {
+    const isEdit = !!(etapa && etapa.id_etapa);
+    return openModal({
+      title: isEdit ? "Editar etapa" : "Nova etapa",
+      width: 560,
+      content: etapaFormHtml(etapa || {}, projeto),
+      onOpen(modal) {
+        const form = modal.body.querySelector("form");
+        if (etapa) {
+          const s = form.querySelector('[name="data_inicio_programado"]');
+          const e = form.querySelector('[name="data_fim_programado"]');
+          if (s) s.value = formatDateTimeLocal(etapa.data_inicio_programado);
+          if (e) e.value = formatDateTimeLocal(etapa.data_fim_programado);
+        }
+        const tagInput = form.querySelector("#proj_etiqueta");
+        if (tagInput) createTagsInput(tagInput, { delimiter: ";" });
+      },
+      buttons: [
+        {
+          text: "Salvar",
+          class: "infraButton",
+          onClick(modal) {
+            const form = modal.body.querySelector("form");
+            if (!form.checkValidity()) {
+              form.reportValidity();
+              return;
+            }
+            const data = formToObject(form);
+            data.data_inicio_programado = formatDateTime(data.data_inicio_programado);
+            data.data_fim_programado = formatDateTime(data.data_fim_programado);
+            data.progresso_execucao = Number(data.progresso_execucao) || 0;
+            if (data.id_dependencia) {
+              data.predecessoras = [{ id_etapa: Number(data.id_dependencia), tipo: "FS", lag_dias: 0 }];
             } else {
-                var edicao = _this.is(':checked') ? 1 : 0;
-                var action = 'share_projeto';
-                var param = {
-                    action: action,
-                    mode: data_this.mode,
-                    key: data_this.key,
-                    id_projeto: id_projeto,
-                    id_projeto_compartilhado: data.id,
-                    id_unidade: data_this.key == 'unidade' ? data.value : false,
-                    id_user: data_this.key == 'usuario' ? data.value : false,
-                    edicao: edicao
-                };
-                getServerAtividades(param, action);
-                tr.attr('data-edicao',edicao);
-                tr.find('td').eq(0).addClass('editCellLoading');    
+              data.predecessoras = [];
+              data.id_dependencia = false;
             }
+            const action = isEdit ? "update_projeto_etapa" : "save_etapa";
+            act(action, data).then(() => {
+              modal.close();
+              if (typeof onSaved === "function") onSaved();
+            });
+          }
+        },
+        { text: "Cancelar", onClick: (r) => r.close() }
+      ]
+    });
+  }
+
+  // src/features/projetos/view/popup.js
+  function buildPopup(ctx, { onSaved } = {}) {
+    const task = ctx.task;
+    const meta = task._meta || {};
+    if (meta.kind !== "etapa") {
+      ctx.set_title(task.name);
+      ctx.set_subtitle(meta.kind || "");
+      return;
+    }
+    const etapa = meta.etapa;
+    const { progress } = effectiveProgress(etapa);
+    ctx.set_title(etapa.nome_etapa);
+    ctx.set_subtitle(etapa.macroetapa || "");
+    ctx.set_details(popupDetailsHtml(etapa, { progress, critico: meta.critico, folga: meta.folga }));
+    if (can("update_projeto_etapa")) {
+      ctx.add_action('<i class="fas fa-edit"></i> Editar', () => {
+        const p = findProjeto(listProjetos(), meta.id_projeto);
+        if (p) openEtapaForm(p, etapa, { onSaved });
+      });
+    }
+    if (can("delete_projeto_etapa")) {
+      ctx.add_action('<i class="fas fa-trash"></i> Excluir', () => {
+        if (!confirm("Excluir esta etapa?")) return;
+        act("delete_projeto_etapa", { id_projeto: meta.id_projeto, id_etapa: etapa.id_etapa }).then(() => {
+          if (typeof onSaved === "function") onSaved();
+        });
+      });
+    }
+  }
+
+  // src/features/projetos/view/share.js
+  function openShare(projeto, { onSaved } = {}) {
+    let shares = (projeto.projetos_compartilhados || []).map((s) => ({ ...s }));
+    openModal({
+      title: "Compartilhar \u2014 " + projeto.nome_projeto,
+      width: 520,
+      content: shareTableHtml(shares),
+      onOpen(modal) {
+        modal.body.addEventListener("click", (ev) => {
+          const btn = ev.target.closest("[data-act]");
+          if (!btn) return;
+          if (btn.dataset.act === "share-add") {
+            shares.push({ usuario: "", permissao: "leitura" });
+            modal.body.querySelector(".seipro-projetos-share").outerHTML = shareTableHtml(shares);
+          }
+          if (btn.dataset.act === "share-remove") {
+            shares.splice(Number(btn.dataset.index), 1);
+            modal.body.querySelector(".seipro-projetos-share").outerHTML = shareTableHtml(shares);
+          }
+        });
+        modal.body.addEventListener("focusout", (ev) => {
+          const cell = ev.target.closest("[data-field]");
+          if (!cell) return;
+          const tr = cell.closest("tr");
+          const i = Number(tr.dataset.index);
+          if (shares[i]) shares[i][cell.dataset.field] = cell.textContent.trim();
+        });
+      },
+      buttons: [
+        {
+          text: "Salvar",
+          onClick(modal) {
+            qsa("#seiproProjetosShareTable tbody tr", modal.body).forEach((tr, i) => {
+              shares[i] = {
+                usuario: tr.querySelector('[data-field="usuario"]').textContent.trim(),
+                permissao: tr.querySelector('[data-field="permissao"]').textContent.trim()
+              };
+            });
+            act("share_projeto", { id_projeto: projeto.id_projeto, projetos_compartilhados: shares }).then(() => {
+              modal.close();
+              if (typeof onSaved === "function") onSaved();
+            });
+          }
+        },
+        { text: "Fechar", onClick: (r) => r.close() }
+      ]
+    });
+  }
+
+  // src/features/projetos/view/report.js
+  function openFilterReport() {
+    const all = flattenEtapas(listProjetos());
+    openModal({
+      title: "Relatorio filtrado",
+      width: 720,
+      content: '<div class="seipro-projetos-report"><label>Responsavel <input class="infraText" data-filter="responsavel"></label> <label>Macroetapa <input class="infraText" data-filter="macroetapa"></label> <label><input type="checkbox" data-filter="critico"> So criticos</label> <label><input type="checkbox" data-filter="atraso"> Atrasados</label><div class="seipro-projetos-report__out"></div><button type="button" class="newLink" data-act="export-csv">Exportar CSV</button></div>',
+      onOpen(modal) {
+        const out = modal.body.querySelector(".seipro-projetos-report__out");
+        function run() {
+          const filter = {};
+          qsa("[data-filter]", modal.body).forEach((el2) => {
+            if (el2.type === "checkbox") filter[el2.dataset.filter] = el2.checked;
+            else if (el2.value.trim()) filter[el2.dataset.filter] = el2.value.trim();
+          });
+          const rows = filterEtapas(all, filter);
+          out.innerHTML = a11yTableHtml(rows);
+          out._rows = rows;
         }
-    }
-}
-function shareTableNewItem(this_) {
-    var _this = $(this_);
-    var td = _this.closest('td');
-    var tr = _this.closest('tr');
-    if (_this.val() == 'new') {
-        setTimeout(function(){ 
-            td.removeClass('inEdit').removeClass('editCellSelect').addClass('editCellNew');
-            td.html('').trigger('click');
-        }, 100);
-    }
-}
-function checkPermissionProjeto(value) {
-    var id_unidade = arrayConfigAtivUnidade.id_unidade;
-    var id_user = arrayConfigAtividades.perfil.id_user;
-    var projetos_compartilhados = (value.projetos_compartilhados !== null && typeof value.projetos_compartilhados !== 'undefined' && value.projetos_compartilhados.length) ? value.projetos_compartilhados : false;
-    var compartilhado =  projetos_compartilhados ? jmespath.search(value.projetos_compartilhados, "[?id_unidade==`"+id_unidade+"`] | [0]") : null;
-        compartilhado =  compartilhado == null ? jmespath.search(value.projetos_compartilhados, "[?id_user==`"+id_user+"`] | [0]") : compartilhado;
-        compartilhado = (id_unidade === null || id_user === null) ? false : compartilhado;
-    var permiteEdicao = value.id_unidade == id_unidade || (compartilhado && compartilhado.edicao == 1) ? true : false;
-    return permiteEdicao;
-}
-function valueProjeto(id_projeto, arrayProjetos = arrayConfigAtividades.projetos) {
-    var value = (id_projeto == 0) ? null : jmespath.search(arrayProjetos, "[?id_projeto==`"+id_projeto+"`] | [0]");
-        value = value === null ? false : value;
-    return value;
-}
-function valueEtapa(id_projeto, id_etapa, arrayProjetos = arrayConfigAtividades.projetos) {
-    var value = (id_projeto == 0 || id_etapa == 0) ? null : jmespath.search(arrayProjetos, "[?id_projeto==`"+id_projeto+"`] | [0].etapas | [?id_etapa==`"+id_etapa+"`] | [0]");
-        value = value === null ? false : value;
-    return value;
-}
-function changeDocumentoRelacionado(this_) {
-    var _this = $(this_);
-    var _parent = _this.closest('table');
-    var _id_documento_sei = _parent.find('[data-key="id_documento_sei"]');
-    var _documento_sei = _parent.find('[data-key="documento_sei"]');
-    if (_id_documento_sei.length) _id_documento_sei.val(_this.find('option:selected').attr('data_id_documento_sei'));
-    if (_documento_sei.length) _documento_sei.val(_this.find('option:selected').attr('data_nr_sei'));
-}
-function updateSelectConcluirProjetoEtapa() {
-	var docsArray = dadosProcessoPro.listDocumentos;
-    var select = $("#proj_documento_relacionado");
-	select.empty().append($('<option/>'));
-    $.each(docsArray, function (index, valueSelect) {
-        select.append($('<option/>', { 
-            data_id_documento_sei: valueSelect.id_protocolo,
-            value : valueSelect.documento+' ('+valueSelect.nr_sei+')',
-            text : valueSelect.documento+' ('+valueSelect.nr_sei+')',
-			data_nr_sei : valueSelect.nr_sei,
-			data_assinatura : valueSelect.data_assinatura,
-			data_documento : valueSelect.documento
-        })).chosen("destroy").chosen({
-            placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado',
-            normalize_search_text: function(text) {
-                return removeAcentos(text.toLowerCase());
-            }
+        modal.body.addEventListener("input", run);
+        modal.body.addEventListener("change", run);
+        modal.body.addEventListener("click", (ev) => {
+          if (ev.target.closest('[data-act="export-csv"]')) {
+            const csv = exportEtapasCsv(out._rows || all);
+            downloadText("projetos-relatorio.csv", csv, "text/csv");
+          }
         });
+        run();
+      },
+      buttons: [{ text: "Fechar", onClick: (r) => r.close() }]
     });
-    $('#proj_documento_relacionado_chosen').removeClass('chosenLoading');
-}
+  }
 
-function openFilterProjeto(arrayProjetos = arrayConfigAtividades.projetos) {
-    var macroetapaList = jmespath.search(arrayProjetos,"[*].etapas[?macroetapa] | [0] | [*].macroetapa");
-        macroetapaList = uniqPro(macroetapaList);
-    var grupoList = jmespath.search(arrayProjetos, "[*].etapas[?grupo] | [0] | [*].grupo");
-        grupoList = uniqPro(grupoList);
-    var responsavelList = jmespath.search(arrayProjetos, "[*].etapas[?responsavel] | [0] | [*].responsavel");
-        responsavelList = uniqPro(responsavelList);
-    var optionSelectMacroetapa = ( macroetapaList.length > 0 ) ? $.map(macroetapaList, function(v,k){ return '<option data-name="macroetapa" value="'+v+'">Macroetapa: '+v+'</option>' }).join('') : '';
-    var optionSelectGrupo = ( grupoList.length > 0 ) ? $.map(grupoList, function(v,k){ return '<option data-name="grupo" value="'+v+'">Grupo: '+v+'</option>' }).join('') : '';
-    var optionSelectResponsavel = ( responsavelList.length > 0 ) ? $.map(responsavelList, function(v,k){ return '<option data-name="responsavel" value="'+v+'">Respons\u00E1vel: '+v+'</option>' }).join('') : '';
-    var selectFilter =  '<select style="width: 100%; height: 30px; margin: 0 !important; padding: 0 5px !important;" class="required infraText txtsheetsSelect" id="selectBoxFilter">'+
-                        '   <option data-name="em_execucao" value="">Etapas em execu\u00E7\u00E3o</option>'+
-                        '   <option data-name="concluidas" value="">Etapas conclu\u00EDdas</option>'+
-                        '   <option data-name="ainiciar" value="">Etapas a iniciar (30 dias)</option>'+
-                        '   <option data-name="aconcluir" value="">Etapas a concluir (30 dias)</option>'+
-                        '   <option data-name="atrasadas" value="">Etapas atrasadas</option>'+
-                            optionSelectMacroetapa+
-                            optionSelectGrupo+
-                            optionSelectResponsavel+
-                        '</select>';
-
-    var htmlBox =   '<div id="boxProjeto" class="atividadeWork">'+
-                   '   <table style="font-size: 10pt;width: 100%;" class="seiProForm">'+
-                   '      <tr>'+
-                   '          <td style="vertical-align: bottom; text-align: left;width: 230px;" class="label">'+
-                   '               <label for="selectBoxFilter"><i class="iconPopup iconSwitch fas fa-clock cinzaColor"></i>Filtro do Relat\u00F3rio:</label>'+
-                   '           </td>'+
-                   '           <td class="required">'+
-                   '               '+selectFilter+
-                   '           </td>'+
-                   '      </tr>'+
-                   '   </table>'+
-                   '</div>';
-    
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html('<div class="dialogBoxDiv"> '+htmlBox+'</span>')
-        .dialog({
-            title: "Gerar Relat\u00F3rio Filtrado",
-        	width: 600,
-            open: function() { 
-                updateButtonConfirm(this, true);
-                prepareFieldsReplace(this);
-            },
-        	buttons: [{
-                text: "Ok",
-                class: 'confirm',
-                click: function() {
-                    var select = $('#selectBoxFilter');
-                    var nameFilter = select.find('option:selected').data('name');
-                    var valueFilter = select.find('option:selected').val();
-                    var filter = {name: nameFilter, value: valueFilter};
-                    filterProjetos(filter);
-                    resetDialogBoxPro('dialogBoxPro');
-                }
-            }]
-    });
-}
-function filterProjetos(filter, arrayProjetos = arrayConfigAtividades.projetos) {
-    var dadosEtapasObj = jmespath.search(arrayProjetos,"[*].etapas[]");
-    if ( filter.name == 'em_execucao' ) {
-        // Etapas em execucao
-        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?data_fim_execucao=='0000-00-00 00:00:00'] | [?progresso_execucao>`0`] | [?progresso_execucao<`100`]");
-        var nameReport = '(Etapas em execu\u00E7\u00E3o)';
-    } else if ( filter.name == 'concluidas' ) {
-        // Etapas concluidas
-        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?data_fim_execucao!='0000-00-00 00:00:00'] | [?progresso_execucao==`100`]");
-        var nameReport = '(Etapas conclu\u00EDdas)';
-    } else if ( filter.name == 'aconcluir' ) {
-        // Etapas a concluir (30 dias)
-        var dadosEtapasReport = $.map(jmespath.search(dadosEtapasObj, "[?data_fim_execucao=='0000-00-00 00:00:00'] | [?progresso_execucao!=`100`]"), function(v,k){ if ( moment(v.data_fim_programado,'YYYY-MM-DD HH:mm:ss') >= moment().add(30, 'days') ) return v });
-        var nameReport = '(Etapas a concluir)';
-    } else if ( filter.name == 'ainiciar' ) {
-        // Etapas a iniciar (30 dias)
-        var dadosEtapasReport = $.map(jmespath.search(dadosEtapasObj, "[?data_fim_execucao=='0000-00-00 00:00:00'] | [?progresso_execucao!=`100`]"), function(v,k){ if ( moment(v.data_inicio_programado,'YYYY-MM-DD HH:mm:ss') >= moment().add(30, 'days') ) return v });
-        var nameReport = '(Etapas a iniciar)';
-    } else if ( filter.name == 'atrasadas' ) {
-        // Etapas atrasadas
-        var dadosEtapasReport = $.map(jmespath.search(dadosEtapasObj, "[?data_fim_execucao=='0000-00-00 00:00:00'] | [?progresso_execucao!=`100`]"), function(v,k){ if ( moment(v.data_fim_programado,'YYYY-MM-DD HH:mm:ss') < moment() ) return v });
-        var nameReport = '(Etapas atrasadas)';
-    } else if ( filter.name == 'grupo' ) {
-        // Etapas por grupo
-        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?grupo=='"+filter.value+"']");
-        var valueAssunto = ( filter.value.length > 50 ) ? filter.value.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : filter.value;
-        var nameReport = '(Grupo: '+valueAssunto+')';
-    } else if ( filter.name == 'macroetapa' ) {
-        // Etapas por macroetapa
-        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?macroetapa=='"+filter.value+"']");
-        var valueAssunto = ( filter.value.length > 50 ) ? filter.value.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : filter.value;
-        var nameReport = '(Macroetapa: '+valueAssunto+')';
-    } else if ( filter.name == 'responsavel' ) {
-        // Etapas por responsavel
-        var dadosEtapasReport = jmespath.search(dadosEtapasObj, "[?responsavel=='"+filter.value+"']");
-        var valueAssunto = ( filter.value.length > 50 ) ? filter.value.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : filter.value;
-        var nameReport = '(Respons\u00E1vel: '+valueAssunto+')';
-    }
-    var dadosProjetosReport = uniqPro(jmespath.search(dadosEtapasReport, "[*].id_projeto"));
-    
-    if (typeof dadosProjetosReport !== 'undefined' && dadosProjetosReport.length > 0) {
-        var idReport = randomString(8);
-        var width = $('#projetosGanttDiv').width();
-        var iconCloseTab = '<i class="fas fa-times-circle closeReport" onclick="deletReportProjetos(this)"></i>';
-            $('#projetosTabs ul').append('<li><a href="#svgtab_report_'+idReport+'">Relat\u00F3rio '+nameReport+' '+iconCloseTab+'</a></li>');
-            $('#projetosTabs').append('<div id="svgtab_report_'+idReport+'" class="ganttReport resizeObserve"></div>');
-    
-        $.each(dadosProjetosReport, function (index, value) {
-            var nameID = value;
-            var dadosEtapas = jmespath.search(dadosEtapasReport, "[?id_projeto==`"+value+"`]");
-            if (dadosEtapas.length > 0) {
-                dadosEtapas = dadosEtapas.sort(function(a, b){
-                                var aa = a.data_inicio_programado.split('/').reverse().join(),
-                                    bb = b.data_inicio_programado.split('/').reverse().join();
-                                return aa < bb ? -1 : (aa > bb ? 1 : 0);
-                              });
-                var task = [];
-                var nameDisplay = jmespath.search(arrayProjetos, "[?id_projeto==`"+value+"`].nome_projeto | [0]");
-
-                $('#projetosTabs #svgtab_report_'+idReport+'').append('<h2>'+nameDisplay+'</h2><svg id="gantt_report_'+idReport+'_'+nameID+'" class="svg_gantt"></svg>');
-                
-                $.each(dadosEtapas, function (i, v) {
-                    var start = moment(v.data_inicio_programado, "DD/MM/YYYY");
-                    var end = moment(v.data_fim_programado, "DD/MM/YYYY");
-                    var progresso_execucao = v.progresso_execucao;
-
-                    var customClass = ( moment() <= end && moment() >= start ) ? 'bar-ongoing' : 'bar-inday';   
-                        customClass = ( progresso_execucao < 100 && end < moment() ) ? 'bar-delay' : customClass;
-                        customClass = ( v.data_fim_execucao != '' ) ? 'bar-complete' : customClass;
-
-                    var taskProjeto = {
-                                        id: v.id_etapa.toString(),
-                                        etapa: v,
-                                        index: i,
-                                        show_full_popup: true,
-                                        name: v.nome_etapa,
-                                        start: moment(v.data_inicio_programado, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD'),
-                                        end: moment(v.data_fim_programado, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD'),
-                                        progress: progresso_execucao ? progresso_execucao : 0,
-                                        dependencies: v.id_dependencia ? [v.id_dependencia.toString()] : [],
-                                        custom_class: customClass
-                                      };
-
-                    task.push(taskProjeto);
-                });
-
-                var gantt = new Gantt("#gantt_report_"+idReport+"_"+nameID, task,{
-                    header_height: 50,
-                    column_width: 10,
-                    step: 24,
-                    language: 'en',
-                    language: 'ptBr',
-                    view_modes: ['Day', 'Week', 'Month'],
-                    bar_height: 15,
-                    bar_corner_radius: 3,
-                    arrow_curve: 5,
-                    padding: 18,
-                    edit_task: false,
-                    view_mode: 'Month',   
-                    date_format: 'YYYY-MM-DD',
-                    custom_popup_html: function(task) {
-                        return customPopupHtmlProjeto(task);
-                    }
-                });
-                ganttProject.push(gantt);
-            }
+  // src/features/projetos/view/portfolio.js
+  function openPortfolio({ includeArquivados: includeArquivados2 = false } = {}) {
+    const tasks = portfolioToGanttTasks(sortProjetos(listProjetos(), { includeArquivados: includeArquivados2 }));
+    openModal({
+      title: "Portfolio de projetos",
+      width: 900,
+      content: '<div id="seiproPortfolioGantt" class="seipro-projetos__gantt"></div>',
+      onOpen(modal) {
+        const host = modal.body.querySelector("#seiproPortfolioGantt");
+        const svg = document.createElement("svg");
+        svg.id = "gantt_portfolio";
+        host.appendChild(svg);
+        loadGanttLib().then((Gantt) => {
+          if (!Gantt || !tasks.length) {
+            host.innerHTML = "<p>Nenhum projeto para exibir.</p>";
+            return;
+          }
+          new Gantt("#gantt_portfolio", tasks, buildGanttOptions({ editable: false }));
         });
-        $('#projetosTabs').tabs('refresh');
-        $('.gantt-container').css('max-width',(width-20)).addClass('resizeObserve');
-        var activeTab = $('#projetosTabs .ui-tabs-nav li').length-1;
-        $('#projetosTabs').tabs( "option", "active",  activeTab);
-        scrollProjetoGanttToFirstBar();
+      },
+      buttons: [{ text: "Fechar", onClick: (r) => r.close() }]
+    });
+  }
+  function openResponsavelView() {
+    const groups = groupByResponsavel(listProjetos());
+    const html = groups.map(
+      (g) => "<h4>" + escapeText(g.responsavel) + " (" + g.etapas.length + ")</h4>" + a11yTableHtml(g.etapas)
+    ).join("") || "<p>Sem dados.</p>";
+    openModal({
+      title: "Visao por responsavel",
+      width: 800,
+      content: '<div class="seipro-projetos-responsavel">' + html + "</div>",
+      buttons: [{ text: "Fechar", onClick: (r) => r.close() }]
+    });
+  }
+
+  // src/features/projetos/view/panel.js
+  var ganttInstances = /* @__PURE__ */ new Map();
+  var tabsApi = null;
+  var includeArquivados = false;
+  var selectedTipo = "";
+  var showExecucao = true;
+  function mountPoint() {
+    return qs("#divInfraAreaTelaD") || qs("#divInfraBarraLocalizacao") || qs("#divInfraAreaTela") || document.body;
+  }
+  function orderPanel(node) {
+    if (typeof globalRef.orderDivPanel === "function") {
+      try {
+        globalRef.orderDivPanel(node.outerHTML, "", "projetosGantt");
+        return qs("#projetosGantt");
+      } catch (e) {
+      }
+    }
+    const host = mountPoint();
+    const old = qs("#projetosGantt");
+    if (old) old.remove();
+    host.appendChild(node);
+    return node;
+  }
+  function refresh() {
+    refreshProjetosPanel();
+  }
+  function renderGantt(container, projeto) {
+    const host = container.querySelector(".seipro-projetos__gantt");
+    const a11y = container.querySelector(".seipro-projetos__a11y");
+    if (!host) return;
+    host.innerHTML = "";
+    const svg = document.createElement("svg");
+    svg.id = "gantt_" + projeto.id_projeto;
+    svg.className = "svg_gantt";
+    host.appendChild(svg);
+    const { tasks, holidayOpts, etapas } = projetoToGanttTasks(projeto, {
+      showExecucao,
+      showMacro: true,
+      applySchedule: true,
+      ignoreNonBusiness: false
+    });
+    if (a11y) a11y.innerHTML = a11yTableHtml(etapas);
+    loadGanttLib().then((Gantt) => {
+      if (!Gantt) return;
+      const editable = can("update_projeto_etapa");
+      const options = buildGanttOptions({
+        editable,
+        holidayOpts,
+        popup: (ctx) => buildPopup(ctx, { onSaved: refresh }),
+        onDateChange(task, start, end) {
+          if (!confirm("Reprogramar etapa e dependentes?")) {
+            refresh();
+            return;
+          }
+          const patch = taskDatesToEtapaPatch({ ...task, _start: start, _end: end });
+          act("update_projeto_etapa", {
+            id_projeto: projeto.id_projeto,
+            id_etapa: patch.id_etapa,
+            data_inicio_programado: formatDateTime(patch.data_inicio_programado),
+            data_fim_programado: formatDateTime(patch.data_fim_programado)
+          }).then(refresh);
+        },
+        onProgressChange(task, progress) {
+          act("update_projeto_etapa", {
+            id_projeto: projeto.id_projeto,
+            id_etapa: Number(String(task.id).replace(/_exec$/, "")),
+            progresso_execucao: progress
+          });
+        }
+      });
+      const g = new Gantt("#" + svg.id, tasks, options);
+      ganttInstances.set(projeto.id_projeto, g);
+    }).catch((err2) => {
+      host.innerHTML = '<p class="seipro-projetos__error">Nao foi possivel carregar o Gantt: ' + String(err2.message || err2) + "</p>";
+    });
+  }
+  function renderAlerts(root, projetos) {
+    const box = root.querySelector("#projetosAlerts");
+    if (!box) return;
+    const alerts = deadlineAlerts(flattenEtapas(projetos));
+    if (!alerts.length) {
+      box.innerHTML = "";
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML = alerts.slice(0, 8).map(
+      (a) => '<div class="seipro-projetos__alert seipro-projetos__alert--' + a.level + '">' + escapeText(a.nome_etapa) + ": " + escapeText(a.message) + "</div>"
+    ).join("");
+  }
+  function fillTipoSelect(root, projetos) {
+    const sel = root.querySelector("#selectTipoProjetoPro");
+    if (!sel) return;
+    const tipos = tiposOptions(projetos, getStoreProjetos().tipos_projetos);
+    sel.innerHTML = '<option value="">Todos</option>' + tipos.map(
+      (t) => '<option value="' + t.id_tipo_projeto + '"' + (String(selectedTipo) === String(t.id_tipo_projeto) ? " selected" : "") + ">" + escapeText(t.nome_tipo_projeto) + "</option>"
+    ).join("");
+  }
+  function renderTabs(root, projetos) {
+    const host = root.querySelector("#projetosTabs");
+    if (!host) return;
+    ganttInstances.clear();
+    if (tabsApi) {
+      try {
+        tabsApi.destroy();
+      } catch (e) {
+      }
+      tabsApi = null;
+    }
+    if (!projetos.length) {
+      host.innerHTML = emptyStateHtml();
+      return;
+    }
+    const items = projetos.map((p) => {
+      const toolbar = '<div class="seipro-projetos__proj-toolbar">' + (can("save_projeto_etapa") ? '<button type="button" class="newLink" data-act="add-etapa" data-id_projeto="' + p.id_projeto + '" title="Adicionar etapa"><i class="fas fa-plus-circle"></i></button>' : "") + (can("edit_projeto") ? '<button type="button" class="newLink" data-act="edit-projeto" data-id_projeto="' + p.id_projeto + '" title="Editar"><i class="fas fa-edit"></i></button>' : "") + (can("clone_projeto") ? '<button type="button" class="newLink" data-act="clone-projeto" data-id_projeto="' + p.id_projeto + '" title="Clonar"><i class="fas fa-clone"></i></button>' : "") + (can("archive_projeto") ? '<button type="button" class="newLink" data-act="archive-projeto" data-id_projeto="' + p.id_projeto + '" title="Arquivar"><i class="fas fa-archive"></i></button>' : "") + (can("share_projeto") ? '<button type="button" class="newLink" data-act="share-projeto" data-id_projeto="' + p.id_projeto + '" title="Compartilhar"><i class="fas fa-share-square"></i></button>' : "") + (can("delete_projeto") ? '<button type="button" class="newLink" data-act="delete-projeto" data-id_projeto="' + p.id_projeto + '" title="Excluir"><i class="fas fa-trash"></i></button>' : "") + (!p.ativo ? '<span class="seipro-projetos__tag">ARQUIVADO</span>' : "") + "</div>";
+      const content = toolbar + '<div class="seipro-projetos__gantt"></div><details class="seipro-projetos__a11y-wrap"><summary>Tabela acessivel</summary><div class="seipro-projetos__a11y"></div></details>';
+      return {
+        id: String(p.id_projeto),
+        label: p.nome_projeto + (p.sigla_unidade ? " [" + p.sigla_unidade + "]" : ""),
+        content
+      };
+    });
+    tabsApi = createTabs(host, {
+      items,
+      onChange(id) {
+        const p = findProjeto(projetos, id);
+        const panel2 = host.querySelector("#seipro-panel-" + id);
+        if (p && panel2) renderGantt(panel2, p);
+      }
+    });
+    const first = projetos[0];
+    const panel = host.querySelector("#seipro-panel-" + first.id_projeto);
+    if (panel) renderGantt(panel, first);
+  }
+  function refreshProjetosPanel() {
+    const root = qs("#projetosGantt");
+    if (!root) return;
+    const projetos = sortProjetos(listProjetos(), {
+      includeArquivados,
+      idTipo: selectedTipo || null
+    });
+    fillTipoSelect(root, listProjetos());
+    renderAlerts(root, projetos);
+    renderTabs(root, projetos);
+  }
+  function onPanelClick(ev) {
+    const btn = ev.target.closest("[data-act]");
+    if (!btn) return;
+    const root = qs("#projetosGantt");
+    if (!root || !root.contains(btn)) return;
+    const actName = btn.dataset.act;
+    const id = Number(btn.dataset.id_projeto);
+    if (actName === "toggle-panel") {
+      const body = qs("#projetosGanttDiv");
+      if (body) body.style.display = body.style.display === "none" ? "inline-table" : "none";
+      return;
+    }
+    if (actName === "add-projeto") return openProjetoForm(null, { onSaved: refresh });
+    if (actName === "edit-projeto") {
+      const p = findProjeto(listProjetos(), id);
+      if (p) openProjetoForm(p, { onSaved: refresh });
+      return;
+    }
+    if (actName === "add-etapa") {
+      const p = findProjeto(listProjetos(), id);
+      if (p) openEtapaForm(p, {}, { onSaved: refresh });
+      return;
+    }
+    if (actName === "clone-projeto") {
+      act("clone_projeto", { id_projeto: id }).then(refresh);
+      return;
+    }
+    if (actName === "archive-projeto") {
+      act("archive_projeto", { id_projeto: id }).then(refresh);
+      return;
+    }
+    if (actName === "delete-projeto") {
+      if (!confirm("Excluir este projeto?")) return;
+      act("delete_projeto", { id_projeto: id }).then(refresh);
+      return;
+    }
+    if (actName === "share-projeto") {
+      const p = findProjeto(listProjetos(), id);
+      if (p) openShare(p, { onSaved: refresh });
+      return;
+    }
+    if (actName === "open-filter") return openFilterReport();
+    if (actName === "open-portfolio") return openPortfolio({ includeArquivados });
+    if (actName === "open-responsavel") return openResponsavelView();
+    if (actName === "toggle-arquivados") {
+      includeArquivados = !includeArquivados;
+      refresh();
+      return;
+    }
+    if (actName === "refresh") return refresh();
+    if (actName === "seed-demo") {
+      ensureDemoSeed(true);
+      refresh();
+      return;
+    }
+    if (actName === "export-json") {
+      downloadText("projetos.json", JSON.stringify(listProjetos(), null, 2), "application/json");
+      return;
+    }
+    if (actName === "import-json") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "application/json,.json";
+      input.onchange = () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = importProjetoJson(String(reader.result));
+            if (Array.isArray(data)) {
+              data.forEach((p) => act("import_projeto", { projeto: exportProjetoJson(p) }));
+            } else {
+              act("import_projeto", { projeto: exportProjetoJson(data) });
+            }
+            setTimeout(refresh, 50);
+          } catch (e) {
+            alert(e.message || "Falha ao importar");
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+  }
+  function onPanelChange(ev) {
+    const sel = ev.target.closest("#selectTipoProjetoPro");
+    if (!sel) return;
+    selectedTipo = sel.value;
+    refresh();
+  }
+  function setProjetosPanel() {
+    ensureDemoSeed(false);
+    let root = qs("#projetosGantt");
+    if (!root) {
+      root = elFromHtml(panelShellHtml());
+      root = orderPanel(root) || qs("#projetosGantt") || root;
+    }
+    refreshProjetosPanel();
+  }
+  function initProjetosPanel(timeout = 9e3) {
+    if (timeout <= 0) return;
+    if (qs("#ifrArvore") && window !== window.top) return;
+    try {
+      const enabled = typeof globalRef.checkConfigValue === "function" ? globalRef.checkConfigValue("gerenciarprojetos") : typeof globalRef.verifyConfigValue === "function" ? globalRef.verifyConfigValue("gerenciarprojetos") : true;
+      if (!enabled) return;
+    } catch (e) {
+    }
+    if (!document.body) {
+      setTimeout(() => initProjetosPanel(timeout - 100), 100);
+      return;
+    }
+    setProjetosPanel();
+  }
+  function bindProjetosPanel(root = document) {
+    on(root, "click", onPanelClick);
+    on(root, "change", onPanelChange);
+  }
+  function installProjetosView() {
+    bindProjetosPanel(document);
+    ready(() => {
+      setTimeout(() => initProjetosPanel(), 400);
+    });
+  }
+  function initProjetos(mode, arrayProjetos, queryIdProjeto) {
+    let list = arrayProjetos;
+    if (!Array.isArray(list)) {
+      const cfg = globalRef.arrayConfigAtividades;
+      list = cfg && Array.isArray(cfg.projetos) ? cfg.projetos : null;
+    }
+    if (Array.isArray(list) && list.length) {
+      const cfg = globalRef.arrayConfigAtividades;
+      replaceProjetos(list, cfg && cfg.tipos_projetos);
+    }
+    if (mode === "refresh" || mode === "update" || qs("#projetosGantt")) {
+      refreshProjetosPanel();
     } else {
-        setTimeout(() => {
-            alertaBoxPro('Error', 'exclamation-triangle', 'Nenhuma etapa atende ao filtro proposto');
-        }, 500);
+      initProjetosPanel();
     }
-}
-function deletReportProjetos(this_) {
-    var id = $(this_).closest('li').attr('aria-controls');
-    var id_ = id.replace('svgtab_report','gantt_report');
-        $(this_).closest('li').remove();
-        $('#'+id).remove();
-        $('#projetosTabs').tabs('refresh');
-	for (i = 0; i < ganttProject.length; i++) {
-		if ( typeof ganttProject[i] !== 'undefined' && ganttProject[i].$svg.id.indexOf(id_) !== -1 ) {   
-            ganttProject.splice(i,1);
-            i--;
-		}
-	}
-}
-function closeAllPopupsProjeto() {
-    for (i = 0; i < ganttProject.length; i++) {
-    	ganttProject[i].hide_popup();
-        var id_projeto = ganttProject[i].options.id_projeto;
-        $('#svgtab_'+id_projeto+' .gantt-container').attr('style','max-width:'+$('#svgtab_'+id_projeto+' .gantt-container').css('max-width'));
+    if (queryIdProjeto) {
+      setTimeout(() => selectProjetoTab(queryIdProjeto), 250);
     }
-}
+  }
+  function setProjetos(mode, arrayProjetos, queryIdProjeto) {
+    initProjetos(mode, arrayProjetos, queryIdProjeto);
+  }
+  function selectProjetoTab(idProjeto) {
+    const id = String(idProjeto);
+    if (tabsApi && typeof tabsApi.select === "function") {
+      tabsApi.select(id);
+      return;
+    }
+    const btn = qs('#projetosTabs [role="tab"][data-tab-id="' + id + '"]');
+    if (btn) btn.click();
+  }
+
+  // src/features/projetos/boot.js
+  function bootProjetos(timeout = 9e3) {
+    installProjetosStore();
+    if (timeout <= 0) return;
+    const enabled = (() => {
+      try {
+        if (typeof globalRef.checkConfigValue === "function") return !!globalRef.checkConfigValue("gerenciarprojetos");
+        if (typeof globalRef.verifyConfigValue === "function") return !!globalRef.verifyConfigValue("gerenciarprojetos");
+      } catch (e) {
+      }
+      return true;
+    })();
+    if (!enabled) return;
+    if (window.frameElement) return;
+    ensureDemoSeed(false);
+    try {
+      initProjetosPanel(timeout);
+    } catch (e) {
+      setTimeout(() => bootProjetos(timeout - 200), 200);
+    }
+  }
+  function refreshAfterAtividades(arrayProjetos) {
+    if (Array.isArray(arrayProjetos)) replaceProjetos(arrayProjetos);
+    refreshProjetosPanel();
+  }
+
+  // src/features/projetos/commands.js
+  function checkPermissionProjeto(value) {
+    if (!value) return true;
+    if (!hasRemoteBackend()) return true;
+    try {
+      if (typeof globalRef.arrayConfigAtivUnidade !== "undefined" && globalRef.arrayConfigAtivUnidade && value.sigla_unidade && globalRef.arrayConfigAtivUnidade.sigla_unidade === value.sigla_unidade) {
+        return true;
+      }
+      const shares = value.projetos_compartilhados || [];
+      const login = (globalRef.userSEI || "").toLowerCase();
+      return shares.some(
+        (s) => String(s.usuario || "").toLowerCase() === login && (s.permissao === "edicao" || s.permissao === "escrita" || s.permissao === "admin")
+      );
+    } catch (e) {
+      return true;
+    }
+  }
+
+  // src/features/projetos/legacy-api.js
+  var legacy = {
+    initProjetos,
+    setProjetos,
+    initProjetosPanel,
+    setProjetosPanel,
+    refreshProjetosPanel,
+    selectProjetoTab,
+    bootProjetos,
+    refreshAfterAtividades,
+    openProjetoForm,
+    openEtapaForm,
+    dispatchProjetoAction,
+    ensureDemoSeed,
+    getStoreProjetos,
+    listProjetos,
+    replaceProjetos,
+    checkPermissionProjeto,
+    // Legacy names still referenced from atividades / inline remnants
+    saveProjeto: (el2) => openProjetoForm(),
+    saveEtapa: (el2) => {
+      const id = el2 && el2.dataset ? Number(el2.dataset.id_projeto) : 0;
+      const p = listProjetos().find((x) => x.id_projeto === id);
+      if (p) openEtapaForm(p, {});
+    },
+    openProjetoConfig: () => openProjetoForm(),
+    openFilterProjeto: () => {
+      const btn = document.querySelector('#projetosGantt [data-act="open-filter"]');
+      if (btn) btn.click();
+    }
+  };
+  function installProjetosLegacyApi() {
+    Object.keys(legacy).forEach((name) => aliasGlobal(name, legacy[name]));
+    aliasGlobal("loadProjetosPro", true);
+  }
+
+  // src/features/projetos/domain/index.js
+  var domain_exports = {};
+  __export(domain_exports, {
+    addBusinessDays: () => addBusinessDays,
+    addDays: () => addDays,
+    autoProgressPercent: () => autoProgressPercent,
+    barStatus: () => barStatus,
+    baselineDeviation: () => baselineDeviation,
+    cascadeMove: () => cascadeMove,
+    cloneProjetoDeep: () => cloneProjetoDeep,
+    computeSchedule: () => computeSchedule,
+    countBusinessDays: () => countBusinessDays,
+    deadlineAlerts: () => deadlineAlerts,
+    defaultStore: () => defaultStore,
+    diffDays: () => diffDays,
+    effectiveProgress: () => effectiveProgress,
+    emptyDateSentinel: () => emptyDateSentinel,
+    expectedProgress: () => expectedProgress,
+    exportEtapasCsv: () => exportEtapasCsv,
+    exportProjetoJson: () => exportProjetoJson,
+    filterEtapas: () => filterEtapas,
+    findEtapa: () => findEtapa,
+    findEtapaById: () => findEtapaById,
+    findEtapaNome: () => findEtapaNome,
+    findProjeto: () => findProjeto,
+    findProjetoById: () => findProjetoById,
+    flattenEtapas: () => flattenEtapas,
+    formatDate: () => formatDate,
+    formatDateTime: () => formatDateTime,
+    formatDateTimeLocal: () => formatDateTimeLocal,
+    formatDisplay: () => formatDisplay,
+    ganttHolidayOptions: () => ganttHolidayOptions,
+    groupByResponsavel: () => groupByResponsavel,
+    holidaysBetween: () => holidaysBetween,
+    holidaysBr: () => holidaysBr,
+    importProjetoJson: () => importProjetoJson,
+    isBusinessDay: () => isBusinessDay,
+    isEmptyDate: () => isEmptyDate,
+    isHoliday: () => isHoliday,
+    isSameDay: () => isSameDay,
+    isWeekend: () => isWeekend,
+    macroetapaSummaries: () => macroetapaSummaries,
+    maxDate: () => maxDate,
+    minDate: () => minDate,
+    nextBusinessDay: () => nextBusinessDay,
+    nextLocalId: () => nextLocalId,
+    normalizeEtapa: () => normalizeEtapa,
+    normalizePredecessoras: () => normalizePredecessoras,
+    normalizeProjeto: () => normalizeProjeto,
+    parseDate: () => parseDate,
+    resetLocalIdSeq: () => resetLocalIdSeq,
+    sortEtapas: () => sortEtapas,
+    sortProjetos: () => sortProjetos,
+    startOfDay: () => startOfDay,
+    tiposFromProjetos: () => tiposFromProjetos,
+    tiposOptions: () => tiposOptions,
+    today: () => today,
+    topologicalSort: () => topologicalSort,
+    uniqueFieldValues: () => uniqueFieldValues,
+    validateEtapaDates: () => validateEtapaDates
+  });
+
+  // src/features/projetos/index.js
+  var ns = getSeiPro().features.projetos || (getSeiPro().features.projetos = {});
+  ns.domain = domain_exports;
+  installProjetosStore();
+  installProjetosLegacyApi();
+  installProjetosView();
+  bootProjetos();
+})();

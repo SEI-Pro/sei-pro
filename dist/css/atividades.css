@@ -7,7 +7,6 @@
 .seipro-atividades-panel { }
 
 
-#projetosGanttDiv .popup-wrapper,
 #ganttRecorrenciaPanel .popup-wrapper,
 #ganttAfastamentoPanel .popup-wrapper,
 #ganttHistoryPainel .popup-wrapper,
@@ -20,14 +19,12 @@
     min-width: 250px;
     width: 350px;
 }
-#projetosGanttDiv .popup-wrapper h5, p,
 #ganttRecorrenciaPanel .popup-wrapper h5, p,
 #ganttAfastamentoPanel .popup-wrapper h5, p,
 #ganttHistoryPainel .popup-wrapper h5, p,
 #ganttAtivPanel .popup-wrapper h5, p {
     margin: 0;
 }
-#projetosGanttDiv .popup-wrapper h5,
 #ganttRecorrenciaPanel .popup-wrapper h5,
 #ganttAfastamentoPanel .popup-wrapper h5,
 #ganttHistoryPainel .popup-wrapper h5,
@@ -37,7 +34,6 @@
     margin-bottom: 10px;
     /*color: $text-light;*/
 }
-#projetosGanttDiv .popup-wrapper a,
 #ganttRecorrenciaPanel .popup-wrapper a,
 #ganttAfastamentoPanel .popup-wrapper a,
 #ganttHistoryPainel .popup-wrapper a,
@@ -45,7 +41,6 @@
     text-decoration: underline;
     color: #0000cc;
 }
-#projetosGanttDiv .popup-wrapper p,
 #ganttRecorrenciaPanel .popup-wrapper p,
 #ganttAfastamentoPanel .popup-wrapper p,
 #ganttHistoryPainel .popup-wrapper p,
@@ -54,21 +49,18 @@
     margin-bottom: 6px;
     /*color: $text-muted;*/
 }
-#projetosGanttDiv .popup-wrapper p:last-child,
 #ganttRecorrenciaPanel .popup-wrapper p:last-child,
 #ganttAfastamentoPanel .popup-wrapper p:last-child,
 #ganttHistoryPainel .popup-wrapper p:last-child,
 #ganttAtivPanel .popup-wrapper p:last-child {
     margin-bottom: 0;
 }
-#projetosGanttDiv .popup-wrapper .pointer,
 #ganttRecorrenciaPanel .popup-wrapper .pointer,
 #ganttAfastamentoPanel .popup-wrapper .pointer,
 #ganttHistoryPainel .popup-wrapper .pointer,
 #ganttAtivPanel .popup-wrapper .pointer {
     border-color: #ccc transparent transparent !important;
 }
-#projetosGanttDiv .popup-wrapper .hide,
 #ganttRecorrenciaPanel .popup-wrapper .hide,
 #ganttAfastamentoPanel .popup-wrapper .hide,
 #ganttHistoryPainel .popup-wrapper .hide,
@@ -139,7 +131,6 @@
 #ganttAfastamentoPanel .bar-wrapper .handle-group,
 #ganttHistoryPainel .bar-wrapper .handle-group,
 #ganttRecorrenciaPanel .bar-wrapper .handle-group,
-#projetosGanttDiv .bar-wrapper .handle-group,
 #ganttAtivPanel .bar-wrapper .handle-group {
     display: none;
 }

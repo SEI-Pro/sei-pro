@@ -1,0 +1,211 @@
+/**
+ * Projetos feature styles (.seipro-projetos-*).
+ * Gantt bar colors + panel chrome. frappe-gantt.css is loaded separately (lazy).
+ */
+
+.seipro-projetos {
+  position: relative;
+  margin-top: 8px;
+}
+
+.seipro-projetos__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 4px 0 8px;
+}
+
+.seipro-projetos__toolbar .newLink {
+  font-size: 14pt;
+  margin: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.seipro-projetos__tipo-label {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.seipro-projetos__alerts {
+  margin: 4px 0 8px;
+}
+
+.seipro-projetos__alert {
+  padding: 4px 8px;
+  margin: 2px 0;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.seipro-projetos__alert--overdue {
+  background: #fdecea;
+  color: #b71c1c;
+}
+
+.seipro-projetos__alert--warning {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.seipro-projetos__proj-toolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.seipro-projetos__proj-toolbar .newLink {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 13pt;
+}
+
+.seipro-projetos__tag {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 6px;
+  background: #eee;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+.seipro-projetos__gantt {
+  width: 100%;
+  overflow-x: auto;
+  min-height: 120px;
+}
+
+.seipro-projetos__empty {
+  padding: 16px;
+  color: #555;
+}
+
+.seipro-projetos__error {
+  color: #b71c1c;
+  padding: 8px;
+}
+
+.seipro-projetos__a11y-wrap {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.seipro-projetos-popup {
+  width: 100%;
+  font-size: 11px;
+  border-collapse: collapse;
+}
+
+.seipro-projetos-popup th {
+  text-align: left;
+  padding: 2px 8px 2px 0;
+  color: #666;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.seipro-projetos-popup td {
+  padding: 2px 0;
+}
+
+.seipro-projetos-form .label {
+  width: 140px;
+  vertical-align: top;
+}
+
+/* Gantt bar status (frappe-gantt custom_class) */
+.seipro-projetos-bar--ongoing .bar {
+  fill: #42a5f5 !important;
+}
+.seipro-projetos-bar--inday .bar {
+  fill: #90caf9 !important;
+}
+.seipro-projetos-bar--delay .bar {
+  fill: #ef5350 !important;
+}
+.seipro-projetos-bar--complete .bar {
+  fill: #66bb6a !important;
+}
+.seipro-projetos-bar--executed .bar {
+  fill: #8d6e63 !important;
+  opacity: 0.85;
+}
+.seipro-projetos-bar--critical .bar {
+  fill: #ab47bc !important;
+}
+.seipro-projetos-bar--milestone .bar {
+  fill: #ffca28 !important;
+}
+.seipro-projetos-bar--macro .bar {
+  fill: #78909c !important;
+  opacity: 0.7;
+}
+.seipro-projetos-bar--portfolio .bar {
+  fill: #5c6bc0 !important;
+}
+
+/* Tabs (shared/ui/tabs) scoped helpers */
+.seipro-projetos .seipro-tabs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
+}
+
+.seipro-projetos .seipro-tabs__tab {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-bottom: 0;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  font-size: 11px;
+}
+
+.seipro-projetos .seipro-tabs__tab[aria-selected="true"] {
+  background: #fff;
+  font-weight: 600;
+}
+
+.seipro-projetos-report label {
+  margin-right: 10px;
+  font-size: 11px;
+}
+
+.seipro-projetos-report__out {
+  margin-top: 10px;
+  max-height: 360px;
+  overflow: auto;
+}
+
+/* frappe-gantt popup inside projetos panel */
+.seipro-projetos .popup-wrapper,
+#projetosGanttDiv .popup-wrapper {
+  background: #fff;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  min-width: 250px;
+  width: 350px;
+}
+.seipro-projetos .popup-wrapper h5,
+#projetosGanttDiv .popup-wrapper h5 {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0 0 10px;
+}
+.seipro-projetos .popup-wrapper p,
+#projetosGanttDiv .popup-wrapper p {
+  font-size: 12px;
+  margin: 0 0 6px;
+}
+.seipro-projetos .popup-wrapper .pointer,
+#projetosGanttDiv .popup-wrapper .pointer {
+  border-color: #ccc transparent transparent !important;
+}

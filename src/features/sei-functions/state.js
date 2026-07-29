@@ -161,9 +161,7 @@ export function installSeiFunctionsState() {
                         {name: 'Acompanhamento Especial', icon: 'fas fa-eye', alt: 'Acompanhamento Especial'}
                     ];
 
-    g.rangeProjetosPro = "Projetos";
-
-    g.rangeEtapasPro = "Etapas";
+    // rangeEtapasPro / rangeProjetosPro removed — Projetos no longer uses Sheets tabs.
 
     g.rangeFeriadosNacionaisPro = "FeriadosNacionais";
 

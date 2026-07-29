@@ -3,7 +3,7 @@
   "name": "SEI Pro PRF",
   "short_name": "SEI Pro PRF",
   "description": "Ferramentas avançadas para o SEI da PRF, com recursos para processos, documentos e IA. Reporte de bugs restrito ao ambiente da PRF",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "author": "Polícia Rodoviária Federal",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -222,6 +222,7 @@
         "css/controlar-prazos.css",
         "css/anotacao-controle.css",
         "css/monitorados.css",
+        "css/projetos.css",
         "css/fontawesome.pro.min.css",
         "css/fontawesome.min.css",
         "css/jkanban.min.css",
@@ -314,7 +315,8 @@
         "css/lista-processos.css",
         "css/quick-filter.css",
         "css/anotacao-controle.css",
-        "css/monitorados.css"
+        "css/monitorados.css",
+        "css/projetos.css"
       ],
       "all_frames": true,
       "matches": [
@@ -571,6 +573,7 @@
         "js/lib/chosen.jquery.min.js",
         "js/lib/jquery.toolbar.min.js",
         "js/lib/frappe-gantt.js",
+        "js/lib/frappe-gantt.esm.js",
         "js/lib/jkanban.min.js",
         "js/lib/jquery.tagsinput-revisited.js",
         "js/lib/jquery.tablesorter.combined.min.js",
@@ -612,6 +615,7 @@
         "icons/lab/icon-32.png",
         "css/sei-pro.css",
         "css/atividades.css",
+        "css/projetos.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",
         "css/frappe-gantt.css",

@@ -14,7 +14,7 @@
     var original = $.getScript;
 
     // Libs removidas do eager load — precisam de getScript real a partir da WAR.
-    var LAZY_RE = /\/js\/lib\/(frappe-gantt|chart\.min|mammoth\.browser\.min|tesseract\.min|jschardet\.min)(\.js)?(\?|$)/i;
+    var LAZY_RE = /\/js\/lib\/(frappe-gantt(\.esm)?|chart\.min|mammoth\.browser\.min|tesseract\.min|jschardet\.min)(\.js)?(\?|$)/i;
 
     function isExtensionUrl(u) {
         return typeof u === 'string' && u.indexOf('chrome-extension://') === 0;

@@ -15,7 +15,8 @@ installSeiFunctionsState();
 
 // var CLIENT_ID_PRO = _G() ? _G().CLIENT_ID_PRO : false;
 // var API_KEY_PRO = _G() ? _G().API_KEY_PRO : false;
-// var spreadsheetIdProjetos_Pro = _G() ? _G().spreadsheetIdProjetos_Pro : false;
+// var spreadsheetIdFormularios_Pro = _G() ? _G().spreadsheetIdFormularios_Pro : false;
+
 // var spreadsheetIdFormularios_Pro = _G() ? _G().spreadsheetIdFormularios_Pro : false;
 // var spreadsheetIdSyncProcessos_Pro = _G() ? _G().spreadsheetIdSyncProcessos_Pro : false;
 
@@ -4524,83 +4525,7 @@ export function execConcluirReabrirProcessoPro(url) {
         targetIfrVisualizacaoPro(url);
     }
 }
-//Initializes the API client library and sets up sign-in state listeners.
-/* function initClientPro() {
-    if ( typeof spreadsheetIdProjetos_Pro !== 'undefined' || typeof spreadsheetIdAtividades_Pro !== 'undefined' || typeof spreadsheetIdFormularios_Pro !== 'undefined'  || typeof spreadsheetIdSyncProcessos_Pro !== 'undefined' ) {
-
-        gapi.client.init({
-          apiKey: API_KEY_PRO,
-          clientId: CLIENT_ID_PRO,
-          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-          scope: 'https://www.googleapis.com/auth/spreadsheets'
-        }).then(function () {
-          // Listen for sign-in state changes.
-            
-            if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
-            if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
-            if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
-            gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatusPro);
-
-            // Handle the initial sign-in state.
-            updateSigninStatusPro(gapi.auth2.getAuthInstance().isSignedIn.get());
-            $('#authorizeButtonPro').on('click',function() { handleAuthClickPro() });
-            $('#signoutButtonPro').on('click',function() { handleSignoutClickPro() });
-
-        }, function(error) {
-          alertaBoxPro('Error', 'exclamation-triangle', JSON.stringify(error, null, 2));
-        });
-    }
-}
-export function onSignInPro(response) {
-    const responsePayload = parseJwt(response.credential);
-    var googleUser = {response: response, decode: responsePayload};
-        window.googleUser = googleUser;
-        sessionStorageStorePro('googleUser', googleUser);
-}
-// Called when the signed in status changes, to update the UI appropriately. After a sign-in, the API is called.
-export function updateSigninStatusPro(isSignedIn) {
-    if (isSignedIn) {
-        $('#authorizeButtonPro').hide();
-        $('#signoutButtonPro').show();
-        if (typeof loadEtapasSheet === "function") { loadEtapasSheet() }
-        if (typeof loadAtividadesSheet === "function") { loadAtividadesSheet() }
-        if (typeof loadFormulariosSheet === "function") { loadFormulariosSheet() }
-    } else {
-        $('#authorizeButtonPro').show();
-        $('#signoutButtonPro').hide();
-    }
-}
-export function loadSheetIconPro(status) {
-    if ( status == 'load' ) {
-      $('#signoutButtonPro').removeClass('noperfil').addClass('spinner');
-      $('#signoutButtonPro i').attr('class','fas fa-spinner fa-spin brancoColor');
-    } else if ( status == 'noperfil' ) {
-        $('#signoutButtonPro').removeClass('spinner');
-        $('#signoutButtonPro').addClass('noperfil').show().attr('onmouseover', 'return infraTooltipMostrar(\'Perfil n&atilde;o autorizado. Solicite acesso &agrave; planilha\')').find('i').attr('class','fas fa-user-slash brancoColor');
-    } else {
-        $('#signoutButtonPro').removeClass('noperfil').removeClass('spinner');
-        $('#signoutButtonPro i').attr('class','fas fa-power-off brancoColor');
-    }
-}
-// Sign in the user upon button click.
-export function handleAuthClickPro(event) {
-    gapi.auth2.getAuthInstance().signIn();
-}
-
-// Sign out the user upon button click.
-export function handleSignoutClickPro(event) {
-    gapi.auth2.getAuthInstance().signOut();
-    logoutSheetPro();
-}
-export function logoutSheetPro() {
-    $('#projetosGantt').remove();
-    localStorageRemovePro('loadEtapasSheet');
-    localStorageRemovePro('loadFormulariosSheet');
-    //localStorageRemovePro('configBasePro');
-    removeOptionsPro('configBaseSelectedPro');
-    removeOptionsPro('configBaseSelectedFormPro');
-    removeOptionsPro('projetosGanttActiveTabs');
-} */
+// Historical Google Sheets client (removed). Projetos is local-first; see pages/PROJETOS.md.
 // [migrado para core/sei] uniqPro
 // [migrado para core/sei] getParamsUrlPro
 export function dynamicColors() {

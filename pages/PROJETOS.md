@@ -1,32 +1,47 @@
-# [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
+# Project management (Gantt)
 
-## ![SEI Pro Estilo Tabela](../img/icon-projetos.png) Gerenciar projetos
+The **Projetos** feature adds a Gantt-based project manager to the SEI home page.
 
- [MOMENTANEAMENTE DESCONTINUADA] A API do Google utilizada pela ferramenta está descontinuada. Em breve retomaremos o projeto com solução alternativa.
+## Status
 
-Essa funcionalidade adiciona à página inicial do SEI um gestor de projetos utilizando o [Diagrama de Gantt](https://pt.wikipedia.org/wiki/Diagrama_de_Gantt)
+Active again in **local-first** mode. The old Google Sheets / Google Cloud OAuth flow is discontinued and removed from the runtime. Projects and stages persist in the extension store (`configDataProjetosPro`). When an Atividades API backend is configured, writes can still sync through that API.
 
-> ![Tela Estilo de Tabelas](../img/tela-projetos.gif) 
+## What you get
 
-Para que você possa compartilhar seus projetos com sua equipe, utilizamos uma planilha online no Google Spreadsheets como base de dados.
+- Projects with stages on a Gantt chart (frappe-gantt 1.2.2)
+- Business-day calendar with Brazilian holidays
+- Dependencies (FS / SS / FF / SF), critical path, and float
+- Milestones, baseline vs actual deviation, portfolio and per-owner views
+- Import / export JSON and CSV reports
+- Demo seed data so the panel works without a remote server
 
-Os passos a seguir são necessários apenas para o proprietário da base de dados. Para os demais usuários, leia o passo **3. Gerenciando seus projetos**
+## Enable
 
-## 1. Criando Base de Dados
+1. Open the extension options
+2. Turn on **Gerenciar Projetos** (`gerenciarprojetos`)
+3. Reload the SEI control page — the **Projetos** panel appears on the home area
 
-Siga o passo a passo para [Configurar o Google Spreadsheets como uma base de dados](../pages/BASEDADOS.md)
+If the store is empty, use **Carregar demonstracao** in the empty state (or the panel seeds demo data automatically once).
 
-## 2. Conectando ao SEI Pro
+## Optional remote sync
 
-Siga o passo a passo para [Conectar o SEI Pro ao Google Spreadsheets](../pages/SEISHEETS.md)
+If you already use the Atividades backend (`URL_API` + access key), keep `gerenciarprojetos` on. The panel still works offline; remote sync uses the same action names as before (`save_projeto`, `update_projeto_etapa`, …).
 
-## 3. Gerenciando seus projetos
+## Related
 
-- [Compartilhando seus projetos com outros usuários](../pages/PROJETOSSHARE.md)
-- [Carregando chaves de acesso de outro usuário](../pages/PROJETOSIMPORT.md)
-- [Criando e editando projetos](../pages/PROJETOSEDIT.md)
+- [PROJETOSEDIT.md](./PROJETOSEDIT.md) — create and edit projects / stages
+- [PROJETOSSHARE.md](./PROJETOSSHARE.md) — sharing options
 
-## Próximo item
+### Historical (Google Sheets)
 
-> [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
+These pages described the Sheets setup and are obsolete for runtime use:
 
+- [BASEDADOS.md](./BASEDADOS.md) — Google Spreadsheet as database
+- [SEISHEETS.md](./SEISHEETS.md) — connect SEI Pro to Sheets
+- [PROJETOSIMPORT.md](./PROJETOSIMPORT.md) — import Sheets keys
+
+Sharing is now handled inside the panel (share table) and/or via JSON export.
+
+## Next
+
+> [Group process list by markers, type, owner, or control point](./AGRUPAR.md)
