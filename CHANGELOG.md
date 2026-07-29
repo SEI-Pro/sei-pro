@@ -1,5 +1,22 @@
 # Changelog — SEI Pro PRF
 
+## [2.1.0] - 2026-07-29
+
+Mais um passo na modernização interna iniciada na 2.0: o comportamento das funcionalidades permanece o mesmo, com a extensão mais leve e estável no dia a dia.
+
+### Melhorado
+
+- **Carregamento mais rápido:** bibliotecas grandes (gráficos, OCR, upload, conversão de documentos, etc.) só entram quando o recurso é de fato usado, em vez de em toda página do SEI
+- **Pacote mais enxuto:** remoção de bibliotecas que não eram mais utilizadas
+
+### Alterado
+
+- Continuidade da reestruturação modular (árvore, lista de processos, editor, tela de opções, IA, documentos em lote e áreas correlatas), sem mudança de escopo para o usuário
+
+### Corrigido
+
+- Estabilidade adicional de cliques e do editor no mundo isolado da extensão
+
 ## [2.0.4] - 2026-07-02
 
 Estabilização adicional do legado contra condições de corrida no carregamento da página do SEI (`readyState=interactive`), com foco nos reportes automáticos de erro recebidos em produção (versões 2.0.1 e anteriores).
