@@ -14954,7 +14954,10 @@ export function initGanttAfastamento(bar_class = false, TimeOut = 9000) {
     if (typeof Gantt !== 'undefined') {
         getGanttAfastamento(bar_class);
     } else {
-        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) $.getScript(URL_SPRO + "js/lib/frappe-gantt.js");
+        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) {
+            if (typeof loadStylePro === 'function') loadStylePro(URL_SPRO + 'css/frappe-gantt.css');
+            $.getScript(URL_SPRO + "js/lib/frappe-gantt.js");
+        }
         setTimeout(function () {
             initGanttAfastamento(bar_class, TimeOut - 100);
             if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initGanttAfastamento');
@@ -17456,7 +17459,10 @@ export function initGanttAtividades(bar_class = false, TimeOut = 9000) {
     if (typeof Gantt !== 'undefined') {
         getGanttAtividades(bar_class);
     } else {
-        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) $.getScript(URL_SPRO + "js/lib/frappe-gantt.js");
+        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) {
+            if (typeof loadStylePro === 'function') loadStylePro(URL_SPRO + 'css/frappe-gantt.css');
+            $.getScript(URL_SPRO + "js/lib/frappe-gantt.js");
+        }
         setTimeout(function () {
             initGanttAtividades(bar_class, TimeOut - 100);
             if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initGanttAtividades');
@@ -19793,7 +19799,10 @@ export function initCalculoRecorrenciaAtiv(this_, TimeOut = 9000) {
     if (typeof Gantt !== 'undefined') {
         calculoRecorrenciaAtiv_(this_);
     } else {
-        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) $.getScript(URL_SPRO + "js/lib/frappe-gantt.js");
+        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) {
+            if (typeof loadStylePro === 'function') loadStylePro(URL_SPRO + 'css/frappe-gantt.css');
+            $.getScript(URL_SPRO + "js/lib/frappe-gantt.js");
+        }
         setTimeout(function () {
             initCalculoRecorrenciaAtiv(this_, TimeOut - 100);
             if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initCalculoRecorrenciaAtiv');

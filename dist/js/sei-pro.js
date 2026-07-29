@@ -2821,6 +2821,7 @@
     if (typeof Dropzone === "function") {
       setUploadFilesInProcess();
     } else {
+      if (typeof loadStylePro === "function") loadStylePro(URL_SPRO + "css/dropzone.min.css");
       $.getScript(URL_SPRO + "js/lib/dropzone.min.js", function() {
         setUploadFilesInProcess();
       });

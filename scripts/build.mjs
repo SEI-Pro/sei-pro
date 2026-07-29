@@ -51,6 +51,7 @@ const bundles = [
     { entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.js', out: 'dist/js/sei-pro.js' },
     { entry: 'src/features/sei-functions/index.js', out: 'dist/js/sei-functions-pro.js' },
+    { entry: 'src/features/atividades/index.js', out: 'dist/js/sei-pro-atividades.js' },
     { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/docs-lote/index.js', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.js', out: 'dist/js/quick-filter-list.bundle.js' },
@@ -91,7 +92,7 @@ function optionsFor({ entry, out }) {
 const legacyFiles = [
     // lista-processos migrada para bundle ESM (sei-pro.js) — não copiar mais o legado.
     // sei-functions-pro migrada para bundle ESM — não copiar mais o legado.
-    'src/features/atividades/sei-pro-atividades.js',
+    // atividades migrada para bundle ESM (sei-pro-atividades.js) — não copiar mais o legado.
     'src/features/editor/sei-pro-editor.js',
     'src/features/ai/sei-pro-ai.js',
     'src/features/todas-paginas/sei-pro-all.js',
@@ -140,7 +141,8 @@ const featureCss = [
     { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' },
     { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' },
     { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' },
-    { src: 'src/features/sei-functions/style.css', out: 'dist/css/sei-functions.css' }
+    { src: 'src/features/sei-functions/style.css', out: 'dist/css/sei-functions.css' },
+    { src: 'src/features/atividades/style.css', out: 'dist/css/atividades.css' }
 ];
 
 function copyFeatureCss() {

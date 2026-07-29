@@ -32,18 +32,24 @@ describe('migration: arvore CSS', () => {
     expect(arvoreInfo).toContain("querySelector('.panelDadosArvore')");
   });
 
-  it('carrega Dropzone, bundle e CSS da árvore no contexto do manifest', () => {
+  it('carrega bundle e CSS da árvore no manifest; Dropzone fica lazy (WAR + init_arvore)', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const entries = manifest.content_scripts.filter(({ js = [] }) =>
       js.includes('js/sei-pro-arvore.js')
     );
+    const war = (manifest.web_accessible_resources || []).flatMap((r) => r.resources || []);
+    const initArvore = read('src/bootstrap/init_arvore.js');
 
     expect(entries.length).toBeGreaterThan(0);
     for (const entry of entries) {
       expect(entry.js).toContain('js/sei-pro-arvore.js');
-      expect(entry.js).toContain('js/lib/dropzone.min.js');
-      expect(entry.css).toContain('css/dropzone.min.css');
+      expect(entry.js).not.toContain('js/lib/dropzone.min.js');
+      expect(entry.css).not.toContain('css/dropzone.min.css');
       expect(entry.css).toContain('css/arvore.css');
     }
+    expect(war).toContain('js/lib/dropzone.min.js');
+    expect(war).toContain('css/dropzone.min.css');
+    expect(initArvore).toContain("js/lib/dropzone.min.js");
+    expect(initArvore).toContain('css/dropzone.min.css');
   });
 });

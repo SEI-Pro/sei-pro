@@ -300,12 +300,19 @@ function loadScriptPro() {
             });
             if (typeof loadProjetosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-projetos.js"));
             if (typeof loadPrescricoesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-prescricoes.js"));
-            if (typeof Gantt === 'undefined') $.getScript(getUrlExtension("js/lib/frappe-gantt.js"));
+            // Feature-heavy libs: lazy (not eager in content_scripts). CSS via loadStylePro.
+            if (typeof Gantt === 'undefined') {
+                if (typeof loadStylePro === 'function') loadStylePro(getUrlExtension('css/frappe-gantt.css'));
+                $.getScript(getUrlExtension("js/lib/frappe-gantt.js"));
+            }
             if (typeof jKanban === 'undefined') $.getScript(getUrlExtension("js/lib/jkanban.min.js"));
             if (typeof $().toolbar === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));
             if (typeof $().tagsInput === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tagsinput-revisited.js"));
             if (typeof $.tablesorter === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.tablesorter.combined.min.js"));
-            if (typeof Chart === 'undefined') $.getScript(getUrlExtension("js/lib/chart.min.js"));
+            if (typeof Chart === 'undefined') {
+                if (typeof loadStylePro === 'function') loadStylePro(getUrlExtension('css/chart.min.css'));
+                $.getScript(getUrlExtension("js/lib/chart.min.js"));
+            }
             if (typeof $().visible === 'undefined') $.getScript(getUrlExtension("js/lib/jquery-visible.min.js"));
         });
     }

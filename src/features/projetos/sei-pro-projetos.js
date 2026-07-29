@@ -6,7 +6,10 @@ function initProjetos(mode = 'insert', arrayProjetos = arrayConfigAtividades.pro
     if (typeof Gantt !== 'undefined') {
         setProjetos(mode, arrayProjetos, query_id_projeto);
     } else {
-        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/frappe-gantt.js");
+        if (typeof Gantt === 'undefined' && typeof URL_SPRO !== 'undefined' && TimeOut == 9000) {
+            if (typeof loadStylePro === 'function') loadStylePro(URL_SPRO + 'css/frappe-gantt.css');
+            $.getScript(URL_SPRO+"js/lib/frappe-gantt.js");
+        }
         setTimeout(function(){ 
             initProjetos(mode, arrayProjetos, query_id_projeto, TimeOut - 100); 
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initProjetos'); 
