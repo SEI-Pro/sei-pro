@@ -6,7 +6,14 @@ const root = path.resolve(process.cwd());
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 describe('editor CSS prefix audit', () => {
-    const source = read('src/features/editor/sei-pro-editor.js');
+    const source = [
+        read('src/features/editor/templates/toolbar.js'),
+        read('src/features/editor/view/toolbar.js'),
+        read('src/features/editor/view/styles.js'),
+        read('src/features/editor/view/dialogs/table.js'),
+        read('src/features/editor/commands/formatting.js')
+    ].join('\n');
+    const delegatedActions = read('src/features/editor/view/delegated-actions.js');
 
     it('prefixa em lote os hooks CSS próprios do menu de alinhamento e da tabela rápida', () => {
         for (const hook of [
@@ -34,12 +41,31 @@ describe('editor CSS prefix audit', () => {
         expect(source).toContain(".closest('.cke_top').find('.seipro-editor-align-menu')");
     });
 
-    it('preserva os hooks compartilhados do CKEditor e os listeners dos botões legados', () => {
+    it('preserva os hooks compartilhados do CKEditor e delega os botões da toolbar', () => {
         for (const sharedHook of ['cke_iconPro', 'cke_buttonPro', 'cke_toolgroup', 'cke_button_disabled']) {
             expect(source).toContain(sharedHook);
         }
         for (const listener of ['.getQuickTableButtom', '.getTablestylesButtom', '.getAlignButtom']) {
-            expect(source).toContain(`$('${listener}').on('click'`);
+            expect(delegatedActions).toContain(`['${listener}'`);
         }
+        expect(source).not.toContain(".getQuickTableButtom').on('click'");
+    });
+
+    it('builds and loads the editor-owned stylesheet', () => {
+        const style = read('src/features/editor/style.css');
+        const build = read('scripts/build.mjs');
+        const manifest = JSON.parse(read('manifest.base.json'));
+        const editorContext = manifest.content_scripts.find(({ matches = [] }) =>
+            matches.some((match) => match.includes('acao=editor_montar'))
+        );
+
+        expect(style).toContain('.seipro-editor-modal');
+        expect(style).toContain('.seipro-draft-panel');
+        expect(style).toContain('.seipro-checklist');
+        expect(style).toContain('.seipro-palette-overlay');
+        expect(build).toContain(
+            "{ src: 'src/features/editor/style.css', out: 'dist/css/editor.css' }"
+        );
+        expect(editorContext.css).toContain('css/editor.css');
     });
 });

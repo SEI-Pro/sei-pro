@@ -1,64 +1,54 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Ferramentas IA](../img/icon-ferramentasia.png) Ferramentas de Inteligência Artificial (ChatGPT)
+## ![SEI Pro Ferramentas IA](../img/icon-ferramentasia.png) Ferramentas de Inteligência Artificial
 
-Aproveite todo o potencial da inteligência artificial do ChatGPT diretamente no editor de documentos do SEI.
+As ferramentas de IA funcionam diretamente no editor de documentos, com respostas em
+streaming e perfis BYOK (*bring your own key*). Cada usuário fornece sua própria chave de API.
+A chave fica somente no armazenamento local do navegador e não é sincronizada.
 
-Utilize alguns dos nossos prompts de integração predeterminados...
+### Provedores compatíveis
 
-|  Tipo de Interação  |
-| ------------------- | 
-|  Discorra sobre  | 
-|  Resuma em linguagem simples o seguinte trecho:  | 
-|  Reescreva o seguinte trecho:  | 
-|  Descubra a base legal para o seguinte tema:  | 
-|  Traga o texto legal, sem explicações, do seguintes dispositivo legal:  | 
-|  Traduza para português a frase:  | 
-|  Faça uma análise crítica sobre o seguinte tópico:  | 
-|  Liste até 10 sinônimos em português para a palavra:  | 
-|  Conclua o seguinte texto:  | 
-|  Extraia as palavras-chave deste texto:  | 
-|  Converta minha nota curta em uma ata de reunião:  | 
-|  Faça um resumo em tópicos do seguinte texto:  | 
-|  Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumentação sobre o seguinte tema:  | 
-|  Amplie e reescreva o texto a seguir, em voz ativa, com correções gramaticais, citando as fontes e adicinando coesão às orações:  | 
-|  Crie um Parecer técnico detalhado, cite fontes e legislação, traga argumentos a favor e contrários sobre o tema:  |
+- OpenAI
+- Anthropic (Claude)
+- Google Gemini
+- Moonshot (Kimi)
+- Ollama local
+- APIs compatíveis com OpenAI, como gateways institucionais, OpenRouter e LiteLLM
 
-.. ou apenas selecione a última opção `-` e descreve qual a instrução que gostaria de perguntar ao Chatbot.
+Cadastre os perfis em **Configurações > Provedores de IA**. Informe nome, provedor, URL base,
+modelo e chave. Para Ollama ou um gateway institucional, marque o perfil como confiável
+somente quando você conhecer e controlar o endpoint.
 
-Ainda é possível adicionar um texto de exemplo, para começar a explorar as potencialidades da ferramenta.
+O Cursor não oferece uma API de chat compatível para este fluxo. Caso exista um endpoint
+compatível fornecido pela sua organização ou por uma versão futura do serviço, configure-o
+como **Compatível com OpenAI**, usando a URL base personalizada e o nome do modelo.
 
-> ![Tela Ferramentas IA](../img/tela-ferramentasia.gif) 
+> **ATENÇÃO:** confirme qual serviço receberá o conteúdo antes de gerar um texto. Documentos
+> restritos ou sigilosos exigem confirmação explícita e o resultado da IA deve sempre ser
+> revisado antes da assinatura.
 
-Para utilizar a API do ChatGPT será preciso se cadastrar na plataforma.
+### Contexto, limites e auditoria
 
-Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:
+Em **Configurações > Provedores de IA**, também é possível definir o máximo de rodadas, o
+limite total de documentos lidos, o orçamento aproximado de tokens, a palavra-chave inline
+e uma instrução institucional adicional. O teto de documentos é único por geração: leituras
+automáticas e chamadas de ferramenta compartilham o mesmo contador.
 
-1. Acesse o site do OpenAI ([https://beta.openai.com/](https://beta.openai.com/)) e clique em "Sign Up" no canto superior direito da tela.
+A IA pode listar e ler documentos, consultar dados e histórico do processo, ler a minuta
+atual e pesquisar legislação. Todas as ferramentas são somente leitura. A extensão não
+oferece à IA ações para criar, assinar, tramitar ou alterar processos.
 
-2. Preencha o formulário de cadastro com seus dados pessoais e crie uma senha.
-É possível logar com sua conta Google ou Microsoft.
+Autorizações para conteúdo protegido ficam no **Histórico local de autorizações**, na mesma
+página de configurações. O histórico não guarda o conteúdo enviado e pode ser baixado ou
+limpo pelo usuário.
 
-3. Verifique seu e-mail e clique no link de confirmação enviado pela OpenAI.
+### Ferramentas do editor
 
-4. Verifique seu celular e adicione o código de verificação enviado por SMS.
-
-5. Faça login na sua conta OpenAI.
-
-6. Clique em `"Upgrade"` no menu do lado direito da tela ou acesse o endereço [https://beta.openai.com/account/billing/overview](https://beta.openai.com/account/billing/overview).
-
-7. Selecione a opção `"USER > Create API Key"`.
-
-8. Clique em `"Create new secret key"` para gerar sua chave de API.
-
-9. Será adicionado um crédito promocional de $18, para utilização em até 4 (quatro) meses.
-Caso deseje prosseguir após isso, adicione suas informações de pagamento no menu `"Billing"`.
-Consulte condições de precificação da plataforma em: [https://openai.com/api/pricing/](https://openai.com/api/pricing/)
-
-10. Copie sua chave secreta de API, pois ela será necessária para fazer chamadas à API. 
-Cole-a na caixa de texto que aparecerá ao clicar no ícone [Ferramentas IA](../img/icon-ferramentasia.png).
-
-> **ATENÇÃO: Os dados são processados pelo serviço OpenAI. Não envie informações restritas ou sigilosas.**
+- `Ctrl+K`: pesquisa todas as ações do editor, com categorias, favoritos e recentes.
+- Checklist antes da assinatura: valida campos, tags, revisões, referências e citações.
+- Trechos da unidade: salva textos reutilizáveis com placeholders como `{{processo}}`,
+  `{{interessado}}`, `{{unidade}}` e `{{hoje}}`.
+- Comparação: confronta a minuta com outro documento do processo.
 
 > 
 ## Próximo item

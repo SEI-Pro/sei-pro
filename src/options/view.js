@@ -7,11 +7,15 @@
  */
 import { openModal } from '../shared/ui/modal.js';
 import {
+    AI_PROVIDER_OPTIONS,
     buildDataValuesPayload,
     classifyProfileDraft,
     computeDependentVisibility,
+    getAiProviderDefaults,
     inferConexaoTipo,
+    isAiProviderId,
     isDefaultEnabledConfigOption,
+    normalizeAiProfileDraft,
     normalizeOptionsSearchText,
     parseDataValues,
     parseNewDocSigilo,
@@ -23,12 +27,20 @@ import {
     serializeDataValues
 } from './domain.js';
 import {
+    clearLlmAccessAudit,
     clearDataValues,
+    deleteLlmProfile,
     downloadJsonFile,
     getExtensionManifest,
     loadDataValues,
+    loadLlmAccessAudit,
+    loadLlmAiSettings,
+    loadLlmProfiles,
     readTextFile,
+    requestProfileHostPermissions,
     saveDataValues,
+    saveLlmProfile,
+    saveLlmAiSettings,
     syncProcessNotificationOption
 } from './io.js';
 
@@ -37,6 +49,7 @@ const TAB_PANEL_IDS = [
     'options-editor-text',
     'options-tree-view',
     'options-database',
+    'options-ai-providers',
     'options-complements'
 ];
 
@@ -51,6 +64,10 @@ const searchState = {
     tabsActive: 0,
     tabsSearchMode: false
 };
+
+let loadedAiProfileIds = new Set();
+let loadedAiAccessAudit = [];
+let loadedAiSettings = {};
 
 function $(sel, root) {
     return (root || document).querySelector(sel);
@@ -213,15 +230,273 @@ function collectProfiles() {
     return { profiles, incomplete };
 }
 
+function aiElement(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (typeof text === 'string') element.textContent = text;
+    return element;
+}
+
+function aiField(labelText, input, wide) {
+    const wrapper = aiElement(
+        'div',
+        'seipro-options-ai-field' + (wide ? ' seipro-options-ai-field--wide' : '')
+    );
+    const label = aiElement('label', '', labelText);
+    label.appendChild(input);
+    wrapper.append(label);
+    return wrapper;
+}
+
+function updateAiEmptyState() {
+    const empty = document.getElementById('seipro-options-ai-empty');
+    const host = document.getElementById('seipro-options-ai-profiles');
+    show(empty, Boolean(host && host.children.length === 0));
+}
+
+function setAiStatus(message, state) {
+    const status = document.getElementById('seipro-options-ai-status');
+    if (!status) return;
+    status.textContent = message || '';
+    if (state) status.dataset.state = state;
+    else status.removeAttribute('data-state');
+}
+
+function formatAuditDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value || '');
+    return new Intl.DateTimeFormat('pt-BR', {
+        dateStyle: 'short',
+        timeStyle: 'medium'
+    }).format(date);
+}
+
+function renderAiAccessAudit(records = loadedAiAccessAudit) {
+    loadedAiAccessAudit = Array.isArray(records) ? records.slice() : [];
+    const body = document.getElementById('seipro-options-ai-audit-body');
+    const empty = document.getElementById('seipro-options-ai-audit-empty');
+    if (!body) return;
+    body.replaceChildren();
+    const recent = loadedAiAccessAudit.slice().reverse();
+    show(empty, recent.length === 0);
+    recent.forEach((record) => {
+        const row = document.createElement('tr');
+        const level = record.accessLevelVerified === false
+            ? 'Não verificado'
+            : (record.accessLevel === 2 ? 'Sigiloso' : 'Restrito');
+        [
+            formatAuditDate(record.timestamp),
+            record.documentNumber || 'Documento atual',
+            level,
+            record.providerId || '',
+            record.model || ''
+        ].forEach((value) => {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+        body.appendChild(row);
+    });
+}
+
+function applyAiSettings(settings = {}) {
+    loadedAiSettings = { ...settings };
+    const values = {
+        'seipro-options-ai-max-iterations': settings.maxIterations,
+        'seipro-options-ai-max-docs': settings.maxDocs,
+        'seipro-options-ai-max-context': settings.maxContextTokens,
+        'seipro-options-ai-keyword': settings.keyword || '+gpt',
+        'seipro-options-ai-system': settings.systemInstruction || ''
+    };
+    Object.entries(values).forEach(([id, value]) => {
+        const field = document.getElementById(id);
+        if (field) field.value = value ?? '';
+    });
+    const inline = document.getElementById('seipro-options-ai-inline');
+    if (inline) inline.checked = settings.inlineEnabled === true;
+}
+
+function collectAiSettings() {
+    const number = (id, fallback, min, max) => {
+        const value = Number(document.getElementById(id)?.value);
+        return Number.isFinite(value) ? Math.min(max, Math.max(min, Math.round(value))) : fallback;
+    };
+    return {
+        ...loadedAiSettings,
+        maxIterations: number('seipro-options-ai-max-iterations', 8, 1, 20),
+        maxDocs: number('seipro-options-ai-max-docs', 15, 0, 50),
+        maxContextTokens: number('seipro-options-ai-max-context', 24000, 1000, 100000),
+        keyword: document.getElementById('seipro-options-ai-keyword')?.value.trim() || '+gpt',
+        inlineEnabled: document.getElementById('seipro-options-ai-inline')?.checked === true,
+        systemInstruction: document.getElementById('seipro-options-ai-system')?.value.trim() || ''
+    };
+}
+
+function createAiProfileRow(profile = {}) {
+    const host = document.getElementById('seipro-options-ai-profiles');
+    if (!host) return null;
+
+    const row = aiElement('fieldset', 'seipro-options-ai-profile');
+    row.dataset.profileId = profile.id || '';
+    row.dataset.hasKey = profile.hasKey === true ? 'true' : 'false';
+    const legend = aiElement('legend', '', profile.label || 'Novo perfil de IA');
+    const grid = aiElement('div', 'seipro-options-ai-grid');
+
+    const provider = aiElement('select', 'seipro-options-ai-provider');
+    provider.dataset.aiField = 'providerId';
+    AI_PROVIDER_OPTIONS.forEach((item) => {
+        const option = aiElement('option', '', item.label);
+        option.value = item.id;
+        provider.appendChild(option);
+    });
+    provider.value = profile.providerId || 'openai';
+
+    const label = aiElement('input');
+    label.type = 'text';
+    label.dataset.aiField = 'label';
+    label.value = profile.label || '';
+    label.placeholder = 'Ex.: OpenAI pessoal';
+
+    const baseUrl = aiElement('input');
+    baseUrl.type = 'url';
+    baseUrl.dataset.aiField = 'baseUrl';
+    baseUrl.value = profile.baseUrl || '';
+    baseUrl.placeholder = 'https://api.exemplo.com';
+
+    const model = aiElement('input');
+    model.type = 'text';
+    model.dataset.aiField = 'model';
+    model.value = profile.model || '';
+    model.placeholder = 'Ex.: gpt-4.1-mini';
+
+    const key = aiElement('input');
+    key.type = 'password';
+    key.dataset.aiField = 'key';
+    key.autocomplete = 'new-password';
+    key.value = profile.key || '';
+    key.placeholder = profile.hasKey ? 'Deixe em branco para manter a chave salva' : 'Chave de API (opcional para Ollama)';
+
+    const trusted = aiElement('input');
+    trusted.type = 'checkbox';
+    trusted.dataset.aiField = 'trusted';
+    trusted.checked = profile.trusted === true;
+
+    const applyDefaults = () => {
+        const defaults = getAiProviderDefaults(provider.value);
+        baseUrl.value = defaults.baseUrl;
+        model.value = defaults.model;
+    };
+    provider.addEventListener('change', applyDefaults);
+    if (!profile.id) applyDefaults();
+
+    label.addEventListener('input', () => {
+        legend.textContent = label.value.trim() || 'Novo perfil de IA';
+    });
+
+    grid.append(
+        aiField('Provedor', provider),
+        aiField('Nome do perfil', label),
+        aiField('URL base', baseUrl, true),
+        aiField('Modelo', model),
+        aiField('Chave de API', key)
+    );
+
+    const actions = aiElement('div', 'seipro-options-ai-actions');
+    const trustedLabel = aiElement('label', 'seipro-options-ai-trusted');
+    trustedLabel.append(trusted, document.createTextNode('Confiar neste endpoint local ou gateway institucional'));
+    const remove = aiElement('button', 'seipro-options-ai-remove', 'Remover perfil');
+    remove.type = 'button';
+    remove.addEventListener('click', () => {
+        row.remove();
+        updateAiEmptyState();
+        setAiStatus('Clique em Salvar para confirmar a remoção.', '');
+        applyOptionsSearchFilter();
+    });
+    actions.append(trustedLabel, remove);
+    row.append(legend, grid, actions);
+    host.appendChild(row);
+    updateAiEmptyState();
+    return row;
+}
+
+function legacyDatabaseProfileToAiProfile(profile, index) {
+    const providerId = String(profile.baseTipo || '').toLowerCase();
+    if (!isAiProviderId(providerId)) return null;
+    const defaults = getAiProviderDefaults(providerId);
+    return {
+        id: `llm-options-legacy-${providerId}-${index}`,
+        providerId,
+        label: profile.baseName || '',
+        baseUrl: profile.URL_API || defaults.baseUrl,
+        model: profile.model || profile.MODEL || defaults.model,
+        key: profile.KEY_USER || profile.API_KEY || '',
+        trusted: profile.trusted === true || providerId === 'ollama'
+    };
+}
+
+function collectAiProfiles() {
+    const profiles = [];
+    const errors = [];
+    $all('.seipro-options-ai-profile').forEach((row, index) => {
+        $all('[data-ai-field]', row).forEach((field) => field.classList.remove('inputError'));
+        const read = (name) => row.querySelector('[data-ai-field="' + name + '"]');
+        const input = {
+            id: row.dataset.profileId || '',
+            providerId: read('providerId').value,
+            label: read('label').value,
+            baseUrl: read('baseUrl').value,
+            model: read('model').value,
+            key: read('key').value,
+            trusted: read('trusted').checked
+        };
+        try {
+            profiles.push(normalizeAiProfileDraft(input));
+        } catch (error) {
+            errors.push(`Perfil ${index + 1}: ${error.message}`);
+            const field = error.message.includes('modelo')
+                ? read('model')
+                : (error.message.includes('URL') || error.message.includes('HTTPS') ? read('baseUrl') : read('providerId'));
+            if (field) field.classList.add('inputError');
+        }
+    });
+    return { profiles, errors };
+}
+
+async function saveAiProfiles(profiles) {
+    await requestProfileHostPermissions(profiles.map((profile) => profile.baseUrl));
+    const saved = [];
+    for (const profile of profiles) {
+        saved.push(await saveLlmProfile(profile, { requestPermission: false }));
+    }
+    const currentIds = new Set(saved.map((profile) => profile.id));
+    for (const profileId of loadedAiProfileIds) {
+        if (!currentIds.has(profileId)) await deleteLlmProfile(profileId);
+    }
+    loadedAiProfileIds = currentIds;
+}
+
 async function saveOptions(reload) {
     // Database profiles are optional. Blank/incomplete rows are skipped; general
     // switches always save (same contract as the pre-migration options.js).
     const { profiles } = collectProfiles();
+    const ai = collectAiProfiles();
+    if (ai.errors.length > 0) {
+        setAiStatus(ai.errors.join(' '), 'error');
+        return;
+    }
     const configGeral = collectConfigGeral();
     const payload = buildDataValuesPayload(profiles, configGeral);
     const serialized = serializeDataValues(payload);
+    const aiSettings = collectAiSettings();
     try {
+        setAiStatus(ai.profiles.length ? 'Salvando perfis de IA…' : '', '');
+        await Promise.all([
+            saveAiProfiles(ai.profiles),
+            saveLlmAiSettings(aiSettings)
+        ]);
+        loadedAiSettings = aiSettings;
         await saveDataValues(serialized);
+        setAiStatus('Perfis de IA salvos.', 'success');
         const notif = document.getElementById('itemConfigGeral_notificacaonovoprocesso');
         syncProcessNotificationOption(notif ? notif.checked : false);
         if (reload === true) {
@@ -458,9 +733,22 @@ function applyConfigGeralToUi(configGeral) {
 }
 
 async function restoreOptions() {
-    const raw = await loadDataValues();
+    const [raw, aiProfiles, accessAudit, aiSettings] = await Promise.all([
+        loadDataValues(),
+        loadLlmProfiles().catch((error) => {
+            setAiStatus(error.message, 'error');
+            return [];
+        }),
+        loadLlmAccessAudit(),
+        loadLlmAiSettings()
+    ]);
     const dataValues = parseDataValues(raw);
-    const profiles = pickProfiles(dataValues);
+    const storedDatabaseProfiles = pickProfiles(dataValues);
+    const profiles = storedDatabaseProfiles.filter((profile) => !isAiProviderId(profile.baseTipo));
+    const legacyAiProfiles = storedDatabaseProfiles
+        .filter((profile) => isAiProviderId(profile.baseTipo))
+        .map(legacyDatabaseProfileToAiProfile)
+        .filter(Boolean);
     const configGeral = pickConfigGeral(dataValues);
 
     for (let i = 0; i < profiles.length; i++) {
@@ -480,6 +768,22 @@ async function restoreOptions() {
     }
 
     applyConfigGeralToUi(configGeral);
+    const aiHost = document.getElementById('seipro-options-ai-profiles');
+    if (aiHost) aiHost.textContent = '';
+    const mergedAiProfiles = aiProfiles.slice();
+    const knownAiEndpoints = new Set(aiProfiles.map((profile) => `${profile.providerId}|${profile.baseUrl}`));
+    legacyAiProfiles.forEach((profile) => {
+        const key = `${profile.providerId}|${profile.baseUrl}`;
+        if (!knownAiEndpoints.has(key)) {
+            mergedAiProfiles.push(profile);
+            knownAiEndpoints.add(key);
+        }
+    });
+    loadedAiProfileIds = new Set(aiProfiles.map((profile) => profile.id));
+    mergedAiProfiles.forEach((profile) => createAiProfileRow(profile));
+    renderAiAccessAudit(accessAudit);
+    applyAiSettings(aiSettings);
+    updateAiEmptyState();
     addActionsProfile();
     applyOptionsSearchFilter();
 }
@@ -569,7 +873,7 @@ function applyOptionsSearchFilter() {
     const hasQuery = query !== '';
     const empty = document.getElementById('options-search-empty');
     let visibleMatches = 0;
-    const tabMatches = [false, false, false, false, false];
+    const tabMatches = [false, false, false, false, false, false];
 
     clearOptionsSearchFilterClasses();
     setOptionsTabsSearchMode(hasQuery);
@@ -584,13 +888,16 @@ function applyOptionsSearchFilter() {
         { selector: '#options-editor-text table.tableZebra', index: 1 },
         { selector: '#options-tree-view table.tableZebra', index: 2 },
         { selector: '#options-profile .options-table', index: 3 },
-        { selector: '#options-complements table.tableZebra', index: 4 }
+        { selector: '#options-ai-providers .seipro-options-ai-profile', index: 4 },
+        { selector: '#options-complements table.tableZebra', index: 5 }
     ];
 
     tabDefinitions.forEach((definition) => {
         $all(definition.selector).forEach((table) => {
             let tableHasMatch = false;
-            $all('tr', table).forEach((row) => {
+            const rows = $all('tr', table);
+            const candidates = rows.length > 0 ? rows : [table];
+            candidates.forEach((row) => {
                 if (row.id === 'footer') return;
                 if (row.offsetParent === null && !row.classList.contains('options-search-hidden')) {
                     // Skip rows already hidden by feature CSS (e.g. .lab), except we still
@@ -650,8 +957,11 @@ function bindEvents() {
     const exportBtn = document.getElementById('export');
     const fileInput = document.getElementById('selectFiles');
     const newBtn = document.getElementById('new');
+    const addAiProfileBtn = document.getElementById('seipro-options-ai-add');
     const searchInput = document.getElementById('options-search-input');
     const searchClear = document.getElementById('options-search-clear');
+    const auditDownload = document.getElementById('seipro-options-ai-audit-download');
+    const auditClear = document.getElementById('seipro-options-ai-audit-clear');
 
     if (importBtn) {
         importBtn.addEventListener('click', () => {
@@ -661,6 +971,29 @@ function bindEvents() {
     if (exportBtn) exportBtn.addEventListener('click', () => { saveOptions(false); });
     if (fileInput) fileInput.addEventListener('change', () => { loadFile(); });
     if (newBtn) newBtn.addEventListener('click', () => addProfile());
+    if (addAiProfileBtn) {
+        addAiProfileBtn.addEventListener('click', () => {
+            createAiProfileRow();
+            setAiStatus('', '');
+            applyOptionsSearchFilter();
+        });
+    }
+    if (auditDownload) {
+        auditDownload.addEventListener('click', () => {
+            downloadJsonFile(
+                `sei-pro-auditoria-ia-${new Date().toISOString().slice(0, 10)}.json`,
+                JSON.stringify(loadedAiAccessAudit, null, 2)
+            );
+        });
+    }
+    if (auditClear) {
+        auditClear.addEventListener('click', async () => {
+            if (!window.confirm('Limpar o histórico local de autorizações de envio para IA?')) return;
+            await clearLlmAccessAudit();
+            renderAiAccessAudit([]);
+            setAiStatus('Histórico local de autorizações removido.', 'success');
+        });
+    }
 
     $all('.save').forEach((btn) => {
         btn.addEventListener('click', () => { saveOptions(true); });

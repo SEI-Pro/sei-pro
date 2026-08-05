@@ -113,7 +113,6 @@
         try {
           value = decodeURIComponent(value);
         } catch (error) {
-          console.warn("Malformed URL parameter ignored in getParamsUrlPro:", value, error);
         }
         params[key] = value;
       }

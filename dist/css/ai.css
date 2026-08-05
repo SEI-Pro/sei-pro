@@ -1,0 +1,124 @@
+.seipro-ai-modal .seipro-modal-box {
+    color: #27303f;
+    background: #fbfcfe;
+}
+
+.seipro-ai-form {
+    display: grid;
+    gap: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+.seipro-ai-field {
+    display: grid;
+    gap: 6px;
+}
+
+.seipro-ai-label {
+    color: #374151;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.seipro-ai-form input[type="text"],
+.seipro-ai-form input[type="url"],
+.seipro-ai-form input[type="password"],
+.seipro-ai-form select,
+.seipro-ai-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 9px 10px;
+    color: #202938;
+    font: inherit;
+    background: #fdfefe;
+    border: 1px solid #b8c3d1;
+    border-radius: 5px;
+}
+
+.seipro-ai-form textarea {
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.seipro-ai-form input:focus,
+.seipro-ai-form select:focus,
+.seipro-ai-form textarea:focus {
+    border-color: #2563a8;
+    outline: 2px solid rgba(37, 99, 168, .18);
+    outline-offset: 1px;
+}
+
+.seipro-ai-check-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    color: #374151;
+    font-size: 13px;
+}
+
+.seipro-ai-privacy-note,
+.seipro-ai-form-status {
+    margin: 0;
+    color: #5f6b7b;
+    font-size: 12px;
+}
+
+.seipro-ai-primary {
+    color: #f8fbff !important;
+    background: #245f9e !important;
+    border-color: #245f9e !important;
+}
+
+.seipro-ai-secondary {
+    justify-self: start;
+    padding: 0;
+    color: #245f9e;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.seipro-ai-danger {
+    color: #8c2525 !important;
+    background: #fbeeee !important;
+    border-color: #dfb4b4 !important;
+}
+
+.seipro-ai-access-warning {
+    padding: 10px 12px;
+    color: #6f3f0c;
+    background: #fff5dd;
+    border: 1px solid #e8ca87;
+    border-radius: 5px;
+}
+
+.seipro-ai-access-details {
+    display: grid;
+    grid-template-columns: minmax(120px, auto) 1fr;
+    gap: 8px 14px;
+    margin: 16px 0 0;
+}
+
+.seipro-ai-access-details dt {
+    font-weight: 650;
+}
+
+.seipro-ai-access-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+    .seipro-ai-access-details {
+        grid-template-columns: 1fr;
+    }
+}
+.seipro-ai-error-message {
+    margin: 0;
+    padding: 10px 12px;
+    color: #7a1f1f;
+    background: #fdecec;
+    border: 1px solid #e5a3a3;
+    border-radius: 5px;
+    overflow-wrap: anywhere;
+}

@@ -30,6 +30,18 @@ describe('docs-lote/domain — extractEditorUrl', () => {
     it('lança quando ausente', () => {
         expect(() => extractEditorUrl('sem link')).toThrow();
     });
+    it('lança quando id_documento está vazio (URL truncada do SEI)', () => {
+        const truncated =
+            "janela.location = 'controlador.php?acao=editor_montar&id_procedimento=7&id_documento='+id+'&infra_hash=abc';";
+        expect(() => extractEditorUrl(truncated)).toThrow();
+    });
+    it('resolve concatenação JS quando o id está atribuído no HTML', () => {
+        const html =
+            "var id = 55;\njanela.location = 'controlador.php?acao=editor_montar&id_procedimento=7&id_documento='+id+'&infra_hash=abc';";
+        expect(extractEditorUrl(html)).toBe(
+            'controlador.php?acao=editor_montar&id_procedimento=7&id_documento=55&infra_hash=abc'
+        );
+    });
 });
 
 describe('docs-lote/domain — interpolateEspecificacao', () => {

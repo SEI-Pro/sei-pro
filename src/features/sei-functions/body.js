@@ -5,6 +5,13 @@
  * numeros, serial, validacao, cor, datas, options, …) and are NOT redefined here.
  */
 import { installSeiFunctionsState, refreshSeiPageSelectors } from './state.js';
+import {
+    extractEditorMontarUrl,
+    isValidEditorMontarUrl,
+    editorWindowNeedsNavigate,
+    getUrlDocumentoId,
+    repairEditorMontarUrl
+} from '../../shared/sei-editor-url.js';
 
 installSeiFunctionsState();
 
@@ -4813,266 +4820,7 @@ export function toogleByID(this_) {
     }
 
 }
-export function getColorID() {
-	var colorID = {
-		color1: { 
-			light: '#dddddd', 
-			dark: '#646464'
-		},
-		color2: { 
-			light: '#e2daf1', 
-			dark: '#7b54c0'
-		},
-		color3: { 
-			light: '#eed7e9', 
-			dark: '#b1489c'
-		},
-		color4: { 
-			light: '#f2d7dc', 
-			dark: '#c2495e'
-		},
-		color5: { 
-			light: '#ecdacf', 
-			dark: '#a85723'
-		},
-		color6: { 
-			light: '#dfdfc8', 
-			dark: '#6e6b06'
-		},
-		color7: { 
-			light: '#d1e2cc', 
-			dark: '#2f7c16'
-		},
-		color8: { 
-			light: '#c9e4d7', 
-			dark: '#0a824a'
-		},
-		color9: { 
-			light: '#cae2e6', 
-			dark: '#0e7a8b'
-		},
-		color10: { 
-			light: '#d4def0', 
-			dark: '#3b68b9'
-		}
-	};
-	return colorID;
-}
-export function getStyleTable(color, width = 80) {
-	var styleTable = {
-		tableStyle1: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+';margin-left:auto; margin-right:auto; width:'+width+'%;',
-			tr_head: '',
-			tr: '',
-			td_head: 'background-color: '+color.light+';',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle2: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+';margin-left:auto; margin-right:auto; width:'+width+'%;',
-			tr_head: 'background-color: '+color.light+';',
-			tr: ['','background-color: '+color.light+';'],
-			td_head: '',
-			td_head_p: 'Tabela_Texto_Alinhado_Esquerda',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle3: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto; width:'+width+'%; border-left: none;border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+'; border-right: none;',
-			tr_head: 'border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+';',
-			tr: 'border: none;',
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle4: {
-			table: 'border-collapse:collapse; margin-left:auto;margin-right:auto;width:'+width+'%;border: none;',
-			tr_head: 'border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+';',
-			tr: 'border: none;',
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: 'border-left: none; border-top: none;border-bottom: none;border-right: 1px solid '+color.dark+';',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle5: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto; width:'+width+'%;border: none;',
-			tr_head: 'border: none;',
-			tr: 'border: none;',
-			td_head: '',
-			td_head_p: 'Tabela_Texto_Alinhado_Esquerda',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle6: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto; width:'+width+'%; border: none;',
-			tr_head: 'border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+';',
-			tr: 'border: none;',
-			td_head: 'background-color: '+color.light+';',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: 'background-color: '+color.light+'; border-left: none; border-top: none; border-bottom: none; border-right: 1px solid '+color.dark+';',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle7: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+'; margin-left:auto; margin-right:auto; width:'+width+'%;',
-			tr_head: 'border-bottom: 3px solid '+color.dark+';',
-			tr: '',
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle8: {
-			table: 'border-collapse:collapse; border-bottom: 1px solid '+color.dark+'; border-left: none; border-right: none; border-top: none;margin-left: auto;margin-right:auto; width:'+width+'%;',
-			tr_head: 'border-bottom: 3px solid '+color.dark+';',
-			tr: '',
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: 'border-left: 1px solid '+color.dark+';',
-			td_first: 'border-right: none;',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle9: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto;width:'+width+'%; border: none;',
-			tr_head: 'border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+';',
-			tr: 'border: none;',
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: 'border: 1px solid '+color.dark+';',
-			td_first: 'border-left: none;border-top: none;border-bottom: none;border-right: 1px solid '+color.dark+';',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle10: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+'; margin-left:auto; margin-right:auto; width:'+width+'%;',
-			tr_head: 'color: #fff;',
-			tr: '',
-			td_head: 'background-color: '+color.dark+';',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle11: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto; width:'+width+'%; border: none;',
-			tr_head: 'color: #fff; border: 1px solid '+color.dark+'; border-bottom: 1px solid #fff !important',
-			tr: 'border: none;',
-			td_head: 'background-color: '+color.dark+';',
-			td_head_p: 'Texto_Centralizado',
-			td: 'background-color: '+color.light+'; border-bottom: 1px solid #fff; border-right: 1px solid #fff',
-			td_first: 'color: #fff;background-color: '+color.dark+'; border: 1px solid '+color.dark+'; border-bottom: 1px solid #fff !important;',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle12: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+'; margin-left:auto; margin-right:auto; width:'+width+'%;',
-			tr_head: 'background-color: '+color.light+'; border-bottom: 3px solid '+color.dark+';',
-			tr: '',
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle13: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto ;width:'+width+'%; border: none;',
-			tr_head: 'background-color: '+color.light+'; border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+';',
-			tr: 'border: none;',
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: 'border: 1px solid '+color.dark+';',
-			td_first: 'border-left: none;border-top: none;border-bottom: none;border-right: 1px solid '+color.dark+';',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle14: {
-			table: 'border-collapse:collapse;margin-left:auto;margin-right:auto;width:'+width+'%;border: none;',
-			tr_head: 'background-color: '+color.light+'; border-bottom: 1px solid '+color.dark+';',
-			tr: ['border: none;','border: none; background-color: '+color.light+';'],
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle15: {
-			table: 'border-collapse:collapse;margin-left:auto;margin-right:auto;width:'+width+'%;border-left: none; border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+'; border-right: none;',
-			tr_head: 'border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+';',
-			tr: 'border-bottom: 1px solid '+color.dark+';',
-			td_head: '',
-			td_head_p: 'Tabela_Texto_Alinhado_Esquerda',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle16: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+'; margin-left:auto; margin-right:auto; width:'+width+'%;',
-			tr_head: 'color: #fff;',
-			tr: '',
-			td_head: 'background-color: '+color.dark+';',
-			td_head_p: 'Texto_Centralizado',
-			td: 'border: none;',
-			td_first: 'border: none;',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle17: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+';margin-left:auto; margin-right:auto;width:'+width+'%;',
-			tr_head: 'color: #fff;',
-			tr: ['border: none;','border: none; background-color: '+color.light+';'],
-			td_head: 'background-color: '+color.dark+';',
-			td_head_p: 'Texto_Centralizado',
-			td: 'border: none;',
-			td_first: 'border: none;',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle18: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto; width:'+width+'%;border: none;',
-			tr_head: 'color: #fff; border: 1px solid '+color.dark+'; border-bottom: 3px solid #fff !important',
-			tr: ['border: none; background-color: '+color.light+';','color: #fff; border: none; background-color: '+color.dark+';'],
-			td_head: 'background-color: '+color.dark+';',
-			td_head_p: 'Texto_Centralizado',
-			td: 'border:none;',
-			td_first: 'border: none; border-right: 3px solid #fff',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle19: {
-			table: 'border-collapse:collapse; margin-left:auto; margin-right:auto;width:'+width+'%; border-left: none;border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+'; border-right: none;',
-			tr_head: 'background-color: '+color.light+'; border-bottom: 1px solid '+color.dark+';',
-			tr: ['border: none;','border: none; background-color: '+color.light+';'],
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle20: {
-			table: 'border-collapse:collapse; margin-left:auto;margin-right:auto;width:'+width+'%;border: none;',
-			tr_head: 'background-color: '+color.light+'; border-top: 1px solid '+color.dark+'; border-bottom: 1px solid '+color.dark+';',
-			tr: ['border: none;','border: none; background-color: '+color.light+';'],
-			td_head: '',
-			td_head_p: 'Texto_Centralizado',
-			td: '',
-			td_first: 'border-left: none; border-top: none;border-bottom: none;border-right: 1px solid '+color.dark+';',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		},
-		tableStyle21: {
-			table: 'border-collapse:collapse; border-color:'+color.dark+';margin-left:auto; margin-right:auto; width:'+width+'%;',
-			tr_head: '',
-			tr: '',
-			td_head: '',
-			td_head_p: 'Tabela_Texto_Alinhado_Esquerda',
-			td: '',
-			td_first: '',
-			td_p: 'Tabela_Texto_Alinhado_Esquerda'
-		}
-	};
-	return styleTable;
-}
+export { getColorID, getStyleTable } from '../../shared/table-styles.js';
 // [migrado para platform/webstore.js] wrappers de web storage da página:
 //  localStorage{Restore,Store,Remove}Pro, sessionStorage{...}, hybridStorage{...}.
 //  Instalados por installCoreStack() -> installWebstore(); globais via aliasGlobal.
@@ -5612,8 +5360,11 @@ export function getLinksProcessoPro(_ifrVisualizacao, _ifrArvore) {
                         } else if ( value.indexOf('?acao=procedimento_atualizar_andamento') !== -1 && _ifrVisualizacao.find('img[title="Atualizar Andamento"]').length > 0 ) { 
                             name = 'Atualizar Andamento';
                         } 
-                        var data = jmespath.search(parent.iconsFlashMenu, "[?name=='"+name+"'] | [0]");
-                        if ( name != '' ) { linksArvore.push({ url: value, name: data.name, icon: data.icon, alt: data.alt}); }
+                        var data = (typeof jmespath !== 'undefined' && parent.iconsFlashMenu)
+                            ? jmespath.search(parent.iconsFlashMenu, "[?name=='"+name+"'] | [0]")
+                            : null;
+                        if ( name != '' && data ) { linksArvore.push({ url: value, name: data.name, icon: data.icon, alt: data.alt}); }
+                        else if ( name != '' ) { linksArvore.push({ url: value, name: name, icon: '', alt: name}); }
                 });
             }
         }
@@ -5807,10 +5558,16 @@ export function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
     getListDocumentosArvore(ifrArvore);
     if (mode == 'editor') { 
         // getDialogCitacaoDocumento();
+        // These live on the MAIN-world editor bundle after WAR inject; isolated
+        // sei-functions cannot see them. Soft-call when present (legacy same-world).
         setTimeout(function(){ 
-            getDialogDadosEditor();
+            if (typeof getDialogDadosEditor === 'function') getDialogDadosEditor();
         }, 1000);
-        insertAutomaticMinutaWatermark();
+        if (typeof insertAutomaticMinutaWatermark === 'function') insertAutomaticMinutaWatermark();
+        try {
+            document.documentElement.setAttribute('data-seipro-processo-dados', 'ready');
+            window.dispatchEvent(new CustomEvent('seipro-processo-dados-ready'));
+        } catch (e) { /* noop */ }
     } else if (mode == 'gantt') { 
         updateSelectConcluirEtapa();
     } else if (mode == 'projeto') { 
@@ -7712,12 +7469,17 @@ export function getDocCertidao(this_) {
                                                             urlReload = v.split("'")[1];
                                                         }
                                                         if (v.indexOf("acao=editor_montar") !== -1) {
-                                                            urlEditor.push(v.split("'")[1]);
+                                                            var editorUrlCert = extractEditorMontarUrl(v);
+                                                            if (editorUrlCert) urlEditor.push(editorUrlCert);
                                                         }
                                                         if (v.indexOf("janelaEditor_") !== -1) {
                                                             idUser = v.split("_")[1];
                                                         }
                                                     });
+                                                    if (!urlEditor.length) {
+                                                        var editorUrlCertHtml = extractEditorMontarUrl(htmlResult);
+                                                        if (editorUrlCertHtml) urlEditor.push(editorUrlCertHtml);
+                                                    }
                                                     if (urlEditor.length > 0 && idUser) {
                                                         sessionStorageStorePro('dadosDocCertidao',contentHtml);
                                                         sessionStorageStorePro('nomeDocCertidao',ifrArvore.contents().find('.infraArvoreNoSelecionado').eq(0).text());
@@ -7757,12 +7519,204 @@ export function getUrlNewDocArvore() {
     return urlNewDoc;
 }
 export function openWindowEditor(urlEditor, idUser) {
-    var id_documento = getParamsUrlPro(urlEditor).id_documento
-    var janelaEditor = infraAbrirJanela('', 'janelaEditor_'+idUser+'_'+id_documento, parent.infraClientWidth(), parent.infraClientHeight(), 'location=0,status=0,resizable=1,scrollbars=1', false);
-    if (janelaEditor.location=='about:blank') {
-        janelaEditor.location.href = urlEditor;
+    if (!isValidEditorMontarUrl(urlEditor)) {
+        console.warn('SEI Pro: openWindowEditor skipped — missing id_documento', urlEditor);
+        if (typeof alertaBoxPro === 'function') {
+            alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel abrir o editor: documento sem identifica\u00E7\u00E3o.');
+        }
+        return;
     }
-    janelaEditor.focus();
+    var abs = toAbsoluteSeiUrl(urlEditor);
+    var id_documento = getParamsUrlPro(urlEditor).id_documento;
+    var nome = 'janelaEditor_'+idUser+'_'+id_documento;
+    var janelaEditor = null;
+    try {
+        // Pass URL as first arg (like SEI iniciarEditor). Empty-string open does NOT
+        // navigate an existing named window that already has a bad empty-id URL.
+        janelaEditor = infraAbrirJanela(abs, nome, parent.infraClientWidth(), parent.infraClientHeight(), 'location=0,status=0,resizable=1,scrollbars=1', false);
+    } catch (e) {
+        janelaEditor = null;
+    }
+    if (!janelaEditor) {
+        openLinkNewTab(abs);
+        return;
+    }
+    try {
+        var href = '';
+        try { href = String(janelaEditor.location.href || ''); } catch (e2) { href = ''; }
+        if (editorWindowNeedsNavigate(href)) {
+            janelaEditor.location.href = abs;
+        }
+        janelaEditor.focus();
+    } catch (e3) {
+        openLinkNewTab(abs);
+    }
+}
+
+function toAbsoluteSeiUrl(url) {
+    try {
+        var a = document.createElement('a');
+        a.href = url;
+        return a.href;
+    } catch (e) {
+        return url;
+    }
+}
+
+function firstEditorContextDocumentId(win) {
+    const candidates = [];
+    const add = (value) => {
+        if (value) candidates.push(String(value));
+    };
+
+    try {
+        let current = win;
+        for (let depth = 0; current && depth < 3; depth++, current = current.parent) {
+            add(current?.linkEditarConteudo);
+            add(current?.location?.href);
+            const doc = current?.document;
+            if (!doc) continue;
+            const input = doc.querySelector('[name="id_documento"], #hdnIdDocumento, #id_documento');
+            add(input?.value);
+            doc.querySelectorAll('a[href*="id_documento="]').forEach((link) => {
+                add(link.href || link.getAttribute('href'));
+            });
+        }
+    } catch (error) { /* noop */ }
+
+    // The selected document remains available in the process tree even when
+    // the visualisation frame itself was loaded without id_documento.
+    try {
+        const parentDoc = win?.parent?.document;
+        const tree = parentDoc?.querySelector('#ifrArvore');
+        const selected = tree?.contentDocument?.querySelector('.infraArvoreNoSelecionado');
+        add(selected?.closest('a')?.href);
+        add(selected?.getAttribute('href'));
+    } catch (error) { /* noop */ }
+
+    for (const candidate of candidates) {
+        const id = getUrlDocumentoId(candidate);
+        if (/^\d+$/.test(id)) return id;
+        if (/^\d+$/.test(candidate.trim())) return candidate.trim();
+    }
+    return '';
+}
+
+function editorLinksFromContext(win) {
+    const links = [];
+    const add = (value) => {
+        const candidate = String(value || '').trim();
+        if (candidate && /acao=editor_montar/i.test(candidate)) links.push(candidate);
+    };
+
+    try {
+        let current = win;
+        for (let depth = 0; current && depth < 3; depth++, current = current.parent) {
+            add(current?.linkEditarConteudo);
+            const doc = current?.document;
+            doc?.querySelectorAll('a[href*="editor_montar"]').forEach((link) => {
+                add(link.href || link.getAttribute('href'));
+            });
+        }
+    } catch (error) { /* noop */ }
+
+    return links;
+}
+
+function resolveNativeEditorUrl(win) {
+    if (!win) return null;
+    const documentId = firstEditorContextDocumentId(win);
+    if (!documentId) return null;
+
+    const base = editorLinksFromContext(win)[0] || '';
+    if (!base) return null;
+
+    const repaired = repairEditorMontarUrl(base, documentId, win.location?.href || '');
+    return repaired && isValidEditorMontarUrl(repaired) ? repaired : null;
+}
+
+/**
+ * SEI's editarConteudo opens with infraAbrirJanela('', name) and only assigns
+ * location when about:blank — so a prior empty-id_documento window is reused.
+ * Replace it to open with the absolute linkEditarConteudo (like iniciarEditor).
+ */
+export function patchNativeEditorOpen(win) {
+    if (!win || win.__SEI_PRO_EDITOR_OPEN_PATCHED__) return false;
+    if (typeof win.editarConteudo !== 'function') return false;
+    if (!resolveNativeEditorUrl(win)) return false;
+    win.__SEI_PRO_EDITOR_OPEN_PATCHED__ = true;
+    var orig = win.editarConteudo;
+    win.editarConteudo = function patchedEditarConteudo(assinado) {
+        try {
+            if (win.INFRA_FF > 0 && win.INFRA_FF < 4) {
+                win.alert('Para realizar a edi\u00E7\u00E3o de documentos no Firefox \u00E9 recomendado atualizar o navegador para a vers\u00E3o 4 ou posterior.\n\nPara iniciar a atualiza\u00E7\u00E3o autom\u00E1tica acesse o menu "Ajuda / Verificar atualiza\u00E7\u00F5es..." ou "Ajuda / Sobre o Firefox" do navegador.');
+            }
+            if (assinado == 'S') {
+                if (win.objAjaxVerificacaoAssinatura) win.objAjaxVerificacaoAssinatura.bolAssinado = true;
+            } else if (win.objAjaxVerificacaoAssinatura && typeof win.objAjaxVerificacaoAssinatura.executar === 'function') {
+                win.objAjaxVerificacaoAssinatura.executar();
+            }
+            if (win.objAjaxVerificacaoAssinatura && win.objAjaxVerificacaoAssinatura.bolAssinado) {
+                if (!win.confirm('Este documento j\u00E1 foi assinado. Se for editado perder\u00E1 a assinatura e dever\u00E1 ser assinado novamente.\n\n Deseja editar o documento?')) {
+                    if (assinado == 'N' && typeof win.atualizarArvore === 'function') {
+                        win.atualizarArvore(win.linkMontarArvoreProcessoDocumento);
+                    }
+                    return;
+                }
+            }
+        } catch (ePre) {
+            console.warn('SEI Pro: editarConteudo pre-check failed, falling back', ePre);
+            try { return orig.apply(win, arguments); } catch (eOrig) { /* continue */ }
+        }
+        ensureNativeEditorWindowNavigates(win);
+    };
+    return true;
+}
+
+export function ensureNativeEditorWindowNavigates(win) {
+    const editorUrl = resolveNativeEditorUrl(win);
+    if (!editorUrl) return false;
+    var abs;
+    try {
+        var a = win.document.createElement('a');
+        a.href = editorUrl;
+        abs = a.href;
+    } catch (e) {
+        abs = editorUrl;
+    }
+    var nome = 'janelaEditor_' + (win.nomeJanelaDocumento || '');
+    var openFn = null;
+    try {
+        if (win.parent && typeof win.parent.infraAbrirJanela === 'function') openFn = win.parent.infraAbrirJanela.bind(win.parent);
+        else if (typeof win.infraAbrirJanela === 'function') openFn = win.infraAbrirJanela.bind(win);
+    } catch (eBind) { /* noop */ }
+
+    var w = null;
+    try {
+        if (openFn) {
+            w = openFn(abs, nome, win.infraClientWidth(), win.infraClientHeight(), 'location=0,status=0,resizable=1,scrollbars=1', false);
+        } else {
+            w = win.open(abs, nome);
+        }
+    } catch (e2) {
+        w = null;
+    }
+    if (!w) {
+        if (typeof openLinkNewTab === 'function') openLinkNewTab(abs);
+        else try { win.open(abs, '_blank'); } catch (e3) { /* noop */ }
+        return true;
+    }
+    try {
+        var href = '';
+        try { href = String(w.location.href || ''); } catch (e4) { href = ''; }
+        if (editorWindowNeedsNavigate(href)) {
+            w.location.href = abs;
+        }
+        w.focus();
+    } catch (e5) {
+        if (typeof openLinkNewTab === 'function') openLinkNewTab(abs);
+    }
+    return true;
 }
 export function setResizeIfrArvore() {
     var ifrArvore = $('#ifrArvore');
@@ -11154,12 +11108,17 @@ export function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false
                                                         urlReload = v.split("'")[1];
                                                     }
                                                     if (v.indexOf("acao=editor_montar") !== -1) {
-                                                        urlEditor.push(v.split("'")[1]);
+                                                        var editorUrlNew = extractEditorMontarUrl(v);
+                                                        if (editorUrlNew) urlEditor.push(editorUrlNew);
                                                     }
                                                     if (v.indexOf("janelaEditor_") !== -1) {
                                                         idUser = v.split("_")[1];
                                                     }
                                                 });
+                                                if (!urlEditor.length) {
+                                                    var editorUrlNewHtml = extractEditorMontarUrl(htmlResult);
+                                                    if (editorUrlNewHtml) urlEditor.push(editorUrlNewHtml);
+                                                }
                                                 if (urlEditor.length > 0 && idUser) {
                                                     var acao_pro = insertHtml ? 'set_automatico' : 'set_new_doc';
                                                     if (openProc) openLinkNewTab(href);
@@ -11756,16 +11715,54 @@ export function fnJqueryPro() {
 // [migrado para core/sei] loadStyleDesign
 export function loadScriptVisualizacaoPro() {
     if ( $($ifrVisualizacao).length ) {
+        function tryPatchWindow(w) {
+            try {
+                if (!w) return;
+                if (!patchNativeEditorOpen(w) && !w.__SEI_PRO_EDITOR_OPEN_PATCHED__) {
+                    // linkEditarConteudo may appear after partial loads — retry briefly.
+                    if (w.__SEI_PRO_EDITOR_OPEN_RETRY__) return;
+                    w.__SEI_PRO_EDITOR_OPEN_RETRY__ = true;
+                    var tries = 0;
+                    var timer = setInterval(function() {
+                        tries++;
+                        if (patchNativeEditorOpen(w) || w.__SEI_PRO_EDITOR_OPEN_PATCHED__ || tries >= 20) {
+                            clearInterval(timer);
+                            w.__SEI_PRO_EDITOR_OPEN_RETRY__ = false;
+                        }
+                    }, 250);
+                }
+            } catch (e) { /* noop */ }
+        }
+
+        function tryPatchViz() {
+            var w = $($ifrVisualizacao)[0] && $($ifrVisualizacao)[0].contentWindow;
+            tryPatchWindow(w);
+        }
+
+        function tryPatchNestedViz() {
+            var $ifrInternoVisualizacao = $($ifrVisualizacao).contents().find('#ifrVisualizacao');
+            if (!$ifrInternoVisualizacao.length) return;
+
+            var nestedWindow = $ifrInternoVisualizacao[0] && $ifrInternoVisualizacao[0].contentWindow;
+            tryPatchWindow(nestedWindow);
+            $ifrInternoVisualizacao.off('load.seipro-editor-open').on('load.seipro-editor-open', function() {
+                tryPatchWindow(this.contentWindow);
+                scriptVisualizacaoPro($(this).contents());
+            });
+        }
+
         $($ifrVisualizacao).off("load.seipro").on("load.seipro", function() {
-            if (SeiPro.sei.adapter.isSEI5()) {
-                var $ifrInternoVisualizacao = $($ifrVisualizacao).contents().find('#ifrVisualizacao');
-                $ifrInternoVisualizacao.off("load.seipro").on("load.seipro", function() {
-                    scriptVisualizacaoPro($ifrInternoVisualizacao.contents());
-                });
-            } else {
-                scriptVisualizacaoPro($($ifrVisualizacao).contents());
-            }
+            tryPatchViz();
+            tryPatchNestedViz();
+            scriptVisualizacaoPro($($ifrVisualizacao).contents());
         });
+        try {
+            var readyWin = $($ifrVisualizacao)[0] && $($ifrVisualizacao)[0].contentWindow;
+            if (readyWin && readyWin.document && readyWin.document.readyState === 'complete') {
+                tryPatchViz();
+                tryPatchNestedViz();
+            }
+        } catch (e2) { /* noop */ }
     }
 }
 export function scriptVisualizacaoPro(ifrV) {

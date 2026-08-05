@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { extractTextWithNumbering } from '@src/features/editor/domain.js';
-import { extractTextFromHtml } from '@src/features/editor/io.js';
+import { extractTextFromHtml } from '@src/features/editor/domain/html-text.js';
 import { bindEditorFocus, collectEditorText } from '@src/features/editor/view.js';
 
 describe('editor/domain — extractTextWithNumbering', () => {
@@ -30,7 +30,7 @@ describe('editor/domain — extractTextWithNumbering', () => {
     });
 });
 
-describe('editor/io — extractTextFromHtml', () => {
+describe('editor/domain/html-text — extractTextFromHtml', () => {
     it('injeta o parser e normaliza parágrafos antes de chamar o domínio', () => {
         const parseHtml = (html) => ({
             html,

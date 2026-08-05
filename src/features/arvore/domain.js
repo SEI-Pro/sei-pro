@@ -6,6 +6,8 @@
  * chrome.* (callers inject formatters / URL parsers when needed).
  */
 
+import { isValidEditorMontarUrl } from '../../shared/sei-editor-url.js';
+
 function isMenuEntry(value) {
     return Array.isArray(value) && typeof value[0] === 'string' && value[0].trim() !== '';
 }
@@ -175,6 +177,9 @@ export function getLinksInText(text, resolveIdDocumento) {
             : [v];
         parts.forEach((j) => {
             const link = j.replace(/[\\"]/g, '');
+            if (link.indexOf('acao=editor_montar') !== -1 && !isValidEditorMontarUrl(link)) {
+                return;
+            }
             let ldownload = '';
             if (
                 link.indexOf('documento_download_anexo') !== -1 &&

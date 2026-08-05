@@ -19,7 +19,7 @@
  * touches the legacy/readable sources in place. Legacy files are only ever copied.
  */
 import { build } from 'esbuild';
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -39,7 +39,7 @@ import { readdirSync } from 'node:fs';
 
 const entriesDir = path.join(root, 'src/entries');
 const entryBundles = readdirSync(entriesDir)
-    .filter((f) => f.endsWith('.js'))
+    .filter((f) => f.endsWith('.js') && f !== 'editor.js')
     .map((f) => ({
         entry: 'src/entries/' + f,
         out: 'dist/js/' + f.replace(/\.js$/, '.bundle.js')
@@ -47,6 +47,9 @@ const entryBundles = readdirSync(entriesDir)
 
 const bundles = [
     { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
+    // The service worker is legacy, but the LLM handler is bundled so it can
+    // reuse the provider adapters and streaming client without duplicating them.
+    { entry: 'src/background/llm-handler.js', out: 'dist/js/llm-handler.js' },
     { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
     { entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.js', out: 'dist/js/sei-pro.js' },
@@ -63,7 +66,9 @@ const bundles = [
     { entry: 'src/features/controlar-prazos/index.js', out: 'dist/js/sei-pro-controle-prazo.js' },
     // Marcar como "Não Visualizado": decomposta em io/view; saída nova (manifest
     // blocos 3 e 4, após sei-pro.js). Globais preservados via aliasGlobal.
-    { entry: 'src/features/editor/index.js', out: 'dist/js/editor-domain.bundle.js' },
+    { entry: 'src/entries/editor.js', out: 'dist/js/sei-pro-editor.js' },
+    { entry: 'src/features/ai/index.js', out: 'dist/js/sei-pro-ai.js' },
+    { entry: 'src/features/legis/index.js', out: 'dist/js/sei-legis.js' },
     { entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' },
     { entry: 'src/features/lista-agrupamento/index.js', out: 'dist/js/lista-agrupamento.bundle.js' },
     // Projetos (Gantt): domain/store/view; saida mantem nome legado js/sei-pro-projetos.js
@@ -78,12 +83,27 @@ const bundles = [
 ];
 
 function optionsFor({ entry, out }) {
+    const outfile = path.join(root, out);
+    const plugins = entry === 'src/entries/editor.js'
+        ? [{
+            name: 'trim-editor-bundle-line-endings',
+            setup(buildApi) {
+                buildApi.onEnd((result) => {
+                    if (result.errors.length) return;
+                    const source = readFileSync(outfile, 'utf8');
+                    writeFileSync(outfile, source.replace(/[ \t]+$/gm, ''), 'utf8');
+                });
+            }
+        }]
+        : [];
+
     return {
         entryPoints: [path.join(root, entry)],
         bundle: true,
         format: 'iife',
         minify: false,
-        outfile: path.join(root, out),
+        outfile,
+        plugins,
         logLevel: 'info'
     };
 }
@@ -95,14 +115,12 @@ const legacyFiles = [
     // lista-processos migrada para bundle ESM (sei-pro.js) — não copiar mais o legado.
     // sei-functions-pro migrada para bundle ESM — não copiar mais o legado.
     // atividades migrada para bundle ESM (sei-pro-atividades.js) — não copiar mais o legado.
-    'src/features/editor/sei-pro-editor.js',
-    'src/features/ai/sei-pro-ai.js',
     'src/features/todas-paginas/sei-pro-all.js',
     // projetos migrado para bundle ESM (sei-pro-projetos.js) — nao copiar mais o legado.
     'src/features/prescricoes/sei-pro-prescricoes.js',
     'src/features/visualizacao/sei-pro-visualizacao.js',
     'src/features/visualizacao/sei-pro-visualizacao-chosen.js',
-    'src/features/legis/sei-legis.js',
+    // legis migrated to an ESM bundle while retaining dist/js/sei-legis.js.
     // docs-lote migrada para bundle ESM (docs-lote.bundle.js) — não copiar mais o legado.
     // sei-functions-pro migrada para bundle ESM (sei-functions-pro.js) — não copiar mais o legado.
     'src/shared/legacy/sei-pro-icons.js',
@@ -115,6 +133,7 @@ const legacyFiles = [
     'src/bootstrap/init_visualizacao_html.js',
     'src/bootstrap/init-flags.js',
     'src/bootstrap/getscript-isolated.js',
+    'src/bootstrap/editor-loader.js',
     'src/platform/inline-stubs-main.js',
     'src/background/storage-handler.js',
     'src/background/fetch-handler.js',
@@ -139,12 +158,15 @@ const featureCss = [
     { src: 'src/features/anotacao-controle/style.css', out: 'dist/css/anotacao-controle.css' },
     { src: 'src/features/monitorados/monitorados.css', out: 'dist/css/monitorados.css' },
     { src: 'src/shared/ui/prazo-preview.css', out: 'dist/css/prazo-preview.css' },
+    { src: 'src/shared/ui/stream-panel.css', out: 'dist/css/stream-panel.css' },
+    { src: 'src/features/ai/style.css', out: 'dist/css/ai.css' },
     { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' },
     { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' },
     { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' },
     { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' },
     { src: 'src/features/sei-functions/style.css', out: 'dist/css/sei-functions.css' },
     { src: 'src/features/atividades/style.css', out: 'dist/css/atividades.css' },
+    { src: 'src/features/editor/style.css', out: 'dist/css/editor.css' },
     { src: 'src/features/projetos/projetos.css', out: 'dist/css/projetos.css' }
 ];
 
@@ -190,6 +212,18 @@ const vendorLibs = [
     {
         src: 'vendor/frappe-gantt/frappe-gantt.css',
         out: 'dist/css/frappe-gantt.css'
+    },
+    {
+        src: 'vendor/qrcode/qrcode.min.js',
+        out: 'dist/js/lib/qrcode.min.js'
+    },
+    {
+        src: 'vendor/mammoth/mammoth.browser.min.js',
+        out: 'dist/js/lib/mammoth.browser.min.js'
+    },
+    {
+        src: 'src/features/editor/ckeditor-main.js',
+        out: 'dist/js/editor-ckeditor-main.js'
     }
 ];
 

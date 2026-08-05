@@ -1,9 +1,8 @@
-import { extractTextWithNumbering } from './domain.js';
+import { extractTextWithNumbering } from '../domain.js';
 
 /**
- * Fronteira de IO do editor: o parser/DOM fica injetado pela fachada legada,
- * enquanto a normalização dos parágrafos e a regra de numeração permanecem
- * testáveis sem depender de DOMParser, window ou CKEditor.
+ * Converte HTML do editor em uma representação testável de parágrafos.
+ * O chamador injeta o parser para manter esta regra independente do navegador.
  */
 export function extractTextFromHtml(html, {
     parseHtml,

@@ -82,6 +82,58 @@
     sortUploadFiles: () => sortUploadFiles,
     sticknotePresetRankIconHtml: () => sticknotePresetRankIconHtml
   });
+
+  // src/shared/sei-editor-url.js
+  var EDITOR_URL_RE = /controlador\.php\?acao=editor_montar[^'"\s<>]*/gi;
+  function getUrlDocumentoId(url) {
+    const m = String(url || "").match(/[?&]id_documento=([^&]*)/i);
+    if (!m) return "";
+    return String(m[1] || "").trim();
+  }
+  function isValidEditorMontarUrl(url) {
+    const s = String(url || "");
+    if (s.indexOf("acao=editor_montar") === -1) return false;
+    return /^\d+$/.test(getUrlDocumentoId(s));
+  }
+  function resolveJsNumericVar(src, varName) {
+    if (!varName) return "";
+    const re = new RegExp(
+      "(?:(?:var|let|const)\\s+)?" + varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + `\\s*=\\s*['"]?(\\d+)['"]?`,
+      "i"
+    );
+    const m = String(src || "").match(re);
+    return m ? m[1] : "";
+  }
+  function extractEditorMontarUrl(text) {
+    const src = String(text || "");
+    let best = null;
+    const re = new RegExp(EDITOR_URL_RE.source, "gi");
+    let m;
+    while ((m = re.exec(src)) !== null) {
+      const cand = m[0].replace(/\\+$/g, "");
+      if (isValidEditorMontarUrl(cand)) best = cand;
+    }
+    if (best) return best;
+    const concat = src.match(
+      /'(controlador\.php\?acao=editor_montar[^']*id_documento=)'\s*\+\s*([A-Za-z_$][\w$]*)\s*\+\s*'([^']*)'/i
+    );
+    if (concat) {
+      const id = resolveJsNumericVar(src, concat[2]);
+      if (id) {
+        const stitched = concat[1] + id + concat[3];
+        if (isValidEditorMontarUrl(stitched)) return stitched;
+      }
+    }
+    return null;
+  }
+  function linkMatchesDocumentoId(link, id) {
+    if (id === null || typeof id === "undefined") return false;
+    const want = String(id).trim();
+    if (!want) return false;
+    return getUrlDocumentoId(link) === want;
+  }
+
+  // src/features/arvore/domain.js
   function isMenuEntry(value) {
     return Array.isArray(value) && typeof value[0] === "string" && value[0].trim() !== "";
   }
@@ -225,6 +277,9 @@
       const parts = v.indexOf('"') !== -1 ? v.split('"').filter((i) => i.indexOf("controlador.php") !== -1) : [v];
       parts.forEach((j) => {
         const link = j.replace(/[\\"]/g, "");
+        if (link.indexOf("acao=editor_montar") !== -1 && !isValidEditorMontarUrl(link)) {
+          return;
+        }
         let ldownload = "";
         if (link.indexOf("documento_download_anexo") !== -1 && link.indexOf("arvore=1") === -1 && typeof resolveIdDocumento === "function") {
           const id = resolveIdDocumento(array[index - 2]);
@@ -2159,11 +2214,22 @@
         parent.document.getElementById(ifrVisualizacao_).setAttribute("src", link[0]);
       }
     } else if (mode == "doc_editar") {
-      var link = arrayLinksArvoreAll2.filter(function(v) {
-        return v.indexOf("id_documento=" + id_documento) !== -1 && v.indexOf("editor_montar") !== -1;
+      var linkFromViz = null;
+      try {
+        var vizFrame = parent.document.getElementById("ifrConteudoVisualizacao") || parent.document.getElementById("ifrVisualizacao");
+        var vizWin = vizFrame && vizFrame.contentWindow;
+        if (vizWin && typeof vizWin.linkEditarConteudo === "string" && isValidEditorMontarUrl(vizWin.linkEditarConteudo) && linkMatchesDocumentoId(vizWin.linkEditarConteudo, id_documento)) {
+          linkFromViz = vizWin.linkEditarConteudo;
+        }
+      } catch (e) {
+      }
+      var link = linkFromViz ? [linkFromViz] : arrayLinksArvoreAll2.filter(function(v) {
+        return linkMatchesDocumentoId(v, id_documento) && v.indexOf("editor_montar") !== -1;
       });
-      if (link.length > 0 && link[0] !== "") {
+      if (link.length > 0 && isValidEditorMontarUrl(link[0])) {
         parent.openLinkNewTab(url_host.replace("controlador.php", "") + link[0]);
+      } else if (typeof parent.alertaBoxPro === "function") {
+        parent.alertaBoxPro("Error", "exclamation-triangle", "N\xE3o foi poss\xEDvel abrir o editor: documento sem identifica\xE7\xE3o.");
       }
     } else if (mode == "doc_assinar") {
       var link = arrayLinksArvoreAll2.filter(function(v) {
@@ -2432,7 +2498,8 @@
             urlReload = v.split("'")[1];
           }
           if (v.indexOf("acao=editor_montar") !== -1) {
-            urlEditor.push(v.split("'")[1]);
+            var editorUrlLine = extractEditorMontarUrl(v);
+            if (editorUrlLine) urlEditor.push(editorUrlLine);
           }
           if (v.indexOf("iniciarEditor(") !== -1) {
             idUser = v.split("'")[1];
@@ -2441,6 +2508,10 @@
             idUser = v.split("_")[1];
           }
         });
+        if (!urlEditor.length) {
+          var editorUrlHtml = extractEditorMontarUrl(htmlResult);
+          if (editorUrlHtml) urlEditor.push(editorUrlHtml);
+        }
         if (urlEditor.length > 0 && idUser && openEditor) {
           parent.openWindowEditor(urlEditor[0], idUser);
         }

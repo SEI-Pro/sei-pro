@@ -10,10 +10,53 @@ function getRuntimeApi() {
     return null;
 }
 
+function usesPromiseApi(api) {
+    return typeof browser !== 'undefined' && api === browser;
+}
+
 function getStorageArea() {
     const api = getRuntimeApi();
     if (!api || !api.storage || !api.storage.sync) return null;
     return api.storage.sync;
+}
+
+function getLocalStorageArea() {
+    const api = getRuntimeApi();
+    if (!api || !api.storage || !api.storage.local) return null;
+    return api.storage.local;
+}
+
+function sendRuntimeMessage(message) {
+    return new Promise((resolve, reject) => {
+        const api = getRuntimeApi();
+        if (!api || !api.runtime || typeof api.runtime.sendMessage !== 'function') {
+            reject(new Error('chrome.runtime unavailable'));
+            return;
+        }
+        let settled = false;
+        const finish = (response) => {
+            if (settled) return;
+            settled = true;
+            const error = readLastError();
+            if (error) reject(new Error(error.message || String(error)));
+            else resolve(response);
+        };
+        const fail = (error) => {
+            if (settled) return;
+            settled = true;
+            reject(error);
+        };
+        try {
+            if (usesPromiseApi(api)) {
+                Promise.resolve(api.runtime.sendMessage(message)).then(finish, fail);
+                return;
+            }
+            const result = api.runtime.sendMessage(message, finish);
+            if (result && typeof result.then === 'function') result.then(finish, fail);
+        } catch (error) {
+            fail(error);
+        }
+    });
 }
 
 function readLastError() {
@@ -21,6 +64,165 @@ function readLastError() {
         if (typeof chrome !== 'undefined' && chrome.runtime) return chrome.runtime.lastError || null;
     } catch (e) { /* ignore */ }
     return null;
+}
+
+export async function loadLlmProfiles() {
+    const response = await sendRuntimeMessage({ action: 'llmProfilesList' });
+    if (!response || response.ok !== true) {
+        throw new Error((response && response.error) || 'Não foi possível carregar os perfis de IA.');
+    }
+    return Array.isArray(response.profiles) ? response.profiles : [];
+}
+
+export async function saveLlmProfile(profile, options = {}) {
+    if (options.requestPermission !== false) {
+        await requestProfileHostPermission(profile && profile.baseUrl);
+    }
+    const response = await sendRuntimeMessage({ action: 'llmSaveProfile', profile });
+    if (!response || response.ok !== true) {
+        throw new Error((response && response.error) || 'Não foi possível salvar o perfil de IA.');
+    }
+    return response.profile;
+}
+
+export async function deleteLlmProfile(profileId) {
+    const response = await sendRuntimeMessage({
+        action: 'llmDeleteProfile',
+        profileId: String(profileId || '')
+    });
+    if (!response || response.ok !== true) {
+        throw new Error((response && response.error) || 'Não foi possível remover o perfil de IA.');
+    }
+}
+
+export function loadLlmAccessAudit() {
+    return new Promise((resolve) => {
+        const storage = getLocalStorageArea();
+        if (!storage) {
+            resolve([]);
+            return;
+        }
+        try {
+            storage.get({ llmAccessAudit: [] }, (items) => {
+                const error = readLastError();
+                if (error) {
+                    console.warn('options io: could not read AI access audit', error);
+                    resolve([]);
+                    return;
+                }
+                resolve(Array.isArray(items?.llmAccessAudit) ? items.llmAccessAudit : []);
+            });
+        } catch (error) {
+            console.warn('options io: AI access audit read failed', error);
+            resolve([]);
+        }
+    });
+}
+
+export function clearLlmAccessAudit() {
+    return new Promise((resolve, reject) => {
+        const storage = getLocalStorageArea();
+        if (!storage) {
+            resolve();
+            return;
+        }
+        try {
+            storage.remove('llmAccessAudit', () => {
+                const error = readLastError();
+                if (error) reject(new Error(error.message || String(error)));
+                else resolve();
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+export function loadLlmAiSettings() {
+    return new Promise((resolve) => {
+        const storage = getLocalStorageArea();
+        const defaults = {
+            activeProfileId: '',
+            maxIterations: 8,
+            maxDocs: 15,
+            maxContextTokens: 24000,
+            keyword: '+gpt',
+            inlineEnabled: false,
+            systemInstruction: ''
+        };
+        if (!storage) {
+            resolve(defaults);
+            return;
+        }
+        storage.get({ llmAiSettings: defaults }, (items) => {
+            resolve({ ...defaults, ...(items?.llmAiSettings || {}) });
+        });
+    });
+}
+
+export function saveLlmAiSettings(settings) {
+    return new Promise((resolve, reject) => {
+        const storage = getLocalStorageArea();
+        if (!storage) {
+            reject(new Error('chrome.storage.local indisponível'));
+            return;
+        }
+        storage.set({ llmAiSettings: settings }, () => {
+            const error = readLastError();
+            if (error) reject(new Error(error.message || String(error)));
+            else resolve(settings);
+        });
+    });
+}
+
+export function requestProfileHostPermission(baseUrl) {
+    return requestProfileHostPermissions(baseUrl ? [baseUrl] : []);
+}
+
+export function requestProfileHostPermissions(baseUrls) {
+    const origins = [];
+    try {
+        (Array.isArray(baseUrls) ? baseUrls : []).forEach((baseUrl) => {
+            if (!baseUrl) return;
+            const parsed = new URL(baseUrl);
+            const origin = `${parsed.protocol}//${parsed.host}/*`;
+            if (!origins.includes(origin)) origins.push(origin);
+        });
+    } catch (_) {
+        return Promise.reject(new Error('A URL base do provedor de IA é inválida.'));
+    }
+    if (origins.length === 0) return Promise.resolve(true);
+
+    const api = getRuntimeApi();
+    const permissions = api && api.permissions;
+    if (!permissions || typeof permissions.request !== 'function') return Promise.resolve(true);
+
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const finish = (granted) => {
+            if (settled) return;
+            settled = true;
+            const error = readLastError();
+            if (error) reject(new Error(error.message || String(error)));
+            else if (!granted) reject(new Error('A permissão para acessar o provedor não foi concedida.'));
+            else resolve(true);
+        };
+        const fail = (error) => {
+            if (settled) return;
+            settled = true;
+            reject(error);
+        };
+        try {
+            if (usesPromiseApi(api)) {
+                Promise.resolve(permissions.request({ origins })).then(finish, fail);
+                return;
+            }
+            const result = permissions.request({ origins }, finish);
+            if (result && typeof result.then === 'function') result.then(finish, fail);
+        } catch (error) {
+            fail(error);
+        }
+    });
 }
 
 /** Read dataValues string from sync storage. Resolves to '' on missing/error. */

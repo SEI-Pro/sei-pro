@@ -8,7 +8,7 @@ const isChrome = (typeof browser === 'undefined');
 if (isChrome) { var browser = chrome; }
 
 if (typeof importScripts === 'function') {
-    importScripts('storage-handler.js', 'fetch-handler.js', 'bug-report-handler.js', 'process-notification-handler.js', 'install-handler.js', 'router.js');
+    importScripts('storage-handler.js', 'fetch-handler.js', 'llm-handler.js', 'bug-report-handler.js', 'process-notification-handler.js', 'install-handler.js', 'router.js');
 }
 
 function handleInstalled(details) {
@@ -26,5 +26,13 @@ function handleMessage(message, sender, sendResponse) {
     return globalThis.SeiProBackgroundRouter.handleMessage(message, sender, sendResponse, browser);
 }
 
+function handleConnect(port) {
+    if (!globalThis.SeiProBackgroundLlm || typeof globalThis.SeiProBackgroundLlm.handleLlmConnect !== 'function') {
+        return false;
+    }
+    return globalThis.SeiProBackgroundLlm.handleLlmConnect(port, browser);
+}
+
 browser.runtime.onInstalled.addListener(handleInstalled);
 browser.runtime.onMessage.addListener(handleMessage);
+browser.runtime.onConnect.addListener(handleConnect);

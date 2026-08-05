@@ -102,7 +102,8 @@ src/
 │   │   ├── index.js               #   entry do bundle (instala + aliasGlobal)
 │   │   └── monitorados.css        #   CSS da feature
 │   ├── arvore-info/ · quick-highlight/ · anotacao-controle/   # outras já bundladas
-│   ├── atividades/ · lista-processos/ · editor/ · ai/ · …     # ainda legadas (1 .js global)
+│   ├── editor/ · ai/ · legis/            # ESM; IA isolada e ponte CKEditor mínima
+│   ├── atividades/ · lista-processos/ · … # other features at different migration stages
 ├── options/                       # ★ PÁGINA DE CONFIGURAÇÃO (extension page)
 │   ├── domain.js · io.js · view.js · index.js  # vanilla ESM → options.bundle.js
 │   ├── options.html · page.css                 # shell + estilos (sem jQuery)
@@ -122,8 +123,9 @@ dist/                              # SAÍDA GERADA — não editar à mão
 ### Princípios fundamentais
 
 1. **Mundo isolado (isolated-first):** todo código novo roda no mundo isolado do content
-   script. Sem `world:"MAIN"`. Sem `onclick` inline (handlers inline executam no mundo MAIN
-   e não enxergam funções do content script).
+   script. A única exceção atual é o adaptador CKEditor 4, porque as instâncias pertencem à
+   página. Ele roda em `MAIN` sem acesso ao runtime e conversa com a IA isolada por duas
+   operações serializáveis (`snapshot` e `insertHtml`). Sem `onclick` inline.
 2. **Direção de dependência:** `features` → `shared/ui` → `core` / `sei` / `platform`.
    Nunca o contrário. `core/stack.js` **não deve importar nada de `features/`**.
 3. **`aliasGlobal` só em `legacy-api.js`:** nunca espalhado em domain, io ou view.
@@ -386,7 +388,7 @@ Atualizado em 2026-07-15. Itens já resolvidos (A1-001…A1-010 / E2) saíram da
 | `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar; bridge não é arquitetura-alvo |
 | Features/CSS legados sem `.seipro-*` | classes próprias ainda sem prefixo em monolitos | **P6 em lote** no fim do épico (`docs/engineering-loop.md`); proibido micro-hook unitário |
 | Manifest / `init*.js` | blocos duplicados, sem registry | médio prazo: `src/app/` (contexts + feature-registry + boot) |
-| Monolitos (~56k LOC) | `atividades`, `sei-functions-pro`, `editor`, `lista-processos`, `ai`, `arvore` | fila de épicos E2 em `docs/engineering-loop-board.md` (P0–P7) |
+| Remaining monoliths | large features such as `atividades/body.js` | continue decomposing through the E2 epic queue in `docs/engineering-loop-board.md` (P0–P7); editor monolith removed |
 
 **Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install).
 
@@ -409,7 +411,7 @@ um helper migrado não seja redefinido no legado.
 |---|---|
 | jQuery 3.7.1 | DOM e requisições |
 | JMESPath | Consultas na configuração JSON |
-| Moment.js | Manipulação de datas e prazos |
+| Moment.js | Compatibility for legacy date/deadline flows; the editor bundle does not use it |
 | CKEditor | Editor de documentos (SEI 4.x) |
 | Font Awesome Pro | Ícones |
 | frappe-gantt | Gráfico de Gantt (projetos) |
@@ -419,12 +421,16 @@ um helper migrado não seja redefinido no legado.
 | PDF.js | Leitura de PDFs |
 | Tesseract.js | OCR |
 | DOMPurify | Sanitização de HTML |
+| LLM stack (ESM) | `core/llm` (OpenAI, Anthropic, Gemini, Moonshot, Ollama, compatible endpoints), SSE, context budgeting, and tools |
+| Editor / AI / Legis (ESM) | esbuild-generated bundles; `legacy-api.js` remains only as a bridge for old call sites |
 
 ---
 
 ## Configuração
 
-Configurações do usuário são salvas via `chrome.storage.sync` e cacheadas em `localStorage` como `configBasePro` (JSON). Funções principais:
+General settings remain in `chrome.storage.sync` and are cached in `localStorage` as
+`configBasePro` (JSON). AI profiles and keys live in `chrome.storage.local.llmProfiles`,
+are not synchronized, and are read by the service worker. Main legacy configuration helpers:
 
 ```js
 checkConfigValue(name)   // boolean — feature está ativa?
@@ -468,9 +474,11 @@ if (typeof loadFunctionsPro === 'undefined')
 seiProFunctionsLoaded_init.done(function() { $.getScript('js/sei-pro.js'); });
 ```
 
-### Suporte a Ollama (`sei-pro-ai.js`)
+### AI providers (`core/llm`)
 
-Portado de [godlikeb0b/sei-pro](https://github.com/godlikeb0b/sei-pro). Adiciona `perfilOllama`, `modelsOllama`, `loadAIPromptsToStorage()` e resolve `getModelAI` para 3 plataformas. Ver `sei-pro-ai.js` linhas 11–100 para detalhes.
+The ESM adapters support OpenAI, Anthropic, Gemini, Moonshot, Ollama, and OpenAI-compatible
+endpoints. BYOK profiles are configured on the Options page, stored locally, and consumed
+by the service worker for streaming requests.
 
 ### Service worker (`background.js`)
 

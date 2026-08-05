@@ -19,6 +19,11 @@ import {
     openModalDropzone,
     initUploadArvore
 } from './upload.js';
+import {
+    extractEditorMontarUrl,
+    isValidEditorMontarUrl,
+    linkMatchesDocumentoId
+} from '../../shared/sei-editor-url.js';
 
 installArvoreState();
 
@@ -726,9 +731,26 @@ export function callActionsArvore(doc, mode) {
             parent.document.getElementById(ifrVisualizacao_).setAttribute("src",link[0]);
         }
     } else if (mode == 'doc_editar') {
-        var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('editor_montar') !== -1) });
-        if (link.length > 0 && link[0] !== '') {
+        var linkFromViz = null;
+        try {
+            var vizFrame = parent.document.getElementById('ifrConteudoVisualizacao')
+                || parent.document.getElementById('ifrVisualizacao');
+            var vizWin = vizFrame && vizFrame.contentWindow;
+            if (vizWin && typeof vizWin.linkEditarConteudo === 'string'
+                && isValidEditorMontarUrl(vizWin.linkEditarConteudo)
+                && linkMatchesDocumentoId(vizWin.linkEditarConteudo, id_documento)) {
+                linkFromViz = vizWin.linkEditarConteudo;
+            }
+        } catch (e) { /* noop */ }
+        var link = linkFromViz
+            ? [linkFromViz]
+            : arrayLinksArvoreAll.filter(function(v){
+                return linkMatchesDocumentoId(v, id_documento) && v.indexOf('editor_montar') !== -1;
+            });
+        if (link.length > 0 && isValidEditorMontarUrl(link[0])) {
             parent.openLinkNewTab(url_host.replace('controlador.php','')+link[0]);
+        } else if (typeof parent.alertaBoxPro === 'function') {
+            parent.alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel abrir o editor: documento sem identifica\u00E7\u00E3o.');
         }
     } else if (mode == 'doc_assinar') {
         var link = arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf('documento_assinar') !== -1) });
@@ -985,7 +1007,8 @@ export function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callb
                     urlReload = v.split("'")[1];
                 }
                 if (v.indexOf("acao=editor_montar") !== -1) {
-                    urlEditor.push(v.split("'")[1]);
+                    var editorUrlLine = extractEditorMontarUrl(v);
+                    if (editorUrlLine) urlEditor.push(editorUrlLine);
                 }
                 if (v.indexOf("iniciarEditor(") !== -1) {
                     idUser = v.split("'")[1];
@@ -994,6 +1017,10 @@ export function saveDuplicateArvore(htmlDoc, nr_sei, paramDoc, openEditor, callb
                     idUser = v.split("_")[1];
                 }
             });
+            if (!urlEditor.length) {
+                var editorUrlHtml = extractEditorMontarUrl(htmlResult);
+                if (editorUrlHtml) urlEditor.push(editorUrlHtml);
+            }
             if (urlEditor.length > 0 && idUser && openEditor) {
                 parent.openWindowEditor(urlEditor[0], idUser);
             }

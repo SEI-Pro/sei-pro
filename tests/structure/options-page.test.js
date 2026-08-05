@@ -37,4 +37,17 @@ describe('options page migration wiring', () => {
         expect(core).toContain("from '../shared/config-defaults.js'");
         expect(domain).toContain("from '../shared/config-defaults.js'");
     });
+
+    it('wires AI provider profiles to local background storage actions', () => {
+        const html = read('src/options/options.html');
+        const io = read('src/options/io.js');
+        const manifest = JSON.parse(read('manifest.base.json'));
+        expect(html).toContain('id="options-ai-providers"');
+        expect(html).toContain('id="seipro-options-ai-add"');
+        expect(io).toContain("action: 'llmProfilesList'");
+        expect(io).toContain("action: 'llmSaveProfile'");
+        expect(io).toContain("action: 'llmDeleteProfile'");
+        expect(io).toContain('permissions.request({ origins }');
+        expect(manifest.optional_host_permissions).toContain('https://*/*');
+    });
 });

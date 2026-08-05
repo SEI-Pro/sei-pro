@@ -3,7 +3,7 @@
  *
  * Recebe configurações vindas de páginas externas via parâmetros de URL
  * (acao_pro=set_database / set_option / change_database) e as persiste em
- * chrome.storage.sync (bases de Atividades, Projetos, OpenAI, Gemini e opções).
+ * chrome.storage.sync (bases de Atividades, Projetos, provedores de IA e opções).
  *
  * Porte isolated-first, SEM jQuery. Mudanças vs. legado:
  *  - storage via fachada SeiPro.core.storage (delega ao service worker) em vez de
@@ -80,8 +80,15 @@ export function getOptionsSEIPro(data) {
 }
 
 // Monta o payload NEW_BASE para cada tipo de base recebido por URL.
-function baseItem(base, param, manifest) {
-    const common = { CLIENT_ID: '', API_KEY: '', spreadsheetId: '', URL_API: param.url || '', KEY_USER: param.token || '' };
+export function baseItem(base, param, manifest) {
+    const common = {
+        CLIENT_ID: '',
+        API_KEY: '',
+        spreadsheetId: '',
+        URL_API: param.url || '',
+        KEY_USER: param.token || '',
+        model: param.model || ''
+    };
     switch (base) {
         case 'atividades':
             return { baseName: manifest.short_name, baseTipo: 'atividades',
@@ -91,6 +98,14 @@ function baseItem(base, param, manifest) {
             return { baseName: 'Open AI (Chat GPT)', baseTipo: 'openai', conexaoTipo: 'api', ...common };
         case 'gemini':
             return { baseName: 'Gemini (Google)', baseTipo: 'gemini', conexaoTipo: 'api', ...common };
+        case 'anthropic':
+            return { baseName: 'Anthropic (Claude)', baseTipo: 'anthropic', conexaoTipo: 'api', ...common };
+        case 'moonshot':
+            return { baseName: 'Moonshot (Kimi)', baseTipo: 'moonshot', conexaoTipo: 'api', ...common };
+        case 'ollama':
+            return { baseName: 'Ollama', baseTipo: 'ollama', conexaoTipo: 'api', ...common };
+        case 'openai_compatible':
+            return { baseName: param.base_name || 'OpenAI-compatible', baseTipo: 'openai_compatible', conexaoTipo: 'api', ...common };
         case 'projetos':
             return { baseName: param.base_name, baseTipo: 'projetos', conexaoTipo: 'sheets',
                 CLIENT_ID: param.client_id, API_KEY: param.api_key, spreadsheetId: param.sheet_id,

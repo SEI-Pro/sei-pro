@@ -6,47 +6,88 @@ const root = path.resolve(process.cwd());
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 describe('editor legacy API bridge', () => {
-    it('instala os exports extraídos pela ponte e a compõe no entry', () => {
+    it('installs extracted modules and boots from adapter', () => {
         const index = read('src/features/editor/index.js');
         const bridge = read('src/features/editor/legacy-api.js');
-        const legacy = read('src/features/editor/sei-pro-editor.js');
+        const adapter = read('src/features/editor/adapter.js');
 
         expect(index).toContain("import { installEditorLegacyApi } from './legacy-api.js'");
+        expect(index).toContain("import { bootEditor } from './adapter.js'");
         expect(index).toContain('installEditorLegacyApi();');
         expect(bridge).toContain("import { aliasGlobal } from '../../core/global.js';");
-        expect(bridge).toContain("[domain, io, view].forEach");
-        for (const name of ['extractTextWithNumbering', 'extractTextFromHtml', 'bindEditorFocus', 'collectEditorText']) {
-            expect(bridge).toContain(`aliasGlobal(name, mod[name])`);
-            expect(legacy).not.toMatch(new RegExp(`function\\s+${name}\\s*\\(`));
+        expect(bridge).toContain("import { installEditorStateBridge, setParamEditor, bootEditor } from './adapter.js'");
+        expect(bridge).toContain('installEditorStateBridge();');
+        expect(fs.existsSync(path.join(root, 'src/features/editor/body.js'))).toBe(false);
+        expect(adapter).toContain('export function bootEditor()');
+        expect(fs.existsSync(path.join(root, 'src/features/editor/view/toolbar.js'))).toBe(true);
+        expect(fs.existsSync(path.join(root, 'src/features/editor/templates/toolbar.js'))).toBe(true);
+        expect(fs.existsSync(path.join(root, 'src/features/editor/lib/domq.js'))).toBe(true);
+    });
+
+    it('delegates editor text flows to extracted modules', () => {
+        const editorText = read('src/features/editor/view/editor-text.js');
+
+        expect(editorText).toContain('extractTextFromHtml');
+        expect(editorText).toContain('collectEditorText');
+        expect(editorText).toContain('bindEditorFocus');
+        expect(editorText).toContain('export function getAllTextEditor');
+        expect(editorText).toContain('export function setCKEDITOR_instances');
+    });
+
+    it('contains only the SEI 4.1 toolbar and no retired remote features', () => {
+        const toolbar = read('src/features/editor/templates/toolbar.js');
+        const allEditor = [
+            toolbar,
+            read('src/features/editor/view/toolbar.js'),
+            read('src/features/editor/commands/formatting.js')
+        ].join('\n');
+
+        for (const retired of [
+            'isSEI5()',
+            'tinyurl.com',
+            'getTinyUrl',
+            'latex.codecogs.com',
+            'getLatexButtom',
+            'getAutoSaveButtom',
+            'helpLegisButtom'
+        ]) {
+            expect(allEditor).not.toContain(retired);
         }
+        expect(toolbar).toContain('<a class="${classClick} cke_iconPro cke_button');
+        expect(toolbar).not.toContain('<button class="ck ck-button');
     });
 
-    it('mantém a fachada legada delegando a namespace moderno para os fluxos editoriais', () => {
-        const legacy = read('src/features/editor/sei-pro-editor.js');
-
-        expect(legacy).toContain('SeiPro.features && SeiPro.features.editor');
-        expect(legacy).toContain('editorFeature.collectEditorText');
-        expect(legacy).toContain('editorFeature.extractTextFromHtml');
-        expect(legacy).toContain('function getAllTextEditor');
-        expect(legacy).toContain('function setCKEDITOR_instances');
-    });
-
-    it('liga o bundle do editor antes do loader legado no único contexto de editor', () => {
+    it('injects the editor bundle into MAIN via isolated editor-loader', () => {
         const manifest = JSON.parse(read('manifest.base.json'));
         const editorContexts = manifest.content_scripts.filter(({ matches = [] }) =>
             matches.some((match) => match.includes('acao=editor_montar'))
         );
         const scripts = editorContexts[0]?.js || [];
-        const editorBundleIndex = scripts.indexOf('js/editor-domain.bundle.js');
+        const functionsIndex = scripts.indexOf('js/sei-functions-pro.js');
+        const loaderIndex = scripts.indexOf('js/editor-loader.js');
         const initIndex = scripts.indexOf('js/init.js');
+        const war = manifest.web_accessible_resources?.[0]?.resources || [];
 
         expect(editorContexts).toHaveLength(1);
-        expect(editorBundleIndex).toBeGreaterThanOrEqual(0);
-        expect(initIndex).toBeGreaterThan(editorBundleIndex);
-        expect(read('scripts/build.mjs')).toContain(
-            "{ entry: 'src/features/editor/index.js', out: 'dist/js/editor-domain.bundle.js' }"
-        );
-        expect(read('scripts/build.mjs')).toContain("'src/features/editor/sei-pro-editor.js'");
-        expect(read('src/bootstrap/init.js')).toContain('js/sei-pro-editor.js');
+        expect(loaderIndex).toBeGreaterThan(functionsIndex);
+        expect(initIndex).toBeGreaterThan(loaderIndex);
+        expect(scripts).not.toContain('js/sei-pro-editor.js');
+        expect(war).toContain('js/sei-pro-editor.js');
+        expect(scripts).toContain('js/lib/jmespath.min.js');
+        expect(scripts.indexOf('js/lib/jmespath.min.js')).toBeLessThan(functionsIndex);
+        expect(read('src/bootstrap/editor-loader.js')).toContain('not injecting into SEI error page');
+        expect(read('src/bootstrap/editor-loader.js')).toContain('empty id_documento');
+        expect(read('src/bootstrap/editor-loader.js')).toContain('redirecting to opener');
+        expect(read('src/bootstrap/editor-loader.js')).not.toMatch(/getDadosIframeProcessoPro\s*\(/);
+        expect(read('scripts/build.mjs')).toContain("'src/bootstrap/editor-loader.js'");
+        expect(read('src/bootstrap/editor-loader.js')).toContain('js/sei-pro-editor.js');
+        expect(read('src/bootstrap/init.js')).not.toContain('js/sei-pro-editor.js');
+        expect(read('src/bootstrap/init.js')).not.toContain('js/sei-legis.js');
+        expect(read('src/bootstrap/init.js')).not.toContain('jquery-qrcode');
+        expect(scripts).not.toContain('js/editor-domain.bundle.js');
+        expect(read('src/entries/editor.js')).toContain("import '../features/editor/page-runtime.js'");
+        expect(read('src/features/editor/page-runtime.js')).toContain('installEditorPageRuntime');
+        expect(read('src/features/editor/page-runtime.js')).toContain("ensureGlobal('delayCrash'");
+        expect(read('src/features/editor/page-runtime.js')).toContain('iconSeiPro');
     });
 });

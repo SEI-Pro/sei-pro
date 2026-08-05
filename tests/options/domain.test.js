@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+    AI_PROVIDER_OPTIONS,
     buildDataValuesPayload,
     classifyProfileDraft,
     computeDependentVisibility,
     getConfigGeralEntry,
+    getAiProviderDefaults,
     inferConexaoTipo,
+    isAiProviderId,
     isDefaultEnabledConfigOption,
     normalizeOptionsSearchText,
+    normalizeAiProfileDraft,
     parseDataValues,
     parseNewDocSigilo,
     pickConfigGeral,
@@ -120,5 +124,53 @@ describe('options domain: helpers', () => {
             conexaoTipo: 'api',
             URL_API: 'https://example'
         }).status).toBe('complete');
+    });
+
+    it('normalizes every supported AI provider profile', () => {
+        expect(AI_PROVIDER_OPTIONS.map((provider) => provider.id)).toEqual([
+            'openai',
+            'anthropic',
+            'gemini',
+            'moonshot',
+            'ollama',
+            'openai_compatible'
+        ]);
+        expect(getAiProviderDefaults('anthropic')).toEqual({
+            baseUrl: 'https://api.anthropic.com',
+            model: 'claude-sonnet-4-20250514'
+        });
+        expect(isAiProviderId('openai_compatible')).toBe(true);
+        expect(isAiProviderId('atividades')).toBe(false);
+        expect(normalizeAiProfileDraft({
+            providerId: 'ollama',
+            label: 'Local',
+            trusted: true
+        }, () => 'profile-1')).toEqual({
+            id: 'profile-1',
+            providerId: 'ollama',
+            label: 'Local',
+            baseUrl: 'http://localhost:11434',
+            model: 'llama3.2',
+            key: '',
+            trusted: true
+        });
+    });
+
+    it('requires a secure custom OpenAI-compatible endpoint and model', () => {
+        expect(() => normalizeAiProfileDraft({
+            providerId: 'openai_compatible',
+            baseUrl: '',
+            model: 'custom'
+        })).toThrow(/URL base/);
+        expect(() => normalizeAiProfileDraft({
+            providerId: 'openai_compatible',
+            baseUrl: 'http://gateway.example',
+            model: 'custom'
+        })).toThrow(/HTTPS/);
+        expect(normalizeAiProfileDraft({
+            providerId: 'openai_compatible',
+            baseUrl: 'https://gateway.example/v1/',
+            model: 'custom'
+        }, () => 'custom-1').baseUrl).toBe('https://gateway.example/v1');
     });
 });

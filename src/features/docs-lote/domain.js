@@ -14,13 +14,14 @@ export function extractNewDocUrl(htmlArvore) {
     return m[0];
 }
 
+import { extractEditorMontarUrl } from '../../shared/sei-editor-url.js';
+
 // Extrai o link do editor (editor_montar) do HTML retornado ao confirmar o documento.
+// Requires a numeric id_documento (rejects SEI JS concatenations truncated at empty id).
 export function extractEditorUrl(htmlDocCreated) {
-    const m = String(htmlDocCreated || '').match(
-        /controlador\.php\?acao=editor_montar&id_procedimento=[^'"]*/
-    );
-    if (!m) throw new Error('Link de edição não encontrado');
-    return m[0];
+    const url = extractEditorMontarUrl(htmlDocCreated);
+    if (!url) throw new Error('Link de edição não encontrado');
+    return url;
 }
 
 // Substitui ##campo## pelo valor correspondente na linha do CSV. Campos sem

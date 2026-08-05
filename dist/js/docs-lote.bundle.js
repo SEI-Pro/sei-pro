@@ -35,6 +35,50 @@
     return typeof URLPAGES_SPRO !== "undefined" ? `${URLPAGES_SPRO}/pages/DOCUMENTOSEMLOTE.html` : false;
   }
 
+  // src/shared/sei-editor-url.js
+  var EDITOR_URL_RE = /controlador\.php\?acao=editor_montar[^'"\s<>]*/gi;
+  function getUrlDocumentoId(url) {
+    const m = String(url || "").match(/[?&]id_documento=([^&]*)/i);
+    if (!m) return "";
+    return String(m[1] || "").trim();
+  }
+  function isValidEditorMontarUrl(url) {
+    const s = String(url || "");
+    if (s.indexOf("acao=editor_montar") === -1) return false;
+    return /^\d+$/.test(getUrlDocumentoId(s));
+  }
+  function resolveJsNumericVar(src, varName) {
+    if (!varName) return "";
+    const re = new RegExp(
+      "(?:(?:var|let|const)\\s+)?" + varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + `\\s*=\\s*['"]?(\\d+)['"]?`,
+      "i"
+    );
+    const m = String(src || "").match(re);
+    return m ? m[1] : "";
+  }
+  function extractEditorMontarUrl(text) {
+    const src = String(text || "");
+    let best = null;
+    const re = new RegExp(EDITOR_URL_RE.source, "gi");
+    let m;
+    while ((m = re.exec(src)) !== null) {
+      const cand = m[0].replace(/\\+$/g, "");
+      if (isValidEditorMontarUrl(cand)) best = cand;
+    }
+    if (best) return best;
+    const concat = src.match(
+      /'(controlador\.php\?acao=editor_montar[^']*id_documento=)'\s*\+\s*([A-Za-z_$][\w$]*)\s*\+\s*'([^']*)'/i
+    );
+    if (concat) {
+      const id = resolveJsNumericVar(src, concat[2]);
+      if (id) {
+        const stitched = concat[1] + id + concat[3];
+        if (isValidEditorMontarUrl(stitched)) return stitched;
+      }
+    }
+    return null;
+  }
+
   // src/features/docs-lote/domain.js
   function extractNewDocUrl(htmlArvore) {
     const m = String(htmlArvore || "").match(
@@ -44,11 +88,9 @@
     return m[0];
   }
   function extractEditorUrl(htmlDocCreated) {
-    const m = String(htmlDocCreated || "").match(
-      /controlador\.php\?acao=editor_montar&id_procedimento=[^'"]*/
-    );
-    if (!m) throw new Error("Link de edi\xE7\xE3o n\xE3o encontrado");
-    return m[0];
+    const url = extractEditorMontarUrl(htmlDocCreated);
+    if (!url) throw new Error("Link de edi\xE7\xE3o n\xE3o encontrado");
+    return url;
   }
   function interpolateEspecificacao(template, dataCSV) {
     return String(template || "").replace(

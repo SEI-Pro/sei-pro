@@ -41,7 +41,10 @@ export function getParamsUrlPro(url) {
             try {
                 value = decodeURIComponent(value);
             } catch (error) {
-                console.warn('Malformed URL parameter ignored in getParamsUrlPro:', value, error);
+                // SEI error pages may use legacy Latin-1 escapes such as
+                // `inv%E1lido`, which are invalid UTF-8 for decodeURIComponent.
+                // Keep the raw value: query parsing must never add a console
+                // error on top of the server-side error page.
             }
             params[key] = value;
         }

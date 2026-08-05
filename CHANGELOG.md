@@ -1,5 +1,28 @@
 # Changelog — SEI Pro PRF
 
+## [Não lançado]
+
+### Adicionado
+
+- Paleta `Ctrl+K` com todas as ações do editor, categorias, favoritos e comandos recentes
+- Busca com prévia para dados do processo, trechos por unidade com placeholders e comparação semântica
+- Rascunhos com linha do tempo, comparação, restauração seletiva e aviso de edição concorrente
+- Checklist navegável com verificação de referências e citações
+- “Aceitar minhas” no controle de revisões
+- Sexta ferramenta de IA, `buscar_legislacao`, e contratos de provedor para Gemini, Moonshot e Ollama
+- Limites, modo inline, instrução adicional e histórico de autorizações nas Configurações
+
+### Segurança e arquitetura
+
+- IA, chaves, perfis, storage e chamadas de modelo permanecem no mundo isolado
+- Ponte do CKEditor reduzida a `snapshot` e `insertHtml`, sem proxy de runtime/LLM
+- Consentimento para a minuta e documentos protegidos, com teto global compartilhado de leituras
+- Remoção dos handlers inline do editor e da Legística; eventos passam a ser delegados
+
+### Corrigido
+
+- O botão de inserir texto externo volta a abrir o importador no editor e agora identifica claramente as fontes Word, HTML e Google
+
 ## [2.2.0] - 2026-07-29
 
 O **Gerenciar Projetos** (Gantt na página inicial) volta a funcionar sem Google Sheets. Os projetos ficam salvos na própria extensão; se você já usa a API de Atividades, a sincronização remota continua disponível.

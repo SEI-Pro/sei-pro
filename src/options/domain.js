@@ -8,6 +8,67 @@ import { isDefaultEnabledConfigOption } from '../shared/config-defaults.js';
 
 export { isDefaultEnabledConfigOption };
 
+export const AI_PROVIDER_OPTIONS = Object.freeze([
+    { id: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com', model: 'gpt-4.1-mini' },
+    { id: 'anthropic', label: 'Anthropic (Claude)', baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-4-20250514' },
+    { id: 'gemini', label: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com', model: 'gemini-2.5-flash' },
+    { id: 'moonshot', label: 'Moonshot (Kimi)', baseUrl: 'https://api.moonshot.ai', model: 'kimi-k3' },
+    { id: 'ollama', label: 'Ollama', baseUrl: 'http://localhost:11434', model: 'llama3.2' },
+    { id: 'openai_compatible', label: 'OpenAI-compatible', baseUrl: '', model: '' }
+]);
+
+export function getAiProviderDefaults(providerId) {
+    const provider = AI_PROVIDER_OPTIONS.find((item) => item.id === providerId);
+    return provider
+        ? { baseUrl: provider.baseUrl, model: provider.model }
+        : { baseUrl: '', model: '' };
+}
+
+export function isAiProviderId(providerId) {
+    return AI_PROVIDER_OPTIONS.some((item) => item.id === providerId);
+}
+
+export function normalizeAiProfileDraft(fields, idFactory) {
+    const input = fields && typeof fields === 'object' ? fields : {};
+    const provider = AI_PROVIDER_OPTIONS.find((item) => item.id === input.providerId);
+    if (!provider) throw new Error('Selecione um provedor de IA válido.');
+
+    const defaults = getAiProviderDefaults(provider.id);
+    const baseUrl = String(input.baseUrl == null ? defaults.baseUrl : input.baseUrl)
+        .trim()
+        .replace(/\/+$/, '');
+    const model = String(input.model == null ? defaults.model : input.model).trim();
+    if (!model) throw new Error('Informe o modelo de IA.');
+    if (provider.id === 'openai_compatible' && !baseUrl) {
+        throw new Error('Informe a URL base do provedor compatível com OpenAI.');
+    }
+    if (baseUrl) {
+        let parsed;
+        try {
+            parsed = new URL(baseUrl);
+        } catch (_) {
+            throw new Error('Informe uma URL base válida.');
+        }
+        const local = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+        if (parsed.protocol !== 'https:' && !(local && parsed.protocol === 'http:')) {
+            throw new Error('Use HTTPS, exceto para Ollama em localhost.');
+        }
+    }
+
+    const makeId = typeof idFactory === 'function'
+        ? idFactory
+        : () => `llm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    return {
+        id: String(input.id || makeId()),
+        providerId: provider.id,
+        baseUrl,
+        key: String(input.key || ''),
+        model,
+        trusted: input.trusted === true,
+        label: String(input.label || '').trim() || provider.label
+    };
+}
+
 /** Parse the JSON string stored in sync.dataValues. Always returns an array. */
 export function parseDataValues(raw) {
     if (raw === null || typeof raw === 'undefined' || raw === '') return [];

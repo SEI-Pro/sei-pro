@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
     compareVersionNumbers,
     getParamsUrlPro,
@@ -33,6 +33,16 @@ describe('getParamsUrlPro', () => {
             a: 'hello world',
             b: '100%'
         });
+    });
+
+    it('keeps legacy malformed percent escapes without throwing or logging', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        expect(getParamsUrlPro('https://x/?msg=Hash+inv%E1lido&acao=erro')).toEqual({
+            msg: 'Hash inv%E1lido',
+            acao: 'erro'
+        });
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
     });
 
     it('returns false when no query', () => {

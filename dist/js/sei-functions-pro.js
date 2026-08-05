@@ -430,6 +430,7 @@
     enableConsultasExtras: () => enableConsultasExtras,
     encodeUrlUploadArvore: () => encodeUrlUploadArvore,
     endProcessGroupTable: () => endProcessGroupTable,
+    ensureNativeEditorWindowNavigates: () => ensureNativeEditorWindowNavigates,
     errorHandler: () => errorHandler,
     errorHandlerFileSystemOptional: () => errorHandlerFileSystemOptional,
     execArvorePro: () => execArvorePro,
@@ -659,6 +660,7 @@
     openStyleBoxSlimPro: () => openStyleBoxSlimPro,
     openStyleBoxSlimPro_: () => openStyleBoxSlimPro_,
     openWindowEditor: () => openWindowEditor,
+    patchNativeEditorOpen: () => patchNativeEditorOpen,
     positionElement: () => positionElement,
     printDocumento: () => printDocumento,
     pullDadosProcessoSession: () => pullDadosProcessoSession,
@@ -768,6 +770,335 @@
     waitLoadProSimple: () => waitLoadProSimple,
     zoomImagemPro: () => zoomImagemPro
   });
+
+  // src/shared/sei-editor-url.js
+  var EDITOR_URL_RE = /controlador\.php\?acao=editor_montar[^'"\s<>]*/gi;
+  function getUrlDocumentoId(url) {
+    const m = String(url || "").match(/[?&]id_documento=([^&]*)/i);
+    if (!m) return "";
+    return String(m[1] || "").trim();
+  }
+  function isValidEditorMontarUrl(url) {
+    const s = String(url || "");
+    if (s.indexOf("acao=editor_montar") === -1) return false;
+    return /^\d+$/.test(getUrlDocumentoId(s));
+  }
+  function editorWindowNeedsNavigate(href) {
+    const s = String(href || "");
+    if (!s || s === "about:blank") return true;
+    if (s.indexOf("acao=editor_montar") === -1) return true;
+    return !isValidEditorMontarUrl(s);
+  }
+  function repairEditorMontarUrl(url, documentId, baseUrl = "") {
+    const id = String(documentId || "").trim();
+    if (!/^\d+$/.test(id)) return null;
+    const raw = String(url || "").trim();
+    if (!raw) return null;
+    try {
+      const parsed = new URL(raw, baseUrl || "https://sei.invalid/");
+      parsed.searchParams.set("acao", "editor_montar");
+      parsed.searchParams.set("id_documento", id);
+      const absolute = /^[a-z][a-z\d+.-]*:/i.test(raw);
+      return absolute ? parsed.href : `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch (error) {
+      return null;
+    }
+  }
+  function resolveJsNumericVar(src, varName) {
+    if (!varName) return "";
+    const re = new RegExp(
+      "(?:(?:var|let|const)\\s+)?" + varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + `\\s*=\\s*['"]?(\\d+)['"]?`,
+      "i"
+    );
+    const m = String(src || "").match(re);
+    return m ? m[1] : "";
+  }
+  function extractEditorMontarUrl(text) {
+    const src = String(text || "");
+    let best = null;
+    const re = new RegExp(EDITOR_URL_RE.source, "gi");
+    let m;
+    while ((m = re.exec(src)) !== null) {
+      const cand = m[0].replace(/\\+$/g, "");
+      if (isValidEditorMontarUrl(cand)) best = cand;
+    }
+    if (best) return best;
+    const concat = src.match(
+      /'(controlador\.php\?acao=editor_montar[^']*id_documento=)'\s*\+\s*([A-Za-z_$][\w$]*)\s*\+\s*'([^']*)'/i
+    );
+    if (concat) {
+      const id = resolveJsNumericVar(src, concat[2]);
+      if (id) {
+        const stitched = concat[1] + id + concat[3];
+        if (isValidEditorMontarUrl(stitched)) return stitched;
+      }
+    }
+    return null;
+  }
+
+  // src/shared/table-styles.js
+  function getColorID() {
+    var colorID = {
+      color1: {
+        light: "#dddddd",
+        dark: "#646464"
+      },
+      color2: {
+        light: "#e2daf1",
+        dark: "#7b54c0"
+      },
+      color3: {
+        light: "#eed7e9",
+        dark: "#b1489c"
+      },
+      color4: {
+        light: "#f2d7dc",
+        dark: "#c2495e"
+      },
+      color5: {
+        light: "#ecdacf",
+        dark: "#a85723"
+      },
+      color6: {
+        light: "#dfdfc8",
+        dark: "#6e6b06"
+      },
+      color7: {
+        light: "#d1e2cc",
+        dark: "#2f7c16"
+      },
+      color8: {
+        light: "#c9e4d7",
+        dark: "#0a824a"
+      },
+      color9: {
+        light: "#cae2e6",
+        dark: "#0e7a8b"
+      },
+      color10: {
+        light: "#d4def0",
+        dark: "#3b68b9"
+      }
+    };
+    return colorID;
+  }
+  function getStyleTable(color, width = 80) {
+    var styleTable = {
+      tableStyle1: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "",
+        tr: "",
+        td_head: "background-color: " + color.light + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle2: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "background-color: " + color.light + ";",
+        tr: ["", "background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle3: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle4: {
+        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle5: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
+        tr_head: "border: none;",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle6: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "background-color: " + color.light + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "background-color: " + color.light + "; border-left: none; border-top: none; border-bottom: none; border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle7: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "border-bottom: 3px solid " + color.dark + ";",
+        tr: "",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle8: {
+        table: "border-collapse:collapse; border-bottom: 1px solid " + color.dark + "; border-left: none; border-right: none; border-top: none;margin-left: auto;margin-right:auto; width:" + width + "%;",
+        tr_head: "border-bottom: 3px solid " + color.dark + ";",
+        tr: "",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "border-left: 1px solid " + color.dark + ";",
+        td_first: "border-right: none;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle9: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "border: 1px solid " + color.dark + ";",
+        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle10: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "color: #fff;",
+        tr: "",
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle11: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
+        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important",
+        tr: "border: none;",
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "background-color: " + color.light + "; border-bottom: 1px solid #fff; border-right: 1px solid #fff",
+        td_first: "color: #fff;background-color: " + color.dark + "; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle12: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "background-color: " + color.light + "; border-bottom: 3px solid " + color.dark + ";",
+        tr: "",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle13: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto ;width:" + width + "%; border: none;",
+        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "border: 1px solid " + color.dark + ";",
+        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle14: {
+        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
+        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle15: {
+        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border-left: none; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border-bottom: 1px solid " + color.dark + ";",
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle16: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "color: #fff;",
+        tr: "",
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "border: none;",
+        td_first: "border: none;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle17: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto;width:" + width + "%;",
+        tr_head: "color: #fff;",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "border: none;",
+        td_first: "border: none;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle18: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
+        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 3px solid #fff !important",
+        tr: ["border: none; background-color: " + color.light + ";", "color: #fff; border: none; background-color: " + color.dark + ";"],
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "border:none;",
+        td_first: "border: none; border-right: 3px solid #fff",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle19: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
+        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle20: {
+        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
+        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle21: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "",
+        tr: "",
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      }
+    };
+    return styleTable;
+  }
+
+  // src/features/sei-functions/body.js
   installSeiFunctionsState();
   var sanitizeHTML = (html) => DOMPurify.sanitize(html, {
     ADD_ATTR: ["target"],
@@ -4863,266 +5194,6 @@
       elem.show();
     }
   }
-  function getColorID() {
-    var colorID = {
-      color1: {
-        light: "#dddddd",
-        dark: "#646464"
-      },
-      color2: {
-        light: "#e2daf1",
-        dark: "#7b54c0"
-      },
-      color3: {
-        light: "#eed7e9",
-        dark: "#b1489c"
-      },
-      color4: {
-        light: "#f2d7dc",
-        dark: "#c2495e"
-      },
-      color5: {
-        light: "#ecdacf",
-        dark: "#a85723"
-      },
-      color6: {
-        light: "#dfdfc8",
-        dark: "#6e6b06"
-      },
-      color7: {
-        light: "#d1e2cc",
-        dark: "#2f7c16"
-      },
-      color8: {
-        light: "#c9e4d7",
-        dark: "#0a824a"
-      },
-      color9: {
-        light: "#cae2e6",
-        dark: "#0e7a8b"
-      },
-      color10: {
-        light: "#d4def0",
-        dark: "#3b68b9"
-      }
-    };
-    return colorID;
-  }
-  function getStyleTable(color, width = 80) {
-    var styleTable = {
-      tableStyle1: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "",
-        tr: "",
-        td_head: "background-color: " + color.light + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle2: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "background-color: " + color.light + ";",
-        tr: ["", "background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle3: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle4: {
-        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle5: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
-        tr_head: "border: none;",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle6: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "background-color: " + color.light + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "background-color: " + color.light + "; border-left: none; border-top: none; border-bottom: none; border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle7: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "border-bottom: 3px solid " + color.dark + ";",
-        tr: "",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle8: {
-        table: "border-collapse:collapse; border-bottom: 1px solid " + color.dark + "; border-left: none; border-right: none; border-top: none;margin-left: auto;margin-right:auto; width:" + width + "%;",
-        tr_head: "border-bottom: 3px solid " + color.dark + ";",
-        tr: "",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "border-left: 1px solid " + color.dark + ";",
-        td_first: "border-right: none;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle9: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "border: 1px solid " + color.dark + ";",
-        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle10: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "color: #fff;",
-        tr: "",
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle11: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
-        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important",
-        tr: "border: none;",
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "background-color: " + color.light + "; border-bottom: 1px solid #fff; border-right: 1px solid #fff",
-        td_first: "color: #fff;background-color: " + color.dark + "; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle12: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "background-color: " + color.light + "; border-bottom: 3px solid " + color.dark + ";",
-        tr: "",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle13: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto ;width:" + width + "%; border: none;",
-        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "border: 1px solid " + color.dark + ";",
-        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle14: {
-        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
-        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle15: {
-        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border-left: none; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border-bottom: 1px solid " + color.dark + ";",
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle16: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "color: #fff;",
-        tr: "",
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "border: none;",
-        td_first: "border: none;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle17: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto;width:" + width + "%;",
-        tr_head: "color: #fff;",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "border: none;",
-        td_first: "border: none;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle18: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
-        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 3px solid #fff !important",
-        tr: ["border: none; background-color: " + color.light + ";", "color: #fff; border: none; background-color: " + color.dark + ";"],
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "border:none;",
-        td_first: "border: none; border-right: 3px solid #fff",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle19: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
-        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle20: {
-        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
-        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle21: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "",
-        tr: "",
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      }
-    };
-    return styleTable;
-  }
   function getProcessNotificationCountPro() {
     return $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").find("a.processoNaoVisualizado, a.processoNaoVisualizadoSigiloso, a.processoCredencialAssinaturaSigiloso").length;
   }
@@ -5576,9 +5647,11 @@
             } else if (value.indexOf("?acao=procedimento_atualizar_andamento") !== -1 && _ifrVisualizacao.find('img[title="Atualizar Andamento"]').length > 0) {
               name = "Atualizar Andamento";
             }
-            var data = jmespath.search(parent.iconsFlashMenu, "[?name=='" + name + "'] | [0]");
-            if (name != "") {
+            var data = typeof jmespath !== "undefined" && parent.iconsFlashMenu ? jmespath.search(parent.iconsFlashMenu, "[?name=='" + name + "'] | [0]") : null;
+            if (name != "" && data) {
               linksArvore2.push({ url: value, name: data.name, icon: data.icon, alt: data.alt });
+            } else if (name != "") {
+              linksArvore2.push({ url: value, name, icon: "", alt: name });
             }
           });
         }
@@ -5776,9 +5849,14 @@
     getListDocumentosArvore(ifrArvore);
     if (mode == "editor") {
       setTimeout(function() {
-        getDialogDadosEditor();
+        if (typeof getDialogDadosEditor === "function") getDialogDadosEditor();
       }, 1e3);
-      insertAutomaticMinutaWatermark();
+      if (typeof insertAutomaticMinutaWatermark === "function") insertAutomaticMinutaWatermark();
+      try {
+        document.documentElement.setAttribute("data-seipro-processo-dados", "ready");
+        window.dispatchEvent(new CustomEvent("seipro-processo-dados-ready"));
+      } catch (e) {
+      }
     } else if (mode == "gantt") {
       updateSelectConcluirEtapa();
     } else if (mode == "projeto") {
@@ -7394,12 +7472,17 @@
                             urlReload = v2.split("'")[1];
                           }
                           if (v2.indexOf("acao=editor_montar") !== -1) {
-                            urlEditor.push(v2.split("'")[1]);
+                            var editorUrlCert = extractEditorMontarUrl(v2);
+                            if (editorUrlCert) urlEditor.push(editorUrlCert);
                           }
                           if (v2.indexOf("janelaEditor_") !== -1) {
                             idUser = v2.split("_")[1];
                           }
                         });
+                        if (!urlEditor.length) {
+                          var editorUrlCertHtml = extractEditorMontarUrl(htmlResult);
+                          if (editorUrlCertHtml) urlEditor.push(editorUrlCertHtml);
+                        }
                         if (urlEditor.length > 0 && idUser) {
                           sessionStorageStorePro("dadosDocCertidao", contentHtml);
                           sessionStorageStorePro("nomeDocCertidao", ifrArvore.contents().find(".infraArvoreNoSelecionado").eq(0).text());
@@ -7439,12 +7522,199 @@
     return urlNewDoc;
   }
   function openWindowEditor(urlEditor, idUser) {
-    var id_documento = getParamsUrlPro(urlEditor).id_documento;
-    var janelaEditor = infraAbrirJanela("", "janelaEditor_" + idUser + "_" + id_documento, parent.infraClientWidth(), parent.infraClientHeight(), "location=0,status=0,resizable=1,scrollbars=1", false);
-    if (janelaEditor.location == "about:blank") {
-      janelaEditor.location.href = urlEditor;
+    if (!isValidEditorMontarUrl(urlEditor)) {
+      console.warn("SEI Pro: openWindowEditor skipped \u2014 missing id_documento", urlEditor);
+      if (typeof alertaBoxPro === "function") {
+        alertaBoxPro("Error", "exclamation-triangle", "N\xE3o foi poss\xEDvel abrir o editor: documento sem identifica\xE7\xE3o.");
+      }
+      return;
     }
-    janelaEditor.focus();
+    var abs = toAbsoluteSeiUrl(urlEditor);
+    var id_documento = getParamsUrlPro(urlEditor).id_documento;
+    var nome = "janelaEditor_" + idUser + "_" + id_documento;
+    var janelaEditor = null;
+    try {
+      janelaEditor = infraAbrirJanela(abs, nome, parent.infraClientWidth(), parent.infraClientHeight(), "location=0,status=0,resizable=1,scrollbars=1", false);
+    } catch (e) {
+      janelaEditor = null;
+    }
+    if (!janelaEditor) {
+      openLinkNewTab(abs);
+      return;
+    }
+    try {
+      var href = "";
+      try {
+        href = String(janelaEditor.location.href || "");
+      } catch (e2) {
+        href = "";
+      }
+      if (editorWindowNeedsNavigate(href)) {
+        janelaEditor.location.href = abs;
+      }
+      janelaEditor.focus();
+    } catch (e3) {
+      openLinkNewTab(abs);
+    }
+  }
+  function toAbsoluteSeiUrl(url) {
+    try {
+      var a = document.createElement("a");
+      a.href = url;
+      return a.href;
+    } catch (e) {
+      return url;
+    }
+  }
+  function firstEditorContextDocumentId(win) {
+    const candidates = [];
+    const add = (value) => {
+      if (value) candidates.push(String(value));
+    };
+    try {
+      let current = win;
+      for (let depth = 0; current && depth < 3; depth++, current = current.parent) {
+        add(current?.linkEditarConteudo);
+        add(current?.location?.href);
+        const doc = current?.document;
+        if (!doc) continue;
+        const input = doc.querySelector('[name="id_documento"], #hdnIdDocumento, #id_documento');
+        add(input?.value);
+        doc.querySelectorAll('a[href*="id_documento="]').forEach((link) => {
+          add(link.href || link.getAttribute("href"));
+        });
+      }
+    } catch (error) {
+    }
+    try {
+      const parentDoc = win?.parent?.document;
+      const tree = parentDoc?.querySelector("#ifrArvore");
+      const selected = tree?.contentDocument?.querySelector(".infraArvoreNoSelecionado");
+      add(selected?.closest("a")?.href);
+      add(selected?.getAttribute("href"));
+    } catch (error) {
+    }
+    for (const candidate of candidates) {
+      const id = getUrlDocumentoId(candidate);
+      if (/^\d+$/.test(id)) return id;
+      if (/^\d+$/.test(candidate.trim())) return candidate.trim();
+    }
+    return "";
+  }
+  function editorLinksFromContext(win) {
+    const links = [];
+    const add = (value) => {
+      const candidate = String(value || "").trim();
+      if (candidate && /acao=editor_montar/i.test(candidate)) links.push(candidate);
+    };
+    try {
+      let current = win;
+      for (let depth = 0; current && depth < 3; depth++, current = current.parent) {
+        add(current?.linkEditarConteudo);
+        const doc = current?.document;
+        doc?.querySelectorAll('a[href*="editor_montar"]').forEach((link) => {
+          add(link.href || link.getAttribute("href"));
+        });
+      }
+    } catch (error) {
+    }
+    return links;
+  }
+  function resolveNativeEditorUrl(win) {
+    if (!win) return null;
+    const documentId = firstEditorContextDocumentId(win);
+    if (!documentId) return null;
+    const base = editorLinksFromContext(win)[0] || "";
+    if (!base) return null;
+    const repaired = repairEditorMontarUrl(base, documentId, win.location?.href || "");
+    return repaired && isValidEditorMontarUrl(repaired) ? repaired : null;
+  }
+  function patchNativeEditorOpen(win) {
+    if (!win || win.__SEI_PRO_EDITOR_OPEN_PATCHED__) return false;
+    if (typeof win.editarConteudo !== "function") return false;
+    if (!resolveNativeEditorUrl(win)) return false;
+    win.__SEI_PRO_EDITOR_OPEN_PATCHED__ = true;
+    var orig = win.editarConteudo;
+    win.editarConteudo = function patchedEditarConteudo(assinado) {
+      try {
+        if (win.INFRA_FF > 0 && win.INFRA_FF < 4) {
+          win.alert('Para realizar a edi\xE7\xE3o de documentos no Firefox \xE9 recomendado atualizar o navegador para a vers\xE3o 4 ou posterior.\n\nPara iniciar a atualiza\xE7\xE3o autom\xE1tica acesse o menu "Ajuda / Verificar atualiza\xE7\xF5es..." ou "Ajuda / Sobre o Firefox" do navegador.');
+        }
+        if (assinado == "S") {
+          if (win.objAjaxVerificacaoAssinatura) win.objAjaxVerificacaoAssinatura.bolAssinado = true;
+        } else if (win.objAjaxVerificacaoAssinatura && typeof win.objAjaxVerificacaoAssinatura.executar === "function") {
+          win.objAjaxVerificacaoAssinatura.executar();
+        }
+        if (win.objAjaxVerificacaoAssinatura && win.objAjaxVerificacaoAssinatura.bolAssinado) {
+          if (!win.confirm("Este documento j\xE1 foi assinado. Se for editado perder\xE1 a assinatura e dever\xE1 ser assinado novamente.\n\n Deseja editar o documento?")) {
+            if (assinado == "N" && typeof win.atualizarArvore === "function") {
+              win.atualizarArvore(win.linkMontarArvoreProcessoDocumento);
+            }
+            return;
+          }
+        }
+      } catch (ePre) {
+        console.warn("SEI Pro: editarConteudo pre-check failed, falling back", ePre);
+        try {
+          return orig.apply(win, arguments);
+        } catch (eOrig) {
+        }
+      }
+      ensureNativeEditorWindowNavigates(win);
+    };
+    return true;
+  }
+  function ensureNativeEditorWindowNavigates(win) {
+    const editorUrl = resolveNativeEditorUrl(win);
+    if (!editorUrl) return false;
+    var abs;
+    try {
+      var a = win.document.createElement("a");
+      a.href = editorUrl;
+      abs = a.href;
+    } catch (e) {
+      abs = editorUrl;
+    }
+    var nome = "janelaEditor_" + (win.nomeJanelaDocumento || "");
+    var openFn = null;
+    try {
+      if (win.parent && typeof win.parent.infraAbrirJanela === "function") openFn = win.parent.infraAbrirJanela.bind(win.parent);
+      else if (typeof win.infraAbrirJanela === "function") openFn = win.infraAbrirJanela.bind(win);
+    } catch (eBind) {
+    }
+    var w = null;
+    try {
+      if (openFn) {
+        w = openFn(abs, nome, win.infraClientWidth(), win.infraClientHeight(), "location=0,status=0,resizable=1,scrollbars=1", false);
+      } else {
+        w = win.open(abs, nome);
+      }
+    } catch (e2) {
+      w = null;
+    }
+    if (!w) {
+      if (typeof openLinkNewTab === "function") openLinkNewTab(abs);
+      else try {
+        win.open(abs, "_blank");
+      } catch (e3) {
+      }
+      return true;
+    }
+    try {
+      var href = "";
+      try {
+        href = String(w.location.href || "");
+      } catch (e4) {
+        href = "";
+      }
+      if (editorWindowNeedsNavigate(href)) {
+        w.location.href = abs;
+      }
+      w.focus();
+    } catch (e5) {
+      if (typeof openLinkNewTab === "function") openLinkNewTab(abs);
+    }
+    return true;
   }
   function setResizeIfrArvore() {
     var ifrArvore = $("#ifrArvore");
@@ -10494,12 +10764,17 @@
                           urlReload = v.split("'")[1];
                         }
                         if (v.indexOf("acao=editor_montar") !== -1) {
-                          urlEditor.push(v.split("'")[1]);
+                          var editorUrlNew = extractEditorMontarUrl(v);
+                          if (editorUrlNew) urlEditor.push(editorUrlNew);
                         }
                         if (v.indexOf("janelaEditor_") !== -1) {
                           idUser = v.split("_")[1];
                         }
                       });
+                      if (!urlEditor.length) {
+                        var editorUrlNewHtml = extractEditorMontarUrl(htmlResult);
+                        if (editorUrlNewHtml) urlEditor.push(editorUrlNewHtml);
+                      }
                       if (urlEditor.length > 0 && idUser) {
                         var acao_pro = insertHtml ? "set_automatico" : "set_new_doc";
                         if (openProc) openLinkNewTab(href);
@@ -11015,16 +11290,49 @@
   }
   function loadScriptVisualizacaoPro() {
     if ($($ifrVisualizacao).length) {
-      $($ifrVisualizacao).off("load.seipro").on("load.seipro", function() {
-        if (SeiPro.sei.adapter.isSEI5()) {
-          var $ifrInternoVisualizacao = $($ifrVisualizacao).contents().find("#ifrVisualizacao");
-          $ifrInternoVisualizacao.off("load.seipro").on("load.seipro", function() {
-            scriptVisualizacaoPro($ifrInternoVisualizacao.contents());
-          });
-        } else {
-          scriptVisualizacaoPro($($ifrVisualizacao).contents());
+      let tryPatchWindow = function(w) {
+        try {
+          if (!w) return;
+          if (!patchNativeEditorOpen(w) && !w.__SEI_PRO_EDITOR_OPEN_PATCHED__) {
+            if (w.__SEI_PRO_EDITOR_OPEN_RETRY__) return;
+            w.__SEI_PRO_EDITOR_OPEN_RETRY__ = true;
+            var tries = 0;
+            var timer = setInterval(function() {
+              tries++;
+              if (patchNativeEditorOpen(w) || w.__SEI_PRO_EDITOR_OPEN_PATCHED__ || tries >= 20) {
+                clearInterval(timer);
+                w.__SEI_PRO_EDITOR_OPEN_RETRY__ = false;
+              }
+            }, 250);
+          }
+        } catch (e) {
         }
+      }, tryPatchViz = function() {
+        var w = $($ifrVisualizacao)[0] && $($ifrVisualizacao)[0].contentWindow;
+        tryPatchWindow(w);
+      }, tryPatchNestedViz = function() {
+        var $ifrInternoVisualizacao = $($ifrVisualizacao).contents().find("#ifrVisualizacao");
+        if (!$ifrInternoVisualizacao.length) return;
+        var nestedWindow = $ifrInternoVisualizacao[0] && $ifrInternoVisualizacao[0].contentWindow;
+        tryPatchWindow(nestedWindow);
+        $ifrInternoVisualizacao.off("load.seipro-editor-open").on("load.seipro-editor-open", function() {
+          tryPatchWindow(this.contentWindow);
+          scriptVisualizacaoPro($(this).contents());
+        });
+      };
+      $($ifrVisualizacao).off("load.seipro").on("load.seipro", function() {
+        tryPatchViz();
+        tryPatchNestedViz();
+        scriptVisualizacaoPro($($ifrVisualizacao).contents());
       });
+      try {
+        var readyWin = $($ifrVisualizacao)[0] && $($ifrVisualizacao)[0].contentWindow;
+        if (readyWin && readyWin.document && readyWin.document.readyState === "complete") {
+          tryPatchViz();
+          tryPatchNestedViz();
+        }
+      } catch (e2) {
+      }
     }
   }
   function scriptVisualizacaoPro(ifrV) {

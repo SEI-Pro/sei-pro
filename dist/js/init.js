@@ -6,7 +6,9 @@ var frmEditor5Script = $('html script[charset="utf-8"]').last().html() || '';
 var frmEditor5Exists = frmEditor5Script.includes('INFRA_EDITOR_CONFIG');
 window.__SEI_PRO_CONFIG_READY__ = false;
 
-$.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+$.getScript(getUrlExtension("js/lib/jmespath.min.js")).done(function () {
+    window.__SEI_PRO_JMESPATH_READY__ = true;
+});
 $.getScript(getUrlExtension("js/lib/purify.min.js"));
 $.getScript(getUrlExtension("js/lib/moment.min.js")).done(function() {
     $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
@@ -116,6 +118,10 @@ function showAutoReportNoticePro() {
     }
 }
 function loadScriptDataBasePro(dataValues) { 
+    if (typeof jmespath === 'undefined' || typeof jmespath.search !== 'function') {
+        setTimeout(function () { loadScriptDataBasePro(dataValues); }, 100);
+        return;
+    }
     var dataValues = localStorageRestorePro('configBasePro');
     var dataValues_FormulariosSheets = jmespath.search(dataValues, "[?baseTipo=='formularios'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
     var dataValues_ProcessosSheets = jmespath.search(dataValues, "[?baseTipo=='processos'] | [?conexaoTipo=='sheets'] | [?API_KEY!='']");
@@ -249,10 +255,8 @@ function loadScriptPro() {
         setTimeout(function () {
         	$(document).ready(function () {
                 loadConfigPro();
-                $.getScript(getUrlExtension("js/lib/moment.min.js"));
-                $.getScript(getUrlExtension("js/lib/jquery-qrcode-0.18.0.min.js"));
-                $.getScript(getUrlExtension("js/sei-pro-editor.js"));
-                $.getScript(getUrlExtension("js/sei-legis.js"));
+                // Editor + legis ship in sei-pro-editor.js (src/entries/editor.js).
+                // Moment and the old QR plugin are no longer loaded on the editor path.
                 console.log('loadScriptPro-Editor');
                 loadFilesUI();
         	});

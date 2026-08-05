@@ -28,7 +28,22 @@
             return global.SeiProBackgroundFetch.handleFetchMessage(message, sender, sendResponse, browserApi);
         }
 
-        if (action === 'storageGet' || action === 'storageSet' || action === 'storageRemove') {
+        if (action === 'llmComplete') {
+            if (!global.SeiProBackgroundLlm || typeof global.SeiProBackgroundLlm.handleLlmCompleteMessage !== 'function') {
+                sendResponse({ ok: false, error: 'LLM handler unavailable' });
+                return false;
+            }
+            return global.SeiProBackgroundLlm.handleLlmCompleteMessage(message, sender, sendResponse, browserApi);
+        }
+
+        if (
+            action === 'storageGet'
+            || action === 'storageSet'
+            || action === 'storageRemove'
+            || action === 'llmProfilesList'
+            || action === 'llmSaveProfile'
+            || action === 'llmDeleteProfile'
+        ) {
             if (!global.SeiProBackgroundStorage || typeof global.SeiProBackgroundStorage.handleStorageMessage !== 'function') {
                 sendResponse({ ok: false, error: 'Storage handler unavailable' });
                 return false;

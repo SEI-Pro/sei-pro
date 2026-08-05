@@ -21,7 +21,7 @@ A extensão processa apenas dados necessários ao funcionamento das funcionalida
 - configurações e preferências da extensão
 - favoritos, filtros e caches locais
 - dados de navegação dentro do SEI necessários para as funções da extensão
-- conteúdo selecionado pelo usuário quando ele ativa recursos opcionais, como IA, encurtamento de links ou planilhas
+- conteúdo selecionado ou aberto no editor quando o usuário ativa recursos opcionais, como IA ou planilhas
 - logs técnicos gerados pelo navegador e pela própria extensão para diagnóstico
 
 ---
@@ -49,6 +49,18 @@ Essas integrações incluem, por exemplo:
 - serviços de encurtamento de links, quando acionados manualmente
 
 Quando uma integração externa é usada, apenas os dados necessários para aquela função são enviados. O conteúdo enviado passa a ser tratado também pelas políticas de privacidade do serviço de destino.
+
+Perfis de provedores e chaves de API ficam somente em `chrome.storage.local`; as chaves não
+são copiadas para o `localStorage` da página do SEI nem atravessam a ponte do editor. Para
+montar o contexto, a extensão pode ler a minuta atual, metadados do processo, a árvore, o
+histórico e corpos de documentos públicos, sempre dentro dos limites configurados.
+
+Antes de enviar o corpo da minuta ou de um documento cujo acesso seja restrito, sigiloso ou
+não verificável, a extensão identifica o documento e o provedor de destino e exige
+confirmação. Endpoints locais ou institucionais marcados pelo usuário como confiáveis exigem
+uma confirmação válida apenas durante a sessão da página. A autorização gera um registro
+local com data, documento, nível de acesso, provedor e modelo; o conteúdo não é gravado no
+histórico. Esse histórico é visível, exportável e apagável nas Configurações.
 
 ---
 

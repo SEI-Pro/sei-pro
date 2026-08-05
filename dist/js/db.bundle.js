@@ -113,7 +113,6 @@
         try {
           value = decodeURIComponent(value);
         } catch (error) {
-          console.warn("Malformed URL parameter ignored in getParamsUrlPro:", value, error);
         }
         params[key] = value;
       }
@@ -2857,7 +2856,14 @@
     });
   }
   function baseItem(base, param, manifest) {
-    const common = { CLIENT_ID: "", API_KEY: "", spreadsheetId: "", URL_API: param.url || "", KEY_USER: param.token || "" };
+    const common = {
+      CLIENT_ID: "",
+      API_KEY: "",
+      spreadsheetId: "",
+      URL_API: param.url || "",
+      KEY_USER: param.token || "",
+      model: param.model || ""
+    };
     switch (base) {
       case "atividades":
         return {
@@ -2871,6 +2877,14 @@
         return { baseName: "Open AI (Chat GPT)", baseTipo: "openai", conexaoTipo: "api", ...common };
       case "gemini":
         return { baseName: "Gemini (Google)", baseTipo: "gemini", conexaoTipo: "api", ...common };
+      case "anthropic":
+        return { baseName: "Anthropic (Claude)", baseTipo: "anthropic", conexaoTipo: "api", ...common };
+      case "moonshot":
+        return { baseName: "Moonshot (Kimi)", baseTipo: "moonshot", conexaoTipo: "api", ...common };
+      case "ollama":
+        return { baseName: "Ollama", baseTipo: "ollama", conexaoTipo: "api", ...common };
+      case "openai_compatible":
+        return { baseName: param.base_name || "OpenAI-compatible", baseTipo: "openai_compatible", conexaoTipo: "api", ...common };
       case "projetos":
         return {
           baseName: param.base_name,

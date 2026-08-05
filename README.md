@@ -41,17 +41,17 @@ O **SEI Pro PRF** é uma extensão para Google Chrome que adiciona funcionalidad
 - Exporte sua lista de processos para planilha CSV
 
 ### Editor mais poderoso
-- Salve o documento automaticamente enquanto escreve
+- Recupere rascunhos locais, compare versões e restaure apenas as seções desejadas
 - Copie e cole formatação de texto entre parágrafos
-- Insira sumário, notas de rodapé, referências internas e equações matemáticas
+- Insira sumário, notas de rodapé, referências internas, dados do processo e trechos da unidade
 - Adicione links de legislação e enumere normas automaticamente (Legística)
-- Tabelas com estilos avançados e atalhos de teclado personalizáveis
+- Use `Ctrl+K` para pesquisar todas as ações e rode o checklist antes da assinatura
 
 ### Inteligência Artificial no SEI
-- Revise textos, escreva com assistência e dite documentos usando IA
-- Compatível com **ChatGPT (OpenAI)**, **Google Gemini** e **modelos locais (Ollama)**
-- Configure seus próprios prompts e instruções para o contexto da sua unidade
-- Com Ollama, os dados **não saem da sua máquina**
+- Revise e redija com respostas em streaming e ferramentas de leitura do processo
+- Compatível com **OpenAI**, **Anthropic**, **Gemini**, **Moonshot**, **Ollama** e gateways compatíveis com OpenAI
+- Configure limites, palavra-chave inline e instruções institucionais adicionais
+- Conteúdo protegido exige confirmação; autorizações ficam em um histórico local sem o conteúdo
 
 ### Árvore de documentos aprimorada
 - Menu rápido com as ações mais usadas em cada documento

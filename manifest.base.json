@@ -28,6 +28,15 @@
     "https://script.google.com/*",
     "https://script.googleusercontent.com/*"
   ],
+  "optional_host_permissions": [
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.moonshot.ai/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*/*"
+  ],
   "content_scripts": [
     {
       "js": [
@@ -521,15 +530,21 @@
       "js": [
         "js/core-stack.bundle.js",
         "js/lib/jquery-3.7.1.min.js",
+        "js/lib/jmespath.min.js",
+        "js/lib/purify.min.js",
         "js/getscript-isolated.js",
         "js/init-flags.js",
         "js/sei-functions-pro.js",
-        "js/editor-domain.bundle.js",
+        "js/editor-loader.js",
+        "js/sei-pro-ai.js",
         "js/init.js"
       ],
       "css": [
         "css/sei-pro.css",
-        "css/sei-functions.css"
+        "css/sei-functions.css",
+        "css/editor.css",
+        "css/stream-panel.css",
+        "css/ai.css"
       ],
       "run_at": "document_end",
       "matches": [
@@ -568,6 +583,8 @@
         "js/lib/moment-weekday-calc.js",
         "js/lib/moment-duration-format.min.js",
         "js/lib/jquery-qrcode-0.18.0.min.js",
+        "js/lib/qrcode.min.js",
+        "js/editor-ckeditor-main.js",
         "js/lib/crypto-js.min.js",
         "js/lib/chart.min.js",
         "js/lib/chosen.jquery.min.js",
@@ -602,7 +619,6 @@
         "js/sei-pro.js",
         "js/sei-pro-controle-prazo.js",
         "js/sei-pro-all.js",
-        "js/editor-domain.bundle.js",
         "js/sei-pro-editor.js",
         "js/sei-pro-arvore.js",
         "js/sei-pro-visualizacao.js",

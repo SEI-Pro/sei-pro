@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setOptionsSEIPro, getOptionsSEIPro } from '@src/features/external-config/index.js';
+import { baseItem, setOptionsSEIPro, getOptionsSEIPro } from '@src/features/external-config/index.js';
 
 // Fake da fachada de storage (delega ao SW na produção); aqui guarda em memória.
 function fakeStorage(initial) {
@@ -55,5 +55,19 @@ describe('feature external-config — persistência de opções/bases', () => {
         const st = stub(fakeStorage([{ baseTipo: 'x' }]));
         await getOptionsSEIPro({ type: 'OUTRO' });
         expect(JSON.parse(st._store.dataValues)).toHaveLength(1);
+    });
+
+    it('builds legacy URL profiles for every new AI provider type', () => {
+        const manifest = { short_name: 'SEI Pro PRF' };
+        const params = { url: 'https://gateway.example', token: 'secret', base_name: 'Gateway' };
+        expect(baseItem('anthropic', params, manifest).baseName).toBe('Anthropic (Claude)');
+        expect(baseItem('moonshot', params, manifest).baseTipo).toBe('moonshot');
+        expect(baseItem('ollama', params, manifest).baseTipo).toBe('ollama');
+        expect(baseItem('openai_compatible', params, manifest)).toMatchObject({
+            baseName: 'Gateway',
+            baseTipo: 'openai_compatible',
+            URL_API: 'https://gateway.example',
+            KEY_USER: 'secret'
+        });
     });
 });

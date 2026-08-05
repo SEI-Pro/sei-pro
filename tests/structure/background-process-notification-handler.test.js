@@ -12,7 +12,7 @@ describe('migration: background process notification adapter stays isolated', ()
     const processNotificationHandler = readFileSync(join(rootDir, 'src/background/process-notification-handler.js'), 'utf8');
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
 
-    expect(background).toContain("importScripts('storage-handler.js', 'fetch-handler.js', 'bug-report-handler.js', 'process-notification-handler.js', 'install-handler.js', 'router.js')");
+    expect(background).toMatch(/importScripts\([^)]*'process-notification-handler\.js'[^)]*\)/);
     expect(router).toMatch(/SeiProBackgroundProcessNotification\.handleProcessNotificationMessage\(action, message, sendResponse, browserApi\)/);
     expect(background).not.toMatch(/function syncProcessNotificationState\(/);
     expect(background).not.toMatch(/function createProcessNotification\(/);

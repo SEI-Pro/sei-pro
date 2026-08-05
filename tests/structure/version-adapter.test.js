@@ -33,7 +33,9 @@ const BARE_USAGE = /(?<![.\w])(?<!typeof )\b(isNewSEI|isSEI_5)\b(?!\s*=(?!=))/g;
 //   adapter/version source they bundle legitimately defines/reads isNewSEI.
 const ALLOWLIST = new Set([
   'sei-pro-arvore.js',
-  'sei-pro-arvore-boot.js'
+  'sei-pro-arvore-boot.js',
+  // Generated editor entry now embeds core/sei adapter (MAIN-world WAR inject).
+  'sei-pro-editor.js'
 ]);
 const isGeneratedBundle = (name) => name.endsWith('.bundle.js');
 

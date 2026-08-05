@@ -2,16 +2,47 @@
   // src/shared/ui/modal.js
   function openModal({ title = "", content = "", width = 600, buttons, onOpen, onClose, className = "" } = {}) {
     document.querySelectorAll(".seipro-modal").forEach((m) => m.remove());
+    const previouslyFocused = document.activeElement;
     const overlay = document.createElement("div");
     overlay.className = "seipro-modal " + className;
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100000;display:flex;align-items:center;justify-content:center;";
-    overlay.innerHTML = '<div class="dialogBoxDiv seipro-modal-box" role="dialog" aria-modal="true" style="background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:95vw;max-height:95vh;overflow:auto;width:' + width + 'px;"><div class="seipro-modal-head" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #eee;font-weight:bold;"><span class="seipro-modal-title">' + title + '</span><i class="fas fa-times" data-modal-close style="cursor:pointer;color:#888;"></i></div><div class="seipro-modal-body" style="padding:14px;"></div><div class="seipro-modal-buttons" style="display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #eee;"></div></div>';
-    const body = overlay.querySelector(".seipro-modal-body");
+    const box = document.createElement("div");
+    box.className = "dialogBoxDiv seipro-modal-box";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.style.cssText = "background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:95vw;max-height:95vh;overflow:auto;width:" + width + "px;";
+    const head = document.createElement("div");
+    head.className = "seipro-modal-head";
+    head.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #eee;font-weight:bold;";
+    const titleElement = document.createElement("span");
+    titleElement.className = "seipro-modal-title";
+    titleElement.id = `seipro-modal-title-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    titleElement.textContent = title;
+    box.setAttribute("aria-labelledby", titleElement.id);
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "seipro-modal-close";
+    closeButton.setAttribute("data-modal-close", "");
+    closeButton.setAttribute("aria-label", "Fechar");
+    closeButton.style.cssText = "cursor:pointer;color:#888;border:0;background:transparent;padding:4px;";
+    closeButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+    head.append(titleElement, closeButton);
+    const body = document.createElement("div");
+    body.className = "seipro-modal-body";
+    body.style.cssText = "padding:14px;";
+    const btnRow = document.createElement("div");
+    btnRow.className = "seipro-modal-buttons";
+    btnRow.style.cssText = "display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #eee;";
+    box.append(head, body, btnRow);
+    overlay.appendChild(box);
     if (typeof content === "string") body.innerHTML = content;
     else if (content instanceof Node) body.appendChild(content);
     const ref = { el: overlay, body, close };
     let onKey;
+    let closed = false;
     function close() {
+      if (closed) return;
+      closed = true;
       document.removeEventListener("keydown", onKey, true);
       if (typeof onClose === "function") {
         try {
@@ -20,18 +51,42 @@
         }
       }
       overlay.remove();
+      if (previouslyFocused && typeof previouslyFocused.focus === "function" && previouslyFocused.isConnected) {
+        previouslyFocused.focus();
+      }
+    }
+    function focusableElements() {
+      return Array.from(box.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
     }
     onKey = (ev) => {
       if (ev.key === "Escape") {
         ev.stopPropagation();
         close();
+        return;
+      }
+      if (ev.key !== "Tab") return;
+      const focusable = focusableElements();
+      if (!focusable.length) {
+        ev.preventDefault();
+        box.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (ev.shiftKey && document.activeElement === first) {
+        ev.preventDefault();
+        last.focus();
+      } else if (!ev.shiftKey && document.activeElement === last) {
+        ev.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener("keydown", onKey, true);
     overlay.addEventListener("click", (ev) => {
       if (ev.target === overlay || ev.target.closest("[data-modal-close]")) close();
     });
-    const btnRow = overlay.querySelector(".seipro-modal-buttons");
     (buttons || [{ text: "Fechar", onClick: (r) => r.close() }]).forEach((b) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -43,6 +98,16 @@
     });
     document.body.appendChild(overlay);
     if (typeof onOpen === "function") onOpen(ref);
+    const initialFocus = body.querySelector(
+      "[autofocus], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href]"
+    ) || focusableElements()[0];
+    if (document.activeElement === previouslyFocused) {
+      if (initialFocus) initialFocus.focus();
+      else {
+        box.tabIndex = -1;
+        box.focus();
+      }
+    }
     return ref;
   }
 
@@ -61,6 +126,55 @@
   }
 
   // src/options/domain.js
+  var AI_PROVIDER_OPTIONS = Object.freeze([
+    { id: "openai", label: "OpenAI", baseUrl: "https://api.openai.com", model: "gpt-4.1-mini" },
+    { id: "anthropic", label: "Anthropic (Claude)", baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-20250514" },
+    { id: "gemini", label: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com", model: "gemini-2.5-flash" },
+    { id: "moonshot", label: "Moonshot (Kimi)", baseUrl: "https://api.moonshot.ai", model: "kimi-k3" },
+    { id: "ollama", label: "Ollama", baseUrl: "http://localhost:11434", model: "llama3.2" },
+    { id: "openai_compatible", label: "OpenAI-compatible", baseUrl: "", model: "" }
+  ]);
+  function getAiProviderDefaults(providerId) {
+    const provider = AI_PROVIDER_OPTIONS.find((item) => item.id === providerId);
+    return provider ? { baseUrl: provider.baseUrl, model: provider.model } : { baseUrl: "", model: "" };
+  }
+  function isAiProviderId(providerId) {
+    return AI_PROVIDER_OPTIONS.some((item) => item.id === providerId);
+  }
+  function normalizeAiProfileDraft(fields, idFactory) {
+    const input = fields && typeof fields === "object" ? fields : {};
+    const provider = AI_PROVIDER_OPTIONS.find((item) => item.id === input.providerId);
+    if (!provider) throw new Error("Selecione um provedor de IA v\xE1lido.");
+    const defaults = getAiProviderDefaults(provider.id);
+    const baseUrl = String(input.baseUrl == null ? defaults.baseUrl : input.baseUrl).trim().replace(/\/+$/, "");
+    const model = String(input.model == null ? defaults.model : input.model).trim();
+    if (!model) throw new Error("Informe o modelo de IA.");
+    if (provider.id === "openai_compatible" && !baseUrl) {
+      throw new Error("Informe a URL base do provedor compat\xEDvel com OpenAI.");
+    }
+    if (baseUrl) {
+      let parsed;
+      try {
+        parsed = new URL(baseUrl);
+      } catch (_) {
+        throw new Error("Informe uma URL base v\xE1lida.");
+      }
+      const local = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+      if (parsed.protocol !== "https:" && !(local && parsed.protocol === "http:")) {
+        throw new Error("Use HTTPS, exceto para Ollama em localhost.");
+      }
+    }
+    const makeId = typeof idFactory === "function" ? idFactory : () => `llm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    return {
+      id: String(input.id || makeId()),
+      providerId: provider.id,
+      baseUrl,
+      key: String(input.key || ""),
+      model,
+      trusted: input.trusted === true,
+      label: String(input.label || "").trim() || provider.label
+    };
+  }
   function parseDataValues(raw) {
     if (raw === null || typeof raw === "undefined" || raw === "") return [];
     try {
@@ -173,10 +287,50 @@
     if (typeof chrome !== "undefined" && chrome.runtime) return chrome;
     return null;
   }
+  function usesPromiseApi(api) {
+    return typeof browser !== "undefined" && api === browser;
+  }
   function getStorageArea() {
     const api = getRuntimeApi();
     if (!api || !api.storage || !api.storage.sync) return null;
     return api.storage.sync;
+  }
+  function getLocalStorageArea() {
+    const api = getRuntimeApi();
+    if (!api || !api.storage || !api.storage.local) return null;
+    return api.storage.local;
+  }
+  function sendRuntimeMessage(message) {
+    return new Promise((resolve, reject) => {
+      const api = getRuntimeApi();
+      if (!api || !api.runtime || typeof api.runtime.sendMessage !== "function") {
+        reject(new Error("chrome.runtime unavailable"));
+        return;
+      }
+      let settled = false;
+      const finish = (response) => {
+        if (settled) return;
+        settled = true;
+        const error = readLastError();
+        if (error) reject(new Error(error.message || String(error)));
+        else resolve(response);
+      };
+      const fail = (error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
+      try {
+        if (usesPromiseApi(api)) {
+          Promise.resolve(api.runtime.sendMessage(message)).then(finish, fail);
+          return;
+        }
+        const result = api.runtime.sendMessage(message, finish);
+        if (result && typeof result.then === "function") result.then(finish, fail);
+      } catch (error) {
+        fail(error);
+      }
+    });
   }
   function readLastError() {
     try {
@@ -184,6 +338,154 @@
     } catch (e) {
     }
     return null;
+  }
+  async function loadLlmProfiles() {
+    const response = await sendRuntimeMessage({ action: "llmProfilesList" });
+    if (!response || response.ok !== true) {
+      throw new Error(response && response.error || "N\xE3o foi poss\xEDvel carregar os perfis de IA.");
+    }
+    return Array.isArray(response.profiles) ? response.profiles : [];
+  }
+  async function saveLlmProfile(profile, options = {}) {
+    if (options.requestPermission !== false) {
+      await requestProfileHostPermission(profile && profile.baseUrl);
+    }
+    const response = await sendRuntimeMessage({ action: "llmSaveProfile", profile });
+    if (!response || response.ok !== true) {
+      throw new Error(response && response.error || "N\xE3o foi poss\xEDvel salvar o perfil de IA.");
+    }
+    return response.profile;
+  }
+  async function deleteLlmProfile(profileId) {
+    const response = await sendRuntimeMessage({
+      action: "llmDeleteProfile",
+      profileId: String(profileId || "")
+    });
+    if (!response || response.ok !== true) {
+      throw new Error(response && response.error || "N\xE3o foi poss\xEDvel remover o perfil de IA.");
+    }
+  }
+  function loadLlmAccessAudit() {
+    return new Promise((resolve) => {
+      const storage = getLocalStorageArea();
+      if (!storage) {
+        resolve([]);
+        return;
+      }
+      try {
+        storage.get({ llmAccessAudit: [] }, (items) => {
+          const error = readLastError();
+          if (error) {
+            console.warn("options io: could not read AI access audit", error);
+            resolve([]);
+            return;
+          }
+          resolve(Array.isArray(items?.llmAccessAudit) ? items.llmAccessAudit : []);
+        });
+      } catch (error) {
+        console.warn("options io: AI access audit read failed", error);
+        resolve([]);
+      }
+    });
+  }
+  function clearLlmAccessAudit() {
+    return new Promise((resolve, reject) => {
+      const storage = getLocalStorageArea();
+      if (!storage) {
+        resolve();
+        return;
+      }
+      try {
+        storage.remove("llmAccessAudit", () => {
+          const error = readLastError();
+          if (error) reject(new Error(error.message || String(error)));
+          else resolve();
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+  function loadLlmAiSettings() {
+    return new Promise((resolve) => {
+      const storage = getLocalStorageArea();
+      const defaults = {
+        activeProfileId: "",
+        maxIterations: 8,
+        maxDocs: 15,
+        maxContextTokens: 24e3,
+        keyword: "+gpt",
+        inlineEnabled: false,
+        systemInstruction: ""
+      };
+      if (!storage) {
+        resolve(defaults);
+        return;
+      }
+      storage.get({ llmAiSettings: defaults }, (items) => {
+        resolve({ ...defaults, ...items?.llmAiSettings || {} });
+      });
+    });
+  }
+  function saveLlmAiSettings(settings) {
+    return new Promise((resolve, reject) => {
+      const storage = getLocalStorageArea();
+      if (!storage) {
+        reject(new Error("chrome.storage.local indispon\xEDvel"));
+        return;
+      }
+      storage.set({ llmAiSettings: settings }, () => {
+        const error = readLastError();
+        if (error) reject(new Error(error.message || String(error)));
+        else resolve(settings);
+      });
+    });
+  }
+  function requestProfileHostPermission(baseUrl) {
+    return requestProfileHostPermissions(baseUrl ? [baseUrl] : []);
+  }
+  function requestProfileHostPermissions(baseUrls) {
+    const origins = [];
+    try {
+      (Array.isArray(baseUrls) ? baseUrls : []).forEach((baseUrl) => {
+        if (!baseUrl) return;
+        const parsed = new URL(baseUrl);
+        const origin = `${parsed.protocol}//${parsed.host}/*`;
+        if (!origins.includes(origin)) origins.push(origin);
+      });
+    } catch (_) {
+      return Promise.reject(new Error("A URL base do provedor de IA \xE9 inv\xE1lida."));
+    }
+    if (origins.length === 0) return Promise.resolve(true);
+    const api = getRuntimeApi();
+    const permissions = api && api.permissions;
+    if (!permissions || typeof permissions.request !== "function") return Promise.resolve(true);
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = (granted) => {
+        if (settled) return;
+        settled = true;
+        const error = readLastError();
+        if (error) reject(new Error(error.message || String(error)));
+        else if (!granted) reject(new Error("A permiss\xE3o para acessar o provedor n\xE3o foi concedida."));
+        else resolve(true);
+      };
+      const fail = (error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
+      try {
+        if (usesPromiseApi(api)) {
+          Promise.resolve(permissions.request({ origins })).then(finish, fail);
+          return;
+        }
+        const result = permissions.request({ origins }, finish);
+        if (result && typeof result.then === "function") result.then(finish, fail);
+      } catch (error) {
+        fail(error);
+      }
+    });
   }
   function loadDataValues() {
     return new Promise((resolve) => {
@@ -293,6 +595,7 @@
     "options-editor-text",
     "options-tree-view",
     "options-database",
+    "options-ai-providers",
     "options-complements"
   ];
   var GENERAL_PANEL_IDS = [
@@ -305,6 +608,9 @@
     tabsActive: 0,
     tabsSearchMode: false
   };
+  var loadedAiProfileIds = /* @__PURE__ */ new Set();
+  var loadedAiAccessAudit = [];
+  var loadedAiSettings = {};
   function $all(sel, root) {
     return Array.from((root || document).querySelectorAll(sel));
   }
@@ -446,13 +752,244 @@
     });
     return { profiles, incomplete };
   }
+  function aiElement(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (typeof text === "string") element.textContent = text;
+    return element;
+  }
+  function aiField(labelText, input, wide) {
+    const wrapper = aiElement(
+      "div",
+      "seipro-options-ai-field" + (wide ? " seipro-options-ai-field--wide" : "")
+    );
+    const label = aiElement("label", "", labelText);
+    label.appendChild(input);
+    wrapper.append(label);
+    return wrapper;
+  }
+  function updateAiEmptyState() {
+    const empty = document.getElementById("seipro-options-ai-empty");
+    const host = document.getElementById("seipro-options-ai-profiles");
+    show(empty, Boolean(host && host.children.length === 0));
+  }
+  function setAiStatus(message, state) {
+    const status = document.getElementById("seipro-options-ai-status");
+    if (!status) return;
+    status.textContent = message || "";
+    if (state) status.dataset.state = state;
+    else status.removeAttribute("data-state");
+  }
+  function formatAuditDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value || "");
+    return new Intl.DateTimeFormat("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "medium"
+    }).format(date);
+  }
+  function renderAiAccessAudit(records = loadedAiAccessAudit) {
+    loadedAiAccessAudit = Array.isArray(records) ? records.slice() : [];
+    const body = document.getElementById("seipro-options-ai-audit-body");
+    const empty = document.getElementById("seipro-options-ai-audit-empty");
+    if (!body) return;
+    body.replaceChildren();
+    const recent = loadedAiAccessAudit.slice().reverse();
+    show(empty, recent.length === 0);
+    recent.forEach((record) => {
+      const row = document.createElement("tr");
+      const level = record.accessLevelVerified === false ? "N\xE3o verificado" : record.accessLevel === 2 ? "Sigiloso" : "Restrito";
+      [
+        formatAuditDate(record.timestamp),
+        record.documentNumber || "Documento atual",
+        level,
+        record.providerId || "",
+        record.model || ""
+      ].forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+  }
+  function applyAiSettings(settings = {}) {
+    loadedAiSettings = { ...settings };
+    const values = {
+      "seipro-options-ai-max-iterations": settings.maxIterations,
+      "seipro-options-ai-max-docs": settings.maxDocs,
+      "seipro-options-ai-max-context": settings.maxContextTokens,
+      "seipro-options-ai-keyword": settings.keyword || "+gpt",
+      "seipro-options-ai-system": settings.systemInstruction || ""
+    };
+    Object.entries(values).forEach(([id, value]) => {
+      const field = document.getElementById(id);
+      if (field) field.value = value ?? "";
+    });
+    const inline = document.getElementById("seipro-options-ai-inline");
+    if (inline) inline.checked = settings.inlineEnabled === true;
+  }
+  function collectAiSettings() {
+    const number = (id, fallback, min, max) => {
+      const value = Number(document.getElementById(id)?.value);
+      return Number.isFinite(value) ? Math.min(max, Math.max(min, Math.round(value))) : fallback;
+    };
+    return {
+      ...loadedAiSettings,
+      maxIterations: number("seipro-options-ai-max-iterations", 8, 1, 20),
+      maxDocs: number("seipro-options-ai-max-docs", 15, 0, 50),
+      maxContextTokens: number("seipro-options-ai-max-context", 24e3, 1e3, 1e5),
+      keyword: document.getElementById("seipro-options-ai-keyword")?.value.trim() || "+gpt",
+      inlineEnabled: document.getElementById("seipro-options-ai-inline")?.checked === true,
+      systemInstruction: document.getElementById("seipro-options-ai-system")?.value.trim() || ""
+    };
+  }
+  function createAiProfileRow(profile = {}) {
+    const host = document.getElementById("seipro-options-ai-profiles");
+    if (!host) return null;
+    const row = aiElement("fieldset", "seipro-options-ai-profile");
+    row.dataset.profileId = profile.id || "";
+    row.dataset.hasKey = profile.hasKey === true ? "true" : "false";
+    const legend = aiElement("legend", "", profile.label || "Novo perfil de IA");
+    const grid = aiElement("div", "seipro-options-ai-grid");
+    const provider = aiElement("select", "seipro-options-ai-provider");
+    provider.dataset.aiField = "providerId";
+    AI_PROVIDER_OPTIONS.forEach((item) => {
+      const option = aiElement("option", "", item.label);
+      option.value = item.id;
+      provider.appendChild(option);
+    });
+    provider.value = profile.providerId || "openai";
+    const label = aiElement("input");
+    label.type = "text";
+    label.dataset.aiField = "label";
+    label.value = profile.label || "";
+    label.placeholder = "Ex.: OpenAI pessoal";
+    const baseUrl = aiElement("input");
+    baseUrl.type = "url";
+    baseUrl.dataset.aiField = "baseUrl";
+    baseUrl.value = profile.baseUrl || "";
+    baseUrl.placeholder = "https://api.exemplo.com";
+    const model = aiElement("input");
+    model.type = "text";
+    model.dataset.aiField = "model";
+    model.value = profile.model || "";
+    model.placeholder = "Ex.: gpt-4.1-mini";
+    const key = aiElement("input");
+    key.type = "password";
+    key.dataset.aiField = "key";
+    key.autocomplete = "new-password";
+    key.value = profile.key || "";
+    key.placeholder = profile.hasKey ? "Deixe em branco para manter a chave salva" : "Chave de API (opcional para Ollama)";
+    const trusted = aiElement("input");
+    trusted.type = "checkbox";
+    trusted.dataset.aiField = "trusted";
+    trusted.checked = profile.trusted === true;
+    const applyDefaults = () => {
+      const defaults = getAiProviderDefaults(provider.value);
+      baseUrl.value = defaults.baseUrl;
+      model.value = defaults.model;
+    };
+    provider.addEventListener("change", applyDefaults);
+    if (!profile.id) applyDefaults();
+    label.addEventListener("input", () => {
+      legend.textContent = label.value.trim() || "Novo perfil de IA";
+    });
+    grid.append(
+      aiField("Provedor", provider),
+      aiField("Nome do perfil", label),
+      aiField("URL base", baseUrl, true),
+      aiField("Modelo", model),
+      aiField("Chave de API", key)
+    );
+    const actions = aiElement("div", "seipro-options-ai-actions");
+    const trustedLabel = aiElement("label", "seipro-options-ai-trusted");
+    trustedLabel.append(trusted, document.createTextNode("Confiar neste endpoint local ou gateway institucional"));
+    const remove = aiElement("button", "seipro-options-ai-remove", "Remover perfil");
+    remove.type = "button";
+    remove.addEventListener("click", () => {
+      row.remove();
+      updateAiEmptyState();
+      setAiStatus("Clique em Salvar para confirmar a remo\xE7\xE3o.", "");
+      applyOptionsSearchFilter();
+    });
+    actions.append(trustedLabel, remove);
+    row.append(legend, grid, actions);
+    host.appendChild(row);
+    updateAiEmptyState();
+    return row;
+  }
+  function legacyDatabaseProfileToAiProfile(profile, index) {
+    const providerId = String(profile.baseTipo || "").toLowerCase();
+    if (!isAiProviderId(providerId)) return null;
+    const defaults = getAiProviderDefaults(providerId);
+    return {
+      id: `llm-options-legacy-${providerId}-${index}`,
+      providerId,
+      label: profile.baseName || "",
+      baseUrl: profile.URL_API || defaults.baseUrl,
+      model: profile.model || profile.MODEL || defaults.model,
+      key: profile.KEY_USER || profile.API_KEY || "",
+      trusted: profile.trusted === true || providerId === "ollama"
+    };
+  }
+  function collectAiProfiles() {
+    const profiles = [];
+    const errors = [];
+    $all(".seipro-options-ai-profile").forEach((row, index) => {
+      $all("[data-ai-field]", row).forEach((field) => field.classList.remove("inputError"));
+      const read = (name) => row.querySelector('[data-ai-field="' + name + '"]');
+      const input = {
+        id: row.dataset.profileId || "",
+        providerId: read("providerId").value,
+        label: read("label").value,
+        baseUrl: read("baseUrl").value,
+        model: read("model").value,
+        key: read("key").value,
+        trusted: read("trusted").checked
+      };
+      try {
+        profiles.push(normalizeAiProfileDraft(input));
+      } catch (error) {
+        errors.push(`Perfil ${index + 1}: ${error.message}`);
+        const field = error.message.includes("modelo") ? read("model") : error.message.includes("URL") || error.message.includes("HTTPS") ? read("baseUrl") : read("providerId");
+        if (field) field.classList.add("inputError");
+      }
+    });
+    return { profiles, errors };
+  }
+  async function saveAiProfiles(profiles) {
+    await requestProfileHostPermissions(profiles.map((profile) => profile.baseUrl));
+    const saved = [];
+    for (const profile of profiles) {
+      saved.push(await saveLlmProfile(profile, { requestPermission: false }));
+    }
+    const currentIds = new Set(saved.map((profile) => profile.id));
+    for (const profileId of loadedAiProfileIds) {
+      if (!currentIds.has(profileId)) await deleteLlmProfile(profileId);
+    }
+    loadedAiProfileIds = currentIds;
+  }
   async function saveOptions(reload) {
     const { profiles } = collectProfiles();
+    const ai = collectAiProfiles();
+    if (ai.errors.length > 0) {
+      setAiStatus(ai.errors.join(" "), "error");
+      return;
+    }
     const configGeral = collectConfigGeral();
     const payload = buildDataValuesPayload(profiles, configGeral);
     const serialized = serializeDataValues(payload);
+    const aiSettings = collectAiSettings();
     try {
+      setAiStatus(ai.profiles.length ? "Salvando perfis de IA\u2026" : "", "");
+      await Promise.all([
+        saveAiProfiles(ai.profiles),
+        saveLlmAiSettings(aiSettings)
+      ]);
+      loadedAiSettings = aiSettings;
       await saveDataValues(serialized);
+      setAiStatus("Perfis de IA salvos.", "success");
       const notif = document.getElementById("itemConfigGeral_notificacaonovoprocesso");
       syncProcessNotificationOption(notif ? notif.checked : false);
       if (reload === true) {
@@ -694,9 +1231,19 @@
     applyDependentVisibility();
   }
   async function restoreOptions() {
-    const raw = await loadDataValues();
+    const [raw, aiProfiles, accessAudit, aiSettings] = await Promise.all([
+      loadDataValues(),
+      loadLlmProfiles().catch((error) => {
+        setAiStatus(error.message, "error");
+        return [];
+      }),
+      loadLlmAccessAudit(),
+      loadLlmAiSettings()
+    ]);
     const dataValues = parseDataValues(raw);
-    const profiles = pickProfiles(dataValues);
+    const storedDatabaseProfiles = pickProfiles(dataValues);
+    const profiles = storedDatabaseProfiles.filter((profile) => !isAiProviderId(profile.baseTipo));
+    const legacyAiProfiles = storedDatabaseProfiles.filter((profile) => isAiProviderId(profile.baseTipo)).map(legacyDatabaseProfileToAiProfile).filter(Boolean);
     const configGeral = pickConfigGeral(dataValues);
     for (let i = 0; i < profiles.length; i++) {
       if (i > 0) addProfile();
@@ -712,6 +1259,22 @@
       }, 500);
     }
     applyConfigGeralToUi(configGeral);
+    const aiHost = document.getElementById("seipro-options-ai-profiles");
+    if (aiHost) aiHost.textContent = "";
+    const mergedAiProfiles = aiProfiles.slice();
+    const knownAiEndpoints = new Set(aiProfiles.map((profile) => `${profile.providerId}|${profile.baseUrl}`));
+    legacyAiProfiles.forEach((profile) => {
+      const key = `${profile.providerId}|${profile.baseUrl}`;
+      if (!knownAiEndpoints.has(key)) {
+        mergedAiProfiles.push(profile);
+        knownAiEndpoints.add(key);
+      }
+    });
+    loadedAiProfileIds = new Set(aiProfiles.map((profile) => profile.id));
+    mergedAiProfiles.forEach((profile) => createAiProfileRow(profile));
+    renderAiAccessAudit(accessAudit);
+    applyAiSettings(aiSettings);
+    updateAiEmptyState();
     addActionsProfile();
     applyOptionsSearchFilter();
   }
@@ -790,7 +1353,7 @@
     const hasQuery = query !== "";
     const empty = document.getElementById("options-search-empty");
     let visibleMatches = 0;
-    const tabMatches = [false, false, false, false, false];
+    const tabMatches = [false, false, false, false, false, false];
     clearOptionsSearchFilterClasses();
     setOptionsTabsSearchMode(hasQuery);
     if (!hasQuery) {
@@ -802,12 +1365,15 @@
       { selector: "#options-editor-text table.tableZebra", index: 1 },
       { selector: "#options-tree-view table.tableZebra", index: 2 },
       { selector: "#options-profile .options-table", index: 3 },
-      { selector: "#options-complements table.tableZebra", index: 4 }
+      { selector: "#options-ai-providers .seipro-options-ai-profile", index: 4 },
+      { selector: "#options-complements table.tableZebra", index: 5 }
     ];
     tabDefinitions.forEach((definition) => {
       $all(definition.selector).forEach((table) => {
         let tableHasMatch = false;
-        $all("tr", table).forEach((row) => {
+        const rows = $all("tr", table);
+        const candidates = rows.length > 0 ? rows : [table];
+        candidates.forEach((row) => {
           if (row.id === "footer") return;
           if (row.offsetParent === null && !row.classList.contains("options-search-hidden")) {
           }
@@ -863,8 +1429,11 @@
     const exportBtn = document.getElementById("export");
     const fileInput = document.getElementById("selectFiles");
     const newBtn = document.getElementById("new");
+    const addAiProfileBtn = document.getElementById("seipro-options-ai-add");
     const searchInput = document.getElementById("options-search-input");
     const searchClear = document.getElementById("options-search-clear");
+    const auditDownload = document.getElementById("seipro-options-ai-audit-download");
+    const auditClear = document.getElementById("seipro-options-ai-audit-clear");
     if (importBtn) {
       importBtn.addEventListener("click", () => {
         if (fileInput) fileInput.click();
@@ -877,6 +1446,29 @@
       loadFile();
     });
     if (newBtn) newBtn.addEventListener("click", () => addProfile());
+    if (addAiProfileBtn) {
+      addAiProfileBtn.addEventListener("click", () => {
+        createAiProfileRow();
+        setAiStatus("", "");
+        applyOptionsSearchFilter();
+      });
+    }
+    if (auditDownload) {
+      auditDownload.addEventListener("click", () => {
+        downloadJsonFile(
+          `sei-pro-auditoria-ia-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`,
+          JSON.stringify(loadedAiAccessAudit, null, 2)
+        );
+      });
+    }
+    if (auditClear) {
+      auditClear.addEventListener("click", async () => {
+        if (!window.confirm("Limpar o hist\xF3rico local de autoriza\xE7\xF5es de envio para IA?")) return;
+        await clearLlmAccessAudit();
+        renderAiAccessAudit([]);
+        setAiStatus("Hist\xF3rico local de autoriza\xE7\xF5es removido.", "success");
+      });
+    }
     $all(".save").forEach((btn) => {
       btn.addEventListener("click", () => {
         saveOptions(true);

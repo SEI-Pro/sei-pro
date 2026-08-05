@@ -33,6 +33,7 @@
             <li><a href="#options-editor-text"><i class="fas fa-keyboard"></i> Editor de Texto</a></li>
             <li><a href="#options-tree-view"><i class="fas fa-sitemap"></i> &Aacute;rvore e Visualiza&ccedil;&atilde;o de Documentos</a></li>
             <li><a href="#options-database"><i class="fas fa-database"></i> Base de Dados</a></li>
+            <li><a href="#options-ai-providers"><i class="fas fa-robot"></i> Provedores de IA</a></li>
             <li><a href="#options-complements"><i class="fas fa-puzzle-piece"></i> Complementos</a></li>
         </ul>
         <div id="options-process-control"></div>
@@ -64,10 +65,9 @@
                         <td>
                             <select id="sca-baseTipo-0" class="sca-baseTipo option-ref input-config-pro" data-name-input="baseTipo" style="width: 100%;" required>
                                 <option value="atividades">Atividades</option>
+                                <option value="projetos">Projetos</option>
                                 <!-- <option value="formularios">Formul&aacute;rios</option> -->
                                 <!-- <option value="processos">Processos</option> -->
-                                <option value="openai">Chat GPT (Open AI)</option>
-                                <option value="gemini">Gemini (Google)</option>
                             </select>
                         </td>
                     </tr>
@@ -78,6 +78,8 @@
                         <td>
                             <select id="sca-conexaoTipo-0" class="sca-conexaoTipo option-ref input-config-pro" data-name-input="conexaoTipo" style="width: 100%;" required>
                                 <option value="api">Servidor Web (API)</option>
+                                <option value="googleapi">Google API</option>
+                                <option value="sheets">Google Sheets</option>
                             </select>
                         </td>
                     </tr>
@@ -139,6 +141,74 @@
                     </td>
                 </tr>
             </table>
+        </div>
+        <div id="options-ai-providers">
+            <div class="seipro-options-ai-heading">
+                <div>
+                    <h2>Provedores de IA</h2>
+                    <p>Cadastre suas próprias chaves de API. As chaves ficam somente neste navegador e não são sincronizadas.</p>
+                </div>
+                <button id="seipro-options-ai-add" type="button"><i class="fas fa-plus"></i> Adicionar perfil</button>
+            </div>
+            <p class="seipro-options-ai-note">
+                Para Cursor, gateways institucionais, OpenRouter ou LiteLLM, use “Compatível com OpenAI” e informe a URL base e o modelo.
+            </p>
+            <div id="seipro-options-ai-status" class="seipro-options-ai-status" aria-live="polite"></div>
+            <fieldset class="seipro-options-ai-runtime">
+                <legend>Limites e comportamento</legend>
+                <div class="seipro-options-ai-grid">
+                    <label class="seipro-options-ai-field">Máximo de rodadas por geração
+                        <input id="seipro-options-ai-max-iterations" type="number" min="1" max="20" value="8">
+                    </label>
+                    <label class="seipro-options-ai-field">Máximo total de documentos lidos
+                        <input id="seipro-options-ai-max-docs" type="number" min="0" max="50" value="15">
+                    </label>
+                    <label class="seipro-options-ai-field">Limite aproximado de tokens de contexto
+                        <input id="seipro-options-ai-max-context" type="number" min="1000" max="100000" step="1000" value="24000">
+                    </label>
+                    <label class="seipro-options-ai-field">Palavra-chave no editor
+                        <input id="seipro-options-ai-keyword" type="text" maxlength="20" value="+gpt">
+                    </label>
+                    <label class="seipro-options-ai-trusted">
+                        <input id="seipro-options-ai-inline" type="checkbox">
+                        Ativar geração por palavra-chave no editor
+                    </label>
+                    <label class="seipro-options-ai-field seipro-options-ai-field--wide">Instrução institucional adicional
+                        <textarea id="seipro-options-ai-system" rows="4" placeholder="Opcional. É acrescentada às regras padrão de redação e segurança."></textarea>
+                    </label>
+                </div>
+            </fieldset>
+            <div id="seipro-options-ai-profiles"></div>
+            <p id="seipro-options-ai-empty" class="seipro-options-ai-empty">
+                Nenhum perfil configurado. Adicione um perfil para usar as ferramentas de IA no editor.
+            </p>
+            <section class="seipro-options-ai-audit" aria-labelledby="seipro-options-ai-audit-title">
+                <div class="seipro-options-ai-audit-heading">
+                    <div>
+                        <h3 id="seipro-options-ai-audit-title">Histórico local de autorizações</h3>
+                        <p>Registra apenas data, documento, nível de acesso e destino. O conteúdo dos documentos não é armazenado.</p>
+                    </div>
+                    <div class="seipro-options-ai-audit-actions">
+                        <button id="seipro-options-ai-audit-download" type="button">Baixar histórico</button>
+                        <button id="seipro-options-ai-audit-clear" type="button">Limpar histórico</button>
+                    </div>
+                </div>
+                <div class="seipro-options-ai-audit-table-wrap">
+                    <table class="seipro-options-ai-audit-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Data e hora</th>
+                                <th scope="col">Documento</th>
+                                <th scope="col">Acesso</th>
+                                <th scope="col">Provedor</th>
+                                <th scope="col">Modelo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="seipro-options-ai-audit-body"></tbody>
+                    </table>
+                </div>
+                <p id="seipro-options-ai-audit-empty">Nenhuma autorização registrada neste navegador.</p>
+            </section>
         </div>
         <div id="options-complements">
             <table class="tableZebra">

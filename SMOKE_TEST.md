@@ -49,10 +49,20 @@ Registre data, versão do SEI e navegador.
 
 ### 3. Editor de documentos (`editor_montar` — CKEditor)
 - [ ] Barra de ferramentas SEI Pro carrega (estilos de tabela, copiar formatação).
-- [ ] Auto-save dispara e restaura conteúdo.
+- [ ] Rascunhos locais são salvos; comparação, escolha de seções e restauração funcionam.
 - [ ] Links de legislação / notas de rodapé / QR code funcionam.
-- [ ] Ferramentas de IA abrem e respondem (revisão/escrita/ditado).
+- [ ] Ferramentas de IA abrem, recebem a árvore do processo e respondem em streaming.
 - [ ] Atalhos de teclado respondem.
+- [ ] Parar cancela a geração; aceitar insere o resultado; descartar não altera a minuta.
+- [ ] Documento restrito/sigiloso ou com acesso desconhecido exige confirmação; endpoint confiável confirma uma vez por sessão.
+- [ ] O histórico local de autorizações aparece em Configurações e pode ser baixado/limpo.
+- [ ] Checklist aponta tags, referências, citações, campos vazios e revisões; “Ir ao ponto” localiza a pendência.
+- [ ] `Ctrl+K` abre a paleta, pesquisa, favorita e executa ações de todas as categorias.
+- [ ] “Aceitar minhas” aceita somente revisões do usuário atual.
+- [ ] Inserção de dados do processo pesquisa sem acento e atualiza a prévia.
+- [ ] Trechos da unidade salvam, substituem placeholders e inserem texto escapado.
+- [ ] Comparação com documento anterior destaca inclusões e exclusões.
+- [ ] Abrir o mesmo documento em duas abas exibe aviso de edição concorrente.
 
 ### 4. Visualização de documento (`init_visualizacao.js` / `_html.js`)
 - [ ] Numeração de parágrafos aparece.
@@ -81,20 +91,44 @@ Registre data, versão do SEI e navegador.
 | 5 — Build | Carregar `dist/` **após `npm run build`**; conferir que o bundle carrega antes do jQuery sem erro de ordem. |
 | 6 — Feature folders | Exercitar a feature movida; validar que os globais legados (`window.<fn>`) ainda existem via alias. |
 
-## Risco conhecido a vigiar — fachadas no mundo MAIN
+## Risco conhecido a vigiar — fronteira CKEditor/IA
 
-O core roda em dois mundos (isolado + MAIN da página). `SeiPro.core.messaging`/`storage`/
-`net` **rejeitam no mundo MAIN** (não há `chrome.*` lá). Fique atento no console a erros
-do tipo:
+O CKEditor 4 pertence à página e, por isso, o adaptador do editor é injetado no mundo
+`MAIN`. A IA, os perfis, as chaves, o armazenamento e as chamadas de modelo permanecem no
+mundo isolado. A ponte `editor/ai-bridge.js` aceita somente duas operações:
+`snapshot` (minuta, seleção e instantâneo serializável do processo) e `insertHtml`.
 
-> `SeiPro.messaging: runtime de extensão indisponível (provável mundo MAIN). Ação "..." não pôde ser entregue ao service worker.`
+Não há shim de `chrome.runtime`, proxy de storage, chamada LLM ou porta do service worker
+no mundo `MAIN`. Os testes `editor-loader-bridge`, `page-runtime` e `ai-bridge` bloqueiam
+regressões dessa fronteira. Fique atento a:
 
-Se aparecer, significa que um arquivo carregado via `$.getScript` tentou usar storage/SW
-no mundo errado — anote **qual ação** e **qual feature** disparou; é o gatilho para
-implementar a ponte MAIN→isolado (com validação de origem). Ver `DEVELOPMENT.md`
-(princípio isolated-first e `legacy-inline-bridge`).
+> `A ponte isolada do editor ainda não está disponível`
+
+que indica ordem de carga ou contexto incorreto. Qualquer nova operação nessa ponte exige
+revisão de privacidade e teste estrutural; não se deve transportar chaves, perfis completos
+ou APIs do navegador.
 
 ## Execuções registradas
+
+### 2026-07-30 · Chrome (macOS) · SEI PRF produção — Editor v2.2.0 — ⚠️ PARCIAL
+Build atual carregado por refresh do editor, sem alterar nem salvar a minuta. Validado:
+- toolbar SEI Pro e seleção correta da seção CKEditor ativa;
+- `Cmd+K`, busca da paleta e execução de comando da toolbar (diálogo de QR aberto e
+  cancelado);
+- painel de trechos vazio, painel de rascunhos vazio e seletor de documento anterior;
+- checklist detectando quatro marcadores do modelo e oferecendo “Ir ao ponto”;
+- nenhum erro novo no console após as correções encontradas durante a rodada.
+
+A rodada revelou e corrigiu quatro regressões, agora cobertas por Vitest: seleção fora de
+`<p>` no manipulador de teclado, comando da paleta escolhendo a primeira toolbar desabilitada,
+ações da toolbar sem delegação após a remoção dos handlers inline e painel de trechos
+recebendo o repositório de rascunhos.
+
+Pendente nesta rodada: recarregar o manifesto da extensão no Chrome e repetir IA/streaming,
+consentimento de documento protegido, auditoria e modo inline. O navegador automatizado não
+permite controlar `chrome://extensions`; o DOM confirmou apenas a metade `MAIN` da ponte
+(`mainInstalled=true`, sem `isolatedInstalled`). Também permanecem pendentes os fluxos que
+alteram a minuta (salvar/inserir/restaurar) e o teste em Firefox.
 
 ### 2026-07-29 · Chrome (macOS) · SEI 5.x — Projetos (Gantt) v2.2.0 — ✅ PASSOU
 Painel local-first na home com `gerenciarprojetos`; demo seed; criar/editar etapa; drag com confirmação; portfolio / filtro / export JSON. Console sem Google Sheets.
