@@ -738,8 +738,24 @@
   function assertFetchResponse(response) {
     if (!response) throw new Error("LLM provider returned no response");
     if (response.ok === false || response.status != null && response.status >= 400) {
-      throw new Error(`LLM provider request failed with status ${response.status || "unknown"}`);
+      const status = response.status || "unknown";
+      if (Number(status) === 429) {
+        const retryAfter = response.headers?.get?.("retry-after");
+        const wait = retryAfter ? ` Aguarde ${formatRetryAfter(retryAfter)} antes de tentar novamente.` : "";
+        throw new Error(`O provedor de IA atingiu o limite de requisi\xE7\xF5es (429).${wait}`);
+      }
+      if (Number(status) === 401 || Number(status) === 403) {
+        throw new Error(`O provedor de IA recusou a autentica\xE7\xE3o (${status}). Verifique a chave e o perfil selecionado.`);
+      }
+      throw new Error(`O provedor de IA recusou a solicita\xE7\xE3o (${status}).`);
     }
+  }
+  function formatRetryAfter(value) {
+    const seconds = Number(value);
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return seconds < 60 ? `${seconds} segundos` : `${Math.ceil(seconds / 60)} minutos`;
+    }
+    return "alguns instantes";
   }
   function createFetchTransport(profile) {
     function requestOptions(outgoing) {

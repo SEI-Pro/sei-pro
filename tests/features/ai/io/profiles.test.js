@@ -2,7 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     legacyProfileToLlmProfile,
-    listProfiles
+    listProfiles,
+    redactLegacyAiCredentials
 } from '../../../../src/features/ai/io/profiles.js';
 
 describe('AI profile legacy migration', () => {
@@ -29,6 +30,21 @@ describe('AI profile legacy migration', () => {
         });
     });
 
+    it('redacts only credentials from legacy AI entries', () => {
+        const original = [
+            { baseTipo: 'openai', URL_API: 'https://api.openai.com', KEY_USER: 'secret', model: 'gpt' },
+            { baseTipo: 'atividades', URL_API: 'https://internal.example', KEY_USER: 'activity-secret' }
+        ];
+
+        expect(redactLegacyAiCredentials(original)).toEqual({
+            changed: true,
+            dataValues: [
+                { baseTipo: 'openai', URL_API: 'https://api.openai.com', model: 'gpt' },
+                { baseTipo: 'atividades', URL_API: 'https://internal.example', KEY_USER: 'activity-secret' }
+            ]
+        });
+    });
+
     it('migrates legacy sync profiles once and returns safe profiles', async () => {
         const local = {};
         const storedProfiles = [];
@@ -38,6 +54,10 @@ describe('AI profile legacy migration', () => {
                 baseName: 'OpenAI antiga',
                 URL_API: 'https://api.openai.com',
                 KEY_USER: 'secret'
+            }, {
+                baseTipo: 'atividades',
+                URL_API: 'https://internal.example',
+                KEY_USER: 'activity-secret'
             }])
         };
         window.SeiPro = {
@@ -45,7 +65,8 @@ describe('AI profile legacy migration', () => {
                 storage: {
                     getLocal: async (defaults) => ({ ...defaults, ...local }),
                     setLocal: async (items) => Object.assign(local, items),
-                    getSync: async (defaults) => ({ ...defaults, ...sync })
+                    getSync: async (defaults) => ({ ...defaults, ...sync }),
+                    setSync: async (items) => Object.assign(sync, items)
                 },
                 messaging: {
                     sendMessage: async (message) => {
@@ -80,7 +101,14 @@ describe('AI profile legacy migration', () => {
         });
         expect(second).toHaveLength(1);
         expect(storedProfiles).toHaveLength(1);
-        expect(local.llmProfilesLegacyMigrationVersion).toBe(1);
+        expect(local.llmProfilesLegacyMigrationVersion).toBe(2);
+        const cleanedSyncValues = JSON.parse(sync.dataValues);
+        expect(cleanedSyncValues[0]).not.toHaveProperty('KEY_USER');
+        expect(cleanedSyncValues[1]).toEqual({
+            baseTipo: 'atividades',
+            URL_API: 'https://internal.example',
+            KEY_USER: 'activity-secret'
+        });
     });
 
     it('skips the legacy sync read in the page-injected editor runtime', async () => {

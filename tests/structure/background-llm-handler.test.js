@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  createFetchTransport,
   isAllowedLlmUrl,
   resolveLlmRequest
 } from '../../src/background/llm-handler.js';
@@ -86,5 +87,23 @@ describe('background LLM handler', () => {
     await expect(resolveLlmRequest({
       profile: { id: 'custom', baseUrl: 'https://llm.example.test' }
     }, browserApi)).rejects.toThrow('not trusted');
+  });
+
+  it('explains provider rate limits and retry timing', async () => {
+    const previousFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: { get: () => '20' }
+    });
+
+    try {
+      await expect(createFetchTransport({ baseUrl: 'https://api.openai.com' }).postStream({
+        url: 'https://api.openai.com/v1/chat/completions',
+        body: {}
+      })).rejects.toThrow('Aguarde 20 segundos');
+    } finally {
+      globalThis.fetch = previousFetch;
+    }
   });
 });

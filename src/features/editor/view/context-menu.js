@@ -203,7 +203,7 @@ export function menuPlataformAI(editor) {
     if (editor.contextMenu && typeof editor.getMenuItem('plataform_ai') === 'undefined') {
         editor.addMenuGroup('openaiGroup', -10 * 3);
         editor.addMenuItem('plataform_ai', {
-            label: 'Intelig\u00EAncia artificial',
+            label: 'Abrir Assistente IA',
             icon: URL_SPRO + 'icons/editor/ferramentasia.png',
             command: 'plataform_ai',
             group: 'openaiGroup'

@@ -51,9 +51,10 @@ Registre data, versão do SEI e navegador.
 - [ ] Barra de ferramentas SEI Pro carrega (estilos de tabela, copiar formatação).
 - [ ] Rascunhos locais são salvos; comparação, escolha de seções e restauração funcionam.
 - [ ] Links de legislação / notas de rodapé / QR code funcionam.
-- [ ] Ferramentas de IA abrem, recebem a árvore do processo e respondem em streaming.
+- [ ] O botão **Assistente IA** está visível na barra; abre um painel lateral de conversa, com ações rápidas para analisar processo, redigir despacho, deferir, indeferir e revisar minuta.
+- [ ] O assistente recebe a árvore do processo, mostra as etapas de leitura e responde em streaming; uma nova instrução mantém a conversa aberta.
 - [ ] Atalhos de teclado respondem.
-- [ ] Parar cancela a geração; aceitar insere o resultado; descartar não altera a minuta.
+- [ ] Parar interrompe também a preparação do contexto e as leituras pendentes; **Inserir no documento** só grava a minuta após clique explícito.
 - [ ] Documento restrito/sigiloso ou com acesso desconhecido exige confirmação; endpoint confiável confirma uma vez por sessão.
 - [ ] O histórico local de autorizações aparece em Configurações e pode ser baixado/limpo.
 - [ ] Checklist aponta tags, referências, citações, campos vazios e revisões; “Ir ao ponto” localiza a pendência.

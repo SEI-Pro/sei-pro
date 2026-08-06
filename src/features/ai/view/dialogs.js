@@ -291,6 +291,7 @@ function input(type, className, value = '') {
     const control = element('input', className);
     control.type = type;
     control.value = value;
+    control.autocomplete = type === 'password' ? 'new-password' : 'off';
     return control;
 }
 

@@ -139,10 +139,13 @@ export function htmlButton(status) {
     const htmlButton =
         (restrictConfigValue('ferramentasia') ?
             api.htmlButtonPro(
-                'getPlataformAIButtom',
+                'getPlataformAIButtom seipro-ai-toolbar-button',
                 'openai',
-                'Inserir texto de intelig\u00EAncia artificial',
-                icon16baseOpenAI
+                'Abrir Assistente IA',
+                icon16baseOpenAI,
+                '',
+                '',
+                'Assistente IA'
             ) : '') +
         api.htmlButtonPro(
             'importDocButtom',
@@ -309,10 +312,10 @@ export function htmlButton(status) {
         afterImage: htmlButtonAfterImage
     };
 }
-export const htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = '', important = '') => `
+export const htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = '', important = '', label = title) => `
     <a class="${classClick} cke_iconPro cke_button cke_buttonPro cke_button_off" href="#" title="${title}" aria-label="${title}" role="button" hidefocus="true">
         <span class="cke_button_icon cke_button__${cke_class}_icon" style="background: url('${icon}') ${extraStyle} ${important}">&nbsp;</span>
-        <span class="cke_button_label" aria-hidden="false">${title}</span>
+        <span class="cke_button_label" aria-hidden="false">${label}</span>
     </a>`;
 api.htmlButton = htmlButton;
 api.htmlButtonPro = htmlButtonPro;

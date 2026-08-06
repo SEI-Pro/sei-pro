@@ -66,29 +66,79 @@ function loadLocalConfigScriptPro() {
         });
 }
 function loadConfigPro() {
+    function applyConfig(items) {
+        if (typeof items === 'undefined') return;
+        var safeDataValues = redactLegacyAISecrets(items.dataValues);
+        if (safeDataValues !== items.dataValues) {
+            try {
+                if (typeof browser === "undefined") {
+                    chrome.storage.sync.set({ dataValues: safeDataValues });
+                } else {
+                    browser.storage.sync.set({ dataValues: safeDataValues });
+                }
+            } catch (_) {
+                // The page copy is still redacted even if sync cleanup must be
+                // retried later by the profile migration.
+            }
+        }
+        clearLegacyAIPageProfiles();
+        localStorage.setItem('configBasePro', safeDataValues);
+        loadDataBaseProStorage({ dataValues: safeDataValues });
+        window.__SEI_PRO_CONFIG_READY__ = true;
+        window.dispatchEvent(new CustomEvent('sei-pro-config-ready'));
+    }
     if (typeof browser === "undefined") {
         chrome.storage.sync.get({
             dataValues: ''
         }, function(items) {  
-            if (typeof items !== 'undefined') {
-                localStorage.setItem('configBasePro', items.dataValues);
-                loadDataBaseProStorage(items);
-                window.__SEI_PRO_CONFIG_READY__ = true;
-                window.dispatchEvent(new CustomEvent('sei-pro-config-ready'));
-            }
+            applyConfig(items);
         });
     } else {
         browser.storage.sync.get({
             dataValues: ''
         }, function(items) {  
-            if (typeof items !== 'undefined') {
-                localStorage.setItem('configBasePro', items.dataValues);
-                loadDataBaseProStorage(items);
-                window.__SEI_PRO_CONFIG_READY__ = true;
-                window.dispatchEvent(new CustomEvent('sei-pro-config-ready'));
-            }
+            applyConfig(items);
         });
     }
+}
+
+function redactLegacyAISecrets(rawDataValues) {
+    if (!rawDataValues) return rawDataValues || '';
+    try {
+        var dataValues = typeof rawDataValues === 'string' ? JSON.parse(rawDataValues) : rawDataValues;
+        if (!Array.isArray(dataValues)) return rawDataValues;
+        var aiProviders = ['openai', 'anthropic', 'gemini', 'moonshot', 'ollama', 'openai_compatible'];
+        var secretFields = ['KEY_USER', 'API_KEY', 'key', 'apiKey', 'accessToken', 'refreshToken'];
+        var changed = false;
+        var safeValues = dataValues.map(function (entry) {
+            var provider = String(entry && (entry.baseTipo || entry.providerId) || '').toLowerCase();
+            if (!entry || typeof entry !== 'object' || aiProviders.indexOf(provider) === -1) return entry;
+            var safeEntry = Object.assign({}, entry);
+            secretFields.forEach(function (field) {
+                if (Object.prototype.hasOwnProperty.call(safeEntry, field)) {
+                    delete safeEntry[field];
+                    changed = true;
+                }
+            });
+            return safeEntry;
+        });
+        return changed ? JSON.stringify(safeValues) : (typeof rawDataValues === 'string' ? rawDataValues : JSON.stringify(rawDataValues));
+    } catch (_) {
+        return rawDataValues;
+    }
+}
+
+function clearLegacyAIPageProfiles() {
+    [
+        'configBasePro_openai',
+        'configBasePro_gemini',
+        'configBasePro_anthropic',
+        'configBasePro_moonshot',
+        'configBasePro_ollama',
+        'configBasePro_openai_compatible'
+    ].forEach(function (key) {
+        localStorage.removeItem(key);
+    });
 }
 function showAutoReportNoticePro() {
     function onGet(items) {

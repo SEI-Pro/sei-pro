@@ -10,7 +10,23 @@ const DEFAULTS = Object.freeze({
     openai_compatible: { baseUrl: '', model: '' }
 });
 const LEGACY_MIGRATION_KEY = 'llmProfilesLegacyMigrationVersion';
-const LEGACY_MIGRATION_VERSION = 1;
+const LEGACY_MIGRATION_VERSION = 2;
+const LEGACY_AI_SECRET_FIELDS = Object.freeze([
+    'KEY_USER',
+    'API_KEY',
+    'key',
+    'apiKey',
+    'accessToken',
+    'refreshToken'
+]);
+const LEGACY_PAGE_PROFILE_KEYS = Object.freeze([
+    ['openai', 'configBasePro_openai'],
+    ['gemini', 'configBasePro_gemini'],
+    ['anthropic', 'configBasePro_anthropic'],
+    ['moonshot', 'configBasePro_moonshot'],
+    ['ollama', 'configBasePro_ollama'],
+    ['openai_compatible', 'configBasePro_openai_compatible']
+]);
 
 export function providerDefaults(providerId) {
     return { ...(DEFAULTS[providerId] || DEFAULTS.openai) };
@@ -38,6 +54,29 @@ export function legacyProfileToLlmProfile(profile = {}, index = 0) {
         key: profile.KEY_USER || profile.API_KEY || profile.key || '',
         trusted: profile.trusted === true || providerId === 'ollama'
     });
+}
+
+/**
+ * Removes credentials only from legacy AI profile entries. Other legacy
+ * integrations (for example, activities and Sheets) are deliberately left
+ * untouched because they have separate migration paths.
+ */
+export function redactLegacyAiCredentials(dataValues) {
+    if (!Array.isArray(dataValues)) return { dataValues, changed: false };
+    let changed = false;
+    const redacted = dataValues.map(function (entry) {
+        const providerId = String(entry?.baseTipo || entry?.providerId || '').toLowerCase();
+        if (!entry || typeof entry !== 'object' || !PROVIDER_IDS.includes(providerId)) return entry;
+        const next = { ...entry };
+        LEGACY_AI_SECRET_FIELDS.forEach(function (field) {
+            if (Object.prototype.hasOwnProperty.call(next, field)) {
+                delete next[field];
+                changed = true;
+            }
+        });
+        return next;
+    });
+    return { dataValues: redacted, changed };
 }
 
 export async function saveProfile(profile = {}) {
@@ -137,18 +176,25 @@ async function migrateLegacyProfilesOnce() {
         throw new Error((currentResponse && currentResponse.error) || 'Could not inspect AI profiles');
     }
 
-    const legacyProfiles = parseLegacyDataValues(syncItems && syncItems.dataValues);
-    const cachedOpenAi = readLegacyLocalProfile('configBasePro_openai');
-    if (cachedOpenAi) {
+    const rawLegacyConfig = parseLegacyDataValues(syncItems && syncItems.dataValues);
+    const legacyConfig = rawLegacyConfig.filter(function (entry) {
+        return entry && PROVIDER_IDS.includes(String(entry.baseTipo || entry.providerId || '').toLowerCase());
+    });
+    const legacyProfiles = [...legacyConfig];
+    LEGACY_PAGE_PROFILE_KEYS.forEach(function ([providerId, storageKey]) {
+        const cachedProfile = readLegacyLocalProfile(storageKey);
+        if (!cachedProfile) return;
         legacyProfiles.push({
-            baseTipo: 'openai',
-            baseName: cachedOpenAi.baseName || 'Legacy OpenAI profile',
-            ...cachedOpenAi
+            baseTipo: providerId,
+            baseName: cachedProfile.baseName || `Legacy ${providerId} profile`,
+            ...cachedProfile
         });
-    }
+    });
 
     const existing = Array.isArray(currentResponse.profiles) ? currentResponse.profiles : [];
-    const knownEndpoints = new Set(existing.map(profileEndpointKey));
+    const existingByEndpoint = new Map(existing.map(function (profile) {
+        return [profileEndpointKey(profile), profile];
+    }));
     for (let index = 0; index < legacyProfiles.length; index++) {
         let migrated;
         try {
@@ -158,14 +204,30 @@ async function migrateLegacyProfilesOnce() {
         }
         if (!migrated) continue;
         const endpointKey = profileEndpointKey(migrated);
-        if (knownEndpoints.has(endpointKey)) continue;
-        const response = await sendMessage({ action: 'llmSaveProfile', profile: migrated });
+        const existingProfile = existingByEndpoint.get(endpointKey);
+        if (existingProfile && existingProfile.hasKey) continue;
+        const profileToSave = existingProfile
+            ? {
+                ...migrated,
+                id: existingProfile.id,
+                label: existingProfile.label || migrated.label,
+                baseUrl: existingProfile.baseUrl || migrated.baseUrl,
+                model: existingProfile.model || migrated.model,
+                trusted: existingProfile.trusted === true || migrated.trusted === true
+            }
+            : migrated;
+        const response = await sendMessage({ action: 'llmSaveProfile', profile: profileToSave });
         if (!response || response.ok !== true) {
             throw new Error((response && response.error) || 'Could not migrate an AI profile');
         }
-        knownEndpoints.add(endpointKey);
+        existingByEndpoint.set(endpointKey, response.profile || profileToSave);
     }
 
+    const redacted = redactLegacyAiCredentials(rawLegacyConfig);
+    if (redacted.changed) {
+        await storage.setSync({ dataValues: JSON.stringify(redacted.dataValues) });
+    }
+    clearLegacyAiPageCache();
     await storage.setLocal({ [LEGACY_MIGRATION_KEY]: LEGACY_MIGRATION_VERSION });
 }
 
@@ -174,9 +236,7 @@ function parseLegacyDataValues(raw) {
     try {
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (!Array.isArray(parsed)) return [];
-        return parsed.filter(function (entry) {
-            return entry && PROVIDER_IDS.includes(String(entry.baseTipo || '').toLowerCase());
-        });
+        return parsed;
     } catch (_) {
         return [];
     }
@@ -190,6 +250,25 @@ function readLegacyLocalProfile(key) {
         return parsed && typeof parsed === 'object' ? parsed : null;
     } catch (_) {
         return null;
+    }
+}
+
+function clearLegacyAiPageCache() {
+    try {
+        const storage = globalRef.localStorage;
+        if (!storage) return;
+        LEGACY_PAGE_PROFILE_KEYS.forEach(function (entry) {
+            const key = entry[1];
+            storage.removeItem(key);
+        });
+        const rawConfig = storage.getItem('configBasePro');
+        if (!rawConfig) return;
+        const parsedConfig = JSON.parse(rawConfig);
+        const redacted = redactLegacyAiCredentials(parsedConfig);
+        if (redacted.changed) storage.setItem('configBasePro', JSON.stringify(redacted.dataValues));
+    } catch (_) {
+        // Legacy page storage is best-effort cleanup only. The sync copy above
+        // remains the source of truth and must succeed before the migration is marked complete.
     }
 }
 

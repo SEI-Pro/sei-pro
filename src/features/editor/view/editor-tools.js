@@ -548,7 +548,7 @@ export function createEditorCommands(options = {}) {
         run: () => runToolbarCommand(selector)
     });
     return [
-        command('ai', 'Abrir ferramentas de IA', '.getPlataformAIButtom', ['inteligência artificial', 'redigir'], 'IA e análise'),
+        command('ai', 'Abrir Assistente IA', '.getPlataformAIButtom', ['inteligência artificial', 'redigir', 'despacho'], 'IA e análise'),
         command(
             'import',
             'Inserir texto de conteúdo externo (Word, HTML ou Google)',

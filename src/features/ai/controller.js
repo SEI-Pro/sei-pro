@@ -21,13 +21,14 @@ import { createAiToolExecutor } from './tools/executors.js';
 import {
     confirmRestrictedDocument,
     openProfileDialog,
-    openPromptDialog,
     showAiError
 } from './view/dialogs.js';
+import { createAiAssistant } from './view/assistant.js';
 import { createAiPanel } from './view/panel.js';
 
-let currentController = null;
+let currentGeneration = null;
 let lastGeneration = null;
+let activeAssistant = null;
 
 export async function loadPlataformAI(trigger = {}) {
     return loadBoxAIActions({
@@ -57,12 +58,29 @@ export async function loadBoxAIActions({ editorId = '' } = {}) {
     try {
         selectedText = (await readEditorSnapshot({ editorId })).selectedText || '';
     } catch { /* the dialog can still open without a selection */ }
-    return openPromptDialog({
+    const initialPrompt = selectedText.trim()
+        ? `Revise o trecho selecionado do documento, preservando o sentido e a linguagem administrativa.\n\n${selectedText.trim()}`
+        : '';
+    if (activeAssistant?.isOpen()) {
+        activeAssistant
+            .setProfiles(profiles, settings.activeProfileId)
+            .setPrompt(initialPrompt)
+            .focus();
+        return activeAssistant;
+    }
+
+    const assistant = createAiAssistant({
         profiles,
         activeProfileId: settings.activeProfileId,
-        initialPrompt: selectedText,
-        keyword: settings.keyword || '+gpt',
-        inlineEnabled: settings.inlineEnabled === true,
+        initialPrompt,
+        onClose: function () {
+            if (activeAssistant === assistant) activeAssistant = null;
+            cancelActiveGeneration();
+        },
+        onStop: function () {
+            cancelActiveGeneration();
+            assistant.stopped();
+        },
         onManageProfiles: function () {
             const active = profiles.find(function (profile) {
                 return profile.id === settings.activeProfileId;
@@ -70,8 +88,14 @@ export async function loadBoxAIActions({ editorId = '' } = {}) {
             openProfileDialog({
                 profile: active,
                 onSaved: async function (saved) {
-                    await saveAiSettings({ activeProfileId: saved.id });
-                    loadBoxAIActions({ editorId });
+                    try {
+                        settings = await saveAiSettings({ activeProfileId: saved.id });
+                        profiles = await listProfiles();
+                        publishAiEditorConfig(settings);
+                        assistant.setProfiles(profiles, saved.id);
+                    } catch (error) {
+                        showAiError(error);
+                    }
                 }
             });
         },
@@ -79,15 +103,26 @@ export async function loadBoxAIActions({ editorId = '' } = {}) {
             const profile = profiles.find(function (candidate) {
                 return candidate.id === submission.profileId;
             });
-            const nextSettings = await saveAiSettings({
-                activeProfileId: profile.id,
-                keyword: submission.keyword,
-                inlineEnabled: submission.inlineEnabled
-            });
-            publishAiEditorConfig(nextSettings);
-            startGeneration({ ...submission, profile, editorId });
+            if (!profile) {
+                assistant.fail(new Error('Selecione um perfil de IA válido.'));
+                return;
+            }
+            try {
+                settings = await saveAiSettings({ activeProfileId: profile.id });
+                publishAiEditorConfig(settings);
+                await startGeneration({
+                    ...submission,
+                    profile,
+                    editorId,
+                    panel: assistant
+                });
+            } catch (error) {
+                assistant.fail(error);
+            }
         }
     });
+    activeAssistant = assistant;
+    return assistant.open().focus();
 }
 
 export async function startGeneration({
@@ -96,7 +131,9 @@ export async function startGeneration({
     includeContext = true,
     inlineTarget = null,
     editorId = '',
-    resolveProfile = false
+    resolveProfile = false,
+    panel: providedPanel = null,
+    history = []
 } = {}) {
     let settings;
     try {
@@ -125,20 +162,25 @@ export async function startGeneration({
         includeContext,
         inlineTarget,
         editorId,
-        resolveProfile
+        resolveProfile,
+        history
     };
     lastGeneration = request;
-    const panel = createAiPanel({
+    cancelActiveGeneration();
+    const generation = createGeneration();
+    currentGeneration = generation;
+    const isConversation = providedPanel && typeof providedPanel.getHistory === 'function';
+    const panel = providedPanel || createAiPanel({
         onStop: function () {
-            if (currentController) currentController.cancel();
+            cancelActiveGeneration();
             panel.stopped();
         },
         onRetry: function () {
             panel.close();
-            if (lastGeneration) startGeneration(lastGeneration);
+            if (lastGeneration) void startGeneration(lastGeneration);
         },
         onDiscard: function () {
-            if (currentController) currentController.cancel();
+            cancelActiveGeneration();
         },
         onAccept: async function (value) {
             try {
@@ -148,13 +190,15 @@ export async function startGeneration({
                 panel.fail(error);
             }
         }
-    }).start();
+    });
+    panel.start();
 
     try {
         const fetchState = createDocumentFetchState(settings.maxDocs);
         const editorSnapshot = await readEditorSnapshot({
             editorId: inlineTarget?.editorId || editorId
         });
+        throwIfCancelled(generation);
         const currentDocumentProvider = () => Promise.resolve(editorSnapshot);
         const context = includeContext
             ? await gatherProcessContext({
@@ -167,7 +211,8 @@ export async function startGeneration({
                 confirmRestricted: confirmRestrictedDocument,
                 currentDocumentProvider,
                 fetchState,
-                processSnapshot: editorSnapshot
+                processSnapshot: editorSnapshot,
+                signal: generation.signal
             })
             : {
                 process: {},
@@ -185,9 +230,11 @@ export async function startGeneration({
             onProgress: function (message) { panel.addProgress(message); },
             fetchState,
             currentDocumentProvider,
-            processSnapshot: editorSnapshot
+            processSnapshot: editorSnapshot,
+            signal: generation.signal
         });
-        currentController = await runToolLoop({
+        throwIfCancelled(generation);
+        generation.controller = await runToolLoop({
             profile,
             system: [
                 DEFAULT_SYSTEM_INSTRUCTION,
@@ -196,6 +243,7 @@ export async function startGeneration({
             prompt: assembled,
             tools: AI_TOOL_DEFINITIONS,
             executor,
+            messages: history,
             maxIterations: settings.maxIterations,
             maxDocs: settings.maxDocs,
             onRoundStart: function (iteration) { panel.beginRound(iteration); },
@@ -207,15 +255,47 @@ export async function startGeneration({
                 panel.addProgress(`Concluído: ${call.name}`);
             }
         });
-        const result = await currentController.task;
-        if (result.cancelled) panel.stopped();
-        else panel.complete();
+        if (generation.cancelled) generation.controller.cancel();
+        const result = await generation.controller.task;
+        if (result.cancelled || generation.cancelled) {
+            panel.stopped();
+        } else if (isConversation) {
+            panel.complete({
+                text: result.text,
+                onAccept: async function (value, button) {
+                    try {
+                        button.disabled = true;
+                        await insertAiHtml(value, inlineTarget, editorId);
+                        panel.note('Minuta inserida no documento. Revise o texto antes de salvar ou assinar.');
+                    } catch (error) {
+                        panel.fail(error);
+                    } finally {
+                        button.disabled = false;
+                    }
+                },
+                onRetry: function () {
+                    void startGeneration({ ...request, panel });
+                }
+            });
+        } else {
+            panel.complete();
+        }
         return result;
     } catch (error) {
-        panel.fail(error);
+        if (generation.cancelled || isAbortError(error)) {
+            panel.stopped();
+            return { cancelled: true };
+        }
+        if (isConversation) {
+            panel.fail(error, function () {
+                void startGeneration({ ...request, panel });
+            });
+        } else {
+            panel.fail(error);
+        }
         return { error };
     } finally {
-        currentController = null;
+        if (currentGeneration === generation) currentGeneration = null;
     }
 }
 
@@ -233,4 +313,36 @@ async function insertAiHtml(value, inlineTarget, editorId) {
         editorId: inlineTarget?.editorId || editorId || '',
         inlineMarker: inlineTarget?.marker || ''
     });
+}
+
+function createGeneration() {
+    const abort = typeof AbortController === 'function' ? new AbortController() : null;
+    return {
+        cancelled: false,
+        signal: abort?.signal,
+        controller: null,
+        cancel() {
+            if (this.cancelled) return false;
+            this.cancelled = true;
+            abort?.abort();
+            return this.controller ? this.controller.cancel() : true;
+        }
+    };
+}
+
+function cancelActiveGeneration() {
+    if (!currentGeneration) return false;
+    return currentGeneration.cancel();
+}
+
+function throwIfCancelled(generation) {
+    if (generation.cancelled || generation.signal?.aborted) {
+        const error = new Error('Solicitação interrompida');
+        error.name = 'AbortError';
+        throw error;
+    }
+}
+
+function isAbortError(error) {
+    return error?.name === 'AbortError' || error?.message === 'Solicitação interrompida';
 }

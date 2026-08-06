@@ -3530,10 +3530,18 @@
       const documento = (match ? text.slice(0, match.index) : text).trim();
       const nrSei = match ? match[1].trim() : "";
       if (!documento) return;
+      let src = "";
+      try {
+        const href = anchor.getAttribute("href") || "";
+        const url = new URL(href, globalRef.location.href);
+        if (url.searchParams.has("id_documento")) src = url.href;
+      } catch (_) {
+      }
       byId.set(id, {
         id_protocolo: id,
         documento,
-        nr_sei: nrSei
+        nr_sei: nrSei,
+        src
       });
     });
     return [...byId.values()];
@@ -3792,8 +3800,15 @@
     syncDadosProcessoPro();
     loadEditorProcessDocuments2();
     runEditorProcessoCallbacks();
-    setInterval(function() {
-      if (syncDadosProcessoPro()) runEditorProcessoCallbacks();
+    const processDataTimer = setInterval(function() {
+      if (globalRef.__SEI_PRO_EDITOR_PROCESSO_CB__) {
+        clearInterval(processDataTimer);
+        return;
+      }
+      if (syncDadosProcessoPro()) {
+        runEditorProcessoCallbacks();
+        if (globalRef.__SEI_PRO_EDITOR_PROCESSO_CB__) clearInterval(processDataTimer);
+      }
     }, 1500);
     try {
       globalRef.addEventListener("seipro-processo-dados-ready", function() {
@@ -5409,10 +5424,13 @@
       icon16baseFonteSizeDown
     );
     const htmlButton2 = (restrictConfigValue("ferramentasia") ? api.htmlButtonPro(
-      "getPlataformAIButtom",
+      "getPlataformAIButtom seipro-ai-toolbar-button",
       "openai",
-      "Inserir texto de intelig\xEAncia artificial",
-      icon16baseOpenAI
+      "Abrir Assistente IA",
+      icon16baseOpenAI,
+      "",
+      "",
+      "Assistente IA"
     ) : "") + api.htmlButtonPro(
       "importDocButtom",
       "externalfile",
@@ -5548,10 +5566,10 @@
       afterImage: htmlButtonAfterImage
     };
   }
-  var htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = "", important = "") => `
+  var htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = "", important = "", label = title) => `
     <a class="${classClick} cke_iconPro cke_button cke_buttonPro cke_button_off" href="#" title="${title}" aria-label="${title}" role="button" hidefocus="true">
         <span class="cke_button_icon cke_button__${cke_class}_icon" style="background: url('${icon}') ${extraStyle} ${important}">&nbsp;</span>
-        <span class="cke_button_label" aria-hidden="false">${title}</span>
+        <span class="cke_button_label" aria-hidden="false">${label}</span>
     </a>`;
   api.htmlButton = htmlButton;
   api.htmlButtonPro = htmlButtonPro;
@@ -6427,7 +6445,7 @@
     if (editor.contextMenu && typeof editor.getMenuItem("plataform_ai") === "undefined") {
       editor.addMenuGroup("openaiGroup", -10 * 3);
       editor.addMenuItem("plataform_ai", {
-        label: "Intelig\xEAncia artificial",
+        label: "Abrir Assistente IA",
         icon: URL_SPRO + "icons/editor/ferramentasia.png",
         command: "plataform_ai",
         group: "openaiGroup"
@@ -14066,7 +14084,7 @@
       run: () => runToolbarCommand(selector)
     });
     return [
-      command("ai", "Abrir ferramentas de IA", ".getPlataformAIButtom", ["intelig\xEAncia artificial", "redigir"], "IA e an\xE1lise"),
+      command("ai", "Abrir Assistente IA", ".getPlataformAIButtom", ["intelig\xEAncia artificial", "redigir", "despacho"], "IA e an\xE1lise"),
       command(
         "import",
         "Inserir texto de conte\xFAdo externo (Word, HTML ou Google)",

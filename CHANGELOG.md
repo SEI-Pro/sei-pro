@@ -2,7 +2,13 @@
 
 ## [Não lançado]
 
+## [2.3.0] - 2026-08-06
+
 ### Adicionado
+
+- Assistente IA integrado ao editor, com painel lateral conversacional, ações rápidas para análise e redação de despachos e histórico de instruções
+- Pré-visualização segura da minuta, cópia, nova tentativa e inserção explícita no documento após a revisão do usuário
+- Cancelamento da preparação do contexto e das leituras do processo pelo botão **Parar**
 
 - Paleta `Ctrl+K` com todas as ações do editor, categorias, favoritos e comandos recentes
 - Busca com prévia para dados do processo, trechos por unidade com placeholders e comparação semântica
@@ -12,9 +18,16 @@
 - Sexta ferramenta de IA, `buscar_legislacao`, e contratos de provedor para Gemini, Moonshot e Ollama
 - Limites, modo inline, instrução adicional e histórico de autorizações nas Configurações
 
+### Melhorado
+
+- Botão, menu contextual e paleta de comandos da IA agora identificam claramente o **Assistente IA**
+- Erros de limite do provedor (`429`) e falhas de autenticação passaram a apresentar orientação de recuperação no painel
+- Links dos documentos são preservados ao carregar a árvore do processo; itens sem URL legível deixam de gerar ruído durante a preparação do contexto
+
 ### Segurança e arquitetura
 
 - IA, chaves, perfis, storage e chamadas de modelo permanecem no mundo isolado
+- Credenciais de perfis legados são removidas de configurações sincronizadas e do cache local da página
 - Ponte do CKEditor reduzida a `snapshot` e `insertHtml`, sem proxy de runtime/LLM
 - Consentimento para a minuta e documentos protegidos, com teto global compartilhado de leituras
 - Remoção dos handlers inline do editor e da Legística; eventos passam a ser delegados
@@ -22,6 +35,8 @@
 ### Corrigido
 
 - O botão de inserir texto externo volta a abrir o importador no editor e agora identifica claramente as fontes Word, HTML e Google
+- Campos de modelo dos perfis de IA deixam de gerar avisos de `autocomplete` no navegador
+- A sincronização periódica do editor é encerrada depois que os dados do processo são carregados
 
 ## [2.2.0] - 2026-07-29
 

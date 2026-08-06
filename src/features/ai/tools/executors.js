@@ -19,7 +19,8 @@ export function createAiToolExecutor({
     fetchImpl,
     fetchState,
     currentDocumentProvider,
-    processSnapshot
+    processSnapshot,
+    signal
 } = {}) {
     let documentCache;
 
@@ -28,7 +29,8 @@ export function createAiToolExecutor({
             documentCache = await listProcessDocuments({
                 source,
                 fetchImpl,
-                providedDocuments: processSnapshot?.documents
+                providedDocuments: processSnapshot?.documents,
+                signal
             });
         }
         return documentCache;
@@ -57,7 +59,8 @@ export function createAiToolExecutor({
                     profile,
                     confirmRestricted,
                     currentDocumentProvider,
-                    source
+                    source,
+                    signal
                 });
                 return current || { message: 'O documento atual não foi autorizado para envio.' };
             }
@@ -75,7 +78,8 @@ export function createAiToolExecutor({
                     profile,
                     confirmRestricted,
                     fetchImpl,
-                    fetchState
+                    fetchState,
+                    signal
                 });
             }
             if (call.name === 'buscar_legislacao') {

@@ -44,6 +44,16 @@ describe('feature external-config — persistência de opções/bases', () => {
         expect(saved[0].URL_API).toBe('nova');
     });
 
+    it('never persists an AI credential in the legacy sync configuration', async () => {
+        const st = stub(fakeStorage([]));
+        await getOptionsSEIPro({ type: 'NEW_BASE', mode: 'insert', base: 'openai', alert: false,
+            newItem: { baseTipo: 'openai', URL_API: 'https://api.openai.com', KEY_USER: 'secret' } });
+        expect(JSON.parse(st._store.dataValues)).toEqual([
+            { baseTipo: 'openai', URL_API: 'https://api.openai.com' }
+        ]);
+        expect(localStorage.getItem('configBasePro')).not.toContain('secret');
+    });
+
     it('getOptionsSEIPro remove apaga a base sem reinserir', async () => {
         const st = stub(fakeStorage([{ baseTipo: 'gemini' }, { baseTipo: 'openai' }]));
         await getOptionsSEIPro({ type: 'NEW_BASE', mode: 'remove', base: 'gemini', alert: false, newItem: {} });

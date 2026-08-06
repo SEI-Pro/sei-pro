@@ -98,8 +98,18 @@ describe('editor page-runtime chrome shim', () => {
                 <a id="anchor85022190" href="?id_documento=85022190">Despacho 599</a>
             </div>
         `)).toEqual([
-            { id_protocolo: '74248257', documento: 'Consulta CPF - Receita Federal', nr_sei: '74248257' },
-            { id_protocolo: '85022190', documento: 'Despacho 599', nr_sei: '' }
+            {
+                id_protocolo: '74248257',
+                documento: 'Consulta CPF - Receita Federal',
+                nr_sei: '74248257',
+                src: 'http://localhost:3000/?id_documento=74248257'
+            },
+            {
+                id_protocolo: '85022190',
+                documento: 'Despacho 599',
+                nr_sei: '',
+                src: 'http://localhost:3000/?id_documento=85022190'
+            }
         ]);
     });
 
@@ -124,7 +134,12 @@ describe('editor page-runtime chrome shim', () => {
             });
 
         await expect(loadEditorProcessDocuments()).resolves.toEqual([
-            { id_protocolo: '10', documento: 'Despacho', nr_sei: '123' }
+            {
+                id_protocolo: '10',
+                documento: 'Despacho',
+                nr_sei: '123',
+                src: 'http://localhost:3000/sei/controlador.php?acao=editor_montar&id_documento=456'
+            }
         ]);
         expect(window.fetch).toHaveBeenCalledTimes(2);
         expect(window.dadosProcessoPro.treeModel.documents).toHaveLength(1);

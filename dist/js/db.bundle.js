@@ -2788,6 +2788,59 @@
     }
   }
 
+  // src/core/llm/protocol.js
+  var PROVIDER_IDS = [
+    "openai",
+    "anthropic",
+    "gemini",
+    "moonshot",
+    "ollama",
+    "openai_compatible"
+  ];
+
+  // src/features/ai/io/profiles.js
+  var DEFAULTS = Object.freeze({
+    openai: { baseUrl: "https://api.openai.com", model: "gpt-4.1-mini" },
+    anthropic: { baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-20250514" },
+    gemini: { baseUrl: "https://generativelanguage.googleapis.com", model: "gemini-2.5-flash" },
+    moonshot: { baseUrl: "https://api.moonshot.ai", model: "kimi-k3" },
+    ollama: { baseUrl: "http://localhost:11434", model: "llama3.2" },
+    openai_compatible: { baseUrl: "", model: "" }
+  });
+  var LEGACY_AI_SECRET_FIELDS = Object.freeze([
+    "KEY_USER",
+    "API_KEY",
+    "key",
+    "apiKey",
+    "accessToken",
+    "refreshToken"
+  ]);
+  var LEGACY_PAGE_PROFILE_KEYS = Object.freeze([
+    ["openai", "configBasePro_openai"],
+    ["gemini", "configBasePro_gemini"],
+    ["anthropic", "configBasePro_anthropic"],
+    ["moonshot", "configBasePro_moonshot"],
+    ["ollama", "configBasePro_ollama"],
+    ["openai_compatible", "configBasePro_openai_compatible"]
+  ]);
+  function redactLegacyAiCredentials(dataValues) {
+    if (!Array.isArray(dataValues)) return { dataValues, changed: false };
+    let changed = false;
+    const redacted = dataValues.map(function(entry) {
+      const providerId = String(entry?.baseTipo || entry?.providerId || "").toLowerCase();
+      if (!entry || typeof entry !== "object" || !PROVIDER_IDS.includes(providerId)) return entry;
+      const next = { ...entry };
+      LEGACY_AI_SECRET_FIELDS.forEach(function(field) {
+        if (Object.prototype.hasOwnProperty.call(next, field)) {
+          delete next[field];
+          changed = true;
+        }
+      });
+      return next;
+    });
+    return { dataValues: redacted, changed };
+  }
+
   // src/features/external-config/index.js
   function sei() {
     return getSeiPro();
@@ -2804,8 +2857,9 @@
     });
   }
   function writeDataValues(dataValues) {
-    return storage().setSync({ dataValues: JSON.stringify(dataValues) }).then(function() {
-      localStorage.setItem("configBasePro", JSON.stringify(dataValues));
+    const safe = redactLegacyAiCredentials(dataValues).dataValues;
+    return storage().setSync({ dataValues: JSON.stringify(safe) }).then(function() {
+      localStorage.setItem("configBasePro", JSON.stringify(safe));
     });
   }
   function setOptionsSEIPro(optionKey, optionValue) {
@@ -2847,7 +2901,7 @@
         });
       }
       if (data.mode !== "remove") dataValues.push(newItem);
-      return storage().setSync({ dataValues: JSON.stringify(dataValues) }).then(function() {
+      return writeDataValues(dataValues).then(function() {
         if (data.alert) {
           alert(data.mode === "insert" ? "Configura\xE7\xF5es carregadas com sucesso!" : "Configura\xE7\xF5es removidas com sucesso!\n\n Recarregue a p\xE1gina.");
         }

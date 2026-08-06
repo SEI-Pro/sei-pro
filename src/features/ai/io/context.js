@@ -16,8 +16,10 @@ import {
 export async function listProcessDocuments({
     source = globalRef,
     fetchImpl = globalRef.fetch && globalRef.fetch.bind(globalRef),
-    providedDocuments
+    providedDocuments,
+    signal
 } = {}) {
+    throwIfAborted(signal);
     if (Array.isArray(providedDocuments)) return normalizeDocuments(providedDocuments);
     const processData = resolveProcessSource(source);
     const existing = normalizeDocuments(
@@ -29,7 +31,7 @@ export async function listProcessDocuments({
     );
     if (existing.length) return existing;
     if (typeof fetchImpl !== 'function') return [];
-    return fetchTreeDocuments(processData, { source, fetchImpl });
+    return fetchTreeDocuments(processData, { source, fetchImpl, signal });
 }
 
 export function getProcessData(source = globalRef) {
@@ -84,8 +86,10 @@ export async function readProcessDocument(document, {
     confirmRestricted,
     fetchImpl = globalRef.fetch && globalRef.fetch.bind(globalRef),
     parseHtml = defaultParseHtml,
-    fetchState
+    fetchState,
+    signal
 } = {}) {
+    throwIfAborted(signal);
     if (!document || !document.src) throw new Error('O documento não possui URL legível no SEI');
     const cacheKey = String(document.id || document.numeroSEI || document.src);
     const cached = fetchState?.bodyCache?.get(cacheKey);
@@ -96,12 +100,14 @@ export async function readProcessDocument(document, {
             throw new Error(`É necessária confirmação para ler ${documentLabel(document)}`);
         }
         const granted = await confirmRestricted(document, profile);
+        throwIfAborted(signal);
         if (!granted) throw new Error('O envio do documento protegido não foi autorizado');
         prefix = `${restrictedContentNotice(document)}\n`;
         await recordRestrictedAccess(document, profile);
     }
     fetchState?.consume?.();
-    const html = await fetchDocumentBody(document.src, { fetchImpl, parseHtml });
+    const html = await fetchDocumentBody(document.src, { fetchImpl, parseHtml, signal });
+    throwIfAborted(signal);
     const markdown = htmlToMarkdown(html);
     const result = {
         ...document,
@@ -116,8 +122,10 @@ export async function readCurrentDocument({
     profile,
     confirmRestricted,
     currentDocumentProvider,
-    source = globalRef
+    source = globalRef,
+    signal
 } = {}) {
+    throwIfAborted(signal);
     const snapshot = typeof currentDocumentProvider === 'function'
         ? await currentDocumentProvider()
         : {
@@ -128,6 +136,7 @@ export async function readCurrentDocument({
             accessKnown: getProcessData(source).accessLevel != null,
             hipoteseLegal: ''
         };
+    throwIfAborted(signal);
     const html = String(snapshot?.html || '');
     if (!html.trim()) return null;
     const document = {
@@ -144,6 +153,7 @@ export async function readCurrentDocument({
             throw new Error('É necessária confirmação para enviar o documento atual');
         }
         const granted = await confirmRestricted(document, profile);
+        throwIfAborted(signal);
         if (!granted) return null;
         prefix = `${restrictedContentNotice(document)}\n`;
         await recordRestrictedAccess(document, profile);
@@ -168,23 +178,36 @@ export async function gatherProcessContext({
     confirmRestricted,
     currentDocumentProvider,
     fetchState = createDocumentFetchState(maxDocs),
-    processSnapshot
+    processSnapshot,
+    signal
 } = {}) {
+    throwIfAborted(signal);
     const documents = await listProcessDocuments({
         source,
         fetchImpl,
-        providedDocuments: processSnapshot?.documents
+        providedDocuments: processSnapshot?.documents,
+        signal
     });
     const access = partitionDocumentsByAccess(documents);
     const candidates = includeBodies
-        ? rankDocumentsForContext(access.public, instruction).slice(0, maxDocs)
+        ? rankDocumentsForContext(
+            access.public.filter((document) => String(document.src || '').trim()),
+            instruction
+        ).slice(0, maxDocs)
         : [];
     const chunks = [];
     for (const document of candidates) {
+        throwIfAborted(signal);
         if (typeof onProgress === 'function') onProgress(`Lendo ${documentLabel(document)}`);
         try {
-            chunks.push(await readProcessDocument(document, { profile, fetchImpl, fetchState }));
+            chunks.push(await readProcessDocument(document, {
+                profile,
+                fetchImpl,
+                fetchState,
+                signal
+            }));
         } catch (error) {
+            if (isAbortError(error)) throw error;
             if (typeof onProgress === 'function') {
                 onProgress(`Ignorado ${document.numeroSEI || document.id}: ${error.message}`);
             }
@@ -197,13 +220,16 @@ export async function gatherProcessContext({
     const keptIds = new Set(kept.map(function (chunk) { return String(chunk.id); }));
     let currentDocument = null;
     try {
+        throwIfAborted(signal);
         currentDocument = await readCurrentDocument({
             profile,
             confirmRestricted,
             currentDocumentProvider,
-            source
+            source,
+            signal
         });
     } catch (error) {
+        if (isAbortError(error)) throw error;
         if (typeof onProgress === 'function') {
             onProgress(`Documento atual não incluído: ${error.message}`);
         }
@@ -322,7 +348,7 @@ export function parseTreeDocuments(html, idProcedimento = '') {
     return [...byNode.values()];
 }
 
-async function fetchTreeDocuments(processData, { source, fetchImpl }) {
+async function fetchTreeDocuments(processData, { source, fetchImpl, signal }) {
     const props = processData.propProcesso || {};
     const params = new URLSearchParams(source.location?.search || '');
     const id = props.hdnIdProcedimento || params.get('id_procedimento') || params.get('id_protocolo');
@@ -330,24 +356,24 @@ async function fetchTreeDocuments(processData, { source, fetchImpl }) {
     const workUrl = new URL('controlador.php', source.location?.href || 'http://localhost/');
     workUrl.searchParams.set('acao', 'procedimento_trabalhar');
     workUrl.searchParams.set('id_procedimento', id);
-    const processHtml = await fetchText(workUrl.href, fetchImpl);
+    const processHtml = await fetchText(workUrl.href, fetchImpl, signal);
     const parsed = defaultParseHtml(processHtml);
     const treeSrc = parsed.querySelector('#ifrArvore')?.getAttribute('src');
     if (!treeSrc) return [];
-    const treeHtml = await fetchText(absolutizeUrl(treeSrc, workUrl.href), fetchImpl);
+    const treeHtml = await fetchText(absolutizeUrl(treeSrc, workUrl.href), fetchImpl, signal);
     return normalizeDocuments(parseTreeDocuments(treeHtml, id), processData);
 }
 
-async function fetchDocumentBody(src, { fetchImpl, parseHtml }) {
+async function fetchDocumentBody(src, { fetchImpl, parseHtml, signal }) {
     if (typeof fetchImpl !== 'function') throw new Error('A leitura de documentos do SEI está indisponível');
     const firstUrl = absolutizeUrl(src, globalRef.location?.href);
-    const firstHtml = await fetchText(firstUrl, fetchImpl);
+    const firstHtml = await fetchText(firstUrl, fetchImpl, signal);
     const parsed = parseHtml(firstHtml);
     const nestedSrc = parsed.querySelector(
         '#ifrArvoreHtml, #ifrVisualizacao, iframe[src*="documento_"]'
     )?.getAttribute('src');
     if (nestedSrc) {
-        const nestedHtml = await fetchText(absolutizeUrl(nestedSrc, firstUrl), fetchImpl);
+        const nestedHtml = await fetchText(absolutizeUrl(nestedSrc, firstUrl), fetchImpl, signal);
         return extractDocumentContainer(parseHtml(nestedHtml));
     }
     return extractDocumentContainer(parsed);
@@ -358,8 +384,10 @@ function extractDocumentContainer(document) {
     return container ? container.innerHTML : document.body?.innerHTML || '';
 }
 
-async function fetchText(url, fetchImpl) {
-    const response = await fetchImpl(url, { credentials: 'same-origin' });
+async function fetchText(url, fetchImpl, signal) {
+    throwIfAborted(signal);
+    const response = await fetchImpl(url, { credentials: 'same-origin', signal });
+    throwIfAborted(signal);
     if (!response || response.ok === false) {
         throw new Error(`O SEI retornou ${response?.status || 'uma resposta inválida'}`);
     }
@@ -404,4 +432,15 @@ function absolutizeUrl(value, base) {
 
 function defaultParseHtml(html) {
     return new DOMParser().parseFromString(String(html || ''), 'text/html');
+}
+
+function throwIfAborted(signal) {
+    if (!signal?.aborted) return;
+    const error = new Error('Solicitação interrompida');
+    error.name = 'AbortError';
+    throw error;
+}
+
+function isAbortError(error) {
+    return error?.name === 'AbortError' || error?.message === 'Solicitação interrompida';
 }

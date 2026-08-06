@@ -113,4 +113,19 @@ describe('AI document context IO', () => {
         const prompt = assemblePrompt({ instruction: 'Redija um despacho', ...context });
         expect(prompt).not.toContain('SEGREDO QUE NÃO PODE SAIR');
     });
+
+    it('stops before reading process documents when the request is cancelled', async () => {
+        const controller = new AbortController();
+        controller.abort();
+        const fetchImpl = vi.fn();
+
+        await expect(gatherProcessContext({
+            instruction: 'Redija um despacho',
+            profile: { id: 'p1', providerId: 'openai', model: 'm' },
+            processSnapshot: { process: {}, documents: [], history: [] },
+            fetchImpl,
+            signal: controller.signal
+        })).rejects.toMatchObject({ name: 'AbortError' });
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
 });

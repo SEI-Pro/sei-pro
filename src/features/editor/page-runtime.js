@@ -262,10 +262,17 @@ export function extractProcessDocuments(html) {
         const documento = (match ? text.slice(0, match.index) : text).trim();
         const nrSei = match ? match[1].trim() : '';
         if (!documento) return;
+        let src = '';
+        try {
+            const href = anchor.getAttribute('href') || '';
+            const url = new URL(href, globalRef.location.href);
+            if (url.searchParams.has('id_documento')) src = url.href;
+        } catch (_) { /* keep metadata even when the tree link is malformed */ }
         byId.set(id, {
             id_protocolo: id,
             documento,
-            nr_sei: nrSei
+            nr_sei: nrSei,
+            src
         });
     });
     return [...byId.values()];
@@ -519,8 +526,15 @@ function installSoftPageGlobals() {
     syncDadosProcessoPro();
     loadEditorProcessDocuments();
     runEditorProcessoCallbacks();
-    setInterval(function () {
-        if (syncDadosProcessoPro()) runEditorProcessoCallbacks();
+    const processDataTimer = setInterval(function () {
+        if (globalRef.__SEI_PRO_EDITOR_PROCESSO_CB__) {
+            clearInterval(processDataTimer);
+            return;
+        }
+        if (syncDadosProcessoPro()) {
+            runEditorProcessoCallbacks();
+            if (globalRef.__SEI_PRO_EDITOR_PROCESSO_CB__) clearInterval(processDataTimer);
+        }
     }, 1500);
     try {
         globalRef.addEventListener('seipro-processo-dados-ready', function () {

@@ -54,6 +54,7 @@ export async function runToolLoop({
     profile,
     system,
     prompt,
+    messages: priorMessages = [],
     tools = [],
     executor,
     maxIterations = 8,
@@ -69,7 +70,8 @@ export async function runToolLoop({
     if (!executor || typeof executor.execute !== 'function') {
         throw new TypeError('O executor de ferramentas de leitura é obrigatório');
     }
-    const messages = [{ role: 'user', content: String(prompt || '') }];
+    const messages = normalizeConversation(priorMessages);
+    messages.push({ role: 'user', content: String(prompt || '') });
     let activeStream = null;
     let cancelled = false;
 
@@ -135,4 +137,16 @@ export async function runToolLoop({
             return activeStream ? activeStream.cancel() : false;
         }
     };
+}
+
+function normalizeConversation(messages) {
+    if (!Array.isArray(messages)) return [];
+    return messages.slice(-6).map(function (message) {
+        return {
+            role: message?.role === 'assistant' ? 'assistant' : 'user',
+            content: String(message?.content || '')
+        };
+    }).filter(function (message) {
+        return message.content.trim().length > 0;
+    });
 }

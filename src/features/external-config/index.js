@@ -14,6 +14,7 @@
 import { getSeiPro } from '../../core/global.js';
 import { getParamsUrlPro } from '../../core/util.js';
 import { qs } from '../../dom/index.js';
+import { redactLegacyAiCredentials } from '../ai/io/profiles.js';
 
 function sei() { return getSeiPro(); }
 function storage() { return sei().core.storage; }
@@ -26,8 +27,11 @@ function readDataValues() {
     });
 }
 function writeDataValues(dataValues) {
-    return storage().setSync({ dataValues: JSON.stringify(dataValues) }).then(function () {
-        localStorage.setItem('configBasePro', JSON.stringify(dataValues));
+    // API credentials belong exclusively to chrome.storage.local through the
+    // current AI-profile flow. Never reintroduce them in the legacy sync blob.
+    const safe = redactLegacyAiCredentials(dataValues).dataValues;
+    return storage().setSync({ dataValues: JSON.stringify(safe) }).then(function () {
+        localStorage.setItem('configBasePro', JSON.stringify(safe));
     });
 }
 
@@ -68,7 +72,7 @@ export function getOptionsSEIPro(data) {
             dataValues = dataValues.filter(function (entry) { return entry.baseTipo !== data.base; });
         }
         if (data.mode !== 'remove') dataValues.push(newItem);
-        return storage().setSync({ dataValues: JSON.stringify(dataValues) }).then(function () {
+        return writeDataValues(dataValues).then(function () {
             if (data.alert) {
                 alert(data.mode === 'insert'
                     ? 'Configurações carregadas com sucesso!'
