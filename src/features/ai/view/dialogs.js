@@ -1,6 +1,6 @@
 import { openModal } from '../../../shared/ui/modal.js';
 import { documentLabel } from '../domain/prompt.js';
-import { providerDefaults, saveProfile } from '../io/profiles.js';
+import { providerDefaults } from '../domain/provider-defaults.js';
 
 const PROVIDER_OPTIONS = [
     ['openai', 'OpenAI'],
@@ -100,7 +100,7 @@ export function openPromptDialog({
     return ref;
 }
 
-export function openProfileDialog({ profile, onSaved } = {}) {
+export function openProfileDialog({ profile, onSave, onSaved } = {}) {
     const current = profile || {};
     const form = element('form', 'seipro-ai-form seipro-ai-profile-form');
     const provider = selectInput('seipro-ai-provider', PROVIDER_OPTIONS, current.providerId || 'openai');
@@ -157,9 +157,13 @@ export function openProfileDialog({ profile, onSaved } = {}) {
                 text: 'Salvar',
                 class: 'seipro-ai-primary',
                 onClick: async function (modal) {
+                    if (typeof onSave !== 'function') {
+                        status.textContent = 'Persistência de perfil não configurada.';
+                        return;
+                    }
                     status.textContent = 'Salvando…';
                     try {
-                        const saved = await saveProfile({
+                        const saved = await onSave({
                             id: current.id,
                             providerId: provider.value,
                             label: label.value,

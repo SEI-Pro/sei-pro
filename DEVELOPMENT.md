@@ -123,9 +123,10 @@ dist/                              # SAÍDA GERADA — não editar à mão
 ### Princípios fundamentais
 
 1. **Mundo isolado (isolated-first):** todo código novo roda no mundo isolado do content
-   script. A única exceção atual é o adaptador CKEditor 4, porque as instâncias pertencem à
-   página. Ele roda em `MAIN` sem acesso ao runtime e conversa com a IA isolada por duas
-   operações serializáveis (`snapshot` e `insertHtml`). Sem `onclick` inline.
+   script. A exceção documentada do editor é o bundle CKEditor 4 injetado em `MAIN` via
+   `editor-loader.js` (o CKEditor pertence à página). Esse bundle **não** recebe runtime,
+   storage nem LLM; a IA isolada só troca duas operações serializáveis (`snapshot` e
+   `insertHtml`). Sem `onclick` inline.
 2. **Direção de dependência:** `features` → `shared/ui` → `core` / `sei` / `platform`.
    Nunca o contrário. `core/stack.js` **não deve importar nada de `features/`**.
 3. **`aliasGlobal` só em `legacy-api.js`:** nunca espalhado em domain, io ou view.

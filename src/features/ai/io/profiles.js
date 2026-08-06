@@ -1,14 +1,9 @@
 import { getSeiPro, globalRef } from '../../../core/global.js';
 import { PROVIDER_IDS } from '../../../core/llm/protocol.js';
+import { providerDefaults } from '../domain/provider-defaults.js';
 
-const DEFAULTS = Object.freeze({
-    openai: { baseUrl: 'https://api.openai.com', model: 'gpt-4.1-mini' },
-    anthropic: { baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-4-20250514' },
-    gemini: { baseUrl: 'https://generativelanguage.googleapis.com', model: 'gemini-2.5-flash' },
-    moonshot: { baseUrl: 'https://api.moonshot.ai', model: 'kimi-k3' },
-    ollama: { baseUrl: 'http://localhost:11434', model: 'llama3.2' },
-    openai_compatible: { baseUrl: '', model: '' }
-});
+export { providerDefaults };
+
 const LEGACY_MIGRATION_KEY = 'llmProfilesLegacyMigrationVersion';
 const LEGACY_MIGRATION_VERSION = 2;
 const LEGACY_AI_SECRET_FIELDS = Object.freeze([
@@ -27,10 +22,6 @@ const LEGACY_PAGE_PROFILE_KEYS = Object.freeze([
     ['ollama', 'configBasePro_ollama'],
     ['openai_compatible', 'configBasePro_openai_compatible']
 ]);
-
-export function providerDefaults(providerId) {
-    return { ...(DEFAULTS[providerId] || DEFAULTS.openai) };
-}
 
 export async function listProfiles() {
     await migrateLegacyProfilesOnce();

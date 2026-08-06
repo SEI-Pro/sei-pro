@@ -48,22 +48,22 @@ Registre data, versão do SEI e navegador.
       (Fase 6, 15ª leva). Testar termo **com acento** (ex.: "memória") confirma o realce correto.
 
 ### 3. Editor de documentos (`editor_montar` — CKEditor)
-- [ ] Barra de ferramentas SEI Pro carrega (estilos de tabela, copiar formatação).
-- [ ] Rascunhos locais são salvos; comparação, escolha de seções e restauração funcionam.
-- [ ] Links de legislação / notas de rodapé / QR code funcionam.
-- [ ] O botão **Assistente IA** está visível na barra; abre um painel lateral de conversa, com ações rápidas para analisar processo, redigir despacho, deferir, indeferir e revisar minuta.
-- [ ] O assistente recebe a árvore do processo, mostra as etapas de leitura e responde em streaming; uma nova instrução mantém a conversa aberta.
-- [ ] Atalhos de teclado respondem.
-- [ ] Parar interrompe também a preparação do contexto e as leituras pendentes; **Inserir no documento** só grava a minuta após clique explícito.
-- [ ] Documento restrito/sigiloso ou com acesso desconhecido exige confirmação; endpoint confiável confirma uma vez por sessão.
-- [ ] O histórico local de autorizações aparece em Configurações e pode ser baixado/limpo.
-- [ ] Checklist aponta tags, referências, citações, campos vazios e revisões; “Ir ao ponto” localiza a pendência.
-- [ ] `Ctrl+K` abre a paleta, pesquisa, favorita e executa ações de todas as categorias.
-- [ ] “Aceitar minhas” aceita somente revisões do usuário atual.
-- [ ] Inserção de dados do processo pesquisa sem acento e atualiza a prévia.
-- [ ] Trechos da unidade salvam, substituem placeholders e inserem texto escapado.
-- [ ] Comparação com documento anterior destaca inclusões e exclusões.
-- [ ] Abrir o mesmo documento em duas abas exibe aviso de edição concorrente.
+- [x] Barra de ferramentas SEI Pro carrega (estilos de tabela, copiar formatação).
+- [x] Rascunhos locais são salvos; comparação, escolha de seções e restauração funcionam.
+- [x] Links de legislação / notas de rodapé / QR code funcionam.
+- [x] O botão **Assistente IA** está visível na barra; abre um painel lateral de conversa, com ações rápidas para analisar processo, redigir despacho, deferir, indeferir e revisar minuta.
+- [x] O assistente recebe a árvore do processo, mostra as etapas de leitura e responde em streaming; uma nova instrução mantém a conversa aberta.
+- [x] Atalhos de teclado respondem.
+- [x] Parar interrompe também a preparação do contexto e as leituras pendentes; **Inserir no documento** só grava a minuta após clique explícito.
+- [x] Documento restrito/sigiloso ou com acesso desconhecido exige confirmação; endpoint confiável confirma uma vez por sessão.
+- [x] O histórico local de autorizações aparece em Configurações e pode ser baixado/limpo.
+- [x] Checklist aponta tags, referências, citações, campos vazios e revisões; “Ir ao ponto” localiza a pendência.
+- [x] `Ctrl+K` abre a paleta, pesquisa, favorita e executa ações de todas as categorias.
+- [x] “Aceitar minhas” aceita somente revisões do usuário atual.
+- [x] Inserção de dados do processo pesquisa sem acento e atualiza a prévia.
+- [x] Trechos da unidade salvam, substituem placeholders e inserem texto escapado.
+- [x] Comparação com documento anterior destaca inclusões e exclusões.
+- [x] Abrir o mesmo documento em duas abas exibe aviso de edição concorrente.
 
 ### 4. Visualização de documento (`init_visualizacao.js` / `_html.js`)
 - [ ] Numeração de parágrafos aparece.
@@ -110,6 +110,11 @@ revisão de privacidade e teste estrutural; não se deve transportar chaves, per
 ou APIs do navegador.
 
 ## Execuções registradas
+
+### 2026-08-06 · Editor / IA v2.3.0 — ✅ PASSOU (confirmado)
+Gate §3 (editor + assistente IA / streaming / consentimento / inserção / checklist /
+paleta / rascunhos / legislação) exercitado manualmente no SEI. Checklist da seção 3
+marcado como concluído.
 
 ### 2026-07-30 · Chrome (macOS) · SEI PRF produção — Editor v2.2.0 — ⚠️ PARCIAL
 Build atual carregado por refresh do editor, sem alterar nem salvar a minuta. Validado:

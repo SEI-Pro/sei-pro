@@ -1,5 +1,8 @@
 /**
  * Compatibility bridge for editor toolbar and legacy inline handlers.
+ *
+ * TODO: remove when all legis call sites import from features/legis modules
+ * directly (editor toolbar + any remaining global onclick / getScript callers).
  */
 import { aliasGlobal } from '../../core/global.js';
 import * as domain from './domain.js';

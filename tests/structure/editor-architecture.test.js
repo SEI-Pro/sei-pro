@@ -63,7 +63,8 @@ describe('editor architecture migration guards', () => {
     it('keeps view modules independent from IO modules', () => {
         const viewFiles = [
             ...walk(path.join(editorDir, 'view')),
-            path.join(root, 'src/features/legis/view.js')
+            path.join(root, 'src/features/legis/view.js'),
+            ...walk(path.join(root, 'src/features/ai/view'))
         ];
         for (const file of viewFiles) {
             const source = fs.readFileSync(file, 'utf8');

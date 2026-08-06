@@ -9,9 +9,7 @@ Phase 3 decomposition finished — `body.js` removed, modules under
 library), Filerobot replaced by `shared/ui/image-crop`, jQuery UI dialogs by `shared/ui/modal`,
 entry at `src/entries/editor.js`. F1–F7 estão implementadas e cobertas por testes.
 **Target platform:** SEI 4.1 (CKEditor 4). SEI 5 is explicitly out of scope; see §1.3.
-Live smoke remains the Phase 9 release gate. A partial Chromium run is recorded in
-`SMOKE_TEST.md`; AI/streaming, write paths, Firefox and the second target environment remain
-unchecked.
+Phase 9 live smoke for editor §3 is recorded complete in `SMOKE_TEST.md` (2026-08-06).
 **Explicitly excluded:** the `mod-wssei` REST web service. Enabling it at PRF requires
 per-unit authorization, which is not viable. Every data path in this plan reads the SEI
 frontend with the user's own session, exactly as the extension does today.
@@ -29,7 +27,8 @@ Implementation status:
 - The six read tools, including `buscar_legislacao`, are implemented.
 - Cursor is not a native provider. It is documented as an OpenAI-compatible custom profile
   for any organization-provided compatible base URL.
-- Phase 0/9 release hardening is partially exercised in Chromium and is not claimed complete.
+- Phase 9 editor §3 smoke is recorded complete (2026-08-06); remaining cross-surface
+  release hardening outside that gate stays a human checklist.
 
 ---
 
@@ -52,8 +51,10 @@ Implementation status:
 These come from `DEVELOPMENT.md` and must hold for every commit in this plan.
 
 1. `src/` is the only source of truth. `dist/` is generated; never edited by hand.
-2. Isolated-first. The CKEditor 4 adapter is the documented `MAIN` exception; it exposes no
-   runtime/storage/LLM APIs and uses a two-operation bridge. No inline `onclick`.
+2. Isolated-first. The CKEditor 4 editor bundle is the documented `MAIN` exception
+   (injected by `editor-loader.js` because CKEditor belongs to the page). It exposes no
+   runtime/storage/LLM APIs and uses a two-operation bridge (`snapshot` / `insertHtml`).
+   No inline `onclick`.
 3. Dependency direction: `features → shared/ui → core / sei / platform`. Never the reverse.
 4. `aliasGlobal` appears only in `legacy-api.js`, and every alias carries a removal condition.
 5. All new CSS classes are prefixed `.seipro-`.

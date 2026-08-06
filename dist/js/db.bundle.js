@@ -2798,7 +2798,7 @@
     "openai_compatible"
   ];
 
-  // src/features/ai/io/profiles.js
+  // src/features/ai/domain/provider-defaults.js
   var DEFAULTS = Object.freeze({
     openai: { baseUrl: "https://api.openai.com", model: "gpt-4.1-mini" },
     anthropic: { baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-20250514" },
@@ -2807,6 +2807,8 @@
     ollama: { baseUrl: "http://localhost:11434", model: "llama3.2" },
     openai_compatible: { baseUrl: "", model: "" }
   });
+
+  // src/features/ai/io/profiles.js
   var LEGACY_AI_SECRET_FIELDS = Object.freeze([
     "KEY_USER",
     "API_KEY",

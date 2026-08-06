@@ -14,7 +14,8 @@ import { runToolLoop } from './io/generate.js';
 import {
     getAiSettings,
     listProfiles,
-    saveAiSettings
+    saveAiSettings,
+    saveProfile
 } from './io/profiles.js';
 import { AI_TOOL_DEFINITIONS } from './tools/definitions.js';
 import { createAiToolExecutor } from './tools/executors.js';
@@ -48,6 +49,7 @@ export async function loadBoxAIActions({ editorId = '' } = {}) {
     }
     if (!profiles.length) {
         return openProfileDialog({
+            onSave: saveProfile,
             onSaved: async function (profile) {
                 await saveAiSettings({ activeProfileId: profile.id });
                 loadBoxAIActions({ editorId });
@@ -87,6 +89,7 @@ export async function loadBoxAIActions({ editorId = '' } = {}) {
             }) || profiles[0];
             openProfileDialog({
                 profile: active,
+                onSave: saveProfile,
                 onSaved: async function (saved) {
                     try {
                         settings = await saveAiSettings({ activeProfileId: saved.id });

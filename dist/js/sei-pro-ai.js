@@ -1259,7 +1259,7 @@ ${items.join("\n")}
     "openai_compatible"
   ];
 
-  // src/features/ai/io/profiles.js
+  // src/features/ai/domain/provider-defaults.js
   var DEFAULTS = Object.freeze({
     openai: { baseUrl: "https://api.openai.com", model: "gpt-4.1-mini" },
     anthropic: { baseUrl: "https://api.anthropic.com", model: "claude-sonnet-4-20250514" },
@@ -1268,6 +1268,11 @@ ${items.join("\n")}
     ollama: { baseUrl: "http://localhost:11434", model: "llama3.2" },
     openai_compatible: { baseUrl: "", model: "" }
   });
+  function providerDefaults(providerId) {
+    return { ...DEFAULTS[providerId] || DEFAULTS.openai };
+  }
+
+  // src/features/ai/io/profiles.js
   var LEGACY_MIGRATION_KEY = "llmProfilesLegacyMigrationVersion";
   var LEGACY_MIGRATION_VERSION = 2;
   var LEGACY_AI_SECRET_FIELDS = Object.freeze([
@@ -1286,9 +1291,6 @@ ${items.join("\n")}
     ["ollama", "configBasePro_ollama"],
     ["openai_compatible", "configBasePro_openai_compatible"]
   ]);
-  function providerDefaults(providerId) {
-    return { ...DEFAULTS[providerId] || DEFAULTS.openai };
-  }
   async function listProfiles() {
     await migrateLegacyProfilesOnce();
     const response = await sendMessage({ action: "llmProfilesList" });
@@ -1881,7 +1883,7 @@ ${items.join("\n")}
     ["openai_compatible", "Compat\xEDvel com OpenAI"]
   ];
   var trustedSessionApprovals = /* @__PURE__ */ new Set();
-  function openProfileDialog({ profile, onSaved } = {}) {
+  function openProfileDialog({ profile, onSave, onSaved } = {}) {
     const current = profile || {};
     const form = element2("form", "seipro-ai-form seipro-ai-profile-form");
     const provider = selectInput("seipro-ai-provider", PROVIDER_OPTIONS, current.providerId || "openai");
@@ -1936,9 +1938,13 @@ ${items.join("\n")}
           text: "Salvar",
           class: "seipro-ai-primary",
           onClick: async function(modal) {
+            if (typeof onSave !== "function") {
+              status.textContent = "Persist\xEAncia de perfil n\xE3o configurada.";
+              return;
+            }
             status.textContent = "Salvando\u2026";
             try {
-              const saved = await saveProfile({
+              const saved = await onSave({
                 id: current.id,
                 providerId: provider.value,
                 label: label.value,
@@ -2603,6 +2609,7 @@ ${items.join("\n")}
     }
     if (!profiles.length) {
       return openProfileDialog({
+        onSave: saveProfile,
         onSaved: async function(profile) {
           await saveAiSettings({ activeProfileId: profile.id });
           loadBoxAIActions({ editorId });
@@ -2639,6 +2646,7 @@ ${selectedText.trim()}` : "";
         }) || profiles[0];
         openProfileDialog({
           profile: active,
+          onSave: saveProfile,
           onSaved: async function(saved) {
             try {
               settings = await saveAiSettings({ activeProfileId: saved.id });
