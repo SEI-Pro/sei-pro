@@ -11,7 +11,12 @@ const LAZY_JS = [
     'js/lib/frappe-gantt.js',
     'js/lib/chart.min.js',
     'js/lib/jschardet.min.js',
-    'js/lib/mammoth.browser.min.js',
+    'js/lib/mammoth.browser.min.js'
+];
+
+const REMOVED_JS = [
+    'js/lib/pdfjs.js',
+    'js/lib/pdf.worker.min.js',
     'js/lib/tesseract.min.js'
 ];
 
@@ -62,5 +67,15 @@ describe('lazy feature libs (not eager content_scripts)', () => {
         expect(existsSync(join(rootDir, 'dist/css/dropzone.min.css'))).toBe(false);
         expect(war).not.toContain('js/lib/dropzone.min.js');
         expect(war).not.toContain('css/dropzone.min.css');
+    });
+
+    it('does not package removed PDF/OCR libraries', () => {
+        for (const lib of REMOVED_JS) {
+            for (const cs of manifest.content_scripts || []) {
+                expect(cs.js || [], `eager js ${lib}`).not.toContain(lib);
+            }
+            expect(war, `WAR ${lib}`).not.toContain(lib);
+            expect(existsSync(join(rootDir, 'dist', lib))).toBe(false);
+        }
     });
 });

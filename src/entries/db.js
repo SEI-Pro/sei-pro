@@ -1,6 +1,6 @@
 /**
  * Entry do contexto DB (recepção de configuração externa por URL).
- * Substitui [core-stack.bundle + jquery + jmespath + purify + pdfjs + init_db.js]
+ * Substitui [core-stack.bundle + jquery + jmespath + purify + init_db.js]
  * por um bundle isolado, sem jQuery.
  */
 import { installCoreStack } from '../core/stack.js';

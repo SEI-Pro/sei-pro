@@ -419,8 +419,6 @@ um helper migrado não seja redefinido no legado.
 | jKanban | Board Kanban |
 | Chart.js | Gráficos |
 | (removido) Dropzone.js | Substituído por `src/shared/ui/file-queue.js` (vanilla) |
-| PDF.js | Leitura de PDFs |
-| Tesseract.js | OCR |
 | DOMPurify | Sanitização de HTML |
 | LLM stack (ESM) | `core/llm` (OpenAI, Anthropic, Gemini, Moonshot, Ollama, compatible endpoints), SSE, context budgeting, and tools |
 | Editor / AI / Legis (ESM) | esbuild-generated bundles; `legacy-api.js` remains only as a bridge for old call sites |

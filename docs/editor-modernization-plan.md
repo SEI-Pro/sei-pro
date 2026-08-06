@@ -158,7 +158,7 @@ vendor/
 | jQuery 3.7.1 | core | **Keep** | still required by other legacy blocks; the migrated editor must not use it |
 | DOMPurify | core | **Keep** | mandatory for every `innerHTML` path |
 | CKEditor 4 | provided by the SEI page | **Keep** | not ours; accessed only through `features/editor/adapter.js` |
-| PDF.js / Tesseract | used by the AI full-text path | **Remove from the AI path** | replaced by structured document reading (§5.3). Keep for the OCR feature that legitimately needs it |
+| PDF.js / Tesseract | legacy AI full-text/OCR dependencies | **Removed** | the structured document reader replaced the only planned consumer; neither library has a runtime consumer |
 
 Net effect: roughly 2.4 MB of third-party code leaves the editor context, and the remaining
 libraries all load lazily through one shared helper covered by
@@ -228,8 +228,9 @@ Rules:
 
 ### 4.3 Process context — structured, not OCR
 
-The current pipeline generates a PDF of the entire process, runs pdf.js, and falls back to
-Tesseract OCR. It is slow, lossy, and produces an unlabelled wall of text.
+The former process-context pipeline generated a PDF of the entire process, ran pdf.js, and
+fell back to Tesseract OCR. That path was slow, lossy, and produced an unlabelled wall of
+text; it is no longer shipped.
 
 Replacement, using readers the extension already has:
 
@@ -239,7 +240,7 @@ Replacement, using readers the extension already has:
 4. `core/llm/budget.js` — estimate tokens and trim by relevance (recency + the documents the user named), never by blind truncation. Report to the user what was included and what was dropped.
 5. Session cache keyed by process number, mirroring the existing `sessionStorage fulltext_*` behaviour but storing structured chunks.
 
-This deletes the PDF+OCR dependency from the AI path entirely.
+This keeps the AI path structured and leaves no PDF+OCR dependency in the extension runtime.
 
 ### 4.4 Tool calling
 

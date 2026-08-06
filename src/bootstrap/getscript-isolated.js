@@ -1,7 +1,7 @@
 // Shim de $.getScript para o mundo isolado.
 //
 // - URL remota → getScript original
-// - chrome-extension:// de lib LAZY (Chart, Gantt, Mammoth, Tesseract, jschardet)
+// - chrome-extension:// de lib LAZY (Chart, Gantt, Mammoth, jschardet)
 //   → carga real (WAR; não está nos content_scripts)
 // - chrome-extension:// de tudo mais (já eager no manifest) → no-op
 //   (re-executar sei-functions-pro etc. via ajax+eval quebra globais como frmEditor)
@@ -14,7 +14,7 @@
     var original = $.getScript;
 
     // Libs removidas do eager load — precisam de getScript real a partir da WAR.
-    var LAZY_RE = /\/js\/lib\/(frappe-gantt(\.esm)?|chart\.min|mammoth\.browser\.min|tesseract\.min|jschardet\.min)(\.js)?(\?|$)/i;
+    var LAZY_RE = /\/js\/lib\/(frappe-gantt(\.esm)?|chart\.min|mammoth\.browser\.min|jschardet\.min)(\.js)?(\?|$)/i;
 
     function isExtensionUrl(u) {
         return typeof u === 'string' && u.indexOf('chrome-extension://') === 0;
