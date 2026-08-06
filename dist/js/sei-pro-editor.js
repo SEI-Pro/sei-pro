@@ -1464,11 +1464,9 @@
       }
       return $2(elementTo);
     }
-    function buildFontFaceStyles(pathExtension, iconBoxSlim) {
-      let html = '<style type="text/css" data-style="seipro-fonticon">    @font-face {\n       font-family: "Font Awesome 5 Pro";\n       font-style: normal;\n       font-weight: 900;\n       font-display: block;\n       src: url(' + pathExtension + "webfonts/pro/fa-solid-900.eot) !important;\n       src: url(" + pathExtension + 'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.woff2) format("woff2"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.woff) format("woff"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.ttf) format("truetype"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n   }\n   @font-face {\n       font-family: "Font Awesome 5 Pro";\n       font-style: normal;\n       font-weight: 400;\n       font-display: block;\n       src: url(' + pathExtension + "webfonts/pro/fa-regular-400.eot) !important;\n       src: url(" + pathExtension + 'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.woff2) format("woff2"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.woff) format("woff"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.ttf) format("truetype"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n   }\n';
-      if (iconBoxSlim) {
-        html += '   @font-face { \n       font-family: "Font Awesome 5 Pro";\n       font-style: normal;\n       font-weight: 300;\n       font-display: block;\n       src: url(' + pathExtension + "webfonts/pro/fa-light-300.eot) !important;\n       src: url(" + pathExtension + 'webfonts/pro/fa-light-300.eot?#iefix) format("embedded-opentype"), url(' + pathExtension + 'webfonts/pro/fa-light-300.woff2) format("woff2"), url(' + pathExtension + 'webfonts/pro/fa-light-300.woff) format("woff"), url(' + pathExtension + 'webfonts/pro/fa-light-300.ttf) format("truetype"), url(' + pathExtension + 'webfonts/pro/fa-light-300.svg#fontawesome) format("svg") !important; }\n   }\n   @font-face {\n       font-family: "Font Awesome 5 Duotone";\n       font-style: normal;\n       font-weight: 900;\n       font-display: block;\n       src: url(' + pathExtension + "webfonts/pro/fa-duotone-900.eot) !important;\n       src: url(" + pathExtension + 'webfonts/pro/fa-duotone-900.eot?#iefix) format("embedded-opentype"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.woff2) format("woff2"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.woff) format("woff"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.ttf) format("truetype"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important; }\n   }\n';
-      }
+    function buildFontFaceStyles(pathExtension) {
+      let html = '<style type="text/css" data-style="seipro-fonticon">    @font-face {\n       font-family: "Font Awesome 5 Pro";\n       font-style: normal;\n       font-weight: 900;\n       font-display: block;\n       src: url(' + pathExtension + 'webfonts/pro/fa-solid-900.woff2) format("woff2") !important;\n   }\n   @font-face {\n       font-family: "Font Awesome 5 Pro";\n       font-style: normal;\n       font-weight: 400;\n       font-display: block;\n       src: url(' + pathExtension + 'webfonts/pro/fa-regular-400.woff2) format("woff2") !important;\n   }\n';
+      html += '   @font-face {\n       font-family: "Font Awesome 5 Duotone";\n       font-style: normal;\n       font-weight: 900;\n       font-display: block;\n       src: url(' + pathExtension + 'webfonts/pro/fa-duotone-900.woff2) format("woff2") !important;\n   }\n';
       html += "</style>";
       return html;
     }
@@ -1476,7 +1474,6 @@
       const $2 = globalRef.jQuery || globalRef.$;
       if (!$2) return;
       target = target || $2("html");
-      const iconBoxSlim = !!(globalRef.localStorage.getItem("seiSlim") || globalRef.localStorage.getItem("seiSlim_editor"));
       const pathExtension = getSeiPro().core.runtime.pathExtensionSEIPro();
       const appendTarget = resolveTarget(elementTo, target);
       if (target.find('link[data-style="seipro-fonticon"]').length === 0 && target.find('style[data-style="seipro-fonticon"]').length === 0) {
@@ -1486,22 +1483,26 @@
           "data-style": "seipro-fonticon",
           href: getSeiPro().core.runtime.getUrlExtension("css/fontawesome.pro.min.css")
         }).appendTo(appendTarget);
-        const htmlStyleFont = buildFontFaceStyles(pathExtension, iconBoxSlim);
+        const htmlStyleFont = buildFontFaceStyles(pathExtension);
         target.find("head").append(htmlStyleFont);
       }
     }
     function loadStylePro(url, elementTo, iframeTo) {
       const $2 = globalRef.jQuery || globalRef.$;
-      if (!$2) return;
-      elementTo = elementTo || $2("head");
-      iframeTo = iframeTo || $2("head");
-      if (iframeTo.find('link[data-style="seipro-style"]').length === 0) {
+      if (!$2 || !url) return;
+      const appendTarget = elementTo ? elementTo.jquery ? elementTo : $2(elementTo) : $2("head");
+      const inspectTarget = iframeTo ? iframeTo.jquery ? iframeTo : $2(iframeTo) : appendTarget;
+      const links = inspectTarget && typeof inspectTarget.find === "function" ? inspectTarget.find('link[data-style="seipro-style"]') : $2();
+      const alreadyLoaded = links.toArray().some(
+        (link) => link.getAttribute("href") === url || link.href === url
+      );
+      if (!alreadyLoaded) {
         $2("<link/>", {
           rel: "stylesheet",
           type: "text/css",
           "data-style": "seipro-style",
           href: url
-        }).appendTo(elementTo);
+        }).appendTo(appendTarget);
       }
     }
     function loadFilesUI() {
@@ -3355,7 +3356,6 @@
     link.setAttribute("data-style", "seipro-fonticon");
     link.href = base.replace(/\/?$/, "/") + "css/fontawesome.pro.min.css";
     head.get(0).appendChild(link);
-    const slim = !!(globalRef.localStorage.getItem("seiSlim") || globalRef.localStorage.getItem("seiSlim_editor"));
     const style = globalRef.document.createElement("style");
     style.type = "text/css";
     style.setAttribute("data-style", "seipro-fonticon");
@@ -3364,8 +3364,7 @@
       '@font-face{font-family:"Font Awesome 5 Pro";font-style:normal;font-weight:900;font-display:block;',
       "src:url(" + base + 'webfonts/pro/fa-solid-900.woff2) format("woff2")}',
       '@font-face{font-family:"Font Awesome 5 Pro";font-style:normal;font-weight:400;font-display:block;',
-      "src:url(" + base + 'webfonts/pro/fa-regular-400.woff2) format("woff2")}',
-      slim ? '@font-face{font-family:"Font Awesome 5 Pro";font-style:normal;font-weight:300;font-display:block;src:url(' + base + 'webfonts/pro/fa-light-300.woff2) format("woff2")}' : ""
+      "src:url(" + base + 'webfonts/pro/fa-regular-400.woff2) format("woff2")}'
     ].join("");
     const headEl = $target.find("head").get(0);
     if (headEl) headEl.appendChild(style);

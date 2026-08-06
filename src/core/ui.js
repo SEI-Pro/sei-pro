@@ -16,42 +16,31 @@ export function installUi() {
         return $(elementTo);
     }
 
-    function buildFontFaceStyles(pathExtension, iconBoxSlim) {
+    // Font Awesome is shipped as a WOFF2-only subset. Older formats and the
+    // unused light face were removed from the extension package.
+    function buildFontFaceStyles(pathExtension) {
         let html = '<style type="text/css" data-style="seipro-fonticon">' +
             '    @font-face {\n' +
             '       font-family: "Font Awesome 5 Pro";\n' +
             '       font-style: normal;\n' +
             '       font-weight: 900;\n' +
             '       font-display: block;\n' +
-            '       src: url(' + pathExtension + 'webfonts/pro/fa-solid-900.eot) !important;\n' +
-            '       src: url(' + pathExtension + 'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.woff2) format("woff2"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.woff) format("woff"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.ttf) format("truetype"),url(' + pathExtension + 'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n' +
+            '       src: url(' + pathExtension + 'webfonts/pro/fa-solid-900.woff2) format("woff2") !important;\n' +
             '   }\n' +
             '   @font-face {\n' +
             '       font-family: "Font Awesome 5 Pro";\n' +
             '       font-style: normal;\n' +
             '       font-weight: 400;\n' +
             '       font-display: block;\n' +
-            '       src: url(' + pathExtension + 'webfonts/pro/fa-regular-400.eot) !important;\n' +
-            '       src: url(' + pathExtension + 'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.woff2) format("woff2"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.woff) format("woff"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.ttf) format("truetype"),url(' + pathExtension + 'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n' +
+            '       src: url(' + pathExtension + 'webfonts/pro/fa-regular-400.woff2) format("woff2") !important;\n' +
             '   }\n';
-        if (iconBoxSlim) {
-            html += '   @font-face { \n' +
-                '       font-family: "Font Awesome 5 Pro";\n' +
-                '       font-style: normal;\n' +
-                '       font-weight: 300;\n' +
-                '       font-display: block;\n' +
-                '       src: url(' + pathExtension + 'webfonts/pro/fa-light-300.eot) !important;\n' +
-                '       src: url(' + pathExtension + 'webfonts/pro/fa-light-300.eot?#iefix) format("embedded-opentype"), url(' + pathExtension + 'webfonts/pro/fa-light-300.woff2) format("woff2"), url(' + pathExtension + 'webfonts/pro/fa-light-300.woff) format("woff"), url(' + pathExtension + 'webfonts/pro/fa-light-300.ttf) format("truetype"), url(' + pathExtension + 'webfonts/pro/fa-light-300.svg#fontawesome) format("svg") !important; }\n' +
-                '   }\n' +
-                '   @font-face {\n' +
-                '       font-family: "Font Awesome 5 Duotone";\n' +
-                '       font-style: normal;\n' +
-                '       font-weight: 900;\n' +
-                '       font-display: block;\n' +
-                '       src: url(' + pathExtension + 'webfonts/pro/fa-duotone-900.eot) !important;\n' +
-                '       src: url(' + pathExtension + 'webfonts/pro/fa-duotone-900.eot?#iefix) format("embedded-opentype"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.woff2) format("woff2"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.woff) format("woff"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.ttf) format("truetype"), url(' + pathExtension + 'webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important; }\n' +
-                '   }\n';
-        }
+        html += '   @font-face {\n' +
+            '       font-family: "Font Awesome 5 Duotone";\n' +
+            '       font-style: normal;\n' +
+            '       font-weight: 900;\n' +
+            '       font-display: block;\n' +
+            '       src: url(' + pathExtension + 'webfonts/pro/fa-duotone-900.woff2) format("woff2") !important;\n' +
+            '   }\n';
         html += '</style>';
         return html;
     }
@@ -61,7 +50,6 @@ export function installUi() {
         if (!$) return;
 
         target = target || $('html');
-        const iconBoxSlim = !!(globalRef.localStorage.getItem('seiSlim') || globalRef.localStorage.getItem('seiSlim_editor'));
         const pathExtension = getSeiPro().core.runtime.pathExtensionSEIPro();
         const appendTarget = resolveTarget(elementTo, target);
 
@@ -74,24 +62,34 @@ export function installUi() {
                 href: getSeiPro().core.runtime.getUrlExtension('css/fontawesome.pro.min.css')
             }).appendTo(appendTarget);
 
-            const htmlStyleFont = buildFontFaceStyles(pathExtension, iconBoxSlim);
+            const htmlStyleFont = buildFontFaceStyles(pathExtension);
             target.find('head').append(htmlStyleFont);
         }
     }
 
     function loadStylePro(url, elementTo, iframeTo) {
         const $ = globalRef.jQuery || globalRef.$;
-        if (!$) return;
+        if (!$ || !url) return;
 
-        elementTo = elementTo || $('head');
-        iframeTo = iframeTo || $('head');
-        if (iframeTo.find('link[data-style="seipro-style"]').length === 0) {
+        const appendTarget = elementTo
+            ? (elementTo.jquery ? elementTo : $(elementTo))
+            : $('head');
+        const inspectTarget = iframeTo
+            ? (iframeTo.jquery ? iframeTo : $(iframeTo))
+            : appendTarget;
+        const links = inspectTarget && typeof inspectTarget.find === 'function'
+            ? inspectTarget.find('link[data-style="seipro-style"]')
+            : $();
+        const alreadyLoaded = links.toArray().some((link) =>
+            link.getAttribute('href') === url || link.href === url
+        );
+        if (!alreadyLoaded) {
             $('<link/>', {
                 rel: 'stylesheet',
                 type: 'text/css',
                 'data-style': 'seipro-style',
                 href: url
-            }).appendTo(elementTo);
+            }).appendTo(appendTarget);
         }
     }
 

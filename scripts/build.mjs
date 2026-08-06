@@ -206,10 +206,6 @@ const vendorLibs = [
         out: 'dist/js/lib/frappe-gantt.js'
     },
     {
-        src: 'vendor/frappe-gantt/frappe-gantt.es.js',
-        out: 'dist/js/lib/frappe-gantt.esm.js'
-    },
-    {
         src: 'vendor/frappe-gantt/frappe-gantt.css',
         out: 'dist/css/frappe-gantt.css'
     },

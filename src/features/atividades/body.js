@@ -14,6 +14,23 @@ import { getName as sharedGetName, getNameGenre as sharedGetNameGenre } from '..
 
 installAtividadesState();
 
+let chartAtividadesLoading = false;
+
+function loadChartAtividades() {
+    if (typeof Chart !== 'undefined' || chartAtividadesLoading) return;
+    var base = typeof URL_SPRO !== 'undefined' ? URL_SPRO : '';
+    if (!base || typeof $ === 'undefined' || typeof $.getScript !== 'function') return;
+    chartAtividadesLoading = true;
+    if (typeof loadStylePro === 'function') loadStylePro(base + 'css/chart.min.css');
+    $.getScript(base + 'js/lib/chart.min.js');
+}
+
+function loadKanbanStyleAtividades() {
+    var base = typeof URL_SPRO !== 'undefined' ? URL_SPRO : '';
+    if (!base || typeof loadStylePro !== 'function') return;
+    loadStylePro(base + 'css/jkanban.min.css');
+}
+
 export function getName(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
     return sharedGetName(ref_nomenclatura, name_default, singular, with_article, capitalize);
 }
@@ -16684,9 +16701,11 @@ export function removeAfastamento(this_, id_afastamento = 0) {
 }
 export function initKanbanAtividades(this_, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
+    loadKanbanStyleAtividades();
     if (typeof jKanban !== 'undefined') {
         getKanbanAtividades(this_);
     } else {
+        loadKanbanStyleAtividades();
         if (typeof jKanban === 'undefined') $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
         setTimeout(function () {
             initKanbanAtividades(this_, TimeOut - 100);
@@ -26284,6 +26303,9 @@ export function initAtividades(TimeOut = 9000) {
     if (typeof localStorageRestorePro !== 'undefined' && typeof checkLoadingButtonConfirm !== 'undefined' && typeof $().tabs !== 'undefined' && typeof moment().isoWeekdayCalc !== 'undefined') {
         urlServerAtiv = perfilLoginAtiv.URL_API;
         userHashAtiv = perfilLoginAtiv.KEY_USER;
+        // Chart is scoped to the enabled Atividades feature; it is not loaded
+        // by the global bootstrap on unrelated SEI pages.
+        loadChartAtividades();
         if (typeof initPanelMonitorados !== 'undefined') initPanelMonitorados();
         initEmptyAtividades();
         getAtividades();

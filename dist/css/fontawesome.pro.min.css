@@ -12712,87 +12712,64 @@ readers do not read off random characters that represent icons */
   font-family: 'Font Awesome 5 Pro';
   font-weight: 900; 
 }
+
 @supports (-webkit-appearance:none) {
-  @font-face {
-    font-family: 'Font Awesome 5 Brands';
-    font-style: normal;
-    font-weight: 400;
-    font-display: block;
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.eot");
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.eot?#iefix") format("embedded-opentype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.woff2") format("woff2"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.woff") format("woff"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.ttf") format("truetype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Duotone';
-    font-style: normal;
-    font-weight: 900;
-    font-display: block;
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.eot");
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.eot?#iefix") format("embedded-opentype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.woff2") format("woff2"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.woff") format("woff"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.ttf") format("truetype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Pro';
-    font-style: normal;
-    font-weight: 300;
-    font-display: block;
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.eot");
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.eot?#iefix") format("embedded-opentype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.woff2") format("woff2"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.woff") format("woff"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.ttf") format("truetype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Pro';
-    font-style: normal;
-    font-weight: 400;
-    font-display: block;
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.eot");
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.eot?#iefix") format("embedded-opentype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.woff2") format("woff2"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.woff") format("woff"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.ttf") format("truetype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Pro';
-    font-style: normal;
-    font-weight: 900;
-    font-display: block;
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.eot");
-    src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.eot?#iefix") format("embedded-opentype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.woff2") format("woff2"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.woff") format("woff"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.ttf") format("truetype"), url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.svg#fontawesome") format("svg"); 
-  }
+@font-face {
+  font-family: 'Font Awesome 5 Brands';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: 'Font Awesome 5 Duotone';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.woff2") format("woff2");
+}
+@font-face {
+  font-family: 'Font Awesome 5 Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: 'Font Awesome 5 Pro';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("chrome-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.woff2") format("woff2");
+}
 }
 @supports (-moz-appearance:none) {
-  @font-face {
-    font-family: 'Font Awesome 5 Brands';
-    font-style: normal;
-    font-weight: 400;
-    font-display: block;
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.eot");
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.eot?#iefix") format("embedded-opentype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.woff2") format("woff2"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.woff") format("woff"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.ttf") format("truetype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Duotone';
-    font-style: normal;
-    font-weight: 900;
-    font-display: block;
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.eot");
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.eot?#iefix") format("embedded-opentype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.woff2") format("woff2"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.woff") format("woff"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.ttf") format("truetype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Pro';
-    font-style: normal;
-    font-weight: 300;
-    font-display: block;
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.eot");
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.eot?#iefix") format("embedded-opentype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.woff2") format("woff2"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.woff") format("woff"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.ttf") format("truetype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-light-300.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Pro';
-    font-style: normal;
-    font-weight: 400;
-    font-display: block;
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.eot");
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.eot?#iefix") format("embedded-opentype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.woff2") format("woff2"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.woff") format("woff"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.ttf") format("truetype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.svg#fontawesome") format("svg"); 
-  }
-  @font-face {
-    font-family: 'Font Awesome 5 Pro';
-    font-style: normal;
-    font-weight: 900;
-    font-display: block;
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.eot");
-    src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.eot?#iefix") format("embedded-opentype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.woff2") format("woff2"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.woff") format("woff"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.ttf") format("truetype"), url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.svg#fontawesome") format("svg"); 
-  }
+@font-face {
+  font-family: 'Font Awesome 5 Brands';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-brands-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: 'Font Awesome 5 Duotone';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-duotone-900.woff2") format("woff2");
+}
+@font-face {
+  font-family: 'Font Awesome 5 Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-regular-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: 'Font Awesome 5 Pro';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("moz-extension://__MSG_@@extension_id__/webfonts/pro/fa-solid-900.woff2") format("woff2");
+}
 }

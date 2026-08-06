@@ -94,7 +94,9 @@ export function getMonitoradosEnviarProcesso() {
     if (typeof g('loadStylePro') === 'function') {
         const head = idoc.head;
         g('loadStylePro')(globalRef.URL_SPRO + 'css/sei-pro.css', head, idoc);
-        g('loadStylePro')((localStorage.getItem('seiSlim') ? globalRef.URL_SPRO + 'css/fontawesome.pro.min.css' : globalRef.URL_SPRO + 'css/fontawesome.min.css'), head, idoc);
+        // The Pro stylesheet is the single WOFF2 subset shipped by the extension;
+        // the old Free copy duplicated the same icon families.
+        g('loadStylePro')(globalRef.URL_SPRO + 'css/fontawesome.pro.min.css', head, idoc);
     }
     bindVisDispatcher(idoc, id);
     const tagInput = idoc.querySelector('.seipro-monitorado-tags-input');

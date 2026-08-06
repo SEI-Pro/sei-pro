@@ -414,7 +414,7 @@ um helper migrado não seja redefinido no legado.
 | JMESPath | Consultas na configuração JSON |
 | Moment.js | Compatibility for legacy date/deadline flows; the editor bundle does not use it |
 | CKEditor | Editor de documentos (SEI 4.x) |
-| Font Awesome Pro | Ícones |
+| Font Awesome Pro (subset WOFF2) | Ícones; somente as famílias e glifos usados pela extensão |
 | frappe-gantt | Gráfico de Gantt (projetos) |
 | jKanban | Board Kanban |
 | Chart.js | Gráficos |

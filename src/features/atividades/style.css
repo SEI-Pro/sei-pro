@@ -1,6 +1,6 @@
 /**
  * Atividades — feature-owned CSS extracted from sei-pro.css hooks.
- * Shared libs (frappe-gantt, jkanban, chart) remain separate manifest CSS.
+ * Shared libs (frappe-gantt, jkanban, chart) remain separate and load on demand.
  */
 
 .seipro-atividades-root,

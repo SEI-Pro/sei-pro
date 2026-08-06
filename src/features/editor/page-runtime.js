@@ -89,7 +89,6 @@ function insertFontIconNative(elementTo, target) {
     link.href = base.replace(/\/?$/, '/') + 'css/fontawesome.pro.min.css';
     head.get(0).appendChild(link);
 
-    const slim = !!(globalRef.localStorage.getItem('seiSlim') || globalRef.localStorage.getItem('seiSlim_editor'));
     const style = globalRef.document.createElement('style');
     style.type = 'text/css';
     style.setAttribute('data-style', 'seipro-fonticon');
@@ -98,10 +97,7 @@ function insertFontIconNative(elementTo, target) {
         '@font-face{font-family:"Font Awesome 5 Pro";font-style:normal;font-weight:900;font-display:block;',
         'src:url(' + base + 'webfonts/pro/fa-solid-900.woff2) format("woff2")}',
         '@font-face{font-family:"Font Awesome 5 Pro";font-style:normal;font-weight:400;font-display:block;',
-        'src:url(' + base + 'webfonts/pro/fa-regular-400.woff2) format("woff2")}',
-        slim
-            ? '@font-face{font-family:"Font Awesome 5 Pro";font-style:normal;font-weight:300;font-display:block;src:url(' + base + 'webfonts/pro/fa-light-300.woff2) format("woff2")}'
-            : ''
+        'src:url(' + base + 'webfonts/pro/fa-regular-400.woff2) format("woff2")}'
     ].join('');
     const headEl = $target.find('head').get(0);
     if (headEl) headEl.appendChild(style);

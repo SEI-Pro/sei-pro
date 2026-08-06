@@ -629,6 +629,20 @@
     verifyStatusRecurso: () => verifyStatusRecurso
   });
   installAtividadesState();
+  var chartAtividadesLoading = false;
+  function loadChartAtividades() {
+    if (typeof Chart !== "undefined" || chartAtividadesLoading) return;
+    var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
+    if (!base || typeof $ === "undefined" || typeof $.getScript !== "function") return;
+    chartAtividadesLoading = true;
+    if (typeof loadStylePro === "function") loadStylePro(base + "css/chart.min.css");
+    $.getScript(base + "js/lib/chart.min.js");
+  }
+  function loadKanbanStyleAtividades() {
+    var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
+    if (!base || typeof loadStylePro !== "function") return;
+    loadStylePro(base + "css/jkanban.min.css");
+  }
   function getName2(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
     return getName(ref_nomenclatura, name_default, singular, with_article, capitalize);
   }
@@ -10253,9 +10267,11 @@
     if (TimeOut <= 0) {
       return;
     }
+    loadKanbanStyleAtividades();
     if (typeof jKanban !== "undefined") {
       getKanbanAtividades(this_);
     } else {
+      loadKanbanStyleAtividades();
       if (typeof jKanban === "undefined") $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
       setTimeout(function() {
         initKanbanAtividades(this_, TimeOut - 100);
@@ -16912,6 +16928,7 @@
     if (typeof localStorageRestorePro !== "undefined" && typeof checkLoadingButtonConfirm !== "undefined" && typeof $().tabs !== "undefined" && typeof moment().isoWeekdayCalc !== "undefined") {
       urlServerAtiv = perfilLoginAtiv.URL_API;
       userHashAtiv = perfilLoginAtiv.KEY_USER;
+      loadChartAtividades();
       if (typeof initPanelMonitorados !== "undefined") initPanelMonitorados();
       initEmptyAtividades();
       getAtividades();

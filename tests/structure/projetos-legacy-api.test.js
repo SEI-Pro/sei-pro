@@ -60,6 +60,7 @@ describe('structure/projetos-legacy-api', () => {
         const manifest = read('manifest.base.json');
         expect(manifest).toMatch(/js\/sei-pro-projetos\.js/);
         expect(manifest).toMatch(/css\/projetos\.css/);
-        expect(manifest).toMatch(/frappe-gantt\.esm\.js/);
+        expect(manifest).toMatch(/js\/lib\/frappe-gantt\.js/);
+        expect(manifest).not.toMatch(/frappe-gantt\.esm\.js/);
     });
 });

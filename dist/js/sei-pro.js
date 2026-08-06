@@ -657,6 +657,11 @@
 
   // src/features/lista-processos/body.js
   installListaProcessosState();
+  function loadKanbanStylePro() {
+    var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
+    if (!base || typeof loadStylePro !== "function") return;
+    loadStylePro(base + "css/jkanban.min.css");
+  }
   function normalizeHomeFilterText2(value) {
     return normalizeHomeFilterText(value);
   }
@@ -2548,9 +2553,11 @@
     if (TimeOut2 <= 0) {
       return;
     }
+    loadKanbanStylePro();
     if (typeof jKanban !== "undefined") {
       addKanbanProc(type, loop);
     } else {
+      loadKanbanStylePro();
       if (typeof jKanban === "undefined") $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
       setTimeout(function() {
         initAddKanbanProc(type, loop, TimeOut2 - 100);
@@ -2559,7 +2566,10 @@
     }
   }
   function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
-    if (typeof jKanban === "undefined") $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
+    if (typeof jKanban === "undefined") {
+      loadKanbanStylePro();
+      $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
+    }
     if (!type || type == "all" || type == "") {
       setOptionsPro("panelProcessosView", "Tabela");
       var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');

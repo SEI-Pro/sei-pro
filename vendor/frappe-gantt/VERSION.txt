@@ -1,7 +1,6 @@
 frappe-gantt 1.2.2
 Vendored from npm frappe-gantt@1.2.2 (MIT).
 - frappe-gantt.js     = UMD (lazy via $.getScript / window.Gantt)
-- frappe-gantt.esm.js = ESM (available for future bundling)
 - CSS: dist/css/frappe-gantt.css
 Spike notes (2026-07-29):
 - on_click / on_date_change / on_progress_change / on_view_change still work via trigger_event → options["on_"+event]

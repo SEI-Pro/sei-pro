@@ -20,6 +20,12 @@ import { resolveDropzoneIcon } from '../arvore/domain.js';
 
 installListaProcessosState();
 
+function loadKanbanStylePro() {
+    var base = typeof URL_SPRO !== 'undefined' ? URL_SPRO : '';
+    if (!base || typeof loadStylePro !== 'function') return;
+    loadStylePro(base + 'css/jkanban.min.css');
+}
+
 export function normalizeHomeFilterText(value) {
     return domainNormalizeHomeFilterText(value);
 }
@@ -2212,9 +2218,11 @@ export function installPanelProcDelegation(root) {
 installPanelProcDelegation(document);
 export function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
+    loadKanbanStylePro();
     if (typeof jKanban !== 'undefined') { 
         addKanbanProc(type, loop);
     } else {
+        loadKanbanStylePro();
         if (typeof jKanban === 'undefined') $.getScript(URL_SPRO+"js/lib/jkanban.min.js");
         setTimeout(function(){ 
             initAddKanbanProc(type, loop, TimeOut - 100); 
@@ -2223,7 +2231,10 @@ export function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut
     }
 }
 export function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
-    if (typeof jKanban === 'undefined') $.getScript(URL_SPRO+"js/lib/jkanban.min.js");
+    if (typeof jKanban === 'undefined') {
+        loadKanbanStylePro();
+        $.getScript(URL_SPRO+"js/lib/jkanban.min.js");
+    }
     if (!type || type == 'all' || type == '') {
         setOptionsPro('panelProcessosView', 'Tabela');
         // Chamada direta no mundo isolado (evita .trigger('click') → MAIN onclick).

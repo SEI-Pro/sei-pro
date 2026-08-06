@@ -10,7 +10,7 @@ describe('getscript-isolated — lazy WAR libs', () => {
 
     it('carrega de verdade só libs lazy (Chart/Gantt/…); no-op no restante eager', () => {
         expect(src).toMatch(/LAZY_RE/);
-        expect(src).toMatch(/frappe-gantt|chart\.min/);
+        expect(src).toMatch(/frappe-gantt|chart\.min|jkanban\.min/);
         expect(src).toMatch(/original\.apply\(\$, arguments\)/);
         expect(src).toMatch(/resolve\(\)\.promise\(\)/);
         expect(src).toMatch(/frmEditor|eager|já presente/i);

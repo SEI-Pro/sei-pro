@@ -1477,7 +1477,7 @@
     if (typeof g4("loadStylePro") === "function") {
       const head = idoc.head;
       g4("loadStylePro")(globalRef.URL_SPRO + "css/sei-pro.css", head, idoc);
-      g4("loadStylePro")(localStorage.getItem("seiSlim") ? globalRef.URL_SPRO + "css/fontawesome.pro.min.css" : globalRef.URL_SPRO + "css/fontawesome.min.css", head, idoc);
+      g4("loadStylePro")(globalRef.URL_SPRO + "css/fontawesome.pro.min.css", head, idoc);
     }
     bindVisDispatcher(idoc, id);
     const tagInput = idoc.querySelector(".seipro-monitorado-tags-input");

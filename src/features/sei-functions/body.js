@@ -264,7 +264,6 @@ export var romanToInt = function(s) {
     return result;
 }
 function insertFontIcon(elementTo, target = $('html')) {
-    var iconBoxSlim = (localStorage.getItem('seiSlim') || localStorage.getItem('seiSlim_editor')) ? true : false;
     var pathExtension = URL_SPRO;
     if ( target, target.find('link[data-style="seipro-fonticon"]').length == 0 && target.find('style[data-style="seipro-fonticon"]').length == 0) {
         $("<link/>", {
@@ -280,35 +279,22 @@ function insertFontIcon(elementTo, target = $('html')) {
                             '       font-style: normal;\n'+
                             '       font-weight: 900;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-solid-900.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-solid-900.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-solid-900.svg#fontawesome) format("svg") !important;\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-solid-900.woff2) format("woff2") !important;\n'+
                             '   }\n'+
                             '   @font-face {\n'+
                             '       font-family: \"Font Awesome 5 Pro";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 400;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.eot?#iefix) format("embedded-opentype"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2"),url('+pathExtension+'webfonts/pro/fa-regular-400.woff) format("woff"),url('+pathExtension+'webfonts/pro/fa-regular-400.ttf) format("truetype"),url('+pathExtension+'webfonts/pro/fa-regular-400.svg#fontawesome) format("svg") !important;\n'+
-                            '   }\n'+
-                            (iconBoxSlim ?
-                            '   @font-face { \n'+
-                            '       font-family: "Font Awesome 5 Pro";\n'+
-                            '       font-style: normal;\n'+
-                            '       font-weight: 300;\n'+
-                            '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-light-300.eot?#iefix) format("embedded-opentype"), url('+pathExtension+'webfonts/pro/fa-light-300.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-light-300.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-light-300.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-light-300.svg#fontawesome) format("svg") !important; }\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-regular-400.woff2) format("woff2") !important;\n'+
                             '   }\n'+
                             '   @font-face {\n'+
                             '       font-family: \"Font Awesome 5 Duotone\";\n'+
                             '       font-style: normal;\n'+
                             '       font-weight: 900;\n'+
                             '       font-display: block;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot) !important;\n'+
-                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.eot?#iefix) format(\"embedded-opentype\"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff2) format("woff2"), url('+pathExtension+'webfonts/pro/fa-duotone-900.woff) format("woff"), url('+pathExtension+'webfonts/pro/fa-duotone-900.ttf) format("truetype"), url('+pathExtension+'webfonts/pro/fa-duotone-900.svg#fontawesome) format("svg") !important; }\n'+
+                            '       src: url('+pathExtension+'webfonts/pro/fa-duotone-900.woff2) format("woff2") !important;\n'+
                             '   }\n'
-                            : '')
                             '</style>';
         target.find('head').append(htmlStyleFont);
     }
@@ -338,15 +324,6 @@ export function checkLoadJqueryUI(callback = false) {
         loadStylePro(URL_SPRO+'css/jquery-ui.css');
     } else if (typeof callback === 'function') {
         callback();
-    }
-}
-export function checkLoadFileRobot(callback = false) {
-    if (typeof window.FilerobotImageEditor === 'undefined') {
-        $.getScript(URL_SPRO+"js/lib/filerobot-image-editor.min.js", function(){
-            if (typeof callback === 'function') callback();
-        });
-    } else {
-        if (typeof callback === 'function') callback();
     }
 }
 export function checkValue(elem) {

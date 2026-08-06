@@ -148,7 +148,7 @@ vendor/
 
 | Library | Current | Action | Replacement |
 |---|---|---|---|
-| Filerobot Image Editor | 1.2 MB, lazy | **Remove** | `shared/ui/image-crop.js` — canvas crop, rotate, resize, quality. Covers the real usage; ~200 LOC |
+| Filerobot Image Editor | 1.2 MB, removed | **Removed** | `shared/ui/image-crop.js` — canvas crop, rotate, resize, quality. Covers the real usage; ~200 LOC |
 | Mammoth | 627 KB, `$.getScript` from `dist/js/lib` | **Keep, relocate** | move to `vendor/`, load through the shared lazy loader |
 | jQuery UI | 247 KB, lazy | **Remove from the editor** | `shared/ui/modal.js` + `tabs.js` + `combobox.js` already exist; other features keep loading it until they migrate |
 | CodeCogs LaTeX | remote PNG per equation | **Remove** | KaTeX vendored; renders locally, no third-party call, no raster |

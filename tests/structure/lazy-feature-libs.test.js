@@ -10,6 +10,7 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 const LAZY_JS = [
     'js/lib/frappe-gantt.js',
     'js/lib/chart.min.js',
+    'js/lib/jkanban.min.js',
     'js/lib/jschardet.min.js',
     'js/lib/mammoth.browser.min.js'
 ];
@@ -17,12 +18,14 @@ const LAZY_JS = [
 const REMOVED_JS = [
     'js/lib/pdfjs.js',
     'js/lib/pdf.worker.min.js',
-    'js/lib/tesseract.min.js'
+    'js/lib/tesseract.min.js',
+    'js/lib/filerobot-image-editor.min.js'
 ];
 
 const LAZY_CSS = [
     'css/frappe-gantt.css',
-    'css/chart.min.css'
+    'css/chart.min.css',
+    'css/jkanban.min.css'
 ];
 
 describe('lazy feature libs (not eager content_scripts)', () => {
@@ -48,14 +51,23 @@ describe('lazy feature libs (not eager content_scripts)', () => {
         }
     });
 
-    it('bootstraps Chart/Gantt from init; Dropzone replaced by file-queue', () => {
+    it('loads heavy libraries from feature paths; Dropzone replaced by file-queue', () => {
         const init = read('src/bootstrap/init.js');
         const initArvore = read('src/bootstrap/init_arvore.js');
         const upload = read('src/features/arvore/upload.js');
-        expect(init).toContain("js/lib/frappe-gantt.js");
-        expect(init).toContain('css/frappe-gantt.css');
-        expect(init).toContain("js/lib/chart.min.js");
-        expect(init).toContain('css/chart.min.css');
+        const atividades = read('src/features/atividades/body.js');
+        const lista = read('src/features/lista-processos/body.js');
+        const projetos = read('src/features/projetos/view/helpers.js');
+        const editorImport = read('src/features/editor/view/dialogs/import.js');
+        const docsLote = read('src/features/docs-lote/view.js');
+        expect(init).not.toMatch(/(?:chart\.min|frappe-gantt|jkanban\.min)\.js/);
+        expect(init).not.toMatch(/(?:chart\.min|frappe-gantt|jkanban\.min)\.css/);
+        expect(atividades).toContain('loadChartAtividades');
+        expect(atividades).toContain('loadKanbanStyleAtividades');
+        expect(lista).toContain('loadKanbanStylePro');
+        expect(projetos).toContain('loadGanttLib');
+        expect(editorImport).toContain('mammoth.browser.min.js');
+        expect(docsLote).toContain('jschardet.min.js');
         expect(initArvore).not.toContain('dropzone.min.js');
         expect(upload).toContain("from '../../shared/ui/file-queue.js'");
         expect(upload).toContain('createFileQueue');
@@ -69,7 +81,7 @@ describe('lazy feature libs (not eager content_scripts)', () => {
         expect(war).not.toContain('css/dropzone.min.css');
     });
 
-    it('does not package removed PDF/OCR libraries', () => {
+    it('does not package removed PDF/OCR/editor libraries', () => {
         for (const lib of REMOVED_JS) {
             for (const cs of manifest.content_scripts || []) {
                 expect(cs.js || [], `eager js ${lib}`).not.toContain(lib);
