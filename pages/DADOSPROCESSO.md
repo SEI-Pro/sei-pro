@@ -86,5 +86,3 @@ Os campos dinâmicos personalizados podem ser utilizados em qualquer documento d
 Os campos dinâmicos personalizados poderão ser utilizados por outras unidades, apesar de não disponíveis para edição.
 
 ## Próximo item
-
-> [Gerar link curto do TinyUrl](./LINKCURTO.md)

@@ -8782,7 +8782,6 @@
   var sumario_exports = {};
   __export(sumario_exports, {
     getDialogSumarioDocumento: () => getDialogSumarioDocumento,
-    getDialogSumarioDocumento_: () => getDialogSumarioDocumento_,
     getListStylesDocumento: () => getListStylesDocumento,
     getSumarioDocumento: () => getSumarioDocumento,
     insertSumarioDocumento: () => insertSumarioDocumento,
@@ -8894,75 +8893,6 @@
       }]
     });
   }
-  function getDialogSumarioDocumento_() {
-    var arrayStyles = api.getListStylesDocumento();
-    CKEDITOR.dialog.add("SumarioSEI", function(editor) {
-      return {
-        title: "Inserir sum\xE1rio",
-        minWidth: 500,
-        minHeight: 80,
-        buttons: [CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton],
-        onOk: function(event, a, b) {
-          var arrayStylesUser = [];
-          var id_style1 = this.getContentElement("tab1", "listStyle1").getValue();
-          var id_style2 = this.getContentElement("tab1", "listStyle2").getValue();
-          var id_style3 = this.getContentElement("tab1", "listStyle3").getValue();
-          if (id_style1 != "") {
-            arrayStylesUser.push(id_style1);
-          }
-          if (id_style2 != "") {
-            arrayStylesUser.push(id_style2);
-          }
-          if (id_style3 != "") {
-            arrayStylesUser.push(id_style3);
-          }
-          if (arrayStylesUser.length) {
-            api.insertSumarioDocumento(arrayStylesUser);
-            event.data.hide = true;
-          }
-        },
-        onShow: function() {
-          var arrayStyles2 = api.getListStylesDocumento();
-          api.updateSelectDialog(this.getContentElement("tab1", "listStyle1")._.inputId, arrayStyles2);
-          api.updateSelectDialog(this.getContentElement("tab1", "listStyle2")._.inputId, arrayStyles2);
-          api.updateSelectDialog(this.getContentElement("tab1", "listStyle3")._.inputId, arrayStyles2);
-          if (verifyConfigValue("substituiselecao")) api.setChosenInCke();
-        },
-        contents: [
-          {
-            id: "tab1",
-            label: "Estilo do T\xEDtulo",
-            elements: [
-              {
-                type: "select",
-                id: "listStyle1",
-                labelLayout: "horizontal",
-                label: "Estilo do T\xEDtulo 1 (obrigat\xF3rio)",
-                items: arrayStyles,
-                "default": ""
-              },
-              {
-                type: "select",
-                id: "listStyle2",
-                labelLayout: "horizontal",
-                label: "Estilo do T\xEDtulo 2",
-                items: arrayStyles,
-                "default": ""
-              },
-              {
-                type: "select",
-                id: "listStyle3",
-                labelLayout: "horizontal",
-                label: "Estilo do T\xEDtulo 3",
-                items: arrayStyles,
-                "default": ""
-              }
-            ]
-          }
-        ]
-      };
-    });
-  }
   function insertSumarioDocumento(arrayStylesUser) {
     var selectStyles = arrayStylesUser.join(", ");
     var htmlSumario = '<p class="Texto_Alinhado_Esquerda"><strong>SUM\xC1RIO</strong></p>';
@@ -8986,7 +8916,6 @@
   api.getListStylesDocumento = getListStylesDocumento;
   api.updateSelectDialog = updateSelectDialog;
   api.getDialogSumarioDocumento = getDialogSumarioDocumento;
-  api.getDialogSumarioDocumento_ = getDialogSumarioDocumento_;
   api.insertSumarioDocumento = insertSumarioDocumento;
 
   // src/features/editor/view/dialogs/qr.js
