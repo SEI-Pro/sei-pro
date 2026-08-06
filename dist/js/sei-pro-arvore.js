@@ -611,6 +611,24 @@
       if (typeof onSend === "function") onSend(match);
     });
   }
+  function bindParentAtividadesActions(deps = {}) {
+    const root = deps.root || (typeof document !== "undefined" ? document : null);
+    const callParentAtividades2 = deps.callParentAtividades;
+    if (!root || typeof callParentAtividades2 !== "function") return;
+    if (root.__seiproArvoreParentAtividadesBound) return;
+    root.__seiproArvoreParentAtividadesBound = true;
+    on(root, "click", '[data-seipro-arvore-action="parent-atividades"]', (event, match) => {
+      event.preventDefault();
+      const fn = match.getAttribute("data-fn");
+      if (!fn) return;
+      const id = match.getAttribute("data-id");
+      if (id != null && id !== "") {
+        callParentAtividades2(fn, /^-?\d+$/.test(id) ? Number(id) : id);
+      } else {
+        callParentAtividades2(fn, match);
+      }
+    });
+  }
   function setUploadHover(container, on2) {
     if (!container) return;
     container.classList.toggle("dz-drag-hover", !!on2);
@@ -1462,6 +1480,17 @@
 
   // src/features/arvore/body.js
   installArvoreState();
+  function atividadesApiParent() {
+    return typeof parent !== "undefined" && parent.SeiPro && parent.SeiPro.features && parent.SeiPro.features.atividades || null;
+  }
+  function callParentAtividades(name) {
+    var api = atividadesApiParent();
+    var fn = api && typeof api[name] === "function" ? api[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : typeof parent !== "undefined" && typeof parent[name] === "function" ? parent[name] : null;
+    if (typeof fn !== "function") return void 0;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+  }
+  bindParentAtividadesActions({ callParentAtividades });
   function resolveArvoreMenuCatalogs(stored, defaults) {
     return resolveMenuCatalogs(stored, defaults);
   }
@@ -3023,8 +3052,8 @@
       }
     } else {
       setTimeout(function() {
-        if (typeof parent.getAtividades === "function" && TimeOut == 9e3) {
-          parent.getAtividades();
+        if (TimeOut == 9e3) {
+          callParentAtividades("getAtividades");
         }
         initAtividadesProcesso(TimeOut - 100);
       }, 500);
@@ -3071,9 +3100,10 @@
         var params_url = getParamsUrlPro($(`a[target="${ifrVisualizacao_}"]`).attr("href"));
         var id_procedimento = params_url.id_procedimento;
         if (value.id_procedimento == parseInt(id_procedimento)) {
-          var htmlActionsAtividade = parent.actionsAtividade(value.id_demanda, "icon");
-          var kanbanItem = parent.getKanbanItem(value);
-          htmlInfoAtividades += '<div class="kanban-item ' + kanbanItem.class.join(" ") + '" data-eid="_id_' + value.id_demanda + '">   ' + kanbanItem.title + (htmlActionsAtividade.action == "info" ? "" : '   <span class="info_dates_monitorado" style="display: block;padding: 0;margin: 10px 0 0 0;">       <a class="newLink" onclick="parent.actionsAtividade(' + value.id_demanda + ')">           <i style="margin-right: 3px;" class="' + htmlActionsAtividade.icon + ' azulColor"></i>           ' + htmlActionsAtividade.name + "       </a>   </span>") + "</div>";
+          var htmlActionsAtividade = callParentAtividades("actionsAtividade", value.id_demanda, "icon");
+          var kanbanItem = callParentAtividades("getKanbanItem", value);
+          if (!htmlActionsAtividade || !kanbanItem) return;
+          htmlInfoAtividades += '<div class="kanban-item ' + kanbanItem.class.join(" ") + '" data-eid="_id_' + value.id_demanda + '">   ' + kanbanItem.title + (htmlActionsAtividade.action == "info" ? "" : '   <span class="info_dates_monitorado" style="display: block;padding: 0;margin: 10px 0 0 0;">       <a class="newLink" href="#" data-seipro-arvore-action="parent-atividades" data-fn="actionsAtividade" data-id="' + value.id_demanda + '">           <i style="margin-right: 3px;" class="' + htmlActionsAtividade.icon + ' azulColor"></i>           ' + htmlActionsAtividade.name + "       </a>   </span>") + "</div>";
         }
       });
       htmlAtividades = '<div class="panelDadosArvore panelDadosArvore_atividades" data-type="atividades">   <label class="newLink panelArvoreHead" style="margin-bottom: 10px; display: block;">      <i class="fas fa-check-circle azulColor iconDadosProcesso"></i>      Atividades:       <span class="atividadesProActionsArvore">       </span>      <i class="fas fa-chevron-' + (getOptionsPro("panelDadosArvorePro_atividades") == "hide" ? "right" : "down") + ' azulColor" style="float: right; cursor:pointer; margin-right: 20px;" onclick="togglePanelDadosArvore(this)"></i>   </label>   <div class="infoDadosArvore kanban-container" style="' + (getOptionsPro("panelDadosArvorePro_atividades") == "hide" ? "display:none" : "") + ';padding: 10px 0;max-height: 800px;overflow-y: scroll;">       ' + htmlInfoAtividades + "   </div></div>";
@@ -3273,7 +3303,7 @@
     }
     loadStyleDesignArvore();
     checkProcessoSigiloso();
-    if (typeof parent.checkCapacidade !== "undefined" && parent.checkCapacidade("view_prescricoes") && parent.checkConfigValue("gerenciarprescricoes")) initPanelPrescricaoProcesso();
+    if (callParentAtividades("checkCapacidade", "view_prescricoes") && parent.checkConfigValue("gerenciarprescricoes")) initPanelPrescricaoProcesso();
     arrayLinksArvore = getLinksArvore();
     arrayLinksPage = getLinksPage();
     parent.linksArvore = getLinksPage();

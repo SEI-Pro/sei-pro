@@ -1624,11 +1624,18 @@
   function hasRemoteBackend() {
     return !!(globalRef.urlServerAtiv && globalRef.userHashAtiv);
   }
+  function getAtividadesServer() {
+    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    if (api && typeof api.getServerAtividades === "function") return api.getServerAtividades;
+    if (typeof globalRef.getServerAtividades === "function") return globalRef.getServerAtividades;
+    return null;
+  }
   function runProjetoAction(param, localDispatch) {
-    if (hasRemoteBackend() && typeof globalRef.getServerAtividades === "function") {
+    const server = getAtividadesServer();
+    if (hasRemoteBackend() && server) {
       return new Promise((resolve) => {
         try {
-          globalRef.getServerAtividades(param, param.action);
+          server(param, param.action);
           resolve({ status: 1, remote: true });
         } catch (e) {
           resolve(localDispatch(param));
@@ -1640,10 +1647,17 @@
 
   // src/features/projetos/view/helpers.js
   var ganttLoading = null;
+  function getAtividadesCheckCapacidade() {
+    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    if (api && typeof api.checkCapacidade === "function") return api.checkCapacidade;
+    if (typeof globalRef.checkCapacidade === "function") return globalRef.checkCapacidade;
+    return null;
+  }
   function can(name) {
-    if (typeof globalRef.checkCapacidade === "function" && hasRemoteBackend()) {
+    const check = getAtividadesCheckCapacidade();
+    if (check && hasRemoteBackend()) {
       try {
-        return !!globalRef.checkCapacidade(name);
+        return !!check(name);
       } catch (e) {
       }
     }

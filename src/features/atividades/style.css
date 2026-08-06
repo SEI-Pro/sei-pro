@@ -3,14 +3,15 @@
  * Shared libs (frappe-gantt, jkanban, chart) remain separate and load on demand.
  */
 
-.seipro-atividades-root,
-.seipro-atividades-panel { }
+/* P6: feature selectors use .seipro-*; legacy #ids remain in markup for jQuery. */
+.seipro-atividades-root { display: inline-block; width: 100%; }
+.seipro-atividades-panel { width: 98%; }
+.seipro-atividades-root [data-act^="atividades-"] { cursor: pointer; }
 
-
-#ganttRecorrenciaPanel .popup-wrapper,
-#ganttAfastamentoPanel .popup-wrapper,
-#ganttHistoryPainel .popup-wrapper,
-#ganttAtivPanel .popup-wrapper {
+.seipro-atividades-gantt-recorrencia .popup-wrapper,
+.seipro-atividades-gantt-afastamento .popup-wrapper,
+.seipro-atividades-gantt-history .popup-wrapper,
+.seipro-atividades-gantt .popup-wrapper {
     background: #fff;
     display: none;
     padding: 12px;
@@ -19,136 +20,136 @@
     min-width: 250px;
     width: 350px;
 }
-#ganttRecorrenciaPanel .popup-wrapper h5, p,
-#ganttAfastamentoPanel .popup-wrapper h5, p,
-#ganttHistoryPainel .popup-wrapper h5, p,
-#ganttAtivPanel .popup-wrapper h5, p {
+.seipro-atividades-gantt-recorrencia .popup-wrapper h5, p,
+.seipro-atividades-gantt-afastamento .popup-wrapper h5, p,
+.seipro-atividades-gantt-history .popup-wrapper h5, p,
+.seipro-atividades-gantt .popup-wrapper h5, p {
     margin: 0;
 }
-#ganttRecorrenciaPanel .popup-wrapper h5,
-#ganttAfastamentoPanel .popup-wrapper h5,
-#ganttHistoryPainel .popup-wrapper h5,
-#ganttAtivPanel .popup-wrapper h5 {
+.seipro-atividades-gantt-recorrencia .popup-wrapper h5,
+.seipro-atividades-gantt-afastamento .popup-wrapper h5,
+.seipro-atividades-gantt-history .popup-wrapper h5,
+.seipro-atividades-gantt .popup-wrapper h5 {
     font-size: 12px;
     font-weight: bold;
     margin-bottom: 10px;
     /*color: $text-light;*/
 }
-#ganttRecorrenciaPanel .popup-wrapper a,
-#ganttAfastamentoPanel .popup-wrapper a,
-#ganttHistoryPainel .popup-wrapper a,
-#ganttAtivPanel .popup-wrapper a {
+.seipro-atividades-gantt-recorrencia .popup-wrapper a,
+.seipro-atividades-gantt-afastamento .popup-wrapper a,
+.seipro-atividades-gantt-history .popup-wrapper a,
+.seipro-atividades-gantt .popup-wrapper a {
     text-decoration: underline;
     color: #0000cc;
 }
-#ganttRecorrenciaPanel .popup-wrapper p,
-#ganttAfastamentoPanel .popup-wrapper p,
-#ganttHistoryPainel .popup-wrapper p,
-#ganttAtivPanel .popup-wrapper p {
+.seipro-atividades-gantt-recorrencia .popup-wrapper p,
+.seipro-atividades-gantt-afastamento .popup-wrapper p,
+.seipro-atividades-gantt-history .popup-wrapper p,
+.seipro-atividades-gantt .popup-wrapper p {
     font-size: 12px;
     margin-bottom: 6px;
     /*color: $text-muted;*/
 }
-#ganttRecorrenciaPanel .popup-wrapper p:last-child,
-#ganttAfastamentoPanel .popup-wrapper p:last-child,
-#ganttHistoryPainel .popup-wrapper p:last-child,
-#ganttAtivPanel .popup-wrapper p:last-child {
+.seipro-atividades-gantt-recorrencia .popup-wrapper p:last-child,
+.seipro-atividades-gantt-afastamento .popup-wrapper p:last-child,
+.seipro-atividades-gantt-history .popup-wrapper p:last-child,
+.seipro-atividades-gantt .popup-wrapper p:last-child {
     margin-bottom: 0;
 }
-#ganttRecorrenciaPanel .popup-wrapper .pointer,
-#ganttAfastamentoPanel .popup-wrapper .pointer,
-#ganttHistoryPainel .popup-wrapper .pointer,
-#ganttAtivPanel .popup-wrapper .pointer {
+.seipro-atividades-gantt-recorrencia .popup-wrapper .pointer,
+.seipro-atividades-gantt-afastamento .popup-wrapper .pointer,
+.seipro-atividades-gantt-history .popup-wrapper .pointer,
+.seipro-atividades-gantt .popup-wrapper .pointer {
     border-color: #ccc transparent transparent !important;
 }
-#ganttRecorrenciaPanel .popup-wrapper .hide,
-#ganttAfastamentoPanel .popup-wrapper .hide,
-#ganttHistoryPainel .popup-wrapper .hide,
-#ganttAtivPanel .popup-wrapper .hide
+.seipro-atividades-gantt-recorrencia .popup-wrapper .hide,
+.seipro-atividades-gantt-afastamento .popup-wrapper .hide,
+.seipro-atividades-gantt-history .popup-wrapper .hide,
+.seipro-atividades-gantt .popup-wrapper .hide
 {
     display: none;
 }
 
-#ganttAtivPanel .bar-em-execucao .bar,
-#ganttRecorrenciaPanel .bar-em-execucao .bar,
-#ganttAfastamentoPanel .bar-em-execucao .bar,
-#ganttHistoryPainel .bar-em-execucao .bar,
-#ganttAtivPanel .bar-iniciado .bar,
-#ganttAfastamentoPanel .bar-iniciado .bar,
-#ganttHistoryPainel .bar-iniciado .bar {
+.seipro-atividades-gantt .seipro-atividades-bar--em-execucao .bar,
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--em-execucao .bar,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--em-execucao .bar,
+.seipro-atividades-gantt-history .seipro-atividades-bar--em-execucao .bar,
+.seipro-atividades-gantt .seipro-atividades-bar--iniciado .bar,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--iniciado .bar,
+.seipro-atividades-gantt-history .seipro-atividades-bar--iniciado .bar {
     fill: #B8C2CB !important;
 }
-#ganttRecorrenciaPanel .bar-fora-execucao .bar,
-#ganttAfastamentoPanel .bar-fora-execucao .bar,
-#ganttHistoryPainel .bar-fora-execucao .bar,
-#ganttAtivPanel .bar-fora-execucao .bar {
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--fora-execucao .bar,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--fora-execucao .bar,
+.seipro-atividades-gantt-history .seipro-atividades-bar--fora-execucao .bar,
+.seipro-atividades-gantt .seipro-atividades-bar--fora-execucao .bar {
     fill: #cacaca !important;
 }
-#ganttRecorrenciaPanel .bar-iniciado .bar-progress,
-#ganttAfastamentoPanel .bar-iniciado .bar-progress,
-#ganttHistoryPainel .bar-iniciado .bar-progress,
-#ganttAtivPanel .bar-iniciado .bar-progress {
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--iniciado .bar-progress,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--iniciado .bar-progress,
+.seipro-atividades-gantt-history .seipro-atividades-bar--iniciado .bar-progress,
+.seipro-atividades-gantt .seipro-atividades-bar--iniciado .bar-progress {
     fill: #2490ef !important;
 }
-#ganttRecorrenciaPanel .bar-concluido-noprazo .bar,
-#ganttAfastamentoPanel .bar-concluido-noprazo .bar,
-#ganttHistoryPainel .bar-concluido-noprazo .bar,
-#ganttAtivPanel .bar-concluido-noprazo .bar {
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--concluido-noprazo .bar,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--concluido-noprazo .bar,
+.seipro-atividades-gantt-history .seipro-atividades-bar--concluido-noprazo .bar,
+.seipro-atividades-gantt .seipro-atividades-bar--concluido-noprazo .bar {
     fill: #e6eae8 !important;
 }
-#ganttRecorrenciaPanel .bar-concluido-noprazo .bar-progress,
-#ganttAfastamentoPanel .bar-concluido-noprazo .bar-progress,
-#ganttHistoryPainel .bar-concluido-noprazo .bar-progress,
-#ganttAtivPanel .bar-concluido-noprazo .bar-progress {
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--concluido-noprazo .bar-progress,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--concluido-noprazo .bar-progress,
+.seipro-atividades-gantt-history .seipro-atividades-bar--concluido-noprazo .bar-progress,
+.seipro-atividades-gantt .seipro-atividades-bar--concluido-noprazo .bar-progress {
     fill: #77CC49 !important;
 }
-#ganttAtivPanel .bar-nao-iniciado .bar,
-#ganttAtivPanel .bar-concluido-foraprazo .bar,
-#ganttAtivPanel .bar-ematraso .bar,
-#ganttRecorrenciaPanel .bar-nao-iniciado .bar,
-#ganttRecorrenciaPanel .bar-concluido-foraprazo .bar,
-#ganttRecorrenciaPanel .bar-ematraso .bar,
-#ganttAfastamentoPanel .bar-nao-iniciado .bar,
-#ganttAfastamentoPanel .bar-concluido-foraprazo .bar,
-#ganttAfastamentoPanel .bar-ematraso .bar,
-#ganttHistoryPainel .bar-nao-iniciado .bar,
-#ganttHistoryPainel .bar-concluido-foraprazo .bar,
-#ganttHistoryPainel .bar-ematraso .bar {
+.seipro-atividades-gantt .seipro-atividades-bar--nao-iniciado .bar,
+.seipro-atividades-gantt .seipro-atividades-bar--concluido-foraprazo .bar,
+.seipro-atividades-gantt .seipro-atividades-bar--ematraso .bar,
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--nao-iniciado .bar,
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--concluido-foraprazo .bar,
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--ematraso .bar,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--nao-iniciado .bar,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--concluido-foraprazo .bar,
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--ematraso .bar,
+.seipro-atividades-gantt-history .seipro-atividades-bar--nao-iniciado .bar,
+.seipro-atividades-gantt-history .seipro-atividades-bar--concluido-foraprazo .bar,
+.seipro-atividades-gantt-history .seipro-atividades-bar--ematraso .bar {
     fill: #e8dadd !important;
 }
-#ganttAfastamentoPanel .bar-concluido-foraprazo .bar-progress,
-#ganttHistoryPainel .bar-concluido-foraprazo .bar-progress,
-#ganttRecorrenciaPanel .bar-concluido-foraprazo .bar-progress,
-#ganttAtivPanel .bar-concluido-foraprazo .bar-progress {
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--concluido-foraprazo .bar-progress,
+.seipro-atividades-gantt-history .seipro-atividades-bar--concluido-foraprazo .bar-progress,
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--concluido-foraprazo .bar-progress,
+.seipro-atividades-gantt .seipro-atividades-bar--concluido-foraprazo .bar-progress {
     fill: #ef8624 !important;
 }
-#ganttAfastamentoPanel .bar-ematraso .bar-progress,
-#ganttHistoryPainel .bar-ematraso .bar-progress,
-#ganttRecorrenciaPanel .bar-ematraso .bar-progress,
-#ganttAtivPanel .bar-ematraso .bar-progress {
+.seipro-atividades-gantt-afastamento .seipro-atividades-bar--ematraso .bar-progress,
+.seipro-atividades-gantt-history .seipro-atividades-bar--ematraso .bar-progress,
+.seipro-atividades-gantt-recorrencia .seipro-atividades-bar--ematraso .bar-progress,
+.seipro-atividades-gantt .seipro-atividades-bar--ematraso .bar-progress {
     fill: #ef2440 !important;
 }
-#ganttAfastamentoPanel .bar-wrapper .handle-group,
-#ganttHistoryPainel .bar-wrapper .handle-group,
-#ganttRecorrenciaPanel .bar-wrapper .handle-group,
-#ganttAtivPanel .bar-wrapper .handle-group {
+.seipro-atividades-gantt-afastamento .bar-wrapper .handle-group,
+.seipro-atividades-gantt-history .bar-wrapper .handle-group,
+.seipro-atividades-gantt-recorrencia .bar-wrapper .handle-group,
+.seipro-atividades-gantt .bar-wrapper .handle-group {
     display: none;
 }
-#ganttAfastamentoPanel .popup-wrapper td,
-#ganttHistoryPainel .popup-wrapper td,
-#ganttRecorrenciaPanel .popup-wrapper td,
-#ganttAtivPanel .popup-wrapper td {
+.seipro-atividades-gantt-afastamento .popup-wrapper td,
+.seipro-atividades-gantt-history .popup-wrapper td,
+.seipro-atividades-gantt-recorrencia .popup-wrapper td,
+.seipro-atividades-gantt .popup-wrapper td {
     vertical-align: middle;
 }
-#ganttAtivPanel .popup-wrapper {
+.seipro-atividades-gantt .popup-wrapper {
     width: 550px!important;
 }
-.tabelaControle a.iconAtividade {
+.tabelaControle a.seipro-atividades-icon {
     margin: 0px;
     padding: 2px;
     font-size: 14pt;
 }
-td.celStatusAtividade a.iconAtividade {
+td.seipro-atividades-status-cell a.seipro-atividades-icon {
     height: 20px !important;
     display: inline-block;
     width: 20px;
@@ -156,49 +157,55 @@ td.celStatusAtividade a.iconAtividade {
     padding: 0;
     border-radius: 50%;
 }
-td.celStatusAtividade a.iconAtividade:hover {
+td.seipro-atividades-status-cell a.seipro-atividades-icon:hover {
     background-color: #ffff99;
 }
-td.celStatusAtividade a.iconAtividade:first-child {
+td.seipro-atividades-status-cell a.seipro-atividades-icon:first-child {
     margin: 0;
 }
-#atividadesStatusTablePro {
+.seipro-atividades-status-table {
     width: 100%; 
     display: inline-table;
 }
-#atividadesStatusTablePro h3 {
+.seipro-atividades-status-table h3 {
     font-size: 11pt;
     padding-left: 25px;
     border: none !important;
 }
-#atividadesStatusTablePro .ui-accordion-content {
+.seipro-atividades-status-table .ui-accordion-content {
     border: none !important;
     padding: 0 0 20px 0 !important;
 }
-#atividadesStatusTablePro th {
+.seipro-atividades-status-table th {
     padding: 10px;
 }
-.atividadesProgresso_atraso .ui-progressbar-value {
+.atividadesProgresso_atraso .ui-progressbar-value,
+.seipro-atividades-progress--atraso .ui-progressbar-value {
     background: #ED4A35 !important;
     border: 1px solid #ED4A35 !important;
 }
-.atividadesProgresso_analise .ui-progressbar-value {
+.atividadesProgresso_analise .ui-progressbar-value,
+.seipro-atividades-progress--analise .ui-progressbar-value {
     background: #4285F4 !important;
     border: 1px solid #365ea0 !important;
 }
-#atividadesAnaliseGerencialPro .atividadesProgresso_analise .ui-progressbar-value {
+.seipro-atividades-analise-gerencial .atividadesProgresso_analise .ui-progressbar-value,
+.seipro-atividades-analise-gerencial .seipro-atividades-progress--analise .ui-progressbar-value {
     background: #9CB639 !important;
     border: 1px solid #9CB639 !important;
 }
-#atividadesAnaliseGerencialPro .atividadesProgresso_atraso .ui-progressbar-value {
+.seipro-atividades-analise-gerencial .atividadesProgresso_atraso .ui-progressbar-value,
+.seipro-atividades-analise-gerencial .seipro-atividades-progress--atraso .ui-progressbar-value {
     background: #ad2222 !important;
     border: 1px solid #ad2222 !important;
 }
-.atividadesProgressoPeriodo .ui-progressbar-value {
+.atividadesProgressoPeriodo .ui-progressbar-value,
+.seipro-atividades-progress--periodo .ui-progressbar-value {
     background: #9CB639 !important;
     border: 1px solid #9CB639 !important;
 }
-.txtAtividadesProgresso {
+.txtAtividadesProgresso,
+.seipro-atividades-progress-txt {
     position: absolute;
     margin: 3px 0 0 0;
     text-align: center;
@@ -206,152 +213,148 @@ td.celStatusAtividade a.iconAtividade:first-child {
     color: #fff;
     font-size: 9pt;
 }
-#atividadesProDiv .panelHome {
+.seipro-atividades-panel .panelHome {
     top: 0px;
 }
-#atividadesDistribuicaoPro table.tabelaControle td {
+.seipro-atividades-distribuicao table.tabelaControle td {
     padding: 10px;
 }
-#atividadesDistribuicaoPro .ui-progressbar {
+.seipro-atividades-distribuicao .ui-progressbar {
     background: #ccc;
     height: 18px;
     margin: 5px;
 }
-#atividadesDistribuicaoPro .atividadesProgressoEntregue.ui-progressbar .ui-progressbar-value {
+.seipro-atividades-distribuicao .atividadesProgressoEntregue.ui-progressbar .ui-progressbar-value,
+.seipro-atividades-distribuicao .seipro-atividades-progress--entregue.ui-progressbar .ui-progressbar-value {
     background: #4285F4 !important;
     border: 1px solid #365ea0 !important;
 }
 .tableMonitorados th.tituloControle,
-.tableAtividades th.tituloControle {
+.seipro-atividades-table th.tituloControle {
     padding: 5px 0;
 }
-div.atividadesProgressoBar {
+div.atividadesProgressoBar,
+.seipro-atividades-progress-bar {
     height: 4px !important;
     border: none !important;
     margin: 0 0 10px 0;
     background: #ccc;
 }
-#tabelaAtivPanel .tableFollow td[data-type="action"],
-#tabelaAtivPanel .tableFollow td[data-type="date"]{
+.seipro-atividades-table-panel .seipro-atividades-table.tableFollow td[data-type="action"],
+.seipro-atividades-table-panel .seipro-atividades-table.tableFollow td[data-type="date"]{
     min-width: 160px;
 }
-#tabelaAtivPanel .tableFollow td[data-type="user"] {
+.seipro-atividades-table-panel .seipro-atividades-table.tableFollow td[data-type="user"] {
     min-width: 220px;
 }
 .tagsinput input,
-.tableFollow .info_category select,
+.seipro-atividades-table.tableFollow .info_category select,
 .kanban-item .info_txt input,
-.atividadeInfo .info_txt input,
-.tableFollow .info_txt input {
+.seipro-atividades-info .info_txt input,
+.seipro-atividades-table.tableFollow .info_txt input {
     font-size: 1em;
     border: 2px solid #ccc;
     border-radius: 5px;
     width: 60%;
     height: 30px;
 }
-.atividadeInfo .content_desc .info_txt input {
+.seipro-atividades-info .content_desc .info_txt input {
     width: 85%;
     height: 20px;
 }
-.tabelaControle td.atividadeBoxDisplay {
+.tabelaControle td.seipro-atividades-box-display {
     margin: 0 10px;
     max-width: 70px;
     overflow: hidden;
     display: table-cell;
 }
-.tabelaControle td.atividadeBoxDisplay:hover {
+.tabelaControle td.seipro-atividades-box-display:hover {
     overflow: visible;
 }
-.tableAtividades th[data-filter-type="action"] {
+.seipro-atividades-table th[data-filter-type="action"] {
     width: 240px;
 }
-.tableAtividades th[data-filter-type="proc"] {
+.seipro-atividades-table th[data-filter-type="proc"] {
     min-width: 210px;
 }
-#tabelaAtivPanel .tableAtividades.tablesorter-default thead tr th.ui-draggable-dragging {
+.seipro-atividades-table-panel .seipro-atividades-table.tablesorter-default thead tr th.ui-draggable-dragging {
     z-index: 999;
     background-color: #6f6f6f !important;
 }
-#tabelaAtivPanel .tableAtividades.tablesorter-default thead tr th.ui-draggable-dragging .tablesorter-header-inner {
+.seipro-atividades-table-panel .seipro-atividades-table.tablesorter-default thead tr th.ui-draggable-dragging .tablesorter-header-inner {
     color: #fff !important;
 }
-#tabelaAtivPanel.tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
+.seipro-atividades-table-panel.tabelaPanelScroll .ui-resizable-handle.ui-resizable-s {
     width: 98%;
 }
 table.moreInfoBox td:first-child,
-.atividadeWork td.label {
+.seipro-atividades-work td.label {
     width: 130px;
     min-width: 100px;
 }
-.atividadeWork label.last {
+.seipro-atividades-work label.last {
     width: 80%;
     display: inline-flex;
     float: right;
     text-align: left;
 }
-.atividadeWork .seiProForm tr {
+.seipro-atividades-work .seiProForm tr {
     height: 50px;
     text-align: center;
 }
-.atividadeWork .seiProForm input {
+.seipro-atividades-work .seiProForm input {
     width: -webkit-fill-available !important;
     width: -moz-available !important;
     height: auto !important;
 }
-#boxAtividade .tagsinput .tag .tag-remove::before, 
-#boxAtividade .tagsinput .tag .tag-remove::after,
-#boxProjeto .tagsinput .tag .tag-remove::before, 
-#boxProjeto .tagsinput .tag .tag-remove::after {
+.seipro-atividades-box .tagsinput .tag .tag-remove::before,
+.seipro-atividades-box .tagsinput .tag .tag-remove::after{
     top: 14px;
 }
-#boxAtividade .seiProForm .tagsinput .tag .tag-remove,
-#boxProjeto .tagsinput .tag .tag-remove {
+.seipro-atividades-box .seiProForm .tagsinput .tag .tag-remove{
     height: 30px !important;
 }
-#boxAtividade .seiProForm .tagsinput .tag .tagicon,
-#boxProjeto .tagsinput .tag .tagicon {
+.seipro-atividades-box .seiProForm .tagsinput .tag .tagicon{
     margin-right: 5px;
 }
-#boxAtividade .seiProForm .tagsinput .tag,
-#boxProjeto .tagsinput .tag {
+.seipro-atividades-box .seiProForm .tagsinput .tag{
     padding-top: 7px;
     display: table;
     margin: 0 5px 5px;
     height: 30px;
 }
-#boxAtividade .seiProForm #ativ_etiquetas_tag, 
-#boxAtividade .seiProForm .tag-input,
-#boxProjeto .tag-input {
+.seipro-atividades-box .seiProForm #ativ_etiquetas_tag,
+.seipro-atividades-box .seiProForm .tag-input{
     height: 30px !important;
     border: 1px solid #ccc;
     padding: 0.5em !important;
 }
-#boxAtividade .seiProForm #ativ_etiquetas_addTag,
-#tabelaAtivPanel .tagsinput div,
-#boxAtividade .seiProForm .tagsinput div,
-#boxProjeto .tagsinput div {
+.seipro-atividades-box .seiProForm #ativ_etiquetas_addTag,
+.seipro-atividades-table-panel .tagsinput div,
+.seipro-atividades-box .seiProForm .tagsinput div{
     max-width: 100%;
     display: flex;
 }
-#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag,
-#boxProjeto .tagsinput .tag {
+.seipro-atividades-box .seiProForm .info_tags_follow_txt .tagsinput .tag,
+.seipro-atividades-box .seiProForm .seipro-atividades-tags .tagsinput .tag{
     display: block !important;
 }
-#tabelaAtivPanel .tagsinput .tag {
+.seipro-atividades-table-panel .tagsinput .tag {
     margin: 5px;
 }
-#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagMonitoradoAddColor,
-#boxProjeto .tagsinput .tag .tagMonitoradoAddColor,
-#boxAtividade .seiProForm .info_tags_follow_txt .tagsinput .tag .tagMonitoradoEditIcon,
-#boxProjeto .tagsinput .tag .tagMonitoradoEditIcon {
+.seipro-atividades-box .seiProForm .info_tags_follow_txt .tagsinput .tag .tagMonitoradoAddColor,
+.seipro-atividades-box .seiProForm .info_tags_follow_txt .tagsinput .tag .tagMonitoradoEditIcon,
+.seipro-atividades-box .seiProForm .seipro-atividades-tags .tagsinput .tag .tagMonitoradoAddColor,
+.seipro-atividades-box .seiProForm .seipro-atividades-tags .tagsinput .tag .tagMonitoradoEditIcon{
     height: 30px !important;
     margin-top: -7px !important;
     font-size: 90%;
     padding-top: 10px;
 }
-#boxAtividade .seiProForm .info_tags_follow_txt #infoAtivTagsPro_tag,
+.seipro-atividades-box .seiProForm .info_tags_follow_txt #infoAtivTagsPro_tag,
+.seipro-atividades-box .seiProForm .seipro-atividades-tags #infoAtivTagsPro_tag,
 .info_tags_follow_txt .tag-input,
-#boxProjeto .tag-input {
+.seipro-atividades-tags .tag-input{
     max-width: 130px !important;
     display: inline-block;
 }
@@ -361,39 +364,39 @@ table.moreInfoBox td:first-child,
 .tabelaControle.tablesorter-default thead .tablesorter-headerDesc,
 .tabelaControle.tablesorter-default thead .tablesorter-headerSortDown,
 .tabelaControle.tablesorter-header.sorter-false,
-.tableAtividades.tablesorter-default .header,
-.tableAtividades.tablesorter-default .tablesorter-header,
-.tableAtividades.tablesorter-default thead .headerSortDown,
-.tableAtividades.tablesorter-default thead .tablesorter-headerDesc,
-.tableAtividades.tablesorter-default thead .tablesorter-headerSortDown,
-.tableAtividades.tablesorter-header.sorter-false {
+.seipro-atividades-table.tablesorter-default .header,
+.seipro-atividades-table.tablesorter-default .tablesorter-header,
+.seipro-atividades-table.tablesorter-default thead .headerSortDown,
+.seipro-atividades-table.tablesorter-default thead .tablesorter-headerDesc,
+.seipro-atividades-table.tablesorter-default thead .tablesorter-headerSortDown,
+.seipro-atividades-table.tablesorter-header.sorter-false {
     background-color: #DFDFDC !important;
     border: none !important;
     border-radius: 0 !important;
 }
 .tabelaControle .tablesorter-header-inner,
-#tabelaAtivPanel table.tableAtividades .tablesorter-header-inner,
-#boxHistory table.tableAtividades .tablesorter-header-inner,
-#tableAfastamentoPanel table.tableAtividades .tablesorter-header-inner,
-#tableRelatorioPanel table.tableAtividades .tablesorter-header-inner,
-#tabsPanelConfig table.tableAtividades .tablesorter-header-inner {
+.seipro-atividades-table-panel table.seipro-atividades-table .tablesorter-header-inner,
+.seipro-atividades-history table.seipro-atividades-table .tablesorter-header-inner,
+.seipro-atividades-afastamento-table table.seipro-atividades-table .tablesorter-header-inner,
+.seipro-atividades-relatorio-panel table.seipro-atividades-table .tablesorter-header-inner,
+.seipro-atividades-config-tabs table.seipro-atividades-table .tablesorter-header-inner {
     color: #000 !important;
     font-weight: bold !important;
     text-align: center !important;
     padding: 0 20px 0 0;
 }
-.tablesorter-default .tablesorter-header.atividadeBoxDisplay {
+.tablesorter-default .tablesorter-header.seipro-atividades-box-display {
     width: 70px;
 }
 table.tabelaControle.tablesorter-default thead .tablesorter-headerDesc,
 table.tabelaControle.tablesorter-default thead .tablesorter-headerAsc,
-#frmProcedimentoControlar div.infraAreaTabela .tablesorter-default thead .tablesorter-headerDesc,
-#frmProcedimentoControlar div.infraAreaTabela .tablesorter-default thead .tablesorter-headerAsc,
-#tabelaAtivPanel .tableAtividades.tablesorter-default thead .tablesorter-headerDesc,
-#tabelaAtivPanel .tableAtividades.tablesorter-default thead .tablesorter-headerAsc {
+.tablesorter-default thead .tablesorter-headerDesc,
+.tablesorter-default thead .tablesorter-headerAsc,
+.seipro-atividades-table-panel .seipro-atividades-table.tablesorter-default thead .tablesorter-headerDesc,
+.seipro-atividades-table-panel .seipro-atividades-table.tablesorter-default thead .tablesorter-headerAsc {
     background-color: #ccc !important;
 }
-.atividadeWork span.ativProcessos {
+.seipro-atividades-work span.seipro-atividades-processos {
     padding: 3px 5px;
     background-color: #f1f1f1;
     margin: 3px;
@@ -401,78 +404,79 @@ table.tabelaControle.tablesorter-default thead .tablesorter-headerAsc,
     font-size: 9pt;
     border-radius: 5px;
 }
-.atividadeWork div.listMultProcessos {
+.seipro-atividades-work div.seipro-atividades-processos-list {
     text-align: left;
     max-height: 140px;
     overflow-y: scroll;
 }
-#atividadesPro.minView .modulesActions {
+.seipro-atividades-root.seipro-atividades--min .modulesActions {
     position: absolute;
     left: -170px;
     top: 40px;
 }
-#atividadesPro #tabelaAtivPanel .filterTableAtivStatus {
+.seipro-atividades-root .seipro-atividades-table-panel .seipro-atividades-filter-status {
     right: 320px;
 }
-#atividadesPro.minView #tabelaAtivPanel .filterTableAtivStatus {
+.seipro-atividades-root.seipro-atividades--min .seipro-atividades-table-panel .seipro-atividades-filter-status {
     right: 170px !important;
 }
-#atividadesPro #tabelaAtivPanel .filterTablePro span.text,
-#atividadesPro .atividadesBtnPanel .text { 
+.seipro-atividades-root .seipro-atividades-table-panel .filterTablePro span.text,
+.seipro-atividades-root .seipro-atividades-btn-panel .text {
     display: inline;
 }
-#atividadesPro.minView #tabelaAtivPanel .filterTablePro span.text,
-#atividadesPro.minView .atividadesBtnPanel .text  { 
+.seipro-atividades-root.seipro-atividades--min .seipro-atividades-table-panel .filterTablePro span.text,
+.seipro-atividades-root.seipro-atividades--min .seipro-atividades-btn-panel .text  {
     display: none;
 }
-#atividadesPro.minView .modulesActions:has(.iconLabel) {
+.seipro-atividades-root.seipro-atividades--min .modulesActions:has(.iconLabel) {
     margin-top: 20px;
 }
-#atividadesPro.minView .panelInfoHome:not(.panelInfoHomeAtividade),
-#atividadesPro.minView .chartAtividade {
+.seipro-atividades-root.seipro-atividades--min .panelInfoHome:not(.seipro-atividades-info-home),
+.seipro-atividades-root.seipro-atividades--min .seipro-atividades-chart {
     margin-top: 50px;
 }
-#divInfraAreaTelaD div#atividadesStatus {
+.seipro-atividades-status {
     position: absolute;
     top: 40px;
     right: 40px;
     padding: 5px 20px;
 }
-#boxAtividade .info_checklist,
+.seipro-atividades-box .info_checklist,
 .tableInfo .info_checklist,
-.atividadeInfo .info_checklist {
+.seipro-atividades-info .info_checklist {
     background: transparent;
     padding: 0;
     margin: 0;
 }
-#boxAtividade .info_checklist .checklist_progress,
+.seipro-atividades-box .info_checklist .checklist_progress,
 .tableInfo .info_checklist .checklist_progress,
-.atividadeInfo .info_checklist .checklist_progress {
+.seipro-atividades-info .info_checklist .checklist_progress {
     width: calc(100% - 50px);
     float: left;
     margin: 10px 0;
 }
-#boxAtividade .info_checklist_head .head_label {
+.seipro-atividades-box .info_checklist_head .head_label {
     display: none;
 }
-.atividadeWork .chosen-container-single {
+.seipro-atividades-work .chosen-container-single {
     width: 100% !important;
     max-width: 600px;
 }
 .infoDadosArvore .kanban-pinboard,
-.preview_atividade .kanban-pinboard {
+.preview_atividade .kanban-pinboard,
+.seipro-atividades-preview .kanban-pinboard {
     display: none !important;
 }
-#tabelaAtivPanel .inlineAlert {
+.seipro-atividades-table-panel .inlineAlert {
     min-height: 25px;
 }
-#atividadesProDiv ul {
+.seipro-atividades-panel ul {
     background: transparent;
     border-top: none;
     border-left: none;
     border-right: none;
 }
 .actionsConfig_icons .fa-layers.fa-fw,
-.iconBoxAtividade .fa-layers.fa-fw {
+.seipro-atividades-icon-box .fa-layers.fa-fw {
     font-size: 1em;
 }

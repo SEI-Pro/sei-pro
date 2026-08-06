@@ -2915,10 +2915,13 @@
     const sendMonitorados = { monitorados: [], config: { colortags: [] } };
     sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
     sendMonitorados.config.colortags = store.config.colortags;
-    globalRef.getServerAtividades({
-      config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
-      action: "set_monitorados"
-    }, "set_monitorados");
+    const atividadesServer = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades && globalRef.SeiPro.features.atividades.getServerAtividades || globalRef.getServerAtividades;
+    if (typeof atividadesServer === "function") {
+      atividadesServer({
+        config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
+        action: "set_monitorados"
+      }, "set_monitorados");
+    }
     globalRef.setLocalFilePro(getStoreMonitoradoPro());
   }
   function getConfigDatetimeMonitorado() {

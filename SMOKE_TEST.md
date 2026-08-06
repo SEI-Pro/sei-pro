@@ -81,6 +81,17 @@ Registre data, versão do SEI e navegador.
       `isLoginPageNewSei` em `SeiPro.sei.urls` (Fase 6, 16ª leva).
 - [ ] Máscara/auto-fill da senha na tela `acao=documento_assinar` — valida `isDocumentoAssinarPage`.
 
+### 7. Atividades (`sei-pro-atividades.js` — home / `gerenciaratividades`)
+- [ ] Painel `#atividadesPro` aparece na home com classes `.seipro-atividades-*`.
+- [ ] Chrome + linhas/config: ações via `data-act` / `data-fn` (sem `onclick` inline) —
+      mostrar/ocultar, Tabela/Quadro/Cronograma/Painel, atualizar, módulos, select-all,
+      editar/clonar/desativar config, formulários de demanda — console sem ReferenceError.
+- [ ] Kanban (Quadro) abre e move cartão; pin e checklist (Enter/rename) funcionam.
+- [ ] Configurações / relatórios / afastamentos abrem e salvam sem quebrar o shell.
+- [ ] Preview rápido de documento (`data-act="atividades-dialog-doc"`) abre o dialog.
+- [ ] Sync/servidor: atualizar dados com chave válida (ou mensagem de acesso negado esperada).
+- [ ] Ícones na árvore/iframe (`data-scope="parent"`) resolvem no parent isolado.
+
 ---
 
 ## Foco específico por fase

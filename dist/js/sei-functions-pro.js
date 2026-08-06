@@ -1184,6 +1184,29 @@
     return span.outerHTML;
   }
 
+  // src/shared/nomenclatura.js
+  function getName(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
+    const arrayNomenclaturas = globalThis.arrayNomenclaturas;
+    const capitalizeFirstLetter = globalThis.capitalizeFirstLetter;
+    if (typeof arrayNomenclaturas !== "undefined" && arrayNomenclaturas.length > 0) {
+      var name = jmespath.search(arrayNomenclaturas, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0]");
+      name = name !== null ? name : false;
+      var article = name ? name.config.masculino ? singular ? "o" : "os" : singular ? "a" : "as" : "";
+      var nomenclatura = name ? singular ? name.config.singular : name.config.plural : name_default;
+      nomenclatura = capitalize && typeof capitalizeFirstLetter === "function" ? capitalizeFirstLetter(nomenclatura) : nomenclatura;
+      var preposicao = name && typeof name.config.preposicao !== "undefined" && name.config.preposicao ? name.config.masculino ? singular ? "do " : "dos " : singular ? "da " : "das " : "";
+      var phase = with_article ? article + " " + nomenclatura : preposicao + nomenclatura;
+      return phase;
+    }
+    return name_default;
+  }
+  function getNameGenre(ref_nomenclatura, string_male, string_female) {
+    const arrayNomenclaturas = globalThis.arrayNomenclaturas || [];
+    var masc = jmespath.search(arrayNomenclaturas, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0].config.masculino");
+    masc = masc !== null ? masc : false;
+    return masc ? string_male : string_female;
+  }
+
   // src/shared/table-styles.js
   function getColorID() {
     var colorID = {
@@ -1448,6 +1471,29 @@
 
   // src/features/sei-functions/body.js
   installSeiFunctionsState();
+  function atividadesApi() {
+    return typeof SeiPro !== "undefined" && SeiPro.features && SeiPro.features.atividades || null;
+  }
+  function callAtividades(name) {
+    var api = atividadesApi();
+    var fn = api && typeof api[name] === "function" ? api[name] : typeof globalThis[name] === "function" ? globalThis[name] : null;
+    if (typeof fn !== "function") return void 0;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+  }
+  function getAtividadesServer() {
+    var api = atividadesApi();
+    if (api && typeof api.getServerAtividades === "function") return api.getServerAtividades;
+    return typeof getServerAtividades === "function" ? getServerAtividades : null;
+  }
+  function checkCapacidade(nome) {
+    var r = callAtividades("checkCapacidade", nome);
+    return typeof r === "undefined" ? false : r;
+  }
+  function checkPerfilNivelAdm() {
+    var r = callAtividades("checkPerfilNivelAdm");
+    return typeof r === "undefined" ? false : r;
+  }
   var sanitizeHTML = (html) => DOMPurify.sanitize(html, {
     ADD_ATTR: ["target"],
     ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|chrome-extension|moz-extension):|[^a-z]|[a-z+\-.]+(?:[^a-z+\-.:]|$))/i
@@ -4279,7 +4325,7 @@
     var init_documentos_gerados = init_recebido && init_remetido ? jmespath.search(proc, "[?contains(descricao, 'Gerado documento')] | [?unidade=='" + init_recebido.unidade + "'] | [?datahora >= `" + init_recebido.datahora + "`] | [?datahora <= `" + init_remetido.datahora + "`]") : [];
     var init_customClass = init_remetido && init_remetido.descricao.indexOf("Processo aberto na unidade") !== -1 ? "bar-complete" : "bar-ongoing";
     var taskProcesso = [];
-    var htmlBox = '<div style="width: 100%;display: flex;margin-bottom: 10px;">   <div class="btn-group" role="group" style="float: right;margin-right: 10px;">         <button type="button" data-value="Day" class="btn btn-sm btn-light">Dia</button>         <button type="button" data-value="Week" class="btn btn-sm btn-light">Semana</button>         <button type="button" data-value="Month" class="btn btn-sm btn-light active">M\xEAs</button>   </div></div><div id="ganttHistoryPainel" style="width: 100%;height: 100%"></div>';
+    var htmlBox = '<div style="width: 100%;display: flex;margin-bottom: 10px;">   <div class="btn-group" role="group" style="float: right;margin-right: 10px;">         <button type="button" data-value="Day" class="btn btn-sm btn-light">Dia</button>         <button type="button" data-value="Week" class="btn btn-sm btn-light">Semana</button>         <button type="button" data-value="Month" class="btn btn-sm btn-light active">M\xEAs</button>   </div></div><div id="ganttHistoryPainel" class="seipro-atividades-gantt-history" style="width: 100%;height: 100%"></div>';
     var init_start = init_recebido.datahora;
     var init_end = init_remetido ? init_remetido.datahora : moment().format("YYYY-MM-DD HH:mm:ss");
     var init_diff = moment(init_end, "YYYY-MM-DD HH:mm:ss").diff(moment(init_start, "YYYY-MM-DD HH:mm:ss"));
@@ -4531,7 +4577,8 @@
     if (value != info.text()) {
       info.text(value);
       if (mode == "ativ") {
-        parent.getServerAtividades({ action: "edit_assunto", id: index, assunto: value }, "edit_assunto");
+        var _ativServer = getAtividadesServer();
+        if (_ativServer) _ativServer({ action: "edit_assunto", id: index, assunto: value }, "edit_assunto");
         var ativIndex = index ? parent.arrayAtividades.findIndex(((obj) => obj.id_demanda == index)) : index;
         arrayAtividades[ativIndex].assunto = value;
         arrayAtividadesPro[ativIndex].assunto = value;
@@ -4702,7 +4749,8 @@
         arrayConfigAtivUnidade["config"] = itemPushConfig;
         console.log(itemPushConfig, arrayConfigAtivUnidade["config"]);
       }
-      getServerAtividades({ action: "edit_etiqueta_config", config_etiquetas: arrayConfigAtivUnidade["config"]["etiquetas"] }, "edit_etiqueta_config");
+      var _ativServer = getAtividadesServer();
+      if (_ativServer) _ativServer({ action: "edit_etiqueta_config", config_etiquetas: arrayConfigAtivUnidade["config"]["etiquetas"] }, "edit_etiqueta_config");
     } else if (mode == "monitorado") {
       localStorageStorePro("configDataMonitoradosPro", storeEtiqueta);
     }
@@ -4731,7 +4779,8 @@
           $('.kanban-item[data-eid="_id_' + index + '"] .info_tags_follow_etiquetas').html(tagsHtml);
           $('.tableAtividades tbody tr[data-index="' + index + '"] td.tdmonitorado_tags .info_tags_follow').html(tagsHtml);
         }
-        getServerAtividades({ action: "edit_etiqueta", id: index, etiquetas: tags }, "edit_etiqueta");
+        var _ativServer = getAtividadesServer();
+        if (_ativServer) _ativServer({ action: "edit_etiqueta", id: index, etiquetas: tags }, "edit_etiqueta");
         if (typeof arrayConfigAtividades.etiquetas !== "undefined" && typeof arrayConfigAtividades.etiquetas.list !== "undefined") {
           $.each(tags, function(i2, value) {
             if (value != "" && $.inArray(value, arrayConfigAtividades["etiquetas"]["list"]) == -1) {
@@ -4746,7 +4795,8 @@
         }
       } else if (mode == "tipo_ativ") {
         console.log(index, tags);
-        getServerAtividades({ action: "edit_etiqueta_atividades", id: index, etiquetas: tags }, "edit_etiqueta_atividades");
+        var _ativServer = getAtividadesServer();
+        if (_ativServer) _ativServer({ action: "edit_etiqueta_atividades", id: index, etiquetas: tags }, "edit_etiqueta_atividades");
         if (typeof arrayConfigAtividades.etiquetas !== "undefined" && typeof arrayConfigAtividades.etiquetas.list !== "undefined") {
           $.each(tags, function(i2, value) {
             if (value != "" && $.inArray(value, arrayConfigAtividades["etiquetas"]["list"]) == -1) {
@@ -6128,7 +6178,7 @@
       }
       setTimeout(function() {
         updateTitlePage(mode);
-        if (typeof setTipoPrescricaoProcesso === "function") setTipoPrescricaoProcesso();
+        callAtividades("setTipoPrescricaoProcesso");
       }, 500);
       if (mode == "editor" || mode == "gantt" || mode == "projeto" || mode == "dados" || mode == "processo") {
         checkDadosIframeDocumentosPro(mode);
@@ -6479,7 +6529,7 @@
   function getHistoryProcessosPro() {
     $(infraBarraS + ".barSuspenso").trigger("click");
     var dadosHistoricoProcessoPro = localStorageRestorePro("dadosHistoricoProcessoPro");
-    var htmlBox = '<div id="boxHistory" class="tabelaPanelScroll" style="margin-top: 10px;height: 400px;">   <table id="historyTablePro" style="margin-top: 35px; font-size: 8pt !important;width: 100%;" class="seiProForm tableAtividades tableDialog tableInfo tableZebra">        <thead>            <tr class="tableHeader">                <th class="tituloControle" style="text-align: center; width: 180px;">Processo</th>                <th class="tituloControle" style="text-align: center;font-weight: bold;">Tipo / Descri\xE7\xE3o</th>                <th class="tituloControle" style="text-align: center;font-weight: bold;">Acesso</th>            </tr>        </thead>        <tbody>';
+    var htmlBox = '<div id="boxHistory" class="tabelaPanelScroll seipro-atividades-history" style="margin-top: 10px;height: 400px;">   <table id="historyTablePro" style="margin-top: 35px; font-size: 8pt !important;width: 100%;" class="seiProForm tableAtividades seipro-atividades-table tableDialog tableInfo tableZebra">        <thead>            <tr class="tableHeader">                <th class="tituloControle" style="text-align: center; width: 180px;">Processo</th>                <th class="tituloControle" style="text-align: center;font-weight: bold;">Tipo / Descri\xE7\xE3o</th>                <th class="tituloControle" style="text-align: center;font-weight: bold;">Acesso</th>            </tr>        </thead>        <tbody>';
     if (dadosHistoricoProcessoPro) {
       $.each(dadosHistoricoProcessoPro, function(i2, v) {
         htmlBox += '   <tr style="text-align: left;">       <td>           <a style="margin-left: 5px;" href="' + url_host + "?acao=procedimento_trabalhar&id_procedimento=" + v.id_procedimento + '" target="_blank">               <span class="bLink">                   ' + v.protocolo + '                   <i class="fas fa-external-link-alt bLink" style="font-size: 90%; text-decoration: underline;"></i>               </span>           </a>       </td>       <td>           <div style="color: #666; padding-top: 5px;">' + v.tipo_processo + '</div>           <div style="font-weight: bold; padding: 5px 0;">' + v.descricao + '</div>       <td data-time-sorter="' + v.datetime + `">           <div onmouseover="return infraTooltipMostrar('Acessado em ` + moment(v.datetime, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY [\xE0s] HH:mm") + `');" onmouseout="return infraTooltipOcultar();">               ` + getDatesPreview({ date: v.datetime }) + "           </div>       <td>   </tr>";

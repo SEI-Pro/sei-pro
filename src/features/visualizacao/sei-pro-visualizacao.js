@@ -1,3 +1,20 @@
+function atividadesApiParent() {
+    return (typeof parent !== 'undefined' && parent.SeiPro && parent.SeiPro.features && parent.SeiPro.features.atividades) || null;
+}
+function hasParentAtividades(name) {
+    var api = atividadesApiParent();
+    return !!(api && typeof api[name] === 'function')
+        || (typeof parent !== 'undefined' && typeof parent[name] === 'function');
+}
+function callParentAtividades(name) {
+    var api = atividadesApiParent();
+    var fn = (api && typeof api[name] === 'function') ? api[name]
+        : (typeof parent !== 'undefined' && typeof parent[name] === 'function' ? parent[name] : null);
+    if (typeof fn !== 'function') return undefined;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+}
+
 const loadSEIProVisualizacao = true;
 function initSeiProVisualizacao() {
     if (typeof parent.insertIconIntegrity === 'function' || typeof parent.insertIconIntegrity !== 'undefined') {
@@ -26,7 +43,7 @@ function initSeiProVisualizacao() {
     if (typeof parent.insertIconPublicacaoEletronica === 'function') {
         parent.insertIconPublicacaoEletronica();
     }
-    if (typeof parent.setTipoPrescricaoProcesso === 'function' && parent.checkTipoPrescricaoProcesso()) {
+    if (hasParentAtividades('setTipoPrescricaoProcesso') && parent.checkTipoPrescricaoProcesso()) {
         parent.appendIconCtrPrescricao();
     }
     if (typeof parent.checkHostLimit !== 'undefined' && !parent.checkHostLimit() && typeof parent.insertIconBatchActions === 'function' && parent.checkConfigValue('acoesemlote')) {
@@ -51,10 +68,10 @@ function initSeiProVisualizacao() {
         parent.insertActionInteressadosSend();
     }
     if (
-        (typeof parent.insertIconAtividade === 'function' || typeof parent.insertIconAtividade !== 'undefined' ) && 
+        hasParentAtividades('insertIconAtividade') &&
         parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null
         ) {
-        parent.insertIconAtividade();
+        callParentAtividades('insertIconAtividade');
     }
     if (typeof parent.insertIconNewTab === 'function') {
         parent.insertIconNewTab();

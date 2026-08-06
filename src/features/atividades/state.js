@@ -1,6 +1,6 @@
 /**
  * Atividades — mutable runtime state on globalThis.
- * Heavy storage/DOM inits remain as guarded globalThis assignments in body.js;
+ * Heavy storage/DOM initialization remains a guarded runtime concern;
  * this module owns the load flag and a refresh hook for boot.
  */
 export function installAtividadesState() {
@@ -39,7 +39,8 @@ export function installAtividadesState() {
 
 /**
  * Re-run storage-backed selectors after options/hybrid storage are available.
- * Body already assigns these at load with try/catch; this is a second pass at boot.
+ * Runtime initialization assigns the storage-backed values; this is a second
+ * pass at boot after the page adapters become available.
  */
 export function refreshAtividadesState(g = globalThis) {
     try {

@@ -29,9 +29,17 @@ export function checkPermissionProjeto(value) {
     }
 }
 
+function getAtividadesCheckCapacidade() {
+    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    if (api && typeof api.checkCapacidade === 'function') return api.checkCapacidade;
+    if (typeof globalRef.checkCapacidade === 'function') return globalRef.checkCapacidade;
+    return null;
+}
+
 export function checkCapacidadeProjeto(name) {
-    if (typeof globalRef.checkCapacidade === 'function' && hasRemoteBackend()) {
-        try { return !!globalRef.checkCapacidade(name); } catch (e) { /* fallthrough */ }
+    const check = getAtividadesCheckCapacidade();
+    if (check && hasRemoteBackend()) {
+        try { return !!check(name); } catch (e) { /* fallthrough */ }
     }
     return hasLocalCapacidade(name);
 }

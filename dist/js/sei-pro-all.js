@@ -449,9 +449,11 @@ function loadScriptEntidade() {
     // $.getScript(URL_SPRO+"js/sei-pro-icons.js");
     /*
     if (window.location.host.indexOf('.antaq.gov.br') !== -1 && !urlServerAtiv && !userHashAtiv) {
-        initEmptyAtividades();
+        var _ativ = (typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.atividades) || null;
+        if (_ativ && typeof _ativ.initEmptyAtividades === 'function') _ativ.initEmptyAtividades();
+        else if (typeof initEmptyAtividades === 'function') initEmptyAtividades();
         $('.panelHome').find('.iconAtividade_update i').removeClass('fa-spin');
-        $('#tabelaAtivPanel').attr('class','').css('text-align','center').html('<a class="newLink" onclick="getResendKey()" style="transform: scale(1.4);margin: 10px 0;"><i class="fas fa-key laranjaColor"></i> Solicitar chave de acesso</a>');
+        $('#tabelaAtivPanel').attr('class','').css('text-align','center').html('<a class="newLink" data-act="atividades-call" data-fn="getResendKey" data-pass-el="0" style="transform: scale(1.4);margin: 10px 0;"><i class="fas fa-key laranjaColor"></i> Solicitar chave de acesso</a>');
     }
     console.log('loadScriptEntidade');
     */

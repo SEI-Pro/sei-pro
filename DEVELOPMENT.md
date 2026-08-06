@@ -103,7 +103,13 @@ src/
 │   │   └── monitorados.css        #   CSS da feature
 │   ├── arvore-info/ · quick-highlight/ · anotacao-controle/   # outras já bundladas
 │   ├── editor/ · ai/ · legis/            # ESM; IA isolada e ponte CKEditor mínima
-│   ├── atividades/ · lista-processos/ · … # other features at different migration stages
+│   ├── atividades/                       # fatiada (P0–P1); chrome do painel em data-act
+│   │   ├── domain.js · io.js · view.js · templates.js · state.js
+│   │   ├── runtime.js · compat.js · modules.js · legacy-api.js · index.js
+│   │   ├── server.js · data.js · charts.js · panel.js · reports-*.js
+│   │   ├── config-*.js · afastamentos.js · kanban.js
+│   │   └── activity-*.js · ratings.js · boot.js · style.css
+│   ├── lista-processos/ · …              # other features at different migration stages
 ├── options/                       # ★ PÁGINA DE CONFIGURAÇÃO (extension page)
 │   ├── domain.js · io.js · view.js · index.js  # vanilla ESM → options.bundle.js
 │   ├── options.html · page.css                 # shell + estilos (sem jQuery)
@@ -380,18 +386,18 @@ ordem de scripts, `matches`, `exclude_matches`, CSS e permissões.
 
 ### Violations conhecidas (dívida técnica a corrigir)
 
-Atualizado em 2026-07-15. Itens já resolvidos (A1-001…A1-010 / E2) saíram da tabela.
+Atualizado em 2026-08-06. Itens já resolvidos (A1-001…A1-010 / E2) saíram da tabela.
 
 | Arquivo / área | Problema | Correção |
 |---|---|---|
 | `src/content/core-stack.js` | ainda importa `monitorados/store-legacy-api` (ponte transitória) | mover instalação para entry/contexto quando `src/entries/lista.js` existir |
-| `src/features/lista-processos/sei-pro.js`, `shared/legacy/sei-functions-pro.js`, `atividades/*` | ~centenas de `onclick`/`onchange` inline → MAIN world | migrar para `data-act` + delegação (padrão `nao-lido` / `panel-proc`); **não** expandir `legacy-inline-bridge` |
+| `src/features/lista-processos/sei-pro.js`, `shared/legacy/sei-functions-pro.js` | onclick/onchange inline restantes → MAIN world | migrar para `data-act` + delegação; **não** expandir `legacy-inline-bridge` |
 | `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar; bridge não é arquitetura-alvo |
 | Features/CSS legados sem `.seipro-*` | classes próprias ainda sem prefixo em monolitos | **P6 em lote** no fim do épico (`docs/engineering-loop.md`); proibido micro-hook unitário |
 | Manifest / `init*.js` | blocos duplicados, sem registry | médio prazo: `src/app/` (contexts + feature-registry + boot) |
-| Remaining monoliths | large features such as `atividades/body.js` | continue decomposing through the E2 epic queue in `docs/engineering-loop-board.md` (P0–P7); editor monolith removed |
+| Remaining monoliths | lista-processos and shared legacy surfaces still contain large bodies | continue decomposing through the E2 epic queue in P0–P7; Atividades no longer has `body.js` |
 
-**Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install).
+**Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install); **Atividades** (ESM fatiada, `handlers`/`view`/`domain`/`io`/`callAtiv`, P6 `.seipro-*`, zero handlers HTML inline incl. tooltips `data-tip`, namespace `SeiPro.features.atividades`, call-sites externos com fallback; `legacy-api` aliasa só `ATIVIDADES_EXTERNAL_GLOBALS` — dispatch interno via `callAtiv` → handlers).
 
 ---
 

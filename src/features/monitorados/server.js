@@ -13,6 +13,12 @@ import { getStoreMonitoradoPro, persistMonitoradoStore, getConfigDatetimeMonitor
  */
 
 const g = (n) => globalRef[n];
+/** Prefer public namespace; fall back to legacy global alias. */
+function getAtividadesServer() {
+    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    if (api && typeof api.getServerAtividades === 'function') return api.getServerAtividades;
+    return g('getServerAtividades');
+}
 let statusLoadRemoteFile = true;
 let loopServer = 0;
 
@@ -35,15 +41,17 @@ function checkFileSystemInit() {
 }
 
 function getRemoteFileMonitorado() {
-    if (loopServer < 5 && g('getServerAtividades')) {
-        g('getServerAtividades')({ action: 'get_monitorados' }, 'get_monitorados');
+    const server = getAtividadesServer();
+    if (loopServer < 5 && server) {
+        server({ action: 'get_monitorados' }, 'get_monitorados');
         loopServer++;
     }
 }
 
 function checkFileRemoteMonitorado(mode, data = false) {
-    if (mode === 'get' && g('getServerAtividades') && !globalRef.checkLoadMonitoradosProcPro) {
-        g('getServerAtividades')({ action: 'check_monitorados' }, 'check_monitorados');
+    const server = getAtividadesServer();
+    if (mode === 'get' && server && !globalRef.checkLoadMonitoradosProcPro) {
+        server({ action: 'check_monitorados' }, 'check_monitorados');
     } else if (mode === 'set' && data) {
         const store = getStoreMonitoradoPro();
         const moment = globalRef.moment;

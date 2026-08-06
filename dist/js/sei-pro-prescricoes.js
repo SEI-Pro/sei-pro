@@ -1,3 +1,28 @@
+
+function atividadesApi() {
+    return (typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.atividades) || null;
+}
+function callAtividades(name) {
+    var api = atividadesApi();
+    var fn = (api && typeof api[name] === 'function') ? api[name]
+        : (typeof globalThis[name] === 'function' ? globalThis[name] : null);
+    if (typeof fn !== 'function') return undefined;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+}
+function getAtividadesServer() {
+    var api = atividadesApi();
+    if (api && typeof api.getServerAtividades === 'function') return api.getServerAtividades;
+    return typeof getServerAtividades === 'function' ? getServerAtividades : null;
+}
+function checkCapacidade(nome) {
+    var r = callAtividades('checkCapacidade', nome);
+    return typeof r === 'undefined' ? false : r;
+}
+function checkAtivRequiredFields(el, mode) {
+    return callAtividades('checkAtivRequiredFields', el, mode);
+}
+
 const loadPrescricoesPro = true;
 function valuePrescricao(id_prescricao, arrayPrescricoes = arrayPrescricoesProcPro) {
     var value = (id_prescricao == 0) ? null : jmespath.search(arrayPrescricoes, "[?id_prescricao==`"+id_prescricao+"`] | [0]");
@@ -213,7 +238,8 @@ function setSavePrescricao(this_) {
         id_documento_sei: id_documento_sei,
         documento_sei: documento_sei
     };
-    getServerAtividades(param, action);
+    var atividadesServer = getAtividadesServer();
+    if (atividadesServer) atividadesServer(param, action);
 }
 function changeOptionsSavePrescricao(this_) {
 	var _this = $(this_);
@@ -237,7 +263,10 @@ function removePrescicao(this_) {
             id_procedimento: dadosProcesso.id_procedimento,
             id_prescricao: id_prescricao
         };
-        if (id_prescricao) getServerAtividades(param, action);
+        if (id_prescricao) {
+            var atividadesServer = getAtividadesServer();
+            if (atividadesServer) atividadesServer(param, action);
+        }
     });
 }
 function changeSelectDocsPrescricao(this_) {

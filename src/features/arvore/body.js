@@ -13,7 +13,7 @@ import {
     sticknotePresetRankIconHtml as domainSticknotePresetRankIconHtml
 } from './domain.js';
 import { readArvoreMenuConfig as readArvoreMenuConfigIO } from './io.js';
-import { bindArvoreToolbarProcess } from './view.js';
+import { bindArvoreToolbarProcess, bindParentAtividadesActions } from './view.js';
 import * as templates from './templates.js';
 import {
     openModalDropzone,
@@ -26,6 +26,22 @@ import {
 } from '../../shared/sei-editor-url.js';
 
 installArvoreState();
+
+function atividadesApiParent() {
+    return (typeof parent !== 'undefined' && parent.SeiPro && parent.SeiPro.features && parent.SeiPro.features.atividades) || null;
+}
+function callParentAtividades(name) {
+    var api = atividadesApiParent();
+    var fn = (api && typeof api[name] === 'function') ? api[name]
+        : (api && api.handlers && typeof api.handlers[name] === 'function') ? api.handlers[name]
+        : (typeof parent !== 'undefined' && typeof parent[name] === 'function' ? parent[name] : null);
+    if (typeof fn !== 'function') return undefined;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+}
+
+bindParentAtividadesActions({ callParentAtividades });
+
 
 export function resolveArvoreMenuCatalogs(stored, defaults) {
     return resolveMenuCatalogs(stored, defaults);
@@ -1611,7 +1627,7 @@ export function initAtividadesProcesso(TimeOut = 9000) {
         }
     } else {
         setTimeout(function(){ 
-            if (typeof parent.getAtividades === 'function' && TimeOut == 9000) { parent.getAtividades(); }
+            if (TimeOut == 9000) { callParentAtividades('getAtividades'); }
             initAtividadesProcesso(TimeOut - 100); 
         }, 500);
     }
@@ -1667,14 +1683,15 @@ export function getAtividadesProcessoArvore() {
             var params_url = getParamsUrlPro($(`a[target="${ifrVisualizacao_}"]`).attr('href'));
             var id_procedimento = params_url.id_procedimento;
             if (value.id_procedimento == parseInt(id_procedimento)) {
-                var htmlActionsAtividade = parent.actionsAtividade(value.id_demanda, 'icon');
-                var kanbanItem = parent.getKanbanItem(value);
+                var htmlActionsAtividade = callParentAtividades('actionsAtividade', value.id_demanda, 'icon');
+                var kanbanItem = callParentAtividades('getKanbanItem', value);
+                if (!htmlActionsAtividade || !kanbanItem) return;
                 
                     htmlInfoAtividades +=   '<div class="kanban-item '+kanbanItem.class.join(' ')+'" data-eid="_id_'+value.id_demanda+'">'+
                                             '   '+kanbanItem.title+
                                             (htmlActionsAtividade.action == 'info' ? '' :
                                             '   <span class="info_dates_monitorado" style="display: block;padding: 0;margin: 10px 0 0 0;">'+
-                                            '       <a class="newLink" onclick="parent.actionsAtividade('+value.id_demanda+')">'+
+                                            '       <a class="newLink" href="#" data-seipro-arvore-action="parent-atividades" data-fn="actionsAtividade" data-id="'+value.id_demanda+'">'+
                                             '           <i style="margin-right: 3px;" class="'+htmlActionsAtividade.icon+' azulColor"></i>'+
                                             '           '+htmlActionsAtividade.name+
                                             '       </a>'+
@@ -1919,7 +1936,7 @@ export function initSeiProArvore(loop = true) {
     }
     loadStyleDesignArvore();
     checkProcessoSigiloso();
-    if (typeof parent.checkCapacidade !== 'undefined' && parent.checkCapacidade('view_prescricoes') && parent.checkConfigValue('gerenciarprescricoes')) initPanelPrescricaoProcesso();
+    if (callParentAtividades('checkCapacidade', 'view_prescricoes') && parent.checkConfigValue('gerenciarprescricoes')) initPanelPrescricaoProcesso();
     arrayLinksArvore = getLinksArvore();
     arrayLinksPage = getLinksPage();
     parent.linksArvore = getLinksPage(); 

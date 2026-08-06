@@ -64,10 +64,22 @@ function classify(fileRel) {
     return { camada: parts[1] || 'unknown', feature: '' };
 }
 
-function modernity(camada) {
-    return ['core', 'platform', 'sei', 'entry', 'feature', 'shared', 'options'].includes(camada)
-        ? 'moderno'
-        : 'legado';
+function modernity(camada, source = '') {
+    if (!['core', 'platform', 'sei', 'entry', 'feature', 'shared', 'options'].includes(camada)) {
+        return 'legado';
+    }
+    // Feature slices that still emit MAIN-world inline handlers or jQuery ajax
+    // wire are transitional — do not over-count as fully modern.
+    if (camada === 'feature' && source) {
+        if (
+            /\bonclick\s*=|\bonchange\s*=/.test(source)
+            || /\$\.ajax\s*\(/.test(source)
+            || /\$\s*\(/.test(source)
+        ) {
+            return 'legado';
+        }
+    }
+    return 'moderno';
 }
 
 function extractOptions() {
@@ -133,7 +145,7 @@ function extractFunctions(file, optionKeys) {
             funcao: hit.name,
             camada,
             feature,
-            moderno_ou_legado: modernity(camada),
+            moderno_ou_legado: modernity(camada, text),
             opcoes_diretas: [...new Set(direct)].sort(),
             opcoes_mapeadas: [],
             compartilhada: 'não',

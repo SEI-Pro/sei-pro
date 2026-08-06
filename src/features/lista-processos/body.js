@@ -20,6 +20,22 @@ import { resolveDropzoneIcon } from '../arvore/domain.js';
 
 installListaProcessosState();
 
+function atividadesApi() {
+    var root = (typeof parent !== 'undefined' && parent.SeiPro) ? parent.SeiPro
+        : (typeof SeiPro !== 'undefined' ? SeiPro : null);
+    return (root && root.features && root.features.atividades) || null;
+}
+function callAtividades(name) {
+    var api = atividadesApi();
+    var fn = (api && typeof api[name] === 'function') ? api[name]
+        : (typeof globalThis[name] === 'function' ? globalThis[name]
+        : (typeof parent !== 'undefined' && typeof parent[name] === 'function' ? parent[name] : null));
+    if (typeof fn !== 'function') return undefined;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+}
+
+
 function loadKanbanStylePro() {
     var base = typeof URL_SPRO !== 'undefined' ? URL_SPRO : '';
     if (!base || typeof loadStylePro !== 'function') return;
@@ -1395,8 +1411,8 @@ export function getNewTabProcesso() {
                     attributes: true
             });
         });
-        htmlBtnAtiv = (parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null && typeof checkCapacidade !== 'undefined' && parent.checkCapacidade('save_atividade') && typeof __ !== 'undefined') 
-        ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+__.Nova_Demanda+'\')"')+' onclick="parent.saveAtividade()" style="position: relative; margin-left: -3px;">'+
+        htmlBtnAtiv = (parent.checkConfigValue('gerenciaratividades') && localStorage.getItem('configBasePro_atividades') !== null && callAtividades('checkCapacidade', 'save_atividade') && typeof __ !== 'undefined')
+        ?   '<a tabindex="451" class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' iconBoxAtividade seipro-atividades-icon-box '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconAtividade_save" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+__.Nova_Demanda+'\')"')+' data-act="atividades-call" data-fn="saveAtividade" data-pass-el="0" style="position: relative; margin-left: -3px;">'+
             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="'+__.Nova_Demanda+'">'+
             '    <span class="botaoSEI_iconBox">'+
             '       <i class="fad fa-user-check" style="font-size: 17pt; color: #fff;"></i>'+

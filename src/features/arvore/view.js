@@ -83,6 +83,30 @@ export function bindUploadConfirmActions(deps = {}) {
     });
 }
 
+/**
+ * Iframe → parent Atividades actions (avoids MAIN-world onclick=parent.*).
+ * deps.callParentAtividades(name, ...args) must resolve SeiPro.features.atividades first.
+ */
+export function bindParentAtividadesActions(deps = {}) {
+    const root = deps.root || (typeof document !== 'undefined' ? document : null);
+    const callParentAtividades = deps.callParentAtividades;
+    if (!root || typeof callParentAtividades !== 'function') return;
+    if (root.__seiproArvoreParentAtividadesBound) return;
+    root.__seiproArvoreParentAtividadesBound = true;
+
+    on(root, 'click', '[data-seipro-arvore-action="parent-atividades"]', (event, match) => {
+        event.preventDefault();
+        const fn = match.getAttribute('data-fn');
+        if (!fn) return;
+        const id = match.getAttribute('data-id');
+        if (id != null && id !== '') {
+            callParentAtividades(fn, /^-?\d+$/.test(id) ? Number(id) : id);
+        } else {
+            callParentAtividades(fn, match);
+        }
+    });
+}
+
 export function setUploadHover(container, on) {
     if (!container) return;
     container.classList.toggle('dz-drag-hover', !!on);

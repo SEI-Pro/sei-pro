@@ -187,10 +187,13 @@
     const sendMonitorados = { monitorados: [], config: { colortags: [] } };
     sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
     sendMonitorados.config.colortags = store.config.colortags;
-    globalRef.getServerAtividades({
-      config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
-      action: "set_monitorados"
-    }, "set_monitorados");
+    const atividadesServer = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades && globalRef.SeiPro.features.atividades.getServerAtividades || globalRef.getServerAtividades;
+    if (typeof atividadesServer === "function") {
+      atividadesServer({
+        config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
+        action: "set_monitorados"
+      }, "set_monitorados");
+    }
     globalRef.setLocalFilePro(getStoreMonitoradoPro());
   }
   function getConfigDatetimeMonitorado() {
@@ -1567,6 +1570,11 @@
 
   // src/features/monitorados/server.js
   var g6 = (n) => globalRef[n];
+  function getAtividadesServer() {
+    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    if (api && typeof api.getServerAtividades === "function") return api.getServerAtividades;
+    return g6("getServerAtividades");
+  }
   var statusLoadRemoteFile = true;
   var loopServer = 0;
   function checkFileSystemInit() {
@@ -1590,14 +1598,16 @@
     }, 1e3);
   }
   function getRemoteFileMonitorado() {
-    if (loopServer < 5 && g6("getServerAtividades")) {
-      g6("getServerAtividades")({ action: "get_monitorados" }, "get_monitorados");
+    const server = getAtividadesServer();
+    if (loopServer < 5 && server) {
+      server({ action: "get_monitorados" }, "get_monitorados");
       loopServer++;
     }
   }
   function checkFileRemoteMonitorado(mode, data = false) {
-    if (mode === "get" && g6("getServerAtividades") && !globalRef.checkLoadMonitoradosProcPro) {
-      g6("getServerAtividades")({ action: "check_monitorados" }, "check_monitorados");
+    const server = getAtividadesServer();
+    if (mode === "get" && server && !globalRef.checkLoadMonitoradosProcPro) {
+      server({ action: "check_monitorados" }, "check_monitorados");
     } else if (mode === "set" && data) {
       const store = getStoreMonitoradoPro();
       const moment2 = globalRef.moment;
