@@ -5,6 +5,8 @@
  * `$`-style chaining. Only APIs used by the editor are implemented; behavior
  * may differ slightly from real jQuery. Native DOM only — zero dependencies.
  */
+import { loadScriptOnce } from '../../../shared/lazy-script.js';
+import { renderQrCode } from '../../../shared/qr-code.js';
 
 const dataStore = new WeakMap();
 const eventStore = new WeakMap();
@@ -412,38 +414,28 @@ class Q {
         return this;
     }
 
-    /**
-     * Render a QR code into the first element (lazy-loads vendor/qrcode).
-     * Compatible with jquery-qrcode options: text, width, height, ...
-     */
+    /** Render a QR code into the first element (lazy-loads the shared vendor). */
     qrcode(options = {}) {
         const el = this.elements[0];
         if (!el) return this;
-        const text = options.text || options.ecLevel || '';
-        const size = options.width || options.height || 128;
-        const run = () => {
-            el.innerHTML = '';
-            // qrcodejs: new QRCode(el, { text, width, height })
-            // eslint-disable-next-line no-undef
-            new QRCode(el, {
-                text: options.text || String(text),
-                width: size,
-                height: options.height || size,
-                colorDark: options.colorDark || '#000000',
-                colorLight: options.colorLight || '#ffffff',
-                correctLevel: (typeof QRCode !== 'undefined' && QRCode.CorrectLevel)
-                    ? (QRCode.CorrectLevel[options.correctLevel] || QRCode.CorrectLevel.M)
-                    : undefined
+        const token = {};
+        el.__seiproQrRenderToken = token;
+        const pending = renderQrCode(el, options)
+            .then((result) => {
+                if (el.__seiproQrRenderToken !== token) {
+                    if (result?.parentNode === el) result.remove();
+                    return null;
+                }
+                return result;
+            })
+            .catch(() => {
+                if (el.__seiproQrRenderToken === token) el.textContent = options.text || '';
+                return null;
             });
-        };
-        if (typeof QRCode === 'undefined') {
-            const base = (typeof URL_SPRO !== 'undefined' && URL_SPRO) || '';
-            qLoadScript(base + 'js/lib/qrcode.min.js').then(run).catch(() => {
-                el.textContent = options.text || '';
-            });
-        } else {
-            run();
-        }
+        el.__seiproQrPromise = pending;
+        pending.then(() => {
+            if (el.__seiproQrPromise === pending) delete el.__seiproQrPromise;
+        });
         return this;
     }
 }
@@ -479,13 +471,7 @@ function q(input, ctx) {
 
 /** Inject a script tag; replacement for $.getScript. */
 export function qLoadScript(url) {
-    return new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = url;
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error(`Failed to load script: ${url}`));
-        (document.head || document.documentElement).appendChild(s);
-    });
+    return loadScriptOnce(url);
 }
 
 /** jQuery-compatible static helpers used by editor dialogs. */

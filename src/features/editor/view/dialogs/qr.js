@@ -223,7 +223,13 @@ export function updateQrCode() {
 	}
 }
 export function setQrCode(qrCode_text) {
+	var result = q('#qrCodeResult')[0];
 	var imgBase = q('#qrCodeResult img').attr('src');
+	if (!imgBase && result && result.__seiproQrPromise) {
+		result.__seiproQrPromise.then(function () { setQrCode(qrCode_text); });
+		return;
+	}
+	if (!imgBase) return;
 	var htmlQrCode = '<img src="'+imgBase+'">';
         state.oEditor.focus();
         state.oEditor.fire('saveSnapshot');

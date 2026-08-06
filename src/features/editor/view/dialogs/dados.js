@@ -7,6 +7,7 @@ import { state } from '../../state.js';
 import { api } from '../../api.js';
 import { formatEditorDate } from '../../domain/dates.js';
 import { filterProcessFields, processFieldPreview } from '../../domain/process-fields.js';
+import { hydrateQrCodePlaceholders } from '../../../../shared/qr-code.js';
 
 function installProcessFieldSearch(dialog, fields) {
     const search = document.getElementById('seipro-process-field-search');
@@ -211,6 +212,14 @@ export function replaceDadosEditor(this_) {
                 q(this).html(q(this).html().replace(new RegExp(hashTag+underline, "i"), function(){ count++; return fieldSpan }));
             });
         console.log(arrayTags, value, hashTag+underline, fieldSpan, dadosProcesso);
+    });
+    hydrateQrCodePlaceholders(state.iframeEditor.get(0), {
+        render: 'image',
+        size: 150,
+        fill: '#333333',
+        background: '#ffffff',
+        ecLevel: 'L',
+        minVersion: 6
     });
     state.oEditor.fire('saveSnapshot');
     var count_error = state.iframeEditor.find('.hashField').length;

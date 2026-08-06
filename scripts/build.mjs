@@ -135,6 +135,7 @@ const legacyFiles = [
     'src/bootstrap/getscript-isolated.js',
     'src/bootstrap/editor-loader.js',
     'src/platform/inline-stubs-main.js',
+    'src/shared/qr-code-main.js',
     'src/background/storage-handler.js',
     'src/background/fetch-handler.js',
     'src/background/bug-report-handler.js',

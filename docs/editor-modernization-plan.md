@@ -154,7 +154,7 @@ vendor/
 | CodeCogs LaTeX | remote PNG per equation | **Remove** | KaTeX vendored; renders locally, no third-party call, no raster |
 | TinyURL | external POST | **Remove** | SEI permanent link + QR code already cover the need; removing it also removes an internal-URL leak |
 | Moment.js | ~70 KB, eager | **Remove from the editor** | `core/datas.js` already exists and is tested |
-| jquery-qrcode | 25 KB, eager | **Replace** | small ESM QR generator in `vendor/`, loaded on first use |
+| jquery-qrcode | 25 KB, eager | **Replace** | single small generator in `vendor/qrcode`, loaded on first use through `src/shared/qr-code.js` |
 | jQuery 3.7.1 | core | **Keep** | still required by other legacy blocks; the migrated editor must not use it |
 | DOMPurify | core | **Keep** | mandatory for every `innerHTML` path |
 | CKEditor 4 | provided by the SEI page | **Keep** | not ours; accessed only through `features/editor/adapter.js` |

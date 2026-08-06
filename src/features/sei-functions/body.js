@@ -12,6 +12,12 @@ import {
     getUrlDocumentoId,
     repairEditorMontarUrl
 } from '../../shared/sei-editor-url.js';
+import { sha256Hex } from '../../core/crypto.js';
+import {
+    createQrCodePlaceholder,
+    hydrateQrCodePlaceholders,
+    renderQrCode
+} from '../../shared/qr-code.js';
 
 installSeiFunctionsState();
 
@@ -7297,14 +7303,16 @@ export function setCapaProcesso(loop = true) {
         ifrVisualizacao.find(divInformacao).hide();
         if (SeiPro.sei.adapter.isSEI5()) ifrVisualizacao.find('#divArvoreHtml').removeClass('d-flex');
         replaceColorsIcons(ifrVisualizacao.find('#tagUserColorPro'));
-        if (typeof $().qrcode === 'function') {
-            ifrVisualizacao.find('.qrcapa').html('').qrcode({
+        var qrCapaTarget = ifrVisualizacao.find('.qrcapa')[0];
+        if (qrCapaTarget) {
+            renderQrCode(qrCapaTarget, {
                 render: 'image',
-                size: '150',
+                size: 150,
                 text: parent.url_host+'?acao=procedimento_trabalhar&id_procedimento='+id_procedimento
+            }).catch((error) => {
+                console.error('[SEI Pro] QR code indisponível', error);
+                qrCapaTarget.textContent = '';
             });
-        } else {
-            $.getScript(URL_SPRO+"js/lib/jquery-qrcode-0.18.0.min.js");
         }
         if (loop) {
             setTimeout(function () {
@@ -9737,12 +9745,17 @@ export function updateChecksumPro(hash) {
             $('#outputompareDoc').html('<i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: 0 8px 0 0;"></i> Carregando dados...').css('background', '#fff');
             var global = global || window;
             const reader = new global.FileReader();
-            reader.onload = event => {
-                var result = event.target.result;
-                var wordArray = CryptoJS.lib.WordArray.create(result),
-                    hashMD5 = CryptoJS.MD5(wordArray).toString(),
-                    hashSHA256 = CryptoJS.SHA256(wordArray).toString();
+            reader.onload = async event => {
+                try {
+                    var result = event.target.result;
+                    var wordArray = CryptoJS.lib.WordArray.create(result),
+                        hashMD5 = CryptoJS.MD5(wordArray).toString(),
+                        hashSHA256 = await sha256Hex(result);
                     compareChecksumPro({hashMD5: hashMD5, hashSHA256: hashSHA256});
+                } catch (error) {
+                    $('#outputompareDoc').text('Não foi possível calcular a integridade do arquivo.').css('background', '#fdf7f7');
+                    console.error('[SEI Pro] SHA-256 indisponível', error);
+                }
             };
             reader.readAsArrayBuffer(input.files[0]);
         }
@@ -9786,12 +9799,17 @@ export function openChecksumPro() {
 export function calculateHashPro(blob) {
     var reader = new FileReader();
     reader.readAsArrayBuffer(blob);
-    reader.onloadend = function () {
-      var wordArray = CryptoJS.lib.WordArray.create(reader.result),
-          hashMD5 = CryptoJS.MD5(wordArray).toString(),
-          hashSHA256 = CryptoJS.SHA256(wordArray).toString();
+    reader.onload = async function () {
+      try {
+          var wordArray = CryptoJS.lib.WordArray.create(reader.result),
+              hashMD5 = CryptoJS.MD5(wordArray).toString(),
+              hashSHA256 = await sha256Hex(reader.result);
           updateChecksumPro({hashMD5: hashMD5, hashSHA256: hashSHA256});
           centralizeDialogBox(dialogBoxPro);
+      } catch (error) {
+          $('#hashIntegrityPro').text('Não foi possível calcular a integridade do arquivo.');
+          console.error('[SEI Pro] SHA-256 indisponível', error);
+      }
     };
 }
 export function sendChecksumPro(url) {
@@ -11470,27 +11488,8 @@ export function getHtmlListDocumentos(value) {
     } else { return '' }
 }
 export function getQRProcesso() {
-    var optionsProc = {
-        "render": "image",
-        "ecLevel": "L",
-        "minVersion": 6,
-        "fill": "#333333",
-        "background": "#ffffff",
-        "text": url_host+"?acao=procedimento_trabalhar&id_procedimento="+getParamsUrlPro(window.location.href).id_procedimento,
-        "size": 150,
-        "radius": 0.5,
-        "quiet": 1,
-        "mode": 0,
-        "mSize": 0.2,
-        "mPosX": 0.5,
-        "mPosY": 0.5,
-        "label": "SEI Pro PRF Dev",
-        "fontname": "Arial",
-        "fontcolor": "#ff9818",
-        "image": {}
-    }
-    var srcImg = $('<div>').qrcode(optionsProc).find('img').attr('src');
-    return `<img src="${srcImg}">`;
+    var text = url_host+"?acao=procedimento_trabalhar&id_procedimento="+getParamsUrlPro(window.location.href).id_procedimento;
+    return createQrCodePlaceholder(text, { className: 'seipro-qr-code' });
 }
 export function camposDinamicosProcesso(arrayTags) {
     var prop = dadosProcessoPro.propProcesso;

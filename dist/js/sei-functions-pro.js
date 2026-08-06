@@ -835,6 +835,355 @@
     return null;
   }
 
+  // src/core/crypto.js
+  async function sha256Hex(input, cryptoApi = globalThis.crypto) {
+    if (!cryptoApi?.subtle?.digest) {
+      throw new Error("Web Crypto SHA-256 is unavailable in this context");
+    }
+    let data = input;
+    if (data instanceof ArrayBuffer) {
+    } else if (ArrayBuffer.isView(data)) {
+      data = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    } else if (typeof data === "string") {
+      data = new TextEncoder().encode(data);
+    } else if (data && typeof data.arrayBuffer === "function") {
+      data = await data.arrayBuffer();
+    } else {
+      throw new TypeError("SHA-256 input must be text, bytes, ArrayBuffer, Blob, or File");
+    }
+    const digest = await cryptoApi.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  // src/shared/lazy-script.js
+  var pendingScripts = /* @__PURE__ */ new Map();
+  var documentIds = /* @__PURE__ */ new WeakMap();
+  var nextDocumentId = 0;
+  function documentKey(doc) {
+    if (!documentIds.has(doc)) documentIds.set(doc, ++nextDocumentId);
+    return documentIds.get(doc);
+  }
+  function loadScriptOnce(url, doc = globalThis.document) {
+    if (!url) return Promise.reject(new TypeError("A script URL is required"));
+    if (!doc) return Promise.reject(new Error("Cannot load a script without a document"));
+    const key = `${url}::document-${documentKey(doc)}`;
+    if (pendingScripts.has(key)) return pendingScripts.get(key);
+    const existing = Array.from(doc.scripts || []).find(
+      (script) => script.src === url || script.getAttribute("src") === url
+    );
+    if (existing?.dataset?.seiproLoaded === "true") return Promise.resolve(existing);
+    const promise = new Promise((resolve, reject) => {
+      const script = existing || doc.createElement("script");
+      const cleanup = () => {
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
+      };
+      const onLoad = () => {
+        cleanup();
+        script.dataset.seiproLoaded = "true";
+        resolve(script);
+      };
+      const onError = () => {
+        cleanup();
+        pendingScripts.delete(key);
+        reject(new Error(`Failed to load script: ${url}`));
+      };
+      script.addEventListener("load", onLoad, { once: true });
+      script.addEventListener("error", onError, { once: true });
+      if (!existing) {
+        script.src = url;
+        (doc.head || doc.documentElement).appendChild(script);
+      }
+    });
+    pendingScripts.set(key, promise);
+    return promise;
+  }
+
+  // src/shared/qr-code.js
+  var QR_SCRIPT = "js/lib/qrcode.min.js";
+  var QR_BRIDGE_SCRIPT = "js/qr-code-main.js";
+  var qrLibraryPromise = null;
+  var bridgeRequestId = 0;
+  function extensionUrl(path) {
+    const base = globalThis.URL_SPRO || "";
+    return `${base.replace(/\/?$/, "/")}${path}`;
+  }
+  function resolveElement(target) {
+    if (!target) return null;
+    if (target.elements && target.elements[0]) return target.elements[0];
+    return target.nodeType ? target : null;
+  }
+  function normalizeSize(options) {
+    const value = Number(options.size || options.width || options.height || 128);
+    return Number.isFinite(value) && value > 0 ? Math.round(value) : 128;
+  }
+  function normalizeLevel(QRCode, options) {
+    const level = String(options.ecLevel || options.correctLevel || "M").toUpperCase();
+    return QRCode.CorrectLevel?.[level] ?? QRCode.CorrectLevel?.M;
+  }
+  function loadQrCodeLibrary() {
+    if (typeof globalThis.QRCode === "function") return Promise.resolve(globalThis.QRCode);
+    if (!qrLibraryPromise) {
+      qrLibraryPromise = loadScriptOnce(extensionUrl(QR_SCRIPT)).then(() => {
+        if (typeof globalThis.QRCode !== "function") {
+          throw new Error("The QR code library did not expose QRCode");
+        }
+        return globalThis.QRCode;
+      }).catch((error) => {
+        qrLibraryPromise = null;
+        throw error;
+      });
+    }
+    return qrLibraryPromise;
+  }
+  function qrOptions(QRCode, options) {
+    const size = normalizeSize(options);
+    const background = options.background === null ? "rgba(0,0,0,0)" : options.background || options.colorLight || "#ffffff";
+    return {
+      text: String(options.text ?? ""),
+      width: size,
+      height: Number(options.height) > 0 ? Math.round(Number(options.height)) : size,
+      typeNumber: Number(options.minVersion || options.typeNumber || 0) || 0,
+      colorDark: options.fill || options.colorDark || "#000000",
+      colorLight: background,
+      correctLevel: normalizeLevel(QRCode, options)
+    };
+  }
+  function createQrInstance(QRCode, scratch, options) {
+    const base = qrOptions(QRCode, options);
+    try {
+      return new QRCode(scratch, base);
+    } catch (error) {
+      if (!base.typeNumber) throw error;
+      scratch.replaceChildren();
+      return new QRCode(scratch, { ...base, typeNumber: 0 });
+    }
+  }
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+  function hasAdvancedDrawingOptions(options) {
+    return options.quiet != null || options.radius != null || Number(options.mode || 0) > 0 || !!options.label || !!options.image;
+  }
+  function drawRoundedModule(ctx, x2, y, size, radius) {
+    const r = clamp(size * radius, 0, size / 2);
+    if (!r) {
+      ctx.fillRect(x2, y, size, size);
+      return;
+    }
+    if (typeof ctx.roundRect === "function") {
+      ctx.beginPath();
+      ctx.roundRect(x2, y, size, size, r);
+      ctx.fill();
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x2 + r, y);
+    ctx.lineTo(x2 + size - r, y);
+    ctx.quadraticCurveTo(x2 + size, y, x2 + size, y + r);
+    ctx.lineTo(x2 + size, y + size - r);
+    ctx.quadraticCurveTo(x2 + size, y + size, x2 + size - r, y + size);
+    ctx.lineTo(x2 + r, y + size);
+    ctx.quadraticCurveTo(x2, y + size, x2, y + size - r);
+    ctx.lineTo(x2, y + r);
+    ctx.quadraticCurveTo(x2, y, x2 + r, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawAdvancedQr(instance, options, doc) {
+    if (!hasAdvancedDrawingOptions(options)) return null;
+    const matrix = instance?._oQRCode?.modules;
+    const moduleCount = instance?._oQRCode?.moduleCount;
+    if (!Array.isArray(matrix) || !Number.isFinite(moduleCount) || moduleCount <= 0) return null;
+    const width = normalizeSize(options);
+    const height = Number(options.height) > 0 ? Math.round(Number(options.height)) : width;
+    const canvas = doc.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    let ctx;
+    try {
+      ctx = canvas.getContext("2d");
+    } catch (_) {
+      return null;
+    }
+    if (!ctx) return null;
+    const background = options.background === null ? null : options.background || options.colorLight || "#ffffff";
+    if (background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, width, height);
+    } else {
+      ctx.clearRect(0, 0, width, height);
+    }
+    const quiet = clamp(Math.round(Number(options.quiet) || 0), 0, 8);
+    const cell = Math.max(1, Math.floor(Math.min(width, height) / (moduleCount + quiet * 2)));
+    const qrSize = cell * (moduleCount + quiet * 2);
+    const offsetX = Math.floor((width - qrSize) / 2);
+    const offsetY = Math.floor((height - qrSize) / 2);
+    ctx.fillStyle = options.fill || options.colorDark || "#000000";
+    const radius = clamp(Number(options.radius) || 0, 0, 1);
+    for (let row = 0; row < moduleCount; row += 1) {
+      for (let column = 0; column < moduleCount; column += 1) {
+        if (!matrix[row]?.[column]) continue;
+        drawRoundedModule(
+          ctx,
+          offsetX + (column + quiet) * cell,
+          offsetY + (row + quiet) * cell,
+          cell,
+          radius
+        );
+      }
+    }
+    const mode = Number(options.mode) || 0;
+    const markerSize = clamp(Number(options.mSize) || 0.2, 0.01, 0.4) * Math.min(width, height);
+    const markerX = clamp(Number(options.mPosX) || 0.5, 0, 1) * width;
+    const markerY = clamp(Number(options.mPosY) || 0.5, 0, 1) * height;
+    if ((mode === 1 || mode === 2) && options.label) {
+      const labelWidth = Math.max(markerSize * 2, Math.min(width * 0.9, markerSize * 4));
+      const labelHeight = Math.max(18, markerSize);
+      const left = clamp(markerX - labelWidth / 2, 0, Math.max(0, width - labelWidth));
+      const top = clamp(markerY - labelHeight / 2, 0, Math.max(0, height - labelHeight));
+      ctx.fillStyle = background || "#ffffff";
+      ctx.fillRect(left, top, labelWidth, labelHeight);
+      ctx.fillStyle = options.fontcolor || "#ff9818";
+      ctx.font = `${Math.max(10, Math.round(labelHeight * 0.45))}px ${options.fontname || "Arial"}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(options.label), left + labelWidth / 2, top + labelHeight / 2, labelWidth - 8);
+    } else if ((mode === 3 || mode === 4) && options.image) {
+      const imageSize = Math.max(1, markerSize);
+      const left = clamp(markerX - imageSize / 2, 0, Math.max(0, width - imageSize));
+      const top = clamp(markerY - imageSize / 2, 0, Math.max(0, height - imageSize));
+      if (mode === 4) {
+        ctx.fillStyle = background || "#ffffff";
+        ctx.fillRect(left, top, imageSize, imageSize);
+      }
+      try {
+        ctx.drawImage(options.image, left, top, imageSize, imageSize);
+      } catch (_) {
+      }
+    }
+    return canvas;
+  }
+  function dataUrlFromNode(node) {
+    if (!node) return null;
+    if (node.tagName === "CANVAS" && typeof node.toDataURL === "function") {
+      try {
+        return node.toDataURL("image/png");
+      } catch {
+      }
+    }
+    if (node.tagName === "IMG" && node.src) return node.src;
+    if (node.tagName === "SVG" && typeof XMLSerializer !== "undefined") {
+      const svg = new XMLSerializer().serializeToString(node);
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+    return null;
+  }
+  function appendRenderedImage(target, source, options) {
+    const doc = target.ownerDocument || globalThis.document;
+    const image = doc.createElement("img");
+    image.src = source;
+    image.width = normalizeSize(options);
+    image.height = Number(options.height) > 0 ? Math.round(Number(options.height)) : image.width;
+    image.alt = options.alt || options.text || "C\xF3digo QR";
+    image.decoding = "async";
+    target.replaceChildren(image);
+    target.removeAttribute("data-seipro-qr-code");
+    return image;
+  }
+  function bridgeOptions(options) {
+    return {
+      text: String(options.text ?? ""),
+      size: normalizeSize(options),
+      height: Number(options.height) > 0 ? Math.round(Number(options.height)) : void 0,
+      fill: options.fill || options.colorDark || "#000000",
+      background: options.background === null ? null : options.background || options.colorLight || "#ffffff",
+      ecLevel: options.ecLevel || options.correctLevel || "M",
+      minVersion: Number(options.minVersion || options.typeNumber || 0) || 0,
+      alt: options.alt || options.text || "C\xF3digo QR"
+    };
+  }
+  function canUsePageBridge() {
+    return !!(globalThis.URL_SPRO && typeof globalThis.document?.createElement === "function" && typeof globalThis.CustomEvent === "function");
+  }
+  function isExtensionIsolatedWorld() {
+    const runtime = globalThis.chrome?.runtime || globalThis.browser?.runtime;
+    return !!(runtime?.id && runtime.id !== "seipro-page-inject" && typeof runtime.getURL === "function");
+  }
+  function renderThroughPageBridge(target, options) {
+    if (!canUsePageBridge()) {
+      return Promise.reject(new Error("The QR code library did not expose QRCode"));
+    }
+    const doc = target.ownerDocument || globalThis.document;
+    const bridgeUrl = extensionUrl(QR_BRIDGE_SCRIPT);
+    const requestId = `seipro-qr-${++bridgeRequestId}`;
+    const payload = bridgeOptions(options);
+    return new Promise((resolve, reject) => {
+      let timer;
+      const cleanup = () => {
+        clearTimeout(timer);
+        target.removeEventListener("seipro-qr-rendered", onRendered);
+        target.removeEventListener("seipro-qr-error", onError);
+        target.removeAttribute("data-seipro-qr-bridge-id");
+      };
+      const onRendered = () => {
+        cleanup();
+        resolve(target.querySelector("img, canvas, svg") || target);
+      };
+      const onError = (event2) => {
+        cleanup();
+        target.removeAttribute("data-seipro-qr-options");
+        target.removeAttribute("data-seipro-qr-script");
+        reject(new Error(event2?.detail || target.getAttribute("data-seipro-qr-error") || "QR code rendering failed"));
+      };
+      target.addEventListener("seipro-qr-rendered", onRendered, { once: true });
+      target.addEventListener("seipro-qr-error", onError, { once: true });
+      target.setAttribute("data-seipro-qr-bridge-id", requestId);
+      target.setAttribute("data-seipro-qr-options", JSON.stringify(payload));
+      target.setAttribute("data-seipro-qr-script", extensionUrl(QR_SCRIPT));
+      timer = setTimeout(() => onError({ detail: "QR code bridge timed out" }), 15e3);
+      loadScriptOnce(bridgeUrl, doc).then(() => {
+        const EventCtor = doc.defaultView?.CustomEvent || globalThis.CustomEvent;
+        target.dispatchEvent(new EventCtor("seipro-qr-render", { bubbles: false }));
+      }).catch(onError);
+    });
+  }
+  function renderQrCode(target, options = {}) {
+    const element = resolveElement(target);
+    if (!element) return Promise.resolve(null);
+    if (typeof globalThis.QRCode !== "function" && isExtensionIsolatedWorld() && canUsePageBridge()) {
+      return renderThroughPageBridge(element, options);
+    }
+    return loadQrCodeLibrary().then((QRCode) => {
+      const doc = element.ownerDocument || globalThis.document;
+      const scratch = doc.createElement("div");
+      scratch.style.cssText = "position:fixed;left:-100000px;top:-100000px;width:1px;height:1px;overflow:hidden;";
+      (doc.body || doc.documentElement).appendChild(scratch);
+      try {
+        const instance = createQrInstance(QRCode, scratch, options);
+        const advancedCanvas = drawAdvancedQr(instance, options, doc);
+        const source = advancedCanvas || scratch.querySelector("canvas, img[src], svg");
+        const dataUrl = dataUrlFromNode(source);
+        if (dataUrl) return appendRenderedImage(element, dataUrl, options);
+        const clone = source ? element.ownerDocument.importNode(source, true) : null;
+        element.replaceChildren();
+        if (clone) element.appendChild(clone);
+        return clone;
+      } finally {
+        scratch.remove();
+      }
+    }, (error) => {
+      if (canUsePageBridge(element)) return renderThroughPageBridge(element, options);
+      throw error;
+    });
+  }
+  function createQrCodePlaceholder(text, options = {}) {
+    const span = document.createElement("span");
+    span.className = options.className || "seipro-qr-code";
+    span.dataset.seiproQrCode = encodeURIComponent(String(text ?? ""));
+    return span.outerHTML;
+  }
+
   // src/shared/table-styles.js
   function getColorID() {
     var colorID = {
@@ -7317,14 +7666,16 @@
       ifrVisualizacao2.find(divInformacao).hide();
       if (SeiPro.sei.adapter.isSEI5()) ifrVisualizacao2.find("#divArvoreHtml").removeClass("d-flex");
       replaceColorsIcons(ifrVisualizacao2.find("#tagUserColorPro"));
-      if (typeof $().qrcode === "function") {
-        ifrVisualizacao2.find(".qrcapa").html("").qrcode({
+      var qrCapaTarget = ifrVisualizacao2.find(".qrcapa")[0];
+      if (qrCapaTarget) {
+        renderQrCode(qrCapaTarget, {
           render: "image",
-          size: "150",
+          size: 150,
           text: parent.url_host + "?acao=procedimento_trabalhar&id_procedimento=" + id_procedimento
+        }).catch((error) => {
+          console.error("[SEI Pro] QR code indispon\xEDvel", error);
+          qrCapaTarget.textContent = "";
         });
-      } else {
-        $.getScript(URL_SPRO + "js/lib/jquery-qrcode-0.18.0.min.js");
       }
       if (loop) {
         setTimeout(function() {
@@ -9605,10 +9956,15 @@
         $("#outputompareDoc").html('<i class="fas fa-sync-alt fa-spin azulColor" style="float: left;margin: 0 8px 0 0;"></i> Carregando dados...').css("background", "#fff");
         var global = global || window;
         const reader = new global.FileReader();
-        reader.onload = (event2) => {
-          var result = event2.target.result;
-          var wordArray = CryptoJS.lib.WordArray.create(result), hashMD5 = CryptoJS.MD5(wordArray).toString(), hashSHA256 = CryptoJS.SHA256(wordArray).toString();
-          compareChecksumPro({ hashMD5, hashSHA256 });
+        reader.onload = async (event2) => {
+          try {
+            var result = event2.target.result;
+            var wordArray = CryptoJS.lib.WordArray.create(result), hashMD5 = CryptoJS.MD5(wordArray).toString(), hashSHA256 = await sha256Hex(result);
+            compareChecksumPro({ hashMD5, hashSHA256 });
+          } catch (error) {
+            $("#outputompareDoc").text("N\xE3o foi poss\xEDvel calcular a integridade do arquivo.").css("background", "#fdf7f7");
+            console.error("[SEI Pro] SHA-256 indispon\xEDvel", error);
+          }
         };
         reader.readAsArrayBuffer(input.files[0]);
       }
@@ -9635,10 +9991,15 @@
   function calculateHashPro(blob) {
     var reader = new FileReader();
     reader.readAsArrayBuffer(blob);
-    reader.onloadend = function() {
-      var wordArray = CryptoJS.lib.WordArray.create(reader.result), hashMD5 = CryptoJS.MD5(wordArray).toString(), hashSHA256 = CryptoJS.SHA256(wordArray).toString();
-      updateChecksumPro({ hashMD5, hashSHA256 });
-      centralizeDialogBox(dialogBoxPro);
+    reader.onload = async function() {
+      try {
+        var wordArray = CryptoJS.lib.WordArray.create(reader.result), hashMD5 = CryptoJS.MD5(wordArray).toString(), hashSHA256 = await sha256Hex(reader.result);
+        updateChecksumPro({ hashMD5, hashSHA256 });
+        centralizeDialogBox(dialogBoxPro);
+      } catch (error) {
+        $("#hashIntegrityPro").text("N\xE3o foi poss\xEDvel calcular a integridade do arquivo.");
+        console.error("[SEI Pro] SHA-256 indispon\xEDvel", error);
+      }
     };
   }
   function sendChecksumPro(url) {
@@ -11060,27 +11421,8 @@
     }
   }
   function getQRProcesso() {
-    var optionsProc = {
-      "render": "image",
-      "ecLevel": "L",
-      "minVersion": 6,
-      "fill": "#333333",
-      "background": "#ffffff",
-      "text": url_host + "?acao=procedimento_trabalhar&id_procedimento=" + getParamsUrlPro(window.location.href).id_procedimento,
-      "size": 150,
-      "radius": 0.5,
-      "quiet": 1,
-      "mode": 0,
-      "mSize": 0.2,
-      "mPosX": 0.5,
-      "mPosY": 0.5,
-      "label": "SEI Pro PRF Dev",
-      "fontname": "Arial",
-      "fontcolor": "#ff9818",
-      "image": {}
-    };
-    var srcImg = $("<div>").qrcode(optionsProc).find("img").attr("src");
-    return `<img src="${srcImg}">`;
+    var text = url_host + "?acao=procedimento_trabalhar&id_procedimento=" + getParamsUrlPro(window.location.href).id_procedimento;
+    return createQrCodePlaceholder(text, { className: "seipro-qr-code" });
   }
   function camposDinamicosProcesso(arrayTags) {
     var prop = dadosProcessoPro.propProcesso;

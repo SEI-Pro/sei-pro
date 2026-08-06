@@ -12,7 +12,8 @@ const LAZY_JS = [
     'js/lib/chart.min.js',
     'js/lib/jkanban.min.js',
     'js/lib/jschardet.min.js',
-    'js/lib/mammoth.browser.min.js'
+    'js/lib/mammoth.browser.min.js',
+    'js/lib/qrcode.min.js'
 ];
 
 const REMOVED_JS = [
@@ -60,6 +61,7 @@ describe('lazy feature libs (not eager content_scripts)', () => {
         const projetos = read('src/features/projetos/view/helpers.js');
         const editorImport = read('src/features/editor/view/dialogs/import.js');
         const docsLote = read('src/features/docs-lote/view.js');
+        const qr = read('src/shared/qr-code.js');
         expect(init).not.toMatch(/(?:chart\.min|frappe-gantt|jkanban\.min)\.js/);
         expect(init).not.toMatch(/(?:chart\.min|frappe-gantt|jkanban\.min)\.css/);
         expect(atividades).toContain('loadChartAtividades');
@@ -68,6 +70,9 @@ describe('lazy feature libs (not eager content_scripts)', () => {
         expect(projetos).toContain('loadGanttLib');
         expect(editorImport).toContain('mammoth.browser.min.js');
         expect(docsLote).toContain('jschardet.min.js');
+        expect(qr).toContain('js/lib/qrcode.min.js');
+        expect(qr).toContain('loadScriptOnce');
+        expect(read('src/shared/qr-code-main.js')).toContain('seipro-qr-render');
         expect(initArvore).not.toContain('dropzone.min.js');
         expect(upload).toContain("from '../../shared/ui/file-queue.js'");
         expect(upload).toContain('createFileQueue');
@@ -89,5 +94,16 @@ describe('lazy feature libs (not eager content_scripts)', () => {
             expect(war, `WAR ${lib}`).not.toContain(lib);
             expect(existsSync(join(rootDir, 'dist', lib))).toBe(false);
         }
+    });
+
+    it('removes the duplicate jQuery QR implementation', () => {
+        const allManifestEntries = [
+            ...(manifest.content_scripts || []).flatMap((cs) => [...(cs.js || []), ...(cs.css || [])]),
+            ...war
+        ];
+        expect(allManifestEntries).not.toContain('js/lib/jquery-qrcode-0.18.0.min.js');
+        expect(read('src/features/todas-paginas/sei-pro-all.js')).not.toContain('jquery-qrcode');
+        expect(read('src/features/sei-functions/body.js')).not.toContain('jquery-qrcode');
+        expect(existsSync(join(rootDir, 'dist/js/lib/jquery-qrcode-0.18.0.min.js'))).toBe(false);
     });
 });

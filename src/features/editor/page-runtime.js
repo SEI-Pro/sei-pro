@@ -4,12 +4,31 @@
  */
 import { globalRef } from '../../core/global.js';
 import { installCoreStack } from '../../core/stack.js';
+import { createQrCodePlaceholder } from '../../shared/qr-code.js';
 import { q } from './lib/domq.js';
 
 function ensureGlobal(name, value) {
     if (typeof globalRef[name] === 'undefined') {
         globalRef[name] = value;
     }
+}
+
+function getProcessQrCode() {
+    let id = '';
+    try {
+        const params = new URL(globalRef.location.href).searchParams;
+        id = params.get('id_procedimento') || params.get('id_protocolo') || '';
+    } catch (_) { /* keep the process cache fallback below */ }
+    if (!id) {
+        id = globalRef.dadosProcessoPro?.propProcesso?.hdnIdProcedimento || '';
+    }
+    if (!id) return '';
+
+    const base = globalRef.url_host || String(globalRef.location.href || '').split('?')[0];
+    return createQrCodePlaceholder(
+        `${base}?acao=procedimento_trabalhar&id_procedimento=${encodeURIComponent(id)}`,
+        { className: 'seipro-qr-code' }
+    );
 }
 
 function extensionBaseFromDataset() {
@@ -485,7 +504,7 @@ function installSoftPageGlobals() {
     ensureGlobal('loadCSSResize', function () {});
     ensureGlobal('loadGoogleDocs', function () {});
     ensureGlobal('getBase64Image', function () { return ''; });
-    ensureGlobal('getQRProcesso', function () { return ''; });
+    ensureGlobal('getQRProcesso', getProcessQrCode);
     ensureGlobal('sumTagValue', function (v) { return v; });
     ensureGlobal('camposDinamicosProcesso', function (tags) { return tags || {}; });
     ensureGlobal('getInteressadosProcesso', function (_text, cb) {

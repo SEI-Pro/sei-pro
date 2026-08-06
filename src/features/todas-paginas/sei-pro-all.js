@@ -826,11 +826,6 @@ function initInfraImg(TimeOut = 9000) {
         }, 500);
     }
 }
-function initQRCodeLib() {
-    if ($('#ifrArvore').length > 0 && typeof $().qrcode !== 'function' && typeof URL_SPRO !== 'undefined') {
-        $.getScript(URL_SPRO+"js/lib/jquery-qrcode-0.18.0.min.js");
-    }
-}
 function initNewProcDefault(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if ($('form#frmProcedimentoCadastro').length && typeof moment == 'function') {
@@ -993,7 +988,6 @@ function initSeiProAll() {
     initSlimPro();
     initBrandingPRF();
     initCheckLoadJqueryUI();
-    initQRCodeLib();
     setOnClickExcluirProcBloco();
     initConfigSEIPro();
     setTimeout(() => { 
