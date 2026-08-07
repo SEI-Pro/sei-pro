@@ -62,5 +62,3 @@ namespace.features.listaProcessosIO = {
     listaAgrupamentoIO,
     readGroupOrder
 };
-
-installListaProcessos();

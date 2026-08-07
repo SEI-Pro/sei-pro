@@ -28,8 +28,7 @@ import { installEditorDelegatedActions } from './view/delegated-actions.js';
 import { openProcessDocumentDiff } from './diff-controller.js';
 
 const root = getSeiPro();
-root.features = root.features || {};
-root.features.editor = {
+const editorApi = Object.freeze({
     extractTextWithNumbering,
     extractTextFromHtml,
     bindEditorFocus,
@@ -45,19 +44,24 @@ root.features.editor = {
     openChecklistPanel,
     openDraftRestorePanel,
     openSnippetPanel
-};
-installEditorLegacyApi();
-ready(() => {
-    try {
-        installEditorAiBridge();
-        installEditorDelegatedActions();
-        bootEditor();
-        installEditorTools({
-            repository: getDraftRepository(),
-            snippetRepository: getSnippetRepository(),
-            openDiff: () => openProcessDocumentDiff()
-        });
-    } catch (error) {
-        console.error('SEI Pro editor boot failed', error);
-    }
 });
+
+export function installEditor() {
+    root.features = root.features || {};
+    root.features.editor = editorApi;
+    installEditorLegacyApi();
+    ready(() => {
+        try {
+            installEditorAiBridge();
+            installEditorDelegatedActions();
+            bootEditor();
+            installEditorTools({
+                repository: getDraftRepository(),
+                snippetRepository: getSnippetRepository(),
+                openDiff: () => openProcessDocumentDiff()
+            });
+        } catch (error) {
+            console.error('SEI Pro editor boot failed', error);
+        }
+    });
+}

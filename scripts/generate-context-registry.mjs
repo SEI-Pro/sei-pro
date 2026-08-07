@@ -16,7 +16,7 @@ const root = REPO_ROOT;
 
 // Contextos que já possuem uma composição ESM exclusiva. Novos contextos só
 // entram aqui depois que sua rota legada foi removida do manifest.
-export const GENERATED_CONTEXTS = Object.freeze(['login', 'db', 'lista', 'arvore']);
+export const GENERATED_CONTEXTS = Object.freeze(['login', 'db', 'lista', 'arvore', 'documento', 'visualizacao', 'editor']);
 
 function camelCase(id) {
     return id.replace(/-([a-z0-9])/g, (_, char) => char.toUpperCase());

@@ -1,4 +1,4 @@
-function replaceSelectOnVisualizacao(force = false, TimeOut = 9000) {
+export function replaceSelectOnVisualizacao(force = false, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if (typeof $().chosen !== 'undefined') {
         $(document).ready(function() {
@@ -15,7 +15,7 @@ function replaceSelectOnVisualizacao(force = false, TimeOut = 9000) {
         }, 500);
     }
 }
-function setReplaceSelectOnVisualizacao(force = false) {
+export function setReplaceSelectOnVisualizacao(force = false) {
     if (parent.verifyConfigValue('substituiselecao')) {
         var target = $('body');
         if (typeof $().chosen !== 'undefined') {
@@ -39,7 +39,7 @@ function setReplaceSelectOnVisualizacao(force = false) {
         }
     }
 }
-function initForceChosenVisualizacao() {
+export function initForceChosenVisualizacao() {
     var observer = new MutationObserver(function(mutations) {
         for (const addedNodes of mutations) {
             if (!parent.delayCrash && typeof addedNodes.target !== 'undefined' && 

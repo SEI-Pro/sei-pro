@@ -9,11 +9,11 @@ import { boot } from '../app/boot.js';
 import { globalRef } from '../core/global.js';
 import { ready } from '../dom/index.js';
 import { registerListaExclusiveFeatures } from '../generated/lista-feature-registry.js';
-import '../features/nao-lido/index.js';
-import { createListaDeps } from './lista.js';
+import { createListaDeps, installListaEntryLegacyApi } from './lista.js';
 import { readListaEntryInputs } from './lista/io.js';
 
 registerListaExclusiveFeatures();
+installListaEntryLegacyApi();
 
 type ListaConfig = { verifyConfigValue?: (key: string) => boolean };
 type ListaContextOverrides = {

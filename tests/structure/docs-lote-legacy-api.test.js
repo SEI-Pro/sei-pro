@@ -39,7 +39,7 @@ describe('migration: docs-lote legacy map bridge', () => {
     const view = read('src/features/docs-lote/view.ts');
     const legacy = readSeiFunctionsSource();
 
-    expect(index).toContain("import './legacy-api.js'");
+    expect(index).toContain('installDocsLoteLegacyApi');
     expect(index).toContain('publishFeature({');
     expect(index).toContain("nsKey: 'docsLote'");
     expect(index).toContain('openWizard: docLoteModalSelecaoDoc');
@@ -53,15 +53,18 @@ describe('migration: docs-lote legacy map bridge', () => {
     expect(legacy).not.toMatch(/function\s+(?:docLoteModalSelecaoDoc|docsLote_getDocsArvore)\s*\(/);
   });
 
-  it('loads the bundle after its legacy dependency in every manifest context', () => {
-    const entries = manifestWithDocsLote();
+  it('loads the lista composition root after its legacy dependency', () => {
+    const entries = JSON.parse(read('manifest.base.json')).content_scripts.filter((entry) =>
+      entry.js.includes('js/lista-context.bundle.js')
+    );
 
-    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.length).toBe(2);
     for (const entry of entries) {
       const functionsIndex = entry.js.indexOf('js/sei-functions-pro.js');
-      const bundleIndex = entry.js.indexOf('js/docs-lote.bundle.js');
+      const bundleIndex = entry.js.indexOf('js/lista-context.bundle.js');
       expect(functionsIndex).toBeGreaterThanOrEqual(0);
       expect(bundleIndex).toBeGreaterThan(functionsIndex);
+      expect(entry.js).not.toContain('js/docs-lote.bundle.js');
     }
   });
 

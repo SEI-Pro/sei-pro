@@ -11,7 +11,7 @@ import { createLogger } from '../platform/logger.js';
 import { createMessaging } from '../platform/messaging.js';
 import { readListaEntryInputs } from './lista/io.js';
 import { runListaProcessosView } from './lista/view.js';
-import './lista/legacy-api.js';
+import { installListaEntryLegacyApi as installLegacyApi } from './lista/legacy-api.js';
 
 const LISTA_FEATURES = Object.freeze([
     'lista-processos',
@@ -67,6 +67,10 @@ export function installListaEntryDomain(globalRef = globalThis) {
         readListaEntryInputs,
         runListaProcessosView
     };
+}
+
+export function installListaEntryLegacyApi() {
+    installLegacyApi();
 }
 
 installListaEntryDomain(typeof window !== 'undefined' ? window : globalThis);

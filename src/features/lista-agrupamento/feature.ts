@@ -1,16 +1,16 @@
 /**
  * Descritor ADR-0004 — fonte de verdade de contextos / configKey / install.
- * Bundle atual auto-inicia em index.ts; install no-op até raiz de composição (fase 4).
+ * Instalação feita pela raiz de composição da lista.
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
+import { installListaAgrupamento } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'lista-agrupamento',
-    maturity: 'declared',
+    maturity: 'exclusive',
     contexts: ['lista'],
     configKey: 'agruparlista',
-    // TODO(ADR-0004): wiring via composition root — bundle still self-boots
-    install() {},
+    install: installListaAgrupamento,
     api: Object.freeze({})
 };
 

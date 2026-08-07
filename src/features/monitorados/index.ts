@@ -7,13 +7,14 @@ import { openBoxConfigDates } from './datas.js';
 import { installCategorias } from './categorias.js';
 import { installCommands, actMonitoradoPro } from './commands.js';
 import { installVisualizacao } from './visualizacao.js';
-import './legacy-api.js'; // único ponto com aliasGlobal — expõe a compat global da feature
+import { installMonitoradosLegacyApi } from './legacy-api.js'; // único ponto com aliasGlobal
 
 /**
  * Processos Monitorados — Tier S. Contrato { id, api, install }.
  */
 
 export function installMonitorados() {
+    installMonitoradosLegacyApi();
     installCategorias();
     installCommands();
     installVisualizacao();
@@ -48,5 +49,3 @@ publishFeature({
     }),
     install: installMonitorados
 });
-
-installMonitorados();

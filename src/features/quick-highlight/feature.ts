@@ -3,14 +3,14 @@
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
 
-import { initQuickHighlight } from './index.js';
+import { installQuickHighlight } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'quick-highlight',
-    maturity: 'wired',
-    contexts: ['documento', 'arvore'],
+    maturity: 'exclusive',
+    contexts: ['documento'],
     configKey: 'filtrarpaginapelapesquisarapida',
-    install: initQuickHighlight,
+    install: installQuickHighlight,
     api: Object.freeze({})
 };
 

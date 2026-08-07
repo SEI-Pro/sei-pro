@@ -38,8 +38,6 @@ const write = process.argv.includes('--write');
 const SLIM_BLOCKS = [
     { script: 'js/login.bundle.js', featureId: 'login' },
     { script: 'js/db.bundle.js', featureId: 'external-config' },
-    { script: 'js/arvore-info.bundle.js', featureId: 'arvore-info' },
-    { script: 'js/quick-highlight.bundle.js', featureId: 'quick-highlight' }
 ];
 
 function readCommitted() {

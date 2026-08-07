@@ -9,5 +9,7 @@
 import { aliasGlobal } from '../../core/global.js';
 import { docLoteModalSelecaoDoc, docsLote_getDocsArvore } from './view.js';
 
-aliasGlobal('docLoteModalSelecaoDoc', docLoteModalSelecaoDoc);
-aliasGlobal('docsLote_getDocsArvore', docsLote_getDocsArvore);
+export function installDocsLoteLegacyApi() {
+    aliasGlobal('docLoteModalSelecaoDoc', docLoteModalSelecaoDoc);
+    aliasGlobal('docsLote_getDocsArvore', docsLote_getDocsArvore);
+}

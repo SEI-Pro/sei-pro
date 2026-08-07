@@ -189,16 +189,9 @@
       "js/lib/jszip.min.js",
       "js/lib/jszip-utils.min.js",
       "js/sei-functions-pro.js",
-      "js/docs-lote.bundle.js",
-      "js/lista-agrupamento.bundle.js",
-      "js/lista.bundle.js",
-      "js/sei-pro.js",
-      "js/sei-pro-controle-prazo.js",
       "js/lista-context.bundle.js",
-      "js/anotacao-controle.bundle.js",
       "js/sei-legis.js",
       "js/sei-pro-icons.js",
-      "js/monitorados.bundle.js",
       "js/sei-pro-atividades.js",
       "js/sei-pro-projetos.js",
       "js/sei-pro-prescricoes.js",
@@ -256,16 +249,9 @@
       "js/lib/jszip.min.js",
       "js/lib/jszip-utils.min.js",
       "js/sei-functions-pro.js",
-      "js/docs-lote.bundle.js",
-      "js/lista-agrupamento.bundle.js",
-      "js/lista.bundle.js",
-      "js/sei-pro.js",
-      "js/sei-pro-controle-prazo.js",
       "js/lista-context.bundle.js",
-      "js/anotacao-controle.bundle.js",
       "js/sei-legis.js",
       "js/sei-pro-icons.js",
-      "js/monitorados.bundle.js",
       "js/sei-pro-atividades.js",
       "js/sei-pro-projetos.js",
       "js/sei-pro-prescricoes.js",
@@ -335,21 +321,6 @@
   },
   {
     "matches": [
-      "*://*.br/*controlador.php?acao=procedimento_visualizar*",
-      "*://*.org/*controlador.php?acao=procedimento_visualizar*",
-      "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_visualizar*"
-    ],
-    "exclude_matches": [
-      "*://sei.sp1.gov.br/*"
-    ],
-    "js": [
-      "js/arvore-info.bundle.js"
-    ],
-    "css": [],
-    "all_frames": true
-  },
-  {
-    "matches": [
       "*://*.br/*controlador.php?acao=arvore_visualizar*",
       "*://*.org/*controlador.php?acao=arvore_visualizar*",
       "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_visualizar*"
@@ -384,9 +355,7 @@
       "js/lib/jszip-utils.min.js",
       "js/sei-functions-pro.js",
       "js/sei-pro-icons.js",
-      "js/sei-pro-visualizacao.js",
-      "js/sei-pro-visualizacao-chosen.js",
-      "js/init_visualizacao.js"
+      "js/visualizacao.bundle.js"
     ],
     "css": [
       "css/sei-functions.css"
@@ -408,7 +377,7 @@
       "*://sei.sp1.gov.br/*"
     ],
     "js": [
-      "js/quick-highlight.bundle.js"
+      "js/documento.bundle.js"
     ],
     "css": [],
     "all_frames": true

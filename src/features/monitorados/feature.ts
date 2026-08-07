@@ -7,7 +7,7 @@ import { installMonitorados } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'monitorados',
-    maturity: 'wired',
+    maturity: 'exclusive',
     contexts: ['lista'],
     configKey: 'gerenciarmonitorados',
     install: installMonitorados,

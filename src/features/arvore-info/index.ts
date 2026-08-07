@@ -25,7 +25,10 @@ import { installAnotacaoSection } from './sections/anotacao.js';
 //   - Delegated event handlers, no inline onclick.
 //   - Loud console logs whenever an expected precondition fails (so "loads incompletely" is diagnosable).
 
-(function (win, doc) {
+export function installArvoreInfo(deps: any = {}) {
+    const win = deps.window || (typeof window !== 'undefined' ? window : globalThis);
+    const doc = deps.document || (win && win.document);
+    if (!win || !doc) return;
     'use strict';
     if (win.__SEI_PRO_TREE_BOOT__) { console.warn('[SeiProTree] already booted — skipping'); return; }
     win.__SEI_PRO_TREE_BOOT__ = true;
@@ -1042,4 +1045,4 @@ import { installAnotacaoSection } from './sections/anotacao.js';
         },
         enrich: function () { /* panel is process-level — no per-anchor work */ }
     });
-})(window, document);
+}

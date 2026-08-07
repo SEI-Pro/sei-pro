@@ -11,7 +11,7 @@ describe('lista context composition root', () => {
         delete document.__seiproNaoLidoBound;
     });
 
-    it('installs the exclusive nao-lido capability through the generated registry', async () => {
+    it('installs the exclusive lista capabilities through the generated registry', async () => {
         const result = await bootListaContext({
             root: document,
             config: enabledConfig,
@@ -21,7 +21,15 @@ describe('lista context composition root', () => {
         });
 
         expect(result.context).toBe('lista');
-        expect(result.installed).toEqual(['nao-lido']);
+        expect(result.installed).toEqual([
+            'anotacao-controle',
+            'controlar-prazos',
+            'docs-lote',
+            'lista-agrupamento',
+            'lista-processos',
+            'monitorados',
+            'nao-lido'
+        ]);
         expect(result.failed).toEqual([]);
         expect(document.__seiproNaoLidoBound).toBe(true);
     });

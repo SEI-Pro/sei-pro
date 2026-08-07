@@ -330,7 +330,8 @@ registry por varredura; `npm run manifest:check` (passthrough seguro); snapshot 
 Geração completa dos `content_scripts` permanece follow-up de risco.
 
 **Fase 4 — Composição** (2026-08-07). Ports `createX` + fakes; boot com isolamento de falha;
- raízes login/db/lista/arvore; registries gerados para os quatro contextos já exclusivos;
+ raízes login/db/lista/arvore; registries gerados para os quatro contextos, com sete
+ capacidades modernas da lista já exclusivas; `atividades` permanece no fim do plano;
 `publishGlobal` amostral; **bus removido** (ADR-0013).
 
 **Fase 5 — Refronteiras (fundação)** (2026-08-07). Mapa de capacidades; testes de

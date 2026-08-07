@@ -104,8 +104,9 @@ export function initQuickHighlight() {
     applyHighlight(input.value || '');
 }
 
-// Bootstrap: roda no frame do visualizador; reaplica quando os iframes carregam.
-(function () {
+// Instalação controlada pela raiz do contexto documento. O guard permanece no
+// window porque o bloco all_frames pode avaliar a entry mais de uma vez.
+export function installQuickHighlight() {
     if (window.__SEI_PRO_QUICK_HL_BOOTED__) return;
     window.__SEI_PRO_QUICK_HL_BOOTED__ = true;
     function boot() {
@@ -116,4 +117,4 @@ export function initQuickHighlight() {
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
     else boot();
-})();
+}

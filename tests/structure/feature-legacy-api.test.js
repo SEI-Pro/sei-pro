@@ -55,7 +55,7 @@ describe('migration: feature legacy aliases stay isolated', () => {
     const entry = readFileSync(join(featuresDir, 'controlar-prazos/index.ts'), 'utf8');
     const legacyApi = readFileSync(join(featuresDir, 'controlar-prazos/legacy-api.ts'), 'utf8');
 
-    expect(entry).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
+    expect(entry).toMatch(/import\s+(?:\{[^}]+\}\s+from\s+)?['"]\.\/legacy-api\.js['"]/);
     expect(entry).not.toMatch(/\baliasGlobal\s*\(/);
     expect(legacyApi).toMatch(/import\s+\{\s*aliasGlobal\s*\}/);
     expect(legacyApi).toMatch(/\baliasGlobal\s*\(/);
@@ -81,7 +81,7 @@ describe('migration: feature legacy aliases stay isolated', () => {
     const boot = readFileSync(join(featuresDir, 'monitorados/boot.ts'), 'utf8');
     const manifest = JSON.parse(readFileSync(join(rootDir, 'manifest.base.json'), 'utf8'));
 
-    expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
+    expect(index).toMatch(/import\s+(?:\{[^}]+\}\s+from\s+)?['"]\.\/legacy-api\.js['"]/);
     expect(index).not.toMatch(/\baliasGlobal\s*\(/);
     expect(legacyApi).toMatch(/import\s+\{\s*aliasGlobal\s*\}/);
     expect(legacyApi).toMatch(/\bicon\b[\s\S]*\bcommands\b/);
@@ -94,13 +94,12 @@ describe('migration: feature legacy aliases stay isolated', () => {
 
     const relevantBlocks = manifest.content_scripts
       .map((block) => block.js || [])
-      .filter((scripts) => scripts.includes('js/sei-pro.js') && scripts.includes('js/monitorados.bundle.js'));
+      .filter((scripts) => scripts.includes('js/lista-context.bundle.js'));
     expect(relevantBlocks.length).toBe(2);
     for (const scripts of relevantBlocks) {
       expect(scripts.indexOf('js/core-stack.bundle.js')).toBeGreaterThanOrEqual(0);
-      expect(scripts.indexOf('js/sei-functions-pro.js')).toBeLessThan(scripts.indexOf('js/sei-pro.js'));
-      expect(scripts.indexOf('js/sei-pro.js')).toBeLessThan(scripts.indexOf('js/monitorados.bundle.js'));
-      expect(scripts.indexOf('js/monitorados.bundle.js')).toBeLessThan(scripts.indexOf('js/init.js'));
+      expect(scripts.indexOf('js/sei-functions-pro.js')).toBeLessThan(scripts.indexOf('js/lista-context.bundle.js'));
+      expect(scripts).not.toContain('js/monitorados.bundle.js');
     }
   });
 

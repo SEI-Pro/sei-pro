@@ -77,7 +77,9 @@ function runListaProcessosViewLegacy() {
     return true;
 }
 
-aliasGlobal('getListaEntryContextLegacy', getListaEntryContextLegacy);
-aliasGlobal('runListaProcessosViewLegacy', runListaProcessosViewLegacy);
+export function installListaEntryLegacyApi() {
+    aliasGlobal('getListaEntryContextLegacy', getListaEntryContextLegacy);
+    aliasGlobal('runListaProcessosViewLegacy', runListaProcessosViewLegacy);
+}
 
 export { getListaEntryContextLegacy, runListaProcessosViewLegacy };

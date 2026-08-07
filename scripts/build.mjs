@@ -64,12 +64,10 @@ const bundles = [
     // The service worker is legacy, but the LLM handler is bundled so it can
     // reuse the provider adapters and streaming client without duplicating them.
     { entry: 'src/background/llm-handler.ts', out: 'dist/js/llm-handler.js' },
-    { entry: 'src/features/arvore-info/index.ts', out: 'dist/js/arvore-info.bundle.js' },
     { entry: 'src/entries/arvore.ts', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' },
     { entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' },
     { entry: 'src/features/atividades/index.ts', out: 'dist/js/sei-pro-atividades.js' },
-    { entry: 'src/features/quick-highlight/index.ts', out: 'dist/js/quick-highlight.bundle.js' },
     { entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.ts', out: 'dist/js/quick-filter-list.bundle.js' },
     { entry: 'src/features/quick-filter/index-tree.ts', out: 'dist/js/quick-filter-tree.bundle.js' },

@@ -85,7 +85,8 @@ describe('editor legacy API bridge', () => {
         expect(read('src/bootstrap/init.js')).not.toContain('js/sei-legis.js');
         expect(read('src/bootstrap/init.js')).not.toContain('jquery-qrcode');
         expect(scripts).not.toContain('js/editor-domain.bundle.js');
-        expect(read('src/entries/editor.ts')).toContain("import '../features/editor/page-runtime.js'");
+        expect(read('src/entries/editor.ts')).toContain('installEditorPageRuntime');
+        expect(read('src/entries/editor.ts')).toContain('registerEditorExclusiveFeatures');
         expect(read('src/features/editor/page-runtime.ts')).toContain('installEditorPageRuntime');
         expect(read('src/features/editor/page-runtime.ts')).toContain("ensureGlobal('delayCrash'");
         expect(read('src/features/editor/page-runtime.ts')).toContain('iconSeiPro');

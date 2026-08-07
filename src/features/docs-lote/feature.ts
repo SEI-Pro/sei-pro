@@ -7,7 +7,7 @@ import { installDocsLoteFeature } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'docs-lote',
-    maturity: 'wired',
+    maturity: 'exclusive',
     contexts: ['lista'],
     configKey: 'acoesemlote',
     install: installDocsLoteFeature,

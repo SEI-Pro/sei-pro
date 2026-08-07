@@ -32,9 +32,9 @@ function projectBlock(block) {
  * enxugando a block — never silently.
  */
 describe('manifest context snapshots (ADR-0004 / 3.4)', () => {
-    it('has exactly 11 content_script blocks', () => {
-        expect(manifest.content_scripts).toHaveLength(11);
-        expect(FROZEN).toHaveLength(11);
+    it('has exactly 10 content_script blocks', () => {
+        expect(manifest.content_scripts).toHaveLength(10);
+        expect(FROZEN).toHaveLength(10);
     });
 
     it('matches and script order match the frozen snapshot', () => {
@@ -60,8 +60,8 @@ describe('manifest context snapshots (ADR-0004 / 3.4)', () => {
         }
     });
 
-    it('arvore-info and quick-highlight stay single-script blocks', () => {
-        for (const script of ['js/arvore-info.bundle.js', 'js/quick-highlight.bundle.js']) {
+    it('documento stays a single-script block', () => {
+        for (const script of ['js/documento.bundle.js']) {
             const blocks = blockByScript(script);
             expect(blocks.length, script).toBeGreaterThan(0);
             for (const block of blocks) {

@@ -7,7 +7,7 @@ import { installAnotacaoControle } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'anotacao-controle',
-    maturity: 'wired',
+    maturity: 'exclusive',
     contexts: ['lista'],
     configKey: 'mostraranotacaocontrole',
     install: installAnotacaoControle,

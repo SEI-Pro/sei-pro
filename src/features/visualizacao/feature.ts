@@ -1,16 +1,17 @@
 /**
  * Descritor ADR-0004 — fonte de verdade de contextos / configKey / install.
- * Ainda é script legado verbatim; install no-op até decomposição.
+ * Os scripts curtos do viewer são compostos pela entry visualização; o restante
+ * do contexto permanece no legado até as próximas fatias.
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
+import { installVisualizacao } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'visualizacao',
-    maturity: 'declared',
-    contexts: ['arvore', 'documento'],
+    maturity: 'exclusive',
+    contexts: ['visualizacao'],
     configKey: null,
-    // TODO(ADR-0004): legacy global script — no ESM install yet
-    install() {},
+    install: installVisualizacao,
     api: Object.freeze({})
 };
 

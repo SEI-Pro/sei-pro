@@ -30,7 +30,7 @@ describe('migration: nao-lido legacy facade', () => {
     expect(io).toMatch(/export function serializeSeiForm\s*\(/);
   });
 
-  it('loads the lista composition root after the legacy lista-processos script in every context', () => {
+    it('loads the lista composition root after the shared legacy dependency in every context', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const entries = manifest.content_scripts.filter((entry) =>
       entry.js.includes('js/lista-context.bundle.js')
@@ -38,10 +38,9 @@ describe('migration: nao-lido legacy facade', () => {
 
     expect(entries.length).toBe(2);
     for (const entry of entries) {
-      const requiredBeforeFeature = [
+        const requiredBeforeFeature = [
         'js/core-stack.bundle.js',
-        'js/sei-functions-pro.js',
-        'js/sei-pro.js'
+        'js/sei-functions-pro.js'
       ];
       const bundleIndex = entry.js.indexOf('js/lista-context.bundle.js');
 
@@ -51,6 +50,7 @@ describe('migration: nao-lido legacy facade', () => {
         expect(bundleIndex, `${dependency} must load before lista context`).toBeGreaterThan(dependencyIndex);
       }
       expect(entry.js[bundleIndex]).toBe('js/lista-context.bundle.js');
+      expect(entry.js).not.toContain('js/sei-pro.js');
       expect(entry.js.includes('js/sei-pro-nao-lido.js')).toBe(false);
     }
   });

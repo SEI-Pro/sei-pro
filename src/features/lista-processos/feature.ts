@@ -7,7 +7,7 @@ import { installListaProcessos } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'lista-processos',
-    maturity: 'wired',
+    maturity: 'exclusive',
     contexts: ['lista'],
     configKey: null,
     install: installListaProcessos,

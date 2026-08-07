@@ -111,8 +111,8 @@ dos snapshots de `matches`.
 O primeiro registry manual do piloto foi removido. Hoje o build gera e verifica um arquivo
 por contexto exclusivo (`src/generated/login-feature-registry.ts`,
 `src/generated/db-feature-registry.ts`, `src/generated/lista-feature-registry.ts` e
-`src/generated/arvore-feature-registry.ts`). Login, db e arvore deixaram de ser `wired`:
-suas entries importam diretamente o registry gerado,
+`src/generated/arvore-feature-registry.ts`). Login, db, arvore e as sete capacidades
+modernas da lista, `arvore-info`, `quick-highlight`, `visualizacao` e `editor` deixaram de ser `wired`: suas entries importam diretamente o registry gerado,
 enquanto contextos ainda não migrados permanecem `declared` ou `wired` e continuam usando
 o caminho legado até uma fatia posterior.
 

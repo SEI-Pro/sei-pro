@@ -12,4 +12,18 @@
  * resolvendo por nome, sem mudança de comportamento. A separação é estrutural;
  * o que era global continua global.
  */
-import './legacy-api.js'; // único ponto com aliasGlobal
+import { publishFeature } from '../../app/publish-feature.js';
+import { installControlarPrazosLegacyApi } from './legacy-api.js';
+import * as domain from './domain.js';
+import * as io from './io.js';
+import * as view from './view.js';
+
+export function installControlarPrazos() {
+    installControlarPrazosLegacyApi();
+}
+
+publishFeature({
+    id: 'controlar-prazos',
+    api: Object.freeze({ domain, io, view }),
+    install: installControlarPrazos
+});

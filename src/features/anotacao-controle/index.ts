@@ -4,9 +4,10 @@
  */
 import { publishFeature } from '../../app/publish-feature.js';
 import { initReplaceSticknoteHome, renderSticknoteHomeInline, replaceSticknoteHome } from './view.js';
-import './legacy-api.js';
+import { installAnotacaoControleLegacyApi } from './legacy-api.js';
 
 export function installAnotacaoControle() {
+    installAnotacaoControleLegacyApi();
     // Lifecycle is driven by lista-processos via api.init / api.render.
 }
 

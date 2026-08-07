@@ -614,6 +614,3 @@ export function installEditorPageRuntime() {
     globalRef.__SEI_PRO_EDITOR_PAGE_RUNTIME__ = result;
     return result;
 }
-
-// Side-effect install so entry import order runs this before legis/editor boot.
-installEditorPageRuntime();

@@ -19,6 +19,10 @@ const setProgress = (n) => { $('#progress span').text('█'.repeat(n) + '▒'.re
 // + $.getScript do init.js); um guard de módulo reiniciaria a cada execução e duplicaria
 // os handlers delegados.
 export function installDocsLoteDelegation() {
+    // The composition root can be exercised in a DOM-only harness before the
+    // optional jQuery bridge is present. Keep the capability installed and let
+    // the legacy dependency enable its handlers when available.
+    if (typeof $ !== 'function') return;
     if (window.__SEI_PRO_DOCLOTE_DELEGATION__) return;
     window.__SEI_PRO_DOCLOTE_DELEGATION__ = true;
     // Antes: onchange="changeNewProcs(this)" no #newProcs.

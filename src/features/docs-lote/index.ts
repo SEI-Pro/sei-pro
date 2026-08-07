@@ -2,9 +2,10 @@
 // docs-lote — Tier S. Contrato { id, api, install }.
 import { publishFeature } from '../../app/publish-feature.js';
 import { installDocsLoteDelegation, docLoteModalSelecaoDoc, docsLote_getDocsArvore } from './view.js';
-import './legacy-api.js';
+import { installDocsLoteLegacyApi } from './legacy-api.js';
 
 export function installDocsLoteFeature() {
+    installDocsLoteLegacyApi();
     installDocsLoteDelegation();
 }
 
@@ -17,5 +18,3 @@ publishFeature({
     }),
     install: installDocsLoteFeature
 });
-
-installDocsLoteFeature();

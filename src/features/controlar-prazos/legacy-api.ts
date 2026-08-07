@@ -17,8 +17,10 @@ import * as domain from './domain.js';
 import * as io from './io.js';
 import * as view from './view.js';
 
-[domain, io, view].forEach(function (mod) {
-    Object.keys(mod).forEach(function (name) {
-        if (typeof mod[name] === 'function') aliasGlobal(name, mod[name]);
+export function installControlarPrazosLegacyApi() {
+    [domain, io, view].forEach(function (mod) {
+        Object.keys(mod).forEach(function (name) {
+            if (typeof mod[name] === 'function') aliasGlobal(name, mod[name]);
+        });
     });
-});
+}

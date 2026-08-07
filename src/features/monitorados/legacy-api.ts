@@ -28,13 +28,15 @@ import { legacyApi as visualizacao } from './visualizacao.js';
  * TODO: remover cada grupo quando o respectivo call-site legado migrar.
  */
 
-const groups = [
-    { initPanelMonitorados, initAppendIconMonitorados, setAppendIconMonitorados }, // boot.js
-    icon, panel, commands, datas, categorias, server, prazoRow, extras, panelLifecycle, visualizacao
-];
+export function installMonitoradosLegacyApi() {
+    const groups = [
+        { initPanelMonitorados, initAppendIconMonitorados, setAppendIconMonitorados }, // boot.js
+        icon, panel, commands, datas, categorias, server, prazoRow, extras, panelLifecycle, visualizacao
+    ];
 
-for (const group of groups) {
-    for (const [name, fn] of Object.entries(group)) {
-        aliasGlobal(name, fn);
+    for (const group of groups) {
+        for (const [name, fn] of Object.entries(group)) {
+            aliasGlobal(name, fn);
+        }
     }
 }

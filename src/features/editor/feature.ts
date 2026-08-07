@@ -1,16 +1,16 @@
 /**
  * Descritor ADR-0004 — fonte de verdade de contextos / configKey / install.
- * Bundle atual auto-inicia em index.ts; install no-op até raiz de composição (fase 4).
+ * A entry MAIN instala o runtime da página e esta feature via registry.
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
+import { installEditor } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'editor',
-    maturity: 'declared',
+    maturity: 'exclusive',
     contexts: ['editor'],
     configKey: null,
-    // TODO(ADR-0004): wiring via composition root — bundle still self-boots
-    install() {},
+    install: installEditor,
     api: Object.freeze({})
 };
 

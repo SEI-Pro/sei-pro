@@ -19,8 +19,8 @@ function callParentAtividades(name) {
     return fn.apply(null, args);
 }
 
-const loadSEIProVisualizacao = true;
-function initSeiProVisualizacao() {
+export const loadSEIProVisualizacao = true;
+export function initSeiProVisualizacao() {
     if (typeof parent.insertIconIntegrity === 'function' || typeof parent.insertIconIntegrity !== 'undefined') {
         parent.insertIconIntegrity();
     }
@@ -87,4 +87,3 @@ function initSeiProVisualizacao() {
         parent.verifyMenuSistemaView();
     }
 }
-$(document).ready(function () { initSeiProVisualizacao() });
