@@ -1,7 +1,7 @@
 /**
  * Árvore — ponte de compatibilidade com o legado.
  *
- * AliasGlobal de TODOS os exports do body + upload + domain/io/view adapters, para que
+ * AliasGlobal de TODOS os exports dos clusters (+ domain/io/view) para que
  * o parent frame, onclick inline e lista-processos/atividades continuem
  * resolvendo funções por nome no contentWindow da ifrArvore.
  */
@@ -9,21 +9,17 @@ import { aliasGlobal } from '../../core/global.js';
 import * as domain from './domain.js';
 import * as io from './io.js';
 import * as view from './view.js';
-import * as body from './body.js';
-import * as upload from './upload.js';
+import * as modules from './modules.js';
 import { installArvoreState } from './state.js';
 
 export function installArvoreLegacyApi() {
     installArvoreState();
 
-    [domain, io, upload].forEach((mod) => {
+    [domain, io, modules].forEach((mod) => {
         Object.keys(mod).forEach((name) => {
-            if (typeof mod[name] === 'function') aliasGlobal(name, mod[name]);
+            const value = mod[name];
+            if (typeof value === 'function') aliasGlobal(name, value);
         });
-    });
-
-    Object.keys(body).forEach((name) => {
-        if (typeof body[name] === 'function') aliasGlobal(name, body[name]);
     });
 
     aliasGlobal('bindArvoreToolbarProcess', view.bindArvoreToolbarProcess);
@@ -35,8 +31,8 @@ export function installArvoreLegacyApi() {
             root: document,
             $: globalThis.$,
             hasUploadFiles: globalThis.hasUploadFiles || domain.hasUploadFiles,
-            openModalDropzone: globalThis.openModalDropzone || upload.openModalDropzone,
-            cancelUpload: globalThis.dropzoneCancelInfo || upload.dropzoneCancelInfo,
+            openModalDropzone: globalThis.openModalDropzone || modules.openModalDropzone,
+            cancelUpload: globalThis.dropzoneCancelInfo || modules.dropzoneCancelInfo,
             getDropzone: () => globalThis.arvoreDropzone
         });
     });

@@ -1,6 +1,10 @@
 /**
  * Árvore — entry do bundle.
- * Contrato público { id, api, install }. body.js ainda é monolito residual.
+ *
+ * Decomposição: domain · io · view · templates · state · clusters · legacy-api.
+ * Saída: dist/js/sei-pro-arvore.js (mesmo nome do legado para o manifest).
+ *
+ * Public surface: SeiPro.features.arvore = { id, api, install }.
  */
 import { ready } from '../../dom/index.js';
 import { publishFeature } from '../../app/publish-feature.js';
@@ -30,12 +34,11 @@ import {
 } from './io.js';
 import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents, bindUploadConfirmActions } from './view.js';
 import { installArvoreLegacyApi } from './legacy-api.js';
-import { initSeiProArvore } from './body.js';
+import { initSeiProArvore } from './modules.js';
 import * as upload from './upload.js';
 
-installArvoreState();
-
 export function installArvore() {
+    installArvoreState();
     installArvoreLegacyApi();
     ready(function () {
         initSeiProArvore();
@@ -72,7 +75,7 @@ publishFeature({
     install: installArvore
 });
 
-// Compat namespaces still used by body/upload during migration.
+// Compat namespaces still used by clusters/upload.
 const namespace = globalThis.SeiPro = globalThis.SeiPro || {};
 namespace.features = namespace.features || {};
 namespace.features.arvoreMenus = { resolveMenuCatalogs };

@@ -1,35 +1,42 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { readArvoreSource } from '../helpers/read-arvore.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 describe('migration: arvore full ESM facade', () => {
-  it('instala a ponte dedicada no entry da árvore e aliasa o body migrado', () => {
+  it('instala a ponte dedicada no entry e aliasa os módulos fatiados', () => {
     const index = read('src/features/arvore/index.js');
     const bridge = read('src/features/arvore/legacy-api.js');
 
     expect(index).toContain("import { installArvoreLegacyApi } from './legacy-api.js';");
     expect(index).toContain('installArvoreLegacyApi();');
-    expect(index).toContain("import { initSeiProArvore } from './body.js';");
+    expect(index).toContain("from './modules.js'");
+    expect(index).toContain('publishFeature');
     expect(bridge).toContain("import { aliasGlobal } from '../../core/global.js';");
     expect(bridge).toContain("import * as domain from './domain.js';");
     expect(bridge).toContain("import * as io from './io.js';");
     expect(bridge).toContain("import * as view from './view.js';");
-    expect(bridge).toContain("import * as body from './body.js';");
-    expect(bridge).toContain("import * as upload from './upload.js';");
+    expect(bridge).toContain("import * as modules from './modules.js'");
     expect(bridge).toContain("aliasGlobal('bindArvoreToolbarProcess', view.bindArvoreToolbarProcess);");
     expect(bridge).toContain("aliasGlobal('bindUploadArvoreNativeDragEvents'");
   });
 
-  it('não mantém o monolito global sei-pro-arvore.js em src/', () => {
+  it('não mantém o monolito body.js nem a cópia sei-pro-arvore.js em src/', () => {
     expect(existsSync(join(rootDir, 'src/features/arvore/sei-pro-arvore.js'))).toBe(false);
-    expect(existsSync(join(rootDir, 'src/features/arvore/body.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/body.js'))).toBe(false);
+    expect(existsSync(join(rootDir, 'src/features/arvore/modules.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/boot.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/upload.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/state.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/templates.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/style.css'))).toBe(true);
+
+    const clusters = readdirSync(join(rootDir, 'src/features/arvore'))
+      .filter((name) => name.endsWith('.js'));
+    expect(clusters.length).toBeGreaterThanOrEqual(12);
   });
 
   it('empacota a feature como dist/js/sei-pro-arvore.js sem cópia verbatim', () => {
@@ -39,7 +46,7 @@ describe('migration: arvore full ESM facade', () => {
     expect(build).toContain("src/features/arvore/style.css");
   });
 
-  it('preserva o wire da árvore no manifest e os call-sites do body', () => {
+  it('preserva o wire da árvore no manifest e os call-sites dos clusters', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const contexts = manifest.content_scripts.filter(({ js = [] }) =>
       js.includes('js/sei-pro-arvore.js')
@@ -60,18 +67,18 @@ describe('migration: arvore full ESM facade', () => {
       }
     }
 
-    const body = read('src/features/arvore/body.js');
+    const source = readArvoreSource();
     const sticknote = read('src/features/arvore/sticknote-view.js');
     const upload = read('src/features/arvore/upload.js');
-    expect(body).toContain('export function initSeiProArvore');
-    expect(body).toContain('export function actionToolbarPro');
-    expect(body).toContain("from './upload.js'");
-    expect(body).toContain("from './sticknote-view.js'");
+    expect(source).toContain('export function initSeiProArvore');
+    expect(source).toContain('export function actionToolbarPro');
+    expect(source).toContain("from './upload.js'");
+    expect(source).toContain("from './sticknote-view.js'");
     expect(upload).toContain('export function loadUploadArvore');
     expect(upload).toContain('export function initUploadArvore');
     expect(upload).toContain('createFileQueue');
     expect(upload).toContain('bindUploadArvoreNativeDragEvents');
     expect(sticknote).toContain('export function sticknoteUpdate');
-    expect(body).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
+    expect(source).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
   });
 });

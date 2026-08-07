@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
+import { readArvoreSource } from '../helpers/read-arvore.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -16,7 +17,7 @@ describe('migration: arvore CSS', () => {
   });
 
   it('preserva os hooks externos e compartilhados necessários ao upload e à árvore', () => {
-    const body = read('src/features/arvore/body.js');
+    const source = readArvoreSource();
     const upload = read('src/features/arvore/upload.js');
     const view = read('src/features/arvore/view.js');
     const templates = read('src/features/arvore/templates.js');
@@ -27,9 +28,9 @@ describe('migration: arvore CSS', () => {
     expect(upload).toContain('previewsContainer');
     expect(view).toContain("items: '.dz-file-preview, .seipro-arvore-file-preview'");
     expect(view).toContain("handle: '.dz-filename'");
-    expect(body).toContain('class="action-doc action-');
-    expect(body).toContain('loading-action-doc');
-    expect(body).toContain('class="panelDadosArvore');
+    expect(source).toContain('class="action-doc action-');
+    expect(source).toContain('loading-action-doc');
+    expect(source).toContain('class="panelDadosArvore');
     expect(read('src/features/arvore/sticknote-view.js')).toContain('class="stickDadosArvore');
     expect(templates).toContain('anchorJoinPro');
     expect(sharedLegacy).toContain('.action-doc[data-id=');

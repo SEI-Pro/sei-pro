@@ -29,7 +29,7 @@ describe('atividades architecture smoke', () => {
 
   it('keeps first-party consumers on the nested API contract', () => {
     const consumers = [
-      'src/features/arvore/body.js',
+      'src/features/arvore/atividades-arvore.js',
       'src/features/lista-processos/atividades-bridge.js',
       'src/features/monitorados/server.js',
       'src/features/monitorados/store.js',
