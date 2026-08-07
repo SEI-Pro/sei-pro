@@ -1,0 +1,22 @@
+#!/bin/sh
+# Barra dado pessoal ANTES de entrar no histórico do git.
+#
+# Instalar: npm run hooks:install
+#
+# O CI também roda esta verificação, mas tarde demais para o caso que importa: quando o CI
+# reprova, o commit já existe, e num repositório público basta o push. Remover PII do
+# histórico é reescrever história — operação de incidente. Aqui a captura só é recusada.
+#
+# Só roda quando o commit toca tests/fixtures/, para não pesar no dia a dia.
+set -eu
+
+if git diff --cached --name-only | grep -q '^tests/fixtures/'; then
+    echo "pre-commit: fixture no commit — verificando dado pessoal..." >&2
+    if ! npx vitest run tests/structure/fixtures-sem-pii.test.js --silent; then
+        echo "" >&2
+        echo "pre-commit: COMMIT RECUSADO — fixture com padrão de dado pessoal." >&2
+        echo "Recapture com scripts/skeletonize-fixture.mjs (ver DEVELOPMENT.md)." >&2
+        echo "NÃO edite o arquivo à mão para 'limpar'." >&2
+        exit 1
+    fi
+fi

@@ -39,9 +39,29 @@ limpo. Nada em `dist/` é editado à mão nem commitado
 **Instalação e build (obrigatório após clonar — `dist/` não vem no repo):**
 ```bash
 npm install
-npm run build    # gera dist/ (carregar unpacked em chrome://extensions)
-npm run dev      # esbuild em watch sobre src/
+npm run build      # gera dist/ (carregar unpacked em chrome://extensions)
+npm run dev        # esbuild em watch sobre src/
+npm run typecheck  # tsc --noEmit; o esbuild NÃO verifica tipos (ADR-0014)
+npm run verify     # typecheck + build + testes + auditoria de dist/
 ```
+
+Node 22.23.1 (`.nvmrc`). **Sem Node instalado?** O mesmo ambiente roda em container, com a
+versão fixada e sem depender do sistema operacional:
+
+```bash
+docker compose run --rm build    # gera dist/ no host, pronto para chrome://extensions
+docker compose run --rm verify   # typecheck + build + testes + auditoria
+docker compose run --rm watch    # rebuild contínuo
+docker compose run --rm dev      # shell dentro do ambiente
+```
+
+O repositório entra por bind mount, então `dist/` aparece direto no host. O `node_modules`
+fica num **volume nomeado**, não no bind mount: esbuild e jsdom trazem binários por
+plataforma, e o `node_modules` de um host macOS não funciona dentro do container Linux. O
+`npm ci` roda sozinho na primeira execução e sempre que `package-lock.json` mudar.
+
+> A versão do Node aparece em três lugares — `Dockerfile`, `.nvmrc` e `engines` no
+> `package.json`. Ao subir uma, suba as três.
 
 **Adicionar um asset estático** (lib, CSS, ícone, dado): coloque a fonte em `vendor/<lib>/`
 (com `VERSION.txt`), `src/css/` ou `assets/`, e declare o par fonte → dist em
@@ -484,6 +504,101 @@ trava que um helper migrado não seja redefinido no legado.
 > migrados. **Não** reproduzem o DOM real/autenticação do SEI; o smoke manual no SEI
 > continua sendo o gate de ambiente, enquanto os smoke checks automatizados impedem
 > regressões de bundle e contrato.
+
+---
+
+## Fixtures do SEI: captura e recaptura
+
+O ACL (ADR-0003) precisa de HTML real do SEI para testar seus parsers — DOM montado à mão no
+teste valida a suposição do autor, não o sistema. Só que esse HTML vem de um sistema que
+tramita processos de um órgão de segurança pública: uma captura descuidada comita nome, CPF e
+número de processo reais, **de forma permanente** (o git não esquece, e reescrever história
+de repositório público é operação de incidente, não de manutenção).
+
+O protocolo abaixo é obrigatório e verificado por `tests/structure/fixtures-sem-pii.test.js`,
+que já está ativo — a trava existe antes da primeira fixture de propósito.
+
+### A origem é produção — e isso define todo o resto
+
+**Só existe SEI de produção disponível para captura** (decidido em 2026-08-07). Não há
+instância sintética nem de homologação. Portanto todo HTML capturado contém dado real de
+pessoas reais, e o protocolo não tem folga: não existe "captura de teste" que dispense
+cuidado.
+
+Duas consequências práticas. Primeiro, **capture do processo mais inócuo que exiba a
+estrutura** — de preferência um que você mesmo criou —, porque menos dado bruto no ponto de
+partida é menos risco em cada passo seguinte. Segundo, o HTML cru **nunca** entra no
+repositório, nem temporariamente: ele fica fora da árvore (`/tmp`) e é apagado logo após a
+esqueletização. O script recusa rodar se a entrada estiver dentro do repositório, justamente
+porque `git add -A` é reflexo.
+
+### O mecanismo é esqueletizar, não "limpar"
+
+Procurar PII e apagar é rede de segurança, não método: depende de prever todo formato e falha
+em silêncio no que não previu. O correto é o inverso — preservar só o que o parser precisa e
+descartar todo o resto por padrão, de modo que PII fique impossível por construção.
+
+O parser do ACL lê **estrutura e seletores** (tags, hierarquia, `class`, `id`, `name`), não
+conteúdo. Então `scripts/skeletonize-fixture.mjs` faz exatamente isso:
+
+| Preserva | Descarta |
+|---|---|
+| tags e hierarquia | todo nó de texto |
+| `class`, `role`, `for`, `scope` | `title`, `alt`, `value`, `placeholder`, `onclick` |
+| `id` e `name` **com dígitos mascarados** (`chkProc987654` → `chkProc000000`) | comentários HTML |
+| `colspan`/`rowspan` verbatim (são estruturais) | corpo de `<script>` e `<style>` |
+| `acao=` na querystring (identifica a página) | valor dos demais parâmetros (`id_procedimento=`) |
+| a chave de `data-*` e `aria-*` | o valor de `data-*` e `aria-*` |
+
+O mascaramento de dígitos é o detalhe que faz funcionar: mantém a **forma** do seletor, que é
+o que o ACL casa, e destrói o **identificador**, que é o que identifica a pessoa.
+
+```bash
+# 1. Capture no devtools da página do SEI, salvando FORA do repositório:
+#    copy(document.documentElement.outerHTML)  →  /tmp/captura.html
+# 2. Esqueletize (gera também o .meta.json de procedência):
+npm run fixture:skeleton -- /tmp/captura.html tests/fixtures/lista/controlar.html \
+    --versao-sei=4.0.12 --pagina=procedimento_controlar --responsavel="Seu Nome"
+# 3. Apague a captura crua:
+rm /tmp/captura.html
+# 4. Revise o esqueleto antes de comitar — leia o arquivo, não confie no script.
+```
+
+O esqueletizador é coberto por `tests/structure/skeletonize-fixture.test.js`, que o exercita
+com PII realista em texto, atributo, `onclick`, querystring, comentário e `id`. Um
+esqueletizador com vazamento é pior que nenhum, porque cria confiança injustificada — por isso
+ele tem teste próprio, e por isso o passo 4 existe.
+
+### Instale o hook de pre-commit
+
+```bash
+npm run hooks:install
+```
+
+O CI também verifica, mas tarde demais para o caso que importa: quando o CI reprova, o commit
+já existe. Num repositório público, remover PII do histórico é reescrever história — operação
+de incidente. O hook recusa antes.
+
+### Procedência obrigatória
+
+Cada fixture tem um `.meta.json` ao lado (gerado pelo script) com `versaoSei`, `pagina` (a
+`acao=` do controlador), `origem`, `dataCaptura`, `responsavel` e a versão do esqueletizador.
+Sem procedência, ninguém sabe recapturar nem contra qual versão ela vale. A versão do
+esqueletizador importa: se ele for corrigido, dá para saber quais fixtures foram geradas pela
+versão antiga.
+
+### Quando recapturar
+
+**O gatilho é a declaração de suporte, não o calendário.** Prazo fixo gera trabalho
+inventado; o acoplamento à versão gera exatamente a quantidade certa. Quando o ACL passar a
+declarar suporte a uma versão nova do SEI, o teste de estrutura exige que exista fixture para
+ela — declarar suporte sem fixture falha o build. Inversamente, fixture de versão que saiu do
+suporte é removida, não mantida "por segurança".
+
+### O que nunca vai para fixture
+
+PDF, imagem de documento, anexo, cookie, token de sessão e qualquer resposta de API que não
+seja HTML de estrutura. Se o teste precisa desses, ele precisa de um dublê, não de uma captura.
 
 ---
 

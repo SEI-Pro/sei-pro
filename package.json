@@ -14,6 +14,8 @@
     "verify": "npm run typecheck && npm run build && npm test && npm run audit:dist",
     "audit:dist": "node scripts/audit-dist-sources.mjs",
     "notices": "node scripts/write-third-party-notices.mjs",
+    "hooks:install": "node scripts/install-git-hooks.mjs",
+    "fixture:skeleton": "node scripts/skeletonize-fixture.mjs",
     "docker:build": "docker compose run --rm build",
     "docker:verify": "docker compose run --rm verify",
     "docker:shell": "docker compose run --rm dev"

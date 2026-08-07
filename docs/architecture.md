@@ -157,23 +157,28 @@ Resumo. Fatias, portões e riscos em
 facilidade.
 
 1. **Fundação**: CI, fitness functions e ratchets sobre os baselines desta página
-   ([0008](./adr/0008-fitness-functions-e-ratchets.md)). Sem isso, tudo abaixo regride.
-2. **ACL do SEI** ([0003](./adr/0003-anti-corruption-layer-sei.md)) — maior alavancagem:
+   ([0008](./adr/0008-fitness-functions-e-ratchets.md)), e a renomeação da base para
+   TypeScript ([0014](./adr/0014-typescript-para-codigo-novo.md)). Sem isso, tudo abaixo
+   regride.
+2. **Segurança** ([0015](./adr/0015-fronteiras-de-confianca.md)) — remover permissão curinga,
+   `eval` e segredo em `storage.sync`. Barato, imediato e independente do resto.
+3. **ACL do SEI** ([0003](./adr/0003-anti-corruption-layer-sei.md)) — maior alavancagem:
    converte quebra do SEI de caçada em 42 arquivos para correção em uma pasta.
-3. **Schema de configuração** ([0009](./adr/0009-configuracao-como-schema-unico.md)) —
+4. **Schema de configuração** ([0009](./adr/0009-configuracao-como-schema-unico.md)) —
    pré-requisito dos descritores de feature.
-4. **Descritores + registry + manifest gerado** ([0004](./adr/0004-features-autodescritivas-manifest-gerado.md)) —
+5. **Descritores + registry + manifest gerado** ([0004](./adr/0004-features-autodescritivas-manifest-gerado.md)) —
    mata os blocos de 40 scripts e a divergência entre fontes de verdade.
-5. **Raiz de composição e injeção explícita, por contexto**
+6. **Raiz de composição e injeção explícita, por contexto**
    ([0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md), [0006](./adr/0006-isolamento-de-falha-por-feature.md)).
-6. **Refronteirização por capacidade**: dividir `atividades`, dissolver `sei-functions`
+7. **Refronteirização por capacidade**: dividir `atividades`, dissolver `sei-functions`
    ([0007](./adr/0007-fronteira-de-feature-por-capacidade.md)).
-7. **Tipagem gradual** ([0010](./adr/0010-tipagem-gradual-jsdoc-checkjs.md)), em paralelo
-   com qualquer item acima.
+8. **Remoção dos `@ts-nocheck`** ([0014](./adr/0014-typescript-para-codigo-novo.md)), em
+   paralelo com qualquer item acima: arquivo tocado entra no `strict` no mesmo commit.
 
-Concluído: **resgate de `dist/`** ([0011](./adr/0011-dist-fora-do-versionamento.md)) —
-os 137 assets sem fonte foram movidos para `vendor/`, `src/css/` e `assets/`; `dist/` saiu
-do git e é reproduzível byte a byte a partir de um clone limpo.
+Concluído: **resgate de `dist/`** ([0011](./adr/0011-dist-fora-do-versionamento.md)) — os 137
+assets sem fonte foram movidos para `vendor/`, `src/css/` e `assets/`; `dist/` saiu do git e é
+reproduzível byte a byte a partir de um clone limpo. **Ambiente em container** (`compose.yaml`)
+e **verificação de tipos** (`npm run typecheck`) já disponíveis.
 
 Portão de ambiente em toda fase que toque UI: smoke manual no SEI real
 ([`SMOKE_TEST.md`](../SMOKE_TEST.md)). Os testes não reproduzem o DOM nem a autenticação
@@ -192,7 +197,16 @@ do SEI.
   ([ADR-0004](./adr/0004-features-autodescritivas-manifest-gerado.md)).
 - Responder a arquivo grande com subpasta em vez de fronteira
   ([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md)).
-- Migrar para TypeScript agora ([ADR-0010](./adr/0010-tipagem-gradual-jsdoc-checkjs.md)).
+- Confiar no `.ts` como se fosse garantia: o esbuild remove tipos **sem verificá-los**. Só
+  `npm run typecheck` verifica ([ADR-0014](./adr/0014-typescript-para-codigo-novo.md)).
+- Silenciar erro de tipo com `any`, `as any` ou `@ts-ignore` — a dívida se marca com
+  `@ts-nocheck`, que é contável ([ADR-0014](./adr/0014-typescript-para-codigo-novo.md)).
+- Tipar `atividades` e `sei-functions` antes da fase 5: 52% dos erros estão em código marcado
+  para reescrita ([ADR-0014](./adr/0014-typescript-para-codigo-novo.md)).
+- Tratar DOM do SEI como confiável, ou pedir permissão curinga de host
+  ([ADR-0015](./adr/0015-fronteiras-de-confianca.md)).
+- Comitar fixture capturada sem esqueletização — o git não esquece
+  ([ADR-0015](./adr/0015-fronteiras-de-confianca.md)).
 - Reintroduzir event bus sem dois consumidores reais
   ([ADR-0013](./adr/0013-remover-bus-nao-utilizado.md)).
 - Declarar feature migrada com base em movimentação de arquivo.

@@ -58,14 +58,55 @@ este plano da tentativa anterior.
 | 0.3 | Fitness functions de camada: `layering.test.js`, `purity.test.js`, `platform-boundary.test.js` | violações atuais na allowlist explícita, com ADR ou TODO |
 | 0.4 | ESLint + Prettier no escopo moderno (`src/core`, `src/platform`, `src/sei`, features migradas); legados verbatim em `.eslintignore` | `npm run lint` no CI |
 | 0.5 | `no-silent-catch.test.js` (ADR-0006) | `catch` sem log/report/rethrow quebra ou está no baseline |
-| 0.6 | Decidir o destino de `scripts/engineering-loop-*.mjs` | `loop:next` funciona lendo este plano, **ou** os scripts e os `npm scripts` são removidos |
+| 0.6 | `tsc --noEmit` no CI, junto de `npm ci` e `npm test` | **pré-requisito técnico da fatia 0.7** |
+| 0.7 | Renomear `.js` → `.ts` em toda a base bundlada, `@ts-nocheck` nos 368 que não passam (ADR-0014) | `dist/` idêntico ao anterior exceto comentários de caminho; ratchet de `@ts-nocheck` criado em 368 |
+| 0.8 | `.d.ts` de `SeiPro` e globais de vendor completados; remover `@ts-nocheck` dos 41 arquivos já limpos | ratchet cai de 368 para ~327 sem tipar nada à mão |
 
 **Riscos.** Fatia 0.3 vai revelar mais violações que o esperado; a allowlist inicial pode
 ficar grande — aceitável, desde que cada entrada tenha motivo e o número só desça.
-Fatia 0.6 existe porque `npm run loop:next` está quebrado hoje (lê
-`docs/engineering-loop-board.md`, que não existe): decidir, não deixar apodrecer.
 
-**Ratchets que passam a existir:** todos os 13.
+Fatia 0.7 é a maior em número de arquivos e a menor em risco: não toca import nenhum (esbuild,
+vitest e `tsc` resolvem `./x.js` para `x.ts` — verificado nos três), não muda comportamento, e
+tem portão objetivo — `dist/` byte a byte igual, salvo os comentários de caminho que o esbuild
+injeta. O risco real é de coordenação: ela conflita com qualquer branch aberta, então precisa
+ser combinada e feita com a árvore limpa. **Não emendar nenhuma outra mudança nesse commit.**
+
+**Ratchets que passam a existir:** os 13 originais, mais `@ts-nocheck` (368), `any` explícito
+e `@ts-ignore`.
+
+---
+
+## Fase S — Segurança: reduções imediatas
+
+**ADR:** [0015](./adr/0015-fronteiras-de-confianca.md)
+**Por que aqui:** são as fatias mais baratas do plano com o maior efeito sobre risco real e
+sobre a revisão da Chrome Web Store. Nenhuma depende das fases seguintes. Rodam em paralelo à
+fase 1; ficam antes dela na lista porque não há motivo para adiar.
+
+| # | Fatia | Pronto quando |
+|---|---|---|
+| S.1 | Remover `https://*/*` de `optional_host_permissions`; provedor customizado passa a pedir permissão em runtime para a origem digitada | `manifest-permissions.test.js` rejeita curinga de host |
+| S.2 | Restringir `matches` de `web_accessible_resources` aos padrões do SEI e podar os 141 recursos ao que a página realmente carrega | `matches` de WAR ⊆ `matches` de content script |
+| S.3 | Remover o `eval` de `arvore-info/dom/confirm.js` (o `defineProperty` já é a via primária) | `no-eval.test.js` verde |
+| S.4 | Mover campos de credencial de `dataValues` de `storage.sync` para `storage.local`, com migração (coordenar com a fatia 2.5) | `secrets-storage.test.js` verde |
+| S.5 | Redação de PII em `report.js` + telemetria opt-in; `script.google.com` sai de `host_permissions` obrigatório | `telemetry-scrub.test.js` verde; usuário vê o payload antes de enviar |
+| S.6 | Ratchet de injeção de HTML criado (110 `innerHTML` + 8 `insertAdjacentHTML` + 405 `.html(`) | baseline travado; sanitização centralizada entra na fase 1 |
+| S.7 | Aviso no envio para LLM externo: provedor nomeado na interface, no momento da ação | usuário sabe para onde o conteúdo do processo está indo, antes de ir |
+| S.8 | Chave `llmProvedoresExternos` no schema (ADR-0009), **padrão aberto com aviso**; instituição pode restringir a provedor local | opções expõe a chave; desligada, a extensão só aceita provedor local |
+
+**Portão de saída:** manifest sem permissão curinga, sem `eval`, sem segredo em `sync` e sem
+conteúdo de página saindo por telemetria. Smoke manual dos fluxos de IA e de envio de bug.
+
+**Riscos.** S.1 e S.2 podem quebrar comportamento que hoje funciona por acidente do escopo
+largo — o carregamento sob demanda via `$.getScript` é o candidato mais provável, e exige
+smoke. S.4 faz o usuário reconfigurar credenciais em máquinas secundárias: é a correção
+certa, percebida como regressão, e precisa de aviso na release. S.5 reduz o volume de
+relatórios de bug recebidos, e isso é um custo aceito conscientemente. S.7 e S.8 são a decisão
+consciente de manter provedores externos **abertos por padrão**, com aviso: o risco de
+conteúdo de processo sair para terceiro passa a ser escolha informada do usuário, não efeito
+colateral — e a instituição pode fechar por configuração quando quiser.
+
+**Ratchets que passam a existir:** injeção de HTML, `fetch` em content script.
 
 ---
 
@@ -79,7 +120,7 @@ de caçada em 42 arquivos para correção em uma pasta, com teste que reproduz a
 |---|---|---|
 | 1.1 | `src/sei/selectors.js`: mover os 16 seletores de `adapter.js` e nomeá-los por intenção | `adapter.js` só compõe; nenhum seletor literal nele |
 | 1.2 | `src/sei/pages.js`: identificação de contexto/página a partir da URL, a partir dos `matches` do manifest | snapshot de contexto por URL (insumo da fase 3) |
-| 1.3 | `src/sei/fixtures/`: HTML real anonimizado do SEI 4.x e 5.x, por página | fixture por contexto, sem dado de processo, pessoa ou credencial |
+| 1.3 | `tests/fixtures/`: esqueletos estruturais do SEI 4.x e 5.x por página, pelo protocolo de `DEVELOPMENT.md` | `fixtures-sem-pii.test.js` verde; cada fixture com `.meta.json` de procedência |
 | 1.4 | `src/sei/parse/lista.js` + testes contra fixture | parser devolve dados; zero DOM/jQuery no retorno |
 | 1.5 | `src/sei/parse/arvore.js` + testes | idem |
 | 1.6 | `src/sei/parse/documento.js` + testes | idem |
@@ -90,9 +131,12 @@ de caçada em 42 arquivos para correção em uma pasta, com teste que reproduz a
 **Portão de saída:** para pelo menos os contextos lista e árvore, nenhum seletor, URL
 `controlador.php` ou ramificação de versão fora de `src/sei/`. Smoke manual nos dois.
 
-**Riscos.** As fixtures precisam de captura manual em instância real e envelhecem; sem
-recaptura periódica dão falsa confiança. Anonimização é obrigatória e não pode ser
-automatizada às cegas. Fatia 1.8 é a mais delicada: transformar `isNewSEI ? a : b` em
+**Riscos.** As fixtures são o ponto de contato com dado sensível real: o protocolo de
+`DEVELOPMENT.md` as torna esqueletos estruturais com conteúdo sintético, e
+`fixtures-sem-pii.test.js` é a rede de segurança — mas a captura em produção só se justifica
+quando a estrutura não existir em instância sintética ou de homologação. A recaptura é
+disparada pela declaração de suporte a uma versão nova do SEI, não por calendário.
+Fatia 1.8 é a mais delicada: transformar `isNewSEI ? a : b` em
 capability exige entender **por que** cada ramo existe, e há 228 ocorrências — não fazer em
 lote mecânico.
 
@@ -216,10 +260,13 @@ notificações de processo: comportamento sensível, difícil de smoke-testar.
 
 ## Contínuo — em paralelo a qualquer fase
 
-**Tipagem gradual** ([ADR-0010](./adr/0010-tipagem-gradual-jsdoc-checkjs.md)): `tsconfig.json`
-com `checkJs`, `tsc --noEmit` no CI, escopo expandido na ordem ports → descritor e schema →
-fronteira do ACL → `src/core`. Legados verbatim em `exclude`, com ratchet decrescente. Não
-introduzir `.ts`; não tocar o pipeline do esbuild.
+**Remoção dos `@ts-nocheck`** ([ADR-0014](./adr/0014-typescript-para-codigo-novo.md)): depois
+da renomeação (fatia 0.7), cada arquivo tocado por qualquer motivo perde o marcador no mesmo
+commit e entra no `strict`. Ordem de mutirão, quando houver folga: `src/types` → ports de
+`platform` → descritor e schema → fronteira do ACL → `core` e `shared` → features.
+`atividades` e `sei-functions` ficam por último apesar de concentrarem 52% dos erros: a fase
+5 vai reescrevê-los, e tipar antes é pagar duas vezes. **A medida oficial é o ratchet de
+`@ts-nocheck`**, não a contagem de erros.
 
 **Manutenção dos ADRs** ([ADR-0001](./adr/0001-adotar-adrs.md)): decisão nova é ADR novo;
 reversão é ADR que substitui. Atualizar a tabela de estado medido de
@@ -236,22 +283,51 @@ novos com `VERSION.txt`), `src/css/` e `assets/`. Mapeamento único em
 `scripts/asset-manifest.mjs`. `dist/` saiu do git e é reproduzível byte a byte a partir de
 clone limpo, travado por `dist-reproducible.test.js` e `no-dist-in-git.test.js`.
 
+**Ambiente de build sem Node no sistema operacional** (2026-08-07). `Dockerfile` +
+`compose.yaml` com Node fixado em 22.23.1 (mesma versão em `.nvmrc` e em `engines`).
+`docker compose run --rm verify` roda typecheck, build, testes e auditoria de `dist/`
+— validado ponta a ponta. O `node_modules` fica num volume nomeado, porque esbuild e jsdom
+trazem binários por plataforma e o do host não serve ao container.
+
+**TypeScript instalado e verificação ligada** (2026-08-07). `tsconfig.json` com `strict` e
+`noEmit`, `npm run typecheck`, e `src/types/` com as declarações de `SeiPro` e dos globais de
+vendor. A renomeação da base é a fatia 0.7.
+
+**Scripts `engineering-loop-*` removidos** (2026-08-07), com os `npm scripts` e as
+referências em `DEVELOPMENT.md` e `src/background/README.md`. Liam um board que nunca
+existiu; este plano ocupa o lugar deles.
+
+**Protocolo e ferramenta de fixtures** (2026-08-07). Como a única fonte de captura é
+produção, a esqueletização deixou de ser recomendação e virou infraestrutura, pronta **antes**
+da primeira captura: `scripts/skeletonize-fixture.mjs` preserva estrutura e seletores
+(mascarando dígitos em `id`/`name`, mantendo `acao=`) e descarta todo conteúdo; recusa entrada
+dentro do repositório, destino fora de `tests/fixtures/` e procedência incompleta. Coberto por
+`skeletonize-fixture.test.js` (25 casos com PII realista) e `fixtures-sem-pii.test.js`, com
+hook de pre-commit via `npm run hooks:install`.
+
 ---
+
+## Decisões resolvidas
+
+Respondidas em 2026-08-07.
+
+1. **Distribuição.** Instalar sem Node **não** é requisito da PRF. A alternativa adotada é
+   build em container, para não exigir Node instalado no sistema — feito, ver acima.
+2. **`scripts/engineering-loop-*.mjs`.** Removidos.
+3. **Fronteiras de `atividades`.** A divisão proposta (configuração, afastamentos,
+   avaliações, registro) foi **validada**. A fatia 5.3 pode partir dela.
+4. **Recaptura de fixtures.** Protocolo em `DEVELOPMENT.md`, com ferramenta e travas
+   implementadas — ver "Concluído". Recaptura disparada pela **declaração de suporte a versão
+   nova do SEI**, não por calendário.
+5. **Postura de segurança.** [ADR-0015](./adr/0015-fronteiras-de-confianca.md) declara três
+   fronteiras de confiança; a execução é a fase S.
+6. **Instância para captura.** Só existe **produção**. O protocolo foi endurecido em função
+   disso: captura fora da árvore do repositório, esqueletização obrigatória por ferramenta
+   (não à mão), hook de pre-commit, e revisão humana do esqueleto antes de comitar.
+7. **Provedores de LLM externos.** **Abertos por padrão, com aviso** nomeando o provedor no
+   momento do envio (fatias S.7 e S.8). A instituição pode restringir a provedor local por
+   configuração.
 
 ## Decisões abertas
 
-Precisam de resposta humana; nenhuma bloqueia a fase 0.
-
-1. **Distribuição.** Instalar a extensão a partir do clone sem Node deixou de ser possível
-   (ADR-0011). Se isso for requisito na PRF, a saída é release publicado pelo CI —
-   decidir na fase 0, junto do workflow.
-2. **`scripts/engineering-loop-*.mjs`.** `loop:next` está quebrado (lê um board inexistente).
-   Apontar para este plano ou remover (fatia 0.6).
-3. **Fronteiras de `atividades`.** A divisão proposta (configuração, afastamentos,
-   avaliações, registro) é hipótese minha a partir dos nomes de arquivo. Precisa de
-   validação de quem conhece o uso real antes da fatia 5.3.
-4. **Recaptura de fixtures do SEI.** Quem captura, com que periodicidade, e de qual
-   instância — sem isso as fixtures da fase 1 envelhecem e dão falsa confiança.
-5. **Postura de segurança.** `optional_host_permissions` inclui `https://*/*` e as chaves
-   BYOK ficam em `chrome.storage.local`. Merece ADR próprio sobre fronteiras de confiança,
-   que é o que a revisão da Chrome Web Store cobra.
+Nenhuma. As próximas surgem na execução da fase 0.
