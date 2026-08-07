@@ -6,6 +6,7 @@ import {
     statSync
 } from 'node:fs';
 import { join, relative } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -66,7 +67,7 @@ describe('Font Awesome subset', () => {
         const monitorados = read('src/features/monitorados/visualizacao.js');
         const ui = read('src/core/ui.js');
         const editor = read('src/features/editor/page-runtime.js');
-        const seiFunctions = read('src/features/sei-functions/body.js');
+        const seiFunctions = readSeiFunctionsSource();
 
         expect(monitorados).toContain('css/fontawesome.pro.min.css');
         expect(monitorados).not.toContain('css/fontawesome.min.css');

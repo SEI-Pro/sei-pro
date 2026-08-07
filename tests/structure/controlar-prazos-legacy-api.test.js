@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = join(fileURLToPath(new URL('../..', import.meta.url)));
 const featureDir = join(rootDir, 'src/features/controlar-prazos');
@@ -33,7 +34,7 @@ describe('migration: controlar-prazos legacy surface', () => {
   });
 
   it('does not redefine the migrated prazo functions in shared legacy code', () => {
-    const sharedLegacy = readFileSync(join(rootDir, 'src/features/sei-functions/body.js'), 'utf8');
+    const sharedLegacy = readSeiFunctionsSource();
     const migratedNames = ['initControlePrazo', 'addControlePrazo', 'setControlePrazo', 'updateTablePrazoProcesso'];
 
     for (const name of migratedNames) {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -8,7 +9,7 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 describe('migration: datas CSS audit', () => {
   it('mantém a prévia de prazo como componente compartilhado, sem CSS próprio de datas', () => {
     const sharedCss = read('src/shared/ui/prazo-preview.css');
-    const legacy = read('src/features/sei-functions/body.js');
+    const legacy = readSeiFunctionsSource();
 
     expect(sharedCss).toContain('.dateboxDisplay');
     expect(sharedCss).toContain('.dateBoxIcon');

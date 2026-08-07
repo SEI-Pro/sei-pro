@@ -390,6 +390,7 @@ Atualizado em 2026-08-06. Itens já resolvidos (A1-001…A1-010 / E2) saíram da
 |---|---|---|
 | `src/content/core-stack.js` | ainda importa `monitorados/store-legacy-api` + installs shared de feature (ponte) | mover para entries de contexto quando lista/árvore tiverem boot próprio |
 | `src/features/lista-processos/body.js`, `arvore/body.js` | monolitos ainda carregam comportamento | extrair até eliminar; shell não conta como migrado |
+| `src/features/sei-functions/*` (clusters) | body.js eliminado; jQuery/DOM ainda nos clusters | vanilla + `.seipro-*` (P6) e encolher `legacy-api` |
 | `shared/legacy` / onclick inline | handlers inline restantes → MAIN world | migrar para `data-act` + delegação; **não** expandir `legacy-inline-bridge` |
 | `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar |
 | Features/CSS legados sem `.seipro-*` | classes próprias ainda sem prefixo em monolitos | **P6 em lote** no fim do épico; proibido micro-hook unitário |

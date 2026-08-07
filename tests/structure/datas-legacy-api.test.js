@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -17,7 +18,7 @@ describe('migration: datas legacy api', () => {
   });
 
   it('removes the duplicate implementation from sei-functions-pro', () => {
-    const legacy = read('src/features/sei-functions/body.js');
+    const legacy = readSeiFunctionsSource();
     const bridge = read('src/shared/legacy/datas-legacy-api.js');
     const view = read('src/shared/legacy/datas-view.js');
 

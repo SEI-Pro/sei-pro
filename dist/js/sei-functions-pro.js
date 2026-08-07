@@ -5,6 +5,49 @@
       __defProp(target, name, { get: all[name], enumerable: true });
   };
 
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function getSeiPro() {
+    globalRef.SeiPro = globalRef.SeiPro || {};
+    globalRef.SeiPro.core = globalRef.SeiPro.core || {};
+    globalRef.SeiPro.sei = globalRef.SeiPro.sei || {};
+    globalRef.SeiPro.features = globalRef.SeiPro.features || {};
+    globalRef.SeiPro.state = globalRef.SeiPro.state || {};
+    return globalRef.SeiPro;
+  }
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
+
+  // src/app/publish-feature.js
+  function toNamespaceKey(id) {
+    if (typeof id !== "string" || !id) return id;
+    return id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  }
+  function publishFeature(spec = {}) {
+    const id = spec.id;
+    if (typeof id !== "string" || !id) {
+      throw new Error("publishFeature: id is required");
+    }
+    const api = spec.api && typeof spec.api === "object" ? spec.api : {};
+    const install = typeof spec.install === "function" ? spec.install : function noop() {
+    };
+    const extras = spec.extras && typeof spec.extras === "object" ? spec.extras : {};
+    const published = Object.freeze({
+      id,
+      api,
+      install,
+      ...extras
+    });
+    const root = getSeiPro();
+    root.features = root.features || {};
+    const key = spec.nsKey || toNamespaceKey(id);
+    root.features[key] = published;
+    return published;
+  }
+
   // src/dom/index.js
   function ready(fn) {
     if (typeof document === "undefined") {
@@ -287,23 +330,37 @@
   // src/features/sei-functions/io.js
   var io_exports = {};
   __export(io_exports, {
-    getSeiFunctionsNet: () => getSeiFunctionsNet
+    getConfigHostSession: () => getConfigHostSession,
+    getSeiFunctionsNet: () => getSeiFunctionsNet,
+    setConfigHostSession: () => setConfigHostSession
   });
   function getSeiFunctionsNet(globalRef2 = globalThis) {
     return globalRef2.SeiPro && globalRef2.SeiPro.core && globalRef2.SeiPro.core.net;
   }
-
-  // src/core/global.js
-  var globalRef = typeof window !== "undefined" ? window : globalThis;
-  function aliasGlobal(name, value) {
-    if (typeof globalRef[name] === "undefined") {
-      globalRef[name] = value;
+  function getConfigHostSession() {
+    try {
+      const raw = sessionStorage.getItem("configHost_Pro");
+      return raw !== null ? JSON.parse(raw) : false;
+    } catch (e) {
+      return false;
+    }
+  }
+  function setConfigHostSession(host) {
+    try {
+      sessionStorage.setItem("configHost_Pro", JSON.stringify(host));
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  // src/features/sei-functions/body.js
-  var body_exports = {};
-  __export(body_exports, {
+  // src/features/sei-functions/view.js
+  function installSeiFunctionsView() {
+  }
+
+  // src/features/sei-functions/modules.js
+  var modules_exports = {};
+  __export(modules_exports, {
     CSSJSON: () => CSSJSON,
     DocsToSEI: () => DocsToSEI,
     DragEvent: () => DragEvent,
@@ -770,770 +827,7 @@
     zoomImagemPro: () => zoomImagemPro
   });
 
-  // src/shared/sei-editor-url.js
-  var EDITOR_URL_RE = /controlador\.php\?acao=editor_montar[^'"\s<>]*/gi;
-  function getUrlDocumentoId(url) {
-    const m = String(url || "").match(/[?&]id_documento=([^&]*)/i);
-    if (!m) return "";
-    return String(m[1] || "").trim();
-  }
-  function isValidEditorMontarUrl(url) {
-    const s = String(url || "");
-    if (s.indexOf("acao=editor_montar") === -1) return false;
-    return /^\d+$/.test(getUrlDocumentoId(s));
-  }
-  function editorWindowNeedsNavigate(href) {
-    const s = String(href || "");
-    if (!s || s === "about:blank") return true;
-    if (s.indexOf("acao=editor_montar") === -1) return true;
-    return !isValidEditorMontarUrl(s);
-  }
-  function repairEditorMontarUrl(url, documentId, baseUrl = "") {
-    const id = String(documentId || "").trim();
-    if (!/^\d+$/.test(id)) return null;
-    const raw = String(url || "").trim();
-    if (!raw) return null;
-    try {
-      const parsed = new URL(raw, baseUrl || "https://sei.invalid/");
-      parsed.searchParams.set("acao", "editor_montar");
-      parsed.searchParams.set("id_documento", id);
-      const absolute = /^[a-z][a-z\d+.-]*:/i.test(raw);
-      return absolute ? parsed.href : `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    } catch (error) {
-      return null;
-    }
-  }
-  function resolveJsNumericVar(src, varName) {
-    if (!varName) return "";
-    const re = new RegExp(
-      "(?:(?:var|let|const)\\s+)?" + varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + `\\s*=\\s*['"]?(\\d+)['"]?`,
-      "i"
-    );
-    const m = String(src || "").match(re);
-    return m ? m[1] : "";
-  }
-  function extractEditorMontarUrl(text) {
-    const src = String(text || "");
-    let best = null;
-    const re = new RegExp(EDITOR_URL_RE.source, "gi");
-    let m;
-    while ((m = re.exec(src)) !== null) {
-      const cand = m[0].replace(/\\+$/g, "");
-      if (isValidEditorMontarUrl(cand)) best = cand;
-    }
-    if (best) return best;
-    const concat = src.match(
-      /'(controlador\.php\?acao=editor_montar[^']*id_documento=)'\s*\+\s*([A-Za-z_$][\w$]*)\s*\+\s*'([^']*)'/i
-    );
-    if (concat) {
-      const id = resolveJsNumericVar(src, concat[2]);
-      if (id) {
-        const stitched = concat[1] + id + concat[3];
-        if (isValidEditorMontarUrl(stitched)) return stitched;
-      }
-    }
-    return null;
-  }
-
-  // src/core/crypto.js
-  async function sha256Hex(input, cryptoApi = globalThis.crypto) {
-    if (!cryptoApi?.subtle?.digest) {
-      throw new Error("Web Crypto SHA-256 is unavailable in this context");
-    }
-    let data = input;
-    if (data instanceof ArrayBuffer) {
-    } else if (ArrayBuffer.isView(data)) {
-      data = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-    } else if (typeof data === "string") {
-      data = new TextEncoder().encode(data);
-    } else if (data && typeof data.arrayBuffer === "function") {
-      data = await data.arrayBuffer();
-    } else {
-      throw new TypeError("SHA-256 input must be text, bytes, ArrayBuffer, Blob, or File");
-    }
-    const digest = await cryptoApi.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-  }
-
-  // src/shared/lazy-script.js
-  var pendingScripts = /* @__PURE__ */ new Map();
-  var documentIds = /* @__PURE__ */ new WeakMap();
-  var nextDocumentId = 0;
-  function documentKey(doc) {
-    if (!documentIds.has(doc)) documentIds.set(doc, ++nextDocumentId);
-    return documentIds.get(doc);
-  }
-  function loadScriptOnce(url, doc = globalThis.document) {
-    if (!url) return Promise.reject(new TypeError("A script URL is required"));
-    if (!doc) return Promise.reject(new Error("Cannot load a script without a document"));
-    const key = `${url}::document-${documentKey(doc)}`;
-    if (pendingScripts.has(key)) return pendingScripts.get(key);
-    const existing = Array.from(doc.scripts || []).find(
-      (script) => script.src === url || script.getAttribute("src") === url
-    );
-    if (existing?.dataset?.seiproLoaded === "true") return Promise.resolve(existing);
-    const promise = new Promise((resolve, reject) => {
-      const script = existing || doc.createElement("script");
-      const cleanup = () => {
-        script.removeEventListener("load", onLoad);
-        script.removeEventListener("error", onError);
-      };
-      const onLoad = () => {
-        cleanup();
-        script.dataset.seiproLoaded = "true";
-        resolve(script);
-      };
-      const onError = () => {
-        cleanup();
-        pendingScripts.delete(key);
-        reject(new Error(`Failed to load script: ${url}`));
-      };
-      script.addEventListener("load", onLoad, { once: true });
-      script.addEventListener("error", onError, { once: true });
-      if (!existing) {
-        script.src = url;
-        (doc.head || doc.documentElement).appendChild(script);
-      }
-    });
-    pendingScripts.set(key, promise);
-    return promise;
-  }
-
-  // src/shared/qr-code.js
-  var QR_SCRIPT = "js/lib/qrcode.min.js";
-  var QR_BRIDGE_SCRIPT = "js/qr-code-main.js";
-  var qrLibraryPromise = null;
-  var bridgeRequestId = 0;
-  function extensionUrl(path) {
-    const base = globalThis.URL_SPRO || "";
-    return `${base.replace(/\/?$/, "/")}${path}`;
-  }
-  function resolveElement(target) {
-    if (!target) return null;
-    if (target.elements && target.elements[0]) return target.elements[0];
-    return target.nodeType ? target : null;
-  }
-  function normalizeSize(options) {
-    const value = Number(options.size || options.width || options.height || 128);
-    return Number.isFinite(value) && value > 0 ? Math.round(value) : 128;
-  }
-  function normalizeLevel(QRCode, options) {
-    const level = String(options.ecLevel || options.correctLevel || "M").toUpperCase();
-    return QRCode.CorrectLevel?.[level] ?? QRCode.CorrectLevel?.M;
-  }
-  function loadQrCodeLibrary() {
-    if (typeof globalThis.QRCode === "function") return Promise.resolve(globalThis.QRCode);
-    if (!qrLibraryPromise) {
-      qrLibraryPromise = loadScriptOnce(extensionUrl(QR_SCRIPT)).then(() => {
-        if (typeof globalThis.QRCode !== "function") {
-          throw new Error("The QR code library did not expose QRCode");
-        }
-        return globalThis.QRCode;
-      }).catch((error) => {
-        qrLibraryPromise = null;
-        throw error;
-      });
-    }
-    return qrLibraryPromise;
-  }
-  function qrOptions(QRCode, options) {
-    const size = normalizeSize(options);
-    const background = options.background === null ? "rgba(0,0,0,0)" : options.background || options.colorLight || "#ffffff";
-    return {
-      text: String(options.text ?? ""),
-      width: size,
-      height: Number(options.height) > 0 ? Math.round(Number(options.height)) : size,
-      typeNumber: Number(options.minVersion || options.typeNumber || 0) || 0,
-      colorDark: options.fill || options.colorDark || "#000000",
-      colorLight: background,
-      correctLevel: normalizeLevel(QRCode, options)
-    };
-  }
-  function createQrInstance(QRCode, scratch, options) {
-    const base = qrOptions(QRCode, options);
-    try {
-      return new QRCode(scratch, base);
-    } catch (error) {
-      if (!base.typeNumber) throw error;
-      scratch.replaceChildren();
-      return new QRCode(scratch, { ...base, typeNumber: 0 });
-    }
-  }
-  function clamp(value, min, max) {
-    return Math.min(max, Math.max(min, value));
-  }
-  function hasAdvancedDrawingOptions(options) {
-    return options.quiet != null || options.radius != null || Number(options.mode || 0) > 0 || !!options.label || !!options.image;
-  }
-  function drawRoundedModule(ctx, x2, y, size, radius) {
-    const r = clamp(size * radius, 0, size / 2);
-    if (!r) {
-      ctx.fillRect(x2, y, size, size);
-      return;
-    }
-    if (typeof ctx.roundRect === "function") {
-      ctx.beginPath();
-      ctx.roundRect(x2, y, size, size, r);
-      ctx.fill();
-      return;
-    }
-    ctx.beginPath();
-    ctx.moveTo(x2 + r, y);
-    ctx.lineTo(x2 + size - r, y);
-    ctx.quadraticCurveTo(x2 + size, y, x2 + size, y + r);
-    ctx.lineTo(x2 + size, y + size - r);
-    ctx.quadraticCurveTo(x2 + size, y + size, x2 + size - r, y + size);
-    ctx.lineTo(x2 + r, y + size);
-    ctx.quadraticCurveTo(x2, y + size, x2, y + size - r);
-    ctx.lineTo(x2, y + r);
-    ctx.quadraticCurveTo(x2, y, x2 + r, y);
-    ctx.closePath();
-    ctx.fill();
-  }
-  function drawAdvancedQr(instance, options, doc) {
-    if (!hasAdvancedDrawingOptions(options)) return null;
-    const matrix = instance?._oQRCode?.modules;
-    const moduleCount = instance?._oQRCode?.moduleCount;
-    if (!Array.isArray(matrix) || !Number.isFinite(moduleCount) || moduleCount <= 0) return null;
-    const width = normalizeSize(options);
-    const height = Number(options.height) > 0 ? Math.round(Number(options.height)) : width;
-    const canvas = doc.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    let ctx;
-    try {
-      ctx = canvas.getContext("2d");
-    } catch (_) {
-      return null;
-    }
-    if (!ctx) return null;
-    const background = options.background === null ? null : options.background || options.colorLight || "#ffffff";
-    if (background) {
-      ctx.fillStyle = background;
-      ctx.fillRect(0, 0, width, height);
-    } else {
-      ctx.clearRect(0, 0, width, height);
-    }
-    const quiet = clamp(Math.round(Number(options.quiet) || 0), 0, 8);
-    const cell = Math.max(1, Math.floor(Math.min(width, height) / (moduleCount + quiet * 2)));
-    const qrSize = cell * (moduleCount + quiet * 2);
-    const offsetX = Math.floor((width - qrSize) / 2);
-    const offsetY = Math.floor((height - qrSize) / 2);
-    ctx.fillStyle = options.fill || options.colorDark || "#000000";
-    const radius = clamp(Number(options.radius) || 0, 0, 1);
-    for (let row = 0; row < moduleCount; row += 1) {
-      for (let column = 0; column < moduleCount; column += 1) {
-        if (!matrix[row]?.[column]) continue;
-        drawRoundedModule(
-          ctx,
-          offsetX + (column + quiet) * cell,
-          offsetY + (row + quiet) * cell,
-          cell,
-          radius
-        );
-      }
-    }
-    const mode = Number(options.mode) || 0;
-    const markerSize = clamp(Number(options.mSize) || 0.2, 0.01, 0.4) * Math.min(width, height);
-    const markerX = clamp(Number(options.mPosX) || 0.5, 0, 1) * width;
-    const markerY = clamp(Number(options.mPosY) || 0.5, 0, 1) * height;
-    if ((mode === 1 || mode === 2) && options.label) {
-      const labelWidth = Math.max(markerSize * 2, Math.min(width * 0.9, markerSize * 4));
-      const labelHeight = Math.max(18, markerSize);
-      const left = clamp(markerX - labelWidth / 2, 0, Math.max(0, width - labelWidth));
-      const top = clamp(markerY - labelHeight / 2, 0, Math.max(0, height - labelHeight));
-      ctx.fillStyle = background || "#ffffff";
-      ctx.fillRect(left, top, labelWidth, labelHeight);
-      ctx.fillStyle = options.fontcolor || "#ff9818";
-      ctx.font = `${Math.max(10, Math.round(labelHeight * 0.45))}px ${options.fontname || "Arial"}`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(String(options.label), left + labelWidth / 2, top + labelHeight / 2, labelWidth - 8);
-    } else if ((mode === 3 || mode === 4) && options.image) {
-      const imageSize = Math.max(1, markerSize);
-      const left = clamp(markerX - imageSize / 2, 0, Math.max(0, width - imageSize));
-      const top = clamp(markerY - imageSize / 2, 0, Math.max(0, height - imageSize));
-      if (mode === 4) {
-        ctx.fillStyle = background || "#ffffff";
-        ctx.fillRect(left, top, imageSize, imageSize);
-      }
-      try {
-        ctx.drawImage(options.image, left, top, imageSize, imageSize);
-      } catch (_) {
-      }
-    }
-    return canvas;
-  }
-  function dataUrlFromNode(node) {
-    if (!node) return null;
-    if (node.tagName === "CANVAS" && typeof node.toDataURL === "function") {
-      try {
-        return node.toDataURL("image/png");
-      } catch {
-      }
-    }
-    if (node.tagName === "IMG" && node.src) return node.src;
-    if (node.tagName === "SVG" && typeof XMLSerializer !== "undefined") {
-      const svg = new XMLSerializer().serializeToString(node);
-      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-    }
-    return null;
-  }
-  function appendRenderedImage(target, source, options) {
-    const doc = target.ownerDocument || globalThis.document;
-    const image = doc.createElement("img");
-    image.src = source;
-    image.width = normalizeSize(options);
-    image.height = Number(options.height) > 0 ? Math.round(Number(options.height)) : image.width;
-    image.alt = options.alt || options.text || "C\xF3digo QR";
-    image.decoding = "async";
-    target.replaceChildren(image);
-    target.removeAttribute("data-seipro-qr-code");
-    return image;
-  }
-  function bridgeOptions(options) {
-    return {
-      text: String(options.text ?? ""),
-      size: normalizeSize(options),
-      height: Number(options.height) > 0 ? Math.round(Number(options.height)) : void 0,
-      fill: options.fill || options.colorDark || "#000000",
-      background: options.background === null ? null : options.background || options.colorLight || "#ffffff",
-      ecLevel: options.ecLevel || options.correctLevel || "M",
-      minVersion: Number(options.minVersion || options.typeNumber || 0) || 0,
-      alt: options.alt || options.text || "C\xF3digo QR"
-    };
-  }
-  function canUsePageBridge() {
-    return !!(globalThis.URL_SPRO && typeof globalThis.document?.createElement === "function" && typeof globalThis.CustomEvent === "function");
-  }
-  function isExtensionIsolatedWorld() {
-    const runtime = globalThis.chrome?.runtime || globalThis.browser?.runtime;
-    return !!(runtime?.id && runtime.id !== "seipro-page-inject" && typeof runtime.getURL === "function");
-  }
-  function renderThroughPageBridge(target, options) {
-    if (!canUsePageBridge()) {
-      return Promise.reject(new Error("The QR code library did not expose QRCode"));
-    }
-    const doc = target.ownerDocument || globalThis.document;
-    const bridgeUrl = extensionUrl(QR_BRIDGE_SCRIPT);
-    const requestId = `seipro-qr-${++bridgeRequestId}`;
-    const payload = bridgeOptions(options);
-    return new Promise((resolve, reject) => {
-      let timer;
-      const cleanup = () => {
-        clearTimeout(timer);
-        target.removeEventListener("seipro-qr-rendered", onRendered);
-        target.removeEventListener("seipro-qr-error", onError);
-        target.removeAttribute("data-seipro-qr-bridge-id");
-      };
-      const onRendered = () => {
-        cleanup();
-        resolve(target.querySelector("img, canvas, svg") || target);
-      };
-      const onError = (event2) => {
-        cleanup();
-        target.removeAttribute("data-seipro-qr-options");
-        target.removeAttribute("data-seipro-qr-script");
-        reject(new Error(event2?.detail || target.getAttribute("data-seipro-qr-error") || "QR code rendering failed"));
-      };
-      target.addEventListener("seipro-qr-rendered", onRendered, { once: true });
-      target.addEventListener("seipro-qr-error", onError, { once: true });
-      target.setAttribute("data-seipro-qr-bridge-id", requestId);
-      target.setAttribute("data-seipro-qr-options", JSON.stringify(payload));
-      target.setAttribute("data-seipro-qr-script", extensionUrl(QR_SCRIPT));
-      timer = setTimeout(() => onError({ detail: "QR code bridge timed out" }), 15e3);
-      loadScriptOnce(bridgeUrl, doc).then(() => {
-        const EventCtor = doc.defaultView?.CustomEvent || globalThis.CustomEvent;
-        target.dispatchEvent(new EventCtor("seipro-qr-render", { bubbles: false }));
-      }).catch(onError);
-    });
-  }
-  function renderQrCode(target, options = {}) {
-    const element = resolveElement(target);
-    if (!element) return Promise.resolve(null);
-    if (typeof globalThis.QRCode !== "function" && isExtensionIsolatedWorld() && canUsePageBridge()) {
-      return renderThroughPageBridge(element, options);
-    }
-    return loadQrCodeLibrary().then((QRCode) => {
-      const doc = element.ownerDocument || globalThis.document;
-      const scratch = doc.createElement("div");
-      scratch.style.cssText = "position:fixed;left:-100000px;top:-100000px;width:1px;height:1px;overflow:hidden;";
-      (doc.body || doc.documentElement).appendChild(scratch);
-      try {
-        const instance = createQrInstance(QRCode, scratch, options);
-        const advancedCanvas = drawAdvancedQr(instance, options, doc);
-        const source = advancedCanvas || scratch.querySelector("canvas, img[src], svg");
-        const dataUrl = dataUrlFromNode(source);
-        if (dataUrl) return appendRenderedImage(element, dataUrl, options);
-        const clone = source ? element.ownerDocument.importNode(source, true) : null;
-        element.replaceChildren();
-        if (clone) element.appendChild(clone);
-        return clone;
-      } finally {
-        scratch.remove();
-      }
-    }, (error) => {
-      if (canUsePageBridge(element)) return renderThroughPageBridge(element, options);
-      throw error;
-    });
-  }
-  function createQrCodePlaceholder(text, options = {}) {
-    const span = document.createElement("span");
-    span.className = options.className || "seipro-qr-code";
-    span.dataset.seiproQrCode = encodeURIComponent(String(text ?? ""));
-    return span.outerHTML;
-  }
-
-  // src/shared/nomenclatura.js
-  function getName(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
-    const arrayNomenclaturas = globalThis.arrayNomenclaturas;
-    const capitalizeFirstLetter = globalThis.capitalizeFirstLetter;
-    if (typeof arrayNomenclaturas !== "undefined" && arrayNomenclaturas.length > 0) {
-      var name = jmespath.search(arrayNomenclaturas, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0]");
-      name = name !== null ? name : false;
-      var article = name ? name.config.masculino ? singular ? "o" : "os" : singular ? "a" : "as" : "";
-      var nomenclatura = name ? singular ? name.config.singular : name.config.plural : name_default;
-      nomenclatura = capitalize && typeof capitalizeFirstLetter === "function" ? capitalizeFirstLetter(nomenclatura) : nomenclatura;
-      var preposicao = name && typeof name.config.preposicao !== "undefined" && name.config.preposicao ? name.config.masculino ? singular ? "do " : "dos " : singular ? "da " : "das " : "";
-      var phase = with_article ? article + " " + nomenclatura : preposicao + nomenclatura;
-      return phase;
-    }
-    return name_default;
-  }
-  function getNameGenre(ref_nomenclatura, string_male, string_female) {
-    const arrayNomenclaturas = globalThis.arrayNomenclaturas || [];
-    var masc = jmespath.search(arrayNomenclaturas, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0].config.masculino");
-    masc = masc !== null ? masc : false;
-    return masc ? string_male : string_female;
-  }
-
-  // src/shared/table-styles.js
-  function getColorID() {
-    var colorID = {
-      color1: {
-        light: "#dddddd",
-        dark: "#646464"
-      },
-      color2: {
-        light: "#e2daf1",
-        dark: "#7b54c0"
-      },
-      color3: {
-        light: "#eed7e9",
-        dark: "#b1489c"
-      },
-      color4: {
-        light: "#f2d7dc",
-        dark: "#c2495e"
-      },
-      color5: {
-        light: "#ecdacf",
-        dark: "#a85723"
-      },
-      color6: {
-        light: "#dfdfc8",
-        dark: "#6e6b06"
-      },
-      color7: {
-        light: "#d1e2cc",
-        dark: "#2f7c16"
-      },
-      color8: {
-        light: "#c9e4d7",
-        dark: "#0a824a"
-      },
-      color9: {
-        light: "#cae2e6",
-        dark: "#0e7a8b"
-      },
-      color10: {
-        light: "#d4def0",
-        dark: "#3b68b9"
-      }
-    };
-    return colorID;
-  }
-  function getStyleTable(color, width = 80) {
-    var styleTable = {
-      tableStyle1: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "",
-        tr: "",
-        td_head: "background-color: " + color.light + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle2: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "background-color: " + color.light + ";",
-        tr: ["", "background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle3: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle4: {
-        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle5: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
-        tr_head: "border: none;",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle6: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "background-color: " + color.light + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "background-color: " + color.light + "; border-left: none; border-top: none; border-bottom: none; border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle7: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "border-bottom: 3px solid " + color.dark + ";",
-        tr: "",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle8: {
-        table: "border-collapse:collapse; border-bottom: 1px solid " + color.dark + "; border-left: none; border-right: none; border-top: none;margin-left: auto;margin-right:auto; width:" + width + "%;",
-        tr_head: "border-bottom: 3px solid " + color.dark + ";",
-        tr: "",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "border-left: 1px solid " + color.dark + ";",
-        td_first: "border-right: none;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle9: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "border: 1px solid " + color.dark + ";",
-        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle10: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "color: #fff;",
-        tr: "",
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle11: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
-        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important",
-        tr: "border: none;",
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "background-color: " + color.light + "; border-bottom: 1px solid #fff; border-right: 1px solid #fff",
-        td_first: "color: #fff;background-color: " + color.dark + "; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle12: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "background-color: " + color.light + "; border-bottom: 3px solid " + color.dark + ";",
-        tr: "",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle13: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto ;width:" + width + "%; border: none;",
-        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border: none;",
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "border: 1px solid " + color.dark + ";",
-        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle14: {
-        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
-        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle15: {
-        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border-left: none; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
-        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: "border-bottom: 1px solid " + color.dark + ";",
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle16: {
-        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "color: #fff;",
-        tr: "",
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "border: none;",
-        td_first: "border: none;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle17: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto;width:" + width + "%;",
-        tr_head: "color: #fff;",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "border: none;",
-        td_first: "border: none;",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle18: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
-        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 3px solid #fff !important",
-        tr: ["border: none; background-color: " + color.light + ";", "color: #fff; border: none; background-color: " + color.dark + ";"],
-        td_head: "background-color: " + color.dark + ";",
-        td_head_p: "Texto_Centralizado",
-        td: "border:none;",
-        td_first: "border: none; border-right: 3px solid #fff",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle19: {
-        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
-        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle20: {
-        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
-        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
-        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
-        td_head: "",
-        td_head_p: "Texto_Centralizado",
-        td: "",
-        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      },
-      tableStyle21: {
-        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
-        tr_head: "",
-        tr: "",
-        td_head: "",
-        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
-        td: "",
-        td_first: "",
-        td_p: "Tabela_Texto_Alinhado_Esquerda"
-      }
-    };
-    return styleTable;
-  }
-
-  // src/features/sei-functions/body.js
-  installSeiFunctionsState();
-  function atividadesApi() {
-    var root = typeof globalThis !== "undefined" ? globalThis.SeiPro : null;
-    var feature = root && root.features && root.features.atividades;
-    return feature && feature.api || null;
-  }
-  function callAtividades(name) {
-    var api = atividadesApi();
-    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
-    if (typeof fn !== "function") return void 0;
-    var args = Array.prototype.slice.call(arguments, 1);
-    return fn.apply(null, args);
-  }
-  function getAtividadesServer() {
-    var api = atividadesApi();
-    if (api && typeof api.legacyRequest === "function") return api.legacyRequest;
-    if (api && typeof api.request === "function") return api.request;
-    return null;
-  }
-  function checkCapacidade(nome) {
-    var r = callAtividades("checkCapacidade", nome);
-    return typeof r === "undefined" ? false : r;
-  }
-  function checkPerfilNivelAdm() {
-    var r = callAtividades("checkPerfilNivelAdm");
-    return typeof r === "undefined" ? false : r;
-  }
-  function atividadeCommand(name, ...args) {
-    return callAtividades(name, ...args);
-  }
-  function atividadesState() {
-    var api = atividadesApi();
-    return api && api.state && typeof api.state.get === "function" ? api.state.get() : {};
-  }
-  function checkPageAtividadesVisualizacao(...args) {
-    return atividadeCommand("checkPageAtividadesVisualizacao", ...args);
-  }
-  function checkUnidadeFuncBeta(...args) {
-    return atividadeCommand("checkUnidadeFuncBeta", ...args);
-  }
-  function setParamEditorAtiv(...args) {
-    return atividadeCommand("setParamEditorAtiv", ...args);
-  }
-  function extractDataDocument(...args) {
-    return atividadeCommand("extractDataDocument", ...args);
-  }
-  function getConfigServerDoc(...args) {
-    return atividadeCommand("getConfigServerDoc", ...args);
-  }
-  function getConfigServer(...args) {
-    return atividadeCommand("getConfigServer", ...args);
-  }
-  function updateCountKanbanBoard(...args) {
-    return atividadeCommand("updateCountKanbanBoard", ...args);
-  }
-  function getKanbanUserPriority(...args) {
-    return atividadeCommand("getKanbanUserPriority", ...args);
-  }
-  function getHtmlKanbanUserPriority(...args) {
-    return atividadeCommand("getHtmlKanbanUserPriority", ...args);
-  }
-  function signCancelDocumento(...args) {
-    return atividadeCommand("signCancelDocumento", ...args);
-  }
+  // src/features/sei-functions/page-helpers.js
   var sanitizeHTML = (html) => DOMPurify.sanitize(html, {
     ADD_ATTR: ["target"],
     ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|chrome-extension|moz-extension):|[^a-z]|[a-z+\-.]+(?:[^a-z+\-.:]|$))/i
@@ -1822,6 +1116,8 @@
   function userTyped(this_) {
     $(this_).data("user-typed", $(this_).val().trim() == "" ? false : true);
   }
+
+  // src/features/sei-functions/tables-filesystem.js
   function dragColumnTable(elemTable) {
     var local = {};
     local.containment = "parent";
@@ -2097,6 +1393,8 @@
       }
     );
   }
+
+  // src/features/sei-functions/layout-dialogs.js
   function resizeWinArvore(widthArvore) {
     var indent = 10;
     var widthConteudo = $("#divConteudo").width();
@@ -2613,6 +1911,8 @@
       });
     });
   }
+
+  // src/features/sei-functions/interessados-forms.js
   function getInteressadosProcesso(txtInteressado, callback) {
     if (typeof window.linkPesquisaInteressado !== "undefined") {
       getInteressadosProcessoAjax(window.linkPesquisaInteressado, txtInteressado, callback);
@@ -2907,6 +2207,8 @@
       }]
     });
   }
+
+  // src/features/sei-functions/marcadores-arvore.js
   function getRemoverMarcador(alert2 = true) {
     loadingButtonConfirm(true);
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
@@ -3384,6 +2686,8 @@
     }
     return { array: selectGroup, indexSelected };
   }
+
+  // src/features/sei-functions/media-viewers.js
   function initDocImagemPro() {
     var ifrVisualizacao2 = $($ifrVisualizacao).contents();
     var ifrArvore = $("#ifrArvore").contents();
@@ -3813,6 +3117,8 @@
       _this.closest("tr").removeClass("infraTrMarcada");
     }
   }
+
+  // src/features/sei-functions/wait-load-home.js
   function waitLoadPro(Obj, ElemRaiz, Elem, func, TimeOut = 6e3) {
     if (TimeOut <= 0) return;
     var $obj = Obj && typeof Obj.find === "function" ? Obj : $(Obj);
@@ -4477,6 +3783,73 @@
     window.tablepaginacao_cancel = true;
     _this.closest("label").remove();
   }
+
+  // src/features/sei-functions/atividades-bridge.js
+  function atividadesApi() {
+    var root = typeof globalThis !== "undefined" ? globalThis.SeiPro : null;
+    var feature = root && root.features && root.features.atividades;
+    return feature && feature.api || null;
+  }
+  function callAtividades(name) {
+    var api = atividadesApi();
+    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
+    if (typeof fn !== "function") return void 0;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+  }
+  function getAtividadesServer() {
+    var api = atividadesApi();
+    if (api && typeof api.legacyRequest === "function") return api.legacyRequest;
+    if (api && typeof api.request === "function") return api.request;
+    return null;
+  }
+  function checkCapacidade(nome) {
+    var r = callAtividades("checkCapacidade", nome);
+    return typeof r === "undefined" ? false : r;
+  }
+  function checkPerfilNivelAdm() {
+    var r = callAtividades("checkPerfilNivelAdm");
+    return typeof r === "undefined" ? false : r;
+  }
+  function atividadeCommand(name, ...args) {
+    return callAtividades(name, ...args);
+  }
+  function atividadesState() {
+    var api = atividadesApi();
+    return api && api.state && typeof api.state.get === "function" ? api.state.get() : {};
+  }
+  function checkPageAtividadesVisualizacao(...args) {
+    return atividadeCommand("checkPageAtividadesVisualizacao", ...args);
+  }
+  function checkUnidadeFuncBeta(...args) {
+    return atividadeCommand("checkUnidadeFuncBeta", ...args);
+  }
+  function setParamEditorAtiv(...args) {
+    return atividadeCommand("setParamEditorAtiv", ...args);
+  }
+  function extractDataDocument(...args) {
+    return atividadeCommand("extractDataDocument", ...args);
+  }
+  function getConfigServerDoc(...args) {
+    return atividadeCommand("getConfigServerDoc", ...args);
+  }
+  function getConfigServer(...args) {
+    return atividadeCommand("getConfigServer", ...args);
+  }
+  function updateCountKanbanBoard(...args) {
+    return atividadeCommand("updateCountKanbanBoard", ...args);
+  }
+  function getKanbanUserPriority(...args) {
+    return atividadeCommand("getKanbanUserPriority", ...args);
+  }
+  function getHtmlKanbanUserPriority(...args) {
+    return atividadeCommand("getHtmlKanbanUserPriority", ...args);
+  }
+  function signCancelDocumento(...args) {
+    return atividadeCommand("signCancelDocumento", ...args);
+  }
+
+  // src/features/sei-functions/tags-menus.js
   function filterTagView(this_) {
     if ($("#kanbanAtivPanel").is(":visible")) {
       filterTagKanban(this_);
@@ -5183,6 +4556,293 @@
       elem.focus();
     }, 100);
   };
+
+  // src/shared/nomenclatura.js
+  function getName(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
+    const arrayNomenclaturas = globalThis.arrayNomenclaturas;
+    const capitalizeFirstLetter = globalThis.capitalizeFirstLetter;
+    if (typeof arrayNomenclaturas !== "undefined" && arrayNomenclaturas.length > 0) {
+      var name = jmespath.search(arrayNomenclaturas, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0]");
+      name = name !== null ? name : false;
+      var article = name ? name.config.masculino ? singular ? "o" : "os" : singular ? "a" : "as" : "";
+      var nomenclatura = name ? singular ? name.config.singular : name.config.plural : name_default;
+      nomenclatura = capitalize && typeof capitalizeFirstLetter === "function" ? capitalizeFirstLetter(nomenclatura) : nomenclatura;
+      var preposicao = name && typeof name.config.preposicao !== "undefined" && name.config.preposicao ? name.config.masculino ? singular ? "do " : "dos " : singular ? "da " : "das " : "";
+      var phase = with_article ? article + " " + nomenclatura : preposicao + nomenclatura;
+      return phase;
+    }
+    return name_default;
+  }
+  function getNameGenre(ref_nomenclatura, string_male, string_female) {
+    const arrayNomenclaturas = globalThis.arrayNomenclaturas || [];
+    var masc = jmespath.search(arrayNomenclaturas, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0].config.masculino");
+    masc = masc !== null ? masc : false;
+    return masc ? string_male : string_female;
+  }
+
+  // src/shared/table-styles.js
+  function getColorID() {
+    var colorID = {
+      color1: {
+        light: "#dddddd",
+        dark: "#646464"
+      },
+      color2: {
+        light: "#e2daf1",
+        dark: "#7b54c0"
+      },
+      color3: {
+        light: "#eed7e9",
+        dark: "#b1489c"
+      },
+      color4: {
+        light: "#f2d7dc",
+        dark: "#c2495e"
+      },
+      color5: {
+        light: "#ecdacf",
+        dark: "#a85723"
+      },
+      color6: {
+        light: "#dfdfc8",
+        dark: "#6e6b06"
+      },
+      color7: {
+        light: "#d1e2cc",
+        dark: "#2f7c16"
+      },
+      color8: {
+        light: "#c9e4d7",
+        dark: "#0a824a"
+      },
+      color9: {
+        light: "#cae2e6",
+        dark: "#0e7a8b"
+      },
+      color10: {
+        light: "#d4def0",
+        dark: "#3b68b9"
+      }
+    };
+    return colorID;
+  }
+  function getStyleTable(color, width = 80) {
+    var styleTable = {
+      tableStyle1: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "",
+        tr: "",
+        td_head: "background-color: " + color.light + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle2: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "background-color: " + color.light + ";",
+        tr: ["", "background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle3: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle4: {
+        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle5: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
+        tr_head: "border: none;",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle6: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "background-color: " + color.light + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "background-color: " + color.light + "; border-left: none; border-top: none; border-bottom: none; border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle7: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "border-bottom: 3px solid " + color.dark + ";",
+        tr: "",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle8: {
+        table: "border-collapse:collapse; border-bottom: 1px solid " + color.dark + "; border-left: none; border-right: none; border-top: none;margin-left: auto;margin-right:auto; width:" + width + "%;",
+        tr_head: "border-bottom: 3px solid " + color.dark + ";",
+        tr: "",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "border-left: 1px solid " + color.dark + ";",
+        td_first: "border-right: none;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle9: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "border: 1px solid " + color.dark + ";",
+        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle10: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "color: #fff;",
+        tr: "",
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle11: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%; border: none;",
+        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important",
+        tr: "border: none;",
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "background-color: " + color.light + "; border-bottom: 1px solid #fff; border-right: 1px solid #fff",
+        td_first: "color: #fff;background-color: " + color.dark + "; border: 1px solid " + color.dark + "; border-bottom: 1px solid #fff !important;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle12: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "background-color: " + color.light + "; border-bottom: 3px solid " + color.dark + ";",
+        tr: "",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle13: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto ;width:" + width + "%; border: none;",
+        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border: none;",
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "border: 1px solid " + color.dark + ";",
+        td_first: "border-left: none;border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle14: {
+        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
+        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle15: {
+        table: "border-collapse:collapse;margin-left:auto;margin-right:auto;width:" + width + "%;border-left: none; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
+        tr_head: "border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: "border-bottom: 1px solid " + color.dark + ";",
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle16: {
+        table: "border-collapse:collapse; border-color:" + color.dark + "; margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "color: #fff;",
+        tr: "",
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "border: none;",
+        td_first: "border: none;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle17: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto;width:" + width + "%;",
+        tr_head: "color: #fff;",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "border: none;",
+        td_first: "border: none;",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle18: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto; width:" + width + "%;border: none;",
+        tr_head: "color: #fff; border: 1px solid " + color.dark + "; border-bottom: 3px solid #fff !important",
+        tr: ["border: none; background-color: " + color.light + ";", "color: #fff; border: none; background-color: " + color.dark + ";"],
+        td_head: "background-color: " + color.dark + ";",
+        td_head_p: "Texto_Centralizado",
+        td: "border:none;",
+        td_first: "border: none; border-right: 3px solid #fff",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle19: {
+        table: "border-collapse:collapse; margin-left:auto; margin-right:auto;width:" + width + "%; border-left: none;border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + "; border-right: none;",
+        tr_head: "background-color: " + color.light + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle20: {
+        table: "border-collapse:collapse; margin-left:auto;margin-right:auto;width:" + width + "%;border: none;",
+        tr_head: "background-color: " + color.light + "; border-top: 1px solid " + color.dark + "; border-bottom: 1px solid " + color.dark + ";",
+        tr: ["border: none;", "border: none; background-color: " + color.light + ";"],
+        td_head: "",
+        td_head_p: "Texto_Centralizado",
+        td: "",
+        td_first: "border-left: none; border-top: none;border-bottom: none;border-right: 1px solid " + color.dark + ";",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      },
+      tableStyle21: {
+        table: "border-collapse:collapse; border-color:" + color.dark + ";margin-left:auto; margin-right:auto; width:" + width + "%;",
+        tr_head: "",
+        tr: "",
+        td_head: "",
+        td_head_p: "Tabela_Texto_Alinhado_Esquerda",
+        td: "",
+        td_first: "",
+        td_p: "Tabela_Texto_Alinhado_Esquerda"
+      }
+    };
+    return styleTable;
+  }
+
+  // src/features/sei-functions/host-clipboard-dialogs.js
   function limitConfigValue(name) {
     return !checkHostLimit() ? checkConfigValue(name) : false;
   }
@@ -5629,6 +5289,8 @@
       elem.show();
     }
   }
+
+  // src/features/sei-functions/notifications-process.js
   function getProcessNotificationCountPro() {
     return $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").find("a.processoNaoVisualizado, a.processoNaoVisualizadoSigiloso, a.processoCredencialAssinaturaSigiloso").length;
   }
@@ -6720,6 +6382,402 @@
       });
     }
   }
+
+  // src/shared/sei-editor-url.js
+  var EDITOR_URL_RE = /controlador\.php\?acao=editor_montar[^'"\s<>]*/gi;
+  function getUrlDocumentoId(url) {
+    const m = String(url || "").match(/[?&]id_documento=([^&]*)/i);
+    if (!m) return "";
+    return String(m[1] || "").trim();
+  }
+  function isValidEditorMontarUrl(url) {
+    const s = String(url || "");
+    if (s.indexOf("acao=editor_montar") === -1) return false;
+    return /^\d+$/.test(getUrlDocumentoId(s));
+  }
+  function editorWindowNeedsNavigate(href) {
+    const s = String(href || "");
+    if (!s || s === "about:blank") return true;
+    if (s.indexOf("acao=editor_montar") === -1) return true;
+    return !isValidEditorMontarUrl(s);
+  }
+  function repairEditorMontarUrl(url, documentId, baseUrl = "") {
+    const id = String(documentId || "").trim();
+    if (!/^\d+$/.test(id)) return null;
+    const raw = String(url || "").trim();
+    if (!raw) return null;
+    try {
+      const parsed = new URL(raw, baseUrl || "https://sei.invalid/");
+      parsed.searchParams.set("acao", "editor_montar");
+      parsed.searchParams.set("id_documento", id);
+      const absolute = /^[a-z][a-z\d+.-]*:/i.test(raw);
+      return absolute ? parsed.href : `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch (error) {
+      return null;
+    }
+  }
+  function resolveJsNumericVar(src, varName) {
+    if (!varName) return "";
+    const re = new RegExp(
+      "(?:(?:var|let|const)\\s+)?" + varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + `\\s*=\\s*['"]?(\\d+)['"]?`,
+      "i"
+    );
+    const m = String(src || "").match(re);
+    return m ? m[1] : "";
+  }
+  function extractEditorMontarUrl(text) {
+    const src = String(text || "");
+    let best = null;
+    const re = new RegExp(EDITOR_URL_RE.source, "gi");
+    let m;
+    while ((m = re.exec(src)) !== null) {
+      const cand = m[0].replace(/\\+$/g, "");
+      if (isValidEditorMontarUrl(cand)) best = cand;
+    }
+    if (best) return best;
+    const concat = src.match(
+      /'(controlador\.php\?acao=editor_montar[^']*id_documento=)'\s*\+\s*([A-Za-z_$][\w$]*)\s*\+\s*'([^']*)'/i
+    );
+    if (concat) {
+      const id = resolveJsNumericVar(src, concat[2]);
+      if (id) {
+        const stitched = concat[1] + id + concat[3];
+        if (isValidEditorMontarUrl(stitched)) return stitched;
+      }
+    }
+    return null;
+  }
+
+  // src/shared/lazy-script.js
+  var pendingScripts = /* @__PURE__ */ new Map();
+  var documentIds = /* @__PURE__ */ new WeakMap();
+  var nextDocumentId = 0;
+  function documentKey(doc) {
+    if (!documentIds.has(doc)) documentIds.set(doc, ++nextDocumentId);
+    return documentIds.get(doc);
+  }
+  function loadScriptOnce(url, doc = globalThis.document) {
+    if (!url) return Promise.reject(new TypeError("A script URL is required"));
+    if (!doc) return Promise.reject(new Error("Cannot load a script without a document"));
+    const key = `${url}::document-${documentKey(doc)}`;
+    if (pendingScripts.has(key)) return pendingScripts.get(key);
+    const existing = Array.from(doc.scripts || []).find(
+      (script) => script.src === url || script.getAttribute("src") === url
+    );
+    if (existing?.dataset?.seiproLoaded === "true") return Promise.resolve(existing);
+    const promise = new Promise((resolve, reject) => {
+      const script = existing || doc.createElement("script");
+      const cleanup = () => {
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
+      };
+      const onLoad = () => {
+        cleanup();
+        script.dataset.seiproLoaded = "true";
+        resolve(script);
+      };
+      const onError = () => {
+        cleanup();
+        pendingScripts.delete(key);
+        reject(new Error(`Failed to load script: ${url}`));
+      };
+      script.addEventListener("load", onLoad, { once: true });
+      script.addEventListener("error", onError, { once: true });
+      if (!existing) {
+        script.src = url;
+        (doc.head || doc.documentElement).appendChild(script);
+      }
+    });
+    pendingScripts.set(key, promise);
+    return promise;
+  }
+
+  // src/shared/qr-code.js
+  var QR_SCRIPT = "js/lib/qrcode.min.js";
+  var QR_BRIDGE_SCRIPT = "js/qr-code-main.js";
+  var qrLibraryPromise = null;
+  var bridgeRequestId = 0;
+  function extensionUrl(path) {
+    const base = globalThis.URL_SPRO || "";
+    return `${base.replace(/\/?$/, "/")}${path}`;
+  }
+  function resolveElement(target) {
+    if (!target) return null;
+    if (target.elements && target.elements[0]) return target.elements[0];
+    return target.nodeType ? target : null;
+  }
+  function normalizeSize(options) {
+    const value = Number(options.size || options.width || options.height || 128);
+    return Number.isFinite(value) && value > 0 ? Math.round(value) : 128;
+  }
+  function normalizeLevel(QRCode, options) {
+    const level = String(options.ecLevel || options.correctLevel || "M").toUpperCase();
+    return QRCode.CorrectLevel?.[level] ?? QRCode.CorrectLevel?.M;
+  }
+  function loadQrCodeLibrary() {
+    if (typeof globalThis.QRCode === "function") return Promise.resolve(globalThis.QRCode);
+    if (!qrLibraryPromise) {
+      qrLibraryPromise = loadScriptOnce(extensionUrl(QR_SCRIPT)).then(() => {
+        if (typeof globalThis.QRCode !== "function") {
+          throw new Error("The QR code library did not expose QRCode");
+        }
+        return globalThis.QRCode;
+      }).catch((error) => {
+        qrLibraryPromise = null;
+        throw error;
+      });
+    }
+    return qrLibraryPromise;
+  }
+  function qrOptions(QRCode, options) {
+    const size = normalizeSize(options);
+    const background = options.background === null ? "rgba(0,0,0,0)" : options.background || options.colorLight || "#ffffff";
+    return {
+      text: String(options.text ?? ""),
+      width: size,
+      height: Number(options.height) > 0 ? Math.round(Number(options.height)) : size,
+      typeNumber: Number(options.minVersion || options.typeNumber || 0) || 0,
+      colorDark: options.fill || options.colorDark || "#000000",
+      colorLight: background,
+      correctLevel: normalizeLevel(QRCode, options)
+    };
+  }
+  function createQrInstance(QRCode, scratch, options) {
+    const base = qrOptions(QRCode, options);
+    try {
+      return new QRCode(scratch, base);
+    } catch (error) {
+      if (!base.typeNumber) throw error;
+      scratch.replaceChildren();
+      return new QRCode(scratch, { ...base, typeNumber: 0 });
+    }
+  }
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+  function hasAdvancedDrawingOptions(options) {
+    return options.quiet != null || options.radius != null || Number(options.mode || 0) > 0 || !!options.label || !!options.image;
+  }
+  function drawRoundedModule(ctx, x2, y, size, radius) {
+    const r = clamp(size * radius, 0, size / 2);
+    if (!r) {
+      ctx.fillRect(x2, y, size, size);
+      return;
+    }
+    if (typeof ctx.roundRect === "function") {
+      ctx.beginPath();
+      ctx.roundRect(x2, y, size, size, r);
+      ctx.fill();
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x2 + r, y);
+    ctx.lineTo(x2 + size - r, y);
+    ctx.quadraticCurveTo(x2 + size, y, x2 + size, y + r);
+    ctx.lineTo(x2 + size, y + size - r);
+    ctx.quadraticCurveTo(x2 + size, y + size, x2 + size - r, y + size);
+    ctx.lineTo(x2 + r, y + size);
+    ctx.quadraticCurveTo(x2, y + size, x2, y + size - r);
+    ctx.lineTo(x2, y + r);
+    ctx.quadraticCurveTo(x2, y, x2 + r, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawAdvancedQr(instance, options, doc) {
+    if (!hasAdvancedDrawingOptions(options)) return null;
+    const matrix = instance?._oQRCode?.modules;
+    const moduleCount = instance?._oQRCode?.moduleCount;
+    if (!Array.isArray(matrix) || !Number.isFinite(moduleCount) || moduleCount <= 0) return null;
+    const width = normalizeSize(options);
+    const height = Number(options.height) > 0 ? Math.round(Number(options.height)) : width;
+    const canvas = doc.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    let ctx;
+    try {
+      ctx = canvas.getContext("2d");
+    } catch (_) {
+      return null;
+    }
+    if (!ctx) return null;
+    const background = options.background === null ? null : options.background || options.colorLight || "#ffffff";
+    if (background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, width, height);
+    } else {
+      ctx.clearRect(0, 0, width, height);
+    }
+    const quiet = clamp(Math.round(Number(options.quiet) || 0), 0, 8);
+    const cell = Math.max(1, Math.floor(Math.min(width, height) / (moduleCount + quiet * 2)));
+    const qrSize = cell * (moduleCount + quiet * 2);
+    const offsetX = Math.floor((width - qrSize) / 2);
+    const offsetY = Math.floor((height - qrSize) / 2);
+    ctx.fillStyle = options.fill || options.colorDark || "#000000";
+    const radius = clamp(Number(options.radius) || 0, 0, 1);
+    for (let row = 0; row < moduleCount; row += 1) {
+      for (let column = 0; column < moduleCount; column += 1) {
+        if (!matrix[row]?.[column]) continue;
+        drawRoundedModule(
+          ctx,
+          offsetX + (column + quiet) * cell,
+          offsetY + (row + quiet) * cell,
+          cell,
+          radius
+        );
+      }
+    }
+    const mode = Number(options.mode) || 0;
+    const markerSize = clamp(Number(options.mSize) || 0.2, 0.01, 0.4) * Math.min(width, height);
+    const markerX = clamp(Number(options.mPosX) || 0.5, 0, 1) * width;
+    const markerY = clamp(Number(options.mPosY) || 0.5, 0, 1) * height;
+    if ((mode === 1 || mode === 2) && options.label) {
+      const labelWidth = Math.max(markerSize * 2, Math.min(width * 0.9, markerSize * 4));
+      const labelHeight = Math.max(18, markerSize);
+      const left = clamp(markerX - labelWidth / 2, 0, Math.max(0, width - labelWidth));
+      const top = clamp(markerY - labelHeight / 2, 0, Math.max(0, height - labelHeight));
+      ctx.fillStyle = background || "#ffffff";
+      ctx.fillRect(left, top, labelWidth, labelHeight);
+      ctx.fillStyle = options.fontcolor || "#ff9818";
+      ctx.font = `${Math.max(10, Math.round(labelHeight * 0.45))}px ${options.fontname || "Arial"}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(options.label), left + labelWidth / 2, top + labelHeight / 2, labelWidth - 8);
+    } else if ((mode === 3 || mode === 4) && options.image) {
+      const imageSize = Math.max(1, markerSize);
+      const left = clamp(markerX - imageSize / 2, 0, Math.max(0, width - imageSize));
+      const top = clamp(markerY - imageSize / 2, 0, Math.max(0, height - imageSize));
+      if (mode === 4) {
+        ctx.fillStyle = background || "#ffffff";
+        ctx.fillRect(left, top, imageSize, imageSize);
+      }
+      try {
+        ctx.drawImage(options.image, left, top, imageSize, imageSize);
+      } catch (_) {
+      }
+    }
+    return canvas;
+  }
+  function dataUrlFromNode(node) {
+    if (!node) return null;
+    if (node.tagName === "CANVAS" && typeof node.toDataURL === "function") {
+      try {
+        return node.toDataURL("image/png");
+      } catch {
+      }
+    }
+    if (node.tagName === "IMG" && node.src) return node.src;
+    if (node.tagName === "SVG" && typeof XMLSerializer !== "undefined") {
+      const svg = new XMLSerializer().serializeToString(node);
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+    return null;
+  }
+  function appendRenderedImage(target, source, options) {
+    const doc = target.ownerDocument || globalThis.document;
+    const image = doc.createElement("img");
+    image.src = source;
+    image.width = normalizeSize(options);
+    image.height = Number(options.height) > 0 ? Math.round(Number(options.height)) : image.width;
+    image.alt = options.alt || options.text || "C\xF3digo QR";
+    image.decoding = "async";
+    target.replaceChildren(image);
+    target.removeAttribute("data-seipro-qr-code");
+    return image;
+  }
+  function bridgeOptions(options) {
+    return {
+      text: String(options.text ?? ""),
+      size: normalizeSize(options),
+      height: Number(options.height) > 0 ? Math.round(Number(options.height)) : void 0,
+      fill: options.fill || options.colorDark || "#000000",
+      background: options.background === null ? null : options.background || options.colorLight || "#ffffff",
+      ecLevel: options.ecLevel || options.correctLevel || "M",
+      minVersion: Number(options.minVersion || options.typeNumber || 0) || 0,
+      alt: options.alt || options.text || "C\xF3digo QR"
+    };
+  }
+  function canUsePageBridge() {
+    return !!(globalThis.URL_SPRO && typeof globalThis.document?.createElement === "function" && typeof globalThis.CustomEvent === "function");
+  }
+  function isExtensionIsolatedWorld() {
+    const runtime = globalThis.chrome?.runtime || globalThis.browser?.runtime;
+    return !!(runtime?.id && runtime.id !== "seipro-page-inject" && typeof runtime.getURL === "function");
+  }
+  function renderThroughPageBridge(target, options) {
+    if (!canUsePageBridge()) {
+      return Promise.reject(new Error("The QR code library did not expose QRCode"));
+    }
+    const doc = target.ownerDocument || globalThis.document;
+    const bridgeUrl = extensionUrl(QR_BRIDGE_SCRIPT);
+    const requestId = `seipro-qr-${++bridgeRequestId}`;
+    const payload = bridgeOptions(options);
+    return new Promise((resolve, reject) => {
+      let timer;
+      const cleanup = () => {
+        clearTimeout(timer);
+        target.removeEventListener("seipro-qr-rendered", onRendered);
+        target.removeEventListener("seipro-qr-error", onError);
+        target.removeAttribute("data-seipro-qr-bridge-id");
+      };
+      const onRendered = () => {
+        cleanup();
+        resolve(target.querySelector("img, canvas, svg") || target);
+      };
+      const onError = (event2) => {
+        cleanup();
+        target.removeAttribute("data-seipro-qr-options");
+        target.removeAttribute("data-seipro-qr-script");
+        reject(new Error(event2?.detail || target.getAttribute("data-seipro-qr-error") || "QR code rendering failed"));
+      };
+      target.addEventListener("seipro-qr-rendered", onRendered, { once: true });
+      target.addEventListener("seipro-qr-error", onError, { once: true });
+      target.setAttribute("data-seipro-qr-bridge-id", requestId);
+      target.setAttribute("data-seipro-qr-options", JSON.stringify(payload));
+      target.setAttribute("data-seipro-qr-script", extensionUrl(QR_SCRIPT));
+      timer = setTimeout(() => onError({ detail: "QR code bridge timed out" }), 15e3);
+      loadScriptOnce(bridgeUrl, doc).then(() => {
+        const EventCtor = doc.defaultView?.CustomEvent || globalThis.CustomEvent;
+        target.dispatchEvent(new EventCtor("seipro-qr-render", { bubbles: false }));
+      }).catch(onError);
+    });
+  }
+  function renderQrCode(target, options = {}) {
+    const element = resolveElement(target);
+    if (!element) return Promise.resolve(null);
+    if (typeof globalThis.QRCode !== "function" && isExtensionIsolatedWorld() && canUsePageBridge()) {
+      return renderThroughPageBridge(element, options);
+    }
+    return loadQrCodeLibrary().then((QRCode) => {
+      const doc = element.ownerDocument || globalThis.document;
+      const scratch = doc.createElement("div");
+      scratch.style.cssText = "position:fixed;left:-100000px;top:-100000px;width:1px;height:1px;overflow:hidden;";
+      (doc.body || doc.documentElement).appendChild(scratch);
+      try {
+        const instance = createQrInstance(QRCode, scratch, options);
+        const advancedCanvas = drawAdvancedQr(instance, options, doc);
+        const source = advancedCanvas || scratch.querySelector("canvas, img[src], svg");
+        const dataUrl = dataUrlFromNode(source);
+        if (dataUrl) return appendRenderedImage(element, dataUrl, options);
+        const clone = source ? element.ownerDocument.importNode(source, true) : null;
+        element.replaceChildren();
+        if (clone) element.appendChild(clone);
+        return clone;
+      } finally {
+        scratch.remove();
+      }
+    }, (error) => {
+      if (canUsePageBridge(element)) return renderThroughPageBridge(element, options);
+      throw error;
+    });
+  }
+  function createQrCodePlaceholder(text, options = {}) {
+    const span = document.createElement("span");
+    span.className = options.className || "seipro-qr-code";
+    span.dataset.seiproQrCode = encodeURIComponent(String(text ?? ""));
+    return span.outerHTML;
+  }
+
+  // src/features/sei-functions/batch-capa.js
   function batchActionsPro(this_) {
     var _this = $(this_);
     var _parent = _this.closest(".ui-dialog");
@@ -7952,6 +8010,8 @@
       }
     }
   }
+
+  // src/features/sei-functions/editor-native-url.js
   function getUrlNewDocArvore() {
     var ifrArvore = $("#ifrArvore");
     var urlNewDoc = getTreeLinkUrlByName("Incluir Documento");
@@ -8177,6 +8237,8 @@
       }
     }
   }
+
+  // src/features/sei-functions/session-history-tables.js
   function cleanHistoryPro(this_) {
     confirmaBoxPro("Tem certeza que deseja apagar o hist\xF3rico de processos?", function() {
       localStorageRemovePro("dadosHistoricoProcessoPro");
@@ -8564,6 +8626,8 @@
       iframe.find("head").append("<style type='text/css' data-style='seipro-resizeimg'> " + cssScript + "</style>");
     }
   }
+
+  // src/features/sei-functions/image-docs.js
   function initResizeImg(editor) {
     var window2 = editor.window.$, document2 = editor.document.$;
     var snapToSize = typeof IMAGE_SNAP_TO_SIZE === "undefined" ? null : IMAGE_SNAP_TO_SIZE;
@@ -9281,6 +9345,28 @@
       }
     }, 1e3);
   }
+
+  // src/core/crypto.js
+  async function sha256Hex(input, cryptoApi = globalThis.crypto) {
+    if (!cryptoApi?.subtle?.digest) {
+      throw new Error("Web Crypto SHA-256 is unavailable in this context");
+    }
+    let data = input;
+    if (data instanceof ArrayBuffer) {
+    } else if (ArrayBuffer.isView(data)) {
+      data = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    } else if (typeof data === "string") {
+      data = new TextEncoder().encode(data);
+    } else if (data && typeof data.arrayBuffer === "function") {
+      data = await data.arrayBuffer();
+    } else {
+      throw new TypeError("SHA-256 input must be text, bytes, ArrayBuffer, Blob, or File");
+    }
+    const digest = await cryptoApi.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  // src/features/sei-functions/editor-captcha.js
   function openLinkNewTab(url) {
     var win = window.open(url, "_blank");
     if (win) {
@@ -10133,6 +10219,8 @@
       removeOptionsPro("noNotify_" + data.notify);
     }
   }
+
+  // src/features/sei-functions/visualizacao-toolbar.js
   function checkPageVisualizacao() {
     const ifrV = SeiPro.sei.adapter.isSEI5() ? $($ifrVisualizacao).contents().find("#ifrVisualizacao").contents() : $($ifrVisualizacao).contents();
     waitLoadPro(ifrV, "#frmDocumentoCadastro", "label#lblPublico", setNewDocDefault);
@@ -10730,6 +10818,8 @@
       }, 500);
     });
   }
+
+  // src/features/sei-functions/slim-ui-chrome.js
   function openStyleBoxSlimPro() {
     checkLoadJqueryUI(openStyleBoxSlimPro_);
   }
@@ -11135,6 +11225,8 @@
     var d = $("#divResulProtocoloSEI");
     d.scrollTop(d.prop("scrollHeight"));
   }
+
+  // src/features/sei-functions/wizards-menu.js
   function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openProc = true) {
     if (!checkProcessoSigiloso()) {
       var href = url_host.replace("controlador.php", "") + "controlador.php?acao=procedimento_trabalhar&id_procedimento=" + String(id_procedimento);
@@ -11614,6 +11706,8 @@
       }, 500);
     }
   }
+
+  // src/features/sei-functions/boot.js
   function fnJqueryPro() {
     try {
       refreshSeiPageSelectors();
@@ -12138,33 +12232,46 @@
   // src/features/sei-functions/legacy-api.js
   function installSeiFunctionsLegacyApi() {
     installSeiFunctionsState();
-    [domain_exports, io_exports].forEach((mod) => {
+    [domain_exports, io_exports, modules_exports].forEach((mod) => {
       Object.keys(mod).forEach((name) => {
-        if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
+        const value = mod[name];
+        if (typeof value === "function") aliasGlobal(name, value);
       });
-    });
-    Object.keys(body_exports).forEach((name) => {
-      const value = body_exports[name];
-      if (typeof value === "function") aliasGlobal(name, value);
     });
     aliasGlobal("refreshSeiPageSelectors", refreshSeiPageSelectors);
   }
 
   // src/features/sei-functions/index.js
-  installSeiFunctionsState();
-  var namespace = globalThis.SeiPro = globalThis.SeiPro || {};
-  namespace.features = namespace.features || {};
-  namespace.features.seiFunctions = {
-    format2DecimalDomain,
-    getSeiFunctionsNet,
-    refreshSeiPageSelectors
-  };
-  installSeiFunctionsLegacyApi();
-  ready(function() {
-    try {
-      refreshSeiPageSelectors();
-    } catch (e) {
-    }
-    fnJqueryPro();
+  function installSeiFunctionsFeature() {
+    installSeiFunctionsState();
+    installSeiFunctionsLegacyApi();
+    installSeiFunctionsView();
+    ready(function() {
+      try {
+        refreshSeiPageSelectors();
+      } catch (e) {
+      }
+      fnJqueryPro();
+    });
+  }
+  publishFeature({
+    id: "sei-functions",
+    nsKey: "seiFunctions",
+    api: Object.freeze({
+      format2DecimalDomain,
+      getSeiFunctionsNet,
+      refreshSeiPageSelectors,
+      resetDialogBoxPro,
+      confirmaBoxPro,
+      alertaBoxPro,
+      fnJqueryPro,
+      loadScriptPro,
+      getDadosProcessoPro,
+      getDocsArvore,
+      getNumProcesso,
+      getIdProcedimento
+    }),
+    install: installSeiFunctionsFeature
   });
+  installSeiFunctionsFeature();
 })();

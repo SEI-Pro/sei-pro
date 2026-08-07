@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const featuresDir = join(rootDir, 'src/features');
@@ -110,7 +111,7 @@ describe('migration: feature legacy aliases stay isolated', () => {
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
     const legacyLista = readFileSync(join(featuresDir, 'lista-processos/body.js'), 'utf8');
     const legacyAll = readFileSync(join(featuresDir, 'todas-paginas/sei-pro-all.js'), 'utf8');
-    const legacyShared = readFileSync(join(rootDir, 'src/features/sei-functions/body.js'), 'utf8');
+    const legacyShared = readSeiFunctionsSource();
 
     expect(build).toMatch(/entry:\s*'src\/features\/monitorados\/index\.js',\s*out:\s*'dist\/js\/monitorados\.bundle\.js'/);
     expect(index).toMatch(/bindToggle\(document,\s*actMonitoradoPro\)/);

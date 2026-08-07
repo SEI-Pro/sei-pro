@@ -1,28 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 describe('migration: sei-functions full ESM facade', () => {
-  it('instala a ponte dedicada no entry e aliasa o body migrado', () => {
+  it('instala a ponte dedicada no entry e aliasa os módulos fatiados', () => {
     const index = read('src/features/sei-functions/index.js');
     const bridge = read('src/features/sei-functions/legacy-api.js');
 
     expect(index).toContain("import { installSeiFunctionsLegacyApi } from './legacy-api.js';");
     expect(index).toContain('installSeiFunctionsLegacyApi();');
-    expect(index).toContain("import { fnJqueryPro } from './body.js';");
+    expect(index).toContain("from './modules.js'");
+    expect(index).toContain('publishFeature');
     expect(bridge).toContain("import { aliasGlobal } from '../../core/global.js';");
-    expect(bridge).toContain("import * as body from './body.js';");
+    expect(bridge).toContain("import * as modules from './modules.js';");
   });
 
-  it('não mantém o monolito global em shared/legacy/', () => {
+  it('não mantém o monolito body.js nem a cópia em shared/legacy/', () => {
     expect(existsSync(join(rootDir, 'src/shared/legacy/sei-functions-pro.js'))).toBe(false);
-    expect(existsSync(join(rootDir, 'src/features/sei-functions/body.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/sei-functions/body.js'))).toBe(false);
+    expect(existsSync(join(rootDir, 'src/features/sei-functions/modules.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/sei-functions/boot.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/sei-functions/state.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/sei-functions/templates.js'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/sei-functions/style.css'))).toBe(true);
+
+    const clusters = readdirSync(join(rootDir, 'src/features/sei-functions'))
+      .filter((name) => name.endsWith('.js'));
+    expect(clusters.length).toBeGreaterThanOrEqual(20);
   });
 
   it('empacota a feature como dist/js/sei-functions-pro.js sem cópia verbatim', () => {
@@ -32,7 +40,7 @@ describe('migration: sei-functions full ESM facade', () => {
     expect(build).toContain('src/features/sei-functions/style.css');
   });
 
-  it('preserva o wire no manifest e os call-sites do body', () => {
+  it('preserva o wire no manifest e os call-sites dos clusters', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const contexts = manifest.content_scripts.filter(({ js = [] }) =>
       js.includes('js/sei-functions-pro.js')
@@ -44,9 +52,16 @@ describe('migration: sei-functions full ESM facade', () => {
       }
     }
 
-    const body = read('src/features/sei-functions/body.js');
-    expect(body).toContain('export function fnJqueryPro');
-    expect(body).toContain('export function loadScriptPro');
-    expect(body).toContain('export function resetDialogBoxPro');
+    const source = readSeiFunctionsSource();
+    expect(source).toContain('export function fnJqueryPro');
+    expect(source).toContain('export function loadScriptPro');
+    expect(source).toContain('export function resetDialogBoxPro');
+  });
+
+  it('publica o contrato canônico { id, api, install }', () => {
+    const index = read('src/features/sei-functions/index.js');
+    expect(index).toContain("id: 'sei-functions'");
+    expect(index).toContain("nsKey: 'seiFunctions'");
+    expect(index).toContain('install: installSeiFunctionsFeature');
   });
 });

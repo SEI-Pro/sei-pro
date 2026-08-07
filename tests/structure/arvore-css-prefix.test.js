@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -19,7 +20,7 @@ describe('migration: arvore CSS', () => {
     const upload = read('src/features/arvore/upload.js');
     const view = read('src/features/arvore/view.js');
     const templates = read('src/features/arvore/templates.js');
-    const sharedLegacy = read('src/features/sei-functions/body.js');
+    const sharedLegacy = readSeiFunctionsSource();
     const arvoreInfo = read('src/features/arvore-info/index.js');
 
     expect(upload).toContain('createFileQueue');

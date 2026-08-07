@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const source = (file) => readFileSync(join(rootDir, 'src/shared', file), 'utf8');
@@ -36,7 +37,7 @@ describe('migration: docs-lote legacy map bridge', () => {
     const index = read('src/features/docs-lote/index.js');
     const bridge = read('src/features/docs-lote/legacy-api.js');
     const view = read('src/features/docs-lote/view.js');
-    const legacy = read('src/features/sei-functions/body.js');
+    const legacy = readSeiFunctionsSource();
 
     expect(index).toContain("import './legacy-api.js'");
     expect(index).toContain('publishFeature({');

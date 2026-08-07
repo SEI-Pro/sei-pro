@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -49,7 +50,7 @@ describe('migration: atividades CSS P6 prefix', () => {
     expect(templates).toContain('withSeiproBarClasses');
     expect(templates).toContain('seipro-atividades-bar--');
 
-    const seiFunctions = read('src/features/sei-functions/body.js');
+    const seiFunctions = readSeiFunctionsSource();
     expect(seiFunctions).toContain('id="ganttHistoryPainel" class="seipro-atividades-gantt-history"');
     expect(seiFunctions).toContain('id="boxHistory" class="tabelaPanelScroll seipro-atividades-history"');
 

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createAtividadesFeatureApi } from '../../../src/features/atividades/api.js';
+import { readSeiFunctionsSource } from '../../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (file) => readFileSync(join(rootDir, file), 'utf8');
@@ -36,7 +37,7 @@ describe('atividades architecture smoke', () => {
       'src/features/projetos/io.js',
       'src/features/projetos/commands.js',
       'src/features/projetos/view/helpers.js',
-      'src/features/sei-functions/body.js',
+      'src/features/sei-functions/atividades-bridge.js',
       'src/features/visualizacao/sei-pro-visualizacao.js'
     ];
     for (const file of consumers) {

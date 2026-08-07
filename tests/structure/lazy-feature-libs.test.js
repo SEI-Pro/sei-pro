@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -103,7 +104,7 @@ describe('lazy feature libs (not eager content_scripts)', () => {
         ];
         expect(allManifestEntries).not.toContain('js/lib/jquery-qrcode-0.18.0.min.js');
         expect(read('src/features/todas-paginas/sei-pro-all.js')).not.toContain('jquery-qrcode');
-        expect(read('src/features/sei-functions/body.js')).not.toContain('jquery-qrcode');
+        expect(readSeiFunctionsSource()).not.toContain('jquery-qrcode');
         expect(existsSync(join(rootDir, 'dist/js/lib/jquery-qrcode-0.18.0.min.js'))).toBe(false);
     });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -48,7 +49,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   it('uses a seipro-prefixed class for the monitorados table facade', () => {
     const css = read('src/features/monitorados/monitorados.css');
     const panel = read('src/features/monitorados/panel.js');
-    const legacyShared = read('src/features/sei-functions/body.js');
+    const legacyShared = readSeiFunctionsSource();
 
     expect(css).toContain('.seipro-table-monitorados');
     expect(panel).toContain('seipro-table-monitorados');
@@ -161,7 +162,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   it('uses a seipro-prefixed class for the monitorado label options box', () => {
     const visualizacao = read('src/features/monitorados/visualizacao.js');
     const datas = read('src/features/monitorados/datas.js');
-    const seiFunctions = read('src/features/sei-functions/body.js');
+    const seiFunctions = readSeiFunctionsSource();
 
     expect(visualizacao).toContain('seipro-monitorados-label-options');
     expect(datas).toContain('.seipro-monitorados-label-options');
@@ -190,7 +191,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
 
   it('uses a seipro-prefixed class for the monitorado tags empty-state hook', () => {
     const css = read('src/features/monitorados/monitorados.css');
-    const legacyShared = read('src/features/sei-functions/body.js');
+    const legacyShared = readSeiFunctionsSource();
 
     expect(css).toContain('seipro-monitorado-tags-empty');
     expect(legacyShared).toContain('seipro-monitorado-tags-empty');

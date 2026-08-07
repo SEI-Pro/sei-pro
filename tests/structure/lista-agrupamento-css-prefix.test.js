@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = join(fileURLToPath(new URL('../..', import.meta.url)));
 const source = (file) => readFileSync(join(rootDir, file), 'utf8');
@@ -22,7 +23,7 @@ describe('migration: lista-agrupamento CSS audit', () => {
   it('preserva os hooks compartilhados e os contratos funcionais do agrupamento', () => {
     const body = source('src/features/lista-processos/body.js');
     const kanban = source('src/features/lista-processos/kanban-home.js');
-    const shared = source('src/features/sei-functions/body.js');
+    const shared = readSeiFunctionsSource();
 
     expect(body).toMatch(/id=\\?"selectGroupTablePro\\?"[^>]*class=\\?"groupTable selectPro\\?"/);
     expect(body).toMatch(/class=\\?"controleTableTag newLink\\?"[^>]*data-htagname/);

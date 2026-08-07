@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -242,7 +243,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
 
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
     const view = read('src/features/docs-lote/view.js');
-    const legacy = read('src/features/sei-functions/body.js');
+    const legacy = readSeiFunctionsSource();
 
     expect(view).toContain('seipro-doclote-field-error');
     expect(view).toContain('Arquivo inválido! Selecione um documento no formato "CSV".');
