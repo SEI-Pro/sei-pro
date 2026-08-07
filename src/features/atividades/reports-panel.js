@@ -6,7 +6,6 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { getServerAtividades } from './server.js';
 
 export function getTabsRelatorio(this_) {

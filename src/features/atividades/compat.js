@@ -46,19 +46,46 @@ export function getNumMonthsBetween2Dates(value) {
 export function syncProjetosFeatureFromAtividades(projetos, opts = {}) {
     var list = Array.isArray(projetos) ? projetos : [];
     var tipos = opts.tipos || null;
+    var projetosFeature = typeof globalThis !== 'undefined' && globalThis.SeiPro
+        && globalThis.SeiPro.features && globalThis.SeiPro.features.projetos;
+    var projetosApi = projetosFeature && (projetosFeature.api || projetosFeature);
+    var replace = projetosApi && projetosApi.commands && projetosApi.commands.replaceProjetos;
+    var init = projetosApi && projetosApi.initProjetos;
+    var refresh = projetosApi && projetosApi.refreshProjetosPanel;
+    var select = projetosApi && projetosApi.selectProjetoTab;
     try {
-        if (typeof replaceProjetos === 'function' && list.length) {
+        if (typeof replace === 'function' && list.length) {
+            replace(list, tipos);
+        } else if (typeof replaceProjetos === 'function' && list.length) {
             replaceProjetos(list, tipos);
         }
     } catch (e) { /* feature may not be loaded yet */ }
     try {
-        if (typeof initProjetos === 'function') {
+        if (typeof init === 'function') {
+            init(opts.mode || 'refresh', list, opts.id_projeto);
+        } else if (typeof initProjetos === 'function') {
             initProjetos(opts.mode || 'refresh', list, opts.id_projeto);
+        } else if (typeof refresh === 'function') {
+            refresh();
         } else if (typeof refreshProjetosPanel === 'function') {
             refreshProjetosPanel();
         }
     } catch (e2) { /* noop */ }
-    if (opts.id_projeto && typeof selectProjetoTab === 'function') {
+    if (opts.id_projeto && typeof select === 'function') {
+        setTimeout(function () { select(opts.id_projeto); }, 200);
+    } else if (opts.id_projeto && typeof selectProjetoTab === 'function') {
         setTimeout(function () { selectProjetoTab(opts.id_projeto); }, 200);
     }
+}
+
+/** Select a project through the explicit Projetos namespace when available. */
+export function selectProjetosFeatureTab(idProjeto) {
+    var projetosFeature = typeof globalThis !== 'undefined' && globalThis.SeiPro
+        && globalThis.SeiPro.features && globalThis.SeiPro.features.projetos;
+    var projetosApi = projetosFeature && (projetosFeature.api || projetosFeature);
+    var select = projetosApi && typeof projetosApi.selectProjetoTab === 'function'
+        ? projetosApi.selectProjetoTab
+        : (typeof selectProjetoTab === 'function' ? selectProjetoTab : null);
+    if (typeof select === 'function') return select(idProjeto);
+    return undefined;
 }

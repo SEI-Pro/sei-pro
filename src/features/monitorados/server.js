@@ -13,11 +13,18 @@ import { getStoreMonitoradoPro, persistMonitoradoStore, getConfigDatetimeMonitor
  */
 
 const g = (n) => globalRef[n];
-/** Prefer public namespace; fall back to legacy global alias. */
+/** Resolve the explicit Atividades server port. */
 function getAtividadesServer() {
-    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
-    if (api && typeof api.getServerAtividades === 'function') return api.getServerAtividades;
-    return g('getServerAtividades');
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    if (api && typeof api.legacyRequest === 'function') return api.legacyRequest;
+    if (api && typeof api.request === 'function') return api.request;
+    return null;
+}
+function getAtividadesState() {
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    return api && api.state && typeof api.state.get === 'function' ? api.state.get() : {};
 }
 let statusLoadRemoteFile = true;
 let loopServer = 0;
@@ -50,7 +57,7 @@ function getRemoteFileMonitorado() {
 
 function checkFileRemoteMonitorado(mode, data = false) {
     const server = getAtividadesServer();
-    if (mode === 'get' && server && !globalRef.checkLoadMonitoradosProcPro) {
+    if (mode === 'get' && server && !getAtividadesState().checkLoadMonitoradosProcPro) {
         server({ action: 'check_monitorados' }, 'check_monitorados');
     } else if (mode === 'set' && data) {
         const store = getStoreMonitoradoPro();
@@ -76,7 +83,7 @@ function checkFileLocalMonitorado() {
         if (globalRef.fileSystemPro && content && typeof content === 'object' && typeof moment().isoWeekdayCalc === 'function' && Array.isArray(content.monitorados) && content.monitorados.length > 0) {
             persistMonitoradoStore(content);
             if (g('initPanelMonitorados')) g('initPanelMonitorados')();
-        } else if (globalRef.perfilLoginAtiv != null) {
+        } else if (getAtividadesState().perfilLoginAtiv != null) {
             getRemoteFileMonitorado();
             if (typeof moment().isoWeekdayCalc !== 'function' && globalRef.jQuery) globalRef.jQuery.getScript(globalRef.URL_SPRO + 'js/lib/moment-weekday-calc.js');
         }

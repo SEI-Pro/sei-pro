@@ -1472,19 +1472,22 @@
   // src/features/sei-functions/body.js
   installSeiFunctionsState();
   function atividadesApi() {
-    return typeof SeiPro !== "undefined" && SeiPro.features && SeiPro.features.atividades || null;
+    var root = typeof globalThis !== "undefined" ? globalThis.SeiPro : null;
+    var feature = root && root.features && root.features.atividades;
+    return feature && feature.api || null;
   }
   function callAtividades(name) {
     var api = atividadesApi();
-    var fn = api && typeof api[name] === "function" ? api[name] : typeof globalThis[name] === "function" ? globalThis[name] : null;
+    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
     if (typeof fn !== "function") return void 0;
     var args = Array.prototype.slice.call(arguments, 1);
     return fn.apply(null, args);
   }
   function getAtividadesServer() {
     var api = atividadesApi();
-    if (api && typeof api.getServerAtividades === "function") return api.getServerAtividades;
-    return typeof getServerAtividades === "function" ? getServerAtividades : null;
+    if (api && typeof api.legacyRequest === "function") return api.legacyRequest;
+    if (api && typeof api.request === "function") return api.request;
+    return null;
   }
   function checkCapacidade(nome) {
     var r = callAtividades("checkCapacidade", nome);
@@ -1493,6 +1496,43 @@
   function checkPerfilNivelAdm() {
     var r = callAtividades("checkPerfilNivelAdm");
     return typeof r === "undefined" ? false : r;
+  }
+  function atividadeCommand(name, ...args) {
+    return callAtividades(name, ...args);
+  }
+  function atividadesState() {
+    var api = atividadesApi();
+    return api && api.state && typeof api.state.get === "function" ? api.state.get() : {};
+  }
+  function checkPageAtividadesVisualizacao(...args) {
+    return atividadeCommand("checkPageAtividadesVisualizacao", ...args);
+  }
+  function checkUnidadeFuncBeta(...args) {
+    return atividadeCommand("checkUnidadeFuncBeta", ...args);
+  }
+  function setParamEditorAtiv(...args) {
+    return atividadeCommand("setParamEditorAtiv", ...args);
+  }
+  function extractDataDocument(...args) {
+    return atividadeCommand("extractDataDocument", ...args);
+  }
+  function getConfigServerDoc(...args) {
+    return atividadeCommand("getConfigServerDoc", ...args);
+  }
+  function getConfigServer(...args) {
+    return atividadeCommand("getConfigServer", ...args);
+  }
+  function updateCountKanbanBoard(...args) {
+    return atividadeCommand("updateCountKanbanBoard", ...args);
+  }
+  function getKanbanUserPriority(...args) {
+    return atividadeCommand("getKanbanUserPriority", ...args);
+  }
+  function getHtmlKanbanUserPriority(...args) {
+    return atividadeCommand("getHtmlKanbanUserPriority", ...args);
+  }
+  function signCancelDocumento(...args) {
+    return atividadeCommand("signCancelDocumento", ...args);
   }
   var sanitizeHTML = (html) => DOMPurify.sanitize(html, {
     ADD_ATTR: ["target"],
@@ -1775,7 +1815,7 @@
     }
     var animacao = comAnimacao ? "animation: 2s ease 0s infinite normal none running whitepulser;" : "";
     var tooltip = comAnimacao ? "Erro detectado - clique para notificar" : "Reportar problema ou sugest\xE3o";
-    var htmlIconDebug = `<i onclick="dialogDebugScreen()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar('` + tooltip + `')" class="fas fa-bug brancoColor iconDebugScreen" style="float:none;font-size:14pt;margin-left:0;cursor:pointer;opacity:1;border-radius:50%;line-height:1;transition:color .15s ease,opacity .15s ease;` + animacao + '"></i>';
+    var htmlIconDebug = '<i data-act="atividades-call" data-fn="dialogDebugScreen" data-pass-el="0" data-tip="' + tooltip + '" class="fas fa-bug brancoColor iconDebugScreen" style="float:none;font-size:14pt;margin-left:0;cursor:pointer;opacity:1;border-radius:50%;line-height:1;transition:color .15s ease,opacity .15s ease;' + animacao + '"></i>';
     $(".iconDebugScreen").remove();
     $('div[data-ref="infraAcaoBarraSistema"]').append(htmlIconDebug);
   }
@@ -4562,6 +4602,7 @@
     }).attr("onmouseout", "return infraTooltipOcultar()").attr("onmouseover", "return infraTooltipMostrar('Arraste para redimensionar. Dois cliques para desativar.')");
   }
   function saveFollowDesc(this_, mode) {
+    var ativState = atividadesState();
     var type_container = $(this_).closest(".kanban-content").length > 0 ? "kanban" : "table";
     var _container = type_container == "kanban" ? $(this_).closest(".kanban-container") : $(this_).closest("table");
     var _data_id = type_container == "kanban" ? $(this_).closest(".kanban-item").data("eid").replace("_id_", "") : $(this_).closest("tr").data("index");
@@ -4579,9 +4620,10 @@
       if (mode == "ativ") {
         var _ativServer = getAtividadesServer();
         if (_ativServer) _ativServer({ action: "edit_assunto", id: index, assunto: value }, "edit_assunto");
-        var ativIndex = index ? parent.arrayAtividades.findIndex(((obj) => obj.id_demanda == index)) : index;
-        arrayAtividades[ativIndex].assunto = value;
-        arrayAtividadesPro[ativIndex].assunto = value;
+        var ativList = ativState.arrayAtividades || [];
+        var ativIndex = index ? ativList.findIndex(((obj) => obj.id_demanda == index)) : index;
+        if (ativIndex >= 0 && ativList[ativIndex]) ativList[ativIndex].assunto = value;
+        if (ativIndex >= 0 && ativState.arrayAtividadesPro && ativState.arrayAtividadesPro[ativIndex]) ativState.arrayAtividadesPro[ativIndex].assunto = value;
         console.log("saveFollowDesc", ativIndex);
         if (type_container == "table" && $(".kanban-item").is(":visible")) {
           var kanban_item = $('.kanban-item[data-eid="_id_' + index + '"] .content_desc');
@@ -4674,7 +4716,8 @@
     }
   }
   function getColorTags(mode) {
-    var colorTags = mode == "ativ" ? typeof arrayConfigAtivUnidade !== "undefined" && arrayConfigAtivUnidade !== null && typeof arrayConfigAtivUnidade.config !== "undefined" && arrayConfigAtivUnidade.config !== null && typeof arrayConfigAtivUnidade.config.etiquetas !== "undefined" && arrayConfigAtivUnidade.config.etiquetas !== null ? arrayConfigAtivUnidade.config.etiquetas.config.colortags : [] : getStoreMonitoradoPro().config.colortags;
+    var ativState = atividadesState();
+    var colorTags = mode == "ativ" ? ativState.arrayConfigAtivUnidade && ativState.arrayConfigAtivUnidade.config && ativState.arrayConfigAtivUnidade.config.etiquetas ? ativState.arrayConfigAtivUnidade.config.etiquetas.config.colortags : [] : getStoreMonitoradoPro().config.colortags;
     colorTags = typeof colorTags !== "undefined" ? colorTags : [];
     return colorTags;
   }
@@ -4732,7 +4775,8 @@
     if (mode != "options") saveConfigEtiqueta(tagNamed, value, icon, mode);
   }
   function saveConfigEtiqueta(name, value, icon, mode) {
-    var storeEtiqueta = mode == "ativ" ? typeof arrayConfigAtivUnidade.config !== "undefined" && typeof arrayConfigAtivUnidade.config.etiquetas !== "undefined" ? arrayConfigAtivUnidade.config.etiquetas : { config: { colortags: [] } } : getStoreMonitoradoPro();
+    var ativState = atividadesState();
+    var storeEtiqueta = mode == "ativ" ? ativState.arrayConfigAtivUnidade && ativState.arrayConfigAtivUnidade.config && ativState.arrayConfigAtivUnidade.config.etiquetas ? ativState.arrayConfigAtivUnidade.config.etiquetas : { config: { colortags: [] } } : getStoreMonitoradoPro();
     var colorTags = Object.keys(storeEtiqueta).length > 0 && typeof storeEtiqueta.config.colortags !== "undefined" ? storeEtiqueta.config.colortags : [];
     if (colorTags.findIndex(((obj) => obj.name == name)) != -1) {
       var index = colorTags.findIndex(((obj) => obj.name == name));
@@ -4741,21 +4785,22 @@
       storeEtiqueta["config"]["colortags"].push({ name, value, icon });
     }
     if (mode == "ativ" || mode == "tipo_ativ") {
-      if (typeof arrayConfigAtivUnidade.config.etiquetas !== "undefined" && arrayConfigAtivUnidade.config.hasOwnProperty("etiquetas")) {
-        arrayConfigAtivUnidade.config.etiquetas.config = storeEtiqueta.config;
+      if (ativState.arrayConfigAtivUnidade && ativState.arrayConfigAtivUnidade.config && ativState.arrayConfigAtivUnidade.config.etiquetas) {
+        ativState.arrayConfigAtivUnidade.config.etiquetas.config = storeEtiqueta.config;
       } else {
-        var itemPushConfig = arrayConfigAtivUnidade["config"];
+        var itemPushConfig = ativState.arrayConfigAtivUnidade["config"];
         itemPushConfig["etiquetas"] = { config: storeEtiqueta.config };
-        arrayConfigAtivUnidade["config"] = itemPushConfig;
-        console.log(itemPushConfig, arrayConfigAtivUnidade["config"]);
+        ativState.arrayConfigAtivUnidade["config"] = itemPushConfig;
+        console.log(itemPushConfig, ativState.arrayConfigAtivUnidade["config"]);
       }
       var _ativServer = getAtividadesServer();
-      if (_ativServer) _ativServer({ action: "edit_etiqueta_config", config_etiquetas: arrayConfigAtivUnidade["config"]["etiquetas"] }, "edit_etiqueta_config");
+      if (_ativServer) _ativServer({ action: "edit_etiqueta_config", config_etiquetas: ativState.arrayConfigAtivUnidade["config"]["etiquetas"] }, "edit_etiqueta_config");
     } else if (mode == "monitorado") {
       localStorageStorePro("configDataMonitoradosPro", storeEtiqueta);
     }
   }
   function saveFollowEtiqueta() {
+    var ativState = atividadesState();
     var mode = $(this).closest("td").data("etiqueta-mode");
     if ($(this).closest(".info_tags_follow_txt").is(":visible")) {
       var tags = $(this).closest(".info_tags_follow_txt").find(".tag-text").map(function() {
@@ -4781,26 +4826,26 @@
         }
         var _ativServer = getAtividadesServer();
         if (_ativServer) _ativServer({ action: "edit_etiqueta", id: index, etiquetas: tags }, "edit_etiqueta");
-        if (typeof arrayConfigAtividades.etiquetas !== "undefined" && typeof arrayConfigAtividades.etiquetas.list !== "undefined") {
+        if (ativState.arrayConfigAtividades && ativState.arrayConfigAtividades.etiquetas && typeof ativState.arrayConfigAtividades.etiquetas.list !== "undefined") {
           $.each(tags, function(i2, value) {
-            if (value != "" && $.inArray(value, arrayConfigAtividades["etiquetas"]["list"]) == -1) {
-              arrayConfigAtividades["etiquetas"]["list"].push(value);
+            if (value != "" && $.inArray(value, ativState.arrayConfigAtividades["etiquetas"]["list"]) == -1) {
+              ativState.arrayConfigAtividades["etiquetas"]["list"].push(value);
             }
           });
         }
-        var demandaIndex = arrayAtividades.findIndex(((obj) => obj.id_demanda == index));
+        var demandaIndex = (ativState.arrayAtividades || []).findIndex(((obj) => obj.id_demanda == index));
         if (demandaIndex != -1) {
-          arrayAtividades[demandaIndex].etiquetas = tags;
-          arrayAtividadesPro[demandaIndex].etiquetas = tags;
+          ativState.arrayAtividades[demandaIndex].etiquetas = tags;
+          if (ativState.arrayAtividadesPro && ativState.arrayAtividadesPro[demandaIndex]) ativState.arrayAtividadesPro[demandaIndex].etiquetas = tags;
         }
       } else if (mode == "tipo_ativ") {
         console.log(index, tags);
         var _ativServer = getAtividadesServer();
         if (_ativServer) _ativServer({ action: "edit_etiqueta_atividades", id: index, etiquetas: tags }, "edit_etiqueta_atividades");
-        if (typeof arrayConfigAtividades.etiquetas !== "undefined" && typeof arrayConfigAtividades.etiquetas.list !== "undefined") {
+        if (ativState.arrayConfigAtividades && ativState.arrayConfigAtividades.etiquetas && typeof ativState.arrayConfigAtividades.etiquetas.list !== "undefined") {
           $.each(tags, function(i2, value) {
-            if (value != "" && $.inArray(value, arrayConfigAtividades["etiquetas"]["list"]) == -1) {
-              arrayConfigAtividades["etiquetas"]["list"].push(value);
+            if (value != "" && $.inArray(value, ativState.arrayConfigAtividades["etiquetas"]["list"]) == -1) {
+              ativState.arrayConfigAtividades["etiquetas"]["list"].push(value);
             }
           });
         }
@@ -4819,7 +4864,8 @@
     }
   }
   function sugestEtiquetaPro(mode) {
-    return mode == "ativ" ? typeof arrayConfigAtividades.etiquetas !== "undefined" ? arrayConfigAtividades["etiquetas"]["list"] : [] : uniqPro($.map(getStoreMonitoradoPro()["monitorados"], function(value) {
+    var ativState = atividadesState();
+    return mode == "ativ" ? ativState.arrayConfigAtividades && typeof ativState.arrayConfigAtividades.etiquetas !== "undefined" ? ativState.arrayConfigAtividades["etiquetas"]["list"] : [] : uniqPro($.map(getStoreMonitoradoPro()["monitorados"], function(value) {
       return value.etiquetas;
     }));
   }
@@ -8409,6 +8455,7 @@
     }
   }
   function getIfrArvoreDadosProcesso() {
+    var ativState = atividadesState();
     if ($("#ifrArvore").length > 0) {
       var ifrArvore = $("#ifrArvore").contents();
       var ifrVisualizacao2 = $($ifrVisualizacao).contents();
@@ -8419,7 +8466,7 @@
           return $(this).text().replace(reg, "").trim().replace(/[\u200B]/g, "");
         }
       }).get(0) : "";
-      var usuarios = typeof arrayConfigAtividades !== "undefined" && typeof arrayConfigAtividades.planos !== "undefined" ? uniqPro(jmespath.search(arrayConfigAtividades.planos, "[*].apelido")) : [];
+      var usuarios = ativState.arrayConfigAtividades && typeof ativState.arrayConfigAtividades.planos !== "undefined" ? uniqPro(jmespath.search(ativState.arrayConfigAtividades.planos, "[*].apelido")) : [];
       usuarios = usuarios.sort((a, b) => b.length - a.length);
       var usuario = ifrVisualizacao2.find($ifrArvoreHtml).length > 0 ? ifrArvoreHtml.find("p").map(function() {
         var txt2 = removeAcentos($(this).text());
@@ -9305,7 +9352,8 @@
     });
   }
   function openEditorViewDoc(paramData, paramTarget, dataResult) {
-    if (!paramTarget.return_sign || paramTarget.return_sign && (dataResult.status_assinatura || !dataResult.status_assinatura && paramTarget.return_user == arrayConfigAtividades.perfil.id_user)) {
+    var ativState = atividadesState();
+    if (!paramTarget.return_sign || paramTarget.return_sign && (dataResult.status_assinatura || !dataResult.status_assinatura && paramTarget.return_user == (ativState.arrayConfigAtividades.perfil && ativState.arrayConfigAtividades.perfil.id_user))) {
       var htmlEditorBox = '<div class="editorBoxProDiv ck ck-reset ck-editor ck-rounded-corners" style="width: 100%; margin: 0; text-align: center;">  <div class="ck ck-editor__main">      <div id="view_doc" class="readOnly ck-blurred ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline" name="view_doc">      </div>  </div>' + (dataResult.status_assinatura ? '  <div class="signed">      <span>          <i class="fas fa-key laranjaColor" style="margin-right: 10px;"></i>          Documento assinado eletronicamente por <strong style="font-weight: bold;">' + dataResult.config.assinatura[0].nome_completo + "</strong>, em " + moment(dataResult.config.assinatura[0].datetime, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY [\xE0s] HH:mm") + ", conforme hor\xE1rio oficial de Bras\xEDlia      </span>  </div>" : "") + "</div>";
       resetDialogBoxPro("editorBoxPro");
       var btnDialogBoxPro = [{
@@ -9331,7 +9379,7 @@
             }
           }];
         }
-      } else if (paramTarget.return_sign && !dataResult.status_assinatura && paramTarget.return_user == arrayConfigAtividades.perfil.id_user) {
+      } else if (paramTarget.return_sign && !dataResult.status_assinatura && paramTarget.return_user == (ativState.arrayConfigAtividades.perfil && ativState.arrayConfigAtividades.perfil.id_user)) {
         btnDialogBoxPro = [{
           text: "Assinar documento",
           class: "confirm ui-state-active",
@@ -10360,10 +10408,11 @@
     }
   }
   function setProgressBarOnProcesso() {
-    if (typeof arrayConfigAtividades !== "undefined" && typeof arrayConfigAtividades.prescricoes !== "undefined" && checkConfigValue("gerenciarprescricoes")) {
+    var ativState = atividadesState();
+    if (ativState.arrayConfigAtividades && typeof ativState.arrayConfigAtividades.prescricoes !== "undefined" && checkConfigValue("gerenciarprescricoes")) {
       var tableProcesso = $("#tblProcessosGerados, #tblProcessosRecebidos, #tblProcessosDetalhado");
-      $.each(arrayConfigAtividades.prescricoes, function(i2, v) {
-        var value_prescricao = typeof arrayConfigAtividades.tipos_prescricoes !== "undefined" ? jmespath.search(arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`" + v.id_tipo_prescricao + "`] | [0]") : null;
+      $.each(ativState.arrayConfigAtividades.prescricoes, function(i2, v) {
+        var value_prescricao = typeof ativState.arrayConfigAtividades.tipos_prescricoes !== "undefined" ? jmespath.search(ativState.arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`" + v.id_tipo_prescricao + "`] | [0]") : null;
         value_prescricao = value_prescricao !== null ? value_prescricao : false;
         var config = value_prescricao ? value_prescricao.config : false;
         var nivel_critico = config && typeof config.nivel_critico !== "undefined" ? config.nivel_critico : 75;
@@ -10381,7 +10430,8 @@
     }
   }
   function appendIconCtrPrescricao(loop = true) {
-    if (typeof checkCapacidade !== "undefined" && checkCapacidade("view_prescricoes") && typeof arrayConfigAtividades !== "undefined" && typeof arrayConfigAtividades.tipos_prescricoes !== "undefined" && $.map(arrayConfigAtividades.tipos_prescricoes, function(v) {
+    var ativState = atividadesState();
+    if (checkCapacidade("view_prescricoes") && ativState.arrayConfigAtividades && typeof ativState.arrayConfigAtividades.tipos_prescricoes !== "undefined" && $.map(ativState.arrayConfigAtividades.tipos_prescricoes, function(v) {
       if (checkListTipoPrescricaoInProcesso(v)) {
         return v;
       }
@@ -10402,11 +10452,12 @@
     }
   }
   function checkTipoPrescricaoProcesso() {
-    if (typeof arrayConfigAtividades.tipos_prescricoes !== "undefined") {
+    var ativState = atividadesState();
+    if (ativState.arrayConfigAtividades && typeof ativState.arrayConfigAtividades.tipos_prescricoes !== "undefined") {
       var arrayTipoPrescicaoProcesso = [];
       var id_tipo_procedimento = typeof dadosProcessoPro.propProcesso !== "undefined" ? dadosProcessoPro.propProcesso.hdnIdTipoProcedimento : false;
       if (id_tipo_procedimento) {
-        $.each(arrayConfigAtividades.tipos_prescricoes, function(i2, v) {
+        $.each(ativState.arrayConfigAtividades.tipos_prescricoes, function(i2, v) {
           if (typeof v.config !== "undefined" && typeof v.config.tipo_processo !== "undefined") {
             if (jmespath.search(v.config.tipo_processo, "[?value=='" + id_tipo_procedimento + "']") !== null) arrayTipoPrescicaoProcesso.push(v);
           }

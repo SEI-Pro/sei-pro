@@ -11,10 +11,12 @@ export function checkPermissionProjeto(value) {
     if (!value) return true;
     if (!hasRemoteBackend()) return true;
     try {
-        if (typeof globalRef.arrayConfigAtivUnidade !== 'undefined' &&
-            globalRef.arrayConfigAtivUnidade &&
+        const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+        const api = feature && feature.api;
+        const state = api && api.state && typeof api.state.get === 'function' ? api.state.get() : {};
+        if (state.arrayConfigAtivUnidade &&
             value.sigla_unidade &&
-            globalRef.arrayConfigAtivUnidade.sigla_unidade === value.sigla_unidade) {
+            state.arrayConfigAtivUnidade.sigla_unidade === value.sigla_unidade) {
             return true;
         }
         // Shared edit right
@@ -30,9 +32,10 @@ export function checkPermissionProjeto(value) {
 }
 
 function getAtividadesCheckCapacidade() {
-    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
-    if (api && typeof api.checkCapacidade === 'function') return api.checkCapacidade;
-    if (typeof globalRef.checkCapacidade === 'function') return globalRef.checkCapacidade;
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    if (api && api.queries && typeof api.queries.checkCapacidade === 'function') return api.queries.checkCapacidade;
+    if (api && api.commands && typeof api.commands.checkCapacidade === 'function') return api.commands.checkCapacidade;
     return null;
 }
 

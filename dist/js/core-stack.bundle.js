@@ -2911,11 +2911,14 @@
     const jmespath = globalRef.jmespath;
     const store = getStoreMonitoradoPro();
     if (typeof store === "undefined" || !store.hasOwnProperty("monitorados")) return;
-    if (typeof globalRef.perfilLoginAtiv === "undefined" || globalRef.perfilLoginAtiv === null) return;
+    const atividadesFeature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const atividadesApi = atividadesFeature && atividadesFeature.api;
+    const atividadesState = atividadesApi && atividadesApi.state && typeof atividadesApi.state.get === "function" ? atividadesApi.state.get() : null;
+    if (!atividadesState || !atividadesState.perfilLoginAtiv) return;
     const sendMonitorados = { monitorados: [], config: { colortags: [] } };
     sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
     sendMonitorados.config.colortags = store.config.colortags;
-    const atividadesServer = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades && globalRef.SeiPro.features.atividades.getServerAtividades || globalRef.getServerAtividades;
+    const atividadesServer = atividadesApi && (atividadesApi.legacyRequest || atividadesApi.request);
     if (typeof atividadesServer === "function") {
       atividadesServer({
         config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),

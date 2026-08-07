@@ -6,9 +6,9 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { atividadesDialogDocAttrs } from './templates.js';
 import { getServerAtividades } from './server.js';
+import { getNameGenre } from '../../shared/nomenclatura.js';
 
 export function saveAppealWork(this_) {
     var _this = $(this_);

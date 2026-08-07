@@ -6,8 +6,8 @@ import { callAtiv, hasAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { getServerAtividades } from './server.js';
+import { getNameGenre } from '../../shared/nomenclatura.js';
 
 export function openModalConfigPanel() {
     openConfigBoxPro('',

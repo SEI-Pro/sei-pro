@@ -6,6 +6,7 @@ describe('atividades/view', () => {
   let root;
 
   beforeEach(() => {
+    globalThis.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ = true;
     root = document.createElement('div');
     document.body.appendChild(root);
   });
@@ -20,6 +21,7 @@ describe('atividades/view', () => {
     delete globalThis.removeConfigRow;
     delete globalThis.actionsAtividade;
     delete globalThis.openDialogDoc;
+    delete globalThis.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__;
   });
 
   it('installAtividadesView delegates named chrome acts once', () => {

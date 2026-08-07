@@ -1,13 +1,14 @@
 /**
  * Atividades — IO boundary (storage/network adapters).
  *
- * Does not call view. The large response router remains in server.js until each
- * branch can take an explicit callback instead of touching DOM/globals.
+ * Does not call view. The compatibility response adapter lives in
+ * server-response.js and is kept outside this transport boundary.
  */
 
 /** Current Atividades backend URL from runtime state. */
 export function getAtividadesServerUrl(globalRef = globalThis) {
-    return globalRef.urlServerAtiv || false;
+    const context = globalRef.__SEI_PRO_ATIVIDADES_CONTEXT__;
+    return (context && context.store ? context.store.get().urlServerAtiv : globalRef.urlServerAtiv) || false;
 }
 
 /**
@@ -44,6 +45,20 @@ export function postAtividadesServer(url, data, {
                 reject({ xhr: xhr, status: status, err: err });
             }
         });
+    });
+}
+
+/** Transport port used by the application service. */
+export function createAtividadesTransport({ ajax, beforeSend } = {}) {
+    return Object.freeze({
+        request(url, data, options = {}) {
+            return postAtividadesServer(url, data, {
+                ajax,
+                beforeSend: typeof beforeSend === 'function'
+                    ? beforeSend
+                    : options.auth && options.auth.beforeSend
+            });
+        }
     });
 }
 

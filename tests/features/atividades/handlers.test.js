@@ -42,7 +42,7 @@ describe('atividades/handlers', () => {
     });
 
     it('resolves the adapted gate through the real callAtiv path', () => {
-        globalThis.SeiPro = { features: { atividades: { handlers: atividadesHandlers } } };
+        globalThis.SeiPro = { features: { atividades: { api: { handlers: atividadesHandlers } } } };
         globalThis.checkOptionEntidade = (key) => key === 'exigir_homologacao_previa_planos';
         globalThis.getOptionEntidade = () => false;
         globalThis.moment = (input) => ({

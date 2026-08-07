@@ -2,13 +2,15 @@ import { callAtiv } from './call.js';
 /**
  * Atividades — opções, perfis e preferências administrativas.
  *
- * Esta fatia mantém apenas a superfície legada necessária durante a migração.
- * O estado compartilhado é instalado por runtime.js e os nomes antigos são
- * publicados exclusivamente por legacy-api.js.
+ * This slice contains the configuration view adapter. Rules and selectors live
+ * in config-domain.js/config-queries.js; host dependencies enter through the
+ * Atividades context.
  */
-import './runtime.js';
 import { atividadesDialogDocAttrs } from './templates.js';
 import { getServerAtividades } from './server.js';
+import { checkDatesLoopArray as domainCheckDatesLoopArray, checkDatesBetweenArray as domainCheckDatesBetweenArray } from './config-domain.js';
+import { getAtividadesContext } from './context.js';
+import { getNameGenre } from '../../shared/nomenclatura.js';
 
 export function getTabEntregasPlanos(idConfigBox, value, entregas, checkEditEntregas, loopReturn = true) {
     let startDatePlano = moment(value.data_inicio_vigencia, 'YYYY-MM-DD HH:mm:ss');
@@ -4906,54 +4908,19 @@ export function configServerKey(this_, mode) {
     // console.log(param);
     callAtiv('getConfigServer',action, param);
 }
-export function checkDatesLoopArray(array, inicio, fim, id_user, id_target, labels, includes = false, search_target = false, add_loop = 'days') {
-    var format = 'YYYY-MM-DDTHH:mm';
-    // var format = (inicio.indexOf('T') !== -1) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
-    var _inicio = moment(inicio, format);
-    var _fim = moment(fim, format);
-    var checkBetween = false;
-    var checkInicio = checkDatesBetweenArray(array, _inicio.format(format), id_user, id_target, labels, includes, search_target, add_loop);
-    var checkFim = checkDatesBetweenArray(array, _fim.format(format), id_user, id_target, labels, includes, search_target, add_loop);
-    while (_inicio.add(1, add_loop).diff(_fim) < 0) {
-        var check = checkDatesBetweenArray(array, _inicio.clone().format(format), id_user, id_target, labels, includes, search_target, add_loop);
-        if (check) {
-            checkBetween = check;
-            break;
-        }
-    }
-    // console.log(array, inicio, format, checkInicio, checkBetween, checkFim, id_user, id_target, labels, includes);
-
-    return (checkInicio || checkBetween || checkFim) ? (checkInicio || checkBetween || checkFim) : false;
-}
-export function checkDatesBetweenArray(array, date_target, id_user, id_target, labels, includes = false, search_target = false, add_loop = 'days') {
-    var format = (date_target.indexOf('T') !== -1) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
-    // var mode_between = (date_target.indexOf('T') !== -1) ? 'minutes' : 'days';
-    var userDates = (search_target)
-        ? array
-        : jmespath.search(array, "[?" + labels.id + "==`" + id_user + "`]");
-    var checkDates = [];
-    var target = moment(date_target, format);
-    includes = (includes) ? '[]' : '()';
-
-    // console.log({search_target: search_target, format: format, userDates: userDates, date_target: date_target, id_user: id_user, id_target: id_target});
-
-    $.each(userDates, function (index, value) {
-        var start = moment(value[labels.inicio], 'YYYY-MM-DD HH:mm:ss');
-        var finish = moment(value[labels.fim], 'YYYY-MM-DD HH:mm:ss');
-        var check = target.isBetween(start, finish, add_loop, includes);
-
-        // console.log('$$$ => ',target.format(format), start.format(format), finish.format(format), add_loop, includes);
-
-        var check_array = (search_target)
-            ? (id_target != value[labels.idreftype]) ? true : false
-            : (id_target != value[labels.id]) ? true : false;
-        if (check && check_array) {
-            // console.log('*',check, start.format(format), finish.format(format), id_target, date_target, value[labels.id]);
-            checkDates.push(value[labels.idreftype]);
-            //return false;
-        }
+export function checkDatesLoopArray(array, inicio, fim, id_user, id_target, labels, includes = false, search_target = false, add_loop = 'days', deps = {}) {
+    const runtime = getAtividadesContext();
+    return domainCheckDatesLoopArray(array, inicio, fim, id_user, id_target, labels, {
+        includes, searchTarget: search_target, addLoop: add_loop, moment: deps.moment || runtime.page.moment,
+        search: deps.search || (runtime.page.jmespath && runtime.page.jmespath.search)
     });
-    return (checkDates && checkDates.length ? checkDates : false);
+}
+export function checkDatesBetweenArray(array, date_target, id_user, id_target, labels, includes = false, search_target = false, add_loop = 'days', deps = {}) {
+    const runtime = getAtividadesContext();
+    return domainCheckDatesBetweenArray(array, date_target, id_user, id_target, labels, {
+        includes, searchTarget: search_target, addLoop: add_loop, moment: deps.moment || runtime.page.moment,
+        search: deps.search || (runtime.page.jmespath && runtime.page.jmespath.search)
+    });
 }
 export function checkOptionConfigSEI(this_) {
     var _this = $(this_);

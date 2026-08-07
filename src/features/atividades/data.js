@@ -6,19 +6,22 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { isPerfilNivelAdm } from './domain.js';
+import { getAtividadesContext } from './context.js';
+import { createAtividadesStorage } from './storage.js';
 
 export function checkPerfilNivelAdm() {
-    var perfil = (typeof arrayConfigAtividades !== 'undefined' &&
-        typeof arrayConfigAtividades.perfil !== 'undefined')
-        ? arrayConfigAtividades.perfil
+    var config = getAtividadesContext().store.get().arrayConfigAtividades;
+    var perfil = (config && typeof config.perfil !== 'undefined')
+        ? config.perfil
         : undefined;
     return isPerfilNivelAdm(perfil);
 }
 /* getLabIdTables → domain.js */
 export function appendDataDemandaOnLocalArray(arrayServer, demandaType) {
-    var arrayLocal = (demandaType == 'demandas_processo') ? arrayAtividadesProcPro : arrayAtividadesPro;
+    var context = getAtividadesContext();
+    var state = context.store.get();
+    var arrayLocal = (demandaType == 'demandas_processo') ? state.arrayAtividadesProcPro : state.arrayAtividadesPro;
     if (arrayServer !== null && arrayServer.length > 0) {
         $.each(arrayServer, function (i, v) {
             var objIndexAtiv = (typeof arrayLocal === 'undefined' || arrayLocal == 0 || arrayLocal.length == 0) ? -1 : arrayLocal.findIndex((obj => obj.id_demanda == v.id_demanda));
@@ -33,27 +36,29 @@ export function appendDataDemandaOnLocalArray(arrayServer, demandaType) {
         });
     }
     if (demandaType == 'demandas_processo') {
-        arrayAtividadesProcPro = arrayLocal;
+        context.store.patch({ arrayAtividadesProcPro: arrayLocal });
     } else {
-        arrayAtividadesPro = arrayLocal;
+        context.store.patch({ arrayAtividadesPro: arrayLocal });
     }
 }
 export function storeLocalDataConfigArray(arrayConfig) {
+    var storage = createAtividadesStorage({ context: getAtividadesContext() }).hybrid;
     if (typeof arrayConfig === 'object' && arrayConfig !== null) {
         var list = [];
         for (var propertyName in arrayConfig) {
-            hybridStorageStorePro('configDataAtividadesPadraoPro_' + propertyName, arrayConfig[propertyName]);
+            storage.write('configDataAtividadesPadraoPro_' + propertyName, arrayConfig[propertyName]);
             list.push(propertyName);
         }
-        hybridStorageStorePro('configDataAtividadesPadraoPro', list);
+        storage.write('configDataAtividadesPadraoPro', list);
     }
 }
 export function restoreLocalDataConfigArray() {
-    var arrayConfig = hybridStorageRestorePro('configDataAtividadesPadraoPro');
+    var storage = createAtividadesStorage({ context: getAtividadesContext() }).hybrid;
+    var arrayConfig = storage.read('configDataAtividadesPadraoPro');
     if (arrayConfig !== null) {
         var arrayStore = [];
         $.each(arrayConfig, function (i, v) {
-            var dataValue = hybridStorageRestorePro('configDataAtividadesPadraoPro_' + v);
+            var dataValue = storage.read('configDataAtividadesPadraoPro_' + v);
             if (dataValue !== null) {
                 arrayStore[v] = dataValue;
             }
@@ -68,7 +73,7 @@ export function removeLocalDataConfigArray() {
     if (arrayConfig !== null) {
         var arrayStore = [];
         $.each(arrayConfig, function (i, v) {
-            var dataValue = hybridStorageRemovePro('configDataAtividadesPadraoPro_' + v);
+            var dataValue = storage.read('configDataAtividadesPadraoPro_' + v);
             if (dataValue !== null) {
                 arrayStore[v] = dataValue;
             }
@@ -79,6 +84,8 @@ export function removeLocalDataConfigArray() {
     }
 }
 export function appendDataConfigOnLocalArray(arrayServer) {
+    var context = getAtividadesContext();
+    var arrayConfigAtividades = context.store.get().arrayConfigAtividades;
     if (typeof arrayServer === 'object' && arrayServer !== null) {
         for (var propertyName in arrayServer) {
             if (arrayServer.hasOwnProperty(propertyName) && (arrayServer[propertyName].length > 0 || (arrayServer[propertyName].hasOwnProperty('lista') && arrayServer[propertyName]['lista'].length > 0))) {
@@ -109,6 +116,7 @@ export function appendDataConfigOnLocalArray(arrayServer) {
             }
         }
     }
+    context.store.patch({ arrayConfigAtividades });
 }
 export function loopRepairKanbanPinMoveCard() {
     $('.kanban-board').each(function () {

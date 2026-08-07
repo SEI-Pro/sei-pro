@@ -1,15 +1,20 @@
 /**
  * Projetos — remote IO adapter (atividades backend).
  *
- * When urlServerAtiv + userHashAtiv are available, delegates to the legacy
- * getServerAtividades global. Otherwise callers should use store.dispatchProjetoAction.
+ * When the Atividades application is available, delegates to its explicit
+ * request port. Otherwise callers use the local project store.
  */
 import { globalRef } from '../../core/global.js';
 import { replaceProjetos } from './store.js';
 import { normalizeProjeto } from './domain/model.js';
 
 export function hasRemoteBackend() {
-    return !!(globalRef.urlServerAtiv && globalRef.userHashAtiv);
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    const state = api && api.state && typeof api.state.get === 'function'
+        ? api.state.get()
+        : null;
+    return !!(state && state.urlServerAtiv && state.userHashAtiv);
 }
 
 /**
@@ -17,9 +22,10 @@ export function hasRemoteBackend() {
  * `localDispatch` is injected to avoid circular import in tests.
  */
 function getAtividadesServer() {
-    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
-    if (api && typeof api.getServerAtividades === 'function') return api.getServerAtividades;
-    if (typeof globalRef.getServerAtividades === 'function') return globalRef.getServerAtividades;
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    if (api && typeof api.legacyRequest === 'function') return api.legacyRequest;
+    if (api && typeof api.request === 'function') return api.request;
     return null;
 }
 

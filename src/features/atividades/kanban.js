@@ -6,9 +6,21 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { withSeiproBarClasses } from './templates.js';
 import { getServerAtividades } from './server.js';
+import { getNameGenre } from '../../shared/nomenclatura.js';
+
+function callParentAtividades(name, ...args) {
+    const root = typeof parent !== 'undefined' ? parent : globalThis;
+    const feature = root && root.SeiPro && root.SeiPro.features && root.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    const fn = (api && api.commands && typeof api.commands[name] === 'function') ? api.commands[name]
+        : (api && api.queries && typeof api.queries[name] === 'function') ? api.queries[name]
+        : (api && api.handlers && typeof api.handlers[name] === 'function') ? api.handlers[name]
+        : (api && api.handlers && typeof api.handlers[name] === 'function' ? api.handlers[name] : null);
+    if (typeof fn === 'function') return fn(...args);
+    return callAtiv(name, ...args);
+}
 
 export function initKanbanAtividades(this_, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -1163,37 +1175,37 @@ export function setToolbarFunc(this_) {
                 var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`" + id + "`] | [0]");
                 value = (value !== null) ? value : false;
                 if (action == 'info_atividade') {
-                    parent.infoAtividade(value.id_demanda);
+                    callParentAtividades('infoAtividade', value.id_demanda);
                 } else if (action == 'history_atividade') {
-                    parent.historyAtividade(value.id_demanda);
+                    callParentAtividades('historyAtividade', value.id_demanda);
                 } else if (action == 'variation_atividade' || action == 'type_atividade') {
-                    parent.variationAtividade(value.id_demanda);
+                    callParentAtividades('variationAtividade', value.id_demanda);
                 } else if (action == 'start_cancel_atividade') {
-                    parent.startCancelAtividade(value.id_demanda);
+                    callParentAtividades('startCancelAtividade', value.id_demanda);
                 } else if (action == 'pause_atividade') {
-                    parent.pauseAtividade(value.id_demanda);
+                    callParentAtividades('pauseAtividade', value.id_demanda);
                 } else if (action == 'edit_atividade') {
                     if (subaction == 'notify_atividade') {
-                        parent.notifyAtividade(value.id_demanda, event);
+                        callParentAtividades('notifyAtividade', value.id_demanda, event);
                     } else {
-                        parent.saveAtividade(value.id_demanda);
+                        callParentAtividades('saveAtividade', value.id_demanda);
                     }
                 } else if (action == 'delete_atividade' || action == 'delete_atividade_all') {
-                    parent.deleteAtividade_(value);
+                    callParentAtividades('deleteAtividade_', value);
                 } else if (action == 'extend_atividade') {
-                    parent.extendAtividade(value.id_demanda);
+                    callParentAtividades('extendAtividade', value.id_demanda);
                 } else if (action == 'complete_edit_atividade') {
-                    parent.completeAtividade(value.id_demanda);
+                    callParentAtividades('completeAtividade', value.id_demanda);
                 } else if (action == 'complete_cancel_atividade') {
-                    parent.completeCancelAtividade(value.id_demanda);
+                    callParentAtividades('completeCancelAtividade', value.id_demanda);
                 } else if (action == 'rate_edit_atividade') {
-                    parent.rateAtividade(value.id_demanda);
+                    callParentAtividades('rateAtividade', value.id_demanda);
                 } else if (action == 'rate_default_atividade') {
-                    parent.rateAtividade(value.id_demanda, true);
+                    callParentAtividades('rateAtividade', value.id_demanda, true);
                 } else if (action == 'rate_cancel_atividade') {
-                    parent.rateCancelAtividade(value.id_demanda);
+                    callParentAtividades('rateCancelAtividade', value.id_demanda);
                 } else if (action == 'send_cancel_atividade') {
-                    parent.sendCancelAtividade(value.id_demanda);
+                    callParentAtividades('sendCancelAtividade', value.id_demanda);
                 }
             }
         }).on('toolbarHidden', function (event) {

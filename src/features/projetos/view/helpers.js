@@ -8,9 +8,10 @@ import { hasRemoteBackend, runProjetoAction } from '../io.js';
 let ganttLoading = null;
 
 function getAtividadesCheckCapacidade() {
-    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
-    if (api && typeof api.checkCapacidade === 'function') return api.checkCapacidade;
-    if (typeof globalRef.checkCapacidade === 'function') return globalRef.checkCapacidade;
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    if (api && api.queries && typeof api.queries.checkCapacidade === 'function') return api.queries.checkCapacidade;
+    if (api && api.commands && typeof api.commands.checkCapacidade === 'function') return api.commands.checkCapacidade;
     return null;
 }
 

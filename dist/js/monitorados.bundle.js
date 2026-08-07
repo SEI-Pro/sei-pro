@@ -183,11 +183,14 @@
     const jmespath = globalRef.jmespath;
     const store = getStoreMonitoradoPro();
     if (typeof store === "undefined" || !store.hasOwnProperty("monitorados")) return;
-    if (typeof globalRef.perfilLoginAtiv === "undefined" || globalRef.perfilLoginAtiv === null) return;
+    const atividadesFeature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const atividadesApi = atividadesFeature && atividadesFeature.api;
+    const atividadesState = atividadesApi && atividadesApi.state && typeof atividadesApi.state.get === "function" ? atividadesApi.state.get() : null;
+    if (!atividadesState || !atividadesState.perfilLoginAtiv) return;
     const sendMonitorados = { monitorados: [], config: { colortags: [] } };
     sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
     sendMonitorados.config.colortags = store.config.colortags;
-    const atividadesServer = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades && globalRef.SeiPro.features.atividades.getServerAtividades || globalRef.getServerAtividades;
+    const atividadesServer = atividadesApi && (atividadesApi.legacyRequest || atividadesApi.request);
     if (typeof atividadesServer === "function") {
       atividadesServer({
         config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),
@@ -1571,9 +1574,16 @@
   // src/features/monitorados/server.js
   var g6 = (n) => globalRef[n];
   function getAtividadesServer() {
-    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
-    if (api && typeof api.getServerAtividades === "function") return api.getServerAtividades;
-    return g6("getServerAtividades");
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    if (api && typeof api.legacyRequest === "function") return api.legacyRequest;
+    if (api && typeof api.request === "function") return api.request;
+    return null;
+  }
+  function getAtividadesState() {
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    return api && api.state && typeof api.state.get === "function" ? api.state.get() : {};
   }
   var statusLoadRemoteFile = true;
   var loopServer = 0;
@@ -1606,7 +1616,7 @@
   }
   function checkFileRemoteMonitorado(mode, data = false) {
     const server = getAtividadesServer();
-    if (mode === "get" && server && !globalRef.checkLoadMonitoradosProcPro) {
+    if (mode === "get" && server && !getAtividadesState().checkLoadMonitoradosProcPro) {
       server({ action: "check_monitorados" }, "check_monitorados");
     } else if (mode === "set" && data) {
       const store = getStoreMonitoradoPro();
@@ -1633,7 +1643,7 @@
       if (globalRef.fileSystemPro && content && typeof content === "object" && typeof moment2().isoWeekdayCalc === "function" && Array.isArray(content.monitorados) && content.monitorados.length > 0) {
         persistMonitoradoStore(content);
         if (g6("initPanelMonitorados")) g6("initPanelMonitorados")();
-      } else if (globalRef.perfilLoginAtiv != null) {
+      } else if (getAtividadesState().perfilLoginAtiv != null) {
         getRemoteFileMonitorado();
         if (typeof moment2().isoWeekdayCalc !== "function" && globalRef.jQuery) globalRef.jQuery.getScript(globalRef.URL_SPRO + "js/lib/moment-weekday-calc.js");
       }

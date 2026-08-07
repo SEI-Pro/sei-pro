@@ -6,8 +6,9 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { getServerAtividades } from './server.js';
+import { getNameGenre } from '../../shared/nomenclatura.js';
+import { getRecalculaPrazo } from '../../core/prazos.js';
 
 export function completeAtividade(id_demanda, confirmeBox = false) {
     var dadosIfrArvore = getIfrArvoreDadosProcesso();

@@ -397,18 +397,21 @@ Atualizado em 2026-08-06. Itens já resolvidos (A1-001…A1-010 / E2) saíram da
 | Manifest / `init*.js` | blocos duplicados, sem registry | médio prazo: `src/app/` (contexts + feature-registry + boot) |
 | Remaining monoliths | lista-processos and shared legacy surfaces still contain large bodies | continue decomposing through the E2 epic queue in P0–P7; Atividades no longer has `body.js` |
 
-**Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install); **Atividades** (ESM fatiada, `handlers`/`view`/`domain`/`io`/`callAtiv`, P6 `.seipro-*`, zero handlers HTML inline incl. tooltips `data-tip`, namespace `SeiPro.features.atividades`, call-sites externos com fallback; `legacy-api` aliasa só `ATIVIDADES_EXTERNAL_GLOBALS` — dispatch interno via `callAtiv` → handlers).
+**Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install); **Atividades** (ESM fatiada, `handlers`/`view`/`domain`/`io`/`callAtiv`, P6 `.seipro-*`, zero handlers HTML inline incl. tooltips `data-tip`, namespace congelado `SeiPro.features.atividades = { api, useCases, ports }`, consumidores de primeira parte via `feature.api`; `legacy-api` aliasa só `ATIVIDADES_EXTERNAL_GLOBALS` em opt-in — dispatch interno via registry → handlers).
 
 ---
 
-**Compat durante a transição:** cada função movida é preservada como global via
-`aliasGlobal` (somente em `legacy-api.js`), então os call-sites do legado continuam
-funcionando sem edição. `tests/structure/no-duplicate-core.test.js` trava que
-um helper migrado não seja redefinido no legado.
+**Compat durante a transição:** as features mantêm seus aliases em `legacy-api.js`.
+Para Atividades, a ponte só é instalada quando o host chama
+`installAtividadesLegacyApi({ enabled: true })`; o caminho normal não publica
+handlers nem aliases nomeados no root. `tests/structure/no-duplicate-core.test.js`
+trava que um helper migrado não seja redefinido no legado.
 
-> **Verificação:** os testes (vitest) cobrem domínio puro, IO e os primitivos de
-> `shared/ui` (jsdom). **Não** cobrem a view montada no DOM real do SEI nem os contratos
-> de globais legados — por isso o smoke test manual no SEI continua sendo o gate final.
+> **Verificação:** os testes (vitest) cobrem domínio puro, IO, a view delegada em
+> jsdom, o contrato `api/useCases/ports`, roteamento de respostas e consumidores
+> migrados. **Não** reproduzem o DOM real/autenticação do SEI; o smoke manual no SEI
+> continua sendo o gate de ambiente, enquanto os smoke checks automatizados impedem
+> regressões de bundle e contrato.
 
 ---
 

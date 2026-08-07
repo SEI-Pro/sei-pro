@@ -117,7 +117,10 @@ describe('monitorados/store (IO localStorage, sem remoto)', () => {
         const send = () => { throw new Error('não deveria enviar'); };
         const backup = () => { throw new Error('não deveria fazer backup'); };
         globalThis.jmespath = { search };
-        globalThis.getServerAtividades = send;
+        globalThis.SeiPro = { features: { atividades: { api: {
+            state: { get: () => ({ perfilLoginAtiv: false }) },
+            legacyRequest: send
+        } } } };
         globalThis.setLocalFilePro = backup;
         globalThis.perfilLoginAtiv = undefined;
         store.persistMonitoradoStore({ monitorados: [{ id_procedimento: 1 }], config: { colortags: [] } }, { remote: false });
@@ -137,7 +140,10 @@ describe('monitorados/store (IO localStorage, sem remoto)', () => {
         };
         globalThis.perfilLoginAtiv = { login: 'tester' };
         globalThis.encodeJSON_toHex = (value) => `hex:${value}`;
-        globalThis.getServerAtividades = (payload, action) => sent.push({ payload, action });
+        globalThis.SeiPro = { features: { atividades: { api: {
+            state: { get: () => ({ perfilLoginAtiv: { login: 'tester' } }) },
+            legacyRequest: (payload, action) => sent.push({ payload, action })
+        } } } };
         globalThis.setLocalFilePro = (value) => backups.push(value);
         const source = {
             monitorados: [{ id_procedimento: 7, processo: 'P-7', documentos: [{ id: 9 }] }],

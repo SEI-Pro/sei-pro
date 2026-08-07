@@ -10,13 +10,13 @@
     const delegated = typeof selectorOrHandler === "string";
     const selector = delegated ? selectorOrHandler : null;
     const handler = delegated ? maybeHandler : selectorOrHandler;
-    function listener(event2) {
+    function listener(event) {
       if (!delegated) {
-        return handler.call(target, event2);
+        return handler.call(target, event);
       }
-      const match = event2.target && event2.target.closest ? event2.target.closest(selector) : null;
+      const match = event.target && event.target.closest ? event.target.closest(selector) : null;
       if (match && target.contains(match)) {
-        return handler.call(match, event2, match);
+        return handler.call(match, event, match);
       }
     }
     target.addEventListener(type, listener);
@@ -39,59 +39,553 @@
   // src/features/atividades/state.js
   var state_exports = {};
   __export(state_exports, {
+    ATIVIDADES_STATE_DEFAULTS: () => ATIVIDADES_STATE_DEFAULTS,
+    createAtividadesContext: () => createAtividadesContext,
+    createAtividadesStore: () => createAtividadesStore,
+    getAtividadesContext: () => getAtividadesContext,
     getAtividadesState: () => getAtividadesState,
+    installAtividadesContext: () => installAtividadesContext,
     installAtividadesState: () => installAtividadesState,
-    refreshAtividadesState: () => refreshAtividadesState
+    refreshAtividadesState: () => refreshAtividadesState,
+    syncAtividadesStateFromPage: () => syncAtividadesStateFromPage
   });
-  function installAtividadesState() {
-    const g = globalThis;
+
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
+
+  // src/features/atividades/store.js
+  var ATIVIDADES_STATE_DEFAULTS = Object.freeze({
+    loadAtividadesPro: true,
+    debugScreen: false,
+    perfilLoginAtiv: false,
+    urlServerAtiv: false,
+    backendServerAtiv: false,
+    userHashAtiv: false,
+    delayServerAtiv: 0,
+    arrayConfigAtividades: [],
+    arrayConfigAtivUnidade: [],
+    ganttAtividades: false,
+    ganttAfastamentos: false,
+    ganttRecorrencias: false,
+    kanbanAtividades: false,
+    kanbanAtividadesMoving: false,
+    tableConfigEditor: {},
+    tableConfigList: {},
+    arrayAtividadesPro: [],
+    arrayAtividadesProcPro: [],
+    arrayPrescricoesProcPro: [],
+    arrayNomenclaturas: [],
+    checkLoadAtividadesProcPro: false,
+    checkLoadMonitoradosProcPro: false,
+    indexReportUpdate: 0,
+    indexAPIUpdate: 0,
+    stopUpdateApi: false,
+    arrayAtividades: [],
+    arrayProcessosUnidade: false,
+    dly: void 0,
+    lastUpdateAtividades: false,
+    listAPIUpdate: [],
+    listLabelsTiposMetadados: [],
+    listReportsUpdate: [],
+    loadRowsPanelAtiv: false,
+    nameAPIUpdate: [],
+    nameReportsUpdate: [],
+    notificacaoTexto: {},
+    perfilAtividadesSelected: false,
+    timeRestoreAtividades: false,
+    chartColors: {}
+  });
+  var cloneDefault = (value) => {
+    if (Array.isArray(value)) return [];
+    if (value && typeof value === "object") return {};
+    return value;
+  };
+  function createAtividadesStore(initial = {}) {
+    let state = Object.keys(ATIVIDADES_STATE_DEFAULTS).reduce((out, key) => {
+      out[key] = Object.prototype.hasOwnProperty.call(initial, key) ? initial[key] : cloneDefault(ATIVIDADES_STATE_DEFAULTS[key]);
+      return out;
+    }, {});
+    const listeners = /* @__PURE__ */ new Set();
+    return Object.freeze({
+      get() {
+        return state;
+      },
+      snapshot() {
+        return { ...state };
+      },
+      patch(next = {}) {
+        const changed = {};
+        Object.keys(next).forEach((key) => {
+          if (!Object.prototype.hasOwnProperty.call(ATIVIDADES_STATE_DEFAULTS, key)) return;
+          if (state[key] === next[key]) return;
+          changed[key] = next[key];
+        });
+        if (!Object.keys(changed).length) return state;
+        state = { ...state, ...changed };
+        listeners.forEach((listener) => listener(state, changed));
+        return state;
+      },
+      replace(next = {}) {
+        state = Object.keys(ATIVIDADES_STATE_DEFAULTS).reduce((out, key) => {
+          out[key] = Object.prototype.hasOwnProperty.call(next, key) ? next[key] : cloneDefault(ATIVIDADES_STATE_DEFAULTS[key]);
+          return out;
+        }, {});
+        listeners.forEach((listener) => listener(state, state));
+        return state;
+      },
+      subscribe(listener) {
+        if (typeof listener !== "function") return () => {
+        };
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      }
+    });
+  }
+
+  // src/features/atividades/context.js
+  var CONTEXT_KEY = "__SEI_PRO_ATIVIDADES_CONTEXT__";
+  function safeCall(fn, fallback, args) {
+    if (typeof fn !== "function") return fallback;
+    try {
+      return fn(...args);
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function createAtividadesContext(options = {}) {
+    const page = options.globalRef || globalRef;
+    const store = options.store || createAtividadesStore(options.initialState || {});
+    const jquery = options.jquery || page.$;
+    const documentRef = options.document || page.document;
+    const clock = options.clock || (() => /* @__PURE__ */ new Date());
+    const schedule = options.schedule || ((fn, delay) => page.setTimeout(fn, delay));
+    const cancelSchedule = options.cancelSchedule || ((id) => page.clearTimeout(id));
+    const getOption = options.getOption || ((key) => safeCall(page.getOptionsPro, void 0, [key]));
+    const setOption = options.setOption || ((key, value) => safeCall(page.setOptionsPro, void 0, [key, value]));
+    const verifyConfig = options.verifyConfig || ((key) => safeCall(page.verifyConfigValue, false, [key]));
+    const checkConfig = options.checkConfig || ((key) => safeCall(page.checkConfigValue, false, [key]));
+    const checkCapability = options.checkCapability || ((name) => {
+      const feature = page.SeiPro && page.SeiPro.features && page.SeiPro.features.atividades;
+      const api = feature && feature.api;
+      const fn = api && api.handlers && api.handlers.checkCapacidade;
+      return typeof fn === "function" ? fn(name) : false;
+    });
+    const context2 = {
+      page,
+      store,
+      clock,
+      schedule,
+      cancelSchedule,
+      dom: {
+        document: documentRef,
+        $: jquery,
+        query(selector, root = documentRef) {
+          return root && typeof root.querySelector === "function" ? root.querySelector(selector) : null;
+        },
+        queryAll(selector, root = documentRef) {
+          return root && typeof root.querySelectorAll === "function" ? Array.from(root.querySelectorAll(selector)) : [];
+        },
+        html(value, root) {
+          if (root) root.innerHTML = value == null ? "" : String(value);
+          return value;
+        }
+      },
+      options: { get: getOption, set: setOption, verifyConfig, checkConfig },
+      permissions: { check: checkCapability },
+      storage: {
+        local: options.localStorage || page.localStorage,
+        session: options.sessionStorage || page.sessionStorage
+      },
+      effects: {
+        loading(value) {
+          return safeCall(options.loading || page.loadingButtonConfirm, void 0, [value]);
+        },
+        alert(...args) {
+          return safeCall(options.alert || page.alertaBoxPro, void 0, args);
+        },
+        confirm(...args) {
+          return safeCall(options.confirm || page.confirmaBoxPro, void 0, args);
+        },
+        notify(...args) {
+          return safeCall(options.notify || page.notificacaoBoxPro, void 0, args);
+        }
+      },
+      events: {
+        emit(name, detail) {
+          if (typeof options.emit === "function") return options.emit(name, detail);
+          if (documentRef && typeof documentRef.dispatchEvent === "function" && typeof page.CustomEvent === "function") {
+            documentRef.dispatchEvent(new page.CustomEvent(name, { detail }));
+          }
+          return void 0;
+        }
+      },
+      api: {
+        resolve(name) {
+          const feature = page.SeiPro && page.SeiPro.features && page.SeiPro.features.atividades;
+          const api = feature && feature.api;
+          if (api && api.handlers && typeof api.handlers[name] === "function") {
+            return api.handlers[name];
+          }
+          return null;
+        },
+        dispatch(name, ...args) {
+          const fn = this.resolve(name);
+          return typeof fn === "function" ? fn(...args) : void 0;
+        }
+      }
+    };
+    return Object.freeze(context2);
+  }
+  function installAtividadesContext(context2, page = globalRef) {
+    if (!context2 || !context2.store) throw new TypeError("Atividades context requires a store");
+    page[CONTEXT_KEY] = context2;
+    return context2;
+  }
+  function getAtividadesContext(page = globalRef) {
+    if (page[CONTEXT_KEY]) return page[CONTEXT_KEY];
+    return installAtividadesContext(createAtividadesContext({ globalRef: page }), page);
+  }
+
+  // src/features/atividades/state.js
+  var STATE_KEYS = Object.keys(ATIVIDADES_STATE_DEFAULTS);
+  function readInitialState(g) {
+    return STATE_KEYS.reduce((out, key) => {
+      if (typeof g[key] !== "undefined") out[key] = g[key];
+      return out;
+    }, {});
+  }
+  function projectStoreToPage(store, g) {
+    store.subscribe((state, changed) => {
+      Object.keys(changed).forEach((key) => {
+        const descriptor = Object.getOwnPropertyDescriptor(g, key);
+        if (!descriptor || typeof descriptor.set !== "function") g[key] = state[key];
+      });
+    });
+    const current = store.get();
+    STATE_KEYS.forEach((key) => {
+      g[key] = current[key];
+    });
+  }
+  function installAtividadesState(g = globalRef) {
     if (g.__SEI_PRO_ATIVIDADES_STATE_INSTALLED__) return g;
-    g.loadAtividadesPro = true;
-    g.debugScreen = g.debugScreen || false;
-    g.perfilLoginAtiv = g.perfilLoginAtiv || false;
-    g.urlServerAtiv = g.urlServerAtiv || false;
-    g.backendServerAtiv = g.backendServerAtiv || false;
-    g.userHashAtiv = g.userHashAtiv || false;
-    g.delayServerAtiv = g.delayServerAtiv || 0;
-    g.arrayConfigAtividades = g.arrayConfigAtividades || [];
-    g.arrayConfigAtivUnidade = g.arrayConfigAtivUnidade || [];
-    g.ganttAtividades = g.ganttAtividades || false;
-    g.ganttAfastamentos = g.ganttAfastamentos || false;
-    g.ganttRecorrencias = g.ganttRecorrencias || false;
-    g.kanbanAtividades = g.kanbanAtividades || false;
-    g.kanbanAtividadesMoving = g.kanbanAtividadesMoving || false;
-    g.tableConfigEditor = g.tableConfigEditor || {};
-    g.tableConfigList = g.tableConfigList || {};
-    g.arrayAtividadesPro = g.arrayAtividadesPro || [];
-    g.arrayAtividadesProcPro = g.arrayAtividadesProcPro || [];
-    g.arrayPrescricoesProcPro = g.arrayPrescricoesProcPro || [];
-    g.arrayNomenclaturas = g.arrayNomenclaturas || [];
-    g.checkLoadAtividadesProcPro = g.checkLoadAtividadesProcPro || false;
-    g.checkLoadMonitoradosProcPro = g.checkLoadMonitoradosProcPro || false;
-    g.indexReportUpdate = g.indexReportUpdate || 0;
-    g.indexAPIUpdate = g.indexAPIUpdate || 0;
-    g.stopUpdateApi = g.stopUpdateApi || false;
+    const store = createAtividadesStore(readInitialState(g));
+    const existing = g.__SEI_PRO_ATIVIDADES_CONTEXT__;
+    const context2 = existing || createAtividadesContext({ globalRef: g, store });
+    if (!existing) installAtividadesContext(context2, g);
+    STATE_KEYS.forEach((key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(g, key);
+      if (descriptor && descriptor.configurable === false) return;
+      try {
+        Object.defineProperty(g, key, {
+          configurable: true,
+          enumerable: true,
+          get: () => context2.store.get()[key],
+          set: (value) => context2.store.patch({ [key]: value })
+        });
+      } catch (e) {
+        g[key] = context2.store.get()[key];
+      }
+    });
+    projectStoreToPage(context2.store, g);
     g.__SEI_PRO_ATIVIDADES_STATE_INSTALLED__ = true;
     return g;
   }
   function refreshAtividadesState(g = globalThis) {
+    const context2 = getAtividadesContext(g);
+    const store = context2.store;
     try {
-      if (typeof g.$ === "function") {
-        g.arrayAtividades = g.$("#ifrArvore").length > 0 ? g.arrayAtividadesProcPro || [] : g.arrayAtividadesPro || [];
+      const jquery = context2.dom && context2.dom.$;
+      if (typeof jquery === "function") {
+        const arrayAtividades2 = jquery("#ifrArvore").length > 0 ? g.arrayAtividadesProcPro || [] : g.arrayAtividadesPro || [];
+        store.patch({ arrayAtividades: arrayAtividades2 });
       }
     } catch (e) {
     }
     try {
-      if (typeof g.Chart !== "undefined" && g.chartColors) {
-        g.Chart.defaults.color = localStorage.getItem("darkModePro") ? g.chartColors.light_grey : g.chartColors.dark_grey;
+      const storage3 = context2.storage && context2.storage.local;
+      if (typeof g.Chart !== "undefined" && g.chartColors && g.Chart.defaults) {
+        const darkMode = storage3 && typeof storage3.getItem === "function" ? storage3.getItem("darkModePro") : false;
+        g.Chart.defaults.color = darkMode ? g.chartColors.light_grey : g.chartColors.dark_grey;
       }
     } catch (e) {
     }
     return g;
   }
   function getAtividadesState() {
-    return installAtividadesState();
+    return getAtividadesContext().store.get();
   }
+  function syncAtividadesStateFromPage(g = globalRef) {
+    const context2 = getAtividadesContext(g);
+    const values = STATE_KEYS.reduce((out, key) => {
+      if (typeof g[key] !== "undefined") out[key] = g[key];
+      return out;
+    }, {});
+    context2.store.patch(values);
+    return context2.store.get();
+  }
+
+  // src/shared/nomenclatura.js
+  function getName(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
+    const arrayNomenclaturas2 = globalThis.arrayNomenclaturas;
+    const capitalizeFirstLetter = globalThis.capitalizeFirstLetter;
+    if (typeof arrayNomenclaturas2 !== "undefined" && arrayNomenclaturas2.length > 0) {
+      var name = jmespath.search(arrayNomenclaturas2, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0]");
+      name = name !== null ? name : false;
+      var article = name ? name.config.masculino ? singular ? "o" : "os" : singular ? "a" : "as" : "";
+      var nomenclatura = name ? singular ? name.config.singular : name.config.plural : name_default;
+      nomenclatura = capitalize && typeof capitalizeFirstLetter === "function" ? capitalizeFirstLetter(nomenclatura) : nomenclatura;
+      var preposicao = name && typeof name.config.preposicao !== "undefined" && name.config.preposicao ? name.config.masculino ? singular ? "do " : "dos " : singular ? "da " : "das " : "";
+      var phase = with_article ? article + " " + nomenclatura : preposicao + nomenclatura;
+      return phase;
+    }
+    return name_default;
+  }
+  function getNameGenre(ref_nomenclatura, string_male, string_female) {
+    const arrayNomenclaturas2 = globalThis.arrayNomenclaturas || [];
+    var masc = jmespath.search(arrayNomenclaturas2, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0].config.masculino");
+    masc = masc !== null ? masc : false;
+    return masc ? string_male : string_female;
+  }
+
+  // src/features/atividades/runtime.js
+  var runtime_exports = {};
+  __export(runtime_exports, {
+    createAtividadesRuntimeState: () => createAtividadesRuntimeState,
+    initializeAtividadesRuntime: () => initializeAtividadesRuntime,
+    loadChartAtividades: () => loadChartAtividades2,
+    loadKanbanStyleAtividades: () => loadKanbanStyleAtividades2
+  });
+
+  // src/features/atividades/runtime-state.js
+  var REPORT_KEYS = Object.freeze([
+    "atividades",
+    "programas",
+    "afastamentos",
+    "planos",
+    "planos-arquivados",
+    "usuarios",
+    "objetivos"
+  ]);
+  var REPORT_NAMES = Object.freeze([
+    "Atividades",
+    "Programas de Gest\xE3o",
+    "Afastamentos",
+    "Planos de Trabalho",
+    "Planos de Trabalho [ARQUIVADOS]",
+    "Usu\xE1rios",
+    "Objetivos"
+  ]);
+  var API_KEYS = Object.freeze(["api_mgi_planos_trabalho", "api_mgi_planos_entrega"]);
+  var API_NAMES = Object.freeze(["Planos de Trabalho (MGI)", "Planos de Entregas (MGI)"]);
+  var METADATA_TYPE_LABELS = Object.freeze([
+    { label: "N\xFAmero", value: "number" },
+    { label: "Texto", value: "text" },
+    { label: "CPF", value: "cpf" },
+    { label: "Usu\xE1rio", value: "usuario" },
+    { label: "Unidade", value: "unidade" },
+    { label: "CNPJ", value: "cnpj" },
+    { label: "Telefone", value: "telefone" },
+    { label: "Processo", value: "processo" },
+    { label: "Sim/N\xE3o", value: "boolean" },
+    { label: "URL", value: "url" },
+    { label: "Mapa", value: "latlong" },
+    { label: "Data", value: "date" },
+    { label: "Data/Hora", value: "datetime" }
+  ]);
+  var CHART_COLORS = Object.freeze({
+    blue: "rgb(54, 162, 235)",
+    dark_blue: "rgb(4 110 188)",
+    green: "rgb(75, 192, 192)",
+    red: "rgb(255, 99, 132)",
+    magenta: "rgb(218,112,214)",
+    orange: "rgb(255, 159, 64)",
+    purple: "rgb(153, 102, 255)",
+    cyan: "rgb(0,206,209)",
+    grey: "rgb(201, 203, 207)",
+    yellow: "rgb(255, 205, 86)",
+    maroon: "rgb(128,0,0)",
+    olive: "rgb(85,107,47)",
+    teal: "rgb(0,128,128)",
+    navy: "rgb(65,105,225)",
+    silver: "rgb(192,192,192)",
+    salmon: "rgb(250,128,114)",
+    steel: "rgb(70,130,180)",
+    violet: "rgb(238,130,238)",
+    pink: "rgb(255,192,203)",
+    chocolate: "rgb(210,105,30)",
+    light_grey: "rgb(220,220,220)",
+    dark_grey: "rgb(102 102 102)",
+    silver_blue: "rgb(236 240 242)"
+  });
+  var NOTIFICATION_TEXT = Object.freeze({
+    avaliacao_plano: "Prezado(a) {apelido},\n\nO plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia} foi avaliado pela chefia imediata\n\nNota Atribu\xEDda: {nota_atribuida}.\n\n{tabela_entregas}\n\nJustificativas: {justificativas}.\n\nComent\xE1rios: {comentarios}.\n\nNome do Avaliador: {nome_avaliador}.\n\nData da Avalia\xE7\xE3o: {data_avaliacao}.\n\n{texto_recurso}\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})",
+    avaliacao_plano_nao_aceito: "- - - - \u26A0\uFE0F Aviso - - - -\n\nNos termos do {fundamento_analise_recurso}, o participante do PGD que tiver plano de trabalho avaliado como \u201Cinadequado\u201D ou como \u201Cn\xE3o executado\u201D, poder\xE1 recorrer da avalia\xE7\xE3o, prestando justificativas no prazo de [b]{prazo_apresentacao_recurso} dias {contagem_dias_recurso} a contar desta notifica\xE7\xE3o de avalia\xE7\xE3o[/b]\n\n[red]Fique atento! O prazo m\xE1ximo para recorrer encerra-se dia {data_fim_recurso}.[/red]\n\nAcesse as configura\xE7\xF5es do sistema (\u2699\uFE0F > Planos de Trabalho) e apresente as justificativas para recorrer da avalia\xE7\xE3o da nota.",
+    recurso_apresentacao: "Prezado(a) {apelido}},\n\nApresentado recurso sobre a avalia\xE7\xE3o do plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia}.\n\nNota Atribu\xEDda: {nota_atribuida}.\n\nComent\xE1rios: {comentarios}\n\nNome do Avaliador: {nome_avaliador}.\n\nData da Avalia\xE7\xE3o: {data_avaliacao}.\n\n- - - -  \u{1F53D} Abaixo, conte\xFAdo do RECURSO - - - -\n\nNome do Avaliado: {nome_avaliado}\n\nData da Apresenta\xE7\xE3o de Recurso: {data_apresentacao_recurso}.\n\n[b]Justificativas para reconsidera\xE7\xE3o da nota:[/b] {justificativa_avaliado}\n\n- - - - \u26A0\uFE0F Aviso - - - -\n\nNos termos do {fundamento_analise_recurso}, a chefia imediata dever\xE1 analisar o recurso apresentado pelo participante no prazo de [b]{prazo_analise_recurso} dias {contagem_dias_recurso} a contar desta notifica\xE7\xE3o.[/b]\n\n[red]Ap\xF3s o prazo mencionado, o cadastramento de novos planos e demandas poder\xE1 ser restringido para toda a unidade.[/red]\n\nAcesse as configura\xE7\xF5es do sistema (\u2699\uFE0F > Planos de Trabalho) e avalie as justificativas apresentadas.[\\b]\n\n[red]Ressalta-se que caso a justificativa apresentada seja acatada, a avalia\xE7\xE3o inicial dever\xE1 ser ajustada. Entretanto, se n\xE3o acatada, o chefe da unidade de execu\xE7\xE3o dever\xE1 apresentar os motivos da negativa e dar ci\xEAncia \xE0 unidade de gest\xE3o de pessoas.[/red]",
+    recurso_analise: "Prezado(a) {apelido},\n\nRegistrada an\xE1lise do recurso sobre a avalia\xE7\xE3o do plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia}.\n\nNota Atribu\xEDda: {nota_atribuida}\n\nComent\xE1rios: {comentarios}\n\nNome do Avaliador: {nome_avaliador}.\n\n- - - -  \u{1F53D} Abaixo, conte\xFAdo do RECURSO - - - -\n\nNome do Avaliado: {nome_avaliado}\n\nData da Apresenta\xE7\xE3o de Recurso: {data_apresentacao_recurso}.\n\n[b]Justificativas para reconsidera\xE7\xE3o da nota:[/b] {justificativa_avaliado}\n\n- - - -  \u{1F53D} Abaixo, resultado da AN\xC1LISE DO RECURSO - - - -\n\nNome do Avaliador: {nome_avaliador_recurso}\n\nData da An\xE1lise: {data_analise_recurso}\n\n{resultado_analise}\n\n- - - - \u26A0\uFE0F Aviso - - - -\n\n[red]Nos termos do {fundamento_analise_recurso}, o chefe da unidade de execu\xE7\xE3o dever\xE1 cientificar a unidade de gest\xE3o de pessoas para provid\xEAncias.[/red]\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})",
+    cancelamento_avaliacao_plano: "Prezado(a) {apelido},\n\nA avalia\xE7\xE3o do plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia}. foi [b]cancelada[/b] pela chefia imediata.\n\nNome do Cancelador: {nome_cancelador}.\n\nData do Cancelamento: {data_cancelamento}.\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})",
+    omissao_demanda: "Prezado(a) {apelido},\n\nA demanda [b]#{id_demanda}[/b] atribu\xEDda \xE0 voc\xEA foi encerrada por omiss\xE3o de entregas pactuadas.\n\nAssunto: {assunto}.\n\nAtividade: {nome_atividade}.\n\nData de distribui\xE7\xE3o: {data_distribuicao}.\n\nPrazo de entrega: {prazo_entrega}.\n\nTempo pactuado: {tempo_pactuado}.\n\nComent\xE1rios: {comentarios}.\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})"
+  });
+  function call(page, name, fallback, ...args) {
+    return typeof page[name] === "function" ? page[name](...args) : fallback;
+  }
+  function hasOption(page, key, getOption) {
+    if (typeof getOption === "function") return !!getOption(key);
+    return !!call(page, "getOptionsPro", false, key);
+  }
+  function restoreHybrid(page, key, getOption) {
+    if (hasOption(page, "panelLocalStorePro", getOption)) return null;
+    return call(page, "hybridStorageRestorePro", null, key);
+  }
+  function restoreLocal(page, key) {
+    return call(page, "localStorageRestorePro", null, key);
+  }
+  function asArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+  function calculateLastUpdate(page, timeRestoreAtividades, getOption) {
+    if (!hasOption(page, "panelLocalStorePro", getOption)) {
+      const lastUpdate = restoreLocal(page, "lastUpdateAtividades");
+      if (lastUpdate !== null && lastUpdate !== void 0) {
+        const previous = restoreLocal(page, "lastRestoreAtividades");
+        const moment2 = page.moment;
+        if (previous !== null && typeof moment2 === "function") {
+          try {
+            const expires = moment2(previous, "YYYY-MM-DD HH:mm:ss").add(timeRestoreAtividades.value, timeRestoreAtividades.time);
+            if (expires < moment2()) return false;
+          } catch (e) {
+          }
+        }
+        return lastUpdate;
+      }
+    }
+    return false;
+  }
+  function createAtividadesRuntimeState(context2) {
+    if (!context2 || !context2.page) throw new TypeError("Runtime state requires Atividades context");
+    const page = context2.page;
+    const options = context2.options || {};
+    const getOption = typeof options.get === "function" ? options.get : (key) => call(page, "getOptionsPro", void 0, key);
+    const configDefault = restoreHybrid(page, "configDataAtividadesPadraoPro", getOption);
+    const configUnit = restoreHybrid(page, "configDataAtivUnidadePro", getOption);
+    const atividades = restoreHybrid(page, "configDataAtividadesPro", getOption);
+    const atividadesProcesso = restoreHybrid(page, "configDataAtividadesProcPro", getOption);
+    const prescricoesProcesso = restoreHybrid(page, "configDataPrescricoesProcPro", getOption);
+    const arrayAtividadesPro2 = asArray(atividades);
+    const arrayAtividadesProcPro2 = asArray(atividadesProcesso);
+    const timeRestoreAtividades = getOption("cache_demandas_value") && getOption("cache_demandas_time") ? { time: getOption("cache_demandas_time"), value: getOption("cache_demandas_value") } : { time: "day", value: 1 };
+    const jquery = context2.dom && context2.dom.$;
+    const inProcessFrame = !!(jquery && typeof jquery === "function" && jquery("#ifrArvore").length > 0);
+    const arrayProcessosUnidade2 = call(page, "getProcessoUnidadePro", false);
+    const perfilAtividadesSelected2 = getOption("panelAtividadesViewSyncUnidade") ? page.siglaUnidadeAtual : getOption("perfilAtividadesSelected") || "";
+    return {
+      loadAtividadesPro: true,
+      debugScreen: false,
+      perfilLoginAtiv: false,
+      urlServerAtiv: false,
+      backendServerAtiv: false,
+      userHashAtiv: false,
+      delayServerAtiv: 0,
+      arrayConfigAtividades: typeof page.restoreLocalDataConfigArray === "function" && configDefault !== null ? page.restoreLocalDataConfigArray() || [] : asArray(configDefault),
+      arrayConfigAtivUnidade: asArray(configUnit),
+      ganttAtividades: false,
+      ganttAfastamentos: false,
+      ganttRecorrencias: false,
+      kanbanAtividades: false,
+      kanbanAtividadesMoving: false,
+      tableConfigEditor: {},
+      tableConfigList: {},
+      arrayAtividadesPro: arrayAtividadesPro2,
+      arrayAtividadesProcPro: arrayAtividadesProcPro2,
+      arrayPrescricoesProcPro: asArray(prescricoesProcesso),
+      checkLoadAtividadesProcPro: false,
+      checkLoadMonitoradosProcPro: false,
+      arrayAtividades: inProcessFrame ? arrayAtividadesProcPro2 : arrayAtividadesPro2,
+      perfilAtividadesSelected: perfilAtividadesSelected2,
+      arrayProcessosUnidade: arrayProcessosUnidade2,
+      arrayNomenclaturas: [],
+      timeRestoreAtividades,
+      lastUpdateAtividades: calculateLastUpdate(page, timeRestoreAtividades, getOption),
+      dly: void 0,
+      loadRowsPanelAtiv: false,
+      indexReportUpdate: 0,
+      listReportsUpdate: [...REPORT_KEYS],
+      nameReportsUpdate: [...REPORT_NAMES],
+      indexAPIUpdate: 0,
+      stopUpdateApi: false,
+      listAPIUpdate: [...API_KEYS],
+      nameAPIUpdate: [...API_NAMES],
+      notificacaoTexto: { ...NOTIFICATION_TEXT },
+      listLabelsTiposMetadados: METADATA_TYPE_LABELS.map((item) => ({ ...item })),
+      chartColors: { ...CHART_COLORS }
+    };
+  }
+  var ATIVIDADES_RUNTIME_CONSTANTS = Object.freeze({
+    reportKeys: REPORT_KEYS,
+    reportNames: REPORT_NAMES,
+    apiKeys: API_KEYS,
+    apiNames: API_NAMES,
+    metadataTypeLabels: METADATA_TYPE_LABELS,
+    chartColors: CHART_COLORS,
+    notificationText: NOTIFICATION_TEXT
+  });
+
+  // src/features/atividades/runtime.js
+  installAtividadesState();
+  var chartAtividadesLoading = false;
+  function loadChartAtividades2() {
+    const context2 = getAtividadesContext();
+    const page = context2.page;
+    if (typeof page.Chart !== "undefined" || chartAtividadesLoading) return;
+    const base = page.URL_SPRO || "";
+    if (!base || !page.$ || typeof page.$.getScript !== "function") return;
+    chartAtividadesLoading = true;
+    if (typeof page.loadStylePro === "function") page.loadStylePro(`${base}css/chart.min.css`);
+    page.$.getScript(`${base}js/lib/chart.min.js`);
+  }
+  function loadKanbanStyleAtividades2() {
+    const page = getAtividadesContext().page;
+    const base = page.URL_SPRO || "";
+    if (!base || typeof page.loadStylePro !== "function") return;
+    page.loadStylePro(`${base}css/jkanban.min.css`);
+  }
+  function applyChartDefaults(context2, state) {
+    const page = context2.page;
+    if (!page.Chart || !page.Chart.defaults) return;
+    const storage3 = context2.storage && context2.storage.local;
+    const darkMode = storage3 && typeof storage3.getItem === "function" ? storage3.getItem("darkModePro") : false;
+    page.Chart.defaults.color = darkMode ? state.chartColors.light_grey : state.chartColors.dark_grey;
+  }
+  function initializeAtividadesRuntime() {
+    const context2 = getAtividadesContext();
+    const state = createAtividadesRuntimeState(context2);
+    context2.store.patch(state);
+    try {
+      if (typeof context2.page.ensureSEIProLogCapture === "function") {
+        context2.page.ensureSEIProLogCapture();
+      }
+    } catch (e) {
+    }
+    applyChartDefaults(context2, state);
+    syncAtividadesStateFromPage();
+    return context2.store.get();
+  }
+
+  // src/features/atividades/compat.js
+  var compat_exports = {};
+  __export(compat_exports, {
+    getAppsScriptUrlAtiv: () => getAppsScriptUrlAtiv3,
+    getLabIdTables: () => getLabIdTables3,
+    getName: () => getName2,
+    getNameGenre: () => getNameGenre2,
+    getNumMonthsBetween2Dates: () => getNumMonthsBetween2Dates3,
+    selectProjetosFeatureTab: () => selectProjetosFeatureTab,
+    syncProjetosFeatureFromAtividades: () => syncProjetosFeatureFromAtividades
+  });
 
   // src/features/atividades/domain.js
   var domain_exports = {};
@@ -189,14 +683,14 @@
   }
   function checkHomologacaoPreviaPlanos(value, {
     checkOptionEntidade: checkOptionEntidade2 = () => false,
-    getOptionEntidade: getOptionEntidade3 = () => false,
+    getOptionEntidade: getOptionEntidade2 = () => false,
     moment: moment2
   } = {}) {
     if (typeof moment2 !== "function") {
       throw new Error("checkHomologacaoPreviaPlanos requires deps.moment");
     }
     var exigir_homologacao_previa_planos = checkOptionEntidade2("exigir_homologacao_previa_planos");
-    var data_homologacao_previa_planos = checkOptionEntidade2("data_homologacao_previa_planos") ? getOptionEntidade3("data_homologacao_previa_planos") : false;
+    var data_homologacao_previa_planos = checkOptionEntidade2("data_homologacao_previa_planos") ? getOptionEntidade2("data_homologacao_previa_planos") : false;
     var _return = false;
     _return = data_homologacao_previa_planos && moment2(data_homologacao_previa_planos, "YYYY-MM-DD") <= moment2(value.data_inicio_vigencia, "YYYY-MM-DD HH:mm:ss") ? true : _return;
     _return = !data_homologacao_previa_planos && exigir_homologacao_previa_planos ? true : _return;
@@ -205,14 +699,14 @@
   }
   function checkHomologacaoPreviaProgramas(value, {
     checkOptionEntidade: checkOptionEntidade2 = () => false,
-    getOptionEntidade: getOptionEntidade3 = () => false,
+    getOptionEntidade: getOptionEntidade2 = () => false,
     moment: moment2
   } = {}) {
     if (typeof moment2 !== "function") {
       throw new Error("checkHomologacaoPreviaProgramas requires deps.moment");
     }
     var exigir_homologacao_programas = checkOptionEntidade2("exigir_homologacao_programas");
-    var data_homologacao_previa_planos = checkOptionEntidade2("data_homologacao_previa_planos") ? getOptionEntidade3("data_homologacao_previa_planos") : false;
+    var data_homologacao_previa_planos = checkOptionEntidade2("data_homologacao_previa_planos") ? getOptionEntidade2("data_homologacao_previa_planos") : false;
     var _return = false;
     _return = data_homologacao_previa_planos && moment2(data_homologacao_previa_planos, "YYYY-MM-DD") < moment2(value.data_fim_vigencia, "YYYY-MM-DD HH:mm:ss") ? true : _return;
     _return = !data_homologacao_previa_planos && exigir_homologacao_programas ? true : _return;
@@ -221,45 +715,11 @@
   }
 
   // src/features/atividades/compat.js
-  var compat_exports = {};
-  __export(compat_exports, {
-    getAppsScriptUrlAtiv: () => getAppsScriptUrlAtiv3,
-    getLabIdTables: () => getLabIdTables3,
-    getName: () => getName2,
-    getNameGenre: () => getNameGenre3,
-    getNumMonthsBetween2Dates: () => getNumMonthsBetween2Dates3,
-    syncProjetosFeatureFromAtividades: () => syncProjetosFeatureFromAtividades2
-  });
-
-  // src/shared/nomenclatura.js
-  function getName(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
-    const arrayNomenclaturas2 = globalThis.arrayNomenclaturas;
-    const capitalizeFirstLetter = globalThis.capitalizeFirstLetter;
-    if (typeof arrayNomenclaturas2 !== "undefined" && arrayNomenclaturas2.length > 0) {
-      var name = jmespath.search(arrayNomenclaturas2, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0]");
-      name = name !== null ? name : false;
-      var article = name ? name.config.masculino ? singular ? "o" : "os" : singular ? "a" : "as" : "";
-      var nomenclatura = name ? singular ? name.config.singular : name.config.plural : name_default;
-      nomenclatura = capitalize && typeof capitalizeFirstLetter === "function" ? capitalizeFirstLetter(nomenclatura) : nomenclatura;
-      var preposicao = name && typeof name.config.preposicao !== "undefined" && name.config.preposicao ? name.config.masculino ? singular ? "do " : "dos " : singular ? "da " : "das " : "";
-      var phase = with_article ? article + " " + nomenclatura : preposicao + nomenclatura;
-      return phase;
-    }
-    return name_default;
-  }
-  function getNameGenre2(ref_nomenclatura, string_male, string_female) {
-    const arrayNomenclaturas2 = globalThis.arrayNomenclaturas || [];
-    var masc = jmespath.search(arrayNomenclaturas2, "[?ref_nomenclatura=='" + ref_nomenclatura + "'] | [0].config.masculino");
-    masc = masc !== null ? masc : false;
-    return masc ? string_male : string_female;
-  }
-
-  // src/features/atividades/compat.js
   function getName2(ref_nomenclatura, name_default, singular = true, with_article = false, capitalize = false) {
     return getName(ref_nomenclatura, name_default, singular, with_article, capitalize);
   }
-  function getNameGenre3(ref_nomenclatura, string_male, string_female) {
-    return getNameGenre2(ref_nomenclatura, string_male, string_female);
+  function getNameGenre2(ref_nomenclatura, string_male, string_female) {
+    return getNameGenre(ref_nomenclatura, string_male, string_female);
   }
   function getAppsScriptUrlAtiv3() {
     return getAppsScriptUrlAtiv2({
@@ -273,313 +733,64 @@
   function getNumMonthsBetween2Dates3(value) {
     return getNumMonthsBetween2Dates2(value, { moment: globalThis.moment });
   }
-  function syncProjetosFeatureFromAtividades2(projetos, opts = {}) {
+  function syncProjetosFeatureFromAtividades(projetos, opts = {}) {
     var list = Array.isArray(projetos) ? projetos : [];
     var tipos = opts.tipos || null;
+    var projetosFeature = typeof globalThis !== "undefined" && globalThis.SeiPro && globalThis.SeiPro.features && globalThis.SeiPro.features.projetos;
+    var projetosApi = projetosFeature && (projetosFeature.api || projetosFeature);
+    var replace = projetosApi && projetosApi.commands && projetosApi.commands.replaceProjetos;
+    var init = projetosApi && projetosApi.initProjetos;
+    var refresh = projetosApi && projetosApi.refreshProjetosPanel;
+    var select = projetosApi && projetosApi.selectProjetoTab;
     try {
-      if (typeof replaceProjetos === "function" && list.length) {
+      if (typeof replace === "function" && list.length) {
+        replace(list, tipos);
+      } else if (typeof replaceProjetos === "function" && list.length) {
         replaceProjetos(list, tipos);
       }
     } catch (e) {
     }
     try {
-      if (typeof initProjetos === "function") {
+      if (typeof init === "function") {
+        init(opts.mode || "refresh", list, opts.id_projeto);
+      } else if (typeof initProjetos === "function") {
         initProjetos(opts.mode || "refresh", list, opts.id_projeto);
+      } else if (typeof refresh === "function") {
+        refresh();
       } else if (typeof refreshProjetosPanel === "function") {
         refreshProjetosPanel();
       }
     } catch (e2) {
     }
-    if (opts.id_projeto && typeof selectProjetoTab === "function") {
+    if (opts.id_projeto && typeof select === "function") {
+      setTimeout(function() {
+        select(opts.id_projeto);
+      }, 200);
+    } else if (opts.id_projeto && typeof selectProjetoTab === "function") {
       setTimeout(function() {
         selectProjetoTab(opts.id_projeto);
       }, 200);
     }
   }
-
-  // src/core/global.js
-  var globalRef = typeof window !== "undefined" ? window : globalThis;
-  function aliasGlobal(name, value) {
-    if (typeof globalRef[name] === "undefined") {
-      globalRef[name] = value;
-    }
-  }
-
-  // src/features/atividades/runtime.js
-  var runtime_exports = {};
-  __export(runtime_exports, {
-    initializeAtividadesRuntime: () => initializeAtividadesRuntime,
-    loadChartAtividades: () => loadChartAtividades2,
-    loadKanbanStyleAtividades: () => loadKanbanStyleAtividades2
-  });
-  installAtividadesState();
-  var chartAtividadesLoading = false;
-  function loadChartAtividades2() {
-    if (typeof Chart !== "undefined" || chartAtividadesLoading) return;
-    var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
-    if (!base || typeof $ === "undefined" || typeof $.getScript !== "function") return;
-    chartAtividadesLoading = true;
-    if (typeof loadStylePro === "function") loadStylePro(base + "css/chart.min.css");
-    $.getScript(base + "js/lib/chart.min.js");
-  }
-  function loadKanbanStyleAtividades2() {
-    var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
-    if (!base || typeof loadStylePro !== "function") return;
-    loadStylePro(base + "css/jkanban.min.css");
-  }
-  function initializeAtividadesRuntime() {
-    try {
-      globalThis.loadAtividadesPro = true;
-    } catch (e) {
-      if (typeof globalThis.loadAtividadesPro === "undefined") globalThis.loadAtividadesPro = false;
-    }
-    try {
-      globalThis.debugScreen = false;
-    } catch (e) {
-      if (typeof globalThis.debugScreen === "undefined") globalThis.debugScreen = false;
-    }
-    try {
-      if (typeof ensureSEIProLogCapture === "function") ensureSEIProLogCapture();
-    } catch (e) {
-    }
-    try {
-      globalThis.perfilLoginAtiv = false;
-    } catch (e) {
-      if (typeof globalThis.perfilLoginAtiv === "undefined") globalThis.perfilLoginAtiv = false;
-    }
-    try {
-      globalThis.urlServerAtiv = false;
-    } catch (e) {
-      if (typeof globalThis.urlServerAtiv === "undefined") globalThis.urlServerAtiv = false;
-    }
-    try {
-      globalThis.backendServerAtiv = false;
-    } catch (e) {
-      if (typeof globalThis.backendServerAtiv === "undefined") globalThis.backendServerAtiv = false;
-    }
-    try {
-      globalThis.userHashAtiv = false;
-    } catch (e) {
-      if (typeof globalThis.userHashAtiv === "undefined") globalThis.userHashAtiv = false;
-    }
-    try {
-      globalThis.delayServerAtiv = 0;
-    } catch (e) {
-      if (typeof globalThis.delayServerAtiv === "undefined") globalThis.delayServerAtiv = false;
-    }
-    try {
-      globalThis.arrayConfigAtividades = typeof getOptionsPro !== "undefined" && !getOptionsPro("panelLocalStorePro") && hybridStorageRestorePro("configDataAtividadesPadraoPro") !== null ? restoreLocalDataConfigArray() : [];
-    } catch (e) {
-      if (typeof globalThis.arrayConfigAtividades === "undefined") globalThis.arrayConfigAtividades = [];
-    }
-    try {
-      globalThis.arrayConfigAtivUnidade = typeof getOptionsPro !== "undefined" && !getOptionsPro("panelLocalStorePro") && hybridStorageRestorePro("configDataAtivUnidadePro") !== null ? hybridStorageRestorePro("configDataAtivUnidadePro") : [];
-    } catch (e) {
-      if (typeof globalThis.arrayConfigAtivUnidade === "undefined") globalThis.arrayConfigAtivUnidade = [];
-    }
-    try {
-      globalThis.ganttAtividades = false;
-    } catch (e) {
-      if (typeof globalThis.ganttAtividades === "undefined") globalThis.ganttAtividades = false;
-    }
-    try {
-      globalThis.ganttAfastamentos = false;
-    } catch (e) {
-      if (typeof globalThis.ganttAfastamentos === "undefined") globalThis.ganttAfastamentos = false;
-    }
-    try {
-      globalThis.ganttRecorrencias = false;
-    } catch (e) {
-      if (typeof globalThis.ganttRecorrencias === "undefined") globalThis.ganttRecorrencias = false;
-    }
-    try {
-      globalThis.kanbanAtividades = false;
-    } catch (e) {
-      if (typeof globalThis.kanbanAtividades === "undefined") globalThis.kanbanAtividades = false;
-    }
-    try {
-      globalThis.kanbanAtividadesMoving = false;
-    } catch (e) {
-      if (typeof globalThis.kanbanAtividadesMoving === "undefined") globalThis.kanbanAtividadesMoving = false;
-    }
-    try {
-      globalThis.tableConfigEditor = {};
-    } catch (e) {
-      if (typeof globalThis.tableConfigEditor === "undefined") globalThis.tableConfigEditor = false;
-    }
-    try {
-      globalThis.tableConfigList = {};
-    } catch (e) {
-      if (typeof globalThis.tableConfigList === "undefined") globalThis.tableConfigList = false;
-    }
-    try {
-      globalThis.arrayAtividadesPro = typeof getOptionsPro !== "undefined" && !getOptionsPro("panelLocalStorePro") && hybridStorageRestorePro("configDataAtividadesPro") !== null ? hybridStorageRestorePro("configDataAtividadesPro") : [];
-    } catch (e) {
-      if (typeof globalThis.arrayAtividadesPro === "undefined") globalThis.arrayAtividadesPro = [];
-    }
-    try {
-      globalThis.arrayAtividadesProcPro = typeof getOptionsPro !== "undefined" && !getOptionsPro("panelLocalStorePro") && hybridStorageRestorePro("configDataAtividadesProcPro") !== null ? hybridStorageRestorePro("configDataAtividadesProcPro") : [];
-    } catch (e) {
-      if (typeof globalThis.arrayAtividadesProcPro === "undefined") globalThis.arrayAtividadesProcPro = false;
-    }
-    try {
-      globalThis.arrayPrescricoesProcPro = typeof getOptionsPro !== "undefined" && !getOptionsPro("panelLocalStorePro") && hybridStorageRestorePro("configDataPrescricoesProcPro") !== null ? hybridStorageRestorePro("configDataPrescricoesProcPro") : [];
-    } catch (e) {
-      if (typeof globalThis.arrayPrescricoesProcPro === "undefined") globalThis.arrayPrescricoesProcPro = false;
-    }
-    try {
-      globalThis.checkLoadAtividadesProcPro = false;
-    } catch (e) {
-      if (typeof globalThis.checkLoadAtividadesProcPro === "undefined") globalThis.checkLoadAtividadesProcPro = false;
-    }
-    try {
-      globalThis.checkLoadMonitoradosProcPro = false;
-    } catch (e) {
-      if (typeof globalThis.checkLoadMonitoradosProcPro === "undefined") globalThis.checkLoadMonitoradosProcPro = false;
-    }
-    try {
-      globalThis.arrayAtividades = $("#ifrArvore").length > 0 ? arrayAtividadesProcPro : arrayAtividadesPro;
-    } catch (e) {
-      if (typeof globalThis.arrayAtividades === "undefined") globalThis.arrayAtividades = [];
-    }
-    try {
-      globalThis.perfilAtividadesSelected = typeof getOptionsPro !== "undefined" && getOptionsPro("panelAtividadesViewSyncUnidade") ? siglaUnidadeAtual : typeof getOptionsPro !== "undefined" && getOptionsPro("perfilAtividadesSelected") ? getOptionsPro("perfilAtividadesSelected") : "";
-    } catch (e) {
-      if (typeof globalThis.perfilAtividadesSelected === "undefined") globalThis.perfilAtividadesSelected = false;
-    }
-    try {
-      globalThis.arrayProcessosUnidade = typeof getProcessoUnidadePro !== "undefined" ? getProcessoUnidadePro() : false;
-    } catch (e) {
-      if (typeof globalThis.arrayProcessosUnidade === "undefined") globalThis.arrayProcessosUnidade = false;
-    }
-    try {
-      globalThis.arrayNomenclaturas = [];
-    } catch (e) {
-      if (typeof globalThis.arrayNomenclaturas === "undefined") globalThis.arrayNomenclaturas = false;
-    }
-    try {
-      globalThis.timeRestoreAtividades = typeof getOptionEntidade !== "undefined" && getOptionEntidade("cache_demandas_value") && getOptionEntidade("cache_demandas_time") ? { time: getOptionEntidade("cache_demandas_time"), value: getOptionEntidade("cache_demandas_value") } : { time: "day", value: 1 };
-    } catch (e) {
-      if (typeof globalThis.timeRestoreAtividades === "undefined") globalThis.timeRestoreAtividades = false;
-    }
-    try {
-      globalThis.lastUpdateAtividades = typeof getOptionsPro !== "undefined" && !getOptionsPro("panelLocalStorePro") && localStorageRestorePro("lastUpdateAtividades") !== null ? localStorageRestorePro("lastRestoreAtividades") !== null && moment(localStorageRestorePro("lastRestoreAtividades"), "YYYY-MM-DD HH:mm:ss").add(timeRestoreAtividades.value, timeRestoreAtividades.time) < moment() ? false : localStorageRestorePro("lastUpdateAtividades") : false;
-    } catch (e) {
-      if (typeof globalThis.lastUpdateAtividades === "undefined") globalThis.lastUpdateAtividades = false;
-    }
-    globalThis.dly = void 0;
-    try {
-      globalThis.loadRowsPanelAtiv = false;
-    } catch (e) {
-      if (typeof globalThis.loadRowsPanelAtiv === "undefined") globalThis.loadRowsPanelAtiv = false;
-    }
-    try {
-      globalThis.indexReportUpdate = 0;
-    } catch (e) {
-      if (typeof globalThis.indexReportUpdate === "undefined") globalThis.indexReportUpdate = false;
-    }
-    try {
-      globalThis.listReportsUpdate = ["atividades", "programas", "afastamentos", "planos", "planos-arquivados", "usuarios", "objetivos"];
-    } catch (e) {
-      if (typeof globalThis.listReportsUpdate === "undefined") globalThis.listReportsUpdate = false;
-    }
-    try {
-      globalThis.nameReportsUpdate = ["Atividades", "Programas de Gest\xE3o", "Afastamentos", "Planos de Trabalho", "Planos de Trabalho [ARQUIVADOS]", "Usu\xE1rios", "Objetivos"];
-    } catch (e) {
-      if (typeof globalThis.nameReportsUpdate === "undefined") globalThis.nameReportsUpdate = false;
-    }
-    try {
-      globalThis.indexAPIUpdate = 0;
-    } catch (e) {
-      if (typeof globalThis.indexAPIUpdate === "undefined") globalThis.indexAPIUpdate = false;
-    }
-    try {
-      globalThis.stopUpdateApi = false;
-    } catch (e) {
-      if (typeof globalThis.stopUpdateApi === "undefined") globalThis.stopUpdateApi = false;
-    }
-    try {
-      globalThis.listAPIUpdate = ["api_mgi_planos_trabalho", "api_mgi_planos_entrega"];
-    } catch (e) {
-      if (typeof globalThis.listAPIUpdate === "undefined") globalThis.listAPIUpdate = false;
-    }
-    try {
-      globalThis.nameAPIUpdate = ["Planos de Trabalho (MGI)", "Planos de Entregas (MGI)"];
-    } catch (e) {
-      if (typeof globalThis.nameAPIUpdate === "undefined") globalThis.nameAPIUpdate = false;
-    }
-    try {
-      globalThis.notificacaoTexto = {
-        avaliacao_plano: "Prezado(a) {apelido},\n\nO plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia} foi avaliado pela chefia imediata\n\nNota Atribu\xEDda: {nota_atribuida}.\n\n{tabela_entregas}\n\nJustificativas: {justificativas}.\n\nComent\xE1rios: {comentarios}.\n\nNome do Avaliador: {nome_avaliador}.\n\nData da Avalia\xE7\xE3o: {data_avaliacao}.\n\n{texto_recurso}\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})",
-        avaliacao_plano_nao_aceito: "- - - - \u26A0\uFE0F Aviso - - - -\n\nNos termos do {fundamento_analise_recurso}, o participante do PGD que tiver plano de trabalho avaliado como \u201Cinadequado\u201D ou como \u201Cn\xE3o executado\u201D, poder\xE1 recorrer da avalia\xE7\xE3o, prestando justificativas no prazo de [b]{prazo_apresentacao_recurso} dias {contagem_dias_recurso} a contar desta notifica\xE7\xE3o de avalia\xE7\xE3o[/b]\n\n[red]Fique atento! O prazo m\xE1ximo para recorrer encerra-se dia {data_fim_recurso}.[/red]\n\nAcesse as configura\xE7\xF5es do sistema (\u2699\uFE0F > Planos de Trabalho) e apresente as justificativas para recorrer da avalia\xE7\xE3o da nota.",
-        recurso_apresentacao: "Prezado(a) {apelido}},\n\nApresentado recurso sobre a avalia\xE7\xE3o do plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia}.\n\nNota Atribu\xEDda: {nota_atribuida}.\n\nComent\xE1rios: {comentarios}\n\nNome do Avaliador: {nome_avaliador}.\n\nData da Avalia\xE7\xE3o: {data_avaliacao}.\n\n- - - -  \u{1F53D} Abaixo, conte\xFAdo do RECURSO - - - -\n\nNome do Avaliado: {nome_avaliado}\n\nData da Apresenta\xE7\xE3o de Recurso: {data_apresentacao_recurso}.\n\n[b]Justificativas para reconsidera\xE7\xE3o da nota:[/b] {justificativa_avaliado}\n\n- - - - \u26A0\uFE0F Aviso - - - -\n\nNos termos do {fundamento_analise_recurso}, a chefia imediata dever\xE1 analisar o recurso apresentado pelo participante no prazo de [b]{prazo_analise_recurso} dias {contagem_dias_recurso} a contar desta notifica\xE7\xE3o.[/b]\n\n[red]Ap\xF3s o prazo mencionado, o cadastramento de novos planos e demandas poder\xE1 ser restringido para toda a unidade.[/red]\n\nAcesse as configura\xE7\xF5es do sistema (\u2699\uFE0F > Planos de Trabalho) e avalie as justificativas apresentadas.[\b]\n\n[red]Ressalta-se que caso a justificativa apresentada seja acatada, a avalia\xE7\xE3o inicial dever\xE1 ser ajustada. Entretanto, se n\xE3o acatada, o chefe da unidade de execu\xE7\xE3o dever\xE1 apresentar os motivos da negativa e dar ci\xEAncia \xE0 unidade de gest\xE3o de pessoas.[/red]",
-        recurso_analise: "Prezado(a) {apelido},\n\nRegistrada an\xE1lise do recurso sobre a avalia\xE7\xE3o do plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia}.\n\nNota Atribu\xEDda: {nota_atribuida}\n\nComent\xE1rios: {comentarios}\n\nNome do Avaliador: {nome_avaliador}.\n\n- - - -  \u{1F53D} Abaixo, conte\xFAdo do RECURSO - - - -\n\nNome do Avaliado: {nome_avaliado}\n\nData da Apresenta\xE7\xE3o de Recurso: {data_apresentacao_recurso}.\n\n[b]Justificativas para reconsidera\xE7\xE3o da nota:[/b] {justificativa_avaliado}\n\n- - - -  \u{1F53D} Abaixo, resultado da AN\xC1LISE DO RECURSO - - - -\n\nNome do Avaliador: {nome_avaliador_recurso}\n\nData da An\xE1lise: {data_analise_recurso}\n\n{resultado_analise}\n\n- - - - \u26A0\uFE0F Aviso - - - -\n\n[red]Nos termos do {fundamento_analise_recurso}, o chefe da unidade de execu\xE7\xE3o dever\xE1 cientificar a unidade de gest\xE3o de pessoas para provid\xEAncias.[/red]\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})",
-        cancelamento_avaliacao_plano: "Prezado(a) {apelido},\n\nA avalia\xE7\xE3o do plano de trabalho [b]#{id_plano}[/b], com vig\xEAncia de {data_inicio_vigencia} \xE0 {data_fim_vigencia}. foi [b]cancelada[/b] pela chefia imediata.\n\nNome do Cancelador: {nome_cancelador}.\n\nData do Cancelamento: {data_cancelamento}.\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})",
-        omissao_demanda: "Prezado(a) {apelido},\n\nA demanda [b]#{id_demanda}[/b] atribu\xEDda \xE0 voc\xEA foi encerrada por omiss\xE3o de entregas pactuadas.\n\nAssunto: {assunto}.\n\nAtividade: {nome_atividade}.\n\nData de distribui\xE7\xE3o: {data_distribuicao}.\n\nPrazo de entrega: {prazo_entrega}.\n\nTempo pactuado: {tempo_pactuado}.\n\nComent\xE1rios: {comentarios}.\n\nPara maiores esclarecimentos, entre em contato com sua unidade de exerc\xEDcio ({contato_unidade})"
-      };
-    } catch (e) {
-      if (typeof globalThis.notificacaoTexto === "undefined") globalThis.notificacaoTexto = false;
-    }
-    try {
-      globalThis.listLabelsTiposMetadados = [
-        { label: "N\xFAmero", value: "number" },
-        { label: "Texto", value: "text" },
-        { label: "CPF", value: "cpf" },
-        { label: "Usu\xE1rio", value: "usuario" },
-        { label: "Unidade", value: "unidade" },
-        { label: "CNPJ", value: "cnpj" },
-        { label: "Telefone", value: "telefone" },
-        { label: "Processo", value: "processo" },
-        { label: "Sim/N\xE3o", value: "boolean" },
-        { label: "URL", value: "url" },
-        { label: "Mapa", value: "latlong" },
-        { label: "Data", value: "date" },
-        { label: "Data/Hora", value: "datetime" }
-      ];
-    } catch (e) {
-      if (typeof globalThis.listLabelsTiposMetadados === "undefined") globalThis.listLabelsTiposMetadados = false;
-    }
-    try {
-      globalThis.chartColors = {
-        blue: "rgb(54, 162, 235)",
-        dark_blue: "rgb(4 110 188)",
-        green: "rgb(75, 192, 192)",
-        red: "rgb(255, 99, 132)",
-        magenta: "rgb(218,112,214)",
-        orange: "rgb(255, 159, 64)",
-        purple: "rgb(153, 102, 255)",
-        cyan: "rgb(0,206,209)",
-        grey: "rgb(201, 203, 207)",
-        yellow: "rgb(255, 205, 86)",
-        maroon: "rgb(128,0,0)",
-        olive: "rgb(85,107,47)",
-        teal: "rgb(0,128,128)",
-        navy: "rgb(65,105,225)",
-        silver: "rgb(192,192,192)",
-        salmon: "rgb(250,128,114)",
-        steel: "rgb(70,130,180)",
-        violet: "rgb(238,130,238)",
-        pink: "rgb(255,192,203)",
-        chocolate: "rgb(210,105,30)",
-        light_grey: "rgb(220,220,220)",
-        dark_grey: "rgb(102 102 102)",
-        silver_blue: "rgb(236 240 242)"
-      };
-      if (typeof Chart !== "undefined") Chart.defaults.color = localStorage.getItem("darkModePro") ? chartColors.light_grey : chartColors.dark_grey;
-    } catch (e) {
-      if (typeof globalThis.chartColors === "undefined") globalThis.chartColors = false;
-    }
+  function selectProjetosFeatureTab(idProjeto) {
+    var projetosFeature = typeof globalThis !== "undefined" && globalThis.SeiPro && globalThis.SeiPro.features && globalThis.SeiPro.features.projetos;
+    var projetosApi = projetosFeature && (projetosFeature.api || projetosFeature);
+    var select = projetosApi && typeof projetosApi.selectProjetoTab === "function" ? projetosApi.selectProjetoTab : typeof selectProjetoTab === "function" ? selectProjetoTab : null;
+    if (typeof select === "function") return select(idProjeto);
+    return void 0;
   }
 
   // src/features/atividades/io.js
   var io_exports = {};
   __export(io_exports, {
+    createAtividadesTransport: () => createAtividadesTransport,
     getAtividadesServerUrl: () => getAtividadesServerUrl,
     postAtividadesServer: () => postAtividadesServer,
     restoreAtividadesHybrid: () => restoreAtividadesHybrid
   });
   function getAtividadesServerUrl(globalRef2 = globalThis) {
-    return globalRef2.urlServerAtiv || false;
+    const context2 = globalRef2.__SEI_PRO_ATIVIDADES_CONTEXT__;
+    return (context2 && context2.store ? context2.store.get().urlServerAtiv : globalRef2.urlServerAtiv) || false;
   }
   function postAtividadesServer(url, data, {
     ajax,
@@ -604,6 +815,16 @@
           reject({ xhr, status, err });
         }
       });
+    });
+  }
+  function createAtividadesTransport({ ajax, beforeSend } = {}) {
+    return Object.freeze({
+      request(url, data, options = {}) {
+        return postAtividadesServer(url, data, {
+          ajax,
+          beforeSend: typeof beforeSend === "function" ? beforeSend : options.auth && options.auth.beforeSend
+        });
+      }
     });
   }
   function restoreAtividadesHybrid(key, {
@@ -702,676 +923,890 @@
   // src/features/atividades/server.js
   var server_exports = {};
   __export(server_exports, {
-    getServerAtividades: () => getServerAtividades
+    getServerAtividades: () => getServerAtividades,
+    requestAtividades: () => requestAtividades
   });
 
   // src/features/atividades/call.js
+  var injectedDispatcher = null;
+  function legacyFallbackEnabled() {
+    return typeof globalThis !== "undefined" && globalThis.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ === true;
+  }
+  function createAtividadesDispatcher({ registry = {}, fallback = null } = {}) {
+    const map = registry;
+    return Object.freeze({
+      resolve(name) {
+        if (typeof map[name] === "function") return map[name];
+        return typeof fallback === "function" ? fallback(name) : null;
+      },
+      call(name, ...args) {
+        const fn = this.resolve(name);
+        return typeof fn === "function" ? fn(...args) : void 0;
+      },
+      has(name) {
+        return typeof this.resolve(name) === "function";
+      }
+    });
+  }
+  function installAtividadesDispatcher(dispatcher) {
+    injectedDispatcher = dispatcher || null;
+    return injectedDispatcher;
+  }
   function callAtiv(name, ...args) {
     if (!name) return void 0;
-    const api = typeof globalThis !== "undefined" && globalThis.SeiPro && globalThis.SeiPro.features && globalThis.SeiPro.features.atividades || null;
+    if (injectedDispatcher && typeof injectedDispatcher.call === "function") {
+      const available = typeof injectedDispatcher.has === "function" ? injectedDispatcher.has(name) : typeof injectedDispatcher.resolve === "function" && typeof injectedDispatcher.resolve(name) === "function";
+      if (available) return injectedDispatcher.call(name, ...args);
+    }
+    const context2 = getAtividadesContext();
+    if (context2 && context2.api && typeof context2.api.dispatch === "function") {
+      const available = typeof context2.api.resolve === "function" ? context2.api.resolve(name) : null;
+      if (typeof available === "function") return context2.api.dispatch(name, ...args);
+    }
+    const feature = typeof globalThis !== "undefined" && globalThis.SeiPro && globalThis.SeiPro.features && globalThis.SeiPro.features.atividades || null;
+    const api = feature && feature.api;
+    const fromCommands = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : null;
+    const fromQueries = api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : null;
     const fromHandlers = api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
-    const fromNamespace = api && typeof api[name] === "function" ? api[name] : null;
-    const fromGlobal = typeof globalThis !== "undefined" && typeof globalThis[name] === "function" ? globalThis[name] : null;
-    const fn = fromHandlers || fromNamespace || fromGlobal;
+    const fromGlobal = legacyFallbackEnabled() && typeof globalThis[name] === "function" ? globalThis[name] : null;
+    const fn = fromCommands || fromQueries || fromHandlers || fromGlobal;
     if (typeof fn !== "function") return void 0;
     return fn(...args);
   }
   function hasAtiv(name) {
     if (!name) return false;
-    const api = typeof globalThis !== "undefined" && globalThis.SeiPro && globalThis.SeiPro.features && globalThis.SeiPro.features.atividades || null;
+    if (injectedDispatcher && typeof injectedDispatcher.has === "function" && injectedDispatcher.has(name)) return true;
+    const context2 = getAtividadesContext();
+    if (context2 && context2.api && typeof context2.api.resolve === "function" && typeof context2.api.resolve(name) === "function") return true;
+    const feature = typeof globalThis !== "undefined" && globalThis.SeiPro && globalThis.SeiPro.features && globalThis.SeiPro.features.atividades || null;
+    const api = feature && feature.api;
+    if (api && api.commands && typeof api.commands[name] === "function") return true;
+    if (api && api.queries && typeof api.queries[name] === "function") return true;
     if (api && api.handlers && typeof api.handlers[name] === "function") return true;
-    if (api && typeof api[name] === "function") return true;
-    return typeof globalThis !== "undefined" && typeof globalThis[name] === "function";
+    return legacyFallbackEnabled() && typeof globalThis[name] === "function";
+  }
+
+  // src/features/atividades/request.js
+  function createAtividadesRequestService({ context: context2, transport, version = "", checkCapability } = {}) {
+    if (!context2 || !transport) throw new TypeError("Request service requires context and transport");
+    function prepare(input = {}, mode = "") {
+      const state = context2.store.get();
+      const allowed = !!state.urlServerAtiv && !!state.userHashAtiv && isAtividadesServerModeAllowed(mode, {
+        checkCapacidade: (name) => typeof checkCapability === "function" ? !!checkCapability(name) : context2.permissions.check(name),
+        delayServerAtiv: state.delayServerAtiv,
+        checkLoadingButtonConfirm: () => false
+      });
+      if (!allowed) return { allowed: false, param: input, mode };
+      const param2 = buildAtividadesRequestParams(input, mode, {
+        userHashAtiv: state.userHashAtiv,
+        version,
+        getOptionsPro: context2.options.get,
+        lastUpdateAtividades: state.lastUpdateAtividades,
+        verifyConfigValue: context2.options.verifyConfig,
+        checkConfigValue: context2.options.checkConfig
+      });
+      return { allowed: true, param: param2, mode };
+    }
+    function send(prepared, options = {}) {
+      if (!prepared || !prepared.allowed) return Promise.resolve({ skipped: true });
+      return transport.request(context2.store.get().urlServerAtiv, prepared.param, options);
+    }
+    return Object.freeze({ prepare, send, request(input, mode, options) {
+      const prepared = prepare(input, mode);
+      return send(prepared, options);
+    } });
+  }
+
+  // src/features/atividades/server-ports.js
+  function createAtividadesServerPorts(context2) {
+    if (!context2 || !context2.page) throw new TypeError("Server ports require Atividades context");
+    const page = context2.page;
+    return Object.freeze({
+      page,
+      loadingButtonConfirm: (value) => context2.effects.loading(value),
+      alertaBoxPro: (...args) => context2.effects.alert(...args),
+      confirmaBoxPro: (...args) => context2.effects.confirm(...args),
+      setOptionsPro: context2.options.set,
+      localStorageStorePro: typeof page.localStorageStorePro === "function" ? page.localStorageStorePro : () => void 0,
+      hybridStorageStorePro: typeof page.hybridStorageStorePro === "function" ? page.hybridStorageStorePro : () => void 0,
+      signOutProfile: typeof page.signOutProfile === "function" ? page.signOutProfile : () => void 0,
+      url_host: page.url_host,
+      userSEI: page.userSEI
+    });
+  }
+
+  // src/features/atividades/response.js
+  function classifyAtividadesResponse(data, param2 = {}, mode = "") {
+    const payload = data || {};
+    if (payload.status === 0 || Array.isArray(payload) && payload.length === 0) {
+      return Object.freeze({ type: "error", mode, param: param2, payload });
+    }
+    if (payload.status_acess === 0) return Object.freeze({ type: "access-denied", mode, param: param2, payload });
+    if (String(mode).startsWith("chart_")) return Object.freeze({ type: "chart", mode, param: param2, payload });
+    if (String(mode).startsWith("config_update_") || String(mode).startsWith("config_new_")) {
+      return Object.freeze({ type: "config", mode, param: param2, payload });
+    }
+    if (String(mode).includes("monitorados")) return Object.freeze({ type: "monitorados", mode, param: param2, payload });
+    if (String(mode).includes("prescricao")) return Object.freeze({ type: "prescricao", mode, param: param2, payload });
+    if (String(mode).includes("projeto")) return Object.freeze({ type: "projeto", mode, param: param2, payload });
+    if (String(mode).startsWith("report_")) return Object.freeze({ type: "report", mode, param: param2, payload });
+    if (String(mode) === "panel") return Object.freeze({ type: "panel", mode, param: param2, payload });
+    return Object.freeze({ type: "operation", mode, param: param2, payload });
+  }
+  function createAtividadesResponseRouter({ resolve = () => null, onUnknown = () => void 0 } = {}) {
+    return (data, param2, mode, context2) => {
+      const event = classifyAtividadesResponse(data, param2, mode);
+      const handler = resolve(`response:${event.type}`) || resolve(`response:${mode}`);
+      if (typeof handler === "function") return handler(event, context2);
+      return onUnknown(event, context2);
+    };
+  }
+
+  // src/features/atividades/server-response.js
+  function routeAtividadesResponse(requestPromise, param2, mode, env = {}) {
+    const context2 = env.context;
+    const page = env.page || {};
+    const ports2 = env.ports || {};
+    const deps = env.deps || {};
+    const request = env.request || (() => void 0);
+    const state = context2.store.get();
+    const jmespath2 = deps.jmespath || page.jmespath || globalThis.jmespath || { search: () => [] };
+    const __2 = deps.nomenclature || page.__ || {};
+    const dialogBoxPro2 = deps.dialogBoxPro || page.dialogBoxPro;
+    const alertBoxPro2 = deps.alertBoxPro || page.alertBoxPro;
+    const resetDialogBoxPro2 = deps.resetDialogBoxPro || page.resetDialogBoxPro || (() => void 0);
+    const decimalHourToMinute2 = deps.decimalHourToMinute || page.decimalHourToMinute || ((value) => value);
+    const checkFileRemoteMonitorado = deps.checkFileRemoteMonitorado || page.checkFileRemoteMonitorado || (() => void 0);
+    const restoreMonitoradoServer = deps.restoreMonitoradoServer || page.restoreMonitoradoServer || (() => void 0);
+    const {
+      loadingButtonConfirm: loadingButtonConfirmPort,
+      alertaBoxPro: alertaBoxProPort,
+      confirmaBoxPro: confirmaBoxProPort,
+      setOptionsPro: setOptionsProPort,
+      localStorageStorePro: localStorageStoreProPort,
+      hybridStorageStorePro: hybridStorageStoreProPort,
+      signOutProfile: signOutProfilePort,
+      url_host: urlHostPort,
+      userSEI: userSeiPort
+    } = ports2;
+    const loadingButtonConfirm2 = typeof loadingButtonConfirmPort === "function" ? loadingButtonConfirmPort : () => void 0;
+    const alertaBoxPro2 = typeof alertaBoxProPort === "function" ? alertaBoxProPort : () => void 0;
+    const confirmaBoxPro2 = typeof confirmaBoxProPort === "function" ? confirmaBoxProPort : () => void 0;
+    const setOptionsPro2 = typeof setOptionsProPort === "function" ? setOptionsProPort : () => void 0;
+    const localStorageStorePro2 = typeof localStorageStoreProPort === "function" ? localStorageStoreProPort : () => void 0;
+    const hybridStorageStorePro2 = typeof hybridStorageStoreProPort === "function" ? hybridStorageStoreProPort : () => void 0;
+    const signOutProfile = typeof signOutProfilePort === "function" ? signOutProfilePort : () => void 0;
+    const url_host2 = urlHostPort || "";
+    const userSEI2 = userSeiPort || "";
+    const $2 = page.$;
+    const moment2 = page.moment;
+    const getOptionsPro2 = context2.options.get;
+    const sessionStorageStorePro2 = typeof page.sessionStorageStorePro === "function" ? page.sessionStorageStorePro : () => void 0;
+    const sessionStorageRestorePro2 = typeof page.sessionStorageRestorePro === "function" ? page.sessionStorageRestorePro : () => null;
+    const documentRef = context2.dom && context2.dom.document;
+    const windowRef = page;
+    let perfilLoginAtiv2 = state.perfilLoginAtiv;
+    let arrayAtividadesPro2 = state.arrayAtividadesPro;
+    let arrayAtividadesProcPro2 = state.arrayAtividadesProcPro;
+    let arrayConfigAtividades2 = state.arrayConfigAtividades;
+    let arrayConfigAtivUnidade2 = state.arrayConfigAtivUnidade;
+    let backendServerAtiv2 = page.backendServerAtiv;
+    let indexReportUpdate2 = page.indexReportUpdate || 0;
+    let indexAPIUpdate = page.indexAPIUpdate || 0;
+    return requestPromise.then(function(ativData) {
+      context2.events.emit("seipro:atividades-response", classifyAtividadesResponse(ativData, param2, mode));
+      if (typeof deps.onResponse === "function") {
+        return deps.onResponse(ativData, param2, mode, context2);
+      }
+      if (ativData.status == 0 || ativData.length == 0) {
+        loadingButtonConfirm2(false);
+        callAtiv("loadingTagConfig", param2.type, "set");
+        if (typeof ativData.replace_server !== "undefined" && ativData.replace_server != "") {
+          var urlReplace = url_host2.replace("controlador.php", "") + "?#&acao_pro=change_database&base=atividades&url=" + ativData.replace_server;
+          if (windowRef.location) windowRef.location.href = urlReplace;
+        }
+        if (mode.indexOf("config_update_") !== -1 || mode.indexOf("config_new_") !== -1) {
+          callAtiv("updateServerTabConfig", ativData, param2);
+        } else if (mode != "panel") {
+          alertaBoxPro2("Error", "exclamation-triangle", typeof ativData.status_txt != "undefined" ? ativData.status_txt : "Erro ao enviar sua informa\xE7\xF5es.");
+          if (mode == "update_prioridades") {
+            callAtiv("updatePriorityKanbanItens", ativData["board"], "error");
+          }
+        } else if (typeof ativData.status_acess !== "undefined" && ativData.status_acess == 0) {
+          alertaBoxPro2("Error", "exclamation-triangle", typeof ativData.status_txt != "undefined" ? ativData.status_txt : "Erro ao acessar o sistema. Acesso Negado.");
+          if (typeof perfilLoginAtiv2.CLIENT_ID !== "undefined" && perfilLoginAtiv2.CLIENT_ID != "") {
+            signOutProfile();
+          } else {
+            callAtiv("cleanAtivParams");
+          }
+        } else {
+          callAtiv("initPanelAtividades", arrayAtividadesPro2);
+        }
+      } else {
+        if (typeof ativData.padrao !== "undefined" && typeof ativData.padrao.perfil !== "undefined" && ativData.padrao.perfil.login.toLowerCase() != userSEI2.toLowerCase()) {
+          confirmaBoxPro2("A chave de acesso ao sistema de " + __2.atividades + " (" + ativData.padrao.perfil.login + ") \xE9 diferente do login do SEI (" + userSEI2 + "). <br><br>Deseja solicitar o envio de nova chave de acesso?", function() {
+            callAtiv("configResendKey", userSEI2);
+          }, "Solicitar chave de acesso...");
+          if (typeof perfilLoginAtiv2.CLIENT_ID !== "undefined" && perfilLoginAtiv2.CLIENT_ID != "") {
+            signOutProfile();
+          } else {
+            callAtiv("cleanAtivParams");
+          }
+        } else {
+          if (mode == "panel" && param2.action == "demandas" && param2.perfil == "" && ativData.demandas.length == 0 && ativData.padrao.perfil.unidade != "") {
+            setOptionsPro2("perfilAtividadesSelected", ativData.padrao.perfil.unidade);
+            request(param2, mode);
+          } else if (mode.indexOf("chart_") !== -1) {
+            if (mode == "chart_produtividade_mensal") {
+              callAtiv("getChartProdutividadeMes", param2.id_plano, "set", ativData);
+              callAtiv("updateServerTabConfig", ativData, param2);
+              if (dialogBoxPro2) dialogBoxPro2.dialog({ title: callAtiv("getTitleChartPlano", param2.id_plano).title });
+            } else {
+              callAtiv("setChartAtividades", ativData["chart"], mode);
+            }
+          } else if (mode == "check_monitorados") {
+            checkFileRemoteMonitorado("set", ativData);
+          } else if (mode == "check_entregas_atividades") {
+            callAtiv("checkTempoPlanoEntrega", false, "set", ativData);
+            loadingButtonConfirm2(false);
+          } else if (mode == "get_monitorados") {
+            restoreMonitoradoServer(ativData["config"]);
+          } else if (mode == "set_monitorados") {
+            loadingButtonConfirm2(false);
+          } else if (mode == "view_documento") {
+            loadingButtonConfirm2(false);
+            if (param2.reference == "modelo") {
+              callAtiv("openModelConfigItem", ativData, param2);
+            }
+          } else if (mode == "edit_tempos") {
+            callAtiv("updateServerTemposDemanda", "reset", param2.mode, false, ativData, param2);
+            $2(".update_tempos_demanda").removeClass("fa-spin");
+          } else if (mode == "edit_documento") {
+            loadingButtonConfirm2(false);
+            if (param2.reference == "modelo") {
+              resetDialogBoxPro2("editorBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", param2.title + " salvo com sucesso!");
+            }
+          } else if (mode == "restory_atividade") {
+            $2("#tableRelatorio_demandas_excluidas").find('tr[data-id="' + param2.id_demanda + '"]').remove();
+            callAtiv("updateAtividade_", false);
+          } else if (mode == "report_errors") {
+            loadingButtonConfirm2(false);
+            $2(".panelHome").find(".iconAtividade_update i").removeClass("fa-spin");
+            $2(".alertaErrorPro .sendReport").find("i").attr("class", "fas fa-thumbs-up azulColor").end().find(".labelLink").text("Notifica\xE7\xE3o enviada!");
+            alertaBoxPro2("Sucess", "check-circle", "Notifica\xE7\xE3o enviada com sucesso!");
+          } else if (mode.indexOf("report_") !== -1) {
+            callAtiv("updateServerTabReport", ativData, param2);
+            if (mode == "report_demandas" && param2.id_plano != 0) callAtiv("updateServerTabConfig", ativData, param2);
+            if (mode == "report_afastamentos" && param2.id_plano != 0) {
+              if (typeof ativData.result !== "undefined" && ativData.result !== null && ativData.result.length > 0) {
+                $2.each(ativData.result, function(i, v) {
+                  var objIndexAtiv3 = typeof arrayConfigAtividades2.afastamentos === "undefined" || arrayConfigAtividades2.afastamentos == 0 || arrayConfigAtividades2.afastamentos.length == 0 || typeof arrayConfigAtividades2.afastamentos.lista === "undefined" || arrayConfigAtividades2.afastamentos.lista == 0 || arrayConfigAtividades2.afastamentos.lista.length == 0 ? -1 : arrayConfigAtividades2.afastamentos.lista.findIndex(((obj) => obj.id_afastamento == v.id_afastamento));
+                  if (objIndexAtiv3 !== -1) {
+                    arrayConfigAtividades2.afastamentos.lista[objIndexAtiv3] = v;
+                  } else {
+                    arrayConfigAtividades2.afastamentos.lista.push(v);
+                  }
+                });
+              }
+              callAtiv("getRelatorioMetaProporcional", param2.id_plano, true);
+            }
+          } else if (mode == "config_update_user_personal") {
+            $2("#tabs-configpessoal").find("tr td:first-child").removeClass("editCellLoading");
+          } else if (mode.indexOf("config_update_") !== -1 || mode == "rate_plano" || mode == "rate_cancel_plano" || mode == "rate_programa" || mode == "rate_cancel_programa" || mode == "appeal_avaliacoes" || mode == "appeal_extend_avaliacoes" || mode.indexOf("config_new_") !== -1 && mode != "config_new_users") {
+            callAtiv("updateServerTabConfig", ativData, param2);
+            if (mode == "config_update_planos" && param2.mode == "homologacao") {
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              callAtiv("updateAtividade");
+              alertaBoxPro2("Sucess", "check-circle", "Justificativa cadastrada com sucesso!");
+            } else if (mode == "rate_plano" || mode == "rate_cancel_plano") {
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", "Avalia\xE7\xE3o de plano " + (mode == "rate_plano" ? "cadastrada" : "cancelada") + " com sucesso!");
+            } else if (mode == "config_update_planos" && param2.mode == "postpone") {
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", "Data de in\xEDcio de vig\xEAncia postergada com sucesso!");
+              if (typeof ativData.refresh_page !== "undefined" && ativData.refresh_page && $2("#tableConfiguracoesPanel_planos").is(":visible")) {
+                callAtiv("getTabConfig", "planos", "get");
+              }
+            } else if (mode == "config_update_self_planos_entregas") {
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", "Entregas do plano cadastradas com sucesso!");
+            } else if (mode == "rate_programa" || mode == "rate_cancel_programa") {
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", "Avalia\xE7\xE3o de " + __2.programa + " " + (mode == "rate_programa" ? "cadastrada" : "cancelada") + " com sucesso!");
+            } else if (mode == "appeal_avaliacoes") {
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", "Recurso de plano cadastrado com sucesso!");
+            } else if (mode == "appeal_extend_avaliacoes") {
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", "Prazo para apresenta\xE7\xE3o de recurso alterado com sucesso!");
+            } else if (mode == "config_new_planos" && param2.mode == "new") {
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", "Plano de trabalho cadastrado com sucesso!");
+            } else if (mode == "config_update_tipos_capacidades" && param2.mode == "update") {
+              callAtiv("updateConfigPerfilCapacidade", param2, ativData);
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null) {
+              if (typeof ativData["padrao"]["termos"] !== "undefined" && ativData["padrao"]["termos"].length) arrayConfigAtividades2["termos"] = ativData["padrao"]["termos"];
+            }
+          } else if (mode == "view_contato") {
+            callAtiv("setTableContatoPanel", ativData["result"]);
+            sessionStorageStorePro2("configDataContatosArray", ativData["result"]);
+          } else if (mode == "history_atividade") {
+            callAtiv("historyAtividade", false, "set", ativData["result"]);
+          } else if (mode == "update_checklist") {
+            callAtiv("checklistUpdate", false, "update", ativData, param2);
+          } else if (mode.indexOf("_prescricao") !== -1) {
+            if (mode == "update_prescricao" || mode == "delete_prescricao") {
+              var txtAlert = mode == "update_prescricao" && param2.id_prescricao > 0 ? "editada" : "inserida";
+              txtAlert = mode == "delete_prescricao" ? "deletada" : txtAlert;
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", __2.Prescricao + " " + txtAlert + " com sucesso!");
+              if (typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
+                arrayPrescricoesProcPro = ativData["return_row"];
+                callAtiv("initPanelPrescricaoProc");
+              }
+            }
+          } else if (mode.indexOf("_projeto") !== -1) {
+            if (mode == "delete_projeto" && typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
+              arrayConfigAtividades2.projetos = ativData.return_row;
+              var txtAlert = mode == "delete_projeto" ? "Projeto deletado" : txtAlert;
+            } else if ((mode == "save_projeto" || mode == "clone_projeto") && typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
+              arrayConfigAtividades2.projetos.push(ativData.return_row[0]);
+              var txtAlert = mode == "save_projeto" ? "Projeto adicionado" : "";
+              txtAlert = mode == "clone_projeto" ? "Projeto duplicado" : txtAlert;
+              txtAlert = mode == "delete_projeto" ? "Projeto deletado" : txtAlert;
+            } else if ((mode == "edit_projeto" || mode == "save_projeto_etapa" || mode == "edit_projeto_etapa" || mode == "delete_projeto_etapa" || mode == "update_projeto_etapa" || mode == "archive_projeto" || mode == "share_projeto") && typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
+              objIndexAtiv2 = typeof arrayConfigAtividades2.projetos === "undefined" || arrayConfigAtividades2.projetos == 0 || arrayConfigAtividades2.projetos.length == 0 ? -1 : arrayConfigAtividades2.projetos.findIndex(((obj) => obj.id_projeto == ativData.id_projeto));
+              if (objIndexAtiv2 !== -1) {
+                arrayConfigAtividades2.projetos[objIndexAtiv2] = ativData.return_row[0];
+              }
+              if (mode == "share_projeto" && (param2.mode == "insert_usuario" || param2.mode == "insert_unidade" || param2.mode == "change_edicao" || param2.mode == "remove_share")) {
+                var table = $2("#shareBox_" + param2.key);
+                var tr = table.find('tr[data-value="' + (param2.key == "usuario" ? param2.id_user : param2.id_unidade) + '"]');
+                tr.attr("data-id", ativData.id_projeto_compartilhado).data("id", ativData.id_projeto_compartilhado);
+                tr.find("td").eq(0).removeClass("editCellLoading");
+                if (param2.mode == "remove_share") {
+                  if (table.find("tbody tr:visible").length == 1) {
+                    table.find(".addConfigItem").trigger("click");
+                    table.find("tbody tr:last-child").data("id", "new").attr("data-id", "new").find("td:first-child").addClass("editCellSelect").removeClass("editCellLoading");
+                  }
+                  tr.hide("fast", function() {
+                    setTimeout(() => {
+                      $2(this).remove();
+                    }, 1e3);
+                  });
+                }
+              }
+              var txtAlert = mode == "edit_projeto" ? "Projeto editado" : "";
+              txtAlert = mode == "edit_projeto_etapa" || mode == "update_projeto_etapa" ? "Etapa editada" : txtAlert;
+              txtAlert = mode == "update_projeto_etapa" && param2.mode == "complete_execucao" ? "Etapa conclu\xEDda" : txtAlert;
+              txtAlert = mode == "delete_projeto_etapa" ? "Etapa deletada" : txtAlert;
+              txtAlert = mode == "archive_projeto" && param2.mode == "Arquivar" ? "Projeto arquivado" : txtAlert;
+              txtAlert = mode == "archive_projeto" && param2.mode == "Reativar" ? "Projeto reativado" : txtAlert;
+              txtAlert = mode == "save_projeto_etapa" ? "Etapa adicionada" : txtAlert;
+            } else if (mode == "share_projeto" && param2.mode == "list_select" && typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null) {
+              if (typeof ativData["padrao"]["unidades_all"] !== "undefined") arrayConfigAtividades2["unidades_all"] = ativData["padrao"]["unidades_all"];
+              if (typeof ativData["padrao"]["usuarios_all"] !== "undefined") arrayConfigAtividades2["usuarios_all"] = ativData["padrao"]["usuarios_all"];
+            }
+            if ((mode == "save_projeto" || mode == "edit_projeto") && typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null) arrayConfigAtividades2["tipos_projetos"] = ativData["padrao"]["tipos_projetos"];
+            callAtiv("storeLocalDataConfigArray", arrayConfigAtividades2);
+            if (ativData.refresh_page) {
+              var mode_update = mode == "save_projeto_etapa" || mode == "delete_projeto_etapa" || mode == "update_projeto_etapa" || mode == "edit_projeto_etapa" ? "update" : "insert";
+              syncProjetosFeatureFromAtividades(arrayConfigAtividades2.projetos, {
+                mode: mode_update,
+                id_projeto: ativData.id_projeto,
+                tipos: arrayConfigAtividades2.tipos_projetos
+              });
+              loadingButtonConfirm2(false);
+              resetDialogBoxPro2("dialogBoxPro");
+              alertaBoxPro2("Sucess", "check-circle", txtAlert + " com sucesso!");
+            }
+            if ((mode == "save_projeto" || mode == "clone_projeto") && ativData.id_projeto) {
+              setTimeout(function() {
+                selectProjetosFeatureTab(ativData.id_projeto);
+              }, 400);
+            }
+          } else if (mode.indexOf("config_") !== -1) {
+            loadingButtonConfirm2(false);
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && (mode == "config_users" || mode == "config_unidades" || mode == "config_tipos_modalidades" || mode == "config_tipos_capacidades" || mode == "config_perfis" || mode == "config_tipos_prescricoes" || mode == "config_entidades")) {
+              if (typeof ativData["padrao"]["unidades_all"] !== "undefined" && ativData["padrao"]["unidades_all"].length) arrayConfigAtividades2["unidades_all"] = ativData["padrao"]["unidades_all"];
+              if (typeof ativData["padrao"]["usuarios_entidade"] !== "undefined" && ativData["padrao"]["usuarios_entidade"].length) arrayConfigAtividades2["usuarios_entidade"] = ativData["padrao"]["usuarios_entidade"];
+              if (typeof ativData["padrao"]["perfis"] !== "undefined" && ativData["padrao"]["perfis"].length) arrayConfigAtividades2["perfis"] = ativData["padrao"]["perfis"];
+              if (typeof ativData["padrao"]["tipos_capacidades"] !== "undefined" && ativData["padrao"]["tipos_capacidades"].length) arrayConfigAtividades2["tipos_capacidades"] = ativData["padrao"]["tipos_capacidades"];
+              if (typeof ativData["padrao"]["tipos_metadados"] !== "undefined" && ativData["padrao"]["tipos_metadados"].length) arrayConfigAtividades2["tipos_metadados"] = ativData["padrao"]["tipos_metadados"];
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && (mode == "config_planos" || mode == "config_self_planos" || mode == "config_update_planos")) {
+              if (typeof ativData["padrao"]["tipos_modalidades"] !== "undefined" && ativData["padrao"]["tipos_modalidades"].length) arrayConfigAtividades2["tipos_modalidades"] = ativData["padrao"]["tipos_modalidades"];
+              if (typeof ativData["padrao"]["termos"] !== "undefined" && ativData["padrao"]["termos"].length) arrayConfigAtividades2["termos"] = ativData["padrao"]["termos"];
+              if (typeof ativData["padrao"]["atividades"] !== "undefined" && ativData["padrao"]["atividades"].length) arrayConfigAtividades2["atividades"] = ativData["padrao"]["atividades"];
+              if (typeof ativData["padrao"]["avaliacao"] !== "undefined" && ativData["padrao"]["avaliacao"].length) arrayConfigAtividades2["avaliacao"] = ativData["padrao"]["avaliacao"];
+              var updatePlano = jmespath2.search(ativData.config, "[?last_update=='0000-00-00 00:00:00'] | [?id_user==`" + arrayConfigAtividades2.perfil.id_user + "`]");
+              var checkUpdatePlano = updatePlano !== null && updatePlano.length > 0 ? true : false;
+              if (checkUpdatePlano) {
+                setTimeout(function() {
+                  callAtiv("updateConfigTempoPactuadoById", updatePlano[0].id_plano);
+                }, 2e3);
+              }
+            }
+            if (typeof ativData["config"] !== "undefined" && ativData["config"] !== null && mode == "config_tipos_prescricoes") {
+              arrayConfigAtividades2["tipos_prescricoes"] = ativData["config"];
+            }
+            if (typeof ativData["config"] !== "undefined" && ativData["config"] !== null && mode == "config_cadeia_valor") {
+              arrayConfigAtividades2["cadeia_valor"] = ativData["config"];
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_atividades") {
+              arrayConfigAtividades2["cadeia_valor"] = ativData["padrao"]["cadeia_valor"];
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_objetivos") {
+              arrayConfigAtividades2["tipos_eixos"] = ativData["padrao"]["tipos_eixos"];
+              arrayConfigAtividades2["mapas"] = ativData["padrao"]["mapas"];
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_acoes") {
+              arrayConfigAtividades2["objetivos"] = ativData["padrao"]["objetivos"];
+              arrayConfigAtividades2["cadeia_valor"] = ativData["padrao"]["cadeia_valor"];
+              arrayConfigAtividades2["unidades_all"] = ativData["padrao"]["unidades_all"];
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_entregas") {
+              arrayConfigAtividades2["objetivos"] = ativData["padrao"]["objetivos"];
+              arrayConfigAtividades2["tipos_entregas"] = ativData["padrao"]["tipos_entregas"];
+              arrayConfigAtividades2["acoes"] = ativData["padrao"]["acoes"];
+              arrayConfigAtividades2["unidades_all"] = ativData["padrao"]["unidades_all"];
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_programas") {
+              arrayConfigAtividades2["entregas"] = ativData["padrao"]["entregas"];
+            }
+            if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_tipos_avaliacoes") {
+              arrayConfigAtividades2["tipos_justificativas"] = ativData["padrao"]["tipos_justificativas"];
+            }
+            if (mode == "config_new_users") {
+              loadingButtonConfirm2(false);
+              if (param2.mode == "check" && ativData.check_lotacao && ativData.id_user != 0 && ativData.id_unidade != 0) {
+                alertaBoxPro2("Error", "exclamation-triangle", "Usu\xE1rio j\xE1 cadastrado no sistema. <br><br>Lota\xE7\xE3o atual: " + ativData.nome_unidade + " (" + ativData.sigla_unidade + ")<br><br>Solicite a desvincula\xE7\xE3o ao gestor da unidade ou a altera\xE7\xE3o de lota\xE7\xE3o ao administrador do sistema");
+              } else if (param2.mode == "check" && ativData.check_lotacao == false && ativData.id_user != 0) {
+                confirmaFraseBoxPro(
+                  "Usu\xE1rio j\xE1 cadastrado no sistema, mas sem lota\xE7\xE3o definida. Deseja lotar em sua unidade?",
+                  "SIM",
+                  function() {
+                    callAtiv("moveUserCapacity", ativData.id_user);
+                  }
+                );
+              } else if (param2.mode == "move") {
+                resetDialogBoxPro2("dialogBoxPro");
+                callAtiv("updateAtividade");
+              }
+            }
+            if (typeof param2.mode === "undefined" || param2.mode != "check") {
+              var mode_config = mode.replace("config_", "").replace("self_", "");
+              callAtiv("getTabConfig", mode_config, "set", ativData, false, 0, param2);
+            }
+          } else if (mode == "panel") {
+            $2("#tabs-configpessoal").find("tr > td:nth-child(2)").removeClass("editCellLoading");
+            var isInitOffset = typeof ativData.offset === "undefined" || ativData.offset == 0 ? true : false;
+            if (typeof ativData.padrao === "object" && ativData.padrao !== null && typeof ativData.padrao.perfil !== "undefined" && ativData.padrao.perfil !== null && typeof ativData.padrao.perfil.nivel !== "undefined" && ativData.padrao.perfil.nivel !== null && typeof arrayConfigAtividades2 === "object" && arrayConfigAtividades2 !== null && typeof arrayConfigAtividades2.perfil !== "undefined" && arrayConfigAtividades2.perfil !== null && typeof arrayConfigAtividades2.perfil.nivel !== "undefined" && arrayConfigAtividades2.perfil.nivel !== null && ativData.padrao.perfil.nivel !== arrayConfigAtividades2.perfil.nivel) {
+              if (isInitOffset) callAtiv("removeLocalDataAtiv", true);
+              callAtiv("getAtividades");
+              return false;
+            }
+            if (typeof ativData["padrao"] === "object" && ativData["padrao"] !== null) {
+              if (param2.last_update) {
+                callAtiv("appendDataConfigOnLocalArray", ativData["padrao"]);
+              } else if (isInitOffset) {
+                callAtiv("removeLocalDataAtiv", true);
+                arrayConfigAtividades2 = ativData["padrao"];
+              }
+              if (typeof arrayConfigAtividades2 !== "undefined" && arrayConfigAtividades2 !== null && typeof arrayConfigAtividades2.etiquetas !== "undefined" && arrayConfigAtividades2.etiquetas !== null && typeof arrayConfigAtividades2.etiquetas.list !== "undefined" && arrayConfigAtividades2.etiquetas.list !== null) {
+                arrayConfigAtividades2["etiquetas"]["list"] = $2.map(arrayConfigAtividades2["etiquetas"]["list"], function(i) {
+                  return i;
+                });
+              }
+            }
+            var arrayConfigUnidadeSeleted = typeof ativData["padrao"] === "object" && ativData["padrao"] !== null && ativData["padrao"]["unidades"].length > 0 ? jmespath2.search(ativData["padrao"]["unidades"], "[?selected==`true`] | [0]") : jmespath2.search(arrayConfigAtividades2["unidades"], "[?selected==`true`] | [0]");
+            arrayConfigAtivUnidade2 = arrayConfigUnidadeSeleted !== null ? arrayConfigUnidadeSeleted : arrayConfigAtivUnidade2;
+            arrayNomenclaturas = arrayConfigAtividades2["nomenclaturas"];
+            initNameConst("set");
+            var arrayUsuarios = [];
+            if (typeof arrayConfigAtividades2.unidades !== "undefined") {
+              $2.each(jmespath2.search(arrayConfigAtividades2.unidades, "[*].usuarios"), function(index, value2) {
+                $2.each(value2, function(i, v) {
+                  if (jmespath2.search(arrayUsuarios, "[?id_user==`" + v.id_user + "`]").length == 0) {
+                    arrayUsuarios.push(v);
+                  }
+                });
+              });
+              arrayConfigAtividades2.usuarios = arrayUsuarios;
+            }
+            if (typeof ativData["demandas"] !== "undefined" && ativData["demandas"] !== null) {
+              if (arrayAtividadesPro2.length && (param2.last_update || !isInitOffset)) {
+                callAtiv("appendDataDemandaOnLocalArray", ativData["demandas"], "demandas");
+              } else {
+                arrayAtividadesPro2 = ativData["demandas"];
+                localStorageStorePro2("lastRestoreAtividades", moment2().format("YYYY-MM-DD HH:mm:ss"));
+              }
+            }
+            if (typeof ativData["demandas_processo"] !== "undefined" && ativData["demandas_processo"] !== null && isInitOffset) {
+              arrayAtividadesProcPro2 = ativData["demandas_processo"];
+            }
+            if (typeof ativData["prescricoes_processo"] !== "undefined" && ativData["prescricoes_processo"] !== null && isInitOffset) {
+              arrayPrescricoesProcPro = ativData["prescricoes_processo"];
+              callAtiv("initPanelPrescricaoProc");
+            }
+            if (typeof ativData["demandas_excluidas"] !== "undefined" && ativData["demandas_excluidas"] !== null && ativData["demandas_excluidas"].length > 0 && isInitOffset) {
+              $2.each(ativData["demandas_excluidas"], function(i, v) {
+                callAtiv("removeRowsPanelAtividades", v.id_demanda);
+              });
+            }
+            checkLoadAtividadesProcPro = true;
+            var arrayAtividades2 = $2("#ifrArvore").length > 0 ? arrayAtividadesProcPro2 : arrayAtividadesPro2;
+            hybridStorageStorePro2("configDataAtividadesPro", arrayAtividadesPro2);
+            hybridStorageStorePro2("configDataAtividadesProcPro", arrayAtividadesProcPro2);
+            hybridStorageStorePro2("configDataAtivUnidadePro", arrayConfigAtivUnidade2);
+            callAtiv("storeLocalDataConfigArray", arrayConfigAtividades2);
+            const nextLastUpdate = !getOptionsPro2("panelLocalStorePro") && typeof ativData["last_update"] !== "undefined" && ativData["last_update"] ? ativData["last_update"] : context2.store.get().lastUpdateAtividades;
+            context2.store.patch({
+              arrayAtividadesPro: arrayAtividadesPro2,
+              arrayAtividadesProcPro: arrayAtividadesProcPro2,
+              arrayPrescricoesProcPro,
+              arrayConfigAtivUnidade: arrayConfigAtivUnidade2,
+              arrayConfigAtividades: arrayConfigAtividades2,
+              arrayAtividades: arrayAtividades2,
+              checkLoadAtividadesProcPro: true,
+              lastUpdateAtividades: nextLastUpdate
+            });
+            if (typeof localStorageStorePro2 === "function") localStorageStorePro2("lastUpdateAtividades", nextLastUpdate);
+            var ativDataPanel = false;
+            var _caption = $2("#tabelaAtivPanel table caption.infraCaption");
+            var _lastCount = _caption.length > 0 ? _caption.find("span.count") : false;
+            if (typeof ativData === "object" && ativData !== null) {
+              if (param2.last_update) {
+                $2(".panelHome").find(".iconAtividade_update i").removeClass("fa-spin");
+                if (!$2("#tabelaAtivPanel table tbody").length || typeof ativData["demandas_processo"] !== "undefined" && ativData["demandas_processo"] !== null && ativData["demandas_processo"].length > 0) {
+                  ativDataPanel = {
+                    demandas: arrayAtividadesPro2,
+                    demandas_processo: arrayAtividadesProcPro2,
+                    padrao: arrayConfigAtividades2,
+                    last_update: nextLastUpdate,
+                    status: 1
+                  };
+                  callAtiv("initPanelAtividades", ativDataPanel);
+                }
+                if (typeof ativData["demandas"] !== "undefined" && ativData["demandas"] !== null && ativData["demandas"].length > 0) {
+                  callAtiv("getRowsPanelAtividades", ativData["demandas"], $2("#tabelaAtivPanel table tbody"));
+                }
+                callAtiv("setAtividadesUser");
+              } else {
+                if (isInitOffset) {
+                  arrayConfigAtividades2 = ativData["padrao"];
+                  context2.store.patch({ arrayConfigAtividades: arrayConfigAtividades2 });
+                  ativDataPanel = ativData;
+                  callAtiv("initPanelAtividades", ativDataPanel);
+                } else {
+                  callAtiv("getRowsPanelAtividades", ativData["demandas"], $2("#tabelaAtivPanel table tbody"));
+                  callAtiv("getHtmlTableAtiv");
+                }
+                var countDemandas = typeof ativData["demandas"] !== "undefined" && ativData["demandas"] !== null && ativData["demandas"].length > 0 ? ativData["demandas"].length : 0;
+                if (countDemandas > 0 && typeof ativData.offset !== "undefined" && callAtiv("getOptionEntidade", "limit_paginacao") != 0) {
+                  var new_param = param2;
+                  new_param.offset = ativData.next_offset;
+                  request(new_param, "panel");
+                  if (_caption.find("span.progress").length == 0) _caption.append('<span class="progress" style="color: #777;font-size: 0.9em !important;padding: 5px;margin: 5px;"><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados...</span>');
+                } else {
+                  _caption.find("span.progress").remove();
+                }
+              }
+              if (_lastCount) _lastCount.text(arrayAtividadesPro2.length);
+            }
+            callAtiv("getInsertIconAtividade");
+            resetDialogBoxPro2("configBoxPro");
+            callAtiv("repairPerfilSelectUnidade");
+            setResizeAreaTelaD();
+            setProgressBarOnProcesso();
+            if (getOptionsPro2("panelAtividadesView") == "Quadro") callAtiv("initKanbanAtividades");
+            if (typeof param2.callback !== "undefined" && param2.callback) {
+              if (param2.callback.action == "rate_atividade") {
+                setTimeout(function() {
+                  callAtiv("rateAtividade", param2.callback.id, false);
+                }, 1500);
+              }
+            }
+            if (verifyConfigValue("gerenciarprojetos") && callAtiv("checkCapacidade", "view_projetos") && isInitOffset) {
+              var projetosPanel = arrayConfigAtividades2 && arrayConfigAtividades2.projetos ? arrayConfigAtividades2.projetos : [];
+              syncProjetosFeatureFromAtividades(projetosPanel, {
+                mode: documentRef && documentRef.getElementById("projetosGantt") ? "refresh" : "insert",
+                tipos: arrayConfigAtividades2 && arrayConfigAtividades2.tipos_projetos
+              });
+            }
+          } else if (mode == "pause_atividade_lista") {
+            loadingButtonConfirm2(false);
+            callAtiv("getPausasAtividadeCalc", ativData["pause_lista"]);
+            var objIndexAtiv2 = typeof arrayAtividadesPro2 === "undefined" || arrayAtividadesPro2 == 0 || arrayAtividadesPro2.length == 0 ? -1 : arrayAtividadesPro2.findIndex(((obj) => obj.id_demanda == ativData.id_demanda));
+            if (objIndexAtiv2 !== -1) {
+              arrayAtividadesPro2[objIndexAtiv2].pausa_lista = ativData["pause_lista"];
+              $2("#ativ_data_entrega").trigger("change");
+            }
+          } else if (mode == "update_planos") {
+            loadingButtonConfirm2(false);
+            callAtiv("updateArrayPlanos", ativData["update_planos"]);
+          } else if (mode == "update_prioridades") {
+            callAtiv("updatePriorityKanbanItens", ativData["board"], "update");
+            var resultAtivData = ativData["demandas"];
+            arrayAtividadesPro2 = resultAtivData;
+            hybridStorageStorePro2("configDataAtividadesPro", resultAtivData);
+          } else if (mode == "sign_documento" || mode == "sign_cancel_documento" || mode == "save_atividade" || mode == "save_atividade_rapida" || mode == "edit_atividade" || mode == "delete_atividade" || mode == "delete_atividade_all" || mode == "start_atividade" || mode == "extend_atividade" || mode == "variation_atividade" || mode == "type_atividade" || mode == "pause_atividade" || mode == "pause_atividade_remove" || mode == "start_cancel_atividade" || mode == "start_cancel_atividades" || mode == "complete_atividade" || mode == "complete_atividade_parcial" || mode == "complete_edit_atividade" || mode == "complete_cancel_atividade" || mode == "complete_cancel_atividades" || mode == "rate_atividade" || mode == "rate_atividades" || mode == "rate_edit_atividade" || mode == "rate_cancel_atividade" || mode == "rate_cancel_atividades" || mode == "send_atividade" || mode == "send_cancel_atividade" || mode == "notify_send" || mode == "save_afastamento" || mode == "edit_afastamento" || mode == "delete_afastamento") {
+            var value = typeof param2.id_demanda !== "undefined" ? jmespath2.search(arrayAtividadesPro2, "[?id_demanda==`" + param2.id_demanda + "`] | [0]") : false;
+            var demandaID = value ? '[{"ID":' + value.id_demanda + "}]" : value;
+            demandaID = !value && typeof param2.id_demandas != "undefined" && param2.id_demandas.length > 0 ? JSON.stringify($2.map(param2.id_demandas, function(sub, i) {
+              return { ID: sub };
+            })) : demandaID;
+            var requisicao = value ? typeof value.requisicao_sei !== "undefined" && value.requisicao_sei !== null && parseInt(value.requisicao_sei) != 0 ? value.nome_requisicao + " (" + value.requisicao_sei + ") " : value.nome_requisicao : "";
+            var txtAlert = mode == "save_atividade" ? __2.Demanda + " " + getNameGenre("demanda", "cadastrado", "cadastrada") : "";
+            txtAlert = mode == "save_atividade_rapida" ? __2.Demanda + " r\xE1pida " + getNameGenre("demanda", "cadastrado", "cadastrada") : txtAlert;
+            txtAlert = mode == "sign_documento" ? "Documento assinado" : txtAlert;
+            txtAlert = mode == "sign_cancel_documento" ? "Assinatura do documento cancelada" : txtAlert;
+            txtAlert = mode == "edit_atividade" ? __2.Demanda + " " + getNameGenre("demanda", "editado", "editada") : txtAlert;
+            txtAlert = mode == "delete_atividade" || mode == "delete_atividade_all" ? typeof ativData["delete_demandas"] !== "undefined" && ativData["delete_demandas"].length > 1 ? __2.Demandas + " " + getNameGenre("demanda", "deletados", "deletadas") : __2.Demanda + " " + getNameGenre("demanda", "deletado", "deletada") : txtAlert;
+            txtAlert = mode == "start_atividade" ? __2.Demanda + " " + getNameGenre("demanda", "iniciado", "iniciada") : txtAlert;
+            txtAlert = mode == "extend_atividade" ? __2.Demanda + " " + getNameGenre("demanda", "prorrogado", "prorrogada") : txtAlert;
+            txtAlert = mode == "variation_atividade" ? __2.Complexidade + " " + getNameGenre("complexidade", "alterado", "alterada") : txtAlert;
+            txtAlert = mode == "type_atividade" ? __2.Atividade + " " + getNameGenre("atividade", "atribu\xEDdo", "atribu\xEDda") : txtAlert;
+            txtAlert = mode == "pause_atividade" ? __2.Demanda + " " + (ativData["check_ispaused"] == false ? __2.paralisada : __2.retomada) : txtAlert;
+            txtAlert = mode == "pause_atividade_remove" ? __2.Paralisacao + " " + getNameGenre("paralisacao", "removido", "removida") : txtAlert;
+            txtAlert = mode == "complete_atividade" ? __2.Demanda + " " + getNameGenre("demanda", "conclu\xEDdo", "conclu\xEDda") : txtAlert;
+            txtAlert = mode == "complete_atividade_parcial" ? __2.Demanda + " residual " + getNameGenre("demanda", "cadastrado", "cadastrada") : txtAlert;
+            txtAlert = mode == "complete_edit_atividade" ? __2.Demanda + " " + getNameGenre("demanda", "editado", "editada") : txtAlert;
+            txtAlert = mode == "start_cancel_atividade" ? "In\xEDcio de " + __2.demanda + " cancelado" : txtAlert;
+            txtAlert = mode == "start_cancel_atividades" ? "In\xEDcio de " + __2.demandas + " cancelado" : txtAlert;
+            txtAlert = mode == "complete_cancel_atividade" ? "Conclus\xE3o de " + __2.demanda + " cancelada" : txtAlert;
+            txtAlert = mode == "complete_cancel_atividades" ? "Conclus\xE3o de " + __2.demandas + " cancelada" : txtAlert;
+            txtAlert = mode == "rate_atividade" ? "Avalia\xE7\xE3o cadastrada" : txtAlert;
+            txtAlert = mode == "rate_atividades" ? "Avalia\xE7\xF5es cadastradas" : txtAlert;
+            txtAlert = mode == "rate_edit_atividade" ? "Avalia\xE7\xE3o editada" : txtAlert;
+            txtAlert = mode == "rate_cancel_atividade" ? "Avalia\xE7\xE3o cancelada" : txtAlert;
+            txtAlert = mode == "rate_cancel_atividades" ? "Avalia\xE7\xF5es canceladas" : txtAlert;
+            txtAlert = mode == "send_atividade" ? ativData["update_demandas"].length == 1 ? __2.Demanda + " " + __2.arquivada : __2.Demandas + " " + __2.arquivadas : txtAlert;
+            txtAlert = mode == "send_cancel_atividade" ? __2.Arquivamento + " de " + __2.demanda + " " + getNameGenre("arquivamento", "cancelado", "cancelado") : txtAlert;
+            txtAlert = mode == "save_afastamento" ? "Afastamento salvo" : txtAlert;
+            txtAlert = mode == "edit_afastamento" ? "Afastamento editado" : txtAlert;
+            txtAlert = mode == "delete_afastamento" ? typeof ativData["id_afastamentos"] !== "undefined" && ativData["id_afastamentos"].length > 1 ? "Afastamentos deletados" : "Afastamento deletado" : txtAlert;
+            txtAlert = mode == "notify_send" ? "Notifica\xE7\xE3o enviada " : txtAlert;
+            loadingButtonConfirm2(false);
+            if (param2.action == "sign_documento" || param2.action == "sign_cancel_documento") {
+              resetDialogBoxPro2("editorBoxPro");
+              callAtiv("updateAtividade_", false);
+              if (typeof ativData.refresh_page !== "undefined" && ativData.refresh_page && $2("#tableConfiguracoesPanel_" + param2.type).is(":visible")) {
+                callAtiv("getTabConfig", param2.type, "get");
+              }
+            }
+            if (mode != "pause_atividade_remove") {
+              resetDialogBoxPro2("dialogBoxPro");
+            } else {
+              setTimeout(function() {
+                callAtiv("getPausasAtividade", ativData["id_demanda"]);
+              }, 1500);
+            }
+            var callback = mode == "type_atividade" && param2.before_rate ? { action: "rate_atividade", id: param2.id_demanda } : false;
+            callAtiv("getAtividades", callback);
+            alertaBoxPro2("Sucess", "check-circle", txtAlert + " com sucesso!");
+            if (value && value.id_procedimento !== null && jmespath2.search(arrayConfigAtividades2.entidades, "[?id_entidade==`" + arrayConfigAtividades2.perfil.id_entidade + "`] |[0].config.gravar_historico_processo")) {
+              updateDadosArvore("Atualizar Andamento", "txaDescricao", "_" + txtAlert + ": " + requisicao + (demandaID ? demandaID : ""), value.id_procedimento);
+            }
+            if ((mode == "save_atividade" || mode == "complete_atividade") && ativData["anotacoes_processo"]) {
+              callAtiv("updateAnotacaoProcesso", ativData["anotacoes_processo"]);
+            }
+            if ((mode == "save_atividade" || mode == "edit_atividade") && param2.lista_marcador && param2.marcador == "on") {
+              var dateSubmit = "Ate " + moment2(param2.prazo_entrega, "YYYY-MM-DD HH:mm").format("DD/MM/YYYY HH:mm");
+              var valuesIframe = [
+                { element: "txaTexto", value: dateSubmit },
+                { element: "hdnIdMarcador", value: param2.lista_marcador.id_marcador }
+              ];
+              updateDadosArvoreMult("Gerenciar Marcador", valuesIframe, param2.id_procedimento, function() {
+                var listMarcadores = sessionStorageRestorePro2("dadosMarcadoresProcessoPro");
+                var objIndexDoc = !listMarcadores ? -1 : listMarcadores.findIndex(((obj) => obj.id_procedimento == String(param2.id_procedimento)));
+                if (objIndexDoc !== -1) {
+                  listMarcadores[objIndexDoc] = {
+                    id_procedimento: listMarcadores[objIndexDoc].id_procedimento,
+                    icon: param2.lista_marcador.icon,
+                    tag: param2.lista_marcador.tag,
+                    name: dateSubmit
+                  };
+                  sessionStorageStorePro2("dadosMarcadoresProcessoPro", listMarcadores);
+                }
+              });
+            }
+            if (mode == "save_afastamento" || mode == "edit_afastamento" || mode == "delete_afastamento") {
+              setTimeout(function() {
+                let return_id_afastamento = mode == "save_afastamento" ? parseInt(ativData.id_afastamento) : parseInt(param2.id_afastamento);
+                objIndexAtiv2 = typeof arrayConfigAtividades2.afastamentos === "undefined" || arrayConfigAtividades2.afastamentos == 0 || arrayConfigAtividades2.afastamentos.length == 0 || typeof arrayConfigAtividades2.afastamentos.lista === "undefined" || arrayConfigAtividades2.afastamentos.lista == 0 || arrayConfigAtividades2.afastamentos.lista.length == 0 ? -1 : arrayConfigAtividades2.afastamentos.lista.findIndex(((obj) => obj.id_afastamento == return_id_afastamento));
+                if (mode == "edit_afastamento" || mode == "delete_afastamento") {
+                  if (objIndexAtiv2 !== -1) {
+                    if (mode == "edit_afastamento") {
+                      arrayConfigAtividades2.afastamentos.lista[objIndexAtiv2] = ativData["result"][0];
+                    } else if (mode == "delete_afastamento") {
+                      arrayConfigAtividades2.afastamentos.lista.splice(objIndexAtiv2, 1);
+                    }
+                  }
+                } else if (mode == "save_afastamento" && typeof ativData["result"] !== "undefined" && ativData["result"] !== null && ativData["result"].length > 0) {
+                  if (objIndexAtiv2 !== -1) {
+                    arrayConfigAtividades2.afastamentos.lista[objIndexAtiv2] = ativData["result"][0];
+                  } else {
+                    arrayConfigAtividades2.afastamentos.lista.push(ativData["result"][0]);
+                  }
+                }
+                setTimeout(function() {
+                  callAtiv("updateTempoProporcionalPlanos");
+                }, 1e3);
+                callAtiv("initPanelAtividadesView");
+              }, 1500);
+            }
+            if (mode == "save_atividade" || mode == "save_atividade_rapida" || mode == "edit_atividade" || mode == "extend_atividade" || mode == "variation_atividade" || mode == "type_atividade" || mode == "complete_atividade" || mode == "complete_edit_atividade" || mode == "complete_atividade_parcial") {
+              if (mode == "complete_atividade" && ativData["checklist_tempo_proporcional"]) {
+                alertBoxPro2.dialog("option", "buttons", [{
+                  text: "Gerar Notifica\xE7\xE3o",
+                  icon: "ui-icon-mail-closed",
+                  click: function(event) {
+                    $2(this).dialog("close");
+                    callAtiv("notifyAtividade", param2.id_demanda == "0" ? ativData["id_demanda"] : param2.id_demanda, event);
+                  }
+                }, {
+                  text: "Gerar Demanda Residual",
+                  icon: "ui-icon-mail-scissors",
+                  class: "ui-state-active",
+                  click: function(event) {
+                    $2(this).dialog("close");
+                    var return_tempo_parcial = ativData["return_tempo_parcial"];
+                    var action = "complete_atividade_parcial";
+                    var param3 = {
+                      action,
+                      id_demanda: return_tempo_parcial.id_demanda,
+                      tempo_pactuado: return_tempo_parcial.tempo_pactuado,
+                      tempo_pactuado_original: return_tempo_parcial.tempo_pactuado_original
+                    };
+                    request(param3, action);
+                  }
+                }]);
+                $2("#alertaBoxPro").html('<strong class="alertaSucessPro dialogBoxDiv"><i class="fas fa-check-circle" style="margin-right: 5px;"></i> ' + __2.Demanda + " conclu\xEDda com sucesso!<br><br>Deseja criar demanda residual a partir do tempo pactuado restante (" + decimalHourToMinute2(ativData["return_tempo_parcial"].tempo_pactuado) + " horas)?</strong>");
+              } else {
+                alertBoxPro2.dialog("option", "buttons", [{
+                  text: "OK",
+                  click: function() {
+                    $2(this).dialog("close");
+                  }
+                }, {
+                  text: "Gerar Notifica\xE7\xE3o",
+                  icon: "ui-icon-mail-closed",
+                  class: "ui-state-active",
+                  click: function(event) {
+                    $2(this).dialog("close");
+                    callAtiv("notifyAtividade", param2.id_demanda == "0" ? ativData["id_demanda"] : param2.id_demanda, event);
+                  }
+                }]);
+              }
+            }
+            if (mode == "delete_atividade" || mode == "delete_atividade_all") {
+              callAtiv("removeRowsPanelAtividades", param2.id_demanda);
+            }
+            if (mode == "complete_atividade" || mode == "complete_edit_atividade" || mode == "complete_atividade_parcial" || mode == "complete_cancel_atividade" || mode == "complete_cancel_atividades" || mode == "save_atividade" || mode == "save_atividade_rapida" || mode == "edit_atividade" || mode == "pause_atividade" || mode == "rate_atividade" || mode == "rate_atividades" || mode == "rate_cancel_atividade" || mode == "rate_cancel_atividades" || mode == "rate_default_atividade" || mode == "rate_edit_atividade" || mode == "send_atividade" || mode == "send_cancel_atividade" || mode == "start_atividade" || mode == "start_cancel_atividade" || mode == "start_cancel_atividades" || mode == "type_atividade" || mode == "extend_atividade" || mode == "variation_atividade" || mode == "delete_atividade") {
+              callAtiv("awaitRowsPanelAtividades", param2.id_demanda);
+            }
+          } else {
+            loadingButtonConfirm2(false);
+          }
+          if (callAtiv("checkPerfilNivelAdm") && callAtiv("checkOptionEntidade", "gerar_relatorios_gerenciais")) {
+            indexReportUpdate2 = 0;
+            callAtiv("checkUpdateReports");
+          }
+          if (callAtiv("checkPerfilNivelAdm") && callAtiv("checkOptionEntidade", "sincronizar_dados_externos")) {
+            indexReportUpdate2 = 0;
+            callAtiv("checkSyncDadoExterno");
+          }
+          if (callAtiv("checkPerfilNivelAdm") && callAtiv("checkOptionEntidade", "sincronizar_dados_api")) {
+            indexAPIUpdate = 0;
+            callAtiv("checkSyncAPI");
+          }
+          if (typeof ativData !== "undefined" && typeof ativData["version_backend"] !== "undefined") backendServerAtiv2 = ativData["version_backend"];
+        }
+      }
+    }).catch(function(failure) {
+      var data = failure && failure.xhr || failure || {};
+      var textStatus = failure && failure.status || "";
+      if (typeof param2.type !== "undefined") {
+        callAtiv("resetButtonTabConfig", ".actionsConfig_" + param2.type);
+      }
+      if (typeof data.refresh_page !== "undefined" && data.refresh_page) callAtiv("cleanAtivParams");
+      callAtiv("failureScreen", data, textStatus, param2);
+      callAtiv("loadingTagConfig", param2.type, "set");
+    }).finally(function() {
+      context2.store.patch({
+        perfilLoginAtiv: perfilLoginAtiv2,
+        arrayAtividadesPro: arrayAtividadesPro2,
+        arrayAtividadesProcPro: arrayAtividadesProcPro2,
+        arrayConfigAtividades: arrayConfigAtividades2,
+        arrayConfigAtivUnidade: arrayConfigAtivUnidade2,
+        backendServerAtiv: page.backendServerAtiv,
+        indexReportUpdate: page.indexReportUpdate,
+        indexAPIUpdate: page.indexAPIUpdate
+      });
+    });
   }
 
   // src/features/atividades/server.js
-  function getServerAtividades(param2, mode) {
-    const urlServer = getAtividadesServerUrl();
-    if (urlServer && userHashAtiv != "" && isAtividadesServerModeAllowed(mode, {
-      checkCapacidade: hasAtiv("checkCapacidade") ? (...__a) => callAtiv("checkCapacidade", ...__a) : () => false,
-      delayServerAtiv: typeof delayServerAtiv !== "undefined" ? delayServerAtiv : 0,
-      checkLoadingButtonConfirm: typeof checkLoadingButtonConfirm === "function" ? checkLoadingButtonConfirm : () => false
-    })) {
-      param2 = buildAtividadesRequestParams(param2, mode, {
-        userHashAtiv,
-        version: typeof VERSION_SPRO !== "undefined" ? VERSION_SPRO : "",
-        getOptionsPro: typeof getOptionsPro === "function" ? getOptionsPro : () => void 0,
-        lastUpdateAtividades: typeof lastUpdateAtividades !== "undefined" ? lastUpdateAtividades : false,
-        verifyConfigValue: typeof verifyConfigValue === "function" ? verifyConfigValue : () => false,
-        checkConfigValue: typeof checkConfigValue === "function" ? checkConfigValue : () => false
-      });
-      delayServerAtiv = 1;
-      setTimeout(function() {
-        delayServerAtiv = 0;
-      }, 1e3);
-      if (typeof loadingButtonConfirm !== "undefined" && mode.indexOf("_monitorados") === -1) {
-        loadingButtonConfirm(true);
+  function getServerAtividades(param2, mode, deps = {}) {
+    const context2 = deps.context || getAtividadesContext();
+    const ports2 = deps.ports || createAtividadesServerPorts(context2);
+    const page = ports2.page || context2.page || {};
+    mode = typeof mode === "string" ? mode : "";
+    const checkCapability = deps.checkCapability || (hasAtiv("checkCapacidade") ? (...args) => callAtiv("checkCapacidade", ...args) : (name) => context2.permissions && typeof context2.permissions.check === "function" ? context2.permissions.check(name) : false);
+    const requestService = createAtividadesRequestService({
+      context: context2,
+      transport: deps.transport || {
+        request: (url, data, options) => postAtividadesServer(url, data, {
+          ajax: page.$ && typeof page.$.ajax === "function" ? page.$.ajax.bind(page.$) : void 0,
+          ...options,
+          beforeSend: options && options.authToken
+        })
+      },
+      version: typeof deps.version !== "undefined" ? deps.version : page.VERSION_SPRO || "",
+      checkCapability
+    });
+    const prepared = requestService.prepare(param2, mode);
+    param2 = prepared.param;
+    if (!prepared.allowed) {
+      const $2 = page.$;
+      if (typeof $2 === "function") {
+        $2("#atividadesProActions").find(".iconAtividade_update i").removeClass("fa-spin");
       }
-      if (mode.indexOf("config_update_") !== -1) callAtiv("loadingTagConfig", param2.type, "get");
-      var authToken = void 0;
-      postAtividadesServer(urlServer, param2, { beforeSend: authToken }).then(function(ativData) {
-        if (ativData.status == 0 || ativData.length == 0) {
-          loadingButtonConfirm(false);
-          callAtiv("loadingTagConfig", param2.type, "set");
-          if (typeof ativData.replace_server !== "undefined" && ativData.replace_server != "") {
-            var urlReplace = url_host.replace("controlador.php", "") + "?#&acao_pro=change_database&base=atividades&url=" + ativData.replace_server;
-            window.location.href = urlReplace;
-          }
-          if (mode.indexOf("config_update_") !== -1 || mode.indexOf("config_new_") !== -1) {
-            callAtiv("updateServerTabConfig", ativData, param2);
-          } else if (mode != "panel") {
-            alertaBoxPro("Error", "exclamation-triangle", typeof ativData.status_txt != "undefined" ? ativData.status_txt : "Erro ao enviar sua informa\xE7\xF5es.");
-            if (mode == "update_prioridades") {
-              callAtiv("updatePriorityKanbanItens", ativData["board"], "error");
-            }
-          } else if (typeof ativData.status_acess !== "undefined" && ativData.status_acess == 0) {
-            alertaBoxPro("Error", "exclamation-triangle", typeof ativData.status_txt != "undefined" ? ativData.status_txt : "Erro ao acessar o sistema. Acesso Negado.");
-            if (typeof perfilLoginAtiv.CLIENT_ID !== "undefined" && perfilLoginAtiv.CLIENT_ID != "") {
-              signOutProfile();
-            } else {
-              callAtiv("cleanAtivParams");
-            }
-          } else {
-            callAtiv("initPanelAtividades", arrayAtividadesPro);
-          }
-        } else {
-          if (typeof ativData.padrao !== "undefined" && typeof ativData.padrao.perfil !== "undefined" && ativData.padrao.perfil.login.toLowerCase() != userSEI.toLowerCase()) {
-            confirmaBoxPro("A chave de acesso ao sistema de " + __.atividades + " (" + ativData.padrao.perfil.login + ") \xE9 diferente do login do SEI (" + userSEI + "). <br><br>Deseja solicitar o envio de nova chave de acesso?", function() {
-              callAtiv("configResendKey", userSEI);
-            }, "Solicitar chave de acesso...");
-            if (typeof perfilLoginAtiv.CLIENT_ID !== "undefined" && perfilLoginAtiv.CLIENT_ID != "") {
-              signOutProfile();
-            } else {
-              callAtiv("cleanAtivParams");
-            }
-          } else {
-            if (mode == "panel" && param2.action == "demandas" && param2.perfil == "" && ativData.demandas.length == 0 && ativData.padrao.perfil.unidade != "") {
-              setOptionsPro("perfilAtividadesSelected", ativData.padrao.perfil.unidade);
-              getServerAtividades(param2, mode);
-            } else if (mode.indexOf("chart_") !== -1) {
-              if (mode == "chart_produtividade_mensal") {
-                callAtiv("getChartProdutividadeMes", param2.id_plano, "set", ativData);
-                callAtiv("updateServerTabConfig", ativData, param2);
-                if (dialogBoxPro) dialogBoxPro.dialog({ title: callAtiv("getTitleChartPlano", param2.id_plano).title });
-              } else {
-                callAtiv("setChartAtividades", ativData["chart"], mode);
-              }
-            } else if (mode == "check_monitorados") {
-              checkFileRemoteMonitorado("set", ativData);
-            } else if (mode == "check_entregas_atividades") {
-              callAtiv("checkTempoPlanoEntrega", false, "set", ativData);
-              loadingButtonConfirm(false);
-            } else if (mode == "get_monitorados") {
-              restoreMonitoradoServer(ativData["config"]);
-            } else if (mode == "set_monitorados") {
-              loadingButtonConfirm(false);
-            } else if (mode == "view_documento") {
-              loadingButtonConfirm(false);
-              if (param2.reference == "modelo") {
-                callAtiv("openModelConfigItem", ativData, param2);
-              }
-            } else if (mode == "edit_tempos") {
-              callAtiv("updateServerTemposDemanda", "reset", param2.mode, false, ativData, param2);
-              $(".update_tempos_demanda").removeClass("fa-spin");
-            } else if (mode == "edit_documento") {
-              loadingButtonConfirm(false);
-              if (param2.reference == "modelo") {
-                resetDialogBoxPro("editorBoxPro");
-                alertaBoxPro("Sucess", "check-circle", param2.title + " salvo com sucesso!");
-              }
-            } else if (mode == "restory_atividade") {
-              $("#tableRelatorio_demandas_excluidas").find('tr[data-id="' + param2.id_demanda + '"]').remove();
-              callAtiv("updateAtividade_", false);
-            } else if (mode == "report_errors") {
-              loadingButtonConfirm(false);
-              $(".panelHome").find(".iconAtividade_update i").removeClass("fa-spin");
-              $(".alertaErrorPro .sendReport").find("i").attr("class", "fas fa-thumbs-up azulColor").end().find(".labelLink").text("Notifica\xE7\xE3o enviada!");
-              alertaBoxPro("Sucess", "check-circle", "Notifica\xE7\xE3o enviada com sucesso!");
-            } else if (mode.indexOf("report_") !== -1) {
-              callAtiv("updateServerTabReport", ativData, param2);
-              if (mode == "report_demandas" && param2.id_plano != 0) callAtiv("updateServerTabConfig", ativData, param2);
-              if (mode == "report_afastamentos" && param2.id_plano != 0) {
-                if (typeof ativData.result !== "undefined" && ativData.result !== null && ativData.result.length > 0) {
-                  $.each(ativData.result, function(i, v) {
-                    var objIndexAtiv3 = typeof arrayConfigAtividades.afastamentos === "undefined" || arrayConfigAtividades.afastamentos == 0 || arrayConfigAtividades.afastamentos.length == 0 || typeof arrayConfigAtividades.afastamentos.lista === "undefined" || arrayConfigAtividades.afastamentos.lista == 0 || arrayConfigAtividades.afastamentos.lista.length == 0 ? -1 : arrayConfigAtividades.afastamentos.lista.findIndex(((obj) => obj.id_afastamento == v.id_afastamento));
-                    if (objIndexAtiv3 !== -1) {
-                      arrayConfigAtividades.afastamentos.lista[objIndexAtiv3] = v;
-                    } else {
-                      arrayConfigAtividades.afastamentos.lista.push(v);
-                    }
-                  });
-                }
-                callAtiv("getRelatorioMetaProporcional", param2.id_plano, true);
-              }
-            } else if (mode == "config_update_user_personal") {
-              $("#tabs-configpessoal").find("tr td:first-child").removeClass("editCellLoading");
-            } else if (mode.indexOf("config_update_") !== -1 || mode == "rate_plano" || mode == "rate_cancel_plano" || mode == "rate_programa" || mode == "rate_cancel_programa" || mode == "appeal_avaliacoes" || mode == "appeal_extend_avaliacoes" || mode.indexOf("config_new_") !== -1 && mode != "config_new_users") {
-              callAtiv("updateServerTabConfig", ativData, param2);
-              if (mode == "config_update_planos" && param2.mode == "homologacao") {
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                callAtiv("updateAtividade");
-                alertaBoxPro("Sucess", "check-circle", "Justificativa cadastrada com sucesso!");
-              } else if (mode == "rate_plano" || mode == "rate_cancel_plano") {
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", "Avalia\xE7\xE3o de plano " + (mode == "rate_plano" ? "cadastrada" : "cancelada") + " com sucesso!");
-              } else if (mode == "config_update_planos" && param2.mode == "postpone") {
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", "Data de in\xEDcio de vig\xEAncia postergada com sucesso!");
-                if (typeof ativData.refresh_page !== "undefined" && ativData.refresh_page && $("#tableConfiguracoesPanel_planos").is(":visible")) {
-                  callAtiv("getTabConfig", "planos", "get");
-                }
-              } else if (mode == "config_update_self_planos_entregas") {
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", "Entregas do plano cadastradas com sucesso!");
-              } else if (mode == "rate_programa" || mode == "rate_cancel_programa") {
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", "Avalia\xE7\xE3o de " + __.programa + " " + (mode == "rate_programa" ? "cadastrada" : "cancelada") + " com sucesso!");
-              } else if (mode == "appeal_avaliacoes") {
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", "Recurso de plano cadastrado com sucesso!");
-              } else if (mode == "appeal_extend_avaliacoes") {
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", "Prazo para apresenta\xE7\xE3o de recurso alterado com sucesso!");
-              } else if (mode == "config_new_planos" && param2.mode == "new") {
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", "Plano de trabalho cadastrado com sucesso!");
-              } else if (mode == "config_update_tipos_capacidades" && param2.mode == "update") {
-                callAtiv("updateConfigPerfilCapacidade", param2, ativData);
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null) {
-                if (typeof ativData["padrao"]["termos"] !== "undefined" && ativData["padrao"]["termos"].length) arrayConfigAtividades["termos"] = ativData["padrao"]["termos"];
-              }
-            } else if (mode == "view_contato") {
-              callAtiv("setTableContatoPanel", ativData["result"]);
-              sessionStorageStorePro("configDataContatosArray", ativData["result"]);
-            } else if (mode == "history_atividade") {
-              callAtiv("historyAtividade", false, "set", ativData["result"]);
-            } else if (mode == "update_checklist") {
-              callAtiv("checklistUpdate", false, "update", ativData, param2);
-            } else if (mode.indexOf("_prescricao") !== -1) {
-              if (mode == "update_prescricao" || mode == "delete_prescricao") {
-                var txtAlert = mode == "update_prescricao" && param2.id_prescricao > 0 ? "editada" : "inserida";
-                txtAlert = mode == "delete_prescricao" ? "deletada" : txtAlert;
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", __.Prescricao + " " + txtAlert + " com sucesso!");
-                if (typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
-                  arrayPrescricoesProcPro = ativData["return_row"];
-                  callAtiv("initPanelPrescricaoProc");
-                }
-              }
-            } else if (mode.indexOf("_projeto") !== -1) {
-              if (mode == "delete_projeto" && typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
-                arrayConfigAtividades.projetos = ativData.return_row;
-                var txtAlert = mode == "delete_projeto" ? "Projeto deletado" : txtAlert;
-              } else if ((mode == "save_projeto" || mode == "clone_projeto") && typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
-                arrayConfigAtividades.projetos.push(ativData.return_row[0]);
-                var txtAlert = mode == "save_projeto" ? "Projeto adicionado" : "";
-                txtAlert = mode == "clone_projeto" ? "Projeto duplicado" : txtAlert;
-                txtAlert = mode == "delete_projeto" ? "Projeto deletado" : txtAlert;
-              } else if ((mode == "edit_projeto" || mode == "save_projeto_etapa" || mode == "edit_projeto_etapa" || mode == "delete_projeto_etapa" || mode == "update_projeto_etapa" || mode == "archive_projeto" || mode == "share_projeto") && typeof ativData.return_row !== "undefined" && ativData.return_row.length) {
-                objIndexAtiv2 = typeof arrayConfigAtividades.projetos === "undefined" || arrayConfigAtividades.projetos == 0 || arrayConfigAtividades.projetos.length == 0 ? -1 : arrayConfigAtividades.projetos.findIndex(((obj) => obj.id_projeto == ativData.id_projeto));
-                if (objIndexAtiv2 !== -1) {
-                  arrayConfigAtividades.projetos[objIndexAtiv2] = ativData.return_row[0];
-                }
-                if (mode == "share_projeto" && (param2.mode == "insert_usuario" || param2.mode == "insert_unidade" || param2.mode == "change_edicao" || param2.mode == "remove_share")) {
-                  var table = $("#shareBox_" + param2.key);
-                  var tr = table.find('tr[data-value="' + (param2.key == "usuario" ? param2.id_user : param2.id_unidade) + '"]');
-                  tr.attr("data-id", ativData.id_projeto_compartilhado).data("id", ativData.id_projeto_compartilhado);
-                  tr.find("td").eq(0).removeClass("editCellLoading");
-                  if (param2.mode == "remove_share") {
-                    if (table.find("tbody tr:visible").length == 1) {
-                      table.find(".addConfigItem").trigger("click");
-                      table.find("tbody tr:last-child").data("id", "new").attr("data-id", "new").find("td:first-child").addClass("editCellSelect").removeClass("editCellLoading");
-                    }
-                    tr.hide("fast", function() {
-                      setTimeout(() => {
-                        $(this).remove();
-                      }, 1e3);
-                    });
-                  }
-                }
-                var txtAlert = mode == "edit_projeto" ? "Projeto editado" : "";
-                txtAlert = mode == "edit_projeto_etapa" || mode == "update_projeto_etapa" ? "Etapa editada" : txtAlert;
-                txtAlert = mode == "update_projeto_etapa" && param2.mode == "complete_execucao" ? "Etapa conclu\xEDda" : txtAlert;
-                txtAlert = mode == "delete_projeto_etapa" ? "Etapa deletada" : txtAlert;
-                txtAlert = mode == "archive_projeto" && param2.mode == "Arquivar" ? "Projeto arquivado" : txtAlert;
-                txtAlert = mode == "archive_projeto" && param2.mode == "Reativar" ? "Projeto reativado" : txtAlert;
-                txtAlert = mode == "save_projeto_etapa" ? "Etapa adicionada" : txtAlert;
-              } else if (mode == "share_projeto" && param2.mode == "list_select" && typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null) {
-                if (typeof ativData["padrao"]["unidades_all"] !== "undefined") arrayConfigAtividades["unidades_all"] = ativData["padrao"]["unidades_all"];
-                if (typeof ativData["padrao"]["usuarios_all"] !== "undefined") arrayConfigAtividades["usuarios_all"] = ativData["padrao"]["usuarios_all"];
-              }
-              if ((mode == "save_projeto" || mode == "edit_projeto") && typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null) arrayConfigAtividades["tipos_projetos"] = ativData["padrao"]["tipos_projetos"];
-              callAtiv("storeLocalDataConfigArray", arrayConfigAtividades);
-              if (ativData.refresh_page) {
-                var mode_update = mode == "save_projeto_etapa" || mode == "delete_projeto_etapa" || mode == "update_projeto_etapa" || mode == "edit_projeto_etapa" ? "update" : "insert";
-                syncProjetosFeatureFromAtividades(arrayConfigAtividades.projetos, {
-                  mode: mode_update,
-                  id_projeto: ativData.id_projeto,
-                  tipos: arrayConfigAtividades.tipos_projetos
-                });
-                loadingButtonConfirm(false);
-                resetDialogBoxPro("dialogBoxPro");
-                alertaBoxPro("Sucess", "check-circle", txtAlert + " com sucesso!");
-              }
-              if ((mode == "save_projeto" || mode == "clone_projeto") && ativData.id_projeto) {
-                setTimeout(function() {
-                  if (typeof selectProjetoTab === "function") selectProjetoTab(ativData.id_projeto);
-                }, 400);
-              }
-            } else if (mode.indexOf("config_") !== -1) {
-              loadingButtonConfirm(false);
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && (mode == "config_users" || mode == "config_unidades" || mode == "config_tipos_modalidades" || mode == "config_tipos_capacidades" || mode == "config_perfis" || mode == "config_tipos_prescricoes" || mode == "config_entidades")) {
-                if (typeof ativData["padrao"]["unidades_all"] !== "undefined" && ativData["padrao"]["unidades_all"].length) arrayConfigAtividades["unidades_all"] = ativData["padrao"]["unidades_all"];
-                if (typeof ativData["padrao"]["usuarios_entidade"] !== "undefined" && ativData["padrao"]["usuarios_entidade"].length) arrayConfigAtividades["usuarios_entidade"] = ativData["padrao"]["usuarios_entidade"];
-                if (typeof ativData["padrao"]["perfis"] !== "undefined" && ativData["padrao"]["perfis"].length) arrayConfigAtividades["perfis"] = ativData["padrao"]["perfis"];
-                if (typeof ativData["padrao"]["tipos_capacidades"] !== "undefined" && ativData["padrao"]["tipos_capacidades"].length) arrayConfigAtividades["tipos_capacidades"] = ativData["padrao"]["tipos_capacidades"];
-                if (typeof ativData["padrao"]["tipos_metadados"] !== "undefined" && ativData["padrao"]["tipos_metadados"].length) arrayConfigAtividades["tipos_metadados"] = ativData["padrao"]["tipos_metadados"];
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && (mode == "config_planos" || mode == "config_self_planos" || mode == "config_update_planos")) {
-                if (typeof ativData["padrao"]["tipos_modalidades"] !== "undefined" && ativData["padrao"]["tipos_modalidades"].length) arrayConfigAtividades["tipos_modalidades"] = ativData["padrao"]["tipos_modalidades"];
-                if (typeof ativData["padrao"]["termos"] !== "undefined" && ativData["padrao"]["termos"].length) arrayConfigAtividades["termos"] = ativData["padrao"]["termos"];
-                if (typeof ativData["padrao"]["atividades"] !== "undefined" && ativData["padrao"]["atividades"].length) arrayConfigAtividades["atividades"] = ativData["padrao"]["atividades"];
-                if (typeof ativData["padrao"]["avaliacao"] !== "undefined" && ativData["padrao"]["avaliacao"].length) arrayConfigAtividades["avaliacao"] = ativData["padrao"]["avaliacao"];
-                var updatePlano = jmespath.search(ativData.config, "[?last_update=='0000-00-00 00:00:00'] | [?id_user==`" + arrayConfigAtividades.perfil.id_user + "`]");
-                var checkUpdatePlano = updatePlano !== null && updatePlano.length > 0 ? true : false;
-                if (checkUpdatePlano) {
-                  setTimeout(function() {
-                    callAtiv("updateConfigTempoPactuadoById", updatePlano[0].id_plano);
-                  }, 2e3);
-                }
-              }
-              if (typeof ativData["config"] !== "undefined" && ativData["config"] !== null && mode == "config_tipos_prescricoes") {
-                arrayConfigAtividades["tipos_prescricoes"] = ativData["config"];
-              }
-              if (typeof ativData["config"] !== "undefined" && ativData["config"] !== null && mode == "config_cadeia_valor") {
-                arrayConfigAtividades["cadeia_valor"] = ativData["config"];
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_atividades") {
-                arrayConfigAtividades["cadeia_valor"] = ativData["padrao"]["cadeia_valor"];
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_objetivos") {
-                arrayConfigAtividades["tipos_eixos"] = ativData["padrao"]["tipos_eixos"];
-                arrayConfigAtividades["mapas"] = ativData["padrao"]["mapas"];
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_acoes") {
-                arrayConfigAtividades["objetivos"] = ativData["padrao"]["objetivos"];
-                arrayConfigAtividades["cadeia_valor"] = ativData["padrao"]["cadeia_valor"];
-                arrayConfigAtividades["unidades_all"] = ativData["padrao"]["unidades_all"];
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_entregas") {
-                arrayConfigAtividades["objetivos"] = ativData["padrao"]["objetivos"];
-                arrayConfigAtividades["tipos_entregas"] = ativData["padrao"]["tipos_entregas"];
-                arrayConfigAtividades["acoes"] = ativData["padrao"]["acoes"];
-                arrayConfigAtividades["unidades_all"] = ativData["padrao"]["unidades_all"];
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_programas") {
-                arrayConfigAtividades["entregas"] = ativData["padrao"]["entregas"];
-              }
-              if (typeof ativData["padrao"] !== "undefined" && ativData["padrao"] !== null && mode == "config_tipos_avaliacoes") {
-                arrayConfigAtividades["tipos_justificativas"] = ativData["padrao"]["tipos_justificativas"];
-              }
-              if (mode == "config_new_users") {
-                loadingButtonConfirm(false);
-                if (param2.mode == "check" && ativData.check_lotacao && ativData.id_user != 0 && ativData.id_unidade != 0) {
-                  alertaBoxPro("Error", "exclamation-triangle", "Usu\xE1rio j\xE1 cadastrado no sistema. <br><br>Lota\xE7\xE3o atual: " + ativData.nome_unidade + " (" + ativData.sigla_unidade + ")<br><br>Solicite a desvincula\xE7\xE3o ao gestor da unidade ou a altera\xE7\xE3o de lota\xE7\xE3o ao administrador do sistema");
-                } else if (param2.mode == "check" && ativData.check_lotacao == false && ativData.id_user != 0) {
-                  confirmaFraseBoxPro(
-                    "Usu\xE1rio j\xE1 cadastrado no sistema, mas sem lota\xE7\xE3o definida. Deseja lotar em sua unidade?",
-                    "SIM",
-                    function() {
-                      callAtiv("moveUserCapacity", ativData.id_user);
-                    }
-                  );
-                } else if (param2.mode == "move") {
-                  resetDialogBoxPro("dialogBoxPro");
-                  callAtiv("updateAtividade");
-                }
-              }
-              if (typeof param2.mode === "undefined" || param2.mode != "check") {
-                var mode_config = mode.replace("config_", "").replace("self_", "");
-                callAtiv("getTabConfig", mode_config, "set", ativData, false, 0, param2);
-              }
-            } else if (mode == "panel") {
-              $("#tabs-configpessoal").find("tr > td:nth-child(2)").removeClass("editCellLoading");
-              var isInitOffset = typeof ativData.offset === "undefined" || ativData.offset == 0 ? true : false;
-              if (typeof ativData.padrao === "object" && ativData.padrao !== null && typeof ativData.padrao.perfil !== "undefined" && ativData.padrao.perfil !== null && typeof ativData.padrao.perfil.nivel !== "undefined" && ativData.padrao.perfil.nivel !== null && typeof arrayConfigAtividades === "object" && arrayConfigAtividades !== null && typeof arrayConfigAtividades.perfil !== "undefined" && arrayConfigAtividades.perfil !== null && typeof arrayConfigAtividades.perfil.nivel !== "undefined" && arrayConfigAtividades.perfil.nivel !== null && ativData.padrao.perfil.nivel !== arrayConfigAtividades.perfil.nivel) {
-                if (isInitOffset) callAtiv("removeLocalDataAtiv", true);
-                callAtiv("getAtividades");
-                return false;
-              }
-              if (typeof ativData["padrao"] === "object" && ativData["padrao"] !== null) {
-                if (param2.last_update) {
-                  callAtiv("appendDataConfigOnLocalArray", ativData["padrao"]);
-                } else if (isInitOffset) {
-                  callAtiv("removeLocalDataAtiv", true);
-                  arrayConfigAtividades = ativData["padrao"];
-                }
-                if (typeof arrayConfigAtividades !== "undefined" && arrayConfigAtividades !== null && typeof arrayConfigAtividades.etiquetas !== "undefined" && arrayConfigAtividades.etiquetas !== null && typeof arrayConfigAtividades.etiquetas.list !== "undefined" && arrayConfigAtividades.etiquetas.list !== null) {
-                  arrayConfigAtividades["etiquetas"]["list"] = $.map(arrayConfigAtividades["etiquetas"]["list"], function(i) {
-                    return i;
-                  });
-                }
-              }
-              var arrayConfigUnidadeSeleted = typeof ativData["padrao"] === "object" && ativData["padrao"] !== null && ativData["padrao"]["unidades"].length > 0 ? jmespath.search(ativData["padrao"]["unidades"], "[?selected==`true`] | [0]") : jmespath.search(arrayConfigAtividades["unidades"], "[?selected==`true`] | [0]");
-              arrayConfigAtivUnidade = arrayConfigUnidadeSeleted !== null ? arrayConfigUnidadeSeleted : arrayConfigAtivUnidade;
-              arrayNomenclaturas = arrayConfigAtividades["nomenclaturas"];
-              initNameConst("set");
-              var arrayUsuarios = [];
-              if (typeof arrayConfigAtividades.unidades !== "undefined") {
-                $.each(jmespath.search(arrayConfigAtividades.unidades, "[*].usuarios"), function(index, value2) {
-                  $.each(value2, function(i, v) {
-                    if (jmespath.search(arrayUsuarios, "[?id_user==`" + v.id_user + "`]").length == 0) {
-                      arrayUsuarios.push(v);
-                    }
-                  });
-                });
-                arrayConfigAtividades.usuarios = arrayUsuarios;
-              }
-              if (typeof ativData["demandas"] !== "undefined" && ativData["demandas"] !== null) {
-                if (arrayAtividadesPro.length && (param2.last_update || !isInitOffset)) {
-                  callAtiv("appendDataDemandaOnLocalArray", ativData["demandas"], "demandas");
-                } else {
-                  arrayAtividadesPro = ativData["demandas"];
-                  localStorageStorePro("lastRestoreAtividades", moment().format("YYYY-MM-DD HH:mm:ss"));
-                }
-              }
-              if (typeof ativData["demandas_processo"] !== "undefined" && ativData["demandas_processo"] !== null && isInitOffset) {
-                arrayAtividadesProcPro = ativData["demandas_processo"];
-              }
-              if (typeof ativData["prescricoes_processo"] !== "undefined" && ativData["prescricoes_processo"] !== null && isInitOffset) {
-                arrayPrescricoesProcPro = ativData["prescricoes_processo"];
-                callAtiv("initPanelPrescricaoProc");
-              }
-              if (typeof ativData["demandas_excluidas"] !== "undefined" && ativData["demandas_excluidas"] !== null && ativData["demandas_excluidas"].length > 0 && isInitOffset) {
-                $.each(ativData["demandas_excluidas"], function(i, v) {
-                  callAtiv("removeRowsPanelAtividades", v.id_demanda);
-                });
-              }
-              checkLoadAtividadesProcPro = true;
-              var arrayAtividades2 = $("#ifrArvore").length > 0 ? arrayAtividadesProcPro : arrayAtividadesPro;
-              hybridStorageStorePro("configDataAtividadesPro", arrayAtividadesPro);
-              hybridStorageStorePro("configDataAtividadesProcPro", arrayAtividadesProcPro);
-              hybridStorageStorePro("configDataAtivUnidadePro", arrayConfigAtivUnidade);
-              callAtiv("storeLocalDataConfigArray", arrayConfigAtividades);
-              lastUpdateAtividades = !getOptionsPro("panelLocalStorePro") && typeof ativData["last_update"] !== "undefined" && ativData["last_update"] ? ativData["last_update"] : lastUpdateAtividades;
-              localStorageStorePro("lastUpdateAtividades", lastUpdateAtividades);
-              var ativDataPanel = false;
-              var _caption = $("#tabelaAtivPanel table caption.infraCaption");
-              var _lastCount = _caption.length > 0 ? _caption.find("span.count") : false;
-              if (typeof ativData === "object" && ativData !== null) {
-                if (param2.last_update) {
-                  $(".panelHome").find(".iconAtividade_update i").removeClass("fa-spin");
-                  if (!$("#tabelaAtivPanel table tbody").length || typeof ativData["demandas_processo"] !== "undefined" && ativData["demandas_processo"] !== null && ativData["demandas_processo"].length > 0) {
-                    ativDataPanel = {
-                      demandas: arrayAtividadesPro,
-                      demandas_processo: arrayAtividadesProcPro,
-                      padrao: arrayConfigAtividades,
-                      last_update: lastUpdateAtividades,
-                      status: 1
-                    };
-                    callAtiv("initPanelAtividades", ativDataPanel);
-                  }
-                  if (typeof ativData["demandas"] !== "undefined" && ativData["demandas"] !== null && ativData["demandas"].length > 0) {
-                    callAtiv("getRowsPanelAtividades", ativData["demandas"], $("#tabelaAtivPanel table tbody"));
-                  }
-                  callAtiv("setAtividadesUser");
-                } else {
-                  if (isInitOffset) {
-                    arrayConfigAtividades = ativData["padrao"];
-                    ativDataPanel = ativData;
-                    callAtiv("initPanelAtividades", ativDataPanel);
-                  } else {
-                    callAtiv("getRowsPanelAtividades", ativData["demandas"], $("#tabelaAtivPanel table tbody"));
-                    callAtiv("getHtmlTableAtiv");
-                  }
-                  var countDemandas = typeof ativData["demandas"] !== "undefined" && ativData["demandas"] !== null && ativData["demandas"].length > 0 ? ativData["demandas"].length : 0;
-                  if (countDemandas > 0 && typeof ativData.offset !== "undefined" && callAtiv("getOptionEntidade", "limit_paginacao") != 0) {
-                    var new_param = param2;
-                    new_param.offset = ativData.next_offset;
-                    getServerAtividades(new_param, "panel");
-                    if (_caption.find("span.progress").length == 0) _caption.append('<span class="progress" style="color: #777;font-size: 0.9em !important;padding: 5px;margin: 5px;"><i class="fas fa-sync fa-spin cinzaColor"></i> carregando dados...</span>');
-                  } else {
-                    _caption.find("span.progress").remove();
-                  }
-                }
-                if (_lastCount) _lastCount.text(arrayAtividadesPro.length);
-              }
-              callAtiv("getInsertIconAtividade");
-              resetDialogBoxPro("configBoxPro");
-              callAtiv("repairPerfilSelectUnidade");
-              setResizeAreaTelaD();
-              setProgressBarOnProcesso();
-              if (getOptionsPro("panelAtividadesView") == "Quadro") callAtiv("initKanbanAtividades");
-              if (typeof param2.callback !== "undefined" && param2.callback) {
-                if (param2.callback.action == "rate_atividade") {
-                  setTimeout(function() {
-                    callAtiv("rateAtividade", param2.callback.id, false);
-                  }, 1500);
-                }
-              }
-              if (verifyConfigValue("gerenciarprojetos") && callAtiv("checkCapacidade", "view_projetos") && isInitOffset) {
-                var projetosPanel = arrayConfigAtividades && arrayConfigAtividades.projetos ? arrayConfigAtividades.projetos : [];
-                syncProjetosFeatureFromAtividades(projetosPanel, {
-                  mode: document.getElementById("projetosGantt") ? "refresh" : "insert",
-                  tipos: arrayConfigAtividades && arrayConfigAtividades.tipos_projetos
-                });
-              }
-            } else if (mode == "pause_atividade_lista") {
-              loadingButtonConfirm(false);
-              callAtiv("getPausasAtividadeCalc", ativData["pause_lista"]);
-              var objIndexAtiv2 = typeof arrayAtividadesPro === "undefined" || arrayAtividadesPro == 0 || arrayAtividadesPro.length == 0 ? -1 : arrayAtividadesPro.findIndex(((obj) => obj.id_demanda == ativData.id_demanda));
-              if (objIndexAtiv2 !== -1) {
-                arrayAtividadesPro[objIndexAtiv2].pausa_lista = ativData["pause_lista"];
-                $("#ativ_data_entrega").trigger("change");
-              }
-            } else if (mode == "update_planos") {
-              loadingButtonConfirm(false);
-              callAtiv("updateArrayPlanos", ativData["update_planos"]);
-            } else if (mode == "update_prioridades") {
-              callAtiv("updatePriorityKanbanItens", ativData["board"], "update");
-              var resultAtivData = ativData["demandas"];
-              arrayAtividadesPro = resultAtivData;
-              hybridStorageStorePro("configDataAtividadesPro", resultAtivData);
-            } else if (mode == "sign_documento" || mode == "sign_cancel_documento" || mode == "save_atividade" || mode == "save_atividade_rapida" || mode == "edit_atividade" || mode == "delete_atividade" || mode == "delete_atividade_all" || mode == "start_atividade" || mode == "extend_atividade" || mode == "variation_atividade" || mode == "type_atividade" || mode == "pause_atividade" || mode == "pause_atividade_remove" || mode == "start_cancel_atividade" || mode == "start_cancel_atividades" || mode == "complete_atividade" || mode == "complete_atividade_parcial" || mode == "complete_edit_atividade" || mode == "complete_cancel_atividade" || mode == "complete_cancel_atividades" || mode == "rate_atividade" || mode == "rate_atividades" || mode == "rate_edit_atividade" || mode == "rate_cancel_atividade" || mode == "rate_cancel_atividades" || mode == "send_atividade" || mode == "send_cancel_atividade" || mode == "notify_send" || mode == "save_afastamento" || mode == "edit_afastamento" || mode == "delete_afastamento") {
-              var value = typeof param2.id_demanda !== "undefined" ? jmespath.search(arrayAtividadesPro, "[?id_demanda==`" + param2.id_demanda + "`] | [0]") : false;
-              var demandaID = value ? '[{"ID":' + value.id_demanda + "}]" : value;
-              demandaID = !value && typeof param2.id_demandas != "undefined" && param2.id_demandas.length > 0 ? JSON.stringify($.map(param2.id_demandas, function(sub, i) {
-                return { ID: sub };
-              })) : demandaID;
-              var requisicao = value ? typeof value.requisicao_sei !== "undefined" && value.requisicao_sei !== null && parseInt(value.requisicao_sei) != 0 ? value.nome_requisicao + " (" + value.requisicao_sei + ") " : value.nome_requisicao : "";
-              var txtAlert = mode == "save_atividade" ? __.Demanda + " " + getNameGenre("demanda", "cadastrado", "cadastrada") : "";
-              txtAlert = mode == "save_atividade_rapida" ? __.Demanda + " r\xE1pida " + getNameGenre("demanda", "cadastrado", "cadastrada") : txtAlert;
-              txtAlert = mode == "sign_documento" ? "Documento assinado" : txtAlert;
-              txtAlert = mode == "sign_cancel_documento" ? "Assinatura do documento cancelada" : txtAlert;
-              txtAlert = mode == "edit_atividade" ? __.Demanda + " " + getNameGenre("demanda", "editado", "editada") : txtAlert;
-              txtAlert = mode == "delete_atividade" || mode == "delete_atividade_all" ? typeof ativData["delete_demandas"] !== "undefined" && ativData["delete_demandas"].length > 1 ? __.Demandas + " " + getNameGenre("demanda", "deletados", "deletadas") : __.Demanda + " " + getNameGenre("demanda", "deletado", "deletada") : txtAlert;
-              txtAlert = mode == "start_atividade" ? __.Demanda + " " + getNameGenre("demanda", "iniciado", "iniciada") : txtAlert;
-              txtAlert = mode == "extend_atividade" ? __.Demanda + " " + getNameGenre("demanda", "prorrogado", "prorrogada") : txtAlert;
-              txtAlert = mode == "variation_atividade" ? __.Complexidade + " " + getNameGenre("complexidade", "alterado", "alterada") : txtAlert;
-              txtAlert = mode == "type_atividade" ? __.Atividade + " " + getNameGenre("atividade", "atribu\xEDdo", "atribu\xEDda") : txtAlert;
-              txtAlert = mode == "pause_atividade" ? __.Demanda + " " + (ativData["check_ispaused"] == false ? __.paralisada : __.retomada) : txtAlert;
-              txtAlert = mode == "pause_atividade_remove" ? __.Paralisacao + " " + getNameGenre("paralisacao", "removido", "removida") : txtAlert;
-              txtAlert = mode == "complete_atividade" ? __.Demanda + " " + getNameGenre("demanda", "conclu\xEDdo", "conclu\xEDda") : txtAlert;
-              txtAlert = mode == "complete_atividade_parcial" ? __.Demanda + " residual " + getNameGenre("demanda", "cadastrado", "cadastrada") : txtAlert;
-              txtAlert = mode == "complete_edit_atividade" ? __.Demanda + " " + getNameGenre("demanda", "editado", "editada") : txtAlert;
-              txtAlert = mode == "start_cancel_atividade" ? "In\xEDcio de " + __.demanda + " cancelado" : txtAlert;
-              txtAlert = mode == "start_cancel_atividades" ? "In\xEDcio de " + __.demandas + " cancelado" : txtAlert;
-              txtAlert = mode == "complete_cancel_atividade" ? "Conclus\xE3o de " + __.demanda + " cancelada" : txtAlert;
-              txtAlert = mode == "complete_cancel_atividades" ? "Conclus\xE3o de " + __.demandas + " cancelada" : txtAlert;
-              txtAlert = mode == "rate_atividade" ? "Avalia\xE7\xE3o cadastrada" : txtAlert;
-              txtAlert = mode == "rate_atividades" ? "Avalia\xE7\xF5es cadastradas" : txtAlert;
-              txtAlert = mode == "rate_edit_atividade" ? "Avalia\xE7\xE3o editada" : txtAlert;
-              txtAlert = mode == "rate_cancel_atividade" ? "Avalia\xE7\xE3o cancelada" : txtAlert;
-              txtAlert = mode == "rate_cancel_atividades" ? "Avalia\xE7\xF5es canceladas" : txtAlert;
-              txtAlert = mode == "send_atividade" ? ativData["update_demandas"].length == 1 ? __.Demanda + " " + __.arquivada : __.Demandas + " " + __.arquivadas : txtAlert;
-              txtAlert = mode == "send_cancel_atividade" ? __.Arquivamento + " de " + __.demanda + " " + getNameGenre("arquivamento", "cancelado", "cancelado") : txtAlert;
-              txtAlert = mode == "save_afastamento" ? "Afastamento salvo" : txtAlert;
-              txtAlert = mode == "edit_afastamento" ? "Afastamento editado" : txtAlert;
-              txtAlert = mode == "delete_afastamento" ? typeof ativData["id_afastamentos"] !== "undefined" && ativData["id_afastamentos"].length > 1 ? "Afastamentos deletados" : "Afastamento deletado" : txtAlert;
-              txtAlert = mode == "notify_send" ? "Notifica\xE7\xE3o enviada " : txtAlert;
-              loadingButtonConfirm(false);
-              if (param2.action == "sign_documento" || param2.action == "sign_cancel_documento") {
-                resetDialogBoxPro("editorBoxPro");
-                callAtiv("updateAtividade_", false);
-                if (typeof ativData.refresh_page !== "undefined" && ativData.refresh_page && $("#tableConfiguracoesPanel_" + param2.type).is(":visible")) {
-                  callAtiv("getTabConfig", param2.type, "get");
-                }
-              }
-              if (mode != "pause_atividade_remove") {
-                resetDialogBoxPro("dialogBoxPro");
-              } else {
-                setTimeout(function() {
-                  callAtiv("getPausasAtividade", ativData["id_demanda"]);
-                }, 1500);
-              }
-              var callback = mode == "type_atividade" && param2.before_rate ? { action: "rate_atividade", id: param2.id_demanda } : false;
-              callAtiv("getAtividades", callback);
-              alertaBoxPro("Sucess", "check-circle", txtAlert + " com sucesso!");
-              if (value && value.id_procedimento !== null && jmespath.search(arrayConfigAtividades.entidades, "[?id_entidade==`" + arrayConfigAtividades.perfil.id_entidade + "`] |[0].config.gravar_historico_processo")) {
-                updateDadosArvore("Atualizar Andamento", "txaDescricao", "_" + txtAlert + ": " + requisicao + (demandaID ? demandaID : ""), value.id_procedimento);
-              }
-              if ((mode == "save_atividade" || mode == "complete_atividade") && ativData["anotacoes_processo"]) {
-                callAtiv("updateAnotacaoProcesso", ativData["anotacoes_processo"]);
-              }
-              if ((mode == "save_atividade" || mode == "edit_atividade") && param2.lista_marcador && param2.marcador == "on") {
-                var dateSubmit = "Ate " + moment(param2.prazo_entrega, "YYYY-MM-DD HH:mm").format("DD/MM/YYYY HH:mm");
-                var valuesIframe = [
-                  { element: "txaTexto", value: dateSubmit },
-                  { element: "hdnIdMarcador", value: param2.lista_marcador.id_marcador }
-                ];
-                updateDadosArvoreMult("Gerenciar Marcador", valuesIframe, param2.id_procedimento, function() {
-                  var listMarcadores = sessionStorageRestorePro("dadosMarcadoresProcessoPro");
-                  var objIndexDoc = !listMarcadores ? -1 : listMarcadores.findIndex(((obj) => obj.id_procedimento == String(param2.id_procedimento)));
-                  if (objIndexDoc !== -1) {
-                    listMarcadores[objIndexDoc] = {
-                      id_procedimento: listMarcadores[objIndexDoc].id_procedimento,
-                      icon: param2.lista_marcador.icon,
-                      tag: param2.lista_marcador.tag,
-                      name: dateSubmit
-                    };
-                    sessionStorageStorePro("dadosMarcadoresProcessoPro", listMarcadores);
-                  }
-                });
-              }
-              if (mode == "save_afastamento" || mode == "edit_afastamento" || mode == "delete_afastamento") {
-                setTimeout(function() {
-                  let return_id_afastamento = mode == "save_afastamento" ? parseInt(ativData.id_afastamento) : parseInt(param2.id_afastamento);
-                  objIndexAtiv2 = typeof arrayConfigAtividades.afastamentos === "undefined" || arrayConfigAtividades.afastamentos == 0 || arrayConfigAtividades.afastamentos.length == 0 || typeof arrayConfigAtividades.afastamentos.lista === "undefined" || arrayConfigAtividades.afastamentos.lista == 0 || arrayConfigAtividades.afastamentos.lista.length == 0 ? -1 : arrayConfigAtividades.afastamentos.lista.findIndex(((obj) => obj.id_afastamento == return_id_afastamento));
-                  if (mode == "edit_afastamento" || mode == "delete_afastamento") {
-                    if (objIndexAtiv2 !== -1) {
-                      if (mode == "edit_afastamento") {
-                        arrayConfigAtividades.afastamentos.lista[objIndexAtiv2] = ativData["result"][0];
-                      } else if (mode == "delete_afastamento") {
-                        arrayConfigAtividades.afastamentos.lista.splice(objIndexAtiv2, 1);
-                      }
-                    }
-                  } else if (mode == "save_afastamento" && typeof ativData["result"] !== "undefined" && ativData["result"] !== null && ativData["result"].length > 0) {
-                    if (objIndexAtiv2 !== -1) {
-                      arrayConfigAtividades.afastamentos.lista[objIndexAtiv2] = ativData["result"][0];
-                    } else {
-                      arrayConfigAtividades.afastamentos.lista.push(ativData["result"][0]);
-                    }
-                  }
-                  setTimeout(function() {
-                    callAtiv("updateTempoProporcionalPlanos");
-                  }, 1e3);
-                  callAtiv("initPanelAtividadesView");
-                }, 1500);
-              }
-              if (mode == "save_atividade" || mode == "save_atividade_rapida" || mode == "edit_atividade" || mode == "extend_atividade" || mode == "variation_atividade" || mode == "type_atividade" || mode == "complete_atividade" || mode == "complete_edit_atividade" || mode == "complete_atividade_parcial") {
-                if (mode == "complete_atividade" && ativData["checklist_tempo_proporcional"]) {
-                  alertBoxPro.dialog("option", "buttons", [{
-                    text: "Gerar Notifica\xE7\xE3o",
-                    icon: "ui-icon-mail-closed",
-                    click: function() {
-                      $(this).dialog("close");
-                      callAtiv("notifyAtividade", param2.id_demanda == "0" ? ativData["id_demanda"] : param2.id_demanda, event);
-                    }
-                  }, {
-                    text: "Gerar Demanda Residual",
-                    icon: "ui-icon-mail-scissors",
-                    class: "ui-state-active",
-                    click: function(event2) {
-                      $(this).dialog("close");
-                      var return_tempo_parcial = ativData["return_tempo_parcial"];
-                      var action = "complete_atividade_parcial";
-                      var param3 = {
-                        action,
-                        id_demanda: return_tempo_parcial.id_demanda,
-                        tempo_pactuado: return_tempo_parcial.tempo_pactuado,
-                        tempo_pactuado_original: return_tempo_parcial.tempo_pactuado_original
-                      };
-                      getServerAtividades(param3, action);
-                    }
-                  }]);
-                  $("#alertaBoxPro").html('<strong class="alertaSucessPro dialogBoxDiv"><i class="fas fa-check-circle" style="margin-right: 5px;"></i> ' + __.Demanda + " conclu\xEDda com sucesso!<br><br>Deseja criar demanda residual a partir do tempo pactuado restante (" + decimalHourToMinute(ativData["return_tempo_parcial"].tempo_pactuado) + " horas)?</strong>");
-                } else {
-                  alertBoxPro.dialog("option", "buttons", [{
-                    text: "OK",
-                    click: function() {
-                      $(this).dialog("close");
-                    }
-                  }, {
-                    text: "Gerar Notifica\xE7\xE3o",
-                    icon: "ui-icon-mail-closed",
-                    class: "ui-state-active",
-                    click: function(event2) {
-                      $(this).dialog("close");
-                      callAtiv("notifyAtividade", param2.id_demanda == "0" ? ativData["id_demanda"] : param2.id_demanda, event2);
-                    }
-                  }]);
-                }
-              }
-              if (mode == "delete_atividade" || mode == "delete_atividade_all") {
-                callAtiv("removeRowsPanelAtividades", param2.id_demanda);
-              }
-              if (mode == "complete_atividade" || mode == "complete_edit_atividade" || mode == "complete_atividade_parcial" || mode == "complete_cancel_atividade" || mode == "complete_cancel_atividades" || mode == "save_atividade" || mode == "save_atividade_rapida" || mode == "edit_atividade" || mode == "pause_atividade" || mode == "rate_atividade" || mode == "rate_atividades" || mode == "rate_cancel_atividade" || mode == "rate_cancel_atividades" || mode == "rate_default_atividade" || mode == "rate_edit_atividade" || mode == "send_atividade" || mode == "send_cancel_atividade" || mode == "start_atividade" || mode == "start_cancel_atividade" || mode == "start_cancel_atividades" || mode == "type_atividade" || mode == "extend_atividade" || mode == "variation_atividade" || mode == "delete_atividade") {
-                callAtiv("awaitRowsPanelAtividades", param2.id_demanda);
-              }
-            } else {
-              loadingButtonConfirm(false);
-            }
-            if (callAtiv("checkPerfilNivelAdm") && callAtiv("checkOptionEntidade", "gerar_relatorios_gerenciais")) {
-              indexReportUpdate = 0;
-              callAtiv("checkUpdateReports");
-            }
-            if (callAtiv("checkPerfilNivelAdm") && callAtiv("checkOptionEntidade", "sincronizar_dados_externos")) {
-              indexReportUpdate = 0;
-              callAtiv("checkSyncDadoExterno");
-            }
-            if (callAtiv("checkPerfilNivelAdm") && callAtiv("checkOptionEntidade", "sincronizar_dados_api")) {
-              indexAPIUpdate = 0;
-              callAtiv("checkSyncAPI");
-            }
-            if (typeof ativData !== "undefined" && typeof ativData["version_backend"] !== "undefined") backendServerAtiv = ativData["version_backend"];
-          }
-        }
-      }).catch(function(failure) {
-        var data = failure && failure.xhr || failure || {};
-        var textStatus = failure && failure.status || "";
-        if (typeof param2.type !== "undefined") {
-          callAtiv("resetButtonTabConfig", ".actionsConfig_" + param2.type);
-        }
-        if (typeof data.refresh_page !== "undefined" && data.refresh_page) callAtiv("cleanAtivParams");
-        callAtiv("failureScreen", data, textStatus, param2);
-        callAtiv("loadingTagConfig", param2.type, "set");
-      });
-    } else {
-      $("#atividadesProActions").find(".iconAtividade_update i").removeClass("fa-spin");
-      if (!callAtiv("checkCapacidade", mode)) {
+      if (!checkCapability(mode)) {
         callAtiv("loadingTagConfig", param2.type, "set");
       }
+      return Promise.resolve({ skipped: true, mode, param: param2 });
     }
+    context2.store.patch({ delayServerAtiv: 1 });
+    context2.schedule(() => context2.store.patch({ delayServerAtiv: 0 }), 1e3);
+    const loadingButtonConfirm2 = ports2.loadingButtonConfirm;
+    if (typeof loadingButtonConfirm2 === "function" && mode.indexOf("_monitorados") === -1) {
+      loadingButtonConfirm2(true);
+    }
+    if (mode.indexOf("config_update_") !== -1) {
+      callAtiv("loadingTagConfig", param2.type, "get");
+    }
+    const request = (nextParam, nextMode) => getServerAtividades(nextParam, nextMode, deps);
+    const authToken = void 0;
+    return routeAtividadesResponse(
+      requestService.send(prepared, { authToken }),
+      param2,
+      mode,
+      { context: context2, page, ports: ports2, deps, request }
+    );
   }
+  var requestAtividades = getServerAtividades;
 
   // src/features/atividades/data.js
   var data_exports = {};
@@ -1386,17 +1821,52 @@
     removeLocalDataConfigArray: () => removeLocalDataConfigArray,
     repairKanbanPinMoveCard: () => repairKanbanPinMoveCard,
     repairPerfilSelectUnidade: () => repairPerfilSelectUnidade,
-    restoreLocalDataConfigArray: () => restoreLocalDataConfigArray2,
+    restoreLocalDataConfigArray: () => restoreLocalDataConfigArray,
     sendErrorReport: () => sendErrorReport,
     sendErrorReportServer: () => sendErrorReportServer,
     storeLocalDataConfigArray: () => storeLocalDataConfigArray
   });
+
+  // src/features/atividades/storage.js
+  function createAtividadesStorage({ context: context2, hybridRestore, hybridStore, localRestore, localStore } = {}) {
+    if (!context2) throw new TypeError("Storage adapter requires context");
+    const restoreHybrid2 = hybridRestore || ((key) => restoreAtividadesHybrid(key, {
+      hybridStorageRestorePro: context2.page.hybridStorageRestorePro,
+      getOptionsPro: context2.options.get
+    }));
+    const writeHybrid = hybridStore || ((key, value) => {
+      if (typeof context2.page.hybridStorageStorePro === "function") {
+        return context2.page.hybridStorageStorePro(key, value);
+      }
+      return void 0;
+    });
+    const readLocal = localRestore || ((key) => {
+      if (typeof context2.page.localStorageRestorePro === "function") return context2.page.localStorageRestorePro(key);
+      const storage3 = context2.storage.local;
+      return storage3 && typeof storage3.getItem === "function" ? storage3.getItem(key) : null;
+    });
+    const writeLocal = localStore || ((key, value) => {
+      if (typeof context2.page.localStorageStorePro === "function") return context2.page.localStorageStorePro(key, value);
+      const storage3 = context2.storage.local;
+      if (storage3 && typeof storage3.setItem === "function") storage3.setItem(key, value);
+      return void 0;
+    });
+    return Object.freeze({
+      hybrid: Object.freeze({ read: restoreHybrid2, write: writeHybrid }),
+      local: Object.freeze({ read: readLocal, write: writeLocal })
+    });
+  }
+
+  // src/features/atividades/data.js
   function checkPerfilNivelAdm() {
-    var perfil = typeof arrayConfigAtividades !== "undefined" && typeof arrayConfigAtividades.perfil !== "undefined" ? arrayConfigAtividades.perfil : void 0;
+    var config = getAtividadesContext().store.get().arrayConfigAtividades;
+    var perfil = config && typeof config.perfil !== "undefined" ? config.perfil : void 0;
     return isPerfilNivelAdm(perfil);
   }
   function appendDataDemandaOnLocalArray(arrayServer, demandaType) {
-    var arrayLocal = demandaType == "demandas_processo" ? arrayAtividadesProcPro : arrayAtividadesPro;
+    var context2 = getAtividadesContext();
+    var state = context2.store.get();
+    var arrayLocal = demandaType == "demandas_processo" ? state.arrayAtividadesProcPro : state.arrayAtividadesPro;
     if (arrayServer !== null && arrayServer.length > 0) {
       $.each(arrayServer, function(i, v) {
         var objIndexAtiv2 = typeof arrayLocal === "undefined" || arrayLocal == 0 || arrayLocal.length == 0 ? -1 : arrayLocal.findIndex(((obj) => obj.id_demanda == v.id_demanda));
@@ -1408,27 +1878,29 @@
       });
     }
     if (demandaType == "demandas_processo") {
-      arrayAtividadesProcPro = arrayLocal;
+      context2.store.patch({ arrayAtividadesProcPro: arrayLocal });
     } else {
-      arrayAtividadesPro = arrayLocal;
+      context2.store.patch({ arrayAtividadesPro: arrayLocal });
     }
   }
   function storeLocalDataConfigArray(arrayConfig) {
+    var storage3 = createAtividadesStorage({ context: getAtividadesContext() }).hybrid;
     if (typeof arrayConfig === "object" && arrayConfig !== null) {
       var list = [];
       for (var propertyName in arrayConfig) {
-        hybridStorageStorePro("configDataAtividadesPadraoPro_" + propertyName, arrayConfig[propertyName]);
+        storage3.write("configDataAtividadesPadraoPro_" + propertyName, arrayConfig[propertyName]);
         list.push(propertyName);
       }
-      hybridStorageStorePro("configDataAtividadesPadraoPro", list);
+      storage3.write("configDataAtividadesPadraoPro", list);
     }
   }
-  function restoreLocalDataConfigArray2() {
-    var arrayConfig = hybridStorageRestorePro("configDataAtividadesPadraoPro");
+  function restoreLocalDataConfigArray() {
+    var storage3 = createAtividadesStorage({ context: getAtividadesContext() }).hybrid;
+    var arrayConfig = storage3.read("configDataAtividadesPadraoPro");
     if (arrayConfig !== null) {
       var arrayStore = [];
       $.each(arrayConfig, function(i, v) {
-        var dataValue = hybridStorageRestorePro("configDataAtividadesPadraoPro_" + v);
+        var dataValue = storage3.read("configDataAtividadesPadraoPro_" + v);
         if (dataValue !== null) {
           arrayStore[v] = dataValue;
         }
@@ -1443,7 +1915,7 @@
     if (arrayConfig !== null) {
       var arrayStore = [];
       $.each(arrayConfig, function(i, v) {
-        var dataValue = hybridStorageRemovePro("configDataAtividadesPadraoPro_" + v);
+        var dataValue = storage.read("configDataAtividadesPadraoPro_" + v);
         if (dataValue !== null) {
           arrayStore[v] = dataValue;
         }
@@ -1454,6 +1926,8 @@
     }
   }
   function appendDataConfigOnLocalArray(arrayServer) {
+    var context2 = getAtividadesContext();
+    var arrayConfigAtividades2 = context2.store.get().arrayConfigAtividades;
     if (typeof arrayServer === "object" && arrayServer !== null) {
       for (var propertyName in arrayServer) {
         if (arrayServer.hasOwnProperty(propertyName) && (arrayServer[propertyName].length > 0 || arrayServer[propertyName].hasOwnProperty("lista") && arrayServer[propertyName]["lista"].length > 0)) {
@@ -1461,22 +1935,22 @@
           if (propertyName == "afastamentos") {
             $.each(arrayLocal, function(i, v) {
               var primarykey = v.primarykey;
-              var objIndexAtiv2 = typeof arrayConfigAtividades[propertyName]["lista"] === "undefined" || arrayConfigAtividades[propertyName]["lista"] == 0 || arrayConfigAtividades[propertyName]["lista"].length == 0 ? -1 : arrayConfigAtividades[propertyName]["lista"].findIndex(((obj) => obj[primarykey] == v[primarykey]));
+              var objIndexAtiv2 = typeof arrayConfigAtividades2[propertyName]["lista"] === "undefined" || arrayConfigAtividades2[propertyName]["lista"] == 0 || arrayConfigAtividades2[propertyName]["lista"].length == 0 ? -1 : arrayConfigAtividades2[propertyName]["lista"].findIndex(((obj) => obj[primarykey] == v[primarykey]));
               if (objIndexAtiv2 !== -1) {
-                arrayConfigAtividades[propertyName]["lista"][objIndexAtiv2] = v;
-              } else if (typeof arrayConfigAtividades[propertyName]["lista"] !== "undefined" && arrayConfigAtividades[propertyName]["lista"] != 0) {
-                arrayConfigAtividades[propertyName]["lista"].push(v);
+                arrayConfigAtividades2[propertyName]["lista"][objIndexAtiv2] = v;
+              } else if (typeof arrayConfigAtividades2[propertyName]["lista"] !== "undefined" && arrayConfigAtividades2[propertyName]["lista"] != 0) {
+                arrayConfigAtividades2[propertyName]["lista"].push(v);
               }
             });
           } else {
             if (arrayServer[propertyName].length > 0) {
               $.each(arrayServer[propertyName], function(i, v) {
                 var primarykey = v.primarykey;
-                var objIndexAtiv2 = typeof arrayConfigAtividades[propertyName] === "undefined" || arrayConfigAtividades[propertyName] == 0 || arrayConfigAtividades[propertyName].length == 0 ? -1 : arrayConfigAtividades[propertyName].findIndex(((obj) => obj[primarykey] == v[primarykey]));
+                var objIndexAtiv2 = typeof arrayConfigAtividades2[propertyName] === "undefined" || arrayConfigAtividades2[propertyName] == 0 || arrayConfigAtividades2[propertyName].length == 0 ? -1 : arrayConfigAtividades2[propertyName].findIndex(((obj) => obj[primarykey] == v[primarykey]));
                 if (objIndexAtiv2 !== -1) {
-                  arrayConfigAtividades[propertyName][objIndexAtiv2] = v;
-                } else if (typeof arrayConfigAtividades[propertyName] !== "undefined" && arrayConfigAtividades[propertyName] != 0) {
-                  arrayConfigAtividades[propertyName].push(v);
+                  arrayConfigAtividades2[propertyName][objIndexAtiv2] = v;
+                } else if (typeof arrayConfigAtividades2[propertyName] !== "undefined" && arrayConfigAtividades2[propertyName] != 0) {
+                  arrayConfigAtividades2[propertyName].push(v);
                 }
               });
             }
@@ -1484,6 +1958,7 @@
         }
       }
     }
+    context2.store.patch({ arrayConfigAtividades: arrayConfigAtividades2 });
   }
   function loopRepairKanbanPinMoveCard() {
     $(".kanban-board").each(function() {
@@ -1618,12 +2093,14 @@
     setSelectProgramas: () => setSelectProgramas
   });
   function checkLimitAvaliacaoSubordinada(value) {
-    var config_unidade = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`" + value.id_unidade + "`] | [0].config");
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    var config_unidade = jmespath.search(config.unidades || [], "[?id_unidade==`" + value.id_unidade + "`] | [0].config");
     var limitar_avaliacao_subordinadas = config_unidade && config_unidade !== null && typeof config_unidade.administrativo !== "undefined" && typeof config_unidade.administrativo.limitar_avaliacao_subordinadas !== "undefined" && config_unidade.administrativo.limitar_avaliacao_subordinadas ? config_unidade.administrativo.limitar_avaliacao_subordinadas : false;
-    return limitar_avaliacao_subordinadas && value.id_unidade != arrayConfigAtividades.perfil.id_unidade ? true : false;
+    return limitar_avaliacao_subordinadas && value.id_unidade != (config.perfil && config.perfil.id_unidade) ? true : false;
   }
   function checkCapacidade(nome_capacidade) {
-    var checkPerfil = arrayConfigAtividades && typeof arrayConfigAtividades["perfil"] !== "undefined" && typeof arrayConfigAtividades["perfil"].capacidades !== "undefined" ? jmespath.search(arrayConfigAtividades["perfil"].capacidades, "[?nome_capacidade=='" + nome_capacidade + "'] | length(@)") : 0;
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    var checkPerfil = config && typeof config.perfil !== "undefined" && typeof config.perfil.capacidades !== "undefined" ? jmespath.search(config.perfil.capacidades, "[?nome_capacidade=='" + nome_capacidade + "'] | length(@)") : 0;
     return checkPerfil == 0 ? false : true;
   }
   function getChartDemandas(param2) {
@@ -2005,9 +2482,9 @@
             mode: "index",
             intersect: false,
             callbacks: {
-              label: function(context) {
-                let label = context.dataset.label;
-                let value = context.parsed.y;
+              label: function(context2) {
+                let label = context2.dataset.label;
+                let value = context2.parsed.y;
                 return label.indexOf("Produtividade") === -1 ? label + ": " + value : label + ": " + (value * 100).toLocaleString("pt-BR") + "%";
               }
             }
@@ -2308,14 +2785,14 @@
                   title: function() {
                     return "";
                   },
-                  label: function(context) {
-                    let label = context.dataset.label;
-                    let value = context.parsed.x;
-                    var planoIndex = context.chart.data.datasets.findIndex(function(id_key) {
+                  label: function(context2) {
+                    let label = context2.dataset.label;
+                    let value = context2.parsed.x;
+                    var planoIndex = context2.chart.data.datasets.findIndex(function(id_key) {
                       return id_key.label == "Plano";
                     });
-                    let valuePlano = context.chart.data.datasets[planoIndex].data[context.dataIndex];
-                    var valuePercent = context.datasetIndex != planoIndex ? " (" + (value / valuePlano * 100).toFixed(2) + "%)" : "";
+                    let valuePlano = context2.chart.data.datasets[planoIndex].data[context2.dataIndex];
+                    var valuePercent = context2.datasetIndex != planoIndex ? " (" + (value / valuePlano * 100).toFixed(2) + "%)" : "";
                     return " " + label + ": " + value + " horas" + valuePercent;
                   }
                 }
@@ -2466,14 +2943,14 @@
               title: function() {
                 return "";
               },
-              label: function(context) {
-                var label = context.dataset.label;
-                var value = context.parsed.x;
-                var planoIndex = context.chart.data.datasets.findIndex(function(id_key) {
+              label: function(context2) {
+                var label = context2.dataset.label;
+                var value = context2.parsed.x;
+                var planoIndex = context2.chart.data.datasets.findIndex(function(id_key) {
                   return id_key.label == "Plano";
                 });
-                var valuePlano = context.chart.data.datasets[planoIndex].data[context.dataIndex];
-                var valuePercent = context.datasetIndex != planoIndex ? " (" + (value / valuePlano * 100).toFixed(2) + "%)" : "";
+                var valuePlano = context2.chart.data.datasets[planoIndex].data[context2.dataIndex];
+                var valuePercent = context2.datasetIndex != planoIndex ? " (" + (value / valuePlano * 100).toFixed(2) + "%)" : "";
                 return " " + label + ": " + value + " horas" + valuePercent;
               }
             }
@@ -2674,7 +3151,8 @@
           },
           "edit_field"
         );
-        var ativIndex = data.id ? parent.arrayAtividades.findIndex(((obj) => obj.id_demanda == data.id)) : data.id;
+        var atividades = getAtividadesContext().store.get().arrayAtividades || [];
+        var ativIndex = data.id ? atividades.findIndex(((obj) => obj.id_demanda == data.id)) : data.id;
         arrayAtividades[ativIndex][data.field] = value;
         arrayAtividadesPro[ativIndex][data.field] = value;
         if (type_container == "table" && $(".kanban-item").is(":visible")) {
@@ -3354,7 +3832,7 @@
     var htmlToolbar = '<div id="' + tabs + '" style="border: none; min-height: 300px; margin: 0;">    <ul>' + (callAtiv("checkCapacidade", "report_demandas") ? '       <li><a href="#tabs_report-demandas"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> ' + __.Demandas + "</a></li>" : "") + (callAtiv("checkCapacidade", "report_planos") ? '       <li><a href="#tabs_report-planos"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> Planos de Trabalho</a></li>' : "") + (callAtiv("checkCapacidade", "report_atividades") ? '       <li><a href="#tabs_report-atividades"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> ' + __.Atividades + "</a></li>" : "") + (callAtiv("checkCapacidade", "report_afastamentos") ? '       <li><a href="#tabs_report-afastamentos"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> Afastamentos</a></li>' : "") + (!callAtiv("checkOptionEntidade", "desativa_produtividade_geral") && callAtiv("checkCapacidade", "report_produtividade") ? '       <li><a href="#tabs_report-produtividade"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> Produtividade</a></li>' : "") + (callAtiv("checkCapacidade", "report_demandas_excluidas") ? '       <li><a href="#tabs_report-demandas_excluidas"><i class="fas fa-list-alt cinzaColor" style="margin-right: 5px;"></i> ' + __.Demandas + " exclu\xEDdas</a></li>" : "") + (callAtiv("checkCapacidade", "report_prescricoes") ? '       <li><a href="#tabs_report-prescricoes"><i class="fas fa-history cinzaColor" style="margin-right: 5px;"></i> ' + __.Prescricoes + "</a></li>" : "") + (callAtiv("checkCapacidade", "report_email") ? '       <li><a href="#tabs_report-email"><i class="fas fa-at cinzaColor" style="margin-right: 5px;"></i> E-mail</a></li>' : "") + (callAtiv("checkCapacidade", "report_log") ? '       <li><a href="#tabs_report-log"><i class="fas fa-user-secret cinzaColor" style="margin-right: 5px;"></i> Log</a></li>' : "") + "    </ul>" + (callAtiv("checkCapacidade", "report_demandas") ? '    <div id="tabs_report-demandas" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "report_planos") ? '    <div id="tabs_report-planos" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "report_atividades") ? '    <div id="tabs_report-atividades" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "report_afastamentos") ? '    <div id="tabs_report-afastamentos" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (!callAtiv("checkOptionEntidade", "desativa_produtividade_geral") && callAtiv("checkCapacidade", "report_produtividade") ? '    <div id="tabs_report-produtividade" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "report_demandas_excluidas") ? '    <div id="tabs_report-demandas_excluidas" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "report_prescricoes") ? '    <div id="tabs_report-prescricoes" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "report_email") ? '    <div id="tabs_report-email" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "report_log") ? '    <div id="tabs_report-log" class="" style="overflow-x: scroll; padding: 0;"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + "</div>";
     $("#" + panel).html(htmlToolbar).show();
     $("#" + tabs).tabs({
-      activate: function(event2, ui) {
+      activate: function(event, ui) {
         var active = $(this).tabs("option", "active");
         var type = ui.newPanel[0].id.replace("tabs_report-", "");
         setOptionsPro("report_" + tabs + "ActiveTabs", active);
@@ -3525,7 +4003,7 @@
     var htmlToolbar = '<div id="' + tabs + '" style="border: none; min-height: 300px;">    <ul>    <li><a href="#tabs-configpessoal"><i data-icon="user-cog" class="fas fa-user-cog cinzaColor" style="margin-right: 5px;"></i>Configura\xE7\xF5es Pessoais</a></li>' + (callAtiv("checkCapacidade", "config_atividades") ? '    <li><a href="#tabs-atividades"><i data-icon="clipboard-list" class="fas fa-clipboard-list cinzaColor" style="margin-right: 5px;"></i>' + __.Atividades + "</a></li>" : "") + (callAtiv("checkCapacidade", "config_planos") || callAtiv("checkCapacidade", "config_self_planos") ? '    <li><a href="#tabs-planos"><i data-icon="handshake" class="fas fa-handshake cinzaColor" style="margin-right: 5px;"></i>Planos de Trabalho</a></li>' : "") + (callAtiv("checkCapacidade", "config_termos") || callAtiv("checkCapacidade", "config_self_termos") ? '    <li><a href="#tabs-termos"><i data-icon="file-signature" class="fas fa-file-signature cinzaColor" style="margin-right: 5px;"></i>Termos de Ci\xEAncia e Responsabilidade</a></li>' : "") + (callAtiv("checkCapacidade", "config_programas") ? '    <li><a href="#tabs-programas"><i data-icon="cubes" class="fas fa-cubes cinzaColor" style="margin-right: 5px;"></i>' + __.Programas + "</a></li>" : "") + (callAtiv("checkCapacidade", "config_entregas") ? '    <li><a href="#tabs-entregas"><i data-icon="hand-holding" class="fas fa-hand-holding cinzaColor" style="margin-right: 5px;"></i>Entregas</a></li>' : "") + (callAtiv("checkCapacidade", "config_acoes") ? '    <li><a href="#tabs-acoes"><i data-icon="puzzle-piece" class="fas fa-puzzle-piece cinzaColor" style="margin-right: 5px;"></i>A\xE7\xF5es Estrat\xE9gicas</a></li>' : "") + (callAtiv("checkCapacidade", "config_objetivos") ? '    <li><a href="#tabs-objetivos"><i data-icon="map-signs" class="fas fa-map-signs cinzaColor" style="margin-right: 5px;"></i>Objetivos Estrat\xE9gicos</a></li>' : "") + (callAtiv("checkCapacidade", "config_cadeia_valor") ? '    <li><a href="#tabs-cadeia_valor"><i data-icon="share-alt" class="fas fa-share-alt cinzaColor" style="margin-right: 5px;"></i>Cadeia de Valor</a></li>' : "") + (callAtiv("checkCapacidade", "config_mapas") ? '    <li><a href="#tabs-mapas"><i data-icon="network-wired" class="fas fa-network-wired cinzaColor" style="margin-right: 5px;"></i>Mapas Estrat\xE9gicos</a></li>' : "") + (callAtiv("checkCapacidade", "config_users") ? '    <li><a href="#tabs-users"><i data-icon="users" class="fas fa-users cinzaColor" style="margin-right: 5px;"></i>Usu\xE1rios</a></li>' : "") + (callAtiv("checkCapacidade", "config_unidades") ? '    <li><a href="#tabs-unidades"><i data-icon="briefcase" class="fas fa-briefcase cinzaColor" style="margin-right: 5px;"></i>Unidades</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_prescricoes") ? '    <li><a href="#tabs-tipos_prescricoes"><i data-icon="history" class="fas fa-history cinzaColor" style="margin-right: 5px;"></i>Tipos de ' + __.Prescricoes + "</a></li>" : "") + (callAtiv("checkCapacidade", "config_tipos_metadados") ? '    <li><a href="#tabs-tipos_metadados"><i data-icon="dice-d6" class="fas fa-dice-d6 cinzaColor" style="margin-right: 5px;"></i>Tipos de Metadados</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_eixos") ? '    <li><a href="#tabs-tipos_eixos"><i data-icon="exchange-alt" class="fas fa-exchange-alt cinzaColor" style="margin-right: 5px;"></i>Tipos de Eixos Tem\xE1ticos</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_entregas") ? '    <li><a href="#tabs-tipos_entregas"><i data-icon="exchange-alt" class="fas fa-hand-holding-medical cinzaColor" style="margin-right: 5px;"></i>Tipos de Entregas</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_documentos") ? '    <li><a href="#tabs-tipos_documentos"><i data-icon="file-alt" class="fas fa-file-alt cinzaColor" style="margin-right: 5px;"></i>Tipos de Documentos</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_requisicoes") ? '    <li><a href="#tabs-tipos_requisicoes"><i data-icon="inbox" class="fas fa-inbox cinzaColor" style="margin-right: 5px;"></i>Tipos de Requisi\xE7\xF5es</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_avaliacoes") ? '    <li><a href="#tabs-tipos_avaliacoes"><i data-icon="star" class="fas fa-star cinzaColor" style="margin-right: 5px;"></i>Tipos de Avalia\xE7\xF5es</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_justificativas") ? '    <li><a href="#tabs-tipos_justificativas"><i data-icon="star" class="fas fa-star cinzaColor" style="margin-right: 5px;"></i>Tipos de Justificativas de Avalia\xE7\xE3o</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_modalidades") ? '    <li><a href="#tabs-tipos_modalidades"><i data-icon="wrench" class="fas fa-wrench cinzaColor" style="margin-right: 5px;"></i>Tipos de Modalidades de Trabalho</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_motivos") ? '    <li><a href="#tabs-tipos_motivos"><i data-icon="luggage-cart" class="fas fa-luggage-cart cinzaColor" style="margin-right: 5px;"></i>Tipos de Motivos de Afastamento</a></li>' : "") + (callAtiv("checkCapacidade", "config_tipos_capacidades") ? '    <li><a href="#tabs-tipos_capacidades"><i data-icon="users-cog" class="fas fa-users-cog cinzaColor" style="margin-right: 5px;"></i>Tipos de Capacidades</a></li>' : "") + (callAtiv("checkCapacidade", "config_perfis") ? '    <li><a href="#tabs-perfis"><i data-icon="shield-alt" class="fas fa-shield-alt cinzaColor" style="margin-right: 5px;"></i>Tipos de Perfis</a></li>' : "") + (callAtiv("checkCapacidade", "config_nomenclaturas") ? '    <li><a href="#tabs-nomenclaturas"><i data-icon="ad" class="fas fa-ad cinzaColor" style="margin-right: 5px;"></i>Nomenclaturas</a></li>' : "") + (callAtiv("checkCapacidade", "config_entidades") ? '    <li><a href="#tabs-entidades"><i data-icon="university" class="fas fa-university cinzaColor" style="margin-right: 5px;"></i>Entidades</a></li>' : "") + '    </ul>    <div id="tabs-configpessoal">       ' + callAtiv("configPessoal") + "    </div>" + (callAtiv("checkCapacidade", "config_atividades") ? '    <div id="tabs-atividades"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_planos") || callAtiv("checkCapacidade", "config_self_planos") ? '    <div id="tabs-planos"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_termos") || callAtiv("checkCapacidade", "config_self_termos") ? '    <div id="tabs-termos"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_programas") ? '    <div id="tabs-programas"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_entregas") ? '    <div id="tabs-entregas"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_acoes") ? '    <div id="tabs-acoes"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_objetivos") ? '    <div id="tabs-objetivos"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_cadeia_valor") ? '    <div id="tabs-cadeia_valor"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_mapas") ? '    <div id="tabs-mapas"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_users") ? '    <div id="tabs-users"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_unidades") ? '    <div id="tabs-unidades"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_prescricoes") ? '    <div id="tabs-tipos_prescricoes"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_metadados") ? '    <div id="tabs-tipos_metadados"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_eixos") ? '    <div id="tabs-tipos_eixos"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_entregas") ? '    <div id="tabs-tipos_entregas"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_documentos") ? '    <div id="tabs-tipos_documentos"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_requisicoes") ? '    <div id="tabs-tipos_requisicoes"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_avaliacoes") ? '    <div id="tabs-tipos_avaliacoes"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_justificativas") ? '    <div id="tabs-tipos_justificativas"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_modalidades") ? '    <div id="tabs-tipos_modalidades"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_motivos") ? '    <div id="tabs-tipos_motivos"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_tipos_capacidades") ? '    <div id="tabs-tipos_capacidades"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_perfis") ? '    <div id="tabs-perfis"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_nomenclaturas") ? '    <div id="tabs-nomenclaturas"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + (callAtiv("checkCapacidade", "config_entidades") ? '    <div id="tabs-entidades"><div class="dataFallback" style="z-index: 1;" data-text="Nenhum dado dispon\xEDvel"></div></div>' : "") + "</div>";
     $("." + panel).html(htmlToolbar);
     $("#" + tabs).tabs({
-      activate: function(event2, ui) {
+      activate: function(event, ui) {
         var active = $(this).tabs("option", "active");
         var type = ui.newPanel[0].id.replace("tabs-", "");
         setChangeAllItensPerfil(type);
@@ -3661,8 +4139,8 @@
     var table = _this.closest("table");
     table.find('button[data-value="Pesquisar"]').trigger("click");
   }
-  function setNewItemCell(this_, event2) {
-    if (event2.which == 13) {
+  function setNewItemCell(this_, event) {
+    if (event.which == 13) {
       setTimeout(function() {
         $(this_).closest("td").text($(this_).val().trim());
       }, 500);
@@ -3785,7 +4263,7 @@
         },
         buttons: [{
           text: "Ok",
-          click: function(event2) {
+          click: function(event) {
             resetDialogBoxPro("alertBoxPro");
           }
         }]
@@ -4109,7 +4587,7 @@
         buttons: [{
           text: capacidade ? "Salvar" : "Ok",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             if (capacidade) {
               var comment_homologacao = $("#comment_homologacao").val();
               if (comment_homologacao.length < 100) {
@@ -5068,9 +5546,9 @@
         8: { filter: true },
         9: { filter: true }
       }
-    }).on("sortEnd", function(event2, data) {
+    }).on("sortEnd", function(event, data) {
       checkboxRangerSelectShift();
-    }).on("filterEnd", function(event2, data) {
+    }).on("filterEnd", function(event, data) {
       checkboxRangerSelectShift();
       $(this).find("caption span.count").text(data.filteredRows);
       $(this).find("tbody > tr:visible > td > input").prop("disabled", false);
@@ -5370,31 +5848,31 @@
       }
     });
     tableConfigEditor[type] = configEditor;
-    configTabela.on("cell:edited", function(event2) {
-      var _this = $(event2.element);
+    configTabela.on("cell:edited", function(event) {
+      var _this = $(event.element);
       var td = _this.closest("td");
       var tr = _this.closest("tr");
       var data = td.data();
       var data_tr = tr.data();
-      var value = event2.newValue;
+      var value = event.newValue;
       if (_this.hasClass("editCellSelect")) {
-        if (typeof event2.newValue === "undefined" || event2.newValue == "new") {
-          _this.text(event2.oldValue);
+        if (typeof event.newValue === "undefined" || event.newValue == "new") {
+          _this.text(event.oldValue);
         }
-        if (typeof event2.newValue !== "undefined" && typeof data.newvalue !== "undefined") {
+        if (typeof event.newValue !== "undefined" && typeof data.newvalue !== "undefined") {
           value = data.newvalue;
         }
-      } else if (_this.hasClass("editCellCPF") && typeof event2.newValue !== "undefined") {
-        if (!validaCPF(event2.newValue)) {
+      } else if (_this.hasClass("editCellCPF") && typeof event.newValue !== "undefined") {
+        if (!validaCPF(event.newValue)) {
           td.addClass("editCellLoadingError");
           return false;
         }
-      } else if (_this.hasClass("editCellDate") && typeof event2.newValue !== "undefined") {
-        var value_nottime = moment(event2.newValue, "DD/MM/YYYY").format("YYYY-MM-DD");
+      } else if (_this.hasClass("editCellDate") && typeof event.newValue !== "undefined") {
+        var value_nottime = moment(event.newValue, "DD/MM/YYYY").format("YYYY-MM-DD");
         if (value_nottime == "Invalid date" && data_tr.type == "entregas" && data.key == "data_fim_vigencia") {
           value = "0000-00-00 00:00:00";
         } else if (value_nottime == "Invalid date") {
-          _this.text(event2.oldValue);
+          _this.text(event.oldValue);
           td.addClass("editCellLoadingError");
           return false;
         } else {
@@ -5418,38 +5896,38 @@
           }
         }
       }
-      if (typeof event2.newValue !== "undefined" && _this.hasClass("editCellNew")) {
+      if (typeof event.newValue !== "undefined" && _this.hasClass("editCellNew")) {
         _this.removeClass("editCellNew").addClass("editCellSelect");
       }
-      if (typeof event2.newValue !== "undefined" && typeof data.text !== "undefined" && event2.newValue.trim().indexOf("(C\xF3pia)") === -1) {
+      if (typeof event.newValue !== "undefined" && typeof data.text !== "undefined" && event.newValue.trim().indexOf("(C\xF3pia)") === -1) {
         tr.removeClass("clone");
       }
-      if (typeof event2.newValue !== "undefined" && typeof data.text !== "undefined" && event2.newValue.trim().indexOf("(Novo)") === -1) {
+      if (typeof event.newValue !== "undefined" && typeof data.text !== "undefined" && event.newValue.trim().indexOf("(Novo)") === -1) {
         tr.removeClass("new");
       }
-      if (typeof event2.newValue !== "undefined" && data.key == "data_fim_vigencia" && moment(value, "YYYY-MM-DD HH:mm:ss") < moment()) {
+      if (typeof event.newValue !== "undefined" && data.key == "data_fim_vigencia" && moment(value, "YYYY-MM-DD HH:mm:ss") < moment()) {
         tr.addClass("closed");
       } else {
         tr.removeClass("closed");
       }
-      if (typeof event2.newValue !== "undefined" && data.key == "data_inicio_vigencia" && moment(value, "YYYY-MM-DD HH:mm:ss") > moment()) {
+      if (typeof event.newValue !== "undefined" && data.key == "data_inicio_vigencia" && moment(value, "YYYY-MM-DD HH:mm:ss") > moment()) {
         tr.addClass("future");
       } else {
         tr.removeClass("future");
       }
-      if (typeof event2.newValue !== "undefined") {
+      if (typeof event.newValue !== "undefined") {
         td.addClass("editCellLoading");
         if (td.hasClass("alertAssinatura")) {
           confirmaFraseBoxPro('Editar essas informa\xE7\xF5es ir\xE1 <b style="font-weight: bold;">CANCELAR A ASSINATURA</b> vinculada. Deseja prosseguir?', "CANCELAR", function() {
             updateConfigServerInline(_this, type, value, data, data_tr);
           }, function() {
-            td.removeClass("editCellLoading").text(event2.oldValue);
+            td.removeClass("editCellLoading").text(event.oldValue);
           });
         } else if (td.hasClass("alertHomologacao")) {
           confirmaFraseBoxPro('Editar essas informa\xE7\xF5es ir\xE1 <b style="font-weight: bold;">CANCELAR A HOMOLOGA\xC7\xC3O</b> vinculada. Deseja prosseguir?', "CANCELAR", function() {
             updateConfigServerInline(_this, type, value, data, data_tr);
           }, function() {
-            td.removeClass("editCellLoading").text(event2.oldValue);
+            td.removeClass("editCellLoading").text(event.oldValue);
           });
         } else {
           updateConfigServerInline(_this, type, value, data, data_tr);
@@ -5992,7 +6470,7 @@
         id: "addPlanoBtn",
         text: "Adicionar",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           var _parent = $(this).closest(".ui-dialog");
           var id_user = _parent.find("select#id_user").val();
           var id_tipo_modalidade = _parent.find("select#id_tipo_modalidade").val();
@@ -6075,7 +6553,7 @@
       buttons: [{
         text: "Adicionar",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           var _parent = $(this).closest(".ui-dialog");
           var nome_completo = _parent.find("input#user_nome_completo");
           var user_login = _parent.find("input#user_login");
@@ -6532,8 +7010,8 @@
     changeConfigOptions: () => changeConfigOptions,
     changeConfigPerfilCapacidade: () => changeConfigPerfilCapacidade,
     changeHorasDesconto: () => changeHorasDesconto,
-    checkDatesBetweenArray: () => checkDatesBetweenArray,
-    checkDatesLoopArray: () => checkDatesLoopArray,
+    checkDatesBetweenArray: () => checkDatesBetweenArray2,
+    checkDatesLoopArray: () => checkDatesLoopArray2,
     checkOptionConfigComplex: () => checkOptionConfigComplex,
     checkOptionConfigSEI: () => checkOptionConfigSEI,
     configModalidadesLimitePlanos: () => configModalidadesLimitePlanos,
@@ -6568,6 +7046,45 @@
     tempoProporcionalTabEntregasPlanos: () => tempoProporcionalTabEntregasPlanos,
     updateConfigPerfilCapacidade: () => updateConfigPerfilCapacidade
   });
+
+  // src/features/atividades/config-domain.js
+  function checkDatesBetweenArray(array, dateTarget, idUser, idTarget, labels, {
+    includes = false,
+    searchTarget = false,
+    addLoop = "days",
+    moment: moment2,
+    search
+  } = {}) {
+    if (typeof moment2 !== "function") throw new Error("checkDatesBetweenArray requires moment");
+    const format = String(dateTarget).includes("T") ? "YYYY-MM-DDTHH:mm" : "YYYY-MM-DD";
+    const userDates = searchTarget ? array || [] : typeof search === "function" ? search(array || [], `[?${labels.id}==\`${idUser}\`]`) : (array || []).filter((v) => v[labels.id] == idUser);
+    const target = moment2(dateTarget, format);
+    const boundary = includes ? "[]" : "()";
+    return (userDates || []).reduce((out, value) => {
+      const start = moment2(value[labels.inicio], "YYYY-MM-DD HH:mm:ss");
+      const finish = moment2(value[labels.fim], "YYYY-MM-DD HH:mm:ss");
+      const between = target.isBetween(start, finish, addLoop, boundary);
+      const sameTarget = searchTarget ? idTarget != value[labels.idreftype] : idTarget != value[labels.id];
+      if (between && sameTarget) out.push(value[labels.idreftype]);
+      return out;
+    }, []);
+  }
+  function checkDatesLoopArray(array, inicio, fim, idUser, idTarget, labels, options = {}) {
+    const { moment: moment2, addLoop = "days" } = options;
+    if (typeof moment2 !== "function") throw new Error("checkDatesLoopArray requires moment");
+    const format = "YYYY-MM-DDTHH:mm";
+    const start = moment2(inicio, format);
+    const end = moment2(fim, format);
+    const check = (date) => checkDatesBetweenArray(array, date, idUser, idTarget, labels, options);
+    let result = check(start.format(format));
+    if (!result || !result.length) result = check(end.format(format));
+    while ((!result || !result.length) && start.add(1, addLoop).diff(end) < 0) {
+      result = check(start.clone().format(format));
+    }
+    return result && result.length ? result : false;
+  }
+
+  // src/features/atividades/config-options.js
   function getTabEntregasPlanos(idConfigBox, value, entregas, checkEditEntregas, loopReturn = true) {
     let startDatePlano = moment(value.data_inicio_vigencia, "YYYY-MM-DD HH:mm:ss");
     let endDatePlano = moment(value.data_fim_vigencia, "YYYY-MM-DD HH:mm:ss");
@@ -7261,7 +7778,7 @@
           id: "btnSalvarOptions_" + data.type,
           text: "Salvar",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             saveOptionConfigItem(this, data.type, id);
           }
         }]
@@ -7540,7 +8057,7 @@
         opacity: 0.5,
         axis: "y",
         dropOnEmpty: false,
-        update: function(event2, ui) {
+        update: function(event, ui) {
           $(this).find("tr").each(function(index, value) {
             $(this).attr("data-index", index).data("index", index);
           });
@@ -7832,7 +8349,7 @@
             1: { filter: true },
             2: { filter: true }
           }
-        }).on("sortEnd", function(event2, data) {
+        }).on("sortEnd", function(event, data) {
           checkboxRangerSelectShift(idTableAtividades);
         });
         checkboxRangerSelectShift(idTableAtividades);
@@ -8053,38 +8570,25 @@
     };
     callAtiv("getConfigServer", action, param2);
   }
-  function checkDatesLoopArray(array, inicio, fim, id_user, id_target, labels, includes = false, search_target = false, add_loop = "days") {
-    var format = "YYYY-MM-DDTHH:mm";
-    var _inicio = moment(inicio, format);
-    var _fim = moment(fim, format);
-    var checkBetween = false;
-    var checkInicio = checkDatesBetweenArray(array, _inicio.format(format), id_user, id_target, labels, includes, search_target, add_loop);
-    var checkFim = checkDatesBetweenArray(array, _fim.format(format), id_user, id_target, labels, includes, search_target, add_loop);
-    while (_inicio.add(1, add_loop).diff(_fim) < 0) {
-      var check = checkDatesBetweenArray(array, _inicio.clone().format(format), id_user, id_target, labels, includes, search_target, add_loop);
-      if (check) {
-        checkBetween = check;
-        break;
-      }
-    }
-    return checkInicio || checkBetween || checkFim ? checkInicio || checkBetween || checkFim : false;
-  }
-  function checkDatesBetweenArray(array, date_target, id_user, id_target, labels, includes = false, search_target = false, add_loop = "days") {
-    var format = date_target.indexOf("T") !== -1 ? "YYYY-MM-DDTHH:mm" : "YYYY-MM-DD";
-    var userDates = search_target ? array : jmespath.search(array, "[?" + labels.id + "==`" + id_user + "`]");
-    var checkDates = [];
-    var target = moment(date_target, format);
-    includes = includes ? "[]" : "()";
-    $.each(userDates, function(index, value) {
-      var start = moment(value[labels.inicio], "YYYY-MM-DD HH:mm:ss");
-      var finish = moment(value[labels.fim], "YYYY-MM-DD HH:mm:ss");
-      var check = target.isBetween(start, finish, add_loop, includes);
-      var check_array = search_target ? id_target != value[labels.idreftype] ? true : false : id_target != value[labels.id] ? true : false;
-      if (check && check_array) {
-        checkDates.push(value[labels.idreftype]);
-      }
+  function checkDatesLoopArray2(array, inicio, fim, id_user, id_target, labels, includes = false, search_target = false, add_loop = "days", deps = {}) {
+    const runtime = getAtividadesContext();
+    return checkDatesLoopArray(array, inicio, fim, id_user, id_target, labels, {
+      includes,
+      searchTarget: search_target,
+      addLoop: add_loop,
+      moment: deps.moment || runtime.page.moment,
+      search: deps.search || runtime.page.jmespath && runtime.page.jmespath.search
     });
-    return checkDates && checkDates.length ? checkDates : false;
+  }
+  function checkDatesBetweenArray2(array, date_target, id_user, id_target, labels, includes = false, search_target = false, add_loop = "days", deps = {}) {
+    const runtime = getAtividadesContext();
+    return checkDatesBetweenArray(array, date_target, id_user, id_target, labels, {
+      includes,
+      searchTarget: search_target,
+      addLoop: add_loop,
+      moment: deps.moment || runtime.page.moment,
+      search: deps.search || runtime.page.jmespath && runtime.page.jmespath.search
+    });
   }
   function checkOptionConfigSEI(this_) {
     var _this = $(this_);
@@ -8480,13 +8984,13 @@
       buttons: [{
         text: "Imprimir",
         icon: "ui-icon-print",
-        click: function(event2) {
+        click: function(event) {
           printDocumento();
         }
       }, {
         text: "Ok",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           $("#view_doc").remove();
           resetDialogBoxPro("dialogBoxPro");
         }
@@ -8642,7 +9146,7 @@
         filter_excludeFilter: {}
       },
       sortReset: true
-    }).on("filterEnd", function(event2, data_filter) {
+    }).on("filterEnd", function(event, data_filter) {
       $(this).find("caption span.count").text(data_filter.filteredRows);
       $(this).find("tbody > tr:visible > td > input").prop("disabled", false);
       $(this).find("tbody > tr:hidden > td > input").prop("disabled", true);
@@ -8891,21 +9395,21 @@
         }
       }
     });
-    reportEditor.on("cell:edited", function(event2) {
-      var _this = $(event2.element);
+    reportEditor.on("cell:edited", function(event) {
+      var _this = $(event.element);
       var td = _this.closest("td");
       var tr = _this.closest("tr");
       var data = td.data();
       var data_tr = tr.data();
-      var value = event2.newValue;
+      var value = event.newValue;
       if (_this.hasClass("editCellSelect")) {
-        if (typeof event2.newValue === "undefined" || event2.newValue == "new") {
-          _this.text(event2.oldValue);
+        if (typeof event.newValue === "undefined" || event.newValue == "new") {
+          _this.text(event.oldValue);
         }
-        if (typeof event2.newValue !== "undefined" && typeof data.newvalue !== "undefined") {
+        if (typeof event.newValue !== "undefined" && typeof data.newvalue !== "undefined") {
           value = data.newvalue;
         }
-        if (typeof event2.newValue !== "undefined") {
+        if (typeof event.newValue !== "undefined") {
         }
       }
     });
@@ -9036,9 +9540,9 @@
           4: { filter: true },
           5: { filter: true }
         }
-      }).on("sortEnd", function(event2, data) {
+      }).on("sortEnd", function(event, data) {
         checkboxRangerSelectShift();
-      }).on("filterEnd", function(event2, data) {
+      }).on("filterEnd", function(event, data) {
         checkboxRangerSelectShift();
         var caption = $(this).find("caption").eq(0);
         var tx = caption.text();
@@ -9487,7 +9991,7 @@
             opacity: 0.5,
             axis: "y",
             dropOnEmpty: false,
-            update: function(event2, ui) {
+            update: function(event, ui) {
               $(this).find("tr").each(function(index, value2) {
                 $(this).attr("data-index", index).data("index", index);
               });
@@ -9504,7 +10008,7 @@
         buttons: [{
           text: value && id_afastamento != 0 ? "Editar" : "Adicionar",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             var _parent = $(this).closest(".ui-dialog");
             var target = _parent.find('input[data-type="inicio"]').get(0);
             if (checkDatesAfast(target) && callAtiv("checkAtivRequiredFields", target, "mark") && callAtiv("checkAtivRequiredDocuments", target)) {
@@ -9641,7 +10145,7 @@
         buttons: [{
           text: "Salvar",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             saveSelfEntregasPlanos(id_plano);
           }
         }]
@@ -9708,7 +10212,7 @@
             buttons: [{
               text: "Ok",
               class: "confirm",
-              click: function(event2) {
+              click: function(event) {
                 $("#dialogBoxDiv").remove();
                 resetDialogBoxPro("dialogBoxPro");
               }
@@ -9839,14 +10343,14 @@
                       title: function() {
                         return "";
                       },
-                      label: function(context) {
-                        let label = context.dataset.label;
-                        let value = context.parsed.x;
-                        var planoIndex2 = context.chart.data.datasets.findIndex(function(id_key) {
+                      label: function(context2) {
+                        let label = context2.dataset.label;
+                        let value = context2.parsed.x;
+                        var planoIndex2 = context2.chart.data.datasets.findIndex(function(id_key) {
                           return id_key.label == "Plano";
                         });
-                        let valuePlano = planoIndex2 === -1 ? false : context.chart.data.datasets[planoIndex2].data[context.dataIndex];
-                        var valuePercent = !valuePlano ? "" : context.datasetIndex != planoIndex2 ? " (" + (value / valuePlano * 100).toFixed(2) + "%)" : "";
+                        let valuePlano = planoIndex2 === -1 ? false : context2.chart.data.datasets[planoIndex2].data[context2.dataIndex];
+                        var valuePercent = !valuePlano ? "" : context2.datasetIndex != planoIndex2 ? " (" + (value / valuePlano * 100).toFixed(2) + "%)" : "";
                         return " " + label + ": " + value + " horas" + valuePercent;
                       }
                     }
@@ -9982,13 +10486,13 @@
       buttons: [{
         text: "Imprimir",
         icon: "ui-icon-print",
-        click: function(event2) {
+        click: function(event) {
           printDocumento();
         }
       }, {
         text: "Ok",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           $("#dialogBoxDiv").remove();
           resetDialogBoxPro("dialogBoxPro");
         }
@@ -10411,6 +10915,14 @@
     updatePriorityKanbanItens: () => updatePriorityKanbanItens,
     updateProgressChecklist: () => updateProgressChecklist
   });
+  function callParentAtividades(name, ...args) {
+    const root = typeof parent !== "undefined" ? parent : globalThis;
+    const feature = root && root.SeiPro && root.SeiPro.features && root.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    const fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
+    if (typeof fn === "function") return fn(...args);
+    return callAtiv(name, ...args);
+  }
   function initKanbanAtividades(this_, TimeOut = 9e3) {
     if (TimeOut <= 0) {
       return;
@@ -10818,7 +11330,7 @@
         opacity: 0.5,
         axis: "y",
         dropOnEmpty: false,
-        update: function(event2, ui) {
+        update: function(event, ui) {
           var list_ordem = [];
           $(this).find(".info_checklist_item").each(function(i) {
             $(this).attr("data-ordem", i);
@@ -11320,8 +11832,8 @@
         hideOnClick: true,
         adjustment: 5,
         style: "menu"
-      }).on("toolbarShown", function(event2) {
-        var id = $(event2.currentTarget).data("index");
+      }).on("toolbarShown", function(event) {
+        var id = $(event.currentTarget).data("index");
         var toolbar = $(".tool-container.tool-bottom.toolbar-menu.animate-standard:visible");
         setTimeout(function() {
           if (typeof id !== "undefined" && id !== null && toolbar.length > 0) {
@@ -11366,9 +11878,9 @@
             });
           }
         }, 300);
-      }).on("toolbarItemClick", function(event2, triggerButton) {
-        event2.preventDefault();
-        event2.stopPropagation();
+      }).on("toolbarItemClick", function(event, triggerButton) {
+        event.preventDefault();
+        event.stopPropagation();
         var id = $(this).data("index");
         var action = $(triggerButton).data("action");
         var subaction = $(triggerButton).data("subaction");
@@ -11376,42 +11888,42 @@
           var value = jmespath.search(arrayAtividadesPro, "[?id_demanda==`" + id + "`] | [0]");
           value = value !== null ? value : false;
           if (action == "info_atividade") {
-            parent.infoAtividade(value.id_demanda);
+            callParentAtividades("infoAtividade", value.id_demanda);
           } else if (action == "history_atividade") {
-            parent.historyAtividade(value.id_demanda);
+            callParentAtividades("historyAtividade", value.id_demanda);
           } else if (action == "variation_atividade" || action == "type_atividade") {
-            parent.variationAtividade(value.id_demanda);
+            callParentAtividades("variationAtividade", value.id_demanda);
           } else if (action == "start_cancel_atividade") {
-            parent.startCancelAtividade(value.id_demanda);
+            callParentAtividades("startCancelAtividade", value.id_demanda);
           } else if (action == "pause_atividade") {
-            parent.pauseAtividade(value.id_demanda);
+            callParentAtividades("pauseAtividade", value.id_demanda);
           } else if (action == "edit_atividade") {
             if (subaction == "notify_atividade") {
-              parent.notifyAtividade(value.id_demanda, event2);
+              callParentAtividades("notifyAtividade", value.id_demanda, event);
             } else {
-              parent.saveAtividade(value.id_demanda);
+              callParentAtividades("saveAtividade", value.id_demanda);
             }
           } else if (action == "delete_atividade" || action == "delete_atividade_all") {
-            parent.deleteAtividade_(value);
+            callParentAtividades("deleteAtividade_", value);
           } else if (action == "extend_atividade") {
-            parent.extendAtividade(value.id_demanda);
+            callParentAtividades("extendAtividade", value.id_demanda);
           } else if (action == "complete_edit_atividade") {
-            parent.completeAtividade(value.id_demanda);
+            callParentAtividades("completeAtividade", value.id_demanda);
           } else if (action == "complete_cancel_atividade") {
-            parent.completeCancelAtividade(value.id_demanda);
+            callParentAtividades("completeCancelAtividade", value.id_demanda);
           } else if (action == "rate_edit_atividade") {
-            parent.rateAtividade(value.id_demanda);
+            callParentAtividades("rateAtividade", value.id_demanda);
           } else if (action == "rate_default_atividade") {
-            parent.rateAtividade(value.id_demanda, true);
+            callParentAtividades("rateAtividade", value.id_demanda, true);
           } else if (action == "rate_cancel_atividade") {
-            parent.rateCancelAtividade(value.id_demanda);
+            callParentAtividades("rateCancelAtividade", value.id_demanda);
           } else if (action == "send_cancel_atividade") {
-            parent.sendCancelAtividade(value.id_demanda);
+            callParentAtividades("sendCancelAtividade", value.id_demanda);
           }
         }
-      }).on("toolbarHidden", function(event2) {
-        event2.preventDefault();
-        event2.stopPropagation();
+      }).on("toolbarHidden", function(event) {
+        event.preventDefault();
+        event.stopPropagation();
       });
       _this.trigger("click");
     }
@@ -11518,10 +12030,10 @@
             3: { filter: true },
             4: { filter: true }
           }
-        }).on("sortEnd", function(event2, data) {
+        }).on("sortEnd", function(event, data) {
           checkboxRangerSelectShift();
           repareStickColumnsSortable(tabelaAtiv, true);
-        }).on("filterEnd", function(event2, data) {
+        }).on("filterEnd", function(event, data) {
           var caption = $(this).find("caption").eq(0);
           var tx = caption.text();
           caption.text(tx.replace(/\d+/g, data.filteredRows));
@@ -11741,7 +12253,7 @@
       var btnDialogBoxPro = [{
         text: id_demanda != 0 ? "Editar" : "Salvar",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           if (callAtiv("checkAtivRequiredFields", this, "mark")) {
             var action = id_demanda != 0 ? "edit_atividade" : "save_atividade";
             var param2 = callAtiv("extractDataAtiv", this);
@@ -11761,7 +12273,7 @@
             btnDialogBoxPro.unshift({
               text: value.data_entrega == "0000-00-00 00:00:00" ? "Concluir " + __.Demanda : "Editar Conclus\xE3o",
               icon: "ui-icon-check",
-              click: function(event2) {
+              click: function(event) {
                 callAtiv("completeAtividade", id_demanda);
               }
             });
@@ -11771,7 +12283,7 @@
             btnDialogBoxPro.unshift({
               text: "Iniciar Execu\xE7\xE3o",
               icon: "ui-icon-play",
-              click: function(event2) {
+              click: function(event) {
                 callAtiv("startAtividade", id_demanda);
               }
             });
@@ -11780,15 +12292,15 @@
         btnDialogBoxPro.unshift({
           text: "Gerar Notifica\xE7\xE3o",
           icon: "ui-icon-mail-closed",
-          click: function(event2) {
-            callAtiv("notifyAtividade", id_demanda, event2);
+          click: function(event) {
+            callAtiv("notifyAtividade", id_demanda, event);
           }
         });
         if (callAtiv("checkCapacidade", "delete_atividade") || callAtiv("checkCapacidade", "delete_atividade_all")) {
           btnDialogBoxPro.unshift({
             text: "Excluir",
             icon: "ui-icon-trash",
-            click: function(event2) {
+            click: function(event) {
               deleteAtividade_(value);
             }
           });
@@ -11798,7 +12310,7 @@
           btnDialogBoxPro.unshift({
             text: "Cadastro Avan\xE7ado",
             icon: "ui-icon-notice",
-            click: function(event2) {
+            click: function(event) {
               changeSaveAtividade("full");
             }
           });
@@ -11946,7 +12458,7 @@
         buttons: [{
           text: callAtiv("checkCapacidade", "rate_atividade") && $("#ifrArvore").length == 0 ? "Visualizar " + __.demandas : "Ok",
           class: callAtiv("checkCapacidade", "rate_atividade") ? "confirm" : "",
-          click: function(event2) {
+          click: function(event) {
             if (callAtiv("checkCapacidade", "rate_atividade")) {
               selectDemanadasPendentesAvaliacao(daysMaxAvaliacao);
             } else {
@@ -12039,7 +12551,7 @@
       var btnDialogBoxPro = [{
         text: id_demanda != 0 ? "Editar" : "Salvar",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           if (callAtiv("checkAtivRequiredFields", this, "mark")) {
             var action = id_demanda != 0 ? "edit_atividade" : "save_atividade";
             var param2 = callAtiv("extractDataAtiv", this);
@@ -12059,7 +12571,7 @@
             btnDialogBoxPro.unshift({
               text: value.data_entrega == "0000-00-00 00:00:00" ? "Concluir " + __.Demanda : "Editar Conclus\xE3o",
               icon: "ui-icon-check",
-              click: function(event2) {
+              click: function(event) {
                 callAtiv("completeAtividade", id_demanda);
               }
             });
@@ -12069,7 +12581,7 @@
             btnDialogBoxPro.unshift({
               text: "Iniciar Execu\xE7\xE3o",
               icon: "ui-icon-play",
-              click: function(event2) {
+              click: function(event) {
                 callAtiv("startAtividade", id_demanda);
               }
             });
@@ -12078,15 +12590,15 @@
         btnDialogBoxPro.unshift({
           text: "Gerar Notifica\xE7\xE3o",
           icon: "ui-icon-mail-closed",
-          click: function(event2) {
-            callAtiv("notifyAtividade", id_demanda, event2);
+          click: function(event) {
+            callAtiv("notifyAtividade", id_demanda, event);
           }
         });
         if (callAtiv("checkCapacidade", "delete_atividade") || callAtiv("checkCapacidade", "delete_atividade_all")) {
           btnDialogBoxPro.unshift({
             text: "Excluir",
             icon: "ui-icon-trash",
-            click: function(event2) {
+            click: function(event) {
               if (value.data_avaliacao != "0000-00-00 00:00:00") {
                 confirmaFraseBoxPro(__.A_demanda + " j\xE1 possui avalia\xE7\xE3o cadastrada. Tem certeza que deseja excluir?", "EXCLUIR", function() {
                   callAtiv("deleteAtividade", id_demanda);
@@ -12108,7 +12620,7 @@
           btnDialogBoxPro.unshift({
             text: "Editar " + __.Demandas,
             icon: "ui-icon-pencil",
-            click: function(event2) {
+            click: function(event) {
               callAtiv("selectAtividadeBox", "edit");
             }
           });
@@ -12116,7 +12628,7 @@
             btnDialogBoxPro.unshift({
               text: "Cadastro Simplificado",
               icon: "ui-icon-check",
-              click: function(event2) {
+              click: function(event) {
                 changeSaveAtividade("simple");
               }
             });
@@ -12126,7 +12638,7 @@
           btnDialogBoxPro.unshift({
             text: "Cadastro R\xE1pido",
             icon: "ui-icon-check",
-            click: function(event2) {
+            click: function(event) {
               changeSaveAtividade("quick");
             }
           });
@@ -12262,7 +12774,7 @@
       var btnDialogBoxPro = [{
         text: "Salvar",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           if (callAtiv("checkAtivRequiredFields", this, "mark")) {
             repairTemposDemandaQuick(false);
             var action = "save_atividade_rapida";
@@ -12281,7 +12793,7 @@
         btnDialogBoxPro.unshift({
           text: "Cadastro Avan\xE7ado",
           icon: "ui-icon-notice",
-          click: function(event2) {
+          click: function(event) {
             delayCrash = true;
             changeSaveAtividade("full");
             setTimeout(() => {
@@ -12808,6 +13320,97 @@
     updateRecalculaPrazo: () => updateRecalculaPrazo,
     variationAtividade: () => variationAtividade
   });
+
+  // src/core/feriados.js
+  function easterDay(y) {
+    const moment2 = globalRef.moment;
+    const c = Math.floor(y / 100);
+    const n = y - 19 * Math.floor(y / 19);
+    const k = Math.floor((c - 17) / 25);
+    let i = c - Math.floor(c / 4) - Math.floor((c - k) / 3) + 19 * n + 15;
+    i = i - 30 * Math.floor(i / 30);
+    i = i - Math.floor(i / 28) * (1 - Math.floor(i / 28) * Math.floor(29 / (i + 1)) * Math.floor((21 - n) / 11));
+    let j = y + Math.floor(y / 4) + i + 2 - c + Math.floor(c / 4);
+    j = j - 7 * Math.floor(j / 7);
+    const l = i - j;
+    const m = 3 + Math.floor((l + 40) / 44);
+    const d = l + 28 - 31 * Math.floor(m / 4);
+    return moment2([y, m - 1, d]);
+  }
+  function getHolidaysBr(y) {
+    const moment2 = globalRef.moment;
+    const anoNovo = moment2("01/01/" + y, "DD/MM/YYYY");
+    const carnaval1 = easterDay(y).add(-48, "d");
+    const carnaval2 = easterDay(y).add(-47, "d");
+    const paixaoCristo = easterDay(y).add(-2, "d");
+    const pascoa = easterDay(y);
+    const tiradentes = moment2("21/04/" + y, "DD/MM/YYYY");
+    const corpusChristi = easterDay(y).add(60, "d");
+    const diaTrabalho = moment2("01/05/" + y, "DD/MM/YYYY");
+    const diaIndependencia = moment2("07/09/" + y, "DD/MM/YYYY");
+    const nossaSenhora = moment2("12/10/" + y, "DD/MM/YYYY");
+    const finados = moment2("02/11/" + y, "DD/MM/YYYY");
+    const conscienciaNegra = moment2("20/11/" + y, "DD/MM/YYYY");
+    const proclamaRepublica = moment2("15/11/" + y, "DD/MM/YYYY");
+    const natal = moment2("25/12/" + y, "DD/MM/YYYY");
+    return [
+      { m: anoNovo, dia: "Ano Novo", d: anoNovo.format("DD/MM/YYYY"), d_: anoNovo.format("YYYY-MM-DD") },
+      { m: carnaval1, dia: "Carnaval", d: carnaval1.format("DD/MM/YYYY"), d_: carnaval1.format("YYYY-MM-DD") },
+      { m: carnaval2, dia: "Carnaval", d: carnaval2.format("DD/MM/YYYY"), d_: carnaval2.format("YYYY-MM-DD") },
+      { m: paixaoCristo, dia: "Paix\xE3o de Cristo", d: paixaoCristo.format("DD/MM/YYYY"), d_: paixaoCristo.format("YYYY-MM-DD") },
+      { m: pascoa, dia: "P\xE1scoa", d: pascoa.format("DD/MM/YYYY"), d_: pascoa.format("YYYY-MM-DD") },
+      { m: tiradentes, dia: "Tiradentes", d: tiradentes.format("DD/MM/YYYY"), d_: tiradentes.format("YYYY-MM-DD") },
+      { m: corpusChristi, dia: "Corpus Christi", d: corpusChristi.format("DD/MM/YYYY"), d_: corpusChristi.format("YYYY-MM-DD") },
+      { m: diaTrabalho, dia: "Dia do Trabalho", d: diaTrabalho.format("DD/MM/YYYY"), d_: diaTrabalho.format("YYYY-MM-DD") },
+      { m: diaIndependencia, dia: "Dia da Independ\xEAncia do Brasil", d: diaIndependencia.format("DD/MM/YYYY"), d_: diaIndependencia.format("YYYY-MM-DD") },
+      { m: nossaSenhora, dia: "Nossa Senhora Aparecida", d: nossaSenhora.format("DD/MM/YYYY"), d_: nossaSenhora.format("YYYY-MM-DD") },
+      { m: finados, dia: "Finados", d: finados.format("DD/MM/YYYY"), d_: finados.format("YYYY-MM-DD") },
+      { m: conscienciaNegra, dia: "Dia Nacional de Zumbi e da Consci\xEAncia Negra", d: conscienciaNegra.format("DD/MM/YYYY"), d_: conscienciaNegra.format("YYYY-MM-DD") },
+      { m: proclamaRepublica, dia: "Proclama\xE7\xE3o da Rep\xFAblica", d: proclamaRepublica.format("DD/MM/YYYY"), d_: proclamaRepublica.format("YYYY-MM-DD") },
+      { m: natal, dia: "Natal", d: natal.format("DD/MM/YYYY"), d_: natal.format("YYYY-MM-DD") }
+    ];
+  }
+  function getHolidayBetweenDates2(date, dateTo, addHolidays = false) {
+    const moment2 = globalRef.moment;
+    const $2 = globalRef.jQuery || globalRef.$;
+    const dateStart = moment2(date, "YYYY-MM-DD");
+    const dateEnd = moment2(dateTo, "YYYY-MM-DD");
+    const datesHoliday = [];
+    while (dateEnd > dateStart || dateStart.format("Y") === dateEnd.format("Y")) {
+      $2.merge(datesHoliday, getHolidaysBr(parseInt(dateStart.format("YYYY"))));
+      if (addHolidays) {
+        const addHoliday = $2.map(addHolidays, function(v) {
+          if (v.recorrente) {
+            const feriado_data = moment2(v.feriado_data + "/" + dateStart.format("YYYY"), "DD/MM/YYYY");
+            return { m: feriado_data, dia: v.nome_feriado, d: feriado_data.format("DD/MM/YYYY"), d_: feriado_data.format("YYYY-MM-DD"), meio_periodo: v.meio_periodo };
+          } else if (!v.recorrente && dateStart.format("Y") == moment2(v.feriado_data, "DD/MM/YYYY").format("Y")) {
+            const feriado_data = moment2(v.feriado_data, "DD/MM/YYYY");
+            return { m: feriado_data, dia: v.nome_feriado, d: feriado_data.format("DD/MM/YYYY"), d_: feriado_data.format("YYYY-MM-DD"), meio_periodo: v.meio_periodo };
+          }
+        });
+        $2.merge(datesHoliday, addHoliday);
+      }
+      dateStart.add(1, "year");
+    }
+    return datesHoliday;
+  }
+
+  // src/core/prazos.js
+  function getRecalculaPrazo(data_ref, hora_format, prazo, config_unidade) {
+    const moment2 = globalRef.moment;
+    const jmespath2 = globalRef.jmespath;
+    var workday = config_unidade.count_dias_uteis;
+    var config_feriados = typeof config_unidade.feriados !== "undefined" && config_unidade.feriados !== null ? config_unidade.feriados : false;
+    var arrayFeriados = workday ? jmespath2.search(getHolidayBetweenDates2(moment2(data_ref, hora_format).format("Y") + "-01-01", moment2(data_ref, hora_format).add(1, "Y").format("Y") + "-01-01", config_feriados), "[*].d_") : [];
+    var prazoEntrega = workday ? moment2(data_ref, hora_format).isoAddWeekdaysFromSet({
+      "workdays": prazo,
+      "weekdays": [1, 2, 3, 4, 5],
+      "exclusions": arrayFeriados
+    }).format(hora_format) : moment2(data_ref, hora_format).add(prazo, "d").format(hora_format);
+    return prazoEntrega;
+  }
+
+  // src/features/atividades/activity-actions.js
   function completeAtividade(id_demanda, confirmeBox = false) {
     var dadosIfrArvore = getIfrArvoreDadosProcesso();
     var value = callAtiv("getAtividadeData", id_demanda);
@@ -12848,7 +13451,7 @@
             var btnDialogBoxPro = [{
               text: value.data_entrega != "0000-00-00 00:00:00" ? "Editar Conclus\xE3o" : "Concluir",
               class: "confirm",
-              click: function(event2) {
+              click: function(event) {
                 if (callAtiv("checkSigleInputDateAtiv_", this)) {
                   if (callAtiv("checkAtivRequiredFields", this, "mark")) {
                     if (callAtiv("checkAtivProdutividade", this, value)) {
@@ -12864,15 +13467,15 @@
               btnDialogBoxPro.unshift({
                 text: "Gerar Notifica\xE7\xE3o",
                 icon: "ui-icon-mail-closed",
-                click: function(event2) {
-                  callAtiv("notifyAtividade", id_demanda, event2);
+                click: function(event) {
+                  callAtiv("notifyAtividade", id_demanda, event);
                 }
               });
               if (callAtiv("checkCapacidade", "complete_cancel_atividade")) {
                 btnDialogBoxPro.unshift({
                   text: "Cancelar Conclus\xE3o",
                   icon: "ui-icon-close",
-                  click: function(event2) {
+                  click: function(event) {
                     completeCancelAtividade(id_demanda);
                   }
                 });
@@ -12884,7 +13487,7 @@
                 btnDialogBoxPro.unshift({
                   text: check_ispaused ? __.Retomar + " " + __.Demanda : "Inserir " + __.Paralisacao,
                   icon: "ui-icon-" + (check_ispaused ? "play" : "pause"),
-                  click: function(event2) {
+                  click: function(event) {
                     pauseAtividade(id_demanda);
                   }
                 });
@@ -12893,7 +13496,7 @@
                 btnDialogBoxPro.unshift({
                   text: __.Prorrogar + " Prazo",
                   icon: "ui-icon-refresh",
-                  click: function(event2) {
+                  click: function(event) {
                     extendAtividade(id_demanda);
                   }
                 });
@@ -12902,7 +13505,7 @@
                 btnDialogBoxPro.unshift({
                   text: value.tempo_pactuado == 0 ? "Atribuir " + __.Atividade : "Alterar " + __.Complexidade,
                   icon: value.tempo_pactuado == 0 ? "ui-icon-arrowreturnthick-1-n" : "ui-icon-transferthick-e-w",
-                  click: function(event2) {
+                  click: function(event) {
                     variationAtividade(id_demanda);
                   }
                 });
@@ -12910,7 +13513,7 @@
               btnDialogBoxPro.unshift({
                 text: "Cancelar In\xEDcio",
                 icon: "ui-icon-close",
-                click: function(event2) {
+                click: function(event) {
                   startCancelAtividade(id_demanda);
                 }
               });
@@ -13357,7 +13960,7 @@
         var btnDialogBoxPro = [{
           text: "Iniciar",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             if (callAtiv("checkSigleInputDateAtiv_", this)) {
               if (callAtiv("checkAtivRequiredFields", this, "mark")) {
                 var _parent = $(this).closest(".ui-dialog");
@@ -13391,7 +13994,7 @@
           btnDialogBoxPro.unshift({
             text: "Editar " + __.Demanda,
             icon: "ui-icon-pencil",
-            click: function(event2) {
+            click: function(event) {
               callAtiv("saveAtividade", id_demanda);
             }
           });
@@ -13542,7 +14145,7 @@
         buttons: [{
           text: txtTitle,
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             if (callAtiv("checkSigleInputDateAtiv_", this)) {
               var _this = $(this);
               var _parent = _this.closest(".ui-dialog");
@@ -13622,7 +14225,7 @@
         buttons: [{
           text: checkEmptyAtiv ? "Atribuir" : "Alterar",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             if (callAtiv("checkAtivRequiredFields", this, "mark")) {
               var action = checkEmptyAtiv ? "type_atividade" : "variation_atividade";
               var inpuData = callAtiv("extractDataAtiv", this);
@@ -13669,7 +14272,7 @@
         buttons: [{
           text: __.Prorrogar,
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             if (callAtiv("checkAtivRequiredFields", this, "mark")) {
               var action = "extend_atividade";
               var inpuData = callAtiv("extractDataAtiv", this);
@@ -13707,7 +14310,7 @@
         buttons: [{
           text: __.Prorrogar,
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             if (callAtiv("checkAtivRequiredFields", this, "mark")) {
               var action = "appeal_extend_avaliacoes";
               var param2 = {
@@ -13828,7 +14431,7 @@
     if (listaAtividades.length > 0) {
       btnDialogBoxPro = [{
         text: "Ok",
-        click: function(event2) {
+        click: function(event) {
           resetDialogBoxPro("dialogBoxPro");
         }
       }];
@@ -13836,7 +14439,7 @@
       btnDialogBoxPro = [{
         text: __.Arquivar,
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           if (callAtiv("checkSigleInputDateAtiv_", this)) {
             var data_envio = moment($(this).closest(".ui-dialog").find("#ativ_data_envio").val(), config_unidade.hora_format).format("YYYY-MM-DD HH:mm:ss");
             var action = "send_atividade";
@@ -13854,7 +14457,7 @@
       btnDialogBoxPro.unshift({
         text: "Editar Avalia\xE7\xE3o",
         icon: "ui-icon-star",
-        click: function(event2) {
+        click: function(event) {
           if (id_demanda == 0) {
             callAtiv("selectAtividadeBox", "rate_edit");
           } else {
@@ -13917,7 +14520,7 @@
     var htmlBox = '<div id="boxAtividade" class="seipro-atividades-box atividadeInfo seipro-atividades-info" style="height: 80vh;overflow-y: auto;">   <table style="font-size: 10pt;width: 100%;" class="seiProForm tableLine tableInfo">           ' + htmlInfo + "   </table></div>";
     var btnDialogBoxPro = [{
       text: "Ok",
-      click: function(event2) {
+      click: function(event) {
         resetDialogBoxPro("dialogBoxPro");
       }
     }];
@@ -13925,7 +14528,7 @@
       btnDialogBoxPro.unshift({
         text: "Cancelar Conclus\xE3o",
         icon: "ui-icon-close",
-        click: function(event2) {
+        click: function(event) {
           completeCancelAtividade(value.id_demanda);
         }
       });
@@ -13934,7 +14537,7 @@
       btnDialogBoxPro.unshift({
         text: "Editar Conclus\xE3o",
         icon: "ui-icon-check",
-        click: function(event2) {
+        click: function(event) {
           completeAtividade(value.id_demanda);
         }
       });
@@ -13943,7 +14546,7 @@
       btnDialogBoxPro.unshift({
         text: "Cancelar " + __.Arquivamento,
         icon: "ui-icon-close",
-        click: function(event2) {
+        click: function(event) {
           sendCancelAtividade(value.id_demanda);
         }
       });
@@ -13951,7 +14554,7 @@
     if (callAtiv("actionsAtividade", value.id_demanda, "icon").action != "info") {
       btnDialogBoxPro.unshift({
         text: callAtiv("actionsAtividade", value.id_demanda, "icon").name,
-        click: function(event2) {
+        click: function(event) {
           callAtiv("actionsAtividade", value.id_demanda);
         }
       });
@@ -13960,7 +14563,7 @@
       btnDialogBoxPro.unshift({
         text: "Editar " + __.Demanda,
         icon: "ui-icon-pencil",
-        click: function(event2) {
+        click: function(event) {
           callAtiv("saveAtividade", value.id_demanda);
         }
       });
@@ -13969,7 +14572,7 @@
       btnDialogBoxPro.unshift({
         text: "Cancelar Avalia\xE7\xE3o",
         icon: "ui-icon-close",
-        click: function(event2) {
+        click: function(event) {
           callAtiv("rateCancelAtividade", id_demanda);
         }
       });
@@ -13978,7 +14581,7 @@
       btnDialogBoxPro.unshift({
         text: "Hist\xF3rico",
         icon: "ui-icon-script",
-        click: function(event2) {
+        click: function(event) {
           historyAtividade(id_demanda);
         }
       });
@@ -14031,13 +14634,13 @@
           buttons: [{
             text: "Imprimir",
             icon: "ui-icon-print",
-            click: function(event2) {
+            click: function(event) {
               printDocumento();
             }
           }, {
             text: "Ok",
             class: "confirm",
-            click: function(event2) {
+            click: function(event) {
               $("#view_doc").remove();
               resetDialogBoxPro("dialogBoxPro");
             }
@@ -14237,7 +14840,7 @@
     getHtmlLinkQuicView: () => getHtmlLinkQuicView,
     getListAtivPrioridades: () => getListAtivPrioridades,
     getListAtivVinculacao: () => getListAtivVinculacao,
-    getOptionEntidade: () => getOptionEntidade2,
+    getOptionEntidade: () => getOptionEntidade,
     getOptionSelectDependencia: () => getOptionSelectDependencia,
     getOptionSelectPerfil: () => getOptionSelectPerfil,
     getOptionUnidade: () => getOptionUnidade,
@@ -14271,6 +14874,32 @@
     updateTempoPlanejado: () => updateTempoPlanejado,
     updateTempoTrabalhoAtiv: () => updateTempoTrabalhoAtiv
   });
+
+  // src/features/atividades/config-queries.js
+  function selectEntityConfig(config, entityId) {
+    if (!config || !Array.isArray(config.entidades)) return null;
+    const entity = config.entidades.find((item) => item && item.id_entidade == entityId);
+    return entity && entity.config ? entity.config : null;
+  }
+  function selectEntityOption(config, entityId, option) {
+    const entity = selectEntityConfig(config, entityId);
+    if (!entity || !Object.prototype.hasOwnProperty.call(entity, option)) return false;
+    return entity[option];
+  }
+  function hasEntityOption(config, entityId, option) {
+    return !!selectEntityOption(config, entityId, option);
+  }
+  function selectUnitConfig(unit, option, nested) {
+    const config = unit && unit.config;
+    if (!config || !Object.prototype.hasOwnProperty.call(config, option) || config[option] == null) return false;
+    if (nested) {
+      const value = config[option];
+      return value && Object.prototype.hasOwnProperty.call(value, nested) ? value[nested] : false;
+    }
+    return config[option];
+  }
+
+  // src/features/atividades/activity-form.js
   function getHtmlLinkQuicView(value) {
     var html = value.id_procedimento !== null && value.id_procedimento != 0 && value.id_documento !== null && value.id_documento != 0 ? '<a class="bLink" style="text-decoration: underline; font-size: 10pt; cursor: pointer;" ' + atividadesDialogDocAttrs({
       title: value.docTitle || value.title,
@@ -14449,7 +15078,7 @@
       }
     }
   }
-  function notifyAtividade(id_demanda = 0, event2 = false, loop = 10) {
+  function notifyAtividade(id_demanda = 0, event = false, loop = 10) {
     var value = callAtiv("getAtividadeData", id_demanda);
     var dados_usuario = jmespath.search(arrayConfigAtividades.usuarios, "[?id_user==`" + value.id_user + "`] | [0]");
     if (value) {
@@ -14500,7 +15129,7 @@
           buttons: [{
             text: "Enviar",
             class: "confirm",
-            click: function(event3) {
+            click: function(event2) {
               var action = "notify_send";
               var param2 = {
                 action,
@@ -14516,7 +15145,7 @@
       }
     } else if (loop > 0) {
       setTimeout(function() {
-        notifyAtividade(id_demanda, event2, loop - 1);
+        notifyAtividade(id_demanda, event, loop - 1);
         if (typeof verifyConfigValue !== "undefined" && verifyConfigValue("debugpage")) console.log("Reload notifyAtividade");
       }, 1e3);
     }
@@ -14805,7 +15434,7 @@
         opacity: 0.5,
         axis: "y",
         dropOnEmpty: false,
-        update: function(event2, ui) {
+        update: function(event, ui) {
           $(this).find("tr").each(function(index, value) {
             $(this).attr("data-index", index).data("index", index);
           });
@@ -14861,30 +15490,29 @@
     });
   }
   function getConfigDadosEntidade() {
-    return typeof arrayConfigAtividades !== "undefined" && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty("entidades") && arrayConfigAtividades.entidades != 0 ? jmespath.search(arrayConfigAtividades.entidades, "[?id_entidade==`" + arrayConfigAtividades.perfil.id_entidade + "`] |[0].config") : null;
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    return selectEntityConfig(config, config.perfil && config.perfil.id_entidade);
   }
-  function getOptionEntidade2(option) {
-    return checkOptionEntidade(option) ? getConfigDadosEntidade()[option] : false;
+  function getOptionEntidade(option) {
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    return selectEntityOption(config, config.perfil && config.perfil.id_entidade, option);
   }
   function checkOptionEntidade(option) {
-    var config_entidade = getConfigDadosEntidade();
-    return config_entidade !== null && typeof config_entidade[option] !== "undefined" && config_entidade[option] !== null && config_entidade[option] ? true : false;
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    return hasEntityOption(config, config.perfil && config.perfil.id_entidade, option);
   }
   function getOptionUnidade(option, option2 = false) {
-    var _return = checkOptionUnidade(option) ? arrayConfigAtivUnidade["config"][option] : false;
-    _return = option2 && _return && checkOptionUnidade(option, option2) ? arrayConfigAtivUnidade["config"][option][option2] : false;
-    return _return;
+    return selectUnitConfig(getAtividadesContext().store.get().arrayConfigAtivUnidade, option, option2);
   }
   function checkOptionUnidade(option, option2 = false) {
-    var config_unidade = arrayConfigAtivUnidade.config;
-    var _return = config_unidade !== null && typeof config_unidade[option] !== "undefined" && config_unidade[option] !== null && config_unidade[option] ? true : false;
-    _return = option2 && config_unidade && typeof config_unidade[option][option2] !== "undefined" && config_unidade[option][option2] !== null && config_unidade[option][option2] ? true : false;
-    return _return;
+    return !!selectUnitConfig(getAtividadesContext().store.get().arrayConfigAtivUnidade, option, option2);
   }
   function getConfigDadosUnidade(sigla_unidade) {
+    var state = getAtividadesContext().store.get();
+    var config = state.arrayConfigAtividades || {};
     var config_entidade = getConfigDadosEntidade();
-    var unidade = typeof sigla_unidade === "undefined" || sigla_unidade === null ? arrayConfigAtivUnidade.sigla_unidade : sigla_unidade;
-    var _return = jmespath.search(arrayConfigAtividades.unidades, "[?sigla_unidade=='" + unidade + "'] | [0].{sigla_unidade: sigla_unidade, nome_unidade: nome_unidade, unidade_instituidora: config.programas.unidade_instituidora, count_dias_uteis: config.distribuicao.count_dias_uteis, count_horas: config.distribuicao.count_horas, h_util_inicio: config.distribuicao.horario_util.inicio, h_util_fim: config.distribuicao.horario_util.fim, feriados: config.feriados, modalidades: config.modalidades}");
+    var unidade = typeof sigla_unidade === "undefined" || sigla_unidade === null ? state.arrayConfigAtivUnidade.sigla_unidade : sigla_unidade;
+    var _return = jmespath.search(config.unidades || [], "[?sigla_unidade=='" + unidade + "'] | [0].{sigla_unidade: sigla_unidade, nome_unidade: nome_unidade, unidade_instituidora: config.programas.unidade_instituidora, count_dias_uteis: config.distribuicao.count_dias_uteis, count_horas: config.distribuicao.count_horas, h_util_inicio: config.distribuicao.horario_util.inicio, h_util_fim: config.distribuicao.horario_util.fim, feriados: config.feriados, modalidades: config.modalidades}");
     if (_return != null) {
       _return["hora_format"] = _return.count_horas ? "YYYY-MM-DDTHH:mm" : "YYYY-MM-DD";
       if (typeof config_entidade.feriados !== "undefined" && config_entidade.feriados.length > 0) {
@@ -15018,7 +15646,7 @@
     }
   }
   function updateDtMaxEntrega(data_fim_vigencia) {
-    var prazoDemandasRetroativas = checkOptionEntidade("limitar_demandas_retroativas") && checkOptionEntidade("prazo_demandas_retroativas") ? getOptionEntidade2("prazo_demandas_retroativas") : false;
+    var prazoDemandasRetroativas = checkOptionEntidade("limitar_demandas_retroativas") && checkOptionEntidade("prazo_demandas_retroativas") ? getOptionEntidade("prazo_demandas_retroativas") : false;
     var _dataFimPlano = prazoDemandasRetroativas ? moment(data_fim_vigencia, "YYYY-MM-DD HH:mm:ss") : false;
     var maxDataConclusao = _dataFimPlano && prazoDemandasRetroativas ? _dataFimPlano.clone().add(prazoDemandasRetroativas, "days") : false;
     var vigenciaPlano = _dataFimPlano < moment() ? false : true;
@@ -15522,11 +16150,11 @@
     return optionSelectResponsavel;
   }
   function getHomologacaoRuntimeDeps(deps = {}) {
-    const globalRef2 = typeof globalThis !== "undefined" ? globalThis : {};
+    const context2 = getAtividadesContext();
     return {
-      checkOptionEntidade: deps.checkOptionEntidade || (typeof globalRef2.checkOptionEntidade === "function" ? globalRef2.checkOptionEntidade : () => false),
-      getOptionEntidade: deps.getOptionEntidade || (typeof globalRef2.getOptionEntidade === "function" ? globalRef2.getOptionEntidade : () => false),
-      moment: deps.moment || globalRef2.moment
+      checkOptionEntidade: deps.checkOptionEntidade || (typeof context2.page.checkOptionEntidade === "function" ? context2.page.checkOptionEntidade : checkOptionEntidade),
+      getOptionEntidade: deps.getOptionEntidade || (typeof context2.page.getOptionEntidade === "function" ? context2.page.getOptionEntidade : getOptionEntidade),
+      moment: deps.moment || context2.page.moment
     };
   }
   function checkHomologacaoPreviaPlanos2(value, deps = {}) {
@@ -15988,7 +16616,7 @@
     dialogBoxPro.dialog("option", "buttons", [{
       text: "Salvar Recurso",
       class: "confirm",
-      click: function(event2) {
+      click: function(event) {
         saveAppealWork(this);
         loadingButtonConfirm(true);
       }
@@ -16008,7 +16636,7 @@
       var btnAvaliacao = callAtiv("checkCapacidade", "rate_cancel_programa") && id_avaliacao ? [{
         text: "Cancelar Avalia\xE7\xE3o",
         icon: "ui-icon-close",
-        click: function(event2) {
+        click: function(event) {
           updateButtonConfirm(this, false);
           rateCancelAtividade(id_programa, tipo_avaliacao);
         }
@@ -16016,7 +16644,7 @@
         id: "avaliarBtn",
         text: "Avaliar",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           saveRatingWork(this, false, tipo_avaliacao);
         }
       }] : void 0;
@@ -16076,7 +16704,7 @@
       var btnCancelAvaliacao = callAtiv("checkCapacidade", "appeal_cancel_avaliacoes") || !verifyRecurso.check || verifyRecurso.check && verifyRecurso.status.status < 2 ? [{
         text: "Cancelar Avalia\xE7\xE3o",
         icon: "ui-icon-close",
-        click: function(event2) {
+        click: function(event) {
           updateButtonConfirm(this, false);
           rateCancelAtividade(id_plano, tipo_avaliacao, indice);
         }
@@ -16085,14 +16713,14 @@
       let btnExtendRecurso = {
         text: __.Prorrogar + " prazo",
         icon: "ui-icon-clock",
-        click: function(event2) {
+        click: function(event) {
           callAtiv("extendAvaliacao", id_plano, indice, listRecurso.id_avaliacao_recurso, listRecurso.id_avaliacao);
         }
       };
       let btnAvaliaRecurso = [{
         text: "N\xC3O acatar",
         icon: "ui-icon-closethick",
-        click: function(event2) {
+        click: function(event) {
           $("#ratingPlano").slideUp(function() {
             $("#appealPlano").attr("data-id_avaliacao_recurso", listRecurso.id_avaliacao_recurso).attr("data-id_avaliacao", listRecurso.id_avaliacao).attr("data-mode", "avaliador").slideDown(function() {
               $("#appealPlano .appealCommentBoxDiv").find("a.newLink.appealCommentBox span").text("Motiva\xE7\xE3o para o n\xE3o acatamento das justificativas").focus();
@@ -16100,7 +16728,7 @@
               dialogBoxPro.dialog("option", "buttons", [{
                 text: "Salvar Motiva\xE7\xE3o",
                 class: "confirm",
-                click: function(event3) {
+                click: function(event2) {
                   saveAppealWork(this);
                   loadingButtonConfirm(true);
                 }
@@ -16112,7 +16740,7 @@
         text: "Acatar justificativas",
         icon: "ui-icon-check",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           $(".ratingWork .infoHorasCompensacao, .ratingWork .infoHorasDesconto").remove();
           $(".ratingWork").removeData("nota-selected");
           $(".ratingStars, .ratingReason").css("pointer-events", "all");
@@ -16138,7 +16766,7 @@
       var btnRecurso = checkRecurso ? [{
         text: "Cadastrar Recurso",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           updateButtonConfirm(this, false);
           saveAppeal(this);
         }
@@ -16219,7 +16847,7 @@
           id: "avaliarBtn",
           text: "Avaliar",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             saveRatingWork(this, false, tipo_avaliacao, indice);
           }
         }] : void 0
@@ -16237,7 +16865,7 @@
       var btnDialogBoxPro = rateDisable ? [] : [{
         text: value.data_avaliacao == "0000-00-00 00:00:00" ? "Avaliar" : "Editar",
         class: "confirm",
-        click: function(event2) {
+        click: function(event) {
           saveRatingWork(this, omissaoAtividade);
         }
       }];
@@ -16245,7 +16873,7 @@
         btnDialogBoxPro.unshift({
           text: "Editar Conclus\xE3o",
           icon: "ui-icon-check",
-          click: function(event2) {
+          click: function(event) {
             callAtiv("completeAtividade", id_demanda);
           }
         });
@@ -16253,7 +16881,7 @@
         btnDialogBoxPro.unshift({
           text: rateDisable ? "Cancelar Dispensa" : "Cancelar Avalia\xE7\xE3o",
           icon: "ui-icon-close",
-          click: function(event2) {
+          click: function(event) {
             rateCancelAtividade(id_demanda);
           }
         });
@@ -16339,7 +16967,7 @@
             id: "avaliarBtn",
             text: "Avaliar",
             class: "confirm",
-            click: function(event2) {
+            click: function(event) {
               saveRatingWorkLote(this, arrayRateAtiv);
             }
           }];
@@ -16347,7 +16975,7 @@
             btnDialogBoxPro.unshift({
               text: "Cancelar Conclus\xE3o",
               icon: "ui-icon-close",
-              click: function(event2) {
+              click: function(event) {
                 $("#ratingAtividade").remove();
                 resetDialogBoxPro("dialogBoxPro");
                 completeCancelAtividadeLote(arrayRateAtiv);
@@ -17116,7 +17744,7 @@
         var btnDialogBoxPro = [{
           text: "Selecionar",
           class: "confirm",
-          click: function(event2) {
+          click: function(event) {
             var selectIdDemanda = $("." + mode + "AtividadeBox").find("#ativ_id_demanda").val();
             if (mode == "start") {
               callAtiv("startAtividade", selectIdDemanda);
@@ -17139,7 +17767,7 @@
           btnDialogBoxPro.unshift({
             text: "Cancelar In\xEDcio",
             icon: "ui-icon-close",
-            click: function(event2) {
+            click: function(event) {
               $("#boxAtividade").remove();
               resetDialogBoxPro("dialogBoxPro");
               var list = $("#atividadesProActions .iconAtividade_complete").data("list");
@@ -17404,9 +18032,9 @@
       initEmptyAtividades(reloadProfile);
     }
   }
-  function getUpdateAPI(indexAPIUpdate2 = 0, offset = 0, total_offset = 0) {
-    if (listAPIUpdate[indexAPIUpdate2] && !stopUpdateApi) {
-      var action = "sync_" + listAPIUpdate[indexAPIUpdate2];
+  function getUpdateAPI(indexAPIUpdate = 0, offset = 0, total_offset = 0) {
+    if (listAPIUpdate[indexAPIUpdate] && !stopUpdateApi) {
+      var action = "sync_" + listAPIUpdate[indexAPIUpdate];
       var param2 = {
         action,
         host: url_host.replace("controlador.php", ""),
@@ -17421,10 +18049,10 @@
         data: param2,
         success: function(result) {
           if (result) {
-            if (result.next_offset) getUpdateAPI(indexAPIUpdate2, result.next_offset, result.total_offset);
+            if (result.next_offset) getUpdateAPI(indexAPIUpdate, result.next_offset, result.total_offset);
             if (result.total_offset) {
               $("#progressLoopReports").progressbar({ value: offset, max: result.total_offset });
-              $("#countLoopReports").text(nameAPIUpdate[indexAPIUpdate2] + " (" + offset + "/" + result.total_offset + ")");
+              $("#countLoopReports").text(nameAPIUpdate[indexAPIUpdate] + " (" + offset + "/" + result.total_offset + ")");
             }
             if (result.log_error && result.log_error.length) {
               var logError = $("<div/>").html(JSON.stringify(result.log_error, null, "	")).text();
@@ -17433,13 +18061,13 @@
               $(".errorReport").show().prepend(logError);
             }
             if (result.end) {
-              indexAPIUpdate2++;
-              if (indexAPIUpdate2 <= listAPIUpdate.length - 1) {
-                getUpdateAPI(indexAPIUpdate2);
+              indexAPIUpdate++;
+              if (indexAPIUpdate <= listAPIUpdate.length - 1) {
+                getUpdateAPI(indexAPIUpdate);
               } else {
                 loadingButtonConfirm(false);
                 resetDialogBoxPro("alertBoxPro");
-                indexAPIUpdate2 = 0;
+                indexAPIUpdate = 0;
                 sessionStorage.setItem("checkedUpdateDataAPI", true);
                 $(window).unbind("beforeunload");
               }
@@ -17754,14 +18382,17 @@
   var atividadesHandlers = buildAtividadesHandlers();
   function resolveAtividadesHandler(name, scope) {
     if (!name) return null;
+    const legacyEnabled = typeof globalThis !== "undefined" && globalThis.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ === true;
     if (scope === "parent" && typeof globalThis !== "undefined" && globalThis.parent) {
-      const parentMap = globalThis.parent.SeiPro && globalThis.parent.SeiPro.features && globalThis.parent.SeiPro.features.atividades && globalThis.parent.SeiPro.features.atividades.handlers;
+      const parentFeature = globalThis.parent.SeiPro && globalThis.parent.SeiPro.features && globalThis.parent.SeiPro.features.atividades;
+      const parentApi = parentFeature && parentFeature.api;
+      const parentMap = parentApi && parentApi.handlers;
       if (parentMap && typeof parentMap[name] === "function") return parentMap[name];
-      const parentFn = globalThis.parent[name];
+      const parentFn = legacyEnabled ? globalThis.parent[name] : null;
       if (typeof parentFn === "function") return parentFn;
     }
     const registryFn = typeof atividadesHandlers[name] === "function" ? atividadesHandlers[name] : null;
-    const globalFn = typeof globalThis !== "undefined" && typeof globalThis[name] === "function" ? globalThis[name] : null;
+    const globalFn = legacyEnabled && typeof globalThis !== "undefined" && typeof globalThis[name] === "function" ? globalThis[name] : null;
     if (globalFn && globalFn !== registryFn) return globalFn;
     if (registryFn) return registryFn;
     if (globalFn) return globalFn;
@@ -17814,24 +18445,34 @@
       ATIVIDADES_EXTERNAL_GLOBALS.map((name) => {
         if (name === "refreshAtividadesState") return [name, refreshAtividadesState];
         if (name === "getName") return [name, getName];
-        if (name === "getNameGenre") return [name, getNameGenre2];
+        if (name === "getNameGenre") return [name, getNameGenre];
         return [name, atividadesHandlers[name]];
       }).filter(([, fn]) => typeof fn === "function")
     )
   );
-  function installAtividadesLegacyApi() {
-    installAtividadesState();
-    aliasGlobal("getName", getName);
-    aliasGlobal("getNameGenre", getNameGenre2);
+  function installAtividadesLegacyApi({ target = globalRef, enabled } = {}) {
+    installAtividadesState(target);
+    const legacyEnabled = enabled === true || target.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ === true;
+    if (!legacyEnabled) return target;
+    if (target === globalRef && enabled === true) {
+      target.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ = true;
+    }
+    const alias = (name, fn) => {
+      if (target === globalRef) aliasGlobal(name, fn);
+      else if (typeof target[name] === "undefined") target[name] = fn;
+    };
+    alias("getName", getName);
+    alias("getNameGenre", getNameGenre);
     for (const name of ATIVIDADES_EXTERNAL_GLOBALS) {
       if (name === "getName" || name === "getNameGenre") continue;
       if (name === "refreshAtividadesState") {
-        aliasGlobal(name, refreshAtividadesState);
+        alias(name, refreshAtividadesState);
         continue;
       }
       const fn = atividadesHandlers[name];
-      if (typeof fn === "function") aliasGlobal(name, fn);
+      if (typeof fn === "function") alias(name, fn);
     }
+    return target;
   }
 
   // src/features/atividades/view.js
@@ -18025,6 +18666,7 @@
   }
   function installAtividadesView(root) {
     const target = root || (typeof document !== "undefined" ? document : null);
+    const page = getAtividadesContext().page;
     if (!target || target.__seiproAtividadesViewBound) return;
     target.__seiproAtividadesViewBound = true;
     on(target, "click", '[data-act^="atividades-"]', function(ev, el) {
@@ -18066,7 +18708,7 @@
       const fn = el.getAttribute("data-hover-fn");
       if (!fn) return;
       if (!el.hasAttribute("data-hover-out-arg") && el.getAttribute("data-hover-arg") === "") {
-        if (typeof globalThis.infraTooltipOcultar === "function") globalThis.infraTooltipOcultar();
+        if (typeof page.infraTooltipOcultar === "function") page.infraTooltipOcultar();
         return;
       }
       const arg = el.hasAttribute("data-hover-out-arg") ? el.getAttribute("data-hover-out-arg") : "out";
@@ -18075,13 +18717,227 @@
     on(target, "mouseover", "[data-tip]", function(ev, el) {
       const tip = el.getAttribute("data-tip");
       if (tip == null || tip === "") return;
-      if (typeof globalThis.infraTooltipMostrar !== "function") return;
+      if (typeof page.infraTooltipMostrar !== "function") return;
       const title = el.getAttribute("data-tip-title");
-      if (title != null && title !== "") globalThis.infraTooltipMostrar(tip, title);
-      else globalThis.infraTooltipMostrar(tip);
+      if (title != null && title !== "") page.infraTooltipMostrar(tip, title);
+      else page.infraTooltipMostrar(tip);
     });
     on(target, "mouseout", "[data-tip]", function() {
-      if (typeof globalThis.infraTooltipOcultar === "function") globalThis.infraTooltipOcultar();
+      if (typeof page.infraTooltipOcultar === "function") page.infraTooltipOcultar();
+    });
+  }
+
+  // src/features/atividades/application.js
+  var APPLICATION_KEY = "__SEI_PRO_ATIVIDADES_APPLICATION__";
+  function createAtividadesApplication({
+    context: context2,
+    transport,
+    handlers = {},
+    router = () => void 0,
+    version = "",
+    auth = {}
+  } = {}) {
+    if (!context2 || !context2.store) throw new TypeError("Atividades application requires context");
+    if (!transport || typeof transport.request !== "function") {
+      throw new TypeError("Atividades application requires a transport port");
+    }
+    let requestInFlight = false;
+    const permissions = {
+      can(name) {
+        return typeof context2.permissions.check === "function" ? !!context2.permissions.check(name) : !!(typeof handlers.checkCapacidade === "function" && handlers.checkCapacidade(name));
+      },
+      isAdmin() {
+        return isPerfilNivelAdm(context2.store.get().arrayConfigAtividades && context2.store.get().arrayConfigAtividades.perfil);
+      }
+    };
+    const request = (input = {}, mode = "") => {
+      const state = context2.store.get();
+      const allowed = isAtividadesServerModeAllowed(mode, {
+        checkCapacidade: permissions.can,
+        delayServerAtiv: state.delayServerAtiv,
+        checkLoadingButtonConfirm: () => requestInFlight
+      });
+      if (!state.urlServerAtiv || !state.userHashAtiv || !allowed) {
+        if (input && input.type) context2.effects.loading(false);
+        return Promise.resolve({ skipped: true, allowed, mode });
+      }
+      const param2 = buildAtividadesRequestParams(input, mode, {
+        userHashAtiv: state.userHashAtiv,
+        version,
+        getOptionsPro: context2.options.get,
+        lastUpdateAtividades: state.lastUpdateAtividades,
+        verifyConfigValue: context2.options.verifyConfig,
+        checkConfigValue: context2.options.checkConfig
+      });
+      requestInFlight = true;
+      context2.store.patch({ delayServerAtiv: 1 });
+      const unlock = () => {
+        requestInFlight = false;
+        context2.store.patch({ delayServerAtiv: 0 });
+      };
+      context2.effects.loading(true);
+      return Promise.resolve().then(() => transport.request(state.urlServerAtiv, param2, { mode, auth })).then((data) => {
+        context2.events.emit("seipro:atividades-response", classifyAtividadesResponse(data, param2, mode));
+        return router(data, param2, mode, context2);
+      }).finally(() => {
+        unlock();
+        context2.effects.loading(false);
+      });
+    };
+    return Object.freeze({
+      context: context2,
+      state: () => context2.store.get(),
+      permissions,
+      request,
+      dispatch(name, ...args) {
+        const fn = handlers[name];
+        return typeof fn === "function" ? fn(...args) : void 0;
+      }
+    });
+  }
+  function installAtividadesApplication(application2, page = globalThis) {
+    if (!application2 || typeof application2.request !== "function") {
+      throw new TypeError("Invalid Atividades application");
+    }
+    page[APPLICATION_KEY] = application2;
+    return application2;
+  }
+
+  // src/features/atividades/application/commands.js
+  var COMMANDS = Object.freeze([
+    "saveAtividade",
+    "saveAtividadeFull",
+    "saveAtividadeQuick",
+    "startAtividade",
+    "completeAtividade",
+    "pauseAtividade",
+    "archiveAtividade",
+    "deleteAtividade",
+    "rateAtividade",
+    "rateCancelAtividade",
+    "saveAfastamento",
+    "removeAfastamento",
+    "saveConfigPersonalUser",
+    "saveOptionConfigItem",
+    "updateConfigServer"
+  ]);
+  function createAtividadesCommands(handlers = {}) {
+    const commands = /* @__PURE__ */ Object.create(null);
+    COMMANDS.forEach((name) => {
+      if (typeof handlers[name] === "function") commands[name] = (...args) => handlers[name](...args);
+    });
+    return Object.freeze(commands);
+  }
+
+  // src/features/atividades/application/queries.js
+  var QUERIES = Object.freeze([
+    "getAtividades",
+    "getAtividadeData",
+    "getKanbanItem",
+    "checkCapacidade",
+    "checkPerfilNivelAdm",
+    "checkAtivRequiredFields",
+    "checkThisAtivRequiredFields",
+    "getConfigServer",
+    "getConfigServerDoc"
+  ]);
+  function createAtividadesQueries({ handlers = {}, context: context2 } = {}) {
+    const queries = /* @__PURE__ */ Object.create(null);
+    QUERIES.forEach((name) => {
+      if (typeof handlers[name] === "function") queries[name] = (...args) => handlers[name](...args);
+    });
+    queries.getState = () => context2.store.get();
+    return Object.freeze(queries);
+  }
+
+  // src/features/atividades/api.js
+  function createAtividadesFeatureApi({ application: application2, handlers, context: context2, legacyRequest }) {
+    if (!application2 || !handlers || !context2 || !context2.store) {
+      throw new TypeError("Atividades API requires application, handlers and context.store");
+    }
+    const commands = createAtividadesCommands(handlers);
+    const queries = createAtividadesQueries({ handlers, context: context2 });
+    return Object.freeze({
+      version: 2,
+      handlers: Object.freeze({ ...handlers }),
+      state: Object.freeze({ get: () => context2.store.get(), subscribe: context2.store.subscribe }),
+      commands: Object.freeze(commands),
+      queries: Object.freeze(queries),
+      request: application2.request,
+      legacyRequest: typeof legacyRequest === "function" ? legacyRequest : null
+    });
+  }
+
+  // src/features/atividades/effects.js
+  function createAtividadesEffects(context2) {
+    if (!context2) throw new TypeError("Effects adapter requires context");
+    return Object.freeze({
+      loading: (value) => context2.effects.loading(value),
+      alert: (...args) => context2.effects.alert(...args),
+      confirm: (...args) => context2.effects.confirm(...args),
+      notify: (...args) => context2.effects.notify(...args),
+      emit: (name, detail) => context2.events.emit(name, detail),
+      schedule: (fn, delay) => context2.schedule(fn, delay)
+    });
+  }
+
+  // src/features/atividades/activity-use-cases.js
+  function createActivityUseCases({ context: context2, handlers } = {}) {
+    if (!context2 || !handlers) throw new TypeError("Activity use cases require context and handlers");
+    const invoke = (name, args = []) => {
+      const fn = handlers[name];
+      if (typeof fn !== "function") throw new Error(`Unknown Atividades command: ${name}`);
+      return fn(...args);
+    };
+    const allowed = (capability) => context2.permissions && typeof context2.permissions.check === "function" ? !!context2.permissions.check(capability) : false;
+    return Object.freeze({
+      create(id) {
+        return allowed("save_atividade") ? invoke("saveAtividade", [id || 0]) : false;
+      },
+      save(id, mode = "action") {
+        const command = mode === "quick" ? "saveAtividadeQuick" : mode === "full" ? "saveAtividadeFull" : "saveAtividade";
+        return allowed("save_atividade") ? invoke(command, [id || 0]) : false;
+      },
+      start(id) {
+        return allowed("start_atividade") ? invoke("startAtividade", [id || 0]) : false;
+      },
+      complete(id) {
+        return allowed("complete_atividade") ? invoke("completeAtividade", [id || 0]) : false;
+      },
+      pause(id) {
+        return allowed("pause_atividade") ? invoke("pauseAtividade", [id || 0]) : false;
+      },
+      archive(id) {
+        return allowed("send_atividade") ? invoke("archiveAtividade", [id || 0]) : false;
+      },
+      remove(id) {
+        return allowed("delete_atividade") ? invoke("deleteAtividade", [id || 0]) : false;
+      },
+      rate(id) {
+        return allowed("rate_atividade") ? invoke("rateAtividade", [id || 0]) : false;
+      }
+    });
+  }
+
+  // src/features/atividades/config-use-cases.js
+  function createConfigUseCases({ context: context2, handlers } = {}) {
+    if (!context2 || !handlers) throw new TypeError("Config use cases require context and handlers");
+    const can = (name) => context2.permissions && typeof context2.permissions.check === "function" ? !!context2.permissions.check(name) : false;
+    const call2 = (name, args) => typeof handlers[name] === "function" ? handlers[name](...args) : false;
+    return Object.freeze({
+      open() {
+        return call2("openModalConfigPanel", []);
+      },
+      load(type, mode = "get", data = false) {
+        const capability = mode === "get" ? `config_${type}` : `config_update_${type}`;
+        return can(capability) ? call2("getTabConfig", [type, mode, data]) : false;
+      },
+      save(form, type, id) {
+        return can(`config_update_${type}`) ? call2("saveOptionConfigItem", [form, type, id]) : false;
+      },
+      get(type, id) {
+        return call2("getConfigServer", [type, id]);
+      }
     });
   }
 
@@ -18089,34 +18945,42 @@
   installAtividadesState();
   var namespace = globalThis.SeiPro = globalThis.SeiPro || {};
   namespace.features = namespace.features || {};
-  namespace.features.atividades = {
-    getAppsScriptUrlAtiv: getAppsScriptUrlAtiv3,
-    getLabIdTables: getLabIdTables2,
-    getNumMonthsBetween2Dates: getNumMonthsBetween2Dates3,
-    getName,
-    getNameGenre: getNameGenre2,
-    refreshAtividadesState,
-    getServerAtividades,
-    saveAtividade: atividadesHandlers.saveAtividade,
-    checkCapacidade: atividadesHandlers.checkCapacidade,
-    actionsAtividade: atividadesHandlers.actionsAtividade,
-    initEmptyAtividades: atividadesHandlers.initEmptyAtividades,
-    getResendKey: atividadesHandlers.getResendKey,
-    insertIconAtividade: atividadesHandlers.insertIconAtividade,
-    getAtividades: atividadesHandlers.getAtividades,
-    getKanbanItem: atividadesHandlers.getKanbanItem,
-    checkPerfilNivelAdm: atividadesHandlers.checkPerfilNivelAdm,
-    setTipoPrescricaoProcesso: atividadesHandlers.setTipoPrescricaoProcesso,
-    checkThisAtivRequiredFields: atividadesHandlers.checkThisAtivRequiredFields,
-    checkAtivRequiredFields: atividadesHandlers.checkAtivRequiredFields,
-    initAtividades,
-    initPerfilLoginAtiv,
-    checkHostPermission,
-    handlers: atividadesHandlers,
-    legacyApi: atividadesLegacyApi
-  };
   namespace.shared = namespace.shared || {};
-  namespace.shared.nomenclatura = { getName, getNameGenre: getNameGenre2 };
+  namespace.shared.nomenclatura = { getName, getNameGenre };
+  installAtividadesDispatcher(createAtividadesDispatcher({ registry: atividadesHandlers }));
+  var context = getAtividadesContext();
+  var storage2 = createAtividadesStorage({ context });
+  var effects = createAtividadesEffects(context);
+  var application = createAtividadesApplication({
+    context,
+    handlers: atividadesHandlers,
+    transport: createAtividadesTransport(),
+    router: createAtividadesResponseRouter({
+      resolve: (name) => atividadesHandlers[name]
+    })
+  });
+  installAtividadesApplication(application);
+  var featureApi = createAtividadesFeatureApi({
+    application,
+    handlers: atividadesHandlers,
+    context,
+    legacyRequest: getServerAtividades
+  });
+  var useCases = Object.freeze({
+    activity: createActivityUseCases({ context, handlers: atividadesHandlers }),
+    config: createConfigUseCases({ context, handlers: atividadesHandlers })
+  });
+  var ports = Object.freeze({
+    context,
+    storage: storage2,
+    effects,
+    server: createAtividadesServerPorts(context)
+  });
+  namespace.features.atividades = Object.freeze({
+    api: featureApi,
+    useCases,
+    ports
+  });
   installAtividadesLegacyApi();
   initializeAtividadesRuntime();
   installAtividadesView();

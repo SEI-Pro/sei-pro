@@ -13,6 +13,7 @@
  */
 import { on } from '../../dom/index.js';
 import { resolveAtividadesHandler } from './handlers.js';
+import { getAtividadesContext } from './context.js';
 
 function callScoped(scope, name, ...args) {
     const fn = resolveAtividadesHandler(name, scope || '');
@@ -226,6 +227,7 @@ function handleAct(ev, el) {
  */
 export function installAtividadesView(root) {
     const target = root || (typeof document !== 'undefined' ? document : null);
+    const page = getAtividadesContext().page;
     if (!target || target.__seiproAtividadesViewBound) return;
     target.__seiproAtividadesViewBound = true;
 
@@ -278,7 +280,7 @@ export function installAtividadesView(root) {
         if (!fn) return;
         // Select-all links use data-hover-arg="" only to refresh tip text; hide on leave.
         if (!el.hasAttribute('data-hover-out-arg') && el.getAttribute('data-hover-arg') === '') {
-            if (typeof globalThis.infraTooltipOcultar === 'function') globalThis.infraTooltipOcultar();
+            if (typeof page.infraTooltipOcultar === 'function') page.infraTooltipOcultar();
             return;
         }
         const arg = el.hasAttribute('data-hover-out-arg')
@@ -291,13 +293,13 @@ export function installAtividadesView(root) {
     on(target, 'mouseover', '[data-tip]', function (ev, el) {
         const tip = el.getAttribute('data-tip');
         if (tip == null || tip === '') return;
-        if (typeof globalThis.infraTooltipMostrar !== 'function') return;
+        if (typeof page.infraTooltipMostrar !== 'function') return;
         const title = el.getAttribute('data-tip-title');
-        if (title != null && title !== '') globalThis.infraTooltipMostrar(tip, title);
-        else globalThis.infraTooltipMostrar(tip);
+        if (title != null && title !== '') page.infraTooltipMostrar(tip, title);
+        else page.infraTooltipMostrar(tip);
     });
     on(target, 'mouseout', '[data-tip]', function () {
-        if (typeof globalThis.infraTooltipOcultar === 'function') globalThis.infraTooltipOcultar();
+        if (typeof page.infraTooltipOcultar === 'function') page.infraTooltipOcultar();
     });
 }
 

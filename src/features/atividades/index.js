@@ -8,55 +8,73 @@
  * Core: SeiPro.core.prazos (getRecalculaPrazo) — not redefined here.
  *
  * Public surface: prefer SeiPro.features.atividades.* from other features.
- * data-act uses handlers; legacy globals remain via legacy-api.js.
+ * data-act uses handlers; legacy globals are opt-in via legacy-api.js.
  */
 import { ready } from '../../dom/index.js';
 import { installAtividadesState, refreshAtividadesState } from './state.js';
-import { getLabIdTables } from './domain.js';
-import {
-    getAppsScriptUrlAtiv,
-    getNumMonthsBetween2Dates
-} from './compat.js';
+import { getAtividadesContext } from './context.js';
 import { getName, getNameGenre } from '../../shared/nomenclatura.js';
-import { installAtividadesLegacyApi, atividadesLegacyApi } from './legacy-api.js';
+import { installAtividadesLegacyApi } from './legacy-api.js';
 import { initializeAtividadesRuntime } from './runtime.js';
 import { installAtividadesView } from './view.js';
 import { atividadesHandlers } from './handlers.js';
-import { initAtividades, initPerfilLoginAtiv, checkHostPermission } from './boot.js';
+import { initPerfilLoginAtiv, checkHostPermission } from './boot.js';
 import { getServerAtividades } from './server.js';
+import { createAtividadesDispatcher, installAtividadesDispatcher } from './call.js';
+import { createAtividadesApplication, installAtividadesApplication } from './application.js';
+import { createAtividadesTransport } from './io.js';
+import { createAtividadesFeatureApi } from './api.js';
+import { createAtividadesResponseRouter } from './response.js';
+import { createAtividadesStorage } from './storage.js';
+import { createAtividadesEffects } from './effects.js';
+import { createAtividadesServerPorts } from './server-ports.js';
+import { createActivityUseCases } from './activity-use-cases.js';
+import { createConfigUseCases } from './config-use-cases.js';
 
 installAtividadesState();
 
 const namespace = globalThis.SeiPro = globalThis.SeiPro || {};
 namespace.features = namespace.features || {};
-namespace.features.atividades = {
-    getAppsScriptUrlAtiv,
-    getLabIdTables,
-    getNumMonthsBetween2Dates,
-    getName,
-    getNameGenre,
-    refreshAtividadesState,
-    getServerAtividades,
-    saveAtividade: atividadesHandlers.saveAtividade,
-    checkCapacidade: atividadesHandlers.checkCapacidade,
-    actionsAtividade: atividadesHandlers.actionsAtividade,
-    initEmptyAtividades: atividadesHandlers.initEmptyAtividades,
-    getResendKey: atividadesHandlers.getResendKey,
-    insertIconAtividade: atividadesHandlers.insertIconAtividade,
-    getAtividades: atividadesHandlers.getAtividades,
-    getKanbanItem: atividadesHandlers.getKanbanItem,
-    checkPerfilNivelAdm: atividadesHandlers.checkPerfilNivelAdm,
-    setTipoPrescricaoProcesso: atividadesHandlers.setTipoPrescricaoProcesso,
-    checkThisAtivRequiredFields: atividadesHandlers.checkThisAtivRequiredFields,
-    checkAtivRequiredFields: atividadesHandlers.checkAtivRequiredFields,
-    initAtividades,
-    initPerfilLoginAtiv,
-    checkHostPermission,
-    handlers: atividadesHandlers,
-    legacyApi: atividadesLegacyApi
-};
 namespace.shared = namespace.shared || {};
 namespace.shared.nomenclatura = { getName, getNameGenre };
+
+// Internal calls are resolved against the composed registry, never against a
+// global function name.  The namespace is still published for sibling bundles.
+installAtividadesDispatcher(createAtividadesDispatcher({ registry: atividadesHandlers }));
+
+const context = getAtividadesContext();
+const storage = createAtividadesStorage({ context });
+const effects = createAtividadesEffects(context);
+const application = createAtividadesApplication({
+    context,
+    handlers: atividadesHandlers,
+    transport: createAtividadesTransport(),
+    router: createAtividadesResponseRouter({
+        resolve: (name) => atividadesHandlers[name]
+    })
+});
+installAtividadesApplication(application);
+const featureApi = createAtividadesFeatureApi({
+    application,
+    handlers: atividadesHandlers,
+    context,
+    legacyRequest: getServerAtividades
+});
+const useCases = Object.freeze({
+    activity: createActivityUseCases({ context, handlers: atividadesHandlers }),
+    config: createConfigUseCases({ context, handlers: atividadesHandlers })
+});
+const ports = Object.freeze({
+    context,
+    storage,
+    effects,
+    server: createAtividadesServerPorts(context)
+});
+namespace.features.atividades = Object.freeze({
+    api: featureApi,
+    useCases,
+    ports
+});
 
 installAtividadesLegacyApi();
 initializeAtividadesRuntime();

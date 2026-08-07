@@ -1481,11 +1481,16 @@
   // src/features/arvore/body.js
   installArvoreState();
   function atividadesApiParent() {
-    return typeof parent !== "undefined" && parent.SeiPro && parent.SeiPro.features && parent.SeiPro.features.atividades || null;
+    var feature = typeof parent !== "undefined" && parent.SeiPro && parent.SeiPro.features && parent.SeiPro.features.atividades;
+    return feature && feature.api || null;
+  }
+  function atividadesStateParent() {
+    var api = atividadesApiParent();
+    return api && api.state && typeof api.state.get === "function" ? api.state.get() : {};
   }
   function callParentAtividades(name) {
     var api = atividadesApiParent();
-    var fn = api && typeof api[name] === "function" ? api[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : typeof parent !== "undefined" && typeof parent[name] === "function" ? parent[name] : null;
+    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
     if (typeof fn !== "function") return void 0;
     var args = Array.prototype.slice.call(arguments, 1);
     return fn.apply(null, args);
@@ -3046,7 +3051,7 @@
       }, 500);
       return;
     }
-    if (typeof parent.arrayConfigAtividades !== "undefined" && typeof parent.arrayConfigAtividades.perfil !== "undefined") {
+    if (typeof atividadesStateParent().arrayConfigAtividades !== "undefined" && typeof atividadesStateParent().arrayConfigAtividades.perfil !== "undefined") {
       if (parent.checkConfigValue("gerenciaratividades")) {
         setAtividadesProcesso();
       }
@@ -3095,8 +3100,9 @@
   function getAtividadesProcessoArvore() {
     var htmlAtividades = "";
     var htmlInfoAtividades = "";
-    if (parent.arrayAtividadesProcPro.length > 0) {
-      $.each(parent.arrayAtividadesProcPro, function(index, value) {
+    var atividadesState = atividadesStateParent();
+    if ((atividadesState.arrayAtividadesProcPro || []).length > 0) {
+      $.each(atividadesState.arrayAtividadesProcPro, function(index, value) {
         var params_url = getParamsUrlPro($(`a[target="${ifrVisualizacao_}"]`).attr("href"));
         var id_procedimento = params_url.id_procedimento;
         if (value.id_procedimento == parseInt(id_procedimento)) {
@@ -3214,12 +3220,13 @@
     }
   }
   function initPanelPrescricaoProcesso() {
-    var prescData = parent.arrayPrescricoesProcPro;
+    var prescData = atividadesStateParent().arrayPrescricoesProcPro;
     var tipos_prescricao = typeof jmespath !== "undefined" ? jmespath.search(prescData, "[*].id_tipo_prescricao") : null;
     tipos_prescricao = tipos_prescricao !== null ? parent.uniqPro(tipos_prescricao) : null;
     if (typeof prescData !== "undefined" && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0 && typeof parent.checkConfigValue !== "undefined" && parent.checkConfigValue("gerenciarprescricoes")) {
       $.each(tipos_prescricao, function(i, v) {
-        var value_prescricao = typeof parent.arrayConfigAtividades.tipos_prescricoes !== "undefined" ? jmespath.search(parent.arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`" + v + "`] | [0]") : null;
+        var configAtividades = atividadesStateParent().arrayConfigAtividades || {};
+        var value_prescricao = typeof configAtividades.tipos_prescricoes !== "undefined" ? jmespath.search(configAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`" + v + "`] | [0]") : null;
         value_prescricao = value_prescricao !== null ? value_prescricao : false;
         var prescricao = jmespath.search(prescData, "[?id_tipo_prescricao==`" + v + "`]");
         prescricao = prescricao !== null ? prescricao : false;

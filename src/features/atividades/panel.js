@@ -6,8 +6,9 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { getServerAtividades } from './server.js';
+import { getAtividadesContext } from './context.js';
+import { getNameGenre } from '../../shared/nomenclatura.js';
 
 export function updateButtonTextarea(this_) {
     if (checkValue($(this_))) { updateButtonConfirm(this_, true) } else { updateButtonConfirm(this_, false) }
@@ -183,7 +184,8 @@ export function editFieldAtiv(this_) {
                     id: data.id,
                     value: value
                 }, 'edit_field');
-            var ativIndex = (data.id) ? parent.arrayAtividades.findIndex((obj => obj.id_demanda == data.id)) : data.id;
+            var atividades = getAtividadesContext().store.get().arrayAtividades || [];
+            var ativIndex = (data.id) ? atividades.findIndex((obj => obj.id_demanda == data.id)) : data.id;
             arrayAtividades[ativIndex][data.field] = value;
             arrayAtividadesPro[ativIndex][data.field] = value;
 

@@ -1622,12 +1622,16 @@
 
   // src/features/projetos/io.js
   function hasRemoteBackend() {
-    return !!(globalRef.urlServerAtiv && globalRef.userHashAtiv);
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    const state = api && api.state && typeof api.state.get === "function" ? api.state.get() : null;
+    return !!(state && state.urlServerAtiv && state.userHashAtiv);
   }
   function getAtividadesServer() {
-    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
-    if (api && typeof api.getServerAtividades === "function") return api.getServerAtividades;
-    if (typeof globalRef.getServerAtividades === "function") return globalRef.getServerAtividades;
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    if (api && typeof api.legacyRequest === "function") return api.legacyRequest;
+    if (api && typeof api.request === "function") return api.request;
     return null;
   }
   function runProjetoAction(param, localDispatch) {
@@ -1648,9 +1652,10 @@
   // src/features/projetos/view/helpers.js
   var ganttLoading = null;
   function getAtividadesCheckCapacidade() {
-    const api = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
-    if (api && typeof api.checkCapacidade === "function") return api.checkCapacidade;
-    if (typeof globalRef.checkCapacidade === "function") return globalRef.checkCapacidade;
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    if (api && api.queries && typeof api.queries.checkCapacidade === "function") return api.queries.checkCapacidade;
+    if (api && api.commands && typeof api.commands.checkCapacidade === "function") return api.commands.checkCapacidade;
     return null;
   }
   function can(name) {
@@ -2214,6 +2219,11 @@
   var includeArquivados = false;
   var selectedTipo = "";
   var showExecucao = true;
+  function atividadesState() {
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    return api && api.state && typeof api.state.get === "function" ? api.state.get() : {};
+  }
   function mountPoint() {
     return qs("#divInfraAreaTelaD") || qs("#divInfraBarraLocalizacao") || qs("#divInfraAreaTela") || document.body;
   }
@@ -2480,11 +2490,11 @@
   function initProjetos(mode, arrayProjetos, queryIdProjeto) {
     let list = arrayProjetos;
     if (!Array.isArray(list)) {
-      const cfg = globalRef.arrayConfigAtividades;
+      const cfg = atividadesState().arrayConfigAtividades;
       list = cfg && Array.isArray(cfg.projetos) ? cfg.projetos : null;
     }
     if (Array.isArray(list) && list.length) {
-      const cfg = globalRef.arrayConfigAtividades;
+      const cfg = atividadesState().arrayConfigAtividades;
       replaceProjetos(list, cfg && cfg.tipos_projetos);
     }
     if (mode === "refresh" || mode === "update" || qs("#projetosGantt")) {
@@ -2540,7 +2550,10 @@
     if (!value) return true;
     if (!hasRemoteBackend()) return true;
     try {
-      if (typeof globalRef.arrayConfigAtivUnidade !== "undefined" && globalRef.arrayConfigAtivUnidade && value.sigla_unidade && globalRef.arrayConfigAtivUnidade.sigla_unidade === value.sigla_unidade) {
+      const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+      const api = feature && feature.api;
+      const state = api && api.state && typeof api.state.get === "function" ? api.state.get() : {};
+      if (state.arrayConfigAtivUnidade && value.sigla_unidade && state.arrayConfigAtivUnidade.sigla_unidade === value.sigla_unidade) {
         return true;
       }
       const shares = value.projetos_compartilhados || [];
@@ -2654,6 +2667,20 @@
   // src/features/projetos/index.js
   var ns = getSeiPro().features.projetos || (getSeiPro().features.projetos = {});
   ns.domain = domain_exports;
+  var projetosApi = Object.freeze({
+    commands: Object.freeze({ dispatchProjetoAction, replaceProjetos }),
+    queries: Object.freeze({ getStoreProjetos, listProjetos }),
+    initProjetos,
+    refreshProjetosPanel,
+    selectProjetoTab
+  });
+  ns.api = projetosApi;
+  ns.commands = projetosApi.commands;
+  ns.queries = projetosApi.queries;
+  ns.initProjetos = initProjetos;
+  ns.refreshProjetosPanel = refreshProjetosPanel;
+  ns.selectProjetoTab = selectProjetoTab;
+  ns.replaceProjetos = replaceProjetos;
   installProjetosStore();
   installProjetosLegacyApi();
   installProjetosView();

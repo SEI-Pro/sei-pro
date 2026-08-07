@@ -1,19 +1,29 @@
 
 function atividadesApi() {
-    return (typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.atividades) || null;
+    var root = (typeof parent !== 'undefined' && parent.SeiPro)
+        || (typeof globalThis !== 'undefined' ? globalThis.SeiPro : null);
+    var feature = root && root.features && root.features.atividades;
+    return (feature && feature.api) || null;
+}
+function atividadesState() {
+    var api = atividadesApi();
+    return api && api.state && typeof api.state.get === 'function' ? api.state.get() : {};
 }
 function callAtividades(name) {
     var api = atividadesApi();
-    var fn = (api && typeof api[name] === 'function') ? api[name]
-        : (typeof globalThis[name] === 'function' ? globalThis[name] : null);
+    var fn = (api && api.commands && typeof api.commands[name] === 'function') ? api.commands[name]
+        : (api && api.queries && typeof api.queries[name] === 'function') ? api.queries[name]
+        : (api && api.handlers && typeof api.handlers[name] === 'function') ? api.handlers[name]
+        : (api && api.handlers && typeof api.handlers[name] === 'function') ? api.handlers[name] : null;
     if (typeof fn !== 'function') return undefined;
     var args = Array.prototype.slice.call(arguments, 1);
     return fn.apply(null, args);
 }
 function getAtividadesServer() {
     var api = atividadesApi();
-    if (api && typeof api.getServerAtividades === 'function') return api.getServerAtividades;
-    return typeof getServerAtividades === 'function' ? getServerAtividades : null;
+    if (api && typeof api.legacyRequest === 'function') return api.legacyRequest;
+    if (api && typeof api.request === 'function') return api.request;
+    return null;
 }
 function checkCapacidade(nome) {
     var r = callAtividades('checkCapacidade', nome);
@@ -24,18 +34,24 @@ function checkAtivRequiredFields(el, mode) {
 }
 
 const loadPrescricoesPro = true;
-function valuePrescricao(id_prescricao, arrayPrescricoes = arrayPrescricoesProcPro) {
+function valuePrescricao(id_prescricao, arrayPrescricoes) {
+    arrayPrescricoes = arrayPrescricoes || atividadesState().arrayPrescricoesProcPro || [];
     var value = (id_prescricao == 0) ? null : jmespath.search(arrayPrescricoes, "[?id_prescricao==`"+id_prescricao+"`] | [0]");
         value = value === null ? false : value;
     return value;
 }
-function valueTipoPrescricao(id_tipo_prescricao, arrayTiposPrescricoes = arrayConfigAtividades.tipos_prescricoes) {
+function valueTipoPrescricao(id_tipo_prescricao, arrayTiposPrescricoes) {
+    arrayTiposPrescricoes = arrayTiposPrescricoes || (atividadesState().arrayConfigAtividades || {}).tipos_prescricoes || [];
     var value = (id_tipo_prescricao == 0) ? null : jmespath.search(arrayTiposPrescricoes, "[?id_tipo_prescricao==`"+id_tipo_prescricao+"`] | [0]");
         value = value === null ? false : value;
     return value;
 }
-function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
-    if ($.map(parent.arrayConfigAtividades.tipos_prescricoes, function(v){ if (parent.checkListTipoPrescricaoInProcesso(v)) { return v }}).length > 0) {
+function getCtrPrescricao(prescData) {
+    prescData = prescData || atividadesState().arrayPrescricoesProcPro || [];
+    var state = atividadesState();
+    var config = state.arrayConfigAtividades || {};
+    var unit = state.arrayConfigAtivUnidade || {};
+    if ($.map(config.tipos_prescricoes || [], function(v){ if (parent.checkListTipoPrescricaoInProcesso(v)) { return v }}).length > 0) {
         var tipos_prescricao = typeof jmespath !== 'undefined' ? jmespath.search(prescData,"[*].id_tipo_prescricao") : null;
             tipos_prescricao = tipos_prescricao !== null ? uniqPro(tipos_prescricao) : null;
 
@@ -43,7 +59,7 @@ function getCtrPrescricao(prescData = arrayPrescricoesProcPro) {
 
         if (typeof prescData !== 'undefined' && prescData.length > 0 && tipos_prescricao !== null && tipos_prescricao.length > 0) {
             $.each(tipos_prescricao, function(i, v){
-                var value_prescricao = typeof arrayConfigAtividades.tipos_prescricoes !== 'undefined' ? jmespath.search(parent.arrayConfigAtividades.tipos_prescricoes, "[?id_tipo_prescricao==`"+v+"`] | [0]") : null;
+                var value_prescricao = typeof config.tipos_prescricoes !== 'undefined' ? jmespath.search(config.tipos_prescricoes, "[?id_tipo_prescricao==`"+v+"`] | [0]") : null;
                     value_prescricao = value_prescricao !== null ? value_prescricao : false;
                 var prescricao = jmespath.search(prescData,"[?id_tipo_prescricao==`"+v+"`]");
                     prescricao = prescricao !== null ? prescricao : false;
@@ -306,11 +322,12 @@ function checkListTipoPrescricaoInProcesso(v) {
                 && typeof dadosProcessoPro.propProcesso !== 'undefined'
                 && typeof dadosProcessoPro.propProcesso.hdnIdTipoProcedimento !== 'undefined'
                 && jmespath.search(v.config.tipo_processo, "[?value=='"+dadosProcessoPro.propProcesso.hdnIdTipoProcedimento+"'] | [0]") !== null
-                && (typeof v.config.unidades === 'undefined' || (typeof v.config.unidades !== 'undefined' && jmespath.search(v.config.unidades,"[?id_unidade==`"+arrayConfigAtivUnidade.id_unidade+"`]").length))
+                && (typeof v.config.unidades === 'undefined' || (typeof v.config.unidades !== 'undefined' && jmespath.search(v.config.unidades,"[?id_unidade==`"+(unit.id_unidade || '')+"`]").length))
             ? true : false;
     return _return;
 }
-function dialogSavePrescricao(this_, prescData = arrayPrescricoesProcPro) {
+function dialogSavePrescricao(this_, prescData) {
+    prescData = prescData || atividadesState().arrayPrescricoesProcPro || [];
 	var _this = $(this_);
 	var data = _this.data();
     var value = (typeof data.id_prescricao !== 'undefined') ? valuePrescricao(data.id_prescricao) : false;
@@ -318,7 +335,7 @@ function dialogSavePrescricao(this_, prescData = arrayPrescricoesProcPro) {
         ? prescData.length ? jmespath.search(prescData,"[*].data_inicio").reduce(function (a, b) { return a > b ? a : b; }) : ''
         : prescData.length ? jmespath.search(prescData,"[?id_dependencia==`"+value.id_prescricao+"`] | [0].data_inicio") : '';
     var countTiposPresc = 0;
-    var optionsTiposPresc = $.map(arrayConfigAtividades.tipos_prescricoes, function(v){
+    var optionsTiposPresc = $.map((atividadesState().arrayConfigAtividades || {}).tipos_prescricoes || [], function(v){
                             if (checkListTipoPrescricaoInProcesso(v)) {
                                 countTiposPresc++;
                                 return '<option value="'+v.id_tipo_prescricao+'" '+(value && value.id_tipo_prescricao == v.id_tipo_prescricao ? 'selected' : '')+'>'+v.nome_prescricao+'</option>'

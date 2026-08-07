@@ -128,23 +128,26 @@ export const atividadesHandlers = buildAtividadesHandlers();
 
 export function resolveAtividadesHandler(name, scope) {
     if (!name) return null;
+    const legacyEnabled = typeof globalThis !== 'undefined'
+        && globalThis.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ === true;
     if (scope === 'parent' && typeof globalThis !== 'undefined' && globalThis.parent) {
-        const parentMap = globalThis.parent.SeiPro
+        const parentFeature = globalThis.parent.SeiPro
             && globalThis.parent.SeiPro.features
-            && globalThis.parent.SeiPro.features.atividades
-            && globalThis.parent.SeiPro.features.atividades.handlers;
+            && globalThis.parent.SeiPro.features.atividades;
+        const parentApi = parentFeature && parentFeature.api;
+        const parentMap = parentApi && parentApi.handlers;
         if (parentMap && typeof parentMap[name] === 'function') return parentMap[name];
-        const parentFn = globalThis.parent[name];
+        const parentFn = legacyEnabled ? globalThis.parent[name] : null;
         if (typeof parentFn === 'function') return parentFn;
     }
     const registryFn = typeof atividadesHandlers[name] === 'function'
         ? atividadesHandlers[name]
         : null;
-    const globalFn = (typeof globalThis !== 'undefined' && typeof globalThis[name] === 'function')
+    const globalFn = (legacyEnabled && typeof globalThis !== 'undefined' && typeof globalThis[name] === 'function')
         ? globalThis[name]
         : null;
-    // Prefer an explicit global override (tests / rare monkey-patches) when it
-    // differs from the registry entry installed by legacy-api.
+    // A host can deliberately opt into a global override during rollout; the
+    // default path remains the registry installed by index.js.
     if (globalFn && globalFn !== registryFn) return globalFn;
     if (registryFn) return registryFn;
     if (globalFn) return globalFn;

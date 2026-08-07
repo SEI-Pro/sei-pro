@@ -45,6 +45,12 @@ let includeArquivados = false;
 let selectedTipo = '';
 let showExecucao = true;
 
+function atividadesState() {
+    const feature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const api = feature && feature.api;
+    return api && api.state && typeof api.state.get === 'function' ? api.state.get() : {};
+}
+
 function mountPoint() {
     return (
         qs('#divInfraAreaTelaD') ||
@@ -350,11 +356,11 @@ export function installProjetosView() {
 export function initProjetos(mode, arrayProjetos, queryIdProjeto) {
     let list = arrayProjetos;
     if (!Array.isArray(list)) {
-        const cfg = globalRef.arrayConfigAtividades;
+        const cfg = atividadesState().arrayConfigAtividades;
         list = (cfg && Array.isArray(cfg.projetos)) ? cfg.projetos : null;
     }
     if (Array.isArray(list) && list.length) {
-        const cfg = globalRef.arrayConfigAtividades;
+        const cfg = atividadesState().arrayConfigAtividades;
         replaceProjetos(list, cfg && cfg.tipos_projetos);
     }
     if (mode === 'refresh' || mode === 'update' || qs('#projetosGantt')) {

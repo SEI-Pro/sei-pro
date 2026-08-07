@@ -2,24 +2,24 @@
  * Atividades — ponte de compatibilidade com o legado.
  *
  * aliasGlobal é usado somente aqui. Internal dispatch uses callAtiv() →
- * SeiPro.features.atividades.handlers (no full alias map required).
+ * SeiPro.features.atividades.api.handlers (no full alias map required).
  *
- * Only ATIVIDADES_EXTERNAL_GLOBALS (+ nomenclatura) are aliased for
- * sei-functions / arvore / lista / monitorados / projetos / prescricoes /
- * visualizacao / todas-paginas fallbacks that still touch globalThis.
+ * ATIVIDADES_EXTERNAL_GLOBALS is retained as an opt-in adapter for third-party
+ * hosts. First-party sei-functions / arvore / lista / monitorados / projetos /
+ * prescricoes / visualizacao consumers use the explicit feature API.
  *
  * TODO: remover installAtividadesLegacyApi (e este arquivo) quando:
  *   1. call-sites externos consumirem só SeiPro.features.atividades.* (ou ESM);
  *   2. tests/structure/atividades-legacy-api.test.js deixar de exigir aliasGlobal.
  */
 import { aliasGlobal } from '../../core/global.js';
+import { globalRef } from '../../core/global.js';
 import * as nomenclatura from '../../shared/nomenclatura.js';
 import { installAtividadesState, refreshAtividadesState } from './state.js';
 import { atividadesHandlers } from './handlers.js';
 
 /**
- * Names still expected by external features via globalThis / parent.* fallbacks.
- * Prefer SeiPro.features.atividades[name] at those call-sites.
+ * Names supported by the opt-in third-party adapter.
  */
 export const ATIVIDADES_EXTERNAL_GLOBALS = Object.freeze([
     'getServerAtividades',
@@ -74,20 +74,34 @@ export const atividadesLegacyApi = Object.freeze(
     )
 );
 
-export function installAtividadesLegacyApi() {
-    installAtividadesState();
+export function installAtividadesLegacyApi({ target = globalRef, enabled } = {}) {
+    installAtividadesState(target);
+
+    // The bridge is now opt-in. All first-party consumers use the explicit
+    // namespace; a host embedding an older third-party script can request the
+    // aliases and dispatcher fallback deliberately with this flag.
+    const legacyEnabled = enabled === true || target.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ === true;
+    if (!legacyEnabled) return target;
+    if (target === globalRef && enabled === true) {
+        target.__SEI_PRO_ENABLE_LEGACY_ATIVIDADES__ = true;
+    }
 
     // Nomenclature first (sei-functions may call getName immediately).
-    aliasGlobal('getName', nomenclatura.getName);
-    aliasGlobal('getNameGenre', nomenclatura.getNameGenre);
+    const alias = (name, fn) => {
+        if (target === globalRef) aliasGlobal(name, fn);
+        else if (typeof target[name] === 'undefined') target[name] = fn;
+    };
+    alias('getName', nomenclatura.getName);
+    alias('getNameGenre', nomenclatura.getNameGenre);
 
     for (const name of ATIVIDADES_EXTERNAL_GLOBALS) {
         if (name === 'getName' || name === 'getNameGenre') continue;
         if (name === 'refreshAtividadesState') {
-            aliasGlobal(name, refreshAtividadesState);
+            alias(name, refreshAtividadesState);
             continue;
         }
         const fn = atividadesHandlers[name];
-        if (typeof fn === 'function') aliasGlobal(name, fn);
+        if (typeof fn === 'function') alias(name, fn);
     }
+    return target;
 }

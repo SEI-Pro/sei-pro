@@ -6,17 +6,19 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { getServerAtividades } from './server.js';
+import { getAtividadesContext } from './context.js';
 
 export function checkLimitAvaliacaoSubordinada(value) {
-    var config_unidade = jmespath.search(arrayConfigAtividades.unidades, "[?id_unidade==`" + value.id_unidade + "`] | [0].config");
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    var config_unidade = jmespath.search(config.unidades || [], "[?id_unidade==`" + value.id_unidade + "`] | [0].config");
     var limitar_avaliacao_subordinadas = (config_unidade && config_unidade !== null && typeof config_unidade.administrativo !== 'undefined' && typeof config_unidade.administrativo.limitar_avaliacao_subordinadas !== 'undefined' && config_unidade.administrativo.limitar_avaliacao_subordinadas) ? config_unidade.administrativo.limitar_avaliacao_subordinadas : false;
-    return (limitar_avaliacao_subordinadas && value.id_unidade != arrayConfigAtividades.perfil.id_unidade) ? true : false;
+    return (limitar_avaliacao_subordinadas && value.id_unidade != (config.perfil && config.perfil.id_unidade)) ? true : false;
 }
 export function checkCapacidade(nome_capacidade) {
-    var checkPerfil = (arrayConfigAtividades && typeof arrayConfigAtividades['perfil'] !== 'undefined' && typeof arrayConfigAtividades['perfil'].capacidades !== 'undefined')
-        ? jmespath.search(arrayConfigAtividades['perfil'].capacidades, "[?nome_capacidade=='" + nome_capacidade + "'] | length(@)")
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    var checkPerfil = (config && typeof config.perfil !== 'undefined' && typeof config.perfil.capacidades !== 'undefined')
+        ? jmespath.search(config.perfil.capacidades, "[?nome_capacidade=='" + nome_capacidade + "'] | length(@)")
         : 0;
     return (checkPerfil == 0) ? false : true;
 }

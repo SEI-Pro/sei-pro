@@ -6,7 +6,6 @@ import { callAtiv } from './call.js';
  * O estado compartilhado é instalado por runtime.js e os nomes antigos são
  * publicados exclusivamente por legacy-api.js.
  */
-import './runtime.js';
 import { atividadesDialogDocAttrs } from './templates.js';
 import {
     checkHomologacaoPreviaPlanos as domainCheckHomologacaoPreviaPlanos,
@@ -14,6 +13,9 @@ import {
     findConfigItemById
 } from './domain.js';
 import { getServerAtividades } from './server.js';
+import { getAtividadesContext } from './context.js';
+import { selectEntityConfig, selectEntityOption, hasEntityOption, selectUnitConfig } from './config-queries.js';
+import { getNameGenre } from '../../shared/nomenclatura.js';
 
 export function getHtmlLinkQuicView(value) {
     var html = (value.id_procedimento !== null && value.id_procedimento != 0 && value.id_documento !== null && value.id_documento != 0)
@@ -670,30 +672,29 @@ export function changeAtivEtiqueta() {
     });
 }
 export function getConfigDadosEntidade() {
-    return (typeof arrayConfigAtividades !== 'undefined' && arrayConfigAtividades !== null && arrayConfigAtividades.hasOwnProperty('entidades') && arrayConfigAtividades.entidades != 0) ? jmespath.search(arrayConfigAtividades.entidades, "[?id_entidade==`" + arrayConfigAtividades.perfil.id_entidade + "`] |[0].config") : null;
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    return selectEntityConfig(config, config.perfil && config.perfil.id_entidade);
 }
 export function getOptionEntidade(option) {
-    return (checkOptionEntidade(option)) ? getConfigDadosEntidade()[option] : false;
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    return selectEntityOption(config, config.perfil && config.perfil.id_entidade, option);
 }
 export function checkOptionEntidade(option) {
-    var config_entidade = getConfigDadosEntidade();
-    return (config_entidade !== null && typeof config_entidade[option] !== 'undefined' && config_entidade[option] !== null && config_entidade[option]) ? true : false;
+    var config = getAtividadesContext().store.get().arrayConfigAtividades || {};
+    return hasEntityOption(config, config.perfil && config.perfil.id_entidade, option);
 }
 export function getOptionUnidade(option, option2 = false) {
-    var _return = (checkOptionUnidade(option)) ? arrayConfigAtivUnidade['config'][option] : false;
-    _return = (option2 && _return && checkOptionUnidade(option, option2)) ? arrayConfigAtivUnidade['config'][option][option2] : false;
-    return _return;
+    return selectUnitConfig(getAtividadesContext().store.get().arrayConfigAtivUnidade, option, option2);
 }
 export function checkOptionUnidade(option, option2 = false) {
-    var config_unidade = arrayConfigAtivUnidade.config;
-    var _return = (config_unidade !== null && typeof config_unidade[option] !== 'undefined' && config_unidade[option] !== null && config_unidade[option]) ? true : false;
-    _return = (option2 && config_unidade && typeof config_unidade[option][option2] !== 'undefined' && config_unidade[option][option2] !== null && config_unidade[option][option2]) ? true : false;
-    return _return;
+    return !!selectUnitConfig(getAtividadesContext().store.get().arrayConfigAtivUnidade, option, option2);
 }
 export function getConfigDadosUnidade(sigla_unidade) {
+    var state = getAtividadesContext().store.get();
+    var config = state.arrayConfigAtividades || {};
     var config_entidade = getConfigDadosEntidade();
-    var unidade = (typeof sigla_unidade === 'undefined' || sigla_unidade === null) ? arrayConfigAtivUnidade.sigla_unidade : sigla_unidade;
-    var _return = jmespath.search(arrayConfigAtividades.unidades, "[?sigla_unidade=='" + unidade + "'] | [0].{sigla_unidade: sigla_unidade, nome_unidade: nome_unidade, unidade_instituidora: config.programas.unidade_instituidora, count_dias_uteis: config.distribuicao.count_dias_uteis, count_horas: config.distribuicao.count_horas, h_util_inicio: config.distribuicao.horario_util.inicio, h_util_fim: config.distribuicao.horario_util.fim, feriados: config.feriados, modalidades: config.modalidades}");
+    var unidade = (typeof sigla_unidade === 'undefined' || sigla_unidade === null) ? state.arrayConfigAtivUnidade.sigla_unidade : sigla_unidade;
+    var _return = jmespath.search(config.unidades || [], "[?sigla_unidade=='" + unidade + "'] | [0].{sigla_unidade: sigla_unidade, nome_unidade: nome_unidade, unidade_instituidora: config.programas.unidade_instituidora, count_dias_uteis: config.distribuicao.count_dias_uteis, count_horas: config.distribuicao.count_horas, h_util_inicio: config.distribuicao.horario_util.inicio, h_util_fim: config.distribuicao.horario_util.fim, feriados: config.feriados, modalidades: config.modalidades}");
     if (_return != null) {
         _return['hora_format'] = (_return.count_horas) ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD';
         if (typeof config_entidade.feriados !== 'undefined' && config_entidade.feriados.length > 0) {
@@ -1495,13 +1496,13 @@ export function getOptionsSelectResp(arrayResp, value) {
     return optionSelectResponsavel;
 }
 function getHomologacaoRuntimeDeps(deps = {}) {
-    const globalRef = typeof globalThis !== 'undefined' ? globalThis : {};
+    const context = getAtividadesContext();
     return {
         checkOptionEntidade: deps.checkOptionEntidade
-            || (typeof globalRef.checkOptionEntidade === 'function' ? globalRef.checkOptionEntidade : () => false),
+            || (typeof context.page.checkOptionEntidade === 'function' ? context.page.checkOptionEntidade : checkOptionEntidade),
         getOptionEntidade: deps.getOptionEntidade
-            || (typeof globalRef.getOptionEntidade === 'function' ? globalRef.getOptionEntidade : () => false),
-        moment: deps.moment || globalRef.moment
+            || (typeof context.page.getOptionEntidade === 'function' ? context.page.getOptionEntidade : getOptionEntidade),
+        moment: deps.moment || context.page.moment
     };
 }
 

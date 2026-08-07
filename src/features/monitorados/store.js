@@ -22,8 +22,9 @@ import {
  * nem carrega. Por isso é instalado por src/content/core-stack.js, não por
  * src/core/stack.js nem pelo bundle visível da feature.
  *
- * Dependências de runtime (moment, jmespath, getServerAtividades, setLocalFilePro,
- * encodeJSON_toHex, perfilLoginAtiv) são lidas lazy via globalRef no momento da chamada.
+ * Dependências de runtime (moment, jmespath, setLocalFilePro e encodeJSON_toHex)
+ * são lidas lazy via globalRef no momento da chamada. A autenticação e o
+ * transporte de Atividades vêm exclusivamente do namespace da feature.
  */
 
 const STORE_KEY = 'configDataMonitoradosPro';
@@ -74,13 +75,16 @@ export function flushMonitoradoRemote() {
     const jmespath = globalRef.jmespath;
     const store = getStoreMonitoradoPro();
     if (typeof store === 'undefined' || !store.hasOwnProperty('monitorados')) return;
-    if (typeof globalRef.perfilLoginAtiv === 'undefined' || globalRef.perfilLoginAtiv === null) return;
+    const atividadesFeature = globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades;
+    const atividadesApi = atividadesFeature && atividadesFeature.api;
+    const atividadesState = atividadesApi && atividadesApi.state && typeof atividadesApi.state.get === 'function'
+        ? atividadesApi.state.get()
+        : null;
+    if (!atividadesState || !atividadesState.perfilLoginAtiv) return;
     const sendMonitorados = { monitorados: [], config: { colortags: [] } };
     sendMonitorados.monitorados = jmespath.search(store.monitorados, "[*].{id_procedimento: id_procedimento, assuntos: assuntos, descricao: descricao, interessados: interessados, processo: processo, tipo_procedimento: tipo_procedimento, categoria: categoria, order: order, etiquetas: etiquetas, configdate: configdate}");
     sendMonitorados.config.colortags = store.config.colortags;
-    const atividadesServer = (globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.atividades
-        && globalRef.SeiPro.features.atividades.getServerAtividades)
-        || globalRef.getServerAtividades;
+    const atividadesServer = atividadesApi && (atividadesApi.legacyRequest || atividadesApi.request);
     if (typeof atividadesServer === 'function') {
         atividadesServer({
             config: encodeURIComponent(globalRef.encodeJSON_toHex(JSON.stringify(sendMonitorados))),

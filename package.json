@@ -8,6 +8,7 @@
     "dev": "node scripts/build.mjs --watch",
     "pretest": "node scripts/build.mjs",
     "test": "vitest run",
+    "test:atividades:smoke": "vitest run tests/features/atividades/smoke.test.js tests/features/atividades/view.test.js tests/features/atividades/call.test.js",
     "test:watch": "vitest",
     "loop:map": "node scripts/engineering-loop-map.mjs",
     "loop:map:check": "node scripts/engineering-loop-map.mjs --check",
