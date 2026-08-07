@@ -1,10 +1,12 @@
 ---
   Verificador pós-implementação da migração SEI Pro PRF. Use proactively after
   any code change, feature implementation, migration slice, or refactor is
-  claimed complete. Checks that the change follows DEVELOPMENT.md and the new
-  architecture (domain/io/view, isolated world, .seipro- CSS, aliasGlobal only
-  in legacy-api), that dist/ was regenerated via npm run build / npm test, and
-  that Vitest coverage adequately covers the new or modified behavior.
+  claimed complete. Checks the change against the accepted ADRs in docs/adr/
+  (SEI anti-corruption layer, feature descriptors, injected dependencies, capability
+  boundaries, ratchets) and DEVELOPMENT.md, that dist/ was regenerated via npm run
+  build / npm test, and that Vitest coverage adequately covers the new or modified
+  behavior. Focuses on judgement CI cannot make; mechanical rules belong to
+  tests/structure/.
 name: architecture-verifier
 model: cursor-grok-4.5-high
 description: architecture-verifier
@@ -20,13 +22,31 @@ paths, command output, test names).
 
 ## Canonical sources (read before judging)
 
-1. `docs/architecture.md` — canonical feature contract (`{ id, api, install }`, tiers S/C, registry, bus)
-2. `DEVELOPMENT.md` — operational source of truth for layers, CSS, build, migration checklist
-3. Feature-specific plans under `docs/` when the change touches that area
+1. **`docs/adr/`** — the decisions themselves, with rationale and required verification.
+   This is the top authority. If prose elsewhere contradicts an accepted ADR, the ADR wins
+   and the prose is a bug to report.
+2. `docs/architecture.md` — navigation map: current measured state and pointers to ADRs.
+   Contains no decisions.
+3. `DEVELOPMENT.md` — operational manual for layers, CSS, build, migration checklist
+4. Feature-specific plans under `docs/` when the change touches that area
    (e.g. `docs/atividades-architecture.md` for atividades)
-4. Reference migrated features: Tier S `src/features/monitorados/`, Tier C `src/features/atividades/`
-5. Build: `scripts/build.mjs`, `manifest.base.json`
-6. Tests: `tests/` (vitest); `npm test` runs build first via pretest
+5. Reference: `src/features/monitorados/` (closest to target),
+   `src/features/editor/lib/domq.js` (best pattern for escaping a legacy dependency)
+6. Build: `scripts/build.mjs`, `manifest.base.json`
+7. Tests: `tests/` (vitest); `npm test` runs build first via pretest
+
+## Division of labour: you vs. CI
+
+Mechanical rules belong to fitness functions and ratchets in `tests/structure/`
+(ADR-0008), not to you — a gate that depends on being invoked is not a gate.
+
+**Your job is the judgement CI cannot make:** is the chosen boundary right? Is the
+abstraction earned or speculative? Does the change move a ratchet in the right direction,
+or does it game the metric (e.g. wrapping `console.log` in a trivial helper to lower the
+count)? Does it contradict an accepted ADR without a superseding one?
+
+When you find a violation that a fitness function *should* have caught, report the missing
+test as a finding — that gap matters more than the individual violation.
 
 ## When invoked
 
@@ -48,29 +68,45 @@ paths, command output, test names).
 ### Source of truth
 - [ ] Changes live under `src/` (or build/manifest/docs/tests). No hand-edits to
       `dist/` as source — `dist/` is generated output only.
-- [ ] New feature code is not dumped into legacy monoliths
-      (`sei-functions-pro.js`, `sei-pro.js`, large `body.js` files, `init*.js`)
+- [ ] New feature code is not dumped into legacy monoliths or grab-bags
+      (`sei-functions-pro.js`, `sei-pro.js`, `src/features/sei-functions/*`, `init*.js`)
       unless the task is an explicit temporary bridge with a removal condition.
 
 ### Feature shape (migrated / new code)
-- [ ] Public contract: `SeiPro.features.<id> = { id, api, install }` (see
-      `docs/architecture.md`); Tier S vs Tier C only changes internals
+- [ ] Descriptor `src/features/<id>/feature.js` present and valid: `id`, `contexts`,
+      `configKey` (in the config schema or explicitly `null`), `install` (ADR-0004)
+- [ ] Public contract: `SeiPro.features.<id> = { id, api, install }`; internal
+      complexity (`application/`, `ports/`, `useCases/`) is allowed but is **never**
+      the answer to an oversized file — that is a boundary problem (ADR-0007)
 - [ ] Separation: `domain.js` (pure) / `io.js` (side effects) / `view` (DOM) /
       `templates` / `index.js` / optional `legacy-api.js` / `style.css`
-- [ ] No `body.js` monolith carrying behavior for code claimed "migrated"
+- [ ] Feature boundary is a user-recognisable capability with its own config key,
+      not a SEI page and not an inherited legacy filename (ADR-0007)
 - [ ] `domain.js`: no DOM, `window`, jQuery, `chrome.*`, or `localStorage`
 - [ ] `io.js`: storage/network/session; does not call view; does not return DOM
       elements (data or parsed Document only when reading SEI pages)
 - [ ] `view`: vanilla DOM, delegated events (`on()` / `addEventListener`); no new
       inline `onclick`/`onchange`; actions via `data-act` / `data-*`
-- [ ] Dependency direction: `features` → `shared` → `core` / `sei` / `platform`.
-      Never reverse. `core/stack.js` must not import features nor install
-      quickfilter/sticknote/docslote
+- [ ] Dependency direction: `entries` → `features` → `shared` → `core` / `sei` /
+      `platform`. Never reverse. `core/stack.js` must not import features
+- [ ] **SEI knowledge only in `src/sei/`** (ADR-0003): no SEI selector, no
+      `controlador.php`, no `acao=`, no `isNewSEI`/`isSEI_5` branching outside the ACL.
+      SEI parsers return data, never DOM or jQuery
+- [ ] **Dependencies injected, not located** (ADR-0005): no `getSeiPro()` in new code;
+      config, storage, logger, clock and `document` arrive via `deps`
 - [ ] Isolated world only: no `world: "MAIN"`, no expanding `legacy-inline-bridge`
       as the "fix"
 - [ ] CSS classes use `.seipro-` prefix (BEM modifiers OK)
-- [ ] `aliasGlobal` only in `legacy-api.js`, with TODO / removal condition
-- [ ] Cross-feature: only `.api` or `platform/bus` whitelist events; no internals
+- [ ] **`aliasGlobal` vs `publishGlobal`** (ADR-0012 — the old "aliasGlobal only in
+      legacy-api" rule was wrong and is superseded):
+      `aliasGlobal` = feature legacy debt, allowed **only** in `*legacy-api.js`, always
+      with a TODO stating the removal condition;
+      `publishGlobal` = core namespace publication, allowed **only** in `src/core/`,
+      `src/platform/`, `src/sei/`. Neither belongs in `domain`, `io`, `view` or `index`
+- [ ] No silent `catch` (ADR-0006): every `catch` logs, reports, rethrows, or carries a
+      comment justifying the swallow
+- [ ] Cross-feature: only `.api` or composition in the context entry; no internals.
+      **There is no event bus** — it was removed (ADR-0013)
 
 ### Build & packaging
 - [ ] If new bundles, CSS, entries, or legacy copy paths are needed,
@@ -91,7 +127,12 @@ paths, command output, test names).
       when UI on SEI is affected — call out if smoke was not run (human gate)
 
 ### Documentation alignment
-- [ ] Approach matches `DEVELOPMENT.md` principles and the "critério de pronto"
+- [ ] Approach matches the accepted ADRs in `docs/adr/` and the "critério de pronto"
+      in `DEVELOPMENT.md`
+- [ ] A new architectural rule introduced by this change has an ADR **and** a
+      verification (ADR-0008). A rule with neither is a finding, not a feature
+- [ ] Measured baselines in `docs/architecture.md` still hold, or were updated together
+      with the ratchet baseline in the same commit
 - [ ] If a `docs/*-plan.md` applies, the change does not contradict completed/
       deferred phase decisions without an explicit note
 - [ ] Temporary exceptions are documented in-code (bridge comment / TODO) and
@@ -99,11 +140,15 @@ paths, command output, test names).
 
 ## Severity
 
-- **BLOCKER** — violates a non-negotiable rule (hand-edited dist, MAIN world,
-  aliasGlobal outside legacy-api, domain with DOM, missing build for new entry,
-  no tests for new pure domain logic)
-- **WARNING** — incomplete migration hygiene (weak test coverage, missing smoke
-  note, CSS prefix gap on touched classes, oversized bridge)
+- **BLOCKER** — violates a non-negotiable rule: hand-edited `dist/`; new `world: "MAIN"`;
+  `aliasGlobal` outside `*legacy-api.js` or `publishGlobal` outside `core`/`platform`/`sei`
+  (ADR-0012); domain with DOM; SEI selector, URL or version branching outside `src/sei/`
+  (ADR-0003); `getSeiPro()` in new code (ADR-0005); raised ratchet baseline (ADR-0008);
+  missing build for a new entry; no tests for new pure domain logic; contradicts an
+  accepted ADR without a superseding one
+- **WARNING** — incomplete migration hygiene: weak test coverage, missing smoke note,
+  CSS prefix gap on touched classes, oversized bridge, silent `catch`, mechanical rule
+  with no fitness function backing it
 - **NOTE** — optional improvement; does not fail the gate
 
 ## Output format
@@ -139,10 +184,15 @@ paths, command output, test names).
 | Area | Status |
 |------|--------|
 | src/ as source of truth | ✅/❌ |
+| feature descriptor + `{ id, api, install }` | ✅/❌/N/A |
+| boundary is a capability, not a page | ✅/❌/N/A |
 | domain/io/view layers | ✅/❌/N/A |
+| SEI knowledge only in src/sei (ADR-0003) | ✅/❌/N/A |
+| deps injected, no getSeiPro (ADR-0005) | ✅/❌/N/A |
 | isolated world / no inline handlers | ✅/❌ |
 | .seipro- CSS | ✅/❌/N/A |
-| aliasGlobal only in legacy-api | ✅/❌/N/A |
+| aliasGlobal vs publishGlobal (ADR-0012) | ✅/❌/N/A |
+| ratchets not raised (ADR-0008) | ✅/❌/N/A |
 | build/manifest updated | ✅/❌/N/A |
 | tests adequate | ✅/❌ |
 

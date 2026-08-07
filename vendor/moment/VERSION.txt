@@ -1,0 +1,8 @@
+Moment.js 2.30.1
+Licença: MIT
+
+Resgatado de dist/js/lib em 2026-08-07 (ADR-0011): o arquivo existia apenas em
+dist/ commitado, sem fonte no repositório. Mapeamento fonte → dist em
+scripts/asset-manifest.mjs.
+
+Inclui moment-duration-format e moment-weekday-calc. Datas novas usam src/core/datas.js.

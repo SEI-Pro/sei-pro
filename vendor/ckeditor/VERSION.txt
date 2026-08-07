@@ -1,0 +1,13 @@
+CKEditor 4 desconhecida
+Licença: GPL / LGPL / MPL (verificar)
+
+Resgatado de dist/js/lib em 2026-08-07 (ADR-0011): o arquivo existia apenas em
+dist/ commitado, sem fonte no repositório. Mapeamento fonte → dist em
+scripts/asset-manifest.mjs.
+
+ATENÇÃO: campo marcado como "desconhecida" não foi determinável a partir do
+conteúdo do arquivo. Confirme na origem antes de atualizar esta lib — não presuma.
+
+Roda no mundo MAIN — pertence à página do SEI. Inclui plugin tableselection.
+tableselection.plugin.css → dist/js/lib/ckeditor/tableselection.css
+tableselection.content.css → dist/css/tableselection.css (conteúdo difere)

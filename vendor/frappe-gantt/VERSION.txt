@@ -1,4 +1,6 @@
 frappe-gantt 1.2.2
+Licença: MIT
+
 Vendored from npm frappe-gantt@1.2.2 (MIT).
 - frappe-gantt.js     = UMD (lazy via $.getScript / window.Gantt)
 - CSS: dist/css/frappe-gantt.css

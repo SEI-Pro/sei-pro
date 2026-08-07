@@ -1,154 +1,200 @@
-# Arquitetura canônica — SEI Pro PRF
+# Arquitetura — SEI Pro PRF
 
-Fonte de verdade do design de alto nível. Detalhes operacionais de build, migração
-e checklist diário continuam em [DEVELOPMENT.md](../DEVELOPMENT.md). O verificador
-pós-implementação é [`.cursor/agents/architecture-verifier.md`](../.cursor/agents/architecture-verifier.md).
+Mapa de navegação da arquitetura. **Este documento não contém decisões** — descreve o
+estado atual medido e aponta para o ADR onde cada decisão vive.
 
----
+| Documento | Papel |
+|---|---|
+| [`docs/adr/`](./adr/README.md) | **Decisões** arquiteturais, com motivo e verificação |
+| [`docs/implementation-plan.md`](./implementation-plan.md) | **Ordem de execução**: fases, fatias, portões e riscos |
+| [`DEVELOPMENT.md`](../DEVELOPMENT.md) | **Manual operacional**: build, migração de feature, checklist |
+| este arquivo | **Mapa**: onde as coisas estão hoje e a distância até o alvo |
 
-## Princípio
-
-A extensão é um **host de plugins** sobre páginas do SEI:
-
-1. **Contextos** — lista, árvore, editor, visualização, login, db, options, background
-2. **Features** — plugins instaláveis (`configKey` + contextos)
-3. **Ports de plataforma** — `storage`, `net`, `messaging`, `llm` em `platform/` / service worker
-
-```
-features → shared → core | sei | platform
-app / entries → features
-```
-
-Nunca o inverso. Uma feature nunca importa internals de outra; só `SeiPro.features.<id>.api`
-ou eventos do bus.
+Por que essa separação: até 2026-08-07 as decisões viviam em prosa aqui e no
+`DEVELOPMENT.md`, sem data, motivo nem verificação. O resultado foi deriva medida nas duas
+direções — regra descumprida em 73% dos casos porque a regra estava errada, e regra
+descrevendo dívida que já não existia. Ver [ADR-0001](./adr/0001-adotar-adrs.md).
 
 ---
 
-## Contrato público de feature
+## O que a extensão é
 
-Toda feature publicada expõe **apenas**:
+Um **host de plugins** sobre páginas do SEI, em Manifest V3. A fronteira arquitetural
+primária é o **contexto de execução** (service worker, content script isolado, mundo MAIN,
+página de options), porque é o MV3 que define capacidade e ciclo de vida; camadas
+(Ports & Adapters) vêm depois, dentro de cada contexto.
+Ver [ADR-0002](./adr/0002-fronteira-primaria-contexto-de-execucao.md).
+
+```
+entries → features → shared → core | sei | platform
+```
+
+Nunca o inverso. A única exceção são as raízes de composição em `src/entries/`, que por
+definição conhecem tudo.
+
+---
+
+## Estado atual medido
+
+Números de 2026-08-07, reproduzíveis pelos comandos em
+`tests/structure/ratchets.test.js`. São os baselines dos ratchets
+([ADR-0008](./adr/0008-fitness-functions-e-ratchets.md)) e a medida honesta da distância
+até o alvo.
+
+| Dimensão | Hoje | Alvo | ADR |
+|---|---|---|---|
+| Arquivos JS em `src/` | 409 | — | — |
+| Blocos de content script no manifest | 11 (maior com **40** scripts) | 1 script por contexto, manifest gerado | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| Features no registry | **2 de 22** | todas, por descritor | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| Features no contrato `{ id, api, install }` | **9 de 22** | todas | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| Tamanho do ACL `src/sei/` | **261 linhas** | concentra todo conhecimento do SEI | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| Arquivos com seletor do SEI fora de `src/sei/` | 36 | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| Arquivos com ramificação `isNewSEI`/`isSEI_5` | 42 | 0 fora de `src/sei/` | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| Arquivos com jQuery `$(` | 91 (3611 usos) | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| Arquivos usando `getSeiPro()` | 50 (338 refs a `SeiPro.`) | 0 fora da raiz de composição | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
+| `aliasGlobal` de dívida legada | 50 | 0 | [0012](./adr/0012-aliasglobal-publicacao-vs-legado.md) |
+| Arquivos acima de 500 linhas | 42 | decrescente | [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
+| Chaves de configuração declaradas | 7 de **79** em uso | 79 no schema | [0009](./adr/0009-configuracao-como-schema-unico.md) |
+| `console.*` cru | 492 em 92 arquivos | logger injetado | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
+| Arquivos de teste | 187 (52 de estrutura) | — | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
+| `dist/` reproduzível a partir do repo | ✅ **feito** (era: 137 assets sem fonte) | — | [0011](./adr/0011-dist-fora-do-versionamento.md) |
+| CI | **inexistente** | portão obrigatório | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
+
+**Leitura honesta:** há duas arquiteturas rodando em paralelo. A moderna (bundles ESM,
+registry, contrato de feature) cobre 2 contextos e 9 features. A legada (ordem de
+carregamento do manifest, ~1300 globais compartilhados, 24 arquivos copiados verbatim) é
+ainda a maior parte do que executa. O roadmap abaixo é a substituição de uma pela outra.
+
+---
+
+## Onde as coisas estão
+
+```
+src/
+├── app/          # registry + boot + publishFeature          → ADR-0004, ADR-0006
+├── entries/      # raiz de composição por contexto            → ADR-0005
+├── core/         # domínio puro: datas, texto, números, prazos, config
+├── sei/          # ACL: versão, seletores, urls, parsing       → ADR-0003
+├── platform/     # ports: storage, net, messaging, logger, runtime (único com chrome.*)
+├── shared/       # helpers e primitivos de UI vanilla (shared/ui/)
+├── features/     # 22 capacidades, uma pasta cada             → ADR-0004, ADR-0007
+├── options/      # página de configuração
+├── background/   # service worker MV3 + handlers
+├── bootstrap/    # init*.js legados (glue de carga, transitório)
+└── content/      # core-stack.js (bundle amplo transitório)
+```
+
+Referências de leitura: `src/features/monitorados/` é a feature migrada mais próxima do
+alvo; `src/features/editor/lib/domq.js` é o melhor padrão do repositório para sair de
+dependência legada (fachada mínima + fitness function travando a regressão);
+`src/features/atividades/` é o subsistema a dividir ([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md),
+detalhe em [atividades-architecture.md](./atividades-architecture.md)).
+
+---
+
+## Contrato de feature
 
 ```js
-SeiPro.features.<id> = Object.freeze({
-  id,       // string estável (kebab ou camel do namespace)
-  api,      // comandos/consultas estáveis para entries e outras features
-  install   // (ctx?) => void | cleanup
-});
+// src/features/<id>/feature.js — descritor, fonte de verdade (ADR-0004)
+export default { id, contexts, configKey, css, permissions, install, api };
+
+// publicado em runtime para consumidores legados
+SeiPro.features.<id> = Object.freeze({ id, api, install });
 ```
 
-Campos extras internos (`useCases`, `ports`, `view`, …) podem existir **dentro** da
-feature ou sob `api`, mas consumidores cross-feature usam só `.api` / `.install`.
+Consumidores cross-feature usam **só** `.api`. Complexidade interna
+(`application/`, `ports/`, `useCases/`) é permitida e nunca exigida — e **não** é resposta
+para arquivo grande, que é problema de fronteira ([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md)).
 
-### Tiers internos (não são dois padrões concorrentes)
-
-| Tier | Quando | Anatomia |
-|------|--------|----------|
-| **S (simples)** | Maioria das features | `domain` + `io` + `view` + `index` + opcional `legacy-api` + `style.css` |
-| **C (complexo)** | Servidor, muitos handlers, várias UIs | Tier S + `application` / `ports` / `useCases` (ex.: atividades) |
-
-A complexidade hexagonal é **interna**. O público continua `{ id, api, install }`.
-
-Exemplos canônicos:
-
-- Tier S: `src/features/monitorados/`, `src/features/login/`
-- Tier C: `src/features/atividades/` (ver [atividades-architecture.md](./atividades-architecture.md))
-
-### `legacy-api.js`
-
-Único lugar com `aliasGlobal`. Dívida explícita com TODO e condição de remoção.
-Não faz parte do contrato público moderno.
-
-### Critério de “feature migrada”
-
-- Domínio sem DOM / `window` / jQuery / `chrome.*` / `localStorage`
-- IO concentra storage/rede/sessão e não chama view
-- View vanilla, eventos delegados, CSS `.seipro-*`
-- Sem `body.js` / monolito carregando o comportamento
-- Superfície `{ id, api, install }` publicada
-- Testes de domínio/IO + smoke SEI quando UI for afetada
-
-Shells que só embrulham `body.js` **não** contam como migrados.
-
----
-
-## Runtime: app (registry + boot)
-
-```
-src/app/
-├── contexts.js           # contexto → matches, css, feature ids
-├── feature-registry.js   # id, configKey, contexts, install
-└── boot.js               # lê config e instala features do contexto
-```
-
-Entries em `src/entries/` são finas: `installCoreStack` (ou stack mínima) + `boot(contextId)`.
-
-Piloto: contextos `login` e `db`. Demais contextos migraram incrementalmente; o
-`core-stack.bundle.js` amplo permanece enquanto houver blocos legados no manifest.
-
-Geração automática de manifest só depois de testes de snapshot de `matches` / ordem
-de scripts (ver `tests/structure/manifest-contexts.test.js`).
+Anatomia e regras por camada: [`DEVELOPMENT.md`](../DEVELOPMENT.md).
 
 ---
 
 ## Comunicação
 
-| Mecanismo | Uso |
-|-----------|-----|
-| `feature.api` | Chamada síncrona / comando entre features |
-| `platform/bus.js` | Reação a eventos transversais nomeados |
-| `legacy-api` / globais | Só call-sites ainda não migrados |
+| Necessidade | Mecanismo |
+|---|---|
+| Feature chama feature, mesmo contexto | `SeiPro.features.<id>.api`, ou ligação na raiz de composição |
+| Atravessar contexto de execução | mensagem serializável via `platform/messaging.js` |
+| Call-site legado ainda não migrado | `aliasGlobal` em `legacy-api.js`, com condição de remoção |
 
-Eventos do bus (whitelist):
+Não usar event bus. `src/platform/bus.js` ainda existe, com 1 emissor e 0 assinantes, e
+está em remoção — [ADR-0013](./adr/0013-remover-bus-nao-utilizado.md).
 
-- `config:changed`
-- `monitorados:updated`
-- `process-list:refreshed`
-- `atividades:response` (alias documentado do evento DOM legado quando migrar)
-
-Não usar bus intra-feature. Não introduzir Redux/store global.
+**Atenção ao ler as regras acima e abaixo:** ADR aceito é norma para código novo, não
+descrição do que já existe. `feature.js`, `publishGlobal`, o schema de configuração e as
+raízes de composição por contexto são o alvo; a tabela de estado atual mede quanto falta.
 
 ---
 
-## Camadas e SOLID (aplicado)
+## Regras não negociáveis
 
-| Camada | Pasta | Prática |
-|--------|-------|---------|
-| Domínio puro | `features/*/domain*`, `core/*` | SRP; vitest sem chrome/DOM |
-| Aplicação | `index` / `application` | Orquestra domain + ports |
-| Ports | `platform/*`, `features/*/io` | DIP — sem `chrome.*` direto na feature |
-| Adapters | `background/*-handler`, `sei/*`, views | ISP — handlers pequenos |
-| Composição | `src/app/boot`, `entries/*` | OCP — nova feature = registro |
+Cada uma tem verificação executável; regra sem verificação não é regra
+([ADR-0008](./adr/0008-fitness-functions-e-ratchets.md)).
 
-`core/stack.js` instala **somente** núcleo puro + platform + sei. Helpers de feature
-(`quickfilter`, `sticknote`, `docslote`, …) vivem em `shared/` ou na feature e são
-instalados pelo entry/contexto ou pelo `core-stack` transitório — nunca como “core eterno”.
+1. **`src/`, `vendor/` e `assets/` são a fonte da verdade.** `dist/` é saída gerada, fora
+   do git, reproduzível byte a byte ([ADR-0011](./adr/0011-dist-fora-do-versionamento.md)).
+   Asset novo entra por `scripts/asset-manifest.mjs`, nunca direto em `dist/`.
+2. **Direção de dependência** nunca invertida; feature não importa internals de feature.
+3. **Domínio puro**: sem DOM, `window`, `chrome.*`, jQuery ou `localStorage`.
+4. **Conhecimento do SEI só em `src/sei/`**: nenhum seletor, URL ou ramificação de versão
+   fora do ACL ([ADR-0003](./adr/0003-anti-corruption-layer-sei.md)).
+5. **`chrome.*` só em `platform/`, `background/` e `options/`.**
+6. **Mundo isolado por padrão**; a única exceção é a ponte serializável do CKEditor.
+7. **Sem handler inline novo**; ações por `data-act` e delegação.
+8. **CSS com prefixo `.seipro-`** (BEM).
+9. **`aliasGlobal` só em `legacy-api.js`, com condição de remoção**; publicação de
+   namespace do núcleo é `publishGlobal` e é outra coisa
+   ([ADR-0012](./adr/0012-aliasglobal-publicacao-vs-legado.md)).
+10. **Falha de feature não derruba o contexto** ([ADR-0006](./adr/0006-isolamento-de-falha-por-feature.md)).
 
 ---
 
-## Mundo isolado e CSS
+## Roadmap
 
-- Código novo no isolated world. CKEditor em MAIN só via ponte serializável documentada.
-- Sem novos `onclick`/`onchange` inline; não expandir `legacy-inline-bridge`.
-- Classes `.seipro-*` (BEM). Sem Shadow DOM neste host.
+Resumo. Fatias, portões e riscos em
+**[docs/implementation-plan.md](./implementation-plan.md)**. Ordem por valor, não por
+facilidade.
 
----
+1. **Fundação**: CI, fitness functions e ratchets sobre os baselines desta página
+   ([0008](./adr/0008-fitness-functions-e-ratchets.md)). Sem isso, tudo abaixo regride.
+2. **ACL do SEI** ([0003](./adr/0003-anti-corruption-layer-sei.md)) — maior alavancagem:
+   converte quebra do SEI de caçada em 42 arquivos para correção em uma pasta.
+3. **Schema de configuração** ([0009](./adr/0009-configuracao-como-schema-unico.md)) —
+   pré-requisito dos descritores de feature.
+4. **Descritores + registry + manifest gerado** ([0004](./adr/0004-features-autodescritivas-manifest-gerado.md)) —
+   mata os blocos de 40 scripts e a divergência entre fontes de verdade.
+5. **Raiz de composição e injeção explícita, por contexto**
+   ([0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md), [0006](./adr/0006-isolamento-de-falha-por-feature.md)).
+6. **Refronteirização por capacidade**: dividir `atividades`, dissolver `sei-functions`
+   ([0007](./adr/0007-fronteira-de-feature-por-capacidade.md)).
+7. **Tipagem gradual** ([0010](./adr/0010-tipagem-gradual-jsdoc-checkjs.md)), em paralelo
+   com qualquer item acima.
 
-## Roadmap de engenharia (ordem)
+Concluído: **resgate de `dist/`** ([0011](./adr/0011-dist-fora-do-versionamento.md)) —
+os 137 assets sem fonte foram movidos para `vendor/`, `src/css/` e `assets/`; `dist/` saiu
+do git e é reproduzível byte a byte a partir de um clone limpo.
 
-1. Contrato `{ id, api, install }` + tiers S/C (este doc)
-2. Limpar `core/stack` (shared/feature modules)
-3. `src/app/` piloto em `login` / `db`
-4. Eliminar monolitos reais (`lista-processos/body.js`, `arvore/body.js`)
-5. Unificar consumidores em `.api` + bus leve
-6. Manifest enxuto por contexto + snapshots; gerar manifest depois
-7. P6 CSS `.seipro-*` em lote por épico fechado
+Portão de ambiente em toda fase que toque UI: smoke manual no SEI real
+([`SMOKE_TEST.md`](../SMOKE_TEST.md)). Os testes não reproduzem o DOM nem a autenticação
+do SEI.
 
 ---
 
 ## O que não fazer
 
-- Adotar Plasmo/WXT/CRXJS enquanto o legado ainda for majoritário
-- Exigir Tier C em toda feature
-- Declarar migração completa com `body.js` intacto
-- Gerar manifest automaticamente sem snapshots
-- Event bus genérico tipo Redux
+- Adotar Plasmo/WXT/CRXJS enquanto o legado for majoritário — a tentativa com Vite + CRXJS
+  foi revertida por minificar os legados in-place, destruindo a fonte
+  ([ADR-0002](./adr/0002-fronteira-primaria-contexto-de-execucao.md)).
+- Passar os 24 arquivos legados copiados verbatim pelo bundler.
+- Gerar o manifest antes dos snapshots de `matches` estarem estáveis — erro de `matches`
+  não quebra teste, quebra silenciosamente para o usuário
+  ([ADR-0004](./adr/0004-features-autodescritivas-manifest-gerado.md)).
+- Responder a arquivo grande com subpasta em vez de fronteira
+  ([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md)).
+- Migrar para TypeScript agora ([ADR-0010](./adr/0010-tipagem-gradual-jsdoc-checkjs.md)).
+- Reintroduzir event bus sem dois consumidores reais
+  ([ADR-0013](./adr/0013-remover-bus-nao-utilizado.md)).
+- Declarar feature migrada com base em movimentação de arquivo.
+- Criar regra de arquitetura sem verificação executável
+  ([ADR-0008](./adr/0008-fitness-functions-e-ratchets.md)).

@@ -19,9 +19,10 @@
  * touches the legacy/readable sources in place. Legacy files are only ever copied.
  */
 import { build } from 'esbuild';
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ALL_FILE_PAIRS, ASSET_DIRS } from './asset-manifest.mjs';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const watch = process.argv.includes('--watch');
@@ -199,36 +200,32 @@ function syncManifest() {
     );
 }
 
-// Third-party libs live under vendor/ (source of truth) and are copied into
-// dist/js/lib + dist/css on every build. Do not edit dist/js/lib by hand.
-const vendorLibs = [
-    {
-        src: 'vendor/frappe-gantt/frappe-gantt.umd.js',
-        out: 'dist/js/lib/frappe-gantt.js'
-    },
-    {
-        src: 'vendor/frappe-gantt/frappe-gantt.css',
-        out: 'dist/css/frappe-gantt.css'
-    },
-    {
-        src: 'vendor/qrcode/qrcode.min.js',
-        out: 'dist/js/lib/qrcode.min.js'
-    },
-    {
-        src: 'vendor/mammoth/mammoth.browser.min.js',
-        out: 'dist/js/lib/mammoth.browser.min.js'
-    },
-    {
-        src: 'src/features/editor/ckeditor-main.js',
-        out: 'dist/js/editor-ckeditor-main.js'
-    }
+// Assets estáticos (libs de terceiros, CSS nosso, ícones, dados). O mapeamento
+// fonte → dist é declarado UMA vez em scripts/asset-manifest.mjs e compartilhado
+// com o resgate e com os testes de estrutura (ADR-0011). Não editar dist/ à mão.
+const extraFiles = [
+    // CKEditor bridge: fonte em src/ porque é código nosso, não vendor.
+    { src: 'src/features/editor/ckeditor-main.js', out: 'dist/js/editor-ckeditor-main.js' }
 ];
 
-function copyVendorLibs() {
-    mkdirSync(path.join(root, 'dist/js/lib'), { recursive: true });
-    mkdirSync(path.join(root, 'dist/css'), { recursive: true });
-    for (const { src, out } of vendorLibs) {
-        copyFileSync(path.join(root, src), path.join(root, out));
+function copyTree(srcDir, outDir) {
+    mkdirSync(outDir, { recursive: true });
+    for (const name of readdirSync(srcDir)) {
+        const from = path.join(srcDir, name);
+        const to = path.join(outDir, name);
+        if (statSync(from).isDirectory()) copyTree(from, to);
+        else copyFileSync(from, to);
+    }
+}
+
+function copyAssets() {
+    for (const { src, out } of [...ALL_FILE_PAIRS, ...extraFiles]) {
+        const dest = path.join(root, out);
+        mkdirSync(path.dirname(dest), { recursive: true });
+        copyFileSync(path.join(root, src), dest);
+    }
+    for (const { src, out } of ASSET_DIRS) {
+        copyTree(path.join(root, src), path.join(root, out));
     }
 }
 
@@ -243,7 +240,7 @@ if (watch) {
     copyLegacy();
     copyFeatureCss();
     copyHtml();
-    copyVendorLibs();
+    copyAssets();
     syncManifest();
     console.log('build: watching src/ — ' + outNames + ' (+ ' + legacyFiles.length + ' legacy copies)');
 } else {
@@ -251,7 +248,7 @@ if (watch) {
     copyLegacy();
     copyFeatureCss();
     copyHtml();
-    copyVendorLibs();
+    copyAssets();
     syncManifest();
     console.log('build: ' + outNames + ' + ' + legacyFiles.length + ' legacy + vendor + manifest -> dist/');
 }

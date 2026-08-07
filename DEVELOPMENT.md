@@ -1,27 +1,56 @@
 # DEVELOPMENT — SEI Pro PRF
 
-Documentação técnica para desenvolvimento e manutenção da extensão. Para informações de uso, veja o [README](./README.md).
+Manual operacional de desenvolvimento e manutenção da extensão. Para informações de uso,
+veja o [README](./README.md).
 
-**Arquitetura canônica (contrato de features, tiers, registry, bus):**
-[docs/architecture.md](./docs/architecture.md).
+**Este documento aplica decisões; não as toma.**
+
+| Onde | O quê |
+|---|---|
+| [`docs/adr/`](./docs/adr/README.md) | **Decisões** arquiteturais, com motivo e verificação. Autoridade máxima |
+| [`docs/implementation-plan.md`](./docs/implementation-plan.md) | **Ordem**: fases, fatias, portões e riscos |
+| [`docs/architecture.md`](./docs/architecture.md) | **Mapa**: estado atual medido e distância até o alvo |
+| este arquivo | **Como fazer**: build, anatomia de feature, checklist de migração |
+
+Se algo aqui contradisser um ADR aceito, o ADR vence e o texto aqui é um bug.
 
 ---
 
 ## Ambiente
 
-A extensão é empacotada com **esbuild** (`scripts/build.mjs`). **`src/` é a fonte única
-da verdade**; `dist/` contém **apenas saída gerada** (bundles ESM + cópias verbatim dos
-scripts legados ainda não migrados + CSS + manifest). Nada em `dist/` é editado à mão.
+A extensão é empacotada com **esbuild** (`scripts/build.mjs`).
+
+**Fontes da verdade** — todas versionadas:
+
+| Pasta | Conteúdo |
+|---|---|
+| `src/` | código (ESM moderno + legados ainda não migrados) e `src/css/` |
+| `vendor/` | bibliotecas de terceiros, cada uma com `VERSION.txt` |
+| `assets/` | binários e dados nossos (ícones, `config_hosts.json`) |
+
+`dist/` é **saída gerada, fora do git**, reproduzível byte a byte a partir de um clone
+limpo. Nada em `dist/` é editado à mão nem commitado
+([ADR-0011](./docs/adr/0011-dist-fora-do-versionamento.md)).
 
 > Nota histórica: uma 1ª tentativa com **Vite + CRXJS** foi revertida porque minificava os
 > arquivos legados in-place (destruindo a fonte). O esbuild atual nunca passa os legados
 > pelo bundler — só os copia. Ver `scripts/build.mjs`.
 
-**Instalação e build:**
+**Instalação e build (obrigatório após clonar — `dist/` não vem no repo):**
 ```bash
 npm install
-npm run build    # gera/atualiza dist/ (carregar unpacked em chrome://extensions)
+npm run build    # gera dist/ (carregar unpacked em chrome://extensions)
 npm run dev      # esbuild em watch sobre src/
+```
+
+**Adicionar um asset estático** (lib, CSS, ícone, dado): coloque a fonte em `vendor/<lib>/`
+(com `VERSION.txt`), `src/css/` ou `assets/`, e declare o par fonte → dist em
+**`scripts/asset-manifest.mjs`** — a única fonte desse mapeamento, compartilhada com o
+build e com os testes. Nunca criar arquivo diretamente em `dist/`.
+
+**Ferramentas de auditoria:**
+```bash
+node scripts/audit-dist-sources.mjs   # há asset em dist/ sem fonte no repo?
 ```
 
 **Testes unitários (dev-only, não vão para `dist/`):**
@@ -121,16 +150,25 @@ src/
 ├── bootstrap/                     # init*.js, getscript-isolated, init-flags (glue de carga)
 └── background/background.js       # service worker (MV3)
 
-dist/                              # SAÍDA GERADA — não editar à mão
+vendor/                            # terceiros — um diretório por lib, com VERSION.txt
+├── jquery/ · jquery-ui/ · ckeditor/ · moment/ · chart/ · dompurify/ · …
+├── fontawesome/                   # subset Pro (CSS + webfonts/)
+└── modallink/                     # ATENÇÃO: patch local, ver VERSION.txt
+
+assets/                            # binários e dados nossos
+└── icons/                         # ícones da extensão, menus, editor, whitelabels
+
+dist/                              # SAÍDA GERADA — fora do git, não editar à mão
 ├── js/                            # bundles *.bundle.js + cópias dos legados + lib/
-├── css/  html/  icons/  config_hosts.json  manifest.json
+├── css/  html/  icons/  webfonts/  config_hosts.json  manifest.json
 ```
 
 ---
 
 ## Arquitetura-alvo e padrão de migração por feature
 
-Contrato completo (tiers S/C, registry, bus): **[docs/architecture.md](./docs/architecture.md)**.
+Estado medido e distância até o alvo: **[docs/architecture.md](./docs/architecture.md)**.
+Motivo de cada regra abaixo: **[docs/adr/](./docs/adr/README.md)**.
 
 ### Princípios fundamentais
 
@@ -139,19 +177,41 @@ Contrato completo (tiers S/C, registry, bus): **[docs/architecture.md](./docs/ar
    `editor-loader.js` (o CKEditor pertence à página). Esse bundle **não** recebe runtime,
    storage nem LLM; a IA isolada só troca duas operações serializáveis (`snapshot` e
    `insertHtml`). Sem `onclick` inline.
-2. **Direção de dependência:** `features` → `shared` → `core` / `sei` / `platform`.
-   Nunca o contrário. `core/stack.js` **não deve importar nada de `features/`** nem
-   instalar helpers de feature (`quickfilter`, `sticknote`, `docslote`).
-3. **Contrato público:** `SeiPro.features.<id> = { id, api, install }`. Consumidores
-   cross-feature usam só `.api` / `.install`.
-4. **`aliasGlobal` só em `legacy-api.js`:** nunca espalhado em domain, io ou view.
-   É dívida explícita, não padrão permanente.
-5. **CSS prefixado:** todas as classes de features usam prefixo `.seipro-`. Sem Shadow DOM
+2. **Direção de dependência:** `entries` → `features` → `shared` → `core` / `sei` /
+   `platform`. Nunca o contrário. `core/stack.js` **não deve importar nada de `features/`**
+   nem instalar helpers de feature (`quickfilter`, `sticknote`, `docslote`).
+3. **Contrato público:** descritor em `feature.js` como fonte de verdade e
+   `SeiPro.features.<id> = { id, api, install }` publicado em runtime. Consumidores
+   cross-feature usam só `.api` ([ADR-0004](./docs/adr/0004-features-autodescritivas-manifest-gerado.md)).
+4. **Conhecimento do SEI só em `src/sei/`** ([ADR-0003](./docs/adr/0003-anti-corruption-layer-sei.md)):
+   nenhum seletor, URL `controlador.php?acao=` ou ramificação `isNewSEI`/`isSEI_5` fora do
+   anti-corruption layer. Parser do SEI devolve dados, nunca DOM ou jQuery.
+5. **Dependência injetada, não localizada** ([ADR-0005](./docs/adr/0005-raiz-de-composicao-e-injecao-explicita.md)):
+   sem `getSeiPro()` em código novo. Config, storage, logger, relógio e `document` chegam
+   pelo `deps` construído na raiz de composição do contexto.
+6. **`aliasGlobal` e `publishGlobal` são coisas diferentes**
+   ([ADR-0012](./docs/adr/0012-aliasglobal-publicacao-vs-legado.md)): `aliasGlobal` é
+   **dívida de feature** e só pode aparecer em `legacy-api.js`, sempre com TODO declarando a
+   condição de remoção; `publishGlobal` é **publicação de namespace** do núcleo para os
+   blocos legados e só pode aparecer em `src/core/`, `src/platform/`, `src/sei/`. Nenhum dos
+   dois em domain, io, view ou index.
+   *(A regra anterior — "`aliasGlobal` só em `legacy-api.js`", sem exceção — estava errada:
+   era descumprida em 136 de 186 chamadas, todas legítimas.)*
+7. **Falha de feature não derruba o contexto**
+   ([ADR-0006](./docs/adr/0006-isolamento-de-falha-por-feature.md)): o boot isola o
+   `install`. Sem `catch` que engole erro em silêncio.
+8. **Fronteira de feature é capacidade do usuário**, não página do SEI nem arquivo legado
+   herdado ([ADR-0007](./docs/adr/0007-fronteira-de-feature-por-capacidade.md)). Subpasta
+   interna não é resposta para arquivo grande.
+9. **CSS prefixado:** todas as classes de features usam prefixo `.seipro-`. Sem Shadow DOM
    (cria fricção com FontAwesome, jQuery UI e estilos do SEI).
-6. **Entries + app boot:** cada contexto caminha para `src/entries/` + `src/app/boot`.
-   O `core-stack.bundle.js` amplo continua enquanto houver blocos legados no manifest.
-7. **Mudança nova já nasce na arquitetura nova:** identificar contexto SEI, config flag e
-   superfície legada; depois domain / IO / view / CSS / contrato `{ id, api, install }`.
+10. **Entries + app boot:** cada contexto caminha para `src/entries/` + `src/app/boot`.
+    O `core-stack.bundle.js` amplo continua enquanto houver blocos legados no manifest.
+11. **Mudança nova já nasce na arquitetura nova:** identificar contexto SEI, config flag e
+    superfície legada; depois domain / IO / view / CSS / contrato `{ id, api, install }`.
+12. **Regra nova exige verificação executável**
+    ([ADR-0008](./docs/adr/0008-fitness-functions-e-ratchets.md)). Sem fitness function ou
+    ratchet, é intenção, não regra — e apodrece.
 
 ---
 
@@ -276,20 +336,17 @@ Modificadores seguem BEM: `.seipro-btn--primary`, `.seipro-modal--open`.
 
 ### Comunicação entre features
 
-Preferência: `SeiPro.features.<id>.api` ou composição na entry/`src/app/boot`. Uma feature
-não deve importar internals de outra feature.
+Uma feature não deve importar internals de outra feature. Duas formas, ambas com uso real:
 
-Bus leve em `src/platform/bus.js` para eventos transversais nomeados. Não usar bus
-intra-feature.
+| Necessidade | Mecanismo |
+|---|---|
+| Feature chama feature, mesmo contexto | `SeiPro.features.<id>.api`, ou ligação explícita na raiz de composição do contexto |
+| Atravessar contexto de execução (content script ↔ service worker ↔ options) | mensagem serializável via `platform/messaging.js` |
 
-```js
-import { bus } from '../platform/bus.js';
-
-bus.emit('monitorados:updated', { items });
-bus.on('monitorados:updated', ({ items }) => view.atualizarIcones(items));
-```
-
-Eventos whitelist: `monitorados:updated`, `config:changed`, `process-list:refreshed`.
+**Não usar event bus.** `src/platform/bus.js` está em remoção: tem 1 emissor, 0 assinantes e
+um `catch` que engole erro de listener em silêncio
+([ADR-0013](./docs/adr/0013-remover-bus-nao-utilizado.md)). Não adicionar consumidor novo.
+Reintroduzir depois exige ADR e pelo menos dois consumidores reais.
 
 ---
 
@@ -307,9 +364,13 @@ e esperada durante a transição.
 
 ### Ordem de prioridade para migração
 
-O loop automatizado (Hermes) segue **épicos + escada P0–P7** em `docs/engineering-loop.md`
-e a fila em `docs/engineering-loop-board.md` (programa E2). CSS `.seipro-*` é o passo **P6
-em lote**, não a fila principal.
+A ordem canônica é **[docs/implementation-plan.md](./docs/implementation-plan.md)**: fases,
+fatias, portões e riscos. CSS `.seipro-*` é passo **em lote** por épico fechado, não a fila
+principal.
+
+> `docs/engineering-loop.md` e `docs/engineering-loop-board.md` eram citados aqui e **nunca
+> existiram** no repositório — por isso `npm run loop:next` falha ao ler o board. Decidir
+> entre apontar os scripts para o plano ou removê-los é a fatia 0.6 do plano.
 
 Quando for migrar uma feature existente (humano ou maker), seguir nesta ordem:
 
@@ -382,19 +443,35 @@ desses snapshots estarem estáveis.
 
 ---
 
-### Violations conhecidas (dívida técnica a corrigir)
+### Dívida técnica
 
-Atualizado em 2026-08-06. Itens já resolvidos (A1-001…A1-010 / E2) saíram da tabela.
+**A tabela manual de "violações conhecidas" foi removida em 2026-08-07.** Ela havia
+derivado nas duas direções: listava `src/features/lista-processos/body.js` e
+`arvore/body.js` como monolitos ativos quando não existe nenhum arquivo `body.js` no
+repositório, e omitia dívida real e maior. Documento em prosa não sobrevive como inventário
+de dívida.
 
-| Arquivo / área | Problema | Correção |
-|---|---|---|
-| `src/content/core-stack.js` | ainda importa `monitorados/store-legacy-api` + installs shared de feature (ponte) | mover para entries de contexto quando lista/árvore tiverem boot próprio |
-| `src/features/lista-processos/body.js`, `arvore/body.js` | monolitos ainda carregam comportamento | extrair até eliminar; shell não conta como migrado |
-| `src/features/sei-functions/*` (clusters) | body.js eliminado; jQuery/DOM ainda nos clusters | vanilla + `.seipro-*` (P6) e encolher `legacy-api` |
-| `shared/legacy` / onclick inline | handlers inline restantes → MAIN world | migrar para `data-act` + delegação; **não** expandir `legacy-inline-bridge` |
-| `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar |
-| Features/CSS legados sem `.seipro-*` | classes próprias ainda sem prefixo em monolitos | **P6 em lote** no fim do épico; proibido micro-hook unitário |
-| Manifest amplo | dezenas de scripts por bloco | enxugar por contexto após registry; gerar manifest só com snapshots |
+A dívida agora é medida, não descrita:
+
+- **Números atuais e alvo:** tabela de estado medido em
+  [`docs/architecture.md`](./docs/architecture.md).
+- **Travamento:** baselines em `tests/structure/ratchets.baseline.json`, que só podem
+  diminuir ([ADR-0008](./docs/adr/0008-fitness-functions-e-ratchets.md)).
+- **Motivo de cada item:** o ADR correspondente.
+
+Dívida qualitativa que não reduz a número, e portanto continua em prosa:
+
+| Área | Problema | Correção | ADR |
+|---|---|---|---|
+| `src/content/core-stack.js` | bundle amplo transitório; importa `monitorados/store-legacy-api` e instala helpers de feature | dissolver nas raízes de composição por contexto | [0005](./docs/adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
+| `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar; **não expandir a gramática** | — |
+| `onclick` inline em legado | handlers inline vazam para o MAIN world | `data-act` + delegação no mundo isolado | — |
+| CSS de monolitos sem `.seipro-*` | classes sem prefixo podem colidir com o SEI | prefixar **em lote** por épico fechado | — |
+| `src/features/editor/domain/*` (4 arquivos) | domínio toca `document` diretamente | mover leitura de DOM para view ou para o ACL | [0003](./docs/adr/0003-anti-corruption-layer-sei.md) |
+| `src/features/atividades/` | subsistema de ~25 mil linhas tratado como feature | dividir por capacidade, teste de domínio **antes** do corte | [0007](./docs/adr/0007-fronteira-de-feature-por-capacidade.md) |
+| `src/features/sei-functions/` | coleção sem coesão, nomeada pelo arquivo legado de origem | dissolver; a pasta desaparece, não é renomeada | [0007](./docs/adr/0007-fronteira-de-feature-por-capacidade.md) |
+| `src/css/sei-pro.css` | 120 KB com estilos de todas as features num arquivo | fatiar em `src/features/<x>/style.css` conforme cada feature migrar | [0007](./docs/adr/0007-fronteira-de-feature-por-capacidade.md) |
+| `vendor/*/VERSION.txt` com versão `desconhecida` | libs resgatadas de `dist/` sem registro de origem | confirmar versão e licença antes de qualquer atualização — não adivinhar | [0011](./docs/adr/0011-dist-fora-do-versionamento.md) |
 
 **Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install); **Atividades** (ESM fatiada, `handlers`/`view`/`domain`/`io`/`callAtiv`, P6 `.seipro-*`, zero handlers HTML inline incl. tooltips `data-tip`, namespace congelado `SeiPro.features.atividades = { api, useCases, ports }`, consumidores de primeira parte via `feature.api`; `legacy-api` aliasa só `ATIVIDADES_EXTERNAL_GLOBALS` em opt-in — dispatch interno via registry → handlers).
 

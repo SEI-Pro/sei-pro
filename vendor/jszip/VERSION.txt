@@ -1,0 +1,8 @@
+JSZip 3.10.1
+Licença: MIT / GPLv3
+
+Resgatado de dist/js/lib em 2026-08-07 (ADR-0011): o arquivo existia apenas em
+dist/ commitado, sem fonte no repositório. Mapeamento fonte → dist em
+scripts/asset-manifest.mjs.
+
+Inclui jszip-utils. Exportação de documentos em lote.

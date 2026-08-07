@@ -1,0 +1,8 @@
+jQuery 3.7.1
+Licença: MIT
+
+Resgatado de dist/js/lib em 2026-08-07 (ADR-0011): o arquivo existia apenas em
+dist/ commitado, sem fonte no repositório. Mapeamento fonte → dist em
+scripts/asset-manifest.mjs.
+
+Carregado em quase todo bloco do manifest. Saída em curso (ADR-0003); ver src/features/editor/lib/domq.js.

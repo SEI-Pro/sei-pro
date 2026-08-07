@@ -1,0 +1,11 @@
+JMESPath desconhecida
+Licença: Apache-2.0
+
+Resgatado de dist/js/lib em 2026-08-07 (ADR-0011): o arquivo existia apenas em
+dist/ commitado, sem fonte no repositório. Mapeamento fonte → dist em
+scripts/asset-manifest.mjs.
+
+ATENÇÃO: campo marcado como "desconhecida" não foi determinável a partir do
+conteúdo do arquivo. Confirme na origem antes de atualizar esta lib — não presuma.
+
+Consultas na configuração JSON.

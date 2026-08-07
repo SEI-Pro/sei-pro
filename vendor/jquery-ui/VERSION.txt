@@ -1,0 +1,8 @@
+jQuery UI 1.14.1
+Licença: MIT
+
+Resgatado de dist/js/lib em 2026-08-07 (ADR-0011): o arquivo existia apenas em
+dist/ commitado, sem fonte no repositório. Mapeamento fonte → dist em
+scripts/asset-manifest.mjs.
+
+CSS + images/ (ui-icons_*) são referenciados relativamente pelo CSS. Substituição gradual por src/shared/ui/.

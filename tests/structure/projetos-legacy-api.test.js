@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { ALL_FILE_PAIRS } from '../../scripts/asset-manifest.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
 
@@ -53,7 +54,15 @@ describe('structure/projetos-legacy-api', () => {
         expect(build).toMatch(/dist\/js\/sei-pro-projetos\.js/);
         expect(build).not.toMatch(/'src\/features\/projetos\/sei-pro-projetos\.js'/);
         expect(build).toMatch(/projetos\.css/);
-        expect(build).toMatch(/vendor\/frappe-gantt/);
+    });
+
+    it('frappe-gantt ships from vendor/ via the asset manifest', () => {
+        // O mapeamento de assets vive em scripts/asset-manifest.mjs (ADR-0011),
+        // não no texto de build.mjs.
+        const gantt = ALL_FILE_PAIRS.filter(({ src }) => src.startsWith('vendor/frappe-gantt/'));
+        expect(gantt.map(({ out }) => out)).toEqual(
+            expect.arrayContaining(['dist/js/lib/frappe-gantt.js', 'dist/css/frappe-gantt.css'])
+        );
     });
 
     it('manifest loads sei-pro-projetos.js and projetos.css', () => {

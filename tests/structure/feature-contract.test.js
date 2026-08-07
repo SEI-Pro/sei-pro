@@ -6,13 +6,17 @@ const rootDir = process.cwd();
 const read = (rel) => readFileSync(join(rootDir, rel), 'utf8');
 
 describe('architecture: feature public contract', () => {
-  it('documents the canonical contract', () => {
+  // Assert the contract and where its rationale lives — not the prose around it.
+  // The previous version asserted doc wording ("Tier S", "platform/bus.js"), which made
+  // improving the document fail the build. See ADR-0008 on what a fitness function
+  // should verify.
+  it('documents the canonical contract and points to its ADR', () => {
     const arch = read('docs/architecture.md');
     expect(arch).toMatch(/\{ id, api, install \}/);
-    expect(arch).toMatch(/Tier S/);
-    expect(arch).toMatch(/Tier C/);
-    expect(arch).toMatch(/src\/app\//);
-    expect(arch).toMatch(/platform\/bus\.js/);
+    expect(arch).toMatch(/docs\/adr|\.\/adr\//);
+
+    const adrIndex = read('docs/adr/README.md');
+    expect(adrIndex).toMatch(/0004-features-autodescritivas-manifest-gerado\.md/);
   });
 
   it('pilot features publish { id, api, install }', () => {
@@ -43,6 +47,7 @@ describe('architecture: feature public contract', () => {
   it('core/stack does not install feature helpers', () => {
     const stack = read('src/core/stack.js');
     expect(stack).not.toMatch(/installQuickFilter|installSticknote|installDocsLote/);
+    // TODO(ADR-0013): drop this assertion when platform/bus.js is removed.
     expect(stack).toMatch(/installBus\s*\(/);
   });
 });

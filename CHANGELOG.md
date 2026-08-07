@@ -2,6 +2,26 @@
 
 ## [Não lançado]
 
+## [2.4.0] - 2026-08-07
+
+### Adicionado
+
+- ADRs (0001–0013) documentando fronteiras de execução, ACL do SEI, composição, isolamento por feature e tipagem gradual
+- Plano de implementação e contratos estruturais (fitness functions) para `dist` reprodutível, ADRs e ausência de `dist/` versionado
+- `THIRD_PARTY_NOTICES.md` e versões pinadas em `vendor/*/VERSION.txt`
+- Scripts de auditoria e resgate de assets (`audit-dist-sources`, `rescue-dist-assets`, `write-third-party-notices`, `write-vendor-versions`)
+
+### Melhorado
+
+- Assets estáticos (`icons`, `config_hosts`) e bibliotecas de terceiros saem de `dist/` para `assets/` e `vendor/`
+- CSS-fonte (`sei-pro.css`, `sei-slim.css`) passa a viver em `src/css/`
+- Build regenera `dist/` a partir das fontes; `dist/` deixa de ser versionado
+
+### Segurança e arquitetura
+
+- `dist/` fora do controle de versão (ADR-0011), com testes que impedem regressão
+- Fonte única da verdade em `src/`, `assets/` e `vendor/`
+
 ## [2.3.0] - 2026-08-06
 
 ### Adicionado

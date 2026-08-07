@@ -10,6 +10,8 @@
     "test": "vitest run",
     "test:atividades:smoke": "vitest run tests/features/atividades/smoke.test.js tests/features/atividades/view.test.js tests/features/atividades/call.test.js",
     "test:watch": "vitest",
+    "audit:dist": "node scripts/audit-dist-sources.mjs",
+    "notices": "node scripts/write-third-party-notices.mjs",
     "loop:map": "node scripts/engineering-loop-map.mjs",
     "loop:map:check": "node scripts/engineering-loop-map.mjs --check",
     "loop:next": "node scripts/engineering-loop-next.mjs",

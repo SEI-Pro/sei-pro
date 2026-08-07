@@ -1,129 +1,72 @@
+# ── Saída de build ───────────────────────────────────────────────────────────
+# dist/ é 100% gerado por `npm run build` a partir de src/, vendor/ e assets/.
+# ADR-0011: antes de 2026-08-07, 137 arquivos (3,6 MB) existiam APENAS aqui, sem
+# fonte no repositório — incluindo sei-pro.css (120 KB). Foram resgatados; o
+# mapeamento fonte → dist vive em scripts/asset-manifest.mjs.
+# Para carregar a extensão: npm install && npm run build → carregar dist/ unpacked.
+/dist/
+dist.zip
+dist-temp/
+build/
 
-dist/.vscode/settings.json
-dist/manifest_spro.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-dist/manifest_antaq.json
-dist/manifest_spro.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-clean_home.js
+# ── Dependências ─────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Configuração local e segredos ────────────────────────────────────────────
 config.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-dist/manifest_seipro.json
-dist/manifest_spro.json
-dist/manifest_petrvs.json
-dist/manifest_lab.json
-.DS_Store
-.._config.yml.icloud
-_config.yml
-_config.yml
-dist/icons/petrvs/icon-128.png
-dist/icons/petrvs/icon-16.png
-dist/icons/petrvs/icon-256.png
-dist/icons/petrvs/icon-32.png
-dist/icons/petrvs/icon-48.png
-dist/icons/petrvs/petrvs.png
-dist/icons/petrvs/icon-128.png
-dist/icons/petrvs/icon-16.png
-dist/icons/petrvs/icon-256.png
-dist/icons/petrvs/icon-32.png
-dist/icons/petrvs/icon-48.png
-dist/icons/petrvs/petrvs.png
-dist/manifest_antaq_v2.json
-dist/manifest_seipro_v2.json
-dist/manifest_v2.json
-dist/manifest_antt.json
-dist/manifest_antt_v2.json
-dist/manifest_cfq.json
-dist/manifest_cfq_v2.json
-dist/manifest_conab.json
-dist/manifest_conab_v2.json
-db-2023-07-27.sql
-old/sei-forms.js
-old/sei-gantt.js
-old/sei-sync-processos.js
+config_local.json
+.env
+.env.local
+# Contém e-mail pessoal — manter apenas local
+google-apps-script.js
+
+# ── Whitelabels e material fora do escopo deste fork ─────────────────────────
 /backend
 /seipro
 /whitelabels
+old/
+clean_home.js
+db-2023-07-27.sql
 
-# Arquivos do sistema
+# ── Sistema operacional ──────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
+.._config.yml.icloud
 
-# Arquivos temporários
-*.tmp
-*.temp
-*.log
-*.cache
-
-# Arquivos de backup
-*.bak
-*.backup
-*~
-
-# Arquivos de IDE/Editor
+# ── IDE / editor ─────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Arquivos de build/distribuição (se houver)
-build/
-dist-temp/
+# ── Temporários, backup e logs ───────────────────────────────────────────────
+*.tmp
+*.temp
+*.log
+*.cache
+*.bak
+*.backup
+debug.log
+error.log
+docs/temp/
+*.md.bak
+dev/
+development/
 
-# Arquivos de configuração local
-config_local.json
-.env
-.env.local
+# ── Ferramentas de automação de navegador (artefatos locais) ─────────────────
+.playwright-cli/
+.playwright-mcp/
+playwright-open-extension.sh
 
-# Arquivos de dependências (dev tooling — not shipped in dist/)
-node_modules/
-
-# Generated symlinks for Vite publicDir (Phase 5 build)
+# ── Resquícios da tentativa revertida com Vite + CRXJS ───────────────────────
+# Symlinks na raiz criados pela resolução de caminhos do CRXJS. A tentativa foi
+# revertida por minificar os legados in-place; ver DEVELOPMENT.md.
 public/
-
-# Root symlinks for CRXJS manifest path resolution (Phase 5 build)
 /css
 /icons
 /html
 /webfonts
 /js
 /config_hosts.json
-
-
-
-# Arquivos de teste (Vitest — dev only)
-*.test.js
-*.spec.js
-!tests/**
-
-# Arquivos de documentação temporária
-docs/temp/
-*.md.bak
-
-# Arquivos de desenvolvimento
-dev/
-development/
-
-# Arquivos de debug
-debug.log
-error.log
-
-# Google Apps Script — contém email pessoal, manter apenas local
-google-apps-script.js
-dist/js/sei-pro-config-local.js
-
-dist.zip
-.playwright-cli/
-playwright-open-extension.sh
-.playwright-mcp/
