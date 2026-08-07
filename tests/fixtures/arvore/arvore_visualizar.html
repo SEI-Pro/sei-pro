@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>SEI — árvore (fixture sintética)</title>
+</head>
+<body>
+  <div id="divArvore">
+    <div class="infraArvore" id="divPASTA1">
+      <a id="anchorImgPASTA1" href="#"><img src="/infra_css/imagens/pasta.gif" alt=""></a>
+      <a id="anchorPASTA1" class="infraArvoreNo" href="#">Pasta sintética</a>
+      <div class="infraArvore" id="div00000001">
+        <a id="anchorImg00000001" href="#"><img src="/infra_css/svg/documento_interno.svg" alt=""></a>
+        <a
+          id="anchor00000001"
+          class="infraArvoreNo"
+          target="ifrVisualizacao"
+          href="/controlador.php?acao=procedimento_trabalhar&amp;acao_origem=arvore_visualizar&amp;id_procedimento=00000000"
+        >00000.000000/0000-00</a>
+      </div>
+      <div class="infraArvore" id="div00000002">
+        <a id="anchorImg00000002" href="#"><img src="/infra_css/svg/documento_interno.svg" alt=""></a>
+        <a
+          id="anchor00000002"
+          class="infraArvoreNo"
+          target="ifrConteudoVisualizacao"
+          href="/controlador.php?acao=documento_visualizar&amp;acao_origem=procedimento_visualizar&amp;id_documento=00000002&amp;id_procedimento=00000000"
+        >Despacho sintético</a>
+      </div>
+    </div>
+  </div>
+  <iframe id="ifrVisualizacao" name="ifrVisualizacao" src="/controlador.php?acao=documento_visualizar&amp;id_documento=00000002&amp;id_procedimento=00000000"></iframe>
+</body>
+</html>

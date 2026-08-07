@@ -43,27 +43,32 @@ até o alvo.
 
 | Dimensão | Hoje | Alvo | ADR |
 |---|---|---|---|
-| Arquivos JS em `src/` | 409 | — | — |
-| Blocos de content script no manifest | 11 (maior com **40** scripts) | 1 script por contexto, manifest gerado | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
-| Features no registry | **2 de 22** | todas, por descritor | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
-| Features no contrato `{ id, api, install }` | **9 de 22** | todas | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
-| Tamanho do ACL `src/sei/` | **261 linhas** | concentra todo conhecimento do SEI | [0003](./adr/0003-anti-corruption-layer-sei.md) |
-| Arquivos com seletor do SEI fora de `src/sei/` | 36 | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
-| Arquivos com ramificação `isNewSEI`/`isSEI_5` | 42 | 0 fora de `src/sei/` | [0003](./adr/0003-anti-corruption-layer-sei.md) |
-| Arquivos com jQuery `$(` | 91 (3611 usos) | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
-| Arquivos usando `getSeiPro()` | 50 (338 refs a `SeiPro.`) | 0 fora da raiz de composição | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
-| `aliasGlobal` de dívida legada | 50 | 0 | [0012](./adr/0012-aliasglobal-publicacao-vs-legado.md) |
-| Arquivos acima de 500 linhas | 42 | decrescente | [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
-| Chaves de configuração declaradas | 7 de **79** em uso | 79 no schema | [0009](./adr/0009-configuracao-como-schema-unico.md) |
-| `console.*` cru | 492 em 92 arquivos | logger injetado | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
-| Arquivos de teste | 187 (52 de estrutura) | — | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
-| `dist/` reproduzível a partir do repo | ✅ **feito** (era: 137 assets sem fonte) | — | [0011](./adr/0011-dist-fora-do-versionamento.md) |
-| CI | **inexistente** | portão obrigatório | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
+| Base tipada | ~384 `.ts` + 24 legados `.js`; **382** `@ts-nocheck` | tipagem sem `@ts-nocheck` | [0014](./adr/0014-typescript-para-codigo-novo.md) |
+| Blocos de content script | 11 (maior **40**); `manifest:check` ok | 1 script/contexto gerado | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| Features com `feature.ts` | **26 declaradas**; maturidade explícita (`declared` / `wired` / `exclusive`) | por capacidade, `exclusive` | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md), [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
+| Features exclusivas | **0** | crescente; só estas contam como migradas | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| ACL `src/sei/` | selectors, pages, supports, parse | concentra o SEI | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| Seletores fora do ACL | 58 | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| Ramificação `isNewSEI`/`isSEI_5` | 46 | 0 fora de `src/sei/` | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| jQuery `$(` | 91 (~4054 usos) | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
+| `getSeiPro()` | 51 (352 refs `SeiPro.`) | 0 fora da raiz | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
+| `aliasGlobal` | **176** | 0 dívida; `publishGlobal` no núcleo | [0012](./adr/0012-aliasglobal-publicacao-vs-legado.md) |
+| Arquivos > 500 linhas | 45 | decrescente | [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
+| Chaves no schema | **74** | schema único | [0009](./adr/0009-configuracao-como-schema-unico.md) |
+| `console.*` cru | 503 / 93 arquivos | logger injetado | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
+| Event bus | **removido** | — | [0013](./adr/0013-remover-bus-nao-utilizado.md) |
+| `https://*/*` | **removido** | — | [0015](./adr/0015-fronteiras-de-confianca.md) |
+| Testes | 213 arquivos / **1159** testes | — | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
+| `dist/` reproduzível | ✅ | — | [0011](./adr/0011-dist-fora-do-versionamento.md) |
+| CI | ✅ `.github/workflows/ci.yml` | portão obrigatório | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
 
-**Leitura honesta:** há duas arquiteturas rodando em paralelo. A moderna (bundles ESM,
-registry, contrato de feature) cobre 2 contextos e 9 features. A legada (ordem de
-carregamento do manifest, ~1300 globais compartilhados, 24 arquivos copiados verbatim) é
-ainda a maior parte do que executa. O roadmap abaixo é a substituição de uma pela outra.
+**Leitura honesta:** a base bundlada foi renomeada para TypeScript e as features têm
+descritores; isso não equivale a base tipada nem a feature migrada. Uma feature só é
+**exclusive** quando a raiz de composição a instala e não há auto-boot ou caminho legado
+paralelo. O manifesto ainda carrega blocos legados gordos e ~382 arquivos estão sob
+`@ts-nocheck`. Duas arquiteturas
+ainda convivem — a moderna cresceu (ACL, schema, boot isolado, strangler de atividades); a
+legada (24 cópias verbatim, ordem do manifest) ainda executa a maior parte do dia a dia.
 
 ---
 
@@ -77,7 +82,8 @@ src/
 ├── sei/          # ACL: versão, seletores, urls, parsing       → ADR-0003
 ├── platform/     # ports: storage, net, messaging, logger, runtime (único com chrome.*)
 ├── shared/       # helpers e primitivos de UI vanilla (shared/ui/)
-├── features/     # 22 capacidades, uma pasta cada             → ADR-0004, ADR-0007
+├── config/       # schema + read + migrations                   → ADR-0009
+├── features/     # 26 capacidades (incl. stranglers)           → ADR-0004, ADR-0007
 ├── options/      # página de configuração
 ├── background/   # service worker MV3 + handlers
 ├── bootstrap/    # init*.js legados (glue de carga, transitório)
@@ -118,8 +124,8 @@ Anatomia e regras por camada: [`DEVELOPMENT.md`](../DEVELOPMENT.md).
 | Atravessar contexto de execução | mensagem serializável via `platform/messaging.js` |
 | Call-site legado ainda não migrado | `aliasGlobal` em `legacy-api.js`, com condição de remoção |
 
-Não usar event bus. `src/platform/bus.js` ainda existe, com 1 emissor e 0 assinantes, e
-está em remoção — [ADR-0013](./adr/0013-remover-bus-nao-utilizado.md).
+Não usar event bus. Removido em [ADR-0013](./adr/0013-remover-bus-nao-utilizado.md);
+comunicação intra-contexto é `feature.api` ou ligação na raiz de composição.
 
 **Atenção ao ler as regras acima e abaixo:** ADR aceito é norma para código novo, não
 descrição do que já existe. `feature.js`, `publishGlobal`, o schema de configuração e as

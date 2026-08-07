@@ -11,8 +11,12 @@
     "test:atividades:smoke": "vitest run tests/features/atividades/smoke.test.js tests/features/atividades/view.test.js tests/features/atividades/call.test.js",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "verify": "npm run typecheck && npm run build && npm test && npm run audit:dist",
+    "lint": "eslint src/core src/platform src/sei src/app src/entries src/types src/dom src/content src/background src/shared --no-error-on-unmatched-pattern",
+    "format": "prettier --write \"src/core/**/*.{js,ts}\" \"src/platform/**/*.{js,ts}\" \"src/sei/**/*.{js,ts}\" \"src/app/**/*.{js,ts}\" \"src/entries/**/*.{js,ts}\" \"src/types/**/*.{js,ts}\" \"src/dom/**/*.{js,ts}\" \"src/content/**/*.{js,ts}\" \"src/background/**/*.{js,ts}\" \"src/shared/**/*.{js,ts}\" \"scripts/**/*.{js,mjs}\" \"tests/structure/**/*.{js,json}\" \"eslint.config.js\"",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run audit:dist",
     "audit:dist": "node scripts/audit-dist-sources.mjs",
+    "measure:ratchets": "node scripts/measure-ratchets.mjs",
+    "manifest:check": "node scripts/generate-manifest.mjs --check",
     "notices": "node scripts/write-third-party-notices.mjs",
     "hooks:install": "node scripts/install-git-hooks.mjs",
     "fixture:skeleton": "node scripts/skeletonize-fixture.mjs",
@@ -27,9 +31,13 @@
     "node": ">=22.23.1 <23"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/chrome": "^0.2.5",
     "esbuild": "^0.28.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
     "jsdom": "^29.1.1",
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2",
     "vitest": "^3.2.4"
   }

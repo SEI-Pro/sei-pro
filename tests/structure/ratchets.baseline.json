@@ -1,0 +1,20 @@
+{
+  "filesWithGetSeiPro": 51,
+  "seiProDotRefs": 352,
+  "filesWithJquery": 91,
+  "jqueryUsages": 4054,
+  "filesWithConsole": 93,
+  "consoleUsages": 503,
+  "filesOver500": 45,
+  "aliasGlobal": 176,
+  "filesWithControladorOutside": 37,
+  "filesWithVersionBranch": 46,
+  "filesWithSeiSelectorsOutside": 58,
+  "featuresOutsideContract": 0,
+  "largestContentScriptBlock": 40,
+  "innerHTMLWrites": 110,
+  "insertAdjacentHTML": 8,
+  "jqueryHtml": 405,
+  "tsNocheck": 382,
+  "seiProCssLines": 4437
+}

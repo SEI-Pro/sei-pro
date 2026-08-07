@@ -1,24 +1,15 @@
-// ADR-0014 — tsc APENAS verifica (noEmit). Quem compila e bundla é o esbuild, em
-// scripts/build.mjs. O esbuild remove os tipos SEM verificá-los, então `npm run typecheck`
-// é a única garantia real de que uma anotação de tipo significa algo neste projeto.
+// ADR-0014 — tsc APENAS verifica (noEmit). Quem compila e bundla é o esbuild.
 {
     "compilerOptions": {
         "noEmit": true,
         "strict": true,
-
         "target": "ES2022",
         "module": "ESNext",
         "moduleResolution": "bundler",
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "types": ["chrome"],
-
-        // Código novo é .ts, mas um .ts pode importar o .js existente durante a transição.
-        // checkJs fica false: os .js legados não são verificados hoje, e ligar isso agora
-        // produziria milhares de erros sem valor. Cada arquivo migrado para .ts entra no
-        // escopo verificado — é assim que o ratchet do ADR-0014 avança.
         "allowJs": true,
         "checkJs": false,
-
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "isolatedModules": true,
@@ -27,6 +18,6 @@
         "noImplicitOverride": true,
         "noUncheckedIndexedAccess": true
     },
-    "include": ["src/**/*.ts"],
+    "include": ["src/**/*.ts", "src/**/*.d.ts"],
     "exclude": ["node_modules", "dist", "vendor"]
 }

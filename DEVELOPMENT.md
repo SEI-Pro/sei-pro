@@ -363,10 +363,9 @@ Uma feature não deve importar internals de outra feature. Duas formas, ambas co
 | Feature chama feature, mesmo contexto | `SeiPro.features.<id>.api`, ou ligação explícita na raiz de composição do contexto |
 | Atravessar contexto de execução (content script ↔ service worker ↔ options) | mensagem serializável via `platform/messaging.js` |
 
-**Não usar event bus.** `src/platform/bus.js` está em remoção: tem 1 emissor, 0 assinantes e
-um `catch` que engole erro de listener em silêncio
-([ADR-0013](./docs/adr/0013-remover-bus-nao-utilizado.md)). Não adicionar consumidor novo.
-Reintroduzir depois exige ADR e pelo menos dois consumidores reais.
+**Não usar event bus.** Removido ([ADR-0013](./docs/adr/0013-remover-bus-nao-utilizado.md)).
+Reintroduzir exige ADR novo e pelo menos dois consumidores reais, com erro de listener
+propagado ao logger (nunca `catch` vazio).
 
 ---
 

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>SEI — documento (fixture sintética)</title>
+</head>
+<body>
+  <div id="divArvoreInformacao">
+    <a
+      class="ancoraVisualizacaoArvore"
+      href="/controlador.php?acao=documento_download_anexo&amp;id_documento=00000002&amp;id_procedimento=00000000&amp;arvore=1"
+    >Baixar</a>
+  </div>
+  <div id="divInformacao" style="display:none">
+    <a
+      class="ancoraArvoreDownload"
+      href="/controlador.php?acao=documento_download_anexo&amp;id_documento=00000002&amp;id_procedimento=00000000"
+    >Baixar legado</a>
+  </div>
+  <div class="barraBotoesSEI infraBarraComandos">
+    <a href="/controlador.php?acao=documento_assinar&amp;id_documento=00000002">Assinar</a>
+  </div>
+  <iframe
+    id="ifrConteudoVisualizacao"
+    name="ifrConteudoVisualizacao"
+    src="/controlador.php?acao=documento_visualizar&amp;acao_origem=procedimento_visualizar&amp;id_documento=00000002&amp;id_procedimento=00000000"
+  ></iframe>
+  <form id="frmDocumentoCadastro" action="/controlador.php?acao=documento_receber&amp;id_procedimento=00000000" method="post">
+    <input type="hidden" name="hdnIdDocumento" value="">
+  </form>
+</body>
+</html>

@@ -42,6 +42,9 @@ Valem para toda fatia, em qualquer fase:
   do SEI.
 - **Fatia só fecha com o ADR refletido.** Se a execução contradisser o ADR, o ADR muda por
   um novo ADR — não por exceção silenciosa no código.
+- **"Declarada" não é "migrada".** `feature.ts` precisa informar sua maturidade:
+  `declared` é metadado, `wired` é instalada pela nova raiz e `exclusive` não tem auto-boot
+  nem caminho legado paralelo. Só `exclusive` fecha uma migração.
 
 ---
 
@@ -305,6 +308,38 @@ dentro do repositório, destino fora de `tests/fixtures/` e procedência incompl
 `skeletonize-fixture.test.js` (25 casos com PII realista) e `fixtures-sem-pii.test.js`, com
 hook de pre-commit via `npm run hooks:install`.
 
+**Fase 0 — Fundação** (2026-08-07). CI (`.github/workflows/ci.yml`), ratchets
+(`tests/structure/ratchets.baseline.json` + `measure-ratchets.mjs`), fitness de camada
+(layering/purity/platform-boundary/no-silent-catch), ESLint+Prettier no escopo moderno,
+renomeação mecânica da base bundlada para `.ts` com `@ts-nocheck` (384 arquivos; 24 legados
+verbatim e `ckeditor-main.js` permanecem `.js`).
+
+**Fase S — Segurança** (2026-08-07). Removido `https://*/*`; WAR com matches do SEI; `eval`
+eliminado; credenciais em `storage.local`; telemetria opt-in com redação de PII; aviso de
+provedor LLM + chave `llmProvedoresExternos` (padrão aberto).
+
+**Fase 1 — ACL** (2026-08-07). `src/sei/{selectors,pages,supports,parse/*}.ts`; fixtures
+lista (produção esqueletizada) + árvore/documento (sintéticas); consumidores migrados;
+`sei-acl.test.js`.
+
+**Fase 2 — Schema** (2026-08-07). `src/config/schema.ts` (74 chaves), `read.ts`, migrações
+versionadas, options de privacidade geradas do schema.
+
+**Fase 3 — Descritores** (2026-08-07). 26 `feature.ts` (22 originais + stranglers Fase 5);
+registry por varredura; `npm run manifest:check` (passthrough seguro); snapshot de matches.
+Geração completa dos `content_scripts` permanece follow-up de risco.
+
+**Fase 4 — Composição** (2026-08-07). Ports `createX` + fakes; boot com isolamento de falha;
+raízes login/db/lista; `publishGlobal` amostral; **bus removido** (ADR-0013).
+
+**Fase 5 — Refronteiras (fundação)** (2026-08-07). Mapa de capacidades; testes de
+caracterização de `config-options`; strangler `atividades-config` + stubs
+afastamentos/avaliações/registro; plano de split de `sei-functions`; primeiro carve de CSS;
+`capability-coverage.test.js`. Dissolução completa de `atividades`/`sei-functions` continua
+pelo strangler.
+
+**Verificação:** `npm run verify` verde — typecheck, lint, build, **1159 testes**, audit:dist.
+
 ---
 
 ## Decisões resolvidas
@@ -328,6 +363,12 @@ Respondidas em 2026-08-07.
    momento do envio (fatias S.7 e S.8). A instituição pode restringir a provedor local por
    configuração.
 
-## Decisões abertas
+## Decisões abertas / residual
 
-Nenhuma. As próximas surgem na execução da fase 0.
+1. **Smoke manual no SEI** ([`SMOKE_TEST.md`](../SMOKE_TEST.md)) — portão de ambiente ainda
+   humano após mudanças de manifest/WAR/ACL.
+2. **Geração completa de `content_scripts`** — `manifest:check` valida sem reescrever blocos
+   gordos; enxugar um contexto por vez com smoke.
+3. **Dissolução completa de `atividades` / `sei-functions`** — strangler iniciado; corpo ainda
+   nos monolitos.
+4. **Remoção massiva de `@ts-nocheck`** — ratchet (~380); arquivo tocado perde o marcador.
