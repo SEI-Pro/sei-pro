@@ -155,7 +155,8 @@
   var io_exports = {};
   __export(io_exports, {
     listaAgrupamentoIO: () => listaAgrupamentoIO,
-    readGroupOrder: () => readGroupOrder
+    readGroupOrder: () => readGroupOrder,
+    readGroupOrderLegacy: () => readGroupOrderLegacy
   });
   function listaAgrupamentoIO(globalRef2 = globalThis) {
     return globalRef2.SeiPro && globalRef2.SeiPro.features && globalRef2.SeiPro.features.listaAgrupamentoIO;
@@ -168,12 +169,15 @@
     const value = typeof getOption === "function" ? getOption("orderbyTableGroup") : null;
     return value || fallback;
   }
+  function readGroupOrderLegacy() {
+    return readGroupOrder(typeof getOptionsPro === "function" ? getOptionsPro : null, "asc");
+  }
 
-  // src/features/lista-processos/body.js
-  var body_exports = {};
-  __export(body_exports, {
+  // src/features/lista-processos/modules.js
+  var modules_exports = {};
+  __export(modules_exports, {
     addAcompanhamentoEspIcon: () => addAcompanhamentoEspIcon,
-    addKanbanProc: () => addKanbanProc2,
+    addKanbanProc: () => addKanbanProc,
     appendGerados: () => appendGerados,
     applyAssignmentFilterHomeFallback: () => applyAssignmentFilterHomeFallback,
     applyHomeFilterFallback: () => applyHomeFilterFallback,
@@ -198,7 +202,7 @@
     filterTableProcessos: () => filterTableProcessos,
     forceOnLoadBody: () => forceOnLoadBody,
     forceTableHomeDestroy: () => forceTableHomeDestroy,
-    getAllMarcadoresHome: () => getAllMarcadoresHome2,
+    getAllMarcadoresHome: () => getAllMarcadoresHome,
     getArrayProcessoRecebido: () => getArrayProcessoRecebido,
     getAssignmentFilterOptionsHome: () => getAssignmentFilterOptionsHome,
     getChangeTypeProc: () => getChangeTypeProc,
@@ -207,11 +211,11 @@
     getGroupTableLabelFromLink: () => getGroupTableLabelFromLink,
     getHomeRowTagValue: () => getHomeRowTagValue,
     getListIdProtocoloSelected: () => getListIdProtocoloSelected,
-    getListTypes: () => getListTypes2,
+    getListTypes: () => getListTypes,
     getListaMarcadores: () => getListaMarcadores,
     getMapaControleProcesso: () => getMapaControleProcesso,
     getNewTabProcesso: () => getNewTabProcesso,
-    getPanelProc: () => getPanelProc2,
+    getPanelProc: () => getPanelProc,
     getProcessoAtribuicaoValue: () => getProcessoAtribuicaoValue,
     getProcessoLinkFromGroupRow: () => getProcessoLinkFromGroupRow,
     getProcessosPaginacao: () => getProcessosPaginacao,
@@ -224,7 +228,7 @@
     getUploadFilesInProcess: () => getUploadFilesInProcess,
     handleClientLoadPro: () => handleClientLoadPro,
     hideProcessoPaginacaoSuperior: () => hideProcessoPaginacaoSuperior,
-    initAddKanbanProc: () => initAddKanbanProc2,
+    initAddKanbanProc: () => initAddKanbanProc,
     initAllMarcadoresHome: () => initAllMarcadoresHome,
     initChosenFilterHome: () => initChosenFilterHome,
     initDadosProcesso: () => initDadosProcesso,
@@ -249,11 +253,9 @@
     insertGroupTable: () => insertGroupTable,
     installPanelProcDelegation: () => installPanelProcDelegation,
     isGroupCollapsedLegacy: () => isGroupCollapsedLegacy,
-    listaAgrupamentoIO: () => listaAgrupamentoIO2,
     loadIframeProcessUpload: () => loadIframeProcessUpload,
+    loadKanbanStylePro: () => loadKanbanStylePro,
     nextUploadFilesInProcess: () => nextUploadFilesInProcess,
-    normalizeHomeFilterKey: () => normalizeHomeFilterKey2,
-    normalizeHomeFilterText: () => normalizeHomeFilterText2,
     normalizeProcessoAtribuicaoText: () => normalizeProcessoAtribuicaoText,
     objProcessosUnidadePro: () => objProcessosUnidadePro,
     observeAreaTela: () => observeAreaTela,
@@ -263,8 +265,6 @@
     orderbyTableGroup: () => orderbyTableGroup,
     persistGroupCollapsedLegacy: () => persistGroupCollapsedLegacy,
     pinKanbanItensProc: () => pinKanbanItensProc,
-    quoteInlineJsText: () => quoteInlineJsText2,
-    readGroupOrderLegacy: () => readGroupOrderLegacy,
     removeAllTags: () => removeAllTags,
     removeCacheGroupTable: () => removeCacheGroupTable,
     removeDataPanelProc: () => removeDataPanelProc,
@@ -284,7 +284,7 @@
     setTimeTest: () => setTimeTest,
     setUploadFilesInProcess: () => setUploadFilesInProcess,
     sortUploadArvore: () => sortUploadArvore,
-    storeGroupTablePro: () => storeGroupTablePro2,
+    storeGroupTablePro: () => storeGroupTablePro,
     storeLinkUsuarioSistema: () => storeLinkUsuarioSistema,
     storeVersionSEI: () => storeVersionSEI,
     syncHomeProcessCaption: () => syncHomeProcessCaption,
@@ -306,783 +306,7 @@
     urgenteProMoveOnTop: () => urgenteProMoveOnTop
   });
 
-  // src/features/lista-processos/templates.js
-  function homeFilterSelectHtml() {
-    return '<select id="filterTableHome" class="selectPro seipro-lista-filter" style="width:250px;margin-right:20px !important;" onchange="getFilterTableHome(this)" data-placeholder="Filtrar processos...">';
-  }
-  function assignmentFilterSelectHtml() {
-    return '<select id="filterAssignmentTableHome" class="selectPro seipro-lista-filter-assignment" style="width:250px;margin-right:20px !important;" onchange="getFilterAssignmentTableHome(this)" data-placeholder="Filtrar atribui\xE7\xE3o...">';
-  }
-  function csvExportLinkHtml() {
-    return `<a class="newLink seipro-lista-csv" onclick="getTableProcessosCSV()" id="processoToCSV" onmouseover="return infraTooltipMostrar('Exportar informa\xE7\xF5es de processos em planilha CSV');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-file-download cinzaColor"></i></a>`;
-  }
-
-  // src/shared/ui/file-queue.js
-  function extensionAllowed(fileName, acceptCsv) {
-    if (!acceptCsv) return true;
-    const name = String(fileName || "").toLowerCase();
-    const allowed = String(acceptCsv).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-    if (allowed.length === 0) return true;
-    return allowed.some((ext) => ext.startsWith(".") ? name.endsWith(ext) : name.endsWith("." + ext));
-  }
-  function formatFileSize(bytes) {
-    const n = Number(bytes) || 0;
-    if (n < 1024) return n + " b";
-    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KiB";
-    return (n / (1024 * 1024)).toFixed(1) + " MiB";
-  }
-  function uploadFormFile({
-    url,
-    file,
-    fileName,
-    paramName = "filArquivo",
-    timeout = 9e5,
-    onProgress,
-    xhrFactory = () => new XMLHttpRequest()
-  }) {
-    return new Promise((resolve, reject) => {
-      const xhr = xhrFactory();
-      const form = new FormData();
-      form.append(paramName, file, fileName || file.name);
-      xhr.open("POST", url, true);
-      xhr.timeout = timeout;
-      xhr.withCredentials = true;
-      if (xhr.upload && typeof onProgress === "function") {
-        xhr.upload.onprogress = (event) => {
-          if (!event.lengthComputable) return;
-          onProgress(event.loaded / event.total, event);
-        };
-      }
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr);
-        else reject({ xhr, message: "HTTP " + xhr.status });
-      };
-      xhr.onerror = () => reject({ xhr, message: "Network error" });
-      xhr.ontimeout = () => reject({ xhr, message: "Timeout" });
-      xhr.send(form);
-    });
-  }
-  function toPublicFile(item) {
-    const file = item.file;
-    file.previewElement = item.previewElement;
-    file.status = item.status;
-    file.uploadName = item.uploadName;
-    file.xhr = item.xhr;
-    file._queueItem = item;
-    return file;
-  }
-  function createFileQueue(opts = {}) {
-    const items = [];
-    const listeners = {};
-    const options = {
-      url: opts.url || "",
-      params: opts.params || {},
-      acceptedFiles: opts.accept || opts.acceptedFiles || null,
-      paramName: opts.paramName || "filArquivo",
-      timeout: opts.timeout || 9e5
-    };
-    const renameFile = typeof opts.renameFile === "function" ? opts.renameFile : (f) => f.name;
-    const createPreview = typeof opts.createPreview === "function" ? opts.createPreview : null;
-    const previewsContainer = typeof opts.previewsContainer === "string" ? typeof document !== "undefined" ? document.querySelector(opts.previewsContainer) : null : opts.previewsContainer || null;
-    let clickableEl = null;
-    let fileInput = null;
-    let processing = false;
-    let destroyed = false;
-    function emit(event, ...args) {
-      const list = listeners[event] || [];
-      list.forEach((fn) => {
-        try {
-          fn(...args);
-        } catch (_e) {
-        }
-      });
-      const OPT_BY_EVENT = {
-        addedfile: "onAddedFile",
-        addedfiles: "onAddedFiles",
-        removedfile: "onRemovedFile",
-        success: "onSuccess",
-        error: "onError"
-      };
-      const optName = OPT_BY_EVENT[event] || "on" + event.charAt(0).toUpperCase() + event.slice(1);
-      if (typeof opts[optName] === "function") {
-        try {
-          opts[optName](...args);
-        } catch (_e) {
-        }
-      }
-    }
-    function bindClickable() {
-      const clickable = opts.clickable;
-      if (!clickable || typeof document === "undefined") return;
-      clickableEl = typeof clickable === "string" ? document.querySelector(clickable) : clickable;
-      if (!clickableEl) return;
-      fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.multiple = true;
-      fileInput.style.display = "none";
-      if (options.acceptedFiles) fileInput.accept = options.acceptedFiles;
-      (clickableEl.ownerDocument || document).body.appendChild(fileInput);
-      clickableEl.addEventListener("click", onClickableClick);
-      fileInput.addEventListener("change", onFileInputChange);
-    }
-    function onClickableClick(event) {
-      event.preventDefault();
-      if (fileInput) fileInput.click();
-    }
-    function onFileInputChange() {
-      if (!fileInput || !fileInput.files) return;
-      handleFiles(Array.from(fileInput.files));
-      fileInput.value = "";
-    }
-    function setAcceptedFiles(csv) {
-      options.acceptedFiles = csv || null;
-      if (fileInput) fileInput.accept = options.acceptedFiles || "";
-    }
-    function addItem(file) {
-      const uploadName = renameFile(file);
-      const accepted = extensionAllowed(uploadName || file.name, options.acceptedFiles);
-      const item = {
-        file,
-        uploadName,
-        status: accepted ? "queued" : "rejected",
-        previewElement: null,
-        xhr: null,
-        errorMessage: accepted ? "" : "Tipo de arquivo n\xE3o permitido"
-      };
-      if (createPreview) {
-        item.previewElement = createPreview(item);
-        if (item.previewElement && previewsContainer) {
-          previewsContainer.appendChild(item.previewElement);
-        }
-        if (!accepted && item.previewElement) {
-          item.previewElement.classList.add("dz-error", "seipro-file-error");
-          const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
-          if (err) err.textContent = item.errorMessage;
-        }
-        const removeBtn = item.previewElement && item.previewElement.querySelector("[data-seipro-file-remove], [data-dz-remove]");
-        if (removeBtn) {
-          removeBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            removeItem(item);
-          });
-        }
-      }
-      items.push(item);
-      emit("addedfile", toPublicFile(item));
-      return item;
-    }
-    function removeItem(item) {
-      const idx = items.indexOf(item);
-      if (idx === -1) return;
-      items.splice(idx, 1);
-      if (item.previewElement && item.previewElement.parentNode) {
-        item.previewElement.parentNode.removeChild(item.previewElement);
-      }
-      emit("removedfile", toPublicFile(item));
-    }
-    function handleFiles(fileList) {
-      if (destroyed) return;
-      const list = Array.from(fileList || []);
-      const added = list.map(addItem);
-      emit("addedfiles", added.map(toPublicFile));
-      return added.map(toPublicFile);
-    }
-    function getQueuedFiles() {
-      return items.filter((i2) => i2.status === "queued").map(toPublicFile);
-    }
-    function getAcceptedFiles() {
-      return items.filter((i2) => i2.status === "success").map(toPublicFile);
-    }
-    function getRejectedFiles() {
-      return items.filter((i2) => i2.status === "error" || i2.status === "rejected").map(toPublicFile);
-    }
-    function removeAllFiles() {
-      [...items].forEach(removeItem);
-    }
-    function setProgress(item, ratio) {
-      if (!item.previewElement) return;
-      item.previewElement.classList.add("dz-processing", "seipro-file-processing");
-      const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
-      if (bar) bar.style.width = Math.round(ratio * 100) + "%";
-    }
-    function markError(item, message) {
-      item.status = "error";
-      item.errorMessage = message || "Erro no envio";
-      if (item.previewElement) {
-        item.previewElement.classList.add("dz-error", "seipro-file-error");
-        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
-        const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
-        if (err) err.textContent = item.errorMessage;
-      }
-    }
-    function markSuccess(item) {
-      item.status = "success";
-      if (item.previewElement) {
-        item.previewElement.classList.add("dz-success", "dz-complete", "seipro-file-success");
-        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
-        const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
-        if (bar) bar.style.width = "100%";
-      }
-    }
-    function processQueue() {
-      if (destroyed || processing) return Promise.resolve();
-      const next = items.find((i2) => i2.status === "queued");
-      if (!next) return Promise.resolve();
-      if (!options.url) {
-        markError(next, "URL de upload n\xE3o configurada");
-        emit("error", toPublicFile(next));
-        if (typeof opts.onError === "function") opts.onError(toPublicFile(next), next.errorMessage);
-        return Promise.resolve();
-      }
-      processing = true;
-      next.status = "uploading";
-      setProgress(next, 0);
-      return uploadFormFile({
-        url: options.url,
-        file: next.file,
-        fileName: next.uploadName,
-        paramName: options.paramName,
-        timeout: options.timeout,
-        onProgress: (ratio) => setProgress(next, ratio),
-        xhrFactory: opts.xhrFactory || (() => new XMLHttpRequest())
-      }).then((xhr) => {
-        next.xhr = xhr;
-        markSuccess(next);
-        const pub = toPublicFile(next);
-        emit("success", pub);
-      }).catch((err) => {
-        next.xhr = err && err.xhr ? err.xhr : null;
-        markError(next, err && err.message || "Erro no envio");
-        emit("error", toPublicFile(next));
-      }).finally(() => {
-        processing = false;
-      });
-    }
-    function destroy() {
-      destroyed = true;
-      if (clickableEl) clickableEl.removeEventListener("click", onClickableClick);
-      if (fileInput && fileInput.parentNode) fileInput.parentNode.removeChild(fileInput);
-      removeAllFiles();
-      clickableEl = null;
-      fileInput = null;
-    }
-    function on(event, handler) {
-      if (!listeners[event]) listeners[event] = [];
-      listeners[event].push(handler);
-      return api;
-    }
-    const api = {
-      files: items,
-      options,
-      handleFiles,
-      addFile: (file) => toPublicFile(addItem(file)),
-      getQueuedFiles,
-      getAcceptedFiles,
-      getRejectedFiles,
-      removeAllFiles,
-      processQueue,
-      destroy,
-      on,
-      setAcceptedFiles,
-      /** Reorder queue to match DOM order of preview elements. */
-      reorderByPreview(orderedElements) {
-        const map = new Map(items.map((i2) => [i2.previewElement, i2]));
-        const next = [];
-        orderedElements.forEach((el) => {
-          const item = map.get(el);
-          if (item) next.push(item);
-        });
-        items.forEach((i2) => {
-          if (!next.includes(i2)) next.push(i2);
-        });
-        items.length = 0;
-        next.forEach((i2) => items.push(i2));
-      }
-    };
-    Object.defineProperty(api, "files", {
-      get() {
-        return items.map(toPublicFile);
-      }
-    });
-    bindClickable();
-    return api;
-  }
-
-  // src/shared/ui/sortable.js
-  function insertionTarget(y, rows) {
-    for (const row of rows) {
-      const r = row.getBoundingClientRect();
-      if (y < r.top + r.height / 2) return row;
-    }
-    return null;
-  }
-  function createSortable(container, opts = {}) {
-    const itemsSel = opts.items || "tr";
-    const handleSel = opts.handle || null;
-    let dragged = null;
-    function rows() {
-      return Array.prototype.slice.call(container.querySelectorAll(itemsSel));
-    }
-    function onDown(e) {
-      const handle = handleSel ? e.target.closest(handleSel) : e.target.closest(itemsSel);
-      if (!handle) return;
-      const row = handle.closest(itemsSel);
-      if (!row || !container.contains(row)) return;
-      dragged = row;
-      row.classList.add("seipro-sorting");
-      row.style.opacity = "0.5";
-      try {
-        handle.setPointerCapture(e.pointerId);
-      } catch (_) {
-      }
-      handle.addEventListener("pointermove", onMove);
-      handle.addEventListener("pointerup", onUp, { once: true });
-      e.preventDefault();
-    }
-    function onMove(e) {
-      if (!dragged) return;
-      const others = rows().filter((r) => r !== dragged);
-      const before = insertionTarget(e.clientY, others);
-      if (before) dragged.parentNode.insertBefore(dragged, before);
-      else dragged.parentNode.appendChild(dragged);
-    }
-    function onUp(e) {
-      if (!dragged) return;
-      dragged.classList.remove("seipro-sorting");
-      dragged.style.opacity = "";
-      const handle = handleSel ? e.target.closest(handleSel) : dragged;
-      if (handle) handle.removeEventListener("pointermove", onMove);
-      dragged = null;
-      if (typeof opts.onUpdate === "function") opts.onUpdate(rows());
-    }
-    container.addEventListener("pointerdown", onDown);
-    return { destroy() {
-      container.removeEventListener("pointerdown", onDown);
-    } };
-  }
-
-  // src/features/arvore/domain.js
-  function resolveDropzoneIcon(fileType, _isNewSEI) {
-    const type = String(fileType || "");
-    const gif = (name) => `/infra_css/imagens/${name}.gif`;
-    let urlIcon = gif("pdf");
-    if (type.indexOf("image/") !== -1) urlIcon = gif("imagem");
-    else if (type.indexOf("video/") !== -1) urlIcon = gif("video");
-    else if (type.indexOf("audio/") !== -1) urlIcon = gif("audio");
-    else if (type.indexOf("application/zip") !== -1) urlIcon = gif("zip");
-    else if (type.indexOf("text/htm") !== -1) urlIcon = gif("html");
-    else if (type.indexOf("text/plain") !== -1) urlIcon = gif("txt");
-    else if (type.indexOf("word") !== -1) urlIcon = gif("doc");
-    else if (type.indexOf("officedocument.presentation") !== -1) urlIcon = gif("pps");
-    else if (type.indexOf("text/csv") !== -1 || type.indexOf("sheet") !== -1) urlIcon = gif("xls");
-    return urlIcon;
-  }
-
-  // src/features/arvore/templates.js
-  function dropzoneInfoHoverHtml() {
-    return '<div id="dz-infoupload" class="dz-infoupload seipro-arvore-dz-info" data-seipro-arvore-upload-overlay>   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>   <span class="cancel seipro-arvore-dz-cancel" data-seipro-arvore-action="dropzone-cancel">       <i class="far fa-times-circle icon"></i>       <span class="label">CANCELAR</span>   </span></div>';
-  }
-  function uploadPreviewHomeHtml(opts = {}) {
-    const ifrTarget = opts.ifrTarget || "ifrVisualizacao";
-    const iconSrc = opts.iconSrc || "/infra_css/imagens/pdf.gif";
-    const iconData = opts.iconData || "imagens/pdf.gif";
-    const sizeLabel = formatFileSize(opts.size || 0);
-    const name = opts.name || "";
-    return '<div class="dz-preview dz-file-preview seipro-arvore-file-preview">   <div class="dz-details">       <span class="dz-error-mark"><i data-seipro-file-remove data-dz-remove class="fas fa-trash vermelhoColor" style="margin: 5px 8px;cursor: pointer; font-size: 10pt;"></i></span>       <span class="dz-error-message"><span data-seipro-file-error data-dz-errormessage></span></span>       <span class="dz-progress"><span class="dz-upload" data-seipro-file-progress data-dz-uploadprogress></span></span>       <a id="anchorImgID" data-img="' + iconData + '" style="margin-left: -4px;" class="clipboard">           <img class="dz-link-icon" src="' + iconSrc + '" align="absbottom" id="iconID">       </a>       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>       <a id="anchorID" target="' + ifrTarget + '" class="dz-filename">           <span data-dz-name title="">' + name.replace(/</g, "&lt;") + '</span>       </a>       <span class="dz-size" data-dz-size>' + sizeLabel + '</span>       <span class="dz-remove" data-seipro-file-remove data-dz-remove><i class="fas fa-trash-alt vermelhoColor" style="cursor:pointer"></i></span>   </div></div>';
-  }
-
-  // src/features/lista-processos/atividades-bridge.js
-  function atividadesApi() {
-    var root = typeof parent !== "undefined" && parent.SeiPro ? parent.SeiPro : typeof SeiPro !== "undefined" ? SeiPro : null;
-    var feature = root && root.features && root.features.atividades;
-    return feature && feature.api || null;
-  }
-  function callAtividades(name) {
-    var api = atividadesApi();
-    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
-    if (typeof fn !== "function") return void 0;
-    var args = Array.prototype.slice.call(arguments, 1);
-    return fn.apply(null, args);
-  }
-
-  // src/features/lista-processos/kanban-home.js
-  function addKanbanProc2(type = storeGroupTablePro(), loop = 3) {
-    if (typeof jKanban === "undefined") {
-      loadKanbanStylePro();
-      $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
-    }
-    if (!type || type == "all" || type == "") {
-      setOptionsPro("panelProcessosView", "Tabela");
-      var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
-      if (btnTabela) getPanelProc(btnTabela);
-    } else {
-      var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
-      if (type == "users") {
-        if (getOptionsPro("arrayListUsersSEI") && getOptionsPro("arrayListUsersSEI").length > 0) {
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
-          var itensKanban = $.map(getOptionsPro("arrayListUsersSEI"), function(v) {
-            return typeof getAtribuicaoDisplayLabel === "function" ? getAtribuicaoDisplayLabel(v.name, v.name, checkConfigValue("nomesusuarios")) : v.name;
-          });
-          itensKanban.unshift("");
-        } else if (loop > 0) {
-          getAjaxListaAtribuicao();
-          setTimeout(function() {
-            initAddKanbanProc(type, loop - 1);
-          }, 2e3);
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
-        }
-      } else if (type == "tags") {
-        if (getOptionsPro("listaMarcadores") && getOptionsPro("listaMarcadores").length > 0) {
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
-          var itensKanban = $.map(getOptionsPro("listaMarcadores"), function(v) {
-            return v.name;
-          });
-          itensKanban.unshift("");
-        } else if (loop > 0) {
-          getAjaxListaMarcador();
-          setTimeout(function() {
-            initAddKanbanProc(type, loop - 1);
-          }, 2e3);
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
-        }
-      } else {
-        var itensKanban = getListTypes(type);
-        $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
-      }
-      if (!!itensKanban && type != "") {
-        itensKanban = $.map(itensKanban, function(v, i2) {
-          return { order: i2, name: v, id: getTagName(v, type) };
-        });
-        var tr = tableProc.find("tr[data-tagname]:not(.tagintable)");
-        var itens = tr.map(function() {
-          var tagName = $(this).data("tagname");
-          var idTag = "id_" + tagName;
-          var itemBoard = $.grep(itensKanban, function(item) {
-            return item.id == tagName;
-          })[0];
-          var nameLabel = itemBoard && itemBoard.name !== "" ? itemBoard.name : "Sem Grupo";
-          var linkProc = $(this).find('a[href*="acao=procedimento_trabalhar"]');
-          var tip = extractTooltipToArray(linkProc.attr("onmouseover"));
-          tip = typeof tip !== "undefined" ? tip : false;
-          var linkParams = getParamsUrlPro(linkProc.attr("href"));
-          var id_protocolo = linkParams && typeof linkParams.id_procedimento !== "undefined" ? linkParams.id_procedimento : false;
-          if (id_protocolo !== false && id_protocolo !== "false" && id_protocolo !== "" && id_protocolo !== null && typeof id_protocolo !== "undefined") {
-            return {
-              id: idTag,
-              title: nameLabel,
-              id_protocolo: String(id_protocolo),
-              processo: linkProc.text(),
-              especificacao: tip ? tip[0] : false,
-              tipo: tip ? tip[1] : false,
-              html_icons: $(this).find("td").eq(1).html(),
-              html_proc: $(this).find("td").eq(2).html(),
-              html_atribuicao: $(this).find("td").eq(3).html(),
-              html_prazo: $(this).find("td.seipro-prazo-box-display").html(),
-              color: $(this).data("color") ? $(this).css("color") : false
-            };
-          }
-        }).get();
-        $("#processosKanban").remove();
-        $("#newFiltro").after('<div id="processosKanban" style="display: inline-block;margin-top: 60px;width: 100%;"></div>');
-        var bords_list = $.map(itensKanban, function(v, i2) {
-          var item = $.grep(itens, function(row) {
-            return row.id == "id_" + v.id;
-          });
-          var title = v.name == "" ? "Sem Grupo" : v.name;
-          title = (type == "arrivaldate" || type == "acessdate" || type == "senddate" || type == "createdate" || type == "deadline") && title.indexOf(".") !== -1 ? title.split(".")[1] : title;
-          var boardOrderStore = getOptionsPro("panelProcessosOrder_" + type);
-          var boardOrderItem = boardOrderStore && $.isArray(boardOrderStore) ? $.grep(boardOrderStore, function(row) {
-            return row.id == v.id;
-          })[0] : null;
-          var order_board = boardOrderItem && typeof boardOrderItem.order !== "undefined" ? boardOrderItem.order : i2;
-          order_board = order_board === null ? 9999 : order_board;
-          var collapse_board = boardOrderItem && typeof boardOrderItem.collapse !== "undefined" ? boardOrderItem.collapse : false;
-          var itens_board = $.map(item, function(value, index) {
-            if (!value || !value.id_protocolo || value.id_protocolo === "false") {
-              return;
-            }
-            var iten_urgente = value.especificacao && value.especificacao.toLowerCase().indexOf("(urgente)") !== -1 ? true : false;
-            var item_pinboard = false;
-            var order_item = false;
-            if (boardOrderItem && $.isArray(boardOrderItem.itens)) {
-              order_item = $.grep(boardOrderItem.itens, function(row) {
-                return row.id == String(value.id_protocolo);
-              })[0] || false;
-            }
-            item_pinboard = order_item === null || order_item === false ? item_pinboard : order_item.pinboard;
-            order_item = order_item === null || order_item === false ? 9999 : order_item.order;
-            order_item = iten_urgente ? -1 : order_item;
-            var pinBoard = '<span style="float: right;margin: -5px -10px 0 0;" class="kanban-pinboard info_noclick"><a class="newLink info_noclick ' + (item_pinboard ? "newLink_active" : "") + '" onclick="pinKanbanItensProc(this, ' + value.id_protocolo + `)" onmouseover="return infraTooltipMostrar('` + (item_pinboard ? "Remover do topo" : "Fixar no topo") + `');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-thumbtack cinzaColor"></i></a></span>`;
-            return {
-              id: value.id_protocolo,
-              order: order_item,
-              title: pinBoard + '<div class="kanban-content">   <div class="kanban-title-card content_edit" data-field="assunto" data-id="' + value.id_protocolo + '">       <span class="info" data-type="proc" style="width: 75%;">           ' + value.html_proc + '           <a class="newLink info_noclick followLinkNewtab" href="controlador.php?acao=procedimento_trabalhar&id_procedimento=' + value.id_protocolo + `" onmouseover="return infraTooltipMostrar('Abrir em nova aba');" onmouseout="return infraTooltipOcultar();" target="_blank"><i class="fas fa-external-link-alt" style="font-size: 90%; text-decoration: underline;"></i></a>       </span>   </div>   <div class="kanban-description">       <span class="sub info_noclick" data-type="especificacao">` + value.especificacao + '</span>       <span class="sub info_noclick" data-type="tipo">' + value.tipo + '</span>       <span class="sub info_noclick" data-type="atribuicao">' + value.html_atribuicao + '</span>       <span class="sub info_noclick" data-type="icons">' + value.html_icons + '</span>       <span class="sub info_noclick" data-type="prazo">' + value.html_prazo + "</span>   </div></div>",
-              click: function(el) {
-                var id_protocolo = el.dataset.eid;
-                var checkOver = $(el).find(".info_noclick:hover").length > 0 ? $(el).find(".info_noclick:hover") : false;
-                var newTab = $(el).find(".followLinkNewtab:hover").length > 0 ? $(el).find(".followLinkNewtab:hover") : false;
-                if (!dialogBoxPro && !checkOver && id_protocolo) window.location.href = "controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo;
-                if (!dialogBoxPro && id_protocolo && newTab) openLinkNewTab("controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo);
-              },
-              class: iten_urgente ? "urgente" : ""
-            };
-          });
-          itens_board.sort(function(a, b) {
-            return a.order - b.order;
-          });
-          if (v.id == "SemGrupo" && itens_board.length === 0) {
-            return null;
-          }
-          return {
-            id: v.id,
-            title,
-            order: order_board,
-            class: "proc_" + type,
-            color: typeof item[0] !== "undefined" ? item[0].color : false,
-            collapse: collapse_board,
-            item: itens_board
-          };
-        });
-        bords_list.sort(function(a, b) {
-          return a.order - b.order;
-        });
-        var kanban = new jKanban({
-          element: "#processosKanban",
-          gutter: "10px",
-          widthBoard: "calc(25% - 20px)",
-          // responsivePercentage: true,
-          itemHandleOptions: {
-            enabled: true
-          },
-          dragEl: function(el, source) {
-            var sourceEl = source.parentElement.getAttribute("data-id");
-            var id_protocolo = el.dataset.eid;
-            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
-            kanbanProcessosMoving = { source: sourceEl, id: el.dataset.eid, order: elemItem.index() };
-          },
-          dropEl: function(el, target, source, sibling) {
-            updateOrderKanbanBoardProc();
-            var targetEl = target.parentElement.getAttribute("data-id");
-            var sourceEl = source.parentElement.getAttribute("data-id");
-            var id_protocolo = el.dataset.eid;
-            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
-            var titleSource = elemItem.closest(".kanban-board").find(".kanban-title-board").text();
-            var elemContent = elemItem.find(".kanban-content");
-            var elemProc = elemContent.find('span[data-type="proc"]');
-            var elemUser = elemContent.find('span[data-type="atribuicao"]');
-            var elemIcons = elemContent.find('span[data-type="icons"]');
-            var elemTypes = elemContent.find('span[data-type="tipo"]');
-            if (type == "users" && sourceEl != targetEl) {
-              var arrayListUsersSEI = getOptionsPro("arrayListUsersSEI");
-              if (arrayListUsersSEI) {
-                var userMatch = $.grep(arrayListUsersSEI, function(item) {
-                  return item.name && item.name.indexOf(targetEl) !== -1;
-                })[0];
-                var idUser = userMatch ? userMatch.value : false;
-                idUser = idUser == "SemGrupo" ? "null" : idUser;
-                var linkAtribuicao = tableProc.find('a[href*="&id_usuario_atribuicao=' + idUser + '"]').attr("href");
-                elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
-                updateDadosArvore("Atribuir Processo", "selAtribuicao", idUser, id_protocolo, function() {
-                  if (targetEl != "SemGrupo") {
-                    var targetAtribuicao = '(<a href="' + linkAtribuicao + '" title="Atribu\xEDdo para ' + targetEl + '" class="ancoraSigla">' + targetEl + "</a>)";
-                    elemUser.html(targetAtribuicao);
-                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html(targetAtribuicao);
-                  } else {
-                    elemUser.html("");
-                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html("");
-                  }
-                  elemProc.find("i.fa-sync").remove();
-                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
-                  setTimeout(function() {
-                    elemProc.find("i.fa-check-double").remove();
-                  }, 2e3);
-                });
-              }
-            } else if (type == "tags" && sourceEl != targetEl) {
-              var listMarcadores = getOptionsPro("listaMarcadores");
-              listMarcadores = listMarcadores ? $.map(listMarcadores, function(v) {
-                return { name: getTagName(v.name, type), value: v.value, img: v.img };
-              }) : false;
-              listMarcadores = listMarcadores !== null ? listMarcadores : false;
-              var arrayMarcador = listMarcadores ? $.grep(listMarcadores, function(item) {
-                return item.name == targetEl;
-              })[0] : false;
-              var valueMarcador = arrayMarcador !== null && arrayMarcador ? arrayMarcador.value : false;
-              var elemIconTag = elemIcons.find('a[href*="acao=andamento_marcador_gerenciar"]');
-              var elemIconTagTable = tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).find('a[href*="acao=andamento_marcador_gerenciar"]');
-              var valueText = elemIconTag.attr("onmouseover");
-              valueText = typeof valueText !== "undefined" ? extractTooltipToArray(valueText) : false;
-              valueText = valueText ? valueText[0] : false;
-              valueText = typeof valueText !== "undefined" && valueText ? valueText : "";
-              if (valueMarcador || targetEl == "SemGrupo") {
-                var valuesIframe = [
-                  { element: "txaTexto", value: valueText },
-                  { element: "hdnIdMarcador", value: targetEl == "SemGrupo" ? "" : valueMarcador }
-                ];
-                updateDadosArvoreMult("Gerenciar Marcador", valuesIframe, id_protocolo, function() {
-                  var arrayListMarcadores = sessionStorageRestorePro("dadosMarcadoresProcessoPro");
-                  var markerStyle = arrayListMarcadores && valueMarcador ? $.grep(arrayListMarcadores, function(item) {
-                    return item.icon == arrayMarcador.img;
-                  })[0] : null;
-                  var styleMarcador = markerStyle && typeof markerStyle.style !== "undefined" ? markerStyle.style : null;
-                  styleMarcador = styleMarcador !== null ? styleMarcador : "";
-                  if (targetEl != "SemGrupo" && sourceEl != "SemGrupo") {
-                    elemIconTag.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
-                    elemIconTagTable.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
-                  } else if (targetEl != "SemGrupo" && sourceEl == "SemGrupo") {
-                    var targetMarcador = '<a href="#controlador.php?acao=andamento_marcador_gerenciar&acao_origem=procedimento_controlar&acao_retorno=procedimento_controlar&id_procedimento=' + id_protocolo + `" onmouseover="return infraTooltipMostrar('` + valueText + "','" + titleSource + `');" onmouseout="return infraTooltipOcultar();" data-color="true" style="` + styleMarcador + '"><img src="' + arrayMarcador.img + '" class="imagemStatus"></a>';
-                    elemIcons.append(targetMarcador);
-                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).append(targetMarcador);
-                  } else if (targetEl == "SemGrupo") {
-                    elemIconTag.remove();
-                    elemIconTagTable.remove();
-                  }
-                  elemProc.find("i.fa-sync").remove();
-                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
-                  setTimeout(function() {
-                    elemProc.find("i.fa-check-double").remove();
-                  }, 2e3);
-                  getAllMarcadoresHome();
-                });
-              }
-            } else if (type == "types" && sourceEl != targetEl && targetEl != "SemGrupo") {
-              elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
-              initListTypesSEI(function() {
-                var tipoMatch = typeof arrayListTypesSEI.selectTipoProc !== "undefined" ? $.grep(arrayListTypesSEI.selectTipoProc, function(item) {
-                  return item.name == titleSource;
-                })[0] : null;
-                var idTypeProc = tipoMatch ? tipoMatch.value : false;
-                if (idTypeProc) {
-                  updateDadosArvore("Consultar/Alterar Processo", "selTipoProcedimento", idTypeProc, id_protocolo, function() {
-                    elemTypes.text(titleSource);
-                    elemProc.find("i.fa-sync").remove();
-                    elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
-                    setTimeout(function() {
-                      elemProc.find("i.fa-check-double").remove();
-                    }, 2e3);
-                  });
-                } else {
-                  elemProc.find("i.fa-sync").remove();
-                  elemProc.prepend('<i class="fas fa-times vemelhoColor" style="margin-right: 5px;"></i>');
-                  setTimeout(function() {
-                    elemProc.find("i.fa-times").remove();
-                  }, 2e3);
-                }
-              });
-            } else if (sourceEl != targetEl) {
-              cancelMoveKanbanItensProc();
-            }
-            kanbanProcessosMoving = false;
-          },
-          dragendBoard: function(el) {
-            updateOrderKanbanBoardProc();
-          },
-          boards: bords_list
-        });
-        kanbanProcessos = kanban;
-        tableProc.hide();
-        updateCountKanbanBoardProc();
-      }
-    }
-  }
-  function cancelMoveKanbanItensProc() {
-    var itemMove = kanbanProcessosMoving;
-    if (itemMove && $("#processosKanban").is(":visible")) {
-      var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + itemMove.source + "'] | [0].item | [?id=='" + itemMove.id + "'] | [0]");
-      item = item == null ? false : item;
-      kanbanProcessos.removeElement(item.id);
-      kanbanProcessos.addElement(itemMove.source, item, itemMove.order);
-    }
-  }
-  function pinKanbanItensProc(this_, id_protocolo) {
-    var _this = $(this_);
-    var _parent = _this.closest(".kanban-board");
-    var _hasActive = _this.hasClass("newLink_active");
-    var source = _parent.data("id");
-    var order = _hasActive ? -1 : 0;
-    var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + source + "'] | [0].item | [?id=='" + id_protocolo + "'] | [0]");
-    item = item == null ? false : item;
-    if (item) {
-      kanbanProcessos.removeElement(item.id);
-      kanbanProcessos.addElement(source, item, order);
-      if (!_hasActive) {
-        $("#processosKanban .kanban-container").animate({ scrollTop: 0 }, 500, function() {
-          $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').addClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Remover do topo')");
-          updateOrderKanbanBoardProc();
-        });
-      } else {
-        $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').removeClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Fixar no topo')");
-        updateOrderKanbanBoardProc();
-      }
-      if (typeof infraTooltipOcultar === "function") infraTooltipOcultar();
-    }
-  }
-  function updateOrderKanbanBoardProc() {
-    var type = storeGroupTablePro();
-    var arrayOrder = $("#processosKanban .kanban-board").map(function() {
-      var _this = $(this);
-      var itens = _this.find(".kanban-item").map(function(i2) {
-        return { id: String($(this).data("eid")), order: i2, pinboard: $(this).find(".kanban-pinboard a").hasClass("newLink_active") };
-      }).get();
-      var boards = { id: _this.data("id"), order: _this.data("order"), collapse: _this.data("collapse"), itens };
-      return boards;
-    }).get();
-    setOptionsPro("panelProcessosOrder_" + type, arrayOrder);
-  }
-  function collapseKanbanBoardProc(this_) {
-    var _this = $(this_);
-    var _parent = _this.closest(".kanban-board");
-    var _data = _parent.data();
-    _parent.attr("data-collapse", _data.collapse ? false : true).data("collapse", _data.collapse ? false : true);
-    _parent.find(".kanban-collapse i").attr("class", _data.collapse ? "fas fa-plus-square azulColor" : "fas fa-minus-square cinzaColor");
-    updateOrderKanbanBoardProc();
-  }
-  function updateCountKanbanBoardProc() {
-    if (!kanbanProcessos || !kanbanProcessos.options || !$.isArray(kanbanProcessos.options.boards)) {
-      return;
-    }
-    $.each(kanbanProcessos.options.boards, function(i2, v) {
-      var elemBoard = $('#processosKanban .kanban-board[data-id="' + v.id + '"]');
-      var countBoard = elemBoard.find(".kanban-item:visible").length;
-      var iconCollapse = elemBoard.find(".kanban-collapse").length ? false : '<div class="kanban-collapse" onclick="collapseKanbanBoardProc(this)"><i class="fas fa-' + (v.collapse ? "plus" : "minus") + "-square " + (v.collapse ? "azulColor" : "cinzaColor") + '"></i></div>';
-      elemBoard.attr("data-collapse", v.collapse).find(".kanban-title-board").attr("data-count", countBoard).after(iconCollapse);
-    });
-  }
-
-  // src/features/lista-processos/body.js
-  installListaProcessosState();
-  function loadKanbanStylePro2() {
-    var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
-    if (!base || typeof loadStylePro !== "function") return;
-    loadStylePro(base + "css/jkanban.min.css");
-  }
-  function normalizeHomeFilterText2(value) {
-    return normalizeHomeFilterText(value);
-  }
-  function normalizeHomeFilterKey2(value) {
-    return normalizeHomeFilterKey(value);
-  }
-  function normalizeProcessoAtribuicaoText(link) {
-    var target = $(link);
-    var title = target.attr("title");
-    if (typeof title !== "undefined" && title !== "") {
-      title = title.replace("Atribu\xEDdo para", "").trim().split(/(\s).+\s/).join("");
-      if (title) {
-        return title;
-      }
-    }
-    return target.text().trim();
-  }
-  function listaAgrupamentoIO2() {
-    return listaAgrupamentoIO();
-  }
-  function readGroupOrderLegacy() {
-    return readGroupOrder(typeof getOptionsPro === "function" ? getOptionsPro : null, "asc");
-  }
-  function quoteInlineJsText2(text) {
-    return quoteInlineJsText(text);
-  }
+  // src/features/lista-processos/runtime-maps.js
   var objProcessosUnidadePro = false;
   var arrayProcessosUnidadePro = false;
   try {
@@ -1117,17 +341,30 @@
       }, 500);
     }
   }
+
+  // src/features/lista-processos/templates.js
+  function homeFilterSelectHtml() {
+    return '<select id="filterTableHome" class="selectPro seipro-lista-filter" style="width:250px;margin-right:20px !important;" onchange="getFilterTableHome(this)" data-placeholder="Filtrar processos...">';
+  }
+  function assignmentFilterSelectHtml() {
+    return '<select id="filterAssignmentTableHome" class="selectPro seipro-lista-filter-assignment" style="width:250px;margin-right:20px !important;" onchange="getFilterAssignmentTableHome(this)" data-placeholder="Filtrar atribui\xE7\xE3o...">';
+  }
+  function csvExportLinkHtml() {
+    return `<a class="newLink seipro-lista-csv" onclick="getTableProcessosCSV()" id="processoToCSV" onmouseover="return infraTooltipMostrar('Exportar informa\xE7\xF5es de processos em planilha CSV');" onmouseout="return infraTooltipOcultar();" style="margin: 0;font-size: 10pt;float: right;"><i class="fas fa-file-download cinzaColor"></i></a>`;
+  }
+
+  // src/features/lista-processos/grouping-select.js
   function isGroupCollapsedLegacy(tagName) {
-    var io = listaAgrupamentoIO2();
+    var io = listaAgrupamentoIO();
     return io && typeof io.isGroupCollapsed === "function" ? io.isGroupCollapsed(getOptionsPro, tagName) : getOptionsPro("panelGroup_" + tagName);
   }
   function persistGroupCollapsedLegacy(tagName) {
-    var io = listaAgrupamentoIO2();
+    var io = listaAgrupamentoIO();
     if (io && typeof io.persistGroupCollapsed === "function") return io.persistGroupCollapsed(setOptionsPro, tagName);
     setOptionsPro("panelGroup_" + tagName, true);
   }
   function clearGroupCollapsedLegacy(tagName) {
-    var io = listaAgrupamentoIO2();
+    var io = listaAgrupamentoIO();
     if (io && typeof io.clearGroupCollapsed === "function") return io.clearGroupCollapsed(removeOptionsPro, tagName);
     removeOptionsPro("panelGroup_" + tagName);
   }
@@ -1167,7 +404,7 @@
   function getProcessoLinkFromGroupRow(row) {
     return $(row).find('a[href*="acao=procedimento_trabalhar"], a[href*="controlador.php?acao=procedimento_trabalhar"]').first();
   }
-  function getListTypes2(acaoType) {
+  function getListTypes(acaoType) {
     var orderbyTableGroup2 = readGroupOrderLegacy();
     var arrayTag = [""];
     if (acaoType == "tags") {
@@ -1589,7 +826,7 @@
     updateGroupTable($("#selectGroupTablePro"));
   }
   function getArrayProcessoRecebido(href) {
-    var io = listaAgrupamentoIO2();
+    var io = listaAgrupamentoIO();
     if (io && typeof io.readReceivedProcess === "function") {
       return io.readReceivedProcess(localStorageRestorePro, getParamsUrlPro, jmespath, href);
     }
@@ -1599,7 +836,7 @@
     return dadosRecebido;
   }
   function updateGroupTablePro(valueSelect, mode) {
-    var io = listaAgrupamentoIO2();
+    var io = listaAgrupamentoIO();
     var selectGroup = io && typeof io.readSelectedGroup === "function" ? io.readSelectedGroup(localStorageRestorePro) : localStorageRestorePro("selectGroupTablePro");
     if ($.isArray(selectGroup) && selectGroup.length > 0) {
       if (jmespath.search(selectGroup, "[?unidade=='" + siglaUnidadeAtual + "'].unidade | length(@)") > 0) {
@@ -1625,9 +862,9 @@
       }
     }
   }
-  function storeGroupTablePro2() {
+  function storeGroupTablePro() {
     if (typeof localStorageRestorePro !== "undefined" && localStorageRestorePro("selectGroupTablePro") != null) {
-      var io = listaAgrupamentoIO2();
+      var io = listaAgrupamentoIO();
       var selectGroup = io && typeof io.readSelectedGroup === "function" ? io.readSelectedGroup(localStorageRestorePro) : localStorageRestorePro("selectGroupTablePro");
       if ($.isArray(selectGroup) && typeof jmespath !== "undefined" && jmespath.search(selectGroup, "[?unidade=='" + siglaUnidadeAtual + "'].unidade | [0]") == siglaUnidadeAtual) {
         return jmespath.search(selectGroup, "[?unidade=='" + siglaUnidadeAtual + "'].selected | [0]");
@@ -1673,18 +910,18 @@
         htmlControl += selectAssignmentFilterHome();
       }
       if (enableGroupTable) {
-        var statusTableTags = storeGroupTablePro2() == "tags" ? "selected" : "";
-        var statusTableTypes = storeGroupTablePro2() == "types" ? "selected" : "";
-        var statusTableUsers = storeGroupTablePro2() == "users" ? "selected" : "";
-        var statusTableCheckpoints = storeGroupTablePro2() == "checkpoints" ? "selected" : "";
-        var statusTableArrivaldate = storeGroupTablePro2() == "arrivaldate" ? "selected" : "";
-        var statusTableSenddate = storeGroupTablePro2() == "senddate" ? "selected" : "";
-        var statusTableDeadline = storeGroupTablePro2() == "deadline" ? "selected" : "";
-        var statusTableAcessdate = storeGroupTablePro2() == "acessdate" ? "selected" : "";
-        var statusTableDepartSend = storeGroupTablePro2() == "senddepart" ? "selected" : "";
-        var statusTableCreatedate = storeGroupTablePro2() == "createdate" ? "selected" : "";
-        var statusTableAcompEsp = storeGroupTablePro2() == "acompanhamentoesp" ? "selected" : "";
-        var statusTableAll = storeGroupTablePro2() == "all" ? "selected" : "";
+        var statusTableTags = storeGroupTablePro() == "tags" ? "selected" : "";
+        var statusTableTypes = storeGroupTablePro() == "types" ? "selected" : "";
+        var statusTableUsers = storeGroupTablePro() == "users" ? "selected" : "";
+        var statusTableCheckpoints = storeGroupTablePro() == "checkpoints" ? "selected" : "";
+        var statusTableArrivaldate = storeGroupTablePro() == "arrivaldate" ? "selected" : "";
+        var statusTableSenddate = storeGroupTablePro() == "senddate" ? "selected" : "";
+        var statusTableDeadline = storeGroupTablePro() == "deadline" ? "selected" : "";
+        var statusTableAcessdate = storeGroupTablePro() == "acessdate" ? "selected" : "";
+        var statusTableDepartSend = storeGroupTablePro() == "senddepart" ? "selected" : "";
+        var statusTableCreatedate = storeGroupTablePro() == "createdate" ? "selected" : "";
+        var statusTableAcompEsp = storeGroupTablePro() == "acompanhamentoesp" ? "selected" : "";
+        var statusTableAll = storeGroupTablePro() == "all" ? "selected" : "";
         var panelKanbanHome = selectPanelKanbanHome();
         htmlControl += '   <select id="selectGroupTablePro" class="groupTable selectPro" onchange="updateGroupTable(this)" data-placeholder="Agrupar processos...">     <option value="">&nbsp;</option>     <option value="">Sem agrupamento</option>     <option value="all" ' + statusTableAll + '>Agrupar processos recebidos/gerados</option>     <option value="deadline" ' + statusTableDeadline + '>Agrupar processos por prazo</option>     <option value="createdate" ' + statusTableCreatedate + '>Agrupar processos por data de autua\xE7\xE3o</option>     <option value="arrivaldate" ' + statusTableArrivaldate + '>Agrupar processos por data de recebimento</option>     <option value="senddate" ' + statusTableSenddate + '>Agrupar processos por data de envio</option>     <option value="acessdate" ' + statusTableAcessdate + '>Agrupar processos por data do \xFAltimo acesso</option>     <option value="tags" ' + statusTableTags + '>Agrupar processos por marcadores</option>     <option value="types" ' + statusTableTypes + '>Agrupar processos por tipo</option>     <option value="users" ' + statusTableUsers + '>Agrupar processos por respons\xE1vel</option>     <option value="checkpoints" ' + statusTableCheckpoints + '>Agrupar processos por ponto de controle</option>     <option value="senddepart" ' + statusTableDepartSend + '>Agrupar processos por unidade de envio</option>     <option value="acompanhamentoesp" ' + statusTableAcompEsp + ">Agrupar processos por acompanhamento especial</option>  </select>  " + panelKanbanHome + "  " + csvExportLinkHtml();
       }
@@ -1788,11 +1025,11 @@
         setOptionsPro("panelProcessosView", "Tabela");
         setTimeout(function() {
           var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
-          if (btnTabela) getPanelProc2(btnTabela);
+          if (btnTabela) getPanelProc(btnTabela);
         }, 500);
       }
       if (getOptionsPro("panelProcessosView") == "Quadro") {
-        initAddKanbanProc2(valueSelect);
+        initAddKanbanProc(valueSelect);
         updateGroupTablePro(valueSelect, "insert");
       } else {
         if (typeof valueSelect !== "undefined" && valueSelect != "") {
@@ -1816,7 +1053,7 @@
     }
   }
   function getTableTag(type) {
-    var listTags = getListTypes2(type);
+    var listTags = getListTypes(type);
     $.each(listTags, function(i2, val) {
       getUniqueTableTag(i2, val, type);
     });
@@ -1852,6 +1089,19 @@
   }
   function checkLoadedTableSorter() {
     return typeof tableHomePro !== "undefined" && typeof tableHomePro[0] !== "undefined" && typeof tableHomePro[0].data("tablesorter") !== "undefined" && typeof tableHomePro[0].data("tablesorter").$filters !== "undefined";
+  }
+
+  // src/features/lista-processos/home-filters.js
+  function normalizeProcessoAtribuicaoText(link) {
+    var target = $(link);
+    var title = target.attr("title");
+    if (typeof title !== "undefined" && title !== "") {
+      title = title.replace("Atribu\xEDdo para", "").trim().split(/(\s).+\s/).join("");
+      if (title) {
+        return title;
+      }
+    }
+    return target.text().trim();
   }
   function updateHomeFilterCaption(table, filteredRows) {
     var caption = table.find("caption.infraCaption").eq(0);
@@ -1918,16 +1168,16 @@
     return "SemGrupo";
   }
   function rowMatchesHomeFilter(row, value, dataType) {
-    var normalizedValue = normalizeHomeFilterText2(value);
+    var normalizedValue = normalizeHomeFilterText(value);
     if (dataType == "user") {
-      return normalizeHomeFilterText2(getProcessoAtribuicaoValue(row)) === normalizedValue;
+      return normalizeHomeFilterText(getProcessoAtribuicaoValue(row)) === normalizedValue;
     }
     if (dataType == "tag") {
       var tagName = getHomeRowTagValue(row);
       if (value === "null") {
         return tagName === "SemGrupo" || row.find('a[href*="acao=andamento_marcador_gerenciar"]').length === 0;
       }
-      return normalizeHomeFilterKey2(tagName) === normalizeHomeFilterKey2(value);
+      return normalizeHomeFilterKey(tagName) === normalizeHomeFilterKey(value);
     }
     if (dataType == "proc") {
       if (normalizedValue === "nao visualizado") {
@@ -1937,7 +1187,7 @@
       var processText = processLink.text() || "";
       var tooltip = extractTooltipToArray(processLink.attr("onmouseover"));
       var tooltipText = tooltip && tooltip.length > 0 ? tooltip.join(" ") : "";
-      var rowText = normalizeHomeFilterText2(processText + " " + tooltipText + " " + row.text());
+      var rowText = normalizeHomeFilterText(processText + " " + tooltipText + " " + row.text());
       return rowText.indexOf(normalizedValue) !== -1;
     }
     return true;
@@ -2167,6 +1417,22 @@
     }
     getFilterAssignmentTableHome(target);
   }
+
+  // src/features/lista-processos/atividades-bridge.js
+  function atividadesApi() {
+    var root = typeof parent !== "undefined" && parent.SeiPro ? parent.SeiPro : typeof SeiPro !== "undefined" ? SeiPro : null;
+    var feature = root && root.features && root.features.atividades;
+    return feature && feature.api || null;
+  }
+  function callAtividades(name) {
+    var api = atividadesApi();
+    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
+    if (typeof fn !== "function") return void 0;
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fn.apply(null, args);
+  }
+
+  // src/features/lista-processos/pagination-tabs.js
   function initDadosProcesso(TimeOut2 = 9e3) {
     if (TimeOut2 <= 0) {
       return;
@@ -2374,6 +1640,8 @@
       alertaBoxPro("Sucess", "check-circle", "Informa\xE7\xF5es editadas com sucesso!");
     }
   }
+
+  // src/features/lista-processos/panels-csv.js
   function checkLoadConfigSheets(TimeOut2 = 9e3) {
     if (TimeOut2 <= 0) {
       return;
@@ -2426,7 +1694,7 @@
       $("#frmProcedimentoControlar").moveTo("#processosSEIPro");
       $("#divInfraBarraLocalizacao").moveTo("#processosSEIPro");
       if (SeiPro.sei.adapter.isNewSEI() && getOptionsPro(elementControleProc) == "hide") $(idControleProc).addClass("displayNone");
-      if (!checkLoadedTableSorter() && (typeof storeGroupTablePro2() === "undefined" || storeGroupTablePro2() == "")) removeAllTags(false, 3);
+      if (!checkLoadedTableSorter() && (typeof storeGroupTablePro() === "undefined" || storeGroupTablePro() == "")) removeAllTags(false, 3);
     }
   }
   function insertDivPanel() {
@@ -2443,7 +1711,7 @@
       if ($("#tblMarcadores").length == 0) {
         insertDivPanelControleProc();
         setSortDivPanel();
-        if (!checkLoadedTableSorter() && (typeof storeGroupTablePro2() === "undefined" || storeGroupTablePro2() == "")) removeAllTags(true, 4);
+        if (!checkLoadedTableSorter() && (typeof storeGroupTablePro() === "undefined" || storeGroupTablePro() == "")) removeAllTags(true, 4);
       }
     } else {
       setTimeout(function() {
@@ -2526,6 +1794,8 @@
       _this.addClass("newLink_active");
     }
   }
+
+  // src/features/lista-processos/table-sorter-home.js
   function initTableSorterHome(TimeOut2 = 1e3) {
     if (TimeOut2 <= 0) {
       return;
@@ -2883,8 +2153,15 @@
       });
     }
   }
+
+  // src/features/lista-processos/panel-kanban-chrome.js
+  function loadKanbanStylePro() {
+    var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
+    if (!base || typeof loadStylePro !== "function") return;
+    loadStylePro(base + "css/jkanban.min.css");
+  }
   function selectPanelKanbanHome() {
-    var type = storeGroupTablePro2();
+    var type = storeGroupTablePro();
     type = !type || type == "all" || type == "" ? false : true;
     var html = '<div id="processosProActions" class="panelHome panelHomeProcessos" style="' + (type ? "display: inline-block;" : "display:none;") + ' vertical-align: middle; margin-left: 10px; width: auto;">    <div class="btn-group processosBtnPanel" role="group" style="margin-right: 10px;">       <button type="button" data-act="panel-proc" data-value="Tabela" class="btn btn-sm btn-light ' + (getOptionsPro("panelProcessosView") == "Tabela" || !getOptionsPro("panelProcessosView") ? "active" : "") + '"><i class="fas fa-table" style="color: #888;"></i> <span class="text">Tabela</span></button>       <button type="button" data-act="panel-proc" data-act-dbl="panel-proc-refresh" title="D\xEA um duplo clique para atualizar o quadro" data-value="Quadro" class="btn btn-sm btn-light ' + (getOptionsPro("panelProcessosView") == "Quadro" ? "active" : "") + '"><i class="fas fa-project-diagram" style="color: #888;"></i> <span class="text">Quadro</span></button>    </div></div>';
     return html;
@@ -2892,15 +2169,15 @@
   function removeDataPanelProc(_this) {
     removeOptionsPro("listaMarcadores");
     removeOptionsPro("arrayListUsersSEI");
-    getPanelProc2(_this);
+    getPanelProc(_this);
   }
-  function getPanelProc2(this_) {
+  function getPanelProc(this_) {
     var data = $(this_).data();
     var mode = data.value;
     $(this_).closest("#processosProActions").find(".btn.active").removeClass("active");
     $(this_).addClass("active");
     if (mode == "Quadro") {
-      var type = storeGroupTablePro2();
+      var type = storeGroupTablePro();
       if (!type || type == "all" || type == "") {
         var selectGroupTablePro = $("#selectGroupTablePro");
         selectGroupTablePro.val("tags").trigger("change");
@@ -2914,15 +2191,15 @@
           }).trigger("chosen:updated");
         }
         setTimeout(function() {
-          initAddKanbanProc2();
+          initAddKanbanProc();
         }, 500);
       } else {
-        initAddKanbanProc2();
+        initAddKanbanProc();
       }
     } else {
       $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").show();
       $("#processosKanban").remove();
-      initTableTag(storeGroupTablePro2());
+      initTableTag(storeGroupTablePro());
     }
     setOptionsPro("panelProcessosView", mode);
   }
@@ -2934,7 +2211,7 @@
       var el = ev.target && ev.target.closest && ev.target.closest('[data-act="panel-proc"]');
       if (!el || !target.contains(el)) return;
       ev.preventDefault();
-      getPanelProc2(el);
+      getPanelProc(el);
     });
     target.addEventListener("dblclick", function(ev) {
       var el = ev.target && ev.target.closest && ev.target.closest('[data-act-dbl="panel-proc-refresh"]');
@@ -2944,22 +2221,24 @@
     });
   }
   installPanelProcDelegation(document);
-  function initAddKanbanProc2(type = storeGroupTablePro2(), loop = 3, TimeOut2 = 9e3) {
+  function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut2 = 9e3) {
     if (TimeOut2 <= 0) {
       return;
     }
-    loadKanbanStylePro2();
+    loadKanbanStylePro();
     if (typeof jKanban !== "undefined") {
       addKanbanProc(type, loop);
     } else {
-      loadKanbanStylePro2();
+      loadKanbanStylePro();
       if (typeof jKanban === "undefined") $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
       setTimeout(function() {
-        initAddKanbanProc2(type, loop, TimeOut2 - 100);
+        initAddKanbanProc(type, loop, TimeOut2 - 100);
         if (typeof verifyConfigValue !== "undefined" && verifyConfigValue("debugpage")) console.log("Reload initAddKanbanProc");
       }, 500);
     }
   }
+
+  // src/features/lista-processos/marcadores-distrib.js
   function addAcompanhamentoEspIcon() {
     var storeRecebimento = typeof localStorageRestorePro !== "undefined" && typeof localStorageRestorePro("configDataRecebimentoPro") !== "undefined" && !$.isEmptyObject(localStorageRestorePro("configDataRecebimentoPro")) ? localStorageRestorePro("configDataRecebimentoPro") : [];
     var array_procedimentos = [];
@@ -3218,7 +2497,7 @@
       }
     });
   }
-  function getAllMarcadoresHome2() {
+  function getAllMarcadoresHome() {
     var arrayMarcadores = [];
     $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").find("tr").each(function() {
       var _processo = $(this).find('a[href*="acao=procedimento_trabalhar"]');
@@ -3243,7 +2522,7 @@
       return;
     }
     if (typeof getParamsUrlPro !== "undefined") {
-      getAllMarcadoresHome2();
+      getAllMarcadoresHome();
     } else {
       setTimeout(function() {
         initAllMarcadoresHome(TimeOut2 - 100);
@@ -3255,6 +2534,383 @@
     $("a div.urgentePro").remove();
     $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(URGENTE)"]').prepend('<div class="urgentePro"></div>').addClass("urgentePro").closest("tr").addClass("urgentePro");
   }
+
+  // src/shared/ui/file-queue.js
+  function extensionAllowed(fileName, acceptCsv) {
+    if (!acceptCsv) return true;
+    const name = String(fileName || "").toLowerCase();
+    const allowed = String(acceptCsv).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (allowed.length === 0) return true;
+    return allowed.some((ext) => ext.startsWith(".") ? name.endsWith(ext) : name.endsWith("." + ext));
+  }
+  function formatFileSize(bytes) {
+    const n = Number(bytes) || 0;
+    if (n < 1024) return n + " b";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KiB";
+    return (n / (1024 * 1024)).toFixed(1) + " MiB";
+  }
+  function uploadFormFile({
+    url,
+    file,
+    fileName,
+    paramName = "filArquivo",
+    timeout = 9e5,
+    onProgress,
+    xhrFactory = () => new XMLHttpRequest()
+  }) {
+    return new Promise((resolve, reject) => {
+      const xhr = xhrFactory();
+      const form = new FormData();
+      form.append(paramName, file, fileName || file.name);
+      xhr.open("POST", url, true);
+      xhr.timeout = timeout;
+      xhr.withCredentials = true;
+      if (xhr.upload && typeof onProgress === "function") {
+        xhr.upload.onprogress = (event) => {
+          if (!event.lengthComputable) return;
+          onProgress(event.loaded / event.total, event);
+        };
+      }
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr);
+        else reject({ xhr, message: "HTTP " + xhr.status });
+      };
+      xhr.onerror = () => reject({ xhr, message: "Network error" });
+      xhr.ontimeout = () => reject({ xhr, message: "Timeout" });
+      xhr.send(form);
+    });
+  }
+  function toPublicFile(item) {
+    const file = item.file;
+    file.previewElement = item.previewElement;
+    file.status = item.status;
+    file.uploadName = item.uploadName;
+    file.xhr = item.xhr;
+    file._queueItem = item;
+    return file;
+  }
+  function createFileQueue(opts = {}) {
+    const items = [];
+    const listeners = {};
+    const options = {
+      url: opts.url || "",
+      params: opts.params || {},
+      acceptedFiles: opts.accept || opts.acceptedFiles || null,
+      paramName: opts.paramName || "filArquivo",
+      timeout: opts.timeout || 9e5
+    };
+    const renameFile = typeof opts.renameFile === "function" ? opts.renameFile : (f) => f.name;
+    const createPreview = typeof opts.createPreview === "function" ? opts.createPreview : null;
+    const previewsContainer = typeof opts.previewsContainer === "string" ? typeof document !== "undefined" ? document.querySelector(opts.previewsContainer) : null : opts.previewsContainer || null;
+    let clickableEl = null;
+    let fileInput = null;
+    let processing = false;
+    let destroyed = false;
+    function emit(event, ...args) {
+      const list = listeners[event] || [];
+      list.forEach((fn) => {
+        try {
+          fn(...args);
+        } catch (_e) {
+        }
+      });
+      const OPT_BY_EVENT = {
+        addedfile: "onAddedFile",
+        addedfiles: "onAddedFiles",
+        removedfile: "onRemovedFile",
+        success: "onSuccess",
+        error: "onError"
+      };
+      const optName = OPT_BY_EVENT[event] || "on" + event.charAt(0).toUpperCase() + event.slice(1);
+      if (typeof opts[optName] === "function") {
+        try {
+          opts[optName](...args);
+        } catch (_e) {
+        }
+      }
+    }
+    function bindClickable() {
+      const clickable = opts.clickable;
+      if (!clickable || typeof document === "undefined") return;
+      clickableEl = typeof clickable === "string" ? document.querySelector(clickable) : clickable;
+      if (!clickableEl) return;
+      fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      if (options.acceptedFiles) fileInput.accept = options.acceptedFiles;
+      (clickableEl.ownerDocument || document).body.appendChild(fileInput);
+      clickableEl.addEventListener("click", onClickableClick);
+      fileInput.addEventListener("change", onFileInputChange);
+    }
+    function onClickableClick(event) {
+      event.preventDefault();
+      if (fileInput) fileInput.click();
+    }
+    function onFileInputChange() {
+      if (!fileInput || !fileInput.files) return;
+      handleFiles(Array.from(fileInput.files));
+      fileInput.value = "";
+    }
+    function setAcceptedFiles(csv) {
+      options.acceptedFiles = csv || null;
+      if (fileInput) fileInput.accept = options.acceptedFiles || "";
+    }
+    function addItem(file) {
+      const uploadName = renameFile(file);
+      const accepted = extensionAllowed(uploadName || file.name, options.acceptedFiles);
+      const item = {
+        file,
+        uploadName,
+        status: accepted ? "queued" : "rejected",
+        previewElement: null,
+        xhr: null,
+        errorMessage: accepted ? "" : "Tipo de arquivo n\xE3o permitido"
+      };
+      if (createPreview) {
+        item.previewElement = createPreview(item);
+        if (item.previewElement && previewsContainer) {
+          previewsContainer.appendChild(item.previewElement);
+        }
+        if (!accepted && item.previewElement) {
+          item.previewElement.classList.add("dz-error", "seipro-file-error");
+          const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
+          if (err) err.textContent = item.errorMessage;
+        }
+        const removeBtn = item.previewElement && item.previewElement.querySelector("[data-seipro-file-remove], [data-dz-remove]");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            removeItem(item);
+          });
+        }
+      }
+      items.push(item);
+      emit("addedfile", toPublicFile(item));
+      return item;
+    }
+    function removeItem(item) {
+      const idx = items.indexOf(item);
+      if (idx === -1) return;
+      items.splice(idx, 1);
+      if (item.previewElement && item.previewElement.parentNode) {
+        item.previewElement.parentNode.removeChild(item.previewElement);
+      }
+      emit("removedfile", toPublicFile(item));
+    }
+    function handleFiles(fileList) {
+      if (destroyed) return;
+      const list = Array.from(fileList || []);
+      const added = list.map(addItem);
+      emit("addedfiles", added.map(toPublicFile));
+      return added.map(toPublicFile);
+    }
+    function getQueuedFiles() {
+      return items.filter((i2) => i2.status === "queued").map(toPublicFile);
+    }
+    function getAcceptedFiles() {
+      return items.filter((i2) => i2.status === "success").map(toPublicFile);
+    }
+    function getRejectedFiles() {
+      return items.filter((i2) => i2.status === "error" || i2.status === "rejected").map(toPublicFile);
+    }
+    function removeAllFiles() {
+      [...items].forEach(removeItem);
+    }
+    function setProgress(item, ratio) {
+      if (!item.previewElement) return;
+      item.previewElement.classList.add("dz-processing", "seipro-file-processing");
+      const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
+      if (bar) bar.style.width = Math.round(ratio * 100) + "%";
+    }
+    function markError(item, message) {
+      item.status = "error";
+      item.errorMessage = message || "Erro no envio";
+      if (item.previewElement) {
+        item.previewElement.classList.add("dz-error", "seipro-file-error");
+        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
+        const err = item.previewElement.querySelector("[data-seipro-file-error], .dz-error-message span");
+        if (err) err.textContent = item.errorMessage;
+      }
+    }
+    function markSuccess(item) {
+      item.status = "success";
+      if (item.previewElement) {
+        item.previewElement.classList.add("dz-success", "dz-complete", "seipro-file-success");
+        item.previewElement.classList.remove("dz-processing", "seipro-file-processing");
+        const bar = item.previewElement.querySelector(".dz-upload, [data-seipro-file-progress]");
+        if (bar) bar.style.width = "100%";
+      }
+    }
+    function processQueue() {
+      if (destroyed || processing) return Promise.resolve();
+      const next = items.find((i2) => i2.status === "queued");
+      if (!next) return Promise.resolve();
+      if (!options.url) {
+        markError(next, "URL de upload n\xE3o configurada");
+        emit("error", toPublicFile(next));
+        if (typeof opts.onError === "function") opts.onError(toPublicFile(next), next.errorMessage);
+        return Promise.resolve();
+      }
+      processing = true;
+      next.status = "uploading";
+      setProgress(next, 0);
+      return uploadFormFile({
+        url: options.url,
+        file: next.file,
+        fileName: next.uploadName,
+        paramName: options.paramName,
+        timeout: options.timeout,
+        onProgress: (ratio) => setProgress(next, ratio),
+        xhrFactory: opts.xhrFactory || (() => new XMLHttpRequest())
+      }).then((xhr) => {
+        next.xhr = xhr;
+        markSuccess(next);
+        const pub = toPublicFile(next);
+        emit("success", pub);
+      }).catch((err) => {
+        next.xhr = err && err.xhr ? err.xhr : null;
+        markError(next, err && err.message || "Erro no envio");
+        emit("error", toPublicFile(next));
+      }).finally(() => {
+        processing = false;
+      });
+    }
+    function destroy() {
+      destroyed = true;
+      if (clickableEl) clickableEl.removeEventListener("click", onClickableClick);
+      if (fileInput && fileInput.parentNode) fileInput.parentNode.removeChild(fileInput);
+      removeAllFiles();
+      clickableEl = null;
+      fileInput = null;
+    }
+    function on(event, handler) {
+      if (!listeners[event]) listeners[event] = [];
+      listeners[event].push(handler);
+      return api;
+    }
+    const api = {
+      files: items,
+      options,
+      handleFiles,
+      addFile: (file) => toPublicFile(addItem(file)),
+      getQueuedFiles,
+      getAcceptedFiles,
+      getRejectedFiles,
+      removeAllFiles,
+      processQueue,
+      destroy,
+      on,
+      setAcceptedFiles,
+      /** Reorder queue to match DOM order of preview elements. */
+      reorderByPreview(orderedElements) {
+        const map = new Map(items.map((i2) => [i2.previewElement, i2]));
+        const next = [];
+        orderedElements.forEach((el) => {
+          const item = map.get(el);
+          if (item) next.push(item);
+        });
+        items.forEach((i2) => {
+          if (!next.includes(i2)) next.push(i2);
+        });
+        items.length = 0;
+        next.forEach((i2) => items.push(i2));
+      }
+    };
+    Object.defineProperty(api, "files", {
+      get() {
+        return items.map(toPublicFile);
+      }
+    });
+    bindClickable();
+    return api;
+  }
+
+  // src/shared/ui/sortable.js
+  function insertionTarget(y, rows) {
+    for (const row of rows) {
+      const r = row.getBoundingClientRect();
+      if (y < r.top + r.height / 2) return row;
+    }
+    return null;
+  }
+  function createSortable(container, opts = {}) {
+    const itemsSel = opts.items || "tr";
+    const handleSel = opts.handle || null;
+    let dragged = null;
+    function rows() {
+      return Array.prototype.slice.call(container.querySelectorAll(itemsSel));
+    }
+    function onDown(e) {
+      const handle = handleSel ? e.target.closest(handleSel) : e.target.closest(itemsSel);
+      if (!handle) return;
+      const row = handle.closest(itemsSel);
+      if (!row || !container.contains(row)) return;
+      dragged = row;
+      row.classList.add("seipro-sorting");
+      row.style.opacity = "0.5";
+      try {
+        handle.setPointerCapture(e.pointerId);
+      } catch (_) {
+      }
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp, { once: true });
+      e.preventDefault();
+    }
+    function onMove(e) {
+      if (!dragged) return;
+      const others = rows().filter((r) => r !== dragged);
+      const before = insertionTarget(e.clientY, others);
+      if (before) dragged.parentNode.insertBefore(dragged, before);
+      else dragged.parentNode.appendChild(dragged);
+    }
+    function onUp(e) {
+      if (!dragged) return;
+      dragged.classList.remove("seipro-sorting");
+      dragged.style.opacity = "";
+      const handle = handleSel ? e.target.closest(handleSel) : dragged;
+      if (handle) handle.removeEventListener("pointermove", onMove);
+      dragged = null;
+      if (typeof opts.onUpdate === "function") opts.onUpdate(rows());
+    }
+    container.addEventListener("pointerdown", onDown);
+    return { destroy() {
+      container.removeEventListener("pointerdown", onDown);
+    } };
+  }
+
+  // src/features/arvore/domain.js
+  function resolveDropzoneIcon(fileType, _isNewSEI) {
+    const type = String(fileType || "");
+    const gif = (name) => `/infra_css/imagens/${name}.gif`;
+    let urlIcon = gif("pdf");
+    if (type.indexOf("image/") !== -1) urlIcon = gif("imagem");
+    else if (type.indexOf("video/") !== -1) urlIcon = gif("video");
+    else if (type.indexOf("audio/") !== -1) urlIcon = gif("audio");
+    else if (type.indexOf("application/zip") !== -1) urlIcon = gif("zip");
+    else if (type.indexOf("text/htm") !== -1) urlIcon = gif("html");
+    else if (type.indexOf("text/plain") !== -1) urlIcon = gif("txt");
+    else if (type.indexOf("word") !== -1) urlIcon = gif("doc");
+    else if (type.indexOf("officedocument.presentation") !== -1) urlIcon = gif("pps");
+    else if (type.indexOf("text/csv") !== -1 || type.indexOf("sheet") !== -1) urlIcon = gif("xls");
+    return urlIcon;
+  }
+
+  // src/features/arvore/templates.js
+  function dropzoneInfoHoverHtml() {
+    return '<div id="dz-infoupload" class="dz-infoupload seipro-arvore-dz-info" data-seipro-arvore-upload-overlay>   <span class="text">Arraste e solte aquivos aqui<br>ou clique para selecionar</span>   <span class="cancel seipro-arvore-dz-cancel" data-seipro-arvore-action="dropzone-cancel">       <i class="far fa-times-circle icon"></i>       <span class="label">CANCELAR</span>   </span></div>';
+  }
+  function uploadPreviewHomeHtml(opts = {}) {
+    const ifrTarget = opts.ifrTarget || "ifrVisualizacao";
+    const iconSrc = opts.iconSrc || "/infra_css/imagens/pdf.gif";
+    const iconData = opts.iconData || "imagens/pdf.gif";
+    const sizeLabel = formatFileSize(opts.size || 0);
+    const name = opts.name || "";
+    return '<div class="dz-preview dz-file-preview seipro-arvore-file-preview">   <div class="dz-details">       <span class="dz-error-mark"><i data-seipro-file-remove data-dz-remove class="fas fa-trash vermelhoColor" style="margin: 5px 8px;cursor: pointer; font-size: 10pt;"></i></span>       <span class="dz-error-message"><span data-seipro-file-error data-dz-errormessage></span></span>       <span class="dz-progress"><span class="dz-upload" data-seipro-file-progress data-dz-uploadprogress></span></span>       <a id="anchorImgID" data-img="' + iconData + '" style="margin-left: -4px;" class="clipboard">           <img class="dz-link-icon" src="' + iconSrc + '" align="absbottom" id="iconID">       </a>       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>       <a id="anchorID" target="' + ifrTarget + '" class="dz-filename">           <span data-dz-name title="">' + name.replace(/</g, "&lt;") + '</span>       </a>       <span class="dz-size" data-dz-size>' + sizeLabel + '</span>       <span class="dz-remove" data-seipro-file-remove data-dz-remove><i class="fas fa-trash-alt vermelhoColor" style="cursor:pointer"></i></span>   </div></div>';
+  }
+
+  // src/features/lista-processos/upload-home.js
   function initUploadFilesInProcess() {
     setUploadFilesInProcess();
   }
@@ -3461,6 +3117,8 @@
       });
     }
   }
+
+  // src/features/lista-processos/boot.js
   function storeLinkUsuarioSistema() {
     if (typeof setOptionsPro !== "undefined") setOptionsPro("usuarioSistema", $("#lnkUsuarioSistema").attr("title"));
   }
@@ -3529,17 +3187,358 @@
     });
   }
 
+  // src/features/lista-processos/kanban-home.js
+  function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
+    if (typeof jKanban === "undefined") {
+      loadKanbanStylePro();
+      $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
+    }
+    if (!type || type == "all" || type == "") {
+      setOptionsPro("panelProcessosView", "Tabela");
+      var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
+      if (btnTabela) getPanelProc(btnTabela);
+    } else {
+      var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
+      if (type == "users") {
+        if (getOptionsPro("arrayListUsersSEI") && getOptionsPro("arrayListUsersSEI").length > 0) {
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
+          var itensKanban = $.map(getOptionsPro("arrayListUsersSEI"), function(v) {
+            return typeof getAtribuicaoDisplayLabel === "function" ? getAtribuicaoDisplayLabel(v.name, v.name, checkConfigValue("nomesusuarios")) : v.name;
+          });
+          itensKanban.unshift("");
+        } else if (loop > 0) {
+          getAjaxListaAtribuicao();
+          setTimeout(function() {
+            initAddKanbanProc(type, loop - 1);
+          }, 2e3);
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
+        }
+      } else if (type == "tags") {
+        if (getOptionsPro("listaMarcadores") && getOptionsPro("listaMarcadores").length > 0) {
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
+          var itensKanban = $.map(getOptionsPro("listaMarcadores"), function(v) {
+            return v.name;
+          });
+          itensKanban.unshift("");
+        } else if (loop > 0) {
+          getAjaxListaMarcador();
+          setTimeout(function() {
+            initAddKanbanProc(type, loop - 1);
+          }, 2e3);
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
+        }
+      } else {
+        var itensKanban = getListTypes(type);
+        $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
+      }
+      if (!!itensKanban && type != "") {
+        itensKanban = $.map(itensKanban, function(v, i2) {
+          return { order: i2, name: v, id: getTagName(v, type) };
+        });
+        var tr = tableProc.find("tr[data-tagname]:not(.tagintable)");
+        var itens = tr.map(function() {
+          var tagName = $(this).data("tagname");
+          var idTag = "id_" + tagName;
+          var itemBoard = $.grep(itensKanban, function(item) {
+            return item.id == tagName;
+          })[0];
+          var nameLabel = itemBoard && itemBoard.name !== "" ? itemBoard.name : "Sem Grupo";
+          var linkProc = $(this).find('a[href*="acao=procedimento_trabalhar"]');
+          var tip = extractTooltipToArray(linkProc.attr("onmouseover"));
+          tip = typeof tip !== "undefined" ? tip : false;
+          var linkParams = getParamsUrlPro(linkProc.attr("href"));
+          var id_protocolo = linkParams && typeof linkParams.id_procedimento !== "undefined" ? linkParams.id_procedimento : false;
+          if (id_protocolo !== false && id_protocolo !== "false" && id_protocolo !== "" && id_protocolo !== null && typeof id_protocolo !== "undefined") {
+            return {
+              id: idTag,
+              title: nameLabel,
+              id_protocolo: String(id_protocolo),
+              processo: linkProc.text(),
+              especificacao: tip ? tip[0] : false,
+              tipo: tip ? tip[1] : false,
+              html_icons: $(this).find("td").eq(1).html(),
+              html_proc: $(this).find("td").eq(2).html(),
+              html_atribuicao: $(this).find("td").eq(3).html(),
+              html_prazo: $(this).find("td.seipro-prazo-box-display").html(),
+              color: $(this).data("color") ? $(this).css("color") : false
+            };
+          }
+        }).get();
+        $("#processosKanban").remove();
+        $("#newFiltro").after('<div id="processosKanban" style="display: inline-block;margin-top: 60px;width: 100%;"></div>');
+        var bords_list = $.map(itensKanban, function(v, i2) {
+          var item = $.grep(itens, function(row) {
+            return row.id == "id_" + v.id;
+          });
+          var title = v.name == "" ? "Sem Grupo" : v.name;
+          title = (type == "arrivaldate" || type == "acessdate" || type == "senddate" || type == "createdate" || type == "deadline") && title.indexOf(".") !== -1 ? title.split(".")[1] : title;
+          var boardOrderStore = getOptionsPro("panelProcessosOrder_" + type);
+          var boardOrderItem = boardOrderStore && $.isArray(boardOrderStore) ? $.grep(boardOrderStore, function(row) {
+            return row.id == v.id;
+          })[0] : null;
+          var order_board = boardOrderItem && typeof boardOrderItem.order !== "undefined" ? boardOrderItem.order : i2;
+          order_board = order_board === null ? 9999 : order_board;
+          var collapse_board = boardOrderItem && typeof boardOrderItem.collapse !== "undefined" ? boardOrderItem.collapse : false;
+          var itens_board = $.map(item, function(value, index) {
+            if (!value || !value.id_protocolo || value.id_protocolo === "false") {
+              return;
+            }
+            var iten_urgente = value.especificacao && value.especificacao.toLowerCase().indexOf("(urgente)") !== -1 ? true : false;
+            var item_pinboard = false;
+            var order_item = false;
+            if (boardOrderItem && $.isArray(boardOrderItem.itens)) {
+              order_item = $.grep(boardOrderItem.itens, function(row) {
+                return row.id == String(value.id_protocolo);
+              })[0] || false;
+            }
+            item_pinboard = order_item === null || order_item === false ? item_pinboard : order_item.pinboard;
+            order_item = order_item === null || order_item === false ? 9999 : order_item.order;
+            order_item = iten_urgente ? -1 : order_item;
+            var pinBoard = '<span style="float: right;margin: -5px -10px 0 0;" class="kanban-pinboard info_noclick"><a class="newLink info_noclick ' + (item_pinboard ? "newLink_active" : "") + '" onclick="pinKanbanItensProc(this, ' + value.id_protocolo + `)" onmouseover="return infraTooltipMostrar('` + (item_pinboard ? "Remover do topo" : "Fixar no topo") + `');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-thumbtack cinzaColor"></i></a></span>`;
+            return {
+              id: value.id_protocolo,
+              order: order_item,
+              title: pinBoard + '<div class="kanban-content">   <div class="kanban-title-card content_edit" data-field="assunto" data-id="' + value.id_protocolo + '">       <span class="info" data-type="proc" style="width: 75%;">           ' + value.html_proc + '           <a class="newLink info_noclick followLinkNewtab" href="controlador.php?acao=procedimento_trabalhar&id_procedimento=' + value.id_protocolo + `" onmouseover="return infraTooltipMostrar('Abrir em nova aba');" onmouseout="return infraTooltipOcultar();" target="_blank"><i class="fas fa-external-link-alt" style="font-size: 90%; text-decoration: underline;"></i></a>       </span>   </div>   <div class="kanban-description">       <span class="sub info_noclick" data-type="especificacao">` + value.especificacao + '</span>       <span class="sub info_noclick" data-type="tipo">' + value.tipo + '</span>       <span class="sub info_noclick" data-type="atribuicao">' + value.html_atribuicao + '</span>       <span class="sub info_noclick" data-type="icons">' + value.html_icons + '</span>       <span class="sub info_noclick" data-type="prazo">' + value.html_prazo + "</span>   </div></div>",
+              click: function(el) {
+                var id_protocolo = el.dataset.eid;
+                var checkOver = $(el).find(".info_noclick:hover").length > 0 ? $(el).find(".info_noclick:hover") : false;
+                var newTab = $(el).find(".followLinkNewtab:hover").length > 0 ? $(el).find(".followLinkNewtab:hover") : false;
+                if (!dialogBoxPro && !checkOver && id_protocolo) window.location.href = "controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo;
+                if (!dialogBoxPro && id_protocolo && newTab) openLinkNewTab("controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo);
+              },
+              class: iten_urgente ? "urgente" : ""
+            };
+          });
+          itens_board.sort(function(a, b) {
+            return a.order - b.order;
+          });
+          if (v.id == "SemGrupo" && itens_board.length === 0) {
+            return null;
+          }
+          return {
+            id: v.id,
+            title,
+            order: order_board,
+            class: "proc_" + type,
+            color: typeof item[0] !== "undefined" ? item[0].color : false,
+            collapse: collapse_board,
+            item: itens_board
+          };
+        });
+        bords_list.sort(function(a, b) {
+          return a.order - b.order;
+        });
+        var kanban = new jKanban({
+          element: "#processosKanban",
+          gutter: "10px",
+          widthBoard: "calc(25% - 20px)",
+          // responsivePercentage: true,
+          itemHandleOptions: {
+            enabled: true
+          },
+          dragEl: function(el, source) {
+            var sourceEl = source.parentElement.getAttribute("data-id");
+            var id_protocolo = el.dataset.eid;
+            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
+            kanbanProcessosMoving = { source: sourceEl, id: el.dataset.eid, order: elemItem.index() };
+          },
+          dropEl: function(el, target, source, sibling) {
+            updateOrderKanbanBoardProc();
+            var targetEl = target.parentElement.getAttribute("data-id");
+            var sourceEl = source.parentElement.getAttribute("data-id");
+            var id_protocolo = el.dataset.eid;
+            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
+            var titleSource = elemItem.closest(".kanban-board").find(".kanban-title-board").text();
+            var elemContent = elemItem.find(".kanban-content");
+            var elemProc = elemContent.find('span[data-type="proc"]');
+            var elemUser = elemContent.find('span[data-type="atribuicao"]');
+            var elemIcons = elemContent.find('span[data-type="icons"]');
+            var elemTypes = elemContent.find('span[data-type="tipo"]');
+            if (type == "users" && sourceEl != targetEl) {
+              var arrayListUsersSEI = getOptionsPro("arrayListUsersSEI");
+              if (arrayListUsersSEI) {
+                var userMatch = $.grep(arrayListUsersSEI, function(item) {
+                  return item.name && item.name.indexOf(targetEl) !== -1;
+                })[0];
+                var idUser = userMatch ? userMatch.value : false;
+                idUser = idUser == "SemGrupo" ? "null" : idUser;
+                var linkAtribuicao = tableProc.find('a[href*="&id_usuario_atribuicao=' + idUser + '"]').attr("href");
+                elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
+                updateDadosArvore("Atribuir Processo", "selAtribuicao", idUser, id_protocolo, function() {
+                  if (targetEl != "SemGrupo") {
+                    var targetAtribuicao = '(<a href="' + linkAtribuicao + '" title="Atribu\xEDdo para ' + targetEl + '" class="ancoraSigla">' + targetEl + "</a>)";
+                    elemUser.html(targetAtribuicao);
+                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html(targetAtribuicao);
+                  } else {
+                    elemUser.html("");
+                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html("");
+                  }
+                  elemProc.find("i.fa-sync").remove();
+                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
+                  setTimeout(function() {
+                    elemProc.find("i.fa-check-double").remove();
+                  }, 2e3);
+                });
+              }
+            } else if (type == "tags" && sourceEl != targetEl) {
+              var listMarcadores = getOptionsPro("listaMarcadores");
+              listMarcadores = listMarcadores ? $.map(listMarcadores, function(v) {
+                return { name: getTagName(v.name, type), value: v.value, img: v.img };
+              }) : false;
+              listMarcadores = listMarcadores !== null ? listMarcadores : false;
+              var arrayMarcador = listMarcadores ? $.grep(listMarcadores, function(item) {
+                return item.name == targetEl;
+              })[0] : false;
+              var valueMarcador = arrayMarcador !== null && arrayMarcador ? arrayMarcador.value : false;
+              var elemIconTag = elemIcons.find('a[href*="acao=andamento_marcador_gerenciar"]');
+              var elemIconTagTable = tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).find('a[href*="acao=andamento_marcador_gerenciar"]');
+              var valueText = elemIconTag.attr("onmouseover");
+              valueText = typeof valueText !== "undefined" ? extractTooltipToArray(valueText) : false;
+              valueText = valueText ? valueText[0] : false;
+              valueText = typeof valueText !== "undefined" && valueText ? valueText : "";
+              if (valueMarcador || targetEl == "SemGrupo") {
+                var valuesIframe = [
+                  { element: "txaTexto", value: valueText },
+                  { element: "hdnIdMarcador", value: targetEl == "SemGrupo" ? "" : valueMarcador }
+                ];
+                updateDadosArvoreMult("Gerenciar Marcador", valuesIframe, id_protocolo, function() {
+                  var arrayListMarcadores = sessionStorageRestorePro("dadosMarcadoresProcessoPro");
+                  var markerStyle = arrayListMarcadores && valueMarcador ? $.grep(arrayListMarcadores, function(item) {
+                    return item.icon == arrayMarcador.img;
+                  })[0] : null;
+                  var styleMarcador = markerStyle && typeof markerStyle.style !== "undefined" ? markerStyle.style : null;
+                  styleMarcador = styleMarcador !== null ? styleMarcador : "";
+                  if (targetEl != "SemGrupo" && sourceEl != "SemGrupo") {
+                    elemIconTag.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
+                    elemIconTagTable.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
+                  } else if (targetEl != "SemGrupo" && sourceEl == "SemGrupo") {
+                    var targetMarcador = '<a href="#controlador.php?acao=andamento_marcador_gerenciar&acao_origem=procedimento_controlar&acao_retorno=procedimento_controlar&id_procedimento=' + id_protocolo + `" onmouseover="return infraTooltipMostrar('` + valueText + "','" + titleSource + `');" onmouseout="return infraTooltipOcultar();" data-color="true" style="` + styleMarcador + '"><img src="' + arrayMarcador.img + '" class="imagemStatus"></a>';
+                    elemIcons.append(targetMarcador);
+                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).append(targetMarcador);
+                  } else if (targetEl == "SemGrupo") {
+                    elemIconTag.remove();
+                    elemIconTagTable.remove();
+                  }
+                  elemProc.find("i.fa-sync").remove();
+                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
+                  setTimeout(function() {
+                    elemProc.find("i.fa-check-double").remove();
+                  }, 2e3);
+                  getAllMarcadoresHome();
+                });
+              }
+            } else if (type == "types" && sourceEl != targetEl && targetEl != "SemGrupo") {
+              elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
+              initListTypesSEI(function() {
+                var tipoMatch = typeof arrayListTypesSEI.selectTipoProc !== "undefined" ? $.grep(arrayListTypesSEI.selectTipoProc, function(item) {
+                  return item.name == titleSource;
+                })[0] : null;
+                var idTypeProc = tipoMatch ? tipoMatch.value : false;
+                if (idTypeProc) {
+                  updateDadosArvore("Consultar/Alterar Processo", "selTipoProcedimento", idTypeProc, id_protocolo, function() {
+                    elemTypes.text(titleSource);
+                    elemProc.find("i.fa-sync").remove();
+                    elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
+                    setTimeout(function() {
+                      elemProc.find("i.fa-check-double").remove();
+                    }, 2e3);
+                  });
+                } else {
+                  elemProc.find("i.fa-sync").remove();
+                  elemProc.prepend('<i class="fas fa-times vemelhoColor" style="margin-right: 5px;"></i>');
+                  setTimeout(function() {
+                    elemProc.find("i.fa-times").remove();
+                  }, 2e3);
+                }
+              });
+            } else if (sourceEl != targetEl) {
+              cancelMoveKanbanItensProc();
+            }
+            kanbanProcessosMoving = false;
+          },
+          dragendBoard: function(el) {
+            updateOrderKanbanBoardProc();
+          },
+          boards: bords_list
+        });
+        kanbanProcessos = kanban;
+        tableProc.hide();
+        updateCountKanbanBoardProc();
+      }
+    }
+  }
+  function cancelMoveKanbanItensProc() {
+    var itemMove = kanbanProcessosMoving;
+    if (itemMove && $("#processosKanban").is(":visible")) {
+      var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + itemMove.source + "'] | [0].item | [?id=='" + itemMove.id + "'] | [0]");
+      item = item == null ? false : item;
+      kanbanProcessos.removeElement(item.id);
+      kanbanProcessos.addElement(itemMove.source, item, itemMove.order);
+    }
+  }
+  function pinKanbanItensProc(this_, id_protocolo) {
+    var _this = $(this_);
+    var _parent = _this.closest(".kanban-board");
+    var _hasActive = _this.hasClass("newLink_active");
+    var source = _parent.data("id");
+    var order = _hasActive ? -1 : 0;
+    var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + source + "'] | [0].item | [?id=='" + id_protocolo + "'] | [0]");
+    item = item == null ? false : item;
+    if (item) {
+      kanbanProcessos.removeElement(item.id);
+      kanbanProcessos.addElement(source, item, order);
+      if (!_hasActive) {
+        $("#processosKanban .kanban-container").animate({ scrollTop: 0 }, 500, function() {
+          $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').addClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Remover do topo')");
+          updateOrderKanbanBoardProc();
+        });
+      } else {
+        $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').removeClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Fixar no topo')");
+        updateOrderKanbanBoardProc();
+      }
+      if (typeof infraTooltipOcultar === "function") infraTooltipOcultar();
+    }
+  }
+  function updateOrderKanbanBoardProc() {
+    var type = storeGroupTablePro();
+    var arrayOrder = $("#processosKanban .kanban-board").map(function() {
+      var _this = $(this);
+      var itens = _this.find(".kanban-item").map(function(i2) {
+        return { id: String($(this).data("eid")), order: i2, pinboard: $(this).find(".kanban-pinboard a").hasClass("newLink_active") };
+      }).get();
+      var boards = { id: _this.data("id"), order: _this.data("order"), collapse: _this.data("collapse"), itens };
+      return boards;
+    }).get();
+    setOptionsPro("panelProcessosOrder_" + type, arrayOrder);
+  }
+  function collapseKanbanBoardProc(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest(".kanban-board");
+    var _data = _parent.data();
+    _parent.attr("data-collapse", _data.collapse ? false : true).data("collapse", _data.collapse ? false : true);
+    _parent.find(".kanban-collapse i").attr("class", _data.collapse ? "fas fa-plus-square azulColor" : "fas fa-minus-square cinzaColor");
+    updateOrderKanbanBoardProc();
+  }
+  function updateCountKanbanBoardProc() {
+    if (!kanbanProcessos || !kanbanProcessos.options || !$.isArray(kanbanProcessos.options.boards)) {
+      return;
+    }
+    $.each(kanbanProcessos.options.boards, function(i2, v) {
+      var elemBoard = $('#processosKanban .kanban-board[data-id="' + v.id + '"]');
+      var countBoard = elemBoard.find(".kanban-item:visible").length;
+      var iconCollapse = elemBoard.find(".kanban-collapse").length ? false : '<div class="kanban-collapse" onclick="collapseKanbanBoardProc(this)"><i class="fas fa-' + (v.collapse ? "plus" : "minus") + "-square " + (v.collapse ? "azulColor" : "cinzaColor") + '"></i></div>';
+      elemBoard.attr("data-collapse", v.collapse).find(".kanban-title-board").attr("data-count", countBoard).after(iconCollapse);
+    });
+  }
+
   // src/features/lista-processos/legacy-api.js
   function installListaProcessosLegacyApi() {
     installListaProcessosState();
-    [domain_exports, io_exports].forEach((mod) => {
+    [domain_exports, io_exports, modules_exports].forEach((mod) => {
       Object.keys(mod).forEach((name) => {
-        if (typeof mod[name] === "function") aliasGlobal(name, mod[name]);
+        const value = mod[name];
+        if (typeof value === "function") aliasGlobal(name, value);
       });
-    });
-    Object.keys(body_exports).forEach((name) => {
-      const value = body_exports[name];
-      if (typeof value === "function") aliasGlobal(name, value);
     });
     if (typeof globalThis.objProcessosUnidadePro === "undefined") {
       globalThis.objProcessosUnidadePro = objProcessosUnidadePro;
@@ -3550,8 +3549,8 @@
   }
 
   // src/features/lista-processos/index.js
-  installListaProcessosState();
   function installListaProcessos() {
+    installListaProcessosState();
     installListaProcessosLegacyApi();
     ready(function() {
       initSeiPro();
@@ -3568,7 +3567,11 @@
       rowMatchesHomeFilterFacts,
       getListIdProtocoloSelectedFromValues,
       listaAgrupamentoIO,
-      readGroupOrder
+      readGroupOrder,
+      initSeiPro,
+      insertGroupTable,
+      getFilterTableHome,
+      setTableSorterHome
     }),
     install: installListaProcessos
   });

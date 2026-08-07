@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
+import { readListaProcessosSource } from '../helpers/read-lista-processos.js';
 
 const rootDir = join(fileURLToPath(new URL('../..', import.meta.url)));
 const featureDir = join(rootDir, 'src/features/controlar-prazos');
@@ -25,7 +26,7 @@ describe('migration: controlar-prazos legacy surface', () => {
 
   it('keeps the legacy entry and call-sites on the established global API', () => {
     const entry = source('index.js');
-    const lista = readFileSync(join(rootDir, 'src/features/lista-processos/body.js'), 'utf8');
+    const lista = readListaProcessosSource();
 
     expect(entry).toMatch(/import ['"]\.\/legacy-api\.js['"]/);
     expect(lista.match(/\binitControlePrazo\s*\(/g)).toHaveLength(3);

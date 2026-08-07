@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readListaProcessosSource } from '../helpers/read-lista-processos.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -24,8 +25,8 @@ describe('migration: anotacao-controle legacy facade', () => {
     expect(bridge).toMatch(/typeof mod\[name\] === 'function'/);
   });
 
-  it('does not duplicate the migrated helpers in the lista-processos monolith', () => {
-    const legacy = read('src/features/lista-processos/body.js');
+  it('does not duplicate the migrated helpers in the lista-processos clusters', () => {
+    const legacy = readListaProcessosSource();
     const domain = read('src/features/anotacao-controle/domain.js');
     const io = read('src/features/anotacao-controle/io.js');
     const view = read('src/features/anotacao-controle/view.js');
@@ -61,7 +62,7 @@ describe('migration: anotacao-controle legacy facade', () => {
   });
 
   it('keeps the migrated lifecycle call-sites on the feature api', () => {
-    const legacy = read('src/features/lista-processos/body.js');
+    const legacy = readListaProcessosSource();
 
     expect(legacy).toContain('SeiPro.features.anotacaoControle.api.init()');
     expect(legacy).toContain('SeiPro.features.anotacaoControle.api.render()');

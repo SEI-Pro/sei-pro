@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readListaProcessosSource } from '../helpers/read-lista-processos.js';
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const source = (file) => readFileSync(join(rootDir, file), 'utf8');
@@ -10,7 +11,7 @@ describe('migration: lista-agrupamento legacy bridge', () => {
   it('centraliza os aliases e a fachada de toggle na ponte', () => {
     const bridge = source('src/features/lista-agrupamento/legacy-api.js');
     const index = source('src/features/lista-agrupamento/index.js');
-    const legacy = source('src/features/lista-processos/body.js');
+    const legacy = readListaProcessosSource();
 
     expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
     expect(bridge).toMatch(/import \{ aliasGlobal, globalRef \}/);

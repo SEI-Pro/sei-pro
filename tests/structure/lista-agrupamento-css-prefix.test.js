@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
+import { readListaProcessosSource } from '../helpers/read-lista-processos.js';
 
 const rootDir = join(fileURLToPath(new URL('../..', import.meta.url)));
 const source = (file) => readFileSync(join(rootDir, file), 'utf8');
@@ -10,10 +11,7 @@ const source = (file) => readFileSync(join(rootDir, file), 'utf8');
 describe('migration: lista-agrupamento CSS audit', () => {
   it('confirma que o agrupamento não introduz stylesheet ou classes próprias não prefixadas', () => {
     const featureDir = join(rootDir, 'src/features/lista-agrupamento');
-    const legacy = [
-      source('src/features/lista-processos/body.js'),
-      source('src/features/lista-processos/kanban-home.js')
-    ].join('\n');
+    const legacy = readListaProcessosSource();
 
     expect(existsSync(join(featureDir, 'style.css'))).toBe(false);
     expect(existsSync(join(featureDir, 'lista-agrupamento.css'))).toBe(false);
@@ -21,12 +19,12 @@ describe('migration: lista-agrupamento CSS audit', () => {
   });
 
   it('preserva os hooks compartilhados e os contratos funcionais do agrupamento', () => {
-    const body = source('src/features/lista-processos/body.js');
+    const lista = readListaProcessosSource();
     const kanban = source('src/features/lista-processos/kanban-home.js');
     const shared = readSeiFunctionsSource();
 
-    expect(body).toMatch(/id=\\?"selectGroupTablePro\\?"[^>]*class=\\?"groupTable selectPro\\?"/);
-    expect(body).toMatch(/class=\\?"controleTableTag newLink\\?"[^>]*data-htagname/);
+    expect(lista).toMatch(/id=\\?"selectGroupTablePro\\?"[^>]*class=\\?"groupTable selectPro\\?"/);
+    expect(lista).toMatch(/class=\\?"controleTableTag newLink\\?"[^>]*data-htagname/);
     expect(kanban).toMatch(/class=\\?"kanban-content\\?"/);
     expect(kanban).toMatch(/class=\\?"kanban-title-card content_edit\\?"/);
     expect(shared).toMatch(/closest\(['"]\.kanban-content['"]\)/);

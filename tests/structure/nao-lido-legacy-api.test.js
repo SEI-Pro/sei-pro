@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readListaProcessosSource } from '../helpers/read-lista-processos.js';
 
 const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
@@ -17,8 +18,8 @@ describe('migration: nao-lido legacy facade', () => {
     expect(bridge).toMatch(/typeof mod\[name\] === 'function'/);
   });
 
-  it('does not duplicate the migrated globals in the legacy lista-processos monolith', () => {
-    const legacy = read('src/features/lista-processos/body.js');
+  it('does not duplicate the migrated globals in the lista-processos clusters', () => {
+    const legacy = readListaProcessosSource();
     const view = read('src/features/nao-lido/view.js');
     const io = read('src/features/nao-lido/io.js');
 
@@ -55,7 +56,7 @@ describe('migration: nao-lido legacy facade', () => {
   });
 
   it('keeps the legacy producer on the data-act contract without inline action handlers', () => {
-    const legacy = read('src/features/lista-processos/body.js');
+    const legacy = readListaProcessosSource();
     const view = read('src/features/nao-lido/view.js');
 
     expect(legacy).toContain('data-act="nao-lido-marcar"');

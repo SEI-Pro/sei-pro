@@ -14,7 +14,8 @@ describe('migration: controlar-prazos CSS classes stay prefixed', () => {
   it('uses seipro-prefixed classes for the prazo column and add action', () => {
     const view = read('src/features/controlar-prazos/view.js');
     const css = read('src/features/controlar-prazos/style.css');
-    const listaProcessos = read('src/features/lista-processos/body.js');
+    const listaProcessos = read('src/features/lista-processos/grouping-select.js') +
+      read('src/features/lista-processos/kanban-home.js');
     const monitoradosPanel = read('src/features/monitorados/panel.js');
 
     expect(view).toContain('seipro-prazo-box-display');

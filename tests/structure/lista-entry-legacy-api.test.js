@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { readListaProcessosSource } from '../helpers/read-lista-processos.js';
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const read = (file) => readFileSync(join(rootDir, file), 'utf8');
@@ -10,7 +11,7 @@ describe('entry da lista — ponte legacy-api', () => {
     it('instala os wrappers legados na entry e remove as duplicatas do monólito', () => {
         const entry = read('src/entries/lista.js');
         const bridge = read('src/entries/lista/legacy-api.js');
-        const legacy = read('src/features/lista-processos/body.js');
+        const legacy = readListaProcessosSource();
 
         expect(entry).toContain("import './lista/legacy-api.js';");
         expect(bridge).toContain("aliasGlobal('getListaEntryContextLegacy'");

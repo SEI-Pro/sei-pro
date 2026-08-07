@@ -1,5 +1,5 @@
 /**
- * Lista de processos — IO boundary (thin; most IO still in body during big-bang).
+ * Lista de processos — IO boundary (thin).
  *
  * Prefer lista-agrupamento IO when available for group order / collapse.
  */
@@ -14,4 +14,8 @@ export function readGroupOrder(getOption, fallback = 'asc') {
     }
     const value = typeof getOption === 'function' ? getOption('orderbyTableGroup') : null;
     return value || fallback;
+}
+
+export function readGroupOrderLegacy() {
+    return readGroupOrder(typeof getOptionsPro === 'function' ? getOptionsPro : null, 'asc');
 }

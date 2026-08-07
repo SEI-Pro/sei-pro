@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readSeiFunctionsSource } from '../helpers/read-sei-functions.js';
+import { readListaProcessosSource } from '../helpers/read-lista-processos.js';
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const featuresDir = join(rootDir, 'src/features');
@@ -109,7 +110,7 @@ describe('migration: feature legacy aliases stay isolated', () => {
   it('mantém o wire de favoritos entre entry, build e call-sites legados', () => {
     const index = readFileSync(join(featuresDir, 'monitorados/index.js'), 'utf8');
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
-    const legacyLista = readFileSync(join(featuresDir, 'lista-processos/body.js'), 'utf8');
+    const legacyLista = readListaProcessosSource();
     const legacyAll = readFileSync(join(featuresDir, 'todas-paginas/sei-pro-all.js'), 'utf8');
     const legacyShared = readSeiFunctionsSource();
 

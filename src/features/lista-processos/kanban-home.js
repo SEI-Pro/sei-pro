@@ -1,7 +1,15 @@
 /**
- * Kanban na lista de processos — extraído de body.js.
+ * Kanban na lista de processos — cluster da feature.
  */
 import { callAtividades } from './atividades-bridge.js';
+import {
+    getAllMarcadoresHome,
+    getListTypes,
+    getPanelProc,
+    initAddKanbanProc,
+    loadKanbanStylePro,
+    storeGroupTablePro
+} from './modules.js';
 
 export function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
     if (typeof jKanban === 'undefined') {

@@ -1,6 +1,10 @@
 /**
  * Lista de processos — entry do bundle.
- * Contrato público { id, api, install }. body.js ainda é monolito residual.
+ *
+ * Decomposição: domain · io · view · templates · state · clusters · legacy-api.
+ * Saída: dist/js/sei-pro.js (mesmo nome do legado para o manifest).
+ *
+ * Public surface: SeiPro.features.listaProcessos = { id, api, install }.
  */
 import { ready } from '../../dom/index.js';
 import { publishFeature } from '../../app/publish-feature.js';
@@ -15,11 +19,15 @@ import {
 } from './domain.js';
 import { listaAgrupamentoIO, readGroupOrder } from './io.js';
 import { installListaProcessosLegacyApi } from './legacy-api.js';
-import { initSeiPro } from './body.js';
-
-installListaProcessosState();
+import {
+    initSeiPro,
+    insertGroupTable,
+    getFilterTableHome,
+    setTableSorterHome
+} from './modules.js';
 
 export function installListaProcessos() {
+    installListaProcessosState();
     installListaProcessosLegacyApi();
     ready(function () {
         initSeiPro();
@@ -37,7 +45,11 @@ publishFeature({
         rowMatchesHomeFilterFacts,
         getListIdProtocoloSelectedFromValues,
         listaAgrupamentoIO,
-        readGroupOrder
+        readGroupOrder,
+        initSeiPro,
+        insertGroupTable,
+        getFilterTableHome,
+        setTableSorterHome
     }),
     install: installListaProcessos
 });
