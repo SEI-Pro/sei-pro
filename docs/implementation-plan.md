@@ -184,7 +184,7 @@ Depende da fase 2 (`configKey`) e da fatia 1.2 (`matches`).
 |---|---|---|
 | 3.1 | `feature.js` nas 9 features já conformes | `feature-descriptor.test.js` cobre 9 de 22 |
 | 3.2 | `feature.js` nas 13 restantes, uma por vez, normalizando a publicação | 22 de 22; ratchet de conformidade zerado |
-| 3.3 | Registry montado por varredura; `contexts.js` e `register-pilot-features.js` deixam de ser listas à mão | adicionar feature não toca arquivo central |
+| 3.3 | Registry montado por varredura; `contexts.js` não mantém fallback e não há mais `register-pilot-features` | adicionar feature não toca arquivo central |
 | 3.4 | `manifest-contexts.test.js` estabilizado: snapshot de `matches` e ordem de scripts dos 11 blocos | pré-requisito da geração — **não pular** |
 | 3.5 | Gerador de manifest a partir do registry, com `--check` no CI | manifest commitado idêntico ao gerado |
 | 3.6 | Enxugar bloco por bloco, um contexto por vez, do menor para o maior | ratchet do maior bloco cai de 40 |
@@ -213,7 +213,7 @@ uma raiz que constrói dependências de verdade.
 | 4.1 | Ports de `src/platform/` viram factories `createX` com fake em `tests/fakes/` | `ports.test.js` verde |
 | 4.2 | Limite de falha + `cleanup` no boot | `boot.test.js`: feature que lança não impede as seguintes; `failed` nomeia o id |
 | 4.3 | Feature caída aparece como indisponível na UI | falha visível, nunca silenciosa |
-| 4.4 | Raiz de composição dos contextos `login` e `db` (já são bundles finos) | `getSeiPro()` sai desses contextos |
+| 4.4 | Raiz de composição dos contextos `login` e `db` (já são bundles finos) | registry gerado por contexto; `getSeiPro()` segue restrito ao legado interno |
 | 4.5 | Raízes de `lista`, `arvore`, `editor`, `visualizacao`, um contexto por vez | ratchet de `getSeiPro()` cai a cada contexto |
 | 4.6 | `SeiPro` publicado só na raiz; `publishGlobal` substitui `aliasGlobal` no núcleo (ADR-0012) | `globals.test.js` verde; violações caem de 186 para 50 |
 | 4.7 | Logger injetado substitui `console.*` nos contextos migrados | ratchet de `console.*` cai de 492 |
@@ -330,7 +330,8 @@ registry por varredura; `npm run manifest:check` (passthrough seguro); snapshot 
 Geração completa dos `content_scripts` permanece follow-up de risco.
 
 **Fase 4 — Composição** (2026-08-07). Ports `createX` + fakes; boot com isolamento de falha;
-raízes login/db/lista; `publishGlobal` amostral; **bus removido** (ADR-0013).
+raízes login/db/lista; registries gerados para os três contextos já exclusivos;
+`publishGlobal` amostral; **bus removido** (ADR-0013).
 
 **Fase 5 — Refronteiras (fundação)** (2026-08-07). Mapa de capacidades; testes de
 caracterização de `config-options`; strangler `atividades-config` + stubs

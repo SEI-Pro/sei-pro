@@ -13,7 +13,8 @@ nada que verifique a coerência entre eles:
    entra e em que ordem;
 2. `scripts/build.mjs` — a lista de bundles e a lista de CSS a copiar;
 3. `src/app/contexts.js` — o mapa contexto → feature ids;
-4. `src/app/register-pilot-features.js` — o registro com `configKey` e `install`;
+4. `src/app/register-pilot-features.js` — o registro com `configKey` e `install` (removido
+   na implementação incremental; substituído por registries gerados por contexto);
 5. a página de options — a chave de configuração que liga a feature.
 
 O resultado medido em 2026-08-07 é duas fontes de verdade que já divergiram. O registry
@@ -104,6 +105,15 @@ smoke manual como portão a cada contexto.
 **Fica proibido:** adicionar bloco de content script à mão depois de a geração entrar;
 manter lista de features em arquivo central; feature sem descritor; gerar manifest antes
 dos snapshots de `matches`.
+
+### Implementação incremental
+
+O primeiro registry manual do piloto foi removido. Hoje o build gera e verifica um arquivo
+por contexto exclusivo (`src/generated/login-feature-registry.ts`,
+`src/generated/db-feature-registry.ts` e `src/generated/lista-feature-registry.ts`).
+Login e db deixaram de ser `wired`: suas entries importam diretamente o registry gerado,
+enquanto contextos ainda não migrados permanecem `declared` ou `wired` e continuam usando
+o caminho legado até uma fatia posterior.
 
 ## Verificação
 

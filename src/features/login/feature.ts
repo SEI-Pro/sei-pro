@@ -7,7 +7,7 @@ import { installLoginAutofill } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'login',
-    maturity: 'wired',
+    maturity: 'exclusive',
     contexts: ['login'],
     configKey: 'autopreenchersenha',
     install: installLoginAutofill,

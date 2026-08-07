@@ -2,7 +2,8 @@
 /**
  * Catálogo de features instaláveis por contexto (ADR-0004).
  * Entradas vêm de `src/features/<id>/feature.ts` via registerFeature /
- * registerPilotFeatures. Descoberta em Node: scripts/lib/scan-feature-descriptors.mjs.
+ * registries gerados por contexto. Descoberta em Node:
+ * scripts/lib/scan-feature-descriptors.mjs.
  * Cada entrada: { id, configKey?, contexts, install, api? }
  */
 

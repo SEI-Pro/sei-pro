@@ -37,7 +37,7 @@ const watch = process.argv.includes('--watch');
 //  - core-stack: stack core+sei carregada pelos blocos ainda não migrados.
 //  - arvore-info: feature da árvore (será dobrada na entry `tree`).
 import { readdirSync } from 'node:fs';
-import { generateListaRegistry } from './generate-context-registry.mjs';
+import { GENERATED_CONTEXTS, generateContextRegistry, registryPath } from './generate-context-registry.mjs';
 
 const entriesDir = path.join(root, 'src/entries');
 const entryBundles = readdirSync(entriesDir)
@@ -92,11 +92,12 @@ const bundles = [
 ];
 
 function verifyGeneratedRegistries() {
-    const generated = generateListaRegistry(root);
-    const registryPath = path.join(root, 'src/generated/lista-feature-registry.ts');
-    const current = readFileSync(registryPath, 'utf8');
-    if (current !== generated.text) {
-        throw new Error('lista registry is stale; run: npm run registry:write');
+    for (const context of GENERATED_CONTEXTS) {
+        const generated = generateContextRegistry(context, root);
+        const current = readFileSync(registryPath(context, root), 'utf8');
+        if (current !== generated.text) {
+            throw new Error(`${context} registry is stale; run: npm run registry:write`);
+        }
     }
 }
 

@@ -7,7 +7,7 @@ import { installExternalConfig } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'external-config',
-    maturity: 'wired',
+    maturity: 'exclusive',
     contexts: ['db'],
     configKey: null,
     install: installExternalConfig,

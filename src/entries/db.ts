@@ -7,12 +7,12 @@ import { installCoreStack } from '../core/stack.js';
 import { createStorage } from '../platform/storage.js';
 import { createLogger } from '../platform/logger.js';
 import { createMessaging } from '../platform/messaging.js';
-import { registerPilotFeatures } from '../app/register-pilot-features.js';
+import { registerDbExclusiveFeatures } from '../generated/db-feature-registry.js';
 import { boot } from '../app/boot.js';
 import { ready } from '../dom/index.js';
 
 const ns = installCoreStack();
-registerPilotFeatures();
+registerDbExclusiveFeatures();
 
 ready(async function () {
     const logger = createLogger({ scope: 'db' });

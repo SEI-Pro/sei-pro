@@ -46,7 +46,7 @@ até o alvo.
 | Base tipada | ~384 `.ts` + 24 legados `.js`; **382** `@ts-nocheck` | tipagem sem `@ts-nocheck` | [0014](./adr/0014-typescript-para-codigo-novo.md) |
 | Blocos de content script | 11 (maior **40**); `manifest:check` ok | 1 script/contexto gerado | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
 | Features com `feature.ts` | **26 declaradas**; maturidade explícita (`declared` / `wired` / `exclusive`) | por capacidade, `exclusive` | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md), [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
-| Features exclusivas | **1** (`nao-lido`, contexto `lista`) | crescente; só estas contam como migradas | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| Features exclusivas | **3** (`login`, `external-config`, `nao-lido`) | crescente; só estas contam como migradas | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
 | ACL `src/sei/` | selectors, pages, supports, parse | concentra o SEI | [0003](./adr/0003-anti-corruption-layer-sei.md) |
 | Seletores fora do ACL | 58 | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
 | Ramificação `isNewSEI`/`isSEI_5` | 46 | 0 fora de `src/sei/` | [0003](./adr/0003-anti-corruption-layer-sei.md) |
@@ -116,8 +116,9 @@ Anatomia e regras por camada: [`DEVELOPMENT.md`](../DEVELOPMENT.md).
 
 `maturity` é um contrato verificável: `declared` só descreve a intenção, `wired` tem
 instalação nova mas ainda convive com caminho paralelo, e `exclusive` é instalada apenas
-pela raiz do contexto. O registry de `lista` é gerado em build a partir das capabilities
-`exclusive`; ele é o primeiro exemplo desse fluxo.
+pela raiz do contexto. Os registries de `login`, `db` e `lista` são gerados em build a
+partir das capabilities `exclusive`; cada bundle importa somente o registry do próprio
+contexto, evitando um catálogo global que aumentaria o acoplamento.
 
 ---
 

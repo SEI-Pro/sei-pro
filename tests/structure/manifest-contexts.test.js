@@ -78,8 +78,10 @@ describe('manifest context snapshots (ADR-0004 / 3.4)', () => {
         expect(db).toMatch(/boot\(\s*['"]db['"]\s*,/);
         expect(login).toMatch(/createLogger|createStorage|createMessaging/);
         expect(db).toMatch(/createLogger|createStorage|createMessaging/);
-        expect(login).toMatch(/registerPilotFeatures/);
-        expect(db).toMatch(/registerPilotFeatures/);
+        expect(login).toMatch(/registerLoginExclusiveFeatures/);
+        expect(db).toMatch(/registerDbExclusiveFeatures/);
+        expect(login).not.toMatch(/registerPilotFeatures/);
+        expect(db).not.toMatch(/registerPilotFeatures/);
     });
 
     it('records remaining broad-block script count as a regression guard', () => {
