@@ -368,10 +368,6 @@ A ordem canônica é **[docs/implementation-plan.md](./docs/implementation-plan.
 fatias, portões e riscos. CSS `.seipro-*` é passo **em lote** por épico fechado, não a fila
 principal.
 
-> `docs/engineering-loop.md` e `docs/engineering-loop-board.md` eram citados aqui e **nunca
-> existiram** no repositório — por isso `npm run loop:next` falha ao ler o board. Decidir
-> entre apontar os scripts para o plano ou removê-los é a fatia 0.6 do plano.
-
 Quando for migrar uma feature existente (humano ou maker), seguir nesta ordem:
 
 1. **Tirar dependências de feature de dentro de `core/stack.js`** — `installMonitoradoStore`

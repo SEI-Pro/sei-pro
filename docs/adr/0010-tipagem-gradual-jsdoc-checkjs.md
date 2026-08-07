@@ -1,8 +1,15 @@
 # ADR-0010 — Tipagem gradual com JSDoc + `checkJs`, sem migrar para TypeScript
 
-- **Status:** Aceito
+- **Status:** Substituído por 0014
 - **Data:** 2026-08-07
 - **Relacionados:** ADR-0005, ADR-0008
+
+> **Substituído por [ADR-0014](./0014-typescript-para-codigo-novo.md)** no mesmo dia.
+> Os argumentos deste ADR não se sustentaram na medição: o risco de pipeline não existe (o
+> esbuild compila `.ts` nativamente, sem plugin, e os legados continuam apenas copiados), e
+> o custo de renomeação que ele presumiu é praticamente zero (esbuild, vitest e `tsc`
+> resolvem `./x.js` para `x.ts`, então os 978 imports não precisam mudar). Mantido como
+> registro; não seguir.
 
 ## Contexto
 

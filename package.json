@@ -10,17 +10,25 @@
     "test": "vitest run",
     "test:atividades:smoke": "vitest run tests/features/atividades/smoke.test.js tests/features/atividades/view.test.js tests/features/atividades/call.test.js",
     "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "verify": "npm run typecheck && npm run build && npm test && npm run audit:dist",
     "audit:dist": "node scripts/audit-dist-sources.mjs",
     "notices": "node scripts/write-third-party-notices.mjs",
-    "loop:map": "node scripts/engineering-loop-map.mjs",
-    "loop:map:check": "node scripts/engineering-loop-map.mjs --check",
-    "loop:next": "node scripts/engineering-loop-next.mjs",
-    "loop:next:check": "node scripts/engineering-loop-next.mjs --check-board"
+    "docker:build": "docker compose run --rm build",
+    "docker:verify": "docker compose run --rm verify",
+    "docker:shell": "docker compose run --rm dev"
   },
   "//build": "esbuild bundla entries ESM (core-stack, features, login/db) e copia legados verbatim para dist/. Fonte da verdade: src/. Ver DEVELOPMENT.md.",
+  "//typecheck": "ADR-0014: o esbuild remove tipos SEM verificar. typecheck e a unica garantia real. Rode antes de build.",
+  "//docker": "Alternativa a Node instalado no OS. Mesma versao do .nvmrc e do Dockerfile; ao subir uma, suba as tres.",
+  "engines": {
+    "node": ">=22.23.1 <23"
+  },
   "devDependencies": {
+    "@types/chrome": "^0.2.5",
     "esbuild": "^0.28.1",
     "jsdom": "^29.1.1",
+    "typescript": "^7.0.2",
     "vitest": "^3.2.4"
   }
 }

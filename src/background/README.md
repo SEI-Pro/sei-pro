@@ -21,4 +21,5 @@ os handlers não compartilham módulos ESM com `core/`.
 ## Arquitetura
 
 Contrato geral: `DEVELOPMENT.md` (camadas, isolated-first, `legacy-api`).
-Programa de migração: `docs/engineering-loop.md` + board.
+Decisões: [`docs/adr/`](../../docs/adr/README.md).
+Programa de migração: [`docs/implementation-plan.md`](../../docs/implementation-plan.md).

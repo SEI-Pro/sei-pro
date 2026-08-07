@@ -1,0 +1,4 @@
+# A imagem não copia o código (só scripts/docker-entrypoint.sh); o repositório entra por
+# bind mount em tempo de execução. Isto mantém o contexto de build pequeno e rápido.
+*
+!scripts/docker-entrypoint.sh

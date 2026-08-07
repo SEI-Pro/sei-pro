@@ -23,8 +23,8 @@ cobra o cumprimento.
 | `Aceito` | Decisão vigente. Vale como norma, mesmo que a implementação esteja em curso |
 | `Substituído por NNNN` | Não vale mais |
 
-**Aceito ≠ implementado.** O ADR registra a direção; o progresso da implementação vive
-nos ratchets (ADR-0008) e no board de engenharia.
+**Aceito ≠ implementado.** O ADR registra a direção; o progresso da implementação vive nos
+ratchets (ADR-0008) e em [`implementation-plan.md`](../implementation-plan.md).
 
 ## Índice
 
@@ -46,8 +46,9 @@ nos ratchets (ADR-0008) e no board de engenharia.
 |---|---|
 | [0008](./0008-fitness-functions-e-ratchets.md) | Regra de arquitetura só existe se for verificada por máquina |
 | [0009](./0009-configuracao-como-schema-unico.md) | Configuração declarada num schema único, fonte de verdade compartilhada |
-| [0010](./0010-tipagem-gradual-jsdoc-checkjs.md) | Tipagem gradual com JSDoc + `checkJs`, sem migrar para TypeScript |
 | [0011](./0011-dist-fora-do-versionamento.md) | `dist/` fora do controle de versão |
+| [0014](./0014-typescript-para-codigo-novo.md) | TypeScript em toda a base por renomeação mecânica; dívida marcada com `@ts-nocheck` |
+| [0015](./0015-fronteiras-de-confianca.md) | Fronteiras de confiança explícitas; todo dado do SEI é não confiável |
 
 ### Correções de regras existentes
 
@@ -55,6 +56,12 @@ nos ratchets (ADR-0008) e no board de engenharia.
 |---|---|
 | [0012](./0012-aliasglobal-publicacao-vs-legado.md) | Separar publicação de namespace de alias legado; a regra antiga estava errada |
 | [0013](./0013-remover-bus-nao-utilizado.md) | Remover o event bus enquanto não houver consumidor real |
+
+### Substituídos
+
+| ADR | Decisão | Situação |
+|---|---|---|
+| [0010](./0010-tipagem-gradual-jsdoc-checkjs.md) | Tipagem gradual com JSDoc + `checkJs` | Substituído por [0014](./0014-typescript-para-codigo-novo.md) |
 
 ## Formato
 

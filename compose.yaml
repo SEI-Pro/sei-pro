@@ -1,0 +1,56 @@
+# Build e verificação sem Node no sistema operacional. Ver Dockerfile e DEVELOPMENT.md.
+#
+#   docker compose run --rm build     # gera dist/ no host
+#   docker compose run --rm verify    # typecheck + build + testes + auditoria de dist/
+#   docker compose run --rm watch     # rebuild contínuo enquanto edita
+#   docker compose run --rm dev       # shell dentro do ambiente
+#
+# Os serviços compartilham a mesma definição por âncora YAML; muda só o comando.
+
+x-node: &node
+  build:
+    context: .
+    dockerfile: Dockerfile
+  working_dir: /app
+  volumes:
+    # O repositório inteiro, para que dist/ apareça no host e seja carregado direto em
+    # chrome://extensions. Os testes de estrutura também precisam do .git real.
+    - .:/app
+    # Precede o bind mount neste caminho: o node_modules do host tem binários da plataforma
+    # errada (esbuild, jsdom). O volume mantém a instalação Linux isolada e em cache entre
+    # execuções, então npm ci roda só quando package-lock.json muda.
+    - node_modules:/app/node_modules
+  # Sem rede após a instalação das dependências não é possível hoje (npm ci precisa dela),
+  # mas o build em si é offline: nenhum passo baixa nada de dist/.
+  environment:
+    - CI=${CI:-}
+
+services:
+  build:
+    <<: *node
+    command: ['npm', 'run', 'build']
+
+  verify:
+    <<: *node
+    command: ['npm', 'run', 'verify']
+
+  watch:
+    <<: *node
+    command: ['npm', 'run', 'dev']
+
+  typecheck:
+    <<: *node
+    command: ['npm', 'run', 'typecheck']
+
+  test:
+    <<: *node
+    command: ['npm', 'test']
+
+  dev:
+    <<: *node
+    command: ['bash']
+    stdin_open: true
+    tty: true
+
+volumes:
+  node_modules:
