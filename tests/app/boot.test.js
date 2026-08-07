@@ -23,10 +23,12 @@ describe('src/app registry + boot', () => {
     }
   });
 
-  it('lists pilot contexts', () => {
+  it('lists known contexts and reflects the runtime registry', () => {
     expect(listContextIds()).toEqual(expect.arrayContaining(['login', 'db']));
+    expect(getContext('login').features).toEqual([]);
+    expect(getContext('db').features).toEqual([]);
+    registerFeature({ id: 'login', contexts: ['login'], install: () => {} });
     expect(getContext('login').features).toContain('login');
-    expect(getContext('db').features).toContain('external-config');
   });
 
   it('boots registered features for a context', async () => {

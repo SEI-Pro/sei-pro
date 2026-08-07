@@ -12,7 +12,10 @@ const ALLOWED_PREFIXES = [
     'src/platform/',
     'src/background/',
     'src/bootstrap/',
-    'src/options/'
+    'src/options/',
+    // The MV3 service-worker entry resolves the browser API before composing
+    // the classic handlers; it is the context boundary, not feature code.
+    'src/entries/background'
 ];
 
 /**

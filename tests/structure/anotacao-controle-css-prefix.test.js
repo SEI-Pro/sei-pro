@@ -33,11 +33,11 @@ describe('migration: anotacao-controle P6 CSS em lote', () => {
 
   it('mantém o bundle e o CSS da feature carregados nos dois contextos do manifest', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
-    const entries = manifest.content_scripts.filter((entry) => entry.js.includes('js/anotacao-controle.bundle.js'));
+    const entries = manifest.content_scripts.filter((entry) => entry.js.includes('js/lista-context.bundle.js'));
 
     expect(entries).toHaveLength(2);
     for (const entry of entries) {
-      expect(entry.js).toContain('js/anotacao-controle.bundle.js');
+      expect(entry.js).toContain('js/lista-context.bundle.js');
       expect(entry.css).toContain('css/anotacao-controle.css');
     }
   });

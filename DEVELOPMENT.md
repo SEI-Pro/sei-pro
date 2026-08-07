@@ -168,7 +168,8 @@ src/
 │   ├── options.html · page.css                 # shell + estilos (sem jQuery)
 │   └── (feature plugs: features/*/options.js)  # ex.: monitorados-options.bundle.js
 ├── bootstrap/                     # init*.js, getscript-isolated, init-flags (glue de carga)
-└── background/background.js       # service worker (MV3)
+├── entries/background.js          # raiz do service worker (MV3)
+└── background/                    # handlers classic carregados por importScripts
 
 vendor/                            # terceiros — um diretório por lib, com VERSION.txt
 ├── jquery/ · jquery-ui/ · ckeditor/ · moment/ · chart/ · dompurify/ · …
@@ -674,7 +675,7 @@ The ESM adapters support OpenAI, Anthropic, Gemini, Moonshot, Ollama, and OpenAI
 endpoints. BYOK profiles are configured on the Options page, stored locally, and consumed
 by the service worker for streaming requests.
 
-### Service worker (`background.js`)
+### Service worker (`entries/background.js`)
 
 Registrado em `manifest.json` como `"background": { "service_worker": "js/background.js" }`. Abre aba na instalação/atualização. Requer permissão `tabs`.
 

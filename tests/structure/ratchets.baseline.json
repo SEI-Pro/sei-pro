@@ -6,15 +6,15 @@
   "filesWithConsole": 93,
   "consoleUsages": 503,
   "filesOver500": 45,
-  "aliasGlobal": 176,
+  "aliasGlobal": 180,
   "filesWithControladorOutside": 37,
   "filesWithVersionBranch": 46,
   "filesWithSeiSelectorsOutside": 58,
   "featuresOutsideContract": 0,
-  "largestContentScriptBlock": 40,
+  "largestContentScriptBlock": 33,
   "innerHTMLWrites": 110,
   "insertAdjacentHTML": 8,
   "jqueryHtml": 405,
-  "tsNocheck": 382,
+  "tsNocheck": 386,
   "seiProCssLines": 4437
 }

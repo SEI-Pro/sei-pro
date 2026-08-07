@@ -46,15 +46,14 @@ describe('migration: lista-processos full ESM facade', () => {
   it('preserva o wire da lista no manifest e os call-sites dos clusters', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const contexts = manifest.content_scripts.filter(({ js = [] }) =>
-      js.includes('js/sei-pro.js')
+      js.includes('js/lista-context.bundle.js')
     );
 
     expect(contexts.length).toBeGreaterThanOrEqual(2);
     for (const context of contexts) {
       if (!(context.css || []).length) continue;
-      if ((context.js || []).includes('js/lista.bundle.js')) {
-        expect(context.css).toContain('css/lista-processos.css');
-      }
+      expect(context.css).toContain('css/lista-processos.css');
+      expect(context.js).not.toContain('js/sei-pro.js');
     }
 
     const source = readListaProcessosSource();

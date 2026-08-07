@@ -214,7 +214,8 @@ uma raiz que constrói dependências de verdade.
 | 4.2 | Limite de falha + `cleanup` no boot | `boot.test.js`: feature que lança não impede as seguintes; `failed` nomeia o id |
 | 4.3 | Feature caída aparece como indisponível na UI | falha visível, nunca silenciosa |
 | 4.4 | Raiz de composição dos contextos `login` e `db` (já são bundles finos) | registry gerado por contexto; `getSeiPro()` segue restrito ao legado interno |
-| 4.5 | Raízes de `lista`, `arvore`, `editor`, `visualizacao`, um contexto por vez | ratchet de `getSeiPro()` cai a cada contexto |
+| 4.5 | Raízes de `lista`, `arvore`, `documento`, `visualizacao`, `editor`, um contexto por vez | ratchet de `getSeiPro()` cai a cada contexto |
+| 4.5a | Raízes explícitas de `options` e `service-worker`; manter `importScripts` isolado atrás da entry MV3 | `options` gera `options.bundle.js`; `background` mantém `js/background.js` estável e handlers testáveis |
 | 4.6 | `SeiPro` publicado só na raiz; `publishGlobal` substitui `aliasGlobal` no núcleo (ADR-0012) | `globals.test.js` verde; violações caem de 186 para 50 |
 | 4.7 | Logger injetado substitui `console.*` nos contextos migrados | ratchet de `console.*` cai de 492 |
 | 4.8 | Remover `platform/bus.js` e o emissor único (ADR-0013) | `no-bus.test.js` verde |
@@ -330,9 +331,10 @@ registry por varredura; `npm run manifest:check` (passthrough seguro); snapshot 
 Geração completa dos `content_scripts` permanece follow-up de risco.
 
 **Fase 4 — Composição** (2026-08-07). Ports `createX` + fakes; boot com isolamento de falha;
- raízes login/db/lista/arvore; registries gerados para os quatro contextos, com sete
- capacidades modernas da lista já exclusivas; `atividades` permanece no fim do plano;
-`publishGlobal` amostral; **bus removido** (ADR-0013).
+raízes login/db/lista/arvore/documento/visualizacao/editor; registries gerados por contexto,
+com sete capacidades modernas da lista já exclusivas; entries explícitas de `options` e do
+service worker; `atividades` permanece no fim do plano; `publishGlobal` amostral; **bus
+removido** (ADR-0013).
 
 **Fase 5 — Refronteiras (fundação)** (2026-08-07). Mapa de capacidades; testes de
 caracterização de `config-options`; strangler `atividades-config` + stubs

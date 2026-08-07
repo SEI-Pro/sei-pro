@@ -84,8 +84,8 @@ src/
 ├── shared/       # helpers e primitivos de UI vanilla (shared/ui/)
 ├── config/       # schema + read + migrations                   → ADR-0009
 ├── features/     # 26 capacidades (incl. stranglers)           → ADR-0004, ADR-0007
-├── options/      # página de configuração
-├── background/   # service worker MV3 + handlers
+├── options/      # implementação da página de configuração
+├── background/   # handlers do service worker MV3
 ├── bootstrap/    # init*.js legados (glue de carga, transitório)
 └── content/      # core-stack.js (bundle amplo transitório)
 ```
@@ -116,9 +116,12 @@ Anatomia e regras por camada: [`DEVELOPMENT.md`](../DEVELOPMENT.md).
 
 `maturity` é um contrato verificável: `declared` só descreve a intenção, `wired` tem
 instalação nova mas ainda convive com caminho paralelo, e `exclusive` é instalada apenas
-pela raiz do contexto. Os registries de `login`, `db`, `lista` e `arvore` são gerados em build a
-partir das capabilities `exclusive`; cada bundle importa somente o registry do próprio
-contexto, evitando um catálogo global que aumentaria o acoplamento.
+pela raiz do contexto. Os registries de `login`, `db`, `lista`, `arvore`, `documento`,
+`visualizacao` e `editor` são gerados em build a partir das capabilities `exclusive`; cada
+bundle importa somente o registry do próprio contexto, evitando um catálogo global que
+aumentaria o acoplamento. `options` e `service-worker` também têm entries explícitas, mas
+são contextos de execução com composição própria (não são páginas de feature e, portanto,
+não entram no registry de features).
 
 ---
 

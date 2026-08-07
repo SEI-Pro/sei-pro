@@ -13,7 +13,7 @@ describe('migration: lista-agrupamento legacy bridge', () => {
     const index = source('src/features/lista-agrupamento/index.ts');
     const legacy = readListaProcessosSource();
 
-    expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
+    expect(index).toContain('installListaAgrupamentoLegacyApi');
     expect(bridge).toMatch(/import \{ aliasGlobal, globalRef \}/);
     expect(bridge).toMatch(/import \{\s*clearGroupCollapsed,\s*persistGroupCollapsed\s*\}/s);
     expect(bridge).toMatch(/import \{ toggleGroupTable \}/);
@@ -29,16 +29,15 @@ describe('migration: lista-agrupamento legacy bridge', () => {
     const manifest = JSON.parse(source('manifest.base.json'));
     const build = source('scripts/build.mjs');
     const contexts = manifest.content_scripts.filter(({ js = [] }) =>
-      js.includes('js/lista-agrupamento.bundle.js')
+      js.includes('js/lista-context.bundle.js')
     );
 
     expect(contexts).toHaveLength(2);
     for (const { js } of contexts) {
-      const bundleIndex = js.indexOf('js/lista-agrupamento.bundle.js');
-      const legacyIndex = js.indexOf('js/sei-pro.js');
-      expect(js[bundleIndex - 1]).toBe('js/docs-lote.bundle.js');
-      expect(bundleIndex).toBeLessThan(legacyIndex);
-      expect(js.slice(0, bundleIndex)).toContain('js/sei-functions-pro.js');
+      const bundleIndex = js.indexOf('js/lista-context.bundle.js');
+      expect(bundleIndex).toBeGreaterThan(js.indexOf('js/sei-functions-pro.js'));
+      expect(js).not.toContain('js/lista-agrupamento.bundle.js');
+      expect(js).not.toContain('js/docs-lote.bundle.js');
     }
 
     expect(build).toMatch(/entry:\s*'src\/features\/lista-agrupamento\/index\.(js|ts)'/);

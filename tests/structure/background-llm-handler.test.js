@@ -25,13 +25,13 @@ function browserWithProfiles(profiles) {
 
 describe('background LLM handler', () => {
   it('is wired as a bundled service-worker dependency', () => {
-    const background = readFileSync(join(rootDir, 'src/background/background.js'), 'utf8');
+    const background = readFileSync(join(rootDir, 'src/entries/background.js'), 'utf8');
     const handler = readFileSync(join(rootDir, 'src/background/llm-handler.ts'), 'utf8');
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
     const manifest = JSON.parse(readFileSync(join(rootDir, 'manifest.base.json'), 'utf8'));
 
-    expect(background).toMatch(/importScripts\([^)]*'llm-handler\.(js|ts)'/);
-    expect(background).toMatch(/SeiProBackgroundLlm\.handleLlmConnect\(port, browser\)/);
+    expect(background).toContain("'llm-handler.js'");
+    expect(background).toMatch(/SeiProBackgroundLlm\.handleLlmConnect\(port, browserApi\)/);
     expect(handler).toMatch(/response\.body\.getReader\(\)/);
     expect(handler).toMatch(/new TextDecoder\(\)/);
     expect(build).toMatch(/src\/background\/llm-handler\.(js|ts)/);

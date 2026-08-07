@@ -8,7 +8,7 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 function manifestWithAnotacaoControle() {
   return JSON.parse(read('manifest.base.json')).content_scripts.filter((entry) =>
-    entry.js.includes('js/anotacao-controle.bundle.js')
+    entry.js.includes('js/lista-context.bundle.js')
   );
 }
 
@@ -17,7 +17,7 @@ describe('migration: anotacao-controle legacy facade', () => {
     const index = read('src/features/anotacao-controle/index.ts');
     const bridge = read('src/features/anotacao-controle/legacy-api.ts');
 
-    expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
+    expect(index).toContain('installAnotacaoControleLegacyApi');
     expect(bridge).toMatch(/import \{ aliasGlobal \} from ['"]\.\.\/\.\.\/core\/global\.js['"]/);
     expect(bridge).toMatch(/import \* as domain from ['"]\.\/domain\.js['"]/);
     expect(bridge).toMatch(/import \* as io from ['"]\.\/io\.js['"]/);
@@ -44,10 +44,9 @@ describe('migration: anotacao-controle legacy facade', () => {
     for (const entry of entries) {
       const requiredBeforeFeature = [
         'js/core-stack.bundle.js',
-        'js/sei-functions-pro.js',
-        'js/sei-pro.js'
+        'js/sei-functions-pro.js'
       ];
-      const bundleIndex = entry.js.indexOf('js/anotacao-controle.bundle.js');
+      const bundleIndex = entry.js.indexOf('js/lista-context.bundle.js');
 
       for (const dependency of requiredBeforeFeature) {
         const dependencyIndex = entry.js.indexOf(dependency);
@@ -58,6 +57,7 @@ describe('migration: anotacao-controle legacy facade', () => {
       const initIndex = entry.js.indexOf('js/init.js');
       expect(initIndex, 'init.js must be present').toBeGreaterThan(bundleIndex);
       expect(entry.css).toContain('css/anotacao-controle.css');
+      expect(entry.js).not.toContain('js/anotacao-controle.bundle.js');
     }
   });
 
@@ -74,7 +74,8 @@ describe('migration: anotacao-controle legacy facade', () => {
     const index = read('src/features/anotacao-controle/index.ts');
 
     expect(build).toContain("{ entry: 'src/features/anotacao-controle/index.ts', out: 'dist/js/anotacao-controle.bundle.js' }");
-    expect(index).toContain("import './legacy-api.js';");
+    expect(index).toContain('installAnotacaoControleLegacyApi');
+    expect(index).toContain('install: installAnotacaoControle');
     expect(index).toContain("publishFeature({");
     expect(index).toContain("nsKey: 'anotacaoControle'");
     expect(index).toMatch(/api:\s*Object\.freeze\(\{[\s\S]*init:\s*initReplaceSticknoteHome/);

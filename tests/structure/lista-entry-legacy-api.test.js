@@ -13,7 +13,7 @@ describe('entry da lista — ponte legacy-api', () => {
         const bridge = read('src/entries/lista/legacy-api.ts');
         const legacy = readListaProcessosSource();
 
-        expect(entry).toContain("import './lista/legacy-api.js';");
+        expect(entry).toContain("import { installListaEntryLegacyApi as installLegacyApi } from './lista/legacy-api.js';");
         expect(bridge).toContain("aliasGlobal('getListaEntryContextLegacy'");
         expect(bridge).toContain("aliasGlobal('runListaProcessosViewLegacy'");
         expect(legacy).not.toMatch(/function getListaEntryContextLegacy\s*\(/);
@@ -40,23 +40,22 @@ describe('entry da lista — ponte legacy-api', () => {
 
     it('mantém o bundle da entry antes da fachada legada nos contextos de lista', () => {
         const manifest = JSON.parse(read('manifest.base.json'));
-        const entries = manifest.content_scripts.filter((item) => item.js.includes('js/lista.bundle.js'));
+        const entries = manifest.content_scripts.filter((item) => item.js.includes('js/lista-context.bundle.js'));
         expect(entries.length).toBe(2);
         for (const item of entries) {
             const requiredOrder = [
                 'js/core-stack.bundle.js',
                 'js/sei-functions-pro.js',
-                'js/lista-agrupamento.bundle.js',
-                'js/lista.bundle.js',
-                'js/sei-pro.js',
-                'js/sei-pro-controle-prazo.js',
                 'js/lista-context.bundle.js',
-                'js/monitorados.bundle.js',
                 'js/init.js'
             ];
             const positions = requiredOrder.map((script) => item.js.indexOf(script));
             expect(positions.every((position) => position >= 0)).toBe(true);
             expect(positions).toEqual([...positions].sort((a, b) => a - b));
+        }
+        for (const item of entries) {
+            expect(item.js).not.toContain('js/lista.bundle.js');
+            expect(item.js).not.toContain('js/sei-pro.js');
         }
         const build = read('scripts/build.mjs');
         expect(build).toContain("src/entries/' + f");

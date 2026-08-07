@@ -35,8 +35,7 @@ const LEGACY_VERBATIM = new Set([
     'src/background/bug-report-handler.js',
     'src/background/process-notification-handler.js',
     'src/background/install-handler.js',
-    'src/background/router.js',
-    'src/background/background.js'
+    'src/background/router.js'
 ]);
 
 const INTENTIONAL_RE =

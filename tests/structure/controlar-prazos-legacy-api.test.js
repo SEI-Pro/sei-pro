@@ -28,7 +28,8 @@ describe('migration: controlar-prazos legacy surface', () => {
     const entry = source('index.ts');
     const lista = readListaProcessosSource();
 
-    expect(entry).toMatch(/import ['"]\.\/legacy-api\.js['"]/);
+    expect(entry).toContain("import { installControlarPrazosLegacyApi } from './legacy-api.js';");
+    expect(entry).toContain('installControlarPrazosLegacyApi();');
     expect(lista.match(/\binitControlePrazo\s*\(/g)).toHaveLength(3);
     expect(lista).not.toMatch(/function\s+initControlePrazo\s*\(/);
     expect(lista).not.toMatch(/function\s+(?:addControlePrazo|setControlePrazo|updateTablePrazoProcesso)\s*\(/);

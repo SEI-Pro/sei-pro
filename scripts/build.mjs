@@ -33,9 +33,8 @@ const watch = process.argv.includes('--watch');
 // src/entries/ que compõe core + plataforma + as features daquele contexto.
 // Toda entry em src/entries/*.js vira dist/js/<nome>.bundle.js automaticamente.
 //
-// Transitórios (removidos quando todos os contextos migrarem para entries):
+// Transitório (removido quando todos os contextos migrarem para entries):
 //  - core-stack: stack core+sei carregada pelos blocos ainda não migrados.
-//  - arvore-info: feature da árvore (será dobrada na entry `tree`).
 import { readdirSync } from 'node:fs';
 import { GENERATED_CONTEXTS, generateContextRegistry, registryPath } from './generate-context-registry.mjs';
 
@@ -45,6 +44,7 @@ const entryBundles = readdirSync(entriesDir)
         const full = path.join(entriesDir, f);
         return statSync(full).isFile()
             && (f.endsWith('.ts') || f.endsWith('.js'))
+            && f !== 'background.js'
             && f !== 'editor.js'
             && f !== 'editor.ts'
             && f !== 'arvore.ts';
@@ -61,8 +61,10 @@ const entryBundles = readdirSync(entriesDir)
 // manifest.base.json until content_scripts are generated.
 const bundles = [
     { entry: 'src/content/core-stack.ts', out: 'dist/js/core-stack.bundle.js' },
-    // The service worker is legacy, but the LLM handler is bundled so it can
-    // reuse the provider adapters and streaming client without duplicating them.
+    // The service worker keeps classic importScripts for legacy handlers, but
+    // its lifecycle is composed by an explicit entry and emitted at the stable
+    // manifest path. The LLM handler is bundled separately for its ESM clients.
+    { entry: 'src/entries/background.js', out: 'dist/js/background.js' },
     { entry: 'src/background/llm-handler.ts', out: 'dist/js/llm-handler.js' },
     { entry: 'src/entries/arvore.ts', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' },
@@ -84,8 +86,6 @@ const bundles = [
     { entry: 'src/features/lista-agrupamento/index.ts', out: 'dist/js/lista-agrupamento.bundle.js' },
     // Projetos (Gantt): domain/store/view; saida mantem nome legado js/sei-pro-projetos.js
     { entry: 'src/features/projetos/index.ts', out: 'dist/js/sei-pro-projetos.js' },
-    // Options page (extension settings UI) — full vanilla bundle.
-    { entry: 'src/options/index.ts', out: 'dist/js/options.bundle.js' },
     // Página de opções — fatia de "Processos Monitorados" (dependência entre os
     // switches gerenciarmonitorados ↔ monitoradosacimacontrole). Carregado por
     // html/options.html ao lado do options.bundle.js.
@@ -104,7 +104,11 @@ function verifyGeneratedRegistries() {
 }
 
 /** Outputs substituídos por uma entry de contexto; não podem sobreviver no dist/. */
-const obsoleteOutputs = ['dist/js/sei-pro-nao-lido.js'];
+const obsoleteOutputs = [
+    'dist/js/sei-pro-nao-lido.js',
+    'dist/js/arvore-info.bundle.js',
+    'dist/js/quick-highlight.bundle.js'
+];
 
 function removeObsoleteOutputs() {
     for (const output of obsoleteOutputs) {
@@ -171,8 +175,7 @@ const legacyFiles = [
     'src/background/bug-report-handler.js',
     'src/background/process-notification-handler.js',
     'src/background/install-handler.js',
-    'src/background/router.js',
-    'src/background/background.js' // service worker (manifest: js/background.js)
+    'src/background/router.js'
 ];
 
 function copyLegacy() {

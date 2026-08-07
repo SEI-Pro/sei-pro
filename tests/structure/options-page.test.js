@@ -6,16 +6,21 @@ const root = process.cwd();
 const read = (rel) => readFileSync(join(root, rel), 'utf8');
 
 describe('options page migration wiring', () => {
-    it('bundles options from src/options/index.ts and drops legacy options.js copy', () => {
+    it('bundles options from the explicit context entry and drops legacy options.js copy', () => {
         const build = read('scripts/build.mjs');
-        expect(build).toContain("entry: 'src/options/index.ts'");
-        expect(build).toContain("out: 'dist/js/options.bundle.js'");
+        const entry = read('src/entries/options.ts');
+        expect(build).not.toContain("entry: 'src/options/index.ts'");
+        expect(build).toContain("f.endsWith('.ts')");
+        expect(build).toContain("f.replace(/\\.(js|ts)$/, '.bundle.js')");
+        expect(entry).toContain('bootOptionsContext');
+        expect(entry).toContain('startOptionsContext');
         expect(build).not.toContain("src/options/options.js', out: 'dist/html/options.js'");
         expect(existsSync(join(root, 'src/options/options.js'))).toBe(false);
         expect(existsSync(join(root, 'src/options/domain.ts'))).toBe(true);
         expect(existsSync(join(root, 'src/options/io.ts'))).toBe(true);
         expect(existsSync(join(root, 'src/options/view.ts'))).toBe(true);
         expect(existsSync(join(root, 'src/options/index.ts'))).toBe(true);
+        expect(existsSync(join(root, 'src/entries/options.ts'))).toBe(true);
     });
 
     it('loads the vanilla options bundle without jQuery/jmespath on the page', () => {
