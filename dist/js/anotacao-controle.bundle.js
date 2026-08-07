@@ -5,6 +5,49 @@
       __defProp(target, name, { get: all[name], enumerable: true });
   };
 
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function getSeiPro() {
+    globalRef.SeiPro = globalRef.SeiPro || {};
+    globalRef.SeiPro.core = globalRef.SeiPro.core || {};
+    globalRef.SeiPro.sei = globalRef.SeiPro.sei || {};
+    globalRef.SeiPro.features = globalRef.SeiPro.features || {};
+    globalRef.SeiPro.state = globalRef.SeiPro.state || {};
+    return globalRef.SeiPro;
+  }
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
+
+  // src/app/publish-feature.js
+  function toNamespaceKey(id) {
+    if (typeof id !== "string" || !id) return id;
+    return id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  }
+  function publishFeature(spec = {}) {
+    const id = spec.id;
+    if (typeof id !== "string" || !id) {
+      throw new Error("publishFeature: id is required");
+    }
+    const api = spec.api && typeof spec.api === "object" ? spec.api : {};
+    const install = typeof spec.install === "function" ? spec.install : function noop() {
+    };
+    const extras = spec.extras && typeof spec.extras === "object" ? spec.extras : {};
+    const published = Object.freeze({
+      id,
+      api,
+      install,
+      ...extras
+    });
+    const root = getSeiPro();
+    root.features = root.features || {};
+    const key = spec.nsKey || toNamespaceKey(id);
+    root.features[key] = published;
+    return published;
+  }
+
   // src/features/anotacao-controle/view.js
   var view_exports = {};
   __export(view_exports, {
@@ -79,14 +122,6 @@
     if (node && node.parentNode) node.parentNode.removeChild(node);
   }
 
-  // src/core/global.js
-  var globalRef = typeof window !== "undefined" ? window : globalThis;
-  function aliasGlobal(name, value) {
-    if (typeof globalRef[name] === "undefined") {
-      globalRef[name] = value;
-    }
-  }
-
   // src/core/texto.js
   function normalizeMojibakeUtf8(value) {
     value = typeof value === "string" ? value : "";
@@ -110,7 +145,7 @@
   }
   var COMBINING_MARKS_RE = new RegExp("[\\u0300-\\u036f]", "g");
 
-  // src/core/sticknote.js
+  // src/shared/sticknote/domain.js
   function parseSticknoteHomeLabel(label) {
     label = normalizeMojibakeUtf8(label);
     label = typeof label === "string" ? label : "";
@@ -624,14 +659,16 @@
   });
 
   // src/features/anotacao-controle/index.js
-  (function(win) {
-    "use strict";
-    win.SeiPro = win.SeiPro || {};
-    win.SeiPro.features = win.SeiPro.features || {};
-    win.SeiPro.features.anotacaoControle = {
+  function installAnotacaoControle() {
+  }
+  publishFeature({
+    id: "anotacao-controle",
+    nsKey: "anotacaoControle",
+    api: Object.freeze({
       init: initReplaceSticknoteHome,
       render: renderSticknoteHomeInline,
       replace: replaceSticknoteHome
-    };
-  })(window);
+    }),
+    install: installAnotacaoControle
+  });
 })();

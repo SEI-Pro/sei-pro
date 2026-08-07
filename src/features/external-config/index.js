@@ -12,6 +12,7 @@
  *    getConfigHost/appendIconEntidadeLogin (código morto neste fork).
  */
 import { getSeiPro } from '../../core/global.js';
+import { publishFeature } from '../../app/publish-feature.js';
 import { getParamsUrlPro } from '../../core/util.js';
 import { qs } from '../../dom/index.js';
 import { redactLegacyAiCredentials } from '../ai/io/profiles.js';
@@ -156,3 +157,13 @@ export function installExternalConfig() {
     changeBasePro();
     sei().core.bootstrap.getPathExtensionPro();
 }
+
+publishFeature({
+    id: 'external-config',
+    nsKey: 'externalConfig',
+    api: Object.freeze({
+        setOptionsSEIPro,
+        getOptionsSEIPro
+    }),
+    install: installExternalConfig
+});

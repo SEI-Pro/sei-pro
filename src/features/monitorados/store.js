@@ -1,4 +1,5 @@
 import { getSeiPro, globalRef } from '../../core/global.js';
+import { bus } from '../../platform/bus.js';
 import { isJson } from '../../core/serial.js';
 import {
     defaultConfigDate,
@@ -59,6 +60,7 @@ export function persistMonitoradoStore(store, options) {
     storeState.config.datetime = moment().format('YYYY-MM-DD HH:mm:ss');
     storeLastRaw = JSON.stringify(storeState);
     localStorage.setItem(STORE_KEY, storeLastRaw);
+    bus.emit('monitorados:updated', { items: storeState.monitorados || [] });
     if (options.remote !== false) scheduleMonitoradoRemote();
 }
 
@@ -107,9 +109,16 @@ export function saveConfigMonitorado() {
 }
 
 export function installMonitoradoStore() {
-    const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
-    Object.assign(monitorados, {
-        // store / io
+    // Staging bag until monitorados/index.js publishes the full { id, api, install }.
+    // Keep methods on the feature object for early legacy readers; index merges into api.
+    const root = getSeiPro();
+    root.features = root.features || {};
+    const monitorados = root.features.monitorados || (root.features.monitorados = {
+        id: 'monitorados',
+        api: {},
+        install: function noop() {}
+    });
+    const storeMethods = {
         getStore: getStoreMonitoradoPro,
         getOptionsConfigDate,
         persist: persistMonitoradoStore,
@@ -117,13 +126,15 @@ export function installMonitoradoStore() {
         flushRemote: flushMonitoradoRemote,
         getConfigDatetime: getConfigDatetimeMonitorado,
         save: saveConfigMonitorado,
-        // domain (puro)
         defaultConfigDate,
         defaultStore: defaultMonitoradoStore,
         findIndex: findMonitoradoIndex,
         processDataReady: monitoradoProcessDataReady,
         processPayloadReady: monitoradoProcessPayloadReady
-    });
+    };
+    Object.assign(monitorados, storeMethods);
+    if (!monitorados.api || typeof monitorados.api !== 'object') monitorados.api = {};
+    Object.assign(monitorados.api, storeMethods);
 
     // Flush imediato ao sair da página (localStorage já é síncrono; isto garante o backup remoto).
     if (typeof globalRef.addEventListener === 'function' && !globalRef.__seiProMonitoradoFlushBound) {

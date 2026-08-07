@@ -1,10 +1,9 @@
 /**
- * Lista de processos — entry do bundle (substitui a cópia legada sei-pro.js).
- *
- * Decomposição: domain · io · view · templates · state · body · legacy-api.
- * Saída: dist/js/sei-pro.js (mesmo nome do legado para o manifest).
+ * Lista de processos — entry do bundle.
+ * Contrato público { id, api, install }. body.js ainda é monolito residual.
  */
 import { ready } from '../../dom/index.js';
+import { publishFeature } from '../../app/publish-feature.js';
 import { installListaProcessosState } from './state.js';
 import {
     normalizeHomeFilterText,
@@ -20,23 +19,35 @@ import { initSeiPro } from './body.js';
 
 installListaProcessosState();
 
+export function installListaProcessos() {
+    installListaProcessosLegacyApi();
+    ready(function () {
+        initSeiPro();
+    });
+}
+
+publishFeature({
+    id: 'lista-processos',
+    nsKey: 'listaProcessos',
+    api: Object.freeze({
+        normalizeHomeFilterText,
+        normalizeHomeFilterKey,
+        quoteInlineJsText,
+        rewriteHomeFilterCaption,
+        rowMatchesHomeFilterFacts,
+        getListIdProtocoloSelectedFromValues,
+        listaAgrupamentoIO,
+        readGroupOrder
+    }),
+    install: installListaProcessos
+});
+
+// Compat: IO namespace still referenced by lista-agrupamento / io bridges.
 const namespace = globalThis.SeiPro = globalThis.SeiPro || {};
 namespace.features = namespace.features || {};
-namespace.features.listaProcessos = {
-    normalizeHomeFilterText,
-    normalizeHomeFilterKey,
-    quoteInlineJsText,
-    rewriteHomeFilterCaption,
-    rowMatchesHomeFilterFacts,
-    getListIdProtocoloSelectedFromValues
-};
 namespace.features.listaProcessosIO = {
     listaAgrupamentoIO,
     readGroupOrder
 };
 
-installListaProcessosLegacyApi();
-
-ready(function () {
-    initSeiPro();
-});
+installListaProcessos();

@@ -1,13 +1,9 @@
 /**
  * Feature "autopreencher senha no login" (config `autopreenchersenha`).
- *
- * Torna o campo de senha do SEI autofill-friendly: o SEI usa um #pwdSenha cru
- * que os gerenciadores de senha não reconhecem; expomos um campo visível com
- * autocomplete="current-password" e mantemos o #pwdSenha real sincronizado.
- *
- * Porte isolated-first, SEM jQuery (usa src/dom). Origem: dist/js/init_pwd.js.
+ * Tier S — contrato { id, api, install }. Porte isolated-first, SEM jQuery.
  */
 import { getSeiPro } from '../../core/global.js';
+import { publishFeature } from '../../app/publish-feature.js';
 import { qs, qsa, closest, show, hide } from '../../dom/index.js';
 
 function sei() { return getSeiPro(); }
@@ -111,3 +107,9 @@ export function installLoginAutofill() {
     observer.observe(document.documentElement, { childList: true, subtree: true });
     safety = setTimeout(function () { observer.disconnect(); }, 10000);
 }
+
+publishFeature({
+    id: 'login',
+    api: Object.freeze({ repair: applyRepairPwd }),
+    install: installLoginAutofill
+});

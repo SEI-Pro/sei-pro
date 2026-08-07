@@ -61,15 +61,17 @@ describe('migration: arvore full ESM facade', () => {
     }
 
     const body = read('src/features/arvore/body.js');
+    const sticknote = read('src/features/arvore/sticknote-view.js');
     const upload = read('src/features/arvore/upload.js');
     expect(body).toContain('export function initSeiProArvore');
     expect(body).toContain('export function actionToolbarPro');
     expect(body).toContain("from './upload.js'");
+    expect(body).toContain("from './sticknote-view.js'");
     expect(upload).toContain('export function loadUploadArvore');
     expect(upload).toContain('export function initUploadArvore');
     expect(upload).toContain('createFileQueue');
     expect(upload).toContain('bindUploadArvoreNativeDragEvents');
-    expect(body).toContain('export function sticknoteUpdate');
+    expect(sticknote).toContain('export function sticknoteUpdate');
     expect(body).toContain('toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });');
   });
 });

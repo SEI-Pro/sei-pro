@@ -18,6 +18,49 @@
     }
   }
 
+  // src/core/global.js
+  var globalRef = typeof window !== "undefined" ? window : globalThis;
+  function getSeiPro() {
+    globalRef.SeiPro = globalRef.SeiPro || {};
+    globalRef.SeiPro.core = globalRef.SeiPro.core || {};
+    globalRef.SeiPro.sei = globalRef.SeiPro.sei || {};
+    globalRef.SeiPro.features = globalRef.SeiPro.features || {};
+    globalRef.SeiPro.state = globalRef.SeiPro.state || {};
+    return globalRef.SeiPro;
+  }
+  function aliasGlobal(name, value) {
+    if (typeof globalRef[name] === "undefined") {
+      globalRef[name] = value;
+    }
+  }
+
+  // src/app/publish-feature.js
+  function toNamespaceKey(id) {
+    if (typeof id !== "string" || !id) return id;
+    return id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  }
+  function publishFeature(spec = {}) {
+    const id = spec.id;
+    if (typeof id !== "string" || !id) {
+      throw new Error("publishFeature: id is required");
+    }
+    const api = spec.api && typeof spec.api === "object" ? spec.api : {};
+    const install = typeof spec.install === "function" ? spec.install : function noop() {
+    };
+    const extras = spec.extras && typeof spec.extras === "object" ? spec.extras : {};
+    const published = Object.freeze({
+      id,
+      api,
+      install,
+      ...extras
+    });
+    const root = getSeiPro();
+    root.features = root.features || {};
+    const key = spec.nsKey || toNamespaceKey(id);
+    root.features[key] = published;
+    return published;
+  }
+
   // src/features/lista-processos/state.js
   function installListaProcessosState() {
     const g = globalThis;
@@ -126,24 +169,18 @@
     return value || fallback;
   }
 
-  // src/core/global.js
-  var globalRef = typeof window !== "undefined" ? window : globalThis;
-  function aliasGlobal(name, value) {
-    if (typeof globalRef[name] === "undefined") {
-      globalRef[name] = value;
-    }
-  }
-
   // src/features/lista-processos/body.js
   var body_exports = {};
   __export(body_exports, {
     addAcompanhamentoEspIcon: () => addAcompanhamentoEspIcon,
-    addKanbanProc: () => addKanbanProc,
+    addKanbanProc: () => addKanbanProc2,
     appendGerados: () => appendGerados,
     applyAssignmentFilterHomeFallback: () => applyAssignmentFilterHomeFallback,
     applyHomeFilterFallback: () => applyHomeFilterFallback,
     arrayProcessosUnidadePro: () => arrayProcessosUnidadePro,
+    atividadesApi: () => atividadesApi,
     bindProcessoPaginacaoSuperiorVisibility: () => bindProcessoPaginacaoSuperiorVisibility,
+    callAtividades: () => callAtividades,
     cancelMoveKanbanItensProc: () => cancelMoveKanbanItensProc,
     changeTypeProc: () => changeTypeProc,
     checkLoadConfigSheets: () => checkLoadConfigSheets,
@@ -161,7 +198,7 @@
     filterTableProcessos: () => filterTableProcessos,
     forceOnLoadBody: () => forceOnLoadBody,
     forceTableHomeDestroy: () => forceTableHomeDestroy,
-    getAllMarcadoresHome: () => getAllMarcadoresHome,
+    getAllMarcadoresHome: () => getAllMarcadoresHome2,
     getArrayProcessoRecebido: () => getArrayProcessoRecebido,
     getAssignmentFilterOptionsHome: () => getAssignmentFilterOptionsHome,
     getChangeTypeProc: () => getChangeTypeProc,
@@ -170,11 +207,11 @@
     getGroupTableLabelFromLink: () => getGroupTableLabelFromLink,
     getHomeRowTagValue: () => getHomeRowTagValue,
     getListIdProtocoloSelected: () => getListIdProtocoloSelected,
-    getListTypes: () => getListTypes,
+    getListTypes: () => getListTypes2,
     getListaMarcadores: () => getListaMarcadores,
     getMapaControleProcesso: () => getMapaControleProcesso,
     getNewTabProcesso: () => getNewTabProcesso,
-    getPanelProc: () => getPanelProc,
+    getPanelProc: () => getPanelProc2,
     getProcessoAtribuicaoValue: () => getProcessoAtribuicaoValue,
     getProcessoLinkFromGroupRow: () => getProcessoLinkFromGroupRow,
     getProcessosPaginacao: () => getProcessosPaginacao,
@@ -187,7 +224,7 @@
     getUploadFilesInProcess: () => getUploadFilesInProcess,
     handleClientLoadPro: () => handleClientLoadPro,
     hideProcessoPaginacaoSuperior: () => hideProcessoPaginacaoSuperior,
-    initAddKanbanProc: () => initAddKanbanProc,
+    initAddKanbanProc: () => initAddKanbanProc2,
     initAllMarcadoresHome: () => initAllMarcadoresHome,
     initChosenFilterHome: () => initChosenFilterHome,
     initDadosProcesso: () => initDadosProcesso,
@@ -247,7 +284,7 @@
     setTimeTest: () => setTimeTest,
     setUploadFilesInProcess: () => setUploadFilesInProcess,
     sortUploadArvore: () => sortUploadArvore,
-    storeGroupTablePro: () => storeGroupTablePro,
+    storeGroupTablePro: () => storeGroupTablePro2,
     storeLinkUsuarioSistema: () => storeLinkUsuarioSistema,
     storeVersionSEI: () => storeVersionSEI,
     syncHomeProcessCaption: () => syncHomeProcessCaption,
@@ -655,8 +692,7 @@
     return '<div class="dz-preview dz-file-preview seipro-arvore-file-preview">   <div class="dz-details">       <span class="dz-error-mark"><i data-seipro-file-remove data-dz-remove class="fas fa-trash vermelhoColor" style="margin: 5px 8px;cursor: pointer; font-size: 10pt;"></i></span>       <span class="dz-error-message"><span data-seipro-file-error data-dz-errormessage></span></span>       <span class="dz-progress"><span class="dz-upload" data-seipro-file-progress data-dz-uploadprogress></span></span>       <a id="anchorImgID" data-img="' + iconData + '" style="margin-left: -4px;" class="clipboard">           <img class="dz-link-icon" src="' + iconSrc + '" align="absbottom" id="iconID">       </a>       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>       <a id="anchorID" target="' + ifrTarget + '" class="dz-filename">           <span data-dz-name title="">' + name.replace(/</g, "&lt;") + '</span>       </a>       <span class="dz-size" data-dz-size>' + sizeLabel + '</span>       <span class="dz-remove" data-seipro-file-remove data-dz-remove><i class="fas fa-trash-alt vermelhoColor" style="cursor:pointer"></i></span>   </div></div>';
   }
 
-  // src/features/lista-processos/body.js
-  installListaProcessosState();
+  // src/features/lista-processos/atividades-bridge.js
   function atividadesApi() {
     var root = typeof parent !== "undefined" && parent.SeiPro ? parent.SeiPro : typeof SeiPro !== "undefined" ? SeiPro : null;
     var feature = root && root.features && root.features.atividades;
@@ -664,12 +700,359 @@
   }
   function callAtividades(name) {
     var api = atividadesApi();
-    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
+    var fn = api && api.commands && typeof api.commands[name] === "function" ? api.commands[name] : api && api.queries && typeof api.queries[name] === "function" ? api.queries[name] : api && api.handlers && typeof api.handlers[name] === "function" ? api.handlers[name] : null;
     if (typeof fn !== "function") return void 0;
     var args = Array.prototype.slice.call(arguments, 1);
     return fn.apply(null, args);
   }
-  function loadKanbanStylePro() {
+
+  // src/features/lista-processos/kanban-home.js
+  function addKanbanProc2(type = storeGroupTablePro(), loop = 3) {
+    if (typeof jKanban === "undefined") {
+      loadKanbanStylePro();
+      $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
+    }
+    if (!type || type == "all" || type == "") {
+      setOptionsPro("panelProcessosView", "Tabela");
+      var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
+      if (btnTabela) getPanelProc(btnTabela);
+    } else {
+      var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
+      if (type == "users") {
+        if (getOptionsPro("arrayListUsersSEI") && getOptionsPro("arrayListUsersSEI").length > 0) {
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
+          var itensKanban = $.map(getOptionsPro("arrayListUsersSEI"), function(v) {
+            return typeof getAtribuicaoDisplayLabel === "function" ? getAtribuicaoDisplayLabel(v.name, v.name, checkConfigValue("nomesusuarios")) : v.name;
+          });
+          itensKanban.unshift("");
+        } else if (loop > 0) {
+          getAjaxListaAtribuicao();
+          setTimeout(function() {
+            initAddKanbanProc(type, loop - 1);
+          }, 2e3);
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
+        }
+      } else if (type == "tags") {
+        if (getOptionsPro("listaMarcadores") && getOptionsPro("listaMarcadores").length > 0) {
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
+          var itensKanban = $.map(getOptionsPro("listaMarcadores"), function(v) {
+            return v.name;
+          });
+          itensKanban.unshift("");
+        } else if (loop > 0) {
+          getAjaxListaMarcador();
+          setTimeout(function() {
+            initAddKanbanProc(type, loop - 1);
+          }, 2e3);
+          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
+        }
+      } else {
+        var itensKanban = getListTypes(type);
+        $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
+      }
+      if (!!itensKanban && type != "") {
+        itensKanban = $.map(itensKanban, function(v, i2) {
+          return { order: i2, name: v, id: getTagName(v, type) };
+        });
+        var tr = tableProc.find("tr[data-tagname]:not(.tagintable)");
+        var itens = tr.map(function() {
+          var tagName = $(this).data("tagname");
+          var idTag = "id_" + tagName;
+          var itemBoard = $.grep(itensKanban, function(item) {
+            return item.id == tagName;
+          })[0];
+          var nameLabel = itemBoard && itemBoard.name !== "" ? itemBoard.name : "Sem Grupo";
+          var linkProc = $(this).find('a[href*="acao=procedimento_trabalhar"]');
+          var tip = extractTooltipToArray(linkProc.attr("onmouseover"));
+          tip = typeof tip !== "undefined" ? tip : false;
+          var linkParams = getParamsUrlPro(linkProc.attr("href"));
+          var id_protocolo = linkParams && typeof linkParams.id_procedimento !== "undefined" ? linkParams.id_procedimento : false;
+          if (id_protocolo !== false && id_protocolo !== "false" && id_protocolo !== "" && id_protocolo !== null && typeof id_protocolo !== "undefined") {
+            return {
+              id: idTag,
+              title: nameLabel,
+              id_protocolo: String(id_protocolo),
+              processo: linkProc.text(),
+              especificacao: tip ? tip[0] : false,
+              tipo: tip ? tip[1] : false,
+              html_icons: $(this).find("td").eq(1).html(),
+              html_proc: $(this).find("td").eq(2).html(),
+              html_atribuicao: $(this).find("td").eq(3).html(),
+              html_prazo: $(this).find("td.seipro-prazo-box-display").html(),
+              color: $(this).data("color") ? $(this).css("color") : false
+            };
+          }
+        }).get();
+        $("#processosKanban").remove();
+        $("#newFiltro").after('<div id="processosKanban" style="display: inline-block;margin-top: 60px;width: 100%;"></div>');
+        var bords_list = $.map(itensKanban, function(v, i2) {
+          var item = $.grep(itens, function(row) {
+            return row.id == "id_" + v.id;
+          });
+          var title = v.name == "" ? "Sem Grupo" : v.name;
+          title = (type == "arrivaldate" || type == "acessdate" || type == "senddate" || type == "createdate" || type == "deadline") && title.indexOf(".") !== -1 ? title.split(".")[1] : title;
+          var boardOrderStore = getOptionsPro("panelProcessosOrder_" + type);
+          var boardOrderItem = boardOrderStore && $.isArray(boardOrderStore) ? $.grep(boardOrderStore, function(row) {
+            return row.id == v.id;
+          })[0] : null;
+          var order_board = boardOrderItem && typeof boardOrderItem.order !== "undefined" ? boardOrderItem.order : i2;
+          order_board = order_board === null ? 9999 : order_board;
+          var collapse_board = boardOrderItem && typeof boardOrderItem.collapse !== "undefined" ? boardOrderItem.collapse : false;
+          var itens_board = $.map(item, function(value, index) {
+            if (!value || !value.id_protocolo || value.id_protocolo === "false") {
+              return;
+            }
+            var iten_urgente = value.especificacao && value.especificacao.toLowerCase().indexOf("(urgente)") !== -1 ? true : false;
+            var item_pinboard = false;
+            var order_item = false;
+            if (boardOrderItem && $.isArray(boardOrderItem.itens)) {
+              order_item = $.grep(boardOrderItem.itens, function(row) {
+                return row.id == String(value.id_protocolo);
+              })[0] || false;
+            }
+            item_pinboard = order_item === null || order_item === false ? item_pinboard : order_item.pinboard;
+            order_item = order_item === null || order_item === false ? 9999 : order_item.order;
+            order_item = iten_urgente ? -1 : order_item;
+            var pinBoard = '<span style="float: right;margin: -5px -10px 0 0;" class="kanban-pinboard info_noclick"><a class="newLink info_noclick ' + (item_pinboard ? "newLink_active" : "") + '" onclick="pinKanbanItensProc(this, ' + value.id_protocolo + `)" onmouseover="return infraTooltipMostrar('` + (item_pinboard ? "Remover do topo" : "Fixar no topo") + `');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-thumbtack cinzaColor"></i></a></span>`;
+            return {
+              id: value.id_protocolo,
+              order: order_item,
+              title: pinBoard + '<div class="kanban-content">   <div class="kanban-title-card content_edit" data-field="assunto" data-id="' + value.id_protocolo + '">       <span class="info" data-type="proc" style="width: 75%;">           ' + value.html_proc + '           <a class="newLink info_noclick followLinkNewtab" href="controlador.php?acao=procedimento_trabalhar&id_procedimento=' + value.id_protocolo + `" onmouseover="return infraTooltipMostrar('Abrir em nova aba');" onmouseout="return infraTooltipOcultar();" target="_blank"><i class="fas fa-external-link-alt" style="font-size: 90%; text-decoration: underline;"></i></a>       </span>   </div>   <div class="kanban-description">       <span class="sub info_noclick" data-type="especificacao">` + value.especificacao + '</span>       <span class="sub info_noclick" data-type="tipo">' + value.tipo + '</span>       <span class="sub info_noclick" data-type="atribuicao">' + value.html_atribuicao + '</span>       <span class="sub info_noclick" data-type="icons">' + value.html_icons + '</span>       <span class="sub info_noclick" data-type="prazo">' + value.html_prazo + "</span>   </div></div>",
+              click: function(el) {
+                var id_protocolo = el.dataset.eid;
+                var checkOver = $(el).find(".info_noclick:hover").length > 0 ? $(el).find(".info_noclick:hover") : false;
+                var newTab = $(el).find(".followLinkNewtab:hover").length > 0 ? $(el).find(".followLinkNewtab:hover") : false;
+                if (!dialogBoxPro && !checkOver && id_protocolo) window.location.href = "controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo;
+                if (!dialogBoxPro && id_protocolo && newTab) openLinkNewTab("controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo);
+              },
+              class: iten_urgente ? "urgente" : ""
+            };
+          });
+          itens_board.sort(function(a, b) {
+            return a.order - b.order;
+          });
+          if (v.id == "SemGrupo" && itens_board.length === 0) {
+            return null;
+          }
+          return {
+            id: v.id,
+            title,
+            order: order_board,
+            class: "proc_" + type,
+            color: typeof item[0] !== "undefined" ? item[0].color : false,
+            collapse: collapse_board,
+            item: itens_board
+          };
+        });
+        bords_list.sort(function(a, b) {
+          return a.order - b.order;
+        });
+        var kanban = new jKanban({
+          element: "#processosKanban",
+          gutter: "10px",
+          widthBoard: "calc(25% - 20px)",
+          // responsivePercentage: true,
+          itemHandleOptions: {
+            enabled: true
+          },
+          dragEl: function(el, source) {
+            var sourceEl = source.parentElement.getAttribute("data-id");
+            var id_protocolo = el.dataset.eid;
+            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
+            kanbanProcessosMoving = { source: sourceEl, id: el.dataset.eid, order: elemItem.index() };
+          },
+          dropEl: function(el, target, source, sibling) {
+            updateOrderKanbanBoardProc();
+            var targetEl = target.parentElement.getAttribute("data-id");
+            var sourceEl = source.parentElement.getAttribute("data-id");
+            var id_protocolo = el.dataset.eid;
+            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
+            var titleSource = elemItem.closest(".kanban-board").find(".kanban-title-board").text();
+            var elemContent = elemItem.find(".kanban-content");
+            var elemProc = elemContent.find('span[data-type="proc"]');
+            var elemUser = elemContent.find('span[data-type="atribuicao"]');
+            var elemIcons = elemContent.find('span[data-type="icons"]');
+            var elemTypes = elemContent.find('span[data-type="tipo"]');
+            if (type == "users" && sourceEl != targetEl) {
+              var arrayListUsersSEI = getOptionsPro("arrayListUsersSEI");
+              if (arrayListUsersSEI) {
+                var userMatch = $.grep(arrayListUsersSEI, function(item) {
+                  return item.name && item.name.indexOf(targetEl) !== -1;
+                })[0];
+                var idUser = userMatch ? userMatch.value : false;
+                idUser = idUser == "SemGrupo" ? "null" : idUser;
+                var linkAtribuicao = tableProc.find('a[href*="&id_usuario_atribuicao=' + idUser + '"]').attr("href");
+                elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
+                updateDadosArvore("Atribuir Processo", "selAtribuicao", idUser, id_protocolo, function() {
+                  if (targetEl != "SemGrupo") {
+                    var targetAtribuicao = '(<a href="' + linkAtribuicao + '" title="Atribu\xEDdo para ' + targetEl + '" class="ancoraSigla">' + targetEl + "</a>)";
+                    elemUser.html(targetAtribuicao);
+                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html(targetAtribuicao);
+                  } else {
+                    elemUser.html("");
+                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html("");
+                  }
+                  elemProc.find("i.fa-sync").remove();
+                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
+                  setTimeout(function() {
+                    elemProc.find("i.fa-check-double").remove();
+                  }, 2e3);
+                });
+              }
+            } else if (type == "tags" && sourceEl != targetEl) {
+              var listMarcadores = getOptionsPro("listaMarcadores");
+              listMarcadores = listMarcadores ? $.map(listMarcadores, function(v) {
+                return { name: getTagName(v.name, type), value: v.value, img: v.img };
+              }) : false;
+              listMarcadores = listMarcadores !== null ? listMarcadores : false;
+              var arrayMarcador = listMarcadores ? $.grep(listMarcadores, function(item) {
+                return item.name == targetEl;
+              })[0] : false;
+              var valueMarcador = arrayMarcador !== null && arrayMarcador ? arrayMarcador.value : false;
+              var elemIconTag = elemIcons.find('a[href*="acao=andamento_marcador_gerenciar"]');
+              var elemIconTagTable = tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).find('a[href*="acao=andamento_marcador_gerenciar"]');
+              var valueText = elemIconTag.attr("onmouseover");
+              valueText = typeof valueText !== "undefined" ? extractTooltipToArray(valueText) : false;
+              valueText = valueText ? valueText[0] : false;
+              valueText = typeof valueText !== "undefined" && valueText ? valueText : "";
+              if (valueMarcador || targetEl == "SemGrupo") {
+                var valuesIframe = [
+                  { element: "txaTexto", value: valueText },
+                  { element: "hdnIdMarcador", value: targetEl == "SemGrupo" ? "" : valueMarcador }
+                ];
+                updateDadosArvoreMult("Gerenciar Marcador", valuesIframe, id_protocolo, function() {
+                  var arrayListMarcadores = sessionStorageRestorePro("dadosMarcadoresProcessoPro");
+                  var markerStyle = arrayListMarcadores && valueMarcador ? $.grep(arrayListMarcadores, function(item) {
+                    return item.icon == arrayMarcador.img;
+                  })[0] : null;
+                  var styleMarcador = markerStyle && typeof markerStyle.style !== "undefined" ? markerStyle.style : null;
+                  styleMarcador = styleMarcador !== null ? styleMarcador : "";
+                  if (targetEl != "SemGrupo" && sourceEl != "SemGrupo") {
+                    elemIconTag.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
+                    elemIconTagTable.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
+                  } else if (targetEl != "SemGrupo" && sourceEl == "SemGrupo") {
+                    var targetMarcador = '<a href="#controlador.php?acao=andamento_marcador_gerenciar&acao_origem=procedimento_controlar&acao_retorno=procedimento_controlar&id_procedimento=' + id_protocolo + `" onmouseover="return infraTooltipMostrar('` + valueText + "','" + titleSource + `');" onmouseout="return infraTooltipOcultar();" data-color="true" style="` + styleMarcador + '"><img src="' + arrayMarcador.img + '" class="imagemStatus"></a>';
+                    elemIcons.append(targetMarcador);
+                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).append(targetMarcador);
+                  } else if (targetEl == "SemGrupo") {
+                    elemIconTag.remove();
+                    elemIconTagTable.remove();
+                  }
+                  elemProc.find("i.fa-sync").remove();
+                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
+                  setTimeout(function() {
+                    elemProc.find("i.fa-check-double").remove();
+                  }, 2e3);
+                  getAllMarcadoresHome();
+                });
+              }
+            } else if (type == "types" && sourceEl != targetEl && targetEl != "SemGrupo") {
+              elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
+              initListTypesSEI(function() {
+                var tipoMatch = typeof arrayListTypesSEI.selectTipoProc !== "undefined" ? $.grep(arrayListTypesSEI.selectTipoProc, function(item) {
+                  return item.name == titleSource;
+                })[0] : null;
+                var idTypeProc = tipoMatch ? tipoMatch.value : false;
+                if (idTypeProc) {
+                  updateDadosArvore("Consultar/Alterar Processo", "selTipoProcedimento", idTypeProc, id_protocolo, function() {
+                    elemTypes.text(titleSource);
+                    elemProc.find("i.fa-sync").remove();
+                    elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
+                    setTimeout(function() {
+                      elemProc.find("i.fa-check-double").remove();
+                    }, 2e3);
+                  });
+                } else {
+                  elemProc.find("i.fa-sync").remove();
+                  elemProc.prepend('<i class="fas fa-times vemelhoColor" style="margin-right: 5px;"></i>');
+                  setTimeout(function() {
+                    elemProc.find("i.fa-times").remove();
+                  }, 2e3);
+                }
+              });
+            } else if (sourceEl != targetEl) {
+              cancelMoveKanbanItensProc();
+            }
+            kanbanProcessosMoving = false;
+          },
+          dragendBoard: function(el) {
+            updateOrderKanbanBoardProc();
+          },
+          boards: bords_list
+        });
+        kanbanProcessos = kanban;
+        tableProc.hide();
+        updateCountKanbanBoardProc();
+      }
+    }
+  }
+  function cancelMoveKanbanItensProc() {
+    var itemMove = kanbanProcessosMoving;
+    if (itemMove && $("#processosKanban").is(":visible")) {
+      var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + itemMove.source + "'] | [0].item | [?id=='" + itemMove.id + "'] | [0]");
+      item = item == null ? false : item;
+      kanbanProcessos.removeElement(item.id);
+      kanbanProcessos.addElement(itemMove.source, item, itemMove.order);
+    }
+  }
+  function pinKanbanItensProc(this_, id_protocolo) {
+    var _this = $(this_);
+    var _parent = _this.closest(".kanban-board");
+    var _hasActive = _this.hasClass("newLink_active");
+    var source = _parent.data("id");
+    var order = _hasActive ? -1 : 0;
+    var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + source + "'] | [0].item | [?id=='" + id_protocolo + "'] | [0]");
+    item = item == null ? false : item;
+    if (item) {
+      kanbanProcessos.removeElement(item.id);
+      kanbanProcessos.addElement(source, item, order);
+      if (!_hasActive) {
+        $("#processosKanban .kanban-container").animate({ scrollTop: 0 }, 500, function() {
+          $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').addClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Remover do topo')");
+          updateOrderKanbanBoardProc();
+        });
+      } else {
+        $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').removeClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Fixar no topo')");
+        updateOrderKanbanBoardProc();
+      }
+      if (typeof infraTooltipOcultar === "function") infraTooltipOcultar();
+    }
+  }
+  function updateOrderKanbanBoardProc() {
+    var type = storeGroupTablePro();
+    var arrayOrder = $("#processosKanban .kanban-board").map(function() {
+      var _this = $(this);
+      var itens = _this.find(".kanban-item").map(function(i2) {
+        return { id: String($(this).data("eid")), order: i2, pinboard: $(this).find(".kanban-pinboard a").hasClass("newLink_active") };
+      }).get();
+      var boards = { id: _this.data("id"), order: _this.data("order"), collapse: _this.data("collapse"), itens };
+      return boards;
+    }).get();
+    setOptionsPro("panelProcessosOrder_" + type, arrayOrder);
+  }
+  function collapseKanbanBoardProc(this_) {
+    var _this = $(this_);
+    var _parent = _this.closest(".kanban-board");
+    var _data = _parent.data();
+    _parent.attr("data-collapse", _data.collapse ? false : true).data("collapse", _data.collapse ? false : true);
+    _parent.find(".kanban-collapse i").attr("class", _data.collapse ? "fas fa-plus-square azulColor" : "fas fa-minus-square cinzaColor");
+    updateOrderKanbanBoardProc();
+  }
+  function updateCountKanbanBoardProc() {
+    if (!kanbanProcessos || !kanbanProcessos.options || !$.isArray(kanbanProcessos.options.boards)) {
+      return;
+    }
+    $.each(kanbanProcessos.options.boards, function(i2, v) {
+      var elemBoard = $('#processosKanban .kanban-board[data-id="' + v.id + '"]');
+      var countBoard = elemBoard.find(".kanban-item:visible").length;
+      var iconCollapse = elemBoard.find(".kanban-collapse").length ? false : '<div class="kanban-collapse" onclick="collapseKanbanBoardProc(this)"><i class="fas fa-' + (v.collapse ? "plus" : "minus") + "-square " + (v.collapse ? "azulColor" : "cinzaColor") + '"></i></div>';
+      elemBoard.attr("data-collapse", v.collapse).find(".kanban-title-board").attr("data-count", countBoard).after(iconCollapse);
+    });
+  }
+
+  // src/features/lista-processos/body.js
+  installListaProcessosState();
+  function loadKanbanStylePro2() {
     var base = typeof URL_SPRO !== "undefined" ? URL_SPRO : "";
     if (!base || typeof loadStylePro !== "function") return;
     loadStylePro(base + "css/jkanban.min.css");
@@ -784,7 +1167,7 @@
   function getProcessoLinkFromGroupRow(row) {
     return $(row).find('a[href*="acao=procedimento_trabalhar"], a[href*="controlador.php?acao=procedimento_trabalhar"]').first();
   }
-  function getListTypes(acaoType) {
+  function getListTypes2(acaoType) {
     var orderbyTableGroup2 = readGroupOrderLegacy();
     var arrayTag = [""];
     if (acaoType == "tags") {
@@ -1242,7 +1625,7 @@
       }
     }
   }
-  function storeGroupTablePro() {
+  function storeGroupTablePro2() {
     if (typeof localStorageRestorePro !== "undefined" && localStorageRestorePro("selectGroupTablePro") != null) {
       var io = listaAgrupamentoIO2();
       var selectGroup = io && typeof io.readSelectedGroup === "function" ? io.readSelectedGroup(localStorageRestorePro) : localStorageRestorePro("selectGroupTablePro");
@@ -1290,18 +1673,18 @@
         htmlControl += selectAssignmentFilterHome();
       }
       if (enableGroupTable) {
-        var statusTableTags = storeGroupTablePro() == "tags" ? "selected" : "";
-        var statusTableTypes = storeGroupTablePro() == "types" ? "selected" : "";
-        var statusTableUsers = storeGroupTablePro() == "users" ? "selected" : "";
-        var statusTableCheckpoints = storeGroupTablePro() == "checkpoints" ? "selected" : "";
-        var statusTableArrivaldate = storeGroupTablePro() == "arrivaldate" ? "selected" : "";
-        var statusTableSenddate = storeGroupTablePro() == "senddate" ? "selected" : "";
-        var statusTableDeadline = storeGroupTablePro() == "deadline" ? "selected" : "";
-        var statusTableAcessdate = storeGroupTablePro() == "acessdate" ? "selected" : "";
-        var statusTableDepartSend = storeGroupTablePro() == "senddepart" ? "selected" : "";
-        var statusTableCreatedate = storeGroupTablePro() == "createdate" ? "selected" : "";
-        var statusTableAcompEsp = storeGroupTablePro() == "acompanhamentoesp" ? "selected" : "";
-        var statusTableAll = storeGroupTablePro() == "all" ? "selected" : "";
+        var statusTableTags = storeGroupTablePro2() == "tags" ? "selected" : "";
+        var statusTableTypes = storeGroupTablePro2() == "types" ? "selected" : "";
+        var statusTableUsers = storeGroupTablePro2() == "users" ? "selected" : "";
+        var statusTableCheckpoints = storeGroupTablePro2() == "checkpoints" ? "selected" : "";
+        var statusTableArrivaldate = storeGroupTablePro2() == "arrivaldate" ? "selected" : "";
+        var statusTableSenddate = storeGroupTablePro2() == "senddate" ? "selected" : "";
+        var statusTableDeadline = storeGroupTablePro2() == "deadline" ? "selected" : "";
+        var statusTableAcessdate = storeGroupTablePro2() == "acessdate" ? "selected" : "";
+        var statusTableDepartSend = storeGroupTablePro2() == "senddepart" ? "selected" : "";
+        var statusTableCreatedate = storeGroupTablePro2() == "createdate" ? "selected" : "";
+        var statusTableAcompEsp = storeGroupTablePro2() == "acompanhamentoesp" ? "selected" : "";
+        var statusTableAll = storeGroupTablePro2() == "all" ? "selected" : "";
         var panelKanbanHome = selectPanelKanbanHome();
         htmlControl += '   <select id="selectGroupTablePro" class="groupTable selectPro" onchange="updateGroupTable(this)" data-placeholder="Agrupar processos...">     <option value="">&nbsp;</option>     <option value="">Sem agrupamento</option>     <option value="all" ' + statusTableAll + '>Agrupar processos recebidos/gerados</option>     <option value="deadline" ' + statusTableDeadline + '>Agrupar processos por prazo</option>     <option value="createdate" ' + statusTableCreatedate + '>Agrupar processos por data de autua\xE7\xE3o</option>     <option value="arrivaldate" ' + statusTableArrivaldate + '>Agrupar processos por data de recebimento</option>     <option value="senddate" ' + statusTableSenddate + '>Agrupar processos por data de envio</option>     <option value="acessdate" ' + statusTableAcessdate + '>Agrupar processos por data do \xFAltimo acesso</option>     <option value="tags" ' + statusTableTags + '>Agrupar processos por marcadores</option>     <option value="types" ' + statusTableTypes + '>Agrupar processos por tipo</option>     <option value="users" ' + statusTableUsers + '>Agrupar processos por respons\xE1vel</option>     <option value="checkpoints" ' + statusTableCheckpoints + '>Agrupar processos por ponto de controle</option>     <option value="senddepart" ' + statusTableDepartSend + '>Agrupar processos por unidade de envio</option>     <option value="acompanhamentoesp" ' + statusTableAcompEsp + ">Agrupar processos por acompanhamento especial</option>  </select>  " + panelKanbanHome + "  " + csvExportLinkHtml();
       }
@@ -1405,11 +1788,11 @@
         setOptionsPro("panelProcessosView", "Tabela");
         setTimeout(function() {
           var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
-          if (btnTabela) getPanelProc(btnTabela);
+          if (btnTabela) getPanelProc2(btnTabela);
         }, 500);
       }
       if (getOptionsPro("panelProcessosView") == "Quadro") {
-        initAddKanbanProc(valueSelect);
+        initAddKanbanProc2(valueSelect);
         updateGroupTablePro(valueSelect, "insert");
       } else {
         if (typeof valueSelect !== "undefined" && valueSelect != "") {
@@ -1433,7 +1816,7 @@
     }
   }
   function getTableTag(type) {
-    var listTags = getListTypes(type);
+    var listTags = getListTypes2(type);
     $.each(listTags, function(i2, val) {
       getUniqueTableTag(i2, val, type);
     });
@@ -2043,7 +2426,7 @@
       $("#frmProcedimentoControlar").moveTo("#processosSEIPro");
       $("#divInfraBarraLocalizacao").moveTo("#processosSEIPro");
       if (SeiPro.sei.adapter.isNewSEI() && getOptionsPro(elementControleProc) == "hide") $(idControleProc).addClass("displayNone");
-      if (!checkLoadedTableSorter() && (typeof storeGroupTablePro() === "undefined" || storeGroupTablePro() == "")) removeAllTags(false, 3);
+      if (!checkLoadedTableSorter() && (typeof storeGroupTablePro2() === "undefined" || storeGroupTablePro2() == "")) removeAllTags(false, 3);
     }
   }
   function insertDivPanel() {
@@ -2060,7 +2443,7 @@
       if ($("#tblMarcadores").length == 0) {
         insertDivPanelControleProc();
         setSortDivPanel();
-        if (!checkLoadedTableSorter() && (typeof storeGroupTablePro() === "undefined" || storeGroupTablePro() == "")) removeAllTags(true, 4);
+        if (!checkLoadedTableSorter() && (typeof storeGroupTablePro2() === "undefined" || storeGroupTablePro2() == "")) removeAllTags(true, 4);
       }
     } else {
       setTimeout(function() {
@@ -2326,7 +2709,7 @@
           }
         }
         if (typeof verifyConfigValue !== "undefined" && verifyConfigValue("mostraranotacaocontrole")) {
-          if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle) SeiPro.features.anotacaoControle.render();
+          if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle && SeiPro.features.anotacaoControle.api) SeiPro.features.anotacaoControle.api.render();
         }
       }, 1e3);
     }
@@ -2501,7 +2884,7 @@
     }
   }
   function selectPanelKanbanHome() {
-    var type = storeGroupTablePro();
+    var type = storeGroupTablePro2();
     type = !type || type == "all" || type == "" ? false : true;
     var html = '<div id="processosProActions" class="panelHome panelHomeProcessos" style="' + (type ? "display: inline-block;" : "display:none;") + ' vertical-align: middle; margin-left: 10px; width: auto;">    <div class="btn-group processosBtnPanel" role="group" style="margin-right: 10px;">       <button type="button" data-act="panel-proc" data-value="Tabela" class="btn btn-sm btn-light ' + (getOptionsPro("panelProcessosView") == "Tabela" || !getOptionsPro("panelProcessosView") ? "active" : "") + '"><i class="fas fa-table" style="color: #888;"></i> <span class="text">Tabela</span></button>       <button type="button" data-act="panel-proc" data-act-dbl="panel-proc-refresh" title="D\xEA um duplo clique para atualizar o quadro" data-value="Quadro" class="btn btn-sm btn-light ' + (getOptionsPro("panelProcessosView") == "Quadro" ? "active" : "") + '"><i class="fas fa-project-diagram" style="color: #888;"></i> <span class="text">Quadro</span></button>    </div></div>';
     return html;
@@ -2509,15 +2892,15 @@
   function removeDataPanelProc(_this) {
     removeOptionsPro("listaMarcadores");
     removeOptionsPro("arrayListUsersSEI");
-    getPanelProc(_this);
+    getPanelProc2(_this);
   }
-  function getPanelProc(this_) {
+  function getPanelProc2(this_) {
     var data = $(this_).data();
     var mode = data.value;
     $(this_).closest("#processosProActions").find(".btn.active").removeClass("active");
     $(this_).addClass("active");
     if (mode == "Quadro") {
-      var type = storeGroupTablePro();
+      var type = storeGroupTablePro2();
       if (!type || type == "all" || type == "") {
         var selectGroupTablePro = $("#selectGroupTablePro");
         selectGroupTablePro.val("tags").trigger("change");
@@ -2531,15 +2914,15 @@
           }).trigger("chosen:updated");
         }
         setTimeout(function() {
-          initAddKanbanProc();
+          initAddKanbanProc2();
         }, 500);
       } else {
-        initAddKanbanProc();
+        initAddKanbanProc2();
       }
     } else {
       $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").show();
       $("#processosKanban").remove();
-      initTableTag(storeGroupTablePro());
+      initTableTag(storeGroupTablePro2());
     }
     setOptionsPro("panelProcessosView", mode);
   }
@@ -2551,7 +2934,7 @@
       var el = ev.target && ev.target.closest && ev.target.closest('[data-act="panel-proc"]');
       if (!el || !target.contains(el)) return;
       ev.preventDefault();
-      getPanelProc(el);
+      getPanelProc2(el);
     });
     target.addEventListener("dblclick", function(ev) {
       var el = ev.target && ev.target.closest && ev.target.closest('[data-act-dbl="panel-proc-refresh"]');
@@ -2561,363 +2944,21 @@
     });
   }
   installPanelProcDelegation(document);
-  function initAddKanbanProc(type = storeGroupTablePro(), loop = 3, TimeOut2 = 9e3) {
+  function initAddKanbanProc2(type = storeGroupTablePro2(), loop = 3, TimeOut2 = 9e3) {
     if (TimeOut2 <= 0) {
       return;
     }
-    loadKanbanStylePro();
+    loadKanbanStylePro2();
     if (typeof jKanban !== "undefined") {
       addKanbanProc(type, loop);
     } else {
-      loadKanbanStylePro();
+      loadKanbanStylePro2();
       if (typeof jKanban === "undefined") $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
       setTimeout(function() {
-        initAddKanbanProc(type, loop, TimeOut2 - 100);
+        initAddKanbanProc2(type, loop, TimeOut2 - 100);
         if (typeof verifyConfigValue !== "undefined" && verifyConfigValue("debugpage")) console.log("Reload initAddKanbanProc");
       }, 500);
     }
-  }
-  function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
-    if (typeof jKanban === "undefined") {
-      loadKanbanStylePro();
-      $.getScript(URL_SPRO + "js/lib/jkanban.min.js");
-    }
-    if (!type || type == "all" || type == "") {
-      setOptionsPro("panelProcessosView", "Tabela");
-      var btnTabela = document.querySelector('#processosProActions .btn[data-value="Tabela"]');
-      if (btnTabela) getPanelProc(btnTabela);
-    } else {
-      var tableProc = $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado");
-      if (type == "users") {
-        if (getOptionsPro("arrayListUsersSEI") && getOptionsPro("arrayListUsersSEI").length > 0) {
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
-          var itensKanban = $.map(getOptionsPro("arrayListUsersSEI"), function(v) {
-            return typeof getAtribuicaoDisplayLabel === "function" ? getAtribuicaoDisplayLabel(v.name, v.name, checkConfigValue("nomesusuarios")) : v.name;
-          });
-          itensKanban.unshift("");
-        } else if (loop > 0) {
-          getAjaxListaAtribuicao();
-          setTimeout(function() {
-            initAddKanbanProc(type, loop - 1);
-          }, 2e3);
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
-        }
-      } else if (type == "tags") {
-        if (getOptionsPro("listaMarcadores") && getOptionsPro("listaMarcadores").length > 0) {
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
-          var itensKanban = $.map(getOptionsPro("listaMarcadores"), function(v) {
-            return v.name;
-          });
-          itensKanban.unshift("");
-        } else if (loop > 0) {
-          getAjaxListaMarcador();
-          setTimeout(function() {
-            initAddKanbanProc(type, loop - 1);
-          }, 2e3);
-          $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-spinner fa-spin");
-        }
-      } else {
-        var itensKanban = getListTypes(type);
-        $('#processosProActions [data-value="Quadro"] i').attr("class", "fas fa-project-diagram");
-      }
-      if (!!itensKanban && type != "") {
-        itensKanban = $.map(itensKanban, function(v, i2) {
-          return { order: i2, name: v, id: getTagName(v, type) };
-        });
-        var tr = tableProc.find("tr[data-tagname]:not(.tagintable)");
-        var itens = tr.map(function() {
-          var tagName = $(this).data("tagname");
-          var idTag = "id_" + tagName;
-          var itemBoard = $.grep(itensKanban, function(item) {
-            return item.id == tagName;
-          })[0];
-          var nameLabel = itemBoard && itemBoard.name !== "" ? itemBoard.name : "Sem Grupo";
-          var linkProc = $(this).find('a[href*="acao=procedimento_trabalhar"]');
-          var tip = extractTooltipToArray(linkProc.attr("onmouseover"));
-          tip = typeof tip !== "undefined" ? tip : false;
-          var linkParams = getParamsUrlPro(linkProc.attr("href"));
-          var id_protocolo = linkParams && typeof linkParams.id_procedimento !== "undefined" ? linkParams.id_procedimento : false;
-          if (id_protocolo !== false && id_protocolo !== "false" && id_protocolo !== "" && id_protocolo !== null && typeof id_protocolo !== "undefined") {
-            return {
-              id: idTag,
-              title: nameLabel,
-              id_protocolo: String(id_protocolo),
-              processo: linkProc.text(),
-              especificacao: tip ? tip[0] : false,
-              tipo: tip ? tip[1] : false,
-              html_icons: $(this).find("td").eq(1).html(),
-              html_proc: $(this).find("td").eq(2).html(),
-              html_atribuicao: $(this).find("td").eq(3).html(),
-              html_prazo: $(this).find("td.seipro-prazo-box-display").html(),
-              color: $(this).data("color") ? $(this).css("color") : false
-            };
-          }
-        }).get();
-        $("#processosKanban").remove();
-        $("#newFiltro").after('<div id="processosKanban" style="display: inline-block;margin-top: 60px;width: 100%;"></div>');
-        var bords_list = $.map(itensKanban, function(v, i2) {
-          var item = $.grep(itens, function(row) {
-            return row.id == "id_" + v.id;
-          });
-          var title = v.name == "" ? "Sem Grupo" : v.name;
-          title = (type == "arrivaldate" || type == "acessdate" || type == "senddate" || type == "createdate" || type == "deadline") && title.indexOf(".") !== -1 ? title.split(".")[1] : title;
-          var boardOrderStore = getOptionsPro("panelProcessosOrder_" + type);
-          var boardOrderItem = boardOrderStore && $.isArray(boardOrderStore) ? $.grep(boardOrderStore, function(row) {
-            return row.id == v.id;
-          })[0] : null;
-          var order_board = boardOrderItem && typeof boardOrderItem.order !== "undefined" ? boardOrderItem.order : i2;
-          order_board = order_board === null ? 9999 : order_board;
-          var collapse_board = boardOrderItem && typeof boardOrderItem.collapse !== "undefined" ? boardOrderItem.collapse : false;
-          var itens_board = $.map(item, function(value, index) {
-            if (!value || !value.id_protocolo || value.id_protocolo === "false") {
-              return;
-            }
-            var iten_urgente = value.especificacao && value.especificacao.toLowerCase().indexOf("(urgente)") !== -1 ? true : false;
-            var item_pinboard = false;
-            var order_item = false;
-            if (boardOrderItem && $.isArray(boardOrderItem.itens)) {
-              order_item = $.grep(boardOrderItem.itens, function(row) {
-                return row.id == String(value.id_protocolo);
-              })[0] || false;
-            }
-            item_pinboard = order_item === null || order_item === false ? item_pinboard : order_item.pinboard;
-            order_item = order_item === null || order_item === false ? 9999 : order_item.order;
-            order_item = iten_urgente ? -1 : order_item;
-            var pinBoard = '<span style="float: right;margin: -5px -10px 0 0;" class="kanban-pinboard info_noclick"><a class="newLink info_noclick ' + (item_pinboard ? "newLink_active" : "") + '" onclick="pinKanbanItensProc(this, ' + value.id_protocolo + `)" onmouseover="return infraTooltipMostrar('` + (item_pinboard ? "Remover do topo" : "Fixar no topo") + `');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-thumbtack cinzaColor"></i></a></span>`;
-            return {
-              id: value.id_protocolo,
-              order: order_item,
-              title: pinBoard + '<div class="kanban-content">   <div class="kanban-title-card content_edit" data-field="assunto" data-id="' + value.id_protocolo + '">       <span class="info" data-type="proc" style="width: 75%;">           ' + value.html_proc + '           <a class="newLink info_noclick followLinkNewtab" href="controlador.php?acao=procedimento_trabalhar&id_procedimento=' + value.id_protocolo + `" onmouseover="return infraTooltipMostrar('Abrir em nova aba');" onmouseout="return infraTooltipOcultar();" target="_blank"><i class="fas fa-external-link-alt" style="font-size: 90%; text-decoration: underline;"></i></a>       </span>   </div>   <div class="kanban-description">       <span class="sub info_noclick" data-type="especificacao">` + value.especificacao + '</span>       <span class="sub info_noclick" data-type="tipo">' + value.tipo + '</span>       <span class="sub info_noclick" data-type="atribuicao">' + value.html_atribuicao + '</span>       <span class="sub info_noclick" data-type="icons">' + value.html_icons + '</span>       <span class="sub info_noclick" data-type="prazo">' + value.html_prazo + "</span>   </div></div>",
-              click: function(el) {
-                var id_protocolo = el.dataset.eid;
-                var checkOver = $(el).find(".info_noclick:hover").length > 0 ? $(el).find(".info_noclick:hover") : false;
-                var newTab = $(el).find(".followLinkNewtab:hover").length > 0 ? $(el).find(".followLinkNewtab:hover") : false;
-                if (!dialogBoxPro && !checkOver && id_protocolo) window.location.href = "controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo;
-                if (!dialogBoxPro && id_protocolo && newTab) openLinkNewTab("controlador.php?acao=procedimento_trabalhar&id_procedimento=" + id_protocolo);
-              },
-              class: iten_urgente ? "urgente" : ""
-            };
-          });
-          itens_board.sort(function(a, b) {
-            return a.order - b.order;
-          });
-          if (v.id == "SemGrupo" && itens_board.length === 0) {
-            return null;
-          }
-          return {
-            id: v.id,
-            title,
-            order: order_board,
-            class: "proc_" + type,
-            color: typeof item[0] !== "undefined" ? item[0].color : false,
-            collapse: collapse_board,
-            item: itens_board
-          };
-        });
-        bords_list.sort(function(a, b) {
-          return a.order - b.order;
-        });
-        var kanban = new jKanban({
-          element: "#processosKanban",
-          gutter: "10px",
-          widthBoard: "calc(25% - 20px)",
-          // responsivePercentage: true,
-          itemHandleOptions: {
-            enabled: true
-          },
-          dragEl: function(el, source) {
-            var sourceEl = source.parentElement.getAttribute("data-id");
-            var id_protocolo = el.dataset.eid;
-            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
-            kanbanProcessosMoving = { source: sourceEl, id: el.dataset.eid, order: elemItem.index() };
-          },
-          dropEl: function(el, target, source, sibling) {
-            updateOrderKanbanBoardProc();
-            var targetEl = target.parentElement.getAttribute("data-id");
-            var sourceEl = source.parentElement.getAttribute("data-id");
-            var id_protocolo = el.dataset.eid;
-            var elemItem = $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"]');
-            var titleSource = elemItem.closest(".kanban-board").find(".kanban-title-board").text();
-            var elemContent = elemItem.find(".kanban-content");
-            var elemProc = elemContent.find('span[data-type="proc"]');
-            var elemUser = elemContent.find('span[data-type="atribuicao"]');
-            var elemIcons = elemContent.find('span[data-type="icons"]');
-            var elemTypes = elemContent.find('span[data-type="tipo"]');
-            if (type == "users" && sourceEl != targetEl) {
-              var arrayListUsersSEI = getOptionsPro("arrayListUsersSEI");
-              if (arrayListUsersSEI) {
-                var userMatch = $.grep(arrayListUsersSEI, function(item) {
-                  return item.name && item.name.indexOf(targetEl) !== -1;
-                })[0];
-                var idUser = userMatch ? userMatch.value : false;
-                idUser = idUser == "SemGrupo" ? "null" : idUser;
-                var linkAtribuicao = tableProc.find('a[href*="&id_usuario_atribuicao=' + idUser + '"]').attr("href");
-                elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
-                updateDadosArvore("Atribuir Processo", "selAtribuicao", idUser, id_protocolo, function() {
-                  if (targetEl != "SemGrupo") {
-                    var targetAtribuicao = '(<a href="' + linkAtribuicao + '" title="Atribu\xEDdo para ' + targetEl + '" class="ancoraSigla">' + targetEl + "</a>)";
-                    elemUser.html(targetAtribuicao);
-                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html(targetAtribuicao);
-                  } else {
-                    elemUser.html("");
-                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(3).html("");
-                  }
-                  elemProc.find("i.fa-sync").remove();
-                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
-                  setTimeout(function() {
-                    elemProc.find("i.fa-check-double").remove();
-                  }, 2e3);
-                });
-              }
-            } else if (type == "tags" && sourceEl != targetEl) {
-              var listMarcadores = getOptionsPro("listaMarcadores");
-              listMarcadores = listMarcadores ? $.map(listMarcadores, function(v) {
-                return { name: getTagName(v.name, type), value: v.value, img: v.img };
-              }) : false;
-              listMarcadores = listMarcadores !== null ? listMarcadores : false;
-              var arrayMarcador = listMarcadores ? $.grep(listMarcadores, function(item) {
-                return item.name == targetEl;
-              })[0] : false;
-              var valueMarcador = arrayMarcador !== null && arrayMarcador ? arrayMarcador.value : false;
-              var elemIconTag = elemIcons.find('a[href*="acao=andamento_marcador_gerenciar"]');
-              var elemIconTagTable = tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).find('a[href*="acao=andamento_marcador_gerenciar"]');
-              var valueText = elemIconTag.attr("onmouseover");
-              valueText = typeof valueText !== "undefined" ? extractTooltipToArray(valueText) : false;
-              valueText = valueText ? valueText[0] : false;
-              valueText = typeof valueText !== "undefined" && valueText ? valueText : "";
-              if (valueMarcador || targetEl == "SemGrupo") {
-                var valuesIframe = [
-                  { element: "txaTexto", value: valueText },
-                  { element: "hdnIdMarcador", value: targetEl == "SemGrupo" ? "" : valueMarcador }
-                ];
-                updateDadosArvoreMult("Gerenciar Marcador", valuesIframe, id_protocolo, function() {
-                  var arrayListMarcadores = sessionStorageRestorePro("dadosMarcadoresProcessoPro");
-                  var markerStyle = arrayListMarcadores && valueMarcador ? $.grep(arrayListMarcadores, function(item) {
-                    return item.icon == arrayMarcador.img;
-                  })[0] : null;
-                  var styleMarcador = markerStyle && typeof markerStyle.style !== "undefined" ? markerStyle.style : null;
-                  styleMarcador = styleMarcador !== null ? styleMarcador : "";
-                  if (targetEl != "SemGrupo" && sourceEl != "SemGrupo") {
-                    elemIconTag.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
-                    elemIconTagTable.attr("style", styleMarcador).attr("onmouseover", "return infraTooltipMostrar('" + valueText + "','" + titleSource + "');").find("img").attr("src", arrayMarcador.img);
-                  } else if (targetEl != "SemGrupo" && sourceEl == "SemGrupo") {
-                    var targetMarcador = '<a href="#controlador.php?acao=andamento_marcador_gerenciar&acao_origem=procedimento_controlar&acao_retorno=procedimento_controlar&id_procedimento=' + id_protocolo + `" onmouseover="return infraTooltipMostrar('` + valueText + "','" + titleSource + `');" onmouseout="return infraTooltipOcultar();" data-color="true" style="` + styleMarcador + '"><img src="' + arrayMarcador.img + '" class="imagemStatus"></a>';
-                    elemIcons.append(targetMarcador);
-                    tableProc.find('tr[id="P' + id_protocolo + '"]').find("td").eq(1).append(targetMarcador);
-                  } else if (targetEl == "SemGrupo") {
-                    elemIconTag.remove();
-                    elemIconTagTable.remove();
-                  }
-                  elemProc.find("i.fa-sync").remove();
-                  elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
-                  setTimeout(function() {
-                    elemProc.find("i.fa-check-double").remove();
-                  }, 2e3);
-                  getAllMarcadoresHome();
-                });
-              }
-            } else if (type == "types" && sourceEl != targetEl && targetEl != "SemGrupo") {
-              elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
-              initListTypesSEI(function() {
-                var tipoMatch = typeof arrayListTypesSEI.selectTipoProc !== "undefined" ? $.grep(arrayListTypesSEI.selectTipoProc, function(item) {
-                  return item.name == titleSource;
-                })[0] : null;
-                var idTypeProc = tipoMatch ? tipoMatch.value : false;
-                if (idTypeProc) {
-                  updateDadosArvore("Consultar/Alterar Processo", "selTipoProcedimento", idTypeProc, id_protocolo, function() {
-                    elemTypes.text(titleSource);
-                    elemProc.find("i.fa-sync").remove();
-                    elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
-                    setTimeout(function() {
-                      elemProc.find("i.fa-check-double").remove();
-                    }, 2e3);
-                  });
-                } else {
-                  elemProc.find("i.fa-sync").remove();
-                  elemProc.prepend('<i class="fas fa-times vemelhoColor" style="margin-right: 5px;"></i>');
-                  setTimeout(function() {
-                    elemProc.find("i.fa-times").remove();
-                  }, 2e3);
-                }
-              });
-            } else if (sourceEl != targetEl) {
-              cancelMoveKanbanItensProc();
-            }
-            kanbanProcessosMoving = false;
-          },
-          dragendBoard: function(el) {
-            updateOrderKanbanBoardProc();
-          },
-          boards: bords_list
-        });
-        kanbanProcessos = kanban;
-        tableProc.hide();
-        updateCountKanbanBoardProc();
-      }
-    }
-  }
-  function cancelMoveKanbanItensProc() {
-    var itemMove = kanbanProcessosMoving;
-    if (itemMove && $("#processosKanban").is(":visible")) {
-      var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + itemMove.source + "'] | [0].item | [?id=='" + itemMove.id + "'] | [0]");
-      item = item == null ? false : item;
-      kanbanProcessos.removeElement(item.id);
-      kanbanProcessos.addElement(itemMove.source, item, itemMove.order);
-    }
-  }
-  function pinKanbanItensProc(this_, id_protocolo) {
-    var _this = $(this_);
-    var _parent = _this.closest(".kanban-board");
-    var _hasActive = _this.hasClass("newLink_active");
-    var source = _parent.data("id");
-    var order = _hasActive ? -1 : 0;
-    var item = jmespath.search(kanbanProcessos.options.boards, "[?id=='" + source + "'] | [0].item | [?id=='" + id_protocolo + "'] | [0]");
-    item = item == null ? false : item;
-    if (item) {
-      kanbanProcessos.removeElement(item.id);
-      kanbanProcessos.addElement(source, item, order);
-      if (!_hasActive) {
-        $("#processosKanban .kanban-container").animate({ scrollTop: 0 }, 500, function() {
-          $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').addClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Remover do topo')");
-          updateOrderKanbanBoardProc();
-        });
-      } else {
-        $('#processosKanban .kanban-item[data-eid="' + id_protocolo + '"] .kanban-pinboard a').removeClass("newLink_active").attr("onmouseover", "return infraTooltipMostrar('Fixar no topo')");
-        updateOrderKanbanBoardProc();
-      }
-      if (typeof infraTooltipOcultar === "function") infraTooltipOcultar();
-    }
-  }
-  function updateOrderKanbanBoardProc() {
-    var type = storeGroupTablePro();
-    var arrayOrder = $("#processosKanban .kanban-board").map(function() {
-      var _this = $(this);
-      var itens = _this.find(".kanban-item").map(function(i2) {
-        return { id: String($(this).data("eid")), order: i2, pinboard: $(this).find(".kanban-pinboard a").hasClass("newLink_active") };
-      }).get();
-      var boards = { id: _this.data("id"), order: _this.data("order"), collapse: _this.data("collapse"), itens };
-      return boards;
-    }).get();
-    setOptionsPro("panelProcessosOrder_" + type, arrayOrder);
-  }
-  function collapseKanbanBoardProc(this_) {
-    var _this = $(this_);
-    var _parent = _this.closest(".kanban-board");
-    var _data = _parent.data();
-    _parent.attr("data-collapse", _data.collapse ? false : true).data("collapse", _data.collapse ? false : true);
-    _parent.find(".kanban-collapse i").attr("class", _data.collapse ? "fas fa-plus-square azulColor" : "fas fa-minus-square cinzaColor");
-    updateOrderKanbanBoardProc();
-  }
-  function updateCountKanbanBoardProc() {
-    if (!kanbanProcessos || !kanbanProcessos.options || !$.isArray(kanbanProcessos.options.boards)) {
-      return;
-    }
-    $.each(kanbanProcessos.options.boards, function(i2, v) {
-      var elemBoard = $('#processosKanban .kanban-board[data-id="' + v.id + '"]');
-      var countBoard = elemBoard.find(".kanban-item:visible").length;
-      var iconCollapse = elemBoard.find(".kanban-collapse").length ? false : '<div class="kanban-collapse" onclick="collapseKanbanBoardProc(this)"><i class="fas fa-' + (v.collapse ? "plus" : "minus") + "-square " + (v.collapse ? "azulColor" : "cinzaColor") + '"></i></div>';
-      elemBoard.attr("data-collapse", v.collapse).find(".kanban-title-board").attr("data-count", countBoard).after(iconCollapse);
-    });
   }
   function addAcompanhamentoEspIcon() {
     var storeRecebimento = typeof localStorageRestorePro !== "undefined" && typeof localStorageRestorePro("configDataRecebimentoPro") !== "undefined" && !$.isEmptyObject(localStorageRestorePro("configDataRecebimentoPro")) ? localStorageRestorePro("configDataRecebimentoPro") : [];
@@ -3177,7 +3218,7 @@
       }
     });
   }
-  function getAllMarcadoresHome() {
+  function getAllMarcadoresHome2() {
     var arrayMarcadores = [];
     $("#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado").find("tr").each(function() {
       var _processo = $(this).find('a[href*="acao=procedimento_trabalhar"]');
@@ -3202,7 +3243,7 @@
       return;
     }
     if (typeof getParamsUrlPro !== "undefined") {
-      getAllMarcadoresHome();
+      getAllMarcadoresHome2();
     } else {
       setTimeout(function() {
         initAllMarcadoresHome(TimeOut2 - 100);
@@ -3455,7 +3496,7 @@
         }, 2e3);
         forceOnLoadBody();
         observeAreaTela();
-        if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle) SeiPro.features.anotacaoControle.init();
+        if (window.SeiPro && SeiPro.features && SeiPro.features.anotacaoControle && SeiPro.features.anotacaoControle.api) SeiPro.features.anotacaoControle.api.init();
         initReplaceNewIcons();
         initControlePrazo();
         initViewEspecifacaoProcesso();
@@ -3510,22 +3551,32 @@
 
   // src/features/lista-processos/index.js
   installListaProcessosState();
+  function installListaProcessos() {
+    installListaProcessosLegacyApi();
+    ready(function() {
+      initSeiPro();
+    });
+  }
+  publishFeature({
+    id: "lista-processos",
+    nsKey: "listaProcessos",
+    api: Object.freeze({
+      normalizeHomeFilterText,
+      normalizeHomeFilterKey,
+      quoteInlineJsText,
+      rewriteHomeFilterCaption,
+      rowMatchesHomeFilterFacts,
+      getListIdProtocoloSelectedFromValues,
+      listaAgrupamentoIO,
+      readGroupOrder
+    }),
+    install: installListaProcessos
+  });
   var namespace = globalThis.SeiPro = globalThis.SeiPro || {};
   namespace.features = namespace.features || {};
-  namespace.features.listaProcessos = {
-    normalizeHomeFilterText,
-    normalizeHomeFilterKey,
-    quoteInlineJsText,
-    rewriteHomeFilterCaption,
-    rowMatchesHomeFilterFacts,
-    getListIdProtocoloSelectedFromValues
-  };
   namespace.features.listaProcessosIO = {
     listaAgrupamentoIO,
     readGroupOrder
   };
-  installListaProcessosLegacyApi();
-  ready(function() {
-    initSeiPro();
-  });
+  installListaProcessos();
 })();

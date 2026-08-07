@@ -20,12 +20,13 @@ paths, command output, test names).
 
 ## Canonical sources (read before judging)
 
-1. `DEVELOPMENT.md` — source of truth for architecture, layers, CSS, build, tests
-2. Feature-specific plans under `docs/` when the change touches that area
-   (e.g. `docs/editor-modernization-plan.md` for editor/AI/legis)
-3. Reference migrated feature: `src/features/monitorados/`
-4. Build: `scripts/build.mjs`, `manifest.base.json`
-5. Tests: `tests/` (vitest); `npm test` runs build first via pretest
+1. `docs/architecture.md` — canonical feature contract (`{ id, api, install }`, tiers S/C, registry, bus)
+2. `DEVELOPMENT.md` — operational source of truth for layers, CSS, build, migration checklist
+3. Feature-specific plans under `docs/` when the change touches that area
+   (e.g. `docs/atividades-architecture.md` for atividades)
+4. Reference migrated features: Tier S `src/features/monitorados/`, Tier C `src/features/atividades/`
+5. Build: `scripts/build.mjs`, `manifest.base.json`
+6. Tests: `tests/` (vitest); `npm test` runs build first via pretest
 
 ## When invoked
 
@@ -52,21 +53,24 @@ paths, command output, test names).
       unless the task is an explicit temporary bridge with a removal condition.
 
 ### Feature shape (migrated / new code)
+- [ ] Public contract: `SeiPro.features.<id> = { id, api, install }` (see
+      `docs/architecture.md`); Tier S vs Tier C only changes internals
 - [ ] Separation: `domain.js` (pure) / `io.js` (side effects) / `view` (DOM) /
       `templates` / `index.js` / optional `legacy-api.js` / `style.css`
+- [ ] No `body.js` monolith carrying behavior for code claimed "migrated"
 - [ ] `domain.js`: no DOM, `window`, jQuery, `chrome.*`, or `localStorage`
 - [ ] `io.js`: storage/network/session; does not call view; does not return DOM
       elements (data or parsed Document only when reading SEI pages)
 - [ ] `view`: vanilla DOM, delegated events (`on()` / `addEventListener`); no new
       inline `onclick`/`onchange`; actions via `data-act` / `data-*`
-- [ ] Dependency direction: `features` → `shared/ui` → `core` / `sei` / `platform`.
-      Never reverse. `core/stack.js` must not import features.
+- [ ] Dependency direction: `features` → `shared` → `core` / `sei` / `platform`.
+      Never reverse. `core/stack.js` must not import features nor install
+      quickfilter/sticknote/docslote
 - [ ] Isolated world only: no `world: "MAIN"`, no expanding `legacy-inline-bridge`
       as the "fix"
 - [ ] CSS classes use `.seipro-` prefix (BEM modifiers OK)
 - [ ] `aliasGlobal` only in `legacy-api.js`, with TODO / removal condition
-- [ ] Cross-feature: no importing another feature's internals; prefer entry/index
-      composition
+- [ ] Cross-feature: only `.api` or `platform/bus` whitelist events; no internals
 
 ### Build & packaging
 - [ ] If new bundles, CSS, entries, or legacy copy paths are needed,

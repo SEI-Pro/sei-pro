@@ -18976,24 +18976,29 @@
     effects,
     server: createAtividadesServerPorts(context)
   });
+  function installAtividadesFeature() {
+    installAtividadesLegacyApi();
+    initializeAtividadesRuntime();
+    installAtividadesView();
+    ready(function() {
+      try {
+        refreshAtividadesState();
+      } catch (e) {
+      }
+      const ns = globalThis.NAMESPACE_SPRO;
+      if (typeof ns !== "undefined" && (ns === "ANTAQ Pro" || ns === "ANTT Pro")) {
+        checkHostPermission();
+      } else {
+        initPerfilLoginAtiv();
+      }
+    });
+  }
   namespace.features.atividades = Object.freeze({
+    id: "atividades",
     api: featureApi,
+    install: installAtividadesFeature,
     useCases,
     ports
   });
-  installAtividadesLegacyApi();
-  initializeAtividadesRuntime();
-  installAtividadesView();
-  ready(function() {
-    try {
-      refreshAtividadesState();
-    } catch (e) {
-    }
-    const ns = globalThis.NAMESPACE_SPRO;
-    if (typeof ns !== "undefined" && (ns === "ANTAQ Pro" || ns === "ANTT Pro")) {
-      checkHostPermission();
-    } else {
-      initPerfilLoginAtiv();
-    }
-  });
+  installAtividadesFeature();
 })();

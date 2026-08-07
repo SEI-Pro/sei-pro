@@ -13,7 +13,7 @@ describe('migration: datas wire', () => {
     it('instala a view de datas antes da ponte legada no core stack', () => {
         const stack = read('src/content/core-stack.js');
         expect(stack).toContain("import { installDatasView } from '../shared/legacy/datas-view.js';");
-        expect(stack).toContain('installCoreStack();\ninstallDatasView();\ninstallDatasLegacyApi();');
+        expect(stack).toContain('installCoreStack();\ninstallSharedLegacyHelpers();\ninstallDatasView();\ninstallDatasLegacyApi();');
         expect(read('src/shared/legacy/datas-legacy-api.js')).toContain(
             "import { recordDataRecebimento } from './datas-view.js';"
         );

@@ -11,7 +11,7 @@ import {
     normalizeSticknoteHomeText,
     parseSticknoteChecklistLine,
     parseSticknoteHomeLabel
-} from '../../core/sticknote.js';
+} from '../../shared/sticknote/domain.js';
 import { normalizeMojibakeUtf8 } from '../../core/texto.js';
 
 // Monta o registro puro que a lista legada persiste em `arraySticknoteHome`.

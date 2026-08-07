@@ -8,7 +8,7 @@
  * da lista de processos: montar o "haystack" normalizado de uma linha e decidir
  * se ela casa com os tokens.
  */
-import { normalizeFilterText } from '../../core/quickfilter.js';
+import { normalizeFilterText } from '../../shared/quickfilter/domain.js';
 
 // Normaliza, deduplica e junta os segmentos de texto crus de uma linha num único
 // haystack pesquisável. `rawSegments` é uma lista de strings (texto, title,

@@ -9,7 +9,7 @@
     });
   }
 
-  // src/core/quickfilter.js
+  // src/shared/quickfilter/domain.js
   function normalizeFilterText(text) {
     text = typeof text === "string" ? text : "";
     text = removeAcentos(text.toLowerCase());
@@ -72,7 +72,7 @@
     return mergeHighlightRanges(ranges);
   }
 
-  // src/core/quickfilter-dom.js
+  // src/shared/quickfilter/dom.js
   var HIGHLIGHT_CLASS = "seipro-quick-highlight";
   function resolveDoc(scope) {
     if (scope && scope.ownerDocument) return scope.ownerDocument;

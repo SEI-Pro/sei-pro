@@ -15,6 +15,33 @@
     }
   }
 
+  // src/app/publish-feature.js
+  function toNamespaceKey(id) {
+    if (typeof id !== "string" || !id) return id;
+    return id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  }
+  function publishFeature(spec = {}) {
+    const id = spec.id;
+    if (typeof id !== "string" || !id) {
+      throw new Error("publishFeature: id is required");
+    }
+    const api = spec.api && typeof spec.api === "object" ? spec.api : {};
+    const install = typeof spec.install === "function" ? spec.install : function noop() {
+    };
+    const extras = spec.extras && typeof spec.extras === "object" ? spec.extras : {};
+    const published = Object.freeze({
+      id,
+      api,
+      install,
+      ...extras
+    });
+    const root = getSeiPro();
+    root.features = root.features || {};
+    const key = spec.nsKey || toNamespaceKey(id);
+    root.features[key] = published;
+    return published;
+  }
+
   // src/features/docs-lote/state.js
   var S = {
     CSVEncoding: "utf-8",
@@ -1186,8 +1213,17 @@
   aliasGlobal("docsLote_getDocsArvore", docsLote_getDocsArvore);
 
   // src/features/docs-lote/index.js
-  var docsLote = getSeiPro().features.docsLote || (getSeiPro().features.docsLote = {});
-  docsLote.openWizard = docLoteModalSelecaoDoc;
-  docsLote.getDocsArvore = docsLote_getDocsArvore;
-  installDocsLoteDelegation();
+  function installDocsLoteFeature() {
+    installDocsLoteDelegation();
+  }
+  publishFeature({
+    id: "docs-lote",
+    nsKey: "docsLote",
+    api: Object.freeze({
+      openWizard: docLoteModalSelecaoDoc,
+      getDocsArvore: docsLote_getDocsArvore
+    }),
+    install: installDocsLoteFeature
+  });
+  installDocsLoteFeature();
 })();

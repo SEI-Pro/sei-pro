@@ -16,7 +16,7 @@
 import { qs, qsa, el, remove } from '../../dom/index.js';
 import {
     normalizeSticknoteHomeText
-} from '../../core/sticknote.js';
+} from '../../shared/sticknote/domain.js';
 import {
     buildChecklistTooltipHtml,
     buildSticknoteHomeRecord,

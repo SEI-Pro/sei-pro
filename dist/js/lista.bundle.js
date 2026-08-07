@@ -124,7 +124,7 @@
       observeAreaTela: globalRef.observeAreaTela,
       initAnotacaoControle: () => {
         if (globalRef.SeiPro && globalRef.SeiPro.features && globalRef.SeiPro.features.anotacaoControle) {
-          globalRef.SeiPro.features.anotacaoControle.init();
+          globalRef.SeiPro.features.anotacaoControle.api.init();
         }
       },
       initReplaceNewIcons: globalRef.initReplaceNewIcons,

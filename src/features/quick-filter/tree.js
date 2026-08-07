@@ -9,8 +9,8 @@
  * pai, então o input é lido e escutado via parent.document. Porte isolated-first,
  * sem jQuery; tokenização/faixas e motor de highlight vêm do core.
  */
-import { getFilterTokens } from '../../core/quickfilter.js';
-import { applyHighlight as coreApplyHighlight, clearHighlights, HIGHLIGHT_CLASS } from '../../core/quickfilter-dom.js';
+import { getFilterTokens } from '../../shared/quickfilter/domain.js';
+import { applyHighlight as coreApplyHighlight, clearHighlights, HIGHLIGHT_CLASS } from '../../shared/quickfilter/dom.js';
 
 const HIDDEN_CLASS = 'seipro-quick-hidden';
 

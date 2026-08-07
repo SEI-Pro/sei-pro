@@ -11,7 +11,7 @@ describe('migration: datas legacy api', () => {
     const bridge = read('src/shared/legacy/datas-legacy-api.js');
 
     expect(stack).toContain("import { installDatasLegacyApi } from '../shared/legacy/datas-legacy-api.js';");
-    expect(stack).toContain('installCoreStack();\ninstallDatasView();\ninstallDatasLegacyApi();');
+    expect(stack).toContain('installCoreStack();\ninstallSharedLegacyHelpers();\ninstallDatasView();\ninstallDatasLegacyApi();');
     expect(bridge).toContain("import { aliasGlobal, globalRef } from '../../core/global.js';");
     expect(bridge).toContain("aliasGlobal('getDataRecebimentoPro', getDataRecebimentoProLegacy);");
   });

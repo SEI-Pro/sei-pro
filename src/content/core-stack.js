@@ -4,13 +4,16 @@
  * os blocos do manifest apontarem para entries, este arquivo é removido.
  *
  * A composição vive em src/core/stack.js (reusada pelas entries).
+ * Helpers de feature em shared/ + ponte monitorados ficam aqui (fora de core/).
  */
 import { installCoreStack } from '../core/stack.js';
+import { installSharedLegacyHelpers } from '../shared/install-legacy-helpers.js';
 import { installDatasView } from '../shared/legacy/datas-view.js';
 import { installDatasLegacyApi } from '../shared/legacy/datas-legacy-api.js';
 import { installMonitoradoStoreLegacyApi } from '../features/monitorados/store-legacy-api.js';
 
 installCoreStack();
+installSharedLegacyHelpers();
 installDatasView();
 installDatasLegacyApi();
 // Ponte transitória do bloco legado amplo: aliases globais de Processos

@@ -2,6 +2,9 @@
 
 Documentação técnica para desenvolvimento e manutenção da extensão. Para informações de uso, veja o [README](./README.md).
 
+**Arquitetura canônica (contrato de features, tiers, registry, bus):**
+[docs/architecture.md](./docs/architecture.md).
+
 ---
 
 ## Ambiente
@@ -84,12 +87,13 @@ ainda-legadas são scripts globais que o build copia verbatim para `dist/js/`.
 
 ```
 src/
+├── app/                           # contexts + feature-registry + boot + publish-feature
 ├── core/                          # núcleo PURO (datas, numeros, texto, validacao, config, …)
 ├── sei/                           # adapter de versão SEI 4/5, urls, tooltip
-├── platform/                      # runtime, messaging, storage, net, logger (chrome.* / SW)
-├── content/core-stack.js          # composição core+sei+platform (bundle carregado em todo bloco)
-├── entries/                       # entries por contexto de página (db, login, …)
-├── shared/
+├── platform/                      # runtime, messaging, storage, net, bus, logger (chrome.* / SW)
+├── content/core-stack.js          # stack + shared legacy helpers (transitório)
+├── entries/                       # entries por contexto (login/db usam app/boot)
+├── shared/                        # helpers compartilhados (quickfilter, sticknote, docslote, ui/)
 │   ├── ui/                        # PRIMITIVOS vanilla reusáveis: modal, tags-input,
 │   │                              #   sortable, sortable-table (substituem jQuery UI/plugins)
 │   └── legacy/                    # legado fundacional ainda global (sei-functions-pro, icons)
@@ -126,6 +130,8 @@ dist/                              # SAÍDA GERADA — não editar à mão
 
 ## Arquitetura-alvo e padrão de migração por feature
 
+Contrato completo (tiers S/C, registry, bus): **[docs/architecture.md](./docs/architecture.md)**.
+
 ### Princípios fundamentais
 
 1. **Mundo isolado (isolated-first):** todo código novo roda no mundo isolado do content
@@ -133,50 +139,41 @@ dist/                              # SAÍDA GERADA — não editar à mão
    `editor-loader.js` (o CKEditor pertence à página). Esse bundle **não** recebe runtime,
    storage nem LLM; a IA isolada só troca duas operações serializáveis (`snapshot` e
    `insertHtml`). Sem `onclick` inline.
-2. **Direção de dependência:** `features` → `shared/ui` → `core` / `sei` / `platform`.
-   Nunca o contrário. `core/stack.js` **não deve importar nada de `features/`**.
-3. **`aliasGlobal` só em `legacy-api.js`:** nunca espalhado em domain, io ou view.
+2. **Direção de dependência:** `features` → `shared` → `core` / `sei` / `platform`.
+   Nunca o contrário. `core/stack.js` **não deve importar nada de `features/`** nem
+   instalar helpers de feature (`quickfilter`, `sticknote`, `docslote`).
+3. **Contrato público:** `SeiPro.features.<id> = { id, api, install }`. Consumidores
+   cross-feature usam só `.api` / `.install`.
+4. **`aliasGlobal` só em `legacy-api.js`:** nunca espalhado em domain, io ou view.
    É dívida explícita, não padrão permanente.
-4. **CSS prefixado:** todas as classes de features usam prefixo `.seipro-`. Sem Shadow DOM
+5. **CSS prefixado:** todas as classes de features usam prefixo `.seipro-`. Sem Shadow DOM
    (cria fricção com FontAwesome, jQuery UI e estilos do SEI).
-5. **Entries específicos por contexto:** cada contexto de página deve caminhar para seu
-   próprio entry em `src/entries/`, carregando só o que precisa. O `core-stack.bundle.js`
-   amplo continua existindo enquanto houver blocos legados no manifest.
-6. **Mudança nova já nasce na arquitetura nova:** ao pedir uma feature ou correção, primeiro
-   identificar o contexto SEI, a config flag e a superfície legada; depois separar domínio,
-   IO, view, CSS e compatibilidade global conforme o contrato abaixo.
+6. **Entries + app boot:** cada contexto caminha para `src/entries/` + `src/app/boot`.
+   O `core-stack.bundle.js` amplo continua enquanto houver blocos legados no manifest.
+7. **Mudança nova já nasce na arquitetura nova:** identificar contexto SEI, config flag e
+   superfície legada; depois domain / IO / view / CSS / contrato `{ id, api, install }`.
 
 ---
 
-### Anatomia de uma feature migrada
+### Anatomia de uma feature migrada (Tier S)
 
 ```
 src/features/<nome>/
 ├── domain.js          # lógica pura: sem DOM, sem chrome.*, sem jQuery
-│                      #   → 100% testável com vitest/jsdom
-│                      #   → recebe dados, retorna dados
-├── io.js              # efeitos colaterais: storage, rede, sessão
-│                      #   → recebe dependências explícitas quando viável
-│                      #   → pode usar platform/core/sei; não chama view
-├── view.js            # DOM vanilla (ou sub-arquivos: panel.js, icon.js, …)
-│                      #   → recebe root/ctx quando possível; document só na borda
-│                      #   → eventos delegados via on() de src/dom/index.js
-│                      #   → classes CSS sempre com prefixo .seipro-
-├── templates.js       # opcional: HTML/DOM factory da feature
-│                      #   → markup estático/gerado fica aqui ou em view.js
-│                      #   → nunca em domain.js ou io.js
-├── index.js           # entry do bundle: compõe domain + io + view
-│                      #   → instala a feature no contexto (setup, observers)
-│                      #   → importa e chama legacy-api.js se houver legado
-├── legacy-api.js      # (se houver legado chamando esta feature)
-│                      #   → único arquivo que usa aliasGlobal()
-│                      #   → reexporta funções de domain/io/view como globais
-│                      #   → marcado com TODO: remover quando legado migrar
-└── style.css          # CSS da feature; classes todas prefixadas .seipro-
+├── io.js              # efeitos: storage, rede, sessão (não chama view)
+├── view.js            # DOM vanilla + delegação; classes .seipro-
+├── templates.js       # opcional: markup
+├── index.js           # publica { id, api, install }; compõe domain+io+view
+├── legacy-api.js      # opcional: único aliasGlobal; TODO de remoção
+└── style.css          # classes .seipro-*
 ```
+
+Tier C (atividades, editor/ai quando necessário) adiciona `application` / `ports` /
+`useCases` **internamente**; o público permanece `{ id, api, install }`.
 
 **Exemplo de composição em `index.js`:**
 ```js
+import { publishFeature } from '../../app/publish-feature.js';
 import { ready } from '../../dom/index.js';
 import * as domain from './domain.js';
 import * as io from './io.js';
@@ -193,6 +190,12 @@ export function installMinhaFeature(ctx = {}) {
     const estado = domain.calcular(dados);
     ready(() => view.render(deps.root, estado));
 }
+
+publishFeature({
+    id: 'minha-feature',
+    api: { /* comandos/consultas estáveis */ },
+    install: installMinhaFeature
+});
 ```
 
 **Exemplo de `legacy-api.js`:**
@@ -273,24 +276,20 @@ Modificadores seguem BEM: `.seipro-btn--primary`, `.seipro-modal--open`.
 
 ### Comunicação entre features
 
-Preferência: dependência explícita no `index.js` ou na entry do contexto. Uma feature não
-deve importar internals de outra feature.
+Preferência: `SeiPro.features.<id>.api` ou composição na entry/`src/app/boot`. Uma feature
+não deve importar internals de outra feature.
 
-Ainda não há event bus oficial no projeto. Se uma mudança realmente transversal aparecer
-(ex.: várias features precisam reagir a `monitorados:updated`), criar primeiro um bus pequeno
-em `src/platform/bus.js`, instalar na stack/entry e documentar os eventos aqui. Não introduzir
-bus para chamada dentro da mesma feature.
-
-Formato sugerido para eventos transversais, quando o bus existir:
+Bus leve em `src/platform/bus.js` para eventos transversais nomeados. Não usar bus
+intra-feature.
 
 ```js
-bus.emit('monitorados:updated', { items });
+import { bus } from '../platform/bus.js';
 
+bus.emit('monitorados:updated', { items });
 bus.on('monitorados:updated', ({ items }) => view.atualizarIcones(items));
 ```
 
-Eventos candidatos, ainda não implementados como bus: `monitorados:updated`,
-`config:changed`, `process-list:refreshed`.
+Eventos whitelist: `monitorados:updated`, `config:changed`, `process-list:refreshed`.
 
 ---
 
@@ -365,22 +364,21 @@ Critério de pronto para considerar uma feature migrada:
 
 ---
 
-### Evolução para registry e manifest gerado
+### Registry, boot e manifest
 
-Alvo de médio prazo: substituir manifest manual duplicado e `init*.js` por um catálogo
-de contextos e features:
+Implementação em `src/app/` (piloto: `login` / `db`):
 
 ```
 src/app/
-├── contexts.js          # contexto SEI → matches, css, libs, entry, features
-├── feature-registry.js  # id, configKey, contexts, install()
-└── boot.js              # carrega config e instala features do contexto
+├── contexts.js           # contexto SEI → feature ids, config keys
+├── feature-registry.js   # id, configKey, contexts, install()
+├── publish-feature.js    # publica { id, api, install } em SeiPro.features
+└── boot.js               # carrega config e instala features do contexto
 ```
 
-Essa mudança deve ser incremental. Primeiro aplicar em um contexto pequeno (`login`/`db`)
-ou em uma nova entry de processo; depois expandir para lista, árvore, visualização e editor.
-Antes de gerar manifest automaticamente, criar testes de snapshot/estrutura para garantir
-ordem de scripts, `matches`, `exclude_matches`, CSS e permissões.
+Entries finas chamam `boot(contextId)`. Snapshots de contextos em
+`tests/structure/manifest-contexts.test.js`. Geração automática de manifest só depois
+desses snapshots estarem estáveis.
 
 ---
 
@@ -390,12 +388,12 @@ Atualizado em 2026-08-06. Itens já resolvidos (A1-001…A1-010 / E2) saíram da
 
 | Arquivo / área | Problema | Correção |
 |---|---|---|
-| `src/content/core-stack.js` | ainda importa `monitorados/store-legacy-api` (ponte transitória) | mover instalação para entry/contexto quando `src/entries/lista.js` existir |
-| `src/features/lista-processos/sei-pro.js`, `shared/legacy/sei-functions-pro.js` | onclick/onchange inline restantes → MAIN world | migrar para `data-act` + delegação; **não** expandir `legacy-inline-bridge` |
-| `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar; bridge não é arquitetura-alvo |
-| Features/CSS legados sem `.seipro-*` | classes próprias ainda sem prefixo em monolitos | **P6 em lote** no fim do épico (`docs/engineering-loop.md`); proibido micro-hook unitário |
-| Manifest / `init*.js` | blocos duplicados, sem registry | médio prazo: `src/app/` (contexts + feature-registry + boot) |
-| Remaining monoliths | lista-processos and shared legacy surfaces still contain large bodies | continue decomposing through the E2 epic queue in P0–P7; Atividades no longer has `body.js` |
+| `src/content/core-stack.js` | ainda importa `monitorados/store-legacy-api` + installs shared de feature (ponte) | mover para entries de contexto quando lista/árvore tiverem boot próprio |
+| `src/features/lista-processos/body.js`, `arvore/body.js` | monolitos ainda carregam comportamento | extrair até eliminar; shell não conta como migrado |
+| `shared/legacy` / onclick inline | handlers inline restantes → MAIN world | migrar para `data-act` + delegação; **não** expandir `legacy-inline-bridge` |
+| `src/platform/legacy-inline-bridge.js` | não cobre jQuery `.trigger('click')`, cadeias `$()`, `parent.fn` | dívida aceita só até o call-site migrar |
+| Features/CSS legados sem `.seipro-*` | classes próprias ainda sem prefixo em monolitos | **P6 em lote** no fim do épico; proibido micro-hook unitário |
+| Manifest amplo | dezenas de scripts por bloco | enxugar por contexto após registry; gerar manifest só com snapshots |
 
 **Já resolvido (não reabrir como fatia):** `core/stack.js` sem import de feature; `aliasGlobal` de features migradas em `*-legacy-api.js`; background fachada + handlers (`router`, `storage`, `fetch`, bug-report, notificações, install); **Atividades** (ESM fatiada, `handlers`/`view`/`domain`/`io`/`callAtiv`, P6 `.seipro-*`, zero handlers HTML inline incl. tooltips `data-tip`, namespace congelado `SeiPro.features.atividades = { api, useCases, ports }`, consumidores de primeira parte via `feature.api`; `legacy-api` aliasa só `ATIVIDADES_EXTERNAL_GLOBALS` em opt-in — dispatch interno via registry → handlers).
 

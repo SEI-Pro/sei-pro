@@ -1191,257 +1191,6 @@
     return prazos;
   }
 
-  // src/core/quickfilter.js
-  function normalizeFilterText(text) {
-    text = typeof text === "string" ? text : "";
-    text = removeAcentos(text.toLowerCase());
-    return text.replace(/\s+/g, " ").trim();
-  }
-  function getFilterTokens(text) {
-    var query = normalizeFilterText(text);
-    return query === "" ? [] : uniqPro(query.split(" ").filter(function(token) {
-      return token !== "";
-    }));
-  }
-  function getNormalizedIndexMap(text) {
-    var normalized = "";
-    var map = [];
-    for (var i = 0; i < text.length; i++) {
-      var normalizedChar = removeAcentos(text.charAt(i).toLowerCase());
-      if (typeof normalizedChar !== "string") normalizedChar = text.charAt(i).toLowerCase();
-      for (var j = 0; j < normalizedChar.length; j++) {
-        normalized += normalizedChar.charAt(j);
-        map.push(i);
-      }
-    }
-    return { normalized, map };
-  }
-  function mergeHighlightRanges(ranges) {
-    if (!ranges.length) return [];
-    ranges.sort(function(a, b) {
-      return a.start - b.start || a.end - b.end;
-    });
-    var merged = [ranges[0]];
-    for (var i = 1; i < ranges.length; i++) {
-      var current = ranges[i];
-      var last = merged[merged.length - 1];
-      if (current.start <= last.end) {
-        last.end = Math.max(last.end, current.end);
-      } else {
-        merged.push(current);
-      }
-    }
-    return merged;
-  }
-  function buildHighlightRanges(text, tokens) {
-    if (!tokens.length || !text) return [];
-    var mapData = getNormalizedIndexMap(text);
-    var normalized = mapData.normalized;
-    var indexMap = mapData.map;
-    var ranges = [];
-    tokens.forEach(function(token) {
-      var startIndex = 0;
-      while (startIndex < normalized.length) {
-        var foundIndex = normalized.indexOf(token, startIndex);
-        if (foundIndex === -1) break;
-        var rawStart = indexMap[foundIndex];
-        var rawEndIndex = foundIndex + token.length - 1;
-        var rawEnd = indexMap[rawEndIndex] + 1;
-        ranges.push({ start: rawStart, end: rawEnd });
-        startIndex = foundIndex + token.length;
-      }
-    });
-    return mergeHighlightRanges(ranges);
-  }
-  function installQuickFilter() {
-    const quickfilter = {
-      normalizeFilterText,
-      getFilterTokens,
-      getNormalizedIndexMap,
-      mergeHighlightRanges,
-      buildHighlightRanges
-    };
-    getSeiPro().core.quickfilter = quickfilter;
-    aliasGlobal("normalizeQuickPageFilterText", normalizeFilterText);
-    aliasGlobal("getQuickPageFilterTokens", getFilterTokens);
-    aliasGlobal("getNormalizedIndexMap", getNormalizedIndexMap);
-    aliasGlobal("mergeQuickPageHighlightRanges", mergeHighlightRanges);
-    aliasGlobal("buildQuickPageHighlightRanges", buildHighlightRanges);
-    return quickfilter;
-  }
-
-  // src/core/quickfilter-dom.js
-  var HIGHLIGHT_CLASS = "seipro-quick-highlight";
-  function resolveDoc(scope) {
-    if (scope && scope.ownerDocument) return scope.ownerDocument;
-    if (scope && scope.nodeType === 9) return scope;
-    return typeof document !== "undefined" ? document : null;
-  }
-  function clearHighlights(scope) {
-    var doc = resolveDoc(scope);
-    if (!doc) return;
-    var root = scope || doc.body;
-    if (!root || typeof root.querySelectorAll !== "function") return;
-    var spans = root.querySelectorAll("." + HIGHLIGHT_CLASS);
-    for (var i = 0; i < spans.length; i++) {
-      var span = spans[i];
-      if (span.parentNode) {
-        span.parentNode.replaceChild(doc.createTextNode(span.textContent), span);
-      }
-    }
-    if (typeof root.normalize === "function") root.normalize();
-  }
-  function highlightTextNode(node, tokens) {
-    var text = node.nodeValue;
-    if (!text || !text.trim()) return;
-    var ranges = buildHighlightRanges(text, tokens);
-    if (!ranges.length) return;
-    var doc = node.ownerDocument || (typeof document !== "undefined" ? document : null);
-    if (!doc) return;
-    var fragment = doc.createDocumentFragment();
-    var cursor = 0;
-    ranges.forEach(function(range) {
-      if (range.start > cursor) {
-        fragment.appendChild(doc.createTextNode(text.slice(cursor, range.start)));
-      }
-      var span = doc.createElement("span");
-      span.className = HIGHLIGHT_CLASS;
-      span.textContent = text.slice(range.start, range.end);
-      fragment.appendChild(span);
-      cursor = range.end;
-    });
-    if (cursor < text.length) {
-      fragment.appendChild(doc.createTextNode(text.slice(cursor)));
-    }
-    if (node.parentNode) node.parentNode.replaceChild(fragment, node);
-  }
-  function applyHighlight(container, tokens, options) {
-    options = options || {};
-    if (!container) return;
-    var doc = resolveDoc(container);
-    if (!doc || typeof doc.createTreeWalker !== "function") return;
-    clearHighlights(container);
-    if (!tokens || !tokens.length) return;
-    var shouldSkip = typeof options.shouldSkip === "function" ? options.shouldSkip : function() {
-      return false;
-    };
-    var walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
-      acceptNode: function(node) {
-        return shouldSkip(node) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
-      }
-    });
-    var nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    for (var i = 0; i < nodes.length; i++) highlightTextNode(nodes[i], tokens);
-  }
-  function installQuickFilterDom() {
-    const quickfilterDom = {
-      HIGHLIGHT_CLASS,
-      clearHighlights,
-      highlightTextNode,
-      applyHighlight
-    };
-    getSeiPro().core.quickfilterDom = quickfilterDom;
-    return quickfilterDom;
-  }
-
-  // src/core/sticknote.js
-  function parseSticknoteHomeLabel(label) {
-    label = normalizeMojibakeUtf8(label);
-    label = typeof label === "string" ? label : "";
-    if (!label) {
-      return false;
-    }
-    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s+\/\s+(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
-    if (!match) {
-      return false;
-    }
-    return {
-      text: match[1].trim(),
-      user: match[2].trim()
-    };
-  }
-  function normalizeSticknoteHomeText(value) {
-    value = typeof value === "string" ? value : "";
-    return value.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\r/g, "\n").replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\u00a0/g, " ").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-  }
-  function parseSticknoteChecklistLine(line) {
-    line = typeof line === "string" ? line : "";
-    var hasUnchecked = line.indexOf("[ ]") !== -1;
-    var checked = line.indexOf("[X]") !== -1;
-    var isItem = hasUnchecked || checked;
-    var text = line;
-    if (checked) {
-      text = line.replace("[X]", "").trim();
-    } else if (hasUnchecked) {
-      text = line.replace("[ ]", "").trim();
-    }
-    return { isItem, checked, text };
-  }
-  function installSticknote() {
-    const sticknote = {
-      parseSticknoteHomeLabel,
-      normalizeSticknoteHomeText,
-      parseSticknoteChecklistLine
-    };
-    getSeiPro().core.sticknote = sticknote;
-    aliasGlobal("parseSticknoteHomeLabel", parseSticknoteHomeLabel);
-    aliasGlobal("normalizeSticknoteHomeText", normalizeSticknoteHomeText);
-    aliasGlobal("parseSticknoteChecklistLine", parseSticknoteChecklistLine);
-    return sticknote;
-  }
-
-  // src/core/docslote.js
-  var docsLoteSpecialChars = { "\xC0": "&Agrave;", "\xC1": "&Aacute;", "\xC2": "&Acirc;", "\xC3": "&Atilde;", "\xC4": "&Auml;", "\xC5": "&Aring;", "\xE0": "&agrave;", "\xE1": "&aacute;", "\xE2": "&acirc;", "\xE3": "&atilde;", "\xE4": "&auml;", "\xE5": "&aring;", "\xC6": "&AElig;", "\xE6": "&aelig;", "\xDF": "&szlig;", "\xC7": "&Ccedil;", "\xE7": "&ccedil;", "\xC8": "&Egrave;", "\xC9": "&Eacute;", "\xCA": "&Ecirc;", "\xCB": "&Euml;", "\xE8": "&egrave;", "\xE9": "&eacute;", "\xEA": "&ecirc;", "\xEB": "&euml;", "\u0192": "&#131;", "\xCC": "&Igrave;", "\xCD": "&Iacute;", "\xCE": "&Icirc;", "\xCF": "&Iuml;", "\xEC": "&igrave;", "\xED": "&iacute;", "\xEE": "&icirc;", "\xEF": "&iuml;", "\xD1": "&Ntilde;", "\xF1": "&ntilde;", "\xD2": "&Ograve;", "\xD3": "&Oacute;", "\xD4": "&Ocirc;", "\xD5": "&Otilde;", "\xD6": "&Ouml;", "\xF2": "&ograve;", "\xF3": "&oacute;", "\xF4": "&ocirc;", "\xF5": "&otilde;", "\xF6": "&ouml;", "\xD8": "&Oslash;", "\xF8": "&oslash;", "\u0152": "&#140;", "\u0153": "&#156;", "\u0160": "&#138;", "\u0161": "&#154;", "\xD9": "&Ugrave;", "\xDA": "&Uacute;", "\xDB": "&Ucirc;", "\xDC": "&Uuml;", "\xF9": "&ugrave;", "\xFA": "&uacute;", "\xFB": "&ucirc;", "\xFC": "&uuml;", "\xB5": "&#181;", "\xD7": "&#215;", "\xDD": "&Yacute;", "\u0178": "&#159;", "\xFD": "&yacute;", "\xFF": "&yuml;", "\xB0": "&#176;", "\xBA": "&#176;", "\u2020": "&#134;", "\u2021": "&#135;", "\xB1": "&#177;", "\xAB": "&#171;", "\xBB": "&#187;", "\xBF": "&#191;", "\xA1": "&#161;", "\xB7": "&#183;", "\u2022": "&#149;", "\u2122": "&#153;", "\xA9": "&copy;", "\xAE": "&reg;", "\xA7": "&#167;", "\xB6": "&#182;" };
-  var docsLoteNormalCharsUtf8 = { "\xC0": "A", "\xC1": "A", "\xC2": "A", "\xC3": "A", "\xC4": "A", "\xC5": "A", "\xE0": "a", "\xE1": "a", "\xE2": "a", "\xE3": "a", "\xE4": "a", "\xE5": "a", "\xC6": "_", "\xE6": "_", "\xDF": "B", "\xC7": "C", "\xE7": "c", "\xC8": "E", "\xC9": "E", "\xCA": "E", "\xCB": "E", "\xE8": "e", "\xE9": "e", "\xEA": "e", "\xEB": "e", "\u0192": "f", "\xCC": "I", "\xCD": "I", "\xCE": "I", "\xCF": "I", "\xEC": "i", "\xED": "i", "\xEE": "i", "\xEF": "i", "\xD1": "N", "\xF1": "n", "\xD2": "O", "\xD3": "O", "\xD4": "O", "\xD5": "O", "\xD6": "O", "\xF2": "o", "\xF3": "o", "\xF4": "o", "\xF5": "o", "\xF6": "o", "\xD8": "_", "\xF8": "_", "\u0152": "_", "\u0153": "_", "\u0160": "S", "\u0161": "S", "\xD9": "U", "\xDA": "U", "\xDB": "U", "\xDC": "U", "\xF9": "u", "\xFA": "u", "\xFB": "u", "\xFC": "u", "\xB5": "u", "\xD7": "_", "\xDD": "Y", "\u0178": "Y", "\xFD": "y", "\xFF": "y", "\xB0": "", "\xBA": "", "\u2020": "_", "\u2021": "_", "\xB1": "_", "\xAB": "_", "\xBB": "_", "\xBF": "_", "\xA1": "_", "\xB7": "_", "\u2022": "_", "\u2122": "_", "\xA9": "_", "\xAE": "_", "\xA7": "_", "\xB6": "_" };
-  var docsLoteNormalCharsIso = { "\xC0": "A", "\xC1": "A", "\xC2": "A", "\xC3": "A", "\xC4": "A", "\xC5": "A", "\xE0": "a", "\xE1": "a", "\xE2": "a", "\xE3": "a", "\xE4": "a", "\xE5": "a", "\xC6": "_", "\xE6": "_", "\xDF": "B", "\xC7": "C", "\xE7": "c", "\xC8": "E", "\xC9": "E", "\xCA": "E", "\xCB": "E", "\xE8": "e", "\xE9": "e", "\xEA": "e", "\xEB": "e", "\u0192": "f", "\xCC": "I", "\xCD": "I", "\xCE": "I", "\xCF": "I", "\xEC": "i", "\xED": "i", "\xEE": "i", "\xEF": "i", "\xD1": "N", "\xF1": "n", "\xD2": "O", "\xD3": "O", "\xD4": "O", "\xD5": "O", "\xD6": "O", "\xF2": "o", "\xF3": "o", "\xF4": "o", "\xF5": "o", "\xF6": "o", "\xD8": "_", "\xF8": "_", "\u0152": "_", "\u0153": "_", "\u0160": "S", "\u0161": "S", "\xD9": "U", "\xDA": "U", "\xDB": "U", "\xDC": "U", "\xF9": "u", "\xFA": "u", "\xFB": "u", "\xFC": "u", "\xB5": "u", "\xD7": "_", "\xDD": "Y", "\u0178": "Y", "\xFD": "y", "\xFF": "y", "\xB0": "", "\xBA": "", "\u2020": "_", "\u2021": "_", "\xB1": "_", "\xAB": "_", "\xBB": "_", "\xBF": "_", "\xA1": "_", "\xB7": "_", "\u2022": "_", "\u2122": "_", "\xA9": "_", "\xAE": "_", "\xA7": "_", "\xB6": "_" };
-  function getDocsLoteNormalChars(encoding) {
-    return encoding === "utf-8" ? docsLoteNormalCharsUtf8 : docsLoteNormalCharsIso;
-  }
-  function hasDocsLoteSpecialChars(text, encoding) {
-    if (typeof text !== "string" || text === "") return false;
-    var map = getDocsLoteNormalChars(encoding);
-    var regex = new RegExp(Object.keys(map).join("|"));
-    return regex.test(text);
-  }
-  function encodeDocsLoteSpecialChars(text) {
-    if (typeof text !== "string") return text;
-    var regex = new RegExp(Object.keys(docsLoteSpecialChars).join("|"), "g");
-    return text.replace(regex, function(match) {
-      return docsLoteSpecialChars[match];
-    });
-  }
-  function parseDocsLoteDocTitle(docTitle) {
-    if (typeof docTitle !== "string" || docTitle === "") {
-      return { nrSEI: false, nomeDocumento: false };
-    }
-    var parts = docTitle.split("-");
-    return {
-      nrSEI: typeof parts[1] !== "undefined" ? parts[1].trim() : false,
-      nomeDocumento: typeof parts[2] !== "undefined" ? parts[2].trim() : false
-    };
-  }
-  function installDocsLote() {
-    const docslote = {
-      docsLoteSpecialChars,
-      docsLoteNormalCharsUtf8,
-      docsLoteNormalCharsIso,
-      getDocsLoteNormalChars,
-      hasDocsLoteSpecialChars,
-      encodeDocsLoteSpecialChars,
-      parseDocsLoteDocTitle
-    };
-    getSeiPro().core.docslote = docslote;
-    return docslote;
-  }
-
-  // src/core/docslote-legacy-api.js
-  function installDocsLoteLegacyApi() {
-    aliasGlobal("docsLote_specialChars", docsLoteSpecialChars);
-    aliasGlobal("docsLote_normalChars_utf8", docsLoteNormalCharsUtf8);
-    aliasGlobal("docsLote_normalChars_iso", docsLoteNormalCharsIso);
-  }
-
   // src/core/ui.js
   function installUi() {
     function resolveTarget(elementTo, target) {
@@ -2733,6 +2482,58 @@
     });
   }
 
+  // src/platform/bus.js
+  var ALLOWED = /* @__PURE__ */ new Set([
+    "config:changed",
+    "monitorados:updated",
+    "process-list:refreshed"
+  ]);
+  function createBus() {
+    const listeners = /* @__PURE__ */ new Map();
+    function on(event, handler) {
+      if (!ALLOWED.has(event) || typeof handler !== "function") return () => {
+      };
+      if (!listeners.has(event)) listeners.set(event, /* @__PURE__ */ new Set());
+      listeners.get(event).add(handler);
+      return function off() {
+        const set = listeners.get(event);
+        if (set) set.delete(handler);
+      };
+    }
+    function emit(event, payload) {
+      if (!ALLOWED.has(event)) return;
+      const set = listeners.get(event);
+      if (!set || !set.size) return;
+      set.forEach((handler) => {
+        try {
+          handler(payload);
+        } catch (e) {
+        }
+      });
+    }
+    return Object.freeze({ on, emit, ALLOWED: Object.freeze([...ALLOWED]) });
+  }
+  function installBus() {
+    const ns = getSeiPro();
+    if (ns.platform && ns.platform.bus) return ns.platform.bus;
+    ns.platform = ns.platform || {};
+    ns.platform.bus = createBus();
+    return ns.platform.bus;
+  }
+  function getBus() {
+    const ns = typeof globalThis !== "undefined" && globalThis.SeiPro;
+    if (ns && ns.platform && ns.platform.bus) return ns.platform.bus;
+    return installBus();
+  }
+  var bus = {
+    on(event, handler) {
+      return getBus().on(event, handler);
+    },
+    emit(event, payload) {
+      return getBus().emit(event, payload);
+    }
+  };
+
   // src/core/stack.js
   function installCoreStack() {
     createNamespace();
@@ -2753,11 +2554,6 @@
     installCookies();
     installHelpers();
     installPrazos();
-    installQuickFilter();
-    installQuickFilterDom();
-    installSticknote();
-    installDocsLote();
-    installDocsLoteLegacyApi();
     installUi();
     installMessaging();
     installStorage();
@@ -2768,9 +2564,280 @@
     installAdapter();
     installUrls();
     installTooltip();
+    installBus();
     installPrazoPreview();
     installPrazoPreviewLegacyApi();
     installLegacyInlineBridge();
+  }
+
+  // src/shared/quickfilter/domain.js
+  function normalizeFilterText(text) {
+    text = typeof text === "string" ? text : "";
+    text = removeAcentos(text.toLowerCase());
+    return text.replace(/\s+/g, " ").trim();
+  }
+  function getFilterTokens(text) {
+    var query = normalizeFilterText(text);
+    return query === "" ? [] : uniqPro(query.split(" ").filter(function(token) {
+      return token !== "";
+    }));
+  }
+  function getNormalizedIndexMap(text) {
+    var normalized = "";
+    var map = [];
+    for (var i = 0; i < text.length; i++) {
+      var normalizedChar = removeAcentos(text.charAt(i).toLowerCase());
+      if (typeof normalizedChar !== "string") normalizedChar = text.charAt(i).toLowerCase();
+      for (var j = 0; j < normalizedChar.length; j++) {
+        normalized += normalizedChar.charAt(j);
+        map.push(i);
+      }
+    }
+    return { normalized, map };
+  }
+  function mergeHighlightRanges(ranges) {
+    if (!ranges.length) return [];
+    ranges.sort(function(a, b) {
+      return a.start - b.start || a.end - b.end;
+    });
+    var merged = [ranges[0]];
+    for (var i = 1; i < ranges.length; i++) {
+      var current = ranges[i];
+      var last = merged[merged.length - 1];
+      if (current.start <= last.end) {
+        last.end = Math.max(last.end, current.end);
+      } else {
+        merged.push(current);
+      }
+    }
+    return merged;
+  }
+  function buildHighlightRanges(text, tokens) {
+    if (!tokens.length || !text) return [];
+    var mapData = getNormalizedIndexMap(text);
+    var normalized = mapData.normalized;
+    var indexMap = mapData.map;
+    var ranges = [];
+    tokens.forEach(function(token) {
+      var startIndex = 0;
+      while (startIndex < normalized.length) {
+        var foundIndex = normalized.indexOf(token, startIndex);
+        if (foundIndex === -1) break;
+        var rawStart = indexMap[foundIndex];
+        var rawEndIndex = foundIndex + token.length - 1;
+        var rawEnd = indexMap[rawEndIndex] + 1;
+        ranges.push({ start: rawStart, end: rawEnd });
+        startIndex = foundIndex + token.length;
+      }
+    });
+    return mergeHighlightRanges(ranges);
+  }
+  function installQuickFilter() {
+    const quickfilter = {
+      normalizeFilterText,
+      getFilterTokens,
+      getNormalizedIndexMap,
+      mergeHighlightRanges,
+      buildHighlightRanges
+    };
+    getSeiPro().core.quickfilter = quickfilter;
+    return quickfilter;
+  }
+
+  // src/shared/quickfilter/legacy-api.js
+  function installQuickFilterLegacyApi() {
+    installQuickFilter();
+    aliasGlobal("normalizeQuickPageFilterText", normalizeFilterText);
+    aliasGlobal("getQuickPageFilterTokens", getFilterTokens);
+    aliasGlobal("getNormalizedIndexMap", getNormalizedIndexMap);
+    aliasGlobal("mergeQuickPageHighlightRanges", mergeHighlightRanges);
+    aliasGlobal("buildQuickPageHighlightRanges", buildHighlightRanges);
+  }
+
+  // src/shared/quickfilter/dom.js
+  var HIGHLIGHT_CLASS = "seipro-quick-highlight";
+  function resolveDoc(scope) {
+    if (scope && scope.ownerDocument) return scope.ownerDocument;
+    if (scope && scope.nodeType === 9) return scope;
+    return typeof document !== "undefined" ? document : null;
+  }
+  function clearHighlights(scope) {
+    var doc = resolveDoc(scope);
+    if (!doc) return;
+    var root = scope || doc.body;
+    if (!root || typeof root.querySelectorAll !== "function") return;
+    var spans = root.querySelectorAll("." + HIGHLIGHT_CLASS);
+    for (var i = 0; i < spans.length; i++) {
+      var span = spans[i];
+      if (span.parentNode) {
+        span.parentNode.replaceChild(doc.createTextNode(span.textContent), span);
+      }
+    }
+    if (typeof root.normalize === "function") root.normalize();
+  }
+  function highlightTextNode(node, tokens) {
+    var text = node.nodeValue;
+    if (!text || !text.trim()) return;
+    var ranges = buildHighlightRanges(text, tokens);
+    if (!ranges.length) return;
+    var doc = node.ownerDocument || (typeof document !== "undefined" ? document : null);
+    if (!doc) return;
+    var fragment = doc.createDocumentFragment();
+    var cursor = 0;
+    ranges.forEach(function(range) {
+      if (range.start > cursor) {
+        fragment.appendChild(doc.createTextNode(text.slice(cursor, range.start)));
+      }
+      var span = doc.createElement("span");
+      span.className = HIGHLIGHT_CLASS;
+      span.textContent = text.slice(range.start, range.end);
+      fragment.appendChild(span);
+      cursor = range.end;
+    });
+    if (cursor < text.length) {
+      fragment.appendChild(doc.createTextNode(text.slice(cursor)));
+    }
+    if (node.parentNode) node.parentNode.replaceChild(fragment, node);
+  }
+  function applyHighlight(container, tokens, options) {
+    options = options || {};
+    if (!container) return;
+    var doc = resolveDoc(container);
+    if (!doc || typeof doc.createTreeWalker !== "function") return;
+    clearHighlights(container);
+    if (!tokens || !tokens.length) return;
+    var shouldSkip = typeof options.shouldSkip === "function" ? options.shouldSkip : function() {
+      return false;
+    };
+    var walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node) {
+        return shouldSkip(node) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (var i = 0; i < nodes.length; i++) highlightTextNode(nodes[i], tokens);
+  }
+  function installQuickFilterDom() {
+    const quickfilterDom = {
+      HIGHLIGHT_CLASS,
+      clearHighlights,
+      highlightTextNode,
+      applyHighlight
+    };
+    getSeiPro().core.quickfilterDom = quickfilterDom;
+    return quickfilterDom;
+  }
+
+  // src/shared/sticknote/domain.js
+  function parseSticknoteHomeLabel(label) {
+    label = normalizeMojibakeUtf8(label);
+    label = typeof label === "string" ? label : "";
+    if (!label) {
+      return false;
+    }
+    var match = label.match(/^Anota(?:ç|c)(?:ã|a)o\s*\/\s*([\s\S]*?)\s+\/\s+(.*?)\s+em\s+\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/i);
+    if (!match) {
+      return false;
+    }
+    return {
+      text: match[1].trim(),
+      user: match[2].trim()
+    };
+  }
+  function normalizeSticknoteHomeText(value) {
+    value = typeof value === "string" ? value : "";
+    return value.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\\r/g, "\n").replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\u00a0/g, " ").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  function parseSticknoteChecklistLine(line) {
+    line = typeof line === "string" ? line : "";
+    var hasUnchecked = line.indexOf("[ ]") !== -1;
+    var checked = line.indexOf("[X]") !== -1;
+    var isItem = hasUnchecked || checked;
+    var text = line;
+    if (checked) {
+      text = line.replace("[X]", "").trim();
+    } else if (hasUnchecked) {
+      text = line.replace("[ ]", "").trim();
+    }
+    return { isItem, checked, text };
+  }
+  function installSticknote() {
+    const sticknote = {
+      parseSticknoteHomeLabel,
+      normalizeSticknoteHomeText,
+      parseSticknoteChecklistLine
+    };
+    getSeiPro().core.sticknote = sticknote;
+    return sticknote;
+  }
+
+  // src/shared/sticknote/legacy-api.js
+  function installSticknoteLegacyApi() {
+    installSticknote();
+    aliasGlobal("parseSticknoteHomeLabel", parseSticknoteHomeLabel);
+    aliasGlobal("normalizeSticknoteHomeText", normalizeSticknoteHomeText);
+    aliasGlobal("parseSticknoteChecklistLine", parseSticknoteChecklistLine);
+  }
+
+  // src/shared/docslote.js
+  var docsLoteSpecialChars = { "\xC0": "&Agrave;", "\xC1": "&Aacute;", "\xC2": "&Acirc;", "\xC3": "&Atilde;", "\xC4": "&Auml;", "\xC5": "&Aring;", "\xE0": "&agrave;", "\xE1": "&aacute;", "\xE2": "&acirc;", "\xE3": "&atilde;", "\xE4": "&auml;", "\xE5": "&aring;", "\xC6": "&AElig;", "\xE6": "&aelig;", "\xDF": "&szlig;", "\xC7": "&Ccedil;", "\xE7": "&ccedil;", "\xC8": "&Egrave;", "\xC9": "&Eacute;", "\xCA": "&Ecirc;", "\xCB": "&Euml;", "\xE8": "&egrave;", "\xE9": "&eacute;", "\xEA": "&ecirc;", "\xEB": "&euml;", "\u0192": "&#131;", "\xCC": "&Igrave;", "\xCD": "&Iacute;", "\xCE": "&Icirc;", "\xCF": "&Iuml;", "\xEC": "&igrave;", "\xED": "&iacute;", "\xEE": "&icirc;", "\xEF": "&iuml;", "\xD1": "&Ntilde;", "\xF1": "&ntilde;", "\xD2": "&Ograve;", "\xD3": "&Oacute;", "\xD4": "&Ocirc;", "\xD5": "&Otilde;", "\xD6": "&Ouml;", "\xF2": "&ograve;", "\xF3": "&oacute;", "\xF4": "&ocirc;", "\xF5": "&otilde;", "\xF6": "&ouml;", "\xD8": "&Oslash;", "\xF8": "&oslash;", "\u0152": "&#140;", "\u0153": "&#156;", "\u0160": "&#138;", "\u0161": "&#154;", "\xD9": "&Ugrave;", "\xDA": "&Uacute;", "\xDB": "&Ucirc;", "\xDC": "&Uuml;", "\xF9": "&ugrave;", "\xFA": "&uacute;", "\xFB": "&ucirc;", "\xFC": "&uuml;", "\xB5": "&#181;", "\xD7": "&#215;", "\xDD": "&Yacute;", "\u0178": "&#159;", "\xFD": "&yacute;", "\xFF": "&yuml;", "\xB0": "&#176;", "\xBA": "&#176;", "\u2020": "&#134;", "\u2021": "&#135;", "\xB1": "&#177;", "\xAB": "&#171;", "\xBB": "&#187;", "\xBF": "&#191;", "\xA1": "&#161;", "\xB7": "&#183;", "\u2022": "&#149;", "\u2122": "&#153;", "\xA9": "&copy;", "\xAE": "&reg;", "\xA7": "&#167;", "\xB6": "&#182;" };
+  var docsLoteNormalCharsUtf8 = { "\xC0": "A", "\xC1": "A", "\xC2": "A", "\xC3": "A", "\xC4": "A", "\xC5": "A", "\xE0": "a", "\xE1": "a", "\xE2": "a", "\xE3": "a", "\xE4": "a", "\xE5": "a", "\xC6": "_", "\xE6": "_", "\xDF": "B", "\xC7": "C", "\xE7": "c", "\xC8": "E", "\xC9": "E", "\xCA": "E", "\xCB": "E", "\xE8": "e", "\xE9": "e", "\xEA": "e", "\xEB": "e", "\u0192": "f", "\xCC": "I", "\xCD": "I", "\xCE": "I", "\xCF": "I", "\xEC": "i", "\xED": "i", "\xEE": "i", "\xEF": "i", "\xD1": "N", "\xF1": "n", "\xD2": "O", "\xD3": "O", "\xD4": "O", "\xD5": "O", "\xD6": "O", "\xF2": "o", "\xF3": "o", "\xF4": "o", "\xF5": "o", "\xF6": "o", "\xD8": "_", "\xF8": "_", "\u0152": "_", "\u0153": "_", "\u0160": "S", "\u0161": "S", "\xD9": "U", "\xDA": "U", "\xDB": "U", "\xDC": "U", "\xF9": "u", "\xFA": "u", "\xFB": "u", "\xFC": "u", "\xB5": "u", "\xD7": "_", "\xDD": "Y", "\u0178": "Y", "\xFD": "y", "\xFF": "y", "\xB0": "", "\xBA": "", "\u2020": "_", "\u2021": "_", "\xB1": "_", "\xAB": "_", "\xBB": "_", "\xBF": "_", "\xA1": "_", "\xB7": "_", "\u2022": "_", "\u2122": "_", "\xA9": "_", "\xAE": "_", "\xA7": "_", "\xB6": "_" };
+  var docsLoteNormalCharsIso = { "\xC0": "A", "\xC1": "A", "\xC2": "A", "\xC3": "A", "\xC4": "A", "\xC5": "A", "\xE0": "a", "\xE1": "a", "\xE2": "a", "\xE3": "a", "\xE4": "a", "\xE5": "a", "\xC6": "_", "\xE6": "_", "\xDF": "B", "\xC7": "C", "\xE7": "c", "\xC8": "E", "\xC9": "E", "\xCA": "E", "\xCB": "E", "\xE8": "e", "\xE9": "e", "\xEA": "e", "\xEB": "e", "\u0192": "f", "\xCC": "I", "\xCD": "I", "\xCE": "I", "\xCF": "I", "\xEC": "i", "\xED": "i", "\xEE": "i", "\xEF": "i", "\xD1": "N", "\xF1": "n", "\xD2": "O", "\xD3": "O", "\xD4": "O", "\xD5": "O", "\xD6": "O", "\xF2": "o", "\xF3": "o", "\xF4": "o", "\xF5": "o", "\xF6": "o", "\xD8": "_", "\xF8": "_", "\u0152": "_", "\u0153": "_", "\u0160": "S", "\u0161": "S", "\xD9": "U", "\xDA": "U", "\xDB": "U", "\xDC": "U", "\xF9": "u", "\xFA": "u", "\xFB": "u", "\xFC": "u", "\xB5": "u", "\xD7": "_", "\xDD": "Y", "\u0178": "Y", "\xFD": "y", "\xFF": "y", "\xB0": "", "\xBA": "", "\u2020": "_", "\u2021": "_", "\xB1": "_", "\xAB": "_", "\xBB": "_", "\xBF": "_", "\xA1": "_", "\xB7": "_", "\u2022": "_", "\u2122": "_", "\xA9": "_", "\xAE": "_", "\xA7": "_", "\xB6": "_" };
+  function getDocsLoteNormalChars(encoding) {
+    return encoding === "utf-8" ? docsLoteNormalCharsUtf8 : docsLoteNormalCharsIso;
+  }
+  function hasDocsLoteSpecialChars(text, encoding) {
+    if (typeof text !== "string" || text === "") return false;
+    var map = getDocsLoteNormalChars(encoding);
+    var regex = new RegExp(Object.keys(map).join("|"));
+    return regex.test(text);
+  }
+  function encodeDocsLoteSpecialChars(text) {
+    if (typeof text !== "string") return text;
+    var regex = new RegExp(Object.keys(docsLoteSpecialChars).join("|"), "g");
+    return text.replace(regex, function(match) {
+      return docsLoteSpecialChars[match];
+    });
+  }
+  function parseDocsLoteDocTitle(docTitle) {
+    if (typeof docTitle !== "string" || docTitle === "") {
+      return { nrSEI: false, nomeDocumento: false };
+    }
+    var parts = docTitle.split("-");
+    return {
+      nrSEI: typeof parts[1] !== "undefined" ? parts[1].trim() : false,
+      nomeDocumento: typeof parts[2] !== "undefined" ? parts[2].trim() : false
+    };
+  }
+  function installDocsLote() {
+    const docslote = {
+      docsLoteSpecialChars,
+      docsLoteNormalCharsUtf8,
+      docsLoteNormalCharsIso,
+      getDocsLoteNormalChars,
+      hasDocsLoteSpecialChars,
+      encodeDocsLoteSpecialChars,
+      parseDocsLoteDocTitle
+    };
+    getSeiPro().core.docslote = docslote;
+    return docslote;
+  }
+
+  // src/shared/docslote-legacy-api.js
+  function installDocsLoteLegacyApi() {
+    installDocsLote();
+    aliasGlobal("docsLote_specialChars", docsLoteSpecialChars);
+    aliasGlobal("docsLote_normalChars_utf8", docsLoteNormalCharsUtf8);
+    aliasGlobal("docsLote_normalChars_iso", docsLoteNormalCharsIso);
+  }
+
+  // src/shared/install-legacy-helpers.js
+  function installSharedLegacyHelpers() {
+    installQuickFilterLegacyApi();
+    installQuickFilterDom();
+    installSticknoteLegacyApi();
+    installDocsLoteLegacyApi();
   }
 
   // src/shared/legacy/datas-view.js
@@ -2898,6 +2965,7 @@
     storeState.config.datetime = moment().format("YYYY-MM-DD HH:mm:ss");
     storeLastRaw = JSON.stringify(storeState);
     localStorage.setItem(STORE_KEY, storeLastRaw);
+    bus.emit("monitorados:updated", { items: storeState.monitorados || [] });
     if (options.remote !== false) scheduleMonitoradoRemote();
   }
   function scheduleMonitoradoRemote() {
@@ -2936,9 +3004,15 @@
     persistMonitoradoStore(getStoreMonitoradoPro());
   }
   function installMonitoradoStore() {
-    const monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
-    Object.assign(monitorados, {
-      // store / io
+    const root = getSeiPro();
+    root.features = root.features || {};
+    const monitorados = root.features.monitorados || (root.features.monitorados = {
+      id: "monitorados",
+      api: {},
+      install: function noop() {
+      }
+    });
+    const storeMethods = {
       getStore: getStoreMonitoradoPro,
       getOptionsConfigDate,
       persist: persistMonitoradoStore,
@@ -2946,13 +3020,15 @@
       flushRemote: flushMonitoradoRemote,
       getConfigDatetime: getConfigDatetimeMonitorado,
       save: saveConfigMonitorado,
-      // domain (puro)
       defaultConfigDate,
       defaultStore: defaultMonitoradoStore,
       findIndex: findMonitoradoIndex,
       processDataReady: monitoradoProcessDataReady,
       processPayloadReady: monitoradoProcessPayloadReady
-    });
+    };
+    Object.assign(monitorados, storeMethods);
+    if (!monitorados.api || typeof monitorados.api !== "object") monitorados.api = {};
+    Object.assign(monitorados.api, storeMethods);
     if (typeof globalRef.addEventListener === "function" && !globalRef.__seiProMonitoradoFlushBound) {
       globalRef.__seiProMonitoradoFlushBound = true;
       globalRef.addEventListener("pagehide", function() {
@@ -2986,6 +3062,7 @@
 
   // src/content/core-stack.js
   installCoreStack();
+  installSharedLegacyHelpers();
   installDatasView();
   installDatasLegacyApi();
   installMonitoradoStoreLegacyApi();

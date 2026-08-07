@@ -32,14 +32,19 @@ installAtividadesLegacyApi({ enabled: true });
 O fallback de `callAtiv` para `window[nome]` usa a mesma flag e fica desligado
 no fluxo normal.
 
-O namespace publicado é:
+O namespace publicado segue o contrato canônico (`docs/architecture.md`) Tier C:
 
 ```js
-SeiPro.features.atividades.api       // handlers, commands, queries, state, request
-                                      // legacyRequest: ponte explícita e temporária
-SeiPro.features.atividades.useCases  // activity e config
-SeiPro.features.atividades.ports     // context, storage, effects e server
+SeiPro.features.atividades = {
+  id: 'atividades',
+  api,       // handlers, commands, queries, state, request (+ legacyRequest temporário)
+  install,   // boot da feature
+  useCases,  // extras Tier C: activity e config
+  ports      // extras Tier C: context, storage, effects e server
+}
 ```
+
+Consumidores cross-feature devem preferir `.api`.
 
 Monitorados, projetos, árvore, prescrições, lista e sei-functions consultam
 `feature.api` para estado, handlers, capacidade e requests; nenhum deles

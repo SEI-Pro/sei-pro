@@ -15,6 +15,33 @@
     }
   }
 
+  // src/app/publish-feature.js
+  function toNamespaceKey(id) {
+    if (typeof id !== "string" || !id) return id;
+    return id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  }
+  function publishFeature(spec = {}) {
+    const id = spec.id;
+    if (typeof id !== "string" || !id) {
+      throw new Error("publishFeature: id is required");
+    }
+    const api = spec.api && typeof spec.api === "object" ? spec.api : {};
+    const install = typeof spec.install === "function" ? spec.install : function noop() {
+    };
+    const extras = spec.extras && typeof spec.extras === "object" ? spec.extras : {};
+    const published = Object.freeze({
+      id,
+      api,
+      install,
+      ...extras
+    });
+    const root = getSeiPro();
+    root.features = root.features || {};
+    const key = spec.nsKey || toNamespaceKey(id);
+    root.features[key] = published;
+    return published;
+  }
+
   // src/features/monitorados/dom.js
   var qs = (sel, root = document) => root.querySelector(sel);
   var qsa = (sel, root = document) => Array.prototype.slice.call(root.querySelectorAll(sel));
@@ -54,6 +81,58 @@
       }, timeoutMs);
     });
   }
+
+  // src/platform/bus.js
+  var ALLOWED = /* @__PURE__ */ new Set([
+    "config:changed",
+    "monitorados:updated",
+    "process-list:refreshed"
+  ]);
+  function createBus() {
+    const listeners = /* @__PURE__ */ new Map();
+    function on(event, handler) {
+      if (!ALLOWED.has(event) || typeof handler !== "function") return () => {
+      };
+      if (!listeners.has(event)) listeners.set(event, /* @__PURE__ */ new Set());
+      listeners.get(event).add(handler);
+      return function off() {
+        const set = listeners.get(event);
+        if (set) set.delete(handler);
+      };
+    }
+    function emit(event, payload) {
+      if (!ALLOWED.has(event)) return;
+      const set = listeners.get(event);
+      if (!set || !set.size) return;
+      set.forEach((handler) => {
+        try {
+          handler(payload);
+        } catch (e) {
+        }
+      });
+    }
+    return Object.freeze({ on, emit, ALLOWED: Object.freeze([...ALLOWED]) });
+  }
+  function installBus() {
+    const ns = getSeiPro();
+    if (ns.platform && ns.platform.bus) return ns.platform.bus;
+    ns.platform = ns.platform || {};
+    ns.platform.bus = createBus();
+    return ns.platform.bus;
+  }
+  function getBus() {
+    const ns = typeof globalThis !== "undefined" && globalThis.SeiPro;
+    if (ns && ns.platform && ns.platform.bus) return ns.platform.bus;
+    return installBus();
+  }
+  var bus = {
+    on(event, handler) {
+      return getBus().on(event, handler);
+    },
+    emit(event, payload) {
+      return getBus().emit(event, payload);
+    }
+  };
 
   // src/core/serial.js
   function isJson(str) {
@@ -170,6 +249,7 @@
     storeState.config.datetime = moment2().format("YYYY-MM-DD HH:mm:ss");
     storeLastRaw = JSON.stringify(storeState);
     localStorage.setItem(STORE_KEY, storeLastRaw);
+    bus.emit("monitorados:updated", { items: storeState.monitorados || [] });
     if (options.remote !== false) scheduleMonitoradoRemote();
   }
   function scheduleMonitoradoRemote() {
@@ -230,8 +310,8 @@
     return !id || id === "undefined" ? "" : id;
   }
   function iconHtml(id_procedimento, float = false) {
-    const monitorados2 = getStoreMonitoradoPro().monitorados || [];
-    const isMonitored = monitorados2.some((m) => String(m.id_procedimento) === String(id_procedimento));
+    const monitorados = getStoreMonitoradoPro().monitorados || [];
+    const isMonitored = monitorados.some((m) => String(m.id_procedimento) === String(id_procedimento));
     const floatStyle = float ? "float:" + float + ";" : "";
     const base = 'seipro-monitorado-icon" data-id_procedimento="' + id_procedimento + '" id="seipro-monitorado-icon_' + id_procedimento + '"';
     return isMonitored ? '<i title="Remover dos Processos Monitorados" class="fas fa-star starGold ' + base + ' data-act="monitorado-toggle" data-mode="remove" style="font-size:12pt;margin:0 5px;cursor:pointer;-webkit-text-fill-color:#FED35B;-webkit-text-stroke-color:rgb(216 162 22);-webkit-text-stroke-width:2px;' + floatStyle + '"></i>' : '<i title="Adicionar aos Processos Monitorados" class="far fa-star ' + base + ' data-act="monitorado-toggle" data-mode="add" style="font-size:12pt;margin:0 5px;color:#666;cursor:pointer;' + floatStyle + '"></i>';
@@ -2129,13 +2209,38 @@
   }
 
   // src/features/monitorados/index.js
-  var monitorados = getSeiPro().features.monitorados || (getSeiPro().features.monitorados = {});
-  monitorados.view = { initIcon, mountIcon, iconHtml };
-  monitorados.panel = { render: setPanelMonitorados };
-  monitorados.datas = { openBox: openBoxConfigDates };
-  installCategorias();
-  installCommands();
-  installVisualizacao();
-  bindPanelDispatcher(document);
-  bindToggle(document, actMonitoradoPro);
+  function installMonitorados() {
+    installCategorias();
+    installCommands();
+    installVisualizacao();
+    bindPanelDispatcher(document);
+    bindToggle(document, actMonitoradoPro);
+  }
+  var existing = getSeiPro().features.monitorados || {};
+  var storeApi = {
+    getStore: existing.getStore,
+    getOptionsConfigDate: existing.getOptionsConfigDate,
+    persist: existing.persist,
+    scheduleRemote: existing.scheduleRemote,
+    flushRemote: existing.flushRemote,
+    getConfigDatetime: existing.getConfigDatetime,
+    save: existing.save,
+    defaultConfigDate: existing.defaultConfigDate,
+    defaultStore: existing.defaultStore,
+    findIndex: existing.findIndex,
+    processDataReady: existing.processDataReady,
+    processPayloadReady: existing.processPayloadReady
+  };
+  publishFeature({
+    id: "monitorados",
+    api: Object.freeze({
+      view: Object.freeze({ initIcon, mountIcon, iconHtml }),
+      panel: Object.freeze({ render: setPanelMonitorados }),
+      datas: Object.freeze({ openBox: openBoxConfigDates }),
+      act: actMonitoradoPro,
+      ...Object.fromEntries(Object.entries(storeApi).filter(([, v]) => typeof v !== "undefined"))
+    }),
+    install: installMonitorados
+  });
+  installMonitorados();
 })();

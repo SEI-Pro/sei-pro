@@ -1,11 +1,14 @@
 /**
  * Entry do contexto DB (recepção de configuração externa por URL).
- * Substitui [core-stack.bundle + jquery + jmespath + purify + init_db.js]
- * por um bundle isolado, sem jQuery.
+ * Usa src/app boot + registry (piloto da arquitetura canônica).
  */
 import { installCoreStack } from '../core/stack.js';
-import { installExternalConfig } from '../features/external-config/index.js';
+import { registerPilotFeatures } from '../app/register-pilot-features.js';
+import { boot } from '../app/boot.js';
 import { ready } from '../dom/index.js';
 
 installCoreStack();
-ready(installExternalConfig);
+registerPilotFeatures();
+ready(function () {
+    boot('db');
+});

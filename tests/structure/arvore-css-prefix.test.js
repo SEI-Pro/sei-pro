@@ -29,7 +29,7 @@ describe('migration: arvore CSS', () => {
     expect(body).toContain('class="action-doc action-');
     expect(body).toContain('loading-action-doc');
     expect(body).toContain('class="panelDadosArvore');
-    expect(body).toContain('class="stickDadosArvore');
+    expect(read('src/features/arvore/sticknote-view.js')).toContain('class="stickDadosArvore');
     expect(templates).toContain('anchorJoinPro');
     expect(sharedLegacy).toContain('.action-doc[data-id=');
     expect(sharedLegacy).toContain("closest('.no_notifyPro')");

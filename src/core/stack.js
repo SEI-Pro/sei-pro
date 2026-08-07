@@ -7,6 +7,9 @@
  *
  * Refundação isolated-first: roda SOMENTE no mundo isolado do content script
  * (tem DOM + chrome.*). Não há mais a cópia no mundo MAIN.
+ *
+ * Helpers de feature (quickfilter, sticknote, docslote) NÃO são instalados aqui —
+ * vivem em shared/ e entram via content/core-stack ou pelo boot do contexto.
  */
 import { createNamespace } from './namespace.js';
 import { createRuntime } from '../platform/runtime.js';
@@ -22,11 +25,6 @@ import { installFeriados } from './feriados.js';
 import { installNumeros } from './numeros.js';
 import { installSerial } from './serial.js';
 import { installPrazos } from './prazos.js';
-import { installQuickFilter } from './quickfilter.js';
-import { installQuickFilterDom } from './quickfilter-dom.js';
-import { installSticknote } from './sticknote.js';
-import { installDocsLote } from './docslote.js';
-import { installDocsLoteLegacyApi } from './docslote-legacy-api.js';
 import { installUi } from './ui.js';
 import { installMessaging } from '../platform/messaging.js';
 import { installStorage } from '../platform/storage.js';
@@ -44,6 +42,7 @@ import { installTooltip } from '../sei/tooltip.js';
 import { installPrazoPreview } from '../shared/ui/prazo-preview.js';
 import { installPrazoPreviewLegacyApi } from '../shared/ui/prazo-preview-legacy-api.js';
 import { installLegacyInlineBridge } from '../platform/legacy-inline-bridge.js';
+import { installBus } from '../platform/bus.js';
 
 export function installCoreStack() {
     createNamespace();
@@ -64,11 +63,6 @@ export function installCoreStack() {
     installCookies();
     installHelpers();
     installPrazos();
-    installQuickFilter();
-    installQuickFilterDom();
-    installSticknote();
-    installDocsLote();
-    installDocsLoteLegacyApi();
     installUi();
     installMessaging();
     installStorage();
@@ -79,7 +73,8 @@ export function installCoreStack() {
     installAdapter();
     installUrls();
     installTooltip();
-    installPrazoPreview();    // view compartilhada de etiqueta/preview de prazo
-    installPrazoPreviewLegacyApi(); // aliases getDatesPreview/… usados pelo legado
-    installLegacyInlineBridge(); // ponte estrita p/ onclick="nossaFuncao(...)" do legado ainda não migrado
+    installBus();
+    installPrazoPreview();
+    installPrazoPreviewLegacyApi();
+    installLegacyInlineBridge();
 }

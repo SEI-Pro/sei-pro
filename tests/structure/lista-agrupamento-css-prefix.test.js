@@ -9,7 +9,10 @@ const source = (file) => readFileSync(join(rootDir, file), 'utf8');
 describe('migration: lista-agrupamento CSS audit', () => {
   it('confirma que o agrupamento não introduz stylesheet ou classes próprias não prefixadas', () => {
     const featureDir = join(rootDir, 'src/features/lista-agrupamento');
-    const legacy = source('src/features/lista-processos/body.js');
+    const legacy = [
+      source('src/features/lista-processos/body.js'),
+      source('src/features/lista-processos/kanban-home.js')
+    ].join('\n');
 
     expect(existsSync(join(featureDir, 'style.css'))).toBe(false);
     expect(existsSync(join(featureDir, 'lista-agrupamento.css'))).toBe(false);
@@ -17,13 +20,14 @@ describe('migration: lista-agrupamento CSS audit', () => {
   });
 
   it('preserva os hooks compartilhados e os contratos funcionais do agrupamento', () => {
-    const legacy = source('src/features/lista-processos/body.js');
+    const body = source('src/features/lista-processos/body.js');
+    const kanban = source('src/features/lista-processos/kanban-home.js');
     const shared = source('src/features/sei-functions/body.js');
 
-    expect(legacy).toMatch(/id=\\?"selectGroupTablePro\\?"[^>]*class=\\?"groupTable selectPro\\?"/);
-    expect(legacy).toMatch(/class=\\?"controleTableTag newLink\\?"[^>]*data-htagname/);
-    expect(legacy).toMatch(/class=\\?"kanban-content\\?"/);
-    expect(legacy).toMatch(/class=\\?"kanban-title-card content_edit\\?"/);
+    expect(body).toMatch(/id=\\?"selectGroupTablePro\\?"[^>]*class=\\?"groupTable selectPro\\?"/);
+    expect(body).toMatch(/class=\\?"controleTableTag newLink\\?"[^>]*data-htagname/);
+    expect(kanban).toMatch(/class=\\?"kanban-content\\?"/);
+    expect(kanban).toMatch(/class=\\?"kanban-title-card content_edit\\?"/);
     expect(shared).toMatch(/closest\(['"]\.kanban-content['"]\)/);
     expect(shared).toMatch(/closest\(['"]\.tagintable['"]\)/);
   });

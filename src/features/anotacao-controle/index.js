@@ -1,27 +1,21 @@
 /**
- * Feature "Mostrar anotação do processo na tela de controle de processos"
- * (config `mostraranotacaocontrole`) — ENTRY do bundle isolado.
- *
- * Arquitetura:
- *   core/sticknote.js   → núcleo PURO (parse/normalização), import modular
- *   ./view.js           → camada de DOM (render/replace/format), extraída de sei-pro.js
- *   ./index.js (aqui)   → expõe a API da feature em SeiPro.features.anotacaoControle
- *
- * O lifecycle continua ancorado no ciclo do tablesorter da lista de processos
- * (sei-pro.js), que chama `init()` (init da lista) e `render()` (rebuild da
- * tabela) via este namespace — ponte enxuta no lugar do cluster de ~300 linhas
- * que vivia embutido. Roda no mundo isolado, mesmo `window` do sei-pro.js.
+ * Anotação na lista (sticknote) — Tier S. Contrato { id, api, install }.
  */
+import { publishFeature } from '../../app/publish-feature.js';
 import { initReplaceSticknoteHome, renderSticknoteHomeInline, replaceSticknoteHome } from './view.js';
 import './legacy-api.js';
 
-(function (win) {
-    'use strict';
-    win.SeiPro = win.SeiPro || {};
-    win.SeiPro.features = win.SeiPro.features || {};
-    win.SeiPro.features.anotacaoControle = {
+export function installAnotacaoControle() {
+    // Lifecycle is driven by lista-processos via api.init / api.render.
+}
+
+publishFeature({
+    id: 'anotacao-controle',
+    nsKey: 'anotacaoControle',
+    api: Object.freeze({
         init: initReplaceSticknoteHome,
         render: renderSticknoteHomeInline,
         replace: replaceSticknoteHome
-    };
-})(window);
+    }),
+    install: installAnotacaoControle
+});

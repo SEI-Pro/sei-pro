@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rootDir = process.cwd();
-const source = (file) => readFileSync(join(rootDir, 'src/core', file), 'utf8');
+const source = (file) => readFileSync(join(rootDir, 'src/shared', file), 'utf8');
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 function manifestWithDocsLote() {
@@ -17,15 +17,19 @@ describe('migration: docs-lote legacy map bridge', () => {
     expect(source('docslote.js')).not.toMatch(/\baliasGlobal\s*\(/);
   });
 
-  it('installs all legacy map aliases from the dedicated bridge', () => {
+  it('installs all legacy map aliases from the dedicated bridge outside core/stack', () => {
     const bridge = source('docslote-legacy-api.js');
-    const stack = source('stack.js');
+    const helpers = source('install-legacy-helpers.js');
+    const coreStack = read('src/content/core-stack.js');
+    const stack = read('src/core/stack.js');
 
-    expect(bridge).toMatch(/import \{ aliasGlobal \} from ['"]\.\/global\.js['"]/);
+    expect(bridge).toMatch(/import \{ aliasGlobal \} from ['"]\.\.\/core\/global\.js['"]/);
     expect(bridge).toMatch(/aliasGlobal\(\s*['"]docsLote_specialChars['"]/);
     expect(bridge).toMatch(/aliasGlobal\(\s*['"]docsLote_normalChars_utf8['"]/);
     expect(bridge).toMatch(/aliasGlobal\(\s*['"]docsLote_normalChars_iso['"]/);
-    expect(stack).toMatch(/installDocsLoteLegacyApi\s*\(/);
+    expect(helpers).toMatch(/installDocsLoteLegacyApi\s*\(/);
+    expect(coreStack).toMatch(/installSharedLegacyHelpers\s*\(/);
+    expect(stack).not.toMatch(/installDocsLote|installQuickFilter|installSticknote/);
   });
 
   it('wires the two legacy entry points through the feature bridge', () => {
@@ -35,8 +39,10 @@ describe('migration: docs-lote legacy map bridge', () => {
     const legacy = read('src/features/sei-functions/body.js');
 
     expect(index).toContain("import './legacy-api.js'");
-    expect(index).toContain('docsLote.openWizard = docLoteModalSelecaoDoc');
-    expect(index).toContain('docsLote.getDocsArvore = docsLote_getDocsArvore');
+    expect(index).toContain('publishFeature({');
+    expect(index).toContain("nsKey: 'docsLote'");
+    expect(index).toContain('openWizard: docLoteModalSelecaoDoc');
+    expect(index).toContain('getDocsArvore: docsLote_getDocsArvore');
     expect(bridge).toContain("aliasGlobal('docLoteModalSelecaoDoc', docLoteModalSelecaoDoc)");
     expect(bridge).toContain("aliasGlobal('docsLote_getDocsArvore', docsLote_getDocsArvore)");
     expect(view).toMatch(/export function docLoteModalSelecaoDoc\s*\(/);

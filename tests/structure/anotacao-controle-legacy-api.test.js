@@ -60,11 +60,11 @@ describe('migration: anotacao-controle legacy facade', () => {
     }
   });
 
-  it('keeps the migrated lifecycle call-sites on the feature namespace', () => {
+  it('keeps the migrated lifecycle call-sites on the feature api', () => {
     const legacy = read('src/features/lista-processos/body.js');
 
-    expect(legacy).toContain('SeiPro.features.anotacaoControle.init()');
-    expect(legacy).toContain('SeiPro.features.anotacaoControle.render()');
+    expect(legacy).toContain('SeiPro.features.anotacaoControle.api.init()');
+    expect(legacy).toContain('SeiPro.features.anotacaoControle.api.render()');
     expect(legacy).not.toMatch(/\b(initReplaceSticknoteHome|renderSticknoteHomeInline|replaceSticknoteHome)\s*\(/);
   });
 
@@ -74,6 +74,8 @@ describe('migration: anotacao-controle legacy facade', () => {
 
     expect(build).toContain("{ entry: 'src/features/anotacao-controle/index.js', out: 'dist/js/anotacao-controle.bundle.js' }");
     expect(index).toContain("import './legacy-api.js';");
-    expect(index).toContain('win.SeiPro.features.anotacaoControle');
+    expect(index).toContain("publishFeature({");
+    expect(index).toContain("nsKey: 'anotacaoControle'");
+    expect(index).toMatch(/api:\s*Object\.freeze\(\{[\s\S]*init:\s*initReplaceSticknoteHome/);
   });
 });

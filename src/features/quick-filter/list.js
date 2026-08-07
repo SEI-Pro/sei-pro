@@ -11,8 +11,8 @@
  * highlight compartilhado (core/quickfilter-dom). Tokenização e faixas vêm do
  * core puro (core/quickfilter).
  */
-import { getFilterTokens, normalizeFilterText } from '../../core/quickfilter.js';
-import { applyHighlight as coreApplyHighlight, clearHighlights, HIGHLIGHT_CLASS } from '../../core/quickfilter-dom.js';
+import { getFilterTokens, normalizeFilterText } from '../../shared/quickfilter/domain.js';
+import { applyHighlight as coreApplyHighlight, clearHighlights, HIGHLIGHT_CLASS } from '../../shared/quickfilter/dom.js';
 import { buildRowHaystack, rowMatchesTokens } from './domain.js';
 
 const HIDDEN_CLASS = 'seipro-quick-hidden';
