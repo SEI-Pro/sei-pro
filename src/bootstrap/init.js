@@ -65,21 +65,96 @@ function loadLocalConfigScriptPro() {
             console.warn('Não foi possível carregar sei-pro-config-local.js:', error && error.message ? error.message : error);
         });
 }
-function loadConfigPro() {
-    function applyConfig(items) {
-        if (typeof items === 'undefined') return;
-        var safeDataValues = redactLegacyAISecrets(items.dataValues);
-        if (safeDataValues !== items.dataValues) {
-            try {
-                if (typeof browser === "undefined") {
-                    chrome.storage.sync.set({ dataValues: safeDataValues });
-                } else {
-                    browser.storage.sync.set({ dataValues: safeDataValues });
+var DATAVALUES_SECRET_FIELDS_INIT = ['API_KEY', 'KEY_USER', 'CLIENT_ID', 'spreadsheetId'];
+
+function profileSecretKeyInit(profile) {
+    if (!profile || typeof profile !== 'object') return '';
+    return [String(profile.baseTipo || ''), String(profile.baseName || ''), String(profile.conexaoTipo || '')].join('|');
+}
+
+function mergeDataValuesWithLocalSecrets(rawDataValues, secretsMap) {
+    if (!rawDataValues) return rawDataValues || '';
+    try {
+        var dataValues = typeof rawDataValues === 'string' ? JSON.parse(rawDataValues) : rawDataValues;
+        if (!Array.isArray(dataValues)) return rawDataValues;
+        var secrets = secretsMap && typeof secretsMap === 'object' ? secretsMap : {};
+        var merged = dataValues.map(function (entry) {
+            if (!entry || typeof entry.baseName === 'undefined') return entry;
+            var bag = secrets[profileSecretKeyInit(entry)];
+            if (!bag || typeof bag !== 'object') return entry;
+            return Object.assign({}, entry, bag);
+        });
+        return JSON.stringify(merged);
+    } catch (_) {
+        return rawDataValues;
+    }
+}
+
+function extractAndStripSyncSecrets(rawDataValues) {
+    var empty = { syncSafe: rawDataValues || '', secrets: {}, changed: false };
+    if (!rawDataValues) return empty;
+    try {
+        var dataValues = typeof rawDataValues === 'string' ? JSON.parse(rawDataValues) : rawDataValues;
+        if (!Array.isArray(dataValues)) return empty;
+        var secrets = {};
+        var changed = false;
+        var syncSafe = dataValues.map(function (entry) {
+            if (!entry || typeof entry.baseName === 'undefined') return entry;
+            var safeEntry = Object.assign({}, entry);
+            var bag = {};
+            var hasSecret = false;
+            DATAVALUES_SECRET_FIELDS_INIT.forEach(function (field) {
+                if (Object.prototype.hasOwnProperty.call(safeEntry, field)
+                    && safeEntry[field] !== null
+                    && typeof safeEntry[field] !== 'undefined'
+                    && String(safeEntry[field]).trim() !== '') {
+                    bag[field] = safeEntry[field];
+                    hasSecret = true;
+                    changed = true;
                 }
-            } catch (_) {
-                // The page copy is still redacted even if sync cleanup must be
-                // retried later by the profile migration.
-            }
+                delete safeEntry[field];
+            });
+            if (hasSecret) secrets[profileSecretKeyInit(entry)] = bag;
+            return safeEntry;
+        });
+        return { syncSafe: JSON.stringify(syncSafe), secrets: secrets, changed: changed };
+    } catch (_) {
+        return empty;
+    }
+}
+
+function loadConfigPro() {
+    function applyConfig(syncItems, localItems) {
+        if (typeof syncItems === 'undefined') return;
+        var localSecrets = (localItems && localItems.dataValuesSecrets) || {};
+        window.__SEI_PRO_BUG_REPORT_OPT_IN__ = !!(localItems && localItems.bugReportOptIn === true);
+
+        var migration = extractAndStripSyncSecrets(syncItems.dataValues);
+        var secrets = Object.assign({}, localSecrets, migration.secrets);
+        if (migration.changed) {
+            try {
+                if (typeof browser === 'undefined') {
+                    chrome.storage.local.set({ dataValuesSecrets: secrets });
+                    chrome.storage.sync.set({ dataValues: migration.syncSafe });
+                } else {
+                    browser.storage.local.set({ dataValuesSecrets: secrets });
+                    browser.storage.sync.set({ dataValues: migration.syncSafe });
+                }
+            } catch (_) { /* page still gets merged credentials below */ }
+        }
+
+        var mergedForRuntime = mergeDataValuesWithLocalSecrets(migration.syncSafe, secrets);
+        var safeDataValues = redactLegacyAISecrets(mergedForRuntime);
+        if (safeDataValues !== mergedForRuntime) {
+            try {
+                // AI keys must not linger in sync; runtime copy is already redacted.
+                var aiStripped = redactLegacyAISecrets(migration.syncSafe);
+                if (typeof browser === 'undefined') {
+                    chrome.storage.sync.set({ dataValues: aiStripped });
+                } else {
+                    browser.storage.sync.set({ dataValues: aiStripped });
+                }
+            } catch (_) { /* ignore */ }
         }
         clearLegacyAIPageProfiles();
         localStorage.setItem('configBasePro', safeDataValues);
@@ -87,18 +162,23 @@ function loadConfigPro() {
         window.__SEI_PRO_CONFIG_READY__ = true;
         window.dispatchEvent(new CustomEvent('sei-pro-config-ready'));
     }
-    if (typeof browser === "undefined") {
-        chrome.storage.sync.get({
-            dataValues: ''
-        }, function(items) {  
-            applyConfig(items);
-        });
+
+    function readLocalThenApply(syncItems) {
+        if (typeof browser === 'undefined') {
+            chrome.storage.local.get({ dataValuesSecrets: {}, bugReportOptIn: false }, function (localItems) {
+                applyConfig(syncItems, localItems);
+            });
+        } else {
+            browser.storage.local.get({ dataValuesSecrets: {}, bugReportOptIn: false }, function (localItems) {
+                applyConfig(syncItems, localItems);
+            });
+        }
+    }
+
+    if (typeof browser === 'undefined') {
+        chrome.storage.sync.get({ dataValues: '' }, readLocalThenApply);
     } else {
-        browser.storage.sync.get({
-            dataValues: ''
-        }, function(items) {  
-            applyConfig(items);
-        });
+        browser.storage.sync.get({ dataValues: '' }, readLocalThenApply);
     }
 }
 
@@ -154,10 +234,12 @@ function showAutoReportNoticePro() {
 
         alertaBoxPro('Aviso', 'exclamation-triangle', text, false, 'Estou ciente e aceito o envio anônimo dos erros', true);
 
+        // Opt-in explícito para telemetria / relatório automático (ADR-0015).
+        window.__SEI_PRO_BUG_REPORT_OPT_IN__ = true;
         if (typeof browser === "undefined") {
-            chrome.storage.local.set({ InstallOrUpdate: false });
+            chrome.storage.local.set({ InstallOrUpdate: false, bugReportOptIn: true });
         } else {
-            browser.storage.local.set({ InstallOrUpdate: false });
+            browser.storage.local.set({ InstallOrUpdate: false, bugReportOptIn: true });
         }
     }
 

@@ -31,8 +31,8 @@ function declaredOutputs() {
 
     // Entries auto-descobertas: src/entries/*.js (exceto editor.js) → dist/js/<name>.bundle.js
     for (const f of readdirSync(path.join(root, 'src/entries'))) {
-        if (f.endsWith('.js') && f !== 'editor.js') {
-            out.add('dist/js/' + f.replace(/\.js$/, '.bundle.js'));
+        if ((f.endsWith('.js') || f.endsWith('.ts')) && f !== 'editor.js' && f !== 'editor.ts') {
+            out.add('dist/js/' + f.replace(/\.(js|ts)$/, '.bundle.js'));
         }
     }
     // copyLegacy() escreve em dist/js/<basename>

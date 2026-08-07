@@ -16,9 +16,9 @@ const UNKNOWN = 'desconhecida';
 
 /** version verificada lendo o cabeçalho/conteúdo do próprio arquivo. */
 const LIBS = [
-    ['jquery', 'jQuery', '3.7.1', 'MIT', 'Carregado em quase todo bloco do manifest. Saída em curso (ADR-0003); ver src/features/editor/lib/domq.js.'],
+    ['jquery', 'jQuery', '3.7.1', 'MIT', 'Carregado em quase todo bloco do manifest. Saída em curso (ADR-0003); ver src/features/editor/lib/domq.ts.'],
     ['jquery-ui', 'jQuery UI', '1.14.1', 'MIT', 'CSS + images/ (ui-icons_*) são referenciados relativamente pelo CSS. Substituição gradual por src/shared/ui/.'],
-    ['moment', 'Moment.js', '2.30.1', 'MIT', 'Inclui moment-duration-format e moment-weekday-calc. Datas novas usam src/core/datas.js.'],
+    ['moment', 'Moment.js', '2.30.1', 'MIT', 'Inclui moment-duration-format e moment-weekday-calc. Datas novas usam src/core/datas.ts.'],
     ['chart', 'Chart.js', '4.4.7', 'MIT', 'Gráficos de atividades e relatórios.'],
     ['chosen', 'Chosen', '1.8.2', 'MIT', 'Selects com busca. Substituível por src/shared/ui/.'],
     ['jszip', 'JSZip', '3.10.1', 'MIT / GPLv3', 'Inclui jszip-utils. Exportação de documentos em lote.'],
@@ -35,7 +35,7 @@ const LIBS = [
     ['favico', 'Favico.js', '0.3.10', 'MIT', 'Contador no favicon.'],
     ['jquery-maskedinput', 'jQuery Masked Input', UNKNOWN, 'MIT', 'Máscaras de formulário.'],
     ['jquery-table-edit', 'jQuery Table Edit', UNKNOWN, UNKNOWN, 'Edição inline de tabelas.'],
-    ['jquery-tagsinput', 'jQuery Tags Input (revisited)', UNKNOWN, 'MIT', 'Substituível por src/shared/ui/tags-input.js.'],
+    ['jquery-tagsinput', 'jQuery Tags Input (revisited)', UNKNOWN, 'MIT', 'Substituível por src/shared/ui/tags-input.ts.'],
     ['jquery-toolbar', 'jQuery Toolbar', UNKNOWN, 'MIT', 'Toolbars flutuantes.'],
     ['jquery-visible', 'jQuery Visible', UNKNOWN, 'MIT', 'Detecção de visibilidade em viewport.'],
     ['fontawesome', 'Font Awesome Pro (subset)', UNKNOWN, 'Font Awesome Pro (licença comercial)', 'SUBSET: apenas as famílias e glifos usados pela extensão.\nwebfonts/ → dist/webfonts/pro/. Não substituir pelo pacote completo.'],

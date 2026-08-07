@@ -325,6 +325,9 @@
                     </td>
                 </tr>
             </table>
+            <!-- Phase 2.4: boolean keys with optionsSection in CONFIG_SCHEMA are rendered here -->
+            <h3 class="options-schema-section-title">Privacidade e telemetria</h3>
+            <table class="tableZebra" id="options-schema-privacy"></table>
         </div>
         <div id="options-functions" style="display:none;">
             <div id="accordion">
@@ -718,6 +721,20 @@
                                    <div class="onoffswitch">
                                        <input type="checkbox" data-name="ferramentasia" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_ferramentasia" tabindex="0">
                                        <label class="onoff-switch-label" for="itemConfigGeral_ferramentasia"></label>
+                                   </div>
+                            </td>
+                        </tr>
+                        <tr class="notatq">
+                            <td>
+                                <p>
+                                    <i class="iconPopup fa fa-cloud azulColor"></i><span class="info">Permitir provedores de IA externos (nuvem)</span>
+                                    <span class="info" style="display:block;font-size:0.9em;opacity:0.85;margin-top:4px;">Quando desligado, apenas Ollama/localhost. Padr&atilde;o: ligado, com aviso no envio.</span>
+                                </p>
+                            </td>
+                            <td>
+                                   <div class="onoffswitch">
+                                       <input type="checkbox" data-name="llmProvedoresExternos" name="onoffswitch" class="onoffswitch-checkbox" id="itemConfigGeral_llmProvedoresExternos" tabindex="0" checked>
+                                       <label class="onoff-switch-label" for="itemConfigGeral_llmProvedoresExternos"></label>
                                    </div>
                             </td>
                         </tr>

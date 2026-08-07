@@ -24,10 +24,7 @@
     "storage",
     "notifications"
   ],
-  "host_permissions": [
-    "https://script.google.com/*",
-    "https://script.googleusercontent.com/*"
-  ],
+  "host_permissions": [],
   "optional_host_permissions": [
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
@@ -35,7 +32,8 @@
     "https://api.moonshot.ai/*",
     "http://localhost/*",
     "http://127.0.0.1/*",
-    "https://*/*"
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*"
   ],
   "content_scripts": [
     {
@@ -688,8 +686,15 @@
         "icons/prf/prf.png"
       ],
       "matches": [
-        "*://*.br/*",
-        "*://*.org/*"
+        "*://*.br/sei/*",
+        "*://*.br/sip/*",
+        "*://*.br/*/sei/*",
+        "*://*.br/*/sip/*",
+        "*://*.br/*controlador*.php?acao=*",
+        "*://*.org/sei/*",
+        "*://*.org/sip/*",
+        "*://*.org/*controlador*.php?acao=*",
+        "*://sip-sei.ans.gov.br/*"
       ]
     }
   ]
