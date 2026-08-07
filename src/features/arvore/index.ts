@@ -95,5 +95,3 @@ namespace.features.arvoreUploadView = {
     bindUploadArvoreNativeDragEvents,
     bindUploadConfirmActions
 };
-
-installArvore();

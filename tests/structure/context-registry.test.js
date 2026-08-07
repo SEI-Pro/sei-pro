@@ -11,11 +11,12 @@ const root = process.cwd();
 
 describe('generated context registry', () => {
     it('keeps every committed registry derived from exclusive feature descriptors', () => {
-        expect(GENERATED_CONTEXTS).toEqual(['login', 'db', 'lista']);
+        expect(GENERATED_CONTEXTS).toEqual(['login', 'db', 'lista', 'arvore']);
         const expected = {
             login: ['login'],
             db: ['external-config'],
-            lista: ['nao-lido']
+            lista: ['nao-lido'],
+            arvore: ['arvore']
         };
         for (const context of GENERATED_CONTEXTS) {
             const { descriptors, text } = generateContextRegistry(context);

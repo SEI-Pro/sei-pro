@@ -39,9 +39,9 @@ describe('migration: arvore full ESM facade', () => {
     expect(clusters.length).toBeGreaterThanOrEqual(12);
   });
 
-  it('empacota a feature como dist/js/sei-pro-arvore.js sem cópia verbatim', () => {
+  it('empacota a raiz de contexto como dist/js/sei-pro-arvore.js sem cópia verbatim', () => {
     const build = read('scripts/build.mjs');
-    expect(build).toContain("{ entry: 'src/features/arvore/index.ts', out: 'dist/js/sei-pro-arvore.js' }");
+    expect(build).toContain("{ entry: 'src/entries/arvore.ts', out: 'dist/js/sei-pro-arvore.js' }");
     expect(build).not.toContain("'src/features/arvore/sei-pro-arvore.js'");
     expect(build).toContain("src/features/arvore/style.css");
   });

@@ -43,7 +43,11 @@ const entriesDir = path.join(root, 'src/entries');
 const entryBundles = readdirSync(entriesDir)
     .filter((f) => {
         const full = path.join(entriesDir, f);
-        return statSync(full).isFile() && (f.endsWith('.ts') || f.endsWith('.js')) && f !== 'editor.js' && f !== 'editor.ts';
+        return statSync(full).isFile()
+            && (f.endsWith('.ts') || f.endsWith('.js'))
+            && f !== 'editor.js'
+            && f !== 'editor.ts'
+            && f !== 'arvore.ts';
     })
     .map((f) => ({
         entry: 'src/entries/' + f,
@@ -61,7 +65,7 @@ const bundles = [
     // reuse the provider adapters and streaming client without duplicating them.
     { entry: 'src/background/llm-handler.ts', out: 'dist/js/llm-handler.js' },
     { entry: 'src/features/arvore-info/index.ts', out: 'dist/js/arvore-info.bundle.js' },
-    { entry: 'src/features/arvore/index.ts', out: 'dist/js/sei-pro-arvore.js' },
+    { entry: 'src/entries/arvore.ts', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' },
     { entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' },
     { entry: 'src/features/atividades/index.ts', out: 'dist/js/sei-pro-atividades.js' },

@@ -320,7 +320,6 @@
       "js/sei-functions-pro.js",
       "js/sei-pro-icons.js",
       "js/sei-pro-arvore.js",
-      "js/init_arvore.js",
       "js/quick-filter-tree.bundle.js"
     ],
     "css": [

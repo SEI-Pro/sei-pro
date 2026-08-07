@@ -7,8 +7,8 @@ import { installArvore } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'arvore',
-    maturity: 'wired',
-    contexts: ['arvore', 'visualizacao'],
+    maturity: 'exclusive',
+    contexts: ['arvore'],
     configKey: null,
     install: installArvore,
     api: Object.freeze({})
