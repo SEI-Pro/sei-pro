@@ -15,14 +15,14 @@ function manifestWithDocsLote() {
 
 describe('migration: docs-lote legacy map bridge', () => {
   it('keeps core implementation free of direct global aliases', () => {
-    expect(source('docslote.js')).not.toMatch(/\baliasGlobal\s*\(/);
+    expect(source('docslote.ts')).not.toMatch(/\baliasGlobal\s*\(/);
   });
 
   it('installs all legacy map aliases from the dedicated bridge outside core/stack', () => {
-    const bridge = source('docslote-legacy-api.js');
-    const helpers = source('install-legacy-helpers.js');
-    const coreStack = read('src/content/core-stack.js');
-    const stack = read('src/core/stack.js');
+    const bridge = source('docslote-legacy-api.ts');
+    const helpers = source('install-legacy-helpers.ts');
+    const coreStack = read('src/content/core-stack.ts');
+    const stack = read('src/core/stack.ts');
 
     expect(bridge).toMatch(/import \{ aliasGlobal \} from ['"]\.\.\/core\/global\.js['"]/);
     expect(bridge).toMatch(/aliasGlobal\(\s*['"]docsLote_specialChars['"]/);
@@ -34,9 +34,9 @@ describe('migration: docs-lote legacy map bridge', () => {
   });
 
   it('wires the two legacy entry points through the feature bridge', () => {
-    const index = read('src/features/docs-lote/index.js');
-    const bridge = read('src/features/docs-lote/legacy-api.js');
-    const view = read('src/features/docs-lote/view.js');
+    const index = read('src/features/docs-lote/index.ts');
+    const bridge = read('src/features/docs-lote/legacy-api.ts');
+    const view = read('src/features/docs-lote/view.ts');
     const legacy = readSeiFunctionsSource();
 
     expect(index).toContain("import './legacy-api.js'");
@@ -68,8 +68,8 @@ describe('migration: docs-lote legacy map bridge', () => {
   it('builds the ESM feature bundle without copying the removed legacy script', () => {
     const build = read('scripts/build.mjs');
 
-    expect(build).toContain("{ entry: 'src/features/docs-lote/index.js', out: 'dist/js/docs-lote.bundle.js' }");
-    expect(build).toContain("{ entry: 'src/features/sei-functions/index.js', out: 'dist/js/sei-functions-pro.js' }");
+    expect(build).toContain("{ entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' }");
+    expect(build).toContain("{ entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' }");
     expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
     expect(build).not.toContain("'src/features/docs-lote/sei-pro-docs-lote.js'");
   });

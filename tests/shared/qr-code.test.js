@@ -5,7 +5,7 @@ import {
     createQrCodePlaceholder,
     hydrateQrCodePlaceholders,
     renderQrCode
-} from '../../src/shared/qr-code.js';
+} from '../../src/shared/qr-code.ts';
 
 afterEach(() => {
     delete globalThis.QRCode;

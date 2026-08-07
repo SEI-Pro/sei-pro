@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCommandPalette } from '../../src/shared/ui/command-palette.js';
+import { createCommandPalette } from '../../src/shared/ui/command-palette.ts';
 
 const palettes = [];
 

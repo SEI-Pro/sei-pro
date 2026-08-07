@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest';
-import { compareValues, createSortableTable } from '@src/shared/ui/sortable-table.js';
+import { compareValues, createSortableTable } from '@src/shared/ui/sortable-table.ts';
 
 describe('shared/ui/sortable-table — compareValues (puro)', () => {
     it('numérico quando ambos são números', () => {

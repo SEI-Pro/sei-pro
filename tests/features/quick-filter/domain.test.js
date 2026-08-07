@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildRowHaystack, rowMatchesTokens } from '../../../src/features/quick-filter/domain.js';
-import { getFilterTokens } from '../../../src/shared/quickfilter/domain.js';
+import { buildRowHaystack, rowMatchesTokens } from '../../../src/features/quick-filter/domain.ts';
+import { getFilterTokens } from '../../../src/shared/quickfilter/domain.ts';
 
 describe('quick-filter/domain — buildRowHaystack', () => {
   it('normaliza, deduplica e junta os segmentos', () => {

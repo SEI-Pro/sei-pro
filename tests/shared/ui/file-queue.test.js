@@ -5,7 +5,7 @@ import {
     extensionAllowed,
     formatFileSize,
     uploadFormFile
-} from '@src/shared/ui/file-queue.js';
+} from '@src/shared/ui/file-queue.ts';
 
 describe('shared/ui/file-queue — pure helpers', () => {
     it('extensionAllowed respeita a lista csv', () => {

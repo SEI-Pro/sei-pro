@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createAtividadesContext, resetAtividadesContext } from '../../../src/features/atividades/context.js';
-import { createAtividadesStore } from '../../../src/features/atividades/store.js';
-import { createAtividadesApplication } from '../../../src/features/atividades/application.js';
-import { createAtividadesTransport } from '../../../src/features/atividades/io.js';
-import { installAtividadesState } from '../../../src/features/atividades/state.js';
+import { createAtividadesContext, resetAtividadesContext } from '../../../src/features/atividades/context.ts';
+import { createAtividadesStore } from '../../../src/features/atividades/store.ts';
+import { createAtividadesApplication } from '../../../src/features/atividades/application.ts';
+import { createAtividadesTransport } from '../../../src/features/atividades/io.ts';
+import { installAtividadesState } from '../../../src/features/atividades/state.ts';
 
 describe('atividades/context and application', () => {
   it('keeps canonical state in the store and projects assignments through the adapter', () => {

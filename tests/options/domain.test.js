@@ -19,7 +19,7 @@ import {
     resolveSwitchChecked,
     rowMatchesSearch,
     serializeDataValues
-} from '../../src/options/domain.js';
+} from '../../src/options/domain.ts';
 
 describe('options domain: dataValues parse/serialize', () => {
     it('parses empty and invalid payloads as []', () => {
@@ -52,6 +52,7 @@ describe('options domain: defaults and switches', () => {
     it('keeps default-enabled keys aligned with the options UI', () => {
         expect(isDefaultEnabledConfigOption('gerenciarmonitorados')).toBe(true);
         expect(isDefaultEnabledConfigOption('autopreenchersenha')).toBe(true);
+        expect(isDefaultEnabledConfigOption('llmProvedoresExternos')).toBe(true);
         expect(isDefaultEnabledConfigOption('darkmode')).toBe(false);
     });
 

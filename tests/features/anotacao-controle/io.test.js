@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchSticknotePriority } from '../../../src/features/anotacao-controle/io.js';
+import { fetchSticknotePriority } from '../../../src/features/anotacao-controle/io.ts';
 
 afterEach(() => {
     vi.restoreAllMocks();

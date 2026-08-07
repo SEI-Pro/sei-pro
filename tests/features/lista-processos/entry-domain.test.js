@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
     composeListaFeatures,
+    createListaDeps,
     installListaEntryDomain
-} from '../../../src/entries/lista.js';
-import { readListaEntryInputs } from '../../../src/entries/lista/io.js';
-import { runListaProcessosView } from '../../../src/entries/lista/view.js';
+} from '../../../src/entries/lista.ts';
+import { readListaEntryInputs } from '../../../src/entries/lista/io.ts';
+import { runListaProcessosView } from '../../../src/entries/lista/view.ts';
 
 describe('entry da lista de processos', () => {
     it('compõe as features do contexto de processos e mantém a ordem do legado', () => {
         expect(composeListaFeatures({ hasProcessTables: true })).toEqual({
-            context: 'lista-processos',
+            context: 'lista',
             features: ['lista-processos', 'lista-agrupamento', 'controlar-prazos', 'nao-lido', 'monitorados']
         });
     });
@@ -19,7 +20,7 @@ describe('entry da lista de processos', () => {
             hasProcessTables: true,
             enabled: { 'controlar-prazos': false, monitorados: false }
         })).toEqual({
-            context: 'lista-processos',
+            context: 'lista',
             features: ['lista-processos', 'lista-agrupamento', 'nao-lido']
         });
     });
@@ -36,8 +37,22 @@ describe('entry da lista de processos', () => {
         const target = {};
         installListaEntryDomain(target);
         expect(target.SeiPro.entries.lista.composeListaFeatures).toBe(composeListaFeatures);
+        expect(typeof target.SeiPro.entries.lista.createListaDeps).toBe('function');
         expect(target.SeiPro.entries.lista.readListaEntryInputs).toBe(readListaEntryInputs);
         expect(target.SeiPro.entries.lista.runListaProcessosView).toBe(runListaProcessosView);
+    });
+
+    it('createListaDeps monta ports sem mutar global', () => {
+        const messaging = { sendMessage: async () => ({ ok: true, data: {} }) };
+        const deps = createListaDeps({
+            messaging,
+            logger: { error() {}, warn() {}, debug() {}, isDebugEnabled: () => false },
+            storage: { getLocal: async () => ({}) }
+        });
+        expect(deps.messaging).toBe(messaging);
+        expect(typeof deps.clock.now).toBe('function');
+        expect(deps.logger).toBeTruthy();
+        expect(deps.storage).toBeTruthy();
     });
 
     it('orquestra a view da lista com ordem, carregamento e sessão explícitos', () => {

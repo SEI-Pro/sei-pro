@@ -6,7 +6,7 @@ import {
     installDraftAutosave,
     readEditorSnapshot,
     resolveDraftContext
-} from '../../../../src/features/editor/view/editor-tools.js';
+} from '../../../../src/features/editor/view/editor-tools.ts';
 
 describe('editor Phase 5 tools', () => {
     it('exposes every actionable toolbar capability through Ctrl+K', () => {

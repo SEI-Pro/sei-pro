@@ -3,7 +3,7 @@ import {
     assertWithinCaps,
     formatToolsForProvider,
     validateToolCall
-} from '../../../src/core/llm/tools.js';
+} from '../../../src/core/llm/tools.ts';
 
 const tool = {
     name: 'read_document',

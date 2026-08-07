@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getSeiHtml, postSeiForm, serializeSeiForm } from '@src/features/nao-lido/io.js';
+import { getSeiHtml, postSeiForm, serializeSeiForm } from '@src/features/nao-lido/io.ts';
 
 const originalGlobals = {
     $: globalThis.$,

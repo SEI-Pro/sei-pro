@@ -11,7 +11,7 @@ function read(rel) {
 
 describe('structure/projetos-legacy-api', () => {
     it('index installs legacy api and boots', () => {
-        const index = read('src/features/projetos/index.js');
+        const index = read('src/features/projetos/index.ts');
         expect(index).toMatch(/installProjetosLegacyApi/);
         expect(index).toMatch(/bootProjetos/);
         expect(index).toMatch(/installProjetosStore/);
@@ -19,27 +19,27 @@ describe('structure/projetos-legacy-api', () => {
 
     it('only legacy-api.js uses aliasGlobal in the feature', () => {
         const files = [
-            'src/features/projetos/index.js',
-            'src/features/projetos/boot.js',
-            'src/features/projetos/store.js',
-            'src/features/projetos/io.js',
-            'src/features/projetos/gantt-adapter.js',
-            'src/features/projetos/commands.js',
-            'src/features/projetos/templates.js',
-            'src/features/projetos/view/panel.js',
-            'src/features/projetos/view/helpers.js',
-            'src/features/projetos/view/projeto-form.js',
-            'src/features/projetos/view/etapa-form.js',
-            'src/features/projetos/view/popup.js',
-            'src/features/projetos/view/share.js',
-            'src/features/projetos/view/report.js',
-            'src/features/projetos/view/portfolio.js'
+            'src/features/projetos/index.ts',
+            'src/features/projetos/boot.ts',
+            'src/features/projetos/store.ts',
+            'src/features/projetos/io.ts',
+            'src/features/projetos/gantt-adapter.ts',
+            'src/features/projetos/commands.ts',
+            'src/features/projetos/templates.ts',
+            'src/features/projetos/view/panel.ts',
+            'src/features/projetos/view/helpers.ts',
+            'src/features/projetos/view/projeto-form.ts',
+            'src/features/projetos/view/etapa-form.ts',
+            'src/features/projetos/view/popup.ts',
+            'src/features/projetos/view/share.ts',
+            'src/features/projetos/view/report.ts',
+            'src/features/projetos/view/portfolio.ts'
         ];
         for (const f of files) {
             const src = read(f);
             expect(src.includes('aliasGlobal'), f + ' must not call aliasGlobal').toBe(false);
         }
-        const legacy = read('src/features/projetos/legacy-api.js');
+        const legacy = read('src/features/projetos/legacy-api.ts');
         expect(legacy).toMatch(/aliasGlobal/);
         expect(legacy).toMatch(/loadProjetosPro/);
     });
@@ -50,7 +50,7 @@ describe('structure/projetos-legacy-api', () => {
 
     it('build bundles projetos and does not copy legacy monolith', () => {
         const build = read('scripts/build.mjs');
-        expect(build).toMatch(/src\/features\/projetos\/index\.js/);
+        expect(build).toMatch(/src\/features\/projetos\/index\.(js|ts)/);
         expect(build).toMatch(/dist\/js\/sei-pro-projetos\.js/);
         expect(build).not.toMatch(/'src\/features\/projetos\/sei-pro-projetos\.js'/);
         expect(build).toMatch(/projetos\.css/);

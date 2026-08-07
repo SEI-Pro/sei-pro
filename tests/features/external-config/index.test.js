@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { baseItem, setOptionsSEIPro, getOptionsSEIPro } from '@src/features/external-config/index.js';
+import { baseItem, setOptionsSEIPro, getOptionsSEIPro } from '@src/features/external-config/index.ts';
 
 // Fake da fachada de storage (delega ao SW na produção); aqui guarda em memória.
 function fakeStorage(initial) {

@@ -7,7 +7,7 @@ import {
     formatDateTimeLocal,
     isEmptyDate,
     parseDate
-} from '../../../src/features/projetos/domain/datas.js';
+} from '../../../src/features/projetos/domain/datas.ts';
 
 describe('projetos/domain/datas', () => {
     it('parses legacy YYYY-MM-DD HH:mm:ss', () => {

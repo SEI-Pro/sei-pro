@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { extractNosAcoesHtml, extractNosHtml } from '@src/features/arvore-info/parse/inline-payload.js';
-import { isAtribuicaoUnassigned } from '@src/features/arvore-info/parse/atribuicao.js';
-import { parseAcaoRemoverId } from '@src/features/arvore-info/parse/marcador.js';
-import { acessoLabel, splitInteressado } from '@src/features/arvore-info/parse/consulta.js';
-import { stripChecklistMarker, parseAnotLinePrefix } from '@src/features/arvore-info/parse/anotacao.js';
+import { extractNosAcoesHtml, extractNosHtml } from '@src/features/arvore-info/parse/inline-payload.ts';
+import { isAtribuicaoUnassigned } from '@src/features/arvore-info/parse/atribuicao.ts';
+import { parseAcaoRemoverId } from '@src/features/arvore-info/parse/marcador.ts';
+import { acessoLabel, splitInteressado } from '@src/features/arvore-info/parse/consulta.ts';
+import { stripChecklistMarker, parseAnotLinePrefix } from '@src/features/arvore-info/parse/anotacao.ts';
 
 describe('inline-payload', () => {
   it('extractNosAcoesHtml: extrai e desescapa aspas/barra', () => {

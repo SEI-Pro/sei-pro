@@ -30,7 +30,7 @@ const legacyFeatureClasses = [
 
 describe('migration: Monitorados CSS closes as a batch', () => {
   it('emits feature-owned DOM classes only through seipro-prefixed hooks', () => {
-    const producers = ['panel.js', 'commands.js', 'categorias.js', 'datas.js', 'visualizacao.js', 'extras.js']
+    const producers = ['panel.ts', 'commands.ts', 'categorias.ts', 'datas.ts', 'visualizacao.ts', 'extras.ts']
       .map(read)
       .join('\n');
 
@@ -59,7 +59,7 @@ describe('migration: Monitorados CSS closes as a batch', () => {
     expect(css).not.toMatch(/(^|[^-])\.monitoradosLabelOptions\b/);
     expect(css).toMatch(/\.info_dates_monitorado/);
     expect(css).toMatch(/\.info_tags_follow/);
-    expect(read('panel.js')).toMatch(/tableInfo tableZebra infraTable tableFollow/);
-    expect(read('visualizacao.js')).toMatch(/class=\\?['\"]seiProForm/);
+    expect(read('panel.ts')).toMatch(/tableInfo tableZebra infraTable tableFollow/);
+    expect(read('visualizacao.ts')).toMatch(/class=\\?['\"]seiProForm/);
   });
 });

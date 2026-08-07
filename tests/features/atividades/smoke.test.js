@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createAtividadesFeatureApi } from '../../../src/features/atividades/api.js';
+import { createAtividadesFeatureApi } from '../../../src/features/atividades/api.ts';
 import { readSeiFunctionsSource } from '../../helpers/read-sei-functions.js';
 
 const rootDir = process.cwd();
@@ -9,8 +9,8 @@ const read = (file) => readFileSync(join(rootDir, file), 'utf8');
 
 describe('atividades architecture smoke', () => {
   it('keeps the request boundary small and the response adapter isolated', () => {
-    const server = read('src/features/atividades/server.js');
-    const response = read('src/features/atividades/server-response.js');
+    const server = read('src/features/atividades/server.ts');
+    const response = read('src/features/atividades/server-response.ts');
     expect(server.split('\n').length).toBeLessThan(150);
     expect(server).toContain("routeAtividadesResponse");
     expect(response).toContain('export function routeAtividadesResponse');
@@ -18,7 +18,7 @@ describe('atividades architecture smoke', () => {
   });
 
   it('publishes one explicit API contract instead of spreading handlers at root', () => {
-    const index = read('src/features/atividades/index.js');
+    const index = read('src/features/atividades/index.ts');
     expect(index).toContain('namespace.features.atividades = Object.freeze({');
     expect(index).toContain('api: featureApi');
     expect(index).toContain('useCases,');
@@ -29,15 +29,15 @@ describe('atividades architecture smoke', () => {
 
   it('keeps first-party consumers on the nested API contract', () => {
     const consumers = [
-      'src/features/arvore/atividades-arvore.js',
-      'src/features/lista-processos/atividades-bridge.js',
-      'src/features/monitorados/server.js',
-      'src/features/monitorados/store.js',
+      'src/features/arvore/atividades-arvore.ts',
+      'src/features/lista-processos/atividades-bridge.ts',
+      'src/features/monitorados/server.ts',
+      'src/features/monitorados/store.ts',
       'src/features/prescricoes/sei-pro-prescricoes.js',
-      'src/features/projetos/io.js',
-      'src/features/projetos/commands.js',
-      'src/features/projetos/view/helpers.js',
-      'src/features/sei-functions/atividades-bridge.js',
+      'src/features/projetos/io.ts',
+      'src/features/projetos/commands.ts',
+      'src/features/projetos/view/helpers.ts',
+      'src/features/sei-functions/atividades-bridge.ts',
       'src/features/visualizacao/sei-pro-visualizacao.js'
     ];
     for (const file of consumers) {

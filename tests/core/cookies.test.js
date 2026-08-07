@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createNamespace } from '@src/core/namespace.js';
-import { installCookies } from '@src/core/cookies.js';
-import { getSeiPro, globalRef } from '@src/core/global.js';
+import { createNamespace } from '@src/core/namespace.ts';
+import { installCookies } from '@src/core/cookies.ts';
+import { getSeiPro, globalRef } from '@src/core/global.ts';
 
 function setup() {
     delete globalRef.SeiPro;

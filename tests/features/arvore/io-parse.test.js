@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { parseUploadPageHtml } from '@src/features/arvore/io.js';
+import { parseUploadPageHtml } from '@src/features/arvore/io.ts';
 
 describe('arvore/io — parseUploadPageHtml', () => {
     it('lê documento_receber no HTML do SEI', () => {

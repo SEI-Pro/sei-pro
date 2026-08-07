@@ -6,7 +6,7 @@ import {
     deadlineAlerts,
     effectiveProgress,
     expectedProgress
-} from '../../../src/features/projetos/domain/progress.js';
+} from '../../../src/features/projetos/domain/progress.ts';
 
 describe('projetos/domain/progress', () => {
     it('autoProgressPercent mid-window', () => {

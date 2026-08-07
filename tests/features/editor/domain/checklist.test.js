@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest';
-import { scanChecklist } from '../../../../src/features/editor/domain/checklist.js';
+import { scanChecklist } from '../../../../src/features/editor/domain/checklist.ts';
 
 const parseHtml = (html) => new DOMParser().parseFromString(html, 'text/html');
 

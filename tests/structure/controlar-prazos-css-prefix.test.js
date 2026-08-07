@@ -12,11 +12,11 @@ function read(relPath) {
 
 describe('migration: controlar-prazos CSS classes stay prefixed', () => {
   it('uses seipro-prefixed classes for the prazo column and add action', () => {
-    const view = read('src/features/controlar-prazos/view.js');
+    const view = read('src/features/controlar-prazos/view.ts');
     const css = read('src/features/controlar-prazos/style.css');
-    const listaProcessos = read('src/features/lista-processos/grouping-select.js') +
-      read('src/features/lista-processos/kanban-home.js');
-    const monitoradosPanel = read('src/features/monitorados/panel.js');
+    const listaProcessos = read('src/features/lista-processos/grouping-select.ts') +
+      read('src/features/lista-processos/kanban-home.ts');
+    const monitoradosPanel = read('src/features/monitorados/panel.ts');
 
     expect(view).toContain('seipro-prazo-box-display');
     expect(view).toContain('seipro-add-controle-prazo');
@@ -33,7 +33,7 @@ describe('migration: controlar-prazos CSS classes stay prefixed', () => {
 
   it('closes the feature-owned CSS batch without unprefixed residual classes', () => {
     const css = read('src/features/controlar-prazos/style.css');
-    const view = read('src/features/controlar-prazos/view.js');
+    const view = read('src/features/controlar-prazos/view.ts');
 
     const featureClasses = [...css.matchAll(/\.([a-z][a-z0-9-]*prazo[a-z0-9-]*)/gi)].map((match) => match[1]);
     expect(featureClasses.length).toBeGreaterThan(0);
@@ -49,7 +49,7 @@ describe('migration: controlar-prazos CSS classes stay prefixed', () => {
 describe('migration: monitorados CSS classes stay prefixed', () => {
   it('uses a seipro-prefixed class for the monitorados table facade', () => {
     const css = read('src/features/monitorados/monitorados.css');
-    const panel = read('src/features/monitorados/panel.js');
+    const panel = read('src/features/monitorados/panel.ts');
     const legacyShared = readSeiFunctionsSource();
 
     expect(css).toContain('.seipro-table-monitorados');
@@ -62,8 +62,8 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the bulk remove action hook', () => {
-    const panel = read('src/features/monitorados/panel.js');
-    const lifecycle = read('src/features/monitorados/panel-lifecycle.js');
+    const panel = read('src/features/monitorados/panel.ts');
+    const lifecycle = read('src/features/monitorados/panel-lifecycle.ts');
 
     expect(panel).toContain('seipro-monitorados-remove-selected');
     expect(lifecycle).toContain('.seipro-monitorados-remove-selected');
@@ -73,7 +73,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the refresh action hook', () => {
-    const panel = read('src/features/monitorados/panel.js');
+    const panel = read('src/features/monitorados/panel.ts');
 
     expect(panel).toContain('seipro-monitorados-update');
     expect(panel).toContain('data-act="update"');
@@ -82,7 +82,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the config action hook', () => {
-    const panel = read('src/features/monitorados/panel.js');
+    const panel = read('src/features/monitorados/panel.ts');
 
     expect(panel).toContain('seipro-monitorados-config');
     expect(panel).toContain('data-act="config"');
@@ -91,7 +91,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses seipro-prefixed classes for native mirror cells, copied native icons and the process link', () => {
-    const panel = read('src/features/monitorados/panel.js');
+    const panel = read('src/features/monitorados/panel.ts');
 
     expect(panel).toContain('seipro-monitorado-native-cell');
     expect(panel).toContain('seipro-monitorado-native-icons');
@@ -106,7 +106,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the monitorado type cell', () => {
-    const panel = read('src/features/monitorados/panel.js');
+    const panel = read('src/features/monitorados/panel.ts');
 
     expect(panel).toContain('seipro-monitorado-type-cell');
     expect(panel).toContain('seipro-monitorado-remove-row');
@@ -118,10 +118,10 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the monitorado category cell', () => {
-    const panel = read('src/features/monitorados/panel.js');
+    const panel = read('src/features/monitorados/panel.ts');
 
     expect(panel).toContain('seipro-monitorado-category-cell');
-    const categorias = read('src/features/monitorados/categorias.js');
+    const categorias = read('src/features/monitorados/categorias.ts');
 
     expect(panel).toContain('seipro-monitorado-category-text');
     expect(panel).toContain('seipro-monitorado-category-editor');
@@ -137,8 +137,8 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the prazo config action hook', () => {
-    const visualizacao = read('src/features/monitorados/visualizacao.js');
-    const prazoRow = read('src/features/monitorados/prazo-row.js');
+    const visualizacao = read('src/features/monitorados/visualizacao.ts');
+    const prazoRow = read('src/features/monitorados/prazo-row.ts');
 
     expect(visualizacao).toContain('seipro-monitorado-config-dates');
     expect(visualizacao).toContain('data-act="dates-config"');
@@ -149,7 +149,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the monitorado tags cell', () => {
-    const visualizacao = read('src/features/monitorados/visualizacao.js');
+    const visualizacao = read('src/features/monitorados/visualizacao.ts');
     const css = read('src/features/monitorados/monitorados.css');
 
     expect(visualizacao).toContain('seipro-monitorado-tags-cell');
@@ -161,8 +161,8 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the monitorado label options box', () => {
-    const visualizacao = read('src/features/monitorados/visualizacao.js');
-    const datas = read('src/features/monitorados/datas.js');
+    const visualizacao = read('src/features/monitorados/visualizacao.ts');
+    const datas = read('src/features/monitorados/datas.ts');
     const seiFunctions = readSeiFunctionsSource();
 
     expect(visualizacao).toContain('seipro-monitorados-label-options');
@@ -175,8 +175,8 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses seipro-prefixed classes for monitorado tags input and add hook', () => {
-    const visualizacao = read('src/features/monitorados/visualizacao.js');
-    const datas = read('src/features/monitorados/datas.js');
+    const visualizacao = read('src/features/monitorados/visualizacao.ts');
+    const datas = read('src/features/monitorados/datas.ts');
 
     expect(visualizacao).toContain('seipro-monitorado-tags-input');
     expect(visualizacao).toContain('seipro-monitorado-tags-add');
@@ -202,7 +202,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses seipro-prefixed classes for monitorado date modal rows', () => {
-    const datas = read('src/features/monitorados/datas.js');
+    const datas = read('src/features/monitorados/datas.ts');
 
     expect(datas).toContain('seipro-monitorado-dates-selectdoc');
     expect(datas).toContain('seipro-monitorado-dates-setdate');
@@ -230,9 +230,9 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the monitorado date editor hook', () => {
-    const visualizacao = read('src/features/monitorados/visualizacao.js');
-    const datas = read('src/features/monitorados/datas.js');
-    const prazoRow = read('src/features/monitorados/prazo-row.js');
+    const visualizacao = read('src/features/monitorados/visualizacao.ts');
+    const datas = read('src/features/monitorados/datas.ts');
+    const prazoRow = read('src/features/monitorados/prazo-row.ts');
 
     expect(visualizacao).toContain('seipro-monitorado-dates-editor');
     expect(visualizacao).toContain('seipro-monitorado-dates');
@@ -247,7 +247,7 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
 
   it('uses a seipro-prefixed class for the monitorado date empty-state hook', () => {
     const css = read('src/features/monitorados/monitorados.css');
-    const prazoRow = read('src/features/monitorados/prazo-row.js');
+    const prazoRow = read('src/features/monitorados/prazo-row.ts');
 
     expect(css).toContain('.seipro-monitorado-dates-empty');
     expect(prazoRow).toContain('seipro-monitorado-dates-empty');
@@ -259,14 +259,14 @@ describe('migration: monitorados CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the monitorado success message hook', () => {
-    const commands = read('src/features/monitorados/commands.js');
+    const commands = read('src/features/monitorados/commands.ts');
 
     expect(commands).toContain('seipro-monitorado-success-message');
     expect(commands).not.toMatch(/iframeSucessPro/);
   });
 
   it('uses a seipro-prefixed class for the monitorados scroll wrapper', () => {
-    const panel = read('src/features/monitorados/panel.js');
+    const panel = read('src/features/monitorados/panel.ts');
     const css = read('src/features/monitorados/monitorados.css');
 
     expect(panel).toContain('seipro-monitorados-scroll');

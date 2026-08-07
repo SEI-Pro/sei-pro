@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest';
-import { verifyCitations } from '../../../../src/features/editor/domain/citations.js';
+import { verifyCitations } from '../../../../src/features/editor/domain/citations.ts';
 
 const parseHtml = (html) => new DOMParser().parseFromString(html, 'text/html');
 

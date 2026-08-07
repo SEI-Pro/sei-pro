@@ -5,7 +5,7 @@ import {
     capitalizeFirstLetter,
     romanToInt,
     uniqPro
-} from '../../src/core/util.js';
+} from '../../src/core/util.ts';
 
 describe('compareVersionNumbers', () => {
     it('orders semantic versions', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import { callAtiv, hasAtiv, installAtividadesDispatcher } from '../../../src/features/atividades/call.js';
+import { callAtiv, hasAtiv, installAtividadesDispatcher } from '../../../src/features/atividades/call.ts';
 
 describe('atividades/call', () => {
   beforeEach(() => {

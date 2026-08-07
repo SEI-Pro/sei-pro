@@ -9,7 +9,7 @@ function walk(dir, out = []) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
         const p = path.join(dir, ent.name);
         if (ent.isDirectory()) walk(p, out);
-        else if (ent.name.endsWith('.js')) out.push(p);
+        else if (ent.name.match(/\.(js|ts)$/)) out.push(p);
     }
     return out;
 }
@@ -28,19 +28,19 @@ describe('editor architecture migration guards', () => {
     });
 
     it('uses native domq instead of global $', () => {
-        const domq = fs.readFileSync(path.join(editorDir, 'lib/domq.js'), 'utf8');
+        const domq = fs.readFileSync(path.join(editorDir, 'lib/domq.ts'), 'utf8');
         expect(domq).toContain('export function qLoadScript');
         expect(domq).toContain('NOT jQuery');
-        expect(fs.existsSync(path.join(editorDir, 'adapter.js'))).toBe(true);
-        expect(fs.existsSync(path.join(editorDir, 'templates.js'))).toBe(true);
-        expect(fs.existsSync(path.join(editorDir, 'commands/formatting.js'))).toBe(true);
-        expect(fs.existsSync(path.join(root, 'src/entries/editor.js'))).toBe(true);
+        expect(fs.existsSync(path.join(editorDir, 'adapter.ts'))).toBe(true);
+        expect(fs.existsSync(path.join(editorDir, 'templates.ts'))).toBe(true);
+        expect(fs.existsSync(path.join(editorDir, 'commands/formatting.ts'))).toBe(true);
+        expect(fs.existsSync(path.join(root, 'src/entries/editor.ts'))).toBe(true);
     });
 
     it('does not keep a body.js monolith', () => {
         expect(fs.existsSync(path.join(editorDir, 'body.js'))).toBe(false);
-        expect(fs.existsSync(path.join(editorDir, 'adapter.js'))).toBe(true);
-        expect(fs.existsSync(path.join(editorDir, 'view/toolbar.js'))).toBe(true);
+        expect(fs.existsSync(path.join(editorDir, 'adapter.ts'))).toBe(true);
+        expect(fs.existsSync(path.join(editorDir, 'view/toolbar.ts'))).toBe(true);
     });
 
     it('uses delegated actions instead of inline handlers', () => {
@@ -55,7 +55,7 @@ describe('editor architecture migration guards', () => {
             );
         }
         expect(fs.readFileSync(
-            path.join(editorDir, 'view/delegated-actions.js'),
+            path.join(editorDir, 'view/delegated-actions.ts'),
             'utf8'
         )).toContain("root.addEventListener('click'");
     });
@@ -63,7 +63,7 @@ describe('editor architecture migration guards', () => {
     it('keeps view modules independent from IO modules', () => {
         const viewFiles = [
             ...walk(path.join(editorDir, 'view')),
-            path.join(root, 'src/features/legis/view.js'),
+            path.join(root, 'src/features/legis/view.ts'),
             ...walk(path.join(root, 'src/features/ai/view'))
         ];
         for (const file of viewFiles) {

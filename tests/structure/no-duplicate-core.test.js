@@ -13,7 +13,7 @@ const GENERATED = new Set(['core-stack.bundle.js']);
 
 function listJsFiles(dir) {
   return readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isFile() && d.name.endsWith('.js'))
+    .filter((d) => d.isFile() && d.name.match(/\.(js|ts)$/))
     .map((d) => join(dir, d.name));
 }
 
@@ -82,8 +82,8 @@ describe('migration: no duplicate definitions of migrated helpers', () => {
 });
 
 describe('migration: core layer dependency direction', () => {
-  it('src/core/stack.js does not import feature modules directly', () => {
-    const stack = readFileSync(join(srcDir, 'core/stack.js'), 'utf8');
+  it('src/core/stack.ts does not import feature modules directly', () => {
+    const stack = readFileSync(join(srcDir, 'core/stack.ts'), 'utf8');
     expect(stack).not.toMatch(/from\s+['"]\.\.\/features\//);
   });
 });

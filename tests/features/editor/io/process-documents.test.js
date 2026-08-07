@@ -4,7 +4,7 @@ import {
     listProcessDocuments,
     listComparableDocuments,
     processDocumentId
-} from '../../../../src/features/editor/io/process-documents.js';
+} from '../../../../src/features/editor/io/process-documents.ts';
 
 describe('editor process documents', () => {
     it('uses the tree model when the legacy list is absent', () => {

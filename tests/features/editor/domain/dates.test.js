@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatEditorDate } from '../../../../src/features/editor/domain/dates.js';
+import { formatEditorDate } from '../../../../src/features/editor/domain/dates.ts';
 
 describe('formatEditorDate', () => {
     it('formats a Date with the default long pt-BR style', () => {

@@ -14,8 +14,8 @@ function manifestWithAnotacaoControle() {
 
 describe('migration: anotacao-controle legacy facade', () => {
   it('keeps the entry wired through the dedicated legacy bridge', () => {
-    const index = read('src/features/anotacao-controle/index.js');
-    const bridge = read('src/features/anotacao-controle/legacy-api.js');
+    const index = read('src/features/anotacao-controle/index.ts');
+    const bridge = read('src/features/anotacao-controle/legacy-api.ts');
 
     expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
     expect(bridge).toMatch(/import \{ aliasGlobal \} from ['"]\.\.\/\.\.\/core\/global\.js['"]/);
@@ -27,9 +27,9 @@ describe('migration: anotacao-controle legacy facade', () => {
 
   it('does not duplicate the migrated helpers in the lista-processos clusters', () => {
     const legacy = readListaProcessosSource();
-    const domain = read('src/features/anotacao-controle/domain.js');
-    const io = read('src/features/anotacao-controle/io.js');
-    const view = read('src/features/anotacao-controle/view.js');
+    const domain = read('src/features/anotacao-controle/domain.ts');
+    const io = read('src/features/anotacao-controle/io.ts');
+    const view = read('src/features/anotacao-controle/view.ts');
 
     expect(legacy).not.toMatch(/function\s+(?:replaceSticknoteHome|renderSticknoteHomeInline|initReplaceSticknoteHome)\s*\(/);
     expect(domain).toMatch(/export function (?:buildSticknoteHomeRecord|sticknoteChecklistClass)/);
@@ -71,9 +71,9 @@ describe('migration: anotacao-controle legacy facade', () => {
 
   it('keeps the ESM bundle output contract', () => {
     const build = read('scripts/build.mjs');
-    const index = read('src/features/anotacao-controle/index.js');
+    const index = read('src/features/anotacao-controle/index.ts');
 
-    expect(build).toContain("{ entry: 'src/features/anotacao-controle/index.js', out: 'dist/js/anotacao-controle.bundle.js' }");
+    expect(build).toContain("{ entry: 'src/features/anotacao-controle/index.ts', out: 'dist/js/anotacao-controle.bundle.js' }");
     expect(index).toContain("import './legacy-api.js';");
     expect(index).toContain("publishFeature({");
     expect(index).toContain("nsKey: 'anotacaoControle'");

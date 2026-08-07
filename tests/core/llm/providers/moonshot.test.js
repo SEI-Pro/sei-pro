@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     buildRequest,
     parseChunk
-} from '../../../../src/core/llm/providers/moonshot.js';
+} from '../../../../src/core/llm/providers/moonshot.ts';
 
 describe('Moonshot provider contract', () => {
     it('uses the Moonshot endpoint and echoes reasoning content on later turns', () => {

@@ -11,7 +11,7 @@ describe('migration: background message router stays isolated', () => {
     const router = readFileSync(join(rootDir, 'src/background/router.js'), 'utf8');
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
 
-    expect(background).toMatch(/importScripts\([^)]*'llm-handler\.js'[^)]*'router\.js'[^)]*\)/);
+    expect(background).toMatch(/importScripts\([^)]*'llm-handler\.(js|ts)'[^)]*'router\.js'[^)]*\)/);
     expect(background).toMatch(/browser\.runtime\.onMessage\.addListener\(handleMessage\)/);
     expect(background).toMatch(/browser\.runtime\.onConnect\.addListener\(handleConnect\)/);
     expect(background).toMatch(/SeiProBackgroundRouter\.handleMessage\(message, sender, sendResponse, browser\)/);

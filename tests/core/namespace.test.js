@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { createNamespace } from '../../src/core/namespace.js';
-import { globalRef } from '../../src/core/global.js';
+import { createNamespace } from '../../src/core/namespace.ts';
+import { globalRef } from '../../src/core/global.ts';
 
 describe('SeiPro namespace linkState', () => {
     beforeEach(() => {

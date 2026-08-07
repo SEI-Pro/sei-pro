@@ -3,7 +3,7 @@ import {
     extractHtmlResponse,
     sanitizeSeiHtml,
     validateSeiHtml
-} from '../../../../src/features/ai/domain/output.js';
+} from '../../../../src/features/ai/domain/output.ts';
 
 describe('AI SEI HTML output', () => {
     it('accepts dictionary classes and strips an HTML fence', () => {

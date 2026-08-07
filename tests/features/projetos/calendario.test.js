@@ -5,7 +5,7 @@ import {
     holidaysBr,
     isBusinessDay,
     isWeekend
-} from '../../../src/features/projetos/domain/calendario.js';
+} from '../../../src/features/projetos/domain/calendario.ts';
 
 describe('projetos/domain/calendario', () => {
     it('detects weekends', () => {

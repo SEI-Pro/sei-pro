@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { q } from '../../../../src/features/editor/lib/domq.js';
-import { state } from '../../../../src/features/editor/state.js';
-import { getImagemBgOnEditor } from '../../../../src/features/editor/view/dialogs/images-editor.js';
+import { q } from '../../../../src/features/editor/lib/domq.ts';
+import { state } from '../../../../src/features/editor/state.ts';
+import { getImagemBgOnEditor } from '../../../../src/features/editor/view/dialogs/images-editor.ts';
 
 describe('page background dialog', () => {
     afterEach(() => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { getPageCkeditor, bindCkeditorGlobal } from '../../../src/features/editor/ckeditor-access.js';
+import { getPageCkeditor, bindCkeditorGlobal } from '../../../src/features/editor/ckeditor-access.ts';
 
 describe('ckeditor-access', () => {
     beforeEach(() => {

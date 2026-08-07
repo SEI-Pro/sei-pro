@@ -40,52 +40,60 @@ import { readdirSync } from 'node:fs';
 
 const entriesDir = path.join(root, 'src/entries');
 const entryBundles = readdirSync(entriesDir)
-    .filter((f) => f.endsWith('.js') && f !== 'editor.js')
+    .filter((f) => {
+        const full = path.join(entriesDir, f);
+        return statSync(full).isFile() && (f.endsWith('.ts') || f.endsWith('.js')) && f !== 'editor.js' && f !== 'editor.ts';
+    })
     .map((f) => ({
         entry: 'src/entries/' + f,
-        out: 'dist/js/' + f.replace(/\.js$/, '.bundle.js')
+        out: 'dist/js/' + f.replace(/\.(js|ts)$/, '.bundle.js')
     }));
 
+// TODO(ADR-0004 / plan 3.7): derive this list from feature descriptors + contexts
+// instead of maintaining hand entries. entryBundles (src/entries/*) already scan
+// the filesystem; the feature bundles below are still explicit because legacy
+// output names (sei-pro.js, sei-functions-pro.js, …) must stay stable for
+// manifest.base.json until content_scripts are generated.
 const bundles = [
-    { entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' },
+    { entry: 'src/content/core-stack.ts', out: 'dist/js/core-stack.bundle.js' },
     // The service worker is legacy, but the LLM handler is bundled so it can
     // reuse the provider adapters and streaming client without duplicating them.
-    { entry: 'src/background/llm-handler.js', out: 'dist/js/llm-handler.js' },
-    { entry: 'src/features/arvore-info/index.js', out: 'dist/js/arvore-info.bundle.js' },
-    { entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' },
-    { entry: 'src/features/lista-processos/index.js', out: 'dist/js/sei-pro.js' },
-    { entry: 'src/features/sei-functions/index.js', out: 'dist/js/sei-functions-pro.js' },
-    { entry: 'src/features/atividades/index.js', out: 'dist/js/sei-pro-atividades.js' },
-    { entry: 'src/features/quick-highlight/index.js', out: 'dist/js/quick-highlight.bundle.js' },
-    { entry: 'src/features/docs-lote/index.js', out: 'dist/js/docs-lote.bundle.js' },
-    { entry: 'src/features/quick-filter/index-list.js', out: 'dist/js/quick-filter-list.bundle.js' },
-    { entry: 'src/features/quick-filter/index-tree.js', out: 'dist/js/quick-filter-tree.bundle.js' },
-    { entry: 'src/features/anotacao-controle/index.js', out: 'dist/js/anotacao-controle.bundle.js' },
-    { entry: 'src/features/monitorados/index.js', out: 'dist/js/monitorados.bundle.js' },
+    { entry: 'src/background/llm-handler.ts', out: 'dist/js/llm-handler.js' },
+    { entry: 'src/features/arvore-info/index.ts', out: 'dist/js/arvore-info.bundle.js' },
+    { entry: 'src/features/arvore/index.ts', out: 'dist/js/sei-pro-arvore.js' },
+    { entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' },
+    { entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' },
+    { entry: 'src/features/atividades/index.ts', out: 'dist/js/sei-pro-atividades.js' },
+    { entry: 'src/features/quick-highlight/index.ts', out: 'dist/js/quick-highlight.bundle.js' },
+    { entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' },
+    { entry: 'src/features/quick-filter/index-list.ts', out: 'dist/js/quick-filter-list.bundle.js' },
+    { entry: 'src/features/quick-filter/index-tree.ts', out: 'dist/js/quick-filter-tree.bundle.js' },
+    { entry: 'src/features/anotacao-controle/index.ts', out: 'dist/js/anotacao-controle.bundle.js' },
+    { entry: 'src/features/monitorados/index.ts', out: 'dist/js/monitorados.bundle.js' },
     // Controlar Prazos: decomposta em domain/io/view; saída mantém o nome do script
     // legado (js/sei-pro-controle-prazo.js) p/ o manifest não mudar.
-    { entry: 'src/features/controlar-prazos/index.js', out: 'dist/js/sei-pro-controle-prazo.js' },
+    { entry: 'src/features/controlar-prazos/index.ts', out: 'dist/js/sei-pro-controle-prazo.js' },
     // Marcar como "Não Visualizado": decomposta em io/view; saída nova (manifest
     // blocos 3 e 4, após sei-pro.js). Globais preservados via aliasGlobal.
-    { entry: 'src/entries/editor.js', out: 'dist/js/sei-pro-editor.js' },
-    { entry: 'src/features/ai/index.js', out: 'dist/js/sei-pro-ai.js' },
-    { entry: 'src/features/legis/index.js', out: 'dist/js/sei-legis.js' },
-    { entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' },
-    { entry: 'src/features/lista-agrupamento/index.js', out: 'dist/js/lista-agrupamento.bundle.js' },
+    { entry: 'src/entries/editor.ts', out: 'dist/js/sei-pro-editor.js' },
+    { entry: 'src/features/ai/index.ts', out: 'dist/js/sei-pro-ai.js' },
+    { entry: 'src/features/legis/index.ts', out: 'dist/js/sei-legis.js' },
+    { entry: 'src/features/nao-lido/index.ts', out: 'dist/js/sei-pro-nao-lido.js' },
+    { entry: 'src/features/lista-agrupamento/index.ts', out: 'dist/js/lista-agrupamento.bundle.js' },
     // Projetos (Gantt): domain/store/view; saida mantem nome legado js/sei-pro-projetos.js
-    { entry: 'src/features/projetos/index.js', out: 'dist/js/sei-pro-projetos.js' },
+    { entry: 'src/features/projetos/index.ts', out: 'dist/js/sei-pro-projetos.js' },
     // Options page (extension settings UI) — full vanilla bundle.
-    { entry: 'src/options/index.js', out: 'dist/js/options.bundle.js' },
+    { entry: 'src/options/index.ts', out: 'dist/js/options.bundle.js' },
     // Página de opções — fatia de "Processos Monitorados" (dependência entre os
     // switches gerenciarmonitorados ↔ monitoradosacimacontrole). Carregado por
     // html/options.html ao lado do options.bundle.js.
-    { entry: 'src/features/monitorados/options.js', out: 'dist/js/monitorados-options.bundle.js' },
+    { entry: 'src/features/monitorados/options.ts', out: 'dist/js/monitorados-options.bundle.js' },
     ...entryBundles
 ];
 
 function optionsFor({ entry, out }) {
     const outfile = path.join(root, out);
-    const plugins = entry === 'src/entries/editor.js'
+    const plugins = entry === 'src/entries/editor.ts'
         ? [{
             name: 'trim-editor-bundle-line-endings',
             setup(buildApi) {

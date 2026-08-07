@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { semanticDiff } from '../../../../src/features/editor/domain/diff.js';
+import { semanticDiff } from '../../../../src/features/editor/domain/diff.ts';
 
 describe('semanticDiff', () => {
     it('groups additions and removals while ignoring accent/case-only changes', () => {

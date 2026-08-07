@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import * as compat from '../../../src/features/atividades/compat.js';
-import * as domain from '../../../src/features/atividades/domain.js';
-import * as activityForm from '../../../src/features/atividades/activity-form.js';
-import { callAtiv } from '../../../src/features/atividades/call.js';
+import * as compat from '../../../src/features/atividades/compat.ts';
+import * as domain from '../../../src/features/atividades/domain.ts';
+import * as activityForm from '../../../src/features/atividades/activity-form.ts';
+import { callAtiv } from '../../../src/features/atividades/call.ts';
 import {
     atividadesHandlers,
     buildAtividadesHandlers
-} from '../../../src/features/atividades/handlers.js';
+} from '../../../src/features/atividades/handlers.ts';
 
 afterEach(() => {
     delete globalThis.SeiPro;

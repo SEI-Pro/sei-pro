@@ -18,11 +18,11 @@ describe('migration: arvore CSS', () => {
 
   it('preserva os hooks externos e compartilhados necessários ao upload e à árvore', () => {
     const source = readArvoreSource();
-    const upload = read('src/features/arvore/upload.js');
-    const view = read('src/features/arvore/view.js');
-    const templates = read('src/features/arvore/templates.js');
+    const upload = read('src/features/arvore/upload.ts');
+    const view = read('src/features/arvore/view.ts');
+    const templates = read('src/features/arvore/templates.ts');
     const sharedLegacy = readSeiFunctionsSource();
-    const arvoreInfo = read('src/features/arvore-info/index.js');
+    const arvoreInfo = read('src/features/arvore-info/index.ts');
 
     expect(upload).toContain('createFileQueue');
     expect(upload).toContain('previewsContainer');
@@ -31,7 +31,7 @@ describe('migration: arvore CSS', () => {
     expect(source).toContain('class="action-doc action-');
     expect(source).toContain('loading-action-doc');
     expect(source).toContain('class="panelDadosArvore');
-    expect(read('src/features/arvore/sticknote-view.js')).toContain('class="stickDadosArvore');
+    expect(read('src/features/arvore/sticknote-view.ts')).toContain('class="stickDadosArvore');
     expect(templates).toContain('anchorJoinPro');
     expect(sharedLegacy).toContain('.action-doc[data-id=');
     expect(sharedLegacy).toContain("closest('.no_notifyPro')");
@@ -45,7 +45,7 @@ describe('migration: arvore CSS', () => {
     );
     const war = (manifest.web_accessible_resources || []).flatMap((r) => r.resources || []);
     const initArvore = read('src/bootstrap/init_arvore.js');
-    const upload = read('src/features/arvore/upload.js');
+    const upload = read('src/features/arvore/upload.ts');
 
     expect(entries.length).toBeGreaterThan(0);
     for (const entry of entries) {

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { q } from '../../../src/features/editor/lib/domq.js';
-import { setParamEditor, state } from '../../../src/features/editor/state.js';
+import { q } from '../../../src/features/editor/lib/domq.ts';
+import { setParamEditor, state } from '../../../src/features/editor/state.ts';
 
 describe('editor runtime state', () => {
     beforeEach(() => {

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { q } from '../../../../src/features/editor/lib/domq.js';
-import { state } from '../../../../src/features/editor/state.js';
-import { reorderNtRodape } from '../../../../src/features/editor/view/dialogs/footnotes.js';
+import { q } from '../../../../src/features/editor/lib/domq.ts';
+import { state } from '../../../../src/features/editor/state.ts';
+import { reorderNtRodape } from '../../../../src/features/editor/view/dialogs/footnotes.ts';
 
 describe('editor footnotes', () => {
     beforeEach(() => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest';
-import { createTagsInput } from '@src/shared/ui/tags-input.js';
+import { createTagsInput } from '@src/shared/ui/tags-input.ts';
 
 function mkInput(value = '') {
     const input = document.createElement('input');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createSseParser, parseSseBlock } from '../../../src/core/llm/sse.js';
+import { createSseParser, parseSseBlock } from '../../../src/core/llm/sse.ts';
 
 describe('SSE parser', () => {
     it('parses event fields and joins repeated data lines', () => {

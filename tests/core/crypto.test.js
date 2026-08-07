@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { webcrypto } from 'node:crypto';
-import { sha256Hex } from '../../src/core/crypto.js';
+import { sha256Hex } from '../../src/core/crypto.ts';
 
 describe('Web Crypto helpers', () => {
     it('calculates the standard SHA-256 test vector from text', async () => {

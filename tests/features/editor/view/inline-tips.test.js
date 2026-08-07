@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { q } from '../../../../src/features/editor/lib/domq.js';
-import { state } from '../../../../src/features/editor/state.js';
+import { q } from '../../../../src/features/editor/lib/domq.ts';
+import { state } from '../../../../src/features/editor/state.ts';
 import {
     getNiveisParagrafos,
     keyActionEditor,
     keyupActionEditor,
     setOnKeyEditor
-} from '../../../../src/features/editor/view/inline-tips.js';
+} from '../../../../src/features/editor/view/inline-tips.ts';
 
 describe('setOnKeyEditor', () => {
     beforeEach(() => {

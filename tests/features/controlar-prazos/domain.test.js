@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { buildControlePrazoNativeTooltip } from '../../../src/features/controlar-prazos/domain.js';
+import { buildControlePrazoNativeTooltip } from '../../../src/features/controlar-prazos/domain.ts';
 
 function installMomentMock(validDates = {}) {
     globalThis.moment = (value) => ({

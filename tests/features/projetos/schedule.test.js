@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { computeSchedule, topologicalSort, cascadeMove, macroetapaSummaries } from '../../../src/features/projetos/domain/schedule.js';
-import { normalizeEtapa } from '../../../src/features/projetos/domain/model.js';
+import { computeSchedule, topologicalSort, cascadeMove, macroetapaSummaries } from '../../../src/features/projetos/domain/schedule.ts';
+import { normalizeEtapa } from '../../../src/features/projetos/domain/model.ts';
 
 function etapa(partial) {
     return normalizeEtapa(partial);

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createIo, PAGE_CACHE_TTL_MS } from '@src/features/arvore-info/io.js';
+import { createIo, PAGE_CACHE_TTL_MS } from '@src/features/arvore-info/io.ts';
 
 // io.js usa globais de browser. Stubamos fetch/DOMParser/TextDecoder no escopo
 // global para exercitar a lógica de cache/retry sem DOM real.

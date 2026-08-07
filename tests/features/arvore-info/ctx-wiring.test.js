@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
  */
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const sectionsDir = join(root, 'src/features/arvore-info/sections');
-const indexSrc = readFileSync(join(root, 'src/features/arvore-info/index.js'), 'utf8');
+const indexSrc = readFileSync(join(root, 'src/features/arvore-info/index.ts'), 'utf8');
 
 // Extrai o objeto literal passado para `fnName({ ... })` (capturando o 1º bloco balanceado).
 function callObjectBody(code, fnName) {
@@ -27,7 +27,7 @@ function callObjectBody(code, fnName) {
   return null;
 }
 
-const files = readdirSync(sectionsDir).filter((f) => f.endsWith('.js'));
+const files = readdirSync(sectionsDir).filter((f) => f.match(/\.(js|ts)$/));
 
 describe('arvore-info: ctx das seções é totalmente passado pelo index.js', () => {
   for (const file of files) {

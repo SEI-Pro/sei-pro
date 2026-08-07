@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
     checkObjHasProperty, fixedEncodeURIComponent, infraFormatarTamanhoBytes,
     prepCSVRow, removeDuplicatesArray, trycatch, zeroWidthTrim, checkBrowser
-} from '@src/core/helpers.js';
+} from '@src/core/helpers.ts';
 
 describe('core/helpers', () => {
     it('checkObjHasProperty: true só se todos os itens têm a chave', () => {

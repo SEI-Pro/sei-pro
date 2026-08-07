@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatRepeatedCitation } from '../../../src/features/legis/domain.js';
+import { formatRepeatedCitation } from '../../../src/features/legis/domain.ts';
 
 describe('legislation citation formatting', () => {
     it('shortens a repeated full citation to its title and year', () => {

@@ -8,7 +8,7 @@ const read = (relativePath) => readFileSync(join(rootDir, relativePath), 'utf8')
 
 describe('native SHA-256 migration', () => {
     it('keeps SHA-256 in Web Crypto and leaves only the legacy MD5 in CryptoJS', () => {
-        const crypto = read('src/core/crypto.js');
+        const crypto = read('src/core/crypto.ts');
         const body = readSeiFunctionsSource();
 
         expect(crypto).toContain("subtle.digest('SHA-256'");

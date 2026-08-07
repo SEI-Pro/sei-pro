@@ -8,7 +8,7 @@ const read = (file) => readFileSync(path.join(root, file), 'utf8');
 describe('AI feature CSS ownership', () => {
     it('uses feature-prefixed CSS hooks and ships CSS with the editor context', () => {
         const css = read('src/features/ai/style.css');
-        const view = read('src/features/ai/view/dialogs.js');
+        const view = read('src/features/ai/view/dialogs.ts');
         const manifest = JSON.parse(read('manifest.base.json'));
         const editorBlock = manifest.content_scripts.find(({ matches = [] }) =>
             matches.some((match) => match.includes('acao=editor_montar'))

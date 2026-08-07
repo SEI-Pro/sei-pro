@@ -6,7 +6,7 @@ import {
     linkMatchesDocumentoId,
     editorWindowNeedsNavigate,
     repairEditorMontarUrl
-} from '../../src/shared/sei-editor-url.js';
+} from '../../src/shared/sei-editor-url.ts';
 
 describe('sei-editor-url', () => {
     it('rejects truncated editor URLs with empty id_documento', () => {

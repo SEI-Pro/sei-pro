@@ -12,7 +12,7 @@ function read(relPath) {
 
 describe('migration: docs-lote CSS classes stay prefixed', () => {
   it('adds a feature hook to the initial document-selection panel while preserving the shared form class', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('class="seiProForm seipro-doclote-selection-panel"');
     expect(templates).toContain('id="dialogBoxDocLote"');
@@ -22,8 +22,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the new-process type rows', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('seipro-doclote-process-type-fields');
     expect(view).toContain('.seipro-doclote-process-type-fields');
@@ -36,8 +36,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('delegates the new-process toggle through a feature hook while preserving its legacy id and execution flow', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('class="onoffswitch-checkbox seipro-doclote-new-process-toggle" id="newProcs"');
     expect(templates).toContain('for="newProcs"');
@@ -49,7 +49,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the new-process switch wrapper while preserving its shared switch contract', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('class="onoffswitch seipro-doclote-new-process-switch"');
     expect(templates).toContain('class="onoffswitch-checkbox seipro-doclote-new-process-toggle" id="newProcs"');
@@ -57,8 +57,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('delegates the process-type selector through a feature hook while preserving its legacy id and validation flow', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('id="tipoProcessoSelect" class="seipro-doclote-process-type-select"');
     expect(view).toContain(".on('change', '.seipro-doclote-process-type-select'");
@@ -68,7 +68,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('delegates the model document-type selector through a feature hook while preserving the analysis flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain('id="tipoDocumentoSelect" class="seipro-doclote-document-type-select"');
     expect(view).toContain(".on('change', '.seipro-doclote-document-type-select'");
@@ -80,7 +80,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('uses seipro-prefixed classes for analysis text and headings emitted by the wizard', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain('seipro-doclote-analysis-text');
     expect(view).toContain('seipro-doclote-field-title');
@@ -94,7 +94,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for both force-name option wrappers', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates.match(/class="seipro-doclote-force-names"/g)).toHaveLength(2);
     expect(templates).toContain('id="checkForceNames"');
@@ -104,8 +104,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the force-names toggle while preserving its execution contract', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('class="onoffswitch-checkbox seipro-doclote-force-names-toggle" id="checkForceNames"');
     expect(templates).toContain('name="onoffswitch"');
@@ -115,8 +115,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a seipro-prefixed hook to the model document selector while preserving its legacy id', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('id="docLoteSelect" class="seipro-doclote-model-select"');
     expect(templates).toContain('for="docLoteSelect"');
@@ -125,7 +125,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('delegates model-document changes through the feature hook while preserving the selection flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain(".on('change', '.seipro-doclote-model-select'");
     expect(view).toContain("$('#textoPadraoSelect').val('').trigger('chosen:updated')");
@@ -135,8 +135,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a seipro-prefixed hook to the standard-text selector while preserving its mutual reset flow', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('id="textoPadraoSelect" class="seipro-doclote-template-select"');
     expect(templates).toContain('for="textoPadraoSelect"');
@@ -145,7 +145,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('delegates standard-text changes through the feature hook while preserving the model reset flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain(".on('change', '.seipro-doclote-template-select'");
     expect(view).toContain("$('#docLoteSelect').val('').trigger('chosen:updated')");
@@ -155,8 +155,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a seipro-prefixed hook to the CSV upload input while preserving its file contract', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('id="inputBD" class="seipro-doclote-csv-input" type="file" accept=".csv, text/csv"');
     expect(templates).toContain('for="inputBD"');
@@ -169,14 +169,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the execution spinner while preserving its legacy icon classes', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('fas fa-spinner fa-spin azulColor seipro-doclote-execution-spinner');
     expect(templates).toContain('id="preparingProgressCircular" class="seipro-doclote-execution-loader"');
   });
 
   it('adds a seipro-prefixed hook to the model-analysis loader while preserving its legacy id and spinner', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id='loaderAnalysis' class=\"seipro-doclote-analysis-loader\"");
     expect(view).toContain('fas fa-spinner fa-spin azulColor seipro-doclote-analysis-spinner');
@@ -185,7 +185,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a seipro-prefixed hook to the CSV-analysis loader while preserving its legacy id and spinner', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id='loaderAnalysisCSV' class=\"seipro-doclote-csv-analysis-loader\"");
     expect(view).toContain('fas fa-spinner fa-spin azulColor seipro-doclote-csv-analysis-spinner');
@@ -195,8 +195,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a seipro-prefixed hook to the execution loader while preserving its progress contract', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('id="preparingProgressCircular" class="seipro-doclote-execution-loader"');
     expect(templates).toContain('id="preparingProgress"');
@@ -206,8 +206,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a seipro-prefixed hook to the execution progress while preserving its legacy id and updates', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('id="progress" class="seipro-doclote-execution-progress"');
     expect(templates).toContain('id="preparingProgress"');
@@ -216,14 +216,14 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the initial preparation message while preserving its legacy id and text', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('id="preparingProgress" class="seipro-doclote-preparing-progress">Preparando ambiente</p>');
     expect(templates).not.toContain('id="preparingProgress">Preparando ambiente</p>');
   });
 
   it('adds a seipro-prefixed hook to the execution error dialog while preserving its message contract', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('<div class="seipro-doclote-error-dialog">');
     expect(templates).toContain('class="fas fa-exclamation-triangle vermelhoColor seipro-doclote-error-icon"');
@@ -233,7 +233,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds feature hooks to the analysis-stage titles while preserving their text', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('class="seipro-doclote-analysis-title">Análise do documento modelo:</p>');
     expect(templates).toContain('class="seipro-doclote-analysis-csv-title">Análise da base de dados:</p>');
@@ -242,7 +242,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for Docs em Lote field validation messages', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
     const legacy = readSeiFunctionsSource();
 
     expect(view).toContain('seipro-doclote-field-error');
@@ -254,7 +254,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('uses seipro-prefixed classes for Docs em Lote scroll wrappers while preserving table contracts', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('seipro-doclote-crossing-scroll');
     expect(templates).toContain('id="tableDataCrossing"');
@@ -264,7 +264,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a seipro-prefixed hook to the data-crossing panel while preserving its legacy id', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('id="divTableDataCrossing" class="seipro-doclote-crossing-panel"');
     expect(templates).toContain('id="tableDataCrossing"');
@@ -272,7 +272,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the crossing table while preserving its legacy id and shared table classes', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('id="tableDataCrossing" style="font-size: 9pt !important;width: 100%;" class="seiProForm tableInfo tableZebra tableFollow seipro-doclote-crossing-table"');
     expect(templates).toContain('id="divTableDataCrossing" class="seipro-doclote-crossing-panel"');
@@ -281,7 +281,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('uses a seipro-prefixed class for the result action bar emitted by Docs em Lote', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('seipro-doclote-result-actions');
     expect(templates).toContain('seipro-doclote-download');
@@ -292,8 +292,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the process-specification input while preserving its execution contract', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates).toContain('class="infraText seipro-doclote-process-specification-input" id="txtEspecificacaoProcesso"');
     expect(templates).toContain('placeholder="Ex: Certificado de ##nome_aluno##"');
@@ -301,8 +301,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to both document-name selectors while preserving their chosen flow', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(templates.match(/id="nomesDoc" class="seipro-doclote-document-name-select"/g)).toHaveLength(2);
     expect(templates).toContain('${selectData}</select>');
@@ -311,7 +311,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the CSV-selection panel while preserving its shared form class', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('class="seiProForm seipro-doclote-csv-selection-panel"');
     expect(templates).toContain('id="inputBD" class="seipro-doclote-csv-input"');
@@ -319,7 +319,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the Docs em Lote credit while preserving its attribution link', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('class="seipro-doclote-credit"');
     expect(templates).toContain('href="https://github.com/tcgontijo" target="_blank"');
@@ -328,13 +328,13 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the crossing-panel introduction while preserving its text', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates).toContain('class="seipro-doclote-crossing-intro">Segue abaixo o relacionamento entre cabeçalhos da base de dados e os campos dinâmicos do documento modelo:</p>');
   });
 
   it('adds a feature hook to the execution cancel action while preserving its legacy id and abort flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id: 'cancelExecute'");
     expect(view).toContain("class: 'seipro-doclote-cancel-execution'");
@@ -343,7 +343,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the execution completion message while preserving its text and result flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain('seipro-doclote-execution-complete');
     expect(view).toContain('Progresso finalizado! 👏');
@@ -352,7 +352,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the execution error confirmation action while preserving its reset flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("class: 'ui-state-active seipro-doclote-error-confirm'");
     expect(view).toContain("text: 'OK'");
@@ -360,7 +360,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to generated result-table headers while preserving the shared header class and content', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain('tituloControle seipro-doclote-result-table-header');
     expect(view).toContain('nome_documento_gerado');
@@ -370,7 +370,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds feature hooks to generated document links while preserving the legacy link contract', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain('class="bLink seipro-doclote-generated-document-link"');
     expect(view).toContain('target="_blank"');
@@ -378,7 +378,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the CSV confirmation action while preserving its upload and analysis flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id: 'btnEnviaCSV'");
     expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-csv-confirm'");
@@ -388,7 +388,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the crossing confirmation action while preserving its shared button class and execution payload', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id: 'btnConfirm'");
     expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-crossing-confirm'");
@@ -398,7 +398,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the initial selection confirmation while preserving its id and callback flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id: 'btnSelecaoDoc'");
     expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-selection-confirm'");
@@ -407,7 +407,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to crossing-table headers while preserving the shared header class and content', () => {
-    const templates = read('src/features/docs-lote/templates.js');
+    const templates = read('src/features/docs-lote/templates.ts');
 
     expect(templates.match(/class="tituloControle seipro-doclote-crossing-table-header"/g)).toHaveLength(3);
     expect(templates).toContain('${csvFileName}');
@@ -416,7 +416,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the document-analysis confirmation while preserving its id and callback', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id: 'btnConfirmAnalysis'");
     expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-analysis-confirm'");
@@ -424,7 +424,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the CSV-analysis confirmation while preserving its id and callback', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id: 'btnConfirmAnalysisCSV'");
     expect(view).toContain("class: 'confirm ui-state-active seipro-doclote-csv-analysis-confirm'");
@@ -432,7 +432,7 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('adds a feature hook to the model-analysis fields container while preserving its legacy id and render flow', () => {
-    const view = read('src/features/docs-lote/view.js');
+    const view = read('src/features/docs-lote/view.ts');
 
     expect(view).toContain("id='fieldList' class=\"seipro-doclote-model-analysis-fields\"");
     expect(view).toContain("$('#fieldList').append");
@@ -440,8 +440,8 @@ describe('migration: docs-lote CSS classes stay prefixed', () => {
   });
 
   it('audits the complete Docs em Lote markup for unprefixed feature-owned classes', () => {
-    const templates = read('src/features/docs-lote/templates.js');
-    const view = read('src/features/docs-lote/view.js');
+    const templates = read('src/features/docs-lote/templates.ts');
+    const view = read('src/features/docs-lote/view.ts');
     const source = `${templates}\n${view}`;
     const sharedClasses = new Set([
       'dialogBoxDiv', 'seiProForm', 'label', 'required', 'iconPopup', 'iconSwitch',

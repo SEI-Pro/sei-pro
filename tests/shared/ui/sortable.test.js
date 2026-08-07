@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { insertionTarget } from '@src/shared/ui/sortable.js';
+import { insertionTarget } from '@src/shared/ui/sortable.ts';
 
 // Stub de linhas com rects controlados (jsdom não faz layout).
 function row(top, height = 20) {

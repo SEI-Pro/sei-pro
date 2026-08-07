@@ -7,7 +7,7 @@ import {
     removeMonitoradoFromStore,
     monitoradoProcessDataReady,
     monitoradoProcessPayloadReady
-} from '@src/features/monitorados/domain.js';
+} from '@src/features/monitorados/domain.ts';
 
 // store.js lê globalRef.moment e localStorage lazy — stub mínimo antes de usar.
 const fakeStorage = () => {
@@ -83,7 +83,7 @@ describe('monitorados/store (IO localStorage, sem remoto)', () => {
         globalThis.localStorage = fakeStorage();
         globalThis.moment = () => ({ format: () => '2026-01-01 00:00:00', add: () => ({ format: () => '2026-01-06' }) });
         // import dinâmico após os stubs (store lê globalRef no momento da chamada de qualquer forma)
-        store = await import('@src/features/monitorados/store.js');
+        store = await import('@src/features/monitorados/store.ts');
     });
 
     it('getStoreMonitoradoPro devolve default quando vazio e faz parse quando há dados', () => {

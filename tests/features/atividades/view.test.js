@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { installAtividadesView } from '../../../src/features/atividades/view.js';
+import { installAtividadesView } from '../../../src/features/atividades/view.ts';
 
 describe('atividades/view', () => {
   let root;

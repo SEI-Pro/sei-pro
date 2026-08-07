@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { extractTextWithNumbering } from '@src/features/editor/domain.js';
-import { extractTextFromHtml } from '@src/features/editor/domain/html-text.js';
-import { bindEditorFocus, collectEditorText } from '@src/features/editor/view.js';
+import { extractTextWithNumbering } from '@src/features/editor/domain.ts';
+import { extractTextFromHtml } from '@src/features/editor/domain/html-text.ts';
+import { bindEditorFocus, collectEditorText } from '@src/features/editor/view.ts';
 
 describe('editor/domain — extractTextWithNumbering', () => {
     it('numera itens e parágrafos respeitando a hierarquia', () => {

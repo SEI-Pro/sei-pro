@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkDatesBetweenArray } from '../../../src/features/atividades/config-domain.js';
+import { checkDatesBetweenArray } from '../../../src/features/atividades/config-domain.ts';
 
 describe('atividades/config-domain', () => {
   it('detects overlapping ranges without DOM or jQuery', () => {

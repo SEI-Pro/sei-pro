@@ -4,7 +4,7 @@ import {
     PROVIDER_IDS,
     createChatRequest,
     normalizeMessage
-} from '../../../src/core/llm/protocol.js';
+} from '../../../src/core/llm/protocol.ts';
 
 describe('LLM protocol', () => {
     it('normalizes messages for every supported role', () => {

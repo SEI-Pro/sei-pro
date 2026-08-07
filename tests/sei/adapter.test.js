@@ -1,16 +1,18 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { createNamespace } from '../../src/core/namespace.js';
-import { createRuntime } from '../../src/platform/runtime.js';
-import { installUtil } from '../../src/core/util.js';
-import { installVersion } from '../../src/sei/version.js';
-import { installAdapter } from '../../src/sei/adapter.js';
-import { globalRef } from '../../src/core/global.js';
+import { createNamespace } from '../../src/core/namespace.ts';
+import { createRuntime } from '../../src/platform/runtime.ts';
+import { installUtil } from '../../src/core/util.ts';
+import { installVersion } from '../../src/sei/version.ts';
+import { installSelectors } from '../../src/sei/selectors.ts';
+import { installAdapter } from '../../src/sei/adapter.ts';
+import { globalRef } from '../../src/core/global.ts';
 
 function installSeiStack() {
     createNamespace();
     createRuntime();
     installUtil();
     installVersion();
+    installSelectors();
     installAdapter();
 }
 

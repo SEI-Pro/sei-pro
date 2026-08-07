@@ -3,7 +3,7 @@ import {
     buildRequest,
     parseChunk,
     parseComplete
-} from '../../../../src/core/llm/providers/gemini.js';
+} from '../../../../src/core/llm/providers/gemini.ts';
 
 const tool = {
     name: 'ler_documento',

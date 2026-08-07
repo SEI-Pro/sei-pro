@@ -4,12 +4,12 @@ import {
     installEditorAiBridge,
     requestAiInline,
     requestAiOpen
-} from '../../../src/features/editor/ai-bridge.js';
+} from '../../../src/features/editor/ai-bridge.ts';
 import {
     installIsolatedEditorAiBridge,
     insertEditorHtml,
     readEditorSnapshot
-} from '../../../src/features/ai/io/editor-bridge.js';
+} from '../../../src/features/ai/io/editor-bridge.ts';
 
 describe('minimal isolated editor AI bridge', () => {
     beforeEach(() => {

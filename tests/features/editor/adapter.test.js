@@ -3,10 +3,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
     ensureEditorDialogHost
-} from '../../../src/features/editor/adapter.js';
-import { q } from '../../../src/features/editor/lib/domq.js';
-import { state } from '../../../src/features/editor/state.js';
-import { importDocPro } from '../../../src/features/editor/view/dialogs/import.js';
+} from '../../../src/features/editor/adapter.ts';
+import { q } from '../../../src/features/editor/lib/domq.ts';
+import { state } from '../../../src/features/editor/state.ts';
+import { importDocPro } from '../../../src/features/editor/view/dialogs/import.ts';
 
 describe('editor dialog compatibility', () => {
     beforeEach(() => {

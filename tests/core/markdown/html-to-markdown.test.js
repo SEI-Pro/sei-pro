@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { htmlToMarkdown } from '../../../src/core/markdown/html-to-markdown.js';
+import { htmlToMarkdown } from '../../../src/core/markdown/html-to-markdown.ts';
 
 describe('SEI HTML to Markdown', () => {
     it('preserves headings, paragraphs, emphasis, links, and lists', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estimateTokens, trimContext } from '../../../src/core/llm/budget.js';
+import { estimateTokens, trimContext } from '../../../src/core/llm/budget.ts';
 
 describe('LLM context budget', () => {
     it('estimates tokens with the chars-per-four heuristic', () => {

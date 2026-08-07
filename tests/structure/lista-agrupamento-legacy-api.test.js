@@ -9,8 +9,8 @@ const source = (file) => readFileSync(join(rootDir, file), 'utf8');
 
 describe('migration: lista-agrupamento legacy bridge', () => {
   it('centraliza os aliases e a fachada de toggle na ponte', () => {
-    const bridge = source('src/features/lista-agrupamento/legacy-api.js');
-    const index = source('src/features/lista-agrupamento/index.js');
+    const bridge = source('src/features/lista-agrupamento/legacy-api.ts');
+    const index = source('src/features/lista-agrupamento/index.ts');
     const legacy = readListaProcessosSource();
 
     expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
@@ -41,9 +41,9 @@ describe('migration: lista-agrupamento legacy bridge', () => {
       expect(js.slice(0, bundleIndex)).toContain('js/sei-functions-pro.js');
     }
 
-    expect(build).toMatch(/entry:\s*'src\/features\/lista-agrupamento\/index\.js'/);
+    expect(build).toMatch(/entry:\s*'src\/features\/lista-agrupamento\/index\.(js|ts)'/);
     expect(build).toMatch(/out:\s*'dist\/js\/lista-agrupamento\.bundle\.js'/);
-    expect(build).toMatch(/entry:\s*'src\/features\/lista-processos\/index\.js'/);
+    expect(build).toMatch(/entry:\s*'src\/features\/lista-processos\/index\.(js|ts)'/);
     expect(build).not.toMatch(/'src\/features\/lista-processos\/sei-pro\.js'/);
   });
 });

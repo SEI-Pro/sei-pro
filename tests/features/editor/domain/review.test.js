@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     createReviewMetadata,
     formatReviewTime
-} from '../../../../src/features/editor/domain/review.js';
+} from '../../../../src/features/editor/domain/review.ts';
 
 describe('review authorship metadata', () => {
     it('formats the legacy display time', () => {

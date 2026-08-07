@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMonitoradoToggleAction, isMonitoradoToggle } from '@src/features/monitorados/view.js';
+import { getMonitoradoToggleAction, isMonitoradoToggle } from '@src/features/monitorados/view.ts';
 
 const target = (attrs) => ({
     getAttribute: (name) => attrs[name] ?? null,

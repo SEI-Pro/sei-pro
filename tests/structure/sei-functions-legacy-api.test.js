@@ -8,8 +8,8 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 describe('migration: sei-functions full ESM facade', () => {
   it('instala a ponte dedicada no entry e aliasa os módulos fatiados', () => {
-    const index = read('src/features/sei-functions/index.js');
-    const bridge = read('src/features/sei-functions/legacy-api.js');
+    const index = read('src/features/sei-functions/index.ts');
+    const bridge = read('src/features/sei-functions/legacy-api.ts');
 
     expect(index).toContain("import { installSeiFunctionsLegacyApi } from './legacy-api.js';");
     expect(index).toContain('installSeiFunctionsLegacyApi();');
@@ -22,20 +22,20 @@ describe('migration: sei-functions full ESM facade', () => {
   it('não mantém o monolito body.js nem a cópia em shared/legacy/', () => {
     expect(existsSync(join(rootDir, 'src/shared/legacy/sei-functions-pro.js'))).toBe(false);
     expect(existsSync(join(rootDir, 'src/features/sei-functions/body.js'))).toBe(false);
-    expect(existsSync(join(rootDir, 'src/features/sei-functions/modules.js'))).toBe(true);
-    expect(existsSync(join(rootDir, 'src/features/sei-functions/boot.js'))).toBe(true);
-    expect(existsSync(join(rootDir, 'src/features/sei-functions/state.js'))).toBe(true);
-    expect(existsSync(join(rootDir, 'src/features/sei-functions/templates.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/sei-functions/modules.ts'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/sei-functions/boot.ts'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/sei-functions/state.ts'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/sei-functions/templates.ts'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/sei-functions/style.css'))).toBe(true);
 
     const clusters = readdirSync(join(rootDir, 'src/features/sei-functions'))
-      .filter((name) => name.endsWith('.js'));
+      .filter((name) => name.match(/\.(js|ts)$/));
     expect(clusters.length).toBeGreaterThanOrEqual(20);
   });
 
   it('empacota a feature como dist/js/sei-functions-pro.js sem cópia verbatim', () => {
     const build = read('scripts/build.mjs');
-    expect(build).toContain("{ entry: 'src/features/sei-functions/index.js', out: 'dist/js/sei-functions-pro.js' }");
+    expect(build).toContain("{ entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' }");
     expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
     expect(build).toContain('src/features/sei-functions/style.css');
   });
@@ -59,7 +59,7 @@ describe('migration: sei-functions full ESM facade', () => {
   });
 
   it('publica o contrato canônico { id, api, install }', () => {
-    const index = read('src/features/sei-functions/index.js');
+    const index = read('src/features/sei-functions/index.ts');
     expect(index).toContain("id: 'sei-functions'");
     expect(index).toContain("nsKey: 'seiFunctions'");
     expect(index).toContain('install: installSeiFunctionsFeature');

@@ -6,16 +6,16 @@ const root = process.cwd();
 const read = (rel) => readFileSync(join(root, rel), 'utf8');
 
 describe('options page migration wiring', () => {
-    it('bundles options from src/options/index.js and drops legacy options.js copy', () => {
+    it('bundles options from src/options/index.ts and drops legacy options.js copy', () => {
         const build = read('scripts/build.mjs');
-        expect(build).toContain("entry: 'src/options/index.js'");
+        expect(build).toContain("entry: 'src/options/index.ts'");
         expect(build).toContain("out: 'dist/js/options.bundle.js'");
         expect(build).not.toContain("src/options/options.js', out: 'dist/html/options.js'");
         expect(existsSync(join(root, 'src/options/options.js'))).toBe(false);
-        expect(existsSync(join(root, 'src/options/domain.js'))).toBe(true);
-        expect(existsSync(join(root, 'src/options/io.js'))).toBe(true);
-        expect(existsSync(join(root, 'src/options/view.js'))).toBe(true);
-        expect(existsSync(join(root, 'src/options/index.js'))).toBe(true);
+        expect(existsSync(join(root, 'src/options/domain.ts'))).toBe(true);
+        expect(existsSync(join(root, 'src/options/io.ts'))).toBe(true);
+        expect(existsSync(join(root, 'src/options/view.ts'))).toBe(true);
+        expect(existsSync(join(root, 'src/options/index.ts'))).toBe(true);
     });
 
     it('loads the vanilla options bundle without jQuery/jmespath on the page', () => {
@@ -28,19 +28,32 @@ describe('options page migration wiring', () => {
         expect(html).not.toContain('src="options.js"');
     });
 
-    it('shares default-enabled config keys between options and core', () => {
-        const defaults = read('src/shared/config-defaults.js');
-        const core = read('src/core/config.js');
-        const domain = read('src/options/domain.js');
-        expect(defaults).toContain('gerenciarmonitorados');
-        expect(defaults).toContain('autopreenchersenha');
+    it('shares default-enabled config keys via schema (ADR-0009)', () => {
+        const defaults = read('src/shared/config-defaults.ts');
+        const schema = read('src/config/schema.ts');
+        const core = read('src/core/config.ts');
+        const domain = read('src/options/domain.ts');
+        expect(defaults).toContain("from '../config/schema.js'");
+        expect(defaults).toContain('getDefaultEnabledConfigKeys');
+        expect(schema).toContain('gerenciarmonitorados');
+        expect(schema).toContain('autopreenchersenha');
         expect(core).toContain("from '../shared/config-defaults.js'");
         expect(domain).toContain("from '../shared/config-defaults.js'");
     });
 
+    it('renders at least one options section from the config schema', () => {
+        const html = read('src/options/options.html');
+        const view = read('src/options/view.ts');
+        expect(html).toContain('id="options-schema-privacy"');
+        expect(view).toContain('renderSchemaOptionsSection');
+        expect(view).toContain("listSchemaEntriesForOptionsSection");
+        expect(view).toContain('loadBugReportOptIn');
+        expect(view).toContain('saveBugReportOptIn');
+    });
+
     it('wires AI provider profiles to local background storage actions', () => {
         const html = read('src/options/options.html');
-        const io = read('src/options/io.js');
+        const io = read('src/options/io.ts');
         const manifest = JSON.parse(read('manifest.base.json'));
         expect(html).toContain('id="options-ai-providers"');
         expect(html).toContain('id="seipro-options-ai-add"');
@@ -48,6 +61,7 @@ describe('options page migration wiring', () => {
         expect(io).toContain("action: 'llmSaveProfile'");
         expect(io).toContain("action: 'llmDeleteProfile'");
         expect(io).toContain('permissions.request({ origins }');
-        expect(manifest.optional_host_permissions).toContain('https://*/*');
+        expect(manifest.optional_host_permissions).not.toContain('https://*/*');
+        expect(manifest.optional_host_permissions).toContain('https://api.openai.com/*');
     });
 });

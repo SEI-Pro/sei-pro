@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parseStrictCall, installLegacyInlineBridge } from '@src/platform/legacy-inline-bridge.js';
+import { parseStrictCall, installLegacyInlineBridge } from '@src/platform/legacy-inline-bridge.ts';
 
 describe('legacy-inline-bridge — parseStrictCall (gramática estrita)', () => {
     const el = document.createElement('a');

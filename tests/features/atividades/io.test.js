@@ -3,7 +3,7 @@ import {
   getAtividadesServerUrl,
   postAtividadesServer,
   restoreAtividadesHybrid
-} from '../../../src/features/atividades/io.js';
+} from '../../../src/features/atividades/io.ts';
 
 describe('atividades/io', () => {
   it('getAtividadesServerUrl reads runtime url', () => {

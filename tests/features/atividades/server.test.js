@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAtividadesContext } from '../../../src/features/atividades/context.js';
-import { createAtividadesStore } from '../../../src/features/atividades/store.js';
-import { getServerAtividades } from '../../../src/features/atividades/server.js';
-import { createAtividadesServerPorts } from '../../../src/features/atividades/server-ports.js';
+import { createAtividadesContext } from '../../../src/features/atividades/context.ts';
+import { createAtividadesStore } from '../../../src/features/atividades/store.ts';
+import { getServerAtividades } from '../../../src/features/atividades/server.ts';
+import { createAtividadesServerPorts } from '../../../src/features/atividades/server-ports.ts';
 
 describe('atividades/server boundary', () => {
   it('exposes page effects as injectable server ports', () => {

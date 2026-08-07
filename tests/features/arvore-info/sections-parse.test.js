@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { parseMarcadorItems } from '@src/features/arvore-info/sections/marcador.js';
-import { parseAcompItems } from '@src/features/arvore-info/sections/acompanhamento.js';
-import { getAcessoText, getInteressadosTexts } from '@src/features/arvore-info/sections/consulta.js';
-import { parseAtribuicaoItemsFromDoc } from '@src/features/arvore-info/sections/atribuicao.js';
+import { parseMarcadorItems } from '@src/features/arvore-info/sections/marcador.ts';
+import { parseAcompItems } from '@src/features/arvore-info/sections/acompanhamento.ts';
+import { getAcessoText, getInteressadosTexts } from '@src/features/arvore-info/sections/consulta.ts';
+import { parseAtribuicaoItemsFromDoc } from '@src/features/arvore-info/sections/atribuicao.ts';
 
 /**
  * Testes da camada de DOM das seções (jsdom) — fecham a lacuna "parse-from-doc não

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createAtividadesContext } from '../../../src/features/atividades/context.js';
-import { createAtividadesStore } from '../../../src/features/atividades/store.js';
-import { createAtividadesRuntimeState } from '../../../src/features/atividades/runtime-state.js';
+import { createAtividadesContext } from '../../../src/features/atividades/context.ts';
+import { createAtividadesStore } from '../../../src/features/atividades/store.ts';
+import { createAtividadesRuntimeState } from '../../../src/features/atividades/runtime-state.ts';
 
 describe('atividades/runtime-state', () => {
   it('builds the initial patch without writing page globals', () => {

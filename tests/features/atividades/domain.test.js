@@ -9,7 +9,7 @@ import {
   findConfigItemById,
   checkHomologacaoPreviaPlanos,
   checkHomologacaoPreviaProgramas
-} from '../../../src/features/atividades/domain.js';
+} from '../../../src/features/atividades/domain.ts';
 
 describe('atividades/domain', () => {
   it('getLabIdTables maps known table types to primary-key fields', () => {

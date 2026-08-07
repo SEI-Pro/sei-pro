@@ -3,7 +3,7 @@ import {
     buildRequest,
     createStreamState,
     parseChunk
-} from '../../../../src/core/llm/providers/anthropic.js';
+} from '../../../../src/core/llm/providers/anthropic.ts';
 
 describe('Anthropic provider', () => {
     it('includes all browser-direct authentication headers', () => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { qs, qsa, exists, el, on, remove, empty, closest, parseHTML, parseDocument, ready } from '@src/dom/index.js';
+import { qs, qsa, exists, el, on, remove, empty, closest, parseHTML, parseDocument, ready } from '@src/dom/index.ts';
 
 describe('dom helper (substituto do jQuery)', () => {
     it('qs/qsa/exists selecionam no escopo dado', () => {

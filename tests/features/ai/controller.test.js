@@ -1,22 +1,22 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@src/features/ai/io/profiles.js', () => ({
+vi.mock('@src/features/ai/io/profiles.ts', () => ({
     getAiSettings: vi.fn(),
     listProfiles: vi.fn(),
     saveAiSettings: vi.fn()
 }));
 
-vi.mock('@src/features/ai/view/dialogs.js', () => ({
+vi.mock('@src/features/ai/view/dialogs.ts', () => ({
     confirmRestrictedDocument: vi.fn(),
     openProfileDialog: vi.fn(),
     openPromptDialog: vi.fn(),
     showAiError: vi.fn()
 }));
 
-import { loadBoxAIActions, startGeneration } from '@src/features/ai/controller.js';
-import { getAiSettings, listProfiles } from '@src/features/ai/io/profiles.js';
-import { showAiError } from '@src/features/ai/view/dialogs.js';
+import { loadBoxAIActions, startGeneration } from '@src/features/ai/controller.ts';
+import { getAiSettings, listProfiles } from '@src/features/ai/io/profiles.ts';
+import { showAiError } from '@src/features/ai/view/dialogs.ts';
 
 const TRANSPORT_ERROR = new Error('SEI Pro editor bridge unavailable (isolated loader did not respond)');
 

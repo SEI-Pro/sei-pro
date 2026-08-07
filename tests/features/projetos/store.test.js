@@ -17,10 +17,10 @@ describe('projetos/store', () => {
     beforeEach(async () => {
         globalThis.localStorage = fakeStorage();
         // Fresh module instance so storeState cache resets
-        storeMod = await import('../../../src/features/projetos/store.js?' + Date.now());
+        storeMod = await import('../../../src/features/projetos/store.ts?' + Date.now());
         storeMod.replaceProjetos([]);
         globalThis.localStorage.removeItem(KEY);
-        storeMod = await import('../../../src/features/projetos/store.js?' + (Date.now() + 1));
+        storeMod = await import('../../../src/features/projetos/store.ts?' + (Date.now() + 1));
     });
 
     afterEach(() => {

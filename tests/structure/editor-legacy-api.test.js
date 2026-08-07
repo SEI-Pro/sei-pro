@@ -7,9 +7,9 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 describe('editor legacy API bridge', () => {
     it('installs extracted modules and boots from adapter', () => {
-        const index = read('src/features/editor/index.js');
-        const bridge = read('src/features/editor/legacy-api.js');
-        const adapter = read('src/features/editor/adapter.js');
+        const index = read('src/features/editor/index.ts');
+        const bridge = read('src/features/editor/legacy-api.ts');
+        const adapter = read('src/features/editor/adapter.ts');
 
         expect(index).toContain("import { installEditorLegacyApi } from './legacy-api.js'");
         expect(index).toContain("import { bootEditor } from './adapter.js'");
@@ -19,13 +19,13 @@ describe('editor legacy API bridge', () => {
         expect(bridge).toContain('installEditorStateBridge();');
         expect(fs.existsSync(path.join(root, 'src/features/editor/body.js'))).toBe(false);
         expect(adapter).toContain('export function bootEditor()');
-        expect(fs.existsSync(path.join(root, 'src/features/editor/view/toolbar.js'))).toBe(true);
-        expect(fs.existsSync(path.join(root, 'src/features/editor/templates/toolbar.js'))).toBe(true);
-        expect(fs.existsSync(path.join(root, 'src/features/editor/lib/domq.js'))).toBe(true);
+        expect(fs.existsSync(path.join(root, 'src/features/editor/view/toolbar.ts'))).toBe(true);
+        expect(fs.existsSync(path.join(root, 'src/features/editor/templates/toolbar.ts'))).toBe(true);
+        expect(fs.existsSync(path.join(root, 'src/features/editor/lib/domq.ts'))).toBe(true);
     });
 
     it('delegates editor text flows to extracted modules', () => {
-        const editorText = read('src/features/editor/view/editor-text.js');
+        const editorText = read('src/features/editor/view/editor-text.ts');
 
         expect(editorText).toContain('extractTextFromHtml');
         expect(editorText).toContain('collectEditorText');
@@ -35,11 +35,11 @@ describe('editor legacy API bridge', () => {
     });
 
     it('contains only the SEI 4.1 toolbar and no retired remote features', () => {
-        const toolbar = read('src/features/editor/templates/toolbar.js');
+        const toolbar = read('src/features/editor/templates/toolbar.ts');
         const allEditor = [
             toolbar,
-            read('src/features/editor/view/toolbar.js'),
-            read('src/features/editor/commands/formatting.js')
+            read('src/features/editor/view/toolbar.ts'),
+            read('src/features/editor/commands/formatting.ts')
         ].join('\n');
 
         for (const retired of [
@@ -85,9 +85,9 @@ describe('editor legacy API bridge', () => {
         expect(read('src/bootstrap/init.js')).not.toContain('js/sei-legis.js');
         expect(read('src/bootstrap/init.js')).not.toContain('jquery-qrcode');
         expect(scripts).not.toContain('js/editor-domain.bundle.js');
-        expect(read('src/entries/editor.js')).toContain("import '../features/editor/page-runtime.js'");
-        expect(read('src/features/editor/page-runtime.js')).toContain('installEditorPageRuntime');
-        expect(read('src/features/editor/page-runtime.js')).toContain("ensureGlobal('delayCrash'");
-        expect(read('src/features/editor/page-runtime.js')).toContain('iconSeiPro');
+        expect(read('src/entries/editor.ts')).toContain("import '../features/editor/page-runtime.js'");
+        expect(read('src/features/editor/page-runtime.ts')).toContain('installEditorPageRuntime');
+        expect(read('src/features/editor/page-runtime.ts')).toContain("ensureGlobal('delayCrash'");
+        expect(read('src/features/editor/page-runtime.ts')).toContain('iconSeiPro');
     });
 });

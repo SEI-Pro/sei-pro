@@ -7,7 +7,7 @@ const rootDir = process.cwd();
 export function readListaProcessosSource() {
     const dir = join(rootDir, 'src/features/lista-processos');
     return readdirSync(dir)
-        .filter((name) => name.endsWith('.js'))
+        .filter((name) => name.match(/\.(js|ts)$/))
         .sort()
         .map((name) => readFileSync(join(dir, name), 'utf8'))
         .join('\n');

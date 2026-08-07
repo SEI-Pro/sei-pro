@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { validateToolCall } from '../../../../src/core/llm/tools.js';
+import { validateToolCall } from '../../../../src/core/llm/tools.ts';
 import {
     AI_TOOL_DEFINITIONS,
     getAiToolDefinition
-} from '../../../../src/features/ai/tools/definitions.js';
+} from '../../../../src/features/ai/tools/definitions.ts';
 
 describe('AI read-tool definitions', () => {
     it('exposes only read-only process tools', () => {

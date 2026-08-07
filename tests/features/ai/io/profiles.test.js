@@ -4,7 +4,7 @@ import {
     legacyProfileToLlmProfile,
     listProfiles,
     redactLegacyAiCredentials
-} from '../../../../src/features/ai/io/profiles.js';
+} from '../../../../src/features/ai/io/profiles.ts';
 
 describe('AI profile legacy migration', () => {
     beforeEach(() => {

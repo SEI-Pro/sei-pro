@@ -6,7 +6,7 @@ import {
     sortEtapas,
     sortProjetos,
     tiposOptions
-} from '../../../src/features/projetos/domain/filters.js';
+} from '../../../src/features/projetos/domain/filters.ts';
 
 describe('projetos/domain/filters', () => {
     const projetos = [

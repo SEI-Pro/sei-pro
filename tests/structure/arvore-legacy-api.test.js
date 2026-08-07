@@ -8,8 +8,8 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 describe('migration: arvore full ESM facade', () => {
   it('instala a ponte dedicada no entry e aliasa os módulos fatiados', () => {
-    const index = read('src/features/arvore/index.js');
-    const bridge = read('src/features/arvore/legacy-api.js');
+    const index = read('src/features/arvore/index.ts');
+    const bridge = read('src/features/arvore/legacy-api.ts');
 
     expect(index).toContain("import { installArvoreLegacyApi } from './legacy-api.js';");
     expect(index).toContain('installArvoreLegacyApi();');
@@ -27,21 +27,21 @@ describe('migration: arvore full ESM facade', () => {
   it('não mantém o monolito body.js nem a cópia sei-pro-arvore.js em src/', () => {
     expect(existsSync(join(rootDir, 'src/features/arvore/sei-pro-arvore.js'))).toBe(false);
     expect(existsSync(join(rootDir, 'src/features/arvore/body.js'))).toBe(false);
-    expect(existsSync(join(rootDir, 'src/features/arvore/modules.js'))).toBe(true);
-    expect(existsSync(join(rootDir, 'src/features/arvore/boot.js'))).toBe(true);
-    expect(existsSync(join(rootDir, 'src/features/arvore/upload.js'))).toBe(true);
-    expect(existsSync(join(rootDir, 'src/features/arvore/state.js'))).toBe(true);
-    expect(existsSync(join(rootDir, 'src/features/arvore/templates.js'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/modules.ts'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/boot.ts'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/upload.ts'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/state.ts'))).toBe(true);
+    expect(existsSync(join(rootDir, 'src/features/arvore/templates.ts'))).toBe(true);
     expect(existsSync(join(rootDir, 'src/features/arvore/style.css'))).toBe(true);
 
     const clusters = readdirSync(join(rootDir, 'src/features/arvore'))
-      .filter((name) => name.endsWith('.js'));
+      .filter((name) => name.match(/\.(js|ts)$/));
     expect(clusters.length).toBeGreaterThanOrEqual(12);
   });
 
   it('empacota a feature como dist/js/sei-pro-arvore.js sem cópia verbatim', () => {
     const build = read('scripts/build.mjs');
-    expect(build).toContain("{ entry: 'src/features/arvore/index.js', out: 'dist/js/sei-pro-arvore.js' }");
+    expect(build).toContain("{ entry: 'src/features/arvore/index.ts', out: 'dist/js/sei-pro-arvore.js' }");
     expect(build).not.toContain("'src/features/arvore/sei-pro-arvore.js'");
     expect(build).toContain("src/features/arvore/style.css");
   });
@@ -68,8 +68,8 @@ describe('migration: arvore full ESM facade', () => {
     }
 
     const source = readArvoreSource();
-    const sticknote = read('src/features/arvore/sticknote-view.js');
-    const upload = read('src/features/arvore/upload.js');
+    const sticknote = read('src/features/arvore/sticknote-view.ts');
+    const upload = read('src/features/arvore/upload.ts');
     expect(source).toContain('export function initSeiProArvore');
     expect(source).toContain('export function actionToolbarPro');
     expect(source).toContain("from './upload.js'");

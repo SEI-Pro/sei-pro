@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createActivityUseCases } from '../../../src/features/atividades/activity-use-cases.js';
-import { createConfigUseCases } from '../../../src/features/atividades/config-use-cases.js';
+import { createActivityUseCases } from '../../../src/features/atividades/activity-use-cases.ts';
+import { createConfigUseCases } from '../../../src/features/atividades/config-use-cases.ts';
 
 function contextWithPermissions(check = () => true) {
   return { permissions: { check: vi.fn(check) } };

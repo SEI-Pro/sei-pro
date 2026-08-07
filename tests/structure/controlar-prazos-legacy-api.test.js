@@ -14,7 +14,7 @@ function source(name) {
 
 describe('migration: controlar-prazos legacy surface', () => {
   it('keeps every domain/io/view function behind the compatibility bridge', () => {
-    const legacyApi = source('legacy-api.js');
+    const legacyApi = source('legacy-api.ts');
     expect(legacyApi).toMatch(/import \* as domain from ['"]\.\/domain\.js['"]/);
     expect(legacyApi).toMatch(/import \* as io from ['"]\.\/io\.js['"]/);
     expect(legacyApi).toMatch(/import \* as view from ['"]\.\/view\.js['"]/);
@@ -25,7 +25,7 @@ describe('migration: controlar-prazos legacy surface', () => {
   });
 
   it('keeps the legacy entry and call-sites on the established global API', () => {
-    const entry = source('index.js');
+    const entry = source('index.ts');
     const lista = readListaProcessosSource();
 
     expect(entry).toMatch(/import ['"]\.\/legacy-api\.js['"]/);

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { bindParentAtividadesActions } from '../../../src/features/arvore/view.js';
+import { bindParentAtividadesActions } from '../../../src/features/arvore/view.ts';
 
 describe('arvore/bindParentAtividadesActions', () => {
   let root;

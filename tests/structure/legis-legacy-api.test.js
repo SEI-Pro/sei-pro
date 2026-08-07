@@ -7,9 +7,9 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 describe('legis legacy API bridge', () => {
     it('installs module exports for the editor toolbar', () => {
-        const index = read('src/features/legis/index.js');
-        const bridge = read('src/features/legis/legacy-api.js');
-        const view = read('src/features/legis/view.js');
+        const index = read('src/features/legis/index.ts');
+        const bridge = read('src/features/legis/legacy-api.ts');
+        const view = read('src/features/legis/view.ts');
 
         expect(index).toContain("import { installLegisLegacyApi } from './legacy-api.js'");
         expect(index).toContain('installLegisLegacyApi();');
@@ -25,10 +25,10 @@ describe('legis legacy API bridge', () => {
     it('builds the ESM entry under the legacy filename and ships with the editor entry', () => {
         const build = read('scripts/build.mjs');
         const bootstrap = read('src/bootstrap/init.js');
-        const editorEntry = read('src/entries/editor.js');
+        const editorEntry = read('src/entries/editor.ts');
 
         expect(build).toContain(
-            "{ entry: 'src/features/legis/index.js', out: 'dist/js/sei-legis.js' }"
+            "{ entry: 'src/features/legis/index.ts', out: 'dist/js/sei-legis.js' }"
         );
         expect(build).not.toContain("'src/features/legis/sei-legis.js'");
         expect(editorEntry).toContain("import '../features/legis/index.js'");
@@ -37,10 +37,10 @@ describe('legis legacy API bridge', () => {
     });
 
     it('keeps remote access behind the timeout-aware IO boundary', () => {
-        const io = read('src/features/legis/io.js');
-        const view = read('src/features/legis/view.js');
+        const io = read('src/features/legis/io.ts');
+        const view = read('src/features/legis/view.ts');
 
-        const sharedSearch = read('src/shared/legislation-search.js');
+        const sharedSearch = read('src/shared/legislation-search.ts');
         expect(io).toContain("from '../../shared/legislation-search.js'");
         expect(sharedSearch).toContain("https://seipro.app/legis/search.php");
         expect(sharedSearch).toContain('controller.abort()');

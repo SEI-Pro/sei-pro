@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     createDraftRepository,
     normalizeDraftContext
-} from '../../../../src/features/editor/io/drafts.js';
+} from '../../../../src/features/editor/io/drafts.ts';
 
 function createMemoryAdapter() {
     const records = new Map();

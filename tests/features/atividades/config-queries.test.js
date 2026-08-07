@@ -5,7 +5,7 @@ import {
   hasEntityOption,
   selectUnitConfig,
   selectConfigItem
-} from '../../../src/features/atividades/config-queries.js';
+} from '../../../src/features/atividades/config-queries.ts';
 
 describe('atividades/config-queries', () => {
   const config = {

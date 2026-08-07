@@ -8,8 +8,8 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 describe('migration: datas legacy api', () => {
   it('installs one compatibility alias before the legacy script', () => {
-    const stack = read('src/content/core-stack.js');
-    const bridge = read('src/shared/legacy/datas-legacy-api.js');
+    const stack = read('src/content/core-stack.ts');
+    const bridge = read('src/shared/legacy/datas-legacy-api.ts');
 
     expect(stack).toContain("import { installDatasLegacyApi } from '../shared/legacy/datas-legacy-api.js';");
     expect(stack).toContain('installCoreStack();\ninstallSharedLegacyHelpers();\ninstallDatasView();\ninstallDatasLegacyApi();');
@@ -19,8 +19,8 @@ describe('migration: datas legacy api', () => {
 
   it('removes the duplicate implementation from sei-functions-pro', () => {
     const legacy = readSeiFunctionsSource();
-    const bridge = read('src/shared/legacy/datas-legacy-api.js');
-    const view = read('src/shared/legacy/datas-view.js');
+    const bridge = read('src/shared/legacy/datas-legacy-api.ts');
+    const view = read('src/shared/legacy/datas-view.ts');
 
     expect(legacy).not.toMatch(/function\s+getDataRecebimentoPro\s*\(/);
     expect(legacy).toContain('getDataRecebimentoPro is provided by shared/legacy/datas-legacy-api.js');
@@ -30,7 +30,7 @@ describe('migration: datas legacy api', () => {
   });
 
   it('preserves the historical wrapper arguments and storage boundary', () => {
-    const bridge = read('src/shared/legacy/datas-legacy-api.js');
+    const bridge = read('src/shared/legacy/datas-legacy-api.ts');
 
     expect(bridge).toContain('listAndamento, listProc = false, acompanhamentoEsp = \'\'');
     expect(bridge).toContain('unidadeAtual: globalRef.siglaUnidadeAtual || \'\'');

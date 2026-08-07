@@ -8,7 +8,7 @@ const jsDir = join(rootDir, 'dist/js');
 
 function listJsFiles(dir) {
   return readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isFile() && d.name.endsWith('.js'))
+    .filter((d) => d.isFile() && d.name.match(/\.(js|ts)$/))
     .map((d) => d.name);
 }
 
@@ -62,7 +62,7 @@ describe('Phase 3: version flags read through the adapter', () => {
   });
 
   it('the adapter exposes the neutral predicate API', () => {
-    const code = readFileSync(join(rootDir, 'src/sei/adapter.js'), 'utf8');
+    const code = readFileSync(join(rootDir, 'src/sei/adapter.ts'), 'utf8');
     ['isNewSEI', 'isSEI5', 'atLeast', 'pick'].forEach((fn) => {
       expect(code).toMatch(new RegExp(`function ${fn}\\b`));
     });

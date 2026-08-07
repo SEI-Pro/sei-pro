@@ -7,7 +7,7 @@ import {
     buildEnviarProcessoOverrides,
     resolveSelectedProcessoId,
     getNaoLidoLoadingMode
-} from '../../../src/features/nao-lido/domain.js';
+} from '../../../src/features/nao-lido/domain.ts';
 
 describe('nao-lido domain — prefixNaoVisualizadoTooltip', () => {
     it('prefixa "(Não Visualizado) " dentro do infraTooltipMostrar', () => {

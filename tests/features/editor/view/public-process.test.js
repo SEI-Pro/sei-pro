@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
     checkDadosIframeProcessoPublicoPro,
     getCheckerProcessoPublicoPro
-} from '../../../../src/features/editor/view/dialogs/public-process.js';
-import { api } from '../../../../src/features/editor/api.js';
+} from '../../../../src/features/editor/view/dialogs/public-process.ts';
+import { api } from '../../../../src/features/editor/api.ts';
 
 describe('public process dialog', () => {
     afterEach(() => {

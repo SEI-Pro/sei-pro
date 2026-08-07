@@ -11,14 +11,11 @@ const featuresDir = join(rootDir, 'src/features');
 function featureIndexFiles() {
   return readdirSync(featuresDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => join(featuresDir, entry.name, 'index.js'))
-    .filter((file) => {
-      try {
-        readFileSync(file, 'utf8');
-        return true;
-      } catch {
-        return false;
-      }
+    .flatMap((entry) => {
+      const ts = join(featuresDir, entry.name, 'index.ts');
+      const js = join(featuresDir, entry.name, 'index.js');
+      try { readFileSync(ts, 'utf8'); return [ts]; } catch { /* continue */ }
+      try { readFileSync(js, 'utf8'); return [js]; } catch { return []; }
     });
 }
 
@@ -26,7 +23,7 @@ function featureJsFiles(dir = featuresDir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) return featureJsFiles(full);
-    return entry.isFile() && entry.name.endsWith('.js') ? [full] : [];
+    return entry.isFile() && entry.name.match(/\.(js|ts)$/) ? [full] : [];
   });
 }
 
@@ -49,14 +46,14 @@ describe('migration: feature legacy aliases stay isolated', () => {
     const offenders = featureJsFiles()
       .filter((file) => /\baliasGlobal\s*\(/.test(stripComments(readFileSync(file, 'utf8'))))
       .map((file) => file.replace(rootDir + '/', ''))
-      .filter((rel) => !/(^|\/)legacy-api(?:-[^/]+)?\.js$/.test(rel) && !/(^|\/)[^/]*-legacy-api\.js$/.test(rel));
+      .filter((rel) => !/(^|\/)legacy-api(?:-[^/]+)?\.(js|ts)$/.test(rel) && !/(^|\/)[^/]*-legacy-api\.(js|ts)$/.test(rel));
 
     expect(offenders).toEqual([]);
   });
 
   it('controlar-prazos exposes legacy globals only through legacy-api.js', () => {
-    const entry = readFileSync(join(featuresDir, 'controlar-prazos/index.js'), 'utf8');
-    const legacyApi = readFileSync(join(featuresDir, 'controlar-prazos/legacy-api.js'), 'utf8');
+    const entry = readFileSync(join(featuresDir, 'controlar-prazos/index.ts'), 'utf8');
+    const legacyApi = readFileSync(join(featuresDir, 'controlar-prazos/legacy-api.ts'), 'utf8');
 
     expect(entry).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
     expect(entry).not.toMatch(/\baliasGlobal\s*\(/);
@@ -65,9 +62,9 @@ describe('migration: feature legacy aliases stay isolated', () => {
   });
 
   it('monitorados store aliases are exposed by the early store legacy bridge', () => {
-    const coreStack = readFileSync(join(rootDir, 'src/content/core-stack.js'), 'utf8');
-    const store = readFileSync(join(featuresDir, 'monitorados/store.js'), 'utf8');
-    const storeLegacyApi = readFileSync(join(featuresDir, 'monitorados/store-legacy-api.js'), 'utf8');
+    const coreStack = readFileSync(join(rootDir, 'src/content/core-stack.ts'), 'utf8');
+    const store = readFileSync(join(featuresDir, 'monitorados/store.ts'), 'utf8');
+    const storeLegacyApi = readFileSync(join(featuresDir, 'monitorados/store-legacy-api.ts'), 'utf8');
 
     expect(coreStack).toMatch(/import\s+\{\s*installMonitoradoStoreLegacyApi\s*\}/);
     expect(coreStack).toMatch(/installMonitoradoStoreLegacyApi\s*\(/);
@@ -77,11 +74,11 @@ describe('migration: feature legacy aliases stay isolated', () => {
   });
 
   it('monitorados exposes the toggle and boot globals through one bridge with the current manifest order', () => {
-    const index = readFileSync(join(featuresDir, 'monitorados/index.js'), 'utf8');
-    const legacyApi = readFileSync(join(featuresDir, 'monitorados/legacy-api.js'), 'utf8');
-    const icon = readFileSync(join(featuresDir, 'monitorados/icon.js'), 'utf8');
-    const commands = readFileSync(join(featuresDir, 'monitorados/commands.js'), 'utf8');
-    const boot = readFileSync(join(featuresDir, 'monitorados/boot.js'), 'utf8');
+    const index = readFileSync(join(featuresDir, 'monitorados/index.ts'), 'utf8');
+    const legacyApi = readFileSync(join(featuresDir, 'monitorados/legacy-api.ts'), 'utf8');
+    const icon = readFileSync(join(featuresDir, 'monitorados/icon.ts'), 'utf8');
+    const commands = readFileSync(join(featuresDir, 'monitorados/commands.ts'), 'utf8');
+    const boot = readFileSync(join(featuresDir, 'monitorados/boot.ts'), 'utf8');
     const manifest = JSON.parse(readFileSync(join(rootDir, 'manifest.base.json'), 'utf8'));
 
     expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
@@ -108,13 +105,13 @@ describe('migration: feature legacy aliases stay isolated', () => {
   });
 
   it('mantém o wire de favoritos entre entry, build e call-sites legados', () => {
-    const index = readFileSync(join(featuresDir, 'monitorados/index.js'), 'utf8');
+    const index = readFileSync(join(featuresDir, 'monitorados/index.ts'), 'utf8');
     const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
     const legacyLista = readListaProcessosSource();
     const legacyAll = readFileSync(join(featuresDir, 'todas-paginas/sei-pro-all.js'), 'utf8');
     const legacyShared = readSeiFunctionsSource();
 
-    expect(build).toMatch(/entry:\s*'src\/features\/monitorados\/index\.js',\s*out:\s*'dist\/js\/monitorados\.bundle\.js'/);
+    expect(build).toMatch(/entry:\s*'src\/features\/monitorados\/index\.(js|ts)',\s*out:\s*'dist\/js\/monitorados\.bundle\.js'/);
     expect(index).toMatch(/bindToggle\(document,\s*actMonitoradoPro\)/);
     expect(legacyLista).toMatch(/typeof initPanelMonitorados === 'function'\) initPanelMonitorados\(\)/);
     expect(legacyLista).toMatch(/appendStarOnProcess\(\)/);

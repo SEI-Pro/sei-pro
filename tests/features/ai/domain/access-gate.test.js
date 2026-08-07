@@ -5,7 +5,7 @@ import {
     partitionDocumentsByAccess,
     requiresDocumentConsent,
     restrictedContentNotice
-} from '../../../../src/features/ai/domain/access-gate.js';
+} from '../../../../src/features/ai/domain/access-gate.ts';
 
 describe('AI document access gate', () => {
     it('requires consent for access levels 1 and 2', () => {

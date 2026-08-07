@@ -21,13 +21,13 @@ describe('architecture: feature public contract', () => {
 
   it('pilot features publish { id, api, install }', () => {
     for (const file of [
-      'src/features/login/index.js',
-      'src/features/external-config/index.js',
-      'src/features/monitorados/index.js',
-      'src/features/docs-lote/index.js',
-      'src/features/anotacao-controle/index.js',
-      'src/features/lista-processos/index.js',
-      'src/features/arvore/index.js'
+      'src/features/login/index.ts',
+      'src/features/external-config/index.ts',
+      'src/features/monitorados/index.ts',
+      'src/features/docs-lote/index.ts',
+      'src/features/anotacao-controle/index.ts',
+      'src/features/lista-processos/index.ts',
+      'src/features/arvore/index.ts'
     ]) {
       const src = read(file);
       expect(src, file).toMatch(/publishFeature\s*\(/);
@@ -38,16 +38,15 @@ describe('architecture: feature public contract', () => {
   });
 
   it('atividades exposes id + install alongside api', () => {
-    const src = read('src/features/atividades/index.js');
+    const src = read('src/features/atividades/index.ts');
     expect(src).toMatch(/id:\s*['"]atividades['"]/);
     expect(src).toMatch(/install:\s*installAtividadesFeature/);
     expect(src).toMatch(/api:\s*featureApi/);
   });
 
-  it('core/stack does not install feature helpers', () => {
-    const stack = read('src/core/stack.js');
+  it('core/stack does not install feature helpers or bus', () => {
+    const stack = read('src/core/stack.ts');
     expect(stack).not.toMatch(/installQuickFilter|installSticknote|installDocsLote/);
-    // TODO(ADR-0013): drop this assertion when platform/bus.js is removed.
-    expect(stack).toMatch(/installBus\s*\(/);
+    expect(stack).not.toMatch(/installBus\s*\(|platform\/bus/);
   });
 });

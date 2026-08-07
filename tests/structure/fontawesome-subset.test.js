@@ -64,9 +64,9 @@ describe('Font Awesome subset', () => {
     });
 
     it('retains the Pro icon paths used by the extension', () => {
-        const monitorados = read('src/features/monitorados/visualizacao.js');
-        const ui = read('src/core/ui.js');
-        const editor = read('src/features/editor/page-runtime.js');
+        const monitorados = read('src/features/monitorados/visualizacao.ts');
+        const ui = read('src/core/ui.ts');
+        const editor = read('src/features/editor/page-runtime.ts');
         const seiFunctions = readSeiFunctionsSource();
 
         expect(monitorados).toContain('css/fontawesome.pro.min.css');

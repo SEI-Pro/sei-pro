@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createStreamPanel } from '../../src/shared/ui/stream-panel.js';
+import { createStreamPanel } from '../../src/shared/ui/stream-panel.ts';
 
 afterEach(() => {
   document.body.replaceChildren();

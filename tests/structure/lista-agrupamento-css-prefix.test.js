@@ -20,7 +20,7 @@ describe('migration: lista-agrupamento CSS audit', () => {
 
   it('preserva os hooks compartilhados e os contratos funcionais do agrupamento', () => {
     const lista = readListaProcessosSource();
-    const kanban = source('src/features/lista-processos/kanban-home.js');
+    const kanban = source('src/features/lista-processos/kanban-home.ts');
     const shared = readSeiFunctionsSource();
 
     expect(lista).toMatch(/id=\\?"selectGroupTablePro\\?"[^>]*class=\\?"groupTable selectPro\\?"/);

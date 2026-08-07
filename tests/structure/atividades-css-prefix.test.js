@@ -40,13 +40,13 @@ describe('migration: atividades CSS P6 prefix', () => {
   });
 
   it('markup dual-class preserva ids legados e adiciona .seipro-*', () => {
-    const panel = read('src/features/atividades/panel.js');
+    const panel = read('src/features/atividades/panel.ts');
     expect(panel).toContain('id="tabelaAtivPanel" class="seipro-atividades-table-panel');
     expect(panel).toContain('id="ganttAtivPanel" class="seipro-atividades-gantt');
     expect(panel).toContain('id="atividadesProActions" class="seipro-atividades-actions');
     expect(panel).toContain('tableAtividades seipro-atividades-table');
 
-    const templates = read('src/features/atividades/templates.js');
+    const templates = read('src/features/atividades/templates.ts');
     expect(templates).toContain('withSeiproBarClasses');
     expect(templates).toContain('seipro-atividades-bar--');
 
@@ -54,12 +54,12 @@ describe('migration: atividades CSS P6 prefix', () => {
     expect(seiFunctions).toContain('id="ganttHistoryPainel" class="seipro-atividades-gantt-history"');
     expect(seiFunctions).toContain('id="boxHistory" class="tabelaPanelScroll seipro-atividades-history"');
 
-    const boot = read('src/features/atividades/boot.js');
+    const boot = read('src/features/atividades/boot.ts');
     expect(boot).toContain('preview_atividade seipro-atividades-preview');
   });
 
   it('forbids inline onmouse*/tooltip handlers in atividades/*.js', () => {
-    const files = readdirSync(atividadesDir).filter((f) => f.endsWith('.js'));
+    const files = readdirSync(atividadesDir).filter((f) => f.match(/\.(js|ts)$/));
     const offenders = [];
     for (const file of files) {
       const src = readFileSync(join(atividadesDir, file), 'utf8');

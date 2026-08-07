@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeQuickText, getQuickTokens, buildQuickRanges } from '@src/features/quick-highlight/core.js';
+import { normalizeQuickText, getQuickTokens, buildQuickRanges } from '@src/features/quick-highlight/core.ts';
 
 describe('quick-highlight/core (puro)', () => {
     it('normalizeQuickText: minúsculo, sem acento, espaços colapsados', () => {

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
     filterProcessFields,
     processFieldPreview
-} from '../../../../src/features/editor/domain/process-fields.js';
+} from '../../../../src/features/editor/domain/process-fields.ts';
 
 describe('process field search', () => {
     const fields = [

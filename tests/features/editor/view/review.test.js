@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { api } from '../../../../src/features/editor/api.js';
-import { state } from '../../../../src/features/editor/state.js';
-import { getBoxReview, initStyleReview } from '../../../../src/features/editor/view/dialogs/review.js';
+import { api } from '../../../../src/features/editor/api.ts';
+import { state } from '../../../../src/features/editor/state.ts';
+import { getBoxReview, initStyleReview } from '../../../../src/features/editor/view/dialogs/review.ts';
 
 describe('text review toggle', () => {
     afterEach(() => {

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createNamespace } from '@src/core/namespace.js';
-import { installTooltip } from '@src/sei/tooltip.js';
-import { globalRef } from '@src/core/global.js';
+import { createNamespace } from '@src/core/namespace.ts';
+import { installTooltip } from '@src/sei/tooltip.ts';
+import { globalRef } from '@src/core/global.ts';
 
 // tooltip.js importa removeAcentos/extractOnlyAlphaNum/isJson como módulos ES,
 // então não precisa instalar a stack inteira — só o namespace + jsdom (document).

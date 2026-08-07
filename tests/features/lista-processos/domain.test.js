@@ -5,7 +5,7 @@ import {
   rewriteHomeFilterCaption,
   quoteInlineJsText,
   rowMatchesHomeFilterFacts
-} from '../../../src/features/lista-processos/domain.js';
+} from '../../../src/features/lista-processos/domain.ts';
 
 describe('lista-processos domain', () => {
   it('normalizes filter text and keys', () => {

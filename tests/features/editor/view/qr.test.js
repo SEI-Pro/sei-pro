@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { toggleOptionsQR } from '../../../../src/features/editor/view/dialogs/qr.js';
+import { toggleOptionsQR } from '../../../../src/features/editor/view/dialogs/qr.ts';
 
 describe('QR dialog options', () => {
     afterEach(() => {

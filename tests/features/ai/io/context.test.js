@@ -7,8 +7,8 @@ import {
     rankDocumentsForContext,
     readCurrentDocument,
     readProcessDocument
-} from '../../../../src/features/ai/io/context.js';
-import { assemblePrompt } from '../../../../src/features/ai/domain/prompt.js';
+} from '../../../../src/features/ai/io/context.ts';
+import { assemblePrompt } from '../../../../src/features/ai/domain/prompt.ts';
 
 describe('AI document context IO', () => {
     const restricted = {

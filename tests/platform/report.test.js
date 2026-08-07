@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createNamespace } from '@src/core/namespace.js';
-import { installReport } from '@src/platform/report.js';
-import { getSeiPro, globalRef } from '@src/core/global.js';
+import { createNamespace } from '@src/core/namespace.ts';
+import { installReport } from '@src/platform/report.ts';
+import { getSeiPro, globalRef } from '@src/core/global.ts';
 
 function setup(sendImpl) {
     delete globalRef.SeiPro;
@@ -10,6 +10,7 @@ function setup(sendImpl) {
     delete window.__SEI_PRO_LOG_CAPTURE_INSTALLED__;
     delete window.__SEI_PRO_LOG_BUFFER__;
     delete window.__SEI_PRO_AUTO_REPORT_SENDING__;
+    delete window.__SEI_PRO_BUG_REPORT_OPT_IN__;
     window.sessionStorage.clear();
     createNamespace();
     getSeiPro().core.messaging = { sendMessage: sendImpl || (() => Promise.resolve({ ok: true })) };
@@ -48,14 +49,15 @@ describe('platform/report', () => {
         vi.useFakeTimers();
         const send = vi.fn(() => Promise.resolve({ ok: true }));
         const r = setup(send);
+        window.__SEI_PRO_BUG_REPORT_OPT_IN__ = true;
         r.scheduleAutomaticErrorReport('Erro X', 'console.error');
         r.scheduleAutomaticErrorReport('Erro X', 'console.error'); // mesma assinatura
-        vi.advanceTimersByTime(2000);
+        await vi.advanceTimersByTimeAsync(2000);
         expect(send).toHaveBeenCalledTimes(1);
         expect(send.mock.calls[0][0].action).toBe('enviarRelatorioBug');
         // nova tentativa com a mesma assinatura não reenvia
         r.scheduleAutomaticErrorReport('Erro X', 'console.error');
-        vi.advanceTimersByTime(2000);
+        await vi.advanceTimersByTimeAsync(2000);
         expect(send).toHaveBeenCalledTimes(1);
         vi.useRealTimers();
     });

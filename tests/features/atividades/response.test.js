@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   classifyAtividadesResponse,
   createAtividadesResponseRouter
-} from '../../../src/features/atividades/response.js';
+} from '../../../src/features/atividades/response.ts';
 
 describe('atividades/response', () => {
   it('classifies transport payloads without depending on DOM globals', () => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { installLoginAutofill } from '@src/features/login/index.js';
+import { installLoginAutofill } from '@src/features/login/index.ts';
 
 // Stub do namespace SeiPro que a feature consome (config + sei.urls).
 function stubSeiPro({ enabled = true, login = false, assinar = false } = {}) {

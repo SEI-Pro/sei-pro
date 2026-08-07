@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from 'vitest';
-import { api } from '../../../../src/features/editor/api.js';
-import { installDelegatedActions } from '../../../../src/features/editor/view/delegated-actions.js';
+import { api } from '../../../../src/features/editor/api.ts';
+import { installDelegatedActions } from '../../../../src/features/editor/view/delegated-actions.ts';
 
 describe('editor delegated actions', () => {
     it('routes a nested toolbar click to the active CKEditor section', () => {

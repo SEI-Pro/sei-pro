@@ -3,7 +3,7 @@ import {
     assemblePrompt,
     documentLabel,
     preferredDocumentIds
-} from '../../../../src/features/ai/domain/prompt.js';
+} from '../../../../src/features/ai/domain/prompt.ts';
 
 describe('AI prompt assembly', () => {
     const documents = [

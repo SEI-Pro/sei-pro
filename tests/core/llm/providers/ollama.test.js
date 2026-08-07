@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     buildRequest,
     parseComplete
-} from '../../../../src/core/llm/providers/ollama.js';
+} from '../../../../src/core/llm/providers/ollama.ts';
 
 describe('Ollama provider contract', () => {
     it('uses the local OpenAI-compatible endpoint without requiring a key', () => {

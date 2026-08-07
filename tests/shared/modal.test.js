@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it } from 'vitest';
-import { openModal } from '../../src/shared/ui/modal.js';
+import { openModal } from '../../src/shared/ui/modal.ts';
 
 afterEach(() => document.body.replaceChildren());
 

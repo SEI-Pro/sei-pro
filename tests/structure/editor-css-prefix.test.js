@@ -7,13 +7,13 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 describe('editor CSS prefix audit', () => {
     const source = [
-        read('src/features/editor/templates/toolbar.js'),
-        read('src/features/editor/view/toolbar.js'),
-        read('src/features/editor/view/styles.js'),
-        read('src/features/editor/view/dialogs/table.js'),
-        read('src/features/editor/commands/formatting.js')
+        read('src/features/editor/templates/toolbar.ts'),
+        read('src/features/editor/view/toolbar.ts'),
+        read('src/features/editor/view/styles.ts'),
+        read('src/features/editor/view/dialogs/table.ts'),
+        read('src/features/editor/commands/formatting.ts')
     ].join('\n');
-    const delegatedActions = read('src/features/editor/view/delegated-actions.js');
+    const delegatedActions = read('src/features/editor/view/delegated-actions.ts');
 
     it('prefixa em lote os hooks CSS próprios do menu de alinhamento e da tabela rápida', () => {
         for (const hook of [

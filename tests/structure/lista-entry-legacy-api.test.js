@@ -9,8 +9,8 @@ const read = (file) => readFileSync(join(rootDir, file), 'utf8');
 
 describe('entry da lista — ponte legacy-api', () => {
     it('instala os wrappers legados na entry e remove as duplicatas do monólito', () => {
-        const entry = read('src/entries/lista.js');
-        const bridge = read('src/entries/lista/legacy-api.js');
+        const entry = read('src/entries/lista.ts');
+        const bridge = read('src/entries/lista/legacy-api.ts');
         const legacy = readListaProcessosSource();
 
         expect(entry).toContain("import './lista/legacy-api.js';");
@@ -23,10 +23,10 @@ describe('entry da lista — ponte legacy-api', () => {
     });
 
     it('mantém a entry sem CSS próprio e preserva a responsabilidade dos bundles de feature', () => {
-        const entry = read('src/entries/lista.js');
-        const view = read('src/entries/lista/view.js');
-        const io = read('src/entries/lista/io.js');
-        const bridge = read('src/entries/lista/legacy-api.js');
+        const entry = read('src/entries/lista.ts');
+        const view = read('src/entries/lista/view.ts');
+        const io = read('src/entries/lista/io.ts');
+        const bridge = read('src/entries/lista/legacy-api.ts');
 
         for (const source of [entry, view, io, bridge]) {
             expect(source).not.toMatch(/import\s+['\"]\.\/.*\.css['\"]/);
@@ -60,8 +60,8 @@ describe('entry da lista — ponte legacy-api', () => {
         }
         const build = read('scripts/build.mjs');
         expect(build).toContain("src/entries/' + f");
-        expect(build).toContain("out: 'dist/js/' + f.replace(/\\.js$/, '.bundle.js')");
-        expect(build).toContain("{ entry: 'src/features/lista-processos/index.js', out: 'dist/js/sei-pro.js' }");
+        expect(build).toContain("out: 'dist/js/' + f.replace(/\\.(js|ts)$/, '.bundle.js')");
+        expect(build).toContain("{ entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' }");
         expect(build).not.toContain("'src/features/lista-processos/sei-pro.js'");
     });
 });

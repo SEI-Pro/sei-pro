@@ -3,7 +3,7 @@ import {
     buildRequest,
     parseChunk,
     parseComplete
-} from '../../../../src/core/llm/providers/openai.js';
+} from '../../../../src/core/llm/providers/openai.ts';
 
 const tool = {
     name: 'read_document',

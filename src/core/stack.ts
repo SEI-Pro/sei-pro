@@ -1,0 +1,90 @@
+// @ts-nocheck — ADR-0014: dívida até tipagem; remover ao editar o arquivo.
+/**
+ * Composição da stack core + sei + platform sobre window.SeiPro.
+ *
+ * Reusável por todas as entries (src/entries/*). Cada entry chama
+ * installCoreStack() e em seguida instala as features/bridges daquele contexto.
+ * O install é idempotente (getSeiPro guarda; publishGlobal/aliasGlobal só
+ * definem se ausente). Bus removido (ADR-0013).
+ *
+ * Refundação isolated-first: roda SOMENTE no mundo isolado do content script
+ * (tem DOM + chrome.*). Não há mais a cópia no mundo MAIN.
+ *
+ * Helpers de feature (quickfilter, sticknote, docslote) NÃO são instalados aqui —
+ * vivem em shared/ e entram via content/core-stack ou pelo boot do contexto.
+ */
+import { createNamespace } from './namespace.js';
+import { createRuntime } from '../platform/runtime.js';
+import { installUtil } from './util.js';
+import { installAsync } from './async.js';
+import { installBootstrap } from './bootstrap.js';
+import { installConfig } from './config.js';
+import { installValidacao } from './validacao.js';
+import { installTexto } from './texto.js';
+import { installCor } from './cor.js';
+import { installDatas } from './datas.js';
+import { installFeriados } from './feriados.js';
+import { installNumeros } from './numeros.js';
+import { installSerial } from './serial.js';
+import { installPrazos } from './prazos.js';
+import { installUi } from './ui.js';
+import { installMessaging } from '../platform/messaging.js';
+import { installStorage } from '../platform/storage.js';
+import { installNet } from '../platform/net.js';
+import { installLogger } from '../platform/logger.js';
+import { installReport } from '../platform/report.js';
+import { installWebstore } from '../platform/webstore.js';
+import { installOptions } from './options.js';
+import { installCookies } from './cookies.js';
+import { installHelpers } from './helpers.js';
+import { installVersion } from '../sei/version.js';
+import { installSelectors } from '../sei/selectors.js';
+import { installAdapter } from '../sei/adapter.js';
+import { installSupports } from '../sei/supports.js';
+import { installPages } from '../sei/pages.js';
+import { installParse } from '../sei/parse/index.js';
+import { installUrls } from '../sei/urls.js';
+import { installTooltip } from '../sei/tooltip.js';
+import { installPrazoPreview } from '../shared/ui/prazo-preview.js';
+import { installPrazoPreviewLegacyApi } from '../shared/ui/prazo-preview-legacy-api.js';
+import { installLegacyInlineBridge } from '../platform/legacy-inline-bridge.js';
+
+export function installCoreStack() {
+    const ns = createNamespace();
+    createRuntime();
+    installUtil();
+    installAsync();
+    installBootstrap();
+    installConfig();
+    installValidacao();
+    installTexto();
+    installCor();
+    installDatas();
+    installFeriados();
+    installNumeros();
+    installSerial();
+    installWebstore();
+    installOptions();
+    installCookies();
+    installHelpers();
+    installPrazos();
+    installUi();
+    installMessaging();
+    installStorage();
+    installNet();
+    installLogger();
+    installReport();
+    installVersion();
+    installSelectors();
+    installAdapter();
+    installSupports();
+    installPages();
+    installParse();
+    installUrls();
+    installTooltip();
+    installPrazoPreview();
+    installPrazoPreviewLegacyApi();
+    installLegacyInlineBridge();
+    // Raízes de composição (ADR-0005) usam o retorno em vez de getSeiPro().
+    return ns;
+}

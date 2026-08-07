@@ -6,7 +6,7 @@ import {
     computeDataCrossing,
     buildCrossingRegex,
     serializeParams
-} from '@src/features/docs-lote/domain.js';
+} from '@src/features/docs-lote/domain.ts';
 
 describe('docs-lote/domain — extractNewDocUrl', () => {
     it('extrai a URL de novo documento da árvore', () => {

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createNamespace } from '@src/core/namespace.js';
-import { installSerial } from '@src/core/serial.js';
-import { installWebstore } from '@src/platform/webstore.js';
-import { installOptions } from '@src/core/options.js';
-import { getSeiPro, globalRef } from '@src/core/global.js';
+import { createNamespace } from '@src/core/namespace.ts';
+import { installSerial } from '@src/core/serial.ts';
+import { installWebstore } from '@src/platform/webstore.ts';
+import { installOptions } from '@src/core/options.ts';
+import { getSeiPro, globalRef } from '@src/core/global.ts';
 
 function setup() {
     delete globalRef.SeiPro;

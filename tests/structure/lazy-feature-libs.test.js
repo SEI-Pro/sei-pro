@@ -7,7 +7,7 @@ const rootDir = process.cwd();
 const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 /** Heavy feature libs must stay WAR + on-demand, not eager content_scripts.
- * Dropzone was removed — upload uses src/shared/ui/file-queue.js. */
+ * Dropzone was removed — upload uses src/shared/ui/file-queue.ts. */
 const LAZY_JS = [
     'js/lib/frappe-gantt.js',
     'js/lib/chart.min.js',
@@ -56,13 +56,13 @@ describe('lazy feature libs (not eager content_scripts)', () => {
     it('loads heavy libraries from feature paths; Dropzone replaced by file-queue', () => {
         const init = read('src/bootstrap/init.js');
         const initArvore = read('src/bootstrap/init_arvore.js');
-        const upload = read('src/features/arvore/upload.js');
-        const atividades = read('src/features/atividades/runtime.js');
-        const lista = read('src/features/lista-processos/panel-kanban-chrome.js');
-        const projetos = read('src/features/projetos/view/helpers.js');
-        const editorImport = read('src/features/editor/view/dialogs/import.js');
-        const docsLote = read('src/features/docs-lote/view.js');
-        const qr = read('src/shared/qr-code.js');
+        const upload = read('src/features/arvore/upload.ts');
+        const atividades = read('src/features/atividades/runtime.ts');
+        const lista = read('src/features/lista-processos/panel-kanban-chrome.ts');
+        const projetos = read('src/features/projetos/view/helpers.ts');
+        const editorImport = read('src/features/editor/view/dialogs/import.ts');
+        const docsLote = read('src/features/docs-lote/view.ts');
+        const qr = read('src/shared/qr-code.ts');
         expect(init).not.toMatch(/(?:chart\.min|frappe-gantt|jkanban\.min)\.js/);
         expect(init).not.toMatch(/(?:chart\.min|frappe-gantt|jkanban\.min)\.css/);
         expect(atividades).toContain('loadChartAtividades');

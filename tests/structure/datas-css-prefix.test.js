@@ -24,7 +24,7 @@ describe('migration: datas CSS audit', () => {
   it('não inventa stylesheet ou classes próprias para o cluster compartilhado de datas', () => {
     const build = read('scripts/build.mjs');
     const manifest = read('manifest.base.json');
-    const sharedUi = read('src/shared/ui/prazo-preview.js');
+    const sharedUi = read('src/shared/ui/prazo-preview.ts');
 
     expect(build).toContain("'src/shared/ui/prazo-preview.css'");
     expect(build).not.toContain('datas.css');

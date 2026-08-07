@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createAiAssistant } from '../../../../src/features/ai/view/assistant.js';
+import { createAiAssistant } from '../../../../src/features/ai/view/assistant.ts';
 
 afterEach(() => {
     document.body.replaceChildren();

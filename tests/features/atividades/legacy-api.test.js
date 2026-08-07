@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { installAtividadesLegacyApi } from '../../../src/features/atividades/legacy-api.js';
+import { installAtividadesLegacyApi } from '../../../src/features/atividades/legacy-api.ts';
 
 describe('atividades/legacy-api', () => {
   it('does not install aliases unless the host opts in', () => {

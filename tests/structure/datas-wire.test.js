@@ -12,13 +12,13 @@ function readManifest() {
 
 describe('migration: datas wire', () => {
     it('instala a view de datas antes da ponte legada no core stack', () => {
-        const stack = read('src/content/core-stack.js');
+        const stack = read('src/content/core-stack.ts');
         expect(stack).toContain("import { installDatasView } from '../shared/legacy/datas-view.js';");
         expect(stack).toContain('installCoreStack();\ninstallSharedLegacyHelpers();\ninstallDatasView();\ninstallDatasLegacyApi();');
-        expect(read('src/shared/legacy/datas-legacy-api.js')).toContain(
+        expect(read('src/shared/legacy/datas-legacy-api.ts')).toContain(
             "import { recordDataRecebimento } from './datas-view.js';"
         );
-        expect(read('src/shared/legacy/datas-view.js')).toContain('seiPro.shared.datasView');
+        expect(read('src/shared/legacy/datas-view.ts')).toContain('seiPro.shared.datasView');
     });
 
     it('mantém core stack antes do legado de datas em todos os contextos compartilhados', () => {
@@ -36,8 +36,8 @@ describe('migration: datas wire', () => {
     it('mantém entry e cópia legada registrados no build e os call-sites globais', () => {
         const build = read('scripts/build.mjs');
         const legacy = readSeiFunctionsSource();
-        expect(build).toContain("{ entry: 'src/content/core-stack.js', out: 'dist/js/core-stack.bundle.js' }");
-        expect(build).toContain("{ entry: 'src/features/sei-functions/index.js', out: 'dist/js/sei-functions-pro.js' }");
+        expect(build).toContain("{ entry: 'src/content/core-stack.ts', out: 'dist/js/core-stack.bundle.js' }");
+        expect(build).toContain("{ entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' }");
         expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
         expect(legacy).toContain('getDataRecebimentoPro(listAndamento, listProc, acompanhamentoEsp);');
         expect(legacy).toContain('getDataRecebimentoPro(listAndamento, false, acompanhamentoEsp);');

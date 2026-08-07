@@ -5,7 +5,7 @@ import {
     buildSticknoteHomeRecord,
     parseSticknoteHomeAttributes,
     buildSticknoteCardHtml
-} from '../../../src/features/anotacao-controle/domain.js';
+} from '../../../src/features/anotacao-controle/domain.ts';
 
 describe('anotacao-controle domain — buildSticknoteHomeRecord', () => {
     it('retorna false sem protocolo, evitando registros órfãos', () => {

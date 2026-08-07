@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderSnippet, snippetToHtml } from '../../../../src/features/editor/domain/snippets.js';
+import { renderSnippet, snippetToHtml } from '../../../../src/features/editor/domain/snippets.ts';
 
 describe('unit snippets', () => {
     it('replaces known placeholders and preserves unknown ones', () => {

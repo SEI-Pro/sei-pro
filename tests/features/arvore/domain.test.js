@@ -10,15 +10,15 @@ import {
     resolveDropzoneIcon,
     formatAnotacaoToParagraphs,
     buildArvoreInitSignature
-} from '@src/features/arvore/domain.js';
-import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload, fetchText } from '@src/features/arvore/io.js';
-import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents, bindUploadConfirmActions } from '@src/features/arvore/view.js';
-import { installArvoreLegacyApi } from '@src/features/arvore/legacy-api.js';
+} from '@src/features/arvore/domain.ts';
+import { readArvoreMenuConfig, fetchUploadPage, postUploadForm, postSavedUpload, fetchText } from '@src/features/arvore/io.ts';
+import { bindArvoreToolbarProcess, bindUploadArvoreNativeDragEvents, bindUploadConfirmActions } from '@src/features/arvore/view.ts';
+import { installArvoreLegacyApi } from '@src/features/arvore/legacy-api.ts';
 import {
     parseInfraUploadMeta,
     resolveUploadSerie,
     buildUploadDocumentTitle
-} from '@src/features/arvore/domain.js';
+} from '@src/features/arvore/domain.ts';
 
 const fallback = [['Copiar número'], ['Ações em lote']];
 

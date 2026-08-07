@@ -8,8 +8,8 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 describe('migration: nao-lido legacy facade', () => {
   it('keeps the entry wired through the dedicated legacy bridge', () => {
-    const index = read('src/features/nao-lido/index.js');
-    const bridge = read('src/features/nao-lido/legacy-api.js');
+    const index = read('src/features/nao-lido/index.ts');
+    const bridge = read('src/features/nao-lido/legacy-api.ts');
 
     expect(index).toMatch(/import\s+['"]\.\/legacy-api\.js['"]/);
     expect(bridge).toMatch(/import \{ aliasGlobal \} from ['"]\.\.\/\.\.\/core\/global\.js['"]/);
@@ -20,8 +20,8 @@ describe('migration: nao-lido legacy facade', () => {
 
   it('does not duplicate the migrated globals in the lista-processos clusters', () => {
     const legacy = readListaProcessosSource();
-    const view = read('src/features/nao-lido/view.js');
-    const io = read('src/features/nao-lido/io.js');
+    const view = read('src/features/nao-lido/view.ts');
+    const io = read('src/features/nao-lido/io.ts');
 
     expect(legacy).not.toMatch(/function\s+(?:initNaoVisualizadoPro|marcarProcessoNaoLido|marcarUmProcessoNaoLido)\s*\(/);
     expect(view).toMatch(/export function initNaoVisualizadoPro\s*\(/);
@@ -57,7 +57,7 @@ describe('migration: nao-lido legacy facade', () => {
 
   it('keeps the legacy producer on the data-act contract without inline action handlers', () => {
     const legacy = readListaProcessosSource();
-    const view = read('src/features/nao-lido/view.js');
+    const view = read('src/features/nao-lido/view.ts');
 
     expect(legacy).toContain('data-act="nao-lido-marcar"');
     expect(legacy).not.toMatch(/data-act="nao-lido-marcar"[^>]*on(click|change)=/);
@@ -67,9 +67,9 @@ describe('migration: nao-lido legacy facade', () => {
 
   it('keeps the ESM bundle and generated output contract', () => {
     const build = read('scripts/build.mjs');
-    const index = read('src/features/nao-lido/index.js');
+    const index = read('src/features/nao-lido/index.ts');
 
-    expect(build).toContain("{ entry: 'src/features/nao-lido/index.js', out: 'dist/js/sei-pro-nao-lido.js' }");
+    expect(build).toContain("{ entry: 'src/features/nao-lido/index.ts', out: 'dist/js/sei-pro-nao-lido.js' }");
     expect(index).toContain("import './legacy-api.js';");
     expect(index).toContain('installNaoLido(document)');
     expect(index).toContain("ready(function () { installNaoLido(document); });");

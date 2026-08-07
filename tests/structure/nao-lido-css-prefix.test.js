@@ -8,8 +8,8 @@ const read = (relPath) => readFileSync(join(rootDir, relPath), 'utf8');
 
 describe('migration: nao-lido CSS ownership audit', () => {
   it('keeps the feature free of unprefixed feature-owned CSS while preserving SEI legacy hooks', () => {
-    const view = read('src/features/nao-lido/view.js');
-    const producer = read('src/features/lista-processos/pagination-tabs.js');
+    const view = read('src/features/nao-lido/view.ts');
+    const producer = read('src/features/lista-processos/pagination-tabs.ts');
     const legacyConsumer = readSeiFunctionsSource();
 
     // There is no feature stylesheet or feature-owned markup left in nao-lido.

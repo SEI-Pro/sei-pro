@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { recordDataRecebimento } from '../../src/shared/legacy/datas-view.js';
+import { recordDataRecebimento } from '../../src/shared/legacy/datas-view.ts';
 
 const andamento = {
   id_procedimento: '42',

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
     clearTrustedSessionApprovals,
     confirmRestrictedDocument
-} from '../../../../src/features/ai/view/dialogs.js';
+} from '../../../../src/features/ai/view/dialogs.ts';
 
 describe('AI access confirmation', () => {
     beforeEach(() => {

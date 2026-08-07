@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { createNamespace } from '../../src/core/namespace.js';
-import { installNet } from '../../src/platform/net.js';
-import { getSeiPro, globalRef } from '../../src/core/global.js';
+import { createNamespace } from '../../src/core/namespace.ts';
+import { installNet } from '../../src/platform/net.ts';
+import { getSeiPro, globalRef } from '../../src/core/global.ts';
 
 // Install the net facade on top of a stub messaging transport whose response we
 // control per test.

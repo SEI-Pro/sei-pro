@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAiToolExecutor } from '../../../../src/features/ai/tools/executors.js';
+import { createAiToolExecutor } from '../../../../src/features/ai/tools/executors.ts';
 
 describe('AI read-tool executor', () => {
     const processSnapshot = {

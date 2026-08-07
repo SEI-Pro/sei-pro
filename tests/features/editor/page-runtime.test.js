@@ -5,7 +5,7 @@ import {
     installPageChromeShim,
     loadEditorProcessDocuments,
     syncDadosProcessoPro
-} from '../../../src/features/editor/page-runtime.js';
+} from '../../../src/features/editor/page-runtime.ts';
 
 beforeAll(() => {
     document.documentElement.dataset.seiproExtensionUrl = 'chrome-extension://seipro-test/';

@@ -22,8 +22,8 @@ describe('migration: anotacao-controle P6 CSS em lote', () => {
   });
 
   it('mantém os únicos hooks de checklist compartilhados fora do CSS próprio', () => {
-    const domain = read('src/features/anotacao-controle/domain.js');
-    const view = read('src/features/anotacao-controle/view.js');
+    const domain = read('src/features/anotacao-controle/domain.ts');
+    const view = read('src/features/anotacao-controle/view.ts');
 
     expect(domain).toContain('class="stickNoteCheck stickNoteChecked"');
     expect(domain).toContain('class="stickNoteCheck"');

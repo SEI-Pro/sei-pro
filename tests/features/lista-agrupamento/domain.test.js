@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     extractGroupTableTooltipToArray,
     getTagName
-} from '../../../src/features/lista-agrupamento/domain.js';
+} from '../../../src/features/lista-agrupamento/domain.ts';
 import {
     clearGroupCollapsed,
     isGroupCollapsed,
@@ -10,11 +10,11 @@ import {
     readGroupOrder,
     readReceivedProcess,
     readSelectedGroup
-} from '../../../src/features/lista-agrupamento/io.js';
+} from '../../../src/features/lista-agrupamento/io.ts';
 import {
     toggleGroupTable,
     installListaAgrupamentoView
-} from '../../../src/features/lista-agrupamento/view.js';
+} from '../../../src/features/lista-agrupamento/view.ts';
 
 describe('lista-agrupamento domain', () => {
     it('extrai os valores do tooltip legado e remove a chamada wrapper', () => {
