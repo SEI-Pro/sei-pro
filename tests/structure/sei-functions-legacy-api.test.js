@@ -35,7 +35,9 @@ describe('migration: sei-functions full ESM facade', () => {
 
   it('empacota a feature como dist/js/sei-functions-pro.js sem cópia verbatim', () => {
     const build = read('scripts/build.mjs');
-    expect(build).toContain("{ entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' }");
+    expect(build).toContain("{ entry: 'src/entries/sei-functions.ts', out: 'dist/js/sei-functions-pro.js' }");
+    expect(read('src/entries/sei-functions.ts')).toContain('installSeiFunctionsFeature();');
+    expect(read('src/features/sei-functions/index.ts')).not.toMatch(/\ninstallSeiFunctionsFeature\(\);\s*$/);
     expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
     expect(build).toContain('src/features/sei-functions/style.css');
   });

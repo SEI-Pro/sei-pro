@@ -55,5 +55,3 @@ publishFeature({
     }),
     install: installSeiFunctionsFeature
 });
-
-installSeiFunctionsFeature();

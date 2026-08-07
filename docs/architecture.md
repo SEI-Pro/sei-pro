@@ -93,7 +93,9 @@ src/
 Referências de leitura: `src/features/monitorados/` é a feature migrada mais próxima do
 alvo; `src/features/editor/lib/domq.js` é o melhor padrão do repositório para sair de
 dependência legada (fachada mínima + fitness function travando a regressão);
-`src/features/atividades/` é o subsistema a dividir ([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md),
+`src/entries/atividades.ts` e `src/entries/sei-functions.ts` são as raízes de composição
+das duas capacidades ainda amplas; `src/features/atividades/` é o subsistema a dividir
+([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md),
 detalhe em [atividades-architecture.md](./atividades-architecture.md)).
 
 ---

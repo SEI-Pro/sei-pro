@@ -45,6 +45,8 @@ const entryBundles = readdirSync(entriesDir)
         return statSync(full).isFile()
             && (f.endsWith('.ts') || f.endsWith('.js'))
             && f !== 'background.js'
+            && f !== 'atividades.ts'
+            && f !== 'sei-functions.ts'
             && f !== 'editor.js'
             && f !== 'editor.ts'
             && f !== 'arvore.ts';
@@ -68,8 +70,8 @@ const bundles = [
     { entry: 'src/background/llm-handler.ts', out: 'dist/js/llm-handler.js' },
     { entry: 'src/entries/arvore.ts', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' },
-    { entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' },
-    { entry: 'src/features/atividades/index.ts', out: 'dist/js/sei-pro-atividades.js' },
+    { entry: 'src/entries/sei-functions.ts', out: 'dist/js/sei-functions-pro.js' },
+    { entry: 'src/entries/atividades.ts', out: 'dist/js/sei-pro-atividades.js' },
     { entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.ts', out: 'dist/js/quick-filter-list.bundle.js' },
     { entry: 'src/features/quick-filter/index-tree.ts', out: 'dist/js/quick-filter-tree.bundle.js' },

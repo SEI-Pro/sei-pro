@@ -93,5 +93,3 @@ namespace.features.atividades = Object.freeze({
     useCases,
     ports
 });
-
-installAtividadesFeature();

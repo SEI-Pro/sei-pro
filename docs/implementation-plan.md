@@ -216,6 +216,7 @@ uma raiz que constrói dependências de verdade.
 | 4.4 | Raiz de composição dos contextos `login` e `db` (já são bundles finos) | registry gerado por contexto; `getSeiPro()` segue restrito ao legado interno |
 | 4.5 | Raízes de `lista`, `arvore`, `documento`, `visualizacao`, `editor`, um contexto por vez | ratchet de `getSeiPro()` cai a cada contexto |
 | 4.5a | Raízes explícitas de `options` e `service-worker`; manter `importScripts` isolado atrás da entry MV3 | `options` gera `options.bundle.js`; `background` mantém `js/background.js` estável e handlers testáveis |
+| 4.5b | Extrair o lifecycle de `atividades` e `sei-functions` para entries próprias, preservando os nomes de saída | os índices das features não auto-bootam; dissolução por capacidade fica isolada na Fase 5 |
 | 4.6 | `SeiPro` publicado só na raiz; `publishGlobal` substitui `aliasGlobal` no núcleo (ADR-0012) | `globals.test.js` verde; violações caem de 186 para 50 |
 | 4.7 | Logger injetado substitui `console.*` nos contextos migrados | ratchet de `console.*` cai de 492 |
 | 4.8 | Remover `platform/bus.js` e o emissor único (ADR-0013) | `no-bus.test.js` verde |
@@ -331,7 +332,8 @@ registry por varredura; `npm run manifest:check` (passthrough seguro); snapshot 
 Geração completa dos `content_scripts` permanece follow-up de risco.
 
 **Fase 4 — Composição** (2026-08-07). Ports `createX` + fakes; boot com isolamento de falha;
-raízes login/db/lista/arvore/documento/visualizacao/editor; registries gerados por contexto,
+raízes login/db/lista/arvore/documento/visualizacao/editor; entries explícitas de
+`atividades` e `sei-functions` para os bundles transversais; registries gerados por contexto,
 com sete capacidades modernas da lista já exclusivas; entries explícitas de `options` e do
 service worker; `atividades` permanece no fim do plano; `publishGlobal` amostral; **bus
 removido** (ADR-0013).

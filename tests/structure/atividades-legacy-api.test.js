@@ -110,7 +110,9 @@ describe('migration: atividades full ESM facade', () => {
 
   it('empacota a feature como dist/js/sei-pro-atividades.js sem cópia verbatim', () => {
     const build = read('scripts/build.mjs');
-    expect(build).toContain("{ entry: 'src/features/atividades/index.ts', out: 'dist/js/sei-pro-atividades.js' }");
+    expect(build).toContain("{ entry: 'src/entries/atividades.ts', out: 'dist/js/sei-pro-atividades.js' }");
+    expect(read('src/entries/atividades.ts')).toContain('installAtividadesFeature();');
+    expect(read('src/features/atividades/index.ts')).not.toMatch(/\ninstallAtividadesFeature\(\);\s*$/);
     expect(build).not.toContain("'src/features/atividades/sei-pro-atividades.js'");
     expect(build).toContain('src/features/atividades/style.css');
   });

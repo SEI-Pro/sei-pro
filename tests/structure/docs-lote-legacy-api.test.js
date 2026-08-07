@@ -72,7 +72,7 @@ describe('migration: docs-lote legacy map bridge', () => {
     const build = read('scripts/build.mjs');
 
     expect(build).toContain("{ entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' }");
-    expect(build).toContain("{ entry: 'src/features/sei-functions/index.ts', out: 'dist/js/sei-functions-pro.js' }");
+    expect(build).toContain("{ entry: 'src/entries/sei-functions.ts', out: 'dist/js/sei-functions-pro.js' }");
     expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
     expect(build).not.toContain("'src/features/docs-lote/sei-pro-docs-lote.js'");
   });

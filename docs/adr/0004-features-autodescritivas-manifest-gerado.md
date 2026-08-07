@@ -119,6 +119,8 @@ ser `wired`: suas entries importam diretamente o registry gerado, enquanto conte
 não migrados permanecem `declared` ou `wired` e continuam usando o caminho legado até uma
 fatia posterior. As páginas de `options` e o service worker têm entries próprias, mas não
 participam do registry de features porque não são contextos de página de capacidade.
+As capacidades transversais pesadas (`atividades` e `sei-functions`) também têm entries
+próprias; continuam `wired` até que cada cluster seja promovido a uma capability exclusiva.
 
 ## Verificação
 
