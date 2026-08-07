@@ -30,10 +30,10 @@ describe('migration: nao-lido legacy facade', () => {
     expect(io).toMatch(/export function serializeSeiForm\s*\(/);
   });
 
-  it('loads the feature bundle after the legacy lista-processos script in every context', () => {
+  it('loads the lista composition root after the legacy lista-processos script in every context', () => {
     const manifest = JSON.parse(read('manifest.base.json'));
     const entries = manifest.content_scripts.filter((entry) =>
-      entry.js.includes('js/sei-pro-nao-lido.js')
+      entry.js.includes('js/lista-context.bundle.js')
     );
 
     expect(entries.length).toBe(2);
@@ -43,15 +43,15 @@ describe('migration: nao-lido legacy facade', () => {
         'js/sei-functions-pro.js',
         'js/sei-pro.js'
       ];
-      const bundleIndex = entry.js.indexOf('js/sei-pro-nao-lido.js');
+      const bundleIndex = entry.js.indexOf('js/lista-context.bundle.js');
 
       for (const dependency of requiredBeforeFeature) {
         const dependencyIndex = entry.js.indexOf(dependency);
         expect(dependencyIndex, `${dependency} must be present`).toBeGreaterThanOrEqual(0);
-        expect(bundleIndex, `${dependency} must load before nao-lido`).toBeGreaterThan(dependencyIndex);
+        expect(bundleIndex, `${dependency} must load before lista context`).toBeGreaterThan(dependencyIndex);
       }
-      expect(entry.js[bundleIndex]).toBe('js/sei-pro-nao-lido.js');
-      expect(entry.js.includes('js/sei-pro-nao-lido.js')).toBe(true);
+      expect(entry.js[bundleIndex]).toBe('js/lista-context.bundle.js');
+      expect(entry.js.includes('js/sei-pro-nao-lido.js')).toBe(false);
     }
   });
 
@@ -65,13 +65,17 @@ describe('migration: nao-lido legacy facade', () => {
     expect(view).toContain('marcarProcessoNaoLido();');
   });
 
-  it('keeps the ESM bundle and generated output contract', () => {
+  it('installs exclusively through the lista context registry', () => {
     const build = read('scripts/build.mjs');
     const index = read('src/features/nao-lido/index.ts');
+    const descriptor = read('src/features/nao-lido/feature.ts');
+    const entry = read('src/entries/lista-context.ts');
 
-    expect(build).toContain("{ entry: 'src/features/nao-lido/index.ts', out: 'dist/js/sei-pro-nao-lido.js' }");
+    expect(build).not.toContain("{ entry: 'src/features/nao-lido/index.ts', out: 'dist/js/sei-pro-nao-lido.js' }");
     expect(index).toContain("import './legacy-api.js';");
-    expect(index).toContain('installNaoLido(document)');
-    expect(index).toContain("ready(function () { installNaoLido(document); });");
+    expect(index).not.toContain('installNaoLido(document)');
+    expect(descriptor).toContain("maturity: 'exclusive'");
+    expect(entry).toContain('registerListaExclusiveFeatures()');
+    expect(entry).toMatch(/boot\(\s*['"]lista['"]\s*,/);
   });
 });

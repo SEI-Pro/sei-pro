@@ -42,7 +42,8 @@ const typedAclPendingEslint = [
     'src/sei/supports.ts',
     'src/sei/namespace.ts',
     'src/sei/parse/**/*.ts',
-    'src/shared/config-defaults.ts'
+    'src/shared/config-defaults.ts',
+    'src/entries/lista-context.ts'
 ];
 
 export default [

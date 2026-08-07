@@ -19,7 +19,7 @@
  * touches the legacy/readable sources in place. Legacy files are only ever copied.
  */
 import { build } from 'esbuild';
-import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ALL_FILE_PAIRS, ASSET_DIRS } from './asset-manifest.mjs';
@@ -37,6 +37,7 @@ const watch = process.argv.includes('--watch');
 //  - core-stack: stack core+sei carregada pelos blocos ainda não migrados.
 //  - arvore-info: feature da árvore (será dobrada na entry `tree`).
 import { readdirSync } from 'node:fs';
+import { generateListaRegistry } from './generate-context-registry.mjs';
 
 const entriesDir = path.join(root, 'src/entries');
 const entryBundles = readdirSync(entriesDir)
@@ -78,7 +79,6 @@ const bundles = [
     { entry: 'src/entries/editor.ts', out: 'dist/js/sei-pro-editor.js' },
     { entry: 'src/features/ai/index.ts', out: 'dist/js/sei-pro-ai.js' },
     { entry: 'src/features/legis/index.ts', out: 'dist/js/sei-legis.js' },
-    { entry: 'src/features/nao-lido/index.ts', out: 'dist/js/sei-pro-nao-lido.js' },
     { entry: 'src/features/lista-agrupamento/index.ts', out: 'dist/js/lista-agrupamento.bundle.js' },
     // Projetos (Gantt): domain/store/view; saida mantem nome legado js/sei-pro-projetos.js
     { entry: 'src/features/projetos/index.ts', out: 'dist/js/sei-pro-projetos.js' },
@@ -90,6 +90,24 @@ const bundles = [
     { entry: 'src/features/monitorados/options.ts', out: 'dist/js/monitorados-options.bundle.js' },
     ...entryBundles
 ];
+
+function verifyGeneratedRegistries() {
+    const generated = generateListaRegistry(root);
+    const registryPath = path.join(root, 'src/generated/lista-feature-registry.ts');
+    const current = readFileSync(registryPath, 'utf8');
+    if (current !== generated.text) {
+        throw new Error('lista registry is stale; run: npm run registry:write');
+    }
+}
+
+/** Outputs substituídos por uma entry de contexto; não podem sobreviver no dist/. */
+const obsoleteOutputs = ['dist/js/sei-pro-nao-lido.js'];
+
+function removeObsoleteOutputs() {
+    for (const output of obsoleteOutputs) {
+        rmSync(path.join(root, output), { force: true });
+    }
+}
 
 function optionsFor({ entry, out }) {
     const outfile = path.join(root, out);
@@ -238,6 +256,8 @@ function copyAssets() {
 }
 
 const outNames = bundles.map((b) => path.basename(b.out)).join(' + ');
+verifyGeneratedRegistries();
+removeObsoleteOutputs();
 
 if (watch) {
     const esbuild = await import('esbuild');

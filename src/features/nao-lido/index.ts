@@ -3,9 +3,9 @@
  * Marcar processos como "Não Visualizado" (config `marcar_naolido`) — ENTRY do bundle.
  *
  * Decomposição: domain.js (puro) · io.js (rede/serialização SEI) · view.js (DOM +
- * orquestração) · legacy-api.js (aliasGlobal). Bundlado por esbuild →
- * dist/js/sei-pro-nao-lido.js, carregado após sei-pro.js nos blocos 3 e 4 do
- * manifest (procedimento_trabalhar / procedimento_controlar), no mundo isolado.
+ * orquestração) · legacy-api.js (aliasGlobal). É incluído pela entry
+ * `lista-context`, carregada após sei-pro.js nos blocos da lista, no mundo
+ * isolado.
  *
  * O botão na lista de processos (gerado em sei-pro.js) usa `data-act="nao-lido-marcar"`
  * e é tratado por um handler DELEGADO no document (installNaoLido) — não mais
@@ -13,8 +13,9 @@
  * script. A superfície global legada (initNaoVisualizadoPro, chamada por nome no
  * init da home) é preservada via legacy-api.js.
  */
-import { ready } from '../../dom/index.js';
 import './legacy-api.js';
 import { installNaoLido } from './view.js';
 
-ready(function () { installNaoLido(document); });
+// A instalação ocorre exclusivamente em entries/lista-context.ts. Este módulo
+// continua a publicar a ponte legada acima, antes que init.js a consuma.
+export { installNaoLido };

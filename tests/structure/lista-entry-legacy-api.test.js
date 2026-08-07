@@ -50,7 +50,7 @@ describe('entry da lista — ponte legacy-api', () => {
                 'js/lista.bundle.js',
                 'js/sei-pro.js',
                 'js/sei-pro-controle-prazo.js',
-                'js/sei-pro-nao-lido.js',
+                'js/lista-context.bundle.js',
                 'js/monitorados.bundle.js',
                 'js/init.js'
             ];

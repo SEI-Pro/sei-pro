@@ -7,7 +7,7 @@ import { installNaoLido } from './view.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'nao-lido',
-    maturity: 'wired',
+    maturity: 'exclusive',
     contexts: ['lista'],
     configKey: 'marcar_naolido',
     install(deps?: unknown) {

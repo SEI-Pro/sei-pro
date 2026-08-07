@@ -17,6 +17,8 @@
     "audit:dist": "node scripts/audit-dist-sources.mjs",
     "measure:ratchets": "node scripts/measure-ratchets.mjs",
     "manifest:check": "node scripts/generate-manifest.mjs --check",
+    "registry:write": "node scripts/generate-context-registry.mjs --write",
+    "registry:check": "node scripts/generate-context-registry.mjs --check",
     "notices": "node scripts/write-third-party-notices.mjs",
     "hooks:install": "node scripts/install-git-hooks.mjs",
     "fixture:skeleton": "node scripts/skeletonize-fixture.mjs",
