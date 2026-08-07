@@ -1,7 +1,7 @@
 # Atividades: arquitetura desacoplada
 
-`src/features/atividades/index.js` é o único ponto de composição. A feature é
-organizada em quatro fronteiras:
+`src/entries/atividades.ts` é a raiz de composição; `src/features/atividades/index.ts`
+monta a capability sem auto-boot. A feature é organizada em quatro fronteiras:
 
 - `context.js`, `store.js` e `runtime-state.js`: estado, inicialização e
   dependências do host;
