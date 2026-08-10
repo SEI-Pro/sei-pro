@@ -70,3 +70,6 @@ public/
 /webfonts
 /js
 /config_hosts.json
+
+.cursor/
+.agents/
