@@ -55,7 +55,7 @@ describe('migration: arvore full ESM facade', () => {
     expect(contexts.length).toBeGreaterThanOrEqual(1);
     for (const context of contexts) {
       const scripts = context.js;
-      const dependency = scripts.indexOf('js/sei-functions-pro.js');
+      const dependency = scripts.indexOf('js/legacy-context.bundle.js');
       const bundle = scripts.indexOf('js/sei-pro-arvore.js');
       const init = scripts.indexOf('js/init_arvore.js');
       expect(scripts).not.toContain('js/arvore-menu-domain.bundle.js');

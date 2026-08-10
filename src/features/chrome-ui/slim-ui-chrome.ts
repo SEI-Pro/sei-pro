@@ -12,7 +12,7 @@ import {
     loadingButtonConfirm,
     resetDialogBoxPro,
     waitLoadPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function openStyleBoxSlimPro() {
     checkLoadJqueryUI(openStyleBoxSlimPro_);

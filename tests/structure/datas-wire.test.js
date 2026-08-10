@@ -23,12 +23,12 @@ describe('migration: datas wire', () => {
 
     it('mantém core stack antes do legado de datas em todos os contextos compartilhados', () => {
         const contexts = readManifest().content_scripts.filter(({ js = [] }) =>
-            js.includes('js/core-stack.bundle.js') && js.includes('js/sei-functions-pro.js')
+            js.includes('js/core-stack.bundle.js') && js.includes('js/legacy-context.bundle.js')
         );
         expect(contexts.length).toBeGreaterThan(0);
         for (const [index, context] of contexts.entries()) {
             const core = context.js.indexOf('js/core-stack.bundle.js');
-            const legacy = context.js.indexOf('js/sei-functions-pro.js');
+            const legacy = context.js.indexOf('js/legacy-context.bundle.js');
             expect(core, `context ${index}: core stack`).toBeLessThan(legacy);
         }
     });
@@ -37,7 +37,8 @@ describe('migration: datas wire', () => {
         const build = read('scripts/build.mjs');
         const legacy = readSeiFunctionsSource();
         expect(build).toContain("{ entry: 'src/content/core-stack.ts', out: 'dist/js/core-stack.bundle.js' }");
-        expect(build).toContain("{ entry: 'src/entries/sei-functions.ts', out: 'dist/js/sei-functions-pro.js' }");
+        expect(build).toContain('const entryBundles = readdirSync(entriesDir)');
+        expect(build).toContain('...entryBundles');
         expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
         expect(legacy).toContain('getDataRecebimentoPro(listAndamento, listProc, acompanhamentoEsp);');
         expect(legacy).toContain('getDataRecebimentoPro(listAndamento, false, acompanhamentoEsp);');

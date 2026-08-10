@@ -5,7 +5,7 @@
  */
 import {
     atividadesState
-} from './atividades-bridge.js';
+} from '../../shared/sei-runtime/atividades-bridge.js';
 
 import {
     alertaBoxPro,
@@ -15,7 +15,7 @@ import {
     downloadTableCSV,
     normalizeTreeDocuments,
     resetDialogBoxPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function cleanHistoryPro(this_) {
     confirmaBoxPro('Tem certeza que deseja apagar o hist\u00F3rico de processos?', function(){

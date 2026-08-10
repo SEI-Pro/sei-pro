@@ -5,7 +5,7 @@ problema, o log já chega no nosso endpoint sem precisar pedir reprodução.
 
 ## Como a infra existente funciona
 
-Já implementado em [dist/js/sei-functions-pro.js](../dist/js/sei-functions-pro.js)
+Já implementado no contexto legado [dist/js/legacy-context.bundle.js](../dist/js/legacy-context.bundle.js)
 (função `ensureSEIProLogCapture`, linha ~450):
 
 1. Intercepta `console.log/info/warn/error` em buffer (`window.__SEI_PRO_LOG_BUFFER__`).

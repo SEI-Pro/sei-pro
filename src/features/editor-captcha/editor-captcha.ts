@@ -14,7 +14,7 @@ import {
     getConfigServerDoc,
     setParamEditorAtiv,
     signCancelDocumento
-} from './atividades-bridge.js';
+} from '../../shared/sei-runtime/atividades-bridge.js';
 
 import {
     alertaBoxPro,
@@ -26,7 +26,7 @@ import {
     scrollToElement,
     setCaretPosition,
     updateButtonConfirm
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function openLinkNewTab(url) {
     var win = window.open(url, '_blank');

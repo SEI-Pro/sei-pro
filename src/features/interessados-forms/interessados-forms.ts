@@ -14,7 +14,7 @@ import {
     setNewDoc,
     updateButtonConfirm,
     updateDadosProcesso
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function getInteressadosProcesso(txtInteressado, callback) {
     if (typeof window.linkPesquisaInteressado !== 'undefined') {

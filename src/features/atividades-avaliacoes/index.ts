@@ -1,7 +1,10 @@
-/**
- * Stub (ADR-0007) — hoje em `atividades/ratings.ts` + fluxos rate/recurso em
- * `config-panel.ts` / `config-options.ts`. Ver docs/capabilities-map.md.
- */
-export function installAtividadesAvaliacoesFeature() {
-    // no-op until extraction
-}
+// @ts-nocheck — fatia legada isolada; a tipagem entra após a caracterização.
+import * as ratings from './ratings.js';
+import { defineLegacyFeature } from '../../shared/sei-runtime/legacy-api.js';
+
+export const atividadesAvaliacoes = defineLegacyFeature({
+    id: 'atividades-avaliacoes',
+    nsKey: 'atividadesAvaliacoes',
+    modules: [ratings]
+});
+export const installAtividadesAvaliacoesFeature = atividadesAvaliacoes.install;

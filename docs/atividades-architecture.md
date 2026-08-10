@@ -1,7 +1,19 @@
 # Atividades: arquitetura desacoplada
 
 `src/entries/atividades.ts` é a raiz de composição; `src/features/atividades/index.ts`
-monta a capability sem auto-boot. A feature é organizada em quatro fronteiras:
+monta o núcleo residual sem auto-boot. As quatro fronteiras de capacidade agora são
+explicitamente instaladas antes dele:
+
+- `atividades-config/`: administração de configuração;
+- `atividades-afastamentos/`: afastamentos;
+- `atividades-avaliacoes/`: avaliações e recursos;
+- `atividades-registro/`: registro, formulários, painel, kanban e relatórios.
+
+O núcleo em `features/atividades/` mantém apenas runtime, portas, handlers e fachadas de
+compatibilidade. As fachadas serão removidas à medida que os call-sites migrarem para
+`SeiPro.features.<capability>.api`.
+
+Dentro de cada capability, as camadas técnicas continuam:
 
 - `context.js`, `store.js` e `runtime-state.js`: estado, inicialização e
   dependências do host;
@@ -12,10 +24,10 @@ monta a capability sem auto-boot. A feature é organizada em quatro fronteiras:
   comandos e consultas públicos.
 
 As fatias legadas (`activity-*`, `config-*`, `panel`, `kanban`, relatórios e
-afastamentos) continuam contendo os adaptadores de tela necessários ao SEI.
-Elas não fazem parte do root público: são expostas apenas por `api.handlers`
-e pelo registry interno. O dispatcher `callAtiv` resolve primeiro esse
-registry; o estado é lido do store canônico.
+afastamentos) continuam contendo os adaptadores de tela necessários ao SEI, mas agora
+vivem nas pastas de capacidade. Reexports em `features/atividades/` preservam os imports
+internos durante a migração. O dispatcher `callAtiv` resolve primeiro o registry; o estado
+é lido do store canônico.
 
 `server.js` é somente a boundary de autorização, payload e transporte. O
 roteamento de efeitos da UI legada está em `server-response.js`, recebido como
@@ -46,7 +58,7 @@ SeiPro.features.atividades = {
 
 Consumidores cross-feature devem preferir `.api`.
 
-Monitorados, projetos, árvore, prescrições, lista e sei-functions consultam
+Monitorados, projetos, árvore, prescrições, lista e o runtime legado transversal consultam
 `feature.api` para estado, handlers, capacidade e requests; nenhum deles
 depende dos aliases globais da feature no caminho normal.
 

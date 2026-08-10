@@ -15,7 +15,7 @@ import {
     resetDialogBoxPro,
     scrollToElement,
     setSessionProcessosPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function initDocImagemPro() {
     var ifrVisualizacao = $($ifrVisualizacao).contents(); // seleciona o conteudo do iframe de visualizacao de documentos

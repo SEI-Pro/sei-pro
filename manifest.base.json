@@ -62,14 +62,14 @@
         "js/lib/papaparse.js",
         "js/lib/jszip.min.js",
         "js/lib/jszip-utils.min.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/sei-pro-icons.js",
         "js/sei-pro-all.js",
         "js/init_all.js"
       ],
       "css": [
         "css/sei-pro.css",
-        "css/sei-functions.css",
+        "css/legacy-sei.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",
         "css/fontawesome.pro.min.css",
@@ -77,29 +77,25 @@
         "css/jquery-ui.css"
       ],
       "matches": [
-        "*://*.br/sei/*",
-        "*://*.br/sip/*",
-        "*://*.br/*/sei/*",
-        "*://*.br/*/sip/*",
-        "*://*.br/*controlador*.php?acao=*",
-        "*://*.org/sei/*",
-        "*://*.org/sip/*",
-        "*://*.org/*controlador*.php?acao=*",
+        "*://*/sei/*",
+        "*://*/sip/*",
+        "*://*/*/sei/*",
+        "*://*/*/sip/*",
+        "*://*/*controlador*.php*",
         "*://sip-sei.ans.gov.br/*"
       ],
       "exclude_matches": [
         "*://sei.sp1.gov.br/*",
-        "*://*.br/*login.php*",
-        "*://*.br/sip/*controlador.php*",
-        "*://*.br/sei/*controlador_externo.php*",
-        "*://*.br/*/sip/*controlador.php*",
-        "*://*.br/*/sei/*controlador_externo.php*",
-        "*://*.org/*login.php*",
-        "*://*.org/sip/*controlador.php*",
-        "*://*.org/sei/*controlador_externo.php*",
+        "*://*/*login.php*",
+        "*://*/sip/*controlador.php*",
+        "*://*/sei/*controlador_externo.php*",
+        "*://*/*/sip/*controlador.php*",
+        "*://*/*/sei/*controlador_externo.php*",
         "*://sip-sei.ans.gov.br/login.php*",
         "*://sip-sei.ans.gov.br/controlador.php*",
-        "*://sip-sei.ans.gov.br/controlador_externo.php*",
+        "*://sip-sei.ans.gov.br/controlador_externo.php*"
+      ],
+      "exclude_globs": [
         "*://*.br/*controlador.php?acao=editor_montar*",
         "*://*.br/*controlador.php?acao=texto_padrao_interno_alterar*",
         "*://*.br/*controlador.php?acao=secao_modelo_alterar*",
@@ -119,15 +115,12 @@
       ],
       "all_frames": true,
       "matches": [
-        "*://*.br/sip/*login.php*",
-        "*://*.br/sei/*",
-        "*://*.br/login.php*sigla_sistema=SEI*",
-        "*://*.br/*/sip/*login.php*",
-        "*://*.br/*/sei/*",
-        "*://*.br/*/login.php*sigla_sistema=SEI*",
-        "*://*.org/sip/*login.php*",
-        "*://*.org/sei/*",
-        "*://*.org/login.php*sigla_sistema=SEI*",
+        "*://*/sip/*login.php*",
+        "*://*/sei/*",
+        "*://*/login.php*sigla_sistema=SEI*",
+        "*://*/*/sip/*login.php*",
+        "*://*/*/sei/*",
+        "*://*/*/login.php*sigla_sistema=SEI*",
         "*://sip-sei.ans.br/sip/login.php*",
         "*://sip-sei.ans.gov.br/*",
         "*://sip-sei.ans.gov.br/controlador.php*",
@@ -143,21 +136,16 @@
       ],
       "all_frames": true,
       "matches": [
-        "*://*.br/sip/*login.php*",
-        "*://*.br/sip/login.php*",
-        "*://*.br/sei/*",
-        "*://*.br/login.php*sigla_sistema=SEI*",
-        "*://*.br/*/sip/*login.php*",
-        "*://*.br/*/sip/login.php*",
-        "*://*.br/*/sei/*",
-        "*://*.br/*/login.php*sigla_sistema=SEI*",
-        "*://*.br/*controlador.php?acao=documento_assinar*",
-        "*://*.org/sip/*login.php*",
-        "*://*.org/sip/login.php*",
-        "*://*.org/sei/*",
-        "*://*.org/login.php*sigla_sistema=SEI*",
-        "*://*.org/*controlador.php?acao=documento_assinar*",
-        "*://sip-sei.ans.gov.br/controlador.php?acao=documento_assinar*",
+        "*://*/sip/*login.php*",
+        "*://*/sip/login.php*",
+        "*://*/sei/*",
+        "*://*/login.php*sigla_sistema=SEI*",
+        "*://*/*/sip/*login.php*",
+        "*://*/*/sip/login.php*",
+        "*://*/*/sei/*",
+        "*://*/*/login.php*sigla_sistema=SEI*",
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*",
         "*://sip-sei.ans.br/sip/login.php*",
         "*://sip-sei.ans.gov.br/*",
         "*://sip-sei.ans.gov.br/login.php*sigla_sistema=SEI*"
@@ -192,7 +180,7 @@
         "js/lib/papaparse.js",
         "js/lib/jszip.min.js",
         "js/lib/jszip-utils.min.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/lista-context.bundle.js",
         "js/sei-legis.js",
         "js/sei-pro-icons.js",
@@ -205,7 +193,7 @@
       "css": [
         "css/sei-pro.css",
         "css/atividades.css",
-        "css/sei-functions.css",
+        "css/legacy-sei.css",
         "css/lista-processos.css",
         "css/quick-filter.css",
         "css/prazo-preview.css",
@@ -218,6 +206,10 @@
         "css/jquery.toolbar.css"
       ],
       "matches": [
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*"
+      ],
+      "include_globs": [
         "*://*.br/*controlador.php?acao=procedimento_trabalhar*",
         "*://*.br/*controlador.php?acao=procedimento_controlar*",
         "*://*.br/*controlador.php?acao=rel_bloco_protocolo_listar*",
@@ -276,7 +268,7 @@
         "js/lib/papaparse.js",
         "js/lib/jszip.min.js",
         "js/lib/jszip-utils.min.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/lista-context.bundle.js",
         "js/sei-legis.js",
         "js/sei-pro-icons.js",
@@ -288,7 +280,7 @@
       ],
       "css": [
         "css/atividades.css",
-        "css/sei-functions.css",
+        "css/legacy-sei.css",
         "css/lista-processos.css",
         "css/quick-filter.css",
         "css/anotacao-controle.css",
@@ -297,6 +289,10 @@
       ],
       "all_frames": true,
       "matches": [
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*"
+      ],
+      "include_globs": [
         "*://*.br/*controlador.php?acao=procedimento_controlar*",
         "*://*.org/*controlador.php?acao=procedimento_controlar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_controlar*"
@@ -331,14 +327,14 @@
         "js/lib/papaparse.js",
         "js/lib/jszip.min.js",
         "js/lib/jszip-utils.min.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/sei-pro-icons.js",
         "js/sei-pro-arvore.js",
         "js/quick-filter-tree.bundle.js"
       ],
       "css": [
         "css/sei-pro.css",
-        "css/sei-functions.css",
+        "css/legacy-sei.css",
         "css/arvore.css",
         "css/quick-filter.css",
         "css/prazo-preview.css",
@@ -347,6 +343,10 @@
       ],
       "all_frames": true,
       "matches": [
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*"
+      ],
+      "include_globs": [
         "*://*.br/*controlador.php?acao=procedimento_visualizar*",
         "*://*.org/*controlador.php?acao=procedimento_visualizar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_visualizar*"
@@ -381,12 +381,16 @@
         "js/lib/papaparse.js",
         "js/lib/jszip.min.js",
         "js/lib/jszip-utils.min.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/sei-pro-icons.js",
         "js/visualizacao.bundle.js"
       ],
       "all_frames": true,
       "matches": [
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*"
+      ],
+      "include_globs": [
         "*://*.br/*controlador.php?acao=arvore_visualizar*",
         "*://*.org/*controlador.php?acao=arvore_visualizar*",
         "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_visualizar*"
@@ -395,7 +399,7 @@
         "*://sei.sp1.gov.br/*"
       ],
       "css": [
-        "css/sei-functions.css"
+        "css/legacy-sei.css"
       ]
     },
     {
@@ -404,6 +408,10 @@
       ],
       "all_frames": true,
       "matches": [
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*"
+      ],
+      "include_globs": [
         "*://*.br/*controlador.php?acao=arvore_visualizar*",
         "*://*.br/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*",
         "*://*.br/*controlador.php?acao=arvore_processar_html*",
@@ -443,7 +451,7 @@
         "js/lib/papaparse.js",
         "js/lib/jszip.min.js",
         "js/lib/jszip-utils.min.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/sei-pro-icons.js",
         "js/sei-pro-visualizacao.js",
         "js/sei-pro-visualizacao-chosen.js",
@@ -451,6 +459,10 @@
       ],
       "all_frames": true,
       "matches": [
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*"
+      ],
+      "include_globs": [
         "*://*.br/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*",
         "*://*.br/*controlador.php?acao=arvore_processar_html*",
         "*://*.org/*controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*",
@@ -462,7 +474,7 @@
         "*://sei.sp1.gov.br/*"
       ],
       "css": [
-        "css/sei-functions.css"
+        "css/legacy-sei.css"
       ]
     },
     {
@@ -473,20 +485,24 @@
         "js/lib/purify.min.js",
         "js/getscript-isolated.js",
         "js/init-flags.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/editor-loader.js",
         "js/sei-pro-ai.js",
         "js/init.js"
       ],
       "css": [
         "css/sei-pro.css",
-        "css/sei-functions.css",
+        "css/legacy-sei.css",
         "css/editor.css",
         "css/stream-panel.css",
         "css/ai.css"
       ],
       "run_at": "document_end",
       "matches": [
+        "*://*/*controlador.php*",
+        "*://sip-sei.ans.gov.br/controlador.php*"
+      ],
+      "include_globs": [
         "*://*.br/*controlador.php?acao=editor_montar*",
         "*://*.br/*controlador.php?acao=texto_padrao_interno_alterar*",
         "*://*.br/*controlador.php?acao=secao_modelo_alterar*",
@@ -545,7 +561,7 @@
         "js/qr-code-main.js",
         "js/lib/modalLink.js",
         "js/inline-stubs-main.js",
-        "js/sei-functions-pro.js",
+        "js/legacy-context.bundle.js",
         "js/sei-pro-config-local.js",
         "js/sei-pro-atividades.js",
         "js/sei-pro-projetos.js",
@@ -655,15 +671,11 @@
         "icons/prf/prf.png"
       ],
       "matches": [
-        "*://*.br/sei/*",
-        "*://*.br/sip/*",
-        "*://*.br/*/sei/*",
-        "*://*.br/*/sip/*",
-        "*://*.br/*controlador*.php?acao=*",
-        "*://*.org/sei/*",
-        "*://*.org/sip/*",
-        "*://*.org/*controlador*.php?acao=*",
-        "*://sip-sei.ans.gov.br/*"
+        "*://sei.prf.gov.br/*",
+        "*://*.sp.gov.br/*",
+        "*://*.antt.gov.br/*",
+        "*://sip-sei.ans.gov.br/*",
+        "*://sip-sei.ans.br/*"
       ]
     }
   ]

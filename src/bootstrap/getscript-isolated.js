@@ -4,7 +4,7 @@
 // - chrome-extension:// de lib LAZY (Chart, Gantt, Kanban, Mammoth, jschardet)
 //   → carga real (WAR; não está nos content_scripts)
 // - chrome-extension:// de tudo mais (já eager no manifest) → no-op
-//   (re-executar sei-functions-pro etc. via ajax+eval quebra globais como frmEditor)
+//   (re-executar o contexto legado via ajax+eval quebra globais como frmEditor)
 //
 // Carregado pelo manifest logo após o jQuery, antes dos arquivos legados.
 (function () {

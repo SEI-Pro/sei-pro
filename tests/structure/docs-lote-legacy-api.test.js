@@ -60,7 +60,7 @@ describe('migration: docs-lote legacy map bridge', () => {
 
     expect(entries.length).toBe(2);
     for (const entry of entries) {
-      const functionsIndex = entry.js.indexOf('js/sei-functions-pro.js');
+      const functionsIndex = entry.js.indexOf('js/legacy-context.bundle.js');
       const bundleIndex = entry.js.indexOf('js/lista-context.bundle.js');
       expect(functionsIndex).toBeGreaterThanOrEqual(0);
       expect(bundleIndex).toBeGreaterThan(functionsIndex);
@@ -72,7 +72,8 @@ describe('migration: docs-lote legacy map bridge', () => {
     const build = read('scripts/build.mjs');
 
     expect(build).toContain("{ entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' }");
-    expect(build).toContain("{ entry: 'src/entries/sei-functions.ts', out: 'dist/js/sei-functions-pro.js' }");
+    expect(build).toContain('const entryBundles = readdirSync(entriesDir)');
+    expect(build).toContain('...entryBundles');
     expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
     expect(build).not.toContain("'src/features/docs-lote/sei-pro-docs-lote.js'");
   });

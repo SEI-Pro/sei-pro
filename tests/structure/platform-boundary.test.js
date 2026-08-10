@@ -30,10 +30,10 @@ const ALLOWLIST = [
     'src/features/lista-processos/modules.ts',
     'src/features/monitorados/options.ts',
     'src/features/projetos/view/helpers.ts',
-    'src/features/sei-functions/boot.ts',
-    'src/features/sei-functions/editor-captcha.ts',
-    'src/features/sei-functions/modules.ts',
-    'src/features/sei-functions/notifications-process.ts'
+    'src/features/chrome-ui/index.ts',
+    'src/features/editor-captcha/editor-captcha.ts',
+    'src/features/notificacoes-processo/notifications-process.ts',
+    'src/shared/sei-runtime/boot.ts'
 ];
 
 const API_RE = /\b(?:chrome|browser)\./;

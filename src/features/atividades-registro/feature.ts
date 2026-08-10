@@ -1,17 +1,17 @@
 /**
- * Descritor ADR-0004 / ADR-0007 — stub: registro de atividades (extração futura).
+ * Descritor ADR-0004 / ADR-0007 — registro de atividades extraído do agregado.
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
 
-import { installAtividadesRegistroFeature } from './index.js';
+import { atividadesRegistro, installAtividadesRegistroFeature } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'atividades-registro',
-    maturity: 'declared',
+    maturity: 'wired',
     contexts: ['lista', 'arvore'],
     configKey: null,
     install: installAtividadesRegistroFeature,
-    api: Object.freeze({})
+    api: atividadesRegistro.api
 };
 
 export default descriptor;

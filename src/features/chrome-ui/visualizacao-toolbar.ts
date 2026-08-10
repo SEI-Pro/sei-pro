@@ -6,7 +6,7 @@
 import {
     atividadesState,
     checkCapacidade
-} from './atividades-bridge.js';
+} from '../../shared/sei-runtime/atividades-bridge.js';
 
 import {
     alertaBoxPro,
@@ -21,7 +21,7 @@ import {
     setHtmlProtocoloAlterar,
     setInfraImg,
     waitLoadPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function checkPageVisualizacao() {
     const ifrV = SeiPro.sei.adapter.isSEI5() 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { format2DecimalDomain } from '../../../src/features/sei-functions/domain.ts';
+import { format2DecimalDomain } from '../../../src/shared/sei-runtime/domain.ts';
 
 describe('sei-functions domain', () => {
   it('formats decimals like the legacy helper', () => {

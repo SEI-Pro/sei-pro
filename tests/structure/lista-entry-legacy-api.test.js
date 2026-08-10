@@ -45,7 +45,7 @@ describe('entry da lista — ponte legacy-api', () => {
         for (const item of entries) {
             const requiredOrder = [
                 'js/core-stack.bundle.js',
-                'js/sei-functions-pro.js',
+                'js/legacy-context.bundle.js',
                 'js/lista-context.bundle.js',
                 'js/init.js'
             ];

@@ -46,7 +46,6 @@ const entryBundles = readdirSync(entriesDir)
             && (f.endsWith('.ts') || f.endsWith('.js'))
             && f !== 'background.js'
             && f !== 'atividades.ts'
-            && f !== 'sei-functions.ts'
             && f !== 'editor.js'
             && f !== 'editor.ts'
             && f !== 'arvore.ts';
@@ -59,7 +58,7 @@ const entryBundles = readdirSync(entriesDir)
 // TODO(ADR-0004 / plan 3.7): derive this list from feature descriptors + contexts
 // instead of maintaining hand entries. entryBundles (src/entries/*) already scan
 // the filesystem; the feature bundles below are still explicit because legacy
-// output names (sei-pro.js, sei-functions-pro.js, …) must stay stable for
+// output names (sei-pro.js, legacy-context.bundle.js, …) remain stable for
 // manifest.base.json until content_scripts are generated.
 const bundles = [
     { entry: 'src/content/core-stack.ts', out: 'dist/js/core-stack.bundle.js' },
@@ -70,7 +69,6 @@ const bundles = [
     { entry: 'src/background/llm-handler.ts', out: 'dist/js/llm-handler.js' },
     { entry: 'src/entries/arvore.ts', out: 'dist/js/sei-pro-arvore.js' },
     { entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' },
-    { entry: 'src/entries/sei-functions.ts', out: 'dist/js/sei-functions-pro.js' },
     { entry: 'src/entries/atividades.ts', out: 'dist/js/sei-pro-atividades.js' },
     { entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' },
     { entry: 'src/features/quick-filter/index-list.ts', out: 'dist/js/quick-filter-list.bundle.js' },
@@ -109,7 +107,9 @@ function verifyGeneratedRegistries() {
 const obsoleteOutputs = [
     'dist/js/sei-pro-nao-lido.js',
     'dist/js/arvore-info.bundle.js',
-    'dist/js/quick-highlight.bundle.js'
+    'dist/js/quick-highlight.bundle.js',
+    'dist/js/sei-functions-pro.js',
+    'dist/css/sei-functions.css'
 ];
 
 function removeObsoleteOutputs() {
@@ -149,7 +149,7 @@ function optionsFor({ entry, out }) {
 // pure relocation — behavior is unchanged until the feature is decomposed later.
 const legacyFiles = [
     // lista-processos migrada para bundle ESM (sei-pro.js) — não copiar mais o legado.
-    // sei-functions-pro migrada para bundle ESM — não copiar mais o legado.
+    // clusters transversais migrados para legacy-context.bundle.js.
     // atividades migrada para bundle ESM (sei-pro-atividades.js) — não copiar mais o legado.
     'src/features/todas-paginas/sei-pro-all.js',
     // projetos migrado para bundle ESM (sei-pro-projetos.js) — nao copiar mais o legado.
@@ -158,7 +158,6 @@ const legacyFiles = [
     'src/features/visualizacao/sei-pro-visualizacao-chosen.js',
     // legis migrated to an ESM bundle while retaining dist/js/sei-legis.js.
     // docs-lote migrada para bundle ESM (docs-lote.bundle.js) — não copiar mais o legado.
-    // sei-functions-pro migrada para bundle ESM (sei-functions-pro.js) — não copiar mais o legado.
     'src/shared/legacy/sei-pro-icons.js',
     'src/shared/legacy/sei-pro-db-transition.js',
     'src/bootstrap/init.js',
@@ -200,7 +199,7 @@ const featureCss = [
     { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' },
     { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' },
     { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' },
-    { src: 'src/features/sei-functions/style.css', out: 'dist/css/sei-functions.css' },
+    { src: 'src/shared/sei-runtime/style.css', out: 'dist/css/legacy-sei.css' },
     { src: 'src/features/atividades/style.css', out: 'dist/css/atividades.css' },
     { src: 'src/features/editor/style.css', out: 'dist/css/editor.css' },
     { src: 'src/features/projetos/projetos.css', out: 'dist/css/projetos.css' }

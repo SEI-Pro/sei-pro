@@ -27,7 +27,7 @@ import {
     getTreeSignedDocumentsSession,
     openLinkNewTab,
     openWindowEditor
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openProc = true) {
     if (!checkProcessoSigiloso()) {

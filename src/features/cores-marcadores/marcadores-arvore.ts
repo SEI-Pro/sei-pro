@@ -14,7 +14,7 @@ import {
     pullDadosProcessoSession,
     resetDialogBoxPro,
     setSessionProcessosPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function getRemoverMarcador(alert = true) {
     loadingButtonConfirm(true);

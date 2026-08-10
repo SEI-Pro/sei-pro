@@ -15,8 +15,13 @@ function blockByScript(script) {
 
 function projectBlock(block) {
     const out = {
-        matches: block.matches || [],
-        exclude_matches: block.exclude_matches || [],
+        // Chrome cannot express URL queries in `matches`; globs carry the
+        // action-specific part and are the effective selector for these blocks.
+        matches: block.include_globs?.length ? block.include_globs : block.matches || [],
+        exclude_matches: [
+            ...(block.exclude_matches || []),
+            ...(block.exclude_globs || [])
+        ],
         js: block.js || [],
         css: block.css || []
     };
@@ -26,7 +31,7 @@ function projectBlock(block) {
 }
 
 /**
- * Snapshots of all content_scripts (matches + script order).
+ * Snapshots of all content_scripts (effective URL selectors + script order).
  * Required before full manifest generation (ADR-0004 / plan 3.4).
  * Update tests/structure/manifest-contexts.snapshot.json deliberately when
  * enxugando a block — never silently.
@@ -101,7 +106,7 @@ describe('manifest context snapshots (ADR-0004 / 3.4)', () => {
 
     it('generate-manifest validates descriptors against committed manifest', () => {
         const { descriptors, text } = generateManifest();
-        expect(descriptors).toHaveLength(26);
+        expect(descriptors).toHaveLength(37);
         expect(text).toBe(readFileSync(join(rootDir, 'manifest.base.json'), 'utf8'));
     });
 });

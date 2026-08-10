@@ -1,17 +1,17 @@
 /**
- * Descritor ADR-0004 / ADR-0007 — stub: avaliações de entregas (extração futura).
+ * Descritor ADR-0004 / ADR-0007 — avaliações extraídas do agregado.
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
 
-import { installAtividadesAvaliacoesFeature } from './index.js';
+import { atividadesAvaliacoes, installAtividadesAvaliacoesFeature } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'atividades-avaliacoes',
-    maturity: 'declared',
+    maturity: 'wired',
     contexts: ['lista', 'arvore'],
     configKey: null,
     install: installAtividadesAvaliacoesFeature,
-    api: Object.freeze({})
+    api: atividadesAvaliacoes.api
 };
 
 export default descriptor;

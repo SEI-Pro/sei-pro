@@ -1,6 +1,7 @@
 /**
  * ADR-0015 / Phase S.1–S.2: host permission wildcards forbidden;
- * web_accessible_resources.matches ⊆ content_scripts.matches.
+ * URL query selectors belong in content-script globs, while
+ * web_accessible_resources is constrained to an explicit origin allowlist.
  */
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -11,14 +12,13 @@ const manifest = JSON.parse(readFileSync(join(root, 'manifest.base.json'), 'utf8
 
 /** Host patterns that grant (or allow requesting) essentially the whole web. */
 const HOST_WILDCARD_RE = /^(https?:\/\/\*\/\*|<all_urls>|\*:\/\/\*\/\*)$/i;
-
-function collectContentScriptMatches(m) {
-    const set = new Set();
-    for (const cs of m.content_scripts || []) {
-        for (const pattern of cs.matches || []) set.add(pattern);
-    }
-    return set;
-}
+const WEB_ACCESSIBLE_ORIGINS = [
+    '*://sei.prf.gov.br/*',
+    '*://*.sp.gov.br/*',
+    '*://*.antt.gov.br/*',
+    '*://sip-sei.ans.gov.br/*',
+    '*://sip-sei.ans.br/*'
+];
 
 describe('manifest permissions (ADR-0015)', () => {
     it('rejects host wildcards in optional_host_permissions and host_permissions', () => {
@@ -48,18 +48,39 @@ describe('manifest permissions (ADR-0015)', () => {
         expect(optional).not.toContain('https://*/*');
     });
 
-    it('restricts web_accessible_resources.matches to content_script matches', () => {
-        const csMatches = collectContentScriptMatches(manifest);
-        expect(csMatches.size).toBeGreaterThan(0);
-        for (const entry of manifest.web_accessible_resources || []) {
-            for (const pattern of entry.matches || []) {
-                expect(
-                    csMatches.has(pattern),
-                    `WAR match not in content_scripts: ${pattern}`
-                ).toBe(true);
+    it('keeps query strings out of Chrome match patterns', () => {
+        for (const [index, cs] of (manifest.content_scripts || []).entries()) {
+            for (const key of ['matches', 'exclude_matches']) {
+                for (const pattern of cs[key] || []) {
+                    expect(pattern, `${key}[${index}] contains a query: ${pattern}`).not.toMatch(/[?#]/);
+                }
             }
-            expect(entry.matches || []).not.toContain('*://*.br/*');
-            expect(entry.matches || []).not.toContain('*://*.org/*');
+        }
+    });
+
+    it('does not use unsupported top-level-domain wildcards', () => {
+        for (const cs of manifest.content_scripts || []) {
+            for (const pattern of [...(cs.matches || []), ...(cs.exclude_matches || [])]) {
+                const host = pattern.split('://')[1]?.split(/[/:]/, 1)[0];
+                expect(host, `TLD wildcard is not supported: ${pattern}`).not.toMatch(/^\*\.[^.]+$/);
+            }
+        }
+    });
+
+    it('uses globs for action-specific query selectors', () => {
+        const includeGlobs = (manifest.content_scripts || []).flatMap((cs) => cs.include_globs || []);
+        const excludeGlobs = (manifest.content_scripts || []).flatMap((cs) => cs.exclude_globs || []);
+        expect(includeGlobs.some((pattern) => pattern.includes('?acao=editor_montar'))).toBe(true);
+        expect(excludeGlobs.some((pattern) => pattern.includes('?acao=editor_montar'))).toBe(true);
+    });
+
+    it('keeps web_accessible_resources at origin scope and on the allowlist', () => {
+        for (const entry of manifest.web_accessible_resources || []) {
+            expect(entry.matches || []).toEqual(WEB_ACCESSIBLE_ORIGINS);
+            for (const pattern of entry.matches || []) {
+                expect(pattern, `WAR match must end at the origin: ${pattern}`).toMatch(/\/\*$/);
+                expect(pattern).not.toMatch(/[?#]/);
+            }
         }
     });
 });

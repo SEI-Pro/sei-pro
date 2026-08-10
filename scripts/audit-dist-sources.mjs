@@ -36,7 +36,6 @@ function declaredOutputs() {
             (f.endsWith('.js') || f.endsWith('.ts'))
             && f !== 'background.js'
             && f !== 'atividades.ts'
-            && f !== 'sei-functions.ts'
             && f !== 'editor.js'
             && f !== 'editor.ts'
             && f !== 'arvore.ts'

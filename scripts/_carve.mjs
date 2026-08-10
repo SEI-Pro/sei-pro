@@ -5,7 +5,7 @@
  * migração e valida a sintaxe ao final.
  *
  * Uso:
- *   node scripts/_carve.mjs dist/js/sei-functions-pro.js core/helpers.js nomeA nomeB ...
+ *   node scripts/_carve.mjs dist/js/legacy-context.bundle.js core/helpers.js nomeA nomeB ...
  * (2º arg = módulo destino, só para o texto do comentário)
  */
 import { readFileSync, writeFileSync } from 'node:fs';

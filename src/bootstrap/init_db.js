@@ -23,7 +23,7 @@ function setConfigHost(host, callback, callback_else){
 /* function appendIconEntidadeLogin() {
     if ($('#divAreaRestrita').length > 0 && $('#iconEntidade').length == 0) {
         $.getScript(getUrlExtension("js/lib/jquery-3.7.1.min.js"));
-        if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+        if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/legacy-context.bundle.js"));
         $.getScript(getUrlExtension("js/sei-pro-icons.js"));
 
     }

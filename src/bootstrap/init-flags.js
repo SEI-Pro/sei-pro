@@ -1,7 +1,7 @@
 // Big-bang do núcleo (isolated-first). Define cedo os globais que os arquivos
 // legados leem em TEMPO DE CARGA (antes era garantido porque init.js rodava antes
 // do $.getScript dos demais; agora tudo é eager via manifest). Carregado logo após
-// jQuery + shim, antes de sei-functions-pro.js e das features.
+// jQuery + shim, antes do contexto legado transversal e das features.
 (function () {
     try {
         if (window.SeiPro && SeiPro.core && SeiPro.core.runtime) {

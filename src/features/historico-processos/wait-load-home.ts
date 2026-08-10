@@ -12,7 +12,7 @@ import {
     resetDialogBoxPro,
     setSessionProcessosPro,
     updateUrlPage
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function waitLoadPro(Obj, ElemRaiz, Elem, func, TimeOut = 6000) {
   if (TimeOut <= 0) return;

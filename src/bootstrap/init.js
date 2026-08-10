@@ -17,7 +17,7 @@ $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/lib/diff2html.min.js"));
 $.getScript(getUrlExtension("js/docs-lote.bundle.js"));
 var seiProFunctionsLoaded_init = $.Deferred().resolve();
-if (typeof checkHostLimit === 'undefined' || typeof loadFunctionsPro === 'undefined') seiProFunctionsLoaded_init = $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (typeof checkHostLimit === 'undefined' || typeof loadFunctionsPro === 'undefined') seiProFunctionsLoaded_init = $.getScript(getUrlExtension("js/legacy-context.bundle.js"));
 
 function divIconsLoginPro() {
     var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'

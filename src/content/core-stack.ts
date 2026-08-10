@@ -23,6 +23,6 @@ installSharedLegacyHelpers();
 installDatasView();
 installDatasLegacyApi();
 // Ponte transitória do bloco legado amplo: aliases globais de Processos
-// Monitorados ainda precisam existir antes de sei-functions-pro/init*. Mantém a
+// Monitorados ainda precisam existir antes do contexto legado/init*. Mantém a
 // dependência de feature fora de src/core/stack.js até haver entries por contexto.
 installMonitoradoStoreLegacyApi();

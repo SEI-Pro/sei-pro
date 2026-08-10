@@ -6,7 +6,7 @@
 import {
     alertaBoxPro,
     resetDialogBoxPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function initResizeImg(editor) {
 	var window = editor.window.$, document = editor.document.$;

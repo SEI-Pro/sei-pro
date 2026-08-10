@@ -35,7 +35,7 @@ describe('migration: lista-agrupamento legacy bridge', () => {
     expect(contexts).toHaveLength(2);
     for (const { js } of contexts) {
       const bundleIndex = js.indexOf('js/lista-context.bundle.js');
-      expect(bundleIndex).toBeGreaterThan(js.indexOf('js/sei-functions-pro.js'));
+      expect(bundleIndex).toBeGreaterThan(js.indexOf('js/legacy-context.bundle.js'));
       expect(js).not.toContain('js/lista-agrupamento.bundle.js');
       expect(js).not.toContain('js/docs-lote.bundle.js');
     }

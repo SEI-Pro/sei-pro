@@ -32,8 +32,8 @@ describe('editor loader security boundary', () => {
 
     it('loads AI directly as an isolated content script', () => {
         const manifest = JSON.parse(read('manifest.base.json'));
-        const editor = manifest.content_scripts.find(({ matches = [] }) =>
-            matches.some((match) => match.includes('acao=editor_montar'))
+        const editor = manifest.content_scripts.find(({ matches = [], include_globs = [] }) =>
+            [...matches, ...include_globs].some((match) => match.includes('acao=editor_montar'))
         );
         expect(editor.js).toContain('js/sei-pro-ai.js');
         expect(editor.js.indexOf('js/sei-pro-ai.js')).toBeGreaterThan(

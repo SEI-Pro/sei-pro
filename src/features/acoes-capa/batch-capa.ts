@@ -41,7 +41,7 @@ import {
     resetDialogBoxPro,
     setSessionProcessosPro,
     updateTreeDocumentById
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function batchActionsPro(this_) {
     var _this = $(this_);

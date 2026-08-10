@@ -28,10 +28,10 @@ describe('manifest content_scripts load order (bundled core)', () => {
         });
     });
 
-    it('loads the core-stack bundle before sei-functions-pro and init scripts', () => {
+    it('loads the core-stack bundle before the legacy capability composition and init scripts', () => {
         entriesWithCore().forEach((cs, i) => {
             const bundle = cs.js.indexOf(BUNDLE);
-            const seiFns = cs.js.indexOf('js/sei-functions-pro.js');
+            const seiFns = cs.js.indexOf('js/legacy-context.bundle.js');
             const initAll = cs.js.indexOf('js/init_all.js');
             if (seiFns !== -1) {
                 expect(bundle, `entry ${i}: bundle before sei-functions-pro`).toBeLessThan(seiFns);
@@ -42,11 +42,11 @@ describe('manifest content_scripts load order (bundled core)', () => {
         });
     });
 
-    it('loads jQuery before sei-functions-pro and init scripts that need it', () => {
+    it('loads jQuery before the legacy capability composition and init scripts that need it', () => {
         entriesWithCore().forEach((cs, i) => {
             const jq = cs.js.findIndex((f) => JQUERY_RE.test(f));
             if (jq === -1) return;
-            const seiFns = cs.js.indexOf('js/sei-functions-pro.js');
+            const seiFns = cs.js.indexOf('js/legacy-context.bundle.js');
             const initAll = cs.js.indexOf('js/init_all.js');
             if (seiFns !== -1) {
                 expect(jq, `entry ${i}: jQuery before sei-functions-pro`).toBeLessThan(seiFns);
@@ -91,11 +91,11 @@ describe('feature bundle: arvore (Informações adicionais na árvore)', () => {
         expect(featIdx, 'feature block found').toBeGreaterThanOrEqual(0);
         const scripts = cs[featIdx].js || [];
         expect(scripts[0]).toBe(BUNDLE);
-        expect(scripts.indexOf('js/sei-functions-pro.js')).toBeLessThan(scripts.indexOf(FEATURE_BUNDLE));
+        expect(scripts.indexOf('js/legacy-context.bundle.js')).toBeLessThan(scripts.indexOf(FEATURE_BUNDLE));
     });
 });
 
-// Guard against double injection of sei-functions-pro.js on editor pages
+// Guard against double injection of the legacy capability composition on editor pages
 // (SyntaxError: Identifier 'loadFunctionsPro' has already been declared).
 const EDITOR_ACTIONS = [
     'editor_montar',
@@ -104,13 +104,21 @@ const EDITOR_ACTIONS = [
     'texto_padrao_interno_cadastrar'
 ];
 
-describe('manifest: editor pages avoid duplicate sei-functions-pro', () => {
-    it('has a dedicated editor content_scripts block with sei-functions-pro', () => {
+function selectors(entry, kind = 'include') {
+    const matchKey = kind === 'exclude' ? 'exclude_matches' : 'matches';
+    const globKey = kind === 'exclude' ? 'exclude_globs' : 'include_globs';
+    return [
+        ...(entry[matchKey] || []),
+        ...(entry[globKey] || [])
+    ];
+}
+
+describe('manifest: editor pages avoid duplicate legacy capability composition', () => {
+    it('has a dedicated editor content_scripts block with the legacy composition', () => {
         const manifest = readManifest();
         const editorBlocks = (manifest.content_scripts || []).filter(
-            (cs) => Array.isArray(cs.matches) &&
-                cs.matches.some((m) => m.includes('acao=editor_montar')) &&
-                Array.isArray(cs.js) && cs.js.includes('js/sei-functions-pro.js')
+            (cs) => selectors(cs).some((m) => m.includes('acao=editor_montar')) &&
+                Array.isArray(cs.js) && cs.js.includes('js/legacy-context.bundle.js')
         );
         expect(editorBlocks.length, 'dedicated editor block').toBe(1);
     });
@@ -121,7 +129,7 @@ describe('manifest: editor pages avoid duplicate sei-functions-pro', () => {
             (cs) => Array.isArray(cs.js) && cs.js.includes('js/init_all.js')
         );
         expect(broad, 'broad init_all block exists').toBeTruthy();
-        const excludes = broad.exclude_matches || [];
+        const excludes = selectors(broad, 'exclude');
         for (const action of EDITOR_ACTIONS) {
             expect(
                 excludes.some((m) => m.includes(`acao=${action}`)),

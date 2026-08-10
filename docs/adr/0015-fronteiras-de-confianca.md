@@ -17,14 +17,14 @@ de LLM em `optional_host_permissions` (`api.openai.com`, `api.anthropic.com`,
 **`https://*/*`**. O curinga torna a enumeração decorativa: uma vez concedido, a extensão
 alcança qualquer origem HTTPS da web.
 
-**Recursos expostos a toda a web brasileira.** `web_accessible_resources` publica **141
-arquivos** para `*://*.br/*` e `*://*.org/*`. Qualquer site `.br` ou `.org` — não só o SEI —
-pode carregá-los, o que serve de vetor de fingerprinting da extensão e amplia a superfície
-sem necessidade.
-
-**Content scripts com casamento largo demais.** Padrões como
-`*://*.br/*controlador*.php?acao=*` casam com qualquer site `.br` que tenha essa forma de
-URL, não apenas com instâncias do SEI.
+**Padrões inválidos no manifesto.** A versão anterior tentava restringir os 141 recursos de
+`web_accessible_resources` por caminho e query (`*://*.br/...php?acao=*`). O Chrome não aceita
+query em match patterns e, para recursos acessíveis à web, aceita apenas o padrão de origem
+com caminho final `/*`; por isso a extensão nem sequer carregava. A correção separa as
+responsabilidades: WAR usa uma allowlist de origens conhecidas e os filtros por `acao` ficam
+em `include_globs`/`exclude_globs` dos content scripts. Os curingas de host no nível de TLD
+(`*.br`, `*.org`) também não são suportados pelo Chrome; os match patterns usam host curinga
+com caminho e deixam a seleção de domínio para os globs.
 
 **Sanitização praticamente ausente.** Há **110** escritas em `innerHTML` e **405** chamadas
 a `.html()` do jQuery em `src/`, contra **1** único uso de `DOMPurify.sanitize`. O HTML vem do
@@ -68,8 +68,11 @@ fronteira do ACL (ADR-0003), nunca no meio da feature.
 - **`https://*/*` é removido de `optional_host_permissions`.** Provedor de LLM próprio
   (institucional ou local) passa a ser autorizado por `chrome.permissions.request` para a
   **origem exata** que o usuário digitou, em tempo de execução.
-- `web_accessible_resources` restrito ao mínimo realmente carregado pela página, com
-  `matches` dos padrões do SEI — nunca `*://*.br/*` — e `use_dynamic_url` quando aplicável.
+- `web_accessible_resources` restrito ao mínimo realmente carregado pela página e a uma
+  allowlist explícita de origens (`sei.prf.gov.br`, domínios institucionais conhecidos e os
+  endpoints ANS legados). Como o Chrome exige `/*` nesse campo, a granularidade de caminho e
+  query fica nos `matches`/`include_globs` dos content scripts — nunca em WAR. Uma origem nova
+  exige ADR; `use_dynamic_url` continua disponível quando aplicável.
 - Toda permissão nova exige ADR, com justificativa que sobreviva à revisão da Chrome Web
   Store: qual feature, qual origem, por quê o escopo não pode ser menor.
 - **Nenhum `eval`, em nenhum mundo**, inclusive MAIN. Sobrescrever API da página se faz por
@@ -118,7 +121,11 @@ página em telemetria; `fetch` a origem externa a partir de content script.
   - `optional_host_permissions` não contém `https://*/*` nem outro curinga de host;
   - `permissions` e `host_permissions` casam com uma allowlist versionada — crescer exige
     editar a allowlist, o que aparece no diff e exige ADR;
-  - `matches` de `web_accessible_resources` são subconjunto dos padrões de content script.
+  - `matches`/`exclude_matches` de content scripts não contêm query ou fragmento;
+  - não há wildcard de host diretamente no TLD (`*.br`, `*.org`);
+  - queries de ações aparecem somente em `include_globs`/`exclude_globs`;
+  - `web_accessible_resources.matches` termina em `/*` e é igual à allowlist versionada de
+    origens.
 - `tests/structure/no-eval.test.js` — nenhuma ocorrência de `eval(` ou `new Function(` em
   `src/`, exceto em comentário que documente a remoção.
 - `tests/structure/secrets-storage.test.js` — nenhuma chave da lista de segredos

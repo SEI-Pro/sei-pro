@@ -14,7 +14,7 @@ import {
     setSessionProcessosPro,
     setSizeIframePro,
     waitLoadPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function resizeWinArvore(widthArvore) {
     var indent = 10; // reduz 10 pixel a largura do visualizador para compensar a barra divisoria existente entre a arvore e o visualizador

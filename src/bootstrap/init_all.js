@@ -4,8 +4,8 @@ var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionN
 var frmEditor = SeiPro.sei.adapter.isSEI5() ? $('.infra-editor__editor-completo') : $('#frmEditor');
 
 var seiProFunctionsLoaded = $.Deferred().resolve();
-if (!frmEditor.length) {
-    seiProFunctionsLoaded = $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (!frmEditor.length && typeof loadFunctionsPro === 'undefined') {
+    seiProFunctionsLoaded = $.getScript(getUrlExtension("js/legacy-context.bundle.js"));
 }
 
 // [migrado para core/sei] getUrlExtension

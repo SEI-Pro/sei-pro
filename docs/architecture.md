@@ -43,32 +43,32 @@ até o alvo.
 
 | Dimensão | Hoje | Alvo | ADR |
 |---|---|---|---|
-| Base tipada | ~384 `.ts` + 24 legados `.js`; **382** `@ts-nocheck` | tipagem sem `@ts-nocheck` | [0014](./adr/0014-typescript-para-codigo-novo.md) |
-| Blocos de content script | 11 (maior **40**); `manifest:check` ok | 1 script/contexto gerado | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
-| Features com `feature.ts` | **26 declaradas**; maturidade explícita (`declared` / `wired` / `exclusive`) | por capacidade, `exclusive` | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md), [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
-| Features exclusivas | **15** (`login`, `external-config`, `nao-lido`, `arvore`, `arvore-info`, `quick-highlight`, `visualizacao`, `editor` + 7 da lista) | crescente; só estas contam como migradas | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| Base tipada | ~384 `.ts` + 24 legados `.js`; **386** `@ts-nocheck` | tipagem sem `@ts-nocheck` | [0014](./adr/0014-typescript-para-codigo-novo.md) |
+| Blocos de content script | 10 (maior **33**); `manifest:check` ok | 1 script/contexto gerado | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
+| Features com `feature.ts` | **37** (`14 exclusive`, `17 wired`, `6 declared`) | por capacidade, `exclusive` | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md), [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
+| Features exclusivas | **14** (`login`, `external-config`, `nao-lido`, `arvore`, `arvore-info`, `quick-highlight`, `visualizacao`, `editor` + 6 da lista) | crescente; só estas contam como migradas | [0004](./adr/0004-features-autodescritivas-manifest-gerado.md) |
 | ACL `src/sei/` | selectors, pages, supports, parse | concentra o SEI | [0003](./adr/0003-anti-corruption-layer-sei.md) |
 | Seletores fora do ACL | 58 | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
 | Ramificação `isNewSEI`/`isSEI_5` | 46 | 0 fora de `src/sei/` | [0003](./adr/0003-anti-corruption-layer-sei.md) |
 | jQuery `$(` | 91 (~4054 usos) | 0 | [0003](./adr/0003-anti-corruption-layer-sei.md) |
-| `getSeiPro()` | 51 (352 refs `SeiPro.`) | 0 fora da raiz | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
-| `aliasGlobal` | **176** | 0 dívida; `publishGlobal` no núcleo | [0012](./adr/0012-aliasglobal-publicacao-vs-legado.md) |
+| `getSeiPro()` | 51 (350 refs `SeiPro.`) | 0 fora da raiz | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
+| `aliasGlobal` | **180** | 0 dívida; `publishGlobal` no núcleo | [0012](./adr/0012-aliasglobal-publicacao-vs-legado.md) |
 | Arquivos > 500 linhas | 45 | decrescente | [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
 | Chaves no schema | **74** | schema único | [0009](./adr/0009-configuracao-como-schema-unico.md) |
 | `console.*` cru | 503 / 93 arquivos | logger injetado | [0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md) |
 | Event bus | **removido** | — | [0013](./adr/0013-remover-bus-nao-utilizado.md) |
 | `https://*/*` | **removido** | — | [0015](./adr/0015-fronteiras-de-confianca.md) |
-| Testes | 213 arquivos / **1159** testes | — | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
+| Testes | 217 arquivos / **1171** testes | — | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
 | `dist/` reproduzível | ✅ | — | [0011](./adr/0011-dist-fora-do-versionamento.md) |
 | CI | ✅ `.github/workflows/ci.yml` | portão obrigatório | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
 
 **Leitura honesta:** a base bundlada foi renomeada para TypeScript e as features têm
 descritores; isso não equivale a base tipada nem a feature migrada. Uma feature só é
 **exclusive** quando a raiz de composição a instala e não há auto-boot ou caminho legado
-paralelo. O manifesto ainda carrega blocos legados gordos e ~382 arquivos estão sob
-`@ts-nocheck`. Duas arquiteturas
-ainda convivem — a moderna cresceu (ACL, schema, boot isolado, strangler de atividades); a
-legada (24 cópias verbatim, ordem do manifest) ainda executa a maior parte do dia a dia.
+paralelo. O manifesto ainda carrega blocos legados gordos e 386 arquivos estão sob
+`@ts-nocheck`. Duas arquiteturas ainda convivem — a moderna cresceu (ACL, schema, boot
+isolado, registries por contexto e fronteiras por capacidade); a legada (23 cópias verbatim,
+ordem do manifest e globals do SEI) ainda executa a maior parte do dia a dia.
 
 ---
 
@@ -83,7 +83,7 @@ src/
 ├── platform/     # ports: storage, net, messaging, logger, runtime (único com chrome.*)
 ├── shared/       # helpers e primitivos de UI vanilla (shared/ui/)
 ├── config/       # schema + read + migrations                   → ADR-0009
-├── features/     # 26 capacidades (incl. stranglers)           → ADR-0004, ADR-0007
+├── features/     # 37 capacidades (incl. stranglers)           → ADR-0004, ADR-0007
 ├── options/      # implementação da página de configuração
 ├── background/   # handlers do service worker MV3
 ├── bootstrap/    # init*.js legados (glue de carga, transitório)
@@ -93,10 +93,13 @@ src/
 Referências de leitura: `src/features/monitorados/` é a feature migrada mais próxima do
 alvo; `src/features/editor/lib/domq.js` é o melhor padrão do repositório para sair de
 dependência legada (fachada mínima + fitness function travando a regressão);
-`src/entries/atividades.ts` e `src/entries/sei-functions.ts` são as raízes de composição
-das duas capacidades ainda amplas; `src/features/atividades/` é o subsistema a dividir
-([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md),
-detalhe em [atividades-architecture.md](./atividades-architecture.md)).
+`src/entries/legacy-context.ts` é a raiz única de composição temporária que preserva os
+globals do antigo `sei-functions`, executando cada cluster com isolamento de falha por id;
+`src/shared/sei-runtime/` contém apenas o runtime transversal. As capacidades foram extraídas
+para pastas próprias; `src/features/atividades/`
+agora é o núcleo residual/compatibilidade que ainda será reduzido
+([ADR-0007](./adr/0007-fronteira-de-feature-por-capacidade.md), detalhe em
+[atividades-architecture.md](./atividades-architecture.md)).
 
 ---
 
@@ -187,8 +190,9 @@ facilidade.
    mata os blocos de 40 scripts e a divergência entre fontes de verdade.
 6. **Raiz de composição e injeção explícita, por contexto**
    ([0005](./adr/0005-raiz-de-composicao-e-injecao-explicita.md), [0006](./adr/0006-isolamento-de-falha-por-feature.md)).
-7. **Refronteirização por capacidade**: dividir `atividades`, dissolver `sei-functions`
-   ([0007](./adr/0007-fronteira-de-feature-por-capacidade.md)).
+7. **Refronteirização por capacidade**: concluída para `sei-functions` e para as quatro
+   capacidades grandes de `atividades`; resta retirar o núcleo residual e migrar os
+   call-sites que ainda usam as fachadas ([0007](./adr/0007-fronteira-de-feature-por-capacidade.md)).
 8. **Remoção dos `@ts-nocheck`** ([0014](./adr/0014-typescript-para-codigo-novo.md)), em
    paralelo com qualquer item acima: arquivo tocado entra no `strict` no mesmo commit.
 

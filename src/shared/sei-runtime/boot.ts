@@ -18,7 +18,7 @@ import {
     resizeArvoreMaxWidth,
     setResizeArvoreMaxWidth,
     setSizeIframePro
-} from './modules.js';
+} from './deps.js';
 
 export function fnJqueryPro() {
     try { refreshSeiPageSelectors(); } catch (e) { /* selectors optional until DOM ready */ }
@@ -282,7 +282,8 @@ export function loadScriptPro() {
         });
     }
 }
-loadScriptPro();
+// Auto-boot foi removido na dissolução do agregado. A raiz de composição chama
+// `loadScriptPro()` depois de instalar os clusters necessários.
 
 // Implementações globais explícitas para evitar dependência do escopo legado do arquivo.
 (function() {

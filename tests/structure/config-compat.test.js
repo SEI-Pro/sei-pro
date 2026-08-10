@@ -31,8 +31,8 @@ describe('config compatibility contract: checkConfigValue', () => {
         expect(core).toMatch(/aliasGlobal\(\s*['"]isDefaultEnabledConfigValue['"]/);
     });
 
-    it('is NOT redefined in the legacy module (sei-functions-pro.js)', () => {
-        const legacy = read('dist/js/sei-functions-pro.js');
+    it('is NOT redefined in the legacy context bundle', () => {
+        const legacy = read('dist/js/legacy-context.bundle.js');
         expect(legacy).not.toMatch(/function checkConfigValue\s*\(/);
         expect(legacy).not.toMatch(/function isDefaultEnabledConfigValue\s*\(/);
     });

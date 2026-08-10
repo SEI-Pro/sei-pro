@@ -1,45 +1,30 @@
-/**
- * Atividades · configuração (strangler / ADR-0007 fase 5.3).
- *
- * Reexporta pontos de entrada do painel/opções ainda hospedados em `atividades/`.
- * Não remove nem altera o install de `atividades` — fatia só cria a fronteira.
- *
- * Consumidores novos preferem este módulo; o descritor (`feature.ts`) não importa
- * estes reexports para não puxar o monólito no scan/registry.
- */
-export {
+// @ts-nocheck — fatia legada isolada; a tipagem entra após a caracterização.
+import * as options from './config-options.js';
+import * as panel from './config-panel.js';
+import * as table from './config-table.js';
+import * as domain from './config-domain.js';
+import * as queries from './config-queries.js';
+import * as useCases from './config-use-cases.js';
+import { defineLegacyFeature } from '../../shared/sei-runtime/legacy-api.js';
+
+export const atividadesConfig = defineLegacyFeature({
+    id: 'atividades-config',
+    nsKey: 'atividadesConfig',
+    modules: [options, panel, table, domain, queries, useCases]
+});
+export const installAtividadesConfigFeature = atividadesConfig.install;
+export const {
     openModalConfigPanel,
     getTabsConfigPanel,
     getTabConfig,
     addConfigItem,
-    updateConfigServer
-} from '../atividades/config-panel.js';
-
-export {
+    updateConfigServer,
     editConfigOptions,
     changeConfigOptions,
     checkDatesLoopArray,
     checkDatesBetweenArray,
     configPessoal,
     saveConfigPersonalUser,
-    saveOptionConfigItem
-} from '../atividades/config-options.js';
-
-export {
-    checkDatesLoopArray as checkDatesLoopArrayDomain,
-    checkDatesBetweenArray as checkDatesBetweenArrayDomain
-} from '../atividades/config-domain.js';
-
-export {
-    selectEntityConfig,
-    selectEntityOption,
-    hasEntityOption,
-    selectUnitConfig,
-    selectConfigItem
-} from '../atividades/config-queries.js';
-
-export { createConfigUseCases } from '../atividades/config-use-cases.js';
-
-export function installAtividadesConfigFeature() {
-    // no-op until composition root wires this feature independently
-}
+    saveOptionConfigItem,
+    createConfigUseCases
+} = atividadesConfig.api;

@@ -40,7 +40,7 @@ describe('migration: nao-lido legacy facade', () => {
     for (const entry of entries) {
         const requiredBeforeFeature = [
         'js/core-stack.bundle.js',
-        'js/sei-functions-pro.js'
+        'js/legacy-context.bundle.js'
       ];
       const bundleIndex = entry.js.indexOf('js/lista-context.bundle.js');
 

@@ -13,9 +13,9 @@ describe('feature descriptors (ADR-0004)', () => {
     const descriptors = scanFeatureDescriptors();
     const dirs = listFeatureDirs();
 
-    it('counts 26 feature folders', () => {
-        expect(dirs).toHaveLength(26);
-        expect(descriptors).toHaveLength(26);
+    it('counts 37 feature folders', () => {
+        expect(dirs).toHaveLength(37);
+        expect(descriptors).toHaveLength(37);
     });
 
     it('every feature folder has feature.ts', () => {

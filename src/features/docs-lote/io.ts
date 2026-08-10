@@ -3,7 +3,7 @@
 // mantido nesta camada durante a transição). Não toca o DOM da página: o progresso é
 // reportado por callback (`onProgress`) injetado pela view. Usa o estado (S) e o domínio.
 //
-// Helpers globais do SEI lidos do escopo isolado (definidos por core/sei-functions-pro):
+// Helpers globais do SEI lidos do escopo isolado (definidos pelo contexto legado):
 //   $, getParamsUrlPro, removeAcentos, escapeComponent, trycatch, uniqPro, getHashTagsPro,
 //   camposDinamicosProcesso, dadosProcessoPro, url_host, mainMenu, getUrlNewDocArvore,
 //   alertaBoxPro, SeiPro.sei.adapter, SeiPro.core.docslote.

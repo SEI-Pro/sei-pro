@@ -7,12 +7,12 @@ import { getName, getNameGenre } from '../../shared/nomenclatura.js';
 
 import {
     checkUnidadeFuncBeta
-} from './atividades-bridge.js';
+} from '../../shared/sei-runtime/atividades-bridge.js';
 
 import {
     getConfigHost,
     resetDialogBoxPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 // [migrado para core/sei] getConfigValue
 // [migrado para core/sei] verifyConfigValue

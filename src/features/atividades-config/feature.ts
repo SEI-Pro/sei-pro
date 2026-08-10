@@ -1,19 +1,19 @@
 /**
  * Descritor ADR-0004 / ADR-0007 — administração de configuração de atividades.
- * Strangler: install no-op; código ainda vive em `atividades/` (reexports em index).
+ * A implementação foi extraída para esta pasta; `atividades/` mantém apenas
+ * reexports de compatibilidade enquanto os call-sites são migrados.
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
+import { atividadesConfig, installAtividadesConfigFeature } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'atividades-config',
-    maturity: 'declared',
+    maturity: 'wired',
     contexts: ['lista', 'arvore'],
     // Shares parent toggle during strangler; dedicated key comes with full extraction.
     configKey: 'gerenciaratividades',
-    install() {
-        // Parent `atividades` still boots the runtime.
-    },
-    api: Object.freeze({})
+    install: installAtividadesConfigFeature,
+    api: atividadesConfig.api
 };
 
 export default descriptor;

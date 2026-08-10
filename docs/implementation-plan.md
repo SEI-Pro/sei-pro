@@ -89,7 +89,7 @@ fase 1; ficam antes dela na lista porque não há motivo para adiar.
 | # | Fatia | Pronto quando |
 |---|---|---|
 | S.1 | Remover `https://*/*` de `optional_host_permissions`; provedor customizado passa a pedir permissão em runtime para a origem digitada | `manifest-permissions.test.js` rejeita curinga de host |
-| S.2 | Restringir `matches` de `web_accessible_resources` aos padrões do SEI e podar os 141 recursos ao que a página realmente carrega | `matches` de WAR ⊆ `matches` de content script |
+| S.2 | Corrigir o schema de `web_accessible_resources`: origens em allowlist explícita; manter filtros `acao` em `include_globs`/`exclude_globs` dos content scripts | `manifest-permissions.test.js` rejeita queries em match patterns e WAR fora da allowlist |
 | S.3 | Remover o `eval` de `arvore-info/dom/confirm.js` (o `defineProperty` já é a via primária) | `no-eval.test.js` verde |
 | S.4 | Mover campos de credencial de `dataValues` de `storage.sync` para `storage.local`, com migração (coordenar com a fatia 2.5) | `secrets-storage.test.js` verde |
 | S.5 | Redação de PII em `report.js` + telemetria opt-in; `script.google.com` sai de `host_permissions` obrigatório | `telemetry-scrub.test.js` verde; usuário vê o payload antes de enviar |
@@ -216,7 +216,7 @@ uma raiz que constrói dependências de verdade.
 | 4.4 | Raiz de composição dos contextos `login` e `db` (já são bundles finos) | registry gerado por contexto; `getSeiPro()` segue restrito ao legado interno |
 | 4.5 | Raízes de `lista`, `arvore`, `documento`, `visualizacao`, `editor`, um contexto por vez | ratchet de `getSeiPro()` cai a cada contexto |
 | 4.5a | Raízes explícitas de `options` e `service-worker`; manter `importScripts` isolado atrás da entry MV3 | `options` gera `options.bundle.js`; `background` mantém `js/background.js` estável e handlers testáveis |
-| 4.5b | Extrair o lifecycle de `atividades` e `sei-functions` para entries próprias, preservando os nomes de saída | os índices das features não auto-bootam; dissolução por capacidade fica isolada na Fase 5 |
+| 4.5b | Extrair o lifecycle de `atividades` e o runtime transversal legado para entries próprias, preservando os nomes de saída | **concluído**; `atividades.ts` e `legacy-context.ts` não auto-bootam módulos por import; instaladores legados são isolados por id |
 | 4.6 | `SeiPro` publicado só na raiz; `publishGlobal` substitui `aliasGlobal` no núcleo (ADR-0012) | `globals.test.js` verde; violações caem de 186 para 50 |
 | 4.7 | Logger injetado substitui `console.*` nos contextos migrados | ratchet de `console.*` cai de 492 |
 | 4.8 | Remover `platform/bus.js` e o emissor único (ADR-0013) | `no-bus.test.js` verde |
@@ -243,23 +243,24 @@ testar, e ratchets para não regredir.
 
 | # | Fatia | Pronto quando |
 |---|---|---|
-| 5.1 | Mapear capacidades reais usando `pages/` (~80 arquivos) e os CSVs de `docs/mapping-funcoes-configuracoes/` | lista de features-alvo nomeadas no vocabulário do usuário |
-| 5.2 | Cobrir com teste o domínio de `atividades/config-options.js` (5458 linhas) **antes** de mover | teste caracteriza o comportamento atual |
-| 5.3 | Extrair a administração de configuração de `atividades` como feature própria | descritor + `configKey` + testes; smoke |
-| 5.4 | Extrair afastamentos, avaliações e registro de atividades, uma por vez | idem, uma fatia cada |
-| 5.5 | Dissolver `sei-functions`: cada cluster vira feature nomeada por capacidade | a pasta **deixa de existir**, não é renomeada |
+| 5.1 | Mapear capacidades reais usando `pages/` (~80 arquivos) e os CSVs de `docs/mapping-funcoes-configuracoes/` | **concluído**; lista de features-alvo nomeadas no vocabulário do usuário |
+| 5.2 | Cobrir com teste o domínio de `atividades/config-options.js` (5458 linhas) **antes** de mover | **concluído**; caracterização preservada |
+| 5.3 | Extrair a administração de configuração de `atividades` como feature própria | **concluído**; `atividades-config` wired + `configKey` compartilhada explicitamente |
+| 5.4 | Extrair afastamentos, avaliações e registro de atividades, uma por vez | **concluído**; três installers wired + wrappers de compatibilidade |
+| 5.5 | Dissolver `sei-functions`: cada cluster vira feature nomeada por capacidade | **concluído**; pasta removida, runtime em `shared/sei-runtime` |
 | 5.6 | Fatiar `src/css/sei-pro.css` (120 KB) em `src/features/<x>/style.css` | ratchet de linhas do arquivo cai até zerar |
 | 5.7 | `capability-coverage.test.js`: schema, descritores e `pages/` fecham entre si | toda `configKey` tem uma e só uma feature |
 
 **Portão de saída:** nenhuma pasta de feature que falhe no teste de fronteira do ADR-0007.
 Smoke manual amplo.
 
-**Riscos.** O maior do plano em impacto de produto: 25 mil linhas em `atividades`, com os 4
-maiores arquivos sem nenhum teste. A fatia 5.2 é obrigatória e não é negociável — mover
-antes de cobrir é como a dívida foi criada. `sei-functions` inclui captcha do editor e
-notificações de processo: comportamento sensível, difícil de smoke-testar.
+**Riscos residuais.** O maior impacto de produto continua em `atividades`: o núcleo residual
+mantém globals e wrappers enquanto os call-sites são migrados. A dissolução de
+`sei-functions` inclui captcha do editor e notificações de processo; por isso a mudança
+preserva aliases e exige smoke manual antes de promover os novos installers a `exclusive`.
 
-**Ratchets que caem:** arquivos acima de 500 linhas (42), linhas de `sei-functions`.
+**Ratchets que caem:** arquivos acima de 500 linhas (45 no estado atual, com tendência de
+queda); linhas de `sei-functions` caíram a zero porque a pasta foi removida.
 
 ---
 
@@ -269,8 +270,8 @@ notificações de processo: comportamento sensível, difícil de smoke-testar.
 da renomeação (fatia 0.7), cada arquivo tocado por qualquer motivo perde o marcador no mesmo
 commit e entra no `strict`. Ordem de mutirão, quando houver folga: `src/types` → ports de
 `platform` → descritor e schema → fronteira do ACL → `core` e `shared` → features.
-`atividades` e `sei-functions` ficam por último apesar de concentrarem 52% dos erros: a fase
-5 vai reescrevê-los, e tipar antes é pagar duas vezes. **A medida oficial é o ratchet de
+`atividades` fica por último apesar de concentrar grande parte dos erros; o runtime legado
+transversal já foi dissolvido e recebe tipagem apenas nas pontes novas. **A medida oficial é o ratchet de
 `@ts-nocheck`**, não a contagem de erros.
 
 **Manutenção dos ADRs** ([ADR-0001](./adr/0001-adotar-adrs.md)): decisão nova é ADR novo;
@@ -316,9 +317,10 @@ hook de pre-commit via `npm run hooks:install`.
 renomeação mecânica da base bundlada para `.ts` com `@ts-nocheck` (384 arquivos; 24 legados
 verbatim e `ckeditor-main.js` permanecem `.js`).
 
-**Fase S — Segurança** (2026-08-07). Removido `https://*/*`; WAR com matches do SEI; `eval`
-eliminado; credenciais em `storage.local`; telemetria opt-in com redação de PII; aviso de
-provedor LLM + chave `llmProvedoresExternos` (padrão aberto).
+**Fase S — Segurança** (2026-08-07). Removido `https://*/*`; WAR com allowlist de origens e
+match patterns válidos; queries de ação movidas para globs; `eval` eliminado; credenciais em
+`storage.local`; telemetria opt-in com redação de PII; aviso de provedor LLM + chave
+`llmProvedoresExternos` (padrão aberto).
 
 **Fase 1 — ACL** (2026-08-07). `src/sei/{selectors,pages,supports,parse/*}.ts`; fixtures
 lista (produção esqueletizada) + árvore/documento (sintéticas); consumidores migrados;
@@ -327,24 +329,24 @@ lista (produção esqueletizada) + árvore/documento (sintéticas); consumidores
 **Fase 2 — Schema** (2026-08-07). `src/config/schema.ts` (74 chaves), `read.ts`, migrações
 versionadas, options de privacidade geradas do schema.
 
-**Fase 3 — Descritores** (2026-08-07). 26 `feature.ts` (22 originais + stranglers Fase 5);
+**Fase 3 — Descritores** (2026-08-07). 37 `feature.ts` (incluindo as capabilities da Fase 5);
 registry por varredura; `npm run manifest:check` (passthrough seguro); snapshot de matches.
 Geração completa dos `content_scripts` permanece follow-up de risco.
 
 **Fase 4 — Composição** (2026-08-07). Ports `createX` + fakes; boot com isolamento de falha;
 raízes login/db/lista/arvore/documento/visualizacao/editor; entries explícitas de
-`atividades` e `sei-functions` para os bundles transversais; registries gerados por contexto,
-com sete capacidades modernas da lista já exclusivas; entries explícitas de `options` e do
-service worker; `atividades` permanece no fim do plano; `publishGlobal` amostral; **bus
-removido** (ADR-0013).
+`atividades` e `legacy-context` para os bundles transversais; registries gerados por contexto,
+com as capacidades modernas da lista já exclusivas; entries explícitas de `options` e do
+service worker; quatro sub-capabilities de atividades wired; `publishGlobal` amostral;
+**bus removido** (ADR-0013).
 
-**Fase 5 — Refronteiras (fundação)** (2026-08-07). Mapa de capacidades; testes de
-caracterização de `config-options`; strangler `atividades-config` + stubs
-afastamentos/avaliações/registro; plano de split de `sei-functions`; primeiro carve de CSS;
-`capability-coverage.test.js`. Dissolução completa de `atividades`/`sei-functions` continua
-pelo strangler.
+**Fase 5 — Refronteiras (2026-08-07).** Mapa de capacidades; testes de caracterização de
+`config-options`; quatro capabilities de `atividades` wired; dissolução de `sei-functions`
+concluída com `legacy-context.bundle.js`, `shared/sei-runtime` e 12 destinos por capacidade;
+primeiro carve de CSS; `capability-coverage.test.js`. Continua apenas a redução do núcleo
+residual de `atividades` e a migração de call-sites.
 
-**Verificação:** `npm run verify` verde — typecheck, lint, build, **1159 testes**, audit:dist.
+**Verificação:** `npm run verify` verde — typecheck, lint, build, **1175 testes**, audit:dist.
 
 ---
 
@@ -356,7 +358,8 @@ Respondidas em 2026-08-07.
    build em container, para não exigir Node instalado no sistema — feito, ver acima.
 2. **`scripts/engineering-loop-*.mjs`.** Removidos.
 3. **Fronteiras de `atividades`.** A divisão proposta (configuração, afastamentos,
-   avaliações, registro) foi **validada**. A fatia 5.3 pode partir dela.
+   avaliações, registro) foi **implementada** como quatro capabilities wired. O próximo
+   passo é migrar call-sites e reduzir a fachada residual.
 4. **Recaptura de fixtures.** Protocolo em `DEVELOPMENT.md`, com ferramenta e travas
    implementadas — ver "Concluído". Recaptura disparada pela **declaração de suporte a versão
    nova do SEI**, não por calendário.
@@ -375,6 +378,7 @@ Respondidas em 2026-08-07.
    humano após mudanças de manifest/WAR/ACL.
 2. **Geração completa de `content_scripts`** — `manifest:check` valida sem reescrever blocos
    gordos; enxugar um contexto por vez com smoke.
-3. **Dissolução completa de `atividades` / `sei-functions`** — strangler iniciado; corpo ainda
-   nos monolitos.
+3. **Redução do núcleo residual de `atividades`** — as quatro capabilities já têm fronteira
+   e installer; ainda há wrappers/globals até os call-sites serem migrados e o runtime comum
+   ser isolado.
 4. **Remoção massiva de `@ts-nocheck`** — ratchet (~380); arquivo tocado perde o marcador.

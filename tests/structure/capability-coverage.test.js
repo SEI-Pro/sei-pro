@@ -31,7 +31,10 @@ const NULL_CONFIGKEY_ALLOWED = new Set([
     'external-config',
     'legis',
     'lista-processos',
-    'sei-functions',
+    'acoes-capa',
+    'dialogs-host',
+    'editor-captcha',
+    'interessados-forms',
     'todas-paginas',
     'visualizacao'
 ]);
@@ -43,7 +46,8 @@ const NULL_CONFIGKEY_ALLOWED = new Set([
 const CONFIG_KEY_FEATURE_OWNER_OVERRIDES = new Map([
     ['gerenciaratividades', new Set(['atividades', 'atividades-config'])],
     ['gerenciarprescricoes', new Set(['atividades', 'prescricoes'])],
-    ['filtrarpaginapelapesquisarapida', new Set(['lista-processos', 'quick-filter', 'quick-highlight'])]
+    ['filtrarpaginapelapesquisarapida', new Set(['lista-processos', 'quick-filter', 'quick-highlight'])],
+    ['notificacaonovoprocesso', new Set(['lista-processos', 'notificacoes-processo'])]
 ]);
 
 describe('capability coverage (ADR-0007 / phase 5.7)', () => {
@@ -106,7 +110,8 @@ describe('capability coverage (ADR-0007 / phase 5.7)', () => {
         expect([...CONFIG_KEY_FEATURE_OWNER_OVERRIDES.keys()]).toEqual([
             'gerenciaratividades',
             'gerenciarprescricoes',
-            'filtrarpaginapelapesquisarapida'
+        'filtrarpaginapelapesquisarapida',
+        'notificacaonovoprocesso'
         ]);
     });
 });

@@ -3,7 +3,7 @@ import { aliasGlobal, getSeiPro } from './global.js';
 
 /**
  * Opções da extensão guardadas no objeto `optionsPro` (web storage local).
- * Origem: dist/js/sei-functions-pro.js. Porte verbatim, SEM jQuery
+ * Origem histórica: contexto legado transversal. Porte verbatim, SEM jQuery
  * ($.isEmptyObject → isEmptyObjectPro, mesma semântica for-in).
  *
  * Delega o storage à camada webstore (SeiPro.core.webstore), instalada antes.

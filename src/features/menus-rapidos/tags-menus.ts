@@ -10,7 +10,7 @@ import {
     getHtmlKanbanUserPriority,
     getKanbanUserPriority,
     updateCountKanbanBoard
-} from './atividades-bridge.js';
+} from '../../shared/sei-runtime/atividades-bridge.js';
 
 import {
     alertaBoxPro,
@@ -21,7 +21,7 @@ import {
     resetDialogBoxPro,
     setSessionProcessosPro,
     updateDadosArvore
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function filterTagView(this_) {
     if ($('#kanbanAtivPanel').is(':visible')) {

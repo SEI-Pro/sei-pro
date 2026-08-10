@@ -6,7 +6,7 @@
 // Nota de transição: o markup preserva as classes GLOBAIS compartilhadas do SEI Pro
 // (seiProForm, tableInfo, tituloControle, onoffswitch, dialogBoxDiv, #dialogBoxDocLote…)
 // e os estilos inline herdados do legado — renomeá-los para `.seipro-*` quebraria a
-// infra de diálogo compartilhada com sei-functions-pro. Classes próprias desta feature
+// infra de diálogo compartilhada com o contexto legado. Classes próprias desta feature
 // usam o prefixo `.seipro-`.
 
 const wrap = (inner) => `<div id="dialogBoxDocLote" class="dialogBoxDiv seipro-doclote-dialog">${inner}</div>`;

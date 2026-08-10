@@ -59,11 +59,11 @@ describe('editor legacy API bridge', () => {
 
     it('injects the editor bundle into MAIN via isolated editor-loader', () => {
         const manifest = JSON.parse(read('manifest.base.json'));
-        const editorContexts = manifest.content_scripts.filter(({ matches = [] }) =>
-            matches.some((match) => match.includes('acao=editor_montar'))
+        const editorContexts = manifest.content_scripts.filter(({ matches = [], include_globs = [] }) =>
+            [...matches, ...include_globs].some((match) => match.includes('acao=editor_montar'))
         );
         const scripts = editorContexts[0]?.js || [];
-        const functionsIndex = scripts.indexOf('js/sei-functions-pro.js');
+        const functionsIndex = scripts.indexOf('js/legacy-context.bundle.js');
         const loaderIndex = scripts.indexOf('js/editor-loader.js');
         const initIndex = scripts.indexOf('js/init.js');
         const war = manifest.web_accessible_resources?.[0]?.resources || [];

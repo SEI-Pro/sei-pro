@@ -24,7 +24,6 @@ setTimeout(() => {
         loadFontIcons('head', $('#ifrConteudoVisualizacao, #ifrVisualizacao').contents());
     }
 }, 500);
-if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/legacy-context.bundle.js"));
 if (typeof loadSEIProVisualizacao === 'undefined') $.getScript(getUrlExtension("js/sei-pro-visualizacao.js"));
-
 

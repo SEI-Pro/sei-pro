@@ -10,8 +10,8 @@ describe('AI feature CSS ownership', () => {
         const css = read('src/features/ai/style.css');
         const view = read('src/features/ai/view/dialogs.ts');
         const manifest = JSON.parse(read('manifest.base.json'));
-        const editorBlock = manifest.content_scripts.find(({ matches = [] }) =>
-            matches.some((match) => match.includes('acao=editor_montar'))
+        const editorBlock = manifest.content_scripts.find(({ matches = [], include_globs = [] }) =>
+            [...matches, ...include_globs].some((match) => match.includes('acao=editor_montar'))
         );
 
         const selectors = [...css.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((match) => match[1]);

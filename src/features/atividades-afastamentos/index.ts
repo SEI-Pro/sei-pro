@@ -1,7 +1,10 @@
-/**
- * Stub (ADR-0007) — código ainda em `src/features/atividades/afastamentos.ts`.
- * Próxima fatia: mover o módulo e trocar este arquivo por reexports reais.
- */
-export function installAtividadesAfastamentosFeature() {
-    // no-op until extraction
-}
+// @ts-nocheck — fatia legada isolada; a tipagem entra após a caracterização.
+import * as afastamentos from './afastamentos.js';
+import { defineLegacyFeature } from '../../shared/sei-runtime/legacy-api.js';
+
+export const atividadesAfastamentos = defineLegacyFeature({
+    id: 'atividades-afastamentos',
+    nsKey: 'atividadesAfastamentos',
+    modules: [afastamentos]
+});
+export const installAtividadesAfastamentosFeature = atividadesAfastamentos.install;

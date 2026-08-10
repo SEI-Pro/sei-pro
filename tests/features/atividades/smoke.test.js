@@ -37,7 +37,7 @@ describe('atividades architecture smoke', () => {
       'src/features/projetos/io.ts',
       'src/features/projetos/commands.ts',
       'src/features/projetos/view/helpers.ts',
-      'src/features/sei-functions/atividades-bridge.ts',
+      'src/shared/sei-runtime/atividades-bridge.ts',
       'src/features/visualizacao/sei-pro-visualizacao.js'
     ];
     for (const file of consumers) {

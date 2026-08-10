@@ -4,7 +4,7 @@
 // inline nossos — esses não rodariam no mundo isolado). HTML/markup pertencem a esta
 // camada; rede vem do io; lógica pura do domain.
 //
-// `dialogBoxPro` é global EXTERNO (definido/lido por sei-functions-pro e outros) e é
+// `dialogBoxPro` é global EXTERNO (definido/lido pelo contexto legado e outros) e é
 // REATRIBUÍDO aqui — em bundle ESM (strict) precisa ser `window.dialogBoxPro`.
 
 import { S, helpPageUrl } from './state.js';

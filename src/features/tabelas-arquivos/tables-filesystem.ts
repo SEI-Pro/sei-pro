@@ -7,7 +7,7 @@ import {
     alertaBoxPro,
     confirmaFraseBoxPro,
     resetDialogBoxPro
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function dragColumnTable(elemTable) {
     var local = {};

@@ -40,7 +40,7 @@ describe('migration: atividades CSS P6 prefix', () => {
   });
 
   it('markup dual-class preserva ids legados e adiciona .seipro-*', () => {
-    const panel = read('src/features/atividades/panel.ts');
+    const panel = read('src/features/atividades-registro/panel.ts');
     expect(panel).toContain('id="tabelaAtivPanel" class="seipro-atividades-table-panel');
     expect(panel).toContain('id="ganttAtivPanel" class="seipro-atividades-gantt');
     expect(panel).toContain('id="atividadesProActions" class="seipro-atividades-actions');

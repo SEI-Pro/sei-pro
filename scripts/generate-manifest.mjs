@@ -47,6 +47,32 @@ function readCommitted() {
 function validate(manifest, descriptors) {
     const errors = [];
 
+    // Chrome match patterns describe scheme/host/path only. URL queries are
+    // intentionally kept in content-script globs; WAR is origin-scoped and
+    // must use the literal `/*` path accepted by the MV3 schema.
+    for (const [index, block] of (manifest.content_scripts || []).entries()) {
+        for (const key of ['matches', 'exclude_matches']) {
+            for (const pattern of block[key] || []) {
+                if (/[?#]/.test(pattern)) {
+                    errors.push(`content_scripts[${index}].${key} contains query/fragment: ${pattern}`);
+                }
+                const host = pattern.split('://')[1]?.split(/[/:]/, 1)[0];
+                if (host && /^\*\.[^.]+$/.test(host)) {
+                    errors.push(`content_scripts[${index}].${key} cannot wildcard a top-level domain: ${pattern}`);
+                }
+            }
+        }
+    }
+    for (const [index, entry] of (manifest.web_accessible_resources || []).entries()) {
+        for (const pattern of entry.matches || []) {
+            if (/[?#]/.test(pattern) || !pattern.endsWith('/*')) {
+                errors.push(
+                    `web_accessible_resources[${index}].matches must be an origin pattern ending in /*: ${pattern}`
+                );
+            }
+        }
+    }
+
     for (const d of descriptors) {
         if (d.missing) {
             errors.push(`missing descriptor: src/features/${d.dir}/feature.ts`);

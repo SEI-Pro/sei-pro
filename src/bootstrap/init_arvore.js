@@ -11,7 +11,10 @@ if (typeof DOMPurify === 'undefined') $.getScript(getUrlExtension("js/lib/purify
 // Dropzone removido — upload usa src/shared/ui/file-queue.js (vanilla)
 if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
 if (typeof loadFunctionsPro === 'undefined') {
-    $.getScript(getUrlExtension("js/sei-functions-pro.js")).then(function() {
+    const legacyReady = typeof loadFunctionsPro === 'undefined'
+        ? $.getScript(getUrlExtension("js/legacy-context.bundle.js"))
+        : $.Deferred().resolve();
+    legacyReady.then(function() {
         if (typeof loadSEIProArvore === 'undefined') $.getScript(getUrlExtension("js/sei-pro-arvore.js"));
     });
 } else if (typeof loadSEIProArvore === 'undefined') {

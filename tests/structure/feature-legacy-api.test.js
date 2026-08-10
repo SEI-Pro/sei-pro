@@ -98,7 +98,7 @@ describe('migration: feature legacy aliases stay isolated', () => {
     expect(relevantBlocks.length).toBe(2);
     for (const scripts of relevantBlocks) {
       expect(scripts.indexOf('js/core-stack.bundle.js')).toBeGreaterThanOrEqual(0);
-      expect(scripts.indexOf('js/sei-functions-pro.js')).toBeLessThan(scripts.indexOf('js/lista-context.bundle.js'));
+      expect(scripts.indexOf('js/legacy-context.bundle.js')).toBeLessThan(scripts.indexOf('js/lista-context.bundle.js'));
       expect(scripts).not.toContain('js/monitorados.bundle.js');
     }
   });

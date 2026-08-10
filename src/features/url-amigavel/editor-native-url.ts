@@ -15,7 +15,7 @@ import {
     alertaBoxPro,
     getTreeLinkUrlByName,
     openLinkNewTab
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function getUrlNewDocArvore() {
     var ifrArvore = $('#ifrArvore');

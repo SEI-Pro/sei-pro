@@ -5,7 +5,7 @@
  */
 import {
     callAtividades
-} from './atividades-bridge.js';
+} from '../../shared/sei-runtime/atividades-bridge.js';
 
 import {
     alertaBoxPro,
@@ -25,7 +25,7 @@ import {
     setSessionProcessosPro,
     setTabelaPanelScrollHeight,
     updateTitlePage
-} from './modules.js';
+} from '../../shared/sei-runtime/deps.js';
 
 export function getProcessNotificationCountPro() {
     return $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado')

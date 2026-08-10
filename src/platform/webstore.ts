@@ -9,7 +9,7 @@ import { isJson } from '../core/serial.js';
  * NÃO confundir com SeiPro.core.storage (fachada de chrome.storage delegada ao
  * service worker). Estes operam no storage da própria aba.
  *
- * Origem: dist/js/sei-functions-pro.js (5733-5780). Quirk preservado verbatim:
+ * Origem histórica: contexto legado transversal (5733-5780). Quirk preservado verbatim:
  *  - localStorageRestorePro retorna `null` para chave AUSENTE (isJson(null) é true,
  *    pois JSON.parse("null") === null) e `false` só para string não-JSON. É por isso
  *    que hybridStorageRestorePro testa `!== null`: chave ausente cai para o session.

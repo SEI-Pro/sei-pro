@@ -15,6 +15,9 @@ const legacyFiles = [
     'src/features/visualizacao/sei-pro-visualizacao.js',
     'src/features/visualizacao/sei-pro-visualizacao-chosen.js',
     'src/shared/legacy/**',
+    // Transitional SEI runtime: these modules preserve the classic global API until
+    // their remaining call-sites move behind feature APIs. `tsc` remains the type gate.
+    'src/shared/sei-runtime/**',
     'src/bootstrap/init.js',
     'src/bootstrap/init_all.js',
     'src/bootstrap/init_arvore.js',
@@ -36,6 +39,8 @@ const legacyFiles = [
 
 /** Typed without @ts-nocheck — wait for typescript-eslint + TS 7. */
 const typedAclPendingEslint = [
+    'src/app/installers.ts',
+    'src/entries/legacy-context.ts',
     'src/sei/selectors.ts',
     'src/sei/pages.ts',
     'src/sei/supports.ts',

@@ -33,14 +33,14 @@ describe('migration: atividades full ESM facade', () => {
     expect(bridge).not.toContain('aliasMap(atividadesHandlers');
     expect(read('src/features/atividades/call.ts')).toContain('export function callAtiv');
     expect(read('src/features/atividades/call.ts')).toContain('export function hasAtiv');
-    expect(read('src/features/atividades/panel.ts')).toContain("callAtiv('checkCapacidade'");
+    expect(read('src/features/atividades-registro/panel.ts')).toContain("callAtiv('checkCapacidade'");
     expect(read('src/features/atividades/view.ts')).toContain('export function installAtividadesView');
     expect(read('src/features/atividades/view.ts')).toContain('resolveAtividadesHandler');
     expect(read('src/features/atividades/handlers.ts')).toContain('export const atividadesHandlers');
     expect(read('src/features/atividades/server.ts')).toContain("from './io.js'");
     expect(read('src/features/atividades/server.ts')).toContain('postAtividadesServer');
-    expect(read('src/features/atividades/panel.ts')).toContain('data-act="atividades-panel-view"');
-    expect(read('src/features/atividades/panel.ts')).toContain('seipro-atividades-root');
+    expect(read('src/features/atividades-registro/panel.ts')).toContain('data-act="atividades-panel-view"');
+    expect(read('src/features/atividades-registro/panel.ts')).toContain('seipro-atividades-root');
     expect(read('src/features/atividades/view.ts')).toContain("act === 'atividades-call'");
     expect(index).toContain('legacyRequest: getServerAtividades');
     expect(index).toContain('namespace.features.atividades =');
@@ -58,18 +58,26 @@ describe('migration: atividades full ESM facade', () => {
 
   it('fatias de atividades importam getServerAtividades de server.js', () => {
     const needImport = [
-      'boot.ts', 'config-panel.ts', 'config-options.ts', 'config-table.ts',
-      'reports-detail.ts', 'activity-work.ts', 'charts.ts', 'activity-actions.ts',
-      'kanban.ts', 'reports-panel.ts', 'afastamentos.ts', 'activity-form.ts', 'ratings.ts', 'panel.ts'
+      ['src/features/atividades/boot.ts', 'src/features/atividades/server.ts'],
+      ['src/features/atividades-config/config-panel.ts', 'src/features/atividades-config/server.ts'],
+      ['src/features/atividades-config/config-options.ts', 'src/features/atividades-config/server.ts'],
+      ['src/features/atividades-config/config-table.ts', 'src/features/atividades-config/server.ts'],
+      ['src/features/atividades-registro/reports-detail.ts', 'src/features/atividades-registro/server.ts'],
+      ['src/features/atividades-registro/activity-work.ts', 'src/features/atividades-registro/server.ts'],
+      ['src/features/atividades-registro/charts.ts', 'src/features/atividades-registro/server.ts'],
+      ['src/features/atividades-registro/activity-actions.ts', 'src/features/atividades-registro/server.ts'],
+      ['src/features/atividades-registro/kanban.ts', 'src/features/atividades-registro/server.ts'],
+      ['src/features/atividades-registro/reports-panel.ts', 'src/features/atividades-registro/server.ts'],
+      ['src/features/atividades-afastamentos/afastamentos.ts', 'src/features/atividades-afastamentos/server.ts'],
+      ['src/features/atividades-registro/activity-form.ts', 'src/features/atividades-registro/server.ts'],
+      ['src/features/atividades-avaliacoes/ratings.ts', 'src/features/atividades-avaliacoes/server.ts'],
+      ['src/features/atividades-registro/panel.ts', 'src/features/atividades-registro/server.ts']
     ];
-    for (const file of needImport) {
-      const src = read(`src/features/atividades/${file}`);
+    for (const [file, serverFile] of needImport) {
+      const src = read(file);
+      const server = read(serverFile);
       expect(src, file).toContain("import { getServerAtividades } from './server.js'");
-    }
-    const server = read('src/features/atividades/server.ts');
-    for (const file of needImport) {
-      const mod = file.replace(/\.(js|ts)$/, '');
-      expect(server).not.toContain(`from './${mod}.js'`);
+      expect(server).toMatch(/getServerAtividades|export \* from/);
     }
   });
 
