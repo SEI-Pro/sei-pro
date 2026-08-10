@@ -1,11 +1,9 @@
 /**
- * Resgate único de ADR-0011 — passos 1 e 2.
+ * HISTÓRICO — resgate único de ADR-0011 (2026-08-07). Não use para trabalho novo.
  *
- * Move para uma fonte real (`vendor/`, `src/css/`, `assets/`) os assets que só
- * existiam em `dist/` commitado, e remove o lixo. Usa `git mv` para preservar
- * histórico. Idempotente: pares já movidos são ignorados.
- *
- * Só depois deste script (e de um rebuild limpo verde) `dist/` pode sair do git.
+ * Na época, moveu para `vendor/`, `src/css/`, `assets/` os assets que só existiam
+ * em `dist/` commitado. Hoje `dist/` é só saída de build; assets novos entram via
+ * `scripts/asset-manifest.mjs` + `scripts/dist-pipeline.mjs`, nunca editando dist/.
  *
  *   node scripts/rescue-dist-assets.mjs --dry-run
  *   node scripts/rescue-dist-assets.mjs

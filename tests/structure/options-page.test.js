@@ -7,7 +7,7 @@ const read = (rel) => readFileSync(join(root, rel), 'utf8');
 
 describe('options page migration wiring', () => {
     it('bundles options from the explicit context entry and drops legacy options.js copy', () => {
-        const build = read('scripts/build.mjs');
+        const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
         const entry = read('src/entries/options.ts');
         expect(build).not.toContain("entry: 'src/options/index.ts'");
         expect(build).toContain("f.endsWith('.ts')");

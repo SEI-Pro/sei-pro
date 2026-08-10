@@ -23,7 +23,7 @@ describe('legis legacy API bridge', () => {
     });
 
     it('builds the ESM entry under the legacy filename and ships with the editor entry', () => {
-        const build = read('scripts/build.mjs');
+        const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
         const bootstrap = read('src/bootstrap/init.js');
         const editorEntry = read('src/entries/editor.ts');
 

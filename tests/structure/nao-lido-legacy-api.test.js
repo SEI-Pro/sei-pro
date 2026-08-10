@@ -66,7 +66,7 @@ describe('migration: nao-lido legacy facade', () => {
   });
 
   it('installs exclusively through the lista context registry', () => {
-    const build = read('scripts/build.mjs');
+    const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
     const index = read('src/features/nao-lido/index.ts');
     const descriptor = read('src/features/nao-lido/feature.ts');
     const entry = read('src/entries/lista-context.ts');

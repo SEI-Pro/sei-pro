@@ -22,7 +22,7 @@ describe('migration: datas CSS audit', () => {
   });
 
   it('não inventa stylesheet ou classes próprias para o cluster compartilhado de datas', () => {
-    const build = read('scripts/build.mjs');
+    const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
     const manifest = read('manifest.base.json');
     const sharedUi = read('src/shared/ui/prazo-preview.ts');
 

@@ -57,7 +57,7 @@ describe('entry da lista — ponte legacy-api', () => {
             expect(item.js).not.toContain('js/lista.bundle.js');
             expect(item.js).not.toContain('js/sei-pro.js');
         }
-        const build = read('scripts/build.mjs');
+        const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
         expect(build).toContain("src/entries/' + f");
         expect(build).toContain("out: 'dist/js/' + f.replace(/\\.(js|ts)$/, '.bundle.js')");
         expect(build).toContain("{ entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' }");

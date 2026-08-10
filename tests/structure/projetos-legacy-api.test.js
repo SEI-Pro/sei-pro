@@ -49,7 +49,7 @@ describe('structure/projetos-legacy-api', () => {
     });
 
     it('build bundles projetos and does not copy legacy monolith', () => {
-        const build = read('scripts/build.mjs');
+        const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
         expect(build).toMatch(/src\/features\/projetos\/index\.(js|ts)/);
         expect(build).toMatch(/dist\/js\/sei-pro-projetos\.js/);
         expect(build).not.toMatch(/'src\/features\/projetos\/sei-pro-projetos\.js'/);

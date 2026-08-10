@@ -59,7 +59,7 @@ até o alvo.
 | Event bus | **removido** | — | [0013](./adr/0013-remover-bus-nao-utilizado.md) |
 | `https://*/*` | **removido** | — | [0015](./adr/0015-fronteiras-de-confianca.md) |
 | Testes | 217 arquivos / **1171** testes | — | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
-| `dist/` reproduzível | ✅ | — | [0011](./adr/0011-dist-fora-do-versionamento.md) |
+| `dist/` reproduzível | ✅ | wipe oficial + gates clean/bit-identical/audit exit 1 (`001-build-generated-dist`) | [0011](./adr/0011-dist-fora-do-versionamento.md) |
 | CI | ✅ `.github/workflows/ci.yml` | portão obrigatório | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
 
 **Leitura honesta:** a base bundlada foi renomeada para TypeScript e as features têm
@@ -154,7 +154,9 @@ Cada uma tem verificação executável; regra sem verificação não é regra
 
 1. **`src/`, `vendor/` e `assets/` são a fonte da verdade.** `dist/` é saída gerada, fora
    do git, reproduzível byte a byte ([ADR-0011](./adr/0011-dist-fora-do-versionamento.md)).
-   Asset novo entra por `scripts/asset-manifest.mjs`, nunca direto em `dist/`.
+   Asset estático novo entra por `scripts/asset-manifest.mjs`; saídas geradas
+   (bundles/legados/CSS) por `scripts/dist-pipeline.mjs` — nunca direto em `dist/`.
+   O build oficial limpa a árvore antes de escrever.
 2. **Direção de dependência** nunca invertida; feature não importa internals de feature.
 3. **Domínio puro**: sem DOM, `window`, `chrome.*`, jQuery ou `localStorage`.
 4. **Conhecimento do SEI só em `src/sei/`**: nenhum seletor, URL ou ramificação de versão

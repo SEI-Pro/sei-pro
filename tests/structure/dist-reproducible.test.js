@@ -1,29 +1,30 @@
 /**
- * ADR-0011 — dist/ deve ser 100% reproduzível a partir de src/, vendor/ e assets/.
- *
- * Contexto: em 2026-08-07, 137 arquivos (3,6 MB) existiam APENAS em dist/ commitado,
- * sem fonte no repositório — `sei-pro.css` (120 KB) entre eles. Um `rm -rf dist` os
- * perdia, e o build não os regenerava. Estes testes travam a regressão.
+ * ADR-0011 / spec 001-build-generated-dist — dist/ deve ser 100% reproduzível
+ * a partir de src/, vendor/ e assets/ via o pipeline declarado.
  */
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { ALL_FILE_PAIRS, ASSET_DIRS } from '../../scripts/asset-manifest.mjs';
+import {
+    listDeclaredDistOutputs,
+    OPTIONAL_RESOURCES
+} from '../../scripts/dist-pipeline.mjs';
 
 const root = process.cwd();
 const abs = (rel) => path.join(root, rel);
 const manifest = JSON.parse(readFileSync(abs('manifest.base.json'), 'utf8'));
 
-/**
- * Recursos declarados no manifest que podem legitimamente não existir em dist/.
- * Cada entrada exige motivo — a lista não é escape hatch para referência morta.
- */
-const OPTIONAL_RESOURCES = new Set([
-    // Override opcional por instalação; src/bootstrap/init.js:48-65 carrega e avisa
-    // sem falhar quando ausente.
-    'js/sei-pro-config-local.js'
-]);
+function walkDist(dir, acc = []) {
+    if (!existsSync(dir)) return acc;
+    for (const name of readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, name.name);
+        if (name.isDirectory()) walkDist(full, acc);
+        else acc.push(path.relative(root, full));
+    }
+    return acc;
+}
 
 /** Arquivos que o navegador EXIGE para carregar a extensão. Ausência = quebra. */
 function requiredReferences() {
@@ -59,7 +60,6 @@ describe('ADR-0011: dist/ é reproduzível', () => {
     });
 
     it('todo arquivo exigido para carregar a extensão existe em dist/', () => {
-        // `npm test` roda o build antes (pretest). Se dist/ não existe, o build falhou.
         expect(existsSync(abs('dist')), 'dist/ ausente — rode npm run build').toBe(true);
 
         const missing = requiredReferences().filter((ref) => !existsSync(abs(path.join('dist', ref))));
@@ -75,10 +75,20 @@ describe('ADR-0011: dist/ é reproduzível', () => {
     });
 
     it('nenhum asset é servido a partir de uma fonte fora de vendor/, src/ ou assets/', () => {
-        const bad = ALL_FILE_PAIRS.filter(
-            ({ src }) => !/^(vendor|src|assets)\//.test(src)
-        );
+        const bad = ALL_FILE_PAIRS.filter(({ src }) => !/^(vendor|src|assets)\//.test(src));
         expect(bad.map((p) => p.src)).toEqual([]);
+    });
+
+    it('ASSET_DIRS também ficam sob vendor/, src/ ou assets/', () => {
+        const bad = ASSET_DIRS.filter(({ src }) => !/^(vendor|src|assets)\//.test(src));
+        expect(bad.map((p) => p.src)).toEqual([]);
+    });
+
+    it('todo arquivo em dist/ está em listDeclaredDistOutputs', () => {
+        const declared = listDeclaredDistOutputs(root);
+        const present = walkDist(abs('dist'));
+        const orphans = present.filter((f) => !declared.has(f));
+        expect(orphans, 'arquivo em dist/ sem origem no pipeline').toEqual([]);
     });
 
     it('toda lib em vendor/ tem VERSION.txt', () => {
@@ -90,12 +100,17 @@ describe('ADR-0011: dist/ é reproduzível', () => {
     });
 
     it('THIRD_PARTY_NOTICES.md está sincronizado com vendor/', () => {
-        // Gerado por scripts/write-third-party-notices.mjs; o README o referencia.
         expect(() =>
             execFileSync('node', ['scripts/write-third-party-notices.mjs', '--check'], {
                 cwd: root,
                 stdio: 'pipe'
             })
         ).not.toThrow();
+    });
+
+    it('cada OPTIONAL_RESOURCES tem motivo não vazio', () => {
+        for (const [pathKey, reason] of OPTIONAL_RESOURCES) {
+            expect(reason?.trim().length, `opcional sem motivo: ${pathKey}`).toBeGreaterThan(0);
+        }
     });
 });

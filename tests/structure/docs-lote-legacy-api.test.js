@@ -69,11 +69,11 @@ describe('migration: docs-lote legacy map bridge', () => {
   });
 
   it('builds the ESM feature bundle without copying the removed legacy script', () => {
-    const build = read('scripts/build.mjs');
+    const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
 
     expect(build).toContain("{ entry: 'src/features/docs-lote/index.ts', out: 'dist/js/docs-lote.bundle.js' }");
-    expect(build).toContain('const entryBundles = readdirSync(entriesDir)');
-    expect(build).toContain('...entryBundles');
+    expect(build).toContain('export function listEntryBundles');
+    expect(build).toContain('listBundles(root)');
     expect(build).not.toContain("'src/shared/legacy/sei-functions-pro.js'");
     expect(build).not.toContain("'src/features/docs-lote/sei-pro-docs-lote.js'");
   });

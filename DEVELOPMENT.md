@@ -30,7 +30,10 @@ A extensão é empacotada com **esbuild** (`scripts/build.mjs`).
 
 `dist/` é **saída gerada, fora do git**, reproduzível byte a byte a partir de um clone
 limpo. Nada em `dist/` é editado à mão nem commitado
-([ADR-0011](./docs/adr/0011-dist-fora-do-versionamento.md)).
+([ADR-0011](./docs/adr/0011-dist-fora-do-versionamento.md);
+spec `001-build-generated-dist`). O build oficial (`npm run build`, sem `--watch`)
+**apaga e recria** `dist/` para não deixar resíduos. `npm run dev` / `--watch` é só
+feedback local — não é artefato de portão.
 
 > Nota histórica: uma 1ª tentativa com **Vite + CRXJS** foi revertida porque minificava os
 > arquivos legados in-place (destruindo a fonte). O esbuild atual nunca passa os legados
@@ -39,11 +42,14 @@ limpo. Nada em `dist/` é editado à mão nem commitado
 **Instalação e build (obrigatório após clonar — `dist/` não vem no repo):**
 ```bash
 npm install
-npm run build      # gera dist/ (carregar unpacked em chrome://extensions)
-npm run dev        # esbuild em watch sobre src/
+npm run build      # limpa e gera dist/ (carregar unpacked em chrome://extensions)
+npm run dev        # esbuild em watch sobre src/ (não use como gate)
 npm run typecheck  # tsc --noEmit; o esbuild NÃO verifica tipos (ADR-0014)
 npm run verify     # typecheck + build + testes + auditoria de dist/
 ```
+
+Proxy aceito de árvore limpa para checks locais: `rm -rf dist && npm run build`
+(equivalente prático a “só fontes versionadas” no checkout).
 
 Node 22.23.1 (`.nvmrc`). **Sem Node instalado?** O mesmo ambiente roda em container, com a
 versão fixada e sem depender do sistema operacional:
@@ -65,13 +71,27 @@ plataforma, e o `node_modules` de um host macOS não funciona dentro do containe
 
 **Adicionar um asset estático** (lib, CSS, ícone, dado): coloque a fonte em `vendor/<lib>/`
 (com `VERSION.txt`), `src/css/` ou `assets/`, e declare o par fonte → dist em
-**`scripts/asset-manifest.mjs`** — a única fonte desse mapeamento, compartilhada com o
-build e com os testes. Nunca criar arquivo diretamente em `dist/`.
+**`scripts/asset-manifest.mjs`** — a única fonte desse mapeamento estático, compartilhada com o
+build e com os testes. Bundles/legados/CSS de feature: **`scripts/dist-pipeline.mjs`**.
+Nunca criar arquivo diretamente em `dist/`.
 
-**Ferramentas de auditoria:**
+**Empacotar zip** (`scripts/package-extension.sh`): consome **somente** a `dist/` já gerada
+pelo build oficial (FR-008). Rode `npm run build` antes; o script não inventa payload paralelo.
+
+**Ferramentas de auditoria / portão (verify-gate):**
 ```bash
-node scripts/audit-dist-sources.mjs   # há asset em dist/ sem fonte no repo?
+node scripts/audit-dist-sources.mjs   # exit 1 se houver arquivo em dist/ sem origem
+npm run verify                        # typecheck + lint + test + audit:dist
 ```
+
+Gates automatizados (ver `specs/001-build-generated-dist/contracts/verify-gate.md`):
+
+| ID | Check |
+|----|--------|
+| G1 | `dist/` não rastreado no git |
+| G2–G4 | fontes existem; refs do manifesto / WAR presentes |
+| G5 | zero órfãos em `dist/` (`audit:dist` exit 1) |
+| G6 | duas builds limpas bit-idênticas (`dist-bit-identical.test.js`) |
 
 **Testes unitários (dev-only, não vão para `dist/`):**
 ```bash

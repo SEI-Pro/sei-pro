@@ -37,7 +37,7 @@ describe('migration: lista-processos full ESM facade', () => {
   });
 
   it('empacota a feature como dist/js/sei-pro.js sem cópia verbatim', () => {
-    const build = read('scripts/build.mjs');
+    const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
     expect(build).toContain("{ entry: 'src/features/lista-processos/index.ts', out: 'dist/js/sei-pro.js' }");
     expect(build).not.toContain("'src/features/lista-processos/sei-pro.js'");
     expect(build).toContain('src/features/lista-processos/style.css');

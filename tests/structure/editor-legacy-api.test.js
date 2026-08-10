@@ -79,7 +79,7 @@ describe('editor legacy API bridge', () => {
         expect(read('src/bootstrap/editor-loader.js')).toContain('empty id_documento');
         expect(read('src/bootstrap/editor-loader.js')).toContain('redirecting to opener');
         expect(read('src/bootstrap/editor-loader.js')).not.toMatch(/getDadosIframeProcessoPro\s*\(/);
-        expect(read('scripts/build.mjs')).toContain("'src/bootstrap/editor-loader.js'");
+        expect(read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs')).toContain("'src/bootstrap/editor-loader.js'");
         expect(read('src/bootstrap/editor-loader.js')).toContain('js/sei-pro-editor.js');
         expect(read('src/bootstrap/init.js')).not.toContain('js/sei-pro-editor.js');
         expect(read('src/bootstrap/init.js')).not.toContain('js/sei-legis.js');

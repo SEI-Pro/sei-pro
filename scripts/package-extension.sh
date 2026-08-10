@@ -1,4 +1,7 @@
 #!/bin/zsh
+# FR-008 / spec 001-build-generated-dist: packs ONLY the official-build output tree
+# (repo dist/ after `npm run build`). Never invent a parallel payload — regenerate
+# dist/ first if needed. This script does not run the build itself.
 
 set -euo pipefail
 

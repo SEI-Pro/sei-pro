@@ -10,7 +10,7 @@ describe('migration: background bug report adapter stays isolated', () => {
     const background = readFileSync(join(rootDir, 'src/entries/background.js'), 'utf8');
     const router = readFileSync(join(rootDir, 'src/background/router.js'), 'utf8');
     const bugReportHandler = readFileSync(join(rootDir, 'src/background/bug-report-handler.js'), 'utf8');
-    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
+    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8') + '\n' + readFileSync(join(rootDir, 'scripts/dist-pipeline.mjs'), 'utf8');
 
     expect(background).toContain("'bug-report-handler.js'");
     expect(background).toMatch(/loadHandlers\(globalApi, importScriptsApi\)/);

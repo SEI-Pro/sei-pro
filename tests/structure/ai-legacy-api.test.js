@@ -8,7 +8,7 @@ const read = (file) => readFileSync(path.join(root, file), 'utf8');
 describe('AI isolated entry', () => {
     it('uses the typed editor bridge without installing page globals', () => {
         const index = read('src/features/ai/index.ts');
-        const build = read('scripts/build.mjs');
+        const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
 
         expect(index).toContain('installIsolatedEditorAiBridge,');
         expect(index).toContain("} from './io/editor-bridge.js'");

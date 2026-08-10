@@ -105,7 +105,7 @@ describe('migration: feature legacy aliases stay isolated', () => {
 
   it('mantém o wire de favoritos entre entry, build e call-sites legados', () => {
     const index = readFileSync(join(featuresDir, 'monitorados/index.ts'), 'utf8');
-    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
+    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8') + '\n' + readFileSync(join(rootDir, 'scripts/dist-pipeline.mjs'), 'utf8');
     const legacyLista = readListaProcessosSource();
     const legacyAll = readFileSync(join(featuresDir, 'todas-paginas/sei-pro-all.js'), 'utf8');
     const legacyShared = readSeiFunctionsSource();

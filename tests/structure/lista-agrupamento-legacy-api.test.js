@@ -27,7 +27,7 @@ describe('migration: lista-agrupamento legacy bridge', () => {
 
   it('mantém o wire do bundle antes da fachada legada em todos os contextos', () => {
     const manifest = JSON.parse(source('manifest.base.json'));
-    const build = source('scripts/build.mjs');
+    const build = source('scripts/build.mjs') + '\n' + source('scripts/dist-pipeline.mjs');
     const contexts = manifest.content_scripts.filter(({ js = [] }) =>
       js.includes('js/lista-context.bundle.js')
     );

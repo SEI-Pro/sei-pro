@@ -6,13 +6,13 @@
  * os perdia de forma irrecuperável, e `npm run build` não os regenerava.
  *
  * Este arquivo é consumido por:
- *  - `scripts/build.mjs`            → copia fonte → dist a cada build
+ *  - `scripts/build.mjs` / `scripts/dist-pipeline.mjs` → copia fonte → dist a cada build
  *  - `scripts/rescue-dist-assets.mjs` → movimento único de resgate (git mv)
- *  - `tests/structure/dist-reproducible.test.js` → verifica que o manifest.json
- *    não referencia nada que o build não produza
+ *  - `tests/structure/dist-reproducible.test.js` → verifica fontes e saídas
  *
  * Regra: asset novo entra aqui com fonte em `vendor/`, `src/css/` ou `assets/`.
- * Nunca adicione arquivo diretamente em dist/.
+ * Nunca adicione arquivo diretamente em dist/. Saídas geradas (bundles, legados,
+ * CSS de feature) vivem em `scripts/dist-pipeline.mjs`.
  *
  * `vendor/` = terceiros (com VERSION.txt). `src/css/` = folhas de estilo nossas.
  * `assets/` = binários e dados nossos (ícones, config).

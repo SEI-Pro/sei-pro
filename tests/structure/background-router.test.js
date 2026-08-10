@@ -9,7 +9,7 @@ describe('migration: background message router stays isolated', () => {
   it('keeps the service-worker entry as a thin composition root', () => {
     const background = readFileSync(join(rootDir, 'src/entries/background.js'), 'utf8');
     const router = readFileSync(join(rootDir, 'src/background/router.js'), 'utf8');
-    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
+    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8') + '\n' + readFileSync(join(rootDir, 'scripts/dist-pipeline.mjs'), 'utf8');
 
     expect(background).toContain("'llm-handler.js'");
     expect(background).toContain("'router.js'");

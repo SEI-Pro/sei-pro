@@ -81,9 +81,16 @@ ou resolvida por release publicado.
   `asset-manifest` existe; (b) todo arquivo exigido pelo navegador
   (`content_scripts`, `icons`, service worker, popup) existe em `dist/` após o build;
   (c) nenhum `web_accessible_resource` é referência morta, com allowlist de opcionais
-  exigindo motivo; (d) nenhum asset servido de fonte fora de `vendor/`, `src/` ou `assets/`.
-- CI (ADR-0008) roda `npm run build` a partir de árvore limpa.
+  exigindo motivo; (d) nenhum asset servido de fonte fora de `vendor/`, `src/` ou `assets/`;
+  (e) todo arquivo em `dist/` ∈ `listDeclaredDistOutputs` (`scripts/dist-pipeline.mjs`).
+- `tests/structure/dist-clean-tree.test.js` — build oficial remove órfãos (FR-004a).
+- `tests/structure/dist-bit-identical.test.js` — duas builds limpas bit-idênticas (FR-004b).
+- `scripts/audit-dist-sources.mjs` — exit 1 se houver undeclared files (CI / `npm run verify`).
+- Official `npm run build` wipes `dist/` (or `SEI_PRO_DIST_DIR`) before writing.
+- CI (ADR-0008) roda `npm run build` a partir de árvore limpa + `npm run audit:dist`.
 - `tests/structure/no-dist-in-git.test.js` — `git ls-files dist` vazio.
+
+Greenfield Spec Kit: `specs/001-build-generated-dist/` (pipeline rediscovery).
 
 ## Implementação (2026-08-07)
 

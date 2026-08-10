@@ -63,7 +63,7 @@ describe('migration: dissolução de sei-functions por capacidade', () => {
     expect(entry).toContain('startRuntime || startSeiRuntime');
     expect(entry).toContain('bootLegacyContext();');
     expect(read('src/shared/sei-runtime/boot.ts')).not.toMatch(/\nloadScriptPro\(\);\s*$/);
-    expect(read('scripts/build.mjs')).not.toContain('src/entries/sei-functions.ts');
+    expect(read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs')).not.toContain('src/entries/sei-functions.ts');
   });
 
   it('preserva a superfície pública dos clusters e o wire gerado', () => {

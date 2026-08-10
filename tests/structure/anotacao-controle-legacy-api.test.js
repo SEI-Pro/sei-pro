@@ -70,7 +70,7 @@ describe('migration: anotacao-controle legacy facade', () => {
   });
 
   it('keeps the ESM bundle output contract', () => {
-    const build = read('scripts/build.mjs');
+    const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
     const index = read('src/features/anotacao-controle/index.ts');
 
     expect(build).toContain("{ entry: 'src/features/anotacao-controle/index.ts', out: 'dist/js/anotacao-controle.bundle.js' }");

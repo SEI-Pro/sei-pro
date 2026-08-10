@@ -40,7 +40,7 @@ describe('migration: arvore full ESM facade', () => {
   });
 
   it('empacota a raiz de contexto como dist/js/sei-pro-arvore.js sem cópia verbatim', () => {
-    const build = read('scripts/build.mjs');
+    const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
     expect(build).toContain("{ entry: 'src/entries/arvore.ts', out: 'dist/js/sei-pro-arvore.js' }");
     expect(build).not.toContain("'src/features/arvore/sei-pro-arvore.js'");
     expect(build).toContain("src/features/arvore/style.css");

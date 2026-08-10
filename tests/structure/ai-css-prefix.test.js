@@ -19,7 +19,7 @@ describe('AI feature CSS ownership', () => {
         expect(view).toContain('seipro-ai-form');
         expect(editorBlock.css).toContain('css/stream-panel.css');
         expect(editorBlock.css).toContain('css/ai.css');
-        expect(read('scripts/build.mjs')).toContain(
+        expect(read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs')).toContain(
             "{ src: 'src/features/ai/style.css', out: 'dist/css/ai.css' }"
         );
     });

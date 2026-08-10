@@ -53,7 +53,7 @@ describe('editor CSS prefix audit', () => {
 
     it('builds and loads the editor-owned stylesheet', () => {
         const style = read('src/features/editor/style.css');
-        const build = read('scripts/build.mjs');
+        const build = read('scripts/build.mjs') + '\n' + read('scripts/dist-pipeline.mjs');
         const manifest = JSON.parse(read('manifest.base.json'));
         const editorContext = manifest.content_scripts.find(({ matches = [], include_globs = [] }) =>
             [...matches, ...include_globs].some((match) => match.includes('acao=editor_montar'))

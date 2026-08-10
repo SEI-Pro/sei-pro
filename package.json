@@ -26,7 +26,7 @@
     "docker:verify": "docker compose run --rm verify",
     "docker:shell": "docker compose run --rm dev"
   },
-  "//build": "esbuild bundla entries ESM (core-stack, features, login/db) e copia legados verbatim para dist/. Fonte da verdade: src/. Ver DEVELOPMENT.md.",
+  "//build": "esbuild bundla entries ESM e copia legados verbatim. Official build limpa dist/ (FR-004a). Fonte: src/, vendor/, assets/ + scripts/asset-manifest.mjs + scripts/dist-pipeline.mjs. Nunca editar dist/ à mão.",
   "//typecheck": "ADR-0014: o esbuild remove tipos SEM verificar. typecheck e a unica garantia real. Rode antes de build.",
   "//docker": "Alternativa a Node instalado no OS. Mesma versao do .nvmrc e do Dockerfile; ao subir uma, suba as tres.",
   "engines": {

@@ -27,7 +27,7 @@ describe('background LLM handler', () => {
   it('is wired as a bundled service-worker dependency', () => {
     const background = readFileSync(join(rootDir, 'src/entries/background.js'), 'utf8');
     const handler = readFileSync(join(rootDir, 'src/background/llm-handler.ts'), 'utf8');
-    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8');
+    const build = readFileSync(join(rootDir, 'scripts/build.mjs'), 'utf8') + '\n' + readFileSync(join(rootDir, 'scripts/dist-pipeline.mjs'), 'utf8');
     const manifest = JSON.parse(readFileSync(join(rootDir, 'manifest.base.json'), 'utf8'));
 
     expect(background).toContain("'llm-handler.js'");
