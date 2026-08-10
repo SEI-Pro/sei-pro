@@ -113,12 +113,14 @@ lote sem revisão dos tipos introduzidos.
   decrescente. É a medida oficial do progresso da migração.
 - **Ratchet `any` explícito e `@ts-ignore`**: decrescente, para impedir que a dívida migre de
   um marcador honesto para um difuso.
-- `tests/structure/typescript-boundary.test.js`:
-  - nenhum arquivo em `legacyFiles` de `scripts/build.mjs` é `.ts`;
-  - `tsconfig.json` tem `noEmit: true` e `strict: true`;
-  - nenhum arquivo criado após a renomeação carrega `@ts-nocheck` (comparado ao inventário
-    do ratchet);
-  - todo `@ts-nocheck` cita o ADR-0014.
+- `tests/structure/typescript-boundary.test.js` (ADR-0014 + Spec Kit `002-ts-zero-legacy`):
+  - descriptors são `feature.ts`;
+  - `.js` remanescente em camadas modernas é **shrink-only allowlist**;
+  - `tsconfig.json` tem `strict: true` e `include` com `src/**/*.ts`.
+- **Policy gate** (`npm run policy:check` / `scripts/policy-check.mjs`): toque em runtime de
+  produto exige fecho `exclusive`, sem `@ts-nocheck`/`any`/`@ts-ignore` nos arquivos
+  tocados, sem acoplamento a superfície não-exclusive (ver `specs/002-ts-zero-legacy/`).
+- `tests/structure/touched-ts-nocheck.test.js` e `exclusive-closure-policy.test.js`.
 - **Gate do commit de renomeação:** o `dist/` gerado antes e depois deve ser idêntico, exceto
   os comentários de caminho que o esbuild injeta (`// src/x.js` → `// src/x.ts`). Diferença
   além disso significa que a renomeação mudou comportamento e deve ser revertida.

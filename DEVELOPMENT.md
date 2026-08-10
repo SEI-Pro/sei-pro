@@ -433,6 +433,43 @@ Para feature nova, começar diretamente no formato novo. Não criar função sol
 
 ---
 
+### Política zero-legado (Spec Kit `002-ts-zero-legacy`)
+
+A partir desta política, **qualquer toque em runtime de produto** (código sob `src/` que
+afeta a extensão carregada, ou `manifest.base.json` / `assets/` de runtime) MUST:
+
+1. Ser **TypeScript verificável** (sem `@ts-nocheck` / `any` / `@ts-ignore` novos no arquivo tocado).
+2. Aterrissar com o **fecho completo de dependências em `maturity: 'exclusive'`** antes do merge.
+3. **Não importar** capacidades `declared`/`wired`, loaders legados (`src/bootstrap`, etc.) nem APIs banidas (`getSeiPro`, novo `aliasGlobal` debt) — só features exclusive + infra em `scripts/policy/shared-modern-infra.mjs`.
+4. Preferir HTML/DOM nativo/semântico; **proibido** handler inline novo; reutilizar `src/shared/ui` quando couber.
+5. Passar o **portão duplo**: CI (inclui `npm run policy:check` + structure tests) **e** revisão humana com checklist H1–H6 no PR template. CI verde sozinho **não** mergeia.
+
+**Docs-only** não dispara fecho exclusive. **Tooling-only** (`scripts/`, `tests/`, …) deve permanecer tipado/sem acoplar a legado, mas não obriga exclusive de feature.
+
+**Characterization before move (constituição V):** se o módulo a migrar não tem testes, cobrir o comportamento atual **antes** de mover para exclusive.
+
+**Fatias:** commits intermediários podem só migrar pré-requisitos; o merge da mudança solicitada espera o fecho exclusive. Cada fatia deixa a extensão utilizável (`npm run build` / loadable `dist`).
+
+**Agente + SEI:** se a tarefa depende do HTML/DOM real da página, pedir acesso ao SEI no navegador integrado e inspecionar de forma **efêmera** — não inventar a página; **não** salvar HTML/screenshots/conteúdo de processo no repo.
+
+```bash
+npm run policy:check
+POLICY_TOUCHED_PATHS='src/features/foo/bar.ts' npm run policy:check
+npm run verify   # inclui policy:check localmente
+```
+
+#### Branch protection (manual ops)
+
+No branch padrão (`master`), um administrador do repositório deve exigir review em PRs antes do
+merge e o job `verify` verde (ele inclui `policy:check`). Revisores MUST tratar checklist H1–H6 incompleto
+como **reject**. CODEOWNERS é follow-up opcional.
+
+Essa configuração é uma propriedade do GitHub, não um arquivo versionável. Até que um administrador
+ative a proteção/ruleset, o checklist e o CI documentam a política, mas não conseguem impedir sozinhos
+um merge manual. A implementação local falha fechado se não puder resolver a base do diff no CI.
+
+---
+
 ### Checklist para próximos prompts
 
 Ao receber uma tarefa sobre funcionalidade, seguir este roteiro antes de editar:

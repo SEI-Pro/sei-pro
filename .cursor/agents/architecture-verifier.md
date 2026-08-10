@@ -65,6 +65,21 @@ test as a finding — that gap matters more than the individual violation.
 
 ## Architecture checklist
 
+### Dual gate — zero-legado (002-ts-zero-legacy)
+
+Mechanical half: `npm run policy:check` + structure tests (exclusive fecho, TS honesty,
+inline handlers, no SEI page fixtures). CI runs `policy:check` explicitly — local
+`npm run verify` also includes it. **CI green alone is insufficient** for product-runtime.
+
+Judgement half (required for merge):
+- [ ] H1 fecho honesty + characterization tests when moving untested behavior
+- [ ] H2 exclusive is really exclusive (no parallel auto-boot)
+- [ ] H3 DOM/HTML semantics (beyond static inline-handler scan)
+- [ ] H4 no legacy reinforcement; rename/wrap ≠ migrated (FR-010)
+- [ ] H5 agent asked for integrated-browser SEI access when needed; zero persisted SEI HTML/screenshots in the diff
+- [ ] H6 loadable + **blocking** SEI smoke when UI touched
+- [ ] Reject if PR template checklist incomplete
+
 ### Source of truth
 - [ ] Changes live under `src/` (or build/manifest/docs/tests). No hand-edits to
       `dist/` as source — `dist/` is generated output only.

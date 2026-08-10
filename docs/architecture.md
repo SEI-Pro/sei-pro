@@ -60,7 +60,8 @@ até o alvo.
 | `https://*/*` | **removido** | — | [0015](./adr/0015-fronteiras-de-confianca.md) |
 | Testes | 217 arquivos / **1171** testes | — | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
 | `dist/` reproduzível | ✅ | wipe oficial + gates clean/bit-identical/audit exit 1 (`001-build-generated-dist`) | [0011](./adr/0011-dist-fora-do-versionamento.md) |
-| CI | ✅ `.github/workflows/ci.yml` | portão obrigatório | [0008](./adr/0008-fitness-functions-e-ratchets.md) |
+| CI | ✅ `.github/workflows/ci.yml` | portão obrigatório + `policy:check` (`002-ts-zero-legacy`) | [0008](./adr/0008-fitness-functions-e-ratchets.md), [0014](./adr/0014-typescript-para-codigo-novo.md) |
+| Política zero-legado | Spec Kit `specs/002-ts-zero-legacy/` | toque em runtime → fecho `exclusive` + TS + portão duplo | [0014](./adr/0014-typescript-para-codigo-novo.md) |
 
 **Leitura honesta:** a base bundlada foi renomeada para TypeScript e as features têm
 descritores; isso não equivale a base tipada nem a feature migrada. Uma feature só é
