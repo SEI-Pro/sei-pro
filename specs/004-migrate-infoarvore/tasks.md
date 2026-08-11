@@ -75,7 +75,7 @@
 - [x] T020 [US1] Rewrite read-only consulta-driven rendering in `src/features/arvore-info/sections/consulta.ts` to use `textContent`/`createElement` (no SEI HTML string concat into `innerHTML`)
 - [x] T021 [US1] Ensure isolated section failure in `src/features/arvore-info/panel.ts` / sections does not prevent sibling sections from rendering
 - [x] T022 [US1] Gate mount exclusively on `infoarvore` via modern config check path in `src/features/arvore-info/panel.ts` / `index.ts` (preserve stub-parent degrade behavior only where still required for readiness)
-- [ ] T023 [US1] Run quickstart scenario A in `specs/004-migrate-infoarvore/quickstart.md` on real SEI and record pass/fail in `.github/pull_request_template.md` checklist (no SEI HTML committed)
+- [x] T023 [US1] Run quickstart scenario A in `specs/004-migrate-infoarvore/quickstart.md` on real SEI and record pass/fail in `.github/pull_request_template.md` checklist (no SEI HTML committed)
 
 **Checkpoint**: MVP — painel de leitura utilizável com opção on/off
 
@@ -95,7 +95,7 @@
 
 - [x] T025 [US2] Implement preference reader facade in `src/features/arvore-info/preference.ts` (or `domain.ts` + thin IO) reading `configViewFlashPanelArvorePro` without changing the menus-rapidos writer UI
 - [x] T026 [US2] Wire `src/features/arvore-info/panel.ts` to filter sections solely through the preference facade
-- [ ] T027 [US2] Run quickstart scenario B in `specs/004-migrate-infoarvore/quickstart.md` on real SEI and record pass/fail in `.github/pull_request_template.md` checklist
+- [x] T027 [US2] Run quickstart scenario B in `specs/004-migrate-infoarvore/quickstart.md` on real SEI and record pass/fail in `.github/pull_request_template.md` checklist
 
 **Checkpoint**: US1 + US2 — personalização estável
 
@@ -122,7 +122,7 @@
 - [x] T035 [US4] Replace remaining inline `style.cssText` on panel chrome in `src/features/arvore-info/panel.ts` and read-path sections with classes from `arvore-info.css`
 - [x] T036 [US4] Remove `@ts-nocheck` from `src/features/arvore-info/index.ts`, `panel.ts`, and any remaining read-path section files still unchecked after US1
 - [x] T037 [US4] If SEI HTML fragments must be re-hosted, route through centralized ACL sanitization in `src/sei/` and assert no raw concat path remains in read-path renderers
-- [ ] T038 [US4] Run `npm run policy:check` (arvore-info P2 clean) and quickstart scenario D in `specs/004-migrate-infoarvore/quickstart.md` on real SEI; fix fecho imports under `src/features/arvore-info/` to exclusive + allowlisted infra only
+- [x] T038 [US4] Run `npm run policy:check` (arvore-info P2 clean) and quickstart scenario D in `specs/004-migrate-infoarvore/quickstart.md` on real SEI; fix fecho imports under `src/features/arvore-info/` to exclusive + allowlisted infra only
 
 **Checkpoint**: Isolation contract largely met for display path (edit path may still finish in US3)
 
@@ -147,7 +147,7 @@
 - [x] T044 [US3] Rewrite `src/features/arvore-info/sections/anotacao.ts` editor chrome (keep contenteditable model) with typed caret helpers, native action buttons, class-based styles, safe text handling
 - [x] T045 [US3] Migrate tipo/other inline editors still in `src/features/arvore-info/index.ts` or `panel.ts` to the same DOM/CSS rules
 - [x] T046 [US3] Remove any remaining `@ts-nocheck` under `src/features/arvore-info/` left from edit sections
-- [ ] T047 [US3] Run quickstart scenario C in `specs/004-migrate-infoarvore/quickstart.md` on real SEI and record pass/fail in `.github/pull_request_template.md` checklist
+- [x] T047 [US3] Run quickstart scenario C in `specs/004-migrate-infoarvore/quickstart.md` on real SEI and record pass/fail in `.github/pull_request_template.md` checklist
 
 **Checkpoint**: All user stories independently demonstrable
 

@@ -297,6 +297,7 @@
     "css": [
       "css/sei-pro.css",
       "css/legacy-sei.css",
+      "css/fontawesome.pro.min.css",
       "css/arvore.css",
       "css/arvore-info.css",
       "css/quick-filter.css",

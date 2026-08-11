@@ -123,6 +123,28 @@
     cursor: pointer;
     float: right;
     margin-right: 8px;
+    border: 0;
+    background: transparent;
+    padding: 2px 6px;
+    line-height: 1;
+    color: #4285F4;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 5px;
+}
+.seipro-infoarvore-pencil:hover,
+.seipro-infoarvore-pencil:focus-visible {
+    background-color: #eee;
+    outline: none;
+}
+.seipro-infoarvore-pencil:focus-visible {
+    outline: 2px solid #4a90d9;
+    outline-offset: 1px;
+}
+.seipro-infoarvore-pencil i {
+    font-size: 1.1em;
+    pointer-events: none;
+    color: #4285F4 !important;
 }
 
 .seipro-anot-editor {
@@ -167,6 +189,15 @@
 }
 button.seipro-anot-btn {
   appearance: none;
+  /* Avoid `font` shorthand — it can fight Font Awesome on the inner <i>. */
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1;
+}
+button.seipro-anot-btn .fas,
+button.seipro-anot-btn .far,
+button.seipro-anot-btn .fal {
+  pointer-events: none;
 }
 .seipro-anot-btn:focus-visible {
   outline: 2px solid #4a90d9;

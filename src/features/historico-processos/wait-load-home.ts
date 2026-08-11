@@ -742,7 +742,7 @@ export function getGanttHistoryProc(listHistoryProc = false) {
         });
 }
 export function closeAllPopups() {
-    for (i = 0; i < ganttProject.length; i++) {
+    for (let i = 0; i < ganttProject.length; i++) {
     	ganttProject[i].hide_popup();
     }
 }

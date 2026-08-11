@@ -23,12 +23,11 @@ export const ENTRY_BUNDLE_EXCLUSIONS = new Set([
  * Manifest / runtime paths that may be absent by design.
  * Each entry requires a reason — not an escape hatch for dead required refs.
  */
-export const OPTIONAL_RESOURCES = new Map([
-    [
-        'js/sei-pro-config-local.js',
-        'Override opcional por instalação; src/bootstrap/init.js carrega e avisa sem falhar quando ausente.'
-    ]
-]);
+/**
+ * Manifest / runtime paths that may be absent by design.
+ * (vazio por ora — stub de config local passou a ser gerado no build.)
+ */
+export const OPTIONAL_RESOURCES = new Map([]);
 
 /** Explicit esbuild bundles (stable legacy output names + feature entries). */
 export const EXPLICIT_BUNDLES = [
@@ -49,15 +48,16 @@ export const EXPLICIT_BUNDLES = [
     { entry: 'src/features/legis/index.ts', out: 'dist/js/sei-legis.js' },
     { entry: 'src/features/lista-agrupamento/index.ts', out: 'dist/js/lista-agrupamento.bundle.js' },
     { entry: 'src/features/projetos/index.ts', out: 'dist/js/sei-pro-projetos.js' },
-    { entry: 'src/features/monitorados/options.ts', out: 'dist/js/monitorados-options.bundle.js' }
+    { entry: 'src/features/monitorados/options.ts', out: 'dist/js/monitorados-options.bundle.js' },
+    // Scripts clássicos (content script / getScript) — IIFE com globals, sem `export`.
+    { entry: 'src/features/visualizacao/sei-pro-visualizacao.global.ts', out: 'dist/js/sei-pro-visualizacao.js' },
+    { entry: 'src/features/visualizacao/sei-pro-visualizacao-chosen.global.ts', out: 'dist/js/sei-pro-visualizacao-chosen.js' }
 ];
 
 /** Legacy global scripts copied verbatim to dist/js/<basename>. */
 export const LEGACY_FILES = [
     'src/features/todas-paginas/sei-pro-all.js',
     'src/features/prescricoes/sei-pro-prescricoes.js',
-    'src/features/visualizacao/sei-pro-visualizacao.js',
-    'src/features/visualizacao/sei-pro-visualizacao-chosen.js',
     'src/shared/legacy/sei-pro-icons.js',
     'src/shared/legacy/sei-pro-db-transition.js',
     'src/bootstrap/init.js',
@@ -69,6 +69,7 @@ export const LEGACY_FILES = [
     'src/bootstrap/init-flags.js',
     'src/bootstrap/getscript-isolated.js',
     'src/bootstrap/editor-loader.js',
+    'src/bootstrap/sei-pro-config-local.js',
     'src/platform/inline-stubs-main.js',
     'src/shared/qr-code-main.js',
     'src/background/storage-handler.js',

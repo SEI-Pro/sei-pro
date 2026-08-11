@@ -274,44 +274,59 @@ export function checkToolbarToClose() {
         }
     }, 1000);
 }
-export function getToolbarPro(click) {
-    if ( typeof parent.dadosProcessoPro !== 'undefined') {
-        let elemProc = isSEI_5
-            ? $('a[id*="anchor"][target="ifrVisualizacao"].infraArvoreNo')
-            : $(`a[target="${ifrVisualizacao_}"]`).eq(0);
-            
-        const toolbarView = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadView && SeiPro.features.arvoreUploadView.bindArvoreToolbarProcess;
-        const toolbarBinder = typeof bindArvoreToolbarProcess === 'function'
-            ? bindArvoreToolbarProcess
-            : toolbarView;
-        if (toolbarBinder) {
-            toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });
-        } else {
-            elemProc.toolbar({
-                content: '#toolbar-options-proc',
-                position: 'bottom',
-                //event: 'click', hideOnClick: true,
-                adjustment: 5,
-                style: 'menu'
-            }).on('toolbarItemClick', function( event, triggerButton ) {
-                actionToolbarPro($(this), triggerButton);
-            });
+export function getToolbarPro(click, attemptsLeft = 40) {
+    // Parent session payload can lag (setCapaProcesso / dadosProcessoSession). Without a
+    // retry, Menu rápido never binds and hover on the process root does nothing.
+    if (typeof parent.dadosProcessoPro === 'undefined') {
+        if (attemptsLeft > 0) {
+            setTimeout(function () { getToolbarPro(click, attemptsLeft - 1); }, 500);
+            return;
         }
-        if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
-            if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)|| (parent.isSEI_5 && $('a[data-serialtip*="popover"]').length)) {
-                $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').each(function(){ $(this).addClass('clipboard') });
-            }
-            var listToolbar = isSEI_5
-                ? $('a[id*="anchorImg"][data-serialtip]').not(':first').not('[data-toolbarpro]').get()
-                : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').not('[data-toolbarpro]').get();
+        console.warn('[SeiProArvore] getToolbarPro: parent.dadosProcessoPro still missing — binding toolbar anyway');
+    }
+    let elemProc = isSEI_5
+        ? $('a[id*="anchor"][target="ifrVisualizacao"].infraArvoreNo')
+        : $(`a[target="${ifrVisualizacao_}"]`).eq(0);
+    if (!elemProc || !elemProc.length) {
+        if (attemptsLeft > 0) {
+            setTimeout(function () { getToolbarPro(click, attemptsLeft - 1); }, 500);
+            return;
+        }
+        console.warn('[SeiProArvore] getToolbarPro: process root anchor not found — Menu rápido unavailable');
+        return;
+    }
 
-                listToolbar.forEach(function (v, i) {
-                    setTimeout(function(){
-                        actionToolbarDocs($(v), click);
-                        $(v).attr('data-toolbarpro',true);
-                    }, 50*i);
-                });
+    const toolbarView = typeof SeiPro !== 'undefined' && SeiPro.features && SeiPro.features.arvoreUploadView && SeiPro.features.arvoreUploadView.bindArvoreToolbarProcess;
+    const toolbarBinder = typeof bindArvoreToolbarProcess === 'function'
+        ? bindArvoreToolbarProcess
+        : toolbarView;
+    if (toolbarBinder) {
+        toolbarBinder({ element: elemProc, $, onAction: actionToolbarPro });
+    } else {
+        elemProc.toolbar({
+            content: '#toolbar-options-proc',
+            position: 'bottom',
+            //event: 'click', hideOnClick: true,
+            adjustment: 5,
+            style: 'menu'
+        }).on('toolbarItemClick', function( event, triggerButton ) {
+            actionToolbarPro($(this), triggerButton);
+        });
+    }
+    if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
+        if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)|| (parent.isSEI_5 && $('a[data-serialtip*="popover"]').length)) {
+            $('a[id*="anchorImg"]').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').each(function(){ $(this).addClass('clipboard') });
         }
+        var listToolbar = isSEI_5
+            ? $('a[id*="anchorImg"][data-serialtip]').not(':first').not('[data-toolbarpro]').get()
+            : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').not('[data-toolbarpro]').get();
+
+            listToolbar.forEach(function (v, i) {
+                setTimeout(function(){
+                    actionToolbarDocs($(v), click);
+                    $(v).attr('data-toolbarpro',true);
+                }, 50*i);
+            });
     }
 }
 export function actionToolbarDocs(_this, click) {

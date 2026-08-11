@@ -55,9 +55,8 @@ function loadLocalConfigScriptPro() {
             if (!scriptText || scriptText.trim() === '') return;
 
             var match = scriptText.match(/SEI_PRO_APPS_SCRIPT_URL\s*=\s*['"]([^'"]+)['"]/);
-            if (!match || !match[1]) {
-                throw new Error('URL do Apps Script não encontrada no arquivo local');
-            }
+            // Stub sem override (comentários apenas) é válido — segue com o fallback.
+            if (!match || !match[1]) return;
 
             window.SEI_PRO_APPS_SCRIPT_URL = match[1];
         })

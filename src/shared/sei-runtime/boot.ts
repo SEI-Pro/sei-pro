@@ -247,7 +247,7 @@ export function loadResizeIframeArvoreNewSEI() {
             minWidth: 200,
             maxWidth: $(document).width() - 600,
             start: function() {
-                ifr = $('#ifrArvore');
+                var ifr = $('#ifrArvore');
                 var d = $('<div></div>');
                 $('#divConteudo').append(d[0]);
                 d[0].id = 'temp_div';

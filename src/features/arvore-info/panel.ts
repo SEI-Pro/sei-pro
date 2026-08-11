@@ -217,16 +217,20 @@ export function createInfoArvorePanelFeature(deps: InfoArvorePanelDeps) {
         ) {
             const head = sectionPanel.querySelector('.panelArvoreHead');
             if (!head) return null;
-            const a = doc.createElement('a');
-            a.className = 'newLink seipro-edit seipro-infoarvore-pencil';
-            a.dataset.mode = mode;
-            a.title = title || 'Editar';
+            // Native button — avoid nested `a.newLink` (padding + float:none !important hide the glyph).
+            const btn = doc.createElement('button');
+            btn.type = 'button';
+            btn.className = 'seipro-edit seipro-infoarvore-pencil';
+            btn.dataset.mode = mode;
+            btn.title = title || 'Editar';
+            btn.setAttribute('aria-label', title || 'Editar');
             const iEl = doc.createElement('i');
-            iEl.className = 'fas ' + icon;
-            a.appendChild(iEl);
-            if (extraData) Object.keys(extraData).forEach(function (k) { a.dataset[k] = extraData[k]; });
-            head.appendChild(a);
-            return a;
+            iEl.className = 'fas ' + icon + ' azulColor';
+            iEl.setAttribute('aria-hidden', 'true');
+            btn.appendChild(iEl);
+            if (extraData) Object.keys(extraData).forEach(function (k) { btn.dataset[k] = extraData[k]; });
+            head.appendChild(btn);
+            return btn;
         }
 
         frmArvore.addEventListener('click', function (ev) {

@@ -182,7 +182,7 @@ export function setHistoryProcessosPro(dadosProcessoPro) {
         dadosHistoricoProcessoPro = reverseArray(dadosHistoricoProcessoPro);
     }
     if (dadosHistoricoProcessoPro !== null) {
-        for (i = 0; i < dadosHistoricoProcessoPro.length; i++) {
+        for (let i = 0; i < dadosHistoricoProcessoPro.length; i++) {
             if( i > 500 || dadosHistoricoProcessoPro[i].id_procedimento == dadosProcessoPro_push.id_procedimento) {
                 dadosHistoricoProcessoPro.splice(i,1);
                 i--;
@@ -262,7 +262,7 @@ export function setSessionProcessosPro(dadosProcessoPro) {
     }
     */
     if (dadosSessionProcessoPro !== null) {
-        for (i = 0; i < dadosSessionProcessoPro.length; i++) {
+        for (let i = 0; i < dadosSessionProcessoPro.length; i++) {
             if( i > 500 || 
                     (
                         (typeof dadosSessionProcessoPro[i].propProcesso !== 'undefined' && typeof dadosSessionProcessoPro[i].propProcesso.hdnIdProcedimento !== 'undefined' && dadosSessionProcessoPro[i].propProcesso.hdnIdProcedimento == id_procedimento)
