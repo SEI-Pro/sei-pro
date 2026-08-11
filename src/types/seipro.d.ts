@@ -24,6 +24,8 @@ export interface SeiFeatureDescriptor {
     maturity: FeatureMaturity;
     contexts: readonly FeatureContextId[];
     configKey?: string | null;
+    /** ADR-0007: true when there is no pages/ doc yet (must be explicit, not silent). */
+    undocumented?: boolean;
     css?: readonly string[];
     permissions?: readonly string[];
     install: (deps?: unknown) => void | (() => void) | Promise<void | (() => void)>;

@@ -80,6 +80,21 @@ Judgement half (required for merge):
 - [ ] H6 loadable + **blocking** SEI smoke when UI touched
 - [ ] Reject if PR template checklist incomplete
 
+### Capabilities map freshness & soft gate (003-capability-inventory-gaps)
+
+Canonical product inventory: `docs/capabilities-map.md` (human tables + YAML anchors;
+structure gates C0–C10). When the change touches capability boundary, `configKey`,
+descriptor, `pages/`, or schema ownership:
+
+- [ ] Map updated in the **same** change set (inventory and/or gap register); no silent drift
+- [ ] Prose tables (Inventory / Residuals / Gap register) still match YAML anchors (C10)
+- [ ] If the PR adds a **new** user capability while open **P1** gaps exist: Spec Kit / PR
+      lists deferred P1 gap ids + justification (soft gate). Silent bypass → **BLOCKER**
+- [ ] New behavior is not dumped into a residual/aggregator instead of a named capability
+
+Mechanical half: `tests/structure/capabilities-map-inventory.test.js` +
+`capability-coverage.test.js`. Your job is honesty of naming/frontier and soft-gate
+justification quality.
 ### Source of truth
 - [ ] Changes live under `src/` (or build/manifest/docs/tests). No hand-edits to
       `dist/` as source — `dist/` is generated output only.
@@ -160,7 +175,9 @@ Judgement half (required for merge):
   (ADR-0012); domain with DOM; SEI selector, URL or version branching outside `src/sei/`
   (ADR-0003); `getSeiPro()` in new code (ADR-0005); raised ratchet baseline (ADR-0008);
   missing build for a new entry; no tests for new pure domain logic; contradicts an
-  accepted ADR without a superseding one
+  accepted ADR without a superseding one; **new user capability with open P1 gaps and no
+  soft-gate justification** (003 / FR-007); capability-boundary change that leaves
+  `docs/capabilities-map.md` stale vs descriptors/pages/keys
 - **WARNING** — incomplete migration hygiene: weak test coverage, missing smoke note,
   CSS prefix gap on touched classes, oversized bridge, silent `catch`, mechanical rule
   with no fitness function backing it

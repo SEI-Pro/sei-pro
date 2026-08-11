@@ -1,59 +1,22 @@
 /**
  * Phase 5.7 / ADR-0007 — schema ↔ feature descriptors close on each other.
- *
- * - Every descriptor configKey (string) exists in CONFIG_SCHEMA.
- * - Every schema entry with a `feature` field names a folder that has a descriptor
- *   (allowlisted gaps documented below).
+ * Allowlists live in scripts/lib/capability-coverage-allowlists.mjs (map exceptions).
  */
 import { describe, expect, it } from 'vitest';
 import { CONFIG_SCHEMA } from '../../src/config/schema.ts';
 import { scanFeatureDescriptors } from '../../scripts/lib/scan-feature-descriptors.mjs';
-
-/**
- * Schema `feature` values without a src/features/<id>/ folder yet.
- * Shrink this list as dedicated features appear — never grow without ADR note.
- */
-const SCHEMA_FEATURE_WITHOUT_DESCRIPTOR = new Set([
-    'telemetry' // bugReportOptIn — privacy/telemetry feature not foldered yet
-]);
-
-/**
- * Descriptor ids that intentionally omit configKey (null) or share a parent key
- * during strangler / multi-context glue. Documented in docs/capabilities-map.md.
- */
-const NULL_CONFIGKEY_ALLOWED = new Set([
-    'ai',
-    'arvore',
-    'atividades-afastamentos',
-    'atividades-avaliacoes',
-    'atividades-registro',
-    'editor',
-    'external-config',
-    'legis',
-    'lista-processos',
-    'acoes-capa',
-    'dialogs-host',
-    'editor-captcha',
-    'interessados-forms',
-    'todas-paginas',
-    'visualizacao'
-]);
-
-/**
- * Chaves ainda compartilhadas durante um strangler. Cada exceção precisa ter
- * dono atual e futuro explícitos; removê-la é parte da fatia de extração.
- */
-const CONFIG_KEY_FEATURE_OWNER_OVERRIDES = new Map([
-    ['gerenciaratividades', new Set(['atividades', 'atividades-config'])],
-    ['gerenciarprescricoes', new Set(['atividades', 'prescricoes'])],
-    ['filtrarpaginapelapesquisarapida', new Set(['lista-processos', 'quick-filter', 'quick-highlight'])],
-    ['notificacaonovoprocesso', new Set(['lista-processos', 'notificacoes-processo'])]
-]);
+import {
+    SCHEMA_FEATURE_WITHOUT_DESCRIPTOR,
+    NULL_CONFIGKEY_ALLOWED,
+    CONFIG_KEY_FEATURE_OWNER_OVERRIDES
+} from '../../scripts/lib/capability-coverage-allowlists.mjs';
+import { parseCapabilitiesMap } from '../../scripts/lib/parse-capabilities-map.mjs';
 
 describe('capability coverage (ADR-0007 / phase 5.7)', () => {
     const descriptors = scanFeatureDescriptors();
     const schemaKeys = new Set(Object.keys(CONFIG_SCHEMA));
     const descriptorIds = new Set(descriptors.map((d) => d.id));
+    const { inventory } = parseCapabilitiesMap();
 
     it('every descriptor configKey exists in CONFIG_SCHEMA', () => {
         const missing = [];
@@ -110,8 +73,44 @@ describe('capability coverage (ADR-0007 / phase 5.7)', () => {
         expect([...CONFIG_KEY_FEATURE_OWNER_OVERRIDES.keys()]).toEqual([
             'gerenciaratividades',
             'gerenciarprescricoes',
-        'filtrarpaginapelapesquisarapida',
-        'notificacaonovoprocesso'
+            'filtrarpaginapelapesquisarapida',
+            'notificacaonovoprocesso'
         ]);
+    });
+
+    it('C3: every schema key is claimed by inventory ownership, exception, or typed gap', () => {
+        const claimedKeys = new Set();
+        for (const e of inventory.entries) {
+            if (typeof e.configKey === 'string') claimedKeys.add(e.configKey);
+        }
+        const { exceptions, gaps } = parseCapabilitiesMap();
+        for (const ex of exceptions.exceptions) {
+            if (ex.kind === 'shared_config_key' || ex.kind === 'schema_feature_without_descriptor') {
+                // schema_feature_without_descriptor is feature id; shared is key
+                if (ex.kind === 'shared_config_key') claimedKeys.add(ex.keyOrFeatureId);
+            }
+        }
+        // Keys whose schema.feature is telemetry (no folder) must appear in gap evidence or exceptions
+        const orphan = [];
+        for (const key of schemaKeys) {
+            if (claimedKeys.has(key)) continue;
+            const feature = CONFIG_SCHEMA[key]?.feature;
+            if (feature && SCHEMA_FEATURE_WITHOUT_DESCRIPTOR.has(feature)) {
+                const hasGap = gaps.gaps.some(
+                    (g) =>
+                        g.id === 'gap-telemetry-folder' ||
+                        (Array.isArray(g.evidence) && g.evidence.includes(key))
+                );
+                if (hasGap) continue;
+            }
+            // Keys owned by a feature that has null configKey on descriptor but schema points to feature —
+            // still "claimed" if some inventory entry lists that schema feature as descriptor and notes the key via shared mode
+            // Fallback: if schema feature has an inventory entry, accept as claimed through ownership story
+            if (feature && inventory.entries.some((e) => e.descriptorId === feature || e.id === feature)) {
+                continue;
+            }
+            orphan.push(`${key} (feature=${feature || 'none'})`);
+        }
+        expect(orphan, `unclaimed schema keys:\n${orphan.join('\n')}`).toEqual([]);
     });
 });

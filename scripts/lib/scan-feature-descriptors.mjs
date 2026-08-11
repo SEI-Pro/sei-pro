@@ -25,7 +25,7 @@ export function listFeatureDirs(root = REPO_ROOT) {
 
 /**
  * @param {string} source
- * @returns {{ id: string|null, maturity: string|null, contexts: string[], configKey: string|null|undefined, hasInstall: boolean, hasApi: boolean }}
+ * @returns {{ id: string|null, maturity: string|null, contexts: string[], configKey: string|null|undefined, undocumented: boolean, hasInstall: boolean, hasApi: boolean }}
  */
 export function parseFeatureDescriptorSource(source) {
     const idMatch = source.match(/\bid\s*:\s*['"]([a-z0-9-]+)['"]/);
@@ -43,11 +43,14 @@ export function parseFeatureDescriptorSource(source) {
     } else {
         configKey = configKeyMatch[1].slice(1, -1);
     }
+    const undocumentedMatch = source.match(/\bundocumented\s*:\s*(true|false)/);
+    const undocumented = undocumentedMatch ? undocumentedMatch[1] === 'true' : false;
     return {
         id: idMatch ? idMatch[1] : null,
         maturity: maturityMatch ? maturityMatch[1] : null,
         contexts,
         configKey,
+        undocumented,
         hasInstall: /\binstall\s*:/.test(source) || /\binstall\s*\(/.test(source),
         hasApi: /\bapi\s*:/.test(source)
     };
@@ -55,7 +58,7 @@ export function parseFeatureDescriptorSource(source) {
 
 /**
  * @param {string} [root]
- * @returns {Array<{ dir: string, file: string, id: string|null, contexts: string[], configKey: string|null|undefined, hasInstall: boolean, hasApi: boolean, missing: boolean }>}
+ * @returns {Array<{ dir: string, file: string, id: string|null, contexts: string[], configKey: string|null|undefined, undocumented: boolean, hasInstall: boolean, hasApi: boolean, missing: boolean }>}
  */
 export function scanFeatureDescriptors(root = REPO_ROOT) {
     return listFeatureDirs(root).map((dir) => {
@@ -68,6 +71,7 @@ export function scanFeatureDescriptors(root = REPO_ROOT) {
                 maturity: null,
                 contexts: [],
                 configKey: undefined,
+                undocumented: false,
                 hasInstall: false,
                 hasApi: false,
                 missing: true

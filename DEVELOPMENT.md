@@ -468,6 +468,15 @@ Essa configuração é uma propriedade do GitHub, não um arquivo versionável. 
 ative a proteção/ruleset, o checklist e o CI documentam a política, mas não conseguem impedir sozinhos
 um merge manual. A implementação local falha fechado se não puder resolver a base do diff no CI.
 
+### Inventário de capacidades e gaps (Spec Kit `003-capability-inventory-gaps`)
+
+Fonte canônica de produto: [`docs/capabilities-map.md`](./docs/capabilities-map.md) (inventário + gaps P1–P4 + âncoras verificadas em CI).
+
+- Capacidade / fronteira / nome: parta do inventário — **não** do nome de arquivo legado nem só da página do SEI.
+- PR que altera fronteira, `configKey`, descritor ou `pages/` MUST atualizar o mapa no **mesmo** ciclo (gates C0–C10 quebram verify se divergir; C10 exige prosa↔YAML 1:1 nas tabelas Inventory / Residuals / Gap register).
+- **Portão suave (capacidade nova):** enquanto houver gaps `open` + **P1** no mapa, o Spec Kit da capacidade nova MUST listar esses ids adiados e justificar por que o trabalho novo prevalece. Bypass silencioso não é permitido. Ver `specs/003-capability-inventory-gaps/contracts/soft-gate-new-capability.md`.
+- Fechar gaps (exclusive, chaves próprias, páginas novas) é Spec Kit **seguinte** — o mapa só inventaria e prioriza.
+
 ---
 
 ### Checklist para próximos prompts

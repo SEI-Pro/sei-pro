@@ -20,6 +20,11 @@
 
 - [ ] CI green including `policy:check` (and structure tests)
 
+## Capabilities map (003)
+
+- [ ] **Map updated** — If this PR touches capability frontier, `configKey`, descriptors, or `pages/`: `docs/capabilities-map.md` inventory/gaps/exceptions updated in the same PR (or N/A: no capability boundary change)
+- [ ] **Soft gate (new user capability)** — If adding a **new** user capability while open **P1** gaps exist: Spec/PR lists deferred P1 gap ids + justification (or N/A: not a new capability / no open P1)
+
 ## Summary
 
 -

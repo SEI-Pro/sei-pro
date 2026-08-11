@@ -62,6 +62,7 @@ até o alvo.
 | `dist/` reproduzível | ✅ | wipe oficial + gates clean/bit-identical/audit exit 1 (`001-build-generated-dist`) | [0011](./adr/0011-dist-fora-do-versionamento.md) |
 | CI | ✅ `.github/workflows/ci.yml` | portão obrigatório + `policy:check` (`002-ts-zero-legacy`) | [0008](./adr/0008-fitness-functions-e-ratchets.md), [0014](./adr/0014-typescript-para-codigo-novo.md) |
 | Política zero-legado | Spec Kit `specs/002-ts-zero-legacy/` | toque em runtime → fecho `exclusive` + TS + portão duplo | [0014](./adr/0014-typescript-para-codigo-novo.md) |
+| Inventário de capacidades | [`docs/capabilities-map.md`](./capabilities-map.md) (inventário + gaps P1–P4) | cobertura páginas↔descritores↔chaves hard-fail (003) | [0007](./adr/0007-fronteira-de-feature-por-capacidade.md) |
 
 **Leitura honesta:** a base bundlada foi renomeada para TypeScript e as features têm
 descritores; isso não equivale a base tipada nem a feature migrada. Uma feature só é

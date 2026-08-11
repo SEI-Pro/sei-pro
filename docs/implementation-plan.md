@@ -243,7 +243,7 @@ testar, e ratchets para não regredir.
 
 | # | Fatia | Pronto quando |
 |---|---|---|
-| 5.1 | Mapear capacidades reais usando `pages/` (~80 arquivos) e os CSVs de `docs/mapping-funcoes-configuracoes/` | **concluído**; lista de features-alvo nomeadas no vocabulário do usuário |
+| 5.1 | Mapear capacidades reais usando `pages/` (~80 arquivos) e os CSVs de `docs/mapping-funcoes-configuracoes/` | **concluído**; lista de features-alvo nomeadas no vocabulário do usuário; inventário+gaps canônicos em [`docs/capabilities-map.md`](./capabilities-map.md) (Spec Kit `003`) |
 | 5.2 | Cobrir com teste o domínio de `atividades/config-options.js` (5458 linhas) **antes** de mover | **concluído**; caracterização preservada |
 | 5.3 | Extrair a administração de configuração de `atividades` como feature própria | **concluído**; `atividades-config` wired + `configKey` compartilhada explicitamente |
 | 5.4 | Extrair afastamentos, avaliações e registro de atividades, uma por vez | **concluído**; três installers wired + wrappers de compatibilidade |
