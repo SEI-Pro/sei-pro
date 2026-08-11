@@ -336,6 +336,7 @@
         "css/sei-pro.css",
         "css/legacy-sei.css",
         "css/arvore.css",
+        "css/arvore-info.css",
         "css/quick-filter.css",
         "css/prazo-preview.css",
         "css/controlar-prazos.css",

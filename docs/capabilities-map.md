@@ -193,7 +193,7 @@ Exceções executáveis espelham `scripts/lib/capability-coverage-allowlists.mjs
       ],
       "undocumented": false,
       "descriptorId": "arvore-info",
-      "notes": ""
+      "notes": "DADOSPROCESSO.md is editor process-data insertion — not part of the infoarvore panel runtime fecho (004-migrate-infoarvore)."
     },
     {
       "id": "atividades",

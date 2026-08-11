@@ -1,0 +1,352 @@
+/**
+ * Estilos da capacidade "Informações adicionais na árvore" (`infoarvore`).
+ * Fonte de verdade visual do painel — migrado de sei-pro.css / arvore/style.css / sei-slim.
+ */
+/* Rules are filled as migration tasks move styles out of the shared monolith. */
+
+.seipro-infoarvore-panel,
+.panelDadosArvore {
+    border-top: 1px solid rgb(218, 218, 218) !important;
+    padding: 1.2em 0.2em 1.2em 1.2em !important;
+    width: calc(100% - 1.4em) !important;
+}
+
+.seipro-infoarvore-head {
+    margin-bottom: 10px;
+    display: block;
+}
+
+.seipro-infoarvore-toggle {
+    float: right;
+    cursor: pointer;
+    margin-right: 20px;
+}
+
+.seipro-infoarvore-muted {
+    opacity: 0.6;
+}
+
+.seipro-infoarvore-status-failed {
+    /* inherits .infoAlerta from SEI when present */
+}
+
+.seipro-infoarvore-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.seipro-infoarvore-row-grow {
+    cursor: pointer;
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+.seipro-infoarvore-remove {
+    cursor: pointer;
+    color: #c00;
+    flex-shrink: 0;
+}
+
+.seipro-infoarvore-edit-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.seipro-infoarvore-edit-select {
+    width: 100%;
+    padding: 4px;
+}
+
+.seipro-infoarvore-edit-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.seipro-infoarvore-edit-btn {
+    cursor: pointer;
+    padding: 2px 10px;
+}
+
+.seipro-infoarvore-edit-label {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.seipro-infoarvore-edit-textarea {
+    width: 100%;
+    padding: 4px;
+    min-height: 50px;
+}
+
+.seipro-infoarvore-copy {
+    cursor: pointer;
+    max-width: calc(100% - 70px);
+}
+
+.seipro-infoarvore-copy-block {
+    cursor: pointer;
+    display: block;
+    max-width: calc(100% - 70px);
+}
+
+.seipro-infoarvore-prewrap {
+    white-space: pre-wrap;
+}
+
+.seipro-infoarvore-row-label {
+    flex: 1;
+}
+
+.seipro-infoarvore-busy {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.seipro-infoarvore-hidden {
+    display: none !important;
+}
+
+.seipro-infoarvore-submit-frame {
+    display: none;
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 0;
+}
+
+.seipro-infoarvore-pencil {
+    cursor: pointer;
+    float: right;
+    margin-right: 8px;
+}
+
+.seipro-anot-editor {
+    min-height: 24px;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    max-width: 100%;
+    outline: none;
+}
+
+.seipro-anot-editor.is-editing {
+    border: 1px dashed #bfa500;
+}
+
+.seipro-anot-editor.is-priority {
+    border-left: 3px solid #d33;
+}
+
+.seipro-anot-actions {
+    margin-top: 6px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 90%;
+}
+
+.seipro-anot-btn {
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  line-height: 1;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+button.seipro-anot-btn {
+  appearance: none;
+}
+.seipro-anot-btn:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
+}
+
+.seipro-anot-btn.is-muted {
+    color: #888;
+}
+
+.seipro-anot-btn.is-danger {
+    color: #a33;
+}
+
+.seipro-anot-btn.is-confirm {
+    color: #393;
+}
+
+.seipro-anot-btn.is-prio-on {
+    color: #d33;
+}
+
+.seipro-anot-btn.is-prio-off {
+    color: #888;
+}
+
+.seipro-anot-btn.is-busy {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.seipro-anot-stamp {
+    font-size: 80%;
+    color: #666;
+    margin-top: 4px;
+}
+
+.seipro-anot-stamp-icon {
+    margin-right: 4px;
+}
+
+.seipro-anot-placeholder {
+    opacity: 0.5;
+    font-style: italic;
+}
+
+.seipro-anot-dirty {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e69a00;
+    margin-left: 2px;
+    vertical-align: top;
+}
+
+.seipro-anot-priority-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e69a00;
+    margin-left: 2px;
+    vertical-align: top;
+}
+
+.seipro-anot-presets {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    margin-left: 6px;
+}
+
+.seipro-anot-preset {
+    cursor: pointer;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    line-height: 1;
+    font-size: 0;
+}
+
+.seipro-anot-preset svg {
+    width: 30px;
+    height: 30px;
+    display: block;
+    pointer-events: none;
+}
+
+.seipro-anot-count {
+    margin-left: auto;
+    font-size: 85%;
+    color: #888;
+}
+
+.seipro-anot-count.is-limit {
+    color: #d33;
+}
+
+.seipro-anot-expired {
+    background: #fac3c4;
+}
+
+.seipro-anot-proc-link {
+    color: #0066cc;
+}
+
+.seipro-infoarvore-marcador-icon {
+    width: 14px;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.seipro-infoarvore-marcador-note {
+    opacity: 0.8;
+    margin-left: 20px;
+}
+
+/* Anotação section chrome (moved from arvore/style.css) */
+.panelDadosArvore[data-type="anotacoes"] {
+    border: 1px solid #d8d2a8 !important;
+    border-radius: 6px;
+    background: #fffdf2;
+    margin: 8px 0 12px 0;
+    padding: 1em 0.8em 0.8em 1em !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: background-color 200ms ease, border-color 200ms ease;
+}
+.panelDadosArvore[data-type="anotacoes"]:has(.seipro-anot-editor[data-priority="1"]) {
+    background: #f7dcd4;
+    border-color: #c98279 !important;
+}
+.panelDadosArvore[data-type="anotacoes"] .seipro-anot-actions {
+    gap: 10px;
+    padding: 4px 0;
+}
+.panelDadosArvore[data-type="anotacoes"] .seipro-anot-btn {
+    font-size: 15pt !important;
+    padding: 4px;
+    line-height: 1;
+}
+.panelDadosArvore[data-type="anotacoes"] .seipro-anot-btn:hover {
+    transform: scale(1.1);
+    transition: transform 120ms ease;
+}
+.panelDadosArvore[data-type="anotacoes"] .seipro-anot-date-input {
+    font-size: 11pt;
+    padding: 2px 4px;
+}
+.seipro-anot-editor {
+    padding-left: 28px !important;
+}
+.seipro-anot-editor .stickNoteChecked {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+.seipro-anot-editor .stickNoteCheck {
+    cursor: pointer;
+    position: relative;
+}
+.seipro-anot-editor .stickNoteCheck:before {
+    content: "\f0c8";
+    font-family: 'Font Awesome 5 Pro', 'Font Awesome 5 Free';
+    font-weight: 400;
+    position: absolute;
+    margin-left: -22px;
+    font-size: 13pt;
+}
+.seipro-anot-editor .stickNoteCheck.stickNoteChecked:before {
+    content: "\f14a";
+    font-weight: 900;
+}
+
+/* Dark-mode hooks (moved from sei-slim theme coupling) */
+.seiSlim.dark-mode .panelDadosArvore,
+.seiSlim.dark-mode .panelDadosArvorePro,
+.seiSlim.dark-mode .seipro-infoarvore-panel {
+    border-color: #494C50 !important;
+}
+

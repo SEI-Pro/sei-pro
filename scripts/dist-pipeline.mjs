@@ -88,6 +88,7 @@ export const FEATURE_CSS = [
     { src: 'src/features/controlar-prazos/style.css', out: 'dist/css/controlar-prazos.css' },
     { src: 'src/features/quick-filter/style.css', out: 'dist/css/quick-filter.css' },
     { src: 'src/features/arvore/style.css', out: 'dist/css/arvore.css' },
+    { src: 'src/features/arvore-info/arvore-info.css', out: 'dist/css/arvore-info.css' },
     { src: 'src/features/lista-processos/style.css', out: 'dist/css/lista-processos.css' },
     { src: 'src/shared/sei-runtime/style.css', out: 'dist/css/legacy-sei.css' },
     { src: 'src/features/atividades/style.css', out: 'dist/css/atividades.css' },

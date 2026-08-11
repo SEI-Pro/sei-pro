@@ -1,136 +1,190 @@
-// @ts-nocheck — ADR-0014: dívida até tipagem; remover ao editar o arquivo.
-import { parseAcaoRemoverId } from '../parse/marcador.js';
-import { forceTrueConfirm } from '../dom/confirm.js';
-
 /**
  * Seção "Marcador" do painel infoarvore (Etapa D — split por seção).
  * Render READ + remoção inline (via submitViaIframe + forceTrueConfirm). A adição
- * (openInlineEditor no clique do lápis) fica em index.js e re-renderiza via refreshers.
- *
- * ctx = { doc, marcPanel, findToolbarLink, fetchPage, invalidatePage, submitViaIframe,
- *         refreshSection, refreshers, sectionEnabled, log, warn, err, report }
+ * (openInlineEditor no clique do lápis) fica em panel.ts e re-renderiza via refreshers.
  */
+import { parseAcaoRemoverId } from '../parse/marcador.js';
+import { forceTrueConfirm } from '../dom/confirm.js';
+import {
+    TREE_PANEL_INFRA_TABLE,
+    TREE_PANEL_MARCADOR_SELECT
+} from '../../../sei/selectors.js';
+import {
+    clearChildren,
+    createFaIcon,
+    setFailedStatus,
+    setMutedStatus
+} from '../dom/status.js';
+
+export type MarcadorItem = {
+    id: string | null;
+    iconSrc: string | null | undefined;
+    tag: string;
+    note: string;
+    user: string;
+};
+
+export type MarcadorSectionCtx = {
+    doc: Document;
+    marcPanel: HTMLElement;
+    findToolbarLink: (hrefFragment: string) => string | null;
+    fetchPage: (url: string) => Promise<Document>;
+    invalidatePage: (url: string) => void;
+    submitViaIframe: (url: string, valuesOrFn: Record<string, string> | ((w: Window, d: Document) => void)) => Promise<void>;
+    refreshSection: (name: string, reason?: string) => void;
+    refreshers: Record<string, () => void>;
+    sectionEnabled: (sectionId: string) => boolean;
+    log: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    err: (...args: unknown[]) => void;
+    report: (reason: string, detail?: unknown) => void;
+};
+
 // Parsing PURO do documento de marcadores (SEI 4.1+ tabela / fallback form single).
-// Só LÊ docM → testável com jsdom. VERBATIM.
-export function parseMarcadorItems(docM) {
-    var items = [];
+export function parseMarcadorItems(docM: Document): MarcadorItem[] {
+    const items: MarcadorItem[] = [];
     // SEI 4.1+: table-of-marcadores layout (one row per marcador).
-    var rows = docM.querySelectorAll('table.infraTable tr');
-    for (var r = 1; r < rows.length; r++) { // skip header
-        var tds = rows[r].querySelectorAll('td');
+    const rows = docM.querySelectorAll(TREE_PANEL_INFRA_TABLE + ' tr');
+    for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const tds = row.querySelectorAll('td');
         if (tds.length < 4) continue;
-        var img = tds[1].querySelector('img');
-        var remA = rows[r].querySelector('a[onclick*="acaoRemover"]');
-        var remMatch = remA ? parseAcaoRemoverId(remA.getAttribute('onclick')) : null;
-        var tagA = tds[1].querySelector('a[title]');
+        const td1 = tds[1];
+        const td2 = tds[2];
+        const td3 = tds[3];
+        if (!td1 || !td2 || !td3) continue;
+        const img = td1.querySelector('img');
+        const remA = row.querySelector('a[onclick*="acaoRemover"]');
+        const remMatch = remA ? parseAcaoRemoverId(remA.getAttribute('onclick')) : null;
+        const tagA = td1.querySelector('a[title]');
         items.push({
             id: remMatch,
             iconSrc: img ? img.getAttribute('src') : null,
-            tag: (tagA && tagA.getAttribute('title')) || (tds[1].textContent || '').trim(),
-            note: (tds[2].textContent || '').trim(),
-            user: (tds[3].textContent || '').trim()
+            tag: (tagA && tagA.getAttribute('title')) || (td1.textContent || '').trim(),
+            note: (td2.textContent || '').trim(),
+            user: (td3.textContent || '').trim()
         });
     }
     // Legacy fallback: single-marcador form layout.
     if (!items.length) {
-        var sel = docM.getElementById('selMarcador');
-        var ta  = docM.getElementById('txaTexto');
-        var opt = sel && (sel.querySelector('option[selected]') || (sel.options && sel.options[sel.selectedIndex]));
-        var tag = opt ? opt.textContent.trim() : '';
-        var note = ta ? ta.value || ta.textContent || '' : '';
-        if (tag || note) items.push({ id: null, iconSrc: opt && (opt.getAttribute('data-imagesrc') || opt.dataset.imagesrc), tag: tag, note: note, user: '' });
+        const sel = docM.querySelector(TREE_PANEL_MARCADOR_SELECT) as HTMLSelectElement | null;
+        const ta = docM.getElementById('txaTexto') as HTMLTextAreaElement | null;
+        const opt = sel && (sel.querySelector('option[selected]') || (sel.options && sel.options[sel.selectedIndex]));
+        const tag = opt && opt.textContent ? opt.textContent.trim() : '';
+        const note = ta ? ta.value || ta.textContent || '' : '';
+        if (tag || note) {
+            items.push({
+                id: null,
+                iconSrc: opt && (opt.getAttribute('data-imagesrc') || (opt as HTMLElement).dataset.imagesrc),
+                tag: tag,
+                note: note,
+                user: ''
+            });
+        }
     }
     return items;
 }
 
-export function installMarcadorSection(ctx) {
-    var doc = ctx.doc, marcPanel = ctx.marcPanel;
-    var findToolbarLink = ctx.findToolbarLink, fetchPage = ctx.fetchPage, invalidatePage = ctx.invalidatePage;
-    var submitViaIframe = ctx.submitViaIframe, refreshSection = ctx.refreshSection, refreshers = ctx.refreshers;
-    var sectionEnabled = ctx.sectionEnabled, log = ctx.log, warn = ctx.warn, err = ctx.err, report = ctx.report;
+export function installMarcadorSection(ctx: MarcadorSectionCtx): void {
+    const doc = ctx.doc;
+    const marcPanel = ctx.marcPanel;
+    const findToolbarLink = ctx.findToolbarLink;
+    const fetchPage = ctx.fetchPage;
+    const invalidatePage = ctx.invalidatePage;
+    const submitViaIframe = ctx.submitViaIframe;
+    const refreshSection = ctx.refreshSection;
+    const refreshers = ctx.refreshers;
+    const sectionEnabled = ctx.sectionEnabled;
+    const log = ctx.log;
+    const warn = ctx.warn;
+    const err = ctx.err;
+    const report = ctx.report;
 
-    var marcadorUrl = findToolbarLink('andamento_marcador_gerenciar');
-    function renderMarcadorItemRow(it) {
-        var row = doc.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+    const marcadorUrl = findToolbarLink('andamento_marcador_gerenciar');
+    function renderMarcadorItemRow(it: MarcadorItem): HTMLElement {
+        const row = doc.createElement('div');
+        row.className = 'seipro-infoarvore-row';
 
-        var lbl = doc.createElement('span');
-        lbl.style.flex = '1';
+        const lbl = doc.createElement('span');
+        lbl.className = 'seipro-infoarvore-row-label';
         if (it.iconSrc) {
-            var im = doc.createElement('img');
+            const im = doc.createElement('img');
             im.src = it.iconSrc;
-            im.style.cssText = 'width:14px;vertical-align:middle;margin-right:6px;';
+            im.className = 'seipro-infoarvore-marcador-icon';
             lbl.appendChild(im);
         }
-        var s = doc.createElement('strong');
+        const s = doc.createElement('strong');
         s.textContent = it.tag;
         lbl.appendChild(s);
         if (it.note) {
-            var n = doc.createElement('div');
-            n.style.cssText = 'opacity:0.8;margin-left:20px;';
+            const n = doc.createElement('div');
+            n.className = 'seipro-infoarvore-marcador-note';
             n.textContent = it.note;
             lbl.appendChild(n);
         }
         row.appendChild(lbl);
 
         if (it.id) {
-            var rmBtn = doc.createElement('a');
-            rmBtn.className = 'newLink';
+            const rmBtn = doc.createElement('a');
+            rmBtn.className = 'newLink seipro-infoarvore-remove';
             rmBtn.title = 'Remover marcador';
-            rmBtn.style.cssText = 'cursor:pointer;color:#c00;flex-shrink:0;';
-            rmBtn.innerHTML = '<i class="fas fa-times"></i>';
+            rmBtn.appendChild(createFaIcon(doc, 'fas fa-times'));
             rmBtn.addEventListener('click', function () {
-                if (rmBtn.style.opacity === '0.4') return;
-                rmBtn.style.opacity = '0.4';
-                rmBtn.style.pointerEvents = 'none';
-                submitViaIframe(marcadorUrl, function (w, d2) {
-                    var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoRemover"]'))
+                if (rmBtn.classList.contains('seipro-infoarvore-busy')) return;
+                rmBtn.classList.add('seipro-infoarvore-busy');
+                submitViaIframe(marcadorUrl!, function (w, d2) {
+                    const removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoRemover"]'))
                         .find(function (a) {
-                            var oc = a.getAttribute('onclick') || '';
+                            const oc = a.getAttribute('onclick') || '';
                             return oc.indexOf("acaoRemover('" + it.id + "'") !== -1;
                         });
                     if (removeLink) {
                         forceTrueConfirm(w);
-                        removeLink.click();
-                    } else if (typeof w.acaoRemover === 'function') {
+                        (removeLink as HTMLElement).click();
+                    } else if (typeof (w as Window & { acaoRemover?: (id: string, tag: string) => void }).acaoRemover === 'function') {
                         forceTrueConfirm(w);
-                        w.acaoRemover(it.id, it.tag || '');
+                        (w as Window & { acaoRemover: (id: string, tag: string) => void }).acaoRemover(it.id!, it.tag || '');
                     } else {
-                        var hdn = d2.getElementById('hdnInfraItemId');
-                        if (hdn) hdn.value = it.id;
-                        var f = d2.getElementById('frmGerenciarMarcador') || d2.querySelector('form');
-                        if (f) f.submit();
+                        const hdn = d2.getElementById('hdnInfraItemId') as HTMLInputElement | null;
+                        if (hdn) hdn.value = it.id!;
+                        const f = d2.getElementById('frmGerenciarMarcador') || d2.querySelector('form');
+                        if (f) (f as HTMLFormElement).submit();
                     }
                 }).then(function () {
                     refreshSection('marcador', 'post-remove marcador');
-                }).catch(function (e) {
+                }).catch(function (e: Error) {
                     err('marcador remove:', e.message);
-                    rmBtn.style.opacity = '1';
-                    rmBtn.style.pointerEvents = '';
+                    rmBtn.classList.remove('seipro-infoarvore-busy');
                 });
             });
             row.appendChild(rmBtn);
         }
         return row;
     }
+    const marcBody = marcPanel.querySelector('.seipro-marcador-body');
     if (!marcadorUrl) {
         warn('infoarvore_marcador: toolbar link not found — section will stay as "carregando"');
-        marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span style="opacity:0.6">(sem marcador)</span>';
+        setMutedStatus(marcBody, '(sem marcador)');
         return;
     }
     function renderMarcador() {
-      invalidatePage(marcadorUrl);
-      marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span style="opacity:0.6">carregando…</span>';
-      fetchPage(marcadorUrl).then(function (docM) {
-        var items = parseMarcadorItems(docM);
-        var bd = marcPanel.querySelector('.seipro-marcador-body');
-        bd.innerHTML = '';
-        if (!items.length) { bd.innerHTML = '<span style="opacity:0.6">(sem marcador)</span>'; return; }
-        items.forEach(function (it) { bd.appendChild(renderMarcadorItemRow(it)); });
-      }).catch(function (e) {
-        marcPanel.querySelector('.seipro-marcador-body').innerHTML = '<span class="infoAlerta">(falha ao carregar marcador)</span>';
-        report('infoarvore_marcador: fetch failed', { error: e.message, url: marcadorUrl });
-      });
+        invalidatePage(marcadorUrl!);
+        setMutedStatus(marcBody, 'carregando…');
+        fetchPage(marcadorUrl!).then(function (docM) {
+            const items = parseMarcadorItems(docM);
+            const bd = marcPanel.querySelector('.seipro-marcador-body');
+            if (!bd) return;
+            clearChildren(bd);
+            if (!items.length) {
+                setMutedStatus(bd, '(sem marcador)');
+                return;
+            }
+            items.forEach(function (it) { bd.appendChild(renderMarcadorItemRow(it)); });
+        }).catch(function (e: Error) {
+            setFailedStatus(marcPanel.querySelector('.seipro-marcador-body'), '(falha ao carregar marcador)');
+            report('infoarvore_marcador: fetch failed', { error: e.message, url: marcadorUrl });
+        });
     }
     refreshers.marcador = renderMarcador;
     if (sectionEnabled('marcador')) renderMarcador();

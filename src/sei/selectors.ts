@@ -92,6 +92,31 @@ export const PROCESS_TABLE = {
 /** Tree root in arvore_visualizar. */
 export const TREE_ROOT = '#divArvore' as const;
 
+/** Iframe body that hosts both process and document anchors. */
+export const TREE_IFRAME_BODY = 'body.infraArvore' as const;
+
+/** Readiness gate: populated children under the tree root. */
+export const TREE_READY_GATE = TREE_ROOT;
+
+/** Process tree form / panel mount host. */
+export const TREE_PANEL_FORM = '#frmArvore' as const;
+
+/** Fallback mount near andamento when `#frmArvore` is absent. */
+export const TREE_ANDAMENTO = '#divConsultarAndamento' as const;
+
+/** Document/process anchors inside the tree iframe. */
+export const TREE_ANCHOR =
+    'a.infraArvoreNo[target="ifrConteudoVisualizacao"], a.infraArvoreNo[target="ifrVisualizacao"]' as const;
+
+/** Marcador select on SEI forms used by the info panel. */
+export const TREE_PANEL_MARCADOR_SELECT = '#selMarcador' as const;
+
+/** Atribuição select on SEI forms used by the info panel. */
+export const TREE_PANEL_ATRIBUICAO_SELECT = '#selAtribuicao' as const;
+
+/** Generic SEI infra table (marcador / acompanhamento rows). */
+export const TREE_PANEL_INFRA_TABLE = 'table.infraTable' as const;
+
 /** Document registration form. */
 export const DOCUMENT_FORM = '#frmDocumentoCadastro' as const;
 

@@ -1,34 +1,65 @@
-// @ts-nocheck — ADR-0014: dívida até tipagem; remover ao editar o arquivo.
 /**
  * Seção "Acompanhamento Especial" do painel infoarvore (Etapa D — split por seção).
  * Render READ + remoção inline (via submitViaIframe). A EDIÇÃO/adição (editAcompInline)
- * fica em index.js (acoplada ao scaffolding compartilhado de editores) e re-renderiza
+ * fica em panel.ts (acoplada ao scaffolding compartilhado de editores) e re-renderiza
  * por meio do registry `refreshers` (refreshSection('acomp')).
- *
- * ctx = { doc, acompPanel, findToolbarLink, getToolbarLinks, fetchPage, invalidatePage,
- *         submitViaIframe, refreshSection, refreshers, sectionEnabled, log, warn, err, report }
  */
-// Parsing PURO do documento de acompanhamento especial (só LÊ docA). Testável jsdom. VERBATIM.
-export function parseAcompItems(docA) {
-    var rows = docA.querySelectorAll('table.infraTable tr');
-    var items = [];
-    for (var r = 1; r < rows.length; r++) {
-        var tds = rows[r].querySelectorAll('td');
+import { TREE_PANEL_INFRA_TABLE } from '../../../sei/selectors.js';
+import {
+    clearChildren,
+    createFaIcon,
+    setFailedStatus,
+    setMutedStatus
+} from '../dom/status.js';
+
+export type AcompItem = {
+    id: string | null;
+    grupo: string;
+    obs: string;
+    user: string;
+    date: string;
+};
+
+export type AcompanhamentoSectionCtx = {
+    doc: Document;
+    acompPanel: HTMLElement;
+    findToolbarLink: (hrefFragment: string) => string | null;
+    getToolbarLinks: () => Array<{ name?: string; url: string }>;
+    fetchPage: (url: string) => Promise<Document>;
+    invalidatePage: (url: string) => void;
+    submitViaIframe: (url: string, valuesOrFn: Record<string, string> | ((w: Window, d: Document) => void)) => Promise<void>;
+    refreshSection: (name: string, reason?: string) => void;
+    refreshers: Record<string, () => void>;
+    sectionEnabled: (sectionId: string) => boolean;
+    log: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    err: (...args: unknown[]) => void;
+    report: (reason: string, detail?: unknown) => void;
+};
+
+// Parsing PURO do documento de acompanhamento especial (só LÊ docA).
+export function parseAcompItems(docA: Document): AcompItem[] {
+    const rows = docA.querySelectorAll(TREE_PANEL_INFRA_TABLE + ' tr');
+    const items: AcompItem[] = [];
+    for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const tds = row.querySelectorAll('td');
         if (tds.length < 3) continue;
-        var acompId = null;
-        var exLink = rows[r].querySelector('a[onclick*="acaoExcluir"]');
+        let acompId: string | null = null;
+        const exLink = row.querySelector('a[onclick*="acaoExcluir"]');
         if (exLink) {
-            var idM = exLink.getAttribute('onclick').match(/acaoExcluir\((\d+)/);
-            if (idM) acompId = idM[1];
+            const idM = (exLink.getAttribute('onclick') || '').match(/acaoExcluir\((\d+)/);
+            if (idM) acompId = idM[1] || null;
         }
         if (!acompId) {
-            var chk = rows[r].querySelector('input[type="checkbox"][name*="chk"]');
+            const chk = row.querySelector('input[type="checkbox"][name*="chk"]') as HTMLInputElement | null;
             if (chk) acompId = chk.value;
         }
         items.push({
             id: acompId,
-            grupo: (tds[1].textContent || '').trim(),
-            obs: (tds[2].textContent || '').trim(),
+            grupo: (tds[1]?.textContent || '').trim(),
+            obs: (tds[2]?.textContent || '').trim(),
             user: tds[3] ? (tds[3].textContent || '').trim() : '',
             date: tds[4] ? (tds[4].textContent || '').trim() : ''
         });
@@ -36,83 +67,98 @@ export function parseAcompItems(docA) {
     return items;
 }
 
-export function installAcompanhamentoSection(ctx) {
-    var doc = ctx.doc, acompPanel = ctx.acompPanel;
-    var findToolbarLink = ctx.findToolbarLink, getToolbarLinks = ctx.getToolbarLinks;
-    var fetchPage = ctx.fetchPage, invalidatePage = ctx.invalidatePage, submitViaIframe = ctx.submitViaIframe;
-    var refreshSection = ctx.refreshSection, refreshers = ctx.refreshers, sectionEnabled = ctx.sectionEnabled;
-    var log = ctx.log, warn = ctx.warn, err = ctx.err, report = ctx.report;
+export function installAcompanhamentoSection(ctx: AcompanhamentoSectionCtx): void {
+    const doc = ctx.doc;
+    const acompPanel = ctx.acompPanel;
+    const findToolbarLink = ctx.findToolbarLink;
+    const getToolbarLinks = ctx.getToolbarLinks;
+    const fetchPage = ctx.fetchPage;
+    const invalidatePage = ctx.invalidatePage;
+    const submitViaIframe = ctx.submitViaIframe;
+    const refreshSection = ctx.refreshSection;
+    const refreshers = ctx.refreshers;
+    const sectionEnabled = ctx.sectionEnabled;
+    const log = ctx.log;
+    const warn = ctx.warn;
+    const err = ctx.err;
+    const report = ctx.report;
 
-    var acompBody = acompPanel.querySelector('.seipro-acomp-body');
-    var acompUrl = findToolbarLink('acompanhamento_gerenciar')
-                || findToolbarLink('acompanhamento_listar')
-                || findToolbarLink('acompanhamento_cadastrar')
-                || findToolbarLink('acompanhamento_alterar');
-    function renderAcompItemRow(it) {
-        var row = doc.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
-        var txt = it.obs + (it.grupo ? (it.obs ? ' ' : '') + '(' + it.grupo + ')' : '');
-        var a = doc.createElement('a');
-        a.className = 'newLink seipro-copy';
-        a.style.cssText = 'cursor:pointer;flex:1;white-space:pre-wrap;';
+    const acompBody = acompPanel.querySelector('.seipro-acomp-body');
+    const acompUrl = findToolbarLink('acompanhamento_gerenciar')
+        || findToolbarLink('acompanhamento_listar')
+        || findToolbarLink('acompanhamento_cadastrar')
+        || findToolbarLink('acompanhamento_alterar');
+
+    function renderAcompItemRow(it: AcompItem): HTMLElement {
+        const row = doc.createElement('div');
+        row.className = 'seipro-infoarvore-row';
+        const txt = it.obs + (it.grupo ? (it.obs ? ' ' : '') + '(' + it.grupo + ')' : '');
+        const a = doc.createElement('a');
+        a.className = 'newLink seipro-copy seipro-infoarvore-row-grow';
         a.textContent = txt || '(em acompanhamento)';
         row.appendChild(a);
         if (it.id) {
-            var btn = doc.createElement('a');
-            btn.className = 'newLink';
+            const btn = doc.createElement('a');
+            btn.className = 'newLink seipro-infoarvore-remove';
             btn.title = 'Remover acompanhamento especial';
-            btn.style.cssText = 'cursor:pointer;color:#c00;flex-shrink:0;';
-            btn.innerHTML = '<i class="fas fa-times"></i>';
+            btn.appendChild(createFaIcon(doc, 'fas fa-times'));
             btn.addEventListener('click', function () {
-                if (btn.style.opacity === '0.4') return;
-                btn.style.opacity = '0.4';
-                btn.style.pointerEvents = 'none';
-                submitViaIframe(acompUrl, function (w, d2) {
-                    var removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoExcluir"]'))
-                        .find(function (a) {
-                            var oc = a.getAttribute('onclick') || '';
+                if (btn.classList.contains('seipro-infoarvore-busy')) return;
+                btn.classList.add('seipro-infoarvore-busy');
+                submitViaIframe(acompUrl!, function (w, d2) {
+                    const removeLink = Array.from(d2.querySelectorAll('a[onclick*="acaoExcluir"]'))
+                        .find(function (aEl) {
+                            const oc = aEl.getAttribute('onclick') || '';
                             return oc.indexOf('acaoExcluir(' + it.id) !== -1 || oc.indexOf("acaoExcluir('" + it.id + "'") !== -1;
                         });
                     if (removeLink) {
-                        removeLink.click();
-                    } else if (typeof w.acaoExcluir === 'function') {
-                        w.acaoExcluir(it.id, it.obs || it.grupo || '');
+                        (removeLink as HTMLElement).click();
+                    } else if (typeof (w as Window & { acaoExcluir?: (id: string, label: string) => void }).acaoExcluir === 'function') {
+                        (w as Window & { acaoExcluir: (id: string, label: string) => void }).acaoExcluir(it.id!, it.obs || it.grupo || '');
                     } else {
-                        var chks = d2.querySelectorAll('input[type="checkbox"]');
-                        for (var c = 0; c < chks.length; c++) { chks[c].checked = (chks[c].value == it.id); }
-                        var f = d2.querySelector('form'); if (f) f.submit();
+                        const chks = d2.querySelectorAll('input[type="checkbox"]');
+                        for (let c = 0; c < chks.length; c++) {
+                            const chk = chks[c] as HTMLInputElement;
+                            chk.checked = (chk.value == it.id);
+                        }
+                        const f = d2.querySelector('form');
+                        if (f) (f as HTMLFormElement).submit();
                     }
                 }).then(function () {
                     refreshSection('acomp', 'post-remove acomp');
-                }).catch(function (e) {
+                }).catch(function (e: Error) {
                     err('acomp remove:', e.message);
-                    btn.style.opacity = '1';
-                    btn.style.pointerEvents = '';
+                    btn.classList.remove('seipro-infoarvore-busy');
                 });
             });
             row.appendChild(btn);
         }
         return row;
     }
+
     function renderAcomp() {
+        if (!acompUrl || !acompBody) return;
         invalidatePage(acompUrl);
-        acompBody.innerHTML = '<span style="opacity:0.6">carregando…</span>';
+        setMutedStatus(acompBody, 'carregando…');
         fetchPage(acompUrl).then(function (docA) {
-            var items = parseAcompItems(docA);
-            acompBody.innerHTML = '';
+            const items = parseAcompItems(docA);
+            clearChildren(acompBody);
             if (!items.length) {
-                acompBody.innerHTML = '<span style="opacity:0.6">(não está em acompanhamento especial)</span>';
+                setMutedStatus(acompBody, '(não está em acompanhamento especial)');
                 return;
             }
             items.forEach(function (it) { acompBody.appendChild(renderAcompItemRow(it)); });
-        }).catch(function (e) {
-            acompBody.innerHTML = '<span class="infoAlerta">(falha ao carregar)</span>';
+        }).catch(function (e: Error) {
+            setFailedStatus(acompBody, '(falha ao carregar)');
             report('infoarvore_acomp: fetch failed', { error: e.message, url: acompUrl });
         });
     }
     refreshers.acomp = renderAcomp;
     if (!acompUrl) {
-        acompBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-        var names = getToolbarLinks().map(function (l) { return (l.url.match(/acao=([^&]+)/) || [])[1]; }).filter(Boolean);
+        setMutedStatus(acompBody, '(indisponível)');
+        const names = getToolbarLinks().map(function (l) {
+            return (l.url.match(/acao=([^&]+)/) || [])[1];
+        }).filter(Boolean);
         warn('infoarvore_acomp: no acompanhamento_* toolbar link. Toolbar actions:', names.join(', '));
     } else if (sectionEnabled('acompanhamento_especial')) renderAcomp();
     else log('infoarvore_acomp: skipped (section disabled by user)');

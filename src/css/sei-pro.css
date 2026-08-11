@@ -2923,7 +2923,6 @@ div#divInfraBarraSistemaE.barSuspenso:before {
     transition: all 300ms linear;
 }
 .panelDadosArvorePro, 
-.panelDadosArvore, 
 .stickDadosArvore {
     border-top: 1px solid rgb(218, 218, 218) !important;
     padding: 1.2em 0.2em 1.2em 1.2em !important;

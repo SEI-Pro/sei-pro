@@ -1,6 +1,3 @@
-// @ts-nocheck — ADR-0014: dívida até tipagem; remover ao editar o arquivo.
-import { acessoLabel, splitInteressado } from '../parse/consulta.js';
-
 /**
  * Seção "Consulta" do painel infoarvore (Etapa D — split por seção).
  * Lê a página procedimento_alterar/consultar e popula 5 sub-seções READ-ONLY:
@@ -8,30 +5,50 @@ import { acessoLabel, splitInteressado } from '../parse/consulta.js';
  *
  * É view (DOM): recebe um `ctx` com os elementos de painel e as dependências de
  * runtime (fetch/toolbar/refreshers/logger). A lógica PURA (mapa de acesso, split
- * de interessados) vem de parse/consulta.js. VERBATIM do legado.
- *
- * ctx = { doc, intPanel, tipoPanel, acessoPanel, assuntosPanel, obsPanel,
- *         findToolbarLink, fetchPage, invalidatePage, refreshers, sectionEnabled,
- *         log, warn, report }
+ * de interessados) vem de parse/consulta.js.
  */
+import { acessoLabel, splitInteressado } from '../parse/consulta.js';
+import { clearChildren, setFailedStatus, setMutedStatus } from '../dom/status.js';
+
+export type AcessoTextResult = {
+    text: string;
+    element: Element | null;
+};
+
+export type ConsultaSectionCtx = {
+    doc: Document;
+    intPanel: HTMLElement;
+    tipoPanel: HTMLElement;
+    acessoPanel: HTMLElement;
+    assuntosPanel: HTMLElement;
+    obsPanel: HTMLElement;
+    findToolbarLink: (hrefFragment: string) => string | null;
+    fetchPage: (url: string) => Promise<Document>;
+    invalidatePage: (url: string) => void;
+    refreshers: Record<string, () => void>;
+    sectionEnabled: (sectionId: string) => boolean;
+    log: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    report: (reason: string, detail?: unknown) => void;
+};
+
 // Parsing PURO do form de consulta (só LÊ docA). Testável jsdom.
-// Nível de acesso (mapa + hipótese legal) e interessados (split nome/(unidade)).
-export function getAcessoText(docA) {
-    var rdo = docA.querySelector('input[name="rdoNivelAcesso"]:checked');
-    var hipoteseText = '';
+export function getAcessoText(docA: Document): AcessoTextResult {
+    const rdo = docA.querySelector('input[name="rdoNivelAcesso"]:checked') as HTMLInputElement | null;
+    let hipoteseText = '';
     if (rdo && rdo.value === '1') {
-        var hipSel = docA.getElementById('selHipoteseLegal');
-        var hipOpt = hipSel && (hipSel.querySelector('option[selected]') || (hipSel.options && hipSel.options[hipSel.selectedIndex]));
-        if (hipOpt && hipOpt.textContent.trim()) hipoteseText = hipOpt.textContent.trim();
+        const hipSel = docA.getElementById('selHipoteseLegal') as HTMLSelectElement | null;
+        const hipOpt = hipSel && (hipSel.querySelector('option[selected]') || (hipSel.options && hipSel.options[hipSel.selectedIndex]));
+        if (hipOpt && hipOpt.textContent && hipOpt.textContent.trim()) hipoteseText = hipOpt.textContent.trim();
     }
     return { text: acessoLabel(rdo ? rdo.value : null, hipoteseText), element: rdo };
 }
 
-export function getInteressadosTexts(docA) {
-    var opts = docA.querySelectorAll('#selInteressadosProcedimento option, #selInteressados option');
-    var items = [];
-    for (var i = 0; i < opts.length; i++) {
-        var name = (opts[i].textContent || '').trim();
+export function getInteressadosTexts(docA: Document): string[] {
+    const opts = docA.querySelectorAll('#selInteressadosProcedimento option, #selInteressados option');
+    const items: string[] = [];
+    for (let i = 0; i < opts.length; i++) {
+        const name = (opts[i]?.textContent || '').trim();
         if (!name) continue;
         splitInteressado(name).forEach(function (part) {
             items.push(part);
@@ -40,135 +57,158 @@ export function getInteressadosTexts(docA) {
     return items;
 }
 
-export function installConsultaSection(ctx) {
-    var doc = ctx.doc;
-    var intPanel = ctx.intPanel, tipoPanel = ctx.tipoPanel, acessoPanel = ctx.acessoPanel,
-        assuntosPanel = ctx.assuntosPanel, obsPanel = ctx.obsPanel;
-    var findToolbarLink = ctx.findToolbarLink, fetchPage = ctx.fetchPage, invalidatePage = ctx.invalidatePage;
-    var refreshers = ctx.refreshers, sectionEnabled = ctx.sectionEnabled;
-    var log = ctx.log, warn = ctx.warn, report = ctx.report;
+export function installConsultaSection(ctx: ConsultaSectionCtx): void {
+    const doc = ctx.doc;
+    const intPanel = ctx.intPanel;
+    const tipoPanel = ctx.tipoPanel;
+    const acessoPanel = ctx.acessoPanel;
+    const assuntosPanel = ctx.assuntosPanel;
+    const obsPanel = ctx.obsPanel;
+    const findToolbarLink = ctx.findToolbarLink;
+    const fetchPage = ctx.fetchPage;
+    const invalidatePage = ctx.invalidatePage;
+    const refreshers = ctx.refreshers;
+    const sectionEnabled = ctx.sectionEnabled;
+    const log = ctx.log;
+    const warn = ctx.warn;
+    const report = ctx.report;
 
-    var intBody = intPanel.querySelector('.seipro-interessados-body');
+    const intBodyEl = intPanel.querySelector('.seipro-interessados-body');
     // Prefer "procedimento_alterar" — form layout includes #txaObservacoes. Fall back to consultar (read-only).
-    var consultaUrl = findToolbarLink('procedimento_alterar') || findToolbarLink('procedimento_consultar');
-    if (!consultaUrl) {
+    const consultaUrlRaw = findToolbarLink('procedimento_alterar') || findToolbarLink('procedimento_consultar');
+    if (!consultaUrlRaw || !intBodyEl) {
         warn('infoarvore_interessados: consulta link not found');
-        intBody.innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-        tipoPanel.querySelector('.seipro-tipo-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-        acessoPanel.querySelector('.seipro-acesso-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-        assuntosPanel.querySelector('.seipro-assuntos-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
-        obsPanel.querySelector('.seipro-obs-body').innerHTML = '<span style="opacity:0.6">(indisponível)</span>';
+        setMutedStatus(intBodyEl, '(indisponível)');
+        setMutedStatus(tipoPanel.querySelector('.seipro-tipo-body'), '(indisponível)');
+        setMutedStatus(acessoPanel.querySelector('.seipro-acesso-body'), '(indisponível)');
+        setMutedStatus(assuntosPanel.querySelector('.seipro-assuntos-body'), '(indisponível)');
+        setMutedStatus(obsPanel.querySelector('.seipro-obs-body'), '(indisponível)');
         refreshers.consulta = function () {
-            var msg = '<span style="opacity:0.6">(indisponível)</span>';
-            intBody.innerHTML = msg;
-            tipoPanel.querySelector('.seipro-tipo-body').innerHTML = msg;
-            acessoPanel.querySelector('.seipro-acesso-body').innerHTML = msg;
-            assuntosPanel.querySelector('.seipro-assuntos-body').innerHTML = msg;
-            obsPanel.querySelector('.seipro-obs-body').innerHTML = msg;
+            setMutedStatus(intBodyEl, '(indisponível)');
+            setMutedStatus(tipoPanel.querySelector('.seipro-tipo-body'), '(indisponível)');
+            setMutedStatus(acessoPanel.querySelector('.seipro-acesso-body'), '(indisponível)');
+            setMutedStatus(assuntosPanel.querySelector('.seipro-assuntos-body'), '(indisponível)');
+            setMutedStatus(obsPanel.querySelector('.seipro-obs-body'), '(indisponível)');
         };
         return;
     }
+    const intBody: Element = intBodyEl;
+    const consultaUrl: string = consultaUrlRaw;
 
-    function setSectionText(panelBody, text, emptyText) {
-        panelBody.innerHTML = '';
+    function setSectionText(panelBody: Element, text: string, emptyText?: string) {
+        clearChildren(panelBody);
         if (text) {
-            var a = doc.createElement('a');
-            a.className = 'newLink seipro-copy';
-            a.style.cssText = 'cursor:pointer;max-width:calc(100% - 70px);';
+            const a = doc.createElement('a');
+            a.className = 'newLink seipro-copy seipro-infoarvore-copy';
             a.textContent = text;
             panelBody.appendChild(a);
         } else {
-            panelBody.innerHTML = '<span style="opacity:0.6">' + (emptyText || '(indisponível)') + '</span>';
+            setMutedStatus(panelBody, emptyText || '(indisponível)');
         }
     }
 
-    function appendCopyRow(panelBody, text) {
-        var row = doc.createElement('div');
-        var a = doc.createElement('a');
-        a.className = 'newLink seipro-copy';
-        a.style.cssText = 'cursor:pointer;display:block;max-width:calc(100% - 70px);';
+    function appendCopyRow(panelBody: Element, text: string) {
+        const row = doc.createElement('div');
+        const a = doc.createElement('a');
+        a.className = 'newLink seipro-copy seipro-infoarvore-copy-block';
         a.textContent = text;
         row.appendChild(a);
         panelBody.appendChild(row);
     }
 
-    function getSelectedOptionText(docA, selector) {
-        var el = docA.querySelector(selector);
-        var opt = el && (el.querySelector('option[selected]') || (el.options && el.options[el.selectedIndex]));
+    function getSelectedOptionText(docA: Document, selector: string) {
+        const el = docA.querySelector(selector) as HTMLSelectElement | null;
+        const opt = el && (el.querySelector('option[selected]') || (el.options && el.options[el.selectedIndex]));
         return {
             element: el,
-            text: opt ? opt.textContent.trim() : ''
+            text: opt && opt.textContent ? opt.textContent.trim() : ''
         };
     }
 
-    function getOptionTexts(docA, selector) {
-        var nodes = docA.querySelectorAll(selector);
-        var items = [];
+    function getOptionTexts(docA: Document, selector: string): string[] {
+        const nodes = docA.querySelectorAll(selector);
+        const items: string[] = [];
         nodes.forEach(function (o) {
-            var txt = (o.textContent || '').trim();
+            const txt = (o.textContent || '').trim();
             if (txt) items.push(txt);
         });
         return items;
     }
 
-    function renderConsultaSections(docC) {
+    function renderConsultaSections(docC: Document) {
         // --- Tipo de Processo
-        var tipoBody = tipoPanel.querySelector('.seipro-tipo-body');
-        var tipoData = getSelectedOptionText(docC, '#selTipoProcedimento');
-        var tipoName = tipoData.text;
-        setSectionText(tipoBody, tipoName, '(indisponível)');
-        if (!tipoName) report('infoarvore_consulta: Tipo de Processo unavailable in fetched form', { hasSelTipo: !!tipoData.element });
+        const tipoBody = tipoPanel.querySelector('.seipro-tipo-body');
+        if (tipoBody) {
+            const tipoData = getSelectedOptionText(docC, '#selTipoProcedimento');
+            const tipoName = tipoData.text;
+            setSectionText(tipoBody, tipoName, '(indisponível)');
+            if (!tipoName) report('infoarvore_consulta: Tipo de Processo unavailable in fetched form', { hasSelTipo: !!tipoData.element });
+        }
 
         // --- Nível de Acesso
-        var acessoBody = acessoPanel.querySelector('.seipro-acesso-body');
-        var acessoData = getAcessoText(docC);
-        var acessoTxt = acessoData.text;
-        setSectionText(acessoBody, acessoTxt, '(indisponível)');
-        if (!acessoTxt) report('infoarvore_consulta: Nível de Acesso unavailable', { hasRdo: !!acessoData.element });
+        const acessoBody = acessoPanel.querySelector('.seipro-acesso-body');
+        let acessoTxt = '';
+        if (acessoBody) {
+            const acessoData = getAcessoText(docC);
+            acessoTxt = acessoData.text;
+            setSectionText(acessoBody, acessoTxt, '(indisponível)');
+            if (!acessoTxt) report('infoarvore_consulta: Nível de Acesso unavailable', { hasRdo: !!acessoData.element });
+        }
 
         // --- Assuntos
-        var assBody = assuntosPanel.querySelector('.seipro-assuntos-body');
-        var assOpts = getOptionTexts(docC, '#selAssuntos option');
-        assBody.innerHTML = '';
-        if (!assOpts.length) { assBody.innerHTML = '<span style="opacity:0.6">(sem assuntos)</span>'; }
-        else {
-            assOpts.forEach(function (txt) { appendCopyRow(assBody, txt); });
+        const assBody = assuntosPanel.querySelector('.seipro-assuntos-body');
+        const assOpts = getOptionTexts(docC, '#selAssuntos option');
+        if (assBody) {
+            clearChildren(assBody);
+            if (!assOpts.length) {
+                setMutedStatus(assBody, '(sem assuntos)');
+            } else {
+                assOpts.forEach(function (txt) { appendCopyRow(assBody, txt); });
+            }
         }
 
         // --- Observações
-        var obsBody = obsPanel.querySelector('.seipro-obs-body');
-        var obsTA = docC.getElementById('txaObservacoes');
-        var obsVal = obsTA ? (obsTA.value || obsTA.textContent || '').trim() : '';
-        setSectionText(obsBody, obsVal, '(sem observações)');
-        if (obsBody.firstChild && obsVal) obsBody.firstChild.style.whiteSpace = 'pre-wrap';
+        const obsBody = obsPanel.querySelector('.seipro-obs-body');
+        const obsTA = docC.getElementById('txaObservacoes') as HTMLTextAreaElement | null;
+        const obsVal = obsTA ? (obsTA.value || obsTA.textContent || '').trim() : '';
+        if (obsBody) {
+            setSectionText(obsBody, obsVal, '(sem observações)');
+            if (obsBody.firstChild && obsVal && obsBody.firstChild instanceof HTMLElement) {
+                obsBody.firstChild.classList.add('seipro-infoarvore-prewrap');
+            }
+        }
 
         // --- Interessados
-        var opts = getInteressadosTexts(docC);
-        intBody.innerHTML = '';
-        if (!opts.length) { intBody.innerHTML = '<span style="opacity:0.6">(sem interessados)</span>'; log('infoarvore_interessados: empty'); return; }
+        const opts = getInteressadosTexts(docC);
+        clearChildren(intBody);
+        if (!opts.length) {
+            setMutedStatus(intBody, '(sem interessados)');
+            log('infoarvore_interessados: empty');
+            return;
+        }
         opts.forEach(function (part) { appendCopyRow(intBody, part); });
 
-        log('infoarvore_consulta: tipo="' + tipoName + '" acesso="' + acessoTxt + '" assuntos=' + assOpts.length + ' obs.len=' + obsVal.length);
+        const tipoNameLog = tipoBody ? ((tipoBody.textContent || '').trim()) : '';
+        log('infoarvore_consulta: tipo="' + tipoNameLog + '" acesso="' + acessoTxt + '" assuntos=' + assOpts.length + ' obs.len=' + obsVal.length);
         log('infoarvore_interessados: populated', opts.length, 'interessado(s)');
     }
 
     function renderConsulta() {
-      invalidatePage(consultaUrl);
-      fetchPage(consultaUrl).then(function (docC) {
-        renderConsultaSections(docC);
-      }).catch(function (e) {
-        var msg = '<span class="infoAlerta">(falha ao carregar)</span>';
-        intBody.innerHTML = msg;
-        tipoPanel.querySelector('.seipro-tipo-body').innerHTML = msg;
-        acessoPanel.querySelector('.seipro-acesso-body').innerHTML = msg;
-        assuntosPanel.querySelector('.seipro-assuntos-body').innerHTML = msg;
-        obsPanel.querySelector('.seipro-obs-body').innerHTML = msg;
-        report('infoarvore_consulta: fetch failed — 5 sections (Tipo/Acesso/Assuntos/Obs/Interessados) shown as "(falha ao carregar)"', { error: e.message, url: consultaUrl });
-      });
+        invalidatePage(consultaUrl);
+        fetchPage(consultaUrl).then(function (docC) {
+            renderConsultaSections(docC);
+        }).catch(function (e: Error) {
+            setFailedStatus(intBody, '(falha ao carregar)');
+            setFailedStatus(tipoPanel.querySelector('.seipro-tipo-body'), '(falha ao carregar)');
+            setFailedStatus(acessoPanel.querySelector('.seipro-acesso-body'), '(falha ao carregar)');
+            setFailedStatus(assuntosPanel.querySelector('.seipro-assuntos-body'), '(falha ao carregar)');
+            setFailedStatus(obsPanel.querySelector('.seipro-obs-body'), '(falha ao carregar)');
+            report('infoarvore_consulta: fetch failed — 5 sections (Tipo/Acesso/Assuntos/Obs/Interessados) shown as "(falha ao carregar)"', { error: e.message, url: consultaUrl });
+        });
     }
     refreshers.consulta = renderConsulta;
     // Consulta fetch feeds 5 sections; skip only if all 5 are disabled.
-    var consultaSections = ['interessados', 'tipo_procedimento', 'nivel_acesso', 'assuntos', 'observacoes'];
+    const consultaSections = ['interessados', 'tipo_procedimento', 'nivel_acesso', 'assuntos', 'observacoes'];
     if (consultaSections.some(sectionEnabled)) renderConsulta();
     else log('infoarvore_consulta: skipped (all 5 dependent sections disabled by user)');
 }

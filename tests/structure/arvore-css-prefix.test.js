@@ -22,7 +22,10 @@ describe('migration: arvore CSS', () => {
     const view = read('src/features/arvore/view.ts');
     const templates = read('src/features/arvore/templates.ts');
     const sharedLegacy = readSeiFunctionsSource();
-    const arvoreInfo = read('src/features/arvore-info/index.ts');
+    const arvoreInfo = [
+      read('src/features/arvore-info/index.ts'),
+      read('src/features/arvore-info/panel.ts')
+    ].join('\n');
 
     expect(upload).toContain('createFileQueue');
     expect(upload).toContain('previewsContainer');
@@ -36,6 +39,7 @@ describe('migration: arvore CSS', () => {
     expect(sharedLegacy).toContain('.action-doc[data-id=');
     expect(sharedLegacy).toContain("closest('.no_notifyPro')");
     expect(arvoreInfo).toContain("querySelector('.panelDadosArvore')");
+    expect(arvoreInfo).toMatch(/className\s*=\s*['"]panelDadosArvore['"]|\.panelDadosArvore/);
   });
 
   it('carrega bundle e CSS da árvore no manifest; upload usa file-queue (sem Dropzone)', () => {

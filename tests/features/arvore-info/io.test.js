@@ -120,3 +120,24 @@ describe('io.submitForm — encoding ISO-8859-1', () => {
     expect(captured.body).toContain('txaDescricao=OPERA%C7%C3O%20CI%CANCIA');
   });
 });
+
+describe('io — invalidate after write', () => {
+  it('caller can invalidate cached page after submitForm succeeds', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(okResponse());
+    globalThis.fetch = fetchMock;
+    const io = createIo({ win: { location: { href: 'https://sei/' } } });
+    const url = 'https://sei/page';
+    await io.fetchPage(url);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await io.submitForm({
+      querySelector: () => ({
+        getAttribute: () => '/save',
+        querySelectorAll: () => []
+      }),
+      baseURI: 'https://sei/'
+    }, { x: '1' });
+    io.invalidatePage(url);
+    await io.fetchPage(url);
+    expect(fetchMock.mock.calls.filter((c) => c[0] === url).length).toBe(2);
+  });
+});

@@ -5,14 +5,17 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * Guard estrutural: cada módulo de seção (src/features/arvore-info/sections/*.js)
- * lê dependências via `ctx.<chave>`. O index.js precisa PASSAR todas essas chaves
- * no objeto da chamada install/create correspondente — senão o helper fica
- * `undefined` e quebra só em runtime (esbuild não acusa). Foi assim que
+ * lê dependências via `ctx.<chave>`. O `index.ts` / `panel.ts` precisa PASSAR todas
+ * essas chaves no objeto da chamada install/create correspondente — senão o helper
+ * fica `undefined` e quebra só em runtime (esbuild não acusa). Foi assim que
  * `submitForm` passou batido no split da Anotação. Este teste tranca isso.
  */
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 const sectionsDir = join(root, 'src/features/arvore-info/sections');
 const indexSrc = readFileSync(join(root, 'src/features/arvore-info/index.ts'), 'utf8');
+const panelSrc = readFileSync(join(root, 'src/features/arvore-info/panel.ts'), 'utf8');
+/** Wiring call sites may live in index.ts (composition) or panel.ts (orchestration). */
+const wiringSrc = indexSrc + '\n' + panelSrc;
 
 // Extrai o objeto literal passado para `fnName({ ... })` (capturando o 1º bloco balanceado).
 function callObjectBody(code, fnName) {
@@ -29,7 +32,7 @@ function callObjectBody(code, fnName) {
 
 const files = readdirSync(sectionsDir).filter((f) => f.match(/\.(js|ts)$/));
 
-describe('arvore-info: ctx das seções é totalmente passado pelo index.js', () => {
+describe('arvore-info: ctx das seções é totalmente passado pelo index/panel', () => {
   for (const file of files) {
     it(`${file}: todas as ctx.<chave> usadas são passadas na chamada`, () => {
       const code = readFileSync(join(sectionsDir, file), 'utf8');
@@ -42,8 +45,8 @@ describe('arvore-info: ctx das seções é totalmente passado pelo index.js', ()
       let m;
       while ((m = re.exec(code)) !== null) used.add(m[1]);
 
-      const body = callObjectBody(indexSrc, exportName);
-      expect(body, `index.js deve conter a chamada ${exportName}({...})`).toBeTruthy();
+      const body = callObjectBody(wiringSrc, exportName);
+      expect(body, `index.ts ou panel.ts deve conter a chamada ${exportName}({...})`).toBeTruthy();
 
       const passed = new Set();
       const kre = /(\w+)\s*:/g;
@@ -51,7 +54,13 @@ describe('arvore-info: ctx das seções é totalmente passado pelo index.js', ()
       while ((k = kre.exec(body)) !== null) passed.add(k[1]);
 
       const missing = [...used].filter((key) => !passed.has(key));
-      expect(missing, `${exportName}: ctx faltando no index.js: ${missing.join(', ')}`).toEqual([]);
+      expect(missing, `${exportName}: ctx faltando no wiring: ${missing.join(', ')}`).toEqual([]);
     });
   }
+
+  it('index.ts does not own peer tree enrichers (arvore does)', () => {
+    expect(indexSrc).not.toMatch(/installTreeEnrichers/);
+    expect(indexSrc).toMatch(/ensureTreePipeline/);
+    expect(indexSrc).toMatch(/createInfoArvorePanelFeature/);
+  });
 });

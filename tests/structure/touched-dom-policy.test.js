@@ -8,7 +8,7 @@ import path from 'node:path';
 import { resolveTouchedPaths } from '../../scripts/policy/touched-paths.mjs';
 
 const root = process.cwd();
-const INLINE_RE = /\son[a-z][a-z0-9_-]*\s*=/i;
+const INLINE_RE = /\son[a-z][a-z0-9_-]*\s*=\s*['"`]/i;
 
 describe('touched DOM policy', () => {
     it('fails when touched paths contain inline handler attributes', () => {

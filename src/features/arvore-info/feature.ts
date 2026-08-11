@@ -3,14 +3,14 @@
  * Instalação feita pela raiz de composição da árvore.
  */
 import type { SeiFeatureDescriptor } from '../../types/seipro.js';
-import { installArvoreInfo } from './index.js';
+import { installArvoreInfo, type InstallArvoreInfoDeps } from './index.js';
 
 const descriptor: SeiFeatureDescriptor = {
     id: 'arvore-info',
     maturity: 'exclusive',
     contexts: ['arvore'],
     configKey: 'infoarvore',
-    install: installArvoreInfo,
+    install: (deps) => installArvoreInfo(deps as InstallArvoreInfoDeps),
     api: Object.freeze({})
 };
 
