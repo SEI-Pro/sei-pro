@@ -105,7 +105,12 @@ Caso deseja reportar um erro, acesse [Issue](https://github.com/pedrohsoaresadv/
 Envie sua sugestão de nova funcionalidade em [https://seipro.changecrab.com/suggestions](https://seipro.changecrab.com/suggestions)
 Vote nas sugestões que mais queria ver no SEI Pro!
 
-## Grupo SEI Lab
+## SEI Pro no ParticiPEN
+
+Participe da Comunidade do Processo Eletrônico Nacional (ParticiPEN), espaço criado para compartilhar ideias, experiências e discussões técnicas.
+[https://participen.processoeletronico.gov.br/c/modulos-comunidade/sei-pro/39](https://participen.processoeletronico.gov.br/c/modulos-comunidade/sei-pro/39)
+
+## Comunidade SEI Lab
 
 Participe do laboratorio de ideias sobre inovações para o SEI, automações e boas práticas.
 
@@ -125,4 +130,8 @@ Confira nosso [Histórico de versões](./pages/HISTORICO.md)
 ## Licença
 
 AGPL-3.0
+
+## Política de Privacidade
+
+Confira nossa Declaração de Não Coleta de Dadosm em confomidade com a Lei nº 13.709/2018 (LGPD) e com as melhores práticas de segurança da informação: [Política de Privacidade](./PRIVACY_POLICY.md)
 

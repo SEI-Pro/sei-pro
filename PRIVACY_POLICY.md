@@ -1,4 +1,4 @@
-# Política de Privacidade — SEI Pro ![SEI Pro](img/icon-32.png)
+# Política de Privacidade — SEI Pro ![SEI Pro](/img/icon-32.png)
 
 **Versão:** 2.0  
 **Data de Vigência:** 14 de janeiro de 2026  
