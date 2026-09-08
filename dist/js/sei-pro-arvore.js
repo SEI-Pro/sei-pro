@@ -1427,7 +1427,7 @@ function initDadosProcessoArvoreSession() {
     }
 }
 function initDadosProcessoArvore(TimeOut = 1000) {
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name != 'autopreenchersenha')) { 
+    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { 
         if ($('#ifrArvore').length > 0) {
             getLisDocsProcessoPro();
         }
@@ -2200,7 +2200,7 @@ function getDataMarcadorProcesso() {
     }
 }
 function initAtividadesProcesso(TimeOut = 9000) {
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name != 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
     if (
         typeof parent.arrayConfigAtividades !== 'undefined' && 
         typeof parent.arrayConfigAtividades.perfil !== 'undefined'
@@ -2393,7 +2393,7 @@ function stylePanelArvore() {
 }
 function initStylePanelArvore(TimeOut = 9000) {
 
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name != 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
     if (
         typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
         selectedItensPanelArvore.length && 
@@ -2431,7 +2431,7 @@ function breakDocTwoLines() {
     });
 }
 function initBreakDocTwoLines(TimeOut = 9000) {
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name != 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
     if (typeof resizeArvoreMaxWidth !== 'undefined') {
         breakDocTwoLines();
     } else {
