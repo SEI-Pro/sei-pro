@@ -7915,7 +7915,6 @@ function getBatchActionsPro(this_) {
                                 tr.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
                                 tr.find('input').prop('checked',false);
                                 loopActionsPro.index = loopActionsPro.index+1;
-                                console.log(loopActionsPro.list[loopActionsPro.index]);
                                 getBatchActionsPro(this_);
                                 if (typeof loopActionsPro.list[loopActionsPro.index] === 'undefined') {
                                     resetDocsActions();
@@ -7924,7 +7923,6 @@ function getBatchActionsPro(this_) {
                                 tr.find('i.batchLoading').remove();
                                 tr.find('td.documento').prepend('<i class="fas fa-times-circle vermelhoColor batchLoading"></i> ');
                                 loopActionsPro.index = loopActionsPro.index+1;
-                                console.log(loopActionsPro.list[loopActionsPro.index]);
                                 getBatchActionsPro(this_);
                                 if (typeof loopActionsPro.list[loopActionsPro.index] === 'undefined') {
                                     resetDocsActions();
@@ -7953,7 +7951,6 @@ function getBatchActionsPro(this_) {
                             var assinatura = usuario+' / '+cargo;
                             var data_assinatura = moment().format('DD/MM/YYYY HH:mm');
 
-                            console.log(loopActionsPro, senha);
                             
                             $(this).unbind();
                             iframe.find('#btnAssinar').trigger('click');
@@ -9858,6 +9855,11 @@ function validarTagsPro() {
 	return true;
 }
 function enableButtonSavePro() {
+    // No CK5 n\u00E3o existem CKEDITOR.instances nem o bot\u00E3o .cke_button__save: o pr\u00F3prio
+    // editor gerencia o estado do salvar. Sem esta guarda, no SEI 5 a linha
+    // CKEDITOR.instances[idEditor] lan\u00E7a "Cannot read properties of undefined",
+    // porque frmEditor aponta para .infra-editor__editor-completo (que existe).
+    if (typeof CKEDITOR === 'undefined' || !CKEDITOR.instances) { return; }
     if (frmEditor.length) {
         var idEditor = $('#idEditor').val();
         $('div#cke_'+idEditor).find('.cke_button__save').removeClass('cke_button_disabled').addClass('cke_button_off').removeAttr('aria-disabled').css('background-color','');
@@ -9865,7 +9867,6 @@ function enableButtonSavePro() {
         if (CKEDITOR.dialog.getCurrent() != null ) {
             CKEDITOR.dialog.getCurrent().hide();
         }
-        console.log('enableButtonSavePro')
     }
 }
 function DocsToSEI(iframeDoc, mode) {
