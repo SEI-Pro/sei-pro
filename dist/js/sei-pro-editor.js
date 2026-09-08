@@ -149,7 +149,7 @@ function htmlButton(status) {
         htmlButtonPro(
             'getAlignButtom',
             'align_pro',
-            'Alinhar texto roxoColor',
+            'Alinhar texto',
             isNewEditor ? 'fab fa-align-left roxoColor' : icon16baseAlignCenter
         );
 
@@ -387,13 +387,13 @@ function addButton(TimeOut = 9000) {
             // do CK5 customizadas), caimos no append ao container principal.
             var insertAfterOrAppend = function(selector, html) {
                 var ref = $(selector);
-                if (ref.length) ref.after(html); else items.append(html);
+                if (ref.length) ref.first().after(html); else items.first().append(html);
             };
-            items.append(htmlButton('').default);
+            items.first().append(htmlButton('').default);
             insertAfterOrAppend('button[data-cke-tooltip-text="Inserir tabela"]', htmlButton('').tables);
             insertAfterOrAppend('button[data-cke-tooltip-text="Lista numerada"]', htmlButton('').beforeList);
             insertAfterOrAppend('span.ck-file-dialog-button', htmlButton('').afterImage);
-            items.append(htmlButton('').newBlock);
+            items.first().append(htmlButton('').newBlock);
             setClickButtons();
             initFunctions();
         } else {

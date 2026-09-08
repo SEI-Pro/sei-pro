@@ -1,10 +1,11 @@
 const compareVersionNumbers_initall = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+(\.\d+)*$/.test(v2) ? ((a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) { const n1 = +a[i] || 0, n2 = +b[i] || 0; if (n1 !== n2) return n1 > n2 ? 1 : -1; } return 0; })(v1.split('.'), v2.split('.')) : NaN;
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_initall(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
-var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
+// A p\u00E1gina do editor CK5 n\u00E3o tem o menu lateral, ent\u00E3o isNewSEI/isSEI_5 s\u00E3o false ali
+// e o seletor cairia no do CK4. Detecta o container do CK5 primeiro, com fallback CK4.
+var frmEditor = $('.infra-editor__editor-completo').length ? $('.infra-editor__editor-completo') : $('#frmEditor');
 
-if (!frmEditor.length 
-    // && (!isNewSEI || (isNewSEI && typeof loadFunctionsPro === 'undefined'))
+if (!frmEditor.length && typeof loadFunctionsPro === 'undefined'
 ) $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function getUrlExtension(url) {

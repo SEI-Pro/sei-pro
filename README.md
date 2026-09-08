@@ -2,7 +2,7 @@
 
 **SEI Pro!** adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) diversas funções avançadas na página inicial e no editor de textos:
 
-**Compatível com a versão 4.0 do SEI**
+**Compatível com as versões 4 e 5 do SEI**
 
 ## Como começar?
 

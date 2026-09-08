@@ -1,8 +1,14 @@
 const compareVersionNumbers_init = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+(\.\d+)*$/.test(v2) ? ((a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) { const n1 = +a[i] || 0, n2 = +b[i] || 0; if (n1 !== n2) return n1 > n2 ? 1 : -1; } return 0; })(v1.split('.'), v2.split('.')) : NaN;
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_init(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
-var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
-var frmEditor5Exists = (function(){ var h = $('html script[charset="utf-8"]').last().html(); return !!(h && h.includes('INFRA_EDITOR_CONFIG')); })();
+// A p\u00E1gina do editor CK5 n\u00E3o tem o menu lateral, ent\u00E3o isNewSEI/isSEI_5 s\u00E3o false ali
+// e o seletor cairia no do CK4. Detecta o container do CK5 primeiro, com fallback CK4.
+var frmEditor = $('.infra-editor__editor-completo').length ? $('.infra-editor__editor-completo') : $('#frmEditor');
+// Varre TODOS os scripts: no SEI 5.0.4 h\u00E1 6 script[charset=utf-8] e o INFRA_EDITOR_CONFIG
+// fica no primeiro, ent\u00E3o o .last() dava false e o editor do SEI Pro n\u00E3o carregava.
+var frmEditor5Exists = $('html script[charset="utf-8"]').toArray().some(function (s) {
+    return !!(s.innerHTML && s.innerHTML.indexOf('INFRA_EDITOR_CONFIG') !== -1);
+});
 
 $.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"));
 $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
@@ -13,7 +19,11 @@ $.getScript(getUrlExtension("js/lib/moment.min.js"), function () {
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/lib/diff2html.min.js"));
 $.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
-if (typeof loadFunctionsPro === 'undefined' || window.name != '') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+// O bloco 0 do manifest j\u00E1 carrega sei-functions-pro.js como content script (mesmo mundo
+// isolado). A cl\u00E1usula `|| window.name != ''` reinjetava o arquivo na janela do editor
+// (window.name = janelaEditor_<user>_<doc>) e a 2a execu\u00E7\u00E3o abortava com
+// "Identifier 'loadFunctionsPro' has already been declared".
+if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function divIconsLoginPro() {
     var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'
