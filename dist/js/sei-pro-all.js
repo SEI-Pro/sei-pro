@@ -392,7 +392,7 @@ function downloadTablePesquisa(this_, table){
 
 }
 function setTablePesquisaDownload() {
-    var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="'+(isNewSEI ? 'right: 220px;top: 10px;z-index: 999;position: absolute;' : 'right: 0;top: -40px;z-index: 999;position: absolute;')+'">'+
+    var htmlFilter =    '<div class="btn-group filterIfraTable" role="group" style="'+(typeof isNewSEI !== 'undefined' && isNewSEI ? 'right: 220px;top: 10px;z-index: 999;position: absolute;' : 'right: 0;top: -40px;z-index: 999;position: absolute;')+'">'+
                         '   <button type="button" onclick="getTablePesquisaDownload(this, \'download\')" data-icon="fas fa-download" style="padding: 0.1rem .5rem; font-size: 9pt;" data-value="Baixar Lista" class="btn btn-sm btn-light">'+
                         '       <i class="fas fa-download" style="padding-right: 3px; cursor: pointer; font-size: 10pt; color: #888;"></i>'+
                         '       <span class="text">Baixar Lista</span>'+
@@ -407,7 +407,7 @@ function setTablePesquisaDownload() {
                         '   </button>'+
                         '</div>';
 
-    var tablePesquisa = $(frmPesquisaProtocolo).find(isNewSEI ? '#conteudo .pesquisaBarra' : '#conteudo');
+    var tablePesquisa = $(frmPesquisaProtocolo).find(typeof isNewSEI !== 'undefined' && isNewSEI ? '#conteudo .pesquisaBarra' : '#conteudo');
         tablePesquisa.css('position','relative').find('.filterIfraTable').remove();
         tablePesquisa.prepend(htmlFilter);
         if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
@@ -416,7 +416,7 @@ function initTablePesquisaDownload() {
     var resultado = $(frmPesquisaProtocolo).find(typeof isNewSEI !== 'undefined' && isNewSEI ? '#conteudo table.pesquisaResultado' : '#conteudo table.resultado');
     if (resultado.length > 0) {
         setTablePesquisaDownload();
-        if (!isNewSEI) initScrollToElement();
+        if (typeof isNewSEI !== 'undefined' && !isNewSEI) initScrollToElement();
     }
 }
 function initScrollToElement(TimeOut = 9000) {
@@ -732,9 +732,9 @@ function observeUrlPage() {
 }
 function initSlimPro() {
     var htmlSlimPro =   '       <div data-ref="infraAcaoBarraSistema" style="display: inline-block;float: right;margin:3px 10px 0 0">'+
-                        '           <div class="onoffswitch" style="display:inline-block;transform:scale(0.7)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Desativar estilo avan\u00E7ado' : 'Ativar estilo avan\u00E7ado')+'\')">'+
-                        '               <input type="checkbox" onchange="changeSlimPro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="changeSlimPro" tabindex="0" '+(localStorage.getItem('seiSlim') ? 'checked' : '')+'>'+
-                        '               <label class="onoff-switch-label" for="changeSlimPro" style="border-color: #ffffff7a;"></label>'+
+                        '           <div class="infraAncoraSigla" style="display:inline-block;transform:scale(0.7)" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Desativar estilo avan\u00E7ado' : 'Ativar estilo avan\u00E7ado')+'\')">'+
+                        '               <input type="checkbox" onchange="changeSlimPro(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="changeSlimPro" tabindex="0" '+(localStorage.getItem('seiSlim') ? 'checked' : '')+'>'+
+                        '               <label class="infraAreaDados" for="changeSlimPro" style="border-color: #ffffff7a;"></label>'+
                         '           </div>'+
                         '           <i onclick="openStyleBoxSlimPro()" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+(localStorage.getItem('seiSlim') ? 'Escolher cor principal' : 'Ativar estilo avan\u00E7ado')+'\')" class="fas fa-palette brancoColor" style="float: right;font-size: 16pt;cursor: pointer;"></i> '+
                         '       </div>';
@@ -871,7 +871,7 @@ function initNewProcDefault(TimeOut = 9000) {
     }
 }
 function initConfigSEIPro() {
-    if ($('form#frmInfraConfigurar').length) {
+    if ($('form#frmInfraConfigurar').length && typeof URL_SPRO !== 'undefined') {
         let ifrConfig = `<iframe id="ifrConfig" src="${URL_SPRO}html/options.html" style="border: 0;margin: 20px auto;display: block;height: 800px" width="800" frameborder="0" scrolling="yes"></iframe>`;
         $('#ifrConfig').remove();
         $('#frmInfraConfigurar').after(ifrConfig);
@@ -899,13 +899,13 @@ function initSeiProAll() {
     if (typeof DOMPurify === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/purify.min.js");
     if (typeof moment === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js");
     if (typeof $.tablesorter === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js");
-    if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js");
+    if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js"); 
 
     if (typeof checkHostLimit !== 'undefined' && !checkHostLimit()) initCaixaSelecaoUnidadesSEI();
-    initInfraImg();
+    if (!!localStorage.getItem('seiSlim')) initInfraImg();
     checkPageParent();
     setTimeout(() => { initMarcadorUserColor() }, 500);
-    if (!isNewSEI) initNewProcDefault();
+    if (typeof isNewSEI !== 'undefined' && !isNewSEI) initNewProcDefault();
     appendVersionSEIPro();
     initTableSorter();
     repairLnkControleProcesso();
@@ -922,15 +922,15 @@ function initSeiProAll() {
     initCheckLoadJqueryUI();
     initQRCodeLib();
     setOnClickExcluirProcBloco();
-    initConfigSEIPro();
     setTimeout(() => { 
+        initConfigSEIPro();
         initRemovePaginacaoAll();
         initPagesInfiniteSearch();
     }, 1000);
     // initReplaceNewIconsBar();
     // observeIfrArvore();
     //checkBlankPageSEI();
-    if (isSEI_5) $.getScript(URL_SPRO+"js/lib/modalLink.js");
+    if (typeof isSEI_5 !== 'undefined' && isSEI_5) $.getScript(URL_SPRO+"js/lib/modalLink.js");
 
     if (typeof NAMESPACE_SPRO !== 'undefined' && NAMESPACE_SPRO != 'SEI Pro Lab') {
         console.log = function() { 

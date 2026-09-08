@@ -601,7 +601,7 @@ function getRefsTags(iframe) {
     });
 }
 function getDadosNormas(iframe, arrayLegis) {
-	var url = "https://seipro.app/legis/";
+	var url = "https://seipro.io/legis/";
 	$.ajax({
 		type: "POST",
 		url: url,

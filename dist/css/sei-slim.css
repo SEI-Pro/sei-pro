@@ -1597,7 +1597,7 @@ body.dark-mode,
 .seiSlim.dark-mode a.cke_dialog_tab:hover,
 .seiSlim.dark-mode.seiSlim_parent.seiSlim_view a.cke_dialog_ui_button.cke_dialog_ui_button_ok,
 .seiSlim.dark-mode .ui-widget-content .ui-state-active .ui-tabs-anchor, 
-.seiSlim.dark-mode .onoffswitch-checkbox:checked + .onoff-switch-label, 
+.seiSlim.dark-mode input.infraLinkOrgao:checked + label.infraAreaDados, 
 .seiSlim.dark-mode .ui-widget-header .ui-state-active  .ui-tabs-anchor {
     background-color: #007fff !important;
 }
@@ -1798,7 +1798,7 @@ body.dark-mode,
 .seiSlim.dark-mode .infraAreaDados a.ancoraPadraoPreta,
 .seiSlim.dark-mode .hashSpan,
 .seiSlim.dark-mode #frmPesquisaProtocolo .resultado tr.resTituloRegistro td,
-.seiSlim.dark-mode .onoff-switch-label {
+.seiSlim.dark-mode label.infraAreaDados {
     background-color: #494c50;
     border-color: #606060;
 }
@@ -4319,6 +4319,53 @@ a.urgentePro[target="ifrConteudoVisualizacao"] {
     background-color: #e46e64 !important;
 }
 .infraAreaDados .urgentePro {
+    font-size: 120%;
+    line-height: 20px;
+    cursor: pointer;
+    margin-top: 5px;
+    position: absolute;
+}
+div.trancadoPro {
+	display: inline-block;
+    margin: 0 5px;
+    background: #e89a3c;
+    vertical-align: sub;
+	border-radius: 50%;
+	height: 20px;
+	width: 20px;
+}
+div.trancadoPro:after {
+    content: "\f023";
+    font-family: 'Font Awesome 5 Pro';
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    width: 20px;
+    position: absolute;
+    height: 100%;
+}
+a[target="ifrVisualizacao"] div.trancadoPro:after {
+    margin-top: 9px;
+}
+div.trancadoPro:after {
+    margin-top: 2px;
+}
+.seiSlim div.trancadoPro:after {
+    font-family: 'Font Awesome 5 Pro' !important;
+}
+a.trancadoPro[target="ifrVisualizacao"],
+a.trancadoPro[target="ifrConteudoVisualizacao"] {
+    background: #fce8cc;
+    display: inline-block;
+    border-radius: 5px;
+    margin: 0 0px 0 5px;
+    height: 24px;
+    padding: 0 5px 0px 0px;
+}
+.trancadoPro .infraArvoreNoSelecionado {
+    background-color: #e89a3c !important;
+}
+.infraAreaDados .trancadoPro {
     font-size: 120%;
     line-height: 20px;
     cursor: pointer;

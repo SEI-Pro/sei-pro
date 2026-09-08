@@ -303,7 +303,7 @@ function passUpdate(this_) {
 }
 function changeConfigGeral() {
     var arrayShowItensMenu = [];
-    $('#options-functions').find('input[name="onoffswitch"]').each(function(){
+    $('#options-functions').find('input[name="infraAncoraSigla"]').each(function(){
         if ($(this).is(':checked')) {
             var value = true;
             $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
@@ -313,7 +313,7 @@ function changeConfigGeral() {
         }
         arrayShowItensMenu.push({name: $(this).attr('data-name'), value: value});
     });
-    $('#options-complements').find('input[name="onoffswitch"]').each(function(){
+    $('#options-complements').find('input[name="infraAncoraSigla"]').each(function(){
         if ($(this).is(':checked')) {
             var value = true;
             $(this).closest('tr').find('.iconPopup').addClass('azulColor').removeClass('cinzaColor');
@@ -426,7 +426,7 @@ $('#options-functions').find('input[type="text"]').on("keyup", function () {
         $(this).closest('tr').find('.iconPopup').removeClass('azulColor').addClass('cinzaColor');
     }
 });
-$('input[name="onoffswitch"]').on("change", function () {
+$('input[name="infraAncoraSigla"]').on("change", function () {
     changeConfigGeral();
 });
 $('.save').click(function() { save_options(true) });

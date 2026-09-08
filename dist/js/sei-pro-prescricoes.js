@@ -331,18 +331,18 @@ function dialogSavePrescricao(this_, prescData = arrayPrescricoesProcPro) {
                     '      <tr style="height: 40px;">'+
                     '          <td colspan="2" style="vertical-align: bottom; text-align: left;" class="label">'+
                     '               <label for="presc_suspende_contagem"><i class="iconPopup iconSwitch fas fa-stopwatch cinzaColor"></i> Suspender a contagem prescricional?</label>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" name="onoffswitch" data-target="#listCompleteOtherAtiv" onchange="changeOptionsSavePrescricao(this)" class="onoffswitch-checkbox singleOptionConfig" id="presc_suspende_contagem" data-key="suspende_contagem" tabindex="0" '+(value && value.suspensao ? 'checked' : '')+'>'+
-                    '                  <label class="onoff-switch-label" for="presc_suspende_contagem"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" name="infraAncoraSigla" data-target="#listCompleteOtherAtiv" onchange="changeOptionsSavePrescricao(this)" class="infraLinkOrgao singleOptionConfig" id="presc_suspende_contagem" data-key="suspende_contagem" tabindex="0" '+(value && value.suspensao ? 'checked' : '')+'>'+
+                    '                  <label class="infraAreaDados" for="presc_suspende_contagem"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
                     '      <tr style="height: 40px;">'+
                     '          <td colspan="2" style="vertical-align: bottom; text-align: left;" class="label">'+
                     '               <label for="presc_transito_julgado"><i class="iconPopup iconSwitch fas fa-times-circle cinzaColor"></i> Encerrar a contagem prescricional? (tr\u00E2nsito em julgado)</label>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" name="onoffswitch" data-target="#listCompleteOtherAtiv" onchange="changeOptionsSavePrescricao(this)" class="onoffswitch-checkbox singleOptionConfig" id="presc_transito_julgado" data-key="transito_julgado" tabindex="0">'+
-                    '                  <label class="onoff-switch-label" for="presc_transito_julgado"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" name="infraAncoraSigla" data-target="#listCompleteOtherAtiv" onchange="changeOptionsSavePrescricao(this)" class="infraLinkOrgao singleOptionConfig" id="presc_transito_julgado" data-key="transito_julgado" tabindex="0">'+
+                    '                  <label class="infraAreaDados" for="presc_transito_julgado"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+

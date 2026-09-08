@@ -273,17 +273,34 @@ const addDocResponseAI = (this_) => {
     const _this = $(this_);
     const id_response = _this.data('response');
     const htmlResponse = $(`#responseBot_${id_response} .response_bot_content`).html();
-    if (frmEditor.length) {
-        const pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
-        const pClass = oEditor ? pElement.attr('class') : 'Texto_Alinhado_Esquerda';
-        const $htmlResponse = $(`<div>${htmlResponse}</div>`);
-        const responseStyled = $htmlResponse.find('p').addClass(pClass).end().html();
-        if (pElement.length) {
-            oEditor.focus();
-            oEditor.fire('saveSnapshot');
-            iframeEditor.find(pElement).after(responseStyled);
-            oEditor.fire('saveSnapshot');
-        }
+    if (!frmEditor.length) return;
+
+    //SEI 5 com CKEditor 5: nao existem iframe nem CKEDITOR.instances, entao o texto entra
+    //pelo adapter. "Depois do paragrafo" = "antes do proximo irmao" (mesmo idioma do quick-table).
+    if (typeof SeiProEditorAdapter !== 'undefined' && SeiProEditorAdapter.version === 5) {
+        const editorCK5 = SeiProEditorAdapter.getInstance();
+        if (!editorCK5) return;
+        const pElementCK5 = SeiProEditorAdapter.getSelectionParagraph(editorCK5);
+        const pClassCK5 = pElementCK5 ? $(pElementCK5).attr('class') : 'Texto_Alinhado_Esquerda';
+        const responseStyledCK5 = $(`<div>${htmlResponse}</div>`).find('p').addClass(pClassCK5).end().html();
+        SeiProEditorAdapter.withEdit(editorCK5, () => {
+            const nextEl = pElementCK5 ? pElementCK5.nextElementSibling : false;
+            if (nextEl) SeiProEditorAdapter.insertHtmlBefore(editorCK5, nextEl, responseStyledCK5);
+            else if (pElementCK5) SeiProEditorAdapter.appendToBody(editorCK5, responseStyledCK5);
+            else SeiProEditorAdapter.insertHtml(editorCK5, responseStyledCK5);
+        });
+        return;
+    }
+
+    const pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
+    const pClass = oEditor ? pElement.attr('class') : 'Texto_Alinhado_Esquerda';
+    const $htmlResponse = $(`<div>${htmlResponse}</div>`);
+    const responseStyled = $htmlResponse.find('p').addClass(pClass).end().html();
+    if (pElement.length) {
+        oEditor.focus();
+        oEditor.fire('saveSnapshot');
+        iframeEditor.find(pElement).after(responseStyled);
+        oEditor.fire('saveSnapshot');
     }
 };
 
@@ -841,7 +858,7 @@ const getSessionTextProcesso = (num_processo_format) => {
 
             prompt_text = type == 'erros_gramaticais' 
                 ? `
-                    Encontre os erros gramaticais no texto abaixo, citando o trecho com erro e sua sugest\u00E3o de corre\u00E7\u00E3o: 
+                    Encontre os erros gramaticais no texto abaixo, citando o trecho com erro e sua sugest\u00E3o de corre\u00E7\u00E3o. Ao destacar o erro, coloque o trecho tachado. Na sugest\u00E3o de corre\u00E7\u00E3o, coloque o trecho do texto corrigido em negrito: 
 
                     ${prompt_footer}
                 ` 
@@ -1419,9 +1436,9 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td>
-                        <div class="onoffswitch" style="display: inline-block;transform: scale(0.7);">
-                            <input id="configAI_typing_box" type="checkbox" name="onoffswitch" class="resume_doc onoffswitch-checkbox" ${getTypingAI}>
-                            <label class="onoff-switch-label" for="configAI_typing_box"></label>
+                        <div class="infraAncoraSigla" style="display: inline-block;transform: scale(0.7);">
+                            <input id="configAI_typing_box" type="checkbox" name="infraAncoraSigla" class="resume_doc infraLinkOrgao" ${getTypingAI}>
+                            <label class="infraAreaDados" for="configAI_typing_box"></label>
                         </div>
                     </td>
                     <td class="label">
@@ -1430,9 +1447,9 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td>
-                        <div class="onoffswitch" style="display: inline-block;transform: scale(0.7);">
-                            <input id="configAI_betamodels" type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" ${getBetaModels}>
-                            <label class="onoff-switch-label" for="configAI_betamodels"></label>
+                        <div class="infraAncoraSigla" style="display: inline-block;transform: scale(0.7);">
+                            <input id="configAI_betamodels" type="checkbox" name="infraAncoraSigla" class="infraLinkOrgao" ${getBetaModels}>
+                            <label class="infraAreaDados" for="configAI_betamodels"></label>
                         </div>
                     </td>
                 </tr>
@@ -1453,9 +1470,9 @@ const getSessionTextProcesso = (num_processo_format) => {
                         </label>
                     </td>
                     <td style="width: 30%;">
-                        <div class="onoffswitch" style="display: inline-block;transform: scale(0.7);">
-                            <input id="configAI_advancedconfigs" type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" ${getAdvancedConfigs}>
-                            <label class="onoff-switch-label" for="configAI_advancedconfigs"></label>
+                        <div class="infraAncoraSigla" style="display: inline-block;transform: scale(0.7);">
+                            <input id="configAI_advancedconfigs" type="checkbox" name="infraAncoraSigla" class="infraLinkOrgao" ${getAdvancedConfigs}>
+                            <label class="infraAreaDados" for="configAI_advancedconfigs"></label>
                         </div>
                     </td>
                 </tr>

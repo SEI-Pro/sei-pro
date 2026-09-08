@@ -1,3 +1,15 @@
+function getUrlExtension(url) {
+    if (typeof browser === "undefined") {
+        return chrome.runtime.getURL(url);
+    } else {
+        return browser.runtime.getURL(url);
+    }
+}
+function pathExtensionSEIPro() {
+    var URL_SPRO = getUrlExtension("js/sei-pro.js");
+        URL_SPRO = URL_SPRO.toString().replace('js/sei-pro.js', '');
+    return URL_SPRO;
+}
 function loadStyleDesign() {
     var body = document.body;
     if (localStorage.getItem('seiSlim')) {
@@ -80,3 +92,6 @@ function setBgTableColor(this_) {
 }
 loadStyleDesign();
 initLinhaNumerada();
+
+// if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+// if (typeof loadSEIProVisualizacao === 'undefined') $.getScript(getUrlExtension("js/sei-pro-visualizacao.js"));

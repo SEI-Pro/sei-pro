@@ -248,9 +248,9 @@ var docsLote_printDataCrossing = async () => {
                             <tr>
                                 <td style="width: 50px;">
                                     <div class="divInputForceNames" style="margin: 10px 0; font-size: 9pt;transform: scale(0.9);">
-                                        <div class="onoffswitch" style="float: left;margin-right: 1em;">
-                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="checkForceNames" data-type="setdate" tabindex="0">
-                                        <label class="onoff-switch-label" for="checkForceNames"></label>
+                                        <div class="infraAncoraSigla" style="float: left;margin-right: 1em;">
+                                        <input type="checkbox" name="infraAncoraSigla" class="infraLinkOrgao" id="checkForceNames" data-type="setdate" tabindex="0">
+                                        <label class="infraAreaDados" for="checkForceNames"></label>
                                     </div>
                                 </td>
                                 <td>
@@ -282,9 +282,9 @@ var docsLote_printDataCrossing = async () => {
                         <tr>
                             <td style="width: 50px;">
                                 <div style="margin: 10px 0;font-size: 9pt;display: inline-block;transform: scale(0.9);float: left;">
-                                    <div class="onoffswitch" style="float: left;margin-right: 1em;margin-left: 0;">
-                                        <input type="checkbox" onchange="changeNewProcs(this)" name="onoffswitch" class="onoffswitch-checkbox" id="newProcs" data-type="setdate" tabindex="0">
-                                        <label class="onoff-switch-label" for="newProcs"></label>
+                                    <div class="infraAncoraSigla" style="float: left;margin-right: 1em;margin-left: 0;">
+                                        <input type="checkbox" onchange="changeNewProcs(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="newProcs" data-type="setdate" tabindex="0">
+                                        <label class="infraAreaDados" for="newProcs"></label>
                                     </div>
                                 </div>
                             </td>
@@ -404,7 +404,7 @@ var docsLote_execute = async (param) => {
                 const response3 = await docsLote_formNewDoc(response2.urlFormNewDoc, CSVData[i], param);
                 const response4 = await docsLote_confirmDocData(response3.urlConfirmDocData, response3.params);
                 const response5 = await docsLote_editDocContent(response4.urlEditor, CSVData[i]);
-                const response6 = await docsLote_saveDoc(response5.urlSubmitForm, response5.paramsSaveDoc);
+                const response6 = await docsLote_saveDoc(response5);
 
                 response6.success && $('#progress').html(`<p style="text-align:center">${i + 1}/${CSVData.length}<span style="display:block;white-space: nowrap;color: #ccc;font-size: 8pt;padding:5px">\u2592\u2592\u2592\u2592\u2592\u2592</span></p>`);
 
@@ -561,9 +561,13 @@ var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
     params.txtDescricao = '';
     if (dataDialog.nrTxtPadrao) {
         params.selTextoPadrao = selectedModel.numero;
+        params.hdnIdTextoPadrao = selectedModel.numero;
     } else {
         params.txtProtocoloDocumentoTextoBase = selectedModel.numero;
     }
+    console.log('selectedModel', selectedModel);
+    console.log('dataDialog', dataDialog);
+    console.log('params', params);
 
     const regex = new RegExp(Object.keys(docsLote_normalChars).join('|'), 'g');
     // let nomeArvore = forceNames ? data[dataDialog.docsNames].replace(regex, (match) => docsLote_normalChars[match]).substring(0, 50) : data[dataDialog.docsNames].substring(0, 50);
@@ -616,53 +620,104 @@ var docsLote_confirmDocData = async (urlConfirmDocData, params) => {
         success: true
     };
 }
+var docsLote_extrairJsonBalanceado = (texto, indiceInicial) => { //varre respeitando strings/escapes ate fechar a chave que abriu em indiceInicial
+    let profundidade = 0, dentroString = false, escapando = false;
+    for (let i = indiceInicial; i < texto.length; i++) {
+        const c = texto[i];
+        if (dentroString) {
+            if (escapando) escapando = false;
+            else if (c === '\\') escapando = true;
+            else if (c === '"') dentroString = false;
+            continue;
+        }
+        if (c === '"') { dentroString = true; continue; }
+        if (c === '{') profundidade++;
+        else if (c === '}') {
+            profundidade--;
+            if (profundidade === 0) return texto.substring(indiceInicial, i + 1);
+        }
+    }
+    return false;
+};
+var docsLote_getEditorCK5Config = (htmlEditor) => { //No SEI 5 com editor CK5 nao ha #frmEditor/textarea: o conteudo vem em window.INFRA_EDITOR_CONFIG
+    const indiceMarcador = htmlEditor.indexOf('INFRA_EDITOR_CONFIG');
+    if (indiceMarcador === -1) return false;
+    const indiceChave = htmlEditor.indexOf('{', indiceMarcador);
+    if (indiceChave === -1) return false;
+    const jsonTexto = docsLote_extrairJsonBalanceado(htmlEditor, indiceChave);
+    if (!jsonTexto) return false;
+    return trycatch(() => JSON.parse(jsonTexto), false);
+};
 var docsLote_editDocContent = async (urlEditor, data) => {
     const htmlEditor = await $.get(urlEditor);  //TODO: Lançar exceção, identificar e excluir o doc gerado erroneamente
-    const urlSubmitForm = $(htmlEditor).filter((_, el) => $(el).attr('id') === 'frmEditor').attr('action');
     const urlParams = getParamsUrlPro(urlEditor);
     const docTitle = trycatch(() => htmlEditor.match(/<title[^>]*>([^<]+)<\/title>/)[1], false);
     const nrSEI = docTitle ? docTitle.split('-')[1].trim() : false;
     const nomeDocumento = docTitle ? docTitle.split('-')[2].trim() : false;
-
-    const textAreas = $(htmlEditor).find('div#divEditores textarea');
-    const allText = $.map(textAreas, function(v){ return $(v).text() }).join('');
-    const arrayCamposDinamicos = uniqPro(getHashTagsPro($(allText).map(function(){ return $(this).text().replace(/\u00A0/gm, " ") }).get().join(' ')));
-    const dadosProcesso = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' 
-        ? camposDinamicosProcesso(arrayCamposDinamicos) 
-        : false;
     const regex1 = new RegExp(dataCrossing.map((data) => `##${data}##`).join('|'), 'g');
     const regex2 = new RegExp(Object.keys(docsLote_specialChars).join('|'), 'g');
-    const regex3 = new RegExp(arrayCamposDinamicos.map((data) => `#${data}`).join('|'), 'g');
-    
-    let textAreasReplaced = textAreas.map((_, el) =>
-        $(el).text().replace(regex1, (match) =>
-            data[match.substring(2, match.length - 2)].replace(regex2, (match) => docsLote_specialChars[match])
-        )
-    );
-    /* if (dadosProcesso && arrayCamposDinamicos.length) {
-        textAreasReplaced = textAreas.map((_, el) =>
-        $(el).text().replace(regex3, (match) =>dadosProcesso[match.substring(1, match.length)])
+
+    let urlSubmitForm, paramsSaveDoc, jsonSaveDoc;
+    let tipoEditor = 'ck4';
+    const editorCK5Config = docsLote_getEditorCK5Config(htmlEditor);
+
+    if (editorCK5Config) {
+        tipoEditor = 'ck5';
+        urlSubmitForm = editorCK5Config.sei && editorCK5Config.sei.urlSalvar;
+        if (!urlSubmitForm) throw new Error('Link para salvar o documento n\u00E3o encontrado');
+
+        const initialData = editorCK5Config.initialData || {};
+        jsonSaveDoc = {
+            secoesConteudo: Object.keys(initialData).map((nome) => ({
+                nome,
+                html: initialData[nome].replace(regex1, (match) =>
+                    data[match.substring(2, match.length - 2)].replace(regex2, (match) => docsLote_specialChars[match])
+                )
+            })),
+            ignorarNovaVersao: 'N',
+            versao: editorCK5Config.sei.versao
+        };
+    } else {
+        urlSubmitForm = $(htmlEditor).filter((_, el) => $(el).attr('id') === 'frmEditor').attr('action');
+
+        const textAreas = $(htmlEditor).find('div#divEditores textarea');
+        const allText = $.map(textAreas, function(v){ return $(v).text() }).join('');
+        const arrayCamposDinamicos = uniqPro(getHashTagsPro($(allText).map(function(){ return $(this).text().replace(/\u00A0/gm, " ") }).get().join(' ')));
+        const dadosProcesso = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined'
+            ? camposDinamicosProcesso(arrayCamposDinamicos)
+            : false;
+        const regex3 = new RegExp(arrayCamposDinamicos.map((data) => `#${data}`).join('|'), 'g');
+
+        let textAreasReplaced = textAreas.map((_, el) =>
+            $(el).text().replace(regex1, (match) =>
+                data[match.substring(2, match.length - 2)].replace(regex2, (match) => docsLote_specialChars[match])
+            )
         );
-    } */
+        /* if (dadosProcesso && arrayCamposDinamicos.length) {
+            textAreasReplaced = textAreas.map((_, el) =>
+            $(el).text().replace(regex3, (match) =>dadosProcesso[match.substring(1, match.length)])
+            );
+        } */
 
-    let paramsSaveDoc = {};
-    textAreasReplaced.each((i, textArea) => {
-        paramsSaveDoc[$(textAreas).eq(i).attr('name')] = textArea;
-    });
-    // console.log({data:data, dataCrossing: dataCrossing, docsLote_specialChars:docsLote_specialChars, arrayCamposDinamicos:arrayCamposDinamicos, textAreasReplaced:textAreasReplaced, textAreas:textAreas, arrayCamposDinamicos:arrayCamposDinamicos, dadosProcesso:dadosProcesso});
+        paramsSaveDoc = {};
+        textAreasReplaced.each((i, textArea) => {
+            paramsSaveDoc[$(textAreas).eq(i).attr('name')] = textArea;
+        });
+        // console.log({data:data, dataCrossing: dataCrossing, docsLote_specialChars:docsLote_specialChars, arrayCamposDinamicos:arrayCamposDinamicos, textAreasReplaced:textAreasReplaced, textAreas:textAreas, arrayCamposDinamicos:arrayCamposDinamicos, dadosProcesso:dadosProcesso});
 
-    $(htmlEditor).find('input[type=hidden').each((_, input) => {
-        if (!$(input).attr('name').toLowerCase().includes('unidade'))
-        paramsSaveDoc[$(input).attr('name')] = $(input).val().replace(regex2, (match) => docsLote_specialChars[match]);
-    });
+        $(htmlEditor).find('input[type=hidden').each((_, input) => {
+            if (!$(input).attr('name').toLowerCase().includes('unidade'))
+            paramsSaveDoc[$(input).attr('name')] = $(input).val().replace(regex2, (match) => docsLote_specialChars[match]);
+        });
+    }
 
     if (aborted) throw new Error("cancel");
     if (typeof urlSubmitForm !== 'undefined') $('#progress span').text('\u2588\u2588\u2588\u2588\u2588\u2592');
 
     docsCriados.push({
-        nr_sei: nrSEI, 
-        id_documento: urlParams.id_documento, 
-        id_procedimento: urlParams.id_procedimento, 
+        nr_sei: nrSEI,
+        id_documento: urlParams.id_documento,
+        id_procedimento: urlParams.id_procedimento,
         data_doc: data,
         nome_documento: nomeDocumento,
         url_doc: `${url_host}?acao=procedimento_trabalhar&id_procedimento=${urlParams.id_procedimento}&id_documento=${urlParams.id_documento}`
@@ -671,19 +726,35 @@ var docsLote_editDocContent = async (urlEditor, data) => {
     return {
         urlSubmitForm,
         paramsSaveDoc,
+        jsonSaveDoc,
+        tipoEditor,
         success: true,
         nrSEI: nrSEI
     }
 
 }
-var docsLote_saveDoc = async (urlSubmitForm, paramsSaveDoc) => {
+var docsLote_saveDoc = async (docContent) => {
+    const { urlSubmitForm, paramsSaveDoc, jsonSaveDoc, tipoEditor } = docContent;
+
+    if (tipoEditor === 'ck5') {
+        await $.ajax({
+            method: 'POST',
+            url: urlSubmitForm,
+            contentType: 'application/json',
+            data: JSON.stringify(jsonSaveDoc)
+        });
+        if (aborted) throw new Error("cancel");
+        if (typeof urlSubmitForm !== 'undefined') $('#progress span').text('\u2588\u2588\u2588\u2588\u2588\u2588');
+        return { success: true };
+    }
+
     const responseSave = await $.ajax({
         method: 'POST',
         url: urlSubmitForm,
         data: paramsSaveDoc,
     });
     if (aborted) throw new Error("cancel");
-    
+
     if (responseSave.startsWith("OK")) {
         if (typeof urlSubmitForm !== 'undefined') $('#progress span').text('\u2588\u2588\u2588\u2588\u2588\u2588');
         return { success: true }
@@ -1104,12 +1175,14 @@ const getSerieForm = async (htmlFullList, id_tipo_procedimento, nameDoc = null, 
         if (id_tipo_documento) {
             param.hdnIdSerie = id_tipo_documento;
         } else if (nameDoc) {
-            let hdnIdSerie = false; 
+            let hdnIdSerie = false;
+            let melhorTitulo = ''; //O nome do doc (nameDoc) e "tipo + numero" (ex: "Of\u00EDcio 4344"); o titulo do checkbox e so o tipo. Fica-se com o titulo mais longo que seja prefixo de nameDoc, para nao casar "Of\u00EDcio" quando existe "Of\u00EDcio Circular" mais especifico.
 
-            urlForm.find('input.infraCheckbox').each(function(){
-                if ($(this).attr('title').startsWith(nameDoc)) {
+            urlForm.find('input[type=checkbox][title], input[type=radio][title]').each(function(){
+                const titulo = $(this).attr('title');
+                if (titulo && nameDoc.startsWith(titulo) && titulo.length > melhorTitulo.length) {
                     hdnIdSerie = $(this).val();
-                    return false;
+                    melhorTitulo = titulo;
                 }
             });
 
@@ -1117,7 +1190,7 @@ const getSerieForm = async (htmlFullList, id_tipo_procedimento, nameDoc = null, 
                 throw new Error('Erro ao selecionar o tipo de documento. Verifique se o tipo est\u00E1 dispon\u00EDvel no sistema e tente novamente');
             }
 
-            param.hdnIdSerie = hdnIdSerie; 
+            param.hdnIdSerie = hdnIdSerie;
         } else { param.hdnIdTipoProcedimento = id_tipo_procedimento; }
 
     const xhr = new XMLHttpRequest();

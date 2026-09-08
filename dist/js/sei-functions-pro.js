@@ -47,6 +47,7 @@ var nameDocInterno = isNewSEI ? 'documento_interno.svg' : 'sei_documento_interno
 var nomeInstituicao = isNewSEI ? $('#divInfraBarraSistema h6.infraCorBarraSuperior').eq(0).text().trim() : $('#divInfraBarraSuperior label').text().trim();
 var divComandos = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? '#divBotoesControleProcessos' : '#divComandos';
 var ifrVisualizacao_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrConteudoVisualizacao' : 'ifrVisualizacao';
+var targetIframeVisualizacao_ = isSEI_5 ? 'ifrConteudoVisualizacao' : 'ifrVisualizacao';
 var $ifrVisualizacao = '#'+ifrVisualizacao_;
 var ifrArvoreHtml_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrVisualizacao' : 'ifrArvoreHtml';
 var $ifrArvoreHtml = '#'+ifrArvoreHtml_;
@@ -286,7 +287,7 @@ function getIsNewSEI() {
 
 // FUNÇÃO PARA OBTER O NÚMERO DO PROCESSO
 const getNumProcesso = () => {
-    const num_processo = $('#ifrArvore').length ? $('#ifrArvore').contents().find(`a[target="${ifrVisualizacao_}"]`).eq(0).text().trim() : dadosProcessoPro.propProcesso.hdnProtocoloFormatado;
+    const num_processo = $('#ifrArvore').length ? $('#ifrArvore').contents().find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).text().trim() : dadosProcessoPro.propProcesso.hdnProtocoloFormatado;
     return num_processo;
 };
 
@@ -316,6 +317,11 @@ function getIsProcUrgente() {
     isProcUrgente = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.txtDescricao !== 'undefined' ? dadosProcessoPro.propProcesso.txtDescricao : false;
     isProcUrgente = typeof isProcUrgente !== 'undefined' && isProcUrgente && isProcUrgente.toLowerCase().indexOf('(urgente)') !== -1 ? true : false;
     return isProcUrgente;
+}
+function getIsProcTrancado() {
+    isProcTrancado = typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.txtDescricao !== 'undefined' ? dadosProcessoPro.propProcesso.txtDescricao : false;
+    isProcTrancado = typeof isProcTrancado !== 'undefined' && isProcTrancado && isProcTrancado.toLowerCase().indexOf('(trancado)') !== -1 ? true : false;
+    return isProcTrancado;
 }
 function dropzoneCancelInfo(e) {
     if (typeof e !== 'undefined'){
@@ -1443,55 +1449,8 @@ function chosenReparePosition(target = $('body')) {
         });
 }
 function setMenuSistemaView(force = false) {
-    /*
-    var checkMenu = $('#divInfraAreaTelaE').is(':visible');
-    $('#divInfraAreaTelaD').css('width',(checkMenu ? '79%' : '99%'));
-    if (checkMenu || force) {
-        // removeOptionsPro('panelMenuSistemaView');
-        $('#divInfraAreaTelaE').removeClass('menuSuspenso');
-        $('#divInfraBarraSistemaE').removeClass('barSuspenso').removeClass('barSuspenso_show');
-    } else {
-        // setOptionsPro('panelMenuSistemaView', 'active');
-        $('#divInfraAreaTelaE').addClass('menuSuspenso');
-        $('#divInfraBarraSistemaE').addClass('barSuspenso');
-    }
-    */
 }
 function hideMenuSistemaView() {
-    /*
-    if ($('#divInfraAreaTelaE').length > 0) {
-        $('#lnkInfraMenuSistema').unbind().on("click", function () {
-            setMenuSistemaView();
-        });
-        if (getOptionsPro('panelMenuSistemaView') == 'active' && !$('#divInfraAreaTelaE').is(':visible')) {
-            $('#divInfraAreaTelaE').addClass('menuSuspenso');
-            $('#divInfraBarraSistemaE').addClass('barSuspenso').removeClass('barSuspenso_show');
-        }
-        $('#divInfraBarraSistemaE').unbind().on('click', function(event){
-            event.stopPropagation();
-            event.preventDefault();
-            if (!delayCrash) {
-                var menu = $('#divInfraAreaTelaE');
-                if (!$(this).hasClass('barSuspenso')) {
-                    $(this).addClass('barSuspenso');
-                    menu.addClass('menuSuspenso');
-                    setOptionsPro('panelMenuSistemaView', 'active');
-                    $('#divInfraAreaTelaD').css('width','99%');
-                }
-                $('body').addClass('seiSlim_hidemenu');
-                if (menu.is(':visible')) {
-                    menu.hide("slide", { direction: "left" }, 300);
-                    $(this).removeClass('barSuspenso_show');
-                } else {
-                    menu.show("slide", { direction: "left" }, 300);
-                    $(this).addClass('barSuspenso_show');
-                }
-                delayCrash = true;
-                setTimeout(function(){ delayCrash = false }, 300);
-            }
-        });
-    }
-    */
 }
 function checkMenuSistemaView() {
     if ($('#divInfraAreaTelaE').is(':visible')) {
@@ -1698,7 +1657,7 @@ function extractDataFormulario(output = 'obj', allFields = false) {
                     }
                 }).join('') 
             : false;
-    var processo = $('#ifrArvore').contents().find(`a[target="${ifrVisualizacao_}"]`).eq(0).text().trim();
+    var processo = $('#ifrArvore').contents().find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).text().trim();
     var objOut = {};
     var arrayOut = [];
     var fieldsOut = [];
@@ -2044,9 +2003,9 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '               Reabertura programada?'+
                         '          </td>'+
                         '          <td>'+
-                        '              <div class="onoffswitch" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="configDatesSwitchChangeReabertura(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_setreopen" data-type="setdate" tabindex="0" '+(force || configAcomp ? 'checked' : '')+'>'+
-                        '                  <label class="onoff-switch-label" for="configDatesBox_setreopen"></label>'+
+                        '              <div class="infraAncoraSigla" style="float: right;">'+
+                        '                  <input type="checkbox" onchange="configDatesSwitchChangeReabertura(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_setreopen" data-type="setdate" tabindex="0" '+(force || configAcomp ? 'checked' : '')+'>'+
+                        '                  <label class="infraAreaDados" for="configDatesBox_setreopen"></label>'+
                         '              </div>'+
                         '          </td>'+
                         '      </tr>'+
@@ -2124,9 +2083,9 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '               Controlar Prazo?'+
                         '          </td>'+
                         '          <td>'+
-                        '              <div class="onoffswitch" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="configDatesSwitchChangePrazo(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_setdate" data-type="setdate" tabindex="0" '+(checkPrazo ? 'checked' : '')+'>'+
-                        '                  <label class="onoff-switch-label" for="configDatesBox_setdate"></label>'+
+                        '              <div class="infraAncoraSigla" style="float: right;">'+
+                        '                  <input type="checkbox" onchange="configDatesSwitchChangePrazo(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_setdate" data-type="setdate" tabindex="0" '+(checkPrazo ? 'checked' : '')+'>'+
+                        '                  <label class="infraAreaDados" for="configDatesBox_setdate"></label>'+
                         '              </div>'+
                         '          </td>'+
                         '      </tr>'+
@@ -2136,9 +2095,9 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                         '               Controlar vencimento?'+
                         '          </td>'+
                         '          <td>'+
-                        '              <div class="onoffswitch" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(datePrazoDue ? 'checked' : '')+'>'+
-                        '                  <label class="onoff-switch-label" for="configDatesBox_duesetdate"></label>'+
+                        '              <div class="infraAncoraSigla" style="float: right;">'+
+                        '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(datePrazoDue ? 'checked' : '')+'>'+
+                        '                  <label class="infraAreaDados" for="configDatesBox_duesetdate"></label>'+
                         '              </div>'+
                         '          </td>'+
                         '      </tr>'+
@@ -3692,8 +3651,11 @@ function insertIconNewTab() {
             var html =  '<a class="openNewTab" style="margin: 10px 5px;padding: 5px;border-radius: 5px 0 0 5px;background-color: #eaeaea;color: #666;text-decoration: none;right: 60px;position: absolute;user-select: none;" href="'+url_host.replace('controlador.php','')+listLinks[0]+'" target="_blank">'+
                         '   <i class="fas fa-external-link-square-alt" style="color:#4285f4"></i> Abrir documento em nova aba'+
                         '</a>'+
-                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento (HTML)\')" style="margin: 10px 5px;padding: 5px;border-radius: 0 5px 5px 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 40px;position: absolute;user-select: none;" onclick="parent.downloadDocumentVisualizacao(this)" target="_blank">'+
+                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento (HTML)\')" style="margin: 10px 5px;padding: 5px;border-radius: 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 40px;position: absolute;user-select: none;" onclick="parent.downloadDocumentVisualizacao(this)" target="_blank">'+
                         '   <i class="fas fa-download" style="color:#4285f4"></i>'+
+                        '</a>'+
+                        '<a class="openNewTab" data-id_protocolo="'+id_documento+'" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Baixar documento (DOCX)\')" style="margin: 10px 5px;padding: 5px;border-radius: 0 5px 5px 0;background-color: #eaeaea;color: #666;text-decoration: none;right: 20px;position: absolute;user-select: none;" onclick="parent.downloadDocxVisualizacao(this)" target="_blank">'+
+                        '   <i class="fas fa-file-word" style="color:#4285f4"></i>'+
                         '</a>';
 
                 ifrVisualizacao.find('.openNewTab').remove()
@@ -3738,6 +3700,141 @@ function downloadDocumentVisualizacao(this_) {
     downloadLink.click();
     document.body.removeChild(downloadLink);
 }
+function transformDirectTextNodes(el, tt) {
+    for (var c = el.firstChild; c; c = c.nextSibling) {
+        if (c.nodeType === 3 && c.nodeValue) {
+            if (tt === 'uppercase') { c.nodeValue = c.nodeValue.toUpperCase(); }
+            else if (tt === 'lowercase') { c.nodeValue = c.nodeValue.toLowerCase(); }
+            else { c.nodeValue = c.nodeValue.replace(/(^|\s)(\S)/g, function(m, a, b){ return a + b.toUpperCase(); }); }
+        }
+    }
+}
+function inlineDocxStyles(origRoot, cloneRoot) {
+    // O TurboDocx so aplica estilo inline; o SEI estiliza por classe num bloco <style>.
+    // Le o estilo computado (no documento ja renderizado) e copia inline para o clone.
+    var win = origRoot.ownerDocument ? origRoot.ownerDocument.defaultView : null;
+    if (!win || !win.getComputedStyle) { return; }
+    var origEls = origRoot.querySelectorAll('*');
+    var cloneEls = cloneRoot.querySelectorAll('*');
+    var n = Math.min(origEls.length, cloneEls.length);
+    for (var i = 0; i < n; i++) {
+        var oe = origEls[i], ce = cloneEls[i];
+        var tag = oe.nodeName;
+        if (tag === 'STYLE' || tag === 'SCRIPT' || tag === 'HEAD' || tag === 'META' || tag === 'LINK' || tag === 'TITLE') { continue; }
+        var cs = win.getComputedStyle(oe);
+        var add = [];
+        var ta = cs.textAlign;
+        if (ta === 'center' || ta === 'right' || ta === 'justify') { add.push('text-align:'+ta); }
+        var fw = cs.fontWeight;
+        if (fw === 'bold' || fw === 'bolder' || parseInt(fw, 10) >= 600) { add.push('font-weight:bold'); }
+        if (cs.fontStyle === 'italic') { add.push('font-style:italic'); }
+        var tdec = (cs.textDecorationLine || cs.textDecoration || '');
+        if (tdec.indexOf('underline') !== -1) { add.push('text-decoration:underline'); }
+        else if (tdec.indexOf('line-through') !== -1) { add.push('text-decoration:line-through'); }
+        var fs = cs.fontSize;
+        if (fs && fs.indexOf('px') !== -1) {
+            var pt = Math.round(parseFloat(fs) * 0.75 * 10) / 10;
+            if (pt) { add.push('font-size:'+pt+'pt'); }
+        }
+        var ff = cs.fontFamily;
+        if (ff) { add.push('font-family:'+ff.replace(/["']/g, '').split(',')[0].trim()); }
+        var col = cs.color;
+        if (col && col !== 'rgb(0, 0, 0)' && col.indexOf('rgba(0, 0, 0, 0)') === -1) { add.push('color:'+col); }
+        var bg = cs.backgroundColor;
+        if (bg && bg !== 'transparent' && bg.indexOf('rgba(0, 0, 0, 0)') === -1) { add.push('background-color:'+bg); }
+        if (add.length) {
+            var prev = ce.getAttribute('style') || '';
+            if (prev && prev.charAt(prev.length - 1) !== ';') { prev += ';'; }
+            ce.setAttribute('style', prev + add.join(';') + ';');
+        }
+        var tt = cs.textTransform;
+        if (tt === 'uppercase' || tt === 'lowercase' || tt === 'capitalize') {
+            transformDirectTextNodes(ce, tt);
+        }
+    }
+}
+async function downloadDocxVisualizacao(this_) {
+    var this_ = $(this_);
+    var data = this_.data();
+    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var ifrArvore = $('#ifrArvore').contents();
+    var ifrArvoreHtml = ifrVisualizacao.find($ifrArvoreHtml).contents();
+
+    var doc = ifrArvore.find('#anchor'+data.id_protocolo);
+    var nameDoc = doc.text().trim();
+    var nr_sei = getNrSei(nameDoc);
+    var citacaoDoc = getCitacaoDoc();
+    var documento = getNomeSei(nameDoc);
+    var nameFile = documento+' ('+citacaoDoc+nr_sei+')';
+
+    var icon = this_.find('i');
+    icon.attr('class','fas fa-spinner fa-spin');
+
+    // Clona o <html> do iframe aninhado para nao alterar o documento exibido
+    var origHtml = ifrArvoreHtml.find('html')[0];
+    var htmlEl = origHtml.cloneNode(true);
+
+    // O SEI estiliza por classe (centralizacao, negrito, maiusculas, fonte) e o TurboDocx
+    // so honra estilo inline; copia o estilo computado de cada elemento para o clone.
+    inlineDocxStyles(origHtml, htmlEl);
+
+    // Embute as imagens (mesma origem controlador.php, sessao autenticada) como data: URI.
+    // O TurboDocx so embute imagens em data: URI; isso deixa o DOCX autossuficiente.
+    var imgs = Array.prototype.slice.call(htmlEl.querySelectorAll('img'));
+    await Promise.all(imgs.map(function(img) {
+        var src = img.getAttribute('src');
+        if (!src || src.indexOf('data:') === 0) return Promise.resolve();
+        return fetch(img.src, { credentials: 'include' })
+            .then(function(resp){ return resp.blob(); })
+            .then(function(blob){
+                return new Promise(function(res){
+                    var reader = new FileReader();
+                    reader.onload = function(){ img.setAttribute('src', reader.result); res(); };
+                    reader.onerror = function(){ res(); };
+                    reader.readAsDataURL(blob);
+                });
+            })
+            .catch(function(){ /* mantem o src original se o fetch falhar */ });
+    }));
+
+    var fullHtml = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>'+htmlEl.outerHTML+'</body></html>';
+    // O TurboDocx emite espaco inquebravel (nbsp) com codificacao dupla (vira A-circunflexo no Word);
+    // troca espaco inquebravel por espaco comum.
+    fullHtml = fullHtml.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ');
+
+    var build = function() {
+        Promise.resolve(HTMLToDOCX(fullHtml, null, { font: 'Arial', orientation: 'portrait' }))
+            .then(function(blob) {
+                if (!(blob instanceof Blob)) {
+                    blob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                }
+                var downloadLink = document.createElement('a');
+                var url = URL.createObjectURL(blob);
+                downloadLink.href = url;
+                downloadLink.download = nameFile+'.docx';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(url);
+                icon.attr('class','fas fa-thumbs-up');
+                setTimeout(function(){ icon.attr('class','fas fa-file-word'); }, 1000);
+            })
+            .catch(function(err) {
+                console.error('SEI Pro: erro ao gerar DOCX', err);
+                icon.attr('class','fas fa-file-word');
+            });
+    };
+
+    // O bundle browser do @turbodocx/html-to-docx referencia o global Buffer (Node)
+    // no caminho de imagens; carrega o polyfill antes para evitar "Buffer is not defined".
+    var libs = [];
+    if (typeof Buffer === 'undefined') libs.push('js/lib/buffer.min.js');
+    if (typeof HTMLToDOCX === 'undefined') libs.push('js/lib/html-to-docx.browser.js');
+    (function loadNext() {
+        if (!libs.length) { build(); return; }
+        $.getScript(URL_SPRO+libs.shift(), loadNext);
+    })();
+}
 function setHtmlProtocoloAlterar() {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
     var ifrArvore = $('#ifrArvore').contents();
@@ -3764,7 +3861,12 @@ function setHtmlProtocoloAlterar() {
 
     if (form.length > 0 && ifrVisualizacao.find('#txtDescricao').length ) {
         ifrVisualizacao.find('div.urgentePro').remove();
-        ifrVisualizacao.find('#txtDescricao').css('width','86%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="urgentePro" style="right: 11%;top: 10px;" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+        if (NAMESPACE_SPRO == 'SEI Pro Lab') {
+            ifrVisualizacao.find('div.trancadoPro').remove();
+            ifrVisualizacao.find('#txtDescricao').css('width','80%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="trancadoPro" style="right: 11%;top: 10px;" onclick="parent.addTrancadPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Trancamento\');" onmouseout="return infraTooltipOcultar();"></div>').after('<div class="urgentePro" style="right: 15%;top: 10px;" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+        } else {
+            ifrVisualizacao.find('#txtDescricao').css('width','86%').attr('data-oldtext',ifrVisualizacao.find('#txtDescricao').val()).after('<div class="urgentePro" style="right: 11%;top: 10px;" onclick="parent.addUrgentPro(this)" onmouseover="return infraTooltipMostrar(\'Adicionar/remover marca de Urg\u00EAncia\');" onmouseout="return infraTooltipOcultar();"></div>');
+        }
         formControlerAlterarProcesso(ifrVisualizacao);
     }
 }
@@ -3908,13 +4010,13 @@ function waitLoadProSimple(Elem, func, TimeOut = 6000) {
 }
 function execArvorePro(func) {
   var Obj = $("#ifrArvore").contents();
-  waitLoadPro(Obj, "#divArvore > div", `a[target="${ifrVisualizacao_}"]`, function () {
+  waitLoadPro(Obj, "#divArvore > div", `a[target="${targetIframeVisualizacao_}"]`, function () {
     func();
     Obj.find("#divArvore > div > div:hidden").each(function () {
       var idPasta = Obj.find(this).attr("id").substr(3);
     //   console.log(idPasta + " -> evento click adicionado.");
       Obj.find("#ancjoin" + idPasta).on('click', function () {
-        waitLoadPro(Obj, "#div" + idPasta, `a[target="${ifrVisualizacao_}"]`, func);
+        waitLoadPro(Obj, "#div" + idPasta, `a[target="${targetIframeVisualizacao_}"]`, func);
         // console.log(idPasta + " -> evento click adicionado2."); 
         $('#ifrArvore')[0].contentWindow.getLinksArvorePasta(idPasta);
         $(this).off("click");
@@ -3984,8 +4086,8 @@ function initCheckDadosProcesso(TimeOut = 9000) {
         getCheckDadosProcesso();
     } else {
         setTimeout(function(){ 
-            initInfraImg(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initInfraImg'); 
+            initCheckDadosProcesso(TimeOut - 100); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initCheckDadosProcesso'); 
         }, 500);
     }
 }
@@ -5264,9 +5366,9 @@ function configFlashMenuTrPro(value, color, state, mode) {
             '               <p><i class="iconPopup fa '+value.icon+' '+color+'"></i><span class="info">'+value.name+'</span></p>'+
             '           </td>'+
             '           <td>'+
-            '               <div class="onoffswitch">'+
-            '                   <input type="checkbox" data-name="'+value.name+'" onchange="changeFlashMenuPro(this, \''+mode+'\')" name="onoffswitch" class="onoffswitch-checkbox" id="itemFlashMenu_'+index+'" tabindex="0" '+state+'>'+
-            '                   <label class="onoff-switch-label" for="itemFlashMenu_'+index+'"></label>'+
+            '               <div class="infraAncoraSigla">'+
+            '                   <input type="checkbox" data-name="'+value.name+'" onchange="changeFlashMenuPro(this, \''+mode+'\')" name="infraAncoraSigla" class="infraLinkOrgao" id="itemFlashMenu_'+index+'" tabindex="0" '+state+'>'+
+            '                   <label class="infraAreaDados" for="itemFlashMenu_'+index+'"></label>'+
             '               </div>'+
             '           </td>'+
             '        </tr>';
@@ -5286,9 +5388,9 @@ function configFlashMenuPro(arrayLinksArvore) {
                     '   </ul>'+
                     '   <div id="tabs_flashMenuPro">'+
                     '       <h3 style="font-weight: bold; color: #666;">'+
-                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar menu do processo" data-mode="menuproc" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_proc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? '' : 'checked')+'>'+
-                    '              <label class="onoff-switch-label" for="optionFlashMenu_proc"></label>'+
+                    '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar menu do processo" data-mode="menuproc" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_proc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menuproc') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="infraAreaDados" for="optionFlashMenu_proc"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-scroll cinzaColor"></i> Menu r\u00E1pido do processo'+
                     '       </h3>'+
@@ -5312,9 +5414,9 @@ function configFlashMenuPro(arrayLinksArvore) {
     
         textBox +=  '   <div id="tabs_flashDocMenuPro">'+
                     '       <h3 style="font-weight: bold;color: #666;">'+
-                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar menu dos documentos" data-mode="menudoc" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_doc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? '' : 'checked')+'>'+
-                    '              <label class="onoff-switch-label" for="optionFlashMenu_doc"></label>'+
+                    '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar menu dos documentos" data-mode="menudoc" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_doc" tabindex="0" '+(getOptionsPro('optionsFlashMenu_menudoc') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="infraAreaDados" for="optionFlashMenu_doc"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-file cinzaColor"></i> Menu r\u00E1pido dos documentos'+
                     '       </h3>'+
@@ -5341,9 +5443,9 @@ function configFlashMenuPro(arrayLinksArvore) {
 
         textBox +=  '   <div id="tabs_flashDocArvorePro">'+
                     '       <h3 style="font-weight: bold;color: #666;">'+
-                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar icones na arvore" data-mode="iconstree" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_tree" tabindex="0" '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? '' : 'checked')+'>'+
-                    '              <label class="onoff-switch-label" for="optionFlashMenu_tree"></label>'+
+                    '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar icones na arvore" data-mode="iconstree" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_tree" tabindex="0" '+(getOptionsPro('optionsFlashMenu_iconstree') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="infraAreaDados" for="optionFlashMenu_tree"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-tree cinzaColor"></i> \u00CDcones r\u00E1pidos na \u00E1rvore'+
                     '       </h3>'+
@@ -5366,9 +5468,9 @@ function configFlashMenuPro(arrayLinksArvore) {
 
         textBox +=  '   <div id="tabs_flashPanelArvorePro">'+
                     '       <h3 style="font-weight: bold;color: #666;">'+
-                    '          <div class="onoffswitch" style="position: absolute;right: 30px;">'+
-                    '              <input type="checkbox" data-name="Ativar painel de informa\u00E7\u00F5es na arvore" data-mode="panelinfo" onchange="changeFlashMenuGeneralPro(this)" name="onoffswitch" class="onoffswitch-checkbox optionFlashMenu" id="optionFlashMenu_panelinfo" tabindex="0" '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? '' : 'checked')+'>'+
-                    '              <label class="onoff-switch-label" for="optionFlashMenu_panelinfo"></label>'+
+                    '          <div class="infraAncoraSigla" style="position: absolute;right: 30px;">'+
+                    '              <input type="checkbox" data-name="Ativar painel de informa\u00E7\u00F5es na arvore" data-mode="panelinfo" onchange="changeFlashMenuGeneralPro(this)" name="infraAncoraSigla" class="infraLinkOrgao optionFlashMenu" id="optionFlashMenu_panelinfo" tabindex="0" '+(getOptionsPro('optionsFlashMenu_panelinfo') == 'disabled' ? '' : 'checked')+'>'+
+                    '              <label class="infraAreaDados" for="optionFlashMenu_panelinfo"></label>'+
                     '          </div>'+
                     '          <i class="iconPopup fa fa-info-circle cinzaColor"></i> Painel de Informa\u00E7\u00F5es na \u00E1rvore'+
                     '       </h3>'+
@@ -5499,12 +5601,29 @@ function addUrgenteProcessoPro() {
     var modeUrgencia = checkUrgencia ? 'Adicionada' : 'Removida';
     var txtUrgencia = modeUrgencia+' marca de urg\u00EAncia no processo';
 
-    updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', new_text, id_procedimento, function(){ 
+    updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', new_text, id_procedimento, function(){
         dadosProcessoPro.propProcesso.txtDescricao = new_text;
         // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
         setSessionProcessosPro(dadosProcessoPro);
         resetDialogBoxPro('dialogBoxPro');
-        alertaBoxPro('Sucess', 'check-circle', txtUrgencia); 
+        alertaBoxPro('Sucess', 'check-circle', txtUrgencia);
+    });
+}
+function addTrancadoProcessoPro() {
+    var id_procedimento = dadosProcessoPro.propProcesso.hdnIdProcedimento;
+    var new_text = dadosProcessoPro.propProcesso.txtDescricao;
+        new_text = typeof new_text !== 'undefined' && new_text.toLowerCase().indexOf('(trancado)') === -1
+                        ? new_text+' (TRANCADO)'
+                        : (typeof new_text !== 'undefined' && new_text.toLowerCase().indexOf('(trancado)') !== -1) ? new_text.replace(/\(trancado\)/ig,'').trim() : false;
+    var checkTrancado = typeof new_text !== 'undefined' && new_text && new_text.toLowerCase().indexOf('(trancado)') !== -1 ? true : false;
+    var modeTrancado = checkTrancado ? 'Adicionada' : 'Removida';
+    var txtTrancado = modeTrancado+' marca de trancamento no processo para peticionamento intercorrente';
+
+    updateDadosArvore('Consultar/Alterar Processo', 'txtDescricao', new_text, id_procedimento, function(){
+        dadosProcessoPro.propProcesso.txtDescricao = new_text;
+        setSessionProcessosPro(dadosProcessoPro);
+        resetDialogBoxPro('dialogBoxPro');
+        alertaBoxPro('Sucess', 'check-circle', txtTrancado);
     });
 }
 function dialogCopyNewDoc(doc) {
@@ -5524,7 +5643,7 @@ function dialogCopyNewDoc(doc) {
                 text: "Copiar",
                 class: 'confirm ui-state-active',
                 open: function() {
-                    appendAutocompleteProc(this, $('#dialogBoxProcesso'));
+                    if (typeof objProcessosUnidadePro !== 'undefined' && objProcessosUnidadePro.length) appendAutocompleteProc(this, $('#dialogBoxProcesso'));
                 },
                 click: function() {
                     loadingButtonConfirm(true);
@@ -5763,13 +5882,16 @@ function markdownToHTML(markdown) {
     // CONVERTE *itálico*
     markdown = markdown.replace(/\*(.+?)\*/g, '<em>$1</em>');
   
+    // CONVERTE ~~texto tachado~~
+    markdown = markdown.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  
     // CONVERTE QUEBRAS DE LINHA SIMPLES EM <br>
     markdown = markdown.replace(/\n{2,}/g, '</p><p>');
     markdown = markdown.replace(/\n/g, '<br>');
   
     // ENVOLVE TUDO EM <p> CASO SEJA TEXTO SOLTO
     return `<p>${markdown}</p>`;
-  }
+}
 function copyToClipboardWithBR(element) {
     var $temp = $("<textarea>");
     var brRegex = /<br\s*[\/]?>/gi;
@@ -7215,7 +7337,7 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
 function getListDocumentosArvore(ifrArvore) {
     var processo = [];
     var dadosProcessoPro = pullDadosProcessoSession();
-    ifrArvore.find(`#divArvore a[target="${ifrVisualizacao_}"]`).each(function(index){
+    ifrArvore.find(`#divArvore a[target="${targetIframeVisualizacao_}"]`).each(function(index){
         var txt = $(this).text().trim();
         var text = txt.split(' ');
         var id_protocolo = $(this).attr('id').replace('anchor','');
@@ -7400,7 +7522,7 @@ function mergeAllAndamentosProcesso(callback = false) {
         var ifrArvore = _ifrArvore.contents();
         var arrayLinksArvoreAll = _ifrArvore[0].contentWindow.arrayLinksArvoreAll;
         var id_procedimento = getParamsUrlPro(_ifrArvore.attr('src')).id_procedimento;
-        var processo = ifrArvore.find(`a[target="${ifrVisualizacao_}"]`).eq(0).text().trim();
+        var processo = ifrArvore.find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).text().trim();
         var linkHistorico = isSEI_5 
         ? ifrArvore.find('#divConsultarAndamento a').attr('onclick').match(/consultarAndamento\('([^']+)'\)/)?.[1]
         : typeof arrayLinksArvoreAll !== 'undefined' ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('procedimento_consultar_historico') !== -1) }) : [];
@@ -7620,6 +7742,47 @@ function batchActionsPro(this_) {
             });
     }
 }
+function getDownloadAnexoFromArvore(ifrArvore, id_documento, arrayLinksArvoreAll) {
+    var scriptText = ifrArvore.find('script').not('[src*="js"]').text();
+    var lines = scriptText.split('\n');
+    var nrNo = null;
+
+    // Busca o nrNo do documento na árvore pelo id_documento
+    for (var i = 0; i < lines.length; i++) {
+        if (/^Nos\[\d+\]\s*=\s*new\s+infraArvoreNo/i.test(lines[i]) && lines[i].split('"')[3] == id_documento) {
+            nrNo = lines[i].match(/Nos\[(\d+)\]/)[1];
+            break;
+        }
+    }
+    if (nrNo === null) return false;
+
+    // Busca o Nos[nrNo].src para obter a URL do anexo (com arvore=1)
+    var srcPattern = 'Nos[' + nrNo + '].src';
+    var srcUrl = null;
+    for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf(srcPattern) !== -1 && lines[i].indexOf('documento_download_anexo') !== -1) {
+            srcUrl = lines[i].substring(lines[i].indexOf("'") + 1, lines[i].lastIndexOf("'"));
+            break;
+        }
+    }
+    if (!srcUrl) return false;
+
+    // Extrai id_anexo da URL src para buscar a URL de download (sem arvore=1) em arrayLinksArvoreAll
+    var paramIdAnexo = getParamsUrlPro(srcUrl).id_anexo;
+    if (paramIdAnexo) {
+        var downloadUrl = arrayLinksArvoreAll.filter(function(v) {
+            return v.indexOf('documento_download_anexo') !== -1 && v.indexOf('id_anexo=' + paramIdAnexo) !== -1 && v.indexOf('arvore=1') === -1;
+        });
+        if (downloadUrl.length > 0) {
+            var url = downloadUrl[0];
+            if (url.indexOf('#') !== -1) url = url.split('#')[0];
+            return url;
+        }
+    }
+
+    // Fallback: usa a URL src diretamente (com arvore=1, link.download forçará o download)
+    return srcUrl;
+}
 function getBatchActionsPro(this_) {
     var id_documento = loopActionsPro.list[loopActionsPro.index];
     var _this = $(this_);
@@ -7635,6 +7798,34 @@ function getBatchActionsPro(this_) {
             var tr = _table.find('tr[data-index="'+id_documento+'"]');
                 td_doc = tr.find('td.documento');
                 tr.find('td.documento').prepend('<i class="fas fa-sync fa-spin azulColor batchLoading"></i> ');
+
+                // Download direto de documentos externos (PDF) sem AJAX
+                var _btnData = _this.data();
+                if (_btnData.action == 'documento_visualizar') {
+                    var downloadAnexoUrl = getDownloadAnexoFromArvore(ifrArvore, id_documento, arrayLinksArvoreAll);
+                    if (downloadAnexoUrl) {
+                        var link = document.createElement('a');
+                            link.href = downloadAnexoUrl;
+                            link.download = tr.find('td.documento a').text().trim();
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                        tr.removeClass('infraTrMarcada').find('i.batchLoading').remove();
+                        tr.find('td.documento').prepend('<i class="fas fa-check-circle verdeColor batchLoading"></i> ');
+                        tr.find('input').prop('checked',false);
+
+                        loopActionsPro.index = loopActionsPro.index+1;
+                        if (typeof loopActionsPro.list[loopActionsPro.index] !== 'undefined') {
+                            setTimeout(function() { getBatchActionsPro(this_); }, 500);
+                        } else {
+                            window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
+                            $(this_).find('i').attr('class', $(this_).data('lastclass'));
+                        }
+                        return;
+                    }
+                }
+
                 $.ajax({ url: doc[0] }).done(function (html) {
                     var id_documento = loopActionsPro.list[loopActionsPro.index];
                     var $html = $(html);
@@ -7642,7 +7833,11 @@ function getBatchActionsPro(this_) {
                     var arrayLinksArvoreDoc = getLinksInText(textLink);
                     var btnData = _this.data();
                     var linkAction = arrayLinksArvoreDoc.filter(function(v){ return (v.indexOf('acao='+btnData.action) !== -1) });
-                        linkAction = (linkAction.length == 0) ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && v.indexOf(btnData.action) !== -1) }) : linkAction;
+                        // Fallback para documentos externos (PDF): buscar link de download de anexo
+                        if (linkAction.length == 0 && btnData.action == 'documento_visualizar') {
+                            linkAction = arrayLinksArvoreDoc.filter(function(v){ return (v.indexOf('acao=documento_download_anexo') !== -1) });
+                        }
+                        linkAction = (linkAction.length == 0) ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('id_documento='+id_documento) !== -1 && (v.indexOf(btnData.action) !== -1 || (btnData.action == 'documento_visualizar' && v.indexOf('documento_download_anexo') !== -1))) }) : linkAction;
                     var listIconsView = (arrayIconsView.length > 0) ? jmespath.search(arrayIconsView, "[?id_documento==`"+id_documento+"`] | [0].icones") : null;
                         listIconsView = (listIconsView === null) ? [] : listIconsView;
                     var checkIconView = listIconsView.filter(function(v){ return v.indexOf(btnData.icon) !== -1 });
@@ -7810,7 +8005,7 @@ function getBatchActionsPro(this_) {
                                 }
                             });
                         });
-                    } else if (btnData.action == 'documento_visualizar' && linkAction.length > 0 && checkIconView.length > 0) {
+                    } else if (btnData.action == 'documento_visualizar' && linkAction.length > 0 && (checkIconView.length > 0 || linkAction[0].indexOf('documento_download_anexo') !== -1)) {
 
                         var id_documento = loopActionsPro.list[loopActionsPro.index];
                         if (typeof id_documento !== 'undefined') {
@@ -7820,9 +8015,9 @@ function getBatchActionsPro(this_) {
                                 link.href = urlLink;
                                 
                                 if (urlLink.indexOf('documento_download_anexo') === -1) {
-                                    link.download =  ifrArvore.find('#anchor'+id_documento).text().trim()+'.html';
+                                    link.download = tr.find('td.documento a').text().trim()+'.html';
                                 } else {
-                                    link.download =  ifrArvore.find('#anchor'+id_documento).text().trim();
+                                    link.download = tr.find('td.documento a').text().trim();
                                 }
                                     document.body.appendChild(link);
                                     link.click();
@@ -7835,7 +8030,7 @@ function getBatchActionsPro(this_) {
 
                             loopActionsPro.index = loopActionsPro.index+1;
                             if (typeof loopActionsPro.list[loopActionsPro.index] !== 'undefined') {
-                                getBatchActionsPro(this_);
+                                setTimeout(function() { getBatchActionsPro(this_); }, 500);
                             } else {
                                 window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
                                 $(this_).find('i').attr('class', $(this_).data('lastclass'));
@@ -8236,15 +8431,6 @@ function copyLinkProcesso(this_) {
     copyToClipboard(linkProc);
     _this.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 }
-/*
-function verifyMenuSistemaView() {
-    var prefixoCookie = $('#hdnInfraPrefixoCookie').val();
-    if (infraLerCookie(prefixoCookie+'_menu_mostrar') == 'N' && $(mainMenu).is(':visible')) {
-        $('#lnkInfraMenuSistema').trigger('click');
-    }
-    checkMenuSistemaView();
-}
-*/
 function getDocsArvore_fillSelect(select, optionBlank = false, disableId = false, docExternoDisable = true, docExternoOnlyPDF = false) {
     let idRef = $('#ifrArvore').contents().find('#content .infraArvoreNoSelecionado').attr('id');
         idRef = typeof idRef !== 'undefined' ? idRef.replace('span','') : false;
@@ -8507,6 +8693,28 @@ function getHtmlMarcador(id_procedimento, processoAberto) {
     }
     return {icon: iconMarcador, prazo: linkPrazo, data: dataMarcador};
 }
+//Resolve o formulario de cadastro do documento a partir da tela de escolha do tipo.
+//SEI 3.x/4.x: a ancora do tipo e um link GET real. SEI 5: a ancora vem com href="#" e a
+//escolha e feita por POST de hdnIdSerie no proprio frmDocumentoEscolherTipo.
+//Devolve false quando nao foi possivel escolher o tipo (o chamador exibe o erro).
+function getFormDocPro($htmlFullList, urlDoc, idSerie, callback) {
+    if (typeof urlDoc !== 'undefined' && urlDoc !== '#') {
+        $.ajax({ url: urlDoc }).done(callback);
+        return true;
+    }
+    var form = $htmlFullList.find('#frmDocumentoEscolherTipo');
+    var urlForm = form.attr('action');
+    if (typeof urlForm === 'undefined' || typeof idSerie === 'undefined' || idSerie === '' || idSerie === false) return false;
+    var param = {};
+        form.find("input[type=hidden]").each(function () {
+            if ( $(this).attr('name') && $(this).attr('id') && $(this).attr('id').indexOf('hdn') !== -1) {
+                param[$(this).attr('name')] = $(this).val();
+            }
+        });
+        param.hdnIdSerie = idSerie;
+    $.ajax({ method: 'POST', data: param, url: urlForm }).done(callback);
+    return true;
+}
 function getDocCertidao(this_) {
     var _this = $(this_);
     var itemSelected = false;
@@ -8552,8 +8760,7 @@ function getDocCertidao(this_) {
                             var reg = new RegExp('^\\b'+nameOption, "igm");
                             if (reg.test(parent.removeAcentos(nameDoc.trim().toLowerCase()))) {
                                 if (typeof urlDoc !== 'undefined' && text != 'externo') {
-                                    itemSelected = true;
-                                    $.ajax({ url: urlDoc }).done(function (htmlDoc) {
+                                    itemSelected = getFormDocPro($htmlFullList, urlDoc, value, function (htmlDoc) {
                                         var $htmlDoc = $(htmlDoc);
                                         var form = $htmlDoc.find('#frmDocumentoCadastro');
                                         var hrefForm = form.attr('action');
@@ -8624,10 +8831,10 @@ function getDocCertidao(this_) {
                                                             idUser = v.split("_")[1];
                                                         }
                                                     });
-                                                    if (urlEditor.length > 0 && idUser) {
+                                                    if (urlEditor.length > 0) {
                                                         sessionStorageStorePro('dadosDocCertidao',contentHtml);
                                                         sessionStorageStorePro('nomeDocCertidao',ifrArvore.contents().find('.infraArvoreNoSelecionado').eq(0).text());
-                                                        openWindowEditor(urlEditor[0]+'#&acao_pro=set_certidao', idUser);
+                                                        openWindowEditor(urlEditor[0]+'#&acao_pro=set_certidao', idUser || 'pro');
                                                     }
                                                     if (urlReload) {
                                                         ifrArvore.attr('src', urlReload);
@@ -8894,7 +9101,8 @@ function setHistoryProcessosPro(dadosProcessoPro) {
     localStorageStorePro('dadosHistoricoProcessoPro', dadosHistoricoProcessoPro);
 }
 function pullDadosProcessoSession() {
-    return getDadosProcessoSession() ? getDadosProcessoSession() : dadosProcessoPro;
+    const return_dadosProcessoPro = (dadosProcessoPro && typeof dadosProcessoPro === 'object' && Object.keys(dadosProcessoPro).length > 0) ? dadosProcessoPro : false;
+    return getDadosProcessoSession() ? getDadosProcessoSession() : return_dadosProcessoPro;
 }
 function getDadosProcessoSession() {
     var id_procedimento = getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento;
@@ -9051,7 +9259,7 @@ function getIfrArvoreDadosProcesso() {
         }
         var data_documento = (assinatura) ? assinatura : versao;
         
-        var processoLnk = ifrArvore.find(`a[target="${ifrVisualizacao_}"]`).eq(0);
+        var processoLnk = ifrArvore.find(`a[target="${targetIframeVisualizacao_}"]`).eq(0);
         var processo_sei = processoLnk.text().trim();
         var tipo = processoLnk.find('span').attr('title');
         var tipo = typeof tipo !== 'undefined' ? tipo.trim() : tipo;
@@ -10835,6 +11043,15 @@ function addUrgentPro(this_) {
         text.val(text.val().trim()+' (URGENTE)');
     }
 }
+function addTrancadPro(this_) {
+    var _this = $(this_);
+    var text = _this.closest('.infraAreaDados').find('input[type="text"]').last();
+    if (text.length && text.val().toLowerCase().indexOf('(trancado)') !== -1) {
+        text.val(text.val().replace(/\(trancado\)/ig,'').trim() );
+    } else if (text.length && typeof text.val() !== 'undefined') {
+        text.val(text.val().trim()+' (TRANCADO)');
+    }
+}
 function setNewDocDefault() {
     var ifrVisualizacao = isSEI_5 
         ? $($ifrVisualizacao).contents().find('#ifrVisualizacao').contents()
@@ -11316,6 +11533,7 @@ function replaceSelectAllVisualizacao(TimeOut = 9000) {
             });
         });
     }
+    // console.log('replaceSelectAllVisualizacao');
 }
 function insertActionHipoteseLegal() {
     var target = $($ifrVisualizacao).contents();
@@ -11410,9 +11628,9 @@ function openStyleBoxSlimPro_() {
                         '               <label for="iconLabel"><i class="iconPopup iconSwitch fas fa-text-width azulColor"></i>\u00CDcones com legenda:</label>'+
                         '           </td>'+
                         '           <td style="text-align: right;">'+
-                        '              <div class="onoffswitch" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="setIconLabel(this)" name="onoffswitch" class="onoffswitch-checkbox" id="iconLabel" '+(localStorage.getItem('iconLabel') ? 'checked' : '')+'>'+
-                        '                  <label class="onoff-switch-label" for="iconLabel"></label>'+
+                        '              <div class="infraAncoraSigla" style="float: right;">'+
+                        '                  <input type="checkbox" onchange="setIconLabel(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="iconLabel" '+(localStorage.getItem('iconLabel') ? 'checked' : '')+'>'+
+                        '                  <label class="infraAreaDados" for="iconLabel"></label>'+
                         '              </div>'+
                         '           </td>'+
                         '      </tr>'+
@@ -11421,9 +11639,9 @@ function openStyleBoxSlimPro_() {
                         '               <label for="darkModePro"><i class="iconPopup iconSwitch fas fa-moon azulColor"></i>Modo noturno:</label>'+
                         '           </td>'+
                         '           <td style="text-align: right;">'+
-                        '              <div class="onoffswitch" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="setDarkModePro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="darkModePro" '+(localStorage.getItem('darkModePro') ? 'checked' : '')+'>'+
-                        '                  <label class="onoff-switch-label" for="darkModePro"></label>'+
+                        '              <div class="infraAncoraSigla" style="float: right;">'+
+                        '                  <input type="checkbox" onchange="setDarkModePro(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="darkModePro" '+(localStorage.getItem('darkModePro') ? 'checked' : '')+'>'+
+                        '                  <label class="infraAreaDados" for="darkModePro"></label>'+
                         '              </div>'+
                         '           </td>'+
                         '      </tr>'+
@@ -11432,9 +11650,9 @@ function openStyleBoxSlimPro_() {
                         '               <label for="seiBtnRight"><i class="iconPopup iconSwitch fas fa-grip-vertical azulColor"></i>Barra de Bot\u00F5es na Vertical:</label>'+
                         '           </td>'+
                         '           <td style="text-align: right;">'+
-                        '              <div class="onoffswitch" style="float: right;">'+
-                        '                  <input type="checkbox" onchange="setBtnRight(this)" name="onoffswitch" class="onoffswitch-checkbox" id="seiBtnRight" '+(localStorage.getItem('seiBtnRight') ? 'checked' : '')+'>'+
-                        '                  <label class="onoff-switch-label" for="seiBtnRight"></label>'+
+                        '              <div class="infraAncoraSigla" style="float: right;">'+
+                        '                  <input type="checkbox" onchange="setBtnRight(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="seiBtnRight" '+(localStorage.getItem('seiBtnRight') ? 'checked' : '')+'>'+
+                        '                  <label class="infraAreaDados" for="seiBtnRight"></label>'+
                         '              </div>'+
                         '           </td>'+
                         '      </tr>'+
@@ -11923,8 +12141,7 @@ function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openP
                         let $htmlNewDoc = $(htmlNewDoc);
                         var urlDoc = $htmlNewDoc.find('a[href*="&id_serie='+id_tipo_documento+'&"]').attr('href');
                         console.log(urlDoc, id_tipo_documento);
-                            if (typeof urlDoc !== 'undefined') {
-                                $.ajax({ url: urlDoc }).done(function (htmlDoc) {
+                            if (!getFormDocPro($htmlNewDoc, urlDoc, id_tipo_documento, function (htmlDoc) {
                                     var $htmlDoc = $(htmlDoc);
                                     var form = $htmlDoc.find('#frmDocumentoCadastro');
                                     var hrefForm = form.attr('action');
@@ -11994,10 +12211,10 @@ function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openP
                                                         idUser = v.split("_")[1];
                                                     }
                                                 });
-                                                if (urlEditor.length > 0 && idUser) {
+                                                if (urlEditor.length > 0) {
                                                     var acao_pro = insertHtml ? 'set_automatico' : 'set_new_doc';
                                                     if (openProc) openLinkNewTab(href);
-                                                    openWindowEditor(urlEditor[0]+'#&acao_pro='+acao_pro, idUser);
+                                                    openWindowEditor(urlEditor[0]+'#&acao_pro='+acao_pro, idUser || 'pro');
                                                     if (insertHtml) alertaBoxPro('Sucess', 'check-circle', 'Documento gerado com sucesso', refreshDocViewArvorePro);
                                                 }
                                                 if (ifrArvore.length) {
@@ -12011,8 +12228,7 @@ function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openP
                                                 alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao gerar o documento.');
                                             }
                                         });
-                                });
-                            } else {
+                                })) {
                                 alertaBoxPro('Error', 'exclamation-triangle', 'Erro ao selecionar o tipo de documento. Verifique se o tipo est\u00E1 dispon\u00EDvel no sistema e tente novamente');
                             }
                     });
@@ -12146,70 +12362,6 @@ function setSizeIframePro(tLeft, saveSize = true) {
     if (saveSize) setOptionsPro('iframeSizeSlimPro',tLeft);
     if (isNewSEI) $('#divIframeArvore').css('width',tLeft);
 }
-/*
-if (verifyConfigValue('menususpenso')) {
-    function infraMenuSistemaEsquema(bolInicializar, tipo){
-        var mostrarMenu = null;
-        var tamanhoDados = null;
-        var title = '';
-
-        if (bolInicializar == undefined) bolInicializar = false; 
-
-        var lnkMenu = document.getElementById('lnkInfraMenuSistema');
-        if (lnkMenu == null) return;
-
-        var hdnCookie = document.getElementById('hdnInfraPrefixoCookie');
-        if (hdnCookie == null) return;
-
-        var prefixoCookie = hdnCookie.value;
-        infraTooltipOcultar();
-
-        if (bolInicializar){
-            //le do cookie
-            if (infraLerCookie(prefixoCookie+'_menu_mostrar')!='N'){
-                tamanhoDados = document.getElementById("divInfraAreaTelaD").offsetWidth/document.getElementById("divInfraAreaTela").offsetWidth;
-                tamanhoDados = Math.floor(tamanhoDados*Math.pow(10,2));
-                infraCriarCookie(prefixoCookie+'_menu_tamanho_dados',tamanhoDados,1);
-                title = 'Ocultar';
-            } else {
-                title = 'Exibir';
-            }
-        } else {
-            if (tipo == undefined || tipo == null) {
-                if (document.getElementById('divInfraAreaTelaE').style.display == ''){
-                    tipo = 'Ocultar';
-                } else {
-                    tipo = 'Exibir';
-                }
-            }
-            if (tipo == 'Ocultar' || (getOptionsPro('panelMenuSistemaView') !== false && !$('#divInfraBarraSistemaE').hasClass('barSuspenso'))) {
-                document.getElementById('divInfraAreaTelaE').style.display='none';
-                document.getElementById('divInfraAreaTelaD').style.width = '99%';
-                infraCriarCookie(prefixoCookie+'_menu_mostrar','N',1);
-                title = 'Exibir';
-                if ($('#divInfraBarraSistemaE').hasClass('barSuspenso')) removeOptionsPro('panelMenuSistemaView');
-                if (getOptionsPro('panelMenuSistemaView')) setMenuSistemaView();
-            } else {
-                setMenuSistemaView(true);
-                removeOptionsPro('panelMenuSistemaView');
-
-                tamanhoDados = infraLerCookie(prefixoCookie+'_menu_tamanho_dados');
-                document.getElementById('divInfraAreaTelaE').style.display='';
-
-                if (tamanhoDados == null) tamanhoDados = infraClientWidth() * 0.80;
-
-                document.getElementById('divInfraAreaTelaD').style.width = tamanhoDados+'%';
-                infraCriarCookie(prefixoCookie+'_menu_mostrar','S',1);
-                title = 'Ocultar';
-            }
-            if (tipo == 'Ocultar') setOptionsPro('panelMenuSistemaView', 'active');
-                infraResize();
-                checkMenuSistemaView();
-        }
-        // console.log('***** infraMenuSistemaEsquema',bolInicializar, tipo, prefixoCookie, tamanhoDados, window.name);
-    }
-}
-*/
 function infraMenuSistemaEsquema() {
     return false;
 }
@@ -12301,7 +12453,7 @@ function checkMenuSEIPro() {
     }, 500);
 
     // OCULTA O ÍCONE NATIVO DE EXIBIR MENU DO SISTEMA PARA O SEI > 5.0
-    $('img[title="Exibir/Ocultar Menu do Sistema"]').hide()
+    if (verifyConfigValue('menususpenso')) $('img[title="Exibir/Ocultar Menu do Sistema"]').hide();
 }
 
 // SUBSTITUI CAMPOS PERSONALIZADOS
@@ -12378,8 +12530,12 @@ function getQRProcesso() {
         "fontcolor": "#ff9818",
         "image": {}
     }
-    var srcImg = $('<div>').qrcode(optionsProc).find('img').attr('src');
-    return `<img src="${srcImg}">`;
+    if (typeof $('<div>').qrcode === 'function') {
+        var srcImg = $('<div>').qrcode(optionsProc).find('img').attr('src');
+        return `<img src="${srcImg}">`;
+    } else {
+        return '';
+    }
 }
 function camposDinamicosProcesso(arrayTags) {
     var prop = dadosProcessoPro.propProcesso;

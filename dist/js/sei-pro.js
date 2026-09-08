@@ -232,7 +232,7 @@ function setSelectAllTr(this_, tagname = false) {
     var tagname_select = (tagname) ? 'tr[data-tagname="'+tagname+'"]:visible' : 'tr:visible';
     var listCheckbox = [];
     if (index < 1) {
-        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(.onoffswitch-checkbox)');
+        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(input.infraLinkOrgao)');
         var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : true;
         
         if (t) {
@@ -246,7 +246,7 @@ function setSelectAllTr(this_, tagname = false) {
         }
         $(this_).data('index',index+1);
     } else {
-        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(.onoffswitch-checkbox):checked');
+        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(input.infraLinkOrgao):checked');
         var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : false;
         
         if (t) {
@@ -812,12 +812,13 @@ function selectFilterTableHome() {
     return html;
 }
 function initDadosProcesso(TimeOut = 9000) {
+    const targetUrl = isSEI_5 ? $("#ifrArvore").contents().find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).attr('href') : $("#ifrArvore").contents().find('#topmenu').find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).attr('href');
     if (TimeOut <= 0) { return; }
-    if (typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro !== 'undefined'  && typeof $("#ifrArvore").contents().find('#topmenu').find(`a[target="${ifrVisualizacao_}"]`).eq(0).attr('href') !== 'undefined' ) { 
+    if (typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro !== 'undefined'  && typeof targetUrl !== 'undefined' ) { 
         var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
             id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
             id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
-            // idProcedimento = (typeof idProcedimento !== 'undefined') ? idProcedimento : getParamsUrlPro($("#ifrArvore").contents().find('#topmenu').find(`a[target="${ifrVisualizacao_}"]`).eq(0).attr('href')).id_procedimento;
+            // idProcedimento = (typeof idProcedimento !== 'undefined') ? idProcedimento : getParamsUrlPro($("#ifrArvore").contents().find('#topmenu').find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).attr('href')).id_procedimento;
             // console.log(id_procedimento, 'processo');
             getDadosIframeProcessoPro(id_procedimento, 'processo');
     } else {
@@ -1581,7 +1582,7 @@ function forceTableHomeDestroy(Timeout = 3000) {
 }
 function forceOnLoadBody() {
     var onload = new Function($('body').attr('onload'));
-    if (isNewSEI && typeof $.modalLink === 'undefined' && !$('.sparkling-modal-frame').length) {
+    if (typeof isNewSEI !== 'undefined' && isNewSEI && typeof $.modalLink === 'undefined' && !$('.sparkling-modal-frame').length) {
         $.get($('script[src*="jquery.modalLink"]').attr('src'), function(){
             onload();
         });
@@ -1722,7 +1723,7 @@ function setObserveUrlChange() {
     if (parent.verifyConfigValue('urlamigavel')) {
         $(window).bind('hashchange', function() {
             var ifrArvore = $('#ifrArvore').contents();
-            var sourceLink = ifrArvore.find('.infraArvoreNoSelecionado').eq(0).closest(`a[target="${ifrVisualizacao_}"]`);
+            var sourceLink = ifrArvore.find('.infraArvoreNoSelecionado').eq(0).closest(`a[target="${targetIframeVisualizacao_}"]`);
             var nrSEI = (typeof sourceLink !== 'undefined' && sourceLink !== null) ? getNrSei(sourceLink.text().trim()) : false;
                 nrSEI = (nrSEI == '') ? false : nrSEI;
             var nrSEI_URL = (window.location.hash.indexOf('@') !== -1) ? window.location.hash.replace('#','').split('@')[1] : false;
@@ -2222,9 +2223,9 @@ function addControlePrazo(this_ = false) {
                     '               Controlar vencimento?'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(dueSetDate ? 'checked' : '')+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_duesetdate"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChangeHome(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+(dueSetDate ? 'checked' : '')+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_duesetdate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -2907,6 +2908,12 @@ function initUrgentePro() {
         .closest('tr')
         .addClass('urgentePro');
 }
+function initTrancadoPro() {
+    $('a div.trancadoPro').remove();
+    $('a[href*="controlador.php?acao=procedimento_trabalhar"][onmouseover*="(TRANCADO)"]')
+        .prepend('<div class="trancadoPro"></div>')
+        .addClass('trancadoPro');
+}
 
 function initUploadFilesInProcess() {
     if (typeof Dropzone === 'function') {
@@ -3136,13 +3143,14 @@ function initSeiPro() {
         addAcompanhamentoEspIcon();
         initAllMarcadoresHome();
         initUrgentePro();
+        if (NAMESPACE_SPRO == 'SEI Pro Lab') initTrancadoPro();
         initNaoVisualizadoPro();
         storeLinkUsuarioSistema();
         storeVersionSEI();
         if (typeof checkDadosAcompEspecial !== 'undefined') checkDadosAcompEspecial();
         if (sessionStorage.getItem('configHost_Pro') === null && typeof getConfigHost !== 'undefined') getConfigHost();
 	} else if ( $("#ifrArvore").length > 0 ) {
-        if (!checkHostLimit()) initDadosProcesso();
+        if (typeof checkHostLimit !== 'undefined' && !checkHostLimit()) initDadosProcesso();
         initObserveUrlChange();
         checkLoadConfigSheets();
         //observeHistoryBrowserPro();

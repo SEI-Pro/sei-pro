@@ -11,7 +11,7 @@ function replaceSelectOnVisualizacao(force = false, TimeOut = 9000) {
         }
         setTimeout(function(){ 
             replaceSelectOnVisualizacao(force, TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload replaceSelectOnVisualizacao'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload replaceSelectOnVisualizacao'); 
         }, 500);
     }
 }
@@ -26,7 +26,7 @@ function setReplaceSelectOnVisualizacao(force = false) {
                     placeholder_text_single: ' ',
                     no_results_text: 'Nenhum resultado encontrado',
                     normalize_search_text: function(text) {
-                        return removeAcentos(text.toLowerCase());
+                        return parent.removeAcentos(text.toLowerCase());
                     }
                 });
 
@@ -38,6 +38,21 @@ function setReplaceSelectOnVisualizacao(force = false) {
             // console.log('force',force);
         }
     }
+}
+function repareChosenIntimacaoEletronica() {
+    if ($('#selTipoIntimacao').length) {
+        $('#selTipoIntimacao_chosen').remove();
+        $('#selTipoIntimacao')
+            .chosen("destroy")
+            .chosen({
+                placeholder_text_single: ' ',
+                no_results_text: 'Nenhum resultado encontrado',
+                normalize_search_text: function(text) {
+                    return parent.removeAcentos(text.toLowerCase());
+                }
+        });
+    }
+    // console.log('repareChosenIntimacaoEletronica');
 }
 function initForceChosenVisualizacao() {
     var observer = new MutationObserver(function(mutations) {
@@ -61,3 +76,6 @@ function initForceChosenVisualizacao() {
     observer.observe(document, {attributes: false, childList: true, characterData: false, subtree:true});
 }
 // initForceChosenVisualizacao();
+setTimeout(function(){
+    repareChosenIntimacaoEletronica();
+}, 2000);

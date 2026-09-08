@@ -711,7 +711,7 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
 #projetosGanttDiv .bar-complete .handle-group .handle.progress {
 	display: none;
 }
-.onoffswitch {
+div.infraAncoraSigla {
     position: relative; 
     width: 40px;
     user-select:none; 
@@ -719,19 +719,19 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
     -moz-user-select:none; 
     -ms-user-select: none;
 }
-.onoffswitch-checkbox {
+input.infraLinkOrgao {
     position: absolute;
     opacity: 0;
     pointer-events: none;
 }
-.onoff-switch-label {
+label.infraAreaDados {
     display: block; overflow: hidden; cursor: pointer;
     height: 21px; padding: 0; line-height: 21px;
     border: 2px solid #E3E3E3; border-radius: 21px;
     background-color: #E8E8E8;
     transition: background-color 0.3s ease-in;
 }
-.onoff-switch-label:before {
+label.infraAreaDados:before {
     content: "";
     display: block; width: 21px; margin: 0px;
     background: #FFFFFF;
@@ -740,13 +740,13 @@ a.btn.disabled, fieldset:disabled a.btn { pointer-events: none; }
     border: 2px solid #E3E3E3; border-radius: 21px;
     transition: all 0.3s ease-in 0s; 
 }
-.onoffswitch-checkbox:checked + .onoff-switch-label {
+input.infraLinkOrgao:checked + label.infraAreaDados {
     background-color: #007FFF;
 }
-.onoffswitch-checkbox:checked + .onoff-switch-label, .onoffswitch-checkbox:checked + .onoff-switch-label:before {
+input.infraLinkOrgao:checked + label.infraAreaDados, input.infraLinkOrgao:checked + label.infraAreaDados:before {
    border-color: #007FFF;
 }
-.onoffswitch-checkbox:checked + .onoff-switch-label:before {
+input.infraLinkOrgao:checked + label.infraAreaDados:before {
     right: 0px; 
 }
 .seiProForm .trCinza,
@@ -2577,6 +2577,13 @@ a.newLink.filterTableProcessos.newLink_active i {
     font-weight: bold;
     font-size: 1em;
 }
+/* Ajustes especificos para o SEI 5+ (classe isSEI_5 adicionada ao body) */
+body.isSEI_5 .titlePanelHome {
+    display: flex;
+}
+body.isSEI_5 .titlePanelHome .titlePanel {
+    font-size: 1.4rem !important;
+}
 tr .newLink.followLinkTr:hover i,
 .txt_cinza,
 tr .newLink.followLinkTr:hover {
@@ -2641,7 +2648,7 @@ td.content_desc {
     margin-top: 6px;
     cursor: pointer;
 }
-.editTableToggle .onoffswitch {
+.editTableToggle div.infraAncoraSigla {
     transform: scale(0.8);
     float: right;
 }
@@ -3611,7 +3618,7 @@ td.prazoBoxDisplay {
 .newSEI #divRecebidos.tagintable {
     max-width: 100% !important;
 }
-.onoff-switch-label::before {
+label.infraAreaDados::before {
     height: inherit;
 }
 .newSEI .dz-preview span {
@@ -4218,6 +4225,8 @@ div#dialogBoxDocLote p {
     top: 1em;
     color: #888;
     font-family: arial,verdana,helvetica,sans-serif !important;
+    left: initial;
+    font-size: 10pt !important;
 }
 .dialogBoxAI .response_bot_content p {
     margin: 0.7em 0;
@@ -4375,14 +4384,14 @@ div#dialogBoxDocLote p {
 .iconBoxAtividade .fa-layers.fa-fw {
     font-size: 1em;
 }
-.onoff-switch-label::before {
+label.infraAreaDados::before {
     box-sizing: initial;
 }
-.onoff-switch-label {
+label.infraAreaDados {
     margin-bottom: initial;
     box-sizing: initial;
 }
-.newSEI .editTableToggle .onoffswitch {
+.newSEI .editTableToggle div.infraAncoraSigla {
     margin: 5px 5px 0 0;
 }
 .chosen-container .chosen-results li {

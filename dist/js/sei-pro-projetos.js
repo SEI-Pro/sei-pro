@@ -580,36 +580,36 @@ function openProjetoConfig() {
                     '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup fas fa-hand-paper cinzaColor"></i> Ativar modo de edi\u00E7\u00E3o visual (arrastar e soltar)</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="changeVisualProjetos(this)" name="onoffswitch" class="onoffswitch-checkbox" id="editVisualProjetos" tabindex="0" '+stateVisualGantt+'>'+
-                    '               <label class="onoff-switch-label" for="editVisualProjetos"></label>'+
+                    '           <div class="infraAncoraSigla">'+
+                    '               <input type="checkbox" onchange="changeVisualProjetos(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="editVisualProjetos" tabindex="0" '+stateVisualGantt+'>'+
+                    '               <label class="infraAreaDados" for="editVisualProjetos"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
                     '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup fas fa-check-double cinzaColor"></i> Visualizar datas de execu\u00E7\u00E3o em etapas distintas</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="changeExecucaoProjetos(this)" name="onoffswitch" class="onoffswitch-checkbox" id="editExecucaoProjetos" tabindex="0" '+stateExecucaoGantt+'>'+
-                    '               <label class="onoff-switch-label" for="editExecucaoProjetos"></label>'+
+                    '           <div class="infraAncoraSigla">'+
+                    '               <input type="checkbox" onchange="changeExecucaoProjetos(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="editExecucaoProjetos" tabindex="0" '+stateExecucaoGantt+'>'+
+                    '               <label class="infraAreaDados" for="editExecucaoProjetos"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
                     '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup fas fa-archive cinzaColor"></i> Visualizar projetos arquivados</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="viewProjetosArquivados(this)" name="onoffswitch" class="onoffswitch-checkbox" id="viewProjetosArquivados" tabindex="0" '+stateArquivadosGantt+'>'+
-                    '               <label class="onoff-switch-label" for="viewProjetosArquivados"></label>'+
+                    '           <div class="infraAncoraSigla">'+
+                    '               <input type="checkbox" onchange="viewProjetosArquivados(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="viewProjetosArquivados" tabindex="0" '+stateArquivadosGantt+'>'+
+                    '               <label class="infraAreaDados" for="viewProjetosArquivados"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
                     '   <tr style="height: 40px;">'+
                     '       <td><i class="iconPopup far fa-hand-rock cinzaColor"></i> Ordenar pain\u00E9is de gest\u00E3o arrastando e soltando</td>'+
                     '       <td>'+
-                    '           <div class="onoffswitch">'+
-                    '               <input type="checkbox" onchange="changePanelSortPro(this)" name="onoffswitch" class="onoffswitch-checkbox" id="panelSortPro" tabindex="0" '+statePanelSortPro+'>'+
-                    '               <label class="onoff-switch-label" for="panelSortPro"></label>'+
+                    '           <div class="infraAncoraSigla">'+
+                    '               <input type="checkbox" onchange="changePanelSortPro(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="panelSortPro" tabindex="0" '+statePanelSortPro+'>'+
+                    '               <label class="infraAreaDados" for="panelSortPro"></label>'+
                     '           </div>'+
                     '       </td>'+
                     '   </tr>'+
@@ -1556,9 +1556,9 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                 htmlBox +=  '                           <tr data-index="'+i+'" data-id="'+v.id_projeto_compartilhado+'" data-id_projeto="'+id_projeto+'" data-value="'+v.id_unidade+'" data-edicao="'+v.edicao+'" data-key="id_unidade" style="text-align: left;">'+
                             '                               <td class="" data-type="num_switch" data-key="unidade" style="padding: 0 10px;">'+unicodeToChar(v.sigla_unidade+' - '+v.nome_unidade)+'</td>'+
                             '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                            '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
-                            '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="unidade" class="onoffswitch-checkbox switch_unidadeDefault switch_unidadeDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
-                            '                                      <label class="onoff-switch-label" for="changeItemConfig_unidades_'+i+'"></label>'+
+                            '                                  <div class="infraAncoraSigla" style="transform: scale(0.8);">'+
+                            '                                      <input type="checkbox" name="infraAncoraSigla" data-mode="change_edicao" data-key="unidade" class="infraLinkOrgao switch_unidadeDefault switch_unidadeDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
+                            '                                      <label class="infraAreaDados" for="changeItemConfig_unidades_'+i+'"></label>'+
                             '                                  </div>'+
                             '                               </td>'+
                             '                               <td style="width: 50px; text-align: center;">'+
@@ -1570,9 +1570,9 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
         htmlBox +=      '                           <tr data-index="'+unidade_len+'" data-id="new" data-id_projeto="'+id_projeto+'" data-value="" data-key="id_unidade" data-edicao="0" style="text-align: left;">'+
                         '                               <td class="editCellSelect" data-type="num" data-key="unidade" style="padding: 0 10px;"></td>'+
                         '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                        '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
-                        '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="unidade" class="onoffswitch-checkbox switch_unidadeDefault switch_unidadeDefault_'+unidade_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+unidade_len+'" tabindex="0">'+
-                        '                                      <label class="onoff-switch-label" for="changeItemConfig_unidades_'+unidade_len+'"></label>'+
+                        '                                  <div class="infraAncoraSigla" style="transform: scale(0.8);">'+
+                        '                                      <input type="checkbox" name="infraAncoraSigla" data-mode="change_edicao" data-key="unidade" class="infraLinkOrgao switch_unidadeDefault switch_unidadeDefault_'+unidade_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_unidades_'+unidade_len+'" tabindex="0">'+
+                        '                                      <label class="infraAreaDados" for="changeItemConfig_unidades_'+unidade_len+'"></label>'+
                         '                                  </div>'+
                         '                               </td>'+
                         '                               <td style="width: 50px; text-align: center;">'+
@@ -1615,9 +1615,9 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
                 htmlBox +=  '                           <tr data-index="'+i+'" data-id="'+v.id_projeto_compartilhado+'" data-id_projeto="'+id_projeto+'" data-value="'+v.id_user+'" data-edicao="'+v.edicao+'" data-key="id_user" style="text-align: left;">'+
                             '                               <td class="" data-type="num_switch" data-key="usuario" style="padding: 0 10px;">'+unicodeToChar(v.nome_completo)+'</td>'+
                             '                               <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                            '                                  <div class="onoffswitch" style="transform: scale(0.8);">'+
-                            '                                      <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="usuario" class="onoffswitch-checkbox switch_usuarioDefault switch_usuarioDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
-                            '                                      <label class="onoff-switch-label" for="changeItemConfig_usuarios_'+i+'"></label>'+
+                            '                                  <div class="infraAncoraSigla" style="transform: scale(0.8);">'+
+                            '                                      <input type="checkbox" name="infraAncoraSigla" data-mode="change_edicao" data-key="usuario" class="infraLinkOrgao switch_usuarioDefault switch_usuarioDefault_'+i+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+i+'" tabindex="0" '+(v.edicao == 1  ? 'checked' : '')+'>'+
+                            '                                      <label class="infraAreaDados" for="changeItemConfig_usuarios_'+i+'"></label>'+
                             '                                  </div>'+
                             '                               </td>'+
                             '                               <td style="width: 50px; text-align: center;">'+
@@ -1629,9 +1629,9 @@ function shareProjeto(this_, arrayProjetos = arrayConfigAtividades.projetos) {
         htmlBox +=      '                            <tr data-index="'+usuario_len+'" data-id="new" data-id_projeto="'+id_projeto+'" data-value="" data-key="id_user" data-edicao="0" style="text-align: left;">'+
                         '                                <td class="editCellSelect" data-type="num" data-key="usuario" style="padding: 0 10px;"></td>'+
                         '                                <td data-key="default" data-type="switch" data-required="true" style="width: 50px; text-align: center;">'+
-                        '                                   <div class="onoffswitch" style="transform: scale(0.8);">'+
-                        '                                       <input type="checkbox" name="onoffswitch" data-mode="change_edicao" data-key="usuario" class="onoffswitch-checkbox switch_usuarioDefault switch_usuarioDefault_'+usuario_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+usuario_len+'" tabindex="0">'+
-                        '                                       <label class="onoff-switch-label" for="changeItemConfig_usuarios_'+usuario_len+'"></label>'+
+                        '                                   <div class="infraAncoraSigla" style="transform: scale(0.8);">'+
+                        '                                       <input type="checkbox" name="infraAncoraSigla" data-mode="change_edicao" data-key="usuario" class="infraLinkOrgao switch_usuarioDefault switch_usuarioDefault_'+usuario_len+'" onchange="shareProjetoSend(this)" id="changeItemConfig_usuarios_'+usuario_len+'" tabindex="0">'+
+                        '                                       <label class="infraAreaDados" for="changeItemConfig_usuarios_'+usuario_len+'"></label>'+
                         '                                   </div>'+
                         '                                </td>'+
                         '                                <td style="width: 50px; text-align: center;">'+
@@ -1763,7 +1763,7 @@ function shareProjetoSend(this_, data = false) {
                 var _td = $('#shareBox_'+data_this.key).find('.editCellSelect.inEdit');
                 var textResult = extractEditorValue_(_td[0]);
                     _td.text(textResult);
-                    _td.closest('tr').find('.onoffswitch-checkbox').prop('checked',false);
+                    _td.closest('tr').find('input.infraLinkOrgao').prop('checked',false);
                     if (textResult == '') $(this_).prop('checked',false);
             } else {
                 var edicao = _this.is(':checked') ? 1 : 0;

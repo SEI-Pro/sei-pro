@@ -1,4 +1,7 @@
 const loadSEIProVisualizacao = true;
+
+if (typeof jmespath === 'undefined' && typeof parent.URL_SPRO !== 'undefined') $.getScript(parent.URL_SPRO+"js/lib/jmespath.min.js");
+
 function initSeiProVisualizacao() {
     if (typeof parent.insertIconIntegrity === 'function' || typeof parent.insertIconIntegrity !== 'undefined') {
         parent.insertIconIntegrity();

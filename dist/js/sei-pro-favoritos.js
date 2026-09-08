@@ -94,9 +94,9 @@ function openBoxConfigDates(this_) {
                     '               Da data de assinatura de um documento'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this); getDadosSelectDoc(this, \''+id_procedimento+'\')" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_selectdoc" data-type="selectdoc" tabindex="0" '+stateSelectDoc+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_selectdoc"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this); getDadosSelectDoc(this, \''+id_procedimento+'\')" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_selectdoc" data-type="selectdoc" tabindex="0" '+stateSelectDoc+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_selectdoc"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -118,9 +118,9 @@ function openBoxConfigDates(this_) {
                     '               De uma data espec\u00EDfica'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_setdate" data-type="setdate" tabindex="0" '+stateSetDates+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_setdate"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_setdate" data-type="setdate" tabindex="0" '+stateSetDates+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_setdate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -147,9 +147,9 @@ function openBoxConfigDates(this_) {
                     '               Em tempo relativo'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_countdown" data-type="countdown" tabindex="0" '+stateCountDown+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_countdown"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_countdown" data-type="countdown" tabindex="0" '+stateCountDown+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_countdown"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -158,9 +158,9 @@ function openBoxConfigDates(this_) {
                     '               Em n\u00FAmero de dias'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_countdays" data-type="countdays" tabindex="0" '+stateCountDays+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_countdays"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_countdays" data-type="countdays" tabindex="0" '+stateCountDays+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_countdays"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -169,9 +169,9 @@ function openBoxConfigDates(this_) {
                     '               Calcular em dias \u00FAteis'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchIcon(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_workday" data-type="workday" tabindex="0" '+stateWorkday+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_workday"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchIcon(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_workday" data-type="workday" tabindex="0" '+stateWorkday+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_workday"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -184,9 +184,9 @@ function openBoxConfigDates(this_) {
                     '               Da assinatura de um novo documento (EM BREVE)'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_newdoc" data-type="newdoc" tabindex="0" '+stateNewDoc+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_newdoc"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_newdoc" data-type="newdoc" tabindex="0" '+stateNewDoc+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_newdoc"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -209,9 +209,9 @@ function openBoxConfigDates(this_) {
                     '               Do n\u00FAmero de dias decorridos'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duedate" data-type="duedate" tabindex="0" '+stateDueDate+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_duedate"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_duedate" data-type="duedate" tabindex="0" '+stateDueDate+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_duedate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -236,9 +236,9 @@ function openBoxConfigDates(this_) {
                     '               De uma data de vencimento espec\u00EDfica'+
                     '          </td>'+
                     '          <td>'+
-                    '              <div class="onoffswitch" style="float: right;">'+
-                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="onoffswitch" class="onoffswitch-checkbox" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+stateDueSetDate+'>'+
-                    '                  <label class="onoff-switch-label" for="configDatesBox_duesetdate"></label>'+
+                    '              <div class="infraAncoraSigla" style="float: right;">'+
+                    '                  <input type="checkbox" onchange="configDatesSwitchChange(this)" name="infraAncoraSigla" class="infraLinkOrgao" id="configDatesBox_duesetdate" data-type="duesetdate" tabindex="0" '+stateDueSetDate+'>'+
+                    '                  <label class="infraAreaDados" for="configDatesBox_duesetdate"></label>'+
                     '              </div>'+
                     '          </td>'+
                     '      </tr>'+
@@ -600,7 +600,7 @@ function getStoreFavoritePro() {
     return ( typeof localStorageRestorePro('configDataFavoritesPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataFavoritesPro')) ) ? localStorageRestorePro('configDataFavoritesPro') : {favorites: [], config: {colortags: []} };
 }
 function insertIconFavorites() {
-    const target = isSEI_5 ? `a[target="ifrVisualizacao"]` : `a[target="${ifrVisualizacao_}"]`;
+    const target = isSEI_5 ? `a[target="ifrVisualizacao"]` : `a[target="${targetIframeVisualizacao_}"]`;
     waitLoadPro($('#ifrArvore').contents(), '#topmenu', target, appendIconFavorites);
 }
 function appendIconFavorites() {
@@ -1564,7 +1564,6 @@ function setSingleMap(id_procedimento, readonly = false) {
             markers = result;
     });
 
-    // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
         attribution: '<a href="https://seipro.app" target="_blank">SEI Pro</a> | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -1692,7 +1691,6 @@ function setMultipleMap() {
         });
 
 
-        // L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 18,
             attribution: '<a href="https://seipro.app" target="_blank">'+NAMESPACE_SPRO+'</a> | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
