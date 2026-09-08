@@ -19,11 +19,7 @@ $.getScript(getUrlExtension("js/lib/moment.min.js"), function () {
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/lib/diff2html.min.js"));
 $.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
-// O bloco 0 do manifest j\u00E1 carrega sei-functions-pro.js como content script (mesmo mundo
-// isolado). A cl\u00E1usula `|| window.name != ''` reinjetava o arquivo na janela do editor
-// (window.name = janelaEditor_<user>_<doc>) e a 2a execu\u00E7\u00E3o abortava com
-// "Identifier 'loadFunctionsPro' has already been declared".
-if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+if (typeof loadFunctionsPro === 'undefined' || window.name != '') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function divIconsLoginPro() {
     var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'
