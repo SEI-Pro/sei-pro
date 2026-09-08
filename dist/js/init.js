@@ -2,13 +2,14 @@ const compareVersionNumbers_init = (v1, v2) => /^\d+(\.\d+)*$/.test(v1) && /^\d+
 var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_init(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
 var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
-var frmEditor5Exists = $('html script[charset="utf-8"]').last().html().includes('INFRA_EDITOR_CONFIG');
+var frmEditor5Exists = (function(){ var h = $('html script[charset="utf-8"]').last().html(); return !!(h && h.includes('INFRA_EDITOR_CONFIG')); })();
 
 $.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"));
 $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
 $.getScript(getUrlExtension("js/lib/purify.min.js"));
-$.getScript(getUrlExtension("js/lib/moment.min.js"));
-$.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
+$.getScript(getUrlExtension("js/lib/moment.min.js"), function () {
+    $.getScript(getUrlExtension("js/lib/moment-duration-format.min.js"));
+});
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/lib/diff2html.min.js"));
 $.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
@@ -312,7 +313,17 @@ function loadScriptPro() {
                 loadConfigPro();
                 $.getScript(getUrlExtension("js/lib/moment.min.js"));
                 $.getScript(getUrlExtension("js/lib/jquery-qrcode-0.18.0.min.js"));
-                $.getScript(getUrlExtension("js/sei-pro-editor.js"));
+                // O adapter precisa estar em place antes do editor, pois o editor
+                // passa a depender de SeiProEditorAdapter para operar em CK4 e CK5
+                // de forma transparente.
+                // O adapter (mundo da pagina) auto-carrega seus modulos de
+                // js/modules/editor/ via SeiProEditorAdapter.MODULES. Aqui so
+                // garantimos a ordem adapter -> editor. NAO chamar loadModules
+                // daqui: init.js roda no mundo isolado e nao enxerga o
+                // window.SeiProEditorAdapter (definido no mundo da pagina).
+                $.getScript(getUrlExtension("js/sei-pro-editor-adapter.js"), function () {
+                    $.getScript(getUrlExtension("js/sei-pro-editor.js"));
+                });
                 $.getScript(getUrlExtension("js/sei-legis.js"));
                 console.log('loadScriptPro-Editor');
                 loadFilesUI();

@@ -1,6 +1,9 @@
-
+// `isNewEditor` historicamente diferenciava o layout visual "novo" (Infra).
+// No SEI 5 o window.CKEDITOR coexiste com o CK5 (nao eh mais um sinal seguro),
+// entao checamos primeiro o marcador DOM do CKEditor 5.
+const isNewEditor = !!document.querySelector('.ck-editor__editable_inline') || (typeof CKEDITOR === 'undefined');
 var 
-    frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor'),
+    frmEditor = isNewEditor ? $('.infra-editor__editor-completo') : $('#frmEditor'),
     idEditor,
     oEditor, 
     imgEditor, 
@@ -16,7 +19,7 @@ var
     resultTextTip = false,
     CKWebSpeechHandler;
 
-    txaEditor = isSEI_5 ? '.infra-editor__editor-completo' : txaEditor;
+    txaEditor = isNewEditor ? '.infra-editor__editor-completo' : txaEditor;
 
 
 var loadOnKeyEditor = false;
@@ -31,7 +34,7 @@ var qualidadeImagens = (checkConfigValue('qualidadeimagens')) ? getConfigValue('
     qualidadeImagens = (qualidadeImagens < 0) ? 0 : qualidadeImagens;
 
 function setParamEditor(this_) {
-    if (!isSEI_5) {
+    if (!isNewEditor) {
         idEditor = $(this_).closest('div.cke').attr('id').replace('cke_', '');
         oEditor = CKEDITOR.instances[idEditor];
         iframeEditor = (frmEditor.length) ? $('iframe[title*="'+idEditor+'"]').contents() : $(txaEditor).find('iframe[title*="txaConteudo"]').contents();
@@ -85,13 +88,13 @@ function htmlButton(status) {
             'getQuickTableButtom',
             'quicktable',
             'Tabela R\u00E1pida',
-            isSEI_5 ? 'fab fa-bolt rosaColor' : icon16baseQuickTable
+            isNewEditor ? 'fab fa-bolt rosaColor' : icon16baseQuickTable
         ) +
         htmlButtonPro(
             'getTablestylesButtom',
             'tablestyles',
             'Adicionar estilo \u00E0 tabela',
-            isSEI_5 ? 'fab fa-paint-brush rosaColor' : icon16baseTable
+            isNewEditor ? 'fab fa-paint-brush rosaColor' : icon16baseTable
         );
     
     const htmlButtonAfterImage = 
@@ -99,13 +102,13 @@ function htmlButton(status) {
             'getBatchImgQualityButtom',
             'batch_quality_pro',
             'Reduzir qualidade das imagens',
-            isSEI_5 ? 'fab fa-compress azulColor' : icon16baseBatchImgQuality
+            isNewEditor ? 'fab fa-compress azulColor' : icon16baseBatchImgQuality
         ) +
         htmlButtonPro(
             'getInsertCheckboxButtom',
             'insert_checkbox_pro',
             'Inserir caixa de sele\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-check-square azulColor' : icon16baseInsertCheckboxQuality
+            isNewEditor ? 'fab fa-check-square azulColor' : icon16baseInsertCheckboxQuality
         );
     
     const htmlButtonBeforeCut = 
@@ -113,7 +116,7 @@ function htmlButton(status) {
             'getCopyStyleButtom',
             'copy_style_pro',
             'Copiar formata\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-brush rosaColor' : icon16baseCopyStyle
+            isNewEditor ? 'fab fa-brush rosaColor' : icon16baseCopyStyle
         );
     
     const htmlButtonBeforeList = 
@@ -122,32 +125,32 @@ function htmlButton(status) {
                 'getAlignLeftButtom',
                 'align_left_pro',
                 'Alinhar texto \u00E0 esquerda',
-                isSEI_5 ? 'fab fa-align-left roxoColor' : icon16baseAlignLeft
+                isNewEditor ? 'fab fa-align-left roxoColor' : icon16baseAlignLeft
             ) +
             htmlButtonPro(
                 'getAlignCenterButtom',
                 'align_center_pro',
                 'Alinhar texto ao centro',
-                isSEI_5 ? 'fab fa-align-center roxoColor' : icon16baseAlignCenter
+                isNewEditor ? 'fab fa-align-center roxoColor' : icon16baseAlignCenter
             ) +
             htmlButtonPro(
                 'getAlignRightButtom',
                 'align_right_pro',
                 'Alinhar texto \u00E0 direita',
-                isSEI_5 ? 'fab fa-align-right roxoColor' : icon16baseAlignRight
+                isNewEditor ? 'fab fa-align-right roxoColor' : icon16baseAlignRight
             ) +
             htmlButtonPro(
                 'getAlignJustifyButtom',
                 'align_justify_pro',
                 'Alinhar texto justificadamente',
-                isSEI_5 ? 'fab fa-align-justify roxoColor' : icon16baseAlignJustify
+                isNewEditor ? 'fab fa-align-justify roxoColor' : icon16baseAlignJustify
             ) +
         '</div>' +
         htmlButtonPro(
             'getAlignButtom',
             'align_pro',
             'Alinhar texto roxoColor',
-            isSEI_5 ? 'fab fa-align-left roxoColor' : icon16baseAlignCenter
+            isNewEditor ? 'fab fa-align-left roxoColor' : icon16baseAlignCenter
         );
 
     const htmlButtonAfterLetters = 
@@ -155,26 +158,26 @@ function htmlButton(status) {
             'getCapLetterButtom', 
             'capletter_pro', 
             'Primeira Letra Mai\u00FAscula (Exceto artigos e preposi\u00E7\u00F5es)', 
-            isSEI_5 ? 'fab fa-font-case cianoColor' : icon16baseCapLetter
+            isNewEditor ? 'fab fa-font-case cianoColor' : icon16baseCapLetter
         ) +
         htmlButtonPro(
             'getFontSizeUpButtom', 
             'fontsize_up_pro', 
             'Aumentar tamanho da fonte', 
-            isSEI_5 ? 'fab fa-sort-alpha-up cianoColor' : icon16baseFonteSizeUp
+            isNewEditor ? 'fab fa-sort-alpha-up cianoColor' : icon16baseFonteSizeUp
         ) +
         htmlButtonPro(
             'getFontSizeDownButtom', 
             'fontsize_down_pro', 
             'Diminuir tamanho da fonte cianoColor', 
-            isSEI_5 ? 'fab fa-sort-alpha-down cianoColor' : icon16baseFonteSizeDown
+            isNewEditor ? 'fab fa-sort-alpha-down cianoColor' : icon16baseFonteSizeDown
         );
 
     const htmlButtonAfterSave = htmlButtonPro(
         'getAutoSaveButtom',
         'autosave',
         `Salvamento autom\u00E1tico (${autoSaveInterval} ${autoSaveInterval === 1 ? 'minuto' : 'minutos'})`,
-        isSEI_5 ? '' : icon16baseAutoSave
+        isNewEditor ? '' : icon16baseAutoSave
     );
 
     const htmlButton = 
@@ -183,70 +186,70 @@ function htmlButton(status) {
                 'getPlataformAIButtom',
                 'openai',
                 'Inserir texto de intelig\u00EAncia artificial',
-                isSEI_5 ? 'fab fa-robot roxoColor' : icon16baseOpenAI
+                isNewEditor ? 'fab fa-robot roxoColor' : icon16baseOpenAI
             ) : '') +
         htmlButtonPro(
             'importDocButtom',
             'externalfile',
             'Inserir conte\u00FAdo externo',
-            isSEI_5 ? 'fab fa-upload vermelhoColor' : icon16baseImport
+            isNewEditor ? 'fab fa-upload vermelhoColor' : icon16baseImport
         ) +
         htmlButtonPro(
             'getLinkLegisButtom',
             'linklegis',
             'Adicionar link de legisla\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-balance-scale-right verdeColor' : icon16baseLegis
+            isNewEditor ? 'fab fa-balance-scale-right verdeColor' : icon16baseLegis
         ) +
         (frmEditor.length ? 
             htmlButtonPro(
                 'getCitacaoDocumentoButtom',
                 'citacaodoc',
                 'Inserir refer\u00EAncia de documento do processo',
-                isSEI_5 ? 'fab fa-folder-tree amareloColor' : icon16baseCitaDocumento
+                isNewEditor ? 'fab fa-folder-tree amareloColor' : icon16baseCitaDocumento
             ) : '') +
         htmlButtonPro(
             'getNotaRodapeButtom',
             'notarodape',
             'Inserir nota de rodap\u00E9',
-            isSEI_5 ? 'fab fa-comment-alt-dots cianoColor' : icon16baseNotaRodape
+            isNewEditor ? 'fab fa-comment-alt-dots cianoColor' : icon16baseNotaRodape
         ) +
         htmlButtonPro(
             'getRefInternaButtom',
             'refinterna',
             'Inserir refer\u00EAncia interna',
-            isSEI_5 ? 'fab fa-retweet cianoColor' : icon16baseRefInterna
+            isNewEditor ? 'fab fa-retweet cianoColor' : icon16baseRefInterna
         ) +
         htmlButtonPro(
             'getSumarioButtom',
             'sumario',
             'Inserir sum\u00E1rio',
-            isSEI_5 ? 'fab fa-list-alt roxoColor' : icon16baseSumario
+            isNewEditor ? 'fab fa-list-alt roxoColor' : icon16baseSumario
         ) +
         (frmEditor.length == 0 ? '' : 
             htmlButtonPro(
                 'getDadosProcessoButtom',
                 'dadosprocesso',
                 'Inserir dados do processo',
-                isSEI_5 ? 'fab fa-book-spells rosaColor' : icon16baseDadosProcesso
+                isNewEditor ? 'fab fa-book-spells rosaColor' : icon16baseDadosProcesso
             )
         ) +
         htmlButtonPro(
             'getTinyUrlButtom',
             'tinyurl',
             'Gerar link curto do TinyURL',
-            isSEI_5 ? 'fab fa-compress-arrows-alt azulColor' : icon16baseTinyUrl
+            isNewEditor ? 'fab fa-compress-arrows-alt azulColor' : icon16baseTinyUrl
         ) +
         htmlButtonPro(
             'getQrCodeButtom',
             'qrcode',
             'Gerar C\u00F3digo QR',
-            isSEI_5 ? 'fab fa-qrcode rosaColor' : icon16baseQrCode
+            isNewEditor ? 'fab fa-qrcode rosaColor' : icon16baseQrCode
         ) +
         htmlButtonPro(
             'getPageBreakButtom',
             'pagebreak',
             'Inserir Quebra de P\u00E1gina',
-            isSEI_5 ? 'fab fa-page-break azulColor' : icon16basePageBreak,
+            isNewEditor ? 'fab fa-page-break azulColor' : icon16basePageBreak,
             '', 
             isSeiSlim ? '' : '!important'
         ) +
@@ -254,31 +257,31 @@ function htmlButton(status) {
             'getSessionBreakButtom',
             'sessionbreak',
             'Inserir Quebra de Se\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-page-break verdeColor' : icon16baseSessionBreak
+            isNewEditor ? 'fab fa-page-break verdeColor' : icon16baseSessionBreak
         ) +
         htmlButtonPro(
             'getLatexButtom',
             'latex',
             'Inserir Equa\u00E7\u00E3o',
-            isSEI_5 ? 'fab fa-sigma vermelhoColor' : icon16baseLatex
+            isNewEditor ? 'fab fa-sigma vermelhoColor' : icon16baseLatex
         ) +
         htmlButtonPro(
             'getProcessoPublicoButton',
             'processopublico',
             'Adicionar Link de Documento P\u00FAblico',
-            isSEI_5 ? 'fab fa-globe-americas azulColor' : icon16baseDocPublico
+            isNewEditor ? 'fab fa-globe-americas azulColor' : icon16baseDocPublico
         ) +
         htmlButtonPro(
             'getMinutaWatermarkButton',
             'watermark',
             'Adicionar Marca D\'\u00E1gua de MINUTA/MODELO',
-            isSEI_5 ? 'fab fa-layer-plus verdeColor' : icon16baseWatermark
+            isNewEditor ? 'fab fa-layer-plus verdeColor' : icon16baseWatermark
         ) +
         htmlButtonPro(
             'pageImageBackgroundButtom',
             'pageimagebackground',
             'Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o',
-            isSEI_5 ? 'fab fa-print roxoColor' : icon16baseImagePage
+            isNewEditor ? 'fab fa-print roxoColor' : icon16baseImagePage
         );
 
     const htmlButtonReview = checkConfigValue('revisaotexto') ? 
@@ -286,13 +289,13 @@ function htmlButton(status) {
             'getReviewButton',
             'review',
             'Ativar revis\u00E3o de texto',
-            isSEI_5 ? 'fab fa-user-edit azulColor' : icon16baseReview
+            isNewEditor ? 'fab fa-user-edit azulColor' : icon16baseReview
         ) + 
         htmlButtonPro(
             'getCtrReviewButton',
             'ctr_review',
             'Gerenciar revis\u00F5es de texto',
-            isSEI_5 ? 'fab fa-comments azulColor' : icon16baseCtrReview
+            isNewEditor ? 'fab fa-comments azulColor' : icon16baseCtrReview
         ) : '';
     
     const htmlButtonDitado = checkConfigValue('ditado') ? 
@@ -300,13 +303,13 @@ function htmlButton(status) {
             'getDitadoButton',
             'ditado',
             'Ativar ditado de texto',
-            isSEI_5 ? 'fab fa-microphone-alt rosaColor' : URL_SPRO + 'icons/editor/webspeech.png'
+            isNewEditor ? 'fab fa-microphone-alt rosaColor' : URL_SPRO + 'icons/editor/webspeech.png'
         ) + 
         htmlButtonPro(
             'getCtrDitadoButton',
             'ctr_ditado',
             'Gerenciar configura\u00E7\u00F5es do ditado',
-            isSEI_5 ? 'fab fa-cogs rosaColor' : URL_SPRO + 'icons/editor/webspeech-settings.png'
+            isNewEditor ? 'fab fa-cogs rosaColor' : URL_SPRO + 'icons/editor/webspeech-settings.png'
         ) : '';
     
     const htmlButtonNewStyle = isNewSEI ? 
@@ -314,7 +317,7 @@ function htmlButton(status) {
             'getNewStyleButton',
             'newstyle',
             'Ativar estilo avan\u00E7ado',
-            isSEI_5 ? 'fab fa-palette azulColor' : icon16baseNewStyle,
+            isNewEditor ? 'fab fa-palette azulColor' : icon16baseNewStyle,
             '', 
             localStorage.getItem('seiSlim_editor') ? 'cke_button_on' : 'cke_button_off'
         ) : '';
@@ -324,13 +327,13 @@ function htmlButton(status) {
             'getMarkSigiloButton',
             'mark_sigilo_pro',
             'Adicionar / Remover marca de sigilo no texto',
-            isSEI_5 ? 'fab fa-lock-open-alt azulColor' : icon16baseMarkSigilo
+            isNewEditor ? 'fab fa-lock-open-alt azulColor' : icon16baseMarkSigilo
         ) +
         htmlButtonPro(
             'getBoxSigiloButton',
             'boxsigilo',
             'Gerenciar marcas de sigilo do documento',
-            isSEI_5 ? 'fab fa-user-unlock azulColor' : icon16baseBoxSigilo
+            isNewEditor ? 'fab fa-user-unlock azulColor' : icon16baseBoxSigilo
         );
     
     const htmlButtonLegis = 
@@ -338,21 +341,21 @@ function htmlButton(status) {
             'getLegisButtom',
             'legis',
             'Enumerar norma',
-            isSEI_5 ? 'fab fa-pi azulColor' : icon16baseSEILegis
+            isNewEditor ? 'fab fa-pi azulColor' : icon16baseSEILegis
         ) +
         htmlButtonPro(
             'helpLegisButtom',
             'legis_help',
             'Ajuda',
-            isSEI_5 ? 'fab fa-info-circle azulColor' : window.location.origin+'/sei/editor/ck/skins/moonocolor/icons.png',
-            isSEI_5 ? '' : ';background-position: 0 -168px;',
+            isNewEditor ? 'fab fa-info-circle azulColor' : window.location.origin+'/sei/editor/ck/skins/moonocolor/icons.png',
+            isNewEditor ? '' : ';background-position: 0 -168px;',
             ''
         );
-    const blockHtmlButton = isSEI_5
+    const blockHtmlButton = isNewEditor
         ? htmlButton
         : `<span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">${htmlButton}</span>`;
 
-    const htmlNewBlock = isSEI_5 
+    const htmlNewBlock = isNewEditor 
         ? htmlButtonSigilo+htmlButtonReview+htmlButtonLegis+htmlButtonDitado+htmlButtonNewStyle
         : `
             <span class="cke_iconPro cke_toolgroup ${classStatus}" role="presentation">
@@ -378,19 +381,24 @@ function htmlButton(status) {
 function addButton(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     setTimeout(function(){ 
-        if (isSEI_5) {
-            $('.ck.ck-toolbar__items').append(htmlButton('').default);
-            $('button[data-cke-tooltip-text="Inserir tabela"]').closest('.ck.ck-dropdown').after(htmlButton('').tables);
-            // $('button[data-cke-tooltip-text="Transformar o texto em MAI\u00DASCULO ou min\u00FAsculo"]').closest('.ck.ck-dropdown').append(htmlButton('').afterletters);
-            // $('button.copiar-formatacao__toolbar-button').before(htmlButton('').beforeCut);
-            $('button[data-cke-tooltip-text="Lista numerada"]').closest('.ck.ck-dropdown').after(htmlButton('').beforeList);
-            $('span.ck-file-dialog-button').after(htmlButton('').afterImage);
-            $('.ck.ck-toolbar__items').append(htmlButton('').newBlock);
+        if (isNewEditor) {
+            var items = $('.ck.ck-toolbar__items');
+            // Fallback: quando o seletor de refer\u00EAncia n\u00E3o existe (comum entre builds
+            // do CK5 customizadas), caimos no append ao container principal.
+            var insertAfterOrAppend = function(selector, html) {
+                var ref = $(selector);
+                if (ref.length) ref.after(html); else items.append(html);
+            };
+            items.append(htmlButton('').default);
+            insertAfterOrAppend('button[data-cke-tooltip-text="Inserir tabela"]', htmlButton('').tables);
+            insertAfterOrAppend('button[data-cke-tooltip-text="Lista numerada"]', htmlButton('').beforeList);
+            insertAfterOrAppend('span.ck-file-dialog-button', htmlButton('').afterImage);
+            items.append(htmlButton('').newBlock);
             setClickButtons();
             initFunctions();
         } else {
             if ( $(txaEditor).length && !$('.cke_buttonPro').length ) {
-                    if ( !$('#idEditor').length ) { $(isSEI_5 ? 'body' : '#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
+                    if ( !$('#idEditor').length ) { $(isNewEditor ? 'body' : '#divComandos').append('<input style="display:none" type="hidden" id="idEditor">'); }
                         $(txaEditor).each(function(index){ 
                             var idEditor = $(this).attr('id').replace('cke_', '');
                             if ( $('iframe[title*="'+idEditor+'"]').contents().find('body').attr('contenteditable') == 'true' ) {
@@ -425,7 +433,7 @@ function addButton(TimeOut = 9000) {
     }, 500);
 }
 const htmlButtonPro = (classClick, cke_class, title, icon, extraStyle = '', important = '') => {
-    const htmlButton = isSEI_5
+    const htmlButton = isNewEditor
     ? `
         <button class="ck ck-button ck-off cke_iconPro cke_buttonPro ${classClick}" type="button" style="${extraStyle} ${important}" aria-labelledby="ck-editor__aria-label_${classClick}" tabindex="-1" aria-pressed="false" data-cke-tooltip-text="${title}" data-cke-tooltip-position="s">
             <i class="${icon}"></i>
@@ -589,12 +597,8 @@ function setActionCheckbox(iframe) {
         }
     });
 }
-function getInsertCheckboxButtom() {
-    oEditor.focus();
-    oEditor.fire('saveSnapshot');
-    oEditor.insertHtml('<span class="ancoraSei checkboxSEI" data-id="'+randomString(16)+'" style="font-size: 1.5em;font-weight: bold;">&#9744;</span>');
-    oEditor.fire('saveSnapshot');
-}
+// getInsertCheckboxButtom() foi extraido para js/modules/editor/checkbox.js
+// (carregado antes deste monolito via SeiProEditorAdapter.loadModules).
 function repairBugChrome116(iframe) {
     if (!!window.chrome) {
         iframe.find('p').each(function(){
@@ -674,6 +678,49 @@ function setBgTableColor(this_) {
         $(this_).addClass('dark-mode-color-'+textColour);
     }
 }
+
+// =========================================================================
+// Limpeza de conteudo para o validador do SEI 5
+//
+// O SEI 5 recusa "Documento possui conteudo nao permitido" quando o HTML traz
+// residuos de editor (wrapper/atributos do CKEditor, marcadores {cke_protected})
+// ou de extensoes do navegador (Dark Reader, servicos de copia), alem de cores
+// em rgb()/rgba() \u2014 o SEI 5 so aceita hexadecimal. Esta rotina remove esse lixo
+// e converte as cores. Roda automaticamente na colagem e na saida de dados
+// (ver registrarLimpezaAutomaticaPro) e tambem pode ser chamada sob demanda
+// via limparEditorPro().
+// =========================================================================
+
+// Atributos que nunca devem ir no conteudo salvo (nome exato)
+var ATRIBUTOS_LIXO_PRO = [
+    'contenteditable', 'spellcheck', 'data-editor',
+    'data-processed', 'data-complete', 'data-hveid'
+];
+// ... e por prefixo (data-cke-saved-src/href, data-sfc-*, data-copy-service-*)
+var PREFIXOS_ATRIBUTO_LIXO_PRO = ['data-cke-saved-', 'data-sfc-', 'data-copy-service'];
+// Classes a remover (residuos do CKEditor e do realce de contraste do dark mode)
+var PREFIXOS_CLASSE_LIXO_PRO = ['cke_', 'dark-mode-'];
+
+// Heuristica barata: so vale a pena parsear/limpar se houver indicio de lixo.
+// precisaLimparEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Converte todo rgb()/rgba() de uma string para #rrggbb (reusa o rgbToHex global).
+// rgbParaHexPro() -> js/modules/editor/ (extraido para modulo)
+
+// Limpa, in-place, um no raiz (Element ou Document) e todos os descendentes.
+// limparRaizEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Versao string: recebe HTML, devolve HTML limpo (desembrulhando o <body>).
+// limparHtmlEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Aplica a limpeza a uma instancia do CKEditor (getData -> limpa -> setData).
+// Retorna true se algo mudou; reabilita o botao Salvar nesse caso.
+// limparEditorPro() -> js/modules/editor/ (extraido para modulo)
+
+// Registra a limpeza AUTOMATICA na instancia: na colagem e em toda saida de
+// dados (getData) \u2014 que e o que o SEI serializa ao salvar. Idempotente.
+// registrarLimpezaAutomaticaPro() -> js/modules/editor/ (extraido para modulo)
+
 function extrairTextoComNumeracao(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
@@ -801,6 +848,7 @@ function getSelectedHtmlFromCKEditor() {
 function setCKEDITOR_instances(force = false) {
     for(var id in CKEDITOR.instances) {
         CKEDITOR.instances[id].setKeystroke(CKEDITOR.ALT + 48 /*0*/, false); // desabilita o popup de acessibilidade, que impede acessar o caractere \u00BA no mac (option+0)
+        registrarLimpezaAutomaticaPro(CKEDITOR.instances[id]); // limpeza automatica de conteudo nao permitido (SEI 5)
         CKEDITOR.instances[id].on('focus', function(e) {
             setCKEDITOR_SEIPRO(e);
         });
@@ -867,41 +915,9 @@ function getAutoSave(this_) {
     */
 }
 // Adiciona quebra de pagina
-function getPageBreak(this_) {
-    setParamEditor(this_);
-    
-    var htmlBreakPage = '<div class="pageBreakPro" style="page-break-after: always"></div>';
-    var select = oEditor.getSelection().getStartElement();
-    var pElement = $(select.$).closest('p');
-    if ( pElement.length ) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        if (frmEditor.length) {
-            iframeEditor.find(pElement).before(htmlBreakPage);
-        } else {
-            pElement.before(htmlBreakPage);
-        }
-        oEditor.fire('saveSnapshot');
-    }
-}
-// Adiciona quebra de pagina
-function getSessionBreak(this_) {
-    setParamEditor(this_);
-    
-    var htmlSessionPage = '<p class="sessionBreakPro" style="counter-reset: paragrafo-n1 paragrafo-n2 paragrafo-n3 paragrafo-n4 romano_maiusculo letra_minuscula item-n1 item-n2 item-n3 item-n4 "></p>';
-    var select = oEditor.getSelection().getStartElement();
-    var pElement = $(select.$).closest('p');
-    if ( pElement.length ) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        if (frmEditor.length) {
-            iframeEditor.find(pElement).before(htmlSessionPage);
-        } else {
-            pElement.before(htmlSessionPage);
-        }
-        oEditor.fire('saveSnapshot');
-    }
-}
+// getPageBreak() -> js/modules/editor/page-break.js
+// getSessionBreak() -> js/modules/editor/session-break.js
+// (extraidos; carregados antes deste monolito via loadModules)
 function setNextElemEditor(element, callback = false) {
     var editorIfm = $('iframe[title*="'+idEditor+'"]');
     var selWin = editorIfm[0].contentWindow.getSelection();
@@ -911,388 +927,20 @@ function setNextElemEditor(element, callback = false) {
     if (selEnd[0] != element[0]) setNextElemEditor(element.next(), callback);
 }
 // Altera o alinhamento do texto
-function setAlignText(this_, mode) {
-    setParamEditor(this_);
-    var select = oEditor.getSelection().getStartElement();
-    var elementInit = $(select.$);
-    setNextElemEditor(elementInit, function(element){
-        var p = element.closest('p').attr('class');
-        var newClass = '';
-        if ( p == 'Texto_Alinhado_Esquerda' || p == 'Texto_Centralizado' || p == 'Texto_Alinhado_Direita' || p == 'Texto_Justificado' ) {
-            if ( mode == 'left' ) { newClass = 'Texto_Alinhado_Esquerda' }
-            if ( mode == 'center' ) { newClass = 'Texto_Centralizado' }
-            if ( mode == 'right' ) { newClass = 'Texto_Alinhado_Direita' }
-            if ( mode == 'justify' ) { newClass = 'Texto_Justificado' }
-        } else if ( p == 'Tabela_Texto_Alinhado_Esquerda' || p == 'Tabela_Texto_Centralizado' || p == 'Tabela_Texto_Alinhado_Direita' || p == 'Tabela_Texto_Justificado' ) {
-            if ( mode == 'left' ) { newClass = 'Tabela_Texto_Alinhado_Esquerda' }
-            if ( mode == 'center' ) { newClass = 'Tabela_Texto_Centralizado' }
-            if ( mode == 'right' ) { newClass = 'Tabela_Texto_Alinhado_Direita' }
-            if ( mode == 'justify' ) { newClass = 'Tabela_Texto_Justificado' }
-        } else if ( p == 'Texto_Alinhado_Esquerda_Maiusc' || p == 'Texto_Centralizado_Maiusculas' || p == 'Texto_Alinhado_Direita_Maiusc' || p == 'Texto_Justificado_Maiusculas' ) {
-            if ( mode == 'left' ) { newClass = 'Texto_Alinhado_Esquerda_Maiusc' }
-            if ( mode == 'center' ) { newClass = 'Texto_Centralizado_Maiusculas' }
-            if ( mode == 'right' ) { newClass = 'Texto_Alinhado_Direita_Maiusc' }
-            if ( mode == 'justify' ) { newClass = 'Texto_Justificado_Maiusculas' }
-        }
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        if ( newClass != '' ) { 
-            element.closest('p').removeAttr('style').attr('class', newClass); 
-        } else {
-            element.closest('p').removeAttr('style').css('text-align', mode);
-        }
-        oEditor.fire('saveSnapshot');
-        console.log('>> setAlignText ');
-    });
-}
-function openAlignText(this_) {
-    if ($(this_).hasClass('cke_button_on')) {
-        $(this_).addClass('cke_button_off').removeClass('cke_button_on').closest('.cke_top').find('.divAlignText').hide();
-    } else {
-        $(this_).addClass('cke_button_on').removeClass('cke_button_off').closest('.cke_top').find('.divAlignText').show();
-    }
-}
-function closeAlignText() {  
-    //var idEditor = $('#idEditor').val();
-    $('#cke_'+idEditor).find('.getAlignButtom').addClass('cke_button_off').removeClass('cke_button_on').closest('.cke_top').find('.divAlignText').hide();
-}
+// setAlignText() -> js/modules/editor/ (extraido para modulo)
+// openAlignText() -> js/modules/editor/ (extraido para modulo)
+// closeAlignText() -> js/modules/editor/ (extraido para modulo)
 
 // Modifica o tamanho da fonte
-function changeFontSize(this_, mode) {
-    setParamEditor(this_);
-    var select = oEditor.getSelection().getStartElement();
-    var fontSize = parseFloat($(select.$).css('font-size'));
-    var newFontSize = (mode=='up') ? fontSize+2 : fontSize-2;
-
-    var style = new CKEDITOR.style({
-        element: 'span',
-        attributes: {
-            'style': 'font-size: '+newFontSize+'px'
-        }
-    });
-    if (newFontSize > 7 && newFontSize < 70 && hasSelection(oEditor)) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        oEditor.applyStyle(style);
-        oEditor.fire('saveSnapshot');
-    }
-}
+// changeFontSize() -> js/modules/editor/ (extraido para modulo)
 // Adiciona/Remove marca de sigilo
-function getMarkSigilo(this_) {
-    setParamEditor(this_);
-    var select = oEditor.getSelection().getStartElement();
-    var checkClass = $(select.$).closest('span').hasClass('sigiloSEI');
-
-    var style = new CKEDITOR.style({
-        element: 'span',
-        attributes: {
-            'class': 'sigiloSEI'
-        }
-    });
-    if (hasSelection(oEditor) && !checkClass) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        oEditor.applyStyle(style);
-        oEditor.fire('saveSnapshot');
-    } else if (checkClass) {
-        var element = $(select.$).closest('.sigiloSEI');
-            element.after(element.html()).remove();
-        console.log(element.html());
-    }
-}
-function getTarjaSigilo(this_) {
-    setParamEditor(this_);
-
-    var style = new CKEDITOR.style({
-        element: 'span',
-        attributes: {
-            'class': 'sigiloSEI'
-        }
-    });
-    if (hasSelection(oEditor)) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        oEditor.applyStyle(style);
-        actionsMarkSigilo(undefined, 'apply');
-        oEditor.fire('saveSnapshot');
-    }
-}
-function getBoxSigilo(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('SigiloSEI');
-}
-function actionsMarkSigilo(this_, mode, text = false, increment = false) {
-    var _this = $(this_);
-    var _parent = _this.closest('.cke_dialog_page_contents');
-    var result = '';
-    if (mode == 'replace') {
-        var textFind = (text) ? text : _parent.find('#cke_inputSigilo2_textInput').val().trim();
-        if (textFind != '') {
-            var i_increment = (increment) ? parseInt($('#tabSigilo2_result .count').length ? $('#tabSigilo2_result .count').text() : 0) : 0; console.log(i_increment);
-            var i = 0;
-            var displayResult = '';
-            var tagSigilo = iframeEditor.find('p:contains("'+textFind+'") span.sigiloSEI');
-            if (tagSigilo.length) { tagSigilo.after(tagSigilo.html()).remove() }
-            var matches = iframeEditor.find('p').map(function(){ return $(this).text() }).get().join(' ').match(new RegExp('\\b'+textFind+'\\b', 'igm'));
-                i = matches ? matches.length : 0;
-            if (i > 0) {
-                oEditor.focus();
-                oEditor.fire('saveSnapshot');
-                iframeEditor.find('p').wrapInTag({'class': 'sigiloSEI', 'words' : [textFind]});
-
-                oEditor.fire('saveSnapshot');
-                matches = iframeEditor.find('p').map(function(){ return $(this).text() }).get().join(' ').match(new RegExp('\\b'+textFind+'\\b', 'igm'));
-                i = matches ? matches.length : 0;
-                i = i+i_increment;
-                displayResult = '  <i class="fas fa-check-circle verdeColor"></i> <span class="count">'+i+'</span> '+(i==1 ? 'marca' : 'marcas')+' '+(i==1 ? 'adicionada' : 'adicionadas')+' com sucesso!';
-            } else {
-                displayResult = '  <i class="fas fa-info-circle" style="color: #007fff;"></i> Nenhum texto encontrado!';
-            }
-            result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                         displayResult+
-                         '</label>';
-        } else {
-            result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                     '  <i class="fas fa-info-circle" style="color: #007fff;"></i> Digite um texto para adicionar a marca de sigilo'+
-                     '</label>';
-        }
-        _parent.find('#tabSigilo2_result').show().html(result);
-        $('#tabSigilo3_result').hide().html('');
-        htmlTabSigiloResult();
-    } else if (mode == 'remove') {
-       var i = 0;
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        iframeEditor.find('span.sigiloSEI').each(function(){
-            $(this).after($(this).html()).remove();
-            i++;
-        });
-        iframeEditor.find('span.sigiloSEI_tarja').each(function(){
-            if (typeof $(this).data('text') !== 'undefined' && $(this).data('text') != '') {
-                $(this).after($(this).data('text')).remove();
-                i++;
-            }
-        });
-        oEditor.fire('saveSnapshot');
-        var displayResult = (i==0) 
-                    ? '  <i class="fas fa-info-circle" style="color: #007fff;"></i> Nenhuma marca encontrada!'
-                    : '  <i class="fas fa-check-circle verdeColor"></i> '+i+' '+(i==1 ? 'marca' : 'marcas')+' '+(i==1 ? 'removida' : 'removidas')+' com sucesso!';
-            result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                     displayResult+
-                     '</label>';
-            _parent.find('#tabSigilo3_result').show().html(result);
-            $('#tabSigilo2_result').hide().html('');
-            htmlTabSigiloResult();
-    } else if (mode == 'apply') {
-        var i = 0;
-        var redactor = '\u2588';
-            oEditor.focus();
-            oEditor.fire('saveSnapshot');
-            iframeEditor.find('span.sigiloSEI').each(function(){
-                var rand = randomNumber(8, 15);
-                $(this).data('text', $(this).html()).text(redactor.repeat(rand)).attr('class', 'sigiloSEI_tarja');
-                i++;
-            }); 
-            oEditor.fire('saveSnapshot');
-            if (i > 0) {
-                result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                         '  <i class="fas fa-check-circle verdeColor"></i> '+i+' '+(i==1 ? 'marca' : 'marcas')+' '+(i==1 ? 'tarjada' : 'tarjadas')+' com sucesso!<br>'+
-                         '  <i class="fas fa-exclamation-triangle laranjaColor"></i>  '+(i==1 ? 'Esta marca tarjada poder\u00E1 ser revertida' : 'Estas marcas tarjadas poder\u00E3o ser revertidas')+' na aba "Remover marcas"<br> somente enquanto aberto este editor de documentos.'+
-                         '</label>';
-                _parent.find('#tabSigilo1_result').show().html(result);
-            } else {
-                htmlTabSigiloResult();
-            }
-            $('#tabSigilo2_result').hide().html('');
-            $('#tabSigilo3_result').hide().html('');
-            rodapeSigiloMark();
-    } else if (mode == 'email_cpf') {
-        oEditor.focus();
-        $('#tabSigilo2_result').html('');
-        var arrayEmails = extractEmails(iframeEditor.text());
-            arrayEmails = (arrayEmails.length) ? uniqPro(arrayEmails) : [];
-        var arrayCPFs = extractCPFs(iframeEditor.text());
-            arrayCPFs = (arrayCPFs.length) ? uniqPro(arrayCPFs) : [];
-        var arrayDadosSensiveis = $.merge(arrayCPFs, arrayEmails);
-            if (arrayDadosSensiveis.length) {
-                $.each(arrayDadosSensiveis, function(i,v){
-                    actionsMarkSigilo(this_, 'replace', v, true);
-                });
-            }
-    }
-}
-function rodapeSigiloMark() {
-    var lastFrame = false;
-    var countMarks = 0;
-    $('iframe.cke_wysiwyg_frame').each(function(index){
-        var iframe = $(this).contents();
-        if ( iframe.find('body').attr('contenteditable') == 'true' ) {
-            lastFrame = iframe;
-            countMarks = countMarks+iframe.find('.sigiloSEI_tarja').length;
-        }
-    });
-    lastFrame.find('body .sigiloSEI_sigilo_mark').remove();
-    if (countMarks > 0) {
-        lastFrame.find('body').append('<p class="sigiloSEI_sigilo_mark" contenteditable="false" style="font-size: 6pt;color: #ccc;font-family: monospace;">#_contem_'+countMarks+'_marcas_sigilo</p>');
-    }
-}
-function htmlTabSigiloResult() {
-    var result = '';
-    var tagSigilo = iframeEditor.find('p span.sigiloSEI');
-    var i = tagSigilo.length;
-    var iconMarkSigilo = $('#cke_'+idEditor).find('.getMarkSigiloButton .cke_button_icon').attr('style');
-    if (i == 0) { 
-        result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                  '  <i class="fas fa-info-circle" style="color: #007fff;"></i> Nenhuma marca de sigilo no documento! Adicione marcas de sigilo na aba <br>'+
-                  ' "Localizar texto" ou adicione manualmente com o bot\u00E3o <span style="width: 16px; height: 16px; display: inline-block; '+iconMarkSigilo+'">&nbsp;</span>';
-                  '</label>';
-        $('#tabSigilo1_result').show().html(result);
-    } else {
-        result =  '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                  '  <i class="fas fa-info-circle" style="color: #007fff;"></i> '+i+' '+(i==1 ? 'marca' : 'marcas')+' de sigilo '+(i==1 ? 'encontrada' : 'encontradas')+' no documento! <br>'+
-                  '</label>';
-    }
-    $('#tabSigilo1_result').show().html(result);
-}
-function getDialogSigilo() {
-    CKEDITOR.dialog.add( 'SigiloSEI', function(editor)
-      {
-         return {
-            title : 'Gerenciar marcas de sigilo do documento',
-            minWidth : 700,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.okButton ],
-            onShow : function() {
-                setTimeout(function(){ 
-                    $('.tabSigilo_result').html('').hide();
-                    htmlTabSigiloResult();
-                    var textSelected = editor.getSelection().getSelectedText();
-                    $('#cke_inputSigilo2_textInput').val(textSelected);
-                }, 500);
-            },
-            contents :
-            [
-               {
-                  id : 'tab2',
-                  label : '1. Localizar texto e dados pessoais',
-                  elements :
-                  [
-                    {
-                        type: 'html',
-                        html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                              ' <tbody>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo2_label" for="cke_inputSigilo2_textInput">Localizar texto e adicionar marca <br>de sigilo em todo o documento</label>'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                              '             <span class="cke_dialog_ui_labeled_content" id="cke_inputSigilo2_uiElement">'+
-                              '                 <div class="cke_dialog_ui_input_text" role="presentation" style="width:200px">'+
-                              '                     <input class="cke_dialog_ui_input_text" id="cke_inputSigilo2_textInput" type="text" aria-labelledby="cke_inputSigilo2_label">'+
-                              '                 </div>'+
-                              '             </span>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                              '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'replace\')" title="Adicionar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo2_label" id="buttonSigilo2_uiElement">'+
-                              '                 <span id="buttonSigilo2_label" class="cke_dialog_ui_button">Adicionar</span>'+
-                              '             </a>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:20px 0 0">'+
-                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo2_label" for="cke_inputSigilo2_textInput">Localizar dados pessoais como <br>e-mails e CPFs em todo o documento</label>'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:20px 0 0">'+
-                              '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'email_cpf\')" title="Localizar dados pessoais" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo2_label" id="buttonSigilo2_uiElement">'+
-                              '                 <span id="buttonSigilo2_label" class="cke_dialog_ui_button">Localizar dados pessoais</span>'+
-                              '             </a>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              ' </tbody>'+
-                              '</table>'+
-                              '<div id="tabSigilo2_result" class="tabSigilo_result" style="display:none; margin-top: 15px;"></div>'
-             		}
-                  ]
-               }, {
-                id : 'tab1',
-                label : '2. Tarjar marcas de sigilo',
-                elements :
-                [
-                  {
-                      type: 'html',
-                      html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                            ' <tbody>'+
-                            '     <tr class="cke_dialog_ui_hbox">'+
-                            '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                            '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo1_label" for="cke_inputSigilo1_textInput">Aplicar tarja de sigilo <br> no documento</label>'+
-                            '         </td>'+
-                            '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                            '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'apply\')" title="Aplicar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo1_label" id="buttonSigilo1_uiElement">'+
-                            '                 <span id="buttonSigilo1_label" class="cke_dialog_ui_button">Aplicar</span>'+
-                            '             </a>'+
-                            '         </td>'+
-                            '     </tr>'+
-                            ' </tbody>'+
-                            '</table>'+
-                            '<div id="tabSigilo1_result" class="tabSigilo_result" style="display:none; margin-top: 15px;"></div>'
-                   }
-                ]
-             }, {
-                  id : 'tab3',
-                  label : 'Remover marcas',
-                  elements :
-                  [
-                    {
-                        type: 'html',
-                        html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                              ' <tbody>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo_label" for="cke_inputSigilo_textInput">Remover todas as marcas <br>de sigilo no documento</label>'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                              '             <a style="user-select: none;" onclick="actionsMarkSigilo(this, \'remove\')" title="Remover" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo3_label" id="buttonSigilo3_uiElement">'+
-                              '                 <span id="buttonSigilo3_label" class="cke_dialog_ui_button">Remover</span>'+
-                              '             </a>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              ' </tbody>'+
-                              '</table>'+
-                              '<div id="tabSigilo3_result" class="tabSigilo_result" style="display:none; margin-top: 15px;"></div>'+
-                              '<div id="tabSigilo3_info" style="margin-top: 15px;">'+
-                              '     <label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                              '       <i class="fas fa-exclamation-triangle laranjaColor"></i> Marcas de sigilo j\u00E1 tarjadas n\u00E3o poder\u00E3o ser revertidas ap\u00F3s salvar e abandonar <br>este editor de documentos.'+
-                              '     </label>'+
-                              '</div>'
-             		}
-                  ]
-               }, {
-                  id : 'tab4',
-                  label : 'Guia r\u00E1pido',
-                  elements :
-                  [
-                    {
-                        type: 'html',
-                        html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                              ' <tbody>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:100%; padding:0px">'+
-                              '             <label class="cke_dialog_ui_labeled_label" id="cke_inputSigilo_label" for="cke_inputSigilo_textInput">Acesse o guia r\u00E1pido sobre como <a target="_blank" href="https://sei-pro.github.io/sei-pro/pages/SIGILODOC.html" class="linkDialog">Adicionar marca de sigilo e tarjas pretas de confidencialidade <i class="fas fa-external-link-alt bLink" style="font-size: 90%; text-decoration: underline;"></i></a></label>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              ' </tbody>'+
-                              '</table>'
-             		}
-                  ]
-               }
-            ]
-         };
-      } );
-}
+// getMarkSigilo() -> js/modules/editor/ (extraido para modulo)
+// getTarjaSigilo() -> js/modules/editor/ (extraido para modulo)
+// getBoxSigilo() -> js/modules/editor/ (extraido para modulo)
+// actionsMarkSigilo() -> js/modules/editor/ (extraido para modulo)
+// rodapeSigiloMark() -> js/modules/editor/ (extraido para modulo)
+// htmlTabSigiloResult() -> js/modules/editor/ (extraido para modulo)
+// getDialogSigilo() -> js/modules/editor/ (extraido para modulo)
 function setChosenInCke(multiple = false, max_width = '500px') {
     var minWidth = multiple ? '450px' : '200px';
     if (verifyConfigValue('substituiselecao')) {
@@ -1345,147 +993,13 @@ function getElementStyleSelected(element) {
     var superscript = (element.closest('sup').length) ? true : false;
     return {fontSize: fontSize, color: color, backgroundColor: backgroundColor, bold: bold, underline: underline, italic: italic, strike: strike, subscript: subscript, superscript: superscript}
 }
-function setCopyStyle(this_) {
-    setParamEditor(this_);
-    actionCopyStyle(oEditor);
-}
-function actionCopyStyle(editor) {
-    var select = editor.getSelection().getStartElement();
-    var element = $(select.$);
-    var style = getElementStyleSelected(element);
-    if ($('#cke_'+idEditor).find('.getCopyStyleButtom').hasClass('cke_button_on')) {
-        removeCopyStyle();
-    } else {
-        sessionStorage.setItem('copyStylePro', JSON.stringify(style));
-        element.closest('body').addClass('cke_copyformatting_active');
-        $('#cke_'+idEditor).find('.getCopyStyleButtom').addClass('cke_button_on').removeClass('cke_button_off');
-    }
-}
-function getCopyStyle() {
-    return JSON.parse(sessionStorage.getItem('copyStylePro'));
-}
-function applyCopyStyle() {
-    var select = oEditor.getSelection().getStartElement();
-    var element = $(select.$);
-    var p = element.closest('p').attr('class');
-    var style = getCopyStyle();
-    if (hasSelection(oEditor) || element.closest('body').hasClass('cke_copyformatting_active')) {
-        $('#cke_'+idEditor).find('.getCopyStyleButtom').removeClass('cke_button_disabled');
-    } else {
-        $('#cke_'+idEditor).find('.getCopyStyleButtom').addClass('cke_button_disabled');
-    }
-    if (typeof style !== 'undefined' && hasSelection(oEditor) && element.closest('body').hasClass('cke_copyformatting_active')) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        oEditor.fire('lockSnapshot');
-        oEditor.execCommand('removeFormat');
-        if (typeof style !== 'undefined' && style.backgroundColor && style.backgroundColor != '') { 
-            var styleBackgroundColor = new CKEDITOR.style({
-                element: 'span',
-                attributes: {
-                    'style': 'background-color: '+style.backgroundColor
-                }
-            });
-            oEditor.applyStyle(styleBackgroundColor); 
-        }
-        if (typeof style !== 'undefined' && style.fontSize > 0 ) { 
-            var styleFontSize = new CKEDITOR.style({
-                element: 'span',
-                attributes: {
-                    'style': 'font-size: '+style.fontSize+'px'
-                }
-            });
-            oEditor.applyStyle(styleFontSize); 
-        }
-        if (typeof style !== 'undefined' && style.bold) { oEditor.execCommand('bold'); }
-        if (typeof style !== 'undefined' && style.underline) { oEditor.execCommand('underline'); }
-        if (typeof style !== 'undefined' && style.italic) { oEditor.execCommand('italic'); }
-        if (typeof style !== 'undefined' && style.strike) { oEditor.execCommand('strike'); }
-        if (typeof style !== 'undefined' && style.subscript) { oEditor.execCommand('subscript'); }
-        if (typeof style !== 'undefined' && style.superscript) { oEditor.execCommand('superscript'); }
-        if (typeof style !== 'undefined' && style.color && style.color != '') { 
-            var styleColor = new CKEDITOR.style({
-                element: 'span',
-                attributes: {
-                    'style': 'color: '+style.color
-                }
-            });
-            oEditor.applyStyle(styleColor); 
-        }
-        if (!window.event.altKey) { removeCopyStyle(); }
-        element.closest('p').attr('class', p);
-        oEditor.fire('unlockSnapshot');
-        oEditor.fire('saveSnapshot');
-    }
-}
-function removeCopyStyle() {
-    var select = oEditor.getSelection().getStartElement();
-    var element = $(select.$);
-    element.closest('body').removeClass('cke_copyformatting_active');
-    sessionStorage.removeItem('copyStylePro');
-    $('#cke_'+idEditor).find('.getCopyStyleButtom').addClass('cke_button_off').removeClass('cke_button_on');
-}
-function menuCopyStyle( editor ) {
-    if ( editor.contextMenu && typeof editor.getMenuItem('copystyle') === 'undefined' ) {
-        editor.addMenuGroup( 'copystyleGroup', -10 * 3 );
-        editor.addMenuItem( 'copystyle', {
-            label: 'Copiar formata\u00E7\u00E3o',
-            icon: URL_SPRO+'icons/editor/copiarformatacao.png',
-            command: 'copystyle',
-            group: 'copystyleGroup'
-        });
-        editor.contextMenu.addListener( function( element ) {
-            if ( element.getAscendant( 'p', true ) && hasSelection(editor) ) {
-                return { copystyle: CKEDITOR.TRISTATE_OFF};
-            }
-        });
-        editor.addCommand( 'copystyle', {
-            exec: function( editor ) {
-                actionCopyStyle(editor);
-            }
-        });
-    }
-}
-function menuBlockEdition( editor ) {
-    if ( editor.contextMenu && typeof editor.getMenuItem('blockedition') === 'undefined' ) {
-        editor.addMenuGroup( 'blockGroup', -10 * 3 );
-        editor.addMenuItem( 'blockedition', {
-            label: 'Bloquear Edi\u00E7\u00E3o',
-            icon: URL_SPRO+'icons/editor/blockedition.png',
-            command: 'blockedition',
-            group: 'blockGroup'
-        });
-        editor.contextMenu.addListener( function( element ) {
-            if ( element.getAscendant( 'p', true ) && hasSelection(editor) ) {
-                return { blockedition: CKEDITOR.TRISTATE_OFF};
-            }
-        });
-        editor.addCommand( 'blockedition', {
-            exec: function( editor ) {
-                var sel = editor.getSelection();
-                var select = sel.getStartElement();
-
-                function setNextElem(element) {
-                    var editorIfm = $('iframe[title*="'+idEditor+'"]');
-                    var selWin = editorIfm[0].contentWindow.getSelection();
-                    var selEnd = $(selWin.anchorNode.parentNode);
-                    var selStart = $(selWin.focusNode.parentNode);
-                    var editable = typeof element.attr('contenteditable') !== 'undefined' && element.attr('contenteditable') == 'false' ? true : false;
-                        element.attr('contenteditable',editable);
-                        // console.log(editable, element.attr('contenteditable'), selEnd[0],  element[0]);
-                        if (!editable && selEnd[0] != element[0]) {
-                            setNextElem(element.next());
-                        }
-                }
-                
-                var element = $(select.$);
-                if (element.is('p')) {
-                    setNextElem(element);
-                } 
-            }
-        });
-    }
-}
+// setCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// actionCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// getCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// applyCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// removeCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// menuCopyStyle() -> js/modules/editor/ (extraido para modulo)
+// menuBlockEdition() -> js/modules/editor/ (extraido para modulo)
 function stylesEditorKeystroke() {
     if (getOptionsPro('stylesEditor')) {
         $.each(getOptionsPro('stylesEditor'), function(i, v){
@@ -1617,121 +1131,18 @@ function editImgPro( editor ) {
 }
 
 // Adiciona tabela rapida
-function hideQuickTable() {
-    $('.divQuickTable').each(function(){
-        $(this).html('').hide();
-    })
-    $('.getQuickTableButtom').addClass('cke_button_off').removeClass('cke_button_on');
-}
-function quickTableOver(this_) {
-    var rowThis = parseInt($(this_).attr('data-row'));
-    var colThis = parseInt($(this_).attr('data-col'));
-    var table = $(this_).closest('table');
-        table.find('td').removeClass('td_hover');
-    
-    if ( rowThis >= 3 && parseInt(table.find('tr:last td:first').attr('data-row')) > rowThis+1 ) {
-        table.find('tr:last').remove();
-        table.attr('data-row', (parseInt(table.attr('data-row'))-1));
-    }
-    if ( colThis >= 3 && parseInt(table.find('tr:last td:last').attr('data-col')) > colThis+1 ) {
-        table.find('tr :last-child').remove();
-        table.attr('data-col', (parseInt(table.attr('data-col'))-1));
-    }
-    table.find('td').each(function(){
-        var rowTd = parseInt($(this).attr('data-row'));
-        var colTd = parseInt($(this).attr('data-col'));
-        if ( rowTd <= rowThis && colTd <= colThis ) {
-            $(this).addClass('td_hover');
-        }
-    });
-    $(this_).closest('.divQuickTable').find('.quickTableInfo').html('Tabela '+(rowThis+1)+'x'+(colThis+1));
-    
-    if ( rowThis == parseInt(table.attr('data-row')) && rowThis < 49 ) { 
-        var tableAppend = $(this_).closest('table');
-        var rowLast = tableAppend.find('tr:last');
-        var rowNew = rowLast.clone().appendTo(tableAppend);
-            rowNew.find('td').each(function(index){
-                $(this).attr('data-row', (rowThis+1)).attr('data-col', index).removeClass('td_hover');
-            });
-            tableAppend.attr('data-row', (rowThis+1));
-    }
-    if ( colThis == parseInt(table.attr('data-col')) && colThis < 49 ) {
-        var tableAppend = $(this_).closest('table');
-            tableAppend.find('tr :last-child').each(function(){
-                var colNew = $(this).clone().attr('data-col', (colThis+1)).removeClass('td_hover');
-                var colNew_ = $(this).parent().append(colNew);
-            });
-            tableAppend.attr('data-col', (colThis+1));
-    }
-}
-function getQuickTable(this_) {
-    var rowDefault = 5;
-    var colDefault = 5;
-    var divQuickTable = $(this_).closest('.cke_toolgroup').find('.divQuickTable');
+// hideQuickTable() -> js/modules/editor/ (extraido para modulo)
+// quickTableOver() -> js/modules/editor/ (extraido para modulo)
+// getQuickTable() -> js/modules/editor/ (extraido para modulo)
 
-    if ( $(this_).hasClass('cke_button_off') ) {
-    var htmlTable = '<div class="quickTableInfo">Inserir Tabela</div>';
-        htmlTable += '<table data-row="'+(rowDefault-1)+'" data-col="'+(colDefault-1)+'">';
-        for (var i = 0; i < rowDefault; i++) {
-            htmlTable += '<tr>';
-            for (var j = 0; j < colDefault; j++) {
-                htmlTable += '<td onmouseout="quickTableOver(this);" onmouseover="quickTableOver(this);" data-row="'+i+'" data-col="'+j+'" onclick="quickTableClick(this)"></td>';
-            }
-            htmlTable += '</tr>';
-        }
-        htmlTable += '</table>';
-        divQuickTable.html(htmlTable).show();
-        $(this_).removeClass('cke_button_off').addClass('cke_button_on');
-    } else {
-        hideQuickTable();
-        $(this_).addClass('cke_button_off').removeClass('cke_button_on');
-    }
-}
-
-function quickTableClick(this_) {
-    setParamEditor(this_);
-    var row = $(this_).attr('data-row');
-    var col = $(this_).attr('data-col');
-    var idFirstTD = 'quickTablePos_'+randomString(8);
-    var htmlTable = '<table border="1" cellspacing="1" cellpadding="1" style="border-collapse:collapse; border-color:#646464;margin-left:auto; margin-right:auto; width:80%;">';
-        htmlTable += '  <tbody>';
-        for (var i = 0; i <= row; i++) {
-            htmlTable += '      <tr>';
-            for (var j = 0; j <= col; j++) {
-                var firstTD = ( i == 0 && j == 0 ) ? 'id="'+idFirstTD+'" ' : '';
-                htmlTable += '          <td><p class="Tabela_Texto_Alinhado_Esquerda" '+firstTD+'><br></p></td>';
-            }
-            htmlTable += '      </tr>';
-        }
-        htmlTable += '  </tbody>';
-        htmlTable += '</table>';
-    var select = oEditor.getSelection().getStartElement();
-    var pElement = $(select.$).closest('p');
-    if ( pElement.length ) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        iframeEditor.find(pElement).after(htmlTable);
-        hideQuickTable();
-        $('#cke_'+idEditor).find('.getTablestylesButtom').removeClass('cke_button_disabled');
-        
-        // Move o cursor para a primeira celula da tabela
-        var sel = oEditor.getSelection();
-        var element_ = sel.getStartElement();
-        var element = oEditor.document.getById(idFirstTD);
-        var ranges = oEditor.getSelection().getRanges();
-            ranges[0].setStart(element.getFirst(), 0);
-            ranges[0].setEnd(element.getFirst(), 0);
-            sel.selectRanges([ranges[0]]);
-            iframeEditor.find('#'+idFirstTD).attr('id', '');
-            oEditor.fire('saveSnapshot');
-    }
-}
+// quickTableClick() -> js/modules/editor/ (extraido para modulo)
 
 //// Insere estilo clean a tabela selecionada do documento
-function detectSyleSelectedTable() {
-    var select = oEditor.getSelection().getStartElement();
-    var tableElement = $(select.$).closest('table');
-    return tableElement;
+function detectSyleSelectedTable(editor) {
+    editor = editor || SeiProEditorAdapter.getInstance();
+    if (!editor) return $();
+    var el = SeiProEditorAdapter.getSelectionElement(editor);
+    return el ? $(el).closest('table') : $();
 }
 function activeIconsSelectedText() {
     if ( detectSyleSelectedTable().length ) {
@@ -1749,873 +1160,50 @@ function activeIconsSelectedText() {
         $('#cke_'+idEditor).find('.getCapLetterButtom').addClass('cke_button_disabled');
     }
 }
-function getSyleSelectedTable(this_) {
-    setParamEditor(this_);
-    if ( detectSyleSelectedTable().length ) {
-            oEditor.openDialog('TabelaSEI');
-    } else {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Clique na tabela que deseja aplicar o estilo!');
-    }
-}
-function changeColorTable(this_) {
-	var id = $(this_).attr('data-colorid');
-		$('#addEstiloTabela').attr('class', id);
-}
-function getDialogSyleTable() {
-	var color = getColorID();
-	var lenColor = Object.keys(getColorID()).length;
-	var lenStyleTable = Object.keys(getStyleTable(getColorID().color1)).length;
-    var htmlEstilo =   '<div style="padding-bottom: 10px;">Selecione a varia\u00E7\u00E3o de cores da tabela:</div>';
-        htmlEstilo +=  '<div id="selectColorTabela" class="listaCoresTabela">';
-         for (var i = 0; i < lenColor; i++) {
-            var id = (i+1);
-			var checked = ( i == 0 ) ? 'checked' : '';
-            htmlEstilo +=  	'<span><label for="colorStyle'+id+'">'+
-							'<a class="iconSelectColorTable" style="background-color: '+color['color'+id].light+'"></a>'+
-							'<a class="iconSelectColorTable" style="background-color: '+color['color'+id].dark+'"></a>'+
-							'</label><br><input type="radio" onchange="changeColorTable(this)" name="colorStyle" data-colorid="color'+id+'" id="colorStyle'+id+'" value="colorStyle'+id+'" '+checked+'></span>';
-         }
-        htmlEstilo +=  '</div>';
-		htmlEstilo +=  '<div style="padding-bottom: 10px;">Selecione o estilo da tabela:</div>'+
-                        '<div id="addEstiloTabela" class="color1">'+
-                        '   <div class="listaEstiloTabela">';
-         for (var i = 0; i < lenStyleTable; i++) {
-            var id = (i+1);
-			var checked = ( i == 0 ) ? 'checked' : '';
-                htmlEstilo +=  ( i % 7 === 0 && i != 0 && i != (lenStyleTable-1) ) ? '</div><div class="listaEstiloTabela">' : '';
-                htmlEstilo +=  '<span><label for="tableStyle'+id+'"><a class="iconSelectStyleTable" style="background-position-y: -'+(id*43)+'px"></a></label><br><input type="radio" name="tableStyle" id="tableStyle'+id+'" value="tableStyle'+id+'" '+checked+'></span>';
-         }
-         htmlEstilo +=  '</div></div>';
-         htmlEstilo +=  '<div style="padding: 10px 0;">Selecione a largura da tabela: '+
-                        '   <input type="number" id="addEstiloTableWidth" style="background: #f5f5f5; padding: 5px; border-radius: 5px; width: 50px; border: 1px solid #ccc;" max="100" step="5" min="5"> %'+
-                        '</div>';
-         htmlEstilo +=  '<div style="padding: 10px 0;">'+
-                        '   <input type="checkbox" id="addEstiloTableHeader" checked> <label for="addEstiloTableHeader">Determinar a primeira linha como cabe\u00E7alho da tabela</label>'+
-                        '</div>';
-    
-    CKEDITOR.dialog.add( 'TabelaSEI', function(editor)
-      {
-         return {
-            title : 'Inserir estilo \u00E0 tabela',
-            minWidth : 700,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var valueT = $('#addEstiloTabela').find('input[name="tableStyle"]:checked').val();
-                var valueC = $('#selectColorTabela').find('input[name="colorStyle"]:checked').attr('data-colorid');
-                var valueW = $('#addEstiloTableWidth').val();
-                if ( valueT != '' && valueC != '' && valueW != '' ) { 
-                    setSyleTable([valueT, valueC, valueW]);
-                    event.data.hide = true;
-                }
-            },
-            onShow : function() {
-                var elementTable = detectSyleSelectedTable(); 
-                // var percent = elementTable[0].style.width;
-                var percent = Math.round(100 * parseFloat(elementTable.css('width')) / parseFloat(elementTable.parent().css('width')));
-                var percentInput = (typeof percent != 'undefined') ? parseInt(percent) : 80;
-                    percentInput = (percentInput > 100) ? 100 : percentInput;
-                    percentInput = (percentInput < 5 ) ? 5 : percentInput;
-                console.log(elementTable[0].style.width, percentInput);
-                $('#addEstiloTableWidth').val(percentInput);
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Estilo da tabela',
-                  elements :
-                  [
-                    {
-             			type: 'html',
-             			html: htmlEstilo
-             		}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function getSyleTable(this_) {
-    setParamEditor(this_);
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        setSyleTable();
-        oEditor.fire('saveSnapshot');
-}
-function setSyleTable(value) {
+// getSyleSelectedTable() -> js/modules/editor/ (extraido para modulo)
+// changeColorTable() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compat com initFunctions(); di\u00E1logo jQuery UI em openDialogSyleTable().
+// getDialogSyleTable() -> js/modules/editor/ (extraido para modulo)
 
-	var tableID = value[0];
-	var colorID = value[1];
-	var widthID = value[2];
-	var color = getColorID()[colorID];
-	var arrayStyle = getStyleTable(color, widthID)[tableID];
-	
-    var elementTable = detectSyleSelectedTable();
-    elementTable.attr('style', arrayStyle.table);
-    elementTable.find('tr').each(function(index_tr){ 
-        var styleTr = ( index_tr == 0 ) ? arrayStyle.tr_head : arrayStyle.tr;
-			styleTr = ( index_tr != 0 && $.isArray(arrayStyle.tr) && ( index_tr % 2 === 0 ) ) ? arrayStyle.tr[1] : styleTr;
-			styleTr = ( index_tr != 0 && $.isArray(arrayStyle.tr) && ( index_tr % 2 !== 0 ) ) ? arrayStyle.tr[0] : styleTr;
-		var styleTd = ( index_tr == 0 ) ? arrayStyle.td_head : arrayStyle.td;
-        var classTdP = ( index_tr == 0 ) ? arrayStyle.td_head_p : arrayStyle.td_p;
-			$(this).attr('style', styleTr);
-			$(this).find('td').each(function(index_td){ 
-				styleTd = ( index_td == 0 && index_tr != 0 ) ? arrayStyle.td_first : arrayStyle.td;
-				styleTd = ( index_tr == 0 ) ? arrayStyle.td_head : styleTd;
-				$(this).attr('style', styleTd);
-				if ( $(this).find('p').length ) {
-					$(this).find('p').attr('class', classTdP);
-				} else {
-					$(this).html('<p class="'+classTdP+'">'+$(this).html()+'</p>');
-				}
-			});
-    });
-    elementTable.find('span[style*="background-color"],tr[style*="background-color"],td[style*="background-color"]').each(function(){
-        setBgTableColor(this);
-    });
-    if ($('#addEstiloTableHeader').is(':checked')) {
-        $('<thead></thead>').prependTo(elementTable).append(elementTable.find('tr:first'));
-    }
+// buildHtmlSyleTable() -> js/modules/editor/ (extraido para modulo)
 
-}
+// openDialogSyleTable() -> js/modules/editor/ (extraido para modulo)
+// getSyleTable() -> js/modules/editor/ (extraido para modulo)
+// setSyleTable() -> js/modules/editor/ (extraido para modulo)
 
 //// INSERE LINK DE NORMAS
-function sendLegisSEI(nomeLegis) {
-	var url = "https://seipro.app/legis/";
-	$.ajax({
-		type: "POST",
-		url: url,
-		dataType: "json",
-		data: { norma: [nomeLegis] },
-		success: function(legisData){
-            if (  legisData[0].status == 0 ) {
-                alertaBoxPro('Error', 'exclamation-triangle', 'Nenhuma legisla\u00E7\u00E3o encontrada');
-            } else {
-                var nomeLegis = ( legisData.length && legisData[0].NomeNorma ) ? '&nbsp;('+legisData[0].NomeNorma+')' : '';
-                var htmlLegis = ( legisData.length ) ? '<a class="ancoraSei legisSeiPro" data-norma="'+legisData[0].SiglaNorma+'" data-normafull="'+legisData[0].DescNormaFull+'" data-index="0" href="'+legisData[0].Link+'" target="_blank">'+legisData[0].DescNormaFull+nomeLegis.trim()+'</a>' : '';
-                oEditor.focus();
-                oEditor.fire('saveSnapshot');
-                oEditor.insertHtml(htmlLegis);
-                uniqLinkLegisSEI(idEditor);
-                oEditor.fire('saveSnapshot');
-            }
-		}
-	});
-}
-function insertLegisSEI(this_) {
-    var htmlLegis = $('<div>').append($(this_).closest('p').find('.legisSeiPro').clone().removeAttr('style').removeClass('linkDialog')).html();
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        oEditor.insertHtml(htmlLegis);
-        uniqLinkLegisSEI();
-        oEditor.fire('saveSnapshot');
-        CKEDITOR.dialog.getCurrent().hide();
-}
-function uniqLinkLegisSEI() {
-    var arrayRef = [];
-        iframeEditor.find('.legisSeiPro').each(function(){ 
-             var refNorma = $(this).attr('data-norma');
-             if ( iframeEditor.find('a[data-norma="'+refNorma+'"]').length > 1 ) {
-                var text = $(this).attr('data-normafull');
-                var newText = text.split(',');
-                var textDate = newText[1].trim().split(' ')[5];
-                    newText = ( typeof textDate !== 'undefined' && arrayRef.includes(refNorma) ) ? newText[0].trim()+', de '+textDate : text;
-                    $(this).text(newText);
-             }
-             arrayRef.push(refNorma);
-        });
-}
-function getLegisSEI(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('LegisSEI');
-}
-function getSearchLegisMore(this_) {
-    var parent = $(this_).closest('tr');
-    if (!parent.find('.searchLegis_ementa').is(':hidden')) {
-        parent.find('.searchLegis_ementa').hide();
-        parent.find('.searchLegis_ementafull').show();
-    } else {
-        parent.find('.searchLegis_ementa').show();
-        parent.find('.searchLegis_ementafull').hide();
-    }
-}
-function getSearchLegis(this_) {
-    var dialog_page = $(this_).closest('.cke_dialog_page_contents');
-    var dialog = CKEDITOR.dialog.getCurrent();
-    var inputTipo = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoNorma')._.inputId;
-        inputTipo = $('#'+inputTipo).find('option:selected').text();
-    var inputTermo = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'termoNorma').getValue();
-    var inputNumero = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'numeroNorma').getValue();
-    var inputAno = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'anoNorma').getValue();
-	var url = "https://seipro.app/legis/search.php";
-    var tipo = encodeURI(removeAcentos(inputTipo.toUpperCase().trim()));
-    var termo = encodeURI(inputTermo.trim());
-    var numero = ( inputNumero.indexOf('/') !== -1) ? inputNumero.split('/')[0] : inputNumero;
-        numero = numero.replace(/[^0-9\-]+/g, '');
-        numero = encodeURI(numero.trim());
-    var ano = inputAno.replace(/[^0-9\-]+/g, '');
-        ano = encodeURI(inputAno.trim());
-    var periodo = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'periodoNorma').getValue();
+// sendLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// insertLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// uniqLinkLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// getLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// getSearchLegisMore() -> js/modules/editor/ (extraido para modulo)
+// getSearchLegis() -> js/modules/editor/ (extraido para modulo)
+// getDialogLegisSEI() -> js/modules/editor/ (extraido para modulo)
+// convertFirstLetter() -> js/modules/editor/cap-letter.js (PORTADO p/ CK5)
 
-    
-    $('#searchLegis_load').show();
-    if ($('#searchLegis_result').is(':visible')) {
-        dialog.move(dialog.getPosition().x, (dialog.getPosition().y+125));
-        $('#searchLegis_result').html('').hide();
-    }
-	$.ajax({
-		type: "POST",
-		url: url,
-		dataType: "json",
-		data: { 
-            tipo: tipo,
-            numero: numero,
-            ano: ano,
-            periodo: periodo,
-            termo: termo
-        },
-		success: function(legisData){
-            if (  legisData.status == 0 ) {
-                $('#searchLegis_load').hide();
-                alertaBoxPro('Error', 'exclamation-triangle', 'Erro interno do servidor :( Tente novamente mais tarde');
-            } else {
-                var htmlResult =      '<table>'+
-                                      ' <tbody>';
-
-                    $.each(legisData.docs, function (i, val) {
-                        var ementa = val.dsc_ementa.replace(/(\r\n|\n|\r)/gm, "");
-                            ementa = (ementa.indexOf(' ') !== -1 && ementa.split(' ')[0] === ementa.split(' ')[0].toUpperCase()) ? ementa.charAt(0).toUpperCase() + ementa.toLocaleLowerCase().slice(1) : ementa;
-                        var ementa_limited = ( ementa.length > 170 ) ? ementa.replace(/^(.{170}[^\s]*).*/, "$1")+'...' : ementa;
-                        var datanorma = ( val.dsc_tipo_epigrafe == 'Decreto' ) ? 'Dec' : val.dsc_tipo_epigrafe;
-                            datanorma = ( val.dsc_tipo_epigrafe == 'Medida Provis\u00F3ria' ) ? 'Mp' : datanorma;
-                            datanorma = ( val.dsc_tipo_epigrafe == 'Lei Complementar' ) ? 'LC' : datanorma;
-                            datanorma = ( val.dsc_tipo_epigrafe == 'Decreto-Lei' ) ? 'DecLei' : datanorma;
-                            datanorma = ( datanorma.indexOf(' ') !== -1) ? datanorma.split(' ').join('') : datanorma;
-                            datanorma = datanorma+val.num_ato;
-                        var nomenorma = (val.dsc_identificacao.indexOf(' de ') !== -1) ? val.dsc_identificacao.replace(' de ', ', de ') : val.dsc_identificacao;
-
-                        var ementa_limited_link = ( ementa.length > 170 ) ? '<a class="linkDialog" onclick="getSearchLegisMore(this)">mais</a>' : '';
-                        var style_normaRevogada = ( val.dsc_situacao_macro == "Revogado" ) ? 'text-decoration: line-through; color: #adadad;' : 'color: #444;';
-                        var text_normaRevogada = ( val.dsc_situacao_macro == "Revogado" ) ? '<span style="background: #e0e0e0; padding: 1px 5px; color: #444; border-radius: 5px; margin-left: 10px;">Revogada</span>' : '';
-                        var btnInsertLegis = '<span onclick="insertLegisSEI(this)" style="float: right; background: #e7effd; padding: 3px 5px; color: #4285f4; border-radius: 5px; margin-left: 10px; cursor: pointer;"><i class="fas fa-pen azulColor" style="font-size: 90%; cursor: pointer;"></i> Adicionar</span>'
-                        htmlResult += '     <tr style="border-bottom: 2px solid #efefef;">'+
-                                      '         <td>'+
-                                      '             <p style="padding: 10px 0 2px 0;">'+
-                                      '                 <a class="linkDialog ancoraSei legisSeiPro" style="font-size: 13px;" data-norma="'+datanorma+'" data-normafull="'+nomenorma+'" data-index="0" href="'+val.url+'" target="_blank">'+nomenorma+' <i class="fas fa-external-link-alt linkDialog" style="font-size: 80%;"></i></a> '+text_normaRevogada+btnInsertLegis+
-                                      '             </p>'+
-                                      '             <p class="searchLegis_ementa" style="padding: 6px 0 10px 0; font-style: italic; word-break: break-word; white-space: break-spaces; width: 500px; '+style_normaRevogada+'">'+ementa_limited+' '+ementa_limited_link+'</p>'+
-                                      '             <p class="searchLegis_ementafull" style="display:none; padding: 6px 0 10px 0; font-style: italic; word-break: break-word; white-space: break-spaces; width: 500px; '+style_normaRevogada+'">'+ementa+' <a class="linkDialog" onclick="getSearchLegisMore(this)">menos</a></p>'+
-                                      '         </td>'+
-                                      '     </tr>';
-                    });
-                    if (legisData.numFound > 50) {
-                        htmlResult += '     <tr>'+
-                                      '         <td>'+
-                                      '             <p style="margin: 10px;text-align: center;background: #fdfbe4;padding: 5px;border-radius: 5px;"><i class="fas fa-info-circle azulColor"></i> Atingido o limite de 50 resultados. Restrinja sua pesquisa.</p>'+
-                                      '         </td>'+
-                                      '     </tr>';
-                    } else if (legisData.numFound == 0) {
-                        htmlResult += '     <tr>'+
-                                      '         <td>'+
-                                      '             <p style="margin: 10px;text-align: center;background: #fdfbe4;padding: 5px;border-radius: 5px;"><i class="fas fa-info-circle azulColor"></i> Nenhum resultado encontrado :(</p>'+
-                                      '         </td>'+
-                                      '     </tr>';
-                    }
-                    htmlResult +=     ' </tbody>'+
-                                      '</table>';
-                $('#searchLegis_load').hide();
-                $('#searchLegis_result').html(htmlResult).show(); 
-                    dialog.move(dialog.getPosition().x, (dialog.getPosition().y-125));
-            }
-		}
-	});
-}
-function getDialogLegisSEI() {
-      CKEDITOR.dialog.add( 'LegisSEI', function(editor)
-      {
-         return {
-            title : 'Adicionar Link de Legisla\u00E7\u00E3o',
-            minWidth : 520,
-            minHeight : 150,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var tipoNorma = this.getContentElement( 'tab1', 'tipoNorma' ).getValue();
-                var numeroNorma = this.getContentElement( 'tab1', 'numeroNorma' ).getValue();
-                var orgaoInfraNorma = this.getContentElement( 'tab2', 'orgaoInfraNorma' ).getValue();
-                var tipoInfraNorma = this.getContentElement( 'tab2', 'tipoInfraNorma' ).getValue();
-                var numeroInfraNorma = this.getContentElement( 'tab2', 'numeroInfraNorma' ).getValue();
-                var nomeNorma = this.getContentElement( 'tab3', 'nomeNorma' ).getValue();
-                
-                if ( tipoNorma != '' && numeroNorma != '' ) {
-                    var nrNorma = ( numeroNorma.indexOf('/') !== -1) ? numeroNorma.split('/')[0] : numeroNorma;
-                        nrNorma = nrNorma.replace(/[^0-9\-]+/g, '');
-                    sendLegisSEI(tipoNorma+nrNorma);
-                    event.data.hide = true;
-                } else if ( tipoInfraNorma != '' && numeroInfraNorma != '' ) {
-                    var nrNorma = ( numeroInfraNorma.indexOf('/') !== -1) ? numeroInfraNorma.split('/')[0] : numeroInfraNorma;
-                        nrNorma = nrNorma.replace(/[^0-9\-]+/g, '');
-                    sendLegisSEI(orgaoInfraNorma+tipoInfraNorma+nrNorma);
-                    event.data.hide = true;
-                } else if ( nomeNorma != '' ) {
-                    sendLegisSEI(nomeNorma);
-                    event.data.hide = true;
-                } else {
-                    event.data.hide = true;
-                }
-            },
-            onShow : function() {
-                $('.cke_dialog_page_contents').find('select').css('width','100%');
-                $('#searchLegis_load').hide();
-                if ($('#searchLegis_result').is(':visible')) {
-                    this.move(this.getPosition().x, (this.getPosition().y+125));
-                    $('#searchLegis_result').html('').hide();
-                }
-                var inputNumero = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'numeroNorma')._.inputId;
-                var inputAno = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'anoNorma')._.inputId;
-                    $('#'+inputNumero).attr('type', 'number');
-                    $('#'+inputAno).attr('type', 'number');
-                    if (verifyConfigValue('substituiselecao')) setChosenInCke();
-                
-                    var textSelected = oEditor.getSelection().getSelectedText();
-                    var idSelectNorma = this.getContentElement( 'tab1', 'tipoNorma' )._.inputId;
-                    var idNumNorma = this.getContentElement( 'tab1', 'numeroNorma' )._.inputId;
-                    var selectNorma = $('#'+idSelectNorma);
-                    var numNorma = $('#'+idNumNorma);
-                    if (textSelected.toLowerCase().indexOf('lei complementar') !== -1 || textSelected.toLowerCase().indexOf('lc') !== -1) {
-                        selectNorma.val('LC').trigger('change');
-                    } else if (textSelected.toLowerCase().indexOf('decreto-lei') !== -1 || textSelected.toLowerCase().indexOf('dc') !== -1) {
-                        selectNorma.val('DecLei').trigger('change');
-                    } else if (textSelected.toLowerCase().indexOf('medida provis\u00F3ria') !== -1 || textSelected.toLowerCase().indexOf('mp') !== -1) {
-                        selectNorma.val('Mp').trigger('change');
-                    } else if (textSelected.toLowerCase().indexOf('decreto') !== -1 || textSelected.toLowerCase().indexOf('dec') !== -1) {
-                        selectNorma.val('Dec').trigger('change');
-                    } else if (textSelected.toLowerCase().indexOf('lei') !== -1) {
-                        selectNorma.val('Lei').trigger('change');
-                    }
-
-                    if (hasNumber(textSelected)) {
-                        var numInput = (textSelected.toLowerCase().indexOf('/') !== -1) ? textSelected.split('/')[0] : textSelected;
-                            numInput = (textSelected.toLowerCase().indexOf(',') !== -1) ? textSelected.split(',')[0] : numInput;
-                            numInput = (hasNumber(numInput)) ? onlyNumber(numInput) : '';
-                        numNorma.val(numInput);
-                    }
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Legisla\u00E7\u00E3o Federal',
-                  elements :
-                  [
-                    {
-             			type: 'select',
-             			id: 'tipoNorma',
-             			label: 'Tipo de Legisla\u00E7\u00E3o',
-                        labelLayout: 'horizontal',
-            			width: '200px',
-             			items: [ [''], [ 'Lei', 'Lei' ], [ 'Lei Complementar', 'LC' ], [ 'Decreto', 'Dec' ], [ 'Decreto-Lei', 'DecLei' ], [ 'Medida Provis\u00F3ria', 'Mp' ] ],
-             			'default': ''
-             		},{
-                        type: 'text',
-                        label: 'N\u00FAmero da Legisla\u00E7\u00E3o',
-                        id: 'numeroNorma',
-            			width: '200px',
-                        labelLayout: 'horizontal'
- 					},{
-             			type: 'select',
-             			id: 'periodoNorma',
-             			label: 'Per\u00EDodo da Publica\u00E7\u00E3o',
-                        labelLayout: 'horizontal',
-            			width: '200px',
-             			items: [ [''], [ 'No ano', 'ano' ], [ 'At\u00E9 o ano de...', 'ate' ], [ 'Ap\u00F3s o ano de...', 'apos' ] ],
-             			'default': ''
-             		},{
-                        type: 'text',
-                        label: 'Ano da Publica\u00E7\u00E3o',
-                        id: 'anoNorma',
-            			width: '200px',
-                        labelLayout: 'horizontal'
- 					},{
-                        type: 'text',
-                        label: 'Conte\u00FAdo da Legisla\u00E7\u00E3o (palavras-chave)',
-                        id: 'termoNorma',
-            			width: '200px',
-                        labelLayout: 'horizontal'
- 					},{
-                        type: 'html',
-                        html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                              ' <tbody>'+
-                              '     <tr class="cke_dialog_ui_hbox">'+
-                              '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                              '         </td>'+
-                              '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                              '             <a style="user-select: none;" onclick="getSearchLegis(this)" title="Pesquisar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="searchLegis_label" id="searchLegis_uiElement">'+
-                              '                 <span id="searchLegis_label" class="cke_dialog_ui_button">Pesquisar</span>'+
-                              '             </a>'+
-                              '             <i id="searchLegis_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>'+
-                              '         </td>'+
-                              '     </tr>'+
-                              ' </tbody>'+
-                              '</table>'+
-                              '<div id="searchLegis_result" style="display:none; height: 250px; overflow-y: scroll; margin-top: 15px;"></div>'
- 					}
-                  ]
-               },{
-                  id : 'tab2',
-                  label : 'Norma Infralegal',
-                  elements :
-                  [
-                    {
-             			type: 'select',
-             			id: 'orgaoInfraNorma',
-             			label: 'Autoridade Signat\u00E1ria',
-                        labelLayout: 'horizontal',
-                        width: '200px',
-             			items: [ 
-                            [''], 
-                            [ 'ANTAQ', 'Antaq' ], 
-                            [ 'Cade', 'Cade' ], 
-                            [ 'PRF', 'PRF' ] , 
-                            [ 'TSE', 'Tse' ], 
-                            [ 'TRE RR', 'Trerr' ],
-                            [ 'TJ RR', 'TJRR' ],
-                            [ 'CNJ', 'CNJ' ] 
-                        ],
-             			'default': ''
-             		},{
-             			type: 'select',
-             			id: 'tipoInfraNorma',
-             			label: 'Tipo de Legisla\u00E7\u00E3o',
-                        labelLayout: 'horizontal',
-                        width: '200px',
-             			items: [ 
-                            [''], 
-                            [ 'Acordo/Plano/Ato/Nota', 'acord' ], 
-                            [ 'Ata e Certid\u00F5es de Julgamento', 'atas' ],
-                            [ 'Constitui\u00E7\u00E3o Estadual', 'ce' ], 
-                            [ 'Decreto Estadual', 'decest' ], 
-                            [ 'Edital', 'Edit' ], 
-                            [ 'Enunciado Administrativo', 'enumadm' ],
-                            [ 'Emenda Constitucional', 'ec' ], 
-                            [ 'Emenda Regimental', 'er' ], 
-                            [ 'Emendas', 'Emenda' ],
-                            [ 'Instru\u00E7\u00E3o Normativa', 'in' ], 
-                            [ 'Instru\u00E7\u00E3o Normativa Conjunta', 'resconj' ],
-                            [ 'Lei Complementar Estadual', 'lce' ], 
-                            [ 'Lei Estadual', 'leiest' ], 
-                            [ 'Lei Municipal', 'leimun' ], 
-                            [ 'Nota T\u00E9cnica', 'nt' ],
-                            [ 'Orienta\u00E7\u00E3o Normativa', 'on' ], 
-                            [ 'Portaria', 'port' ], 
-                            [ 'Portaria Conjunta', 'portconj' ], 
-                            [ 'Portaria Interministerial', 'portinter' ], 
-                            [ 'Portaria Interinstitucional', 'portinst' ],
-                            [ 'Provimento', 'prov' ], 
-                            [ 'Recomenda\u00E7\u00E3o', 'Rec' ], 
-                            [ 'Regimento Interno', 'regim' ],
-                            [ 'Resolu\u00E7\u00E3o Normativa', 'rn' ], 
-                            [ 'Resolu\u00E7\u00E3o', 'res' ], 
-                            [ 'Resolu\u00E7\u00E3o Conjunta', 'resconj' ], 
-                            [ 'S\u00FAmula Administrativa', 'sum' ]
-                        ],
-             			'default': ''
-             		},{
-                        type: 'text',
-                        label: 'N\u00FAmero da Norma',
-            			width: '200px',
-                        labelLayout: 'horizontal',
-                        id: 'numeroInfraNorma'
- 					}
-                  ]
-               },{
-                  id : 'tab3',
-                  label : 'Lista de Normas',
-                  elements :
-                  [
-                    {
-             			type: 'select',
-             			id: 'nomeNorma',
-             			label: 'Nome da Legisla\u00E7\u00E3o',
-             			items: [ 
-                                [''], 
-                                ['C\u00F3digo Brasileiro de Aeron\u00E1utica','Cba'], 
-                                ['C\u00F3digo Brasileiro de Telecomunica\u00E7\u00F5es','Cbt'], 
-                                ['C\u00F3digo Civil','Cc'], 
-                                ['C\u00F3digo Comercial','Ccm'], 
-                                ['C\u00F3digo de Defesa do Consumidor','Cdc'], 
-                                ['Constitui\u00E7\u00E3o Federal','Cf'], 
-                                ['C\u00F3digo Florestal','Cflorestal'], 
-                                ['Consolida\u00E7\u00E3o das Leis do Trabalho','Clt'], 
-                                ['C\u00F3digo de \u00C1guas','Codigoaguas'], 
-                                ['C\u00F3digo Eleitoral','Codigoeleitoral'], 
-                                ['C\u00F3digo de Minas','Codigominas'], 
-                                ['C\u00F3digo Penal','Cp'], 
-                                ['C\u00F3digo de Processo Civil','Cpc'], 
-                                ['C\u00F3digo Penal Militar','Cpm'], 
-                                ['C\u00F3digo de Processo Penal','Cpp'], 
-                                ['C\u00F3digo de Processo Penal Militar','Cppm'], 
-                                ['C\u00F3digo de Tr\u00E2nsito Brasileiro','Ctb'], 
-                                ['C\u00F3digo Tribut\u00E1rio Nacional','Ctn'], 
-                                ['Estatuto da Crian\u00E7a e do Adolescente','Eca'], 
-                                ['Estatuto da Cidade','Estatutocidade'], 
-                                ['Estatuto do Desarmamento','Estatutodesarmamento'], 
-                                ['Estatuto do Idoso','Estatutoidoso'], 
-                                ['Estatuto da Igualdade Racial','Estatutoigualdaderacial'], 
-                                ['Estatuto do \u00CDndio','Estatutoindio'], 
-                                ['Estatuto da Juventude','Estatutojuventude'], 
-                                ['Estatuto Nacional da Microempresa e da Empresa de Pequeno Porte','Estatutomicroempresas'], 
-                                ['Estatuto dos Militares','Estatutomilitares'], 
-                                ['Estatuto dos Museus','Estatutomuseus'], 
-                                ['Estatuto da Advocacia e da Ordem dos Advogados do Brasil (OAB)','Estatutooab'], 
-                                ['Estatuto da Pessoa com Defici\u00EAncia','Estatutopcd'], 
-                                ['Estatuto dos Refugiados','Estatutorefugiados'], 
-                                ['Estatuto da Terra','Estatutoterra'], 
-                                ['Estatuto de Defesa do Torcedor','Estatutotorcedor']
-                                 ],
-             			'default': ''
-             		}
-                  ]
-               }
-
-            ]
-         };
-      } );
-}
-function convertFirstLetter(this_) {
-    setParamEditor(this_);
-    var selectTxt = oEditor.getSelection().getSelectedText();
-    if ( selectTxt != '' ) {
-        var text = capitalizeFirstLetter(selectTxt);
-        oEditor.insertHtml(text);
-    } else {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Selecione um texto para convers\u00E3o');
-    }
-}
-
-function getCitacaoDocumento(this_, TimeOut = 9000) {
-    if (checkProcessoSigiloso()) {
-        alertaBoxPro('Error', 'exclamation-triangle', ' N\u00E3o dispon\u00EDvel para processos sigilosos');
-        setParamEditor(this_);
-    } else {
-        if (TimeOut <= 0) { return; }
-        if (typeof dadosProcessoPro.listDocumentos !== 'undefined') { 
-            setParamEditor(this_);
-            getDialogCitacaoDocumento();
-        } else {
-            setTimeout(function(){ 
-                getCitacaoDocumento(this_, TimeOut - 100); 
-                $(this_).fadeOut(200).fadeIn(200);
-                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload getCitacaoDocumento'); 
-            }, 500);
-        }
-    }
-}
-function getDialogCitacaoDocumento() {
-    if (!checkProcessoSigiloso()) {
-        var listDocumentos = $.map(dadosProcessoPro.listDocumentos, function (value) {
-            var select_text = ( value.nr_sei != '' ) ? value.documento+' ('+value.nr_sei+')' : value.documento;
-            if ( value.documento != '' ) { return `<option value="${value.id_protocolo}">${select_text}</option>`; }
-        }).join('');
-
-        const htmlBox = sanitizeHTML(`
-            <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-                <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                    <tr>
-                        <td style="vertical-align: bottom; text-align: left;" class="label">
-                            <label for="selectCitacaoDocumento"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>Documentos do processo:</label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <select multiple="multiple" id="selectCitacaoDocumento">
-                            ${listDocumentos}
-                            </select>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        `);
-
-        resetDialogBoxPro('dialogBoxPro');
-        dialogBoxPro = $('#dialogBoxPro')
-            .html(htmlBox)
-            .dialog({
-                title : 'Inserir refer\u00EAncia de documento do processo',
-                width : 600,
-                height : 220,
-                open: function () {
-                    initChosenReplace('box_multiple', this, true);
-                    $('#selectCitacaoDocumento').on('change', function() { resizeHeigthDialogBox(dialogBoxPro) });
-                },
-                buttons: [{
-                    text: 'Inserir',
-                    class: 'confirm ui-state-active',
-                    click: function(event) { 
-                        var selectMult = $('#selectCitacaoDocumento option:checked');
-                        var list_protocolo = $.map(selectMult,function(e){
-                            if (e.value != '') return e.value
-                        });
-                        if ($.isArray(list_protocolo) && list_protocolo.length) {
-                            $.each(list_protocolo, function(index, id_protocolo){
-                                if (id_protocolo != '') {
-                                    var insert = insertCitacaoDocumento(id_protocolo);
-                                    if (insert && index < list_protocolo.length-2) oEditor.insertText(', ');
-                                    if (insert && index == list_protocolo.length-2) oEditor.insertText(' e ');
-                                }
-                            });
-                            resetDialogBoxPro('dialogBoxPro');
-                        }
-                    }
-                }]
-            });
-    }
-}
-function insertCitacaoDocumento(id_protocolo) {
-    var dataValue = jmespath.search(dadosProcessoPro.listDocumentos, "[?id_protocolo=='"+id_protocolo+"'] | [0]");
-    // console.log(dataValue, id_protocolo);
-    if ( typeof dataValue !== 'undefined' && dataValue !== null && dataValue.documento ) {
-        var nrSei = ( dataValue.nr_sei != '' ) ? dataValue.nr_sei : dataValue.documento;
-        var citacaoDoc = getCitacaoDoc();
-        var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+dataValue.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
-        var citacaoDocumento = ( dataValue.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? dataValue.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        oEditor.insertHtml(citacaoDocumento);
-        oEditor.fire('saveSnapshot');
-        return true;
-    } else {
-        return false;
-    }
-}
+// getCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
+// getDialogCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
+// insertCitacaoDocumento() -> js/modules/editor/ (extraido para modulo)
 
 // INSERE NOTAS DE RODAPE
-function getNotaRodape(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('NtRodapeSEI');
-}
-function getDialogNotaRodape() {
-      CKEDITOR.dialog.add( 'NtRodapeSEI', function(editor)
-      {
-         return {
-            title : 'Inserir nota de rodap\u00E9',
-            minWidth : 500,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var txt_NotaRodapeLivre = this.getContentElement( 'tab_nr', 'textNotaRodape' ).getValue();
-                var txt_NotaRodapeABNT = $('#nrABNTResult').html();
-				var txt_NotaRodape = ( txt_NotaRodapeABNT != '' ) ? txt_NotaRodapeABNT : txt_NotaRodapeLivre;
-                if ( txt_NotaRodape != '' ) {
-                    insertNtRodape(txt_NotaRodape);
-                    event.data.hide = true;
-                }
-            },
-            onShow : function() {
-				var nr_IDInput = this.getContentElement( 'tab_abnt', 'nr_Nome' )._.inputId;
-				var nr_Data = this.getContentElement( 'tab_abnt', 'nr_Data' )._.inputId;
-				var nr_Data = this.getContentElement( 'tab_abnt', 'nr_Data' )._.inputId;
-				var nr_Volume = this.getContentElement( 'tab_abnt', 'nr_Volume' )._.inputId;
-				var nr_Ano = this.getContentElement( 'tab_abnt', 'nr_Ano' )._.inputId;
-				var nr_Edicao = this.getContentElement( 'tab_abnt', 'nr_Edicao' )._.inputId;
-					$('#nrABNTResult').hide().html('');
-					$('#'+nr_Data).attr('type', 'date');
-					$('#'+nr_Volume).attr('type', 'number');
-					$('#'+nr_Ano).attr('type', 'number');
-					$('#'+nr_Edicao).attr('type', 'number');
-				setTimeout(function(){ 
-					$('#'+nr_IDInput).closest('.cke_dialog_page_contents').find('input, textarea, select').on('input change', function() {
-						updateNrABNT($(this));
-					});
-				}, 100);
-            },
-            contents :
-            [
-               {
-                  id : 'tab_nr',
-                  label : 'Texto livre',
-                  elements :
-                  [
-                    {
-             			type: 'text',
-             			id: 'textNotaRodape',
-             			label: 'Texto da nota de rodap\u00E9',
-             			'default': ''
-             		}
-                  ]
-               },{
-                  id : 'tab_abnt',
-                  label : 'Padr\u00E3o ABNT',
-                  elements :
-                  [
-					{
-						type: 'hbox',
-						widths: [ '50%', '50%' ],
-						children: [
-							{
-								type: 'text',
-								id: 'nr_Nome',
-								label: 'Nome do autor',
-								'default': ''
-							},{
-								type: 'text',
-								id: 'nr_Sobrenome',
-								label: 'Sobrenome do Autor',
-								'default': ''
-							}
-						]
-					},{
-						type: 'hbox',
-						widths: [ '75%', '25%' ],
-						children: [
-							{
-								type: 'text',
-								id: 'nr_Titulo',
-								label: 'T\u00EDtulo da publica\u00E7\u00E3o',
-								'default': ''
-							},{
-								type: 'text',
-								id: 'nr_Edicao',
-								label: 'N\u00FAmero da Edi\u00E7\u00E3o',
-								'default': ''
-							}
-						]
-					},{
-						type: 'hbox',
-						widths: [ '50%', '50%'],
-						children: [
-							{
-								type: 'text',
-								id: 'nr_Local',
-								label: 'Local de publica\u00E7\u00E3o (cidade)',
-								'default': ''
-							},{
-								type: 'text',
-								id: 'nr_Editora',
-								label: 'Nome da Editora',
-								'default': ''
-							}
-						]
-					},{
-						type: 'hbox',
-						widths: [ '25%', '25%', '25%', '25%' ],
-						children: [
-							{
-								type: 'text',
-								id: 'nr_Ano',
-								label: 'Ano da publica\u00E7\u00E3o',
-								'default': ''
-							},{
-								type: 'text',
-								id: 'nr_Volume',
-								label: 'N\u00FAmero do Volume',
-								'default': ''
-							},{
-								type: 'text',
-								id: 'nr_Paginas',
-								label: 'P\u00E1ginas inicial-final',
-								'default': ''
-							}
-						]
-					},{
-						type: 'hbox',
-						widths: [ '75%', '25%'],
-						children: [
-							{
-								type: 'text',
-								id: 'nr_Link',
-								label: 'Link da publica\u00E7\u00E3o',
-								'default': ''
-							},{
-								type: 'text',
-								id: 'nr_Data',
-								label: 'Data do acesso',
-								'default': ''
-							}
-						]
-					},{
-						type: 'html',
-						html: '<div id="nrABNTResult" style="padding: 5px 5px 8px 5px; background: #f9f9dc; border-radius: 5px; white-space: break-spaces;"></div>'
-					}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function updateNrABNT(this_) {
-    setMomentPtBr();
-	var input = this_.closest('.cke_dialog_page_contents').find('input, textarea, select');
-	var nr_Nome = input.eq(0).val();
-		nr_Nome = ( nr_Nome != '' ) ? ', '+capitalizeFirstLetter(nr_Nome.trim()) : nr_Nome;
-	var nr_Sobrenome = input.eq(1).val();
-		nr_Sobrenome = ( nr_Sobrenome != '' ) ? nr_Sobrenome.toUpperCase() : nr_Sobrenome;
-	var nr_Titulo = input.eq(2).val();
-		nr_Titulo = ( nr_Titulo != '' ) ? '. <strong>'+capitalizeFirstLetter(nr_Titulo.trim())+'</strong>' : nr_Titulo;
-	var nr_Edicao = input.eq(3).val();
-		nr_Edicao = ( nr_Edicao != '' ) ? '. '+nr_Edicao+'. ed.' : nr_Edicao;
-	var nr_Local = input.eq(4).val();
-		nr_Local = ( nr_Local != '' ) ? ', '+capitalizeFirstLetter(nr_Local.trim()) : nr_Local;
-	var nr_Editora = input.eq(5).val();
-		nr_Editora = ( nr_Editora != '' ) ? ': '+capitalizeFirstLetter(nr_Editora.trim()) : nr_Editora;
-	var nr_Ano = input.eq(6).val();
-		nr_Ano = ( nr_Ano != '' ) ? ', '+nr_Ano : nr_Ano;
-	var nr_Volume = input.eq(7).val();
-		nr_Volume = ( nr_Volume != '' ) ? ', v. '+nr_Volume : nr_Volume;
-	var nr_Paginas = input.eq(8).val();
-		nr_Paginas = ( nr_Paginas != '' ) ? '. p.'+nr_Paginas : nr_Paginas;
-	var nr_Link = input.eq(9).val();
-		nr_Link = ( nr_Link != '' && isValidHttpUrl(nr_Link) ) ? '. Dispon\u00EDvel em: <a href="'+nr_Link+'" target="_blank">&lt;'+nr_Link+'&gt;</a>' : '';
-	var nr_Data = input.eq(10).val();
-		nr_Data = ( nr_Data != '' ) ? '. Acesso em: '+moment(nr_Data).format('ll') : nr_Data;
-	
-	var htmlResult = nr_Sobrenome+nr_Nome+nr_Titulo+nr_Edicao+nr_Local+nr_Editora+nr_Ano+nr_Volume+nr_Paginas+nr_Link+nr_Data;
-	if ( htmlResult != '' ) {
-		$('#nrABNTResult').show().html(htmlResult+'.');
-	}
-}
-function insertNtRodape(txt_NotaRodape) {
-    var randRef = randomString(16);
-    var ntRodapeId = parseInt(iframeEditor.find('.ntRodape_item').length)+1;
-    var ntRodapeHtml_footer = '<p class="Tabela_Texto_Alinhado_Esquerda ntRodape"><a name="footer_'+randRef+'" href="#item_'+randRef+'" class="anchorRefInternaPro"><span class="ntRodape_footer ancoraSei" data-ntrodape-ref="'+randRef+'" data-ntrodape="'+ntRodapeId+'"  contenteditable="false">['+ntRodapeId+']</span></a> '+txt_NotaRodape+'</p>';
-    var ntRodapeHtml_item = '<sup><a href="#footer_'+randRef+'" name="item_'+randRef+'" class="anchorRefInternaPro"><span class="ntRodape_item ancoraSei" data-ntrodape="'+ntRodapeId+'" data-ntrodape-ref="'+randRef+'" contenteditable="false">['+ntRodapeId+']</span></a></sup> ';
-    
-    oEditor.focus();
-    oEditor.fire('saveSnapshot');
-    if ( iframeEditor.find('.ntRodape_tr').length == 0 ) {
-        iframeEditor.find('body').append('<p class="Tabela_Texto_Alinhado_Esquerda ntRodape_tr">____________________________</p>');
-    }
-    iframeEditor.find('body').append(ntRodapeHtml_footer);
-    oEditor.insertHtml(ntRodapeHtml_item);
-    reorderNtRodape(iframeEditor);
-    oEditor.fire('saveSnapshot');
-    clickScroolToRef();
-}
-function reorderNtRodape(iframeEditor) {
-    iframeEditor.find('.ntRodape_item').each(function(index){
-        var dataRef = $(this).attr('data-ntrodape-ref');
-        var ntRodapeId = index+1;
-        $(this).attr('data-ntrodape', ntRodapeId).text('['+ntRodapeId+']');
-        iframeEditor.find('.ntRodape_footer[data-ntrodape-ref='+dataRef+']').attr('data-ntrodape', ntRodapeId).text('['+ntRodapeId+']');
-    });
-    
-    var arrayFooters = [];
-    iframeEditor.find('.ntRodape_footer').each(function(index){
-        var dataRef = $(this).attr('data-ntrodape-ref');
-        var ntRodapeId = parseInt($(this).attr('data-ntrodape'));
-        var htmlFooter = $(this).closest('p')[0].outerHTML;
-        if ( iframeEditor.find('.ntRodape_item[data-ntrodape-ref='+dataRef+']').length ) {
-            arrayFooters.push({id:ntRodapeId, html: htmlFooter});
-        }
-        $(this).closest('p').remove();
-    });
+// getNotaRodape() -> js/modules/editor/ (extraido para modulo)
+// Mantemos o nome antigo para compatibilidade com initFunctions() -- em CK4/CK5
+// o di\u00E1logo agora eh jQuery UI, registrado sob demanda ao clicar no bot\u00E3o.
+// getDialogNotaRodape() -> js/modules/editor/ (extraido para modulo)
 
-    arrayFooters.sort(function(a,b){ return a.id - b.id;});
-
-    $.each(arrayFooters, function (index, value) {
-        iframeEditor.find('body').append(value.html);
-    });
-}
+/**
+ * Abre o di\u00E1logo de inser\u00E7\u00E3o de nota de rodap\u00E9 (jQuery UI). Substitui o antigo
+ * CKEDITOR.dialog -- compat\u00EDvel com CK4 e CK5 via adapter.
+ */
+// openDialogNotaRodape() -> js/modules/editor/ (extraido para modulo)
+// removeNtRodape() -> js/modules/editor/ (extraido para modulo)
+// updateNrABNT() -> js/modules/editor/ (extraido para modulo)
+// insertNtRodape() -> js/modules/editor/ (extraido para modulo)
+// updateNtRodape() -> js/modules/editor/ (extraido para modulo)
+// reorderNtRodape funciona em CK4 (DOM iframe direto) e CK5 (transformBodyHtml,
+// que serializa para HTML, manipula via DOMParser e re-seta a root do corpo).
+// Aceita compat: assinatura antiga era reorderNtRodape(iframeEditor).
+// reorderNtRodape() -> js/modules/editor/ (extraido para modulo)
 function initAddButtonTarjaSigilo(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
     if ($('.getMarkSigiloButton').length) { 
@@ -2641,12 +1229,25 @@ function addButtonTarjaSigilo() {
         });
         $('.getTarjaSigiloButton').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTarjaSigilo(this) } });
 }
+//No CK5 nao existe o form do editor: o salvamento e o proprio botao Salvar da barra
+//(mesmos seletores que o auto-cleanup ja usa para se enganchar). No CK4 segue o form.
+function submitEditorPro(editor) {
+    if (isCK5Pro()) {
+        $('.cke_button__save, button[data-cke-tooltip-text*="Salvar"], button[aria-label*="Salvar"], #divInfraBarraComandosSuperior button').first().trigger('click');
+        return;
+    }
+    var $form = editor && editor.element && editor.element.$ ? editor.element.$.form : false;
+    if ($form) $form.submit();
+}
+function isCK5Pro() {
+    return typeof SeiProEditorAdapter !== 'undefined' && SeiProEditorAdapter.version === 5;
+}
 function setDocCertidao() {
     var dadosDocCertidao = sessionStorageRestorePro('dadosDocCertidao');
     var nomeDocCertidao = sessionStorageRestorePro('nomeDocCertidao');
     var param = getParamsUrlPro(window.location.href);
     if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_certidao' && dadosDocCertidao && nomeDocCertidao) {
-        setCKEDITOR_instances();
+        if (!isCK5Pro()) setCKEDITOR_instances(); //CK4 puro: no CK5 lanca e abortaria a funcao
         initAddButtonTarjaSigilo();
         var modeloHtml =    '<p class="Texto_Centralizado_Maiusculas_Negrito">CERTID\u00C3O</p>'+
                             '<p class="Texto_Centralizado_Maiusculas_Negrito">C\u00D3PIA DE DOCUMENTO OFICIAL COM RESTRI\u00C7\u00C3O LEGAL DE PARTE(S) SOB SIGILO<br><br></p>'+
@@ -2680,6 +1281,22 @@ function setDocCertidao() {
                             '</table>'+
                             '<p class="Texto_Alinhado_Esquerda"><br></p>';
                             
+            if (isCK5Pro()) {
+                var editorCK5 = SeiProEditorAdapter.getInstance();
+                if (editorCK5) {
+                    SeiProEditorAdapter.focus(editorCK5);
+                    //transformBodyHtml e o equivalente fiel ao iframe.find('body').html() do CK4
+                    //e precisa ficar FORA de withEdit (o CK5 proibe mutar o DOM dentro do model.change).
+                    SeiProEditorAdapter.transformBodyHtml(editorCK5, function () { return modeloHtml; });
+                    setTimeout(function () {
+                        trycatch(function () { actionsMarkSigilo(null, 'apply', false, false, editorCK5) }, false);
+                        trycatch(function () { enableButtonSavePro() }, false); //CK4 puro, tolera falhar no CK5
+                        trycatch(function () { submitEditorPro(editorCK5) }, false);
+                        sessionStorageRemovePro('dadosDocCertidao');
+                        sessionStorageRemovePro('nomeDocCertidao');
+                    }, 0);
+                }
+            } else {
             var elemIframe = $('iframe').filter(function(){ return $(this).contents().find('body').attr('contenteditable') == 'true' }).eq(0)
             if (elemIframe.length) {
                 var iframe = elemIframe.contents();
@@ -2694,13 +1311,13 @@ function setDocCertidao() {
                         actionsMarkSigilo(undefined, 'apply');
                         enableButtonSavePro();
                         
-                        var $form = oEditor.element.$.form;
-                        if ($form) $form.submit();
+                        submitEditorPro(oEditor);
 
                         sessionStorageRemovePro('dadosDocCertidao');
                         sessionStorageRemovePro('nomeDocCertidao');
                     }
                 }
+            }
             }
         /*
         var maxIframeHeight = {value: 0, index: -1}
@@ -2742,8 +1359,23 @@ function setDocAutomatico() {
     var nomeDocAutomatico = sessionStorageRestorePro('nomeDocAutomatico');
     var param = getParamsUrlPro(window.location.href);
     if (typeof param.acao_pro !== 'undefined' && param.acao_pro == 'set_automatico' && dadosDocAutomatico && nomeDocAutomatico) {
-        setCKEDITOR_instances();
+        if (!isCK5Pro()) setCKEDITOR_instances(); //CK4 puro: no CK5 lanca e abortaria a funcao
         initAddButtonTarjaSigilo();
+        if (isCK5Pro()) {
+            var editorCK5 = SeiProEditorAdapter.getInstance();
+            if (editorCK5) {
+                SeiProEditorAdapter.focus(editorCK5);
+                SeiProEditorAdapter.transformBodyHtml(editorCK5, function () { return dadosDocAutomatico });
+                sessionStorageRemovePro('dadosDocAutomatico');
+                sessionStorageRemovePro('nomeDocAutomatico');
+                setTimeout(function () {
+                    trycatch(function () { actionsMarkSigilo(null, 'apply', false, false, editorCK5) }, false);
+                    trycatch(function () { enableButtonSavePro() }, false); //CK4 puro, tolera falhar no CK5
+                    trycatch(function () { submitEditorPro(editorCK5) }, false);
+                }, 1500);
+            }
+            return;
+        }
         var elemIframe = $('iframe').filter(function(){ return $(this).contents().find('body').attr('contenteditable') == 'true' }).eq(0)
         if (elemIframe.length) {
             var iframe = elemIframe.contents();
@@ -2763,8 +1395,7 @@ function setDocAutomatico() {
                     setTimeout(function(){ 
                         enableButtonSavePro();
                         
-                        var $form = oEditor.element.$.form;
-                        if ($form) $form.submit();
+                        submitEditorPro(oEditor);
                     }, 1500);
                 }
             }
@@ -2870,635 +1501,23 @@ function arrayDadosEditor() {
         }
     return listaDadosEditor;
 }
-function getDadosEditor(this_, TimeOut = 9000) {
-    if (checkProcessoSigiloso()) {
-        CKEDITOR.dialog.add( 'DadosSEI', function(editor) { return getDialogNaoDisponivel('Dados do Processo') } );
-        setParamEditor(this_);
-        oEditor.openDialog('DadosSEI');
-    } else {
-        if (TimeOut <= 0) { return; }
-        if (typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.listDocumentos !== 'undefined' && arrayDadosEditor().length) { 
-            setParamEditor(this_);
-            oEditor.openDialog('DadosSEI');
-        } else {
-            setTimeout(function(){ 
-                if (typeof dadosProcessoPro.propProcesso === 'undefined' && getDadosProcessoSession() ) {
-                    dadosProcessoPro = getDadosProcessoSession();
-                }
-                getDadosEditor(this_, TimeOut - 100); 
-                $(this_).fadeOut(200).fadeIn(200);
-                if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload getDadosEditor'); 
-            }, 500);
-        }
-    }
-}
-function getDialogDadosEditor() {
-    if (!checkProcessoSigiloso()) {
-        var tableNewDynamicField = '';
-        var dadosEditorArray = arrayDadosEditor();
-        var tagsArray = jmespath.search(dadosProcessoPro.propProcesso.txaTagsObservacoes, "[?unidade=='"+siglaUnidadeAtual+"'] | [0]");
-        tagsArray = (tagsArray === null) ? jmespath.search(dadosProcessoPro.propProcesso.txaTagsObservacoes, "[?unidade==''] | [0]") : tagsArray;
-            tableNewDynamicField =        '<table role="presentation" class="cke_dialog_ui_hbox tableZebra">'+
-                                        ' <thead>'+
-                                        '     <tr>'+
-                                        '         <th style="padding: 8px; background: #f3f3f3; font-weight: bold; border-top: 1px solid #b9b9b9;">Nome do campo din\u00E2mico</th>'+
-                                        '         <th style="padding: 8px; background: #f3f3f3; font-weight: bold; border-top: 1px solid #b9b9b9;">Valor</th>'+
-                                        '     </tr>'+
-                                        ' </thead>'+
-                                        ' <tbody>';
-        if (tagsArray !== null) {
-            $.each(tagsArray.tags, function(index, v){
-                tableNewDynamicField +=  '     <tr class="cke_dialog_ui_hbox" data-tag="'+v.name+'">'+
-                                        '         <td class="" role="presentation" style="width:30%; padding:8px">'+
-                                        '             <label class="cke_dialog_ui_labeled_label"><b class="hashSpan">#'+v.name+'</b></label>'+
-                                        '         </td>'+
-                                        '         <td class="" role="presentation" style="width:70%; padding:8px">'+
-                                        '             <em>'+v.value+'</em>'+
-                                        '             <a style="user-select: none; float: right;" onclick="removeDynamicField(this)" title="Remover" hidefocus="true" class="cke_dialog_ui_button" role="button">'+
-                                        '                 <span id="buttonRemoveDynamicField_label" class="cke_dialog_ui_button">'+
-                                        '                     <i style="color: #989898;" class="fas fa-trash"></i>'+
-                                        '                 </span>'+
-                                        '             </a>'+
-                                        '             <a style="user-select: none; float: right; margin-right: 10px;" onclick="editDynamicField(this)" title="Editar" hidefocus="true" class="cke_dialog_ui_button" role="button">'+
-                                        '                 <span id="buttonEditDynamicField_label" class="cke_dialog_ui_button">'+
-                                        '                     <i style="color: #989898;" class="fas fa-pencil-alt"></i>'+
-                                        '                 </span>'+
-                                        '             </a>'+
-                                        '         </td>'+
-                                        '     </tr>';
-            });
-        }
-                tableNewDynamicField += ' </tbody>'+
-                                        '</table>';
-        
-        CKEDITOR.dialog.add( 'DadosSEI', function(editor)
-        {
-            return {
-                title : 'Dados do Processo',
-                minWidth : 750,
-                minHeight : 80,
-                buttons: [ CKEDITOR.dialog.okButton ],
-                onOk: function(event, a, b) {
-                    var value = this.getContentElement( 'tab1', 'listDados' ).getValue();
-                    if ( value != '' ) { 
-                        insertDadosEditor(value);
-                        event.data.hide = true;
-                    }
-                },
-                onShow : function() {
-                    var arrayTags_len = (getHashTagsPro(iframeEditor.find('p').map(function(){ return $(this).text() }).get().join(' '))).length;
-                    var resultDiv = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                                    '  <i class="fas fa-info-circle" style="color: #007fff;"></i> '+arrayTags_len+' '+(arrayTags_len==1 ? 'campo din\u00E2mico detectado' : 'campos din\u00E2micos detectados')+'!<br>'+
-                                    '</label>';
-                    $('#tabReplaceTag_result').show().html(resultDiv);
-                    $('#tabNewDynamicField_alert').hide().html('');
-                    if (verifyConfigValue('substituiselecao')) setChosenInCke();
-                },
-                contents :
-                [
-                {
-                    id : 'tab1',
-                    label : 'Inserir Dados do Processo',
-                    elements :
-                    [
-                        {
-                            type: 'select',
-                            id: 'listDados',
-                            // labelLayout: 'horizontal',
-                            inputStyle: 'max-width: 560px',
-                            label: 'Dados do Processo',
-                            items: dadosEditorArray,
-                            'default': ''
-                        }
-                    ]
-                },{
-                    id : 'tab2',
-                    label : 'Substituir Campos Din\u00E2micos',
-                    elements :
-                    [
-                        {
-                            type: 'html',
-                            html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                                ' <tbody>'+
-                                '     <tr class="cke_dialog_ui_hbox">'+
-                                '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:0px">'+
-                                '             <label class="cke_dialog_ui_labeled_label">Substituir campos din\u00E2micos no documento</label>'+
-                                '         </td>'+
-                                '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'+
-                                '             <a style="user-select: none;" onclick="replaceDadosEditor(this)" title="Substituir" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo1_label" id="buttonSigilo1_uiElement">'+
-                                '                 <span id="buttonSigilo1_label" class="cke_dialog_ui_button">Substituir</span>'+
-                                '             </a>'+
-                                '         </td>'+
-                                '     </tr>'+
-                                ' </tbody>'+
-                                '</table>'+
-                                '<div id="tabReplaceTag_result" class="tabReplaceTag_result" style="display:none; margin-top: 15px;"></div>'
-                        }
-                    ]
-                },{
-                    id : 'tab3',
-                    label : 'Campos Din\u00E2micos Personalizados',
-                    elements :
-                    [
-                        {
-                            type: 'html',
-                            html: '<table role="presentation" class="cke_dialog_ui_hbox">'+
-                                ' <tbody>'+
-                                '     <tr class="cke_dialog_ui_hbox">'+
-                                '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">'+
-                                '             <label class="cke_dialog_ui_labeled_label" id="cke_inputNameDynamicField_label" for="cke_inputNameDynamicField_textInput">Nome do campo din\u00E2mico:</label>'+
-                                '         </td>'+
-                                '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px 0">'+
-                                '             # <input style="max-width: 510px;" tabindex="2" placeholder="Insira um nome personalizado, sem acentos ou espa\u00E7os" class="cke_dialog_ui_input_text" id="cke_inputNameDynamicField_textInput" type="text" aria-labelledby="cke_inputNameDynamicField_label">'+
-                                '         </td>'+
-                                '     </tr>'+
-                                '     <tr class="cke_dialog_ui_hbox">'+
-                                '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">'+
-                                '             <label class="cke_dialog_ui_labeled_label" id="cke_inputValueDynamicField_label" for="cke_inputValueDynamicField_textInput">Valor do campo din\u00E2mico:</label>'+
-                                '         </td>'+
-                                '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px 0">'+
-                                '             <input tabindex="3" placeholder="Insira o valor para o campo din\u00E2mico" class="cke_dialog_ui_input_text" id="cke_inputValueDynamicField_textInput" type="text" aria-labelledby="cke_inputValueDynamicField_label">'+
-                                '         </td>'+
-                                '     </tr>'+
-                                '     <tr class="cke_dialog_ui_hbox">'+
-                                '         <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">'+
-                                '         </td>'+
-                                '         <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px 0">'+
-                                '             <a style="user-select: none;" onclick="newDynamicField(this)" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonNewDynamicField_label" id="buttonNewDynamicField_uiElement">'+
-                                '                 <span id="buttonNewDynamicField_label" class="cke_dialog_ui_button">Salvar</span>'+
-                                '             </a>'+
-                                '         </td>'+
-                                '     </tr>'+
-                                ' </tbody>'+
-                                '</table>'+
-                                '<div id="tabNewDynamicField_alert" class="tabReplaceTag_result" style="display:none; margin-top: 15px;"></div>'+
-                                '<div id="tabNewDynamicField_result" class="tabReplaceTag_result" style="margin-top: 15px;">'+
-                                '     '+tableNewDynamicField+
-                                '</div>'+
-                                '<div id="tabNewDynamicField_info" class="tabReplaceTag_result" style="margin-top: 15px;">'+
-                                '     <label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                                '         <i class="fas fa-info-circle" style="color: #007fff;"></i> Os campos din\u00E2micos personalizados s\u00E3o salvos nas observa\u00E7\u00F5es da unidade para este processo.'+
-                                '     </label>'+
-                                '</div>'
-                        }
-                    ]
-                },{
-                    id : 'tab4',
-                    label : 'Lista de Campos Din\u00E2micos',
-                    elements :
-                    [
-                        {
-                            type: 'html',
-                            html: '<table role="presentation" class="cke_dialog_ui_hbox tableZebra">'+
-                                ' <tbody>'+
-                                '     <tr class="cke_dialog_ui_hbox">'+
-                                '         <td class="" role="presentation" style="width:100%; padding:0px">'+
-                                '             <div id="tabReplaceTag_list" style="height: 285px; overflow-y: scroll;">'+
-                                '                  <label class="cke_dialog_ui_labeled_label" style="display: block;"><span style="font-size: 10pt;"><i class="fas fa-hashtag" style="color: #007fff; font-size: 12pt;"></i> Lista de campos din\u00E2micos dispon\u00EDveis para utiliza\u00E7\u00E3o</span></label>'+
-                                '                  <table role="presentation" style="margin-top: 15px;" class="cke_dialog_ui_hbox" id="cke_tabReplaceTag_uiElement">'+
-                                '                   <tbody>'+
-                                '                       '+getDialogDadosEditor_htmlListTag('processo', 'N\u00FAmero do processo <em>(com link)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('processo_texto', 'N\u00FAmero do processo <em>(sem link)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('autuacao', 'Data de autua\u00E7\u00E3o do processo <em>(em formato DD/MM/AAAA)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('tipo', 'Tipo do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('especificacao', 'Especifica\u00E7\u00E3o do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('assuntos', 'Classifica\u00E7\u00E3o por assuntos do processo <em>(separados por v\u00EDrgula)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('assuntos_lista', 'Classifica\u00E7\u00E3o por assuntos do processo <em>(em formato de lista)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('interessados', 'Interessados do processo <em>(separados por v\u00EDrgula)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('interessados_lista', 'Interessados do processo <em>(em formato de lista)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('observacoes', 'Observa\u00E7\u00F5es do processo <em>(separados por v\u00EDrgula)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('observacoes_lista', 'Observa\u00E7\u00F5es do processo <em>(em formato de lista)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('observacao', 'Observa\u00E7\u00E3o da unidade atual</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('acesso', 'N\u00EDvel de acesso do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('acesso_texto', 'N\u00EDvel de acesso do processo <em>(sem \u00EDcone)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documentos', 'Lista de todos os documentos do processo (separados por v\u00EDrgula)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('totaldocumentos', 'N\u00FAmero de documentos do processo</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documentos_lista', 'Lista de todos os documentos do processo (em formato de lista)</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('hoje', 'Data de hoje <em>(em formato [dia] de [m\u00EAs] de [ano])</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('ano', 'Ano corrente <em>(em formato de 4 d\u00EDgitos [YYYY])</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('qrcode', 'QRCode do link para acesso ao processo (SEI Interno)</em>')+
-                                '                   </tbody>'+
-                                '                  </table>'+
-                                '                  <label class="cke_dialog_ui_labeled_label" style="margin-top: 15px; display: block;"><span style="font-size: 10pt;"><i class="fas fa-user-ninja roxoColor" style="font-size: 12pt;"></i> Fun\u00E7\u00F5es Avan\u00E7adas</span></label>'+
-                                '                  <table role="presentation" style="margin-top: 15px;" class="cke_dialog_ui_hbox" id="cke_tabReplaceTagAdv_uiElement">'+
-                                '                   <tbody>'+
-                                '                       '+getDialogDadosEditor_htmlListTag('assunto1', 'Primeiro assunto do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('assunto3', 'Terceiro assunto do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('interessado1', 'Primeiro interessado do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('interessado4', 'Quarto interessado do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('observacao1', 'Primeira observa\u00E7\u00E3o do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('observacao2', 'Segunda observa\u00E7\u00E3o do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documento1', 'Primeiro documento do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documento5', 'Quinto documento do processo')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documento+1', 'Pr\u00F3ximo documento do processo em rela\u00E7\u00E3o ao atual')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documento+3', 'Terceiro documento do processo em rela\u00E7\u00E3o ao atual')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documento-1', 'Primeiro documento do processo anterior ao atual')+
-                                '                       '+getDialogDadosEditor_htmlListTag('documento-6', 'Sexto documento do processo anterior ao atual')+
-                                '                       '+getDialogDadosEditor_htmlListTag('hoje+1', 'Amanh\u00E3 <em>(em formato [dia] de [m\u00EAs] de [ano])</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('hoje-1', 'Ontem <em>(em formato [dia] de [m\u00EAs] de [ano])</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('hoje+7', 'Data daqui 7 dias <em>(em formato [dia] de [m\u00EAs] de [ano])</em>')+
-                                '                       '+getDialogDadosEditor_htmlListTag('hoje-5', 'Data \u00E0 5 dias atr\u00E1s <em>(em formato [dia] de [m\u00EAs] de [ano])</em>')+
-                                '                   </tbody>'+
-                                '                  </table>'+
-                                '             </div>'+
-                                '         </td>'+
-                                '     </tr>'+
-                                ' </tbody>'+
-                                '</table>'
-                        }
-                    ]
-                }
-                ]
-            };
-        } );
-    }
-}
-function removeDynamicField(this_) {
-    $(this_).closest('tr').fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).slideUp('slow', function() {
-        $(this).remove();
-        updateDynamicField();
-        var result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                     '  <i class="fas fa-check-circle verdeColor"></i> Campo din\u00E2mico exclu\u00EDdo com sucesso!<br>'+
-                     '</label>';
-        $('#tabNewDynamicField_alert').show().html(result);
-    });
-}
-function editDynamicField(this_) {
-    var _this = $(this_);
-    var _parent = _this.closest('tr');
-    var name = _parent.find('td').eq(0).find('b').text().replace('#', '');
-    var value = _parent.find('td').eq(1).find('em').text();
-        $('#cke_inputNameDynamicField_textInput').val(name);
-        $('#cke_inputValueDynamicField_textInput').val(value);
-}
-function newDynamicField(this_) {
-    var _this = $(this_);
-    var _parent = _this.closest('table');
-    var nameInput = _parent.find('#cke_inputNameDynamicField_textInput');
-    var valueInput = _parent.find('#cke_inputValueDynamicField_textInput');
-    var arrayRestictTags = uniqPro($('#tabReplaceTag_list table').find('b').map(function(){ return $(this).text().replace(/[^a-zA-Z_]+/g, '') }).get());
-    var name = (nameInput.val() != '') ? removeAcentos(nameInput.val().split(':')[0].replace('#','')).replace(/\ /g, '').toLowerCase().trim() : nameInput.val();
-    var value = valueInput.val().trim();
-    var result = '';
-    $('#tabNewDynamicField_alert').hide().html('');
-    if (name != '' && value != '') {
-        if ($.inArray(name, arrayRestictTags) === -1) {
-            var htmlNewDynamicField = '     <tr class="cke_dialog_ui_hbox" data-tag="'+name+'">'+
-                                      '         <td class="" role="presentation" style="width:30%; padding:8px">'+
-                                      '             <label class="cke_dialog_ui_labeled_label"><b class="hashSpan">#'+name+'</b></label>'+
-                                      '         </td>'+
-                                      '         <td class="" role="presentation" style="width:70%; padding:8px">'+
-                                      '             <em>'+value+'</em>'+
-                                      '             <a style="user-select: none; float: right;" onclick="removeDynamicField(this)" title="Remover" hidefocus="true" class="cke_dialog_ui_button" role="button">'+
-                                      '                 <span id="buttonRemoveDynamicField_label" class="cke_dialog_ui_button">'+
-                                      '                     <i style="color: #989898;" class="fas fa-trash"></i>'+
-                                      '                 </span>'+
-                                      '             </a>'+
-                                      '             <a style="user-select: none; float: right; margin-right: 10px;" onclick="editDynamicField(this)" title="Editar" hidefocus="true" class="cke_dialog_ui_button" role="button">'+
-                                      '                 <span id="buttonEditDynamicField_label" class="cke_dialog_ui_button">'+
-                                      '                     <i style="color: #989898;" class="fas fa-pencil-alt"></i>'+
-                                      '                 </span>'+
-                                      '             </a>'+
-                                      '         </td>'+
-                                      '     </tr>';
-            var trTagEdit = $('#tabNewDynamicField_result').find('table tbody').find('tr[data-tag="'+name+'"]');
-                if (trTagEdit.length == 0) {
-                    $('#tabNewDynamicField_result').find('table tbody').prepend(htmlNewDynamicField);
-                    $('#tabNewDynamicField_result').find('table tbody').find('tr').eq(0).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-                } else {
-                    trTagEdit.find('td').eq(0).find('b').text('#'+name);
-                    trTagEdit.find('td').eq(1).find('em').text(value);
-                    trTagEdit.eq(0).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-                }
-                result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                         '  <i class="fas fa-check-circle verdeColor"></i> Campo din\u00E2mico salvo com sucesso!<br>'+
-                         '</label>';
-                nameInput.val('');
-                valueInput.val('');
-                updateDynamicField();
-        } else {
-            result = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
-                     '  <i class="fas fa-info-circle" style="color: #007fff;"></i> Nome restrito para utiliza&#x00E7;&#x00E3;o interna (Lista de campos din&#x00E2;micos). Insira outro nome!'+
-                     '</label>';
-        }
-        $('#tabNewDynamicField_alert').show().html(result);
-    }
-}
-function updateDynamicField() {
-    var selectId = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'listDados')._.inputId;
-        $('#'+selectId).find('option').each(function(){
-            if ($(this).text().trim().split(' ')[0] == 'Personalizado') {
-                $(this).remove();
-            }
-        });
-    
-    var txtObsDynamicField = '';
-    var arrayNewDynamicField = [];
-        $('#tabNewDynamicField_result').find('table tbody tr').each(function(index, value){
-            var name = $(this).find('td').eq(0).find('b').text().trim().replace('#', '');
-            var value = $(this).find('td').eq(1).find('em').text().trim();
-            $('#'+selectId).append('<option value="'+value+'">Personalizado ('+siglaUnidadeAtual+') #'+name+': '+value+'</option>');
-            arrayNewDynamicField.push({name: name, value: value});
-            txtObsDynamicField += '#'+name+': '+value+'\n';
-        });
-    
-        $.each(dadosProcessoPro.propProcesso.txaTagsObservacoes, function(index, value){
-            if (value.unidade == siglaUnidadeAtual) {
-                dadosProcessoPro.propProcesso.txaTagsObservacoes[index].tags = arrayNewDynamicField;
-            }
-        });
-    var txaObservacoes = jmespath.search(dadosProcessoPro.propProcesso.txaObservacoes, "[?unidade=='"+siglaUnidadeAtual+"'].observacao | [0]")
-        txtObsDynamicField = (txaObservacoes !== null) ? txtObsDynamicField+txaObservacoes : txtObsDynamicField;
-        updateDadosProcesso('txaObservacoes', txtObsDynamicField);
-        console.log('arrayNewDynamicField', arrayNewDynamicField, txtObsDynamicField);
-}
-function getDialogDadosEditor_htmlListTag(tag, desc) {
-    return '          <tr class="cke_dialog_ui_hbox">'+
-           '              <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:50%; padding:8px">'+
-           '                  <label class="cke_dialog_ui_labeled_label"><b class="hashSpan">#'+tag+'</b></label>'+
-           '              </td>'+
-           '              <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px; vertical-align: middle;">'+
-           '                  '+desc+
-           '              </td>'+
-           '          </tr>';
-}
-function insertDadosEditor(value) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        oEditor.insertHtml(value);
-        oEditor.fire('saveSnapshot');
-}
-function getSumarioDocumento(this_) {
-    setParamEditor(this_);
-    getDialogSumarioDocumento();
-}
-function getListStylesDocumento() {
-    var arrayStylesDoc = [];
-    $(txaEditor).each(function(index){ 
-        var idEditor_ = $(this).attr('id').replace('cke_', '');
-        var iframe_ = $('iframe[title*="'+idEditor_+'"]').contents();
-        if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-            iframe_.find('p').each(function(index){ 
-                var style = ( typeof $(this).attr('class') !== 'undefined' && $(this).attr('class').indexOf(' ') !== -1 ) ? $(this).attr('class').split(' ')[0] : $(this).attr('class');
-                arrayStylesDoc.push(style);
-            });
-        }
-    });
-    arrayStylesDoc = uniqPro(arrayStylesDoc);
-
-    var optionsStyles = $.map(arrayStylesDoc, function (value) {
-        if (value) return `<option value=".${value}">${value}</option>`;
-    }).join('');
-    return optionsStyles;
-}
-function updateSelectDialog(element, array) {
-    if ( $('select#'+element).length ) {
-        $('select#'+element).html('');
-        $.each(array, function (index, value) {
-            $('select#'+element).append('<option value="'+value[1]+'">'+value[0]+'</option>');
-        });
-    }
-}
-function getDialogSumarioDocumento() {
-    var optionsStyles = getListStylesDocumento();
-    const htmlBox = sanitizeHTML(`
-        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="listStyle1"><i class="iconPopup iconSwitch fas fa-h1 cinzaColor"></i>Estilo do T\u00EDtulo 1 (obrigat\u00F3rio):</label>
-                    </td>
-                    <td>
-                        <select id="listStyle1" style="width: 350px;">
-                            ${optionsStyles}
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="listStyle2"><i class="iconPopup iconSwitch fas fa-h2 cinzaColor"></i>Estilo do T\u00EDtulo 2:</label>
-                    </td>
-                    <td>
-                        <select id="listStyle2" style="width: 350px;">
-                            ${optionsStyles}
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="listStyle3"><i class="iconPopup iconSwitch fas fa-h3 cinzaColor"></i>Estilo do T\u00EDtulo 3:</label>
-                    </td>
-                    <td>
-                        <select id="listStyle3" style="width: 350px;">
-                            ${optionsStyles}
-                        </select>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    `);
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(htmlBox)
-        .dialog({
-            title : 'Inserir sum\u00E1rio',
-            width : 650,
-            height : 250,
-            open: function () {
-                initChosenReplace('box_init', this, true);
-            },
-            buttons: [{
-                text: 'Inserir',
-                class: 'confirm ui-state-active',
-                click: function(event) { 
-                    var arrayStylesUser = [];
-                    var id_style1 = $('#listStyle1' ).val();
-                    var id_style2 = $('#listStyle2' ).val();
-                    var id_style3 = $('#listStyle3' ).val();
-                    if ( id_style1 != '' ) { arrayStylesUser.push(id_style1); }
-                    if ( id_style2 != '' ) { arrayStylesUser.push(id_style2); }
-                    if ( id_style3 != '' ) { arrayStylesUser.push(id_style3); }
-                    if ( arrayStylesUser.length ) { 
-                        insertSumarioDocumento(arrayStylesUser);
-                        resetDialogBoxPro('dialogBoxPro');
-                    }
-                }
-            }]
-        });
-}
-function getDialogSumarioDocumento_() {
-    var arrayStyles = getListStylesDocumento();
-    CKEDITOR.dialog.add( 'SumarioSEI', function(editor)
-      {
-         return {
-            title : 'Inserir sum\u00E1rio',
-            minWidth : 500,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var arrayStylesUser = [];
-                var id_style1 = this.getContentElement( 'tab1', 'listStyle1' ).getValue();
-                var id_style2 = this.getContentElement( 'tab1', 'listStyle2' ).getValue();
-                var id_style3 = this.getContentElement( 'tab1', 'listStyle3' ).getValue();
-                if ( id_style1 != '' ) { arrayStylesUser.push(id_style1); }
-                if ( id_style2 != '' ) { arrayStylesUser.push(id_style2); }
-                if ( id_style3 != '' ) { arrayStylesUser.push(id_style3); }
-                if ( arrayStylesUser.length ) { 
-                    insertSumarioDocumento(arrayStylesUser);
-                    event.data.hide = true;
-                }
-
-            },
-            onShow : function() {
-                var arrayStyles = getListStylesDocumento();
-                updateSelectDialog(this.getContentElement( 'tab1', 'listStyle1' )._.inputId, arrayStyles);
-                updateSelectDialog(this.getContentElement( 'tab1', 'listStyle2' )._.inputId, arrayStyles);
-                updateSelectDialog(this.getContentElement( 'tab1', 'listStyle3' )._.inputId, arrayStyles);
-                if (verifyConfigValue('substituiselecao')) setChosenInCke();
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Estilo do T\u00EDtulo',
-                  elements :
-                  [
-                    {
-             			type: 'select',
-             			id: 'listStyle1',
-                        labelLayout: 'horizontal',
-             			label: 'Estilo do T\u00EDtulo 1 (obrigat\u00F3rio)',
-             			items: arrayStyles,
-             			'default': ''
-             		},{
-             			type: 'select',
-             			id: 'listStyle2',
-                        labelLayout: 'horizontal',
-             			label: 'Estilo do T\u00EDtulo 2',
-             			items: arrayStyles,
-             			'default': ''
-             		},{
-             			type: 'select',
-             			id: 'listStyle3',
-                        labelLayout: 'horizontal',
-             			label: 'Estilo do T\u00EDtulo 3',
-             			items: arrayStyles,
-             			'default': ''
-             		}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function insertSumarioDocumento(arrayStylesUser) {
-    var selectStyles = arrayStylesUser.join(', ');
-    var htmlSumario = '<p class="Texto_Alinhado_Esquerda"><strong>SUM\u00C1RIO</strong></p>';
-        iframeEditor.find(selectStyles).each(function(index){ 
-            var randRef = randomString(16);
-            var text = $(this).text().trim();
-            htmlSumario+= '<p class="Texto_Alinhado_Esquerda"><a href="#bookmark-'+randRef+'">'+$(this).text().trim()+'</a></p>';
-            $(this).find('a.seipro-bookmark').remove();
-            $(this).prepend('<a class="seipro-bookmark" name="bookmark-'+randRef+'"></a>');
-        });
-    var select = oEditor.getSelection().getStartElement();
-    var pElement = $(select.$).closest('p');
-    if ( pElement.length ) {
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        iframeEditor.find(pElement).after(htmlSumario);
-        oEditor.fire('saveSnapshot');
-    }
-}
+// getDadosEditor() -> js/modules/editor/ (extraido para modulo)
+// getDialogDadosEditor() -> js/modules/editor/ (extraido para modulo)
+// removeDynamicField() -> js/modules/editor/ (extraido para modulo)
+// editDynamicField() -> js/modules/editor/ (extraido para modulo)
+// newDynamicField() -> js/modules/editor/ (extraido para modulo)
+// updateDynamicField() -> js/modules/editor/ (extraido para modulo)
+// getDialogDadosEditor_htmlListTag() -> js/modules/editor/ (extraido para modulo)
+// insertDadosEditor() -> js/modules/editor/ (extraido para modulo)
+// getSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
+// getListStylesDocumento() -> js/modules/editor/ (extraido para modulo)
+// updateSelectDialog() -> js/modules/editor/ (extraido para modulo)
+// getDialogSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
+// getDialogSumarioDocumento_() -> js/modules/editor/ (extraido para modulo)
+// insertSumarioDocumento() -> js/modules/editor/ (extraido para modulo)
 
 // GERA LINK CURTO
-function getTinyUrl(this_) {
-    setParamEditor(this_);
-    const htmlBox = sanitizeHTML(`
-        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="urlTiny"><i class="iconPopup iconSwitch fas fa-compress-arrows-alt cinzaColor"></i>Insira o link que deseja encurtar:</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="text" id="urlTiny">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="aliasTiny"><i class="iconPopup iconSwitch fas fa-audio-description cinzaColor"></i>Insira um Nome Personalizado para o link (opcional):</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="text" id="aliasTiny">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label" id="tinyResult" colspan="2">
-                    </td>
-                </tr>
-            </table>
-        </div>
-    `);
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(htmlBox)
-        .dialog({
-            title : 'Gerar link curto do TinyURL',
-            width : 600,
-            height : 300,
-            open: function () {
-                initChosenReplace('box_multiple', this, true);
-				var selectTxt = oEditor.getSelection().getSelectedText();
-				setTimeout(function(){ 
-					$('#tinyResult').html('');	
-                    $('#urlTiny').focus();						
-					if ( selectTxt != '' && isValidHttpUrl(selectTxt) ) {
-						$('#urlTiny').val(selectTxt);
-					}
-					$('#aliasTiny').unbind('keyup').keyup(function() {
-						$('#tinyResult').html('');
-						var alias = $('#aliasTiny').val();
-						if ( alias != '' ) {
-							var regex = /^[0-9A-Za-z\-]+$/;
-							var htmlTinyResult = ( regex.test(alias) ) ? 'Resultado: <a class="linkDialog" style="cursor: auto;">https://tinyurl.com/'+alias+'</a>' : '<strong style="color:red;">O nome personalizado deve conter apenas letras, n\u00FAmeros e travess\u00F5es.</strong>';
-								$('#tinyResult').html(htmlTinyResult);
-						}
-					});
-				}, 100);
-            },
-            buttons: [{
-                text: 'Inserir',
-                class: 'confirm ui-state-active',
-                click: function(event) { 
-                    var regex = /^[0-9A-Za-z\-]+$/;
-                    var url_Tiny = $('#urlTiny' ).val();
-                    var alias_Tiny =  $('#aliasTiny' ).val();
-                    if ( url_Tiny != '' && isValidHttpUrl(url_Tiny) && ( ( alias_Tiny != '' && regex.test(alias_Tiny) ) || alias_Tiny == '' ) ) {
-                        ajaxTinyUrl(url_Tiny, alias_Tiny, 'insert');
-                        resetDialogBoxPro('dialogBoxPro');
-                    } else {
-                        if ( url_Tiny == '' || !isValidHttpUrl(url_Tiny) ) {
-                            alertaBoxPro('Error', 'exclamation-triangle', 'Digite um link v\u00E1lido!');
-                        } else if ( alias_Tiny != '' && !regex.test(alias_Tiny) ) {
-                            alertaBoxPro('Error', 'exclamation-triangle', 'O nome personalizado deve conter apenas letras, n\u00FAmeros e travess\u00F5es!');
-                        } else if ( alias_Tiny.length < 5 ) {
-                            alertaBoxPro('Error', 'exclamation-triangle', 'O nome personalizado deve ter mais de 4 (quatro) caracteres')
-                        } else {
-                            alertaBoxPro('Error', 'exclamation-triangle', 'Digite um link v\u00E1lido!');
-                        }
-                        resetDialogBoxPro('dialogBoxPro');
-                    }
-                }
-            }]
-        });
-}
+// getTinyUrl() -> js/modules/editor/ (extraido para modulo)
 function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
 	var url = "https://tinyurl.com/api-create.php";
 	var data = ( alias_Tiny != '' ) ? { url: url_Tiny, alias: alias_Tiny } : { url: url_Tiny };	
@@ -3511,11 +1530,10 @@ function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
             if (  dataUrl != '' && xhr.status == 200 ) {
 				if ( mode == 'insert' ) {
 					var htmlUrl = '<a href="'+dataUrl+'" class="ancoraSei" target="_blank">'+dataUrl+'</a>';
-                        oEditor.focus();
-                        oEditor.fire('saveSnapshot');
-                        oEditor.insertHtml(htmlUrl);
-                        oEditor.fire('saveSnapshot');
-                        // CKEDITOR.dialog.getCurrent().hide();
+                        var ed = SeiProEditorAdapter.getInstance();
+                        if (ed) {
+                            SeiProEditorAdapter.withEdit(ed, function () { SeiProEditorAdapter.insertHtml(ed, htmlUrl); });
+                        }
 				} else if ( mode == 'setinput' ) {
 					setInputTinyUrl(dataUrl);
 				}
@@ -3532,245 +1550,26 @@ function ajaxTinyUrl(url_Tiny, alias_Tiny, mode) {
 }
 
 // GERA QR CODE
-function getQrCode(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('QrCodeSEI');
-}
-function getDialogQrCode() {
-	var htmlQrCodeLab = '<div id="qrCodeLab">'+
-						'	<table style="width: 100%;">'+
-						'		<tr><td style="vertical-align: top; text-align: right;" colspan="2"><a id="toggleOptionsQR" onclick="toggleOptionsQR()" class="linkDialog">Op\u00E7\u00F5es avan\u00E7adas </a></td></tr>'+
-						'		<tr><td style="vertical-align: top;">'+
-						'		<div id="optionsQrAdvanced" style="display:none">'+
-						'			<table>'+
-						'			<tr><td>'+
-						'				<label for="QrPro-size">Tamanho do QR: 140px</label><input id="QrPro-size" type="range" value="140" min="100" max="500" step="50">'+
-						'			</td><td>'+
-						'				<label for="QrPro-fill">Cor de Preenchimento</label><input id="QrPro-fill" type="color" value="#333333">'+
-						'			</td><td>'+
-						'				<label for="background">Cor de Fundo</label><input id="QrPro-background" type="color" value="#ffffff">'+
-						'				<span style="display: inline-flex;margin-left: 20px;"><input id="QrPro-background-transparent" type="checkbox" style="margin: 0 5px;"> Transparente</span>'+
-						'			</td></tr><tr><td>'+
-						'				<label for="QrPro-minversion">Vers\u00E3o: 7</label><input id="QrPro-minversion" type="range" value="6" min="1" max="10" step="1">'+
-						'			</td><td>'+
-						'				<label for="QrPro-eclevel">N\u00EDvel de corre\u00E7\u00E3o de erros</label><select id="QrPro-eclevel"><option value="L" selected="selected">Baixo (7%)</option><option value="M">M\u00E9dio (15%)</option><option value="Q">1/4 (25%)</option><option value="H">Alto (30%)</option></select>'+
-						'			</td><td>'+
-						'				<label for="QrPro-quiet">Margens de folga: 1 m\u00F3dulos</label><input id="QrPro-quiet" type="range" value="1" min="0" max="4" step="1">'+
-						'			</td></tr><tr><td>'+
-						'				<label for="QrPro-radius">Raio de canto: 0%</label><input id="QrPro-radius" type="range" value="50" min="0" max="50" step="10">'+
-						'			</td><td>'+
-						'				<label for="QrPro-mode">Modo</label>'+
-						'					<select id="QrPro-mode">'+
-						'						<option value="0" selected="selected">Normal</option>'+
-						'						<option value="1">Etiqueta em faixa</option>'+
-						'						<option value="2">Etiqueta em caixa</option>'+
-						'						<option value="3">Imagem em faixa</option>'+
-						'						<option value="4">Imagem em caixa</option>'+
-						'					</select>'+
-						'			</td></tr><tr class="QrMode-etiqueta QrMode-imagem"><td>'+
-						'				<label for="QrPro-msize">Tamanho da etiqueta: 20%</label><input id="QrPro-msize" type="range" value="20" min="0" max="40" step="1">'+
-						'			</td><td>'+
-						'				<label for="QrPro-mposx">Posi\u00E7\u00E3o X: 46%</label><input id="QrPro-mposx" type="range" value="50" min="0" max="100" step="1">'+
-						'			</td><td>'+
-						'				<label for="QrPro-mposy">Posi\u00E7\u00E3o Y: 51%</label><input id="QrPro-mposy" type="range" value="50" min="0" max="100" step="1">'+
-						'			</td></tr><tr class="QrMode-etiqueta"><td>'+
-						'				<label for="QrPro-font">Nome da fonte</label><select id="QrPro-font"><option value="Arial" selected="selected">Arial</option><option value="Helvetica">Helvetica</option><option value="Times">Times</option><option value="Times New Roman">Times New Roman</option><option value="Courier">Courier</option><option value="Courier New">Courier New</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Impact">Impact</option></select>'+
-						'			</td><td>'+
-						'				<label for="QrPro-fontcolor">Cor da fonte</label><input id="QrPro-fontcolor" type="color" value="#ff9818">'+
-						'			</td><td>'+
-						'				<label for="QrPro-label" class="QrMode-e">Etiqueta</label><input id="QrPro-label" type="text" value="'+NAMESPACE_SPRO+'">'+
-						'			</td></tr>'+
-						'			<tr class="QrMode-imagem"><td colspan="2">'+
-						'				<label for="QrPro-image">Imagem</label><input id="QrPro-image" type="file">'+
-						'				<img id="QrPro-img-buffer" style="display:none" src="'+iconSeiPro+'">'+
-						'			</td><tr><td>'+
-						'				<a onclick="resetOptionsQR()" class="linkDialog" style="margin-top: 20px; display: block;">Resetar configura\u00E7\u00F5es</a>'+
-						'			</td></tr>'+
-						'			</table>'+
-						'		</div>'+
-						'	</td><td>'+
-						'		<div id="qrCodeResult" style="text-align: center; margin: 20px 0; min-width: 180px;"></div>'+
-						'	</td></tr>'+
-						'	</table>'+
-						'</div>';
-	
-      CKEDITOR.dialog.add( 'QrCodeSEI', function(editor)
-      {
-         return {
-            title : 'Gerar C\u00F3digo QR',
-            minWidth : 500,
-            minHeight : 100,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-				var regex = /^[0-9A-Za-z\-]+$/;
-                var qrCode_input = this.getContentElement( 'tab1', 'qrCodeText' ).getValue();
-                if ( qrCode_input != '' ) {
-                    setQrCode(qrCode_input);
-                    event.data.hide = true;
-                }
-            },
-            onShow : function() {
-				var selectTxt = oEditor.getSelection().getSelectedText();
-				var qrCode_input = this.getContentElement( 'tab1', 'qrCodeText' )._.inputId;
-				setTimeout(function(){ 
-					$('#qrCodeResult').html('');							
-					if ( selectTxt != '' ) {
-						$('.cke_dialog #'+qrCode_input).val(selectTxt);
-						updateQrCode();
-					}
-					$('.cke_dialog #'+qrCode_input).unbind('change').on('input change',function() {
-						updateQrCode();
-					});
-					$('#optionsQrAdvanced input, #optionsQrAdvanced textarea, #optionsQrAdvanced select').on('input change', function() {
-						updateQrCode();
-					});
-					$('#QrPro-image').on('change', function() {
-						var input = $('#QrPro-image')[0];
-						if (input.files && input.files[0]) {
-							var global = global || window;
-							const reader = new global.FileReader();
-							reader.onload = event => {
-								$('#QrPro-img-buffer').attr('src', event.target.result);
-								$('#QrPro-mode').val('4');
-								setTimeout(updateQrCode(), 1000);
-							};
-							reader.readAsDataURL(input.files[0]);
-						}
-					});
-				}, 100);
-                if (verifyConfigValue('substituiselecao')) setChosenInCke();
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Gerar C\u00F3digo QR',
-                  elements :
-                  [
-                    {
-             			type: 'text',
-             			id: 'qrCodeText',
-             			label: 'Insira o texto que deseja codificar',
-						required : true,
-             			'default': '' 
-             		},{
-						type: 'html',
-						html: htmlQrCodeLab
-					}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function resetOptionsQR() {
-	var QrValues = [
-		['QrPro-size', '140'],
-		['QrPro-fill', '#333333'],
-		['QrPro-background', '#ffffff'],
-		['QrPro-minversion', '6'],
-		['QrPro-eclevel', 'L'],
-		['QrPro-quiet', '1'],
-		['QrPro-radius', '50'],
-		['QrPro-mode', '0'],
-		['QrPro-label', NAMESPACE_SPRO],
-		['QrPro-msize', '20'],
-		['QrPro-mposx', '50'],
-		['QrPro-mposy', '50'],
-		['QrPro-fonte', 'Arial'],
-		['QrPro-fontcolor', '#ff9818'],
-		['QrPro-image', '']
-	];
+// getQrCode() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compatibilidade com initFunctions(); di\u00E1logo jQuery UI
+// constru\u00EDdo on-demand em openDialogQrCode().
+// getDialogQrCode() -> js/modules/editor/ (extraido para modulo)
 
-    $.each(QrValues, (idx, pair) => {
-        $('#'+ pair[0]).val(pair[1]);
-    });
-	$("#QrPro-img-buffer").attr('src',iconSeiPro);
-	updateQrCode();
-}
-function toggleOptionsQR() {
-	$('#optionsQrAdvanced').toggle();
-	var position = CKEDITOR.dialog.getCurrent().getPosition();
-	var positionX = ( $('#optionsQrAdvanced').is(':visible') ) ? position.x-150 : position.x+150;
-		CKEDITOR.dialog.getCurrent().move(positionX, position.y);
-}
-function tipQrCodeUrl(qrCodeTxt) {
-	var iconTiny = $('.getTinyUrlButtom span').attr('style');
-		$('#tipQrCodeUrl').remove();
-	if ( qrCodeTxt != '' && isValidHttpUrl(qrCodeTxt) && qrCodeTxt.length > 50 ) {
-		var htmlTip = 	'<span id="tipQrCodeUrl" style="float:left; padding: 5px 5px 8px 5px; background: #f9f9dc; border-radius: 5px;">Dica: Experimente <a onclick="convertTinyURL()" class="linkDialog"><span style="width: 16px; height: 16px; display: inline-block;'+iconTiny+'"></span>'+
-						'Gerar link curto do TinyURL</a></span>';
-		$('#toggleOptionsQR').before(htmlTip);
-	}
-}
-function setInputTinyUrl(dataUrl) {
-	CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'qrCodeText').setValue(dataUrl);
-	updateQrCode();
-}
-function convertTinyURL() {
-	var qrCodeTxt = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'qrCodeText').getValue();
-	ajaxTinyUrl(qrCodeTxt, '', 'setinput');
-}
-function updateQrCode() {
-	$('#qrCodeResult').empty();
-	$('.QrMode-etiqueta').hide();
-	$('.QrMode-imagem').hide();
-	
-	var QrValues = [
-		['QrPro-size', 'px'],
-		['QrPro-minversion', ''],
-		['QrPro-quiet', ' m\u00F3dulos'],
-		['QrPro-radius', '%'],
-		['QrPro-msize', '%'],
-		['QrPro-mposx', '%'],
-		['QrPro-mposy', '%']
-	];
+/**
+ * Abre o di\u00E1logo de gera\u00E7\u00E3o de QR Code (jQuery UI). Reaproveita todo o
+ * painel de op\u00E7\u00F5es avan\u00E7adas (#qrCodeLab) e as fun\u00E7\u00F5es auxiliares
+ * updateQrCode()/toggleOptionsQR()/resetOptionsQR().
+ */
+// openDialogQrCode() -> js/modules/editor/ (extraido para modulo)
 
-    $.each(QrValues, (idx, pair) => {
-        const $label = $('label[for="' + pair[0] + '"]');
-        $label.text($label.text().replace(/:.*/, ': ' + $('#' + pair[0]).val() + pair[1]));
-    });
-	
-	var qrCodeTxt = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'qrCodeText').getValue();
-    var options = {
-        render: 'image',
-        ecLevel: $('#QrPro-eclevel').val(),
-        minVersion: parseInt($('#QrPro-minversion').val(), 10),
-        fill: $('#QrPro-fill').val(),
-        background: ($('#QrPro-background-transparent').is(':checked')) ? null : $('#QrPro-background').val(),
-        text: qrCodeTxt,
-        size: parseInt($('#QrPro-size').val(), 10),
-        radius: parseInt($('#QrPro-radius').val(), 10) * 0.01,
-        quiet: parseInt($('#QrPro-quiet').val(), 10),
-        mode: parseInt($('#QrPro-mode').val(), 10),
-        mSize: parseInt($('#QrPro-msize').val(), 10) * 0.01,
-        mPosX: parseInt($('#QrPro-mposx').val(), 10) * 0.01,
-        mPosY: parseInt($('#QrPro-mposy').val(), 10) * 0.01,
-        label: $('#QrPro-label').val(),
-        fontname: $('#QrPro-font').val(),
-        fontcolor: $('#QrPro-fontcolor').val(),
-        image: $('#QrPro-img-buffer')[0]
-    };
-
-	if ( $('#QrPro-mode').val() == 1 || $('#QrPro-mode').val() == 2 ) {
-		$('.QrMode-etiqueta').show();
-	} else if ( $('#QrPro-mode').val() == 3 || $('#QrPro-mode').val() == 4 ) {
-		$('.QrMode-imagem').show();
-	}
-	
-	if ( qrCodeTxt != '' ) {
-		$('#qrCodeResult').qrcode(options);
-	}
-	tipQrCodeUrl(qrCodeTxt);
-}
-function setQrCode(qrCode_text) {
-	var imgBase = $('#qrCodeResult img').attr('src');
-	var htmlQrCode = '<img src="'+imgBase+'">';
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-	    oEditor.insertHtml(htmlQrCode);
-        oEditor.fire('saveSnapshot');
-}
+// buildHtmlQrCodeLab() -> js/modules/editor/ (extraido para modulo)
+// resetOptionsQR() -> js/modules/editor/ (extraido para modulo)
+// toggleOptionsQR() -> js/modules/editor/ (extraido para modulo)
+// tipQrCodeUrl() -> js/modules/editor/ (extraido para modulo)
+// setInputTinyUrl() -> js/modules/editor/ (extraido para modulo)
+// convertTinyURL() -> js/modules/editor/ (extraido para modulo)
+// updateQrCode() -> js/modules/editor/ (extraido para modulo)
+// setQrCode() -> js/modules/editor/ (extraido para modulo)
 function loadResizeImg() {
 	$(txaEditor).each(function(index){ 
 		var idEditor_ = $(this).attr('id').replace('cke_', '');
@@ -3808,1626 +1607,42 @@ function insertProtocoloOnBox(idEditor) {
     }, 100);
 }
 
-function openLinkPro(linkRef, idEditor) {
-    var url = iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]').attr('href');
-    var win = window.open(url, '_blank');
-    if (win) {
-        win.focus();
-    } else {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Por favor, permita popups para essa p\u00E1gina');
-    }
-}
-function removeLinkPro(linkRef, idEditor) {
-    if ( iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]').closest('span').attr('contenteditable') == 'false' ) { 
-        iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]').closest('span').removeAttr('contenteditable'); 
-    }
-    iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]').after(iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]').html()).remove();
-    iframeEditor.find('.linkDisplayPro').remove();
-}
-function copyLinkPro(linkRef, idEditor) {
-    var el = iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]');
-    var url = el.attr('href');
-    copyToClipboard(url);
-    el.find('.info').text('Link copiado!').show();
-    setTimeout(function () {
-        el.find('.info').text('').hide();
-    }, 2000)
-}
-function editLinkPro(idEditor) {
-    oEditor.openDialog('editLinkPro');
-}
-function getDialogLinkPro() {
-      CKEDITOR.dialog.add( 'editLinkPro', function(editor)
-      {
-         return {
-            title : 'Editar link',
-            minWidth : 400,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var urlLink = this.getContentElement( 'tab1', 'urlLink' ).getValue();
-                var nomeLink = this.getContentElement( 'tab1', 'nomeLink' ).getValue();
-                if ( urlLink != '' ) {
-                        nomeLink = ( nomeLink == '' ) ? urlLink : nomeLink;
-                    var select = oEditor.getSelection().getStartElement();
-                    var aElement = $(select.$);
-                    var linkRef = $('#refLinkProForm').val();
-                        iframeEditor.find('a[data-reflinkpro="'+linkRef+'"]').attr('href', urlLink).attr('data-cke-saved-href', urlLink).text(nomeLink);
-                    event.data.hide = true;
-                } else {
-                    alertaBoxPro('Error', 'exclamation-triangle', 'Digite um link');
-					event.data.hide = false;
-				}
-            },
-            onShow : function() {
-                var select = oEditor.getSelection().getStartElement();
-                var aElement = $(select.$);
-                var linkRef = aElement.attr('data-reflinkpro');
-                var idInputUrl = this.getContentElement( 'tab1', 'urlLink' )._.inputId;
-                var idInputNome = this.getContentElement( 'tab1', 'nomeLink' )._.inputId;
-                if ( aElement.length ) {
-                    setTimeout(function(){ 
-                        $('.cke_dialog #'+idInputUrl).val(aElement.attr('href'));
-                        $('.cke_dialog #'+idInputNome).val(aElement.text()).after('<input style="display:none" type="hidden" value="'+linkRef+'" id="refLinkProForm">');
-                    }, 500);
-                }
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Editar link',
-                  elements :
-                  [
-                    {
-             			type: 'text',
-             			id: 'nomeLink',
-             			label: 'Texto vis\u00EDvel',
-             			'default': ''
-             		},{
-             			type: 'text',
-             			id: 'urlLink',
-             			label: 'URL',
-						required : true,
-             			'default': ''
-             		}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function openDialogBatchImgQuality(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('batchImgQuality');
-}
-function getDialogBatchImgQuality() {
-      CKEDITOR.dialog.add( 'batchImgQuality', function(editor)
-      {
-         return {
-            title : 'Reduzir qualidade das imagens',
-            minWidth : 400,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var qualityImg = this.getContentElement( 'tab1', 'quality' ).getValue();
-                if ( qualityImg != '' ) {
-                    iframeEditor.find('img').each(function(){
-                        qualityImages(this, this, qualityImg*0.01);
-                    })
-                    event.data.hide = true;
-                } else {
-                    alertaBoxPro('Error', 'exclamation-triangle', 'Digite um valor');
-					event.data.hide = false;
-				}
-            },
-            onShow : function() {
-                this.getContentElement("tab1", "quality").getInputElement().setAttribute('type','range').setAttribute('max','100').setAttribute('min','1');
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Qualidade',
-                  elements :
-                  [
-                    {
-             			type: 'text',
-             			id: 'quality',
-             			label: 'Qualidade da Imagem',
-             			'default': qualidadeImagens
-             		}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function initDialogUploadImgBase64() {
-    if (checkConfigValue('editarimagens')) {
-        getDialogUploadImgBase64();
-    }
-}
-function openDialogUploadImgBase64(oEditor) {
-    oEditor.openDialog('base64imageDialog');
-}
-function getDialogUploadImgBase64() {
-    /*
-    * Created by ALL-INKL.COM - Neue Medien Muennich - 04. Feb 2014
-    * Licensed under the terms of GPL, LGPL and MPL licenses.
-    */
-    CKEDITOR.dialog.add("base64imageDialog", function(editor){
-        var t = null,
-            selectedImg = null,
-            orgWidth = null, orgHeight = null,
-            imgPreview = null, imgLoading = null, urlCB = null, urlI = null, fileCB = null, imgScal = 1, lock = true;
-        /* Check File Reader Support */
-        function fileSupport() {
-            var r = false, n = null;
-            try {
-                if (FileReader) {
-                    var n = document.createElement("input");
-                    if (n && "files" in n) r = true;
-                }
-            } catch(e) { r = false; }
-            n = null;
-            return r;
-        }
-        var fsupport = fileSupport();
-        /* Load preview image */
-        function imagePreviewLoad(s) {
-            /* no preview */
-            if (typeof(s) != "string" || !s) {
-                imgLoading.getElement().setHtml("");
-                return;
-            }
-            /* Create image */
-            var i = new Image();
-            /* Display loading text in preview element */
-            imgLoading.getElement().setHtml("Carregando...");
-            /* When image is loaded */
-            i.onload = function() {
-                /* Remove preview */
-                imgLoading.getElement().setHtml("");
-                /* Set attributes */
-                if (orgWidth == null || orgHeight == null) {
-                    if (!$(this).attr('data-width')) t.setValueOf("tab-properties", "width", this.width);
-                    if (!$(this).attr('data-height')) t.setValueOf("tab-properties", "height", this.height);
-                    imgScal = 1;
-                    if (this.height > 0 && this.width > 0) imgScal = this.width / this.height;
-                    if (imgScal <= 0) imgScal = 1;
-                } else {
-                    orgWidth = null;
-                    orgHeight = null;
-                }
-                this.id = editor.id+"previewimage_"+randomString(4);
-                this.setAttribute("class","previewImage");
-                this.setAttribute("alt", "");
-                this.setAttribute("style", "cursor:move;max-width:400px;max-height:100px;float:left;margin: 5px;");
+// openLinkPro() -> js/modules/editor/ (extraido para modulo)
+// removeLinkPro() -> js/modules/editor/ (extraido para modulo)
+// copyLinkPro() -> js/modules/editor/ (extraido para modulo)
+// editLinkPro() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compatibilidade com initFunctions(); di\u00E1logo agora eh jQuery UI
+// constru\u00EDdo on-demand em openDialogLinkPro().
+// getDialogLinkPro() -> js/modules/editor/ (extraido para modulo)
 
-                if (!$(this).attr('data-width')) $(this).attr('data-width', this.width);
-                if (!$(this).attr('data-height')) $(this).attr('data-height', this.height);
-
-                /* Insert preview image */
-                try {
-                    var boxPreview = CKEDITOR.dialog.getCurrent().getContentElement("tab-source", "preview").getElement().$;
-                    var p = imgPreview.getElement().$;
-                    if (p) {
-                        p.appendChild(this);
-                        // if (qualidadeImagens > 0 && !$(this).attr('quality')) qualityImages(this, this, quality);
-                        if (boxPreview) {
-                            $(boxPreview).sortable({
-                                items: 'img.previewImage',
-                                cursor: 'grabbing',
-                                start: function(event, ui){
-                                    ui.placeholder.height(ui.item.height());
-                                    ui.placeholder.width(ui.item.width());
-                                },
-                                forceHelperSize: true,
-                                opacity: 0.5
-                            });
-                        }
-                    }
-                } catch(e) {}
-                
-            };
-            /* Error Function */
-            i.onerror = function(){ imgLoading.getElement().setHtml(""); };
-            i.onabort = function(){ imgLoading.getElement().setHtml(""); };
-            /* Load image */
-            i.src = s;
-            if (!isBase64(s)) { 
-                getBase64Image($(i));
-                //console.log($(i), s);
-            }
-        }
-        function loopFileUpload(files, i) {
-            var fr = new FileReader();
-            fr.onload = (function(f) { return function(e) {
-                imgLoading.getElement().setHtml("");
-                imagePreviewLoad(e.target.result);
-            }; })(files[i]);
-            fr.onerror = function(){ imgLoading.getElement().setHtml(""); };
-            fr.onabort = function(){ imgLoading.getElement().setHtml(""); };
-            try {
-                fr.readAsDataURL(files[i]);
-            } catch(e) {}
-        }
-        /* Change input values and preview image */
-        function imagePreview(src){
-            /* Remove preview */
-            imgLoading.getElement().setHtml("");
-            imgPreview.getElement().setHtml("");
-            if (src == "base64") {
-                /* Disable Checkboxes */
-                if (urlCB) urlCB.setValue(false, true);
-                if (fileCB) fileCB.setValue(false, true);
-            } else if (src == "url") {
-                /* Enable Image URL Checkbox */
-                if (urlCB) urlCB.setValue(true, true);
-                if (fileCB) fileCB.setValue(false, true);
-                /* Load preview image */
-                if (urlI) imagePreviewLoad(urlI.getValue());
-            } else if (fsupport) {
-                /* Enable Image File Checkbox */
-                if (urlCB) urlCB.setValue(false, true);
-                if (fileCB) fileCB.setValue(true, true);
-                /* Read file and load preview */
-                var fileI = t.getContentElement("tab-source", "file");
-                var n = null;
-                try { n = fileI.getInputElement().$; } catch(e) { n = null; }
-                if (n && "files" in n && n.files && n.files.length && n.files[0]) {
-                    if ("type" in n.files[0] && !n.files[0].type.match("image.*")) return;
-                    if (!FileReader) return;
-                    imgLoading.getElement().setHtml("Carregando...");
-                    for (var i in n.files) {
-                        loopFileUpload(n.files, i);
-                    }
-                }
-            }
-        };
-        /* Calculate image dimensions */
-        function getImageDimensions() {
-            var o = {
-                "w" : t.getContentElement("tab-properties", "width").getValue(),
-                "h" : t.getContentElement("tab-properties", "height").getValue(),
-                "uw" : "px",
-                "uh" : "px"
-            };
-            if (o.w.indexOf("%") >= 0) o.uw = "%";
-            if (o.h.indexOf("%") >= 0) o.uh = "%";
-            o.w = parseInt(o.w, 10);
-            o.h = parseInt(o.h, 10);
-            if (isNaN(o.w)) o.w = 0;
-            if (isNaN(o.h)) o.h = 0;
-            return o;
-        }
-        /* Set image dimensions */
-        function imageDimensions(src) {
-            var o = getImageDimensions();
-            var u = "px";
-            if (src == "width") {
-                if (o.uw == "%") u = "%";
-                o.h = Math.round(o.w / imgScal);
-            } else {
-                if (o.uh == "%") u = "%";
-                o.w = Math.round(o.h * imgScal); 
-            }
-            if (u == "%") {
-                o.w += "%";
-                o.h += "%";
-            }
-            t.getContentElement("tab-properties", "width").setValue(o.w),
-            t.getContentElement("tab-properties", "height").setValue(o.h)
-        }
-        /* Set integer Value */
-        function integerValue(elem) {
-            var v = elem.getValue(), u = "";
-            if (v.indexOf("%") >= 0) u = "%";
-            v = parseInt(v, 10);
-            if (isNaN(v)) v = 0;
-            elem.setValue(v+u);
-        }
-        function addImgOnEditor(img) {
-            /* Get image source */
-            var src = $(img).attr('src');
-            var data = $(img).data();
-            var quality = t.getValueOf("tab-properties", "quality");
-                quality = (quality != "") ? parseInt(quality)*0.01 : qualidadeImagens*0.01;
-                quality = (quality > 100) ? 100 : quality;
-                quality = (quality < 0) ? 0 : quality;
-            // try { src = CKEDITOR.document.getById(editor.class+"previewimage").$.src; } catch(e) { src = ""; }
-            if (typeof(src) != "string" || src == null || src === "") return;
-            /* selected image or new image */
-            if (selectedImg) var newImg = selectedImg; else var newImg = editor.document.createElement("img");
-            newImg.setAttribute("src", src);
-            src = null;
-            /* Set attributes */
-            newImg.setAttribute("alt", t.getValueOf("tab-properties", "alt").replace(/^\s+/, "").replace(/\s+$/, ""));
-            var attr = {
-                "width" : ["width", "width:#;", "integer", 1],
-                "height" : ["height", "height:#;", "integer", 1],
-                "maxwidth" : ["maxwidth", "max-width:#;object-fit: contain;", "integer", 1],
-                "maxheight" : ["maxheight", "max-height:#;object-fit: contain;", "integer", 1],
-                "vmargin" : ["vspace", "margin-top:#;margin-bottom:#;", "integer", 0],
-                "hmargin" : ["hspace", "margin-left:#;margin-right:#;", "integer", 0],
-                "align" : ["align", ""],
-                "filter" : ["filter", ""],
-                "border" : ["border", "border:# solid black;", "integer", 0]
-            }, css = [], value, cssvalue, attrvalue, k;
-            for(k in attr) {
-                value = t.getValueOf("tab-properties", k);
-                attrvalue = value;
-                cssvalue = value;
-                unit = "px";
-                if (k == "align") {
-                    switch(value) {
-                        case "top":
-                        case "bottom":
-                            attr[k][1] = "vertical-align:#;";
-                            break;
-                        case "left":
-                        case "right":
-                            attr[k][1] = "float:#;";
-                            break;
-                        default:
-                            value = null;
-                            break;
-                    }
-                } else if (k == "filter") {
-                    switch(value) {
-                        case "grayscale":
-                            attr[k][1] = "filter:grayscale(1);";
-                            break;
-                        case "blur":
-                            attr[k][1] = "filter:blur(3px);";
-                            break;
-                        case "shadow":
-                            attr[k][1] = "filter:drop-shadow(2px 4px 6px black);";
-                            break;
-                        case "invert":
-                            attr[k][1] = "filter:invert(1);";
-                            break;
-                        case "sepia":
-                            attr[k][1] = "filter:sepia(1);";
-                            break;
-                        default:
-                            value = null;
-                            break;
-                    }
-                }
-                if (attr[k][2] == "integer") {
-                    if (value.indexOf("%") >= 0) unit = "%";
-                    value = parseInt(value, 10);
-                    if (isNaN(value)) value = null; else if (value < attr[k][3]) value = null;
-                    if (value != null) {
-                        if (unit == "%") {
-                            attrvalue = value+"%";
-                            cssvalue = value+"%";
-                        } else {
-                            attrvalue = value;
-                            cssvalue = value+"px";
-                        }
-                    }
-                }
-                if (value != null) {
-                    if (k == 'width' && typeof data !== 'undefined' && data.width && !selectedImg) {
-                        newImg.setAttribute('width', data.width);
-                    } else if (k == 'height' && typeof data !== 'undefined' && data.height && !selectedImg) {
-                        newImg.setAttribute('height', data.height);
-                    } else {
-                        newImg.setAttribute(attr[k][0], attrvalue);
-                        css.push(attr[k][1].replace(/#/g, cssvalue));
-                    }
-                }
-                if (attrvalue == 'none') {
-                    newImg.removeAttribute(k);
-                }
-            }
-            if (css.length) newImg.setAttribute("style", css.join(""));
-            if (newImg.getAttribute('maxwidth')) {
-                newImg.removeAttribute('height');
-            }
-            if (newImg.getAttribute('maxheight')) {
-                newImg.removeAttribute('width');
-            }
-            /* Insert new image */
-            if (!selectedImg) editor.insertElement(newImg);
-            if (qualidadeImagens > 0) {
-                newImg.setAttribute("quality",quality);
-                qualityImages(newImg.$, newImg.$, quality);
-            }
-            /* Resize image */
-            if (editor.plugins.imageresize) editor.plugins.imageresize.resize(editor, newImg, 800, 800);
-        }
-
-
-        if (fsupport) {
-            /* Dialog with file and url image source */
-            var sourceElements = [
-                {
-                    type: "vbox",
-                    widths: ["70px"],
-                    children: [
-                        {
-                            type: "checkbox",
-                            id: "filecheckbox",
-                            style: "margin-top:5px",
-                            label: "Navegar neste computador:"
-                        },
-                        {
-                            type: "file",
-                            id: "file",
-                            label: "",
-                            onChange: function(){ imagePreview("file"); }
-                        }
-                    ]
-                },{
-                    type: "vbox",
-                    widths: ["70px"],
-                    children: [
-                        {
-                            type: "checkbox",
-                            id: "urlcheckbox",
-                            style: "margin-top:5px",
-                            label: "URL da Imagem:"
-                        },
-                        {
-                            type: "text",
-                            id: "url",
-                            label: "",
-                            onChange: function(){ imagePreview("url"); }
-                        }
-                    ]
-                },
-                {
-                    type: "html",
-                    id: "loading",
-                    html: new CKEDITOR.template("<div style=\"text-align:center;\"></div>").output()
-                },
-                {
-                    type: "html",
-                    id: "preview",
-                    html: new CKEDITOR.template("<div class=\"dropFilePro\" style=\"text-align:center;max-width: 700px;\"></div>").output()
-                }
-            ];
-        } else {
-            /* Dialog with url image source */
-            var sourceElements = [
-                {
-                    type: "text",
-                    id: "url",
-                    label: "URL da Imagem:",
-                    onChange: function(){ imagePreview("url"); }
-                },
-                {
-                    type: "html",
-                    id: "loading",
-                    html: new CKEDITOR.template("<div style=\"text-align:center;\"></div>").output()
-                },
-                {
-                    type: "html",
-                    id: "preview",
-                    html: new CKEDITOR.template("<div class=\"dropFilePro\" style=\"text-align:center;max-width: 700px;\"></div>").output()
-                }
-            ];
-        }
-        /* Dialog */
-        return {
-            title: editor.lang.common.image,
-            minWidth: 750,
-            minHeight: 180,
-            onLoad: function(){
-                if (fsupport) {
-                    /* Get checkboxes */
-                    urlCB = this.getContentElement("tab-source", "urlcheckbox");
-                    fileCB = this.getContentElement("tab-source", "filecheckbox");
-                    /* Checkbox Events */
-                    urlCB.getInputElement().on("click", function(){ imagePreview("url"); });
-                    fileCB.getInputElement().on("click", function(){ imagePreview("file"); });
-                    
-                }
-                /* Get url input element */
-                urlI = this.getContentElement("tab-source", "url");
-                /* Get image preview element */
-                imgLoading = this.getContentElement("tab-source", "loading");
-                imgPreview = this.getContentElement("tab-source", "preview");
-                /* Constrain proportions or not */
-                this.getContentElement("tab-properties", "lock").getInputElement().on("click", function(){
-                    if (this.getValue()) lock = true; else lock = false;
-                    if (lock) imageDimensions("width");
-                }, this.getContentElement("tab-properties", "lock"));
-                /* Change Attributes Events  */
-                this.getContentElement("tab-properties", "width").getInputElement().on("keyup", function(){ if (lock) imageDimensions("width"); });
-                this.getContentElement("tab-properties", "height").getInputElement().on("keyup", function(){ if (lock) imageDimensions("height"); });
-                this.getContentElement("tab-properties", "vmargin").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "vmargin"));
-                this.getContentElement("tab-properties", "hmargin").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "hmargin"));
-                this.getContentElement("tab-properties", "border").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "border"));
-                this.getContentElement("tab-properties", "maxwidth").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "maxwidth"));
-                this.getContentElement("tab-properties", "maxheight").getInputElement().on("keyup", function(){ integerValue(this); }, this.getContentElement("tab-properties", "maxheight"));
-                this.getContentElement("tab-properties", "quality").getInputElement().setAttribute('type','number').setAttribute('max','100').setAttribute('min','1');
-                checkLoadJqueryUI();
-            },
-            onShow: function(){
-
-                fileElem = this.getContentElement("tab-source", "file").getElement().$;
-                if (fileElem) {
-                    $(fileElem).css('height','90px').find('iframe').css('height','90px').contents()
-                        .find('head').append('<style type="text/css" data-style="seipro">input[type="file"]:before { content: "Arraste arquivos para c\u00E1 ou clique em "; }</style>')
-                        .end()
-                        .find('input[type="file"]')
-                        .prop('multiple','multiple')
-                        .css({
-                            'width':'100%',
-                            'display':'block',
-                            'background':'#f2f2f2',
-                            'padding':'30px 10px 30px 40px',
-                            'border-radius':'10px',
-                            'font-size':'13pt',
-                            'color':'#999',
-                            'filter': (isDarkMode ? 'invert(1) brightness(1.5)' : 'none'),
-                            'border':'1px dashed #ccc'
-                        });
-                }
-                /* Remove preview */
-                imgLoading.getElement().setHtml("");
-                imgPreview.getElement().setHtml("");
-                t = this, orgWidth = null, orgHeight = null, imgScal = 1, lock = true;
-                /* selected image or null */
-                selectedImg = editor.getSelection().getSelectedElement();
-                if (selectedImg && selectedImg.getName() == "img") {
-                    // selectedImg = selectedImg.getSelectedElement();
-                    // this.getContentElement("tab-properties", "quality").disable();
-                    if (typeof(selectedImg.getAttribute("src")) == "string") {
-                        var srcSelectedImg = selectedImg.getAttribute("src");
-                        var base64strImg = srcSelectedImg.substring(srcSelectedImg.indexOf(',') + 1)
-                        var decoded = atob(base64strImg);
-                        console.log("FileSize: " + decoded.length);
-                        this.getContentElement("tab-properties", "imglength").getElement().setHtml("Tamanho da imagem: <br>"+infraFormatarTamanhoBytes(decoded.length));
-                    }
-                }
-                if (!selectedImg || selectedImg.getName() !== "img") {
-                    selectedImg = null;
-                    // this.getContentElement("tab-properties", "quality").enable();
-                    this.getContentElement("tab-properties", "imglength").getElement().setHtml("");
-                }
-                /* Set input values */
-                t.setValueOf("tab-properties", "lock", lock);
-                t.setValueOf("tab-properties", "vmargin", "0");
-                t.setValueOf("tab-properties", "hmargin", "0");
-                t.setValueOf("tab-properties", "border", "0");
-                t.setValueOf("tab-properties", "maxwidth", "0");
-                t.setValueOf("tab-properties", "maxheight", "0");
-                t.setValueOf("tab-properties", "quality", qualidadeImagens);
-                t.setValueOf("tab-properties", "align", "none");
-                t.setValueOf("tab-properties", "filter", "none");
-                if (selectedImg) {
-                    /* Set input values from selected image */
-                    if (typeof(selectedImg.getAttribute("width")) == "string") orgWidth = selectedImg.getAttribute("width");
-                    if (typeof(selectedImg.getAttribute("height")) == "string") orgHeight = selectedImg.getAttribute("height");
-                    if ((orgWidth == null || orgHeight == null) && selectedImg.$) {
-                        orgWidth = selectedImg.$.width;
-                        orgHeight = selectedImg.$.height;
-                    }
-                    if (orgWidth != null && orgHeight != null) {
-                        t.setValueOf("tab-properties", "width", orgWidth);
-                        t.setValueOf("tab-properties", "height", orgHeight);
-                        orgWidth = parseInt(orgWidth, 10);
-                        orgHeight = parseInt(orgHeight, 10);
-                        imgScal = 1;
-                        if (!isNaN(orgWidth) && !isNaN(orgHeight) && orgHeight > 0 && orgWidth > 0) imgScal = orgWidth / orgHeight;
-                        if (imgScal <= 0) imgScal = 1;
-                    }
-                    if (typeof(selectedImg.getAttribute("src")) == "string") {
-                        if (selectedImg.getAttribute("src").indexOf("data:") === 0) {
-                            imagePreview("base64");
-                            imagePreviewLoad(selectedImg.getAttribute("src"));
-                        } else {
-                            t.setValueOf("tab-source", "url", selectedImg.getAttribute("src"));
-                        }
-                    }
-                    if (typeof(selectedImg.getAttribute("alt")) == "string") t.setValueOf("tab-properties", "alt", selectedImg.getAttribute("alt"));
-                    if (typeof(selectedImg.getAttribute("hspace")) == "string") t.setValueOf("tab-properties", "hmargin", selectedImg.getAttribute("hspace"));
-                    if (typeof(selectedImg.getAttribute("vspace")) == "string") t.setValueOf("tab-properties", "vmargin", selectedImg.getAttribute("vspace"));
-                    if (typeof(selectedImg.getAttribute("border")) == "string") t.setValueOf("tab-properties", "border", selectedImg.getAttribute("border"));
-                    if (typeof(selectedImg.getAttribute("maxwidth")) == "string") t.setValueOf("tab-properties", "maxwidth", selectedImg.getAttribute("maxwidth"));
-                    if (typeof(selectedImg.getAttribute("maxheight")) == "string") t.setValueOf("tab-properties", "maxheight", selectedImg.getAttribute("maxheight"));
-                    if (typeof(selectedImg.getAttribute("filter")) == "string") t.setValueOf("tab-properties", "filter", selectedImg.getAttribute("filter"));
-                    if (typeof(selectedImg.getAttribute("quality")) == "string") {
-                        var qualitySelectedImg = parseInt(selectedImg.getAttribute("quality")*100);
-                            t.setValueOf("tab-properties", "quality", qualitySelectedImg);
-                            t.getContentElement("tab-properties", "quality").getInputElement().setAttribute('type','number').setAttribute('max',qualitySelectedImg).setAttribute('min','1');
-                    }
-                    if (typeof(selectedImg.getAttribute("align")) == "string") {
-                        switch(selectedImg.getAttribute("align")) {
-                            case "top":
-                            case "text-top":
-                                t.setValueOf("tab-properties", "align", "top");
-                                break;
-                            case "baseline":
-                            case "bottom":
-                            case "text-bottom":
-                                t.setValueOf("tab-properties", "align", "bottom");
-                                break;
-                            case "left":
-                                t.setValueOf("tab-properties", "align", "left");
-                                break;
-                            case "right":
-                                t.setValueOf("tab-properties", "align", "right");
-                                break;
-                        }
-                    }
-                    t.selectPage("tab-properties");
-                }
-            },
-            onOk : function(){
-                var imgs = CKEDITOR.document.getElementsByTag("img").$;
-                if (typeof imgs !== 'undefined' && imgs.length) {
-                    $.each(imgs, function(i, img){
-                        var src = $(img).attr('src');
-                        if (!isValidHttpUrl(src)) {
-                            addImgOnEditor(img);
-                        }
-                    })
-                }
-            },
-            /* Dialog form */
-            contents: [
-                {
-                    id: "tab-source",
-                    label: editor.lang.common.generalTab,
-                    elements: sourceElements
-                },
-                {
-                    id: "tab-properties",
-                    label: editor.lang.common.advancedTab,
-                    elements: [
-                        {
-                            type: "text",
-                            id: "alt",
-                            label: "Texto Alternativo"
-                        },
-                        {
-                            type: 'hbox',
-                            widths: ["30%", "30%", "40%"],
-                            children: [
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "width",
-                                    label: editor.lang.common.width
-                                },
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "height",
-                                    label: editor.lang.common.height
-                                },
-                                {
-                                    type: "checkbox",
-                                    id: "lock",
-                                    label: "Travar Propor\u00E7\u00F5es",
-                                    style: "margin-top:18px;"
-                                }
-                            ]
-                        },
-                        {
-                            type: 'hbox',
-                            widths: ["30%", "30%", "40%"],
-                            style: "margin-top:10px;",
-                            children: [
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "vmargin",
-                                    label: "Margem Vertical"
-                                },
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "hmargin",
-                                    label: "Margem Horizontal"
-                                },
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "border",
-                                    label: "Borda"
-                                }
-                            ]
-                        },
-                        {
-                            type: 'hbox',
-                            widths: ["30%", "30%", "40%"],
-                            children: [
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "maxwidth",
-                                    label: "Largura M\u00E1xima"
-                                },
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "maxheight",
-                                    label: "Altura M\u00E1xima"
-                                },{
-                                    type: "select",
-                                    id: "align",
-                                    label: editor.lang.common.align,
-                                    items: [
-                                        [editor.lang.common.notSet, "none"],
-                                        [editor.lang.common.alignTop, "top"],
-                                        [editor.lang.common.alignBottom, "bottom"],
-                                        [editor.lang.common.alignLeft, "left"],
-                                        [editor.lang.common.alignRight, "right"]
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            type: 'hbox',
-                            widths: ["30%", "30%", "40%"],
-                            children: [
-                                {
-                                    type: "text",
-                                    width: "80px",
-                                    id: "quality",
-                                    label: "Qualidade da Imagem (1 = baixa / 100 = alta)"
-                                },{
-                                    type: "select",
-                                    id: "filter",
-                                    label: "Filtro",
-                                    items: [
-                                        [editor.lang.common.notSet, "none"],
-                                        ["Escala de Cinza", "grayscale"],
-                                        ["Borrado", "blur"],
-                                        ["Caixa Sombreada", "shadow"],
-                                        ["Cores Invertidas", "invert"],
-                                        ["Envelhecido", "sepia"]
-                                    ]
-                                },{
-                                    type: "html",
-                                    id: "imglength",
-                                    html: new CKEDITOR.template("<div style=\"text-align:left;\"></div>").output()
-                                },
-                            ]
-                        }
-                    ]
-                }
-            ]
-        };
-    });
-}
-function hideLinkTips(iframeDoc) {
-    if (iframeDoc.find('.linkDisplayPro:hover').length == 0) {
-        iframeDoc.find('.linkDisplayPro').closest('a');
-        iframeDoc.find('.linkDisplayPro').remove();
-        restoreIframeDisplayLink();
-    }
-}
-function showLinkTips(this_, iframeDoc) {
-    iframeDoc.find('.linkDisplayPro').remove();
-    var eLink = $(this_);
-    var tLink = eLink.text();
-        tLink = $("<div/>").text(tLink).html();
-    var hrefLink = eLink.attr('href');
-    var hLinkTiny = ( hrefLink.length > 50 ) ? hrefLink.replace(/^(.{50}[^\s]*).*/, "$1")+'...' : hrefLink;
-    var linkRef = randomString(8);
-    var html =  '<div class="linkDisplayPro" unselectable="on">'+
-                '    <span contenteditable="false">'+
-                '        <a onclick="parent.openLinkPro(\''+linkRef+'\',\''+idEditor+'\')" title="Abrir link"><i class="fas fa-globe-americas" style="padding-right: 5px;"></i><span class="info"></span><strong style="font-size: 13pt;" class="title-linktip" title="'+tLink+'">'+hLinkTiny+'</strong> <i class="fas fa-external-link-alt" style="font-size: 11px; padding: 3px; vertical-align: top;"></i></a> '+
-                '        <a onclick="parent.copyLinkPro(\''+linkRef+'\',\''+idEditor+'\')" title="Copiar link"><i class="far fa-copy" style="color: #777;"></i></a>'+
-                '        <a onclick="parent.editLinkPro(\''+idEditor+'\')" title="Editar link"><i class="fas fa-pen" style="color: #777;"></i></a>'+
-                '        <a onclick="parent.removeLinkPro(\''+linkRef+'\',\''+idEditor+'\')" title="Remover link"><i class="fas fa-unlink" style="color: #777;"></i></a>'+
-                '    </span>'+
-                '</div>';
-        $(this_).attr('data-reflinkpro', linkRef).prepend(html);
-    
-        var boxDisplayLink = $(this_).find('.linkDisplayPro');
-        var boxDisplayLink_left = boxDisplayLink.offset().left;
-        var boxDisplayLink_width = boxDisplayLink.width();
-        var windowWidth = $(window).width();
-        var margin = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-(boxDisplayLink_left+boxDisplayLink_width+45) : 0;
-            boxDisplayLink.css('margin-left', margin);
-}
-function openImageEditorPro(this_) {
-    oEditor.openDialog('ImageEditorPro');
-}
-function initDialogImageEditorPro() {
-    if (checkConfigValue('editarimagens')) {
-        getDialogImageEditorPro();
-    }
-}
-function getDialogImageEditorPro() {
-    if (checkConfigValue('editarimagens')) {
-        var htmlImageEditorPro =    '<div id="ImageEditorPro"></div>'; 
-        var wScreen = $('body').width()-5;
-            wScreen = wScreen > 900 ? 900 : wScreen;
-        var hScreen = $('body').height()-10;
-            hScreen = hScreen > 900 ? 900 : hScreen
-
-        CKEDITOR.dialog.add( 'ImageEditorPro', function(editor) {
-            return {
-                title : 'Editar Imagem',
-                minWidth : wScreen,
-                minHeight : hScreen,
-                buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-                onOk: function(event, a, b) {
-                        event.data.hide = false;
-                    var newImgBase64 = imgEditor.getCurrentImgData().imageData.imageBase64;
-                    var selectedImg = oEditor.getSelection().getStartElement().$;
-                    if (selectedImg) {
-                        selectedImg.setAttribute("src", newImgBase64);
-                        imgEditor.terminate();
-                        CKEDITOR.dialog.getCurrent().hide();
-                    }
-                },
-                onShow : function() {
-                    checkLoadFileRobot(function(){
-                        selectedImg = editor.getSelection();
-                        if (selectedImg) {
-                            selectedImg = selectedImg.getSelectedElement();
-                        } else  if (!selectedImg || selectedImg.getName() !== "img") {
-                            selectedImg = null;
-                        }
-                        if (typeof(selectedImg.getAttribute("src")) == "string") {
-                            console.log('onShow', selectedImg);
-                            var { TABS, TOOLS } = FilerobotImageEditor;
-                            var config = {
-                                source: selectedImg.getAttribute("src"),
-                                onSave: function (editedImageObject, designState) { 
-                                    selectedImg.setAttribute("src", editedImageObject.imageBase64);
-                                    CKEDITOR.dialog.getCurrent().hide();
-                                },
-                                annotationsCommon: {
-                                    fill: '#ff0000'
-                                },
-                                Text: { text: NAMESPACE_SPRO+'...' },
-                                translations: {
-                                    'toolbar.adjust': 'Ajustes'
-                                },
-                                language: 'pt',
-                                tabsIds: [TABS.ADJUST, TABS.ANNOTATE, TABS.FINETUNE, TABS.FILTERS,  TABS.RESIZE, TABS.WATERMARK], // or ['Adjust', 'Annotate', 'Watermark']
-                                defaultTabId: TABS.ADJUST, // or 'Annotate'
-                                defaultToolId: TOOLS.TEXT, // or 'Text'
-                                loadableDesignState: false,
-                                observePluginContainerSize: true
-                            };
-
-                            // Assuming we have a div with id="editor_container"
-                            var filerobotImageEditor = new FilerobotImageEditor(
-                                document.querySelector('#ImageEditorPro'),
-                                config
-                            );
-
-                            filerobotImageEditor.render({
-                                onClose: (closingReason) => {
-                                    console.log('Closing reason', closingReason);
-                                    filerobotImageEditor.terminate();
-                                }
-                            });
-                            imgEditor = filerobotImageEditor;
-                            setTimeout(function(){ 
-                                var ImageEditorPro_ = $('#ImageEditorPro');
-                                    ImageEditorPro_.css('height',hScreen);
-                                var wImageEditorPro = ImageEditorPro_.width();
-                                var hImageEditorPro = ImageEditorPro_.height();
-                                    // ImageEditorPro_.find('.FIE_main-container').css('height',hImageEditorPro-30);
-                                    // ImageEditorPro_.find('.FIE_editor-content').css('height',hImageEditorPro-70);
-                                    // ImageEditorPro_.find('.FIE_editor-content').css('width',wImageEditorPro-100);
-                            }, 500);
-                        }
-                    });
-                },
-                contents :
-                [
-                {
-                    id : 'tab1',
-                    label : 'Editar Imagem',
-                    elements :
-                    [
-                        {
-                            type: 'html',
-                            html: htmlImageEditorPro
-                        }
-                    ]
-                }
-                ]
-            };
-        });
-    }
-}
-function pageImageBackground(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('pageImageBackground');
-}
-function getDialogPageImageBackground() {
-    var htmlImportFile =    `<label class="cke_dialog_ui_labeled_label">Importar imagem (PNG, JPG ou SVG)</label>
-                            <div class="cke_dialog_ui_labeled_content cke_dialog_ui_input_file">
-                                <input style="width:95%" id="fileInputImportImage" type="file" accept="image/*">
-                            </div>`;
-
-      CKEDITOR.dialog.add( 'pageImageBackground', function(editor)
-      {
-         return {
-            title : 'Adicionar Image de Fundo e Configura\u00E7\u00F5es de P\u00E1gina para Impress\u00E3o',
-            minWidth : 650,
-            minHeight : 80,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                getImagePageBackground(true, function(src, config) { templateImagePageBackground(src, config) });
-                event.data.hide = false;
-            },
-            onShow : function() {
-                centralizeDialogBoxEditor();
-                $('#'+CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoEscala')._.inputId).attr('type', 'number').attr('step','10').addClass('tipoEscala');
-                $('#'+CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoCabecalho')._.inputId).addClass('textoCabecalho');
-                $('#'+CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoRodape')._.inputId).addClass('textoRodape');
-                $('.cke_dialog_page_contents').find('select').css('width','100%');
-                $('#fileInputImportImage, .cke_dialog_page_contents input, .cke_dialog_page_contents select').on('change',function(){
-                    let _this = $(this);
-                    let val = _this.val();
-                    let pageBox = $('#boxBgPreview');
-                    let imgBox = $('#imgBgPreview');
-
-                    getPreviewImagePageBackground();
-
-                    if (val == 'landscape') {
-                        pageBox.css({'width':'297px', 'height':'210px'});
-                    } else if (val == 'portrait') {
-                        pageBox.css({'height':'297px', 'width':'210px'});
-                    } else if (val == 'letter') {
-                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'279.4px', 'width':'215.9px'});
-                        else pageBox.css({'width':'279.4px', 'height':'215.9px'});
-                    } else if (val == 'legal') {
-                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'356px', 'width':'216px'});
-                        else pageBox.css({'width':'356px', 'height':'216px'});
-                    } else if (val == 'tabloid') {
-                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'432px', 'width':'279px'});
-                        else pageBox.css({'width':'432px', 'height':'279px'});
-                    } else if (val == 'A4') {
-                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'297px', 'width':'210px'});
-                        else pageBox.css({'width':'297px', 'height':'210px'});
-                    } else if (val == 'A5') {
-                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'210px', 'width':'148px'});
-                        else pageBox.css({'width':'210px', 'height':'148px'});
-                    } else if (val == 'A3') {
-                        if (pageBox.height() > pageBox.width()) pageBox.css({'height':'420px', 'width':'297px'});
-                        else pageBox.css({'width':'420px', 'height':'297px'});
-                    } else if (_this.hasClass('tipoEscala')) {
-                        pageBox.find('p').css({'font-size': val+'%'});
-                    } else if (_this.hasClass('tipoFonte')) {
-                        pageBox.find('p').css({'font-family':val});
-                    } else if (_this.hasClass('tipoPosicao')) {
-                        imgBox.css({'background-position':val});
-                    } else if (_this.hasClass('tipoDisposicao')) {
-                        imgBox.css({'background-size':val});
-                    } else if (_this.hasClass('tipoRepeticao')) {
-                        imgBox.css({'background-repeat':val});
-                    } else if (_this.hasClass('tipoUtilizacao')) {
-                        if (val == 'page_cover') pageBox.find('p').css({'visibility':'hidden'});
-                        else pageBox.find('p').css({'visibility':'visible'});
-                    } else if (_this.hasClass('tipoPadding')) {
-                        if (val == '3cm 2cm 3cm 2cm') {
-                            imgBox.css({'padding':'30px 20px'});
-                        } else if (val == '1cm 1cm 1cm 1cm') {
-                            imgBox.css({'padding':'10px'});
-                        } else {
-                            imgBox.css({'padding':'0'});
-                        }
-                    } else if (_this.hasClass('tipoMargem')) {
-                        if (val == '3cm 2cm 3cm 2cm') {
-                            imgBox.css({'margin':'30px 20px'});
-                        } else if (val == '1cm 1cm 1cm 1cm') {
-                            imgBox.css({'margin':'10px'});
-                        } else {
-                            imgBox.css({'margin':'0'});
-                        }
-                    }
-                    centralizeDialogBoxEditor();
-                });
-                if (verifyConfigValue('substituiselecao')) setChosenInCke();
-                setTimeout(function () {
-                    resetOptionsImgBg();
-                }, 100);
-            },
-            contents :
-            [
-               {
-                    id : 'tab1',
-                    label : 'Impress\u00E3o',
-                    elements :
-                    [
-                        {
-                            type: 'hbox',
-                            widths: ["100%"],
-                            style: "margin-top:10px;",
-                            children: [
-                                {
-                                    type: 'html',
-                                    html: htmlImportFile
-                                }
-                            ]
-                        },{
-                            type: 'hbox',
-                            widths: ["33%", "33%", "33%"],
-                            children: [
-                                {
-                                    type: 'select',
-                                    id: 'tipoLayout',
-                                    className: 'tipoLayout',
-                                    label: 'Layout',
-                                    width: '200px',
-                                    items: [ ['Paisagem', 'landscape'], [ 'Retrato', 'portrait' ] ],
-                                    'default': 'portrait'
-                                },{
-                                    type: 'select',
-                                    id: 'tipoPapel',
-                                    className: 'tipoPapel',
-                                    label: 'Tamanho do Papel',
-                                    width: '200px',
-                                    items: [ ['A5', 'A5'], ['A4', 'A4'], ['A3', 'A3'], ['Tabloid', 'tabloid'], ['Letter', 'letter'], ['Legal', 'legal'] ],
-                                    'default': 'A4'
-                                },{
-                                    type: 'text',
-                                    id: 'tipoEscala',
-                                    className: 'tipoEscala',
-                                    label: 'Escala (%)',
-                                    width: '200px',
-                                    'default': '100'
-                                }
-                            ]
-                        },{
-                            type: 'hbox',
-                            widths: ["33%", "33%", "33%"],
-                            children: [
-                                {
-                                    type: 'select',
-                                    id: 'tipoMargem',
-                                    className: 'tipoMargem',
-                                    label: 'Margens Externas',
-                                    width: '200px',
-                                    items: [ ['Padr\u00E3o (3cm 2cm)', '3cm 2cm 3cm 2cm'], ['Nenhuma (0cm)', '0cm'], ['M\u00EDnima (1cm)', '1cm 1cm 1cm 1cm'] ],
-                                    'default': '0cm'
-                                },{
-                                    type: 'select',
-                                    id: 'tipoPadding',
-                                    className: 'tipoPadding',
-                                    label: 'Margens Internas',
-                                    width: '200px',
-                                    items: [ ['Padr\u00E3o (3cm 2cm)', '3cm 2cm 3cm 2cm'], ['Nenhuma (0cm)', '0cm'], ['M\u00EDnima (1cm)', '1cm 1cm 1cm 1cm'] ],
-                                    'default': '3cm 2cm 3cm 2cm'
-                                },{
-                                    type: 'select',
-                                    id: 'tipoFonte',
-                                    className: 'tipoFonte',
-                                    label: 'Fonte',
-                                    width: '200px',
-                                    items: [ ['Helvetica'], ['Arial'], ['Arial Black'], ['Calibri'], ['Verdana'], ['Tahoma'], ['Trebuchet MS'], ['Impact'], ['Gill Sans'], ['Times New Roman'], ['Georgia'], ['Palatino'], ['Baskerville'], ['Andal\u00E9 Mono'], ['Courier'], ['Lucida'], ['Monaco'], ['Bradley Hand'], ['Brush Script MT'], ['Luminari'], ['Comic Sans MS'] ],
-                                    'default': 'Calibri'
-                                }
-                            ]
-                        },{
-                            type: 'hbox',
-                            widths: ["33%", "33%", "33%"],
-                            children: [
-                                {
-                                    type: 'select',
-                                    id: 'tipoPosicao',
-                                    className: 'tipoPosicao',
-                                    label: 'Posi\u00E7\u00E3o da Imagem',
-                                    width: '200px',
-                                    items: [ 
-                                        ['Topo Centralizada \u2238', 'top center'], 
-                                        ['Top Direito \u25F3', 'top right'],  
-                                        ['Top Esquerdo \u25F0', 'top left'],  
-                                        ['Inferior Centralizado \u2A66', 'bottom center'],  
-                                        ['Inferior Direito \u25F2', 'bottom right'],  
-                                        ['Inferior Esquerdo \u25F1', 'bottom left'],  
-                                        ['Meio Centralizada \u29C7'],  
-                                        ['Meio Direito \u27E5', 'center center'],  
-                                        ['Meio Esquerdo \u27E4', 'center left'] ],
-                                    'default': 'top center'
-                                },{
-                                    type: 'select',
-                                    id: 'tipoDisposicao',
-                                    className: 'tipoDisposicao',
-                                    label: 'Disposi\u00E7\u00E3o da Imagem',
-                                    width: '200px',
-                                    items: [ ['Capa (cover)', 'cover'], ['Contida (contain)', 'contain']],
-                                    'default': 'contain'
-                                },{
-                                    type: 'select',
-                                    id: 'tipoRepeticao',
-                                    className: 'tipoRepeticao',
-                                    label: 'Repeti\u00E7\u00E3o da Imagem',
-                                    width: '200px',
-                                    items: [ ['Sem repeti\u00E7\u00E3o', 'no-repeat'], ['Repeti\u00E7\u00E3o horizontal', 'repeat-x'], ['Repeti\u00E7\u00E3o vertical', 'repeat-y'], ['Repeti\u00E7\u00E3o vertical e horizontal', 'repeat'], ['Comprimida ou estivada', 'round'], ['Repeti\u00E7\u00E3o em corte', 'space']],
-                                    'default': 'no-repeat'
-                                }
-                            ]
-                        },{
-                            type: 'hbox',
-                            widths: ["33%", "33%", "33%"],
-                            children: [
-                                {
-                                    type: 'select',
-                                    id: 'tipoUtilizacao',
-                                    className: 'tipoUtilizacao',
-                                    label: 'Utiliza\u00E7\u00E3o da Imagem',
-                                    width: '200px',
-                                    items: [ ['Imagem de fundo', 'background'], ['Imagem como capa de livro', 'page_cover']],
-                                    'default': 'background'
-                                },{
-                                    type: 'text',
-                                    id: 'textoCabecalho',
-                                    className: 'textoCabecalho',
-                                    label: 'Texto do Cabe\u00E7alho',
-                                    width: '200px',
-                                    'default': ''
-                                },{
-                                    type: 'text',
-                                    id: 'textoRodape',
-                                    className: 'textoRodape',
-                                    label: 'Texto do Rodap\u00E9',
-                                    width: '200px',
-                                    'default': ''
-                                }
-                            ]
-                        },{
-                            type: 'hbox',
-                            widths: ["25%", "25%", "25%", "25%"],
-                            children: [
-                                {
-                                    type: 'checkbox',
-                                    id: 'visibleOnPrint',
-                                    className: 'visibleOnPrint',
-                                    'default': 'checked',
-                                    label: 'Vis\u00EDvel apenas ao imprimir'
-                                },{
-                                    type: 'checkbox',
-                                    id: 'onlyFirst',
-                                    className: 'onlyFirst',
-                                    'default': '',
-                                    label: 'Aplicar apenas na primeira p\u00E1gina'
-                                },{
-                                    type: 'checkbox',
-                                    id: 'reduceQualityImg',
-                                    className: 'reduceQualityImg',
-                                    'default': 'checked',
-                                    label: 'Reduzir qualidade da imagem'
-                                }
-                            ]
-                        },{
-                            type: "html",
-                            id: "imgpreview",
-                            html: new CKEDITOR.template(
-                                    `<div id="boxBgPreview" style="text-align: left; width: 210px; height: 297px; margin: 20px auto; border: 1px solid rgb(204, 204, 204); border-radius: 5px; box-shadow: rgb(219, 219, 219) 0px 6px 5px -5px; overflow: hidden; font-size: 100%;" class="cke_dialog_ui_html">
-                                        <div id="imgBgPreview" style="padding: 30px 20px;"><p style="font-family: Calibri; color: rgb(119, 119, 119); font-size: 100%; white-space: pre-line;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut mi lacus. Nulla et metus finibus, pretium enim at, ultrices dui. Aliquam ut mauris convallis, eleifend orci quis, pulvinar augue. Aenean ultrices malesuada ante, non tempor sem placerat in. Nunc ultrices odio ut lorem gravida volutpat. Praesent sed arcu sollicitudin, molestie urna eget, consectetur nulla. Ut sed orci mollis, consequat tortor sed, congue leo.
-                                        <br>Donec ac auctor libero, eu rutrum libero. Nunc sollicitudin felis tempor, convallis augue vitae, tincidunt elit. In quis volutpat erat. Phasellus feugiat purus porta libero vehicula sodales. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam porttitor, diam quis pulvinar finibus, dolor risus convallis sem, eu pellentesque odio enim a arcu. Phasellus sem turpis, malesuada eget efficitur ornare, tristique in odio. Proin molestie tempus odio nec scelerisque. Pellentesque id faucibus libero, vel semper augue.
-                                        <br>Sed convallis ante leo, eu rhoncus nisi dignissim a. Nullam convallis magna sed magna consectetur, nec gravida velit suscipit. Donec sit amet mi ut massa dapibus imperdiet nec quis eros. Vestibulum fringilla mattis metus at lobortis.</p>
-                                        </div>
-                                    </div>
-                                    <a onclick="resetOptionsImgBg(this)" class="linkDialog" style="float: right;margin-right: 20px;">Resetar configura\u00E7\u00F5es</a>`
-                                ).output()
-                        }
-                    ]
-                }
-            ]
-         };
-      } );
-}
-function getImagemBgOnEditor() {
-    let imgBgAncora = iframeEditor.find('.imgBgAncora');
-    let config = imgBgAncora.data();
-        config = typeof config !== 'undefined' ? config : false;
-    let src = imgBgAncora.find('style').text().match(/\((.*?)\)/);
-        src = typeof src !== 'undefined' && src !== null ? src[1].replace(/('|")/g,'') : false;
-    if (src) {
-        $('#imgBgPreview').css('background-image', 'url("'+src+'")');
-        $('#imgBgPreview').css('background-position', config.posicao);
-        $('#imgBgPreview').css('background-size', config.disposicao);
-        $('#imgBgPreview').css('background-repeat', config.repeticao);
-    } else {
-        $('#imgBgPreview').css('background-image', 'none');
-    }
-    return src;
-}
-function resetOptionsImgBg() {
-    let config = iframeEditor.find('.imgBgAncora').data();
-        config = typeof config !== 'undefined' ? config : false;
-    $('#fileInputImportImage').val('');
-    $('.cke_dialog_page_contents .tipoLayout').val(config ? config.layout : 'portrait').trigger('change');
-    $('.cke_dialog_page_contents .tipoPapel').val(config ? config.papel : 'A4').trigger('change');
-    $('.cke_dialog_page_contents .tipoEscala').val(config ? config.escala : '100').trigger('change');
-    $('.cke_dialog_page_contents .tipoMargem').val(config ? config.margem : '0cm').trigger('change');
-    $('.cke_dialog_page_contents .tipoPadding').val(config ? config.padding : '3cm 2cm 3cm 2cm').trigger('change');
-    $('.cke_dialog_page_contents .tipoFonte').val(config ? config.fonte : 'Calibri').trigger('change');
-    $('.cke_dialog_page_contents .tipoPosicao').val(config ? config.posicao : 'top center').trigger('change');
-    $('.cke_dialog_page_contents .tipoDisposicao').val(config ? config.disposicao : 'contain').trigger('change');
-    $('.cke_dialog_page_contents .textoCabecalho').val(config ? config.cabecalho : '').trigger('change');
-    $('.cke_dialog_page_contents .textoRodape').val(config ? config.rodape : '').trigger('change');
-    $('.cke_dialog_page_contents .visibleOnPrint').prop('checked',config ? config.visivel : true);
-    $('.cke_dialog_page_contents .onlyFirst').prop('checked',config ? config.primeirapg : false);
-    $('.cke_dialog_page_contents .reduceQualityImg').prop('checked',config ? config.reducao : true);
-    $('.cke_dialog_page_contents .tipoRepeticao').val(config ? config.repeticao : 'no-repeat').trigger('change');
-    $('.cke_dialog_page_contents .tipoUtilizacao').val(config ? config.utilizacao : 'background').trigger('change');
-    getImagemBgOnEditor();
-    setChosenInCke();
-    getPreviewImagePageBackground();
-}
-function getPreviewImagePageBackground() {
-    let elem = $('#imgBgPreview');
-    getImagePageBackground(false, function(src, config){
-        elem.css({
-            // 'font-family': config.fonte,
-            // 'background-position': config.posicao,
-            // 'background-size': config.disposicao,
-            // 'background-repeat': config.repeticao,
-            'background-image': 'url("'+src+'")'
-        });
-    });
-}
-function getImagePageBackground(insert = false, callback = false) {
-    var src = getImagemBgOnEditor();
-    var importImage = document.getElementById('fileInputImportImage').files;
-    var visibleOnPrint = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'visibleOnPrint').getValue();
-    var onlyFirst = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'onlyFirst').getValue();
-    var reduceQualityImg = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'reduceQualityImg').getValue();
-    var tipoLayout = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoLayout').getValue();
-    var tipoPapel = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoPapel').getValue();
-    var tipoMargem = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoMargem').getValue();
-    var tipoPadding = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoPadding').getValue();
-    var tipoEscala = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoEscala').getValue();
-    var tipoFonte = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoFonte').getValue();
-    var tipoPosicao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoPosicao').getValue();
-    var tipoDisposicao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoDisposicao').getValue();
-    var tipoRepeticao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoRepeticao').getValue();
-    var tipoUtilizacao = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'tipoUtilizacao').getValue();
-    var textoCabecalho = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoCabecalho').getValue();
-    var textoRodape = CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'textoRodape').getValue();
-
-    if (importImage.length) {
-        loadImagePageBackground(importImage[0], {
-            primeirapg: onlyFirst, 
-            cabecalho: textoCabecalho, 
-            rodape: textoRodape, 
-            visivel: visibleOnPrint, 
-            reducao: reduceQualityImg, 
-            layout: tipoLayout, 
-            papel: tipoPapel, 
-            margem: tipoMargem, 
-            padding: tipoPadding, 
-            escala: tipoEscala, 
-            fonte: tipoFonte, 
-            posicao: tipoPosicao, 
-            disposicao: tipoDisposicao,
-            utilizacao: tipoUtilizacao,
-            repeticao: tipoRepeticao
-        }, callback);
-    } else if (insert && src) {
-        templateImagePageBackground(src, {
-            primeirapg: onlyFirst, 
-            cabecalho: textoCabecalho, 
-            rodape: textoRodape, 
-            visivel: visibleOnPrint, 
-            reducao: reduceQualityImg, 
-            layout: tipoLayout, 
-            papel: tipoPapel, 
-            margem: tipoMargem, 
-            padding: tipoPadding, 
-            escala: tipoEscala, 
-            fonte: tipoFonte, 
-            posicao: tipoPosicao, 
-            disposicao: tipoDisposicao,
-            utilizacao: tipoUtilizacao,
-            repeticao: tipoRepeticao
-        });
-    }
-}
-function loadImagePageBackground(item, config, callback = false) {
-    var reader = new FileReader();
-        reader.onload = function (evt) {
-            var element = oEditor.document.createElement('img', {
-                attributes: {
-                    src: evt.target.result,
-                    class: 'img-base64'
-                }
-            });
-            
-            if (qualidadeImagens > 0 && config.reducao) qualityImages(element.$, element.$);
-            // We use a timeout callback to prevent a bug where insertElement inserts at first caret position
-            setTimeout(function () {
-                var src = config.reducao ? $(element).attr('src') : evt.target.result;
-                if (typeof callback === 'function') callback(src, config);
-            }, 10);
-        };
-        reader.readAsDataURL(item);
-}
-function templateImagePageBackground(src, config){
-    var imgBgAncora = iframeEditor.find('.imgBgAncora');
-    var config_cabecalho = config.cabecalho == '' ? `` : `body:before {
-                                                            display: block;
-                                                            position: fixed;
-                                                            text-align: center;
-                                                            content: "${config.cabecalho}";
-                                                            top: 0.5cm;
-                                                            width: 100%;
-                                                            color: #717171;
-                                                            font-size: 8pt;
-                                                            font-family: Calibri;
-                                                        }`;
-    var config_rodape = config.rodape == '' ? `` : `body:after {
-                                                        display: block;
-                                                        position: fixed;
-                                                        text-align: center;
-                                                        content: "${config.rodape}";
-                                                        bottom: 0.5cm;
-                                                        width: 100%;
-                                                        color: #717171;
-                                                        font-size: 8pt;
-                                                        font-family: Calibri;
-                                                    }`;
-    var config_capa = config.utilizacao == 'page_cover' && config.papel == 'A4' && config.layout == 'landscape' ? 'padding-top: 21cm !important;' : '';
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A4' && config.layout == 'portrait' ? 'padding-top: 29.7cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'letter' && config.layout == 'landscape' ? 'padding-top: 21.59cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'letter' && config.layout == 'portrait' ? 'padding-top: 27.94cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'legal' && config.layout == 'landscape' ? 'padding-top: 21.6cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'legal' && config.layout == 'portrait' ? 'padding-top: 35.6cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'tabloid' && config.layout == 'landscape' ? 'padding-top: 27.9cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'tabloid' && config.layout == 'portrait' ? 'padding-top: 43.2cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A5' && config.layout == 'landscape' ? 'padding-top: 14.8cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A5' && config.layout == 'portrait' ? 'padding-top: 21cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A3' && config.layout == 'landscape' ? 'padding-top: 29.7cm !important;' : config_capa;
-        config_capa = config.utilizacao == 'page_cover' && config.papel == 'A3' && config.layout == 'portrait' ? 'padding-top: 42cm !important;' : config_capa;
-    
-    var title = $('td[class*="cke_dialog_ui_hbox"]').map(function(){
-                    let input = $(this).find('select').length ? $(this).find('select option:selected').text() : '';
-                        input = $(this).find('input.cke_dialog_ui_input_text').length ? $(this).find('input.cke_dialog_ui_input_text').val() : input;
-                        input = $(this).find('input[type="checkbox"]').length ? ( $(this).find('input[type="checkbox"]').is(':checked') ? 'Sim' : 'N\u00E3o') : input;
-                        if (input != '') return $(this).find('label').text()+': '+input.trim();
-                }).get().join('\n');
-
-    var htmlBgPage = `<p class="Tabela_Texto_Alinhado_Esquerda">
-                        <span class="imgBgAncora" title="${title}" contenteditable="false" data-cabecalho="${config.cabecalho}" data-rodape="${config.rodape}" data-primeirapg="${config.primeirapg}" data-visivel="${config.visivel}" data-reducao="${config.reducao}" data-layout="${config.layout}" data-papel="${config.papel}" data-margem="${config.margem}" data-padding="${config.padding}" data-escala="${config.escala}" data-fonte="${config.fonte}" data-posicao="${config.posicao}" data-disposicao="${config.disposicao}" data-utilizacao="${config.utilizacao}" data-repeticao="${config.repeticao}">
-                            <a class="ancoraSei" contenteditable="false" style="text-indent:0;">
-                                <style data-style="seipro-imagebg-print" type="text/css">
-                                    .imgBgAncora { text-indent: 0; font-size: .8em; padding: 2px 5px; background: #e4e4e4; border-radius: 5px; font-weight: bold; color:#d45656; margin: 0 5px; }
-                                    html.dark-mode .imgBgAncora, html.dark-mode .imgBgAncora:after { background: #6f7071 !important; color: #f9f9f9 !important; }
-                                    body.cke_editable .imgBgAncora:after { content: " [delete isto para remover]"; color:#888; font-weight: normal; font-size: .85em; margin: 0 5px; }
-                                    @media print {
-                                        @page`+(config.primeirapg ? `:first` : ``)+` {
-                                                size: ${config.papel} ${config.layout};
-                                                margin: ${config.margem};
-                                            }
-                                        `+(config.visivel ? `` : `}`)+`
-                                            body p,
-                                            body p * {
-                                                font-size: ${config.escala}% !important;
-                                                font-family: ${config.fonte} !important;
-                                            }
-                                            .imgBgAncora { display: none; }
-                                            body {
-                                                padding: ${config.padding};
-                                                ${config_capa}
-                                                background-position: ${config.posicao};
-                                                background-size: ${config.disposicao};
-                                                background-repeat: ${config.repeticao};
-                                                background-image: url("${src}");
-                                            }
-                                            ${config_cabecalho}
-                                            ${config_rodape}
-                                        `+(config.visivel ? `}` : ``)+`
-                                </style>
-                                \uD83D\uDDA8\uFE0F * CONFIGURA\u00C7\u00D5ES DE IMPRESS\u00C3O
-                            </a>
-                        </span>
-                    </p>`;
-            oEditor.focus();
-            storeCursorLocation(oEditor);
-            oEditor.fire('saveSnapshot');
-            if (imgBgAncora.length) imgBgAncora.closest('p').remove();
-            iframeEditor.find('body').prepend(htmlBgPage);
-            oEditor.fire('saveSnapshot');
-            // restoreCursorLocation(oEditor);
-            enableButtonSavePro();
-
-        var imgBgAncora_new = iframeEditor.find('.imgBgAncora');
-            imgBgAncora_new.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-            imgBgAncora_new.get(0).scrollIntoView();
-}
-function importDocPro(this_) {
-    setParamEditor(this_);
-    var tipsDocs = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se o documento est\u00E1 acess\u00EDvel por qualquer<br>pessoa na internet. <a href="https://sei-pro.github.io/sei-pro/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
-    var tipsSheets = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Antes de importar, confira se a planilha est\u00E1 publicada na web.<br> Aten\u00E7\u00E3o: O URL publicado na web \u00E9 diferente do URL da planilha. <br><a href="https://sei-pro.github.io/sei-pro/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a></label>'
-    
-    const htmlBox = sanitizeHTML(`
-        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-            <div id="tabDialog" style="border: none;margin: 0;">
-                <ul style="font-size: 0.8em;">
-                   <li><a href="#tabDialog-tab1"><i class="fas fa-upload cinzaColor" style="margin-right: 5px;"></i> Documento HTML ou Word (docx)</a></li>
-                   <li><a href="#tabDialog-tab2"><i class="fas fa-file-alt cinzaColor" style="margin-right: 5px;"></i> Google Docs</a></li>
-                   <li><a href="#tabDialog-tab3"><i class="fas fa-file-spreadsheet cinzaColor" style="margin-right: 5px;"></i> Google Planilhas</a></li>
-                </ul>
-                <div id="tabDialog-tab1">
-                    <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                        <tr>
-                            <td style="vertical-align: bottom; text-align: left;" class="label">
-                                <label for="selectCitacaoDocumento"><i class="iconPopup iconSwitch fas fa-upload cinzaColor"></i>Importar documento HTML ou Word (docx):</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input style="width:95%" id="fileInputImportHTMLDocx" type="file" accept=".docx,.html">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div style="display: flex;">
-                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
-                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="importWord" tabindex="0">
-                                        <label class="onoff-switch-label" for="importWord"></label>
-                                    </div>
-                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="importWord">Corrigir erros de codifica\u00E7\u00E3o de documentos Word</label>
-                                </div>
-                                <div style="display: flex;">
-                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
-                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceText" tabindex="0" checked>
-                                        <label class="onoff-switch-label" for="replaceText"></label>
-                                    </div>
-                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceText">Substituir todo o documento pelo conte\u00FAdo externo</label>
-                                </div>
-                                <div style="display: flex;">
-                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
-                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceTags" tabindex="0" checked>
-                                        <label class="onoff-switch-label" for="replaceTags"></label>
-                                    </div>
-                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceTags">Substituir campos din\u00E2micos no documento (se dispon\u00EDvel)</label>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div id="tabDialog-tab2">
-                    <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                        <tr>
-                            <td style="vertical-align: bottom; text-align: left;" class="label">
-                                <label for="urlGDocs"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i>URL do Google Docs:</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input style="width:95%" id="urlGDocs" type="text">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div style="display: flex;">
-                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
-                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceTextDocs" tabindex="0" checked>
-                                        <label class="onoff-switch-label" for="replaceTextDocs"></label>
-                                    </div>
-                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceTextDocs">Substituir todo o documento pelo conte\u00FAdo externo</label>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label style="font-style: italic;color: #616161;margin-top: 15px;display: block;">
-                                    <i class="fas fa-info-circle" style="color: #007fff;"></i> 
-                                    Antes de importar, confira se o documento est\u00E1 acess\u00EDvel por qualquer<br>pessoa na internet. 
-                                    <a href="https://sei-pro.github.io/sei-pro/pages/INSERIRDOC.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
-                                </label>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div id="tabDialog-tab3">
-                    <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                        <tr>
-                            <td style="vertical-align: bottom; text-align: left;" class="label">
-                                <label for="urlGSheets"><i class="iconPopup iconSwitch fas fa-file-alt cinzaColor"></i>URL do Google Planilhas (Publicar na Web)</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input style="width:95%" id="urlGSheets" type="text">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div style="display: flex;">
-                                    <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
-                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="replaceTextSheets" tabindex="0" checked>
-                                        <label class="onoff-switch-label" for="replaceTextSheets"></label>
-                                    </div>
-                                    <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="replaceTextSheets">Substituir todo o documento pelo conte\u00FAdo externo</label>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label style="font-style: italic;color: #616161;margin-top: 15px;display: block;">
-                                    <i class="fas fa-info-circle" style="color: #007fff;"></i> 
-                                    Antes de importar, confira se a planilha est\u00E1 publicada na web.<br> Aten\u00E7\u00E3o: O URL publicado na web \u00E9 diferente do URL da planilha. 
-                                    <br><a href="https://sei-pro.github.io/sei-pro/pages/INSERIRPLANILHA.html" target="_blank" style="text-decoration: underline; cursor: pointer; color: rgb(0, 0, 238);">Consulte nossa ajuda para mais informa\u00E7\u00F5es.</a>
-                                </label>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-    `);
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(htmlBox)
-        .dialog({
-            title : 'Inserir conte\u00FAdo externo',
-            width : 600,
-            height : 400,
-            open: function () {
-                $.getScript(URL_SPRO+"js/lib/mammoth.browser.min.js");
-                $('#tabDialog').tabs();
-                initChosenReplace('box_multiple', this, true);
-                setTimeout(function () {
-                    $('#fileInputImportHTMLDocx').val('');                    
-                }, 500);
-            },
-            buttons: [{
-                text: 'Inserir',
-                class: 'confirm ui-state-active',
-                click: function(event) { 
-                    var inputFile = document.getElementById('fileInputImportHTMLDocx').files
-                    var urlGDocs = $('#urlGDocs').val();
-                    var urlGSheets = $('#urlGSheets' ).val();
-                    if ( inputFile.length ) {
-                        handleFileImport(inputFile);
-                    } else if ( urlGDocs != '' ) {
-                        getGoogleDocs(urlGDocs);
-                    } else if ( urlGSheets != '' ) {
-                        getGoogleSheets(urlGSheets);
-                    }
-                }
-            }]
-        });
-}
-function getGoogleDocs(url) {
-    var regex = "\\/d\\/(.*?)(\\/|$)";
-    var regDocs = new RegExp(regex).exec(url);
-    if ( regDocs !== null ) {
-        var urlDocs = 'https://docs.google.com/feeds/download/documents/export/Export?id='+regDocs[1]+'&exportFormat=html';
-        loadGoogleDocs(urlDocs, iframeEditor, 'docs');
-    } else {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Url do documento inv\u00E1lido!');
-    }
-}
-function getGoogleSheets(url) {
-    var regex = "\\/e\\/(.*?)(\\/|$)";
-    var regSheets = new RegExp(regex).exec(url);
-    if ( regSheets !== null ) {
-        var urlSheets = 'https://docs.google.com/spreadsheets/d/e/'+regSheets[1]+'/pubhtml';
-        loadGoogleDocs(urlSheets, iframeEditor, 'sheets');
-    } else {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Url do documento inv\u00E1lido!');
-    }
-}
-function handleFileImport(inputFile) {
-    const file = inputFile[0];
-    if (!file) return;
-  
-    const ext = file.name.split('.').pop().toLowerCase();
-  
-    if (ext === "docx") {
-      converterDocxParaHtml(inputFile);
-    } else if (ext === "html" || ext === "htm") {
-      loadFileImportHTML(inputFile);
-    } else {
-      alertaBoxPro('Error', 'exclamation-triangle', "Formato não suportado. Use um arquivo .docx ou .html");
-    }
-}
+/**
+ * Abre o di\u00E1logo de edi\u00E7\u00E3o de link (jQuery UI). Substitui o CKEDITOR.dialog
+ * 'editLinkPro'. Preenche os campos a partir do link em foco (a[data-reflinkpro]).
+ */
+// openDialogLinkPro() -> js/modules/editor/ (extraido para modulo)
+// openDialogBatchImgQuality() -> js/modules/editor/ (extraido para modulo)
+// Mantido por compat; dialogo em openDialogBatchImgQuality().
+// getDialogBatchImgQuality() -> js/modules/editor/ (extraido para modulo)
+// initDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
+// openDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
+// getDialogUploadImgBase64() -> js/modules/editor/ (extraido para modulo)
+// hideLinkTips() -> js/modules/editor/ (extraido para modulo)
+// showLinkTips() -> js/modules/editor/ (extraido para modulo)
+// openImageEditorPro() -> js/modules/editor/ (extraido para modulo)
+// initDialogImageEditorPro() -> js/modules/editor/ (extraido para modulo)
+// getDialogImageEditorPro() -> js/modules/editor/ (extraido para modulo)
+// pageImageBackground() -> js/modules/editor/ (extraido para modulo)
+// getDialogPageImageBackground() -> js/modules/editor/ (extraido para modulo)
+// getImagemBgOnEditor() -> js/modules/editor/ (extraido para modulo)
+// resetOptionsImgBg() -> js/modules/editor/ (extraido para modulo)
+// getPreviewImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// getImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// loadImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// templateImagePageBackground() -> js/modules/editor/ (extraido para modulo)
+// importDocPro() -> js/modules/editor/ (extraido para modulo)
+// getGoogleDocs() -> js/modules/editor/ (extraido para modulo)
+// getGoogleSheets() -> js/modules/editor/ (extraido para modulo)
+// handleFileImport() -> js/modules/editor/ (extraido para modulo)
 async function converterDocxParaHtml(inputFile) {
     try {
       const file = inputFile[0];
@@ -5444,106 +1659,15 @@ async function converterDocxParaHtml(inputFile) {
         }
   
       if (result.messages.length > 0) {
-        console.warn("Mensagens da conversão:", result.messages);
+        console.warn("Mensagens da convers\u00E3o:", result.messages);
       }
     } catch (erro) {
       console.error("Erro ao converter .docx:", erro);
     }
 }
-function loadFileImportHTML(files) {
-    if (files.length <= 0) { return false; }
-    
-    var fr = new FileReader();
-    fr.onload = function(e) { 
-        var result = e.target.result;  
-        if ( $('iframe[title*="'+idEditor+'"]').length ) {
-            var r = (!$('#replaceText').is(':checked')) 
-                    ? true
-                    : confirm("Deseja substituir o conte\u00FAdo atual pelo arquivo importado?");
-            if (r == true) { 
-                loadFileImportEditor(result);
-            }
-        }
-    }
-    if ( $('#importWord').val() == true ) {
-        fr.readAsText(files.item(0), "cP1252");
-    } else {
-        fr.readAsText(files.item(0));
-    }
-    // console.log(CKEDITOR.dialog.getCurrent().getContentElement('tab1', 'replaceTags').getValue());
-    if ( $('#replaceTags').val() == true ) {
-        setTimeout(function(){ replaceDadosEditor() }, 500);
-    }
-}
-function loadFileImportEditor(result) {
-    oEditor.focus();
-    oEditor.fire('saveSnapshot');
-    if ( frmEditor.length ) {
-        if ( $('#replaceText').is(':checked') ) {
-            iframeEditor.find('body').html(result);
-        } else {
-            var select = oEditor.getSelection().getStartElement();
-            var pElement = $(select.$).closest('p');
-            if ( pElement.length ) {
-                iframeEditor.find(pElement).before(result);
-            }
-        }
-    } else {
-        if ( $('#replaceText').is(':checked') ) {
-            iframeEditor.html(result);
-        } else {
-            var select = oEditor.getSelection().getStartElement();
-            var pElement = $(select.$).closest('p');
-            if ( pElement.length ) {
-                pElement.before(result);
-            }
-        }
-    }
-    wordToSEI(iframeEditor);
-    oEditor.fire('saveSnapshot');
-    enableButtonSavePro();
-    resetDialogBoxPro('dialogBoxPro');
-}
-function wordToSEI(iframe) {
-    iframe.find('body link').remove();
-    iframe.find('body script').remove();
-    iframe.find('body style').remove();
-    iframe.find('body meta').remove();
-    iframe.find('o\\:p').remove();
-    iframe.find('a.msocomanchor').remove();
-    iframe.find('div[style="mso-element:comment-list"]').remove();
-    iframe.find('*').contents().each(function() {
-        if (this.nodeType === Node.COMMENT_NODE) {
-            $(this).remove();
-        }
-    });
-
-    iframe.find('p.MsoNormal').each(function(){
-        var align = $(this).attr('align');
-        var style = ( align == 'center' ) ? 'Texto_Centralizado': 'Texto_Justificado_Recuo_Primeira_Linha';
-
-        $(this).removeClass('MsoNormal').removeAttr('align').removeAttr('style').addClass(style);
-
-        $(this).find('span').replaceWith(function() {
-         return $( this ).contents();
-        });
-
-        $(this).find('del').each(function(){ 
-                var text = $(this).html();
-                if (text != '' && text != '&nbsp;') { $(this).after('<span style="color:#FF0000;"><s>'+text+'</s></span> '); }
-                $(this).remove();
-        });
-        $(this).find('ins').each(function(){ 
-                var text = $(this).html();
-                if (text != '' && text != '&nbsp;') { $(this).after('<span style="color:#0000FF;"><u>'+text+'</u></span> '); }
-                $(this).remove();
-        });
-    });
-
-    iframe.find('.WordSection1').replaceWith(function() {
-         return $( this ).contents();
-    });
-}
+// loadFileImportHTML() -> js/modules/editor/ (extraido para modulo)
+// loadFileImportEditor() -> js/modules/editor/ (extraido para modulo)
+// wordToSEI() -> js/modules/editor/ (extraido para modulo)
 function initPasteImgToBase64(editor) {
     if (editor.addFeature) {
         editor.addFeature({
@@ -5609,290 +1733,11 @@ function loadPasteImgToBase64() {
 		}
 	});
 }
-function updatePreviewLatex() {
-    resizeHeigthDialogBox(dialogBoxPro);
-    var mathTextValue = $('#MathText').val();
-    if ( mathTextValue != '' ) { 
-        $('#latexPreview').html('<img src="https://latex.codecogs.com/png.latex?'+encodeURI(mathTextValue)+'">');
-        getBase64Image($('#latexPreview').find('img'));
-        setTimeout(() => {
-            resizeHeigthDialogBox(dialogBoxPro);
-        }, 500);
-    } else {
-        $('#latexPreview').html('');
-    }
-    resizeHeigthDialogBox(dialogBoxPro);
-}
-function openDialogLatex(this_) {
-    setParamEditor(this_);
-    const htmlBox = sanitizeHTML(`
-        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="MathText"><i class="iconPopup iconSwitch fas fa-sigma cinzaColor"></i>Digite a equa\u00E7\u00E3o no formato LaTeX/Mathematics:</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <textarea id="MathText" style="width: 100%;height: 100px;"></textarea>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <div id="latexPreview" style="text-align: center;margin: 20px;"></div>
-                        <label style="font-style: italic;color: #616161;">
-                            <i class="fas fa-info-circle" style="color: #007fff;"></i> Consulte o <a href="https://pt.wikipedia.org/wiki/Ajuda:Guia_de_edi%C3%A7%C3%A3o/F%C3%B3rmulas_TeX" target="_blank" class="linkDialog" style="font-style: italic;">Guia de edi\u00E7\u00E3o/F\u00F3rmulas TeX</a> para utilizar a liguagem LaTeX. <br>Se preferir, utilize um <a href="https://editor.codecogs.com/" target="_blank" class="linkDialog" style="font-style: italic;">editor visual de equa\u00E7\u00F5es LaTeX</a>.
-                        </label>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    `);
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(htmlBox)
-        .dialog({
-            title : 'Inserir Equa\u00E7\u00E3o',
-            width : 600,
-            height : 350,
-            open: function () {
-                initChosenReplace('box_multiple', this, true);
-				var selectTxt = oEditor.getSelection().getSelectedText();
-				var mathText = $('#MathText');
-				setTimeout(function(){ 
-					$('#latexPreview').html('');							
-					if ( mathText != '' ) {
-						mathText.val(selectTxt);
-						updatePreviewLatex();
-					}
-					mathText.unbind('change').on('input change',function() {
-						updatePreviewLatex();
-					});
-				}, 100);
-            },
-            buttons: [{
-                text: 'Inserir',
-                class: 'confirm ui-state-active',
-                click: function(event) { 
-                    var mathText = $('#MathText').val();
-                    var imgMath = $('#latexPreview').find('img');
-                    if ( mathText != '' && imgMath.length ) {
-                        oEditor.focus();
-                        oEditor.fire('saveSnapshot');
-                        oEditor.insertHtml($('#latexPreview').html());
-                        oEditor.fire('saveSnapshot');
-                        resetDialogBoxPro('dialogBoxPro');
-                    }
-                }
-            }]
-        });
-}
-function getDialogLatex() {
-    var htmlLatexPreview =  '<div id="latexPreview" style="text-align: center;margin: 20px;"></div>'+
-                            '<label class="cke_dialog_ui_labeled_label" style="font-style: italic;color: #616161;"><i class="fas fa-info-circle" style="color: #007fff;"></i> Consulte o <a href="https://pt.wikipedia.org/wiki/Ajuda:Guia_de_edi%C3%A7%C3%A3o/F%C3%B3rmulas_TeX" target="_blank" class="linkDialog" style="font-style: italic;">Guia de edi\u00E7\u00E3o/F\u00F3rmulas TeX</a> para utilizar a liguagem LaTeX. <br>Se preferir, utilize um <a href="https://editor.codecogs.com/" target="_blank" class="linkDialog" style="font-style: italic;">editor visual de equa\u00E7\u00F5es LaTeX</a>. </label>';
-    CKEDITOR.dialog.add( 'latexDialog', function(editor)
-      {
-         return {
-            title : 'Inserir Equa\u00E7\u00E3o',
-            minWidth : 500,
-            minHeight : 200,
-            buttons: [ CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton ],
-            onOk: function(event, a, b) {
-                var mathText = this.getContentElement( 'tab1', 'MathText' ).getValue();
-                var imgMath = $('#latexPreview').find('img');
-                if ( mathText != '' && imgMath.length ) {
-                    oEditor.focus();
-                    oEditor.fire('saveSnapshot');
-                    oEditor.insertHtml($('#latexPreview').html());
-                    oEditor.fire('saveSnapshot');
-                    event.data.hide = true;
-                }
-            },
-            onShow : function() {
-				var selectTxt = oEditor.getSelection().getSelectedText();
-				var mathText = this.getContentElement( 'tab1', 'MathText' )._.inputId;
-				setTimeout(function(){ 
-					$('#latexPreview').html('');							
-					if ( mathText != '' ) {
-						$('.cke_dialog #'+mathText).val(selectTxt);
-						updatePreviewLatex();
-					}
-					$('.cke_dialog #'+mathText).unbind('change').on('input change',function() {
-						updatePreviewLatex();
-					});
-				}, 100);
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Inserir Equa\u00E7\u00E3o',
-                  elements :
-                  [
-                    {
-             			type: 'textarea',
-             			id: 'MathText',
-             			label: 'Digite a equa\u00E7\u00E3o no formato LaTeX/Mathematics',
-						required : true,
-             			'default': '' 
-             		},{
-						type: 'html',
-						html: htmlLatexPreview
-					}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function tableSorterPro( editor ) {
-    if ( editor.contextMenu && typeof editor.getMenuItem('sortasc') === 'undefined' ) {
-        editor.addMenuGroup( 'tableproGroup' );
-        editor.addMenuGroup( 'tablesorterGroup' );
-        editor.addMenuItem( 'addestilo', {
-            label: 'Adicionar Estilo',
-            icon: URL_SPRO+'icons/editor/addestilotabela.png',
-            command: 'addestilo',
-            group: 'tableproGroup'
-        });
-        editor.addMenuItem( 'clonetable', {
-            label: 'Duplicar Tabela',
-            icon: URL_SPRO+'icons/editor/duplicartabela.png',
-            command: 'clonetable',
-            group: 'tableproGroup'
-        });
-        editor.addMenuItem( 'sortasc', {
-            label: 'Classificar A \u2192 Z',
-            command: 'sortasc',
-            group: 'tablesorterGroup'
-        });
-        editor.addMenuItem( 'sortdesc', {
-            label: 'Classificar Z \u2192 A',
-            command: 'sortdesc',
-            group: 'tablesorterGroup'
-        });
-
-        editor.contextMenu.addListener( function( element ) {
-            if ( element.getAscendant( 'tr', true ) ) {
-                return { addestilo: CKEDITOR.TRISTATE_OFF};
-            }
-        });
-        editor.contextMenu.addListener( function( element ) {
-            if ( element.getAscendant( 'tr', true ) ) {
-                return { clonetable: CKEDITOR.TRISTATE_OFF};
-            }
-        });
-        editor.contextMenu.addListener( function( element ) {
-            if ( element.getAscendant( 'tr', true ) ) {
-                return { sortasc: CKEDITOR.TRISTATE_OFF};
-            }
-        });
-        editor.contextMenu.addListener( function( element ) {
-            if ( element.getAscendant( 'tr', true ) ) {
-                return { sortdesc: CKEDITOR.TRISTATE_OFF};
-            }
-        });
-
-        editor.addCommand( 'addestilo', {
-            exec: function( editor ) {
-                editor.openDialog('TabelaSEI');
-            }
-        });
-        editor.addCommand( 'sortasc', {
-            exec: function( editor ) {
-                tablesort('asc');
-            }
-        });
-        editor.addCommand( 'sortdesc', {
-            exec: function( editor ) {
-                tablesort('desc');
-            }
-        });
-        editor.addCommand( 'clonetable', {
-            exec: function( editor ) {
-                cloneTablePro();
-            }
-        });
-
-        var cloneTablePro = function(){
-            var selection = editor.getSelection();
-            var select = selection.getStartElement();
-            if ( select ){
-                editor.focus();
-                editor.fire('saveSnapshot');
-                var tableElement = $(select.$).closest('table'); 
-                var htmlTable = tableElement[0].outerHTML;
-                var newLine = '<p class="Texto_Justificado_Recuo_Primeira_Linha"><br></p>';
-                tableElement.after(newLine+htmlTable);
-                editor.fire('saveSnapshot');
-            }
-        }
-        var tablesort = function( order ){
-            var selection = editor.getSelection();
-            var element = selection.getStartElement();
-            if ( element ){
-                editor.focus();
-                editor.fire('saveSnapshot');
-                var column_nr = element.getAscendant( { td:1, th:1 }, true ).getIndex();
-                var table = element.getAscendant({table:1});
-                var tbody = table.getElementsByTag('tbody').getItem(0);
-                if (tbody == undefined) tbody = table;
-                var items = tbody.$.childNodes;
-                var itemsArr = [];
-                for (var i in items) {
-                    if (items[i].nodeType == 1) // get rid of the whitespace text nodes
-                        itemsArr.push(items[i]);		
-                }
-
-                itemsArr.sort(function(a, b) {
-                    var aText = a.childNodes[column_nr].innerText.trim();
-                    var bText = b.childNodes[column_nr].innerText.trim();
-                    if (!aText || 0 === aText.length) 
-                        if (!bText || 0 === bText.length) return 0;
-                        else return 1;
-                    if (!bText || 0 === bText.length) return -1;
-                    if (order == 'desc') return bText.localeCompare(aText, undefined, {numeric:true});
-                    return aText.localeCompare(bText, undefined, {numeric:true});
-                });
-
-                for (i = 0; i < itemsArr.length; ++i) {
-                  tbody.$.appendChild(itemsArr[i]);
-                }
-                editor.fire('saveSnapshot');
-            }
-        }
-    }
-}
-function initContextMenuPro() {
-    if (isSEI_5) {
-
-    } else {
-        $(txaEditor).each(function(){ 
-            var idEditor_ = $(this).attr('id').replace('cke_', '');
-            if ($('iframe[title*="'+idEditor_+'"]').length == 0) {
-                $(this).find('iframe').attr('title', 'Editor de Rich Text, '+idEditor_);
-            }
-        });
-        setTimeout(function () {
-            $(txaEditor).each(function(index){ 
-                var idEditor_ = $(this).attr('id').replace('cke_', '');
-                var iframe_ = $('iframe[title*="'+idEditor_+'"]').contents();
-                if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-                    var oEditor_ = CKEDITOR.instances[idEditor_];
-                        tableSorterPro(oEditor_);
-                        menuCopyStyle(oEditor_);
-                        menuBlockEdition(oEditor_);
-                        if (restrictConfigValue('ferramentasia')) menuPlataformAI(oEditor_);
-                        if (checkConfigValue('editarimagens')) {
-                            editImgPro(oEditor_);
-                        }
-                }
-            });
-        }, 2000);
-    }
-}
+// updatePreviewLatex() -> js/modules/editor/ (extraido para modulo)
+// openDialogLatex() -> js/modules/editor/ (extraido para modulo)
+// getDialogLatex() -> js/modules/editor/ (extraido para modulo)
+// tableSorterPro() -> js/modules/editor/ (extraido para modulo)
+// initContextMenuPro() -> js/modules/editor/ (extraido para modulo)
 // INSERE FUNCAO ARRASTA E SOLTA PARA IMAGENS
 function initDropImages() {
     if (checkConfigValue('editarimagens')) {
@@ -5900,7 +1745,7 @@ function initDropImages() {
             $('iframe.cke_wysiwyg_frame').each(function(index){
                 var iframe = $(this).contents();
                 var instanceIframe = $(this).attr('title');
-                    instanceIframe = (typeof instanceIframe !== 'undefined') ? instanceIframe.split(',')[1].trim() : '';
+                    instanceIframe = (typeof instanceIframe !== 'undefined' && instanceIframe && instanceIframe.split(',').length > 1) ? instanceIframe.split(',')[1].trim() : '';
                 if ( iframe.find('body').attr('contenteditable') == 'true' ) {
                     iframe.find('body').attr('data-editor', instanceIframe).unbind().on('drop dragdrop',function(e){
                         var items = e.originalEvent.dataTransfer.items;
@@ -5956,295 +1801,27 @@ function qualityImages( src, dst, quality, type) {
         }
 }
 // INSERE LINK DE DOCUMENTO PUBLICO
-function getCheckerProcessoPublicoPro() {
-    $('<iframe>', {
-        id:  'frmCheckerProcessoPublicoPro',
-        frameborder: 0,
-        style: 'width: 1px; height: 1px; position: absolute; top: -100px; display: none;',
-        tableindex: '-1',
-        scrolling: 'no'
-    }).appendTo('body');
-}
-function openDialogProcessoPublicoPro(this_) {
-    setParamEditor(this_);
-    const htmlBox = sanitizeHTML(`
-        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="processoPub"><i class="iconPopup iconSwitch fas fa-folder-open cinzaColor"></i>Processo:</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="text" id="processoPub">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="captchaPub"><i class="iconPopup iconSwitch fas fa-hashtag cinzaColor"></i>Digite o c\u00F3digo:</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="text" id="captchaPub" style="width: 70%;" autocomplete="off">
-                        <a id="searchPub_search" class="newLink newLink_active" style="user-select: none;padding-right: 20px;margin: 0 5px;"">
-                            <i class="fas fa-search cinzaColor"></i>
-                            <span class="txt_cinza" style="font-size: 80%;vertical-align: text-top;">Pesquisar</span>
-                        </a>
-                        <i id="searchPub_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="searchPub_captcha" style="margin-bottom: 8px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="searchPub_result" style="display:none; margin-top: 10px;"></div>
-                    </td>
-                </tr>
-                <tr class="trListDocPublico" style="display:none;">
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="selectDocPublico"><i class="iconPopup iconSwitch fas fa-file cinzaColor"></i>Documentos:</label>
-                    </td>
-                </tr>
-                <tr class="trListDocPublico" style="display:none;">
-                    <td class="label">
-                        <select id="selectDocPublico" style="width: 100%;"></select>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    `);
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(htmlBox)
-        .dialog({
-            title : 'Adicionar Link de Documento P\u00FAblico',
-            width : 600,
-            height : 450,
-            open: function () {
-                initChosenReplace('box_multiple', this, true);
-
-                $(document).off('click', '#searchPub_search').on('click', '#searchPub_search', function(event) {
-                    event.preventDefault();
-                    loadListaProcessoPublicoPro();
-                });
-
-                $(document).off('keypress', '#captchaPub').on('keypress', '#captchaPub', function(event) {
-                    event.preventDefault();
-                    if (event.which == 13) {
-                        loadListaProcessoPublicoPro();
-                    }
-                });
-                
-                getDadosIframeProcessoPublicoPro();
-                $('#searchPub_result').html('').hide();
-                $('#searchPub_load').hide();
-                var processo = (typeof dadosProcessoPro.listAndamento !== 'undefined' && typeof dadosProcessoPro.listAndamento.processo !== 'undefined') ? dadosProcessoPro.listAndamento.processo : '';
-                $('#processoPub' ).val(processo); 
-            },
-            buttons: [{
-                text: 'Inserir',
-                class: 'confirm ui-state-active',
-                click: function(event) { 
-                    var selectDocPublico = $('#selectDocPublico option:selected');
-                    var url = selectDocPublico.attr('data-url');
-                    var doc = selectDocPublico.attr('data-documento');
-                    var htmlUrl = (url=='') ? doc : '<a class="ancoraSei" href="'+url+'" target="_blank">'+doc+'</a>';
-                    if ( typeof selectDocPublico !== 'undefined' != '' && selectDocPublico.length ) {
-                        oEditor.focus();
-                        oEditor.fire('saveSnapshot');
-                        oEditor.insertHtml(htmlUrl); 
-                        oEditor.fire('saveSnapshot');
-                        resetDialogBoxPro('dialogBoxPro');
-                    }
-                }
-            }]
-        });
-}
+// getCheckerProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// openDialogProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
 async function resolveCapchaProcessoPublico() {
-    if (typeof perfilGemini !== 'undefined' && perfilGemini.KEY_USER && !$('.trListDocPublico').is(':visible') && !delayCrash) {
-        const base64ImgCaptcha = await getImageBase64FromImgElement($('#searchPub_captcha img')[0]);
-        const captchaResolve = await resolveCaptchaAI("Quais os caracteres da imagem? Responsa apenas com os caracteres, sem espaço entre eles", base64ImgCaptcha);
+    if (typeof perfilGemini !== 'undefined' && perfilGemini.KEY_USER && !$('.trListDocPublico').is(':visible')) {
+        var imgCaptcha = $('#searchPub_captcha img');
+        const base64ImgCaptcha = imgCaptcha.attr('src').startsWith('data:image/') ? imgCaptcha.attr('src') : await getImageBase64FromImgElement(imgCaptcha[0]);
+        const captchaResolve = await resolveCaptchaAI("Quais os caracteres da imagem? Responsa apenas com os caracteres, sem espa\u00E7o entre eles", base64ImgCaptcha);
         $('#captchaPub').val(captchaResolve);
-        if ($('#processoPub').val() != '') loadListaProcessoPublicoPro();
-    }
-}
-function getDadosIframeProcessoPublicoPro() {
-    if ( $('#frmCheckerProcessoPublicoPro').length == 0 ) { getCheckerProcessoPublicoPro(); }
-    var url = window.location.origin+'/sei/modulos/pesquisa/md_pesq_processo_pesquisar.php?acao_externa=protocolo_pesquisar&acao_origem_externa=protocolo_pesquisar&id_orgao_acesso_externo=0';
-    $('#frmCheckerProcessoPublicoPro').attr('src', url).unbind().on('load', function(){
-        checkDadosIframeProcessoPublicoPro();
-    });
-}
-function checkDadosIframeProcessoPublicoPro(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    var ifrPublico = $('#frmCheckerProcessoPublicoPro').contents();
-    if ( ifrPublico.find('#seiSearch').length ) {
-        var captcha = ifrPublico.find('#lblCaptcha').find('img').attr('src');
-        var htmlCaptcha =   '<img src="'+captcha+'"> <i onclick="getDadosIframeProcessoPublicoPro()" class="fas fa-redo" style="color: #969696; cursor: pointer; padding: 3px 8px;"></i>';
-        $('#searchPub_captcha').html(htmlCaptcha);
-        $('#searchPub_load').hide();
-        $('#captchaPub').val('').focus(); 
-        resolveCapchaProcessoPublico();
-    } else {
-        setTimeout(function () { 
-            checkDadosIframeProcessoPublicoPro(TimeOut - 100);
-            console.log('**RELOAD checkDadosIframeProcessoPublicoPro');
-        }, 500);
-    }
-}
-function loadListaProcessoPublicoPro() {
-    delayCrash = true;
-    var processo = $('#processoPub').val(); 
-    var captcha = $('#captchaPub').val(); 
-    if (processo != '' && captcha != '') {
-        $('#searchPub_load').show();
-        var ifrPublico = $('#frmCheckerProcessoPublicoPro').contents();
-            ifrPublico.find('#txtProtocoloPesquisa').val(processo);
-            ifrPublico.find('#txtCaptcha').val(captcha);
-            ifrPublico.find('#sbmPesquisar').trigger('click');
-            setTimeout(function () {
-                waitLoadPro($('#frmCheckerProcessoPublicoPro').contents(), '#conteudo', "a.protocoloNormal", getListaProcessoPublicoPro);
-            }, 800);
-    } else {
-        alertaBoxPro('Error', 'exclamation-triangle', 'Digite os campos obrigat\u00F3rios!');
-        delayCrash = false;
-    }
-}
-function getListaProcessoPublicoPro(){
-    var ifrPublicoResult = $('#frmCheckerProcessoPublicoPro').contents();
-    var htmlResult = ifrPublicoResult.find('#conteudo');
-    var htmlValida = ifrPublicoResult.find('#txaInfraValidacao');
-        $('#searchPub_load').hide();
-        $('#frmCheckerProcessoPublicoPro').unbind();
-        if (typeof htmlResult !== 'undefined' && htmlResult.html() != '') { 
-            var linkProcesso = htmlResult.find('a.protocoloNormal').eq(0).attr('href');
-            var urlProcesso = window.location.origin+'/sei/modulos/pesquisa/'+linkProcesso;
-            if (typeof linkProcesso !== 'undefined' && linkProcesso != '') { 
-                getLinksProcessoPublicoPro(urlProcesso);
-            } else { 
-                getDadosIframeProcessoPublicoPro();
-                $('#searchPub_load').hide();
-            }
-        }
-        delayCrash = false;
-}
-function getLinksProcessoPublicoPro(href) {
-    $.ajax({ url: href }).done(function (html) {
-        let $html = $(html);
-        var listDocumentos = [];
-            $html.find("#tblDocumentos").find('tr.infraTrClara').each(function(index){
-                var link = $(this).find('a.ancoraPadraoAzul').attr('onclick');
-                    link = (typeof link !== 'undefined' && link != '') ? link.match(/'([^']+)'/)[1] : link;
-                    link = (typeof link !== 'undefined' && link != '') ? window.location.origin+'/sei/modulos/pesquisa/'+link : link;
-                var data = $(this).find("td").map(function () { return $(this).text(); }).get();
-                    listDocumentos.push({link: link, data: data}); 
-            });
-        var processoDoc = $html.find('#tblCabecalho').find('tr.infraTrClara').eq(0).find('td').eq(1).text();
-        var optionSelectDocumentos = '';
-        var citacaoDoc = getCitacaoDoc();
-            $.each(listDocumentos, function (index, value) {
-                var urlDocumento = (typeof value.link !== 'undefined') ? value.link : '';
-                var descDocumento = (typeof value.link === 'undefined') ? ' [DOCUMENTO RESTRITO]' : '';
-                optionSelectDocumentos += '<option data-url="'+urlDocumento+'" data-documento="'+value.data[2]+'&nbsp;('+citacaoDoc+value.data[1]+')">'+value.data[2]+' ('+citacaoDoc+value.data[1]+') '+descDocumento+'</option>';
-            });
-            optionSelectDocumentos += '<option data-url="'+href+'" data-documento="'+processoDoc+'">'+processoDoc+'</option>';
-
-        $('.trListDocPublico').show();
-        $('#selectDocPublico').html(optionSelectDocumentos).chosen("destroy").chosen({
-            placeholder_text_single: ' ',
-            no_results_text: 'Nenhum resultado encontrado',
-            normalize_search_text: function(text) {
-                return removeAcentos(text.toLowerCase());
-            }
-        }).trigger('chosen:updated').trigger('chosen:activate');
-
         setTimeout(() => {
-            $('#selectDocPublico').focus().trigger('chosen:open');
-        }, 2000);
-    });
-}
-function insertAutomaticMinutaWatermark() {
-    var nomeDocumento = jmespath.search(dadosProcessoPro.listDocumentos, "[?id_protocolo=='"+getParamsUrlPro(window.location.href).id_documento+"'].documento | [0]");
-    if (nomeDocumento !== null && nomeDocumento.toLowerCase().indexOf('minuta')  !== -1) {
-        var maxIframeHeight = {value: 0, index: -1}
-        $('iframe.cke_wysiwyg_frame').each(function(index){
-            if ( $(this).contents().find('body').attr('contenteditable') == 'true' ) {
-                var height = $(this).height();
-                if (height > maxIframeHeight.value) { 
-                    maxIframeHeight = {value: height, index: index};
-                }
-            }
-        });
-        if (maxIframeHeight.index != -1) {
-            var elemIframe = $('iframe').eq(maxIframeHeight.index);
-            var iframe = elemIframe.contents();
-            if (iframe.find('.minutaAncora').length == 0) {
-                if (elemIframe.attr('title').indexOf(',') !== -1) {
-                    $('#idEditor').val(elemIframe.attr('title').split(',')[1].trim());
-                    insertMinutaWatermark(iframe, 'auto');
-                    console.log($('#idEditor').val());
-                }
-            }
-        }
-    } else {
-        $('iframe.cke_wysiwyg_frame').each(function(index){
-            var iframe = $(this).contents();
-            if ( iframe.find('body').attr('contenteditable') == 'true' ) {
-                iframe.find('.minutaAncora[data-type="auto"]').remove();
-            }
-        });
+            if ($('#captchaPub').val() != '' && $('#processoPub').val() != '' && captchaResolve) loadListaProcessoPublicoPro();
+        }, 1000);
     }
 }
-function insertMinutaWatermark(iframe, type, mode = 'minuta') {
-    if (typeof oEditor !== 'undefined') {
-        var nomeDocumento = jmespath.search(dadosProcessoPro.listDocumentos, "[?id_protocolo=='"+getParamsUrlPro(window.location.href).id_documento+"'].documento | [0]");
-        var textMinuta = ((nomeDocumento !== null && nomeDocumento.toLowerCase().indexOf('modelo')  !== -1) || mode == 'modelo') ? 'MODELO' : 'MINUTA';
-    
-        var htmlMinuta =    '<p class="Texto_Alinhado_Esquerda">\n'+
-                            '   <span contenteditable="false" class="minutaAncora" data-type="'+type+'">\n'+
-                            '      <a class="ancoraSei" contenteditable="false" style="text-indent:0;">\n'+
-                            '          <style type="text/css" data-style="seipro-watermark">\n'+
-                            '              body:after { content: "'+textMinuta+'"; font-size: 9em; color: rgb(167 167 167 / 20%); z-index: 999; display: flex; align-items: center; justify-content: center; position: fixed; transform: rotate(-45deg); top: 0; right: 0; left: 0; bottom: 0; pointer-events: none; user-select: none; font-family: Arial; }\n'+
-                            '              html.dark-mode .minutaAncora, html.dark-mode .minutaAncora:after { background: #6f7071 !important; color: #f9f9f9 !important; }\n'+
-                            '              .minutaAncora { text-indent: 0; font-size: .8em; padding: 2px 5px; background: #e4e4e4; border-radius: 5px; font-weight: bold; color:#d45656; margin: 0 5px; }\n'+
-                            '              body.cke_editable .minutaAncora:after { content: " [delete isto para remover a marca d\'agua]"; color:#888; font-weight: normal; font-size: .85em; margin: 0 5px; }\n'+
-                            '              body.cke_editable:after { width: fit-content; margin: 0 33%; overflow: hidden; }\n'+
-                            '          </style>\n'+
-                            '          * '+textMinuta+' DE DOCUMENTO'+
-                            '      </a>'+
-                            '   </span>&nbsp;&nbsp;\n'+
-                            '</p>\n';
-        oEditor.focus();
-        oEditor.fire('saveSnapshot');
-        iframe.find('body').prepend(htmlMinuta);
-        oEditor.fire('saveSnapshot');
-        enableButtonSavePro();
-    }
-}
-function getMinutaWatermark(this_) {
-    setParamEditor(this_);
-    var minutaAncora = iframeEditor.find('.minutaAncora');
-    if (minutaAncora.length == 0) {
-        insertMinutaWatermark(iframeEditor, 'manual');
-    } else {
-        if (minutaAncora.text().indexOf('MINUTA') !== -1) {
-            minutaAncora.closest('p').remove();
-            insertMinutaWatermark(iframeEditor, 'manual', 'modelo');
-        } else {
-            minutaAncora.closest('p').remove();
-            insertMinutaWatermark(iframeEditor, 'manual');
-        }
-        var minutaAncora_new = iframeEditor.find('.minutaAncora');
-            minutaAncora_new.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-            minutaAncora_new.get(0).scrollIntoView();
-    }
-}
+// getDadosIframeProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// checkDadosIframeProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// loadListaProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// getListaProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// getLinksProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
+// insertAutomaticMinutaWatermark() -> js/modules/editor/ (extraido para modulo)
+// insertMinutaWatermark() -> js/modules/editor/ (extraido para modulo)
+// getMinutaWatermark() -> js/modules/editor/ (extraido para modulo)
 function repairSaveButtonBug(loop = true) {
     if ($('.cke_button.cke_button__save').hasClass('cke_button_off')) {
         for (var i in CKEDITOR.instances) {
@@ -6268,9 +1845,9 @@ function repairSaveButtonBug(loop = true) {
     }
 }
 
-// ### FERRAMENTA DE INTELIGÊNCIA ARTIFICIAL NO EDITOR DE TEXTOS ###
+// ### FERRAMENTA DE INTELIG\u00CANCIA ARTIFICIAL NO EDITOR DE TEXTOS ###
 // Aprimorado em 2025-04-17
-    // CARREGAMENTO DINÂMICO DO SCRIPT DE IA, COM RECURSIVIDADE E TIMEOUT
+    // CARREGAMENTO DIN\u00C2MICO DO SCRIPT DE IA, COM RECURSIVIDADE E TIMEOUT
     const loadPlataformAI = (this_, TimeOut = 9000) => {
         if (TimeOut <= 0) return;
         if (typeof loadSEIProAI !== 'undefined') {
@@ -6287,7 +1864,7 @@ function repairSaveButtonBug(loop = true) {
         }
     };
 
-    // FUNÇÃO PARA EXIBIÇÃO DE DIÁLOGOS DE IA
+    // FUN\u00C7\u00C3O PARA EXIBI\u00C7\u00C3O DE DI\u00C1LOGOS DE IA
     const getPlataformAI = this_ => {
         setParamEditor(this_);
         if (!getOptionsPro('consentimentoIA')) {
@@ -6297,7 +1874,7 @@ function repairSaveButtonBug(loop = true) {
         }
     };
 
-    // DIÁLOGO DE RESTRIÇÃO PARA PROCESSOS SIGILOSOS
+    // DI\u00C1LOGO DE RESTRI\u00C7\u00C3O PARA PROCESSOS SIGILOSOS
     const getDialogNaoDisponivel = title => ({
         title,
         minWidth: 500,
@@ -6317,7 +1894,7 @@ function repairSaveButtonBug(loop = true) {
         ]
     });
 
-    // DIÁLOGOS PRINCIPAIS DE CONSENTIMENTO E ENVIO DE PROMPT PARA A IA
+    // DI\u00C1LOGOS PRINCIPAIS DE CONSENTIMENTO E ENVIO DE PROMPT PARA A IA
     const getDialogPlataformAI = () => {
         if (checkProcessoSigiloso()) {
             CKEDITOR.dialog.add('plataformAI', editor =>
@@ -6400,7 +1977,7 @@ function repairSaveButtonBug(loop = true) {
                         });
                     }
 
-                    // DELEGAÇÃO DE EVENTOS PARA FUNCIONALIDADES DE ENVIO E EXEMPLO
+                    // DELEGA\u00C7\u00C3O DE EVENTOS PARA FUNCIONALIDADES DE ENVIO E EXEMPLO
                     $(document).on('click', '.sendPrompt', e => {
                         e.preventDefault();
                         getParamAI(e.currentTarget);
@@ -6520,33 +2097,33 @@ function repairSaveButtonBug(loop = true) {
         }
     };
 
-    // FUNÇÃO PRINCIPAL PARA OBTER PARÂMETROS E ENVIAR REQUISIÇÃO À IA
+    // FUN\u00C7\u00C3O PRINCIPAL PARA OBTER PAR\u00C2METROS E ENVIAR REQUISI\u00C7\u00C3O \u00C0 IA
     const getParamAI = (this_) => {
-        // OBTÉM O DIÁLOGO ATUAL DO CKEDITOR
+        // OBT\u00C9M O DI\u00C1LOGO ATUAL DO CKEDITOR
         const dialog = CKEDITOR.dialog.getCurrent();
 
-        // OBTÉM E TRATA O TEXTO DO PROMPT
+        // OBT\u00C9M E TRATA O TEXTO DO PROMPT
         let prompt_text = dialog.getContentElement('tab_ia', 'textPrompt').getValue();
         prompt_text = prompt_text
             .replace(/['"]+/g, '') // REMOVE ASPAS SIMPLES E DUPLAS
             .replace(/\n/g, '\\n') // SUBSTITUI QUEBRAS DE LINHA
             .trim();
 
-        // OBTÉM O VALOR SELECIONADO E TRATA
+        // OBT\u00C9M O VALOR SELECIONADO E TRATA
         let prompt_select = dialog.getContentElement('tab_ia', 'selectPrompt').getValue();
         prompt_select = (prompt_select === '-') ? '' : prompt_select;
 
-        // MOSTRA A ÁREA DE LOADING
+        // MOSTRA A \u00C1REA DE LOADING
         $('#plataformAI_load').show();
 
-        // SE O RESULTADO ESTIVER VISÍVEL, LIMPA E ESCONDE, AJUSTANDO POSIÇÃO DO DIÁLOGO
+        // SE O RESULTADO ESTIVER VIS\u00CDVEL, LIMPA E ESCONDE, AJUSTANDO POSI\u00C7\u00C3O DO DI\u00C1LOGO
         if ($('#plataformAI_result').is(':visible')) {
             const position = dialog.getPosition();
             dialog.move(position.x, (position.y + 125));
             $('#plataformAI_result').html('').hide();
         }
 
-        // ENVIA A REQUISIÇÃO PARA A IA
+        // ENVIA A REQUISI\u00C7\u00C3O PARA A IA
         sendRequestAI(prompt_select, prompt_text);
     };
 
@@ -6555,7 +2132,7 @@ function repairSaveButtonBug(loop = true) {
 
         openai_test();
 
-        // FUNÇÃO PRINCIPAL RESPONSÁVEL POR ENVIAR A SOLICITAÇÃO PARA A API
+        // FUN\u00C7\u00C3O PRINCIPAL RESPONS\u00C1VEL POR ENVIAR A SOLICITA\u00C7\u00C3O PARA A API
         async function openai_test() {
             const model = currentPlataform === 'openai'
                 ? getOptionsPro('setModelOpenAI') || 'gpt-4'
@@ -6617,7 +2194,7 @@ function repairSaveButtonBug(loop = true) {
                         dialog.move(dialog.getPosition().x, (dialog.getPosition().y - 125));
                     }
 
-                    // EFEITO DE "DIGITAÇÃO" DO TEXTO DE RESPOSTA
+                    // EFEITO DE "DIGITA\u00C7\u00C3O" DO TEXTO DE RESPOSTA
                     let i = 0;
                     let isTag;
                     let text;
@@ -6641,7 +2218,7 @@ function repairSaveButtonBug(loop = true) {
                         setTimeout(type, 10);
                     })();
 
-                    // DELEGAÇÃO DE EVENTOS APÓS CARGA DINÂMICA
+                    // DELEGA\u00C7\u00C3O DE EVENTOS AP\u00D3S CARGA DIN\u00C2MICA
                     $(document).on('click', '.result .text', (e) => {
                         insertTextEditorSEI(e.currentTarget);
                     });
@@ -6662,7 +2239,7 @@ function repairSaveButtonBug(loop = true) {
                 }
             };
 
-            // DADOS DO CORPO DA REQUISIÇÃO
+            // DADOS DO CORPO DA REQUISI\u00C7\u00C3O
             const temperature = getOptionsPro('setTemperatureAI') || '0.4';
             const maxTokens = getOptionsPro('setMaxTokensAI') || '6400';
             const topP = getOptionsPro('setTopPAI') || '1';
@@ -6688,7 +2265,7 @@ function repairSaveButtonBug(loop = true) {
             xhr.send(data);
         }
 
-        // DELEGAÇÃO DE EVENTO PARA O BOTÃO "ADICIONAR"
+        // DELEGA\u00C7\u00C3O DE EVENTO PARA O BOT\u00C3O "ADICIONAR"
         $(document).on('click', '.btn-insert-text', function () {
             insertTextEditorSEI(this);
         });
@@ -6728,7 +2305,7 @@ function repairSaveButtonBug(loop = true) {
         }
     };
 
-    // SELECIONA TEXTO DE EXEMPLO COM BASE NA OPÇÃO ESCOLHIDA
+    // SELECIONA TEXTO DE EXEMPLO COM BASE NA OP\u00C7\u00C3O ESCOLHIDA
     const exampleTextAI = () => {
         const dialog = CKEDITOR.dialog.getCurrent();
         const promptSelect = dialog.getContentElement('tab_ia', 'selectPrompt').getValue();
@@ -6756,16 +2333,21 @@ function repairSaveButtonBug(loop = true) {
         }
     };
 
-    // INICIALIZAÇÃO AUTOMÁTICA DA PLATAFORMA COM RETENTATIVAS
+    // INICIALIZA\u00C7\u00C3O AUTOM\u00C1TICA DA PLATAFORMA COM RETENTATIVAS
     const initPlataformAI = (TimeOut = 9000) => {
         if (TimeOut <= 0) return;
 
         if (typeof checkConfigValue !== 'undefined' && typeof localStorageRestorePro !== 'undefined') {
             if (restrictConfigValue('ferramentasia')) {
                 setTimeout(() => {
-                    let perfilPlataform = localStorageRestorePro('configBasePro_openai');
-                    perfilPlataform = (typeof perfilPlataform !== 'undefined' && perfilPlataform !== null) ? perfilPlataform : false;
-                    getDialogPlataformAI();
+                    try {
+                        let perfilPlataform = localStorageRestorePro('configBasePro_openai');
+                        perfilPlataform = (typeof perfilPlataform !== 'undefined' && perfilPlataform !== null) ? perfilPlataform : false;
+                        getDialogPlataformAI();
+                    } catch (e) {
+                        // getDialogPlataformAI depende de CKEDITOR.dialog (API CK4).
+                        // No CK5 silenciamos; fica pendente de porta jQuery UI.
+                    }
                 }, 500);
             }
         } else {
@@ -6778,7 +2360,7 @@ function repairSaveButtonBug(loop = true) {
         }
     };
 
-    // FUNÇÃO PARA ADICIONAR MENU DE INTELIGÊNCIA ARTIFICIAL NO CKEDITOR
+    // FUN\u00C7\u00C3O PARA ADICIONAR MENU DE INTELIG\u00CANCIA ARTIFICIAL NO CKEDITOR
     const menuPlataformAI = (editor) => {
         if (editor.contextMenu && typeof editor.getMenuItem('plataform_ai') === 'undefined') {
             editor.addMenuGroup('openaiGroup', -10 * 3);
@@ -6789,14 +2371,14 @@ function repairSaveButtonBug(loop = true) {
                 group: 'openaiGroup'
             });
 
-            // ADICIONA OPÇÃO AO MENU DE CONTEXTO SOMENTE SE HOUVER SELEÇÃO
+            // ADICIONA OP\u00C7\u00C3O AO MENU DE CONTEXTO SOMENTE SE HOUVER SELE\u00C7\u00C3O
             editor.contextMenu.addListener((element) => {
                 if (hasSelection(editor)) {
                     return { plataform_ai: CKEDITOR.TRISTATE_OFF };
                 }
             });
 
-            // COMANDO PARA ABRIR O DIÁLOGO DE IA
+            // COMANDO PARA ABRIR O DI\u00C1LOGO DE IA
             editor.addCommand('plataform_ai', {
                 exec: (editor) => {
                     editor.openDialog('plataformAI');
@@ -6805,7 +2387,7 @@ function repairSaveButtonBug(loop = true) {
         }
     };
 
-    // FUNÇÃO PARA ALTERAR OPÇÕES DE IA INLINE
+    // FUN\u00C7\u00C3O PARA ALTERAR OP\u00C7\u00D5ES DE IA INLINE
     const getInlineAI = (this_) => {
         const check = $(this_).is(':checked');
         setOptionsPro('setInlineAI', check);
@@ -7064,222 +2646,9 @@ function selectTextOnEditor(findString) {
     }
 }
 // INSERE REFERENCIA INTERNA
-function getRefInterna(this_) {
-    setParamEditor(this_);
-
-    let listP = getNiveisParagrafos();
-        listP = (listP) ? $.map(listP, function(v){ return '<option value="'+v.ref+'-'+v.item+'">'+v.item+'. '+v.text.replace(/^(.{50}[^\s]*).*/, "$1")+'...'+'</option>'; }).join('') : false;
-
-    const htmlBox = sanitizeHTML(`
-        <div class="dialogBoxDiv" style="font-size: 11pt;line-height: 12pt;color: #616161;">
-            <table style="font-size: 10pt;width: 100%;" class="seiProForm">
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="prefixo"><i class="iconPopup iconSwitch fas fa-text-size cinzaColor"></i>Prefixo:</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="text" id="prefixo" style="width:70%">
-                        <div style="float: right;">
-                            <div class="onoffswitch" style="transform: scale(0.5);display: inline-block;float: left;">
-                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="hidePrefix" tabindex="0">
-                                <label class="onoff-switch-label" for="hidePrefix"></label>
-                            </div>
-                            <label style="font-size: 80%;padding-top: 5px;display: inline-block;" for="hidePrefix">N\u00E3o utilizar prefixo</label>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: bottom; text-align: left;" class="label">
-                        <label for="selectRef"><i class="iconPopup iconSwitch fas fa-sort-numeric-down cinzaColor"></i>Par\u00E1grafo numerado:</label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <select multiple="multiple" id="selectRef">
-                        ${listP}
-                        </select>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    `);
-
-    resetDialogBoxPro('dialogBoxPro');
-    dialogBoxPro = $('#dialogBoxPro')
-        .html(htmlBox)
-        .dialog({
-            title : 'Inserir refer\u00EAncia interna',
-            width : 600,
-            height : 300,
-            open: function () {
-                initChosenReplace('box_multiple', this, true);
-                $('#selectRef').on('change', function() { resizeHeigthDialogBox(dialogBoxPro) });
-            },
-            buttons: [{
-                text: 'Atualizar refer\u00EAncias',
-                class: 'confirm',
-                click: function(event) { 
-                    let valuePrefixo = $('#prefixo').val();
-                    let hidePrefix = $('#hidePrefix').is(':checked');
-                        hidePrefix = valuePrefixo == '' ? true : hidePrefix;
-                    updateRefsInternas(valuePrefixo, hidePrefix);
-                    clickScroolToRef();
-                    alertaBoxPro('Sucess', 'check-circle',  'Refer\u00EAncias atualizadas com sucesso');
-                    // resetDialogBoxPro('dialogBoxPro');
-                }
-            },{
-                text: 'Inserir',
-                class: 'confirm ui-state-active',
-                click: function(event) { 
-                    const valuePrefixo = $('#prefixo').val();
-                    const selectMult = $('#selectRef option:checked');
-                    const list_refs = $.map(selectMult,function(e){
-                        if (e.value != '') return e.value
-                    });
-                    let hidePrefix = $('#hidePrefix').is(':checked');
-                        hidePrefix = valuePrefixo == '' ? true : hidePrefix;
-                    let htmlRefInterna = '';
-                    if ($.isArray(list_refs) && list_refs.length) {
-                        $.each(list_refs, function(i, v){
-                            let valueSelect = (v.indexOf('-') !== -1) ? v.split('-') : false;
-                            let refInterna = (valueSelect) ? ' <a href="#RefPro_'+valueSelect[0]+'" class="ancoraSei refInternaPro anchorRefInternaPro" contenteditable="false">['+valuePrefixo+' '+valueSelect[1]+']</a> ' : false;
-                            if (refInterna) htmlRefInterna += refInterna;
-                            if (i < list_refs.length-2) htmlRefInterna += ', ';
-                            if (i == list_refs.length-2) htmlRefInterna += ' e ';
-                        });
-                    }
-                    oEditor.focus();
-                    oEditor.fire('saveSnapshot');
-                    oEditor.insertHtml(htmlRefInterna);
-                    oEditor.fire('saveSnapshot');
-                    updateRefsInternas(valuePrefixo, hidePrefix);
-                    clickScroolToRef();
-                    resetDialogBoxPro('dialogBoxPro');
-                }
-            }]
-        });
-}
-function updateRefsInternas(valuePrefixo, hidePrefix = false) {
-    const iframe_ = $('iframe[title*="'+idEditor+'"]').contents();
-    const textPrefixo = hidePrefix ? '' : valuePrefixo+' ';
-    if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-        const listRefs = getNiveisParagrafos();
-        if (listRefs) {
-            iframe_.find('.refInternaPro').each(function(){
-                const _this = $(this);
-                let ref_this = _this.attr('href');
-                    ref_this = (ref_this.indexOf('_') !== -1) ? ref_this.split('_')[1] : false;
-                let item = (ref_this) ? jmespath.search(listRefs, "[?ref=='"+ref_this+"'] | [0].item ") : false;
-                    item = (item && item !== null) ? item : false;
-                if (item) _this.text('['+textPrefixo+item+']');
-            })
-        }
-    }
-}
-function getNiveisParagrafos() {
-    var iframe_ = $('iframe[title*="'+idEditor+'"]').contents();
-    if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-        var i_Paragrafo_Numerado_Nivel1 = 0;
-        var i_Paragrafo_Numerado_Nivel2 = 0;
-        var i_Paragrafo_Numerado_Nivel3 = 0;
-        var i_Paragrafo_Numerado_Nivel4 = 0;
-        
-        var i_Item_Nivel1 = 0;
-        var i_Item_Nivel2 = 0;
-        var i_Item_Nivel3 = 0;
-        var i_Item_Nivel4 = 0;
-
-        var arrayParagrafos = [];
-        
-        iframe_.find('p').each(function(i){
-            var randRef = randomString(16);
-            var iNumerado = false;
-            var _this = $(this);
-            var _class = _this.attr('class');
-            if (_class == 'Paragrafo_Numerado_Nivel1') { 
-                i_Paragrafo_Numerado_Nivel1++; 
-                i_Paragrafo_Numerado_Nivel2 = 0;
-                i_Paragrafo_Numerado_Nivel3 = 0;
-                i_Paragrafo_Numerado_Nivel4 = 0;
-                iNumerado = true; 
-            }
-            if (_class == 'Paragrafo_Numerado_Nivel2') { 
-                i_Paragrafo_Numerado_Nivel2++; 
-                i_Paragrafo_Numerado_Nivel3 = 0;
-                i_Paragrafo_Numerado_Nivel4 = 0;
-                iNumerado = true; 
-            }
-            if (_class == 'Paragrafo_Numerado_Nivel3') { 
-                i_Paragrafo_Numerado_Nivel3++; 
-                i_Paragrafo_Numerado_Nivel4 = 0;
-                iNumerado = true; 
-            }
-            if (_class == 'Paragrafo_Numerado_Nivel4') { 
-                i_Paragrafo_Numerado_Nivel4++; 
-                iNumerado = true; 
-            }
-            
-            if (_class == 'Item_Nivel1') { 
-                i_Item_Nivel1++; 
-                i_Item_Nivel2 = 0;
-                i_Item_Nivel3 = 0;
-                i_Item_Nivel4 = 0;
-                iNumerado = true; 
-            }
-            if (_class == 'Item_Nivel2') { 
-                i_Item_Nivel2++; 
-                i_Item_Nivel3 = 0;
-                i_Item_Nivel4 = 0;
-                iNumerado = true; 
-            }
-            if (_class == 'Item_Nivel3') { 
-                i_Item_Nivel3++; 
-                i_Item_Nivel4 = 0;
-                iNumerado = true; 
-            }
-            if (_class == 'Item_Nivel4') { 
-                i_Item_Nivel4++; 
-                iNumerado = true; 
-            }
-
-            if (_class == 'sessionBreakPro') {
-                i_Paragrafo_Numerado_Nivel1 = 0;
-                i_Paragrafo_Numerado_Nivel2 = 0;
-                i_Paragrafo_Numerado_Nivel3 = 0;
-                i_Paragrafo_Numerado_Nivel4 = 0;
-            
-                i_Item_Nivel1 = 0;
-                i_Item_Nivel2 = 0;
-                i_Item_Nivel3 = 0;
-                i_Item_Nivel4 = 0;
-            }
-            
-            var item = (_class == 'Paragrafo_Numerado_Nivel1') ? i_Paragrafo_Numerado_Nivel1 : '';
-                item = (_class == 'Paragrafo_Numerado_Nivel2') ? i_Paragrafo_Numerado_Nivel1+'.'+i_Paragrafo_Numerado_Nivel2 : item;
-                item = (_class == 'Paragrafo_Numerado_Nivel3') ? i_Paragrafo_Numerado_Nivel1+'.'+i_Paragrafo_Numerado_Nivel2+'.'+i_Paragrafo_Numerado_Nivel3 : item;
-                item = (_class == 'Paragrafo_Numerado_Nivel4') ? i_Paragrafo_Numerado_Nivel1+'.'+i_Paragrafo_Numerado_Nivel2+'.'+i_Paragrafo_Numerado_Nivel3+'.'+i_Paragrafo_Numerado_Nivel4 : item;
-            
-                item = (_class == 'Item_Nivel1') ? i_Item_Nivel1 : item;
-                item = (_class == 'Item_Nivel2') ? i_Item_Nivel1+'.'+i_Item_Nivel2 : item;
-                item = (_class == 'Item_Nivel3') ? i_Item_Nivel1+'.'+i_Item_Nivel2+'.'+i_Item_Nivel3 : item;
-                item = (_class == 'Item_Nivel4') ? i_Item_Nivel1+'.'+i_Item_Nivel2+'.'+i_Item_Nivel3+'.'+i_Item_Nivel4 : item;
-            
-            if (iNumerado) {
-                if (_this.find('a[name*="RefPro_"]').length == 0) {
-                    _this.prepend('<a name="RefPro_'+randRef+'">');
-                } else {
-                    randRef = _this.find('a[name*="RefPro_"]').attr('name').replace('RefPro_','');
-                }
-                arrayParagrafos.push({ref: randRef, item: item, text: _this.text()});
-            }
-        });
-        return arrayParagrafos;
-    } else {
-        return false;
-    }
-}
+// getRefInterna() -> js/modules/editor/ (extraido para modulo)
+// updateRefsInternas() -> js/modules/editor/ (extraido para modulo)
+// getNiveisParagrafos() -> js/modules/editor/ (extraido para modulo)
 function clickScroolToRef() {
     $('iframe.cke_wysiwyg_frame').each(function(index){
         var iframe_ = $(this).contents();
@@ -7301,954 +2670,97 @@ function clickScroolToRef() {
     });
 }
 
-function getCharOnCursor(position = 'prev') {
-    var range = oEditor.getSelection().getRanges()[ 0 ],
-        startNode = range.startContainer;
-    var pos = (position == 'prev') ? range.startOffset - 1 : range.startOffset;
-
-    if ( startNode.type == CKEDITOR.NODE_TEXT && range.startOffset )
-        // Range at the non-zero position of a text node.
-        return startNode.getText()[ pos ];
-    else {
-        // Expand the range to the beginning of editable.
-        range.collapse( true );
-        range.setStartAt( oEditor.editable(), CKEDITOR.POSITION_AFTER_START );
-
-        // Let's use the walker to find the closes (previous) text node.
-        var walker = new CKEDITOR.dom.walker( range ),
-            node;
-
-        while ( ( node = walker.previous() ) ) {
-            // If found, return the last character of the text node.
-            if ( node.type == CKEDITOR.NODE_TEXT )
-                return node.getText().slice( -1 );         
-        }
-    }
-
-    // Selection starts at the 0 index of the text node and/or there's no previous text node in contents.
-    return null;
-}
-function setStyleReview(type = 'add' , mode = 'insert', text = '', addSp = false, pClass = false) {
-    var userReview = getOptionsPro('usuarioSistema') ? getOptionsPro('usuarioSistema') : '';
-    var dateReview = moment().format('DD/MM/YYYY HH:mm');
-    var reviewRef = randomString(8);
-    if (mode == 'change') {
-        var styleBgColor = new CKEDITOR.style({
-            element: 'span',
-            attributes: {
-                'data-review': type,
-                'data-user-review': userReview,
-                'data-date-review': dateReview,
-                'data-id-review': reviewRef,
-                'class': 'reviewSeiPro',
-                'style': (type == 'add') ? 'background-color: #F0F8FF' : 'background-color: #FFF0F5'
-            }
-        });
-
-        var styleTxtColor = new CKEDITOR.style({
-            element: (type == 'add') ? 'u' : 's',
-            attributes: {
-                'data-review': type,
-                'data-review': type,
-                'data-user-review': userReview,
-                'data-date-review': dateReview,
-                'data-id-review': reviewRef,
-                'class': 'reviewSeiPro',
-                'style': (type == 'add') ? 'color:#0000FF' : 'color:#FF0000'
-            }
-        });
-
-        oEditor.applyStyle(styleBgColor); 
-        oEditor.applyStyle(styleTxtColor); 
-    } else if (mode == 'insert') {
-        var inserHtml = '<span data-review="'+type+'" class="reviewSeiPro" data-id-review="'+reviewRef+'" data-date-review="'+dateReview+'" data-user-review="'+userReview+'" style="background-color:'+(type == 'add' ? '#F0F8FF' : '#FFF0F5')+';"><'+(type == 'add' ? 'u' : 's')+' style="color:'+(type == 'add' ? '#0000FF' : '#FF0000')+';">'+text+'</'+(type == 'add' ? 'u' : 's')+'></span>'+(addSp ? '<span class="reviewSP">&nbsp;</span> ' : '');
-            if (pClass) {
-                oEditor.insertHtml('<p class="'+pClass+'">'+inserHtml+'</p> ');
-            } else {
-                oEditor.insertHtml(inserHtml);
-            }
-    }
-}
-function showReviewTips(this_, iframeDoc) {
-    iframeDoc.find('.reviewDisplayPro').remove();
-
-    var elem = $(this_).closest('span');
-    var userReview = elem.attr('data-user-review');
-        userReview = $("<div/>").text(userReview).html();
-    var dateReview = elem.attr('data-date-review');
-        dateReview = $("<div/>").text(dateReview).html();
-    var typeReview = elem.attr('data-review');
-    var idReview = elem.attr('data-id-review');
-    var commentReview = elem.attr('data-comment');
-        commentReview = (typeof commentReview === 'undefined') ? '' : $("<div/>").text(commentReview).html();
-
-    var html =  getHtmlReviewDisplayPro({
-        date: dateReview,
-        id_review: idReview,
-        type: typeReview,
-        user: userReview,
-        comment: commentReview,
-        text: false
-    });
-
-        elem.prepend(html);
-    
-        var boxDisplayLink = elem.find('.reviewDisplayPro');
-        var boxDisplayLink_left = boxDisplayLink.offset().left;
-        var boxDisplayLink_width = boxDisplayLink.width();
-        var windowWidth = $(window).width();
-        var margin = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-(boxDisplayLink_left+boxDisplayLink_width+45) : 0;
-            boxDisplayLink.css('margin-left', margin);
-    console.log(elem[0], iframeDoc);
-}
-function scroolToReview(idReview) {
-    $('iframe.cke_wysiwyg_frame').each(function(index){
-        var iframe_ = $(this).contents();
-        if ( iframe_.find('body').attr('contenteditable') == 'true' ) {
-                var container = $('#divEditores');
-                var element = iframe_.find('.reviewSeiPro[data-id-review="'+idReview+'"]').closest('p');
-                var position = element.offset().top + 200;
-                container.animate({
-                    scrollTop: position
-                });
-                return false;
-        }
-    });
-}
-function getHtmlReviewDisplayPro(data, readonly = false) {
-    var textCommentReview = (data.comment == '') ? 'Adicionar coment\u00E1rio' : data.comment;
-        textCommentReview = (data.comment == '' && readonly) ? 'Nenhum coment\u00E1rio' : textCommentReview;
-    var html =  '<div class="reviewDisplayPro" unselectable="on">'+
-                '    <span contenteditable="false">'+
-                (data.text 
-                    ? '<span style="margin:5px;display:block;"><span style="background-color:'+(data.type == 'add' ? '#F0F8FF' : '#FFF0F5')+';"><'+(data.type == 'add' ? 'u' : 's')+' style="color:'+(data.type == 'add' ? '#0000FF' : '#FF0000')+';">'+data.text+'</'+(data.type == 'add' ? 'u' : 's')+'></span></span>'
-                    : ''
-                )+
-                (data.html 
-                    ? '<div onmouseover="return infraTooltipMostrar(\'Clique para rolar at\u00E9 o texto\');" onmouseout="return infraTooltipOcultar();" class="textReview" onclick="scroolToReview(\''+data.id_review+'\')">'+data.html+'</div>'
-                    : ''
-                )+
-                '        <span style="color: #777;font-size: 90%;margin-left:5px;"><i class="fas fa-user" style="padding-right: 5px;font-size: 90%;color: #4285f4;"></i><span class="info"></span><strong class="title-reviewtip" title="'+data.user+'">'+data.user+'</strong></span>'+
-                '        <span style="color: #777;font-size: 80%;margin-left:10px;font-style: italic;"><i class="far fa-clock" style="color: #777;"></i> '+data.date+'</span>'+
-                '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-readonly="'+readonly+'" data-id-review="'+data.id_review+'" data-mode="accept" data-type="'+data.type+'" title="Aceitar revis\u00E7\u00E3o"><i class="fas fa-check-circle" style="color: #9CB639;"></i> Aceitar</span>'+
-                '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-readonly="'+readonly+'" data-id-review="'+data.id_review+'" data-mode="reject" data-type="'+data.type+'" title="Rejeitar revis\u00E7\u00E3o"><i class="fas fa-times-circle" style="color: #E46E64;"></i> Rejeitar</span>'+
-                (getOptionsPro('usuarioSistema') == data.user && !readonly
-                    ? '        <span onclick="parent.addCommentReviewPro(this)" data-info="'+(data.comment == '' ? 'new' : 'update')+'" style="color: #777;font-size: 90%;display:block;font-style: italic;margin: 10px 0 5px 0;padding: 5px;border-radius:5px;"><i class="fas fa-comment" style="margin-right: 5px;font-size: 90%;color: #e9af68;transform: scale(-1, 1);"></i><span class="commentReview info" style="padding: 3px;">'+textCommentReview+'<span></span>'
-                    : (data.comment == '' && !readonly ? '' : '<span style="color: #777;font-size: 90%;display:block;font-style: italic;margin: 10px 0 5px 0;padding: 5px;border-radius:5px;"><i class="fas fa-comment" style="margin-right: 5px;font-size: 90%;color: #e9af68;transform: scale(-1, 1);"></i><span class="commentReview info">'+textCommentReview+'<span></span>')
-                )+
-                '    </span>'+
-                '</div>';
-    return html;
-}
-function addCommentReviewPro(this_) {
-    var _this = $(this_);
-    var _target = _this.data('readonly') ? _this : _this;
-    var _info = _this.find('.commentReview');
-
-    if (_this.attr('data-info') == 'new') _info.html('');
-        _info.prop('contenteditable',true).focus().on('keydown',function(e) {
-            setTimeout(function(){ 
-                var text = _info.text().trim();
-                if (text != '') {
-                    _this.attr('data-info','update');
-                    _this.closest('.reviewSeiPro').attr('data-comment',text.replace(/(\r\n|\n|\r)/gm, ' ')).attr('data-date-review',moment().format('DD/MM/YYYY HH:mm'));
-                } else {
-                    _this.attr('data-info','new');
-                    _this.closest('.reviewSeiPro').removeAttr('data-comment');
-                }
-            }, 100);
-        });
-}
-function removeReviewPro(this_) {
-    var _this = $(this_);
-    var _data = _this.data();
-
-    oEditor.fire('saveSnapshot');
-    $('iframe.cke_wysiwyg_frame').each(function(index){
-        if ( $(this).contents().find('body').attr('contenteditable') == 'true' ) {
-            setRemoveReviewPro(_this, $(this).contents(), _data);
-            oEditor.fire('saveSnapshot');
-        }
-    });
-}
-function setRemoveReviewPro(_this, iframeEditor, _data) {
-        iframeEditor.find('.reviewDisplayPro').remove();
-    if (_data.mode == 'acceptAll') {
-        iframeEditor.find('.reviewSeiPro').each(function(){
-            var rv = $(this);
-            if (rv.data('review') == 'add') {
-                rv.prev('span.reviewSP').remove();
-                rv.after(rv.text()).remove();
-            } else if (rv.data('review') == 'delete') {
-                rv.remove();
-            }
-        });
-    } else if (_data.mode == 'rejectAll') {
-        iframeEditor.find('.reviewSeiPro').each(function(){
-            var rv = $(this);
-            if (rv.data('review') == 'add') {
-                rv.prev('span.reviewSP').remove();
-                rv.remove();
-            } else if (rv.data('review') == 'delete') {
-                rv.after(rv.text()).remove();
-            }
-        });
-    } else if (_data.mode == 'accept') {
-        if (_data.type == 'add') {
-            var elemReview = iframeEditor.find('span[data-id-review="'+_data.idReview+'"]');
-            elemReview.prev('span.reviewSP').remove();
-            elemReview.after(elemReview.text()).remove();
-            if (_data.readonly) _this.closest('.reviewDisplayPro').slideUp('slow', function() { _this.closest('.reviewDisplayPro').remove() });
-            return false;
-        } else if ('delete') {
-            var elemReview = iframeEditor.find('span[data-id-review="'+_data.idReview+'"]');
-            elemReview.remove();
-            if (_data.readonly) _this.closest('.reviewDisplayPro').slideUp('slow', function() { _this.closest('.reviewDisplayPro').remove() });
-            return false;
-        }
-    } else if (_data.mode == 'reject') {
-        if (_data.type == 'add') {
-            var elemReview = iframeEditor.find('span[data-id-review="'+_data.idReview+'"]');
-            elemReview.prev('span.reviewSP').remove();
-            elemReview.remove();
-            if (_data.readonly) _this.closest('.reviewDisplayPro').slideUp('slow', function() { _this.closest('.reviewDisplayPro').remove() });
-            return false;
-        } else if ('delete') {
-            var elemReview = iframeEditor.find('span[data-id-review="'+_data.idReview+'"]');
-            elemReview.after(elemReview.text()).remove();
-            if (_data.readonly) _this.closest('.reviewDisplayPro').slideUp('slow', function() { _this.closest('.reviewDisplayPro').remove() });
-            return false;
-        }
-    }
-    if (_data.mode == 'acceptAll' || _data.mode == 'rejectAll') {
-        setTimeout(function(){ 
-            contentDialogReview('<span style="font-size: 12pt;"><i class="fas fa-check verdeColor" style="margin-right: 5px;"></i>Revis\u00F5es realizadas com sucesso</span>');
-            setTimeout(function(){ CKEDITOR.dialog.getCurrent().hide() },3000);
-        },500);
-    }
-}
-function hideReviewTips(iframeDoc) {
-    if (iframeDoc.find('.reviewDisplayPro:hover').length == 0) {
-        iframeDoc.find('.reviewDisplayPro').remove();
-    }
-}
-function getStyleReview(evt) {
-    var keycode = evt.data.keyCode;
-    var wordKey = evt.data.domEvent.$.key;
-    var sel = oEditor.getSelection();
-    var select = sel.getStartElement();
-    var spanElement = $(select.$).closest('span');
-    var selectTxt = sel.getSelectedText();
-    
-    if (spanElement.hasClass('commentReview')) return false;
-    // console.log(keycode, wordKey, selectTxt, evt);
-    
-    if (selectTxt == '' && keycode == 8 && (spanElement.length == 0 || (spanElement.length && spanElement.data('review') != 'add'))) {
-        oEditor.fire('saveSnapshot');
-        var newRange = setPositionCursor();
-        var wordDeleted = getCharOnCursor('prev');
-            wordDeleted = (wordDeleted == ' ') ? '&nbsp;' :  wordDeleted;
-        
-            setStyleReview('delete', 'insert', wordDeleted);
-            sel.selectRanges([ newRange ]);
-            oEditor.fire('saveSnapshot');
-            // console.log(wordDeleted);
-
-    } else if (selectTxt == '' && keycode == 46) {
-        oEditor.fire('saveSnapshot');
-        var newRange = setPositionCursor();
-        var wordDeleted = getCharOnCursor('next');
-        
-            setStyleReview('delete', 'insert', wordDeleted);
-            //oEditor.getSelection().selectRanges([ newRange ]);
-            oEditor.fire('saveSnapshot');
-            // console.log(wordDeleted);
-
-    } else {
-        if (wordKey != 'Shift' && wordKey != 'Meta' && wordKey.indexOf('Arrow') === -1) {
-            if (selectTxt != '' ) {
-                oEditor.fire('saveSnapshot');
-                var insetSp = (keycode == 46 || keycode == 32) ? '' : wordKey;
-                    insetSp = (keycode == 8) ? ' ' : insetSp;
-
-                    if (selectTxt.indexOf('\n\n') !== -1) {
-                        var listElem = setListElementsSelected();
-                        // console.log(listElem);
-                        $.each(listElem,function(i, v){
-                            console.log(i, v.attr('class'));
-                            setStyleReview('delete', 'insert', v.text(), true, v.attr('class'));
-                        });
-                        oEditor.fire('saveSnapshot');
-                    } else {
-                        setStyleReview('delete', 'insert', selectTxt, true);
-                        setStyleReview('add', 'insert', insetSp);
-                        oEditor.fire('saveSnapshot');
-                    }
-                
-                    var _select = oEditor.getSelection().getStartElement();
-                    var _spanElement = $(_select.$).closest('span');
-                    if (keycode != 8 && keycode != 46 && _spanElement.length && _spanElement.data('review') == 'add') {
-                        var newRange = setPositionCursor();
-
-                        setTimeout(function(){ 
-                            _spanElement.find('u').text(wordKey); 
-                            oEditor.getSelection().selectRanges([ newRange ]);
-                        });
-                    }
-                    // console.log(_spanElement[0], keycode, wordKey);
-                
-            } else {
-                if (spanElement.length == 0 || (spanElement.length && spanElement.data('review') != 'add')) {
-                    oEditor.fire('saveSnapshot');
-                    setStyleReview('add','change');
-                    // console.log('add insert');
-                    oEditor.fire('saveSnapshot');
-                }
-            }
-        }
-    }
-}
-function setListElementsSelected() {
-    var init = oEditor.getSelection().getNative();
-    var start = $(init.focusNode.parentNode);
-    var end = $(init.baseNode.parentNode);
-    var list = [];
-
-    function add(elem) {
-        var next = elem.next();
-            list.push(elem.clone());
-        if (end[0] != elem[0]) add(next);
-    }
-    add(start);
-
-    return list;
-}
-function setPositionCursor() {
-    var oldRanges = oEditor.getSelection().getRanges();
-    var oldRange = oldRanges[oldRanges.length - 1];
-    var newRange = oEditor.createRange();
-        newRange.setStart(oldRange.endContainer, oldRange.endOffset);
-        newRange.setEnd(oldRange.endContainer, oldRange.endOffset);
-    return newRange;
-}
-function getBoxCtrReview(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('ReviewSEI');
-}
-function contentDialogReview(alertText = '<span style="font-size: 12pt;"><i class="fas fa-info-circle laranjaColor" style="margin-right: 5px;"></i>Nenhuma revis\u00E3o identificada</span>') {
-    var listReviews = $('iframe[title*="txaEditor_"]').map(function(v, i){ 
-        var _this = $(this);
-        var body = _this.contents().find('body');
-        hideReviewTips(_this);
-        if ( body.attr('contenteditable') == 'true' ) {
-            var review = body.find('.reviewSeiPro').map(function(){
-                var _data = $(this).data();
-                var html = $(this).closest('p').clone().find('.reviewSeiPro[data-id-review="'+_data.idReview+'"]').addClass('reviewHighlights').end().html();
-                    $(this).find('.reviewDisplayPro').remove();
-
-                return getHtmlReviewDisplayPro({
-                    date: _data.dateReview,
-                    id_review: _data.idReview,
-                    type: _data.review,
-                    user: _data.userReview,
-                    comment: typeof _data.comment === 'undefined' ? '' : _data.comment,
-                    text: false,
-                    html: html
-                }, true);
-            }).get().join('');
-            return review;
-        }
-    }).get().join('');
-
-    var btnControlReject =  '<div style="margin: 10px 0 !important;display: inline-block;width: 95%;">'+
-                            '   <span class="action" style="font-size: 11pt;float: right;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-mode="acceptAll" title="Aceitar revis\u00E7\u00E3o"><i class="fas fa-check-circle" style="font-size: 11pt;color: #9CB639;"></i> Aceitar Todas</span>'+
-                            '   <span class="action" style="font-size: 11pt;float: left;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-mode="rejectAll" title="Rejeitar revis\u00E7\u00E3o"><i class="fas fa-times-circle" style="font-size: 11pt;color: #E46E64;"></i> Rejeitar todas</span>'+
-                            '</div>';
-
-    $('#boxReviews').html(listReviews == '' ? alertText : btnControlReject+listReviews);
-}
-function getDialogReview() {
-    var htmlReview =   '<div style="padding-bottom: 10px;overflow: auto;max-height: 400px;text-align: center;" id="boxReviews"></div>';
-    CKEDITOR.dialog.add( 'ReviewSEI', function(editor)
-      {
-         return {
-            title : 'Gerenciar Revis\u00F5es',
-            minWidth : 700,
-            minHeight : 280,
-            buttons: [],
-            onShow : function() {
-                contentDialogReview();
-            },
-            contents :
-            [
-               {
-                  id : 'tab1',
-                  label : 'Revis\u00F5es',
-                  elements :
-                  [
-                    {
-             			type: 'html',
-             			html: htmlReview
-             		}
-                  ]
-               }
-            ]
-         };
-      } );
-}
-function getBoxReview(this_) {
-    var btn = $('.getReviewButton');
-	if ( btn.hasClass('cke_button_off') ) {
-        btn.addClass('cke_button_on').removeClass('cke_button_off');
-        initStyleReview();
-	} else {
-		btn.addClass('cke_button_off').removeClass('cke_button_on');
-	}
-}
-function initStyleReview() {
-    if (typeof window.loadedStyleReview !== 'undefined' && $.inArray(oEditor.name, window.loadedStyleReview) !== -1) {
-        return false;
-    } else {
-        oEditor.on('key', function (evt) {
-            if ($('.getReviewButton').hasClass('cke_button_on')) getStyleReview(evt);
-        });
-        if (typeof window.loadedStyleReview === 'undefined') { 
-            window.loadedStyleReview = [oEditor.name];
-        } else {
-            window.loadedStyleReview.push(oEditor.name);
-        }
-    }
-    console.log(window.loadedStyleReview,'window.loadedStyleReview');
-}
+// getCharOnCursor() -> js/modules/editor/ (extraido para modulo)
+// setStyleReview() -> js/modules/editor/ (extraido para modulo)
+// showReviewTips() -> js/modules/editor/ (extraido para modulo)
+// scroolToReview() -> js/modules/editor/ (extraido para modulo)
+// getHtmlReviewDisplayPro() -> js/modules/editor/ (extraido para modulo)
+// addCommentReviewPro() -> js/modules/editor/ (extraido para modulo)
+// removeReviewPro() -> js/modules/editor/ (extraido para modulo)
+// setRemoveReviewPro() -> js/modules/editor/ (extraido para modulo)
+// hideReviewTips() -> js/modules/editor/ (extraido para modulo)
+// getStyleReview() -> js/modules/editor/ (extraido para modulo)
+// setListElementsSelected() -> js/modules/editor/ (extraido para modulo)
+// setPositionCursor() -> js/modules/editor/ (extraido para modulo)
+// getBoxCtrReview() -> js/modules/editor/ (extraido para modulo)
+// contentDialogReview() -> js/modules/editor/ (extraido para modulo)
+// getDialogReview() -> js/modules/editor/ (extraido para modulo)
+// getBoxReview() -> js/modules/editor/ (extraido para modulo)
+// initStyleReview() -> js/modules/editor/ (extraido para modulo)
 
 // CKWebSpeech
 // CKWebSpeech is a speech recognition plugin to CKEditor, it type out voice ideas into CKEdtior, with support for 32 languages from 62 culture variants.
 // https://github.com/ultranaco/ckwebspeech
 
-function instanceDitadoPro(oEditor) {
-    if (typeof oEditor.ckWebSpeech === 'undefined') {
-        oEditor.addCommand( 'webspeechDialog', new CKEDITOR.dialogCommand( 'webspeechDialog' ) );
-
-        oEditor.addCommand('webspeechToogle', {
-            exec: function( oEditor ) {
-                //console.log(oEditor.ckWebSpeech);
-                oEditor.ckWebSpeech.toogleSpeech();
-            }
-        });
-
-        var culture = typeof (oEditor.config.ckwebspeech) === "undefined" 
-                    ? undefined : typeof oEditor.config.ckwebspeech.culture === "undefined"
-                        ?undefined : oEditor.config.ckwebspeech.culture;
-
-            oEditor['ckWebSpeech'] = new CKWebSpeech(langs, culture, oEditor);
-
-            oEditor.config.ckwebspeech = {
-                'culture' : 'pt-BR',
-                'commandvoice' : 'ok', // trigger command listener
-                'commands': [            // action list
-                    {'vai': 'plataform_ai'},
-                    {'newline': 'nova linha'},
-                    {'newparagraph': 'novo par\u00E1grafo'},
-                    {'undo': 'desfazer'},
-                    {'redo': 'refazer'}
-                ]
-            };
-
-        if ( oEditor.contextMenu && typeof oEditor.getMenuItem('webSpeechEnabled') === 'undefined' ) {
-            oEditor.addMenuGroup( 'webSpeech', -10 * 3 );
-            oEditor.addMenuItem( 'webSpeechEnabled',
-                {
-                    label : 'Ditado',
-                    icon : URL_SPRO + 'icons/editor/webspeech.png',
-                    command : 'webspeechToogle',
-                    group : 'webSpeech'
-                });
-            oEditor.contextMenu.addListener( function( element ) {
-                // if ( hasSelection(oEditor) ) {
-                    return { webSpeechEnabled: CKEDITOR.TRISTATE_OFF};
-                // }
-            });
-        }
-    }
-}
-function getBoxDitado(this_) {
-    var btn = $('.getDitadoButton');
-	if ( btn.hasClass('cke_button_off') ) {
-        btn.addClass('cke_button_on').removeClass('cke_button_off');
-	} else {
-        btn.addClass('cke_button_off').removeClass('cke_button_on');
-	}
-    oEditor.execCommand('webspeechToogle');
-}
-function getBoxCtrDitado(this_) {
-    setParamEditor(this_);
-    oEditor.openDialog('webspeechDialog');
-}
-function initDitadoPro() {
-    langs =
-	[
-	['Afrikaans', 			['af-ZA']],
-	['Bahasa Indonesia',	['id-ID']],
-	['Bahasa Melayu', 		['ms-MY']],
-	['Catal\u00E0', 		['ca-ES']],
-	['\u010Ce\u0161tina', 	['cs-CZ']],
-	['Deutsch',         	['de-DE']],
-	['English',         	['en-AU', 'Australia'],
-							['en-CA', 'Canada'],
-							['en-IN', 'India'],
-							['en-NZ', 'New Zealand'],
-							['en-ZA', 'South Africa'],
-							['en-GB', 'United Kingdom'],
-							['en-US', 'United States']],
-	['Espa\u00F1ol',        ['es-AR', 'Argentina'],
-							['es-BO', 'Bolivia'],
-							['es-CL', 'Chile'],
-							['es-CO', 'Colombia'],
-							['es-CR', 'Costa Rica'],
-							['es-EC', 'Ecuador'],
-							['es-SV', 'El Salvador'],
-							['es-ES', 'Espa\u00F1a'],
-							['es-US', 'Estados Unidos'],
-							['es-GT', 'Guatemala'],
-							['es-HN', 'Honduras'],
-							['es-MX', 'M\u00E9xico'],
-							['es-NI', 'Nicaragua'],
-							['es-PA', 'Panam\u00E1'],
-							['es-PY', 'Paraguay'],
-							['es-PE', 'Per\u00FA'],
-							['es-PR', 'Puerto Rico'],
-							['es-DO', 'Rep\u00FAblica Dominicana'],
-							['es-UY', 'Uruguay'],
-							['es-VE', 'Venezuela']],
-	['Euskara',         	['eu-ES']],
-	['Fran\u00E7ais',       ['fr-FR']],
-	['Galego',          	['gl-ES']],
-	['Hrvatski',        	['hr_HR']],
-	['IsiZulu',         	['zu-ZA']],
-	['\u00CDslenska',        ['is-IS']],
-	['Italiano',        	['it-IT', 'Italia'],
-							['it-CH', 'Svizzera']],
-	['Magyar',          	['hu-HU']],
-	['Nederlands',      	['nl-NL']],
-	['Norsk bokm\u00E5l',   ['nb-NO']],
-	['Polski',          	['pl-PL']],
-	['Portugu\u00EAs',      ['pt-BR', 'Brasil'],
-							['pt-PT', 'Portugal']],
-	['Rom\u00E2n\u0103',    ['ro-RO']],
-	['Sloven\u010Dina',     ['sk-SK']],
-	['Suomi',           	['fi-FI']],
-	['Svenska',         	['sv-SE']],
-	['T\u00FCrk\u00E7e',    ['tr-TR']],
-	['\u0431\u044A\u043B\u0433\u0430\u0440\u0441\u043A\u0438',       	['bg-BG']],
-	['P\u0443\u0441\u0441\u043A\u0438\u0439',         					['ru-RU']],
-	['\u0421\u0440\u043F\u0441\u043A\u0438',          					['sr-RS']],
-	['\uD55C\uAD6D\uC5B4',            									['ko-KR']],
-	['\u4E2D\u6587',             										['cmn-Hans-CN', '\u666E\u901A\u8BDD (\u4E2D\u56FD\u5927\u9646)'],
-							['cmn-Hans-HK', '\u666E\u901A\u8BDD (\u9999\u6E2F)'],
-							['cmn-Hant-TW', '\u4E2D\u6587 (\u53F0\u7063)'],
-							['yue-Hant-HK', '\u7CB5\u8A9E (\u9999\u6E2F)']],
-	['\u65E5\u672C\u8A9E',  ['ja-JP']],
-	['Lingua lat\u012Bna',  ['la']]
-	];
-
-    CKWebSpeechHandler = function(oEditor) {
-        this._editor = oEditor;
-        this._currentCulture = {val: 'pt-BR', langVal: 19};
-        this._elmtPlugIcon;
-        this._plugPath;
-        this._recognizing;
-        this._recognition;
-        this._ignoreOnend;
-        this._start_timestamp;
-        this._working;
-        this.CKWebSpeechHandler();
-    }
-
-    CKWebSpeechHandler.prototype.CKWebSpeechHandler = function() {
-        this._recognition;
-        this._plugPath = URL_SPRO;
-        this._recognizing = false;
-        this._ignoreOnend = false;
-        this._working = false;
-        this.getElementPluginIcon();
-        this.initServiceSpeech();
-    }
-    CKWebSpeechHandler.prototype.isUnlockedService = function() {
-        if (!('webkitSpeechRecognition' in window)) 
-            return false;  
-        return true;
-    }
-    CKWebSpeechHandler.prototype.getElementPluginIcon = function() {
-        var obj = this; var cont =0;
-
-        var listener = setInterval(function(){
-            cont++;
-            var element;
-            try
-                {element = document.getElementById(obj._editor.ui.instances.Webspeech._.id);}
-            catch(err)
-                {element = null;}
-            
-            if(element !== null) {
-                obj._elmtPlugIcon = element.getElementsByClassName('cke_button__webspeech_icon')[0];
-                clearInterval(listener);
-            }
-            if(cont == 500) clearInterval(listener);
-        }, 1);
-    }
-
-    CKWebSpeechHandler.prototype.updateIcons = function() {
-        console.log('Ditado_recognizing: ', this._recognizing);
-        if(this._recognizing){
-            $('.cke_button__ditado_icon').css('background','url(\''+URL_SPRO+'icons/editor/webspeech-enable.gif\')');
-            $('.getDitadoButton').addClass('cke_button_on').removeClass('cke_button_off');
-            
-        }else{
-            $('.cke_button__ditado_icon').css('background','url(\''+URL_SPRO+'icons/editor/webspeech.png\')');
-            $('.getDitadoButton').addClass('cke_button_off').removeClass('cke_button_on');
-        }
-    }
-
-    CKWebSpeechHandler.prototype.initServiceSpeech = function() {
-        if(this.isUnlockedService())
-        {
-            this._recognition = new webkitSpeechRecognition();
-            this._recognition.continuous = true; 
-            this._recognition.interimResults = false;
-            
-            var self = this
-            this._recognition.onstart = function(){ self.onStart() };
-            this._recognition.onerror = function(event){ self.onError(event) };
-            this._recognition.onend = function(){ self.onEnd() };
-            this._recognition.onresult = function(event){ self.onResult(event) };
-            this._recognition.onspeechstart = function(event){self.onSpeech()};
-            this._recognition.onspeechend = function(event){self.onSpeechEnd()};
-        }
-    }
-
-    CKWebSpeechHandler.prototype.onStart = function() {
-        //console.log(this)
-        this._recognizing = true;
-        this.updateIcons();
-    }
-
-    CKWebSpeechHandler.prototype.onError = function(event) {
-        if (event.error == 'no-speech') {
-            //start_img.src = '/media/images-webspeech/mic.gif
-            //console.log('info_no_speech');
-            this._ignore_onend = true;
-        }
-        if (event.error == 'audio-capture') {
-            //start_img.src = '/media/images-webspeech/mic.gif';
-            //showInfo('info_no_microphone');
-            //console.log('auddio_capture');
-            this._ignore_onend = true;
-        }
-        if (event.error == 'not-allowed') {
-            if (event.timeStamp - this._start_timestamp < 100) {
-                //console.log('info_blocked');//showInfo('info_blocked');
-            } else {
-                //console.log('info_denied');//showInfo('info_denied');
-            }
-            this._ignore_onend = true;
-        }
-        this.updateIcons();
-    }
-
-    CKWebSpeechHandler.prototype.onEnd = function() {
-        this._recognizing = false;
-        if (this._ignoreOnend) return;
-        this.updateIcons();
-    }
-    CKWebSpeechHandler.prototype.onSpeech = function(event)  {
-        // this._elmtPlugIcon.style.backgroundImage = 'url(' +  this._plugPath 
-                // + 'icons/editor/speech.gif)';
-    }
-
-    CKWebSpeechHandler.prototype.onSpeechEnd = function(event) {
-        this.updateIcons();
-    }
-
-    CKWebSpeechHandler.prototype.onResult = function(event) {
-        if (typeof(event.results) == 'undefined') {
-            this._recognizing = false;
-            this._recognition.onend = null;
-            this._recognition.stop();
-            this.updateIcons();
-        //upgrade();
-            return;
-        }
-        for (var i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-                var t = ' '+event.results[i][0].transcript+' ';
-
-                if (t.match(/.* nova linha .*/) || t.match(/.* ponto final .*/) || t.match(/.* novo par\u00E1grafo .*/)) {
-                    var l = (t.match(/.* nova linha .*/)) ? t.trim().split('nova linha') : t;
-                        l = (t.match(/.* ponto final .*/)) ? t.trim().split('ponto final') : l;
-                        l = (t.match(/.* novo par\u00E1grafo .*/)) ? t.trim().split('novo par\u00E1grafo') : l;
-                        l = l.filter( n => n);
-                    if (l.length) {
-                        var _this = this;
-                        $.each(l, function(i, v){
-                            if (v.trim() != '') {
-                                var ponto = (i < l.length-1) ? '.' : '';
-                                    v = _this.replaceTranscript(v);
-                                    _this._editor.insertText(v+ponto);
-                                    if (ponto != '') oEditor.execCommand('enter');
-                            }
-                        });
-                    } else {
-                        oEditor.execCommand('enter');
-                    }
-                } else if (t.trim().toLocaleLowerCase() == 'desfazer') {
-                    oEditor.execCommand('undo');
-                } else if (t.trim().toLocaleLowerCase() == 'refazer') {
-                    oEditor.execCommand('redo');
-                } else {
-                    t = this.replaceTranscript(t);
-                    this._editor.insertText(t);
-                }
-                console.log(event.results[i][0].transcript, t);
-            }
-        }
-    }
-
-    CKWebSpeechHandler.prototype.replaceTranscript = function(t) {
-        t = (t.match(/.* abre par\u00EAnteses .*/)) ? t.replace(/ abre par\u00EAnteses /, '(') : t;
-        t = (t.match(/.* fecha par\u00EAnteses .*/)) ? t.replace(/ fecha par\u00EAnteses /, ')') : t;
-        t = (t.match(/.* abre colchete .*/)) ? t.replace(/ abre colchetes /, '[') : t;
-        t = (t.match(/.* fecha colchete .*/)) ? t.replace(/ fecha colchete /, ']') : t;
-        t = (t.match(/.* abre aspas .*/)) ? t.replace(/ abre aspas /, '"') : t;
-        t = (t.match(/.* fecha aspas .*/)) ? t.replace(/ fecha aspas /, '"') : t;
-        t = (t.match(/.* espa\u00E7o .*/)) ? t.replace(/ espa\u00E7o /, ' ') : t;
-        t = (t.match(/.* aspas .*/)) ? t.replace(/ aspas /, '"') : t;
-        t = (t.match(/.* travess\u00E3o .*/)) ? t.replace(/ travess\u00E3o /, ' \u2013 ') : t;
-        t = (t.match(/.* tra\u00E7o .*/)) ? t.replace(/ tra\u00E7o /, '- ') : t;
-        t = (t.match(/.* ponto e v\u00EDrgula .*/)) ? t.replace(/ ponto e v\u00EDrgula /, '; ') : t;
-        t = (t.match(/.* dois pontos .*/)) ? t.replace(/ dois pontos /, ': ') : t;
-        t = (t.match(/.* 2 pontos .*/)) ? t.replace(/ 2 pontos /, ': ') : t;
-        t = (t.match(/.* ponto .*/)) ? t.replace(/ ponto /, '. ') : t;
-        t = (t.match(/.* v\u00EDrgula .*/)) ? t.replace(/ v\u00EDrgula /, ', ') : t;
-
-        var iStr = Array.from(t.trim())[0];
-        var space = (iStr == ',' || iStr == ';' || iStr == ':' || iStr == '-' || iStr == '.') ? '' : ' ';
-        return space+t.trim();
-    }
-    CKWebSpeechHandler.prototype.toogleSpeech = function() {
-        if(!this._recognizing){
-                this._recognition.lang = this._currentCulture.val;
-                this._recognition.start();
-                this._ignore_onend = false;
-                this._start_timestamp = new Date().getTime();
-            }
-        else
-            {this._recognition.stop();}
-    }
-
-    CKWebSpeech = function(langs, culture, oEditor){
-        CKWebSpeechHandler.call(this, oEditor);
-        this._langs = langs;
-        this.CKWebSpeech(culture);
-    }
-
-    CKWebSpeech.prototype = Object.create( CKWebSpeechHandler.prototype );
-
-    CKWebSpeech.prototype.CKWebSpeech = function(_culture){
-        if(typeof _culture !== "undefined")
-            this.setDialectByCulture(_culture);
-    }
-
-    CKWebSpeech.prototype.setDialectByCulture = function(_culture) {
-        for (var i = 0; i < this._langs.length; i++) {
-            for (var j = 1; j < this._langs[i].length; j++) {
-                if(this._langs[i][j][0].toLowerCase() == _culture.toLowerCase())
-                {
-                    this._currentCulture ={val: this._langs[i][j][0], langVal: i};
-                    return this._currentCulture;
-                }//FALTA COLOCAR EN COOKIE
-            };
-        };
-        return this._currentCulture;
-    }
-
-    CKWebSpeech.prototype.setDialectByLanguage = function(_langVal) {
-        this.setDialectByCulture(this._langs[_langVal][1][0]);
-    }
-
-    CKWebSpeech.prototype.getLanguages = function() {
-        var _languages = new Array();
-        for (var i = 0; i < this._langs.length; i++) {
-            _languages.push(new Array(this._langs[i][0], i));
-        };
-        return _languages;
-    }
-
-    CKWebSpeech.prototype.getCultures = function(_langVal) {
-
-        if(typeof _langVal === "undefined")
-            _langVal = this._currentCulture.langVal;
-
-        var _cultures = new Array();
-        for (var i = 1; i < this._langs[_langVal].length; i++) {
-            _cultures.push( new Array(this._langs[_langVal][i][0]));
-        };
-        return  _cultures;
-    }
-    var extern;
-
-    wsDialogHtml = function() {
-        this.updateCulturesSelect = function(elmtCulture, options)
-        {
-            var select_dialect = document.getElementById(elmtCulture._.inputId);
-            
-            for (var i = select_dialect.options.length - 1; i >= 0; i--) {
-                select_dialect.remove(i);
-            }
-            
-            for (var i = 0; i < options.length; i++) {
-                select_dialect.options.add(new Option(options[i], options[i]));
-            }
-            
-        }
-    }
-}
-function getDialogDitado() {
-    if (checkConfigValue('revisaotexto')) {
-        initDitadoPro();
-        CKEDITOR.dialog.add( 'webspeechDialog', function ( oEditor ) {
-            var wsDialogDom = new wsDialogHtml();
-            var selectCulture = oEditor.ckWebSpeech._currentCulture.val;
-
-            return {
-                title: 'Configura\u00E7\u00F5es do Ditado',
-                minWidth: 400,
-                minHeight: 200,
-                contents: [
-                    {
-                        id: 'tab-basic',
-                        label: 'Configura\u00E7\u00F5es b\u00E1sicas',
-                        elements: [
-                            {
-                                type: 'select',
-                                id: 'wslanguages',
-                                label: 'Idioma',
-                                items: oEditor.ckWebSpeech.getLanguages(),
-                                'default': oEditor.ckWebSpeech._currentCulture.langVal,
-                                onChange: function( api ) {
-                                    var dialog = CKEDITOR.dialog.getCurrent();
-                                    var selCultures = dialog.getContentElement('tab-basic', 'wscultures');
-                                    var options = oEditor.ckWebSpeech.getCultures(api.data.value);
-                                    selCultures.setup({selCultures : selCultures, options : options});
-                                    selCultures.fire('change', {value : options[0][0]}, oEditor);
-                                },
-                                onShow: function(data) {
-                                    var dialog = CKEDITOR.dialog.getCurrent();
-                                    var selLanguages = dialog.getContentElement('tab-basic', 'wslanguages');
-                                    document.getElementById(selLanguages._.inputId).value = 
-                                        oEditor.ckWebSpeech._currentCulture.langVal;
-                                }
-                            },
-                            {
-                                type: 'select',
-                                id: 'wscultures',
-                                label: 'Cultura',
-                                items: oEditor.ckWebSpeech.getCultures(),
-                                'default': oEditor.ckWebSpeech._currentCulture.val,
-                                onChange: function( api ) {
-                                    selectCulture = api.data.value;                            
-                                },
-                                setup: function(data) {
-                                    wsDialogDom.updateCulturesSelect(data.selCultures, data.options);
-                                },
-                                onShow: function(data) {
-                                    var dialog = CKEDITOR.dialog.getCurrent();
-                                    var selCultures = dialog.getContentElement('tab-basic', 'wscultures');
-                                    //console.log(selCultures);
-                                    document.getElementById(selCultures._.inputId).value = 
-                                        oEditor.ckWebSpeech._currentCulture.val;
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        id: 'tab-adv',
-                        label: 'Advanced Settings',
-                        elements: [
-
-                        ]
-                    }
-                ],
-                onOk: function() {
-                    oEditor.ckWebSpeech.setDialectByCulture(selectCulture);
-                }
-            };
-        });
-    }
-}
-function getBoxStyleEditor(this_) {
-    var btn = $('.getNewStyleButton');
-	if ( btn.hasClass('cke_button_off') ) {
-        btn.addClass('cke_button_on').removeClass('cke_button_off');
-        updateStyleEditor('set');
-	} else {
-        btn.addClass('cke_button_off').removeClass('cke_button_on');
-        updateStyleEditor('remove');
-	}
-}
-function updateStyleEditor(mode) {
-    if (mode == 'set') {
-        localStorage.setItem('seiSlim_editor', true);
-        $('head').find('link[data-style="seipro-fonticon"]').remove();
-        $('head').find('style[data-style="seipro-fonticon"]').remove();
-        insertFontIcon('head');
-        $('body').addClass('seiSlim seiSlim_parent seiSlim_view');
-    } else {
-        localStorage.removeItem('seiSlim_editor');
-        $('body').attr('class','');
-    }
-}
+// instanceDitadoPro() -> js/modules/editor/ (extraido para modulo)
+// getBoxDitado() -> js/modules/editor/ (extraido para modulo)
+// getBoxCtrDitado() -> js/modules/editor/ (extraido para modulo)
+// initDitadoPro() -> js/modules/editor/ (extraido para modulo)
+// getDialogDitado() -> js/modules/editor/ (extraido para modulo)
+// getBoxStyleEditor() -> js/modules/editor/ (extraido para modulo)
+// updateStyleEditor() -> js/modules/editor/ (extraido para modulo)
 function initFunctions() {
-    initContextMenuPro();
-    getDialogLegisSEI();
-    getDialogNotaRodape();
-    initPlataformAI();
-    // getDialogRefInterna();
-    // getDialogSumarioDocumento();
-    getDialogSyleTable();
-	// getDialogTinyUrl();
-	getDialogQrCode();
-    getDialogLinkPro();
-    // getDialogImportDocPro();
-    getDialogPageImageBackground();
-    initDialogUploadImgBase64();
-    // getDialogLatex();
-    // getDialogProcessoPublicoPro();
-    getDialogSigilo();
-    getDialogReview();
-    getDialogDitado();
-    getDialogBatchImgQuality();
-    initDialogImageEditorPro();
-	loadResizeImg();
-    updateDialogDefinitionPro();
-    loadPasteImgToBase64();
-    insertFontIcon('head');
-    reloadModalLink();
-    setDocCertidao();
-    setDocAutomatico();
-    checkAutoSave();
-    initDropImages();
-    getStylesOnEditor();
-    repairSaveButtonBug();
-    clickScroolToRef();
-    checkLoadJqueryUI();
-	
-	// RETORNA DADOS DO PROCESSO
-	var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
-	if (!checkHostLimit()) getDadosIframeProcessoPro(idProcedimento, 'editor');
-    if (getOptionsPro('setKeywordInlineAI')) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
+    // Cada initializer eh envolvido para que uma falha (ex: CKEDITOR.dialog.add
+    // em CK5) nao interrompa as demais. Util durante a migracao para CK5, onde
+    // parte das funcoes ainda depende de APIs exclusivas do CK4.
+    // Erros previsiveis no CK5 (APIs ausentes como CKEDITOR.dialog, CKEDITOR.on
+    // ou replace de undefined em iframe) sao silenciados para reduzir ruido.
+    var isCK5 = typeof SeiProEditorAdapter !== 'undefined' && SeiProEditorAdapter.version === 5;
+    var knownMissingAPI = /reading 'add'|reading 'replace'|CKEDITOR\.on is not a function|CKEDITOR\.dom/;
+    var tryRun = function (fn, name) {
+        try { fn(); } catch (e) {
+            var msg = (e && e.message) ? e.message : String(e);
+            if (isCK5 && knownMissingAPI.test(msg)) return; // esperado: feature ainda depende de API CK4
+            if (typeof console !== 'undefined' && console.warn) {
+                console.warn('[SEIPro] ' + name + ' falhou:', msg);
+            }
+        }
+    };
+    tryRun(initContextMenuPro, 'initContextMenuPro');
+    tryRun(getDialogLegisSEI, 'getDialogLegisSEI');
+    tryRun(getDialogNotaRodape, 'getDialogNotaRodape');
+    tryRun(initPlataformAI, 'initPlataformAI');
+    tryRun(getDialogSyleTable, 'getDialogSyleTable');
+    tryRun(getDialogQrCode, 'getDialogQrCode');
+    tryRun(getDialogLinkPro, 'getDialogLinkPro');
+    tryRun(getDialogPageImageBackground, 'getDialogPageImageBackground');
+    tryRun(initDialogUploadImgBase64, 'initDialogUploadImgBase64');
+    tryRun(getDialogSigilo, 'getDialogSigilo');
+    tryRun(getDialogReview, 'getDialogReview');
+    tryRun(getDialogDitado, 'getDialogDitado');
+    tryRun(getDialogBatchImgQuality, 'getDialogBatchImgQuality');
+    tryRun(initDialogImageEditorPro, 'initDialogImageEditorPro');
+    tryRun(loadResizeImg, 'loadResizeImg');
+    tryRun(updateDialogDefinitionPro, 'updateDialogDefinitionPro');
+    tryRun(loadPasteImgToBase64, 'loadPasteImgToBase64');
+    tryRun(function () { insertFontIcon('head'); }, 'insertFontIcon');
+    tryRun(reloadModalLink, 'reloadModalLink');
+    tryRun(setDocCertidao, 'setDocCertidao');
+    tryRun(setDocAutomatico, 'setDocAutomatico');
+    tryRun(checkAutoSave, 'checkAutoSave');
+    tryRun(initDropImages, 'initDropImages');
+    tryRun(getStylesOnEditor, 'getStylesOnEditor');
+    tryRun(repairSaveButtonBug, 'repairSaveButtonBug');
+    tryRun(clickScroolToRef, 'clickScroolToRef');
+    tryRun(checkLoadJqueryUI, 'checkLoadJqueryUI');
+
+    // RETORNA DADOS DO PROCESSO
+    tryRun(function () {
+        var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
+        if (!checkHostLimit()) getDadosIframeProcessoPro(idProcedimento, 'editor');
+    }, 'getDadosIframeProcessoPro');
+    tryRun(function () {
+        if (getOptionsPro('setKeywordInlineAI')) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
+    }, 'sei-pro-ai');
 }
 $('body').addClass('seiEditor');
 
-if (!isSEI_5) {
+// Boot unico para CK4 (SEI 3.1/4) e CK5 (SEI 5). O adapter resolve a versao
+// e nos aguardamos o editor ficar pronto antes de montar a toolbar customizada.
+if (typeof SeiProEditorAdapter !== 'undefined') {
+    SeiProEditorAdapter.waitReady(15000)
+        .then(function () { addButton(); })
+        .catch(function (e) { console.warn('[SEIPro] editor n\u00E3o detectado:', e); });
+} else if (typeof CKEDITOR !== 'undefined') {
     addButton();
 }
