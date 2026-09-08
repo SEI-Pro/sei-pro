@@ -1,112 +1,100 @@
+# =============================================================================
+# SEI Pro - .gitignore
+# O repositorio publico versiona apenas a extensao (dist/), a documentacao
+# (README, PRIVACY_POLICY, pages/, img/) e o manifest publico.
+# Tudo que for backend, whitelabel, ferramenta interna ou dado nao vai junto.
+# =============================================================================
 
-dist/.vscode/settings.json
-dist/manifest_spro.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-dist/manifest_antaq.json
-dist/manifest_spro.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-clean_home.js
+# -----------------------------------------------------------------------------
+# Pastas privadas / nao distribuiveis
+# -----------------------------------------------------------------------------
+/antaq/
+/backend/
+/backup/
+/seilab/
+/seilab-app/
+/seipro/
+/tools/
+/updates/
+/whitelabels/
+
+# -----------------------------------------------------------------------------
+# Manifests de whitelabel (o publico e apenas dist/manifest.json)
+# -----------------------------------------------------------------------------
+dist/manifest_*.json
+
+# -----------------------------------------------------------------------------
+# Segredos e configuracao local
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
 config.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-dist/manifest_spro.json
-dist/manifest_seipro.json
-dist/manifest_petrvs.json
-dist/manifest_seipro.json
-dist/manifest_spro.json
-dist/manifest_petrvs.json
-dist/manifest_lab.json
-.DS_Store
-.._config.yml.icloud
-_config.yml
-_config.yml
-dist/icons/petrvs/icon-128.png
-dist/icons/petrvs/icon-16.png
-dist/icons/petrvs/icon-256.png
-dist/icons/petrvs/icon-32.png
-dist/icons/petrvs/icon-48.png
-dist/icons/petrvs/petrvs.png
-dist/icons/petrvs/icon-128.png
-dist/icons/petrvs/icon-16.png
-dist/icons/petrvs/icon-256.png
-dist/icons/petrvs/icon-32.png
-dist/icons/petrvs/icon-48.png
-dist/icons/petrvs/petrvs.png
-dist/manifest_antaq_v2.json
-dist/manifest_seipro_v2.json
-dist/manifest_v2.json
-dist/manifest_antt.json
-dist/manifest_antt_v2.json
-dist/manifest_cfq.json
-dist/manifest_cfq_v2.json
-dist/manifest_conab.json
-dist/manifest_conab_v2.json
-db-2023-07-27.sql
-old/sei-forms.js
-old/sei-gantt.js
-old/sei-sync-processos.js
-/backend
-/seipro
-/whitelabels
+config_local.json
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
 
-# Arquivos do sistema
+# -----------------------------------------------------------------------------
+# Pacotes e artefatos de build (zips da raiz nao sao versionados)
+# -----------------------------------------------------------------------------
+/*.zip
+/*.crx
+/*.tar
+/*.tar.gz
+build/
+dist-temp/
+
+# -----------------------------------------------------------------------------
+# Dumps e bancos de dados
+# -----------------------------------------------------------------------------
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+
+# -----------------------------------------------------------------------------
+# Dependencias
+# -----------------------------------------------------------------------------
+node_modules/
+package-lock.json
+yarn.lock
+
+# -----------------------------------------------------------------------------
+# Scripts utilitarios locais
+# -----------------------------------------------------------------------------
+clean_home.js
+
+# -----------------------------------------------------------------------------
+# Arquivos do sistema operacional
+# -----------------------------------------------------------------------------
 .DS_Store
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
 desktop.ini
+*.icloud
 
-# Arquivos temporários
-*.tmp
-*.temp
-*.log
-*.cache
-
-# Arquivos de backup
-*.bak
-*.backup
-*~
-
-# Arquivos de IDE/Editor
+# -----------------------------------------------------------------------------
+# IDE / Editor
+# -----------------------------------------------------------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Arquivos de build/distribuição (se houver)
-build/
-dist-temp/
-
-# Arquivos de configuração local
-config_local.json
-.env
-.env.local
-
-# Arquivos de dependências (se usar npm/yarn)
-node_modules/
-package-lock.json
-yarn.lock
-
-# Arquivos de teste
-test/
-tests/
-*.test.js
-*.spec.js
-
-# Arquivos de documentação temporária
-docs/temp/
+# -----------------------------------------------------------------------------
+# Temporarios, logs e backups
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.log
+*.cache
+*.bak
+*.backup
 *.md.bak
-
-# Arquivos de desenvolvimento
-dev/
-development/
-
-# Arquivos de debug
-debug.log
-error.log 
-dist/js/sei-pro_new.js
-dist/js/sei-pro_new.js
