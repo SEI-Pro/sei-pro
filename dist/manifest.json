@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "1.6.1",
+  "version": "1.6.15",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -60,7 +60,7 @@
         "*://sip-sei.ans.gov.br/*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*",
+        "*://sei.antaq1.gov.br/*",
         "*://*.br/*login.php*",
         "*://*.br/sip/*controlador.php*",
         "*://*.br/sei/*controlador_externo.php*",
@@ -71,7 +71,8 @@
         "*://*.org/sei/*controlador_externo.php*",
         "*://sip-sei.ans.gov.br/login.php*",
         "*://sip-sei.ans.gov.br/controlador.php*",
-        "*://sip-sei.ans.gov.br/controlador_externo.php*"
+        "*://sip-sei.ans.gov.br/controlador_externo.php*",
+        "*://sistemas.unir.br/sip/*"
       ]
     },
     {
@@ -104,7 +105,8 @@
         "*://sip-sei.ans.gov.br/login.php*sigla_sistema=SEI*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*",
+        "*://sistemas.unir.br/sip/*"
       ]
     },
     {
@@ -134,7 +136,8 @@
         "*://sip-sei.ans.gov.br/login.php*sigla_sistema=SEI*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*",
+        "*://sistemas.unir.br/sip/*"
       ]
     },
     {
@@ -194,7 +197,7 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=acompanhamento_listar*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*"
       ]
     },
     {
@@ -214,7 +217,7 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_controlar*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*"
       ]
     },
     {
@@ -234,7 +237,7 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=procedimento_visualizar*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*"
       ]
     },
     {
@@ -249,7 +252,7 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=arvore_visualizar*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*"
       ]
     },
     {
@@ -267,7 +270,7 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=documento_visualizar&acao_origem=procedimento_visualizar&id_documento=*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*"
       ]
     },
     {
@@ -302,7 +305,7 @@
         "*://sip-sei.ans.gov.br/controlador.php?acao=texto_padrao_interno_cadastrar*"
       ],
       "exclude_matches": [
-        "*://sei.sp1.gov.br/*"
+        "*://sei.antaq1.gov.br/*"
       ]
     }
   ],
@@ -341,6 +344,8 @@
         "js/lib/leaflet-geocoder.js",
         "js/lib/filerobot-image-editor.min.js",
         "js/lib/jszip.min.js",
+        "js/lib/html-to-docx.browser.js",
+        "js/lib/buffer.min.js",
         "js/lib/jszip-utils.min.js",
         "js/lib/jquery-visible.min.js",
         "js/lib/html2canvas.min.js",
@@ -357,7 +362,9 @@
         "js/sei-pro-prescricoes.js",
         "js/sei-pro.js",
         "js/sei-pro-all.js",
+        "js/sei-pro-editor-adapter.js",
         "js/sei-pro-editor.js",
+        "js/modules/editor/*.js",
         "js/sei-pro-arvore.js",
         "js/sei-pro-visualizacao.js",
         "js/sei-pro-favoritos.js",
@@ -495,6 +502,9 @@
       "matches": [
         "*://*.br/*",
         "*://*.org/*"
+      ],
+      "exclude_matches": [
+        "*://sei.antaq1.gov.br/*"
       ]
     }
   ]

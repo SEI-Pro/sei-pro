@@ -109,7 +109,7 @@ Vote nas sugestões que mais queria ver no SEI Pro!
 
 Participe do laboratorio de ideias sobre inovações para o SEI, automações e boas práticas.
 
-> <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/whatsapp.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/whatsapp.png" width="16"/> [http://bit.ly/SEI_Lab](http://bit.ly/SEI_Lab)
+> <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/whatsapp.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/whatsapp.png" width="16"/> [https://seilab.seipro.app](https://seilab.seipro.app)
 
 
 ## Novidades e dicas
