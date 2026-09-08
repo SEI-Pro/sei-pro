@@ -2578,6 +2578,13 @@ a.newLink.filterTableProcessos.newLink_active i {
     font-size: 1em;
 }
 /* Ajustes especificos para o SEI 5+ (classe isSEI_5 adicionada ao body) */
+/* O SEI 5 mudou div.barraBotoesSEI de `display:table; padding:0 3px` (4.1.5) para
+   `display:table-cell` sem padding, o que gera uma tabela anonima e deixa a barra de
+   icones da home comprimida e desalinhada. Restaura o comportamento do SEI 4. */
+body.isSEI_5 div.barraBotoesSEI {
+    display: table !important;
+    padding: 0 3px !important;
+}
 body.isSEI_5 .titlePanelHome {
     display: flex;
 }
@@ -3606,6 +3613,13 @@ td.prazoBoxDisplay {
 }
 .displayInitial, #divInfraAreaTelaD .displayInitial {
     display: initial !important;
+}
+/* Com o agrupamento de tabela ativo o #divTabelaProcesso ganha .displayInitial, e o
+   colapso [-] adiciona .displayNone. As duas sao !important e .displayInitial vem
+   depois na cascata, entao vencia e a grade nao colapsava. Esta regra tem
+   especificidade maior (duas classes) e faz o esconder prevalecer. */
+.displayInitial.displayNone, #divInfraAreaTelaD .displayInitial.displayNone {
+    display: none !important;
 }
 .newSEI a.newLinksMenuPro {
     padding-left: 5px !important;
