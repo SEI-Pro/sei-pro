@@ -11274,6 +11274,18 @@ function confirmaDadosUrgencia(_this) {
         }
 
 }
+// Os icones da barra de acoes sao injetados dentro do #ifrConteudoVisualizacao. Esse iframe
+// recarrega a cada clique num documento da arvore e leva os icones junto, por isso cada funcao
+// appendIcon* se reagendava a cada 1,5s. So que o initSeiProVisualizacao tambem roda de novo a
+// cada recarga e chama todas elas outra vez: cada navegacao deixava mais uma cadeia de timers
+// viva e nenhuma morria. Medido ao vivo no SEI 4.1.5 e no 5.0.4, a taxa de chamadas crescia
+// linearmente com o numero de documentos abertos - nove cadeias perpetuas por navegacao.
+// O helper mantem UMA cadeia por icone: um novo agendamento cancela o anterior em vez de somar.
+var timersIconesBarraPro = {};
+function reagendarIconeBarraPro(nome, fn) {
+    if (timersIconesBarraPro[nome]) { clearTimeout(timersIconesBarraPro[nome]); }
+    timersIconesBarraPro[nome] = setTimeout(fn, 1500);
+}
 function insertIconBatchActions() {
     waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconBatchActions);
 }
@@ -11285,11 +11297,7 @@ function appendIconBatchActions(loop = true) {
     if (!ifrVisualizacao.find('#iconBatchActions').length) {
         ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconbatchActions);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconBatchActions();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconBatchActions', appendIconBatchActions); }
 }
 function insertIconAIActions() {
     waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconAIActions);
@@ -11302,11 +11310,7 @@ function appendIconAIActions(loop = true) {
     if (!ifrVisualizacao.find('#iconAIActions').length) {
         ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconAIActions);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconAIActions();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconAIActions', appendIconAIActions); }
 }
 function initBoxAIActions(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -11331,11 +11335,7 @@ function appendIconCompareDocs(loop = true) {
     if (ifrVisualizacao.find('#iconCompareDocs').length == 0) {
         ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconCompareDocs);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconCompareDocs();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconCompareDocs', appendIconCompareDocs); }
 }
 function insertIconBatchDocs() {
     waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconBatchDocs);
@@ -11348,11 +11348,7 @@ function appendIconBatchDocs(loop = true) {
     if (ifrVisualizacao.find('#iconBatchDocs').length == 0) {
         ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconBatchDocs);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconBatchDocs();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconBatchDocs', appendIconBatchDocs); }
 }
 function initDocLoteModalSelecaoDoc(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
@@ -11412,11 +11408,7 @@ function appendIconCtrPrescricao(loop = true) {
         if (ifrVisualizacao.find('#iconCtrPrescicao').length == 0) {
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconCtrPrescricao);
         }
-        if (loop) {
-            setTimeout(function () {
-                appendIconCtrPrescricao();
-            },1500);
-        }
+        if (loop) { reagendarIconeBarraPro('appendIconCtrPrescricao', appendIconCtrPrescricao); }
     }
 }
 function checkTipoPrescricaoProcesso() {
@@ -11497,11 +11489,7 @@ function appendIconNewDoc(loop = true) {
     if (newDocLink !== null && newDocLink != '' && ifrVisualizacao.find('a.botaoSEI[href*="acao=documento_escolher_tipo"]').length == 0) {
         ifrVisualizacao.find('#divArvoreAcoes').prepend(htmlIconNewDoc);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconNewDoc();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconNewDoc', appendIconNewDoc); }
 }
 function initMoveIconDeleteToEnd() {
     if (!isNewSEI) waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', "a.botaoSEI", moveIconDeleteToEnd);
@@ -11529,11 +11517,7 @@ function appendIconDynamicField(loop = true) {
                                  '</a>';
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconDynamicField);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconDynamicField();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconDynamicField', appendIconDynamicField); }
 }
 function insertIconFormSheet() {
     waitLoadPro($('#ifrArvore').contents(), '#divArvore', 'img[src*="formulario1.gif"]', appendIconFormSheet);
@@ -11548,11 +11532,7 @@ function appendIconFormSheet(loop = true) {
                                  '</a>';
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconFormSheet);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconFormSheet();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconFormSheet', appendIconFormSheet); }
 }
 function insertIconIntegrity() {
     waitLoadPro($($ifrVisualizacao).contents(), divInformacao, ancoraArvoreDownload, appendIconIntegrity);
@@ -11566,11 +11546,7 @@ function appendIconIntegrity(loop = true) {
                                  '</a>';
             ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconIntegrity);
     }
-    if (loop) {
-        setTimeout(function () {
-            appendIconIntegrity();
-        },1500);
-    }
+    if (loop) { reagendarIconeBarraPro('appendIconIntegrity', appendIconIntegrity); }
 }
 function setReplaceSelectAllVisualizacao() {
     if (verifyConfigValue('substituiselecao')) {

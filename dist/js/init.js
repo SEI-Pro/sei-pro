@@ -10,7 +10,36 @@ var frmEditor5Exists = $('html script[charset="utf-8"]').toArray().some(function
     return !!(s.innerHTML && s.innerHTML.indexOf('INFRA_EDITOR_CONFIG') !== -1);
 });
 
-$.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"));
+// A pagina do SEI ja vem com jQuery (3.7.0 no 4.1.5 e no 5.0.4) e com a jQuery UI 1.13.2
+// ligada nele. Injetar a nossa 3.4.1 troca o window.$ da pagina e leva aquela UI junto: ate a
+// nossa 1.12.1 chegar, todo $(...).resizable/.dialog na pagina lanca TypeError - inclusive o
+// adicionarLinha do proprio SEI, que monta a divisoria arrastavel entre a arvore e o documento.
+// Carregar a UI no callback fecha essa janela. O guard de loadFilesUI() nao resolve: ele roda no
+// mundo isolado da extensao, onde a jQuery UI ja existe como content script, entao da sempre
+// falso e nunca chega a carregar nada na pagina. Quem repunha a UI era o checkLoadJqueryUI(),
+// dentro do sei-functions-pro.js, que roda no mundo certo mas so bem depois.
+// A partir do SEI 4 a pagina ja vem com jQuery proprio (3.7.0 no 4.1.5 e no 5.0.4) e com a jQuery
+// UI 1.13.2, o jquery.toolbar e o jquery.modalLink acoplados NELE. Injetar a nossa 3.4.1 por cima
+// trocava o window.$ da pagina e levava os tres junto: ate a nossa jQuery UI 1.12.1 chegar, todo
+// $(...).resizable / .dialog na pagina lancava TypeError - inclusive dentro do adicionarLinha do
+// proprio SEI, que e o que monta a divisoria arrastavel entre a arvore e o documento. Medido ao
+// vivo: 4 excecoes por carregamento no SEI 4.1.5 e no 5.0.4, zero depois desta mudanca.
+// No SEI 3.x a injecao continua necessaria: la o InfraPagina::adicionarJQuery() e false por padrao,
+// muitas paginas nao tem jQuery nenhum e as que tem trazem a 1.12.4.
+// A checagem le o <script> do DOM em vez de testar typeof jQuery porque este arquivo roda no mundo
+// ISOLADO da extensao, onde o jQuery dela sempre existe - qualquer teste direto daria a resposta
+// errada. O run_at e document_idle, entao o DOM ja esta completo aqui.
+var versaoJqueryPaginaPro = null;
+Array.prototype.slice.call(document.querySelectorAll('script[src*="jquery"]')).some(function (s) {
+    var m = (s.src || '').match(/jquery-(\d+(?:\.\d+)*)(?:\.min)?\.js/);
+    if (m) { versaoJqueryPaginaPro = m[1]; return true; }
+    return false;
+});
+if (!versaoJqueryPaginaPro || compareVersionNumbers_init(versaoJqueryPaginaPro, '3.4.1') < 0) {
+    $.getScript(getUrlExtension("js/lib/jquery-3.4.1.min.js"), function () {
+        $.getScript(getUrlExtension("js/lib/jquery-ui.min.js"));
+    });
+}
 $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
 $.getScript(getUrlExtension("js/lib/purify.min.js"));
 $.getScript(getUrlExtension("js/lib/moment.min.js"), function () {

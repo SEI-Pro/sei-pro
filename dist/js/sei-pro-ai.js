@@ -648,6 +648,10 @@ const getSessionTextProcesso = (num_processo_format) => {
             for (const v of elements) {
                 const data_input = $(v).data();
                 const prompt_f = await getFooterPrompt(data_input, respost_id);
+                // getFooterPrompt devolve false quando nao conseguiu o conteudo, e ja avisou o
+                // usuario. Sem esta saida o += concatenava o booleano e a palavra "false" ia para
+                // a API no lugar do documento referenciado.
+                if (!prompt_f) { return false; }
                 prompt_footer += `
                 ${prompt_f}
                 `;
@@ -666,6 +670,14 @@ const getSessionTextProcesso = (num_processo_format) => {
             const contet_text_session = getSessionTextProcesso(num_processo);
             const content_doc = contet_text_session ? contet_text_session : await getAllTextProcesso(data_protocolo, respost_id);
             const name_doc = `Processo SEI n\u00BA ${num_processo}:`;
+
+            // Os ramos "texto selecionado" e "todo o documento" ja tinham esta guarda; este, o do
+            // processo inteiro, nao. Sem ela o rodape do prompt saia vazio e a IA respondia com
+            // seguranca sobre um processo que nunca chegou a ser lido.
+            if (content_doc == '' || !content_doc) {
+                appendBotMessageError(`N\u00E3o foi poss\u00EDvel obter o conte\u00FAdo do processo`);
+                return false;
+            }
 
             if (!contet_text_session) sessionStorage.setItem(`fulltext_${onlyNumber(num_processo)}`,content_doc);
             
@@ -705,6 +717,11 @@ const getSessionTextProcesso = (num_processo_format) => {
             loadResponseBoxHTML(respost_id, 'Baixando documento do processo...');
             const content_doc = await getContentDoc(selectedDoc, respost_id, data_protocolo);
             const name_doc = `Documento SEI ${selectedDoc.nome}:`;
+
+            if (content_doc == '' || !content_doc) {
+                appendBotMessageError(`N\u00E3o foi poss\u00EDvel obter o conte\u00FAdo do documento`);
+                return false;
+            }
 
             prompt_footer = `
                 ${name_doc}
@@ -754,6 +771,14 @@ const getSessionTextProcesso = (num_processo_format) => {
         btnSendAI.removeClass('newLink_confirm').find('i').attr('class','fas fa-spin fa-spinner');
 
         const prompt_footer = await makeFooterPrompt(data_protocolo, respost_id);
+
+        // As guardas acima devolvem false depois de mostrar o erro na caixa, mas o fluxo seguia
+        // assim mesmo: o prompt ia para a API com a palavra "false" no lugar do documento, a
+        // resposta vinha confiante sobre um texto inexistente e o botao de envio ficava girando.
+        if (!prompt_footer) {
+            btnSendAI.addClass('newLink_confirm').find('i').attr('class','fas fa-paper-plane');
+            return;
+        }
 
             prompt_text = type == 'resume' 
                 ? `

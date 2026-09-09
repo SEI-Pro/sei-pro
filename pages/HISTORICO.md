@@ -2,6 +2,71 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.6.23
+09/09/2026
+
+- Corrigida a substituição do jQuery da página, que derrubava a jQuery UI, o plugin do [Menu Suspenso](../pages/MENUSUSPENSO.md) e a janela modal do SEI. A extensão passa a usar o jQuery da própria página quando ele é igual ou mais novo que o dela. Eram 4 erros por carregamento; passaram a zero, no SEI 4.1.5 e no 5.0.4 (diagnóstico original de Rafael Farias, [#163](https://github.com/SEI-Pro/sei-pro/issues/163))
+- Corrigido o acúmulo de temporizadores dos ícones da barra de ações: cada documento aberto deixava mais nove ciclos ativos, indefinidamente
+- Corrigido o envio de conteúdo vazio às [Ferramentas de IA](../pages/FERRAMENTASIA.md) — quando não era possível ler o documento, o texto seguia para a plataforma como a palavra "false" e a resposta vinha sobre um conteúdo inexistente
+- Mensagem mais clara ao tentar duplicar um documento cujo tipo não está disponível na unidade
+
+### Versão 1.6.22
+09/09/2026
+
+- Corrigidos os botões **Baixar Lista**, **Copiar** e **Baixar Documentos** na tela de pesquisa, que só apareciam depois de recarregar a página algumas vezes ([#146](https://github.com/SEI-Pro/sei-pro/issues/146))
+- Corrigida a busca por nome em *Atribuir Processo*. Na prática, as [Caixas de seleção inteligentes](../pages/SUBSTITUIRSELECAO.md) estavam inteiramente inoperantes nas telas de formulário do SEI 4 — *Gerar Documento* e *Enviar Processo* também voltam a ter busca
+- Corrigido o **Copiar número do processo** do menu rápido, que copiava o nome do primeiro documento da árvore
+
+### Versão 1.6.21
+09/09/2026
+
+- Corrigido o botão **Painel de Controle**, que ficava invisível com o [Estilo Avançado](../pages/ESTILOAVANCADO.md) ativado ([#108](https://github.com/SEI-Pro/sei-pro/issues/108))
+- Corrigida a lista de grupos do Acompanhamento Especial, que vinha vazia e só permitia criar grupo novo ([#103](https://github.com/SEI-Pro/sei-pro/issues/103))
+
+### Versão 1.6.20
+09/09/2026
+
+- Corrigido o tamanho dos ícones da extensão no SEI 5, que apareciam com quase metade do tamanho
+- [Ações em Lote](../pages/ACOESEMLOTE.md): a lista de documentos passa a se atualizar sozinha quando a árvore termina de expandir (de 19 para 119 documentos em um processo com 6 volumes fechados)
+- [Ações em Lote](../pages/ACOESEMLOTE.md): corrigido o modal que abria vazio no SEI 4.1.x
+- [Ações em Lote](../pages/ACOESEMLOTE.md): corrigidas as colunas *Unidade* e *Data da Assinatura*, que nunca eram preenchidas em nenhuma versão do SEI
+
+### Versão 1.6.19
+08/09/2026
+
+- Corrigida a barra de ícones da tela **Controle de Processos**, que ficava comprimida no SEI 5
+- Corrigido o botão `[-]`, que não recolhia as grades de processos quando o agrupamento estava ativo (em qualquer versão do SEI)
+
+### Versão 1.6.18
+08/09/2026
+
+- Corrigidos a capa do processo (com o QR Code) e o [painel de dados do processo](../pages/DADOSPROCESSO.md) — atribuição, marcador, acompanhamento especial, especificação, tipo e nível de acesso —, que não carregavam no SEI 5 ([#162](https://github.com/SEI-Pro/sei-pro/issues/162))
+
+### Versão 1.6.17
+08/09/2026
+
+- Corrigida a regressão da 1.6.16 que impedia a assinatura de documentos
+
+### Versão 1.6.16
+08/09/2026
+
+- Compatibilidade com o **SEI 5**: a barra de ferramentas do SEI Pro voltou a ser injetada no editor de documentos ([#147](https://github.com/SEI-Pro/sei-pro/issues/147), [#162](https://github.com/SEI-Pro/sei-pro/issues/162))
+- Corrigidos os botões de alinhamento duplicados na barra do editor
+- Removido o registro da senha de assinatura em lote no console do navegador
+
+### Versão 1.6.15
+07/09/2026
+
+- Editor de documentos adaptado ao **CKEditor 5** do SEI 5, mantendo o funcionamento no CKEditor 4
+- Adicionada a exportação de documentos em **DOCX** no visualizador
+- Correções gerais de compatibilidade com o SEI 5
+
+### Versões 1.5.5 a 1.6.14
+2024 — 2026
+
+- Correções e melhorias
+
+
 ### Versão 1.5.4
 23/10/2023
 

@@ -838,7 +838,10 @@ function getDuplicateDoc(nameDoc = false, paramDoc = false, newproc = false, ope
                         }
                     });
                     if (!itemSelected) { 
-                        openAlertDuplicateDoc('Erro ao selecionar o tipo de documento');
+                        // A busca acima varre a lista de tipos de documento da unidade procurando o tipo
+                        // deste documento. Nao achar significa documento externo ou tipo fora da lista da
+                        // unidade, nao um erro interno - a mensagem antiga nao dizia nada ao usuario.
+                        openAlertDuplicateDoc('Documento n\u00E3o nativo do SEI ou tipo indispon\u00EDvel nesta unidade: n\u00E3o \u00E9 poss\u00EDvel duplicar.');
                     }
                 });
             } else {
