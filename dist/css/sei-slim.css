@@ -1137,6 +1137,13 @@ a.newLink.iconBoxSlim .newIconTitle,
 .seiSlim .infraAcaoBarraSistema a#lnkControleProcessos:before {
     content: "\f015";
 }
+/* O Estilo Avancado zera a fonte dos links da barra (font-size: 0 !important) e desenha o
+   icone via :before. O botao "Painel de Controle" foi acrescentado pelo SEI depois, ficou sem
+   regra correspondente e por isso desaparecia da barra (altura 0). Issue #108. */
+.seiSlim .infraBarraSistemaPadraoD a#lnkPainelControle:before,
+.seiSlim .infraAcaoBarraSistema a#lnkPainelControle:before {
+    content: "\f3fd";
+}
 .seiSlim .infraBarraSistemaPadraoD a[href*="acao=novidade_mostrar"]:before,
 .seiSlim .infraAcaoBarraSistema a#lnkNovidades:before {
     content: "\f5a2";

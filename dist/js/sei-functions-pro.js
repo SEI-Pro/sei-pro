@@ -2328,10 +2328,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                             arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
                         var href = jmespath.search(arrayLinksArvore, "[?name=='Acompanhamento Especial'].url | [0]");
                         if (href !== null) {
-                            $.ajax({ 
-                                url: href
-                            }).done(function (html) {
-                                var $html = $(html);
+                            getHtmlFormAcompEspPro(href, function ($html) {
                                     listaGruposAcompEsp = getListaGruposAcompEsp($html).array;
                                 var htmlOptions = $.map(listaGruposAcompEsp, function(v){
                                                     var selected = (tagName && tagName == v.name) ? 'selected' : '';
@@ -3321,6 +3318,23 @@ function configDatesSwitchChangeReabertura(this_) {
         _parent.find('.configDates_setreopen').hide();
         _this.closest('tr').find('.iconSwitch').removeClass('azulColor');
     }
+}
+// No SEI 4 o link "Acompanhamento Especial" da arvore abria direto o formulario, que traz o
+// #selGrupoAcompanhamento. No SEI 5 esse link passou a abrir a tela de LISTAGEM
+// (acao=acompanhamento_gerenciar) e o formulario ficou atras do botao "Adicionar", com a URL no
+// onclick em vez do href — por isso a lista de grupos existentes chegava vazia e so restava
+// criar um grupo novo. Entrega o HTML que realmente contem o select, nas duas versoes.
+function getHtmlFormAcompEspPro(href, callback) {
+    $.ajax({ url: href }).done(function (html) {
+        var $html = $(html);
+        if ($html.find('#selGrupoAcompanhamento').length) { callback($html); return; }
+        var onclick = $html.find('button, a, input').filter(function () {
+            return /adicionar/i.test($(this).text() + ($(this).val() || ''));
+        }).first().attr('onclick') || '';
+        var url = (onclick.match(/location\.href\s*=\s*'([^']+)'/) || [])[1];
+        if (!url) { callback($html); return; }
+        $.ajax({ url: url }).done(function (html2) { callback($(html2)); });
+    });
 }
 function getListaGruposAcompEsp(html) {
     var indexSelected = 0;
