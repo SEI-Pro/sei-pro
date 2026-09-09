@@ -1025,7 +1025,7 @@ function loadUploadArvore() {
                             ($(containerUpload).find('a[id*="anchorImgPASTA"]').length > 0 ? '<img style="margin-left: -3px;" src="'+pathArvore+'empty.gif" align="absbottom">' : '')+
                             '       <span class="anchorJoinPro" data-img="'+pathArvore+'joinbottom.gif"><img src="'+pathArvore+'join.gif" align="absbottom"></span>'+
                             '       <a id="anchorImgID" data-img="'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : 'imagens/pdf.gif')+'" style="margin-left: -4px;" class="clipboard" title="Clique para copiar o n\u00FAmero do protocolo para a \u00E1rea de transfer\u00EAncia">'+
-                            '           <img class="dz-link-icon" src="/infra_css/'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : 'imagens/pdf.gif')+'" align="absbottom" id="iconID">'+
+                            '           <img class="dz-link-icon" src="'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : '/infra_css/imagens/pdf.gif')+'" align="absbottom" id="iconID">'+
                             '       </a>'+
                             '       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>'+
                             '       <a id="anchorID" target="'+parent.ifrVisualizacao_+'" class="dz-filename">'+

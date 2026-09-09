@@ -2,6 +2,14 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.6.24
+09/09/2026
+
+- Corrigida a ferramenta **Enviar documentos em processos**, que não enviava nada: o arquivo ficava parado na fila, sem mensagem. As bibliotecas de apoio nunca chegavam ao contexto em que o envio é executado
+- Corrigido o ícone quebrado na pré-visualização do arquivo a ser enviado
+- Corrigido o erro ao clicar duas vezes no ícone da ferramenta, que impedia trocar de processo sem antes cancelar
+- Corrigida a interrupção da inicialização do SEI Pro na tela **Controle de Processos**: quando a biblioteca de datas ainda não havia carregado, **nenhuma** funcionalidade da extensão subia naquela tela até um novo carregamento dar sorte ([#142](https://github.com/SEI-Pro/sei-pro/issues/142))
+
 ### Versão 1.6.23
 09/09/2026
 

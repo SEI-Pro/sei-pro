@@ -76,8 +76,17 @@ function loadStyleDesign() {
 loadStyleDesign();
 loadFontIcons('head');
 if (typeof $().toolbar === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));
-if (typeof jmespath === 'undefined') $.getScript(getUrlExtension("js/lib/jmespath.min.js"));
-if (typeof DOMPurify === 'undefined') $.getScript(getUrlExtension("js/lib/purify.min.js"));
+// Sem guard, de proposito. O bloco "*/sei/*" do manifest injeta jmespath.min.js e purify.min.js
+// como content script com all_frames, ou seja, no mundo ISOLADO de TODO frame do SEI - inclusive
+// deste. Logo `typeof jmespath === 'undefined'` avaliado aqui da sempre FALSO e as bibliotecas
+// nunca chegavam ao mundo da PAGINA, que e onde sei-pro-arvore.js roda.
+// Isso passava despercebido porque o sei-pro-arvore.js tem um segundo carregamento, esse com guard
+// correto, condicionado a `parent.URL_SPRO`. Na arvore visivel o parent e a pagina do processo e
+// URL_SPRO existe; mas em "Enviar documentos em processos" a arvore vive dentro do iframe oculto
+// frmCheckerProcessoPro, onde o SEI Pro nao roda no mundo da pagina - o fallback nao disparava e
+// sendUploadArvore() estourava com "jmespath is not defined" ao soltar o arquivo.
+$.getScript(getUrlExtension("js/lib/jmespath.min.js"));
+$.getScript(getUrlExtension("js/lib/purify.min.js"));
 if (typeof Dropzone === 'undefined') $.getScript(getUrlExtension("js/lib/dropzone.min.js"));
 if (typeof moment === 'undefined') $.getScript(getUrlExtension("js/lib/moment.min.js"));
 if (typeof loadFunctionsPro === 'undefined') $.getScript(getUrlExtension("js/sei-functions-pro.js"));

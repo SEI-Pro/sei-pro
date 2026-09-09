@@ -3004,6 +3004,10 @@ function getUploadFilesInProcess() {
         _containerUpload.find(divComandos).after(html).data('index', 0);
     }
 
+    // Clicar no icone com a ferramenta ja aberta chamava new Dropzone() sobre o mesmo elemento e
+    // estourava "Dropzone already attached", abortando a reinicializacao - o processo recem
+    // selecionado nao chegava a ser aplicado. Desfaz a instancia anterior antes de criar a nova.
+    if (typeof arvoreDropzone === 'object' && arvoreDropzone && typeof arvoreDropzone.destroy === 'function') arvoreDropzone.destroy();
     arvoreDropzone = new Dropzone(containerUpload, {
         url: url_host,
         createImageThumbnails: false,
@@ -3023,8 +3027,11 @@ function getUploadFilesInProcess() {
                             '       <span class="dz-progress">'+
                             '           <span class="dz-upload" data-dz-uploadprogress></span>'+
                             '       </span>'+
+                            // O documento_pdf.svg fica em sei/web/svg/, nao em infra_css/svg/: prefixar
+                            // "/infra_css/" dava 404 e o preview do arquivo aparecia com imagem quebrada.
+                            // O pdf.gif do SEI 3.x, esse sim, mora em /infra_css/imagens/.
                             '       <a id="anchorImgID" data-img="'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : 'imagens/pdf.gif')+'" style="margin-left: -4px;" class="clipboard" title="Clique para copiar o n\u00FAmero do protocolo para a \u00E1rea de transfer\u00EAncia">'+
-                            '           <img class="dz-link-icon" src="/infra_css/'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : 'imagens/pdf.gif')+'" align="absbottom" id="iconID">'+
+                            '           <img class="dz-link-icon" src="'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : '/infra_css/imagens/pdf.gif')+'" align="absbottom" id="iconID">'+
                             '       </a>'+
                             '       <span class="dz-progress-mark"><i class="fas fa-cog fa-spin" style="color: #017FFF; font-size: 10pt;"></i></span>'+
                             '       <a id="anchorID" target="'+ifrVisualizacao_+'" class="dz-filename">'+
@@ -3124,7 +3131,21 @@ function storeVersionSEI() {
 function initSeiPro() {
 	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
         if (typeof URL_SPRO !== 'undefined' && typeof SimpleTableCellEdition === 'undefined') $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
-        if (typeof URL_SPRO !== 'undefined' && typeof moment.duration === 'undefined') $.getScript((URL_SPRO+"js/lib/moment-duration-format.min.js"));
+        // `typeof moment.duration` avalia `moment` ANTES do typeof: se a biblioteca ainda nao
+        // chegou - ela e carregada de forma assincrona pelo init.js - isso lanca ReferenceError e
+        // derruba o initSeiPro INTEIRO, deixando a tela de Controle de Processos sem nenhuma
+        // funcionalidade do SEI Pro ate um novo carregamento dar sorte na corrida. Ficava
+        // mascarado porque a injecao do jQuery da extensao atrasava esta funcao o suficiente para
+        // o moment chegar antes; ao remover aquela injecao o problema apareceu.
+        if (typeof URL_SPRO !== 'undefined') {
+            if (typeof moment === 'undefined') {
+                $.getScript((URL_SPRO+"js/lib/moment.min.js"), function () {
+                    $.getScript((URL_SPRO+"js/lib/moment-duration-format.min.js"));
+                });
+            } else if (typeof moment.duration === 'undefined') {
+                $.getScript((URL_SPRO+"js/lib/moment-duration-format.min.js"));
+            }
+        }
         initTableSorterHome();
         insertGroupTable();
         replaceSelectAll();
