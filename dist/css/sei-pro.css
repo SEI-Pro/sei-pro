@@ -2587,6 +2587,11 @@ body.isSEI_5 div.barraBotoesSEI {
 }
 body.isSEI_5 .titlePanelHome {
     display: flex;
+    /* No SEI 4 o container do titulo tem 22.4px; no SEI 5 caiu para 12px. Como o icone
+       da pasta usa font-size:1.1em (relativo ao pai), ele encolhia de 24.64px para
+       13.2px. Restaura a base para o icone voltar ao tamanho do SEI 4. O texto do
+       titulo nao muda: .titlePanel ja tem 1.4rem !important logo abaixo. */
+    font-size: 1.4rem;
 }
 body.isSEI_5 .titlePanelHome .titlePanel {
     font-size: 1.4rem !important;

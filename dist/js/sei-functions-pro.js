@@ -7337,7 +7337,11 @@ function arrayDadosIframeDocumentosPro(ifrArvore, mode) {
 function getListDocumentosArvore(ifrArvore) {
     var processo = [];
     var dadosProcessoPro = pullDadosProcessoSession();
-    ifrArvore.find(`#divArvore a[target="${targetIframeVisualizacao_}"]`).each(function(index){
+    // Os documentos da arvore usam target="ifrConteudoVisualizacao" desde o SEI 4.1, mas
+    // targetIframeVisualizacao_ so aponta para la quando isSEI_5 e verdadeiro. No SEI 4.1.x
+    // isso fazia o seletor nao casar nenhum documento e o modal de Acoes em Lote abrir vazio.
+    // ifrVisualizacao_ ja usa o criterio correto (>= 4.1.0) e vale para as duas versoes.
+    ifrArvore.find(`#divArvore a[target="${ifrVisualizacao_}"]`).each(function(index){
         var txt = $(this).text().trim();
         var text = txt.split(' ');
         var id_protocolo = $(this).attr('id').replace('anchor','');
@@ -8096,6 +8100,73 @@ function getBatchActionsPro(this_) {
                 });
     }
 }
+// Monta as linhas da tabela de A\u00E7\u00F5es em Lote. Extraida de getDocumentosActions para
+// poder ser reaproveitada quando a arvore termina de abrir todas as pastas.
+function getRowsDocumentosActionsPro(listDocumentos) {
+    var rows = '';
+    if (listDocumentos) {
+        $.each(listDocumentos, function(i, v){
+            rows +=     '   <tr style="text-align: left;" data-tagname="SemGrupo" data-index="'+v.id_protocolo+'">'+
+                        '       <td style="text-align: center;">'+
+                        '           <input type="checkbox" onclick="followSelecionarItens(this)" name="actionsPro" value="'+v.id_protocolo+'">'+
+                        '       </td>'+
+                        '       <td>'+v.nr_sei+'</td>'+
+                        '       <td class="documento"><a class="newLink" onclick="getDocOnArvore('+v.id_protocolo+')" style="display: initial;font-size: 10pt;text-decoration: underline;"><i class="far fa-file azulColor" style="margin-right: 5px;"></i>'+v.documento+'</a></td>'+
+                        '       <td class="assinatura">'+v.assinatura+'</td>'+
+                        '       <td class="data_assinatura"></td>'+
+                        '       <td class="data_documento">'+(v.data_documento ? moment(v.data_documento, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : '')+'</td>'+
+                        '       <td class="unidade"></td>'+
+                        '       <td class="sigilo">'+v.sigilo+'</td>'+
+                        '       <td class="icons"></td>'+
+                        '   </tr>';
+        });
+    }
+    return rows;
+}
+// Preenche unidade e datas nas linhas ja montadas, com os dados consolidados pelo
+// mergeAllAndamentosProcesso.
+function fillDocumentosActionsPro() {
+    var actionsTable = $('#actionsTablePro');
+    if (!actionsTable.length) { return; }
+    // mergeAllAndamentosProcesso grava unidade/assinado/datas via setSessionProcessosPro, e a
+    // global dadosProcessoPro nem sempre existe neste contexto (chega a ser null na pagina do
+    // processo). Ler da sessao, com a global apenas como fallback.
+    var dadosProcesso = pullDadosProcessoSession();
+    var listDocumentos = (dadosProcesso && dadosProcesso.listDocumentos)
+                       ? dadosProcesso.listDocumentos
+                       : ((typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro) ? dadosProcessoPro.listDocumentos : null);
+    if (!listDocumentos || listDocumentos.length === 0) { return; }
+    actionsTable.find('tbody tr').each(function(){
+        var id_protocolo = $(this).data('index');
+        var values = jmespath.search(listDocumentos, "[?id_protocolo=='"+id_protocolo+"'] | [0]");
+        if (values !== null) {
+            $(this).find('td.unidade').text((values.unidade ? values.unidade : ''));
+            $(this).find('td.data_assinatura').text((values.assinado && values.data_assinatura ? moment(values.data_assinatura, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : ''));
+            if (values.data_documento) {
+                $(this).find('td.data_documento').text(moment(values.data_documento, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'));
+            }
+        }
+    }).trigger('update');
+}
+// A tabela do modal e montada com os documentos que estao no DOM da arvore no momento
+// da abertura, ou seja, apenas os dos volumes ja expandidos. Logo em seguida o modal
+// manda a arvore abrir todas as pastas; quando isso termina, esta funcao redesenha as
+// linhas com a lista completa. Sem ela era preciso fechar e reabrir o modal.
+function refreshDocumentosActionsPro() {
+    var actionsTable = $('#actionsTablePro');
+    if (!actionsTable.length) { return; }
+    var dadosProcesso = pullDadosProcessoSession();
+    var listDocumentos = (dadosProcesso) ? dadosProcesso.listDocumentos : dadosProcessoPro.listDocumentos;
+    if (typeof listDocumentos === 'undefined' || !listDocumentos) { return; }
+    if (listDocumentos.length === actionsTable.find('tbody tr').length) { return; }
+    var selecionados = actionsTable.find('input[name="actionsPro"]:checked').map(function(){ return $(this).val() }).get();
+    actionsTable.find('tbody').html(getRowsDocumentosActionsPro(listDocumentos));
+    $.each(selecionados, function(i, id){ actionsTable.find('input[name="actionsPro"][value="'+id+'"]').prop('checked', true); });
+    actionsTable.trigger('update');
+    setTabelaPanelScrollHeight('#boxActions', 80);
+    initAppendIconsDocumentosActions();
+    mergeAllAndamentosProcesso(function(){ fillDocumentosActionsPro(); });
+}
 function getDocumentosActions() {
     getListDocumentosArvore($('#ifrArvore').contents());
     var dadosProcesso = pullDadosProcessoSession();
@@ -8160,24 +8231,7 @@ function getDocumentosActions() {
                         '            </tr>'+
                         '        </thead>'+
                         '        <tbody>';
-        if (listDocumentos){
-            $.each(listDocumentos, function(i, v){
-                htmlBox +=  '   <tr style="text-align: left;" data-tagname="SemGrupo" data-index="'+v.id_protocolo+'">'+
-                            '       <td style="text-align: center;">'+
-                            '           <input type="checkbox" onclick="followSelecionarItens(this)" name="actionsPro" value="'+v.id_protocolo+'">'+
-                            '       </td>'+
-                            '       <td>'+v.nr_sei+'</td>'+
-                            '       <td class="documento"><a class="newLink" onclick="getDocOnArvore('+v.id_protocolo+')" style="display: initial;font-size: 10pt;text-decoration: underline;"><i class="far fa-file azulColor" style="margin-right: 5px;"></i>'+v.documento+'</a></td>'+
-                            '       <td class="assinatura">'+v.assinatura+'</td>'+
-                            '       <td class="data_assinatura"></td>'+
-                            '       <td class="data_documento">'+(v.data_documento ? moment(v.data_documento, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : '')+'</td>'+
-                            '       <td class="unidade"></td>'+
-                            '       <td class="sigilo">'+v.sigilo+'</td>'+
-                            '       <td class="icons"></td>'+
-                            '   </tr>';
-
-            });
-        }
+        htmlBox += getRowsDocumentosActionsPro(listDocumentos);
         htmlBox +=          '   </table>'+
                             '</div>';
 
@@ -8199,6 +8253,9 @@ function getDocumentosActions() {
                     $('#ifrArvore').attr('src', urlAllPasta).unbind().on('load', function(){
                         $(this).unbind();
                         getListDocumentosArvore($('#ifrArvore').contents());
+                        // A arvore terminou de expandir: redesenha a tabela com os documentos
+                        // que so agora existem no DOM.
+                        refreshDocumentosActionsPro();
                         resetDialogBoxPro('alertBoxPro');
                     })
                 } else {
@@ -8207,20 +8264,7 @@ function getDocumentosActions() {
                 setTabelaPanelScrollHeight('#boxActions', 80);
                 initAppendIconsDocumentosActions();
                 mergeAllAndamentosProcesso(function(){
-                    var actionsTable = $('#actionsTablePro');
-                    if (typeof dadosProcessoPro.listDocumentos !== 'undefined' && dadosProcessoPro.listDocumentos.length > 0) {
-                        actionsTable.find('tbody tr').each(function(){
-                            var id_protocolo = $(this).data('index');
-                            var values = jmespath.search(dadosProcessoPro.listDocumentos, "[?id_protocolo=='"+id_protocolo+"'] | [0]");
-                            if (values !== null) {
-                                $(this).find('td.unidade').text((values.unidade ? values.unidade : ''));
-                                $(this).find('td.data_assinatura').text((values.assinado && values.data_assinatura ? moment(values.data_assinatura, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : ''));
-                                if (values.data_documento) {
-                                    $(this).find('td.data_documento').text(moment(values.data_documento, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm'));
-                                }
-                            }
-                        }).trigger('update');
-                    }
+                    fillDocumentosActionsPro();
                     resetDialogBoxPro('alertBoxPro');
                 });
                 window.loopActionsPro = {list: [], index: 0, sigilo: {}, assinatura: {}};
