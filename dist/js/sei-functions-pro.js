@@ -286,8 +286,18 @@ function getIsNewSEI() {
 }
 
 // FUNÇÃO PARA OBTER O NÚMERO DO PROCESSO
+// O no raiz da arvore aponta para o iframe interno de visualizacao, target "ifrVisualizacao";
+// os DOCUMENTOS apontam para "ifrConteudoVisualizacao", que e o valor de
+// targetIframeVisualizacao_ a partir do SEI 4.1: usa-lo aqui devolvia o primeiro documento.
+const getElemNumProcessoArvore = () => {
+    const arvore = $('#ifrArvore').contents();
+    let raiz = arvore.find('a[id^="anchor"][target="ifrVisualizacao"].infraArvoreNo').eq(0);
+    if (!raiz.length) raiz = arvore.find('a[id^="anchor"][target="ifrVisualizacao"]').not('.infraArvoreNoAcao').eq(0);
+    if (!raiz.length) raiz = arvore.find(`a[target="${targetIframeVisualizacao_}"]`).eq(0);
+    return raiz;
+};
 const getNumProcesso = () => {
-    const num_processo = $('#ifrArvore').length ? $('#ifrArvore').contents().find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).text().trim() : dadosProcessoPro.propProcesso.hdnProtocoloFormatado;
+    const num_processo = $('#ifrArvore').length ? getElemNumProcessoArvore().text().trim() : dadosProcessoPro.propProcesso.hdnProtocoloFormatado;
     return num_processo;
 };
 
@@ -1657,7 +1667,7 @@ function extractDataFormulario(output = 'obj', allFields = false) {
                     }
                 }).join('') 
             : false;
-    var processo = $('#ifrArvore').contents().find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).text().trim();
+    var processo = getNumProcesso();
     var objOut = {};
     var arrayOut = [];
     var fieldsOut = [];

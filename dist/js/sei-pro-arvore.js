@@ -135,6 +135,17 @@ function getLinksPage() {
     });
     return links;
 }
+// O no raiz da arvore (o numero do processo) aponta para o iframe interno de visualizacao,
+// target "ifrVisualizacao", enquanto os DOCUMENTOS apontam para "ifrConteudoVisualizacao".
+// A partir do SEI 4.1 as variaveis de target do projeto passaram a valer "ifrConteudoVisualizacao",
+// entao usa-las aqui devolvia o primeiro documento no lugar do processo. A classe fica no <a>
+// no SEI 4.1+/5 e no <span> no SEI 3.x, dai a cascata.
+function getElemProcessoArvorePro() {
+    var raiz = $('a[id^="anchor"][target="ifrVisualizacao"].infraArvoreNo').eq(0);
+    if (!raiz.length) raiz = $('a[id^="anchor"][target="ifrVisualizacao"]').not('.infraArvoreNoAcao').eq(0);
+    if (!raiz.length) raiz = $(`a[target="${parent.ifrVisualizacao_}"]`).eq(0);
+    return raiz;
+}
 function actionToolbarPro(this_, triggerButton) {
     var button = $(triggerButton);
     var name_action = button.attr('data-action');
@@ -143,7 +154,7 @@ function actionToolbarPro(this_, triggerButton) {
     var button_txt = button.find('.info').attr('title');
     var button_alt = button.find('.info').attr('alt');
     var button_clicktxt = '';
-    var processo = $(`a[target="${parent.ifrVisualizacao_}"]`).eq(0).text().trim();
+    var processo = getElemProcessoArvorePro().text().trim();
 
     if ( name_action == 'linksArvore' ) {
         button_clicktxt = 'Abrindo...'; 
