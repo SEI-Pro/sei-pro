@@ -412,11 +412,21 @@ function setTablePesquisaDownload() {
         tablePesquisa.prepend(htmlFilter);
         if (typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/moment.min.js"); 
 }
-function initTablePesquisaDownload() {
+function initTablePesquisaDownload(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
     var resultado = $(frmPesquisaProtocolo).find(typeof isNewSEI !== 'undefined' && isNewSEI ? '#conteudo table.pesquisaResultado' : '#conteudo table.resultado');
     if (resultado.length > 0) {
         setTablePesquisaDownload();
         if (typeof isNewSEI !== 'undefined' && !isNewSEI) initScrollToElement();
+    } else {
+        // A tabela de resultados da pesquisa pode ainda nao estar no DOM quando esta funcao roda.
+        // Antes havia uma unica tentativa: se ela chegasse depois, os botoes "Baixar Lista",
+        // "Copiar" e "Baixar Documentos" nunca eram injetados e so apareciam recarregando a
+        // pagina ate acertar o timing. Passa a repetir a checagem como os demais init* do projeto.
+        setTimeout(function () {
+            initTablePesquisaDownload(TimeOut - 100);
+            if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initTablePesquisaDownload => ' + TimeOut);
+        }, 500);
     }
 }
 function initScrollToElement(TimeOut = 9000) {

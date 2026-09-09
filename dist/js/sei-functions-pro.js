@@ -11582,17 +11582,44 @@ function setReplaceSelectAllVisualizacao() {
         }
     }
 }
+function aplicarChosenNoIframePro(ifr) {
+    if (!ifr || !ifr.contentWindow) { return; }
+    var w = ifr.contentWindow;
+    try { if (typeof w.$ === 'undefined' || typeof w.$().chosen !== 'undefined') { return; } } catch (e) { return; }
+    getScriptIframe(ifr, URL_SPRO+"js/lib/chosen.jquery.min.js", function(){
+        getScriptIframe(ifr, URL_SPRO+"js/sei-pro-visualizacao-chosen.js", function(){
+            if (typeof w.replaceSelectOnVisualizacao !== 'undefined') w.replaceSelectOnVisualizacao();
+        });
+    });
+}
 function replaceSelectAllVisualizacao(TimeOut = 9000) {
     var ifrVisualizacao = $($ifrVisualizacao)[0];
-    var ifrVisualizacaoWindow = ifrVisualizacao.contentWindow;
-    if (typeof ifrVisualizacaoWindow !== 'undefined' && typeof ifrVisualizacaoWindow.$().chosen === 'undefined' ) {
-        getScriptIframe(ifrVisualizacao, URL_SPRO+"js/lib/chosen.jquery.min.js", function(){
-            getScriptIframe(ifrVisualizacao, URL_SPRO+"js/sei-pro-visualizacao-chosen.js", function(){
-                if (typeof ifrVisualizacaoWindow.replaceSelectOnVisualizacao !== 'undefined') ifrVisualizacaoWindow.replaceSelectOnVisualizacao();
-            });
-        });
-    }
+    aplicarChosenNoIframePro(ifrVisualizacao);
+    // As telas de formulario (Atribuir Processo, entre outras) abrem num iframe DENTRO do de
+    // visualizacao. O Chosen so era injetado no primeiro nivel, entao nessas telas o select
+    // ficava sem o campo de busca: era o caso do "pesquisar pelo nome em atribuir processos".
+    try {
+        aplicarChosenNoIframePro(ifrVisualizacao.contentWindow.document.getElementById(ifrArvoreHtml_));
+    } catch (e) {}
     // console.log('replaceSelectAllVisualizacao');
+}
+// Semeia o Chosen no iframe de visualizacao assim que ele tem jQuery. E dali que o proprio
+// sei-pro-visualizacao-chosen.js passa a acompanhar as navegacoes do iframe interno, onde
+// abrem as telas de formulario. Sem esta semeadura o bootstrap so acontecia no SEI 5, porque
+// o loadScriptVisualizacaoPro observa niveis diferentes conforme a versao: no SEI 4 o
+// gatilho nunca disparava e selects como o de "Atribuir Processo" ficavam sem campo de busca.
+function initChosenVisualizacaoPro(TimeOut = 9000) {
+    if (TimeOut <= 0) { return; }
+    var pronto = false;
+    try {
+        var ifr = $($ifrVisualizacao)[0];
+        pronto = !!(ifr && ifr.contentWindow && typeof ifr.contentWindow.$ !== 'undefined');
+    } catch (e) {}
+    if (pronto) {
+        replaceSelectAllVisualizacao();
+    } else {
+        setTimeout(function () { initChosenVisualizacaoPro(TimeOut - 500); }, 500);
+    }
 }
 function insertActionHipoteseLegal() {
     var target = $($ifrVisualizacao).contents();
@@ -12785,6 +12812,7 @@ function loadStyleDesign(body = $('body'), secondClass = false) {
 function loadScriptVisualizacaoPro() {
     if ( $($ifrVisualizacao).length ) {
         $($ifrVisualizacao).on("load", function() {
+            initChosenVisualizacaoPro();
             if (isSEI_5) {
                 $($ifrVisualizacao).contents().find('#ifrVisualizacao').on("load", function() {
                     scriptVisualizacaoPro($($ifrVisualizacao).contents().find('#ifrVisualizacao').contents());

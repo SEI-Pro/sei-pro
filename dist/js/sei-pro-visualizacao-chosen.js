@@ -76,6 +76,23 @@ function initForceChosenVisualizacao() {
     observer.observe(document, {attributes: false, childList: true, characterData: false, subtree:true});
 }
 // initForceChosenVisualizacao();
+// As telas de formulario (Atribuir Processo, entre outras) nao carregam neste documento: elas
+// abrem num iframe DENTRO dele. Como o Chosen so era injetado neste nivel, o select dessas telas
+// ficava sem o campo de busca: era o caso do "pesquisar pelo nome em atribuir processos".
+// A cada carregamento do iframe interno, pede ao topo que injete o plugin tambem la.
+function initChosenIframeInternoPro() {
+    var nome = (typeof parent.ifrArvoreHtml_ !== 'undefined') ? parent.ifrArvoreHtml_ : 'ifrVisualizacao';
+    var alvo = document.getElementById(nome);
+    if (!alvo) { return; }
+    var aplicar = function () {
+        if (typeof parent.replaceSelectAllVisualizacao === 'function') {
+            setTimeout(function () { parent.replaceSelectAllVisualizacao(); }, 300);
+        }
+    };
+    $(alvo).off('load.seiProChosen').on('load.seiProChosen', aplicar);
+    aplicar();
+}
 setTimeout(function(){
     repareChosenIntimacaoEletronica();
+    initChosenIframeInternoPro();
 }, 2000);
