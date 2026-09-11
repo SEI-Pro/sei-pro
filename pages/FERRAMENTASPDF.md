@@ -4,6 +4,8 @@
 
 Nove ferramentas para trabalhar arquivos PDF antes de anexá-los ao processo: tarjar dados sensíveis, juntar, dividir, comprimir, organizar páginas, converter imagens, numerar, aplicar OCR e conferir PDF/A.
 
+> ![Tela Ferramentas de PDF](../img/tela-ferramentaspdf.gif)
+
 ### Tudo acontece no seu computador
 
 **Nenhum arquivo é enviado para servidor nenhum** — nem do SEI Pro, nem de terceiros. Todo o processamento roda dentro do seu navegador, e as ferramentas continuam funcionando com a máquina desconectada da internet.
@@ -30,6 +32,18 @@ A página abre por quatro caminhos:
 | **Menu lateral** do SEI | Acesso de qualquer tela |
 | Ícone do **SEI Pro** na barra do navegador | Abre sem precisar estar no SEI |
 
+### Como usar, em geral
+
+Todas as nove funcionam do mesmo jeito:
+
+1. Escolha a ferramenta na tela inicial;
+2. **Arraste o arquivo** para a área tracejada, ou clique em **Escolher PDF** para buscá-lo no computador. Com o processo aberto no SEI, o botão **Trazer do processo aberto** lista os PDFs do processo para você escolher;
+3. Ajuste as opções, se quiser. Elas já vêm preenchidas com o mais comum;
+4. Clique no botão azul da ferramenta;
+5. Quando terminar, clique em **Baixar** para salvar no computador — ou em **Enviar ao processo**, que anexa o arquivo direto ao processo aberto.
+
+> O botão **Enviar ao processo** só aparece quando a página foi aberta a partir do SEI, com um processo aberto. Sem isso, ele não fica cinza: simplesmente não aparece.
+
 ### As ferramentas
 
 #### Tarjar PDF
@@ -45,6 +59,24 @@ A detecção automática reconhece CPF, CNPJ, e-mail, telefone, CEP, cartão, ch
 As amostras exibidas na tela vêm sempre mascaradas: uma captura de tela da própria ferramenta não revela o dado que ela existe para esconder.
 
 > **Documento assinado digitalmente:** tarjar altera o arquivo e invalida a assinatura. A ferramenta avisa antes de prosseguir. O documento original no seu computador não é alterado.
+
+##### Passo a passo
+
+> ![Tela Tarjar PDF](../img/tela-ferramentaspdf2.gif)
+
+1. **Carregue o PDF.** Assim que ele abre, a ferramenta já varre o texto e marca sozinha o que reconhece como dado pessoal. As marcações aparecem em vermelho sobre o documento, e a lista do lado direito mostra o que foi encontrado, agrupado por tipo (CPF, e-mail, telefone...);
+
+2. **Revise.** Use as caixas de seleção da lista para **desmarcar** o que não deve ser tarjado. Clicar em uma ocorrência leva direto à página onde ela está;
+
+3. **Marque o que faltou.** Duas formas:
+   - **selecionando o texto** com o mouse, como se fosse copiar;
+   - clicando em **Desenhar tarja** e arrastando sobre a área — útil em documento digitalizado, onde não há texto para selecionar;
+
+4. **Clique em `Aplicar N tarjas`**, no alto da tela. Uma janela resume o que vai acontecer e pede confirmação;
+
+5. **Baixe ou envie ao processo.** O resultado aparece logo abaixo da barra de botões, com um relatório do que foi feito.
+
+> **Documento digitalizado, sem OCR?** A detecção automática não alcança páginas que são só imagem — não há texto para procurar. A ferramenta avisa quando isso acontece. Nesses casos, use **Desenhar tarja**, ou passe o documento antes pelo **OCR**.
 
 #### Juntar PDF
 

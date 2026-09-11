@@ -69,6 +69,7 @@ Instale a extensão para seu navegador preferido:
 - ![SEI Redimensionar automaticamente a árvore do processo pela sua largura total](/img/icon-resizearvore.png) [Redimensionar automaticamente a árvore do processo pela sua largura total](./pages/RESIZEARVORE.md)
 - ![Utilizar caixas de seleção inteligentes](/img/icon-cursor.png) [Utilizar caixas de seleção inteligentes](./pages/SUBSTITUIRSELECAO.md)
 - ![Ações em Lote](/img/icon-acoeslote.png) [Ações em Lote](./pages/ACOESEMLOTE.md)
+- ![Processos em Lote](/img/icon-acoeslote.png) [Processos em Lote: abrir vários processos do mesmo tipo de uma só vez](./pages/PROCESSOSEMLOTE.md)
 - ![Rolagem Infinita](/img/icon-rolageminfinita.png) [Rolagem infinita na pesquisa de processos](./pages/ROLAGEMINFINITA.md)
 - ![URL Amigável](/img/icon-urlamigavel.png) [Utilizar endereços amigáveis em processos e documentos](./pages/URLAMIGAVEL.md)
 - ![Documentos não assinados](/img/icon-docsnaoassinados.png) [Alertar sobre documentos não assinados ao enviar um processo](./pages/DOCSNAOASSINADOS.md)

@@ -4,6 +4,10 @@
 
 Essa ferramenta abre vários processos de um mesmo tipo de uma só vez, a partir de uma lista de especificações colada pelo usuário ou de uma quantidade informada.
 
+> ![Tela Processos em Lote](../img/tela-processosemlote.png)
+
+Serve para quando é preciso abrir dezenas de processos iguais — um por servidor, um por contrato, um por município — e abrir cada um à mão levaria a tarde inteira.
+
 O acesso é feito pelo link **Processos em Lote**, no menu à esquerda do SEI. O link só aparece se a opção correspondente estiver marcada na tela de configurações da extensão.
 
 ### ⚠️ Antes de usar
@@ -43,3 +47,7 @@ Os processos são abertos **na unidade que estiver selecionada** no momento da e
 > Assuntos e interessados recebem o padrão definido para o tipo de processo escolhido, não sendo possível preenchê-los individualmente por esta ferramenta.
 >
 > O limite é de 2.000 processos por rodada. Demandas maiores devem ser divididas em blocos.
+
+## Próximo item
+
+> [Ações em Lote](../pages/ACOESEMLOTE.md)
