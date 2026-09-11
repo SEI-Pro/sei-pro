@@ -1403,12 +1403,24 @@ function setDocAutomatico() {
     }
 }
 function replaceDadosEditor(this_) {
-    var arrayTags = uniqPro(getHashTagsPro(iframeEditor.find('p').map(function(){ return $(this).text().replace(/\u00A0/gm, " ") }).get().join(' ')));
+    // iframeEditor/oEditor sao globais que setParamEditor preenche no clique dos
+    // botoes CK4 da barra. O dialogo de Dados do Processo deixou de passar por
+    // setParamEditor quando virou modulo (js/modules/editor/dados-processo.js),
+    // entao aqui eles podem estar indefinidos -- e a funcao quebrava logo na
+    // primeira linha. Resolve o corpo pelo adapter, que vale para CK4 e CK5.
+    var ed = (typeof oEditor !== 'undefined' && oEditor) ? oEditor : SeiProEditorAdapter.getInstance(this_);
+    var corpoEditor = (typeof iframeEditor !== 'undefined' && iframeEditor && iframeEditor.length)
+        ? iframeEditor
+        : $(SeiProEditorAdapter.getBodyContainer(ed) || []);
+
+    var arrayTags = uniqPro(getHashTagsPro(corpoEditor.find('p').map(function(){ return $(this).text().replace(/\u00A0/gm, " ") }).get().join(' ')));
     var delimitLine = false;
     var prop = dadosProcessoPro.propProcesso;
     var docs = dadosProcessoPro.listDocumentos;
 
-    var tagField = iframeEditor.find('body').find('span.hashField');
+    // corpoEditor e o <body> (via adapter) ou o document do iframe (via
+    // iframeEditor); find() alcanca os descendentes nos dois casos.
+    var tagField = corpoEditor.find('span.hashField');
     if (tagField.length) { tagField.after(tagField.html()).remove() }
 
     var dadosProcesso = camposDinamicosProcesso(arrayTags);
@@ -1432,8 +1444,7 @@ function replaceDadosEditor(this_) {
         });
     
     var count = 0;
-    oEditor.focus();
-    oEditor.fire('saveSnapshot');
+    if (ed) { SeiProEditorAdapter.focus(ed); SeiProEditorAdapter.fire(ed, 'saveSnapshot'); }
     $.each(arrayTags, function (i, value) {
         var _value = value;
         var underline = (value.indexOf('_') !== -1 && $.inArray(_value, dadosTags) === -1) ? '_'+value.split('_')[1] : '';
@@ -1444,13 +1455,13 @@ function replaceDadosEditor(this_) {
         var fieldSpan = (typeof dadosProcesso[value] !== 'undefined' && dadosProcesso[value] !== null) ? dadosProcesso[value] : hashSpan;
             fieldSpan = (value.indexOf('+') !== -1 || value.indexOf('-') !== -1 || (hasNumber(value) && $.inArray(_value, dadosTags) === -1) ) ? sumTagValue(value): fieldSpan;
             fieldSpan = fieldSpan+'&nbsp;';
-            iframeEditor.find('p').each(function(){
+            corpoEditor.find('p').each(function(){
                 $(this).html($(this).html().replace(new RegExp(hashTag+underline, "i"), function(){ count++; return fieldSpan }));
             });
         console.log(arrayTags, value, hashTag+underline, fieldSpan, dadosProcesso);
     });
-    oEditor.fire('saveSnapshot');
-    var count_error = iframeEditor.find('.hashField').length;
+    if (ed) SeiProEditorAdapter.fire(ed, 'saveSnapshot');
+    var count_error = corpoEditor.find('.hashField').length;
         count_error = (count_error == 0) ? '' : '  <i class="fas fa-exclamation-triangle laranjaColor"></i> '+count_error+' '+(count_error==1 ? 'campo din\u00E2mico n\u00E3o substitu\u00EDdo' : 'campos n\u00E3o din\u00E2micos substitu\u00EDdos')+'.';
     var resultDiv = '<label class="cke_dialog_ui_labeled_label" style="font-style: italic; color: #616161;">'+
                     '  <i class="fas fa-check-circle verdeColor"></i> '+count+' '+(count==1 ? 'campo din\u00E2mico substitu\u00EDdo' : 'campos din\u00E2micos substitu\u00EDdos')+' com sucesso!<br>'+count_error+

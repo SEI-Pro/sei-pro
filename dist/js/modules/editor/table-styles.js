@@ -35,7 +35,7 @@
         }
     };
 
-    // Handler do <input onchange="changeColorTable(this)"> dentro do dialogo:
+    // Handler do <input data-spro-change="changeColorTable"> dentro do dialogo:
     // troca a classe do preview de estilos para a variacao de cor escolhida.
     window.changeColorTable = function (this_) {
         var id = $(this_).attr('data-colorid');
@@ -61,7 +61,7 @@
                 htmlEstilo +=  '<span><label for="colorStyle' + id + '">' +
                                '<a class="iconSelectColorTable" style="background-color: ' + color['color' + id].light + '"></a>' +
                                '<a class="iconSelectColorTable" style="background-color: ' + color['color' + id].dark + '"></a>' +
-                               '</label><br><input type="radio" onchange="changeColorTable(this)" name="colorStyle" data-colorid="color' + id + '" id="colorStyle' + id + '" value="colorStyle' + id + '" ' + checked + '></span>';
+                               '</label><br><input type="radio" data-spro-change="changeColorTable" name="colorStyle" data-colorid="color' + id + '" id="colorStyle' + id + '" value="colorStyle' + id + '" ' + checked + '></span>';
              }
             htmlEstilo +=  '</div>';
             htmlEstilo +=  '<div style="padding-bottom: 10px;">Selecione o estilo da tabela:</div>' +

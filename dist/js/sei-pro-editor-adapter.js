@@ -156,6 +156,15 @@
      *     buttons: [{ text, click(fn($box)), primary }] | objeto jQuery UI,
      *     onOpen($box), onClose() }
      * Retorna o elemento jQuery do dialogo (ou null se jQuery UI ausente).
+     *
+     * ACOES DENTRO DO HTML: use data-spro-click="nomeDaFuncao" (ou
+     * data-spro-change, para inputs que reagem a selecao), NAO onclick=/
+     * onchange=. No CK4 o HTML das abas ia direto para o DOM pelo type:'html'
+     * do CKEDITOR e o handler inline funcionava; aqui o HTML costuma passar por
+     * sanitizeHTML (DOMPurify), que REMOVE todo atributo de evento inline -- o
+     * controle fica no lugar, com aparencia normal, e nao faz nada. data-*
+     * sobrevive ao sanitize e e religado por delegacao abaixo (o que tambem
+     * cobre linhas inseridas no dialogo depois de aberto).
      */
     function openDialog(def) {
         if (!window.$ || !$.fn || !$.fn.dialog) {
@@ -168,6 +177,29 @@
         if ($existing.length) { try { $existing.dialog('destroy'); } catch (e) {} $existing.remove(); }
         var $box = $('<div></div>').attr('id', id).html(def.html || '');
         $('body').append($box);
+
+        // Religa as acoes declaradas em data-spro-click / data-spro-change (ver
+        // nota acima). So aceita identificador simples resolvido em window --
+        // nada de eval.
+        var acionar = function (attr, preventDefault) {
+            return function (ev) {
+                var nome = $(this).attr(attr) || '';
+                if (!/^[A-Za-z_$][\w$]*$/.test(nome)) return;
+                var fn = window[nome];
+                if (typeof fn !== 'function') {
+                    if (typeof console !== 'undefined' && console.warn) {
+                        console.warn('[SEIPro/Adapter] acao de dialogo inexistente:', nome);
+                    }
+                    return;
+                }
+                if (preventDefault) ev.preventDefault();
+                fn.call(this, this);
+            };
+        };
+        // change (nao click) nos controles de selecao: um radio tambem muda pelo
+        // teclado, e ai nao ha clique nenhum.
+        $box.on('click', '[data-spro-click]', acionar('data-spro-click', true));
+        $box.on('change', '[data-spro-change]', acionar('data-spro-change', false));
 
         var buttons = def.buttons;
         if (Array.isArray(buttons)) {
@@ -406,6 +438,16 @@
          */
         getBodyContainer: function (editor) {
             if (!editor || !window.$) return null;
+            // Caminho oficial do CK4: cada instancia conhece o proprio document.
+            // O seletor por title (abaixo) so vale quando o iframe wysiwyg leva o
+            // nome da instancia no title; nos documentos com secoes do SEI 4.1 os
+            // titles sao os nomes das secoes ("Corpo do Texto", "Cabecalho", ...),
+            // e a busca nao casava nada -- deixando o corpo inacessivel.
+            try {
+                var doc = editor.document;
+                var b = doc && doc.getBody && doc.getBody();
+                if (b && b.$) return b.$;
+            } catch (e) {}
             var ifm = $('iframe[title*="'+editor.name+'"]').contents();
             var body = ifm.find('body');
             return body.length ? body[0] : null;

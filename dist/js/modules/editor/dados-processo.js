@@ -96,6 +96,14 @@
         var editor = SeiProEditorAdapter.getInstance(this_);
         if (!editor) return;
 
+        // Fixa oEditor/iframeEditor/idEditor (globais do CK4) na instancia deste
+        // botao. O port tirou esta chamada por resolver a instancia pelo adapter,
+        // mas replaceDadosEditor -- que continua no monolito e e acionada pela
+        // aba 2 -- depende desses globais; sem eles ela olha para a primeira
+        // instancia da pagina (o "Cabecalho", nos documentos com secoes) ou
+        // quebra de vez se nenhum outro botao CK4 tiver sido clicado antes.
+        if (typeof setParamEditor === 'function') { try { setParamEditor(this_); } catch (e) {} }
+
         var dadosEditorArray = arrayDadosEditor();
 
         // Monta as <option> do select da aba 1 a partir dos pares [label, value].
@@ -125,12 +133,12 @@
                     + '         </td>'
                     + '         <td class="" role="presentation" style="width:70%; padding:8px">'
                     + '             <em>' + v.value + '</em>'
-                    + '             <a style="user-select: none; float: right;" onclick="removeDynamicField(this)" title="Remover" hidefocus="true" class="cke_dialog_ui_button" role="button">'
+                    + '             <a style="user-select: none; float: right;" data-spro-click="removeDynamicField" title="Remover" hidefocus="true" class="cke_dialog_ui_button" role="button">'
                     + '                 <span id="buttonRemoveDynamicField_label" class="cke_dialog_ui_button">'
                     + '                     <i style="color: #989898;" class="fas fa-trash"></i>'
                     + '                 </span>'
                     + '             </a>'
-                    + '             <a style="user-select: none; float: right; margin-right: 10px;" onclick="editDynamicField(this)" title="Editar" hidefocus="true" class="cke_dialog_ui_button" role="button">'
+                    + '             <a style="user-select: none; float: right; margin-right: 10px;" data-spro-click="editDynamicField" title="Editar" hidefocus="true" class="cke_dialog_ui_button" role="button">'
                     + '                 <span id="buttonEditDynamicField_label" class="cke_dialog_ui_button">'
                     + '                     <i style="color: #989898;" class="fas fa-pencil-alt"></i>'
                     + '                 </span>'
@@ -219,7 +227,7 @@
             + '              <label class="cke_dialog_ui_labeled_label">Substituir campos din\u00E2micos no documento</label>'
             + '            </td>'
             + '            <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:50%; padding:0px">'
-            + '              <a style="user-select: none;" onclick="replaceDadosEditor(this)" title="Substituir" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo1_label" id="buttonSigilo1_uiElement">'
+            + '              <a style="user-select: none;" data-spro-click="replaceDadosEditor" title="Substituir" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonSigilo1_label" id="buttonSigilo1_uiElement">'
             + '                <span id="buttonSigilo1_label" class="cke_dialog_ui_button">Substituir</span>'
             + '              </a>'
             + '            </td>'
@@ -253,7 +261,7 @@
             + '            <td class="cke_dialog_ui_hbox_first" role="presentation" style="width:30%; padding:10px 0">'
             + '            </td>'
             + '            <td class="cke_dialog_ui_hbox_last" role="presentation" style="width:70%; padding:10px 0">'
-            + '              <a style="user-select: none;" onclick="newDynamicField(this)" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonNewDynamicField_label" id="buttonNewDynamicField_uiElement">'
+            + '              <a style="user-select: none;" data-spro-click="newDynamicField" title="Salvar" hidefocus="true" class="cke_dialog_ui_button cke_dialog_ui_button_cancel" role="button" aria-labelledby="buttonNewDynamicField_label" id="buttonNewDynamicField_uiElement">'
             + '                <span id="buttonNewDynamicField_label" class="cke_dialog_ui_button">Salvar</span>'
             + '              </a>'
             + '            </td>'
@@ -329,11 +337,14 @@
                 text: 'OK',
                 primary: true,
                 click: function ($box) {
+                    // O OK so insere o dado selecionado na aba 1, mas FECHA
+                    // sempre -- e o que o okButton do CK4 fazia (o onOk so
+                    // cancelava o fechamento se retornasse false, o que nunca
+                    // acontecia). Sem isso, quem esta em outra aba clica em OK
+                    // e o dialogo nem se fecha: parece que a ferramenta travou.
                     var value = $box.find('#listDados').val();
-                    if (value && value !== '') {
-                        insertDadosEditor(value);
-                        try { $box.dialog('close'); } catch (e) {}
-                    }
+                    if (value && value !== '') insertDadosEditor(value);
+                    try { $box.dialog('close'); } catch (e) {}
                 }
             }]
         });
@@ -405,12 +416,12 @@
                     + '         </td>'
                     + '         <td class="" role="presentation" style="width:70%; padding:8px">'
                     + '             <em>' + value + '</em>'
-                    + '             <a style="user-select: none; float: right;" onclick="removeDynamicField(this)" title="Remover" hidefocus="true" class="cke_dialog_ui_button" role="button">'
+                    + '             <a style="user-select: none; float: right;" data-spro-click="removeDynamicField" title="Remover" hidefocus="true" class="cke_dialog_ui_button" role="button">'
                     + '                 <span id="buttonRemoveDynamicField_label" class="cke_dialog_ui_button">'
                     + '                     <i style="color: #989898;" class="fas fa-trash"></i>'
                     + '                 </span>'
                     + '             </a>'
-                    + '             <a style="user-select: none; float: right; margin-right: 10px;" onclick="editDynamicField(this)" title="Editar" hidefocus="true" class="cke_dialog_ui_button" role="button">'
+                    + '             <a style="user-select: none; float: right; margin-right: 10px;" data-spro-click="editDynamicField" title="Editar" hidefocus="true" class="cke_dialog_ui_button" role="button">'
                     + '                 <span id="buttonEditDynamicField_label" class="cke_dialog_ui_button">'
                     + '                     <i style="color: #989898;" class="fas fa-pencil-alt"></i>'
                     + '                 </span>'

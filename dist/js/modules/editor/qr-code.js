@@ -99,7 +99,7 @@
     window.buildHtmlQrCodeLab = function () {
         return '<div id="qrCodeLab">'+
             '	<table style="width: 100%;">'+
-            '		<tr><td style="vertical-align: top; text-align: right;" colspan="2"><a id="toggleOptionsQR" onclick="toggleOptionsQR()" class="linkDialog">Op\u00E7\u00F5es avan\u00E7adas </a></td></tr>'+
+            '		<tr><td style="vertical-align: top; text-align: right;" colspan="2"><a id="toggleOptionsQR" data-spro-click="toggleOptionsQR" class="linkDialog">Op\u00E7\u00F5es avan\u00E7adas </a></td></tr>'+
             '		<tr><td style="vertical-align: top;">'+
             '		<div id="optionsQrAdvanced" style="display:none">'+
             '			<table>'+
@@ -144,7 +144,7 @@
             '				<label for="QrPro-image">Imagem</label><input id="QrPro-image" type="file">'+
             '				<img id="QrPro-img-buffer" style="display:none" src="'+iconSeiPro+'">'+
             '			</td><tr><td>'+
-            '				<a onclick="resetOptionsQR()" class="linkDialog" style="margin-top: 20px; display: block;">Resetar configura\u00E7\u00F5es</a>'+
+            '				<a data-spro-click="resetOptionsQR" class="linkDialog" style="margin-top: 20px; display: block;">Resetar configura\u00E7\u00F5es</a>'+
             '			</td></tr>'+
             '			</table>'+
             '		</div>'+
@@ -191,7 +191,7 @@
         var iconTiny = $('.getTinyUrlButtom span').attr('style');
         $('#tipQrCodeUrl').remove();
         if (qrCodeTxt != '' && isValidHttpUrl(qrCodeTxt) && qrCodeTxt.length > 50) {
-            var htmlTip = '<span id="tipQrCodeUrl" style="float:left; padding: 5px 5px 8px 5px; background: #f9f9dc; border-radius: 5px;">Dica: Experimente <a onclick="convertTinyURL()" class="linkDialog"><span style="width: 16px; height: 16px; display: inline-block;'+iconTiny+'"></span>'+
+            var htmlTip = '<span id="tipQrCodeUrl" style="float:left; padding: 5px 5px 8px 5px; background: #f9f9dc; border-radius: 5px;">Dica: Experimente <a data-spro-click="convertTinyURL" class="linkDialog"><span style="width: 16px; height: 16px; display: inline-block;'+iconTiny+'"></span>'+
                 'Gerar link curto do TinyURL</a></span>';
             $('#toggleOptionsQR').before(htmlTip);
         }

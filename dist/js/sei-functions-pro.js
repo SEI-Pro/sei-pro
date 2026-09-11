@@ -1006,15 +1006,24 @@ function resizeArvoreMaxWidth() {
         });
     }
 }
-function setResizeArvoreMaxWidth(indent, saveSize = false) {
-    var widthArvore = $('#ifrArvore').contents().find('#divArvore')[0].scrollWidth; // captura a largura da arvore de processo dentro do iframe
+function setResizeArvoreMaxWidth(indent, saveSize = false, jaEncolheu = false) {
+    var divArvore = $('#ifrArvore').contents().find('#divArvore')[0]; // arvore de processo dentro do iframe
+    if (!divArvore) return; // arvore ainda nao montada
+    var widthArvore = divArvore.scrollWidth; // captura a largura da arvore
         widthArvore = (typeof widthArvore !== 'undefined') ? widthArvore : false;
         if (widthArvore > $('#ifrArvore').width()) {
             if (!saveSize) removeOptionsPro('iframeSizeSlimPro');
             setSizeIframePro(widthArvore+indent, saveSize);
-        } else if (widthArvore) {
+        } else if (widthArvore && !jaEncolheu) {
+            // Encolhe ate o minimo UMA vez e remede: com o iframe menor que a
+            // arvore, a passada seguinte cai no ramo de cima e ajusta a largura
+            // exata. A trava jaEncolheu e o que impede o loop -- sem ela, arvore
+            // estreita (conteudo menor que 200px) ou pagina fora do modo slim
+            // (onde o CSS de setSizeIframePro nao se aplica e a largura medida
+            // nunca muda) repetia este ramo indefinidamente, estourando a pilha
+            // com RangeError e abortando o resto do boot do SEI Pro na pagina.
             setSizeIframePro(200, saveSize);
-            setResizeArvoreMaxWidth(indent, saveSize);
+            setResizeArvoreMaxWidth(indent, saveSize, true);
         }
     console.log('setResizeArvoreMaxWidth');
 }
