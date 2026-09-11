@@ -379,6 +379,16 @@ function loadScriptPro() {
             if (typeof loadAtividadesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-atividades.js"));
             if (typeof loadProjetosPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-projetos.js"));
             if (typeof loadPrescricoesPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-prescricoes.js"));
+            // Ferramentas de PDF: so o lado que atende os pedidos da pagina.
+            // A ferramenta em si (pdf.js, Tesseract, os motores) vive na pagina
+            // da extensao e NAO entra na pagina do SEI -- se entrasse, um
+            // segundo pdf.js sobrescreveria o window.pdfjsLib de que o
+            // sei-pro-ai.js depende.
+            //
+            // O par deste arquivo e js/init_ferramentaspdf.js, que roda no mundo
+            // ISOLADO (declarado no manifest) porque e o unico lado com acesso a
+            // chrome.runtime. Os dois conversam por postMessage no documento.
+            if (typeof window.loadFerramentasPdfPro === 'undefined') $.getScript(getUrlExtension("js/sei-pro-ferramentaspdf.js"));
             if (typeof Gantt === 'undefined') $.getScript(getUrlExtension("js/lib/frappe-gantt.js"));
             if (typeof jKanban === 'undefined') $.getScript(getUrlExtension("js/lib/jkanban.min.js"));
             if (typeof $().toolbar === 'undefined') $.getScript(getUrlExtension("js/lib/jquery.toolbar.min.js"));

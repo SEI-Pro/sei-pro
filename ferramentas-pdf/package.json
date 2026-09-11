@@ -1,0 +1,36 @@
+{
+  "name": "sei-pro-ferramentas-pdf",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ferramentas de PDF do SEI Pro - processamento local, sem servidor",
+  "scripts": {
+    "build": "npm run verificar && node build.mjs",
+    "build:rapido": "node build.mjs",
+    "tipos": "tsc --noEmit",
+    "verificar": "npm run verificar:juntar && npm run verificar:operacoes && npm run verificar:tarjar && npm run verificar:ponte && npm run verificar:envio && npm run verificar:icones && npm run verificar:classes && npm run verificar:carregando && npm run verificar:texto && npm run verificar:ambiente",
+    "verificar:juntar": "tsx tests/verificar-juntar.ts",
+    "verificar:operacoes": "tsx tests/verificar-operacoes.ts",
+    "verificar:tarjar": "tsx tests/verificar-tarjar.ts",
+    "verificar:ponte": "tsx tests/verificar-ponte.ts",
+    "verificar:envio": "tsx tests/verificar-envio.ts",
+    "verificar:icones": "tsx tests/verificar-icones.ts",
+    "verificar:classes": "tsx tests/verificar-classes.ts",
+    "verificar:carregando": "tsx tests/verificar-carregando.ts",
+    "verificar:texto": "tsx tests/verificar-texto.ts",
+    "verificar:ambiente": "tsx tests/verificar-ambiente.ts"
+  },
+  "dependencies": {
+    "@cantoo/pdf-lib": "2.9.1",
+    "fflate": "0.8.3",
+    "pdfjs-dist": "6.3.289",
+    "tesseract.js": "7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "esbuild": "^0.25.0",
+    "linkedom": "^0.18.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

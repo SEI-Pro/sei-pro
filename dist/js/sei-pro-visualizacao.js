@@ -41,6 +41,9 @@ function initSeiProVisualizacao() {
     if (typeof parent.insertIconCompareDocs === 'function' && parent.checkConfigValue('comparardocumentos')) {
         parent.insertIconCompareDocs();
     }
+    if (typeof parent.insertIconFerramentasPdf === 'function' && parent.checkConfigValue('ferramentaspdf')) {
+        parent.insertIconFerramentasPdf();
+    }
     if (typeof parent.insertIconAIActions === 'function' && parent.restrictConfigValue('ferramentasia')) {
         parent.insertIconAIActions();
     }

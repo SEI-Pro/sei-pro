@@ -57,6 +57,7 @@ Instale a extensão para seu navegador preferido:
 - ![Alinhar texto](/img/icon-marcaminuta.png) [Adicionar marca d'água de minuta ao documento](./pages/MARCAMINUTA.md)
 - ![Sigilo Documento](/img/icon-sigilodoc.png) [Adicionar marca de sigilo e tarjas pretas de confidencialidade (LGPD)](./pages/SIGILODOC.md)
 - ![Duplicar Documento](/img/icon-duplicardoc.png) [Duplicar documentos com 1 click](./pages/DUPLICARDOC.md)
+- ![Ferramentas de PDF](/img/icon-ferramentaspdf.png) [Ferramentas de PDF: tarjar, juntar, dividir, comprimir, organizar, OCR e conferir PDF/A — tudo no seu computador](./pages/FERRAMENTASPDF.md)
 - ![Enviar documentos](/img/icon-uploaddocs.png) [Enviar múltiplos documentos externos](./pages/UPLOADDOCS.md)
 - ![Menu Suspenso](/img/icon-menususpenso.png) [Menu Suspenso](./pages/MENUSUSPENSO.md)
 - ![Ordenar Tabelas](/img/icon-ordernartabela.png) [Ordenar tabelas ao clicar no seu cabeçalho](./pages/ORDENARTABELA.md)

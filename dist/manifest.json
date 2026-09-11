@@ -3,7 +3,7 @@
   "name": "SEI Pro Lab",
   "short_name": "SEI Pro Lab",
   "description": "Adiciona ao Sistema Eletrônico de Informações (SEI) funções avançadas",
-  "version": "1.6.24",
+  "version": "1.7.0",
   "author": "Pedro Henrique Soares",
   "homepage_url": "https://sei-pro.github.io/sei-pro",
   "icons": {
@@ -155,7 +155,8 @@
         "js/lib/frappe-gantt.js",
         "js/sei-functions-pro.js",
         "js/lib/jquery.tablesorter.combined.min.js",
-        "js/init.js"
+        "js/init.js",
+        "js/init_ferramentaspdf.js"
       ],
       "css": [
         "css/sei-pro.css",
@@ -460,6 +461,12 @@
         "css/images/marker-shadow.png",
         "config_hosts.json",
         "html/options.html",
+        "vendor/ferramentas-pdf/tesseract/worker.min.js",
+        "vendor/ferramentas-pdf/tesseract/core/tesseract-core-simd-lstm.wasm.js",
+        "vendor/ferramentas-pdf/tesseract/lang/por.traineddata.gz",
+        "html/ferramentas-pdf.html",
+        "js/sei-pro-ferramentaspdf.js",
+        "icons/menu/ferramentas_pdf.svg",
         "html/options.js",
         "html/page.css",
         "icons/menu/capletter.png",
@@ -508,5 +515,8 @@
         "*://sei.antaq1.gov.br/*"
       ]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
 }

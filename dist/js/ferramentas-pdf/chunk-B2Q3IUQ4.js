@@ -1,0 +1,2 @@
+/* GERADO por ferramentas-pdf/build.mjs. NAO EDITE ESTE ARQUIVO. Rode: npm run build */
+var i=/^[\x20-\x7E\xA0-\xFF€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]*$/,e=new Map([["\u2212","-"],["\u2010","-"],["\u2011","-"],["\u202F"," "],["\u2009"," "],["\u200A"," "],["\u200B",""],["\uFB00","ff"],["\uFB01","fi"],["\uFB02","fl"],["\uFB03","ffi"],["\uFB04","ffl"],["\xA0"," "],["\xAD",""]]);function o(r){let t="";for(let n of r)t+=e.get(n)??n;return t}function s(r){let t=o(r).replace(/\s+/g," ").trim();return t?i.test(t)?t:[...t].filter(n=>i.test(n)).join(""):""}export{s as a};

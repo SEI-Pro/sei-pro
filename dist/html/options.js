@@ -4,6 +4,14 @@ $('#import').on("click", function () {
 
 $('#export').on("click", function () { save_options(false) });
 
+// Quarto caminho para as Ferramentas de PDF: pelo icone da extensao, sem
+// precisar estar no SEI. Abre em ABA, nunca no popup -- popup e destruido ao
+// perder o foco, e levaria junto o processamento em curso e o arquivo gerado.
+$('#abrirFerramentasPdf').on("click", function () {
+    var api = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : chrome.runtime;
+    window.open(api.getURL('html/ferramentas-pdf.html'), '_blank');
+});
+
 $('#selectFiles[type=file]').change(function(){
     loadFile();
 });

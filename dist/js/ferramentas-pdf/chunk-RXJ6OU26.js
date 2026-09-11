@@ -1,0 +1,2 @@
+/* GERADO por ferramentas-pdf/build.mjs. NAO EDITE ESTE ARQUIVO. Rode: npm run build */
+import{a as r}from"./chunk-H3PD3J7X.js";var e="vendor/ferramentas-pdf/tesseract",o={worker:r(`${e}/worker.min.js`),core:r(`${e}/core/tesseract-core-simd-lstm.wasm.js`),lang:r(`${e}/lang`)},s="por",n=200,a=100;function c(){try{return WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11]))}catch{return!1}}export{o as a,s as b,n as c,a as d,c as e};

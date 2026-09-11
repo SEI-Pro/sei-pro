@@ -1,0 +1,768 @@
+/*
+ * Ferramentas de PDF -- estilos da pagina interna da extensao.
+ *
+ * TOKENS. As regras do visualizador de tarja vieram de um projeto com outra
+ * paleta e usam variaveis (--ink, --line, --blue...). Elas PRECISAM existir
+ * aqui: sem defini-las, `border: 1px solid var(--line)` e declaracao invalida,
+ * a borda some, e a marcacao desligada -- que e vazada -- fica invisivel. A
+ * ferramenta pareceria funcionar enquanto mente sobre o que esta marcado.
+ * Os valores abaixo sao os do SEI Pro (ver dist/html/page.css).
+ */
+
+.fpdf {
+  --azul: #3367d6;
+  --blue: var(--azul);
+  --bg: #f8f9fa;
+  --bg-2: #f8f9fa;
+  --superficie: #fff;
+  --ink: #333;
+  --ink-2: #555;
+  /* 4,54:1 sobre --bg-2. NAO usar um cinza mais claro: reprova no AA. */
+  --ink-3: #6b6b6b;
+  --line: #ddd;
+  --line-forte: #c4c4c4;
+  --radius-sm: 3px;
+  --radius: 6px;
+  --sombra: 0 0 8px 2px rgba(0, 0, 0, 0.1);
+  --erro: #c0392b;
+  --ok: #2e7d32;
+  --atencao: #b26a00;
+
+  color: var(--ink);
+  font-family: arial, helvetica, sans-serif;
+  font-size: 14px;
+}
+
+/*
+ * O atributo `hidden` precisa VENCER o display das classes.
+ *
+ * O navegador aplica `[hidden] { display: none }` na folha dele, que perde para
+ * qualquer regra de classe -- e a interface usa `display` em quase todo
+ * contêiner. O efeito era um elemento marcado como oculto continuar na tela: a
+ * área de preview e o painel de ocorrências apareciam vazios antes de haver
+ * documento, porque `.fpdf-tarjar { display: grid }` prevalecia sobre o
+ * `hidden`.
+ *
+ * Vale para toda a interface, não só para aquele caso: sem esta regra, esconder
+ * qualquer coisa exigiria lembrar de também zerar o display.
+ */
+.fpdf [hidden],
+.fpdf[hidden] {
+  display: none !important;
+}
+
+/* Conteudo so para leitor de tela. Nao existe em page.css e a regiao de
+   anuncio depende dele. */
+.fpdf .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- estrutura ---------- */
+
+body.fpdf-body {
+  margin: 0;
+  background: var(--bg);
+}
+
+.fpdf-cabecalho {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--azul);
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.fpdf-cabecalho h1 {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.fpdf-cabecalho__voltar {
+  background: rgba(255, 255, 255, 0.15);
+  border: 0;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.fpdf-cabecalho__voltar:hover { background: rgba(255, 255, 255, 0.28); }
+.fpdf-cabecalho__espaco { flex: 1; }
+
+.fpdf-destino {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 5px 10px;
+  border-radius: 12px;
+  max-width: 45ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fpdf-conteudo {
+  max-width: 860px;
+  margin: 20px auto 60px;
+  padding: 0 16px;
+}
+
+/*
+ * Ferramentas que trabalham sobre a página do documento.
+ *
+ * A largura de leitura (860px) serve a formulário e lista, mas deixa a página
+ * do PDF com cerca de 500px depois de descontar o painel lateral -- estreito
+ * demais para arrastar uma tarja sobre uma linha de texto com precisão. Aqui a
+ * página usa a janela, com um teto só para não esticar demais em monitor largo.
+ */
+.fpdf-conteudo--amplo {
+  max-width: min(1700px, 100vw - 32px);
+}
+
+/* ---------- selo de privacidade ---------- */
+
+.fpdf-privacidade {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #eef3fd;
+  border: 1px solid #cfdcf7;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.fpdf-privacidade i { color: var(--azul); font-size: 18px; margin-top: 2px; }
+
+/*
+ * Nas ferramentas que trabalham sobre a página, o selo encolhe para uma linha.
+ *
+ * A altura é o recurso escasso ali: cada pixel gasto no cabeçalho sai do
+ * preview. A primeira frase -- que é a afirmação em si -- continua visível; o
+ * detalhamento fica na página de ajuda, e some daqui.
+ */
+.fpdf-conteudo--amplo .fpdf-privacidade {
+  padding: 9px 14px;
+  margin-bottom: 12px;
+  align-items: center;
+  font-size: 12.5px;
+}
+.fpdf-conteudo--amplo .fpdf-privacidade i { font-size: 15px; margin-top: 0; }
+.fpdf-conteudo--amplo .fpdf-privacidade p:not(:first-child) { display: none; }
+.fpdf-privacidade strong { color: var(--ink); }
+.fpdf-privacidade p { margin: 0 0 6px; }
+.fpdf-privacidade p:last-child { margin-bottom: 0; }
+
+/* ---------- hub ---------- */
+
+.fpdf-hub__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.fpdf-cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  background: var(--superficie);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.fpdf-cartao:hover { border-color: var(--azul); box-shadow: var(--sombra); }
+.fpdf-cartao:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.fpdf-cartao__icone { color: var(--azul); font-size: 20px; }
+.fpdf-cartao__nome { font-weight: 600; font-size: 15px; }
+.fpdf-cartao__resumo { color: var(--ink-3); font-size: 13px; line-height: 1.45; }
+
+/* Classes que faltavam: sem regra, o elemento ficava sem formatacao nenhuma.
+   Foram encontradas comparando o que o codigo aplica com o que a folha define. */
+.fpdf-hub { margin: 0; }
+.fpdf-escolher__nome { font-weight: 500; }
+.fpdf-tarjar__zoom {
+  font-size: 12px;
+  color: var(--ink-2);
+  min-width: 46px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.fpdf-tarjar__espaco { flex: 1; }
+.fpdf-botao--ativo {
+  background: #eaf0fd;
+  border-color: var(--azul);
+  color: var(--azul);
+}
+
+/* ---------- ferramenta ---------- */
+
+.fpdf-ferramenta {
+  background: var(--superficie);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+  padding: 22px;
+}
+
+.fpdf-ferramenta__cabecalho h2 { margin: 0 0 4px; font-size: 19px; }
+.fpdf-ferramenta__descricao { margin: 0 0 18px; color: var(--ink-3); font-size: 13px; }
+.fpdf-ferramenta__acoes { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+
+/* ---------- zona de arquivos ---------- */
+
+.fpdf-zona { margin-bottom: 16px; }
+
+.fpdf-zona__alvo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 30px 20px;
+  border: 2px dashed var(--line-forte);
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  cursor: pointer;
+  text-align: center;
+}
+
+.fpdf-zona__alvo:hover { border-color: var(--azul); background: #f4f7fe; }
+.fpdf-zona input:focus-visible + .fpdf-zona__alvo { outline: 2px solid var(--azul); outline-offset: 2px; }
+.fpdf-zona--arrastando .fpdf-zona__alvo { border-color: var(--azul); background: #eaf0fd; }
+.fpdf-zona--desabilitada .fpdf-zona__alvo { opacity: 0.55; cursor: not-allowed; }
+.fpdf-zona__icone { font-size: 26px; color: var(--azul); }
+.fpdf-zona__titulo { font-weight: 600; font-size: 15px; }
+.fpdf-zona__apoio { color: var(--ink-3); font-size: 13px; }
+.fpdf-zona__botao { margin-top: 6px; }
+.fpdf-zona__ajuda { color: var(--ink-3); font-size: 12px; margin: 8px 2px 0; line-height: 1.45; }
+
+/*
+ * Zona recolhida: há documento aberto, e a altura que ela ocupava faz falta
+ * para o preview. Vira uma faixa -- continua clicável, porque trocar de arquivo
+ * é o que se faz logo depois de ver o resultado.
+ */
+.fpdf-zona--recolhida { margin-bottom: 10px; }
+/* Respiro entre a faixa e o botão de trazer do processo: colados, os dois
+   pareciam um controle só. */
+.fpdf-zona--recolhida .fpdf-botao--secundario { margin-top: 8px; }
+.fpdf-zona--recolhida .fpdf-zona__alvo {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 9px 14px;
+  text-align: left;
+}
+.fpdf-zona--recolhida .fpdf-zona__icone { font-size: 15px; }
+.fpdf-zona--recolhida .fpdf-zona__titulo { font-size: 13px; font-weight: 500; }
+.fpdf-zona--recolhida .fpdf-zona__apoio { display: none; }
+.fpdf-zona--recolhida .fpdf-zona__botao { margin: 0 0 0 auto; padding: 5px 12px; font-size: 12px; }
+.fpdf-zona--recolhida .fpdf-zona__ajuda { display: none; }
+
+/* ---------- botoes ---------- */
+
+.fpdf-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.fpdf-botao--primario { background: var(--azul); color: #fff; border-bottom: 3px solid #7aa4ff; }
+.fpdf-botao--primario:hover:not(:disabled) { background: #2a56b8; }
+.fpdf-botao--secundario { background: #fff; color: var(--azul); border: 1px solid var(--line-forte); border-bottom: 3px solid #afbede; }
+.fpdf-botao--secundario:hover:not(:disabled) { background: #f4f7fe; }
+.fpdf-botao--texto { background: none; color: var(--ink-2); text-decoration: underline; padding: 8px 6px; }
+.fpdf-botao--grande { padding: 11px 22px; font-size: 14px; }
+.fpdf-botao:disabled { opacity: 0.5; cursor: not-allowed; }
+.fpdf-botao:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+
+/* ---------- lista de arquivos ---------- */
+
+.fpdf-lista { list-style: none; margin: 0 0 12px; padding: 0; }
+
+.fpdf-lista__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  background: var(--superficie);
+}
+
+.fpdf-lista__item--erro { border-color: #f0c8c2; background: #fdf6f5; }
+.fpdf-lista__ordem { color: var(--ink-3); font-size: 12px; min-width: 18px; text-align: right; }
+.fpdf-lista__corpo { flex: 1; min-width: 0; }
+.fpdf-lista__nome { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fpdf-lista__detalhe { color: var(--ink-3); font-size: 12px; }
+.fpdf-lista__erro { color: var(--erro); font-size: 12px; margin: 4px 0 0; }
+.fpdf-lista__aviso { font-size: 12px; margin: 6px 0 4px; color: var(--ink-2); }
+.fpdf-lista__senha-caixa { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.fpdf-lista__senha { flex: 1; min-width: 160px; padding: 6px 8px; border: 1px solid var(--line-forte); border-radius: var(--radius-sm); font: inherit; font-size: 13px; }
+.fpdf-lista__acoes { display: flex; gap: 2px; }
+
+.fpdf-lista__seta,
+.fpdf-lista__remover {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+
+.fpdf-lista__seta:hover:not(:disabled),
+.fpdf-lista__remover:hover:not(:disabled) { background: #eef1f6; }
+.fpdf-lista__remover { color: var(--erro); }
+.fpdf-lista__seta:disabled { opacity: 0.35; cursor: not-allowed; }
+.fpdf-lista__seta:focus-visible,
+.fpdf-lista__remover:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+
+.fpdf-etiqueta { font-size: 11px; padding: 3px 7px; border-radius: 10px; white-space: nowrap; }
+.fpdf-etiqueta--atencao { background: #fdf3e2; color: var(--atencao); }
+
+/* ---------- opcoes ---------- */
+
+.fpdf-opcoes {
+  background: #fafbfd;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin: 6px 0 0;
+}
+
+.fpdf-opcoes__linha { margin-bottom: 12px; }
+.fpdf-opcoes__linha:last-child { margin-bottom: 0; }
+.fpdf-opcoes__linha > label { display: block; font-size: 13px; margin-bottom: 5px; font-weight: 600; }
+.fpdf-opcoes__caixa { display: flex; align-items: center; gap: 8px; }
+.fpdf-opcoes__caixa label { font-weight: normal; font-size: 13px; margin: 0; }
+.fpdf-opcoes__ajuda { color: var(--ink-3); font-size: 12px; margin: 6px 0 0; line-height: 1.45; }
+
+.fpdf-campo {
+  width: 100%;
+  max-width: 380px;
+  padding: 7px 9px;
+  border: 1px solid var(--line-forte);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.fpdf-campo:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+
+/* ---------- progresso, erro, resumo ---------- */
+
+.fpdf-resumo { color: var(--ink-3); font-size: 12px; margin: 0 0 10px; }
+.fpdf-progresso { margin-top: 14px; }
+.fpdf-progresso__trilho { height: 8px; background: #e6e9ef; border-radius: 4px; overflow: hidden; }
+.fpdf-progresso__barra { height: 100%; background: var(--azul); transition: width 0.15s linear; }
+.fpdf-progresso__trilho--indeterminado .fpdf-progresso__barra { animation: fpdf-desliza 1.1s ease-in-out infinite; }
+.fpdf-progresso__rodape { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.fpdf-progresso__texto { color: var(--ink-3); font-size: 12px; }
+
+@keyframes fpdf-desliza {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fpdf-progresso__trilho--indeterminado .fpdf-progresso__barra { animation: none; }
+  .fpdf-progresso__barra { transition: none; }
+}
+
+.fpdf-erro {
+  color: var(--erro);
+  background: #fdf6f5;
+  border: 1px solid #f0c8c2;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin: 14px 0 0;
+}
+
+.fpdf-relatorio {
+  background: #fafbfd;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.fpdf-relatorio p { margin: 0 0 6px; }
+.fpdf-relatorio p:last-child { margin-bottom: 0; }
+
+/* ---------- resultado ---------- */
+
+.fpdf-resultado {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #cde5cf;
+  background: #f4faf4;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.fpdf-resultado__marca { font-size: 26px; color: var(--ok); }
+.fpdf-resultado__titulo { margin: 8px 0 4px; font-size: 16px; }
+.fpdf-resultado__detalhe { margin: 0 0 12px; color: var(--ink-3); font-size: 13px; }
+.fpdf-resultado__saidas { list-style: none; margin: 0 0 12px; padding: 0; text-align: left; max-height: 190px; overflow-y: auto; }
+.fpdf-resultado__saidas li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 8px; font-size: 12px; border-bottom: 1px solid #e2eee3; }
+.fpdf-resultado__nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fpdf-resultado__tamanho { color: var(--ink-3); white-space: nowrap; }
+.fpdf-resultado__acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.fpdf-resultado__aviso { font-size: 13px; color: var(--ink-2); margin: 0 0 12px; }
+
+/* ---------- organizar: grade de paginas ---------- */
+
+.fpdf-paginas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin: 6px 0 4px;
+  max-height: max(420px, calc(100vh - 340px));
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.fpdf-pagina {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 6px;
+  position: relative;
+}
+
+.fpdf-pagina--removida { opacity: 0.45; border-style: dashed; }
+.fpdf-pagina__imagem { display: block; width: 100%; height: auto; transition: transform 0.15s; }
+.fpdf-pagina__vazia { width: 100%; aspect-ratio: 1 / 1.41; background: #eef1f6; }
+.fpdf-pagina__rodape { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); padding: 4px 2px 0; }
+.fpdf-pagina__marca { color: var(--erro); }
+.fpdf-pagina__acoes { display: flex; justify-content: center; gap: 1px; margin-top: 4px; }
+
+.fpdf-pagina__acao {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 5px 6px;
+  cursor: pointer;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.fpdf-pagina__acao:hover:not(:disabled) { background: #eef1f6; }
+.fpdf-pagina__acao:disabled { opacity: 0.3; cursor: not-allowed; }
+.fpdf-pagina__acao:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fpdf-pagina__imagem { transition: none; }
+}
+
+/* ---------- conferir PDF/A ---------- */
+
+.fpdf-pdfa { margin-top: 16px; }
+.fpdf-pdfa__resumo h3 { margin: 0 0 4px; font-size: 15px; }
+.fpdf-pdfa__resumo p { margin: 0 0 14px; color: var(--ink-2); font-size: 13px; }
+.fpdf-pdfa__lista { list-style: none; margin: 0; padding: 0; }
+
+.fpdf-pdfa__item {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.fpdf-pdfa__item--ok { border-left-color: var(--ok); }
+.fpdf-pdfa__item--falha { border-left-color: var(--erro); }
+.fpdf-pdfa__item--atencao { border-left-color: var(--atencao); }
+.fpdf-pdfa__item--indeterminado { border-left-color: var(--ink-3); }
+.fpdf-pdfa__cabecalho { display: flex; align-items: center; gap: 8px; }
+.fpdf-pdfa__cabecalho h4 { margin: 0; font-size: 14px; flex: 1; }
+.fpdf-pdfa__item--ok .fpdf-pdfa__cabecalho i { color: var(--ok); }
+.fpdf-pdfa__item--falha .fpdf-pdfa__cabecalho i { color: var(--erro); }
+.fpdf-pdfa__item--atencao .fpdf-pdfa__cabecalho i { color: var(--atencao); }
+.fpdf-pdfa__item--indeterminado .fpdf-pdfa__cabecalho i { color: var(--ink-3); }
+.fpdf-pdfa__selo { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.03em; }
+.fpdf-pdfa__detalhe { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.fpdf-pdfa__resolver { margin: 6px 0 0; font-size: 13px; color: var(--ink); line-height: 1.5; }
+.fpdf-pdfa__ressalva { margin-top: 14px; font-size: 12px; color: var(--ink-3); line-height: 1.55; }
+
+/* ---------- escolher documentos do processo ---------- */
+
+.fpdf-escolher {
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0;
+  max-width: 520px;
+  width: 90vw;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+}
+
+.fpdf-escolher::backdrop { background: rgba(0, 0, 0, 0.4); }
+.fpdf-escolher form { padding: 18px 20px; }
+.fpdf-escolher__cabecalho h3 { margin: 0 0 4px; font-size: 16px; }
+.fpdf-escolher__cabecalho p { margin: 0 0 14px; font-size: 12px; color: var(--ink-3); line-height: 1.45; }
+.fpdf-escolher__lista { list-style: none; margin: 0 0 14px; padding: 0; max-height: 46vh; overflow-y: auto; }
+.fpdf-escolher__lista li { display: flex; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid #eee; }
+.fpdf-escolher__lista label { font-size: 13px; cursor: pointer; flex: 1; }
+.fpdf-escolher__numero { color: var(--ink-3); }
+.fpdf-escolher__rodape { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+.fpdf-escolher__contagem { font-size: 12px; color: var(--ink-3); margin-right: auto; }
+
+/* ==================================================================
+ * VISUALIZADOR DE TARJA
+ *
+ * As regras da camada de texto sao um SUBCONJUNTO de
+ * `pdfjs-dist/web/pdf_viewer.css`, reescopadas sob `.fpdf .tarjar-pagina`.
+ * Nao importamos o arquivo original por duas razoes: ele traz tema, alto
+ * contraste e a barra do editor de anotacoes, nada disso usado aqui; e as
+ * regras dele NAO sao escopadas -- um `span { position: absolute }` solto
+ * vazaria para a pagina inteira.
+ *
+ * ARMADILHA QUE NAO DA ERRO NO CONSOLE: o `setLayerDimensions` do pdf.js
+ * escreve `width: round(down, calc(var(--total-scale-factor) * 595px),
+ * var(--scale-round-x))`. Sem as quatro variaveis abaixo definidas no
+ * conteiner, a largura e invalida, a camada nasce com tamanho ZERO e a
+ * selecao de texto simplesmente nao funciona -- sem nenhum aviso.
+ * ================================================================== */
+
+.fpdf .tarjar-pagina {
+  /*
+   * NÃO ENCOLHER.
+   *
+   * A área de páginas é um container flex em coluna com altura máxima, e item
+   * flex encolhe por padrão para caber no espaço disponível (`flex-shrink: 1`).
+   * O resultado era a altura inline da página ser comprimida: as páginas
+   * apareciam achatadas, como fatias, com o conteúdo espremido na vertical.
+   * A largura ficava certa, o que tornava o sintoma confuso.
+   */
+  flex-shrink: 0;
+  --user-unit: 1;
+  --total-scale-factor: calc(var(--scale-factor) * var(--user-unit));
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+  position: relative;
+  direction: ltr;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.fpdf .tarjar-pagina canvas { display: block; width: 100%; height: 100%; }
+
+/* ---- camada de texto (subconjunto do pdf.js) ---- */
+
+.fpdf .tarjar-pagina .textLayer {
+  position: absolute;
+  text-align: initial;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  z-index: 1;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+.fpdf .tarjar-pagina .textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+.fpdf .tarjar-pagina .textLayer > :not(.markedContent),
+.fpdf .tarjar-pagina .textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.fpdf .tarjar-pagina .textLayer .markedContent { display: contents; }
+
+/* `endOfContent` e o que faz a selecao arrastada ate o fim da pagina funcionar. */
+.fpdf .tarjar-pagina .textLayer .endOfContent {
+  display: block;
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: 0;
+  cursor: default;
+  user-select: none;
+}
+
+.fpdf .tarjar-pagina .textLayer.selecting .endOfContent { top: 0; }
+.fpdf .tarjar-pagina .textLayer ::selection { background: rgba(51, 103, 214, 0.3); }
+.fpdf .tarjar-pagina .textLayer br::selection { background: transparent; }
+
+/* ---- camada de marcacoes ---- */
+
+.fpdf .tarjar-marcas { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+
+.fpdf .tarjar-marca {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  background: #000;
+  border-radius: 1px;
+}
+
+/*
+ * Marcacao desligada continua VISIVEL, em traco vazado.
+ *
+ * Desligar nao e apagar: o usuario precisa enxergar o que decidiu deixar
+ * passar. Marcacao que some da tela ao ser desmarcada e indistinguivel de
+ * uma que foi removida por engano. E o estado nunca e indicado so pela cor:
+ * a ativa e preenchida, a inativa e vazada e tracejada.
+ */
+.fpdf .tarjar-marca[aria-pressed="false"] {
+  background: transparent;
+  border: 1.5px dashed var(--ink-3);
+}
+
+/* Sobre a tarja preta, um anel preto desapareceria. */
+.fpdf .tarjar-marca:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+.fpdf .tarjar-marca[data-realce="true"] { box-shadow: 0 0 0 3px var(--azul); }
+
+/* ---- retangulo em desenho ---- */
+
+.fpdf .tarjar-pagina[data-modo="desenhar"] .textLayer { pointer-events: none; }
+.fpdf .tarjar-pagina[data-modo="desenhar"] { cursor: crosshair; touch-action: none; }
+
+.fpdf .tarjar-rascunho {
+  position: absolute;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1.5px solid var(--ink);
+  pointer-events: none;
+}
+
+/* ---- layout da ferramenta de tarja ---- */
+
+/*
+ * Área de trabalho: o documento à esquerda, as ocorrências à direita.
+ *
+ * A coluna do documento é elástica e a do painel é fixa, porque a lista de
+ * ocorrências tem largura previsível (amostra mascarada + página) enquanto a
+ * página do PDF aproveita tudo o que sobrar.
+ */
+.fpdf-tarjar { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+
+/*
+ * Altura: o preview ocupa o que resta da janela, descontando o cabeçalho fixo,
+ * o selo e os controles acima dele. Em tela baixa há um piso, para a área não
+ * virar uma fresta.
+ */
+.fpdf-tarjar__paginas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  /* A altura é definida em tempo de execução, medindo a posição real da área
+     na janela -- ver `ajustarAlturaDaArea`. Aqui fica só o piso, para a área
+     não nascer achatada antes da primeira medição. */
+  min-height: 360px;
+  overflow-y: auto;
+  padding: 4px;
+  background: #eef1f6;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.fpdf-tarjar__painel { position: sticky; top: 70px; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; background: #fafbfd; min-height: 200px; overflow-y: auto; }
+.fpdf-tarjar__barra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.fpdf-tarjar__grupo { display: flex; gap: 4px; align-items: center; }
+.fpdf-tarjar__tipos { list-style: none; margin: 0 0 14px; padding: 0; }
+.fpdf-tarjar__tipo { display: flex; align-items: center; gap: 8px; padding: 5px 2px; font-size: 13px; }
+.fpdf-tarjar__tipo-contagem { margin-left: auto; color: var(--ink-3); font-size: 12px; }
+.fpdf-tarjar__ocorrencias { list-style: none; margin: 0; padding: 0; }
+
+.fpdf-tarjar__ocorrencia {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.fpdf-tarjar__ocorrencia:hover { background: #eef1f6; }
+.fpdf-tarjar__ocorrencia:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+.fpdf-tarjar__amostra { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.fpdf-tarjar__pagina-num { margin-left: auto; color: var(--ink-3); }
+
+.fpdf-tarjar__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 860px) {
+  .fpdf-tarjar { grid-template-columns: 1fr; }
+  .fpdf-tarjar__painel { position: static; max-height: none; }
+}
+
+/* ---- dialogo de confirmacao ---- */
+
+.fpdf-confirmar { border: 0; border-radius: var(--radius); padding: 0; max-width: 560px; width: 92vw; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25); }
+.fpdf-confirmar::backdrop { background: rgba(0, 0, 0, 0.45); }
+.fpdf-confirmar form { padding: 20px 22px; }
+.fpdf-confirmar h3 { margin: 0 0 10px; font-size: 17px; }
+.fpdf-confirmar p { font-size: 13px; line-height: 1.55; color: var(--ink-2); margin: 0 0 10px; }
+.fpdf-confirmar__aviso { background: #fdf6f5; border: 1px solid #f0c8c2; border-radius: var(--radius-sm); padding: 10px 12px; color: var(--ink); }
+.fpdf-confirmar__rodape { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }

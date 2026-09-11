@@ -3005,6 +3005,16 @@ a[href*="andamento_marcador_gerenciar"][data-color]:before {
     content: "\f05a";
     color: #4285f4;
 }
+/*
+ * Ferramentas de PDF. No Estilo Avancado a imagem do botao e escondida e o
+ * icone vem da fonte, por :before/:after -- sem esta regra o botao fica sem
+ * icone nesse tema, ainda que apareca normalmente no tema padrao.
+ */
+.seiSlim a.botaoSEI[onclick*="abrirFerramentasPdfPro("]:after,
+.seiSlim a.botaoSEI[onclick*="abrirFerramentasPdfPro("]:before {
+    content: "\f1c1";
+    color: #e46e64;
+}
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:after,
 .seiSlim a.botaoSEI[onclick*="openListNewTab("]:before {
     content: "\f35d";

@@ -46,6 +46,31 @@ var infraBarraS = isNewSEI ? '#divInfraBarraSistemaPadraoE' : '#divInfraBarraSis
 var nameDocInterno = isNewSEI ? 'documento_interno.svg' : 'sei_documento_interno.gif';
 var nomeInstituicao = isNewSEI ? $('#divInfraBarraSistema h6.infraCorBarraSuperior').eq(0).text().trim() : $('#divInfraBarraSuperior label').text().trim();
 var divComandos = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? '#divBotoesControleProcessos' : '#divComandos';
+/*
+ * A linha acima e avaliada no TOPO do arquivo, e nesse instante o
+ * sessionStorage pode ainda nao ter a versao do SEI -- ela e gravada por
+ * setSeiVersionPro(), que roda depois. Quando isso acontece, a global fica
+ * congelada em '#divComandos', seletor que NAO existe no SEI 4.1+, e todos os
+ * botoes da barra de acoes deixam de ser injetados: o append acontece sobre
+ * um seletor que nao casa nada, sem erro nenhum no console. O sintoma e a
+ * tela de Controle de Processos sem nenhum icone do SEI Pro ate o usuario
+ * recarregar a pagina e a versao ja estar em cache.
+ *
+ * Esta funcao reavalia a global quando a informacao ja existe. E chamada de
+ * initSeiPro(), que roda com o DOM pronto.
+ */
+function resolverDivComandosPro() {
+    if (divComandos === '#divBotoesControleProcessos') { return divComandos; }
+    var versao = (typeof getSeiVersionPro === 'function') ? getSeiVersionPro() : false;
+    if (isNewSEI && versao && compareVersionNumbers(versao, '4.1.0') >= 0) {
+        divComandos = '#divBotoesControleProcessos';
+    } else if (isNewSEI && document.getElementById('divBotoesControleProcessos')) {
+        // Recuo pelo DOM: se a barra nova esta na tela, e ela que vale, mesmo
+        // que a versao nao tenha sido detectada.
+        divComandos = '#divBotoesControleProcessos';
+    }
+    return divComandos;
+}
 var ifrVisualizacao_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrConteudoVisualizacao' : 'ifrVisualizacao';
 var targetIframeVisualizacao_ = isSEI_5 ? 'ifrConteudoVisualizacao' : 'ifrVisualizacao';
 var $ifrVisualizacao = '#'+ifrVisualizacao_;
@@ -11332,6 +11357,24 @@ function initBoxAIActions(TimeOut = 9000) {
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initBoxAIActions'); 
         }, 500);
     }
+}
+function insertIconFerramentasPdf() {
+    waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconFerramentasPdf);
+}
+function appendIconFerramentasPdf(loop = true) {
+    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var titulo = 'Ferramentas de PDF';
+    var htmlIconFerramentasPdf =  '<a href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener" id="iconFerramentasPdf" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\''+titulo+'\')" tabindex="452" class="botaoSEI">'+
+                                '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/ferramentas_pdf.svg" alt="'+titulo+'" title="'+titulo+'">'+
+                                '</a>';
+    if (ifrVisualizacao.find('#iconFerramentasPdf').length == 0) {
+        ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconFerramentasPdf);
+    }
+    // O iframe da visualizacao recarrega a cada clique num documento da arvore e
+    // leva os icones junto: o reagendamento e o que os traz de volta. Usar o
+    // helper, e nao setTimeout solto -- ele mantem UMA cadeia por icone, senao
+    // cada navegacao deixa mais uma viva e nenhuma morre.
+    if (loop) { reagendarIconeBarraPro('appendIconFerramentasPdf', appendIconFerramentasPdf); }
 }
 function insertIconCompareDocs() {
     waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconCompareDocs);

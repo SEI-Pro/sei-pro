@@ -1021,6 +1021,26 @@ function getNewTabProcesso() {
                             '</a>'
                             : '';
 
+        // LINK FIXO, e nao window.open: nao depende de o navegador permitir a
+        // janela, e evita a armadilha de consultar janela por nome -- que criava
+        // uma aba em branco quando o nome nao existia mais.
+        //
+        // O icone e um SVG PROPRIO, como no botao de Reabertura -- e nao o GIF 1x1
+        // transparente mais um <i> do Font Awesome, que e o padrao dos botoes
+        // vizinhos. Motivo: aqueles fixam `color: #fff` em estilo inline, que
+        // vence a regra `.newSEI .botaoSEI_iconBox { color: #4285f4 }` do
+        // tema. No SEI 4.1+/5, cuja barra de acoes tem fundo BRANCO, o icone
+        // fica branco sobre branco e some -- sem erro nenhum, so um espaco
+        // vazio com tooltip. O SVG traz a propria cor e aparece nos dois temas.
+        var htmlBtnFerramentasPdf = (checkConfigValue('ferramentaspdf')) ? 
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_ferramentaspdf" href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ferramentas de PDF\')"')+' style="position: relative; margin-left: -3px;">'+
+                            '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/ferramentas_pdf.svg" alt="Ferramentas de PDF" title="Ferramentas de PDF">'+
+                            (iconLabel ?
+                            '    <span class="newIconTitle">Ferramentas de PDF</span>'+
+                            '' : '')+
+                            '</a>'
+                            : '';
+
         var htmlBtnPrazo =  (checkConfigValue('gerenciarprazos')) ? 
                             '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\')"')+' onclick="addControlePrazo()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Adicionar prazo">'+
@@ -1054,11 +1074,15 @@ function getNewTabProcesso() {
                     '    <span class="newIconTitle">Abrir Processos em Nova Aba</span>'+
                     '' : '')+
 
-                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnNaoLido;
+                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnFerramentasPdf+htmlBtnNaoLido;
                     
         $(`${divComandos}${infraBarraComandos}`).each(function(){
             var _this = $(this);
                 _this.find('.iconPro_Observe').remove();
+                // O botao das Ferramentas de PDF nao tem .iconPro_Observe (ele
+                // aparece mesmo sem processo marcado), entao precisa do proprio
+                // remove -- senao duplica a cada reexecucao desta funcao.
+                _this.find('.iconPro_ferramentaspdf').remove();
                 _this.append(htmlBtn);            
         });
     }, 500);
@@ -3130,6 +3154,11 @@ function storeVersionSEI() {
 }
 function initSeiPro() {
 	if ( $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').length > 0 ) {
+        // A global divComandos e avaliada antes de a versao do SEI estar
+        // disponivel e pode ter congelado no seletor errado. Ver o comentario
+        // em resolverDivComandosPro(): sem isto, nenhum icone da barra de
+        // acoes aparece ate um novo carregamento.
+        if (typeof resolverDivComandosPro === 'function') resolverDivComandosPro();
         if (typeof URL_SPRO !== 'undefined' && typeof SimpleTableCellEdition === 'undefined') $.getScript((URL_SPRO+"js/lib/jquery-table-edit.min.js"));
         // `typeof moment.duration` avalia `moment` ANTES do typeof: se a biblioteca ainda nao
         // chegou - ela e carregada de forma assincrona pelo init.js - isso lanca ReferenceError e

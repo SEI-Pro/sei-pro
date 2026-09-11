@@ -582,7 +582,24 @@ const getSessionTextProcesso = (num_processo_format) => {
     
                 // EXTRAI TEXTO COM TESSERACT.JS
                 const { data: { text } } = await Tesseract.recognize(dataURL, 'por', {
-                    logger: m => console.log(`[OCR p\u00E1gina ${pageNum}]`, m)
+                    logger: m => console.log(`[OCR p\u00E1gina ${pageNum}]`, m),
+                    // Sem estes tres caminhos o tesseract.js baixa o motor e o
+                    // modelo de portugues do cdn.jsdelivr.net a CADA uso: cerca
+                    // de 5 MB pela rede do orgao, e um terceiro ficando sabendo
+                    // que aquele usuario esta fazendo OCR agora. Os arquivos ja
+                    // vem dentro da extensao.
+                    //
+                    // O corePath aponta o ARQUIVO, nao a pasta: terminando em
+                    // .js o worker o usa direto; terminando em pasta, ele faz
+                    // deteccao de capacidade, monta o nome sozinho e, se errar,
+                    // volta para a CDN.
+                    workerPath: URL_SPRO + 'vendor/ferramentas-pdf/tesseract/worker.min.js',
+                    corePath: URL_SPRO + 'vendor/ferramentas-pdf/tesseract/core/tesseract-core-simd-lstm.wasm.js',
+                    langPath: URL_SPRO + 'vendor/ferramentas-pdf/tesseract/lang',
+                    gzip: true,
+                    // A politica de seguranca da extensao recusa worker criado a
+                    // partir de blob:, que e o padrao da biblioteca.
+                    workerBlobURL: false
                 });
     
                 finalText += `\n\n[P\u00E1gina ${pageNum}]\n${text}`;

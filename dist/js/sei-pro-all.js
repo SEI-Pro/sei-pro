@@ -138,6 +138,7 @@ function insertNewLinksMenu() {
         var newLinkMenu =  '<li><a id="pesquisaLinkPermanentePro" class="newLinksMenuPro" onclick="initBoxSearchProtocoloSEI()"><span>Pesquisar Link Permanente</span></a></li>';
 
         if (checkConfigValue('historicoproc')) newLinkMenu += '<li><a id="historicoProcessosPro" class="newLinksMenuPro" onclick="getHistoryProcessosPro()"><span>Hist\u00F3rico de Processos Visitados</span></a></li>';
+        if (checkConfigValue('ferramentaspdf')) newLinkMenu += '<li><a id="ferramentasPdfPro" class="newLinksMenuPro" href="'+URL_SPRO+'html/ferramentas-pdf.html" target="_blank" rel="noopener"><span>Ferramentas de PDF</span></a></li>';
         if (checkConfigValue('proclote')) newLinkMenu += '<li><a id="processosLotePro" class="newLinksMenuPro" onclick="if(typeof initProcLoteModal===\'function\')initProcLoteModal()"><span>Processos em Lote</span></a></li>';
         if (checkConfigValue('ordenarmenu')) initMenuSEISortable();
         $(idMenu).append(newLinkMenu);

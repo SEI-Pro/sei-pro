@@ -3,7 +3,7 @@
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
 ### Versão 1.7.0
-10/09/2026
+11/09/2026
 
 - Nova funcionalidade: [Ferramentas de PDF](../pages/FERRAMENTASPDF.md), uma página própria da extensão com nove ferramentas que rodam **inteiramente no seu computador** — nenhum arquivo é enviado a servidor nenhum, e tudo continua funcionando com a máquina desconectada
   - **Tarjar PDF**: suprime CPF, e-mail e outros dados sensíveis de forma que o texto **deixe de existir no arquivo**. A maioria dos editores desenha um retângulo por cima e o texto continua lá; aqui a página é reconstruída. O resultado é conferido antes de ser entregue — por posição, por texto extraído e por varredura dos bytes —, e o arquivo não é entregue se qualquer prova falhar
