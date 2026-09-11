@@ -372,6 +372,7 @@
         "js/sei-legis.js",
         "js/sei-pro-visualizacao-chosen.js",
         "js/sei-pro-docs-lote.js",
+        "js/sei-pro-proc-lote.js",
         "js/sei-pro-ai.js",
         "icons/lab/icon-32.png",
         "css/sei-pro.css",

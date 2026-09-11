@@ -2,6 +2,23 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.0
+10/09/2026
+
+- Nova funcionalidade: [Ferramentas de PDF](../pages/FERRAMENTASPDF.md), uma página própria da extensão com nove ferramentas que rodam **inteiramente no seu computador** — nenhum arquivo é enviado a servidor nenhum, e tudo continua funcionando com a máquina desconectada
+  - **Tarjar PDF**: suprime CPF, e-mail e outros dados sensíveis de forma que o texto **deixe de existir no arquivo**. A maioria dos editores desenha um retângulo por cima e o texto continua lá; aqui a página é reconstruída. O resultado é conferido antes de ser entregue — por posição, por texto extraído e por varredura dos bytes —, e o arquivo não é entregue se qualquer prova falhar
+  - **Juntar**, **Dividir**, **Comprimir**, **Organizar páginas**, **Imagem para PDF**, **Numerar páginas**, **OCR (PDF pesquisável)** e **Conferir PDF/A**
+  - Abertas pela barra de ações do Controle de Processos, pela barra da árvore do processo, pelo menu lateral ou pelo ícone da extensão
+  - Com o processo aberto, é possível **trazer documentos do processo** e **devolver o resultado a ele**, sem baixar e reanexar à mão
+  - Comprimir e Dividir passam a usar o **limite de upload real da sua instalação do SEI**, com margem de segurança. Não existe um limite padrão do SEI: cada órgão configura o seu
+- Nova funcionalidade: [Processos em Lote](../pages/PROCESSOSEMLOTE.md), que abre vários processos de um mesmo tipo de uma só vez, a partir de uma lista de especificações colada de uma planilha ou de uma quantidade informada
+  - Acessível pelo **menu lateral** do SEI, e pode ser desligada nas configurações da extensão
+  - Permite escolher o **nível de acesso** (Público ou Restrito, com hipótese legal) e o **intervalo entre um processo e outro**, para reduzir o impacto no servidor
+  - Ao final, apresenta a **tabela com o número de cada processo aberto**, pronta para copiar ou baixar em CSV, incluindo as linhas que falharam e o motivo — uma linha com erro não interrompe as demais
+  - A ferramenta avisa, antes de começar, que a abertura em lote pode deixar o SEI lento para todos os usuários do órgão, e recomenda o uso fora do horário comercial
+- O OCR das [Ferramentas de IA](../pages/FERRAMENTASIA.md) parou de baixar o motor de reconhecimento e o modelo de português de uma CDN externa a cada uso: os arquivos passam a vir dentro da extensão. Além de mais rápido, é o que permite afirmar que a extensão não busca nada de terceiros
+- Corrigida uma vulnerabilidade da biblioteca de leitura de PDF (CVE-2026-16633), que permitia a execução de código ao abrir um PDF criado para isso. A execução de JavaScript embutido em PDF fica desligada, e o interpretador nem sequer é distribuído com a extensão
+
 ### Versão 1.6.24
 09/09/2026
 

@@ -48,6 +48,7 @@ $.getScript(getUrlExtension("js/lib/moment.min.js"), function () {
 $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/lib/diff2html.min.js"));
 $.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
+$.getScript(getUrlExtension("js/sei-pro-proc-lote.js"));
 if (typeof loadFunctionsPro === 'undefined' || window.name != '') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
 
 function divIconsLoginPro() {
