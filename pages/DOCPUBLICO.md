@@ -1,26 +1,35 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Adicionar link documento público](../img/icon-docpublico.png) Adicionar link de documento público
+## ![SEI Pro Link de documento público](../img/icon-docpublico.png) Adicionar link de documento público
 
-Essa funcionalidade adiciona ao editor de texto do SEI a possibilidade de adicionar link de documento público.
+Quer citar num documento um processo ou documento que **o cidadão pode abrir** — um edital, uma ata, uma decisão já publicada? Esta função busca o processo na **Pesquisa Pública do SEI** do seu órgão e insere o **link público** do documento, que funciona **sem login**.
 
-> ![Tela Adicionar link documento público](../img/tela-docpublico.gif) 
+> ![Tela Adicionar link documento público](../img/tela-docpublico.gif)
 
-A lista de documentos vem da pesquisa pública de seu órgão.
+### Como usar
+
+1. No editor, clique onde o link deve entrar;
+2. Clique no botão **Adicionar Link de Documento Público**;
+3. Em **Processo**, informe o número e clique em **Pesquisar**;
+4. Se a Pesquisa Pública pedir, **digite o código** de verificação (captcha) exibido;
+5. Em **Documentos**, escolha o documento — ou, no fim da lista, o link do **processo inteiro**, com todos os documentos públicos;
+6. Clique em **Inserir**.
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-1.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-1.png" width="722"/>
 
-Documentos restritos são listados, mas o link público não estará disponível. 
-Mesmo assim, é possível adicionar o nome do documento, sem o seu respectivo link.
-
-Processos sigilosos não são listados, portanto, não serão encontrados pela ferramenta.
-
-Ao final da lista de documentos é possível adicionar o link público do processo, 
-com a listagem de todos os seus documentos.
-
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-docpublico-2.png" width="640"/>
 
+### Como ativar
+
+O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
+
+### Bom saber
+
+* A função depende da **Pesquisa Pública do SEI** estar ativa no seu órgão.
+* **Documentos restritos** aparecem na lista, mas **sem link público** — é possível inserir apenas o nome.
+* **Processos sigilosos** não aparecem na Pesquisa Pública e, portanto, não são encontrados.
+* Se as [Ferramentas de Inteligência Artificial](../pages/FERRAMENTASIA.md) estiverem configuradas com o Gemini, o SEI Pro pode tentar ler o código de verificação automaticamente.
 
 ## Próximo item
 
-> [Adicionar valores padronizados ao inserir novo documento](./VALDEFAULT.md)
+> [Inserir nota de rodapé](../pages/NOTARODAPE.md)

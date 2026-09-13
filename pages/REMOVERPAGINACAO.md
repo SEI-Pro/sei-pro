@@ -1,11 +1,11 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Estilo Tabela](../img/icon-estilotabela.png) Adicionar estilo a tabela 
+## ![SEI Pro Remover paginação de processos](../img/icon-removerpaginacao.png) Remover paginação de processos
 
-Essa funcionalidade adiciona ao editor de texto do SEI a edição de estilo a tabelas.
+Esta página mudou de endereço. Veja [Remover paginação de processos](../pages/REMOVEPAGINACAO.md).
 
-> ![Tela Estilo de Tabelas](../img/remover-paginacao.gif) 
+> ![Tela Remover paginação](../img/remover-paginacao.gif) 
 
 ## Próximo item
 
-> [Adicionar link de legislação](./LINKLEGIS.md)
+> [Remover paginação de processos](../pages/REMOVEPAGINACAO.md)

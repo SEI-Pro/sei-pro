@@ -1,15 +1,33 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Sumário](../img/icon-sumario.png) Adicionar sumário
+## ![SEI Pro Sumário](../img/icon-sumario.png) Inserir sumário
 
-Essa funcionalidade adiciona ao editor de texto do SEI a criação de sumário ao seu documento.
+Documentos longos — relatórios, pareceres, termos de referência — ficam muito mais fáceis de ler com um **sumário**. O SEI Pro monta o sumário **a partir dos títulos do documento**, com **links** que levam direto a cada parte.
 
-> ![Tela Sumário](../img/tela-sumario.gif) 
+> ![Tela Sumário](../img/tela-sumario.gif)
 
-Informe apenas os estilos de bloco utilizados no seu documento para os títulos (até 3 estilos diferentes). O sumário é inserido logo abaixo do local indicado pelo cursor de texto.
+### Como usar
 
-> ![Tela Sumário](../img/tela-sumario2_.gif) 
+1. Formate os títulos do documento com **estilos** do SEI (por exemplo, *Item Nível 1* para os títulos principais e *Item Nível 2* para os subtítulos);
+2. Clique no ponto onde o sumário deve entrar;
+3. Clique no botão **Inserir sumário**;
+4. Informe o **Estilo do Título 1** (obrigatório) e, se houver, o **Estilo do Título 2** e o **Estilo do Título 3**;
+5. Clique em **Inserir**.
+
+O sumário entra com o título **SUMÁRIO** e a lista dos títulos, com recuo conforme o nível.
+
+> ![Tela Sumário com níveis](../img/tela-sumario2.gif)
+
+### Como ativar
+
+O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
+
+### Bom saber
+
+* Informe **apenas os estilos usados nos títulos**. Se o estilo escolhido também for usado em parágrafos comuns, eles entram no sumário.
+* O sumário **não se atualiza sozinho**. Se você acrescentar ou renomear títulos, apague o sumário e insira de novo.
+* Os links funcionam na visualização do documento no SEI.
 
 ## Próximo item
 
-> [Inserir dados do processo](./DADOSPROCESSO.md)
+> [Inserir equações (fórmulas matemáticas)](../pages/EQUACOES.md)

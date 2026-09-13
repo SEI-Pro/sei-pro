@@ -1,26 +1,43 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Alinhar texto](../img/icon-marcaminuta.png) Adicionar marca d'água de minuta ao documento
+## ![SEI Pro Marca d'água de minuta](../img/icon-marcaminuta.png) Adicionar marca d'água de MINUTA ou MODELO ao documento
 
-Essa funcionalidade adiciona ao editor de texto do SEI a possibilidade de adicionar marca d'água de minuta ao documento.
+Deixe claro para qualquer leitor que o documento **ainda não é a versão final**: o SEI Pro coloca a palavra **MINUTA** (ou **MODELO**) em marca d'água, atravessando o fundo da página — na tela, na visualização do processo e na impressão.
 
-> ![Tela Marca Minuta](../img/tela-marcaminuta.gif)  
+> ![Tela Marca Minuta](../img/tela-marcaminuta.gif)
 
-A marca d'água é adicionada ao fundo do documento, na visualização da árvore de documentos e ao imprimi-lo.
+### Como usar
 
-> ![Tela Marca Minuta](../img/tela-marcaminuta1.gif)  
+No editor, clique no botão **Adicionar Marca D'água de MINUTA/MODELO**. Cada clique alterna:
 
-Ao criar um novo documento que contenha a denominação **"MINUTA"**, a marca d'água é adicionada automaticamente.
+| Situação | Ao clicar |
+| -------- | --------- |
+| Sem marca | Insere **MINUTA** |
+| Com MINUTA | Troca para **MODELO** |
+| Com MODELO | Troca para **MINUTA** |
 
-Ao criar um documento baseado no modelo que contenha a marca d'água, 
-e que não contenha em sua denominação **"MINUTA"**, a marca d'água é removida automaticamente.
+No início do texto aparece uma legenda (por exemplo, *MINUTA DE DOCUMENTO*), que é o que guarda a marca.
 
-A marca d'água pode ser removida manualmente, independente da utilização do SEI Pro.
-Remova o texto **"MINUTA DE DOCUMENTO"** no início do documento.
+> ![Tela Marca Minuta na visualização](../img/tela-marcaminuta1.gif)
 
-A marca d'água é visualizada por todos, independentemente da utilização do SEI Pro, 
-tanto pelo acesso externo, tanto pela consulta pública.
+### Marca automática
+
+* Ao criar um documento cujo **nome contém "minuta"**, a marca d'água é colocada **automaticamente**;
+* Ao criar um documento **a partir de um modelo com marca**, se o nome do novo documento não contém "minuta", a marca automática é **retirada**.
+
+### Como tirar a marca
+
+Apague a legenda do início do texto e salve. Isso funciona para qualquer pessoa, **com ou sem o SEI Pro**.
+
+### Como ativar
+
+O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
+
+### Bom saber
+
+* A marca d'água é gravada no próprio documento: **todos a veem**, com ou sem o SEI Pro, inclusive no acesso externo e na pesquisa pública.
+* Lembre-se de **retirar a marca antes de assinar** a versão final.
 
 ## Próximo item
 
-> [Adicionar marca de sigilo e tarjas pretas de confidencialidade](../pages/SIGILODOC.md)
+> [Enviar, formatar e editar imagens](../pages/EDITARIMAGENS.md)

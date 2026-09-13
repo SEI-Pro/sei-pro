@@ -2,18 +2,42 @@
 
 ## ![SEI Pro Escrita interativa](../img/icon-escritainterativa.png) Escrita interativa no editor de documentos
 
-Essa funcionalidade adiciona ao editor de documentos do SEI a possibilidade adicionar diversos dados do processo de maneira interativa, ao digitar o caractere **#**
+Enquanto você escreve, **digite `#` ou `@`** e um menu aparece com sugestões para completar o texto — documentos e dados do processo, unidades e interessados —, sem sair do teclado.
 
 > ![Tela Escrita interativa](../img/tela-escritainterativa.gif)
 
-Digite **@** , seguido da sigla da uniade que se pretende enviar o processo, para adicionar a descrição completa da unidade.
+### Digite `#` para dados e documentos do processo
 
-Caso seja adicionada unidades pelo menu interativo (@) e o documento esteja visível na tela, 
-os destinatários do documento serão automaticamente adicionados ao enviar o processo.
+Ao digitar `#`, o menu lista:
 
-> ![Tela Escrita interativa](../img/tela-escritainterativa2.gif)
+* os **documentos do processo**, que entram como **citação com link** (no formato escolhido em [Referência de documentos](../pages/REFDOCUMENTOS.md));
+* os **dados do processo** — número, tipo, interessados, assuntos e outros (veja [Dados do processo](../pages/DADOSPROCESSO.md)).
+
+Continue digitando para filtrar a lista: `#desp` mostra os despachos.
+
+### Digite `@` para unidades e interessados
+
+Ao digitar `@` seguido da **sigla de uma unidade**, o menu sugere a **descrição completa** da unidade para inserir no texto.
+
+> ![Tela Escrita interativa com @](../img/tela-escritainterativa2.gif)
+
+**Bônus:** as unidades inseridas com `@` são lembradas e, ao **enviar o processo** com o documento aberto na tela, elas **já aparecem preenchidas como destino** do envio.
+
+### Navegar no menu
+
+* `↑` e `↓` percorrem as sugestões;
+* `Enter` ou `Tab` inserem a sugestão destacada;
+* Continue digitando para refinar, ou apague o `#`/`@` para fechar.
+
+### Como ativar
+
+A função vem **desligada** de fábrica. Para ligar, abra as [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Editor de Texto**, e marque **Escrita interativa no editor de documentos (digite # ou @ para ativar menu rápido)**. Clique em **Salvar** e reabra o editor.
+
+### Bom saber
+
+* O menu usa os dados que o SEI Pro lê do processo. Com a opção [Desativar consultas adicionais](../pages/DESATIVACONSULTAS.md) ligada, as sugestões de `#` não aparecem.
+* Se você usa a [Legística](../pages/LEGISTICA.md), lembre que ela também usa `#` e `@` para referências cruzadas e externas.
 
 ## Próximo item
 
-> [.](../pages/.md)
-
+> [Salvar documentos automaticamente (temporariamente indisponível)](../pages/SALVAMENTOAUTOMATICO.md)

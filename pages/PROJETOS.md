@@ -1,12 +1,12 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Estilo Tabela](../img/icon-projetos.png) Gerenciar projetos
+## ![SEI Pro Projetos](../img/icon-projetos.png) Gerenciar projetos
 
- [MOMENTANEAMENTE DESCONTINUADA] A API do Google utilizada pela ferramenta está descontinuada. Em breve retomaremos o projeto com solução alternativa.
+> **Funcionalidade descontinuada.** A ferramenta de projetos dependia de uma API do Google que foi desativada, e por isso não funciona nas versões atuais do SEI Pro. A opção *Gerenciar Projetos* ainda aparece na aba **Complementos** das configurações, mas não tem efeito. Esta página é mantida apenas como registro.
 
 Essa funcionalidade adiciona à página inicial do SEI um gestor de projetos utilizando o [Diagrama de Gantt](https://pt.wikipedia.org/wiki/Diagrama_de_Gantt)
 
-> ![Tela Estilo de Tabelas](../img/tela-projetos.gif) 
+> ![Tela Gerenciar projetos](../img/tela-projetos.gif) 
 
 Para que você possa compartilhar seus projetos com sua equipe, utilizamos uma planilha online no Google Spreadsheets como base de dados.
 
@@ -28,5 +28,4 @@ Siga o passo a passo para [Conectar o SEI Pro ao Google Spreadsheets](../pages/S
 
 ## Próximo item
 
-> [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
-
+> [Voltar ao início](../)

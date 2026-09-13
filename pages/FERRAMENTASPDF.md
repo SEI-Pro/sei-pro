@@ -134,4 +134,4 @@ O teto é a memória do seu computador, e ele existe. Documentos muito grandes p
 
 ## Próximo item
 
-> [Enviar múltiplos documentos externos](../pages/UPLOADDOCS.md)
+> [Ferramentas de Inteligência Artificial (ChatGPT e Gemini)](../pages/FERRAMENTASIA.md)

@@ -2,6 +2,8 @@
 
 ## Conectando o SEI Pro ao Google Spreadsheets
 
+> **Funcionalidade descontinuada.** A ferramenta de projetos dependia de uma API do Google que foi desativada, e por isso não funciona nas versões atuais do SEI Pro. A opção *Gerenciar Projetos* ainda aparece na aba **Complementos** das configurações, mas não tem efeito. Esta página é mantida apenas como registro.
+
 Nesta etapa você precisará das chaves anotadas na etapa [Configurando o Google Spreadsheets como uma base de dados](../pages/BASEDADOS.md):
 
 1. **"Seu ID de Cliente"**
@@ -67,4 +69,4 @@ Caso apareça a mensagem **"Conectado! Clique para desconectar Base de Dados (Se
 
 ## Próximo item
 
-[Criando e Editando projetos](../pages/PROJETOSIMPORT.md)
+> [Gerenciar projetos](../pages/PROJETOS.md)

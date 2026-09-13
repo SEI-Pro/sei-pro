@@ -2,6 +2,8 @@
 
 ## Configurando o Google Spreadsheets como uma base de dados
 
+> **Funcionalidade descontinuada.** A ferramenta de projetos dependia de uma API do Google que foi desativada, e por isso não funciona nas versões atuais do SEI Pro. A opção *Gerenciar Projetos* ainda aparece na aba **Complementos** das configurações, mas não tem efeito. Esta página é mantida apenas como registro.
+
 Para que você possa compartilhar seus projetos com sua equipe, utilizando uma planilha online no Google Spreadsheets como base de dados.
 
 Dessa forma seus dados estarão protegidos pela camada de segurança do Google e sempre ao seu alcance.
@@ -150,4 +152,4 @@ Em ambiente de testes todos os utilizadores da base de dados precisam ser cadast
 
 ## Próximo item
 
-[Conectar o SEI Pro ao Google Spreadsheets](../pages/SEISHEETS.md)
+> [Gerenciar projetos](../pages/PROJETOS.md)

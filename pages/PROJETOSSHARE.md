@@ -2,6 +2,8 @@
 
 ## Compartilhando seus projetos com outros usuários
 
+> **Funcionalidade descontinuada.** A ferramenta de projetos dependia de uma API do Google que foi desativada, e por isso não funciona nas versões atuais do SEI Pro. A opção *Gerenciar Projetos* ainda aparece na aba **Complementos** das configurações, mas não tem efeito. Esta página é mantida apenas como registro.
+
 Para permitir que outras pessoas gerenciem ou apenas visualizem seus projetos, siga os passos a seguir.
 
 Acesse as configurações da extensão clicando no ícone do **SEI Pro** na barra de extensões do Google Chrome:
@@ -45,8 +47,8 @@ Digite o e-mail da pessoa com que deseja compartilhar a planilha. Defina seu ní
 
 >  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets15.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets15.png" width="777"/>
 
-Compartilhe o arquivo **"config.json"** com a pessoa desejada e solicite a execução do passo-a-passo [Carregando chaves de acesso de outro usuário](./pages/PROJETOSIMPORT.md)
+Compartilhe o arquivo **"config.json"** com a pessoa desejada e solicite a execução do passo-a-passo [Carregando chaves de acesso de outro usuário](../pages/PROJETOSIMPORT.md)
 
 ## Próximo item
 
-[Carregando chaves de acesso de outro usuário](../pages/PROJETOSIMPORT.md)
+> [Gerenciar projetos](../pages/PROJETOS.md)

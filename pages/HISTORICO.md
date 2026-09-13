@@ -96,32 +96,32 @@
 23/10/2023
 
 - Correções e melhorias
-- Adicionado [Mover ícone de excluir documentos para o final da lista](./pages/MOVERICONE.md)
-- Adicionado o [Autopreencher senha no login (SEI >= 4.0)](./pages/AUTOPREENCHERSENHA.md)
-- Adicionado [Numerar documentos na árvore do processo](./pages/NUMERARDOCSARVORE.md)
-- Adicionado o [Contador de processos não recebidos no ícone do SEI](./pages/CONTADORPROCESSOICONE.md)
-- Adicionado [Mostrar especificação do processo na tabela de controle de processos](./pages/ESPECIFICACAOPROCESSO.md)
-- Adicionado [Mostrar nomes de usuários na tabela de controle de processos](./pages/NOMESUSUARIOS.md)
-- Adicionado [Permitir marcar processos como "Não Visualizado"](./pages/NAOLIDO.md)
-- Adicionado a [Comparador de Documentos](./pages/COMPARARDOCUMENTOS.md)
-- Adicionado a [Reabertura programada de processos](./pages/REABRIRPROCESSOS.md)
-- Adicionado o [Ditado no editor de documentos](./pages/DITADO.md)
-- Adicionado a [Escrita interativa no editor de documentos](./pages/ESCRITAINTERATIVA.md)
-- Adicionado a [Revisão de texto no editor de documentos](./pages/REVISARDOC.md)
+- Adicionado [Mover ícone de excluir documentos para o final da lista](../pages/MOVERICONE.md)
+- Adicionado o [Autopreencher senha no login (SEI >= 4.0)](../pages/AUTOPREENCHERSENHA.md)
+- Adicionado [Numerar documentos na árvore do processo](../pages/NUMERARDOCSARVORE.md)
+- Adicionado o [Contador de processos não recebidos no ícone do SEI](../pages/CONTADORPROCESSOICONE.md)
+- Adicionado [Mostrar especificação do processo na tabela de controle de processos](../pages/ESPECIFICACAOPROCESSO.md)
+- Adicionado [Mostrar nomes de usuários na tabela de controle de processos](../pages/NOMESUSUARIOS.md)
+- Adicionado [Permitir marcar processos como "Não Visualizado"](../pages/NAOLIDO.md)
+- Adicionado a [Comparador de Documentos](../pages/COMPARARDOCUMENTOS.md)
+- Adicionado a [Reabertura programada de processos](../pages/REABRIRPROCESSOS.md)
+- Adicionado o [Ditado no editor de documentos](../pages/DITADO.md)
+- Adicionado a [Escrita interativa no editor de documentos](../pages/ESCRITAINTERATIVA.md)
+- Adicionado a [Revisão de texto no editor de documentos](../pages/REVISARDOC.md)
   
 ### Versão 1.2
 10/02/2023
 
 - Correções e melhorias
-- Adicionado a [Redução da qualidade das imagens inseridas nos documentos](./pages/QUALIDADEIMAGENS.md)
-- Adicionado as [Teclas de atalhos no editor de documentos](./pages/TECLASATALHO.md)
-- Adicionado as [Referências internas](./pages/REFERENCIAINTERNA.md) (Sugestão Hélio Oliveira e Roberto Balata)
+- Adicionado a [Redução da qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)
+- Adicionado as [Teclas de atalhos no editor de documentos](../pages/TECLASATALHO.md)
+- Adicionado as [Referências internas](../pages/REFERENCIAINTERNA.md) (Sugestão Hélio Oliveira e Roberto Balata)
 
 ### Versão 1.0
 15/06/2022
 
 - Correções e melhorias
-- Adicionado a [Alteração do layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
+- Adicionado a [Alteração do layout do SEI (Estilo Avançado + Modo Noturno)](../pages/ESTILOAVANCADO.md)
 - Adicionado a [Envio de múltiplas imagens, formatação e editação de opções avançadas](../pages/EDITARIMAGENS.md)
 - Adicionado a [Redução da qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)
 - Adicionado a [Enumeração de Normas (Legística)](../pages/LEGISTICA.md) (Migrado do projeto [SEI Legis](https://github.com/SEI-Pro/sei-legis))
@@ -249,7 +249,7 @@
 
 # Lista de funções do SEI Pro ![SEI Pro](../img/icon-32.png)
 
-- [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](..pages/ESTILOAVANCADO.md)
+- [Alterar o layout do SEI (Estilo Avançado + Modo Noturno)](../pages/ESTILOAVANCADO.md)
 - [Gerenciar projetos](../pages/PROJETOS.md)
 - [Agrupar  lista de processos por data de recebimento, envio, último acesso, marcadores, tipo, responsável, ponto de controle e unidade de envio](../pages/AGRUPAR.md)
 - [Inserir documento externo (HTML, Google Docs e Google Planilhas)](../pages/INSERIRDOC.md)
@@ -283,7 +283,7 @@
 - [Duplicar documentos com 1 click](../pages/DUPLICARDOC.md)
 - [Enviar múltiplos documentos externos](../pages/UPLOADDOCS.md)
 - [Menu Suspenso](../pages/MENUSUSPENSO.md)
-- [Filtrar e ordenar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
+- [Filtrar e ordenar tabelas ao clicar no seu cabeçalho](../pages/ORDENARTABELA.md)
 - [Histórico de processos visitados](../pages/HISTORICOPROC.md)
 - [Informações adicionais na árvore do processo](../pages/INFOARVORE.md)
 - [Anotação diretamente pela árvore do processo](../pages/NOTAARVORE.md)

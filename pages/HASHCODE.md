@@ -2,42 +2,38 @@
 
 ## ![SEI Pro Verificar Integridade Hashcode](../img/icon-hashcode.png) Verificar código de integridade (Hashcode)
 
-Essa funcionalidade adiciona ao visualizador de documentos do SEI a verificação de código de integridade (Hashcode).
+Recebeu a cópia de um arquivo e quer ter certeza de que ela é **idêntica** ao documento que está no processo? Esta função calcula o **código de integridade** (hash) dos documentos externos do SEI e compara com o de qualquer arquivo do seu computador.
 
-> ![Tela Verificar Integridade Hashcode](../img/tela-hashcode.gif) 
+> ![Tela Verificar Integridade Hashcode](../img/tela-hashcode.gif)
 
-O botão de **Verificar código de integridade (Hashcode)** somente aparece nos documentos do tipo **Externo**
+### Para que serve o hash
 
-Mas pra que serve o **HASHCODE**?
+Todo arquivo digital tem uma espécie de "impressão digital" matemática, o **hash**. Ele é calculado a partir do conteúdo do arquivo e funciona como um CPF: dois arquivos idênticos têm o mesmo hash, e **qualquer alteração — uma vírgula, um pixel — muda o código inteiro**.
 
-> Se você obteve uma cópia de um documento e não tem certeza se é o documento original, saiba que é possível gerar um certificado para a sua cópia digital e conferir se bate com o certificado original.
->
-> Todo arquivo digital “gera um certificado”, sem precisar de uma autoridade ou assinatura eletrônica. A mágica está no resultado matemático de um algoritmo de certificação chamado função hash.
-> 
-> O processo garante que o resultado (hashcode ou digest) seja único, como um CPF para cada arquivo virtual. 
-> 
-> Qualquer alteração no arquivo faz com que o hashcode  também mude. Se o hashcode  não bater com o arquivo público, significa que essa cópia é adulterada!
+Por isso, comparar hashes é o jeito mais simples de provar que uma cópia não foi adulterada, sem precisar de assinatura digital ou autoridade certificadora.
 
-Precisa verificar se uma cópia do documento é idêntica ao arquivo anexado ao processo? 
+### Como usar
 
-Acesse a opção **Comparar documento**
+1. Na árvore do processo, clique num **documento externo** (PDF, imagem, planilha etc.);
+2. Na barra de botões do documento, clique em **Verificar código de integridade (Hashcode)**;
+3. A janela mostra os códigos **MD5** e **SHA256** do documento que está no SEI;
+4. Para comparar com um arquivo do computador, clique em **Comparar documento** e escolha o arquivo;
+5. O SEI Pro calcula o hash da sua cópia e mostra se ele é **igual** ao do documento do processo.
 
-> ![Tela Verificar Integridade Hashcode](../img/tela-hashcode2.gif) 
+> ![Tela Comparar documento pelo hash](../img/tela-hashcode2.gif)
 
-Dica: Quando divulgar documentos  públicos, também publique os seus hashcodes! 
+### Como ativar
 
-Os padrões mais utilizados são **MD5** e **SHA256**.
+A função aparece sempre que o SEI Pro está instalado, nos documentos do tipo **externo**.
 
-Confira ainda nossa postagem sobre: 
+### Bom saber
 
-[Como verificar a autenticidade de documentos digitais](https://www.instagram.com/p/CIZ-8DjnEyv/).
+* O cálculo é feito **no seu computador**: o arquivo escolhido para comparação não é enviado a lugar nenhum.
+* Documentos **gerados no SEI** (os que abrem no editor) não têm o botão, porque não são arquivos anexados.
+* **Dica:** ao divulgar documentos públicos, publique também o hash — assim qualquer pessoa pode conferir a autenticidade da cópia que recebeu. Os padrões mais usados são **MD5** e **SHA256**.
 
-> <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/post8-1.png" width="300"/>
-
-Quer saber mais sobre autenticidade de documentos, começe com esse artigo: [Autenticidade e integridade de documentos públicos
-](https://medium.com/@peterkrauss/autenticidade-e-integridade-de-documentos-p%C3%BAblicos-aabea5389f4b)
-
+Para saber mais: [Autenticidade e integridade de documentos públicos](https://medium.com/@peterkrauss/autenticidade-e-integridade-de-documentos-p%C3%BAblicos-aabea5389f4b).
 
 ## Próximo item
 
-> [Adicionar link de documento público](../pages/DOCPUBLICO.md)
+> [Reproduzir vídeo na visualização de documentos](../pages/PLAYVIDEO.md)

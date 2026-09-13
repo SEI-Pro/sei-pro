@@ -2,18 +2,30 @@
 
 ## ![Copiar formatação de texto](../img/icon-copiarformatacao.png) Copiar formatação de texto
 
-Essa funcionalidade adiciona ao editor de documentos do SEI a função de copiar formatação de texto.
+O conhecido **pincel** dos editores de texto: copia a formatação de um trecho — cor, cor de fundo, tamanho da letra, negrito, itálico, sublinhado, tachado, subscrito e sobrescrito — e aplica em outro.
 
-Selecione o texto que deseja copiar a formatação, clique no ícone ![Copiar formatação de texto](../img/icon-copiarformatacao.png). 
+> ![Copiar formatação de texto](../img/tela-copiarformatacao.gif)
 
-Selecione o texto de destino que você deseja formatar.
+### Como usar
 
-> ![Copiar formatação de texto](../img/tela-copiarformatacao.gif) 
+1. Selecione o trecho que tem a formatação que você quer copiar;
+2. Clique no botão **Copiar formatação** (pincel). O cursor indica que o pincel está ativo;
+3. Selecione o trecho de destino: a formatação é aplicada assim que você solta o botão do mouse.
 
-Mantenha o botão `[alt]` do teclado para (`[option]` do Mac) para selecionar vários trechos do texto.
+Para aplicar em **vários trechos seguidos**, mantenha a tecla `Alt` (no Mac, `Option`) pressionada enquanto seleciona cada um.
 
-> ![Copiar formatação de texto](../img/tela-copiarformatacao2.gif) 
+> ![Copiar formatação em vários trechos](../img/tela-copiarformatacao2.gif)
+
+A opção **Copiar formatação** também está no **menu do botão direito** do editor.
+
+### Como ativar
+
+O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
+
+### Bom saber
+
+* O pincel copia a formatação **do texto** (caracteres). O **estilo do parágrafo** (recuo, alinhamento, numeração) não é copiado — para isso, use a caixa **Estilo** do SEI.
 
 ## Próximo item
 
-> [Aumentar ou reduzir o tamanho da fonte](./AUMENTARFONTE.md)
+> [Teclas de atalho para os estilos do editor](../pages/TECLASATALHO.md)

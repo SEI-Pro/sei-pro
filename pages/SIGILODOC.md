@@ -1,34 +1,52 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Sigilo Documento](../img/icon-sigilodoc.png) Adicionar marca de sigilo e tarjas pretas de confidencialidade
+## ![SEI Pro Sigilo Documento](../img/icon-sigilodoc.png) Marcas de sigilo e tarjas pretas de confidencialidade
 
-Essa funcionalidade adiciona ao editor de texto do SEI a possibilidade de adicionar marca de sigilo e tarjas pretas de confidencialidade ao documento.
+Precisa publicar um documento que tem **trechos protegidos** — CPF, endereço, dados de saúde, segredo comercial? Com esta função você **marca os trechos sigilosos** e, quando for gerar a versão pública, **transforma as marcas em tarjas pretas**, que **substituem o texto de verdade**.
 
-> ![Tela Sigilo Documento](../img/tela-sigilodoc.gif)  
+> ![Tela Sigilo Documento](../img/tela-sigilodoc.gif)
 
-### Marcas de sigilo e tarjas pretas
+### Por que tarjar e não só esconder
 
-A extensão SEI Pro não controla o acesso ou a visualização de partes do texto que é mostrado no SEI.
-Para conseguir manter a confidencialidade de textos censurados, a alternativa mais segura é substituir o texto sigiloso 
-por marcas indecifráveis (tarjas de confidencialidade)
+O SEI Pro não controla quem vê cada parte do texto. A única forma segura de publicar um documento com trechos sigilosos é **apagar esses trechos** da versão pública. A tarja faz exatamente isso: o texto marcado é trocado por blocos pretos e **deixa de existir** no documento.
 
-o processo de aplicação de tarjas de confidencialidade perde totalmente o texto tarjado.
-Por isso, é recomendado que o usuário crie 2 (duas) versões do documento:
+Por isso, o caminho recomendado usa **duas versões** do documento:
 
-* A 1ª versão com nível de acesso restrito (ou sigiloso), mas com as informações íntegras e marcadas com o símbolo do 🔒 (cadeado).
+1. **A versão íntegra**, com nível de acesso **restrito** (ou sigiloso), com as informações completas e os trechos sigilosos **marcados** com o cadeado 🔒;
+2. **A versão pública**, com as marcas **convertidas em tarjas**.
 
-É possível adicionar marcas de sigilo manualmente ou localizando um texto por todo o documento.
-Caso deseje, é possível ainda remover todas as marcas de sigilo na aba **"Remover marcas"**
+Para gerar a versão pública com fé pública, veja [Certidão de documento oficial com sigilo](../pages/CERTIDAOSIGILO.md).
 
-> ![Tela Sigilo Documento](../img/tela-sigilodoc1-1.gif)  
+### Marcar trechos
 
-* A 2ª versão com nível de acesso público, com as informações já marcadas como sigilosas convertidas em tarjas pretas de confidencialidade.
+* **Um trecho:** selecione o texto e clique em **Adicionar / Remover marca de sigilo no texto**. Clique de novo para desmarcar;
+* **Todas as ocorrências de um texto:** em **Gerenciar marcas de sigilo do documento**, use **Localizar texto e adicionar marca** — por exemplo, o nome de uma pessoa, em todo o documento;
+* **Dados pessoais:** na mesma janela, **Localizar dados pessoais** marca de uma vez os **e-mails e CPFs** encontrados no texto.
 
-> ![Tela Sigilo Documento](../img/tela-sigilodoc2.gif)  
- 
-As informações tarjadas são perdidas após salvar e abandonar o editor de documentos do SEI. 
-Enquanto aberto do editor, o botão **"Desfazer"** (Control+Z) poderá reverter a aplicação de tarjas pretas.
+> ![Tela Localizar e marcar](../img/tela-sigilodoc1-1.gif)
+
+Na aba **Remover marcas** é possível retirar marcas individualmente ou **todas de uma vez**.
+
+### Aplicar as tarjas
+
+1. Abra **Gerenciar marcas de sigilo do documento**;
+2. Clique em **Aplicar tarja de sigilo**;
+3. Todas as marcas viram tarjas pretas.
+
+> ![Tela Aplicar tarjas](../img/tela-sigilodoc2.gif)
+
+> **Atenção:** enquanto o editor estiver aberto, **Desfazer** (`Ctrl + Z`) ainda reverte as tarjas. **Depois de salvar e sair do editor, as marcas tarjadas não podem mais ser revertidas** — o texto original se perdeu nessa versão.
+
+### Como ativar
+
+Os botões aparecem sempre no editor do SEI quando o SEI Pro está instalado.
+
+### Bom saber
+
+* A busca automática encontra **e-mails e CPFs**. Nomes, endereços, RG e outros dados precisam ser marcados à mão ou pela busca de texto. **Sempre revise o documento inteiro** antes de publicar.
+* Para tarjar **PDFs** e outros arquivos anexados, use [Tarjar PDF, nas Ferramentas de PDF](../pages/FERRAMENTASPDF.md).
+* A janela de gerenciamento tem um **Guia rápido** com o passo a passo.
 
 ## Próximo item
 
-> [Duplicar documentos com 1 click](../pages/DUPLICARDOC.md)
+> [Ditado no editor de documentos](../pages/DITADO.md)

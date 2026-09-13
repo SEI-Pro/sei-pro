@@ -2,6 +2,8 @@
 
 ## Carregando as chaves de acesso de outro usuário
 
+> **Funcionalidade descontinuada.** A ferramenta de projetos dependia de uma API do Google que foi desativada, e por isso não funciona nas versões atuais do SEI Pro. A opção *Gerenciar Projetos* ainda aparece na aba **Complementos** das configurações, mas não tem efeito. Esta página é mantida apenas como registro.
+
 Caso ainda não possua o **SEI Pro**, instale a extensão para o Google Chrome em:
 
 > [https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj](https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj)
@@ -58,4 +60,4 @@ Caso apareça a mensagem **"Conectado! Clique para desconectar Base de Dados (Se
 
 ## Próximo item
 
-[Criando e Editando projetos](../pages/PROJETOSEDIT.md)
+> [Gerenciar projetos](../pages/PROJETOS.md)

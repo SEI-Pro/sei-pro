@@ -2,44 +2,62 @@
 
 ## ![SEI Pro Enviar documentos](../img/icon-uploaddocs.png) Enviar múltiplos documentos externos
 
-Essa funcionalidade adiciona à árvore de processos do SEI a possibilidade de enviar múltiplos documentos externos.
+Para juntar um PDF a um processo, o SEI pede um formulário por arquivo. Com o SEI Pro, basta **arrastar os arquivos para a árvore do processo**: eles são enviados de uma vez, com o tipo, a data e o nome já preenchidos a partir do próprio arquivo.
 
-> ![Tela Enviar documentos](../img/tela-uploaddocs.gif)  
+> ![Tela Enviar documentos](../img/tela-uploaddocs.gif)
 
-Arrastar um ou vários arquivos para a árvore de processos para adicioná-los automaticamente ao SEI.
+### Como usar
 
-Caso o nome do arquivo contenha um dos tipos de documento aceitos pelo SEI, ele será selecionado automaticamente. Caso contrário, será selecionado o tipo **Anexo**.
+1. Abra o processo;
+2. **Arraste um ou vários arquivos** do computador para cima da árvore de documentos;
+3. Acompanhe o envio: cada arquivo mostra uma barra de progresso e, ao final, o número SEI gerado;
+4. A árvore é atualizada com os novos documentos.
 
-|  Nome do Arquivo         |  Tipo de Documento   |  Número / Nome na Árvore  |
-| -----------------------  |  ------------------- |  ------------------------ | 
-|  Relatório de Gestão.zip |  Relatório           |  de Gestão                |
-|  Captura de Tela.png     |  Anexo               |  Captura de Tela          |
+### Como os campos são preenchidos
 
-Todos os documentos são adicionados com o nível de acesso **Público** e formato **Nato-digital**. 
+| Campo do SEI | De onde vem |
+| ------------ | ----------- |
+| **Tipo do documento** | Do início do nome do arquivo, quando ele coincide com um tipo aceito pelo SEI. Se não coincidir, vale o tipo padrão configurado; se não houver, **Anexo** |
+| **Número / Nome na árvore** | O restante do nome do arquivo |
+| **Data do documento** | A data da última modificação do arquivo; se não houver, a data de hoje |
+| **Formato** | **Nato-digital**, ou o formato configurado nos valores padronizados |
+| **Nível de acesso** | **Público**, ou o nível e a hipótese legal configurados nos valores padronizados |
 
-Caso disponível, a data de última modificação do arquivo é adicionada ao campo **Data do Documento**. Caso contrário, a data atual é adicionada.
+Exemplos:
 
-### Ordernando documentos
+| Nome do arquivo | Tipo | Nome na árvore |
+| --------------- | ---- | -------------- |
+| `Relatório de Gestão.pdf` | Relatório | de Gestão |
+| `Ofício 32-2026.pdf` | Ofício | 32-2026 |
+| `Captura de Tela.png` | Anexo | Captura de Tela |
 
+Os valores usados quando o arquivo não informa nada são definidos em [Valores padronizados ao criar documentos](../pages/VALDEFAULT.md).
 
-É possível ordernar os documentos antes do envio ao SEI.
+### Conferir e ordenar antes de enviar
 
-> ![Tela Enviar documentos](../img/tela-uploaddocs2.gif) 
+Por padrão, o envio começa assim que você solta os arquivos. Se preferir **revisar a lista e escolher a ordem** em que os documentos entram na árvore:
 
-Para isso, ative a opção **Ordernar documentos na árvore antes de enviar (Não enviar automaticamente)** nas configurações do SEI Pro.
+1. Nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), ligue **Ordenar documentos na árvore antes de enviar (Não enviar automaticamente)** — ela aparece logo abaixo da opção desta função;
+2. Solte os arquivos na árvore;
+3. Arraste os itens da lista para a ordem desejada e confirme o envio.
 
-Clique no ícone do **SEI Pro** na barra de extensões do Google Chrome:
+> ![Tela Ordenar antes de enviar](../img/tela-uploaddocs2.gif)
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" width="490"/>
+### O mesmo arquivo em vários processos
 
-Caso o ícone não esteja visível, fixe-o na barra de extensões.
+Na tela **Controle de Processos**, marque vários processos e use o botão **Enviar documentos em processos** para juntar os mesmos arquivos a todos eles — veja [Novos botões na barra de ações](../pages/BARRAACOES.md).
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" width="473"/>
+### Como ativar
 
-Ou cole o link na barra de endereços do navegador:
+A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Árvore e Visualização de Documentos**, opção **Enviar Múltiplos Documentos Externos**.
 
-> `chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html`
+### Bom saber
+
+* Valem as **regras do seu órgão** para documentos externos: extensões aceitas e tamanho máximo. Um arquivo fora dessas regras é recusado com a mensagem do SEI.
+* Muitos órgãos **não aceitam** arquivos do Word ou Excel (`.doc`, `.docx`, `.xls`, `.xlsx`). Converta para PDF antes.
+* Precisa reduzir, dividir ou tarjar o PDF antes de juntar? Use as [Ferramentas de PDF](../pages/FERRAMENTASPDF.md).
+* Acentos e caracteres especiais no nome do arquivo são simplificados no envio.
 
 ## Próximo item
 
-> [Menu Suspenso](../pages/MENUSUSPENSO.md)
+> [Valores padronizados ao criar processos e documentos](../pages/VALDEFAULT.md)

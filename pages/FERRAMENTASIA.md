@@ -1,66 +1,87 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Ferramentas IA](../img/icon-ferramentasia.png) Ferramentas de Inteligência Artificial (ChatGPT)
+## ![SEI Pro Ferramentas IA](../img/icon-ferramentasia.png) Ferramentas de Inteligência Artificial (ChatGPT e Gemini)
 
-Aproveite todo o potencial da inteligência artificial do ChatGPT diretamente no editor de documentos do SEI.
+Use o **ChatGPT (OpenAI)** ou o **Gemini (Google)** direto no SEI: peça um resumo do processo, reescreva um parágrafo em linguagem simples, procure erros gramaticais ou dados pessoais num texto, e leve a resposta para um documento — sem copiar e colar entre sistemas.
 
-Utilize alguns dos nossos prompts de integração predeterminados...
+> ![Tela Ferramentas IA](../img/tela-ferramentasia.gif)
 
-|  Tipo de Interação  |
-| ------------------- | 
-|  Discorra sobre  | 
-|  Resuma em linguagem simples o seguinte trecho:  | 
-|  Reescreva o seguinte trecho:  | 
-|  Descubra a base legal para o seguinte tema:  | 
-|  Traga o texto legal, sem explicações, do seguintes dispositivo legal:  | 
-|  Traduza para português a frase:  | 
-|  Faça uma análise crítica sobre o seguinte tópico:  | 
-|  Liste até 10 sinônimos em português para a palavra:  | 
-|  Conclua o seguinte texto:  | 
-|  Extraia as palavras-chave deste texto:  | 
-|  Converta minha nota curta em uma ata de reunião:  | 
-|  Faça um resumo em tópicos do seguinte texto:  | 
-|  Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumentação sobre o seguinte tema:  | 
-|  Amplie e reescreva o texto a seguir, em voz ativa, com correções gramaticais, citando as fontes e adicinando coesão às orações:  | 
-|  Crie um Parecer técnico detalhado, cite fontes e legislação, traga argumentos a favor e contrários sobre o tema:  |
+> **Atenção:** o texto que você envia é processado pelos servidores da **OpenAI** ou do **Google**, fora do seu órgão. **Não envie informações sigilosas, restritas ou dados pessoais.** Antes de usar, verifique se o seu órgão permite o uso desses serviços.
 
-.. ou apenas selecione a última opção `-` e descreve qual a instrução que gostaria de perguntar ao Chatbot.
+### Onde fica
 
-Ainda é possível adicionar um texto de exemplo, para começar a explorar as potencialidades da ferramenta.
+| Onde | O que faz |
+| ---- | --------- |
+| Barra de botões do processo › **Ferramentas de IA** | Abre o chat, com acesso aos documentos do processo |
+| Barra do editor de documentos › **Inserir texto de inteligência artificial** | Trabalha sobre o **texto selecionado** ou **todo o documento** e insere a resposta no editor |
 
-> ![Tela Ferramentas IA](../img/tela-ferramentasia.gif) 
+### Primeiro uso
 
-Para utilizar a API do ChatGPT será preciso se cadastrar na plataforma.
+1. Clique em **Ferramentas de IA** e escolha a plataforma: **ChatGPT (OpenAI)** ou **Gemini (Google)**;
+2. Leia o termo de uso responsável e clique em **Estou ciente e entendo os riscos**;
+3. Cadastre a sua **chave de API** (veja abaixo como obter) e clique em **Salvar**;
+4. Clique em **Recarregar**.
 
-Siga o passo-a-passo abaixo para cadastrar suas credenciais de acesso:
+### Como obter a chave
 
-1. Acesse o site do OpenAI ([https://beta.openai.com/](https://beta.openai.com/)) e clique em "Sign Up" no canto superior direito da tela.
+**ChatGPT (OpenAI)**
 
-2. Preencha o formulário de cadastro com seus dados pessoais e crie uma senha.
-É possível logar com sua conta Google ou Microsoft.
+1. Acesse [platform.openai.com](https://platform.openai.com/) e crie uma conta (é possível entrar com Google ou Microsoft);
+2. Confirme o e-mail e o celular;
+3. No painel, abra **API Keys** e clique em **Create new secret key**;
+4. Copie a chave — ela só é exibida uma vez;
+5. O uso da API é **pago** e cobrado pela OpenAI. Cadastre um meio de pagamento em **Billing** e consulte os [preços](https://openai.com/pricing).
 
-3. Verifique seu e-mail e clique no link de confirmação enviado pela OpenAI.
+**Gemini (Google)**
 
-4. Verifique seu celular e adicione o código de verificação enviado por SMS.
+1. Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey) com uma conta Google;
+2. Aceite os termos e clique em **Criar chave de API**;
+3. Copie a chave e guarde-a em local seguro.
 
-5. Faça login na sua conta OpenAI.
+> A chave é pessoal, como uma senha. Não a compartilhe. Para apagá-la do navegador, use **Apagar chave de API** nas configurações da ferramenta.
 
-6. Clique em `"Upgrade"` no menu do lado direito da tela ou acesse o endereço [https://beta.openai.com/account/billing/overview](https://beta.openai.com/account/billing/overview).
+### O que dá para pedir
 
-7. Selecione a opção `"USER > Create API Key"`.
+Escreva o que quiser na caixa de mensagem, ou use um dos comandos prontos:
 
-8. Clique em `"Create new secret key"` para gerar sua chave de API.
+| Comando | Para que serve |
+| ------- | -------------- |
+| Resuma | Resume o texto |
+| Reformule em linguagem simples | Reescreve em linguagem acessível ao cidadão |
+| Amplie o conteúdo | Desenvolve um texto curto |
+| Crie uma estrutura de tópicos | Organiza o texto em tópicos |
+| Converta em uma ata de reunião | Transforma anotações em ata |
+| Crie um parecer técnico | Monta um parecer sobre o tema |
+| Descubra a base legal do tema | Sugere normas relacionadas — **sempre confira** |
+| Discorra sobre | Escreve sobre um assunto |
+| Faça uma análise crítica sobre o tema | Aponta pontos fortes e fracos |
+| Encontre erros gramaticais | Revisa o português |
+| Encontre dados sensíveis (LGPD) | Aponta dados pessoais no texto |
+| Extraia as palavras-chave | Lista os termos principais |
+| Sugira um encaminhamento | Propõe o próximo passo |
+| Traduza para o português | Traduz o texto |
 
-9. Será adicionado um crédito promocional de $18, para utilização em até 4 (quatro) meses.
-Caso deseje prosseguir após isso, adicione suas informações de pagamento no menu `"Billing"`.
-Consulte condições de precificação da plataforma em: [https://openai.com/api/pricing/](https://openai.com/api/pricing/)
+Na janela do processo, você também pode:
 
-10. Copie sua chave secreta de API, pois ela será necessária para fazer chamadas à API. 
-Cole-a na caixa de texto que aparecerá ao clicar no ícone [Ferramentas IA](../img/icon-ferramentasia.png).
+* **Resumir todo o processo** ou **adicionar documentos do processo** ao pedido;
+* **Pesquisar em outro processo**, informando o número;
+* **Criar documento SEI** a partir da resposta, escolhendo o tipo de documento;
+* **Ver Histórico** das conversas.
 
-> **ATENÇÃO: Os dados são processados pelo serviço OpenAI. Não envie informações restritas ou sigilosas.**
+### Configurações avançadas
 
-> 
+Para quem conhece os modelos de linguagem: é possível escolher o **modelo**, a **temperatura** (criatividade), o **comprimento máximo** da resposta, o **Top P**, as **penalidades de frequência e presença** e uma **instrução do sistema**. **Resetar configurações** volta aos valores padrão.
+
+### Como ativar
+
+A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Editor de Texto**, opção **Ferramentas de Inteligência Artificial**.
+
+### Bom saber
+
+* O SEI Pro **não intermedeia** as mensagens: elas vão do seu navegador direto para a OpenAI ou o Google, com a sua chave. O SEI Pro não recebe financiamento dessas empresas.
+* A IA **erra**, inventa normas e cita fontes que não existem. **Toda resposta precisa de revisão humana**, e a responsabilidade pelo documento assinado é de quem assina.
+* A chave fica guardada nas configurações da extensão, neste navegador (aba **Base de Dados**).
+
 ## Próximo item
 
-> [PAGE](../pages/PAGE.md)
+> [Gerar Certidão de Documento Oficial com Sigilo (LAI e LGPD)](../pages/CERTIDAOSIGILO.md)

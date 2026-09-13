@@ -1,45 +1,62 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Ações em Lote](../img/icon-acoeslote.png) Documentos em Lote
+## ![SEI Pro Documentos em Lote](../img/icon-acoeslote.png) Documentos em Lote
 
-Essa ferramenta adiciona ao SEI a funcionalidade de inserção de documentos em lote em um processo utilizando um arquivo .CSV como base de dados.
+Cria **vários documentos de uma vez** a partir de um **modelo** e de uma **planilha**. É a "mala direta" do SEI: um ofício para cada município, uma notificação para cada empresa, uma portaria para cada servidor — cada um com os dados da sua linha da planilha.
 
-> ![Tela Estilo de Tabelas](../img/tela-documentoslote.gif) 
+> ![Tela Documentos em Lote](../img/tela-documentoslote.gif)
 
-Antes de utilizar a extensão propriamente dita, serão necessárias duas preparações prévias, a saber:
+### Antes de começar: prepare o modelo e a planilha
 
-No mesmo processo onde ocorrerão as replicações, deverá haver um documento modelo contendo campos dinâmicos seguinte padrão:
+**1. O documento modelo.** No mesmo processo em que os documentos serão criados, escreva um documento com o texto comum e, no lugar das informações que mudam, coloque **campos entre dois pares de cerquilhas**:
 
-`##nome_do_campo##`
+> Ao Senhor **##nome##**, Prefeito de **##municipio##**, ...
 
-1. Utilizando um editor como: MS Excel, Libre Calc, Google Planilhas, produza uma planilha contendo a base de dados onde a extensão buscará os dados para publicação. 
+Também é possível usar como modelo um **Texto Padrão** da unidade.
 
-> Os nomes dos cabeçalhos da planilha deverão coincidir exatamente com os nomes inseridos nos campos dinâmicos correspondentes no documento modelo do SEI. 
-> 
-> A planilha deverá ser salva no formato .CSV
+**2. A planilha.** No Excel, LibreOffice Calc ou Google Planilhas, monte uma tabela em que:
 
-2. Uma vez realizados os preparativos iniciais, basta clicar no ícone da ferramenta (), localizado na barra de ícone da tela inicial do processo;
+* a **primeira linha** traz os nomes dos campos, **exatamente iguais** aos do modelo, sem as cerquilhas (`nome`, `municipio`...);
+* **cada linha seguinte** vira um documento.
 
-3. Selecione o documento modelo previamente preparado para ser replicado;
+| nome | municipio |
+| ---- | --------- |
+| Maria Souza | Campinas |
+| João Lima | Santos |
 
-4. Na próxima janela será mostrada a análise do documento modelo identificando os campos dinâmicos detectados. Caso esteja conforme esperado clique em “OK”;
+Salve no formato **CSV** (*Arquivo › Salvar como › CSV*).
 
-> Selecione planilha no formato `.CSV` previamente preparada para ser a base de dados da replicação;
+### Como usar
 
-5. Na próxima janela será mostrada a análise da planilha de base identificando os cabeçalhos detectados e a quantidade de registros. Caso esteja conforme esperado, clique em “OK”;
+A ferramenta tem seis etapas:
 
-6. Na próxima tela verifique o cruzamento de dados entre Base de Dados X Documento Modelo. 
+1. **Documento modelo — Seleção:** abra o processo, clique em **Iniciar Documentos em Lote** na barra de botões e escolha, na árvore, o documento modelo (ou um Texto Padrão). Clique em **Avançar**;
+2. **Documento modelo — Campos dinâmicos:** confira os campos encontrados no modelo;
+3. **Base de dados — Upload:** escolha o arquivo CSV;
+4. **Base de dados — Cabeçalhos e registros:** confira as colunas e a quantidade de linhas encontradas;
+5. **Cruzamento de dados:** veja como cada coluna da planilha preenche cada campo do modelo. Aqui você também escolhe:
+   * **Nome do documento na árvore de processos** — qual coluna da planilha dará nome a cada documento;
+   * **Criar cada documento em um novo processo** — em vez de criar todos no processo atual, abre um processo para cada linha;
 
-> É também possível selecionar quais nomes os documentos receberão na árvore de processo, caso o tipo de documento a ser replicado exija a inserção de um nome através do campo “Número”, presente no formulário de inserção de novo documento.
-> 
-> Existe uma tratativa de caracteres especiais (letras acentuadas, símbolos, etc.) na escolha no nome dos documentos na árvore, uma vez que a codificação adotada pelo SEI não é um padrão seguido mundialmente na Web. 
-> 
-> Para tanto, ao serem detectados caracteres deste tipo nos nomes, será apresentado uma mensagem ao usuário informando esta condição e requerendo sua autorização para proceder.
+   Clique em **Iniciar**;
+6. **Criando:** acompanhe o progresso. Ao final aparece *Progresso finalizado!* e uma tabela com cada linha da planilha, o documento gerado, o número SEI e o link — que pode ser **baixada** ou **copiada**. A árvore é atualizada com os novos documentos.
 
-7. Ao confirmar a tela anterior, e não houverem erros no procedimento, será aberta uma janela que indicará o progresso da replicação. 
+Os botões **Voltar** e **Cancelar** permitem corrigir uma etapa anterior ou desistir.
 
-8. Finalizado o procedimento, a tela será atualizada e os novos documentos aparecerão na árvore. 
+> A ferramenta foi construída a partir do código-fonte do **PluriDocs SEI!**, gentilmente cedido por tcgontijo.
+
+### Como ativar
+
+A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Árvore e Visualização de Documentos**, opção **Documentos em Lote**.
+
+### Bom saber
+
+* **Os nomes dos campos precisam ser escritos exatamente da mesma forma** no modelo e na planilha. Evite acentos e espaços nos nomes (`municipio`, `data_oficio`). Um campo sem correspondência fica sem preenchimento.
+* A codificação do CSV (UTF-8 ou a do Excel antigo) é detectada automaticamente, para os acentos saírem corretos.
+* Se o nome dos documentos na árvore tiver acentos ou símbolos, a ferramenta avisa antes de continuar, porque nem todos os caracteres são aceitos pelo SEI nesse campo.
+* Os documentos são criados **sem assinatura**. Para assinar todos de uma vez, use [Ações em Lote](../pages/ACOESEMLOTE.md).
+* Faça um teste com uma planilha de duas ou três linhas antes de gerar um lote grande.
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Comparador de Documentos](../pages/COMPARARDOCUMENTOS.md)

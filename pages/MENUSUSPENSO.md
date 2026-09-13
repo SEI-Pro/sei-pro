@@ -2,24 +2,27 @@
 
 ## ![SEI Pro Menu Suspenso](../img/icon-menususpenso.png) Menu Suspenso
 
-Essa funcionalidade torna o menu lateral do SEI suspenso na tela, otimizando o espaço útil da sua área de trabalho.
+O menu lateral do SEI ocupa uma faixa fixa da tela, mesmo quando você não está usando. Com o **Menu Suspenso**, ele fica **escondido e aparece por cima do conteúdo** só quando você precisa — as tabelas e documentos ganham a largura inteira da janela.
 
-> ![Menu Suspenso](../img/tela-menususpenso.gif)  
+> ![Menu Suspenso](../img/tela-menususpenso.gif)
 
-Por padrão, o **Menu Suspenso** vem desativado. Após instalar o SEI Pro, ative-o nas configurações da extensão:
+### Como usar
 
-Clique no ícone do **SEI Pro** na barra de extensões do Google Chrome:
+1. Clique no ícone de menu (☰), ao lado do logotipo do SEI, para abrir o menu;
+2. Escolha a opção desejada;
+3. Clique de novo no ícone, ou fora do menu, para escondê-lo.
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets.png" width="490"/>
+O SEI Pro lembra se você deixou o menu aberto ou fechado e mantém a escolha nas próximas telas.
 
-Caso o ícone não esteja visível, fixe-o na barra de extensões.
+### Como ativar
 
->  <img src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" data-canonical-src="https://github.com/pedrohsoaresadv/sei-pro/raw/master/img/tela-seisheets2.png" width="473"/>
+A função vem **desligada** de fábrica. Para ligar, abra as [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Controle de Processos**, e marque **Menu Suspenso**. Clique em **Salvar** e recarregue o SEI.
 
-Ou cole o link na barra de endereços do navegador:
+### Bom saber
 
-> `chrome-extension://cnkocjlifhcemdapiomhehhmjmlmmgem/html/options.html`
+* No SEI 4 e 5, que já permitem recolher o menu, a função reaproveita o botão do próprio SEI e esconde o ícone nativo de exibir/ocultar menu, para não haver dois botões fazendo a mesma coisa.
+* Veja também [Ordenar itens do menu](../pages/ORDERNARMENU.md), para deixar as opções que você mais usa no topo.
 
 ## Próximo item
 
-> [Filtrar e ordernar tabelas ao clicar no seu cabeçalho](../pages/ORDERNARTABELA.md)
+> [Ordenar itens do menu](../pages/ORDERNARMENU.md)

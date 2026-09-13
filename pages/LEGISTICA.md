@@ -2,7 +2,7 @@
 
 ## ![SEI Pro Enumerar Normas (Legística)](../img/icon-legistica.png) Enumerar Normas (Legística)
 
-Essa ferramenta adiciona ao [Sistema Eletrônico de Informações (SEI)](https://softwarepublico.gov.br/social/sei) a função de enumerar normas conforme as regras de redação legislativa da [Lei Complementar nº 95, de 26 de fevereiro de 1998](http://www.planalto.gov.br/ccivil_03/leis/lcp/lcp95.htm) e do [Decreto nº 9.191, de 1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/decreto/D9191.htm).
+Essa ferramenta adiciona ao editor do SEI a função de enumerar normas conforme as regras de redação legislativa da [Lei Complementar nº 95, de 26 de fevereiro de 1998](http://www.planalto.gov.br/ccivil_03/leis/lcp/lcp95.htm) e do [Decreto nº 9.191, de 1º de novembro de 2017](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2017/decreto/D9191.htm).
 
 Criada a partir da necessidade de revisão e consolidação dos atos normativos inferiores a decreto ([Decreto nº 10.139, de 28 de novembro de 2019](http://www.planalto.gov.br/ccivil_03/_ato2019-2022/2019/decreto/D10139.htm)), a ferramenta enumera automaticamente títulos, capítulos, seções, artigos, parágrafos, incisos e alíneas de suas normas criadas a partir do editor de texto do SEI.
 
@@ -10,9 +10,9 @@ Adicionou um novo artigo bem no meio do documento? Não se preocupe, fazemos a e
 
 ## Como utilizar?
 
-No editor de textos do SEI, ative a enumeração automática do **SEI Legis §!** no botão ![icone](/img/icon-cke.png) 
+No editor de textos do SEI, clique no botão **Enumerar norma** (**SEI Legis §!**) para ativar a enumeração automática.
 
-![Tela 1](../img/tela-legistica1_.gif) 
+![Tela 1](../img/tela-legistica1.gif) 
 
 As enumerações digitadas manualmente serão convertidas em referências dinâmicas.
 
@@ -30,7 +30,7 @@ As enumerações digitadas manualmente serão convertidas em referências dinâm
 
 ## Novos dispositivos
 
-Para criar nos dispositivos, inicie seu texto com a **referência dinâmica** correspondente:
+Para criar novos dispositivos, inicie seu texto com a **referência dinâmica** correspondente:
 
 Atualmente são suportadas as seguintes referências dinâmicas:
 
@@ -45,7 +45,7 @@ Atualmente são suportadas as seguintes referências dinâmicas:
 |  Parágrafos |  `§` |  `Parágrafo único.` ou `§ 1º`, `§ 2º`, `§ 3º` ... |
 |  Incisos |  `Inc.` |  `I -`, `II -`, `III -`, `IV -` ... |
 |  Alíneas |  `Alin.` |  `a)`, `b)`, `c)`, `d)` ... |
-|  Iitens |  `Item.` |  `1.`, `2.`, `3.`, `4.` ... |
+|  Itens |  `Item.` |  `1.`, `2.`, `3.`, `4.` ... |
 
 
 > Ao utilizar `ANEXO.`, todas as demais referências reiniciarão sua contagem.
@@ -176,6 +176,16 @@ Estão disponíveis as seguintes referências nominais:
 |  `@CPC` |  [Código de Processo Civil](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105.htm) |
 |  `@EstatutoPCD` |  [Estatuto da Pessoa com Deficiência](http://www.planalto.gov.br/CCIVIL_03/_Ato2015-2018/2015/Lei/L13146.htm) |
 
+## Configuração
+
+Nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Editor de Texto**, a opção **Manter o estilo de parágrafo original ao aplicar a formatação de enumeração normativa (legística)** (desligada de fábrica) preserva o estilo de parágrafo que você já tinha escolhido, em vez de aplicar o estilo padrão de cada tipo de dispositivo.
+
+## Bom saber
+
+* A Legística também usa `#` (referências cruzadas) e `@` (referências externas). Se a [Escrita interativa](../pages/ESCRITAINTERATIVA.md) estiver ligada, os dois menus podem aparecer.
+* Os links para a legislação federal apontam para o site do Planalto. Para inserir normas por pesquisa, veja também [Adicionar link de legislação](../pages/LINKLEGIS.md).
+* Para reiniciar a numeração em partes independentes do documento, veja [Quebra de seção](../pages/QUEBRASECAO.md).
+
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Adicionar estilo à tabela, duplicar e ordenar tabelas](../pages/ESTILOTABELA.md)

@@ -2,14 +2,17 @@
 
 ## ![SEI Pro Salvamento Automático](../img/icon-salvamentoautomatico.png) Salvar documentos automaticamente
 
-Essa ferramenta adiciona ao editor de texto SEI a possibilidade de salvar automaticamente do documento após um período pré-determinado.
+> **Função temporariamente indisponível.** O salvamento automático foi retirado do editor na versão 1.0 do SEI Pro e ainda não voltou. A opção **Intervalo em minutos para o salvamento automático** continua visível nas configurações, mas, no momento, não tem efeito.
 
-> ![Tela Salvamento Automático](../img/tela-salvamentoautomatico.gif) 
+A proposta da função é salvar o documento em edição a cada intervalo de tempo definido, evitando perder o texto se o navegador fechar ou a sessão do SEI expirar.
 
-Essa funcionalidade não vem ativada por padrão no **SEI Pro**, sendo necessário ativá-la na barra de ferramentas do **Editor do SEI**.
+> ![Tela Salvamento Automático](../img/tela-salvamentoautomatico.gif)
 
-Definir o intervalo de salvamento automático para **0** irá desativar a funcionalidade. 
+### Enquanto isso
+
+* Salve com frequência pelo botão **Salvar** do editor;
+* Antes de sair para almoço ou reunião, salve o documento: a sessão do SEI expira e o texto não salvo se perde.
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Configurações do SEI Pro: ligar e desligar funções](../pages/DESATIVARFUNCOES.md)

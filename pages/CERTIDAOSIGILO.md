@@ -2,23 +2,40 @@
 
 ## ![SEI Pro Certidão Sigilo](../img/icon-certidaosigilo.png) Gerar Certidão de Documento Oficial com Sigilo
 
-Essa ferramenta adiciona ao SEI a possibilidade de gerar certidão de documento oficial com restrição legal de partes sob sigilo.
+Quando um documento tem **partes protegidas por sigilo** — dados pessoais, informações comerciais —, a Lei de Acesso à Informação garante o acesso ao restante do conteúdo por meio de **certidão, extrato ou cópia com a parte sigilosa ocultada**. Esta função gera essa certidão no próprio SEI, com um clique.
 
-> ![Tela Parágrafos Numerados](../img/tela-certidaosigilo.gif) 
+> ![Tela Certidão com sigilo](../img/tela-certidaosigilo.gif)
 
-Esse funcionalidade possibilita que seja garantido o acesso efetivo a documentos públicos, conforme preconizado na [Lei nº 12.527, de 18 de novembro de 2011](http://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm), que estabelece, em seu artigo 7º, §2º, que:
+A [Lei nº 12.527, de 18 de novembro de 2011](http://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm), estabelece no art. 7º, § 2º:
 
-> Art. 7º O acesso à informação de que trata esta Lei compreende, entre outros, os direitos de obter:
-> (...)
-> §2º Quando não for autorizado acesso integral à informação, por ser ela parcialmente sigilosa, é assegurado o acesso à parte não sigilosa por meio de certidão, extrato ou cópia com ocultação da parte sob sigilo.
-> (...)
+> Quando não for autorizado acesso integral à informação, por ser ela parcialmente sigilosa, é assegurado o acesso à parte não sigilosa por meio de certidão, extrato ou cópia com ocultação da parte sob sigilo.
 
-Dessa forma, o servidor(a) público(a) em exercício apõe sua assinatura e confere fé pública a documento inicialmente restrito, confirmando que a versão gerada (certidão) se trata de cópia fiel da documentação original, havendo sido ocultadas (tarjadas) exclusivamente as informações protegidas por sigilo legal, assegurando a fidelidade da informação pública. 
+### Como usar
 
-Assim, a versão criada (certidão) passa a coexistir com o documento integral criado com o amparo da citada Lei.
+1. Na árvore do processo, clique no documento original — ele precisa ser **gerado no SEI** e estar **assinado**;
+2. Na barra de botões do documento, clique em **Gerar Certidão de Documento Oficial com Sigilo**;
+3. O SEI Pro cria um novo documento — a certidão — com uma **cópia fiel do conteúdo** do original;
+4. No editor, selecione os trechos sigilosos e use o botão de **tarja** da barra do editor para ocultá-los (veja [Marcas de sigilo e tarjas](../pages/SIGILODOC.md));
+5. Salve e assine a certidão.
 
-A cópia do documento inserida na certidão fica bloqueada para edição pelo servidor que a certifica, podendo apenas adicionar tarjas de sigilo por meio de botão exclusivo disponível na barra de formatação do editor de texto do SEI.
+Ao assinar, o servidor atesta com fé pública que a certidão é cópia fiel do original, com a ocultação **apenas** das informações protegidas por lei. A certidão passa a existir ao lado do documento integral, que continua restrito.
+
+### Configuração
+
+Nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Árvore e Visualização de Documentos**:
+
+| Opção | Para que serve |
+| ----- | -------------- |
+| **Gerar Certidão de Documento Oficial com Sigilo** | Liga ou desliga o botão. Vem **ligada** de fábrica |
+| **Nome do tipo de documento do SEI da Certidão** | O tipo de documento que será usado para criar a certidão — por exemplo, *Certidão*. Deve ser um tipo que exista no SEI do seu órgão |
+
+### Bom saber
+
+* A cópia do conteúdo original dentro da certidão fica **bloqueada para edição**: o servidor que certifica só consegue **acrescentar tarjas**, e não alterar o texto.
+* O botão só aparece em documentos **gerados no SEI e assinados**.
+* Nas tarjas, o texto ocultado é **substituído** — ele não fica escondido por baixo, e não pode ser recuperado a partir da certidão.
+* Para tarjar arquivos PDF (documentos externos), use [Tarjar PDF, nas Ferramentas de PDF](../pages/FERRAMENTASPDF.md).
 
 ## Próximo item
 
-> [Enviar múltiplas imagens, formatar e editar opções avançadas](../pages/EDITARIMAGENS.md)
+> [Abrir em nova aba e baixar documento em Word ou HTML](../pages/BAIXARDOCUMENTO.md)

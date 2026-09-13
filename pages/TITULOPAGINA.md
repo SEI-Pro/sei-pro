@@ -2,17 +2,26 @@
 
 ## ![SEI Pro Título da página](../img/icon-titulopagina.png) Alterar título da página
 
-Essa funcionalidade altera o título da página do SEI, personalizando com o assunto e número do processo.
+Com várias abas do SEI abertas, todas mostram o mesmo título — e é difícil achar a certa. O SEI Pro troca o título da aba pela **especificação e número do processo** que está aberto nela.
 
-> ![Tela Estilo de Tabelas](../img/tela-titulopagina.gif) 
+> ![Tela Título da página](../img/tela-titulopagina.gif)
 
-Nenhuma ação é requerida. Ao instalar a extensão o título da página é alterado no seguinte padrão: 
+### Como fica o título
 
-|  Página do SEI  |  Formato |
-| ------------------- |  ------------------- | 
-|  Árvore de Processo |  `(Assunto do Processo)`  `SEI Processo (Número do Processo)`  |
-|  Edição de Documento |  `Editor:` `(Tipo de Documento)` `(Número SEI do Documento)` - `(Assunto do Processo)` `SEI Processo` `(Número do Processo)`  |
+| Página do SEI | Título da aba |
+| ------------- | ------------- |
+| Processo (árvore) | `Especificação do processo \| SEI - Processo 99906.713-630.000032/2025-82` |
+| Editor de documento | `Editor: Tipo e número do documento - Especificação do processo \| SEI - Processo 99906.713-630.000032/2025-82` |
+
+### Como ativar
+
+Não há nada a fazer: o título é alterado automaticamente sempre que o SEI Pro está instalado.
+
+### Bom saber
+
+* Nos favoritos do navegador, a página salva também recebe esse título.
+* O título é montado com os dados que o SEI Pro lê do processo. Com a opção [Desativar consultas adicionais](../pages/DESATIVACONSULTAS.md) ligada, ele permanece o do SEI.
 
 ## Próximo item
 
-> [Abrir, editar e remover hiperlinks](../pages/ABRIRLINKS.md)
+> [Endereços amigáveis em processos e documentos](../pages/URLAMIGAVEL.md)

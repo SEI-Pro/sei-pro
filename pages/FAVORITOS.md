@@ -2,63 +2,91 @@
 
 ## ![SEI Pro Favoritos](../img/icon-favoritos.png) Gerenciar processos favoritos
 
-Essa funcionalidade adiciona à página inicial do SEI um gestor de processos favoritos, exclusivo do usuário.
+Guarde num painel só seu os processos que você acompanha de perto — mesmo os que já saíram da sua unidade. Cada favorito pode ter **prazo**, **etiqueta colorida**, **categoria**, **localização no mapa** e uma **especificação** própria, e o painel aparece no alto da tela Controle de Processos.
 
-> ![Tela Favoritos](../img/tela-favoritos.gif) 
+> ![Tela Favoritos](../img/tela-favoritos.gif)
 
-Para que você possa favoritar seus processos, o SEI Pro utiliza o sistema de arquivos local (FileSystem API). 
+### Adicionar um favorito
 
-**ATENÇÃO: A falta de permissão do usuário na utilização desse recurso poderá ocasionar a perda de dados dos processos favoritos, caso o dados de cache do navegador sejam apagados.**
+* **Pela árvore do processo:** clique na **estrela** ao lado do número do processo, no alto da árvore;
+* **Pela tela Controle de Processos:** clique na **estrela** ao lado do processo, na tabela.
 
-## 1. Adicionando Etiquetas
+A estrela fica amarela e o processo passa a aparecer no painel **Favoritos**. Para retirar, clique de novo na estrela ou use **Remover favorito** no painel.
 
-Essa funcionalidade adiciona ao processo favorito uma etiqueta, podendo ser personalizada com cores e ícones.
+### O painel Favoritos
 
-> ![Tela Etiqueta](../img/tela-etiqueta.gif) 
+Na tela Controle de Processos, o painel mostra uma tabela com as colunas **Processo**, **Prazo**, **Etiqueta**, **Mapa**, **Especificação**, **Tipo de Processo** e **Categoria**.
 
-## 2. Adicionando Mapas
+No alto do painel:
 
-Essa funcionalidade adicionar e editar uma localização no mapa atravez do marcador ou fazendo uma busca por um lugar consolidade especifico.  
+| Controle | O que faz |
+| -------- | --------- |
+| ⚙ **Configurações** | Baixar e carregar a lista de favoritos (cópia de segurança) |
+| ↻ **Atualizar** | Recarrega as informações dos processos |
+| Caixa de categorias | Mostra só os favoritos de uma categoria |
+| **Baixar** / **Copiar** | Exporta a tabela para planilha ou área de transferência |
+| **Pesquisar** | Filtra a tabela |
+| **−** | Recolhe o painel |
 
-> ![Tela Mapa](../img/tela-mapa.gif) 
+Clique no cabeçalho de uma coluna para ordenar, ou arraste as linhas pela alça (≡) para definir uma ordem própria.
 
+> ![Tela Ordenar favoritos](../img/tela-classificacao-ordem.gif)
 
-## 3. Editando uma Especificação
+### Etiquetas
 
-Essa funcionalidade adiciona e ou altera uma especificação.  
+Marque o favorito com uma etiqueta de texto, com a cor e o ícone que preferir — por exemplo, *Aguardando manifestação* em laranja.
 
-> ![Tela Especificacao](../img/tela-especificacao.gif) 
+> ![Tela Etiqueta](../img/tela-etiqueta.gif)
 
-## 4. Classificando a Tabela e Movendo a Ordem dos Favoritos
+### Prazo
 
-São duas funcionalidades uma delas altera a ordem do processo favorito e a outra classificando a Tabela.
+Defina uma data para o favorito. A coluna **Prazo** mostra quanto falta ou quanto já passou.
 
-> ![Tela Categoria](../img/tela-classificacao-ordem.gif) 
+> ![Tela Prazo](../img/tela-prazo.gif)
 
-## 5. Adicionando Prazo ao Processo
+Em **Edição Avançada**, o prazo pode ser contado:
 
-Essa funcionalidade adiciona um prazo com uma data especifica ao processo.
+* a partir **da data de assinatura de um documento** do processo (por exemplo, a partir do ofício enviado);
+* a partir **de uma data específica**;
 
-> ![Tela Prazo](../img/tela-prazo.gif) 
+e o resultado pode ser exibido **em tempo relativo** ("há 3 semanas") ou **em número de dias**. Também é possível pedir um **aviso quando um novo documento for assinado** no processo.
 
-- [Edição Avançada] Essa funcionalidade permite uma edição avançada com várias funções tais como: Contar o tempo decorrido do processo a partir: Da data de assinatura de um documento, De uma data específica,Data referencial; Visualizar o resultado: Em tempo relativo, Em número de dias. Sinalizar a partir: Da assinatura de um novo documento. 
+> ![Tela Edição avançada do prazo](../img/tela-edicao-avancada-prazo.gif)
 
-> ![Tela Baixando](../img/tela-edicao-avancada-prazo.gif) 
- 
-## 6. Criando Categorias
+### Categorias
 
-Essa funcionalidade adiciona uma categoria ao processo favorito.
+Agrupe os favoritos em categorias — *Contratos*, *Fiscalização*, *Aguardando outras unidades* — e filtre o painel pela caixa de categorias.
 
-> ![Tela Categoria](../img/tela-categoria.gif) 
+> ![Tela Categoria](../img/tela-categoria.gif)
 
-## 7. Configurações: exportar e importar
+### Especificação
 
-- [Exportar | Importar ] Essa funcionalidade exportar os processos favoritos selecionados pelo usuário, como também permite importar os processos baixados pelo usuário.
+Escreva uma especificação só sua para o favorito, diferente da cadastrada no SEI — útil para lembrar do que se trata cada processo.
 
-> ![Tela Baixando](../img/Exportar-e-importar-1_.gif) 
+> ![Tela Especificação](../img/tela-especificacao.gif)
 
+### Mapa
 
+Associe um local ao favorito, clicando no mapa ou pesquisando um endereço. O botão **Mapa de favoritos** mostra todos os processos marcados num mapa só — útil para obras, fiscalizações e vistorias.
+
+> ![Tela Mapa](../img/tela-mapa.gif)
+
+### Cópia de segurança
+
+Em ⚙ **Configurações**, use **Baixar Favoritos** para salvar a lista num arquivo e **Carregar Favoritos** para restaurá-la — por exemplo, ao trocar de computador.
+
+> ![Tela Exportar e importar favoritos](../img/exportar-e-importar.gif)
+
+### Como ativar
+
+A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Controle de Processos**, opção **Processos Favoritos**.
+
+### Bom saber
+
+* **Os favoritos ficam guardados neste navegador, neste computador.** Eles não aparecem para outras pessoas nem em outra máquina. Se os dados de navegação forem apagados, a lista se perde — **baixe uma cópia de segurança de vez em quando**.
+* Para proteger melhor a lista, o SEI Pro também pede permissão para usar o armazenamento de arquivos do navegador. Se o painel mostrar o aviso de que o navegador *não autorizou o uso*, clique em **Re-autorize**.
+* As versões mais novas do SEI têm um recurso de favoritos próprio (menu **Favoritos** do SEI). Os dois são independentes: o favorito do SEI Pro não aparece no do SEI, e vice-versa.
 
 ## Próximo item
 
-> [Agrupar lista de processos por marcadores, tipo, responsável ou ponto de controle](../pages/AGRUPAR.md)
+> [Controle de Prazos](../pages/PRAZOS.md)

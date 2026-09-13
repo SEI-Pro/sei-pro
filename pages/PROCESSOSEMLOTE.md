@@ -50,4 +50,4 @@ Os processos são abertos **na unidade que estiver selecionada** no momento da e
 
 ## Próximo item
 
-> [Ações em Lote](../pages/ACOESEMLOTE.md)
+> [Ferramentas na tela de Pesquisa: visualização rápida, baixar e copiar resultados](../pages/PESQUISA.md)

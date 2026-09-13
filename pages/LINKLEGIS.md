@@ -1,12 +1,24 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Link de Legislação](../img/icon-linklegis.png) Adicionar link de legislação federal
+## ![SEI Pro Link de Legislação](../img/icon-linklegis.png) Adicionar link de legislação
 
-Essa funcionalidade adiciona ao editor de texto do SEI a inclusão de link de legislação federal
+Cite leis, decretos e outras normas **já com o link para o texto oficial**. Você informa o tipo e o número — ou pesquisa por palavra-chave — e o SEI Pro escreve a citação no formato correto, com o hiperlink para a norma publicada.
 
-> ![Tela Estilo de Tabelas](../img/tela-linklegis.gif) 
+> ![Tela Adicionar link de legislação](../img/tela-linklegis.gif) 
 
-As citações acompanham o hiperlink para a norma publicada no site do Planalto.
+### Como usar
+
+1. No editor, clique onde a citação deve entrar;
+2. Clique no botão **Adicionar link de legislação**;
+3. Escolha uma das abas:
+   * **Legislação Federal** — informe o tipo (lei, decreto, medida provisória...) e o número, ou pesquise;
+   * **Norma Infralegal** — escolha o órgão, o tipo e o número;
+   * **Lista de Normas** — escolha uma norma conhecida pelo nome, como o Código Civil;
+4. Clique em **Inserir**.
+
+As citações de legislação federal acompanham o hiperlink para a norma publicada no site do Planalto.
+
+> **Sobre a consulta:** para encontrar a norma e montar o link, o SEI Pro consulta o **servidor do SEI Pro** (`seipro.io`), enviando apenas o tipo, o número ou as palavras pesquisadas. O texto do seu documento não é enviado.
 
 ### Remissão aos atos normativos
 
@@ -22,7 +34,7 @@ Atualização: Agora é possível pesquisar a legislação federal publicadas po
 
 Digite mais de uma palavra-chave (separadas por espaço simples). Combine filtros por data ou tipo de ato.
 
-> ![Tela Estilo de Tabelas](../img/tela-linklegis2.gif) 
+> ![Tela Pesquisa de legislação](../img/tela-linklegis2.gif) 
 
 > Dica: Deixe todos os campos em branco e clique em **Pesquisar** para listar a legislação mais recente publicada pelo site do Planalto.
 
@@ -55,7 +67,7 @@ Atualmente estão disponíveis os seguintes normativos infralegais:
 |  [Resoluções do Cade](http://www.cade.gov.br/assuntos/assuntos/normas-e-legislacao/normas_legislacao/resolucao) |
 |  [Portarias do Cade](http://www.cade.gov.br/assuntos/assuntos/normas-e-legislacao/normas_legislacao/portarias) |
 
-Deseja adicionar as normas infralegais de outros órgãos? Colabore conosco ([pedrohsoares.adv@gmail.com](mailto:pedrohsoares.adv@gmail.com))
+Deseja adicionar as normas infralegais de outros órgãos? Sugira em [Issues no GitHub](https://github.com/pedrohsoaresadv/sei-pro/issues).
 
 ### Lista de Normas
 
@@ -100,6 +112,10 @@ Estão disponíveis as seguintes referências nominais:
 |  [Código de Processo Civil](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/L13105.htm) |
 |  [Estatuto da Pessoa com Deficiência](http://www.planalto.gov.br/CCIVIL_03/_Ato2015-2018/2015/Lei/L13146.htm) |
 
+### Como ativar
+
+O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
+
 ## Próximo item
 
-> [Primeira letra maiúscula (exceto artigos e preposições)](./LETRAMAIUSC.md)
+> [Adicionar link de documento público](../pages/DOCPUBLICO.md)

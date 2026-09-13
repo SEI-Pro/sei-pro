@@ -1,40 +1,60 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Editar Imagens](../img/icon-editarimagens.png) Enviar múltiplas imagens, formatar e editar opções avançadas
+## ![SEI Pro Editar Imagens](../img/icon-editarimagens.png) Enviar, formatar e editar imagens no editor
 
-Essa ferramenta adiciona ao editor de texto SEI a possibilidade de enviar múltiplas imagens arrastando e soltando.
+Coloque fotos e prints no documento **arrastando os arquivos para o editor**, ajuste tamanho, margens e alinhamento, e **edite a imagem ali mesmo** — recortar, girar, escrever, desfocar um dado, pôr marca d'água —, sem precisar de outro programa.
 
-> ![Tela Editar Imagens](../img/tela-editarimagens.gif) 
+> ![Tela Editar Imagens](../img/tela-editarimagens.gif)
 
-Ainda, é possível formatar e editar as imagens a partir de opções avançadas.
+### Enviar imagens
 
-> ![Tela Editar Imagens](../img/tela-editarimagens1.gif) 
+**Arraste** uma ou várias imagens do computador para dentro do texto. Elas entram no ponto onde você soltar.
 
-Ao clicar duas vezes sobre a imagem é possível ajustar os seguintes atributos
+> ![Tela Enviar imagens](../img/tela-editarimagens1.gif)
 
-| **Atributos** | **Valores** |
-| ------------------- | ------------------- |
-| Largura | Número inteiro positivo (px ou %) |
-| Altura | Número inteiro positivo (px ou %)  |
-| Margem Vertical | Número inteiro positivo (px)  |
-| Margem Horinzontal | Número inteiro positivo (px)  |
-| Borda | Número inteiro positivo (px) |
-| Largura Máxima | Número inteiro positivo (px ou %) |
-| Altura Máxima | Número inteiro positivo (px ou %) |
-| Alinhamento | <não ajustado> / Superior / Inferior / Esqueda / Direita |
-| Qualidade da Imagem | 0-100 (somente antes do upload) |
-| Filtro | <não ajustado> / Escala de cinza / Borrado / Caixa sombreada / Cores invertidas / Envelhecido |
+### Formatar a imagem
 
-Selecione a opção **Editar Imagem** (botão direito) para cortar, girar, inverter, desenhar, reparar, adicionar filtros, redimensionar e adicionar marca d'água na imagem.
+**Dê um duplo clique** na imagem (ou clique com o botão direito e escolha **Formatar Imagem**) para ajustar:
 
-> ![Tela Editar Imagens](../img/tela-editarimagens2.gif) 
+| Atributo | Valores |
+| -------- | ------- |
+| Largura e Altura | Em pixels ou porcentagem |
+| Margem Vertical e Margem Horizontal | Em pixels |
+| Borda | Espessura, em pixels |
+| Largura Máxima e Altura Máxima | Em pixels ou porcentagem |
+| Alinhamento | Não ajustado, superior, inferior, esquerda ou direita |
+| Qualidade da Imagem | De 0 a 100 (somente antes de inserir) |
+| Filtro | Não ajustado, escala de cinza, borrado, caixa sombreada, cores invertidas ou envelhecido |
 
+### Editar a imagem
 
-> ![Tela Editar Imagens](../img/tela-editarimagens3.gif) 
+Clique com o **botão direito** na imagem e escolha **Editar Imagem**. Abre-se um editor completo, com as ferramentas:
 
+* **Ajustar** — recortar, girar e espelhar;
+* **Afinar** — brilho, contraste, saturação e outros ajustes;
+* **Filtros**;
+* **Anotar** — escrever textos, desenhar setas, retângulos e à mão livre;
+* **Marca d'água**;
+* **Redimensionar**.
 
-> ![Tela Editar Imagens](../img/tela-editarimagens4.gif) 
+Clique em **Aplicar** para substituir a imagem do documento pela editada, ou **Cancelar** para desistir.
+
+> ![Tela Editar Imagem](../img/tela-editarimagens2.gif)
+
+> ![Tela Editar Imagem](../img/tela-editarimagens3.gif)
+
+> ![Tela Editar Imagem](../img/tela-editarimagens4.gif)
+
+### Como ativar
+
+A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Editor de Texto**, opção **Envio, formatação e edição avançada de imagens no editor de documentos**.
+
+### Bom saber
+
+* A edição acontece **no seu computador**: a imagem não é enviada a nenhum serviço externo.
+* **Para esconder um dado pessoal numa imagem**, desenhe um retângulo preto por cima com a ferramenta **Anotar** e clique em **Aplicar**: a imagem é regravada sem a informação.
+* Imagens grandes deixam o documento pesado. Veja [Reduzir a qualidade das imagens](../pages/QUALIDADEIMAGENS.md).
 
 ## Próximo item
 
-> [Reduzir a qualidade das imagens inseridas nos documentos](../pages/QUALIDADEIMAGENS.md)
+> [Redimensionar imagens](../pages/REDIMENSIONAIMG.md)

@@ -1,22 +1,56 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![SEI Pro Gerenciar Prazos](../img/icon-controleprazo.png) Gerenciar Prazos
+## ![SEI Pro Controle de Prazos](../img/icon-controleprazo.png) Controle de Prazos
 
-Essa funcionalidade adiciona à página de controle de processos do SEI a capacidade de gerenciar prazos.
+Acrescenta à tela **Controle de Processos** uma coluna **Prazos**, que mostra quanto falta para vencer — ou há quanto tempo o processo está parado — em cada processo. Você define o prazo em poucos cliques, para um ou vários processos de uma vez.
 
-> ![Tela Estilo de Tabelas](../img/tela-controleprazo.gif) 
+> ![Tela Controle de Prazos](../img/tela-controleprazo.gif)
 
-Os prazos (data e hora) ficam gravados dentro das informações dos marcadores. 
-Dessa forma, todos os usuários da unidade que utilizarem o **SEI Pro** poderão visualizar e controlar os prazos dos processos.
+### Como adicionar um prazo
 
-Ainda, é possível adicionar prazos em lote. Basta selecioná-los e clicar no ícone **"Adicionar prazo"** na barra de ações.
+1. Na tela **Controle de Processos**, marque a caixa de seleção de um ou mais processos;
+2. Na barra de ações, clique no ícone **Adicionar prazo** (relógio azul);
+3. Na janela **Controle de prazo em processos**, preencha:
 
-> ![Tela Estilo de Tabelas](../img/tela-controleprazo1.gif) 
+| Campo | O que informar |
+| ----- | -------------- |
+| **Controlar vencimento?** | Ligado: você informa a **data de vencimento** e a coluna mostra quanto falta ("em 12 dias"). Desligado: você informa uma **data inicial** e a coluna mostra quanto tempo já passou ("há 5 dias") |
+| **Data** e **hora** | A data do vencimento ou a data inicial. Sem hora, vale 23:59 |
+| **Marcador** | O marcador do SEI em que o prazo será gravado |
+| **Texto** | Uma descrição curta, opcional — por exemplo, *Responder ofício* |
 
-Caso prefira, você poderá gerenciar o prazo do processo dentro dele, através da barra lateral de informações, ao editar as opções de marcadores.
+4. Clique em **Adicionar Prazo**.
 
-> ![Tela Estilo de Tabelas](../img/tela-controleprazo2.gif) 
+Em alguns segundos a coluna **Prazos** mostra o tempo restante. Clique sobre ele para alterar a data.
+
+Para apagar, abra a mesma janela e clique em **Remover Prazos**.
+
+### Onde o prazo fica gravado
+
+O prazo é escrito **no texto do marcador** do processo, no próprio SEI — por exemplo, *"Até 25/09/2026 23:59 Responder ofício"*. Por isso:
+
+* **todos da unidade que usam o SEI Pro** veem e controlam os mesmos prazos, em qualquer computador;
+* quem não usa a extensão vê o marcador com a data escrita no texto;
+* se o marcador for retirado do processo, o prazo some junto.
+
+### Também dentro do processo
+
+Na árvore do processo, ao editar o marcador pelo painel de informações ([Informações adicionais na árvore](../pages/INFOARVORE.md)), os mesmos campos de prazo aparecem.
+
+> ![Tela Prazo em lote](../img/tela-controleprazo1.gif)
+
+> ![Tela Prazo no processo](../img/tela-controleprazo2.gif)
+
+### Como ativar
+
+A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Controle de Processos**, opção **Controlar Prazos**.
+
+### Bom saber
+
+* Para ver os processos na ordem de vencimento, escolha **Agrupar processos por prazo** em [Agrupar lista de processos](../pages/AGRUPAR.md), ou clique no cabeçalho da coluna **Prazos**.
+* A contagem é em **dias corridos**.
+* Se você digitar à mão uma data no formato `DD/MM/AAAA` no texto de um marcador, o SEI Pro também a reconhece como prazo. Com a palavra **"até"** no texto, ela é tratada como vencimento.
 
 ## Próximo item
 
-> [Inserir ...](../pages/PAGE.md)
+> [Reabertura programada de processos](../pages/REABRIRPROCESSOS.md)

@@ -1,13 +1,26 @@
 # [![Home](../img/home.png)](../) |  SEI Pro ![Icone](../img/icon-32.png)
 
-## ![Aumentar fonte](../img/icon-aumentarfonte.png) Aumentar ou reduzir o tamanho da fonte
+## ![SEI Pro Aumentar fonte](../img/icon-aumentarfonte.png) Aumentar ou reduzir o tamanho da fonte
 
-Essa funcionalidade adiciona ao editor de documentos do SEI a função de aumentar ou reduzir o tamanho da fonte.
+Acrescenta ao editor do SEI dois botões para **aumentar** ou **diminuir** o tamanho da letra do trecho selecionado — sem precisar escolher um tamanho numa lista.
 
-> ![Aumentar fonte](../img/tela-aumentarfonte.gif) 
+> ![Tela Aumentar fonte](../img/tela-aumentarfonte.gif)
 
-O intervalo de alteração da fonte é entre `7px` e `70px`
+### Como usar
+
+1. Selecione o texto;
+2. Clique em **Aumentar tamanho da fonte** (A↑) ou **Diminuir tamanho da fonte** (A↓);
+3. Cada clique muda o tamanho em **2 pixels**. Clique quantas vezes precisar.
+
+### Como ativar
+
+Os botões aparecem sempre no editor do SEI quando o SEI Pro está instalado.
+
+### Bom saber
+
+* O tamanho fica entre **7 e 70 pixels**.
+* O ajuste é aplicado ao trecho selecionado. Para padronizar parágrafos inteiros, prefira os **estilos** do SEI.
 
 ## Próximo item
 
-> [Verificar código de integridade (Hashcode)](../pages/HASHCODE.md)
+> [Primeira letra maiúscula (exceto artigos e preposições)](../pages/LETRAMAIUSC.md)
