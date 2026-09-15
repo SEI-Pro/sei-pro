@@ -151,8 +151,8 @@ Caso deseja reportar um erro, acesse [Issue](https://github.com/pedrohsoaresadv/
 
 ## Deseja contribuir?
 
-Envie sua sugestão de nova funcionalidade em [https://seipro.changecrab.com/suggestions](https://seipro.changecrab.com/suggestions)
-Vote nas sugestões que mais queria ver no SEI Pro!
+Envie sua sugestão de nova funcionalidade em [https://sugestoes.seipro.app](https://sugestoes.seipro.app)
+Vote nas sugestões que mais queria ver no SEI Pro! Votar não exige cadastro; para enviar sugestões e comentar, basta entrar com sua conta Google ou e-mail.
 
 ## SEI Pro no ParticiPEN
 
