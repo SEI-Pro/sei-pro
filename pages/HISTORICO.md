@@ -2,6 +2,47 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.1
+15/09/2026
+
+Versão de correções, testada ao vivo no SEI 4.1.5 e no SEI 5.0.4.
+
+- **SEI 4.1**: voltaram a funcionar as melhorias dentro dos formulários e documentos do processo, que a extensão não encontrava porque o SEI 4.1 abre o documento num quadro dentro de outro
+  - [aviso de documentos não assinados](../pages/DOCSNAOASSINADOS.md) e as opções *Remover marcadores*, *Remover atribuição* e *Reabrir processo em data certa* no **Enviar Processo**
+  - [valores padronizados](../pages/VALDEFAULT.md) ao incluir documento e ícone de [urgência](../pages/URGENTE.md)
+  - [pré-visualização de ZIP](../pages/VISUALIZARZIP.md), [vídeo](../pages/PLAYVIDEO.md) e o ícone de [código de integridade (Hashcode)](../pages/HASHCODE.md) ([#149](https://github.com/SEI-Pro/sei-pro/issues/149))
+  - histórico de tramitação na [capa do processo](../pages/CAPAPROCESSO.md)
+  - [Certidão de Documento Oficial com Sigilo](../pages/CERTIDAOSIGILO.md), que encerrava a sessão do SEI ao ser gerada
+- **SEI 5**
+  - [tarja e marca de sigilo](../pages/SIGILODOC.md) no novo editor, que eram descartadas sem aviso
+  - caixas de seleção que sumiam ao salvar o documento, e [Dados do Processo](../pages/DADOSPROCESSO.md) que não substituía os campos
+  - colar imagem copiada de site, do Teams ou do WhatsApp Web
+  - [contador de processos no ícone do SEI](../pages/CONTADORPROCESSOICONE.md)
+  - erro a cada clique nos ícones da barra do processo, e "Protocolo: undefined" em *Consultar/Alterar Processo*
+- Árvore do processo: [numeração](../pages/NUMERARDOCSARVORE.md), [duas linhas](../pages/DIVIDIRLINHASARVORE.md) e [menu rápido](../pages/MENURAPIDO.md) deixam de sumir em parte das aberturas e passam a valer também nos documentos das pastas, em processos com mais de 20 documentos. Corrigida a imagem quebrada no último documento
+- [Favoritos](../pages/FAVORITOS.md): a estrela no Controle de Processos voltou a favoritar ([#83](https://github.com/SEI-Pro/sei-pro/issues/83))
+- [Rolagem infinita](../pages/ROLAGEMINFINITA.md) na pesquisa voltou a funcionar no SEI 4 e no SEI 5, inclusive depois de abrir uma janela como a de assinatura ([#159](https://github.com/SEI-Pro/sei-pro/issues/159))
+- Marcadores: o painel da árvore e o quadro por marcadores passam a mostrar os marcadores novos e a gravar de fato no SEI 4.1 e 5 — antes mostravam sucesso sem gravar. Remover o marcador pelo painel também voltou a funcionar ([#92](https://github.com/SEI-Pro/sei-pro/issues/92), [#116](https://github.com/SEI-Pro/sei-pro/issues/116))
+- [Agrupamento](../pages/AGRUPAR.md) por Acompanhamento Especial com os grupos reais, também no ícone da linha e na planilha CSV ([#109](https://github.com/SEI-Pro/sei-pro/issues/109))
+- Enviar Processo
+  - Enter no campo de prazo do favorito **não envia mais o processo**
+  - as unidades de um envio anterior não são mais pré-preenchidas em outro processo
+  - *Remover atribuição* passa a funcionar junto com *Remover marcadores*
+- Histórico do processo: o histórico visual e as [Ações em Lote](../pages/ACOESEMLOTE.md) passam a ler o histórico completo em processos grandes, sem exibir o histórico errado nem trocar a forma de exibição escolhida no SEI. O Enviar Processo reaproveita o histórico já lido: de 35 para 3 consultas num processo com 3.400 andamentos. O aviso "Aguarde... Pesquisando links" das Ações em Lote passa a fechar sozinho
+- [Enviar múltiplos documentos externos](../pages/UPLOADDOCS.md) e [Ferramentas de PDF](../pages/FERRAMENTASPDF.md): quando o nome do arquivo não indica o tipo e não há tipo padrão, a extensão pergunta o tipo, em vez de usar o primeiro da lista. Nomes com travessão e aspas do Word chegam legíveis
+- [Ferramentas de PDF](../pages/FERRAMENTASPDF.md): *Trazer do processo aberto* e *Enviar ao processo* funcionam com o processo aberto pela pesquisa rápida ou com a [URL amigável](../pages/URLAMIGAVEL.md); os modos *Por intervalos* e *A cada N páginas* do Dividir voltaram a funcionar
+- [Documentos em Lote](../pages/DOCUMENTOSEMLOTE.md): corrigidos o número e o nome trocados na tabela final em órgãos com hífen na sigla, a criação em novos processos no SEI 4.1, as aspas curvas e o travessão do Word na especificação, e as mensagens de erro, que diziam apenas "false"
+- Editor de documentos
+  - a [caixa de seleção](../pages/CAIXASELECAO.md) não apaga mais o texto do item ao ser marcada
+  - colar tabela do Excel ou texto do Word não insere mais uma cópia do trecho como imagem, e imagem colada não sai duplicada ([#105](https://github.com/SEI-Pro/sei-pro/issues/105), [#70](https://github.com/SEI-Pro/sei-pro/issues/70))
+  - *Inserir dados do processo* e a [revisão de texto](../pages/REVISARDOC.md) atuavam no Cabeçalho em documentos com seções
+  - o botão Ajuda da [Legística](../pages/LEGISTICA.md) voltou a abrir a página de ajuda
+- [Parágrafos numerados](../pages/PARAGRAFOSNUMERADOS.md) passam a contar 1, 2, 3 — contavam de 2 em 2
+- Layout do SEI 4.1: links "Ver por" numa linha só, caixas *Gerados* e *Externos* da pesquisa sem sobrepor o texto, e barra de ações fixa sem cobrir o cabeçalho
+- Inicialização mais robusta quando os arquivos da extensão carregam fora de ordem — causa de funções que só apareciam depois de recarregar a página e da janela de assinatura que não abria ([#142](https://github.com/SEI-Pro/sei-pro/issues/142), [#126](https://github.com/SEI-Pro/sei-pro/issues/126), [#146](https://github.com/SEI-Pro/sei-pro/issues/146))
+- Segurança: os dados do SEI inseridos pelos campos dinâmicos passam a ser tratados como texto, e o editor do SEI 5 deixa de aceitar atributos de script em conteúdo colado
+- A partir desta versão, a extensão abre este histórico quando é atualizada
+
 ### Versão 1.7.0
 11/09/2026
 
