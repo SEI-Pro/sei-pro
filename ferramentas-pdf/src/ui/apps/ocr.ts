@@ -19,6 +19,7 @@ import { criarProgresso } from "@/ui/componentes/progresso";
 import { criarRegiaoAnuncio, criarZonaDeArquivos } from "@/ui/componentes/zonaDeArquivos";
 import { criarPainelResultado } from "@/ui/componentes/painelResultado";
 import { ponte } from "@/ui/contexto";
+import { enviarAoProcesso } from "@/ui/enviarAoProcesso";
 import type { FerramentaMontada } from "@/ui/moldura";
 import type { ResultadoOcr } from "@/lib/ferramentas/ocr";
 
@@ -214,7 +215,7 @@ export function montar(): FerramentaMontada {
     enviando = true;
     sincronizar();
     try {
-      await ponte().enviarAoProcesso({
+      await enviarAoProcesso({
         nome: ultimo.resultado.nomeArquivo,
         bytes: ultimo.resultado.bytes,
       });

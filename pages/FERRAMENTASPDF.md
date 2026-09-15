@@ -122,11 +122,22 @@ Quando a página é aberta a partir do SEI, três coisas a mais ficam disponíve
 
 * **O limite real do seu órgão.** Não existe um "limite do SEI": cada instalação configura o seu, e a diferença entre uma e outra vai de poucos megabytes a vários gigabytes. As ferramentas de comprimir e dividir passam a usar o número verdadeiro, com margem de segurança — a assinatura digital acrescenta bytes depois.
 * **Trazer documentos do processo.** Lista os documentos externos em PDF do processo aberto, para carregá-los sem baixar um a um.
-* **Devolver ao processo.** Envia o arquivo processado direto para o processo, sem salvar e reanexar à mão. O documento entra como **externo**, do mesmo jeito que entraria se você o arrastasse para a árvore: o **tipo** é deduzido do nome do arquivo (um arquivo chamado *Ofício 32.pdf* entra como Ofício) e, quando o nome não diz nada, vale o tipo padrão que você configurou — ou **Anexo**. O **nível de acesso** e o formato seguem as suas configurações do SEI Pro. Nada é enviado sem você clicar.
+* **Devolver ao processo.** Envia o arquivo processado direto para o processo, sem salvar e reanexar à mão. O documento entra como **externo**: o **tipo** é deduzido do nome do arquivo (um arquivo chamado *Ofício 32.pdf* entra como Ofício) e, quando o nome não diz nada, vale o tipo padrão que você configurou — ou **Anexo**. Se o seu órgão também não tiver o tipo Anexo, a ferramenta **pergunta qual tipo usar** antes de enviar (veja abaixo). O **nível de acesso** e o formato seguem as suas configurações do SEI Pro. No **nome do documento na árvore**, os acentos são mantidos, mas os caracteres que o SEI não aceita, comuns em arquivos salvos pelo Word, são trocados pelo equivalente simples: o travessão (—) vira hífen (-) e as aspas curvas (“ ”) viram aspas retas ("). Nada é enviado sem você clicar.
 
 Aberta pelo ícone da extensão, sem SEI, a página funciona igual — apenas sem esses três atalhos.
 
 > **Atenção às extensões aceitas:** a lista do SEI costuma incluir PDF e os formatos ODF, mas **não** aceita `doc`, `docx`, `xls`, `xlsx`, `ppt` nem `pptx`. Quem tenta anexar um arquivo do Word é barrado — e esse é um motivo de recusa tão frequente quanto o tamanho.
+
+#### Quando o tipo não é identificado
+
+Se o nome do arquivo não começa por um tipo de documento, não há tipo padrão configurado e o seu órgão não tem o tipo **Anexo**, o envio **para antes de o arquivo subir** e abre a caixa **Tipo do documento**, como no [envio arrastando para a árvore](../pages/UPLOADDOCS.md):
+
+* escolha o tipo na lista e clique em **Enviar ao processo** — o documento entra com o tipo escolhido;
+* ou clique em **Cancelar envio** (ou tecle Esc) — **nada é enviado**, e o arquivo continua na página para você baixar ou tentar de novo.
+
+Quando o resultado tem **várias partes** (no Dividir PDF, por exemplo), a pergunta aparece para cada parte que precisar, já com a última escolha marcada. Cancelar interrompe o envio das partes que faltam, e a mensagem diz quantas já tinham entrado no processo. Atenção: clicar de novo em **Enviar ao processo** reenvia **todas** as partes, inclusive as que já entraram.
+
+Para não precisar escolher, comece o nome do arquivo pelo tipo desejado (por exemplo, `Laudo da vistoria.pdf`) ou preencha o **Nome padrão do documento externo na árvore**, em [Valores padronizados](../pages/VALDEFAULT.md), com o nome de um tipo do seu órgão.
 
 ### Limites
 

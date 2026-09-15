@@ -18,6 +18,8 @@
 import { PDFDocument, StandardFonts, rgb } from "@cantoo/pdf-lib";
 
 import { dividirPdf, interpretarIntervalos } from "@/lib/ferramentas/dividir";
+import { despacharOperacao } from "@/lib/ferramentas/despacho";
+import { MODOS_DIVISAO, opcoesDaDivisao } from "@/ui/apps/dividirOpcoes";
 import { comprimirPdf } from "@/lib/ferramentas/comprimir";
 import { ErroFerramenta } from "@/lib/ferramentas/erros";
 import { imagensParaPdf } from "@/lib/ferramentas/imagemParaPdf";
@@ -148,6 +150,85 @@ async function main() {
   let somaPaginas = 0;
   for (const p of porTamanho) somaPaginas += (await PDFDocument.load(p.bytes)).getPageCount();
   checar("nenhuma pagina se perdeu no corte", somaPaginas === 30, String(somaPaginas));
+
+  console.log("\n== dividir: as opcoes que a TELA monta, pelo despacho do worker ==");
+  // Defeito real: a tela mandava `intervalos`/`porPaginas` e texto, o motor
+  // esperava `porIntervalos`/`porQuantidade` e Intervalo[]. Os dois modos caiam
+  // no ramo de tamanho com teto zero e davam "Nao foi possivel concluir a
+  // operacao" em qualquer PDF -- e os testes acima passavam, porque chamam o
+  // motor com os nomes certos. Aqui entra o MESMO objeto da tela, pelo MESMO
+  // despacho que o worker usa.
+  {
+    const doc3 = await pdfDeTeste(3);
+    const campos = { intervalos: "1-2, 3", paginasPorParte: "2", tamanhoMb: "1" };
+    const pelaTela = async (modo: (typeof MODOS_DIVISAO)[number]["valor"]) => {
+      const saidas = await despacharOperacao(
+        "dividir",
+        [{ nome: "tres.pdf", bytes: doc3 }],
+        opcoesDaDivisao(modo, campos) as Record<string, unknown>,
+      );
+      const paginas: number[] = [];
+      for (const s of saidas) paginas.push((await PDFDocument.load(s.bytes)).getPageCount());
+      return { nomes: saidas.map((s) => s.nome), paginas };
+    };
+
+    checar("a tela oferece os tres modos", MODOS_DIVISAO.length === 3, String(MODOS_DIVISAO.length));
+    // O que cada modo da tela tem de produzir com os campos acima. Um valor de
+    // modo que o motor nao conheca fica sem entrada aqui E falha no motor.
+    const esperado: Record<string, string> = { porIntervalos: "[2,1]", porQuantidade: "[2,1]", porTamanho: "[3]" };
+    for (const { valor, rotulo } of MODOS_DIVISAO) {
+      let resultado: Awaited<ReturnType<typeof pelaTela>> | null = null;
+      let erro = "";
+      try {
+        resultado = await pelaTela(valor);
+      } catch (e) {
+        erro = e instanceof ErroFerramenta ? e.codigo : String(e);
+      }
+      checar(`'${rotulo}' gera arquivos`, Boolean(resultado?.nomes.length), erro || JSON.stringify(resultado));
+      if (resultado) {
+        checar(
+          `'${rotulo}' divide como o modo promete`,
+          JSON.stringify(resultado.paginas) === esperado[valor],
+          `${valor}: ${JSON.stringify(resultado.paginas)}`,
+        );
+      }
+    }
+
+    const intervalos = await pelaTela("porIntervalos");
+    checar(
+      "intervalos '1-2, 3' dao 2 arquivos de 2 e 1 paginas",
+      JSON.stringify(intervalos.paginas) === "[2,1]",
+      JSON.stringify(intervalos),
+    );
+    checar(
+      "com os nomes das paginas",
+      JSON.stringify(intervalos.nomes) === JSON.stringify(["tres-paginas-1-a-2.pdf", "tres-pagina-3.pdf"]),
+      JSON.stringify(intervalos.nomes),
+    );
+    const quantidade = await pelaTela("porQuantidade");
+    checar("a cada 2 paginas dao 2 arquivos de 2 e 1", JSON.stringify(quantidade.paginas) === "[2,1]", JSON.stringify(quantidade));
+    const tamanho = await pelaTela("porTamanho");
+    checar("1 MB para 3 paginas pequenas da 1 arquivo com as 3", JSON.stringify(tamanho.paginas) === "[3]", JSON.stringify(tamanho));
+
+    await esperaErro(
+      "modo que o motor nao conhece falha, em vez de virar corte por tamanho",
+      "FALHA_INESPERADA",
+      () => despacharOperacao("dividir", [{ nome: "tres.pdf", bytes: doc3 }], { modo: "intervalos", intervalos: "1-2", tamanhoMaximoBytes: 1024 * 1024 }),
+    );
+    await esperaErro(
+      "intervalo fora do documento continua recusado (e nao vira o ramo de tamanho)",
+      "FALHA_INESPERADA",
+      () => despacharOperacao("dividir", [{ nome: "tres.pdf", bytes: doc3 }], opcoesDaDivisao("porIntervalos", { ...campos, intervalos: "2-9" }) as Record<string, unknown>),
+    );
+
+    // A tela monta o seletor a partir da mesma lista, e nao de valores escritos a mao.
+    const { readFileSync } = await import("node:fs");
+    const tela = readFileSync(new URL("../src/ui/apps/dividir.ts", import.meta.url), "utf8");
+    checar(
+      "o seletor da tela vem de MODOS_DIVISAO e os valores de opcoesDaDivisao",
+      /MODOS_DIVISAO\.map\(/.test(tela) && /valores:\s*\(\)\s*=>\s*opcoesDaDivisao\(/.test(tela) && !/value:\s*"(intervalos|porPaginas)"/.test(tela),
+    );
+  }
 
   console.log("\n== organizar ==");
   const organizado = await organizarPdf(entrada("o.pdf", doc10), { ordem: [4, 0, 9] });

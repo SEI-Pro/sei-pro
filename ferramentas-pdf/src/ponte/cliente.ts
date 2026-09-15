@@ -117,7 +117,7 @@ export function conectarAoSei(): void {
 
       pendentes.delete(r.id);
       clearTimeout(pendente.temporizador);
-      if (r.erro) pendente.rejeitar(new ErroPonte(r.erro.codigo as never, r.erro.detalhe));
+      if (r.erro) pendente.rejeitar(new ErroPonte(r.erro.codigo as never, r.erro.detalhe, r.erro.tipos));
       else pendente.resolver(r.carga);
     });
 

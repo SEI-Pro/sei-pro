@@ -51,14 +51,78 @@
     }
 
     // ----------------------------------------------------------------
+    // CK5: marca de sigilo no model. O GHS guarda <span class="sigiloSEI"> como o atributo htmlSpan do texto,
+    // {classes, attributes, styles}. Os helpers acham a faixa marcada em volta do cursor (nos de texto vizinhos
+    // com o mesmo valor) e contam as marcas pelo HTML que o model devolve, e nao pelo HTML montado antes do
+    // data.set (que o CK5 pode descartar).
+    // ----------------------------------------------------------------
+    function classesDoValorGhs(valor) {
+        var classes = valor && valor.classes;
+        if (!classes) return [];
+        if (typeof classes === 'string') return classes.split(/\s+/);
+        if (Array.isArray(classes)) return classes.slice();
+        if (typeof classes.forEach === 'function') { var lista = []; classes.forEach(function (c) { lista.push(c); }); return lista; }
+        return Object.keys(classes);
+    }
+    function temClasseSigilo(no) {
+        if (!no || typeof no.is !== 'function' || !no.is('$text')) return false;
+        return classesDoValorGhs(no.getAttribute('htmlSpan')).indexOf('sigiloSEI') !== -1;
+    }
+    function valorSemClasseSigilo(valor) {
+        var copia = {}, k;
+        for (k in valor) if (Object.prototype.hasOwnProperty.call(valor, k)) copia[k] = valor[k];
+        var classes = classesDoValorGhs(valor).filter(function (c) { return c && c !== 'sigiloSEI'; });
+        if (classes.length) copia.classes = classes; else delete copia.classes;
+        var vazio = function (o) { return !o || (typeof o === 'object' && Object.keys(o).length === 0); };
+        return (vazio(copia.classes) && vazio(copia.attributes) && vazio(copia.styles)) ? null : copia;
+    }
+    function faixaMarcaSigiloCK5(editor) {
+        try {
+            var model = editor.model, selecao = model.document.selection;
+            var pos = selecao.getFirstPosition();
+            if (!pos) return null;
+            var no = pos.textNode;
+            // Trecho selecionado que comeca logo depois de uma marca nao e essa marca: so o cursor encostado conta.
+            if (!temClasseSigilo(no)) no = temClasseSigilo(pos.nodeAfter) ? pos.nodeAfter : ((selecao.isCollapsed && temClasseSigilo(pos.nodeBefore)) ? pos.nodeBefore : null);
+            if (!no) return null;
+            var chave = JSON.stringify(no.getAttribute('htmlSpan'));
+            var mesmoValor = function (x) { return temClasseSigilo(x) && JSON.stringify(x.getAttribute('htmlSpan')) === chave; };
+            var ini = no, fim = no;
+            while (mesmoValor(ini.previousSibling)) ini = ini.previousSibling;
+            while (mesmoValor(fim.nextSibling)) fim = fim.nextSibling;
+            return { range: model.createRange(model.createPositionBefore(ini), model.createPositionAfter(fim)), valor: no.getAttribute('htmlSpan') };
+        } catch (e) { return null; }
+    }
+    // HTML do Corpo como esta no editor (sem alterar nada).
+    function htmlCorpoAtual(editor) {
+        var atual = null;
+        SeiProEditorAdapter.transformBodyHtml(editor, function (html) { atual = html; return html; });
+        return atual;
+    }
+
+    // ----------------------------------------------------------------
     // ADICIONA / REMOVE marca de sigilo na selecao (toggle).
     // ----------------------------------------------------------------
     window.getMarkSigilo = function (this_) {
         var editor = SeiProEditorAdapter.getInstance(this_);
         if (!editor) return;
 
+        // CK5: a marca e o atributo htmlSpan (GHS) do texto no model. O caminho abaixo marcava o span da VISTA com
+        // data-seipro-unmark, que nao chega ao model nem ao data.get: desmarcar nao fazia nada.
+        if (editor.model) {
+            var faixaMarca = faixaMarcaSigiloCK5(editor);
+            if (faixaMarca) {
+                editor.model.change(function (writer) {
+                    var novoValor = valorSemClasseSigilo(faixaMarca.valor);
+                    if (novoValor) writer.setAttribute('htmlSpan', novoValor, faixaMarca.range);
+                    else writer.removeAttribute('htmlSpan', faixaMarca.range);
+                });
+                return;
+            }
+        }
+
         // Detecta se a selecao ja esta dentro de um span.sigiloSEI.
-        var selEl = SeiProEditorAdapter.getSelectionElement(editor);
+        var selEl = editor.model ? null : SeiProEditorAdapter.getSelectionElement(editor);
         var wrapper = (selEl && selEl.closest) ? selEl.closest('span.sigiloSEI') : null;
 
         if (wrapper) {
@@ -251,7 +315,7 @@
                     var $count = $box.find('#tabSigilo2_result .count');
                     i_increment = parseInt($count.length ? $count.text() : 0, 10) || 0;
                 }
-                var i = 0;
+                var i = 0, encontradas = 0;
 
                 SeiProEditorAdapter.transformBodyHtml(editor, function (html) {
                     return withBodyDoc(html, function (body) {
@@ -277,9 +341,22 @@
                         i = matches ? matches.length : 0;
                     });
                 });
+                if (editor.model && i > 0) {
+                    // CK5: conta as marcas que ficaram no model (o upcast pode descartar o span): antes anunciava
+                    // "marca adicionada com sucesso" contando o HTML montado antes do data.set.
+                    var rxMarca = new RegExp('\\b' + escapeRegExp(textFind) + '\\b', 'i');
+                    var htmlDepois = htmlCorpoAtual(editor);
+                    encontradas = i;
+                    i = 0;
+                    if (typeof htmlDepois === 'string') withBodyDoc(htmlDepois, function (body) {
+                        body.querySelectorAll('p span.sigiloSEI').forEach(function (sp) { if (rxMarca.test(sp.textContent || '')) i++; });
+                    });
+                }
 
                 var displayResult;
-                if (i > 0) {
+                if (i === 0 && encontradas > 0) {
+                    displayResult = '  <i class="fas fa-exclamation-triangle laranjaColor"></i> Texto encontrado, mas o editor n\u00E3o manteve a marca de sigilo.';
+                } else if (i > 0) {
                     i = i + i_increment;
                     displayResult = '  <i class="fas fa-check-circle verdeColor"></i> <span class="count">' + i + '</span> ' + (i == 1 ? 'marca' : 'marcas') + ' ' + (i == 1 ? 'adicionada' : 'adicionadas') + ' com sucesso!';
                 } else {
@@ -332,9 +409,11 @@
             rodapeSigiloMark(editor);
 
         } else if (mode === 'apply') {
-            var applied = { n: 0 };
+            registrarSaidaSigiloPro(editor); // o texto original (data-text) nao vai para o HTML gravado
+            var applied = { n: 0, tarjasAntes: 0 };
             SeiProEditorAdapter.transformBodyHtml(editor, function (html) {
                 return withBodyDoc(html, function (body) {
+                    applied.tarjasAntes = body.querySelectorAll('span.sigiloSEI_tarja').length;
                     body.querySelectorAll('span.sigiloSEI').forEach(function (sp) {
                         var rand = (typeof randomNumber === 'function') ? randomNumber(8, 15) : 10;
                         sp.setAttribute('data-text', sp.innerHTML);
@@ -344,6 +423,13 @@
                     });
                 });
             });
+            if (editor.model && applied.n > 0) {
+                // CK5: so conta como tarjada a marca que virou span.sigiloSEI_tarja no model (ver modo replace).
+                var htmlTarjado = htmlCorpoAtual(editor);
+                if (typeof htmlTarjado === 'string') withBodyDoc(htmlTarjado, function (body) {
+                    applied.n = Math.min(applied.n, Math.max(0, body.querySelectorAll('span.sigiloSEI_tarja').length - applied.tarjasAntes));
+                });
+            }
             if (applied.n > 0) {
                 result = '<label style="font-style: italic; color: #616161;">' +
                          '  <i class="fas fa-check-circle verdeColor"></i> ' + applied.n + ' ' + (applied.n == 1 ? 'marca' : 'marcas') + ' ' + (applied.n == 1 ? 'tarjada' : 'tarjadas') + ' com sucesso!<br>' +
@@ -376,6 +462,72 @@
             }
         }
     };
+
+    // ----------------------------------------------------------------
+    // A tarja guarda o texto original em data-text para "Remover marcas"
+    // poder reverter com o editor aberto (no monolito era $.data, so em memoria).
+    // O atributo nao pode ir para o HTML gravado: o texto tarjado continuaria no
+    // documento, ao contrario do que prometem SIGILODOC.md e CERTIDAOSIGILO.md.
+    //
+    // CK4: o filtro de saida (htmlFilter, usado pelo getData que o SEI grava)
+    // tira o atributo; o DOM vivo e os snapshots do Desfazer continuam com ele.
+    // Registrado no boot (setCKEDITOR_instances, cobre documento salvo antes com
+    // data-text) e ao aplicar a tarja. Idempotente. CK5 (editor.model): nada.
+    // ----------------------------------------------------------------
+    window.registrarSaidaSigiloCK4Pro = function (editor) {
+        if (!editor || editor.model || editor._saidaSigiloProRegistrada) return;
+        var dp = editor.dataProcessor;
+        if (!dp || !dp.htmlFilter || typeof dp.htmlFilter.addRules !== 'function') return;
+        editor._saidaSigiloProRegistrada = true;
+        dp.htmlFilter.addRules({
+            elements: {
+                span: function (el) {
+                    var attrs = el.attributes;
+                    if (attrs && /(^|\s)sigiloSEI_tarja(\s|$)/.test(attrs['class'] || '')) delete attrs['data-text'];
+                }
+            }
+        }, { applyToAll: true });
+    };
+
+    // CK5 (SEI 5): o SEI grava o que sai do pipeline de DADOS (getFullData ->
+    // editor.data.get por secao), que tambem e o da area de transferencia. Um
+    // conversor de downcast desse pipeline (so dele: a vista de edicao, o model
+    // e o Desfazer mantem o atributo) tira data-text do span.sigiloSEI_tarja. O
+    // GHS guarda o span como atributo do texto ({attributes, classes, styles});
+    // em prioridade alta o valor e trocado por uma copia sem data-text antes do
+    // conversor do GHS montar o elemento (o model nao e alterado).
+    // O transformBodyHtml do adapter faz data.get/data.set internos com a opcao
+    // seiProInterno e preserva o atributo, para "Remover marcas" reverter.
+    // Registrado no boot (abaixo) e ao aplicar a tarja. Idempotente.
+    function classesTemTarjaPro(classes) {
+        if (!classes) return false;
+        if (typeof classes === 'string') return /(^|\s)sigiloSEI_tarja(\s|$)/.test(classes);
+        if (typeof classes.indexOf === 'function') return classes.indexOf('sigiloSEI_tarja') !== -1;
+        if (typeof classes.has === 'function') return classes.has('sigiloSEI_tarja');
+        return Object.prototype.hasOwnProperty.call(classes, 'sigiloSEI_tarja');
+    }
+    window.registrarSaidaSigiloCK5Pro = function (editor) {
+        if (!editor || !editor.model || editor._saidaSigiloCK5ProRegistrada) return;
+        var dispatcher = editor.data && editor.data.downcastDispatcher;
+        if (!dispatcher || typeof dispatcher.on !== 'function') return;
+        editor._saidaSigiloCK5ProRegistrada = true;
+        dispatcher.on('attribute', function (evt, data, conversionApi) {
+            if (conversionApi && conversionApi.options && conversionApi.options.seiProInterno) return;
+            var valor = data && data.attributeNewValue;
+            if (!valor || typeof valor !== 'object' || !valor.attributes) return;
+            if (!Object.prototype.hasOwnProperty.call(valor.attributes, 'data-text') || !classesTemTarjaPro(valor.classes)) return;
+            var copia = {}, attrs = {}, k;
+            for (k in valor) if (Object.prototype.hasOwnProperty.call(valor, k)) copia[k] = valor[k];
+            for (k in valor.attributes) if (k !== 'data-text' && Object.prototype.hasOwnProperty.call(valor.attributes, k)) attrs[k] = valor.attributes[k];
+            copia.attributes = attrs;
+            data.attributeNewValue = copia;
+        }, { priority: 'high' });
+    };
+
+    function registrarSaidaSigiloPro(editor) {
+        window.registrarSaidaSigiloCK4Pro(editor);
+        window.registrarSaidaSigiloCK5Pro(editor);
+    }
 
     // ----------------------------------------------------------------
     // Insere o rodape "#_contem_N_marcas_sigilo" quando ha tarjas, ou o
@@ -441,12 +593,23 @@
                 rx.lastIndex = 0;
                 if (!rx.test(txt)) continue;
                 rx.lastIndex = 0;
-                var replaced = txt.replace(rx, function (m) {
-                    return '<span class="sigiloSEI">' + m + '</span>';
-                });
-                var tpl = document.createElement('template');
-                tpl.innerHTML = replaced;
-                node.parentNode.insertBefore(tpl.content, node);
+                // Monta os nos (texto + span com textContent), sem innerHTML: o nodeValue ja e texto decodificado, e
+                // reinterpretado como HTML um "<NOME DO SERVIDOR>" do texto virava elemento e sumia do documento (no CK4
+                // o HTML resultante volta ao iframe vivo do editor, e um <img onerror> literal chegava a executar).
+                var doc = node.ownerDocument || document;
+                var frag = doc.createDocumentFragment();
+                var ultimo = 0, m;
+                while ((m = rx.exec(txt)) !== null) {
+                    if (m[0] === '') { rx.lastIndex++; continue; }
+                    if (m.index > ultimo) frag.appendChild(doc.createTextNode(txt.slice(ultimo, m.index)));
+                    var span = doc.createElement('span');
+                    span.className = 'sigiloSEI';
+                    span.textContent = m[0];
+                    frag.appendChild(span);
+                    ultimo = m.index + m[0].length;
+                }
+                if (ultimo < txt.length) frag.appendChild(doc.createTextNode(txt.slice(ultimo)));
+                node.parentNode.insertBefore(frag, node);
                 node.parentNode.removeChild(node);
             } else if (node.nodeType === 1) { // ELEMENT_NODE
                 // Nao re-entra em spans de sigilo ja existentes.
@@ -458,4 +621,12 @@
 
     // Registra a feature (leve: id). Idempotente.
     SeiProEditorAdapter.registerFeature({ id: 'sigilo' });
+
+    // Boot CK5: no CK4 quem registra e o setCKEDITOR_instances do monolito.
+    if (SeiProEditorAdapter.waitReady) {
+        SeiProEditorAdapter.waitReady(20000).then(function (editor) {
+            if (SeiProEditorAdapter.version !== 5) return;
+            window.registrarSaidaSigiloCK5Pro(editor || SeiProEditorAdapter.getInstance());
+        })['catch'](function () {});
+    }
 })();

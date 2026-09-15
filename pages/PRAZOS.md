@@ -50,6 +50,7 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 * Para ver os processos na ordem de vencimento, escolha **Agrupar processos por prazo** em [Agrupar lista de processos](../pages/AGRUPAR.md), ou clique no cabeçalho da coluna **Prazos**.
 * A contagem é em **dias corridos**.
 * Se você digitar à mão uma data no formato `DD/MM/AAAA` no texto de um marcador, o SEI Pro também a reconhece como prazo. Com a palavra **"até"** no texto, ela é tratada como vencimento.
+* Na janela **Controle de prazo em processos**, os caracteres do **Texto** que o SEI não aceita, comuns em texto colado do Word, são trocados pelo equivalente simples: o travessão (—) vira hífen (-) e as aspas curvas (“ ”) viram aspas retas ("). Os acentos são mantidos.
 
 ## Próximo item
 

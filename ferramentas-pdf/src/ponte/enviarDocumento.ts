@@ -9,10 +9,15 @@
  * recarregaria a aba do SEI, matando junto a ponte que está conversando com a
  * página. O usuário veria o envio "sumir" no meio.
  *
- * O QUE É REUSADO: as três funções de codificação (`encodeUrlUploadArvore`,
- * `escapeComponent`, `encodeURI_toHex`). É nelas que mora a parte sutil, porque
- * o SEI fala ISO-8859-1 e o formulário tem campos com regras próprias. Duplicar
- * essa lógica seria pedir para as duas cópias divergirem.
+ * O QUE É REUSADO: o `escapeComponent` do SEI Pro, para os campos que vêm do
+ * próprio formulário, e as regras de `encodeUrlUploadArvore` no `hdnAnexos`. É
+ * nelas que mora a parte sutil, porque o SEI fala ISO-8859-1 e o formulário tem
+ * campos com regras próprias.
+ *
+ * O NOME DO DOCUMENTO (`txtNumero`) é a exceção, e tem codificação própria aqui:
+ * é o único campo com texto livre, e o `encodeURI_toHex` que ele usava só troca
+ * letra acentuada -- deixava `&`, `+`, `%`, travessão e aspas curvas crus no
+ * corpo. Ver `paraLatin1` e `codificarLatin1`.
  *
  * O PROTOCOLO, em quatro passos:
  *
@@ -148,7 +153,13 @@ function normalizar(s: string): string {
  *   2. o tipo cujo nome começa o nome do arquivo;
  *   3. o tipo configurado em `newdocname` no SEI Pro;
  *   4. "anexo";
- *   5. o primeiro da lista, para nunca devolver nada.
+ *   5. o único tipo da lista, quando só há um.
+ *
+ * Fora disso devolve NULO, e quem chama pergunta ao usuário. A versão anterior
+ * caía no primeiro tipo da lista: num órgão sem "Anexo" (o SEI SP tem 122 tipos
+ * e nenhum deles é Anexo), todo arquivo de nome livre entrava no processo como
+ * "Abaixo-Assinado", sem aviso -- e documento protocolado não se desfaz. É a
+ * mesma decisão do upload da árvore, que também passou a perguntar.
  */
 export function escolherSerie(
   series: { nome: string; valor: string }[],
@@ -178,7 +189,7 @@ export function escolherSerie(
   return (
     series.find((s) => normalizar(s.nome) === "anexo") ??
     series.find((s) => normalizar(s.nome).includes("anexo")) ??
-    series[0]
+    (series.length === 1 ? series[0] : null)
   );
 }
 
@@ -204,6 +215,10 @@ export function montarNomeDoDocumento(nomeArquivo: string, nomeSerie: string): s
 
   const ponto = nome.lastIndexOf(".");
   if (ponto > 0) nome = nome.substring(0, ponto);
+
+  // Antes do corte de 50, como no upload da árvore: "…" vira "..." e muda o
+  // tamanho.
+  nome = paraLatin1(nome);
 
   if (nome.length > 50) nome = nome.replace(/^(.{50}[^\s]*).*/, "$1");
   if (nome.length > 50) nome = nome.substring(0, 49);
@@ -232,6 +247,60 @@ function acharPrefixoDoTipo(nome: string, nomeSerie: string): number {
   return 0;
 }
 
+/**
+ * Troca o que não cabe em ISO-8859-1 pelo equivalente simples.
+ *
+ * O SEI lê o POST em ISO-8859-1, e travessão e aspas curvas -- que o Word põe
+ * em nome de arquivo -- não existem nessa tabela. Iam como bytes UTF-8 e o SEI
+ * gravava "Relatório Teste â¿¿ â¿¿aspasâ¿" (documento 0103966, SEI 4.1.5).
+ * Acento de português cabe em latin-1 e fica como está.
+ *
+ * É a tabela do `procLote_paraLatin1` (js/sei-pro-proc-lote.js), que o upload
+ * pela árvore e o controle de prazo já usam: um arquivo arrastado para a árvore
+ * e o mesmo arquivo devolvido pela ferramenta entram com o mesmo nome.
+ * `verificar-envio.ts` confere que as duas cópias dão o mesmo resultado.
+ */
+const TROCAS_LATIN1: Record<string, string> = {
+  "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-", "\u2015": "-", "\u2212": "-",
+  "\u2018": "'", "\u2019": "'", "\u201A": "'", "\u201B": "'", "\u2032": "'",
+  "\u201C": '"', "\u201D": '"', "\u201E": '"', "\u201F": '"', "\u2033": '"',
+  "\u2026": "...", "\u2022": "-", "\u00A0": " ", "\u2007": " ", "\u2008": " ",
+  "\u2009": " ", "\u200A": " ", "\u202F": " ", "\u200B": "", "\uFEFF": "",
+  "\u20AC": "EUR", "\u2122": "(TM)", "\u2190": "<-", "\u2192": "->", "\u2264": "<=", "\u2265": ">=",
+};
+
+export function paraLatin1(texto: string): string {
+  return texto.normalize("NFC").replace(/[\s\S]/g, (c) => {
+    // A tabela vem antes do atalho de latin-1 de propósito: o espaço não
+    // separável (U+00A0) cabe em latin-1, mas quebra a busca no SEI.
+    if (Object.prototype.hasOwnProperty.call(TROCAS_LATIN1, c)) return TROCAS_LATIN1[c];
+    if (c.charCodeAt(0) < 256) return c;
+    // Último recurso: tira o acento e fica com a letra base, se ela couber.
+    const base = semAcento(c);
+    return [...base].every((b) => b.charCodeAt(0) < 256) ? base : "";
+  });
+}
+
+/**
+ * Codifica um valor para `application/x-www-form-urlencoded` em ISO-8859-1.
+ *
+ * Letras, dígitos e `* - . _` vão crus, espaço vira `+`, e todo o resto vira
+ * `%XX` do byte latin-1 -- inclusive `&`, `+`, `%` e `=`. Crus, esses quatro
+ * quebram o campo: o `&` encerrava o `txtNumero` ali, e "& 50% + 1" sumia do
+ * nome. Espera texto que já passou por `paraLatin1`; o que ainda ficar acima de
+ * U+00FF é descartado, porque não há byte latin-1 que o represente.
+ */
+export function codificarLatin1(texto: string): string {
+  let saida = "";
+  for (const c of texto) {
+    const codigo = c.charCodeAt(0);
+    if (c === " ") saida += "+";
+    else if (/[A-Za-z0-9*\-._]/.test(c)) saida += c;
+    else if (codigo < 256) saida += `%${codigo.toString(16).toUpperCase().padStart(2, "0")}`;
+  }
+  return saida;
+}
+
 /** Data de hoje no formato que o SEI espera. */
 export function dataDeHoje(quando = new Date()): string {
   const dd = String(quando.getDate()).padStart(2, "0");
@@ -239,12 +308,10 @@ export function dataDeHoje(quando = new Date()): string {
   return `${dd}/${mm}/${quando.getFullYear()}`;
 }
 
-/** As funções de codificação do SEI Pro, com equivalente próprio para teste. */
+/** A função de codificação do SEI Pro, com equivalente próprio para teste. */
 export interface Codificadores {
   /** `escape()`, com `+` protegido. */
   escapar: (s: string) => string;
-  /** Acento vira `%XX` do byte ISO-8859-1; espaço vira `+`. */
-  hexar: (s: string) => string;
 }
 
 /**
@@ -255,8 +322,8 @@ export interface Codificadores {
  * e fica assim, no nome do documento, para sempre.
  *
  * `hdnAnexos` vai cru porque já foi codificado no formato próprio do SEI, e
- * `txtNumero` vai pelo caminho hexadecimal porque é o campo que carrega o nome
- * escrito pelo usuário.
+ * `txtNumero` vai em latin-1 escapado (`paraLatin1` + `codificarLatin1`) porque
+ * é o campo que carrega o nome escrito pelo usuário.
  */
 export function montarCorpoDoPost(
   campos: Record<string, string>,
@@ -267,7 +334,7 @@ export function montarCorpoDoPost(
     const bruto = valor ?? "";
     let codificado: string;
     if (chave === "hdnAnexos") codificado = bruto;
-    else if (chave === "txtNumero") codificado = cod.hexar(bruto.normalize("NFC"));
+    else if (chave === "txtNumero") codificado = codificarLatin1(paraLatin1(bruto));
     else codificado = cod.escapar(bruto);
     partes.push(`${chave}=${codificado}`);
   }
@@ -328,8 +395,11 @@ export class ErroEnvio extends Error {
       | "SEI_SEM_PROCESSO"
       | "SEI_SEM_PERMISSAO"
       | "SEI_SESSAO_EXPIRADA"
-      | "SEI_ENVIO_RECUSADO",
+      | "SEI_ENVIO_RECUSADO"
+      | "SEI_TIPO_INDEFINIDO",
     readonly detalhe?: string,
+    /** Com `SEI_TIPO_INDEFINIDO`: os tipos oferecidos, para a página perguntar. */
+    readonly tipos?: { nome: string; valor: string }[],
   ) {
     super(detalhe ? `${codigo}: ${detalhe}` : codigo);
     this.name = "ErroEnvio";
@@ -393,13 +463,22 @@ export async function enviarDocumentoExterno(
     throw new ErroEnvio("SEI_SEM_PERMISSAO", "formulário de documento externo");
   }
 
+  if (form.series.length === 0) {
+    throw new ErroEnvio("SEI_SEM_PERMISSAO", "nenhum tipo de documento disponível");
+  }
+
   const serie = escolherSerie(
     form.series,
     pedido.nome,
     pedido.tipoDocumentoId,
     comoTexto(amb.config?.getConfigValue?.("newdocname")),
   );
-  if (!serie) throw new ErroEnvio("SEI_SEM_PERMISSAO", "nenhum tipo de documento disponível");
+  // Sem tipo deduzível, o envio para AQUI -- antes de o arquivo subir. Parar
+  // depois do upload faria o arquivo inteiro atravessar a rede à toa a cada
+  // pergunta; parar antes não custa nada além da leitura da tela.
+  if (!serie) {
+    throw new ErroEnvio("SEI_TIPO_INDEFINIDO", "tipo não identificado pelo nome do arquivo", form.series);
+  }
 
   const resposta = (await amb.postarArquivo(form.urlUpload, pedido.arquivo, aoProgredir)).split("#");
   if (resposta.length < 5) {

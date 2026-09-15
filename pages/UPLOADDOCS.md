@@ -17,7 +17,7 @@ Para juntar um PDF a um processo, o SEI pede um formulário por arquivo. Com o S
 
 | Campo do SEI | De onde vem |
 | ------------ | ----------- |
-| **Tipo do documento** | Do início do nome do arquivo, quando ele coincide com um tipo aceito pelo SEI. Se não coincidir, vale o tipo padrão configurado; se não houver, **Anexo** |
+| **Tipo do documento** | Do início do nome do arquivo, quando ele coincide com um tipo aceito pelo SEI. Se não coincidir, vale o tipo padrão configurado; se não houver, **Anexo**. Se o seu órgão também não tiver o tipo Anexo, o SEI Pro **pergunta qual tipo usar** para aquele arquivo |
 | **Número / Nome na árvore** | O restante do nome do arquivo |
 | **Data do documento** | A data da última modificação do arquivo; se não houver, a data de hoje |
 | **Formato** | **Nato-digital**, ou o formato configurado nos valores padronizados |
@@ -32,6 +32,17 @@ Exemplos:
 | `Captura de Tela.png` | Anexo | Captura de Tela |
 
 Os valores usados quando o arquivo não informa nada são definidos em [Valores padronizados ao criar documentos](../pages/VALDEFAULT.md).
+
+### Quando o tipo não é identificado
+
+Se o nome do arquivo não começa com um tipo de documento, não há tipo padrão configurado e o órgão não usa o tipo **Anexo**, o envio daquele arquivo **pausa** e abre a caixa **Tipo do documento**:
+
+* escolha o tipo na lista e clique em **Enviar** — o arquivo entra com o tipo escolhido e o envio segue com os próximos arquivos;
+* ou clique em **Cancelar envio** (ou feche a caixa) — aquele arquivo **não é enviado** e sai da lista; os demais continuam.
+
+Na ferramenta **Enviar documentos em processos**, a escolha feita para um arquivo vale para ele em todos os processos marcados.
+
+Para não precisar escolher, comece o nome do arquivo pelo tipo desejado (por exemplo, `Laudo da vistoria.pdf`) ou preencha o **Nome padrão do documento externo na árvore**, em [Valores padronizados](../pages/VALDEFAULT.md), com o nome de um tipo do seu órgão.
 
 ### Conferir e ordenar antes de enviar
 
@@ -57,6 +68,7 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 * Muitos órgãos **não aceitam** arquivos do Word ou Excel (`.doc`, `.docx`, `.xls`, `.xlsx`). Converta para PDF antes.
 * Precisa reduzir, dividir ou tarjar o PDF antes de juntar? Use as [Ferramentas de PDF](../pages/FERRAMENTASPDF.md).
 * Acentos e caracteres especiais no nome do arquivo são simplificados no envio.
+* No **nome do documento na árvore**, os acentos são mantidos, mas os caracteres que o SEI não aceita, comuns em arquivos salvos pelo Word, são trocados pelo equivalente simples: o travessão (—) vira hífen (-) e as aspas curvas (“ ”) viram aspas retas (").
 
 ## Próximo item
 

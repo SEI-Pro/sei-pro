@@ -46,11 +46,21 @@ export interface DocumentoSei {
   baixavel: boolean;
 }
 
+/** Um tipo de documento externo, como o SEI o oferece no `selSerie`. */
+export interface TipoDocumentoSei {
+  nome: string;
+  valor: string;
+}
+
 /** O que sai daqui de volta para o processo. */
 export interface SaidaParaSei {
   nome: string;
   bytes: Uint8Array;
-  /** Id do tipo de documento no SEI. Ausente: a ponte escolhe "Anexo". */
+  /**
+   * Id do tipo de documento no SEI. Ausente: a ponte deduz pelo nome do
+   * arquivo, pelo tipo padrão configurado ou por "Anexo" -- e, se nada disso
+   * servir, recusa com `SEI_TIPO_INDEFINIDO` em vez de escolher às cegas.
+   */
   tipoDocumentoId?: string;
 }
 
@@ -86,8 +96,15 @@ export class ErroPonte extends Error {
       // problema.
       | "SEI_DOCUMENTO_AUSENTE"
       | "SEI_DOCUMENTO_NATO"
-      | "SEI_SEM_LINK",
+      | "SEI_SEM_LINK"
+      // O nome do arquivo não diz o tipo e não há tipo padrão nem "Anexo".
+      // Vem com `tipos`, para a interface perguntar. Nada foi enviado.
+      | "SEI_TIPO_INDEFINIDO"
+      // O usuário desistiu na escolha do tipo. Nada foi enviado.
+      | "SEI_ENVIO_CANCELADO",
     readonly detalhe?: string,
+    /** Com `SEI_TIPO_INDEFINIDO`: os tipos que a tela do SEI ofereceu. */
+    readonly tipos?: TipoDocumentoSei[],
   ) {
     super(codigo);
     this.name = "ErroPonte";

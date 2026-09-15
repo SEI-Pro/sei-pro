@@ -21,6 +21,7 @@ import {
   type Codificadores,
 } from "@/ponte/enviarDocumento";
 import { extrairParametros } from "@/ponte/parametrosUpload";
+import { localizarProcesso, type ProcessoAberto } from "@/ponte/processoAberto";
 import {
   CANAL,
   deBase64,
@@ -56,7 +57,6 @@ declare const window: Window & {
   getConfigValue?: (chave: string) => unknown;
   checkConfigValue?: (chave: string) => boolean;
   escapeComponent?: (s: string) => string;
-  encodeURI_toHex?: (s: string) => string;
   infraFormatarTamanhoBytes?: (bytes: number) => string;
 };
 
@@ -124,6 +124,9 @@ async function atender(pedido: Pedido): Promise<void> {
     responder(null, {
       codigo: (e as { codigo?: string }).codigo ?? "SEI_INDISPONIVEL",
       detalhe: (e as Error).message,
+      // A lista de tipos, quando o envio parou por não saber qual usar: é com
+      // ela que a página pergunta ao usuário.
+      tipos: (e as { tipos?: { nome: string; valor: string }[] }).tipos,
     });
   }
 }
@@ -168,15 +171,32 @@ async function executar(
   }
 }
 
+/**
+ * O processo aberto nesta aba, lido de fontes que a URL amigável não apaga.
+ * Ver `localizarProcesso`.
+ */
+function processoAberto(): ProcessoAberto | null {
+  const arvore = document.querySelector<HTMLIFrameElement>("#ifrArvore");
+  let urlDaArvore: string | null = null;
+  try {
+    urlDaArvore = arvore?.contentWindow?.location.href ?? null;
+  } catch {
+    // Quadro de outra origem ou já descartado: fica o src resolvido pelo topo.
+  }
+  return localizarProcesso({
+    urlDoTopo: window.location.href,
+    srcDaArvore: arvore?.getAttribute("src"),
+    urlDaArvore,
+  });
+}
+
 function lerContexto() {
   const numero = document
     .querySelector("#divArvoreInformacao, .infraArvoreNoSelecionado")
     ?.textContent?.trim();
-  const idProcedimento =
-    new URLSearchParams(window.location.search).get("id_procedimento") ?? undefined;
   return {
     protocolo: numero || undefined,
-    idProcedimento,
+    idProcedimento: processoAberto()?.idProcedimento,
     unidade: document.querySelector("#selInfraUnidade option:checked")?.textContent?.trim(),
     host: window.location.host,
     versaoSei: window.getSeiVersionPro?.(),
@@ -202,13 +222,13 @@ async function lerParametrosUpload(): Promise<{
   extensoes?: string[];
 } | null> {
   try {
-    const idProcedimento = new URLSearchParams(window.location.search).get("id_procedimento");
-    if (!idProcedimento) return null;
+    const processo = processoAberto();
+    if (!processo) return null;
 
-    const entrada = acharLinkDeIncluirDocumento(await lerHtmlDaArvore(idProcedimento));
+    const entrada = acharLinkDeIncluirDocumento(await lerHtmlDaArvore(processo));
     if (!entrada) return null;
 
-    const resposta = await fetch(entrada, { credentials: "same-origin" });
+    const resposta = await fetch(noControlador(entrada, processo), { credentials: "same-origin" });
     if (!resposta.ok) return null;
     const html = await lerTexto(resposta);
 
@@ -218,7 +238,7 @@ async function lerParametrosUpload(): Promise<{
     );
     if (!link) return null;
 
-    const tela = await fetch(limparHtml(link.getAttribute("href")!), {
+    const tela = await fetch(noControlador(link.getAttribute("href")!, processo), {
       credentials: "same-origin",
     });
     if (!tela.ok) return null;
@@ -266,15 +286,16 @@ async function listarDocumentos(): Promise<
 let cacheDocumentos: { idProcedimento: string; docs: DocumentoDaArvore[] } | null = null;
 
 async function lerDocumentosDaArvore(): Promise<DocumentoDaArvore[]> {
-  const idProcedimento = new URLSearchParams(window.location.search).get("id_procedimento");
-  if (!idProcedimento) throw new ErroSei("SEI_SEM_PROCESSO");
+  const processo = processoAberto();
+  if (!processo) throw new ErroSei("SEI_SEM_PROCESSO");
+  const { idProcedimento } = processo;
 
   if (cacheDocumentos?.idProcedimento === idProcedimento) return cacheDocumentos.docs;
 
   const extrair = window.setDataDocs;
   if (typeof extrair !== "function") throw new ErroSei("SEI_INDISPONIVEL", "setDataDocs ausente");
 
-  const html = await lerHtmlDaArvore(idProcedimento);
+  const html = await lerHtmlDaArvore(processo);
   const docs = extrair(html, idProcedimento);
   cacheDocumentos = { idProcedimento, docs };
   return docs;
@@ -294,11 +315,14 @@ async function lerDocumentosDaArvore(): Promise<DocumentoDaArvore[]> {
  * nenhum quadro -- o que, de quebra, dispensa neutralizar o
  * `atualizarVisualizacao()` do SEI, que numa navegação de verdade recarregaria
  * a árvore por baixo.
+ *
+ * O endereço vem do processo localizado, e não de `location.pathname`: com a
+ * URL amigável o topo está em "/sei/", e "/sei/?acao=..." cai no index.php.
  */
-async function lerHtmlDaArvore(idProcedimento: string): Promise<string> {
-  const base = `${location.origin}${location.pathname}`;
+async function lerHtmlDaArvore(processo: ProcessoAberto): Promise<string> {
+  const { controlador, idProcedimento } = processo;
   const htmlProcesso = await lerTexto(
-    await fetch(`${base}?acao=procedimento_trabalhar&id_procedimento=${idProcedimento}`, {
+    await fetch(`${controlador}?acao=procedimento_trabalhar&id_procedimento=${idProcedimento}`, {
       credentials: "same-origin",
     }),
   );
@@ -309,14 +333,14 @@ async function lerHtmlDaArvore(idProcedimento: string): Promise<string> {
   if (!srcArvore) throw new ErroSei("SEI_SESSAO_EXPIRADA", "árvore não encontrada");
 
   const html = await lerTexto(
-    await fetch(limparHtml(srcArvore), { credentials: "same-origin" }),
+    await fetch(noControlador(srcArvore, processo), { credentials: "same-origin" }),
   );
 
   const linkExpandir = acharLinkDeExpansao(html);
   if (!linkExpandir) return html;
 
   const expandido = await lerTexto(
-    await fetch(limparHtml(linkExpandir), { credentials: "same-origin" }),
+    await fetch(noControlador(linkExpandir, processo), { credentials: "same-origin" }),
   );
 
   // Se a expansão falhar, seguimos com a árvore parcial em vez de quebrar: uma
@@ -373,6 +397,18 @@ function limparHtml(url: string): string {
 }
 
 /**
+ * Endereço absoluto de um link do SEI, resolvido contra o controlador.
+ *
+ * Os links vêm relativos ("controlador.php?acao=..."), e um `fetch` relativo
+ * se resolve contra a URL do TOPO -- que a URL amigável troca por "/sei/#...".
+ * Resolver contra o controlador dá o mesmo endereço de sempre quando o topo
+ * está no controlador.php, e o endereço certo quando não está.
+ */
+function noControlador(url: string, processo: ProcessoAberto): string {
+  return new URL(limparHtml(url), processo.controlador).href;
+}
+
+/**
  * Traz o arquivo de um documento externo.
  *
  * O link vem do `src` que o SEI publica na própria árvore, e NÃO é montado
@@ -385,6 +421,8 @@ async function baixarDocumento(
   id: string,
   aoProgredir: (feito: number, total: number) => void,
 ): Promise<{ nome: string; base64: string }> {
+  const processo = processoAberto();
+  if (!processo) throw new ErroSei("SEI_SEM_PROCESSO");
   const docs = await lerDocumentosDaArvore();
   const doc = docs.find((d) => String(d.id_documento) === String(id));
 
@@ -392,7 +430,7 @@ async function baixarDocumento(
   if (!doc.externo) throw new ErroSei("SEI_DOCUMENTO_NATO", doc.nome);
   if (!doc.src) throw new ErroSei("SEI_SEM_LINK", doc.nome);
 
-  const resposta = await fetch(doc.src.replace(/&amp;/g, "&"), { credentials: "same-origin" });
+  const resposta = await fetch(noControlador(doc.src, processo), { credentials: "same-origin" });
   if (!resposta.ok) throw new ErroSei("SEI_SESSAO_EXPIRADA", String(resposta.status));
 
   // O SEI responde a sessão expirada com a TELA DE LOGIN e status 200. Sem esta
@@ -456,8 +494,9 @@ async function enviarAoProcesso(
   dados: { nome: string; base64: string; tipoDocumentoId?: string },
   aoProgredir: (feito: number, total: number) => void,
 ): Promise<{ id: string }> {
-  const idProcedimento = new URLSearchParams(window.location.search).get("id_procedimento");
-  if (!idProcedimento) throw new ErroSei("SEI_SEM_PROCESSO");
+  const processo = processoAberto();
+  if (!processo) throw new ErroSei("SEI_SEM_PROCESSO");
+  const { idProcedimento } = processo;
 
   const bytes = deBase64(dados.base64);
   // `bytes.buffer` é tipado como ArrayBufferLike, que admite SharedArrayBuffer;
@@ -471,10 +510,11 @@ async function enviarAoProcesso(
   const resultado = await enviarDocumentoExterno(
     { idProcedimento, nome: dados.nome, arquivo, tipoDocumentoId: dados.tipoDocumentoId },
     {
-      buscar: (url, init) => fetch(url, init),
-      postarArquivo,
+      buscar: (url, init) => fetch(noControlador(url, processo), init),
+      postarArquivo: (url, anexo, progresso) =>
+        postarArquivo(noControlador(url, processo), anexo, progresso),
       lerTexto,
-      htmlDaArvore: () => lerHtmlDaArvore(idProcedimento),
+      htmlDaArvore: () => lerHtmlDaArvore(processo),
       formatarTamanho: (b) => window.infraFormatarTamanhoBytes?.(b) ?? String(b),
       codificadores: codificadoresDoSeiPro(),
       config: {
@@ -502,7 +542,6 @@ async function enviarAoProcesso(
 function codificadoresDoSeiPro(): Codificadores {
   return {
     escapar: (s) => window.escapeComponent?.(s) ?? escape(s).replace(/\+/g, "%2B"),
-    hexar: (s) => window.encodeURI_toHex?.(s) ?? escape(s).replace(/\+/g, "%2B"),
   };
 }
 

@@ -138,10 +138,16 @@ function main() {
   }
 
   console.log("\n== os manifests da extensao ==");
+  // So o dist/manifest.json e versionado. Os manifests de whitelabel
+  // (dist/manifest_*.json) sao ignorados pelo git e existem apenas na maquina de
+  // quem os gera: exigir "os 12" fazia o `npm run build` falhar em todo checkout
+  // limpo, worktree ou CI. Exige-se o publico; os que estiverem presentes passam
+  // pelas mesmas conferencias abaixo.
   const manifests = readdirSync(RAIZ_EXT).filter(
     (f) => f.startsWith("manifest") && f.endsWith(".json"),
   );
-  checar("os 12 manifests foram encontrados", manifests.length === 12, String(manifests.length));
+  checar("o manifest publico (dist/manifest.json) existe", manifests.includes("manifest.json"), manifests.join(", "));
+  console.log(`  (${manifests.length} manifest(s) presente(s): ${manifests.join(", ")})`);
 
   for (const arquivo of manifests) {
     const m = JSON.parse(readFileSync(join(RAIZ_EXT, arquivo), "utf8"));

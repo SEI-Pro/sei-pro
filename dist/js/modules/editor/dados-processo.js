@@ -110,7 +110,7 @@
         var optionsDados = $.map(dadosEditorArray, function (v) {
             var label = (typeof v[0] !== 'undefined') ? v[0] : '';
             var value = (typeof v[1] !== 'undefined') ? v[1] : '';
-            return '<option value="' + String(value).replace(/"/g, '&quot;') + '">' + label + '</option>';
+            return '<option value="' + String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '">' + label + '</option>';
         }).join('');
 
         // Tabela dos campos dinamicos personalizados ja salvos (aba 3).
@@ -313,10 +313,13 @@
                 // Inicializa as abas (jQuery UI).
                 try { $box.find('#tabDadosSEI').tabs(); } catch (e) {}
 
-                // Detectados x a substituir: mesma contagem do onShow do CK4.
+                // Detectados x a substituir: mesmo texto que replaceDadosEditor usa
+                // (textoCamposDinamicosPro, no monolito: ignora <style>/<script>).
                 var corpoTexto = SeiProEditorAdapter.findInBody(editor, 'p');
                 var joinText = (corpoTexto && corpoTexto.length)
-                    ? corpoTexto.map(function () { return $(this).text(); }).get().join(' ')
+                    ? ((typeof textoCamposDinamicosPro === 'function')
+                        ? textoCamposDinamicosPro(corpoTexto)
+                        : corpoTexto.map(function () { return $(this).text(); }).get().join(' '))
                     : '';
                 var arrayTags_len = (typeof getHashTagsPro === 'function')
                     ? getHashTagsPro(joinText).length : 0;
@@ -343,7 +346,8 @@
                     // acontecia). Sem isso, quem esta em outra aba clica em OK
                     // e o dialogo nem se fecha: parece que a ferramenta travou.
                     var value = $box.find('#listDados').val();
-                    if (value && value !== '') insertDadosEditor(value);
+                    // Insere na instancia do botao que abriu o dialogo (no CK4 com secoes, sem ela caia no Cabecalho).
+                    if (value && value !== '') insertDadosEditor(value, editor);
                     try { $box.dialog('close'); } catch (e) {}
                 }
             }]
@@ -367,9 +371,11 @@
     // ----------------------------------------------------------------
     // Insere o valor escolhido (aba 1) no ponto do cursor, via adapter.
     // ----------------------------------------------------------------
-    window.insertDadosEditor = function (value) {
-        var ed = SeiProEditorAdapter.getInstance();
+    window.insertDadosEditor = function (value, editor) {
+        var ed = editor || SeiProEditorAdapter.getInstance();
         if (!ed) return;
+        // CK5: o link do processo vai no formato do plugin LinkProtocoloSei (ver sei-pro-editor.js).
+        if (typeof htmlLinksProtocoloEditorPro === 'function') value = htmlLinksProtocoloEditorPro(value, ed);
         SeiProEditorAdapter.withEdit(ed, function () { SeiProEditorAdapter.insertHtml(ed, value); });
     };
 
@@ -468,7 +474,9 @@
         $('#tabNewDynamicField_result').find('table tbody tr').each(function (index, value) {
             var name = $(this).find('td').eq(0).find('b').text().trim().replace('#', '');
             var value = $(this).find('td').eq(1).find('em').text().trim();
-            $select.append('<option value="' + value + '">Personalizado (' + siglaUnidadeAtual + ') #' + name + ': ' + value + '</option>');
+            // value e texto (lido do <em>): o valor da opcao e HTML inserido no documento, e o atributo e HTML de novo.
+            var valueHtml = (typeof textoParaHtmlPro === 'function') ? textoParaHtmlPro(value) : value;
+            $select.append('<option value="' + valueHtml.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '">Personalizado (' + siglaUnidadeAtual + ') #' + name + ': ' + valueHtml + '</option>');
             arrayNewDynamicField.push({ name: name, value: value });
             txtObsDynamicField += '#' + name + ': ' + value + '\n';
         });

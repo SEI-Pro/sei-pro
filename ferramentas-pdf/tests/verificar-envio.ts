@@ -47,6 +47,8 @@ const {
   nomeParaUpload,
   enviarDocumentoExterno,
   acharLinkDeIncluirDocumento,
+  paraLatin1,
+  codificarLatin1,
 } = await import("@/ponte/enviarDocumento");
 
 let passou = 0;
@@ -200,8 +202,38 @@ checar(
   "a preferencia configurada vale quando o nome nao diz nada",
   escolherSerie(SERIES, "documento.pdf", undefined, "Ofício")?.valor === "21",
 );
+// O DEFEITO QUE ISTO TRAVA. Sem pista no nome, sem tipo padrao e sem "Anexo",
+// a versao anterior devolvia o PRIMEIRO tipo da lista. No SEI SP (122 tipos,
+// nenhum Anexo) todo arquivo de nome livre entrava como "Abaixo-Assinado", sem
+// ninguem ter escolhido -- e documento protocolado nao se desfaz.
+const SEM_ANEXO = [
+  { nome: "Abaixo-Assinado", valor: "1" },
+  { nome: "Alvará", valor: "2" },
+  { nome: "Relatório", valor: "63" },
+];
 checar(
-  "sem Anexo na lista, devolve o primeiro em vez de nada",
+  "sem Anexo e sem pista, NAO cai no primeiro da lista: devolve nulo para perguntar",
+  escolherSerie(SEM_ANEXO, "Vistoria F2.pdf") === null,
+  JSON.stringify(escolherSerie(SEM_ANEXO, "Vistoria F2.pdf")),
+);
+checar(
+  "sem Anexo, o nome do arquivo continua escolhendo",
+  escolherSerie(SEM_ANEXO, "Relatorio vistoria.pdf")?.valor === "63",
+);
+checar(
+  "sem Anexo, o tipo padrao configurado continua valendo",
+  escolherSerie(SEM_ANEXO, "Vistoria.pdf", undefined, "Relatório")?.valor === "63",
+);
+checar(
+  "sem Anexo, o tipo pedido pela ferramenta continua valendo",
+  escolherSerie(SEM_ANEXO, "Vistoria.pdf", "2")?.valor === "2",
+);
+checar(
+  "tipo padrao que nao existe na lista nao vira escolha",
+  escolherSerie(SEM_ANEXO, "Vistoria.pdf", undefined, "Anexo") === null,
+);
+checar(
+  "com um tipo so, nao ha o que perguntar: e ele",
   escolherSerie([{ nome: "Despacho", valor: "7" }], "documento.pdf")?.valor === "7",
 );
 checar("lista vazia devolve nulo", escolherSerie([], "x.pdf") === null);
@@ -285,19 +317,9 @@ checar("espaco vira +, e nao %20", hdn.includes("+") && !hdn.includes("%20"), hd
 
 console.log("\n== corpo do POST ==");
 
-// Os codificadores do SEI Pro, reproduzidos: `escape()` e a versao hexadecimal.
+// O codificador do SEI Pro, reproduzido: `escape()` com `+` protegido.
 const cod = {
   escapar: (s: string) => escape(s).replace(/\+/g, "%2B"),
-  hexar: (s: string) => {
-    let r = "";
-    for (const ch of s) {
-      if (ch === " ") r += "+";
-      else if (ch.normalize("NFD").replace(/[̀-ͯ]/g, "") !== ch)
-        r += `%${ch.charCodeAt(0).toString(16)}`.slice(-4).toUpperCase();
-      else r += ch;
-    }
-    return r;
-  },
 };
 
 const corpo = montarCorpoDoPost(
@@ -335,6 +357,106 @@ checar(
   corpo.split("&").find((p) => p.startsWith("txtDataElaboracao=")),
 );
 checar("todos os campos entraram", corpo.split("&").length === 5, corpo);
+
+/* ------------------------------------------------------------------ *
+ * Nome com caractere fora do latin-1 e com os separadores do formulario
+ * ------------------------------------------------------------------ */
+
+console.log("\n== nome com travessao, aspas curvas, &, % e + ==");
+// O caso real (SEI 4.1.5, documento 0103966): o arquivo "Teste — “aspas” &
+// 50% + 1" entrou como "Relatório Teste â¿¿ â¿¿aspasâ¿".
+// Duas falhas juntas: o `encodeURI_toHex` so trocava letra acentuada, entao o
+// travessao e as aspas iam como bytes UTF-8 num POST lido como ISO-8859-1; e o
+// `&` ia cru, encerrando o campo ali -- "& 50% + 1" nunca chegou ao SEI.
+
+/** Decodifica como o PHP le um corpo urlencoded em ISO-8859-1. */
+function lerComoLatin1(valor: string): string {
+  return valor.replace(/\+/g, " ").replace(/%([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
+const NOME_WORD = "Teste \u2014 \u201Caspas\u201D & 50% + 1";
+checar(
+  "travessao vira hifen e aspas curvas viram retas",
+  paraLatin1(NOME_WORD) === 'Teste - "aspas" & 50% + 1',
+  paraLatin1(NOME_WORD),
+);
+checar("acento de portugues fica como esta", paraLatin1("Of\u00EDcio n\u00BA 3 \u00C7") === "Of\u00EDcio n\u00BA 3 \u00C7");
+checar("reticencias de um caractere viram tres pontos", paraLatin1("Anexo\u2026") === "Anexo...");
+checar("espaco nao separavel vira espaco comum", paraLatin1("Contrato\u00A0123") === "Contrato 123");
+checar(
+  "fora do latin-1 com acento fica a letra base; sem base, sai",
+  paraLatin1("\u015Cao \u{1F600}x") === "Sao x",
+  JSON.stringify(paraLatin1("\u015Cao \u{1F600}x")),
+);
+checar(
+  "os separadores do formulario sao escapados",
+  codificarLatin1("a&b=c+d%e") === "a%26b%3Dc%2Bd%25e",
+  codificarLatin1("a&b=c+d%e"),
+);
+checar("espaco vira + e acento vira o byte latin-1", codificarLatin1("Of\u00EDcio 3") === "Of%EDcio+3");
+{
+  const ida = codificarLatin1(paraLatin1(NOME_WORD));
+  checar("a saida e ASCII puro", /^[\x21-\x7E]*$/.test(ida), ida);
+  checar(
+    "e volta ao nome inteiro quando lida em ISO-8859-1",
+    lerComoLatin1(ida) === 'Teste - "aspas" & 50% + 1',
+    lerComoLatin1(ida),
+  );
+}
+checar(
+  "o nome do documento ja sai em latin-1",
+  montarNomeDoDocumento(`${NOME_WORD}-numerado.pdf`, "Relat\u00F3rio") === 'Teste - "aspas" & 50% + 1-numerado',
+  montarNomeDoDocumento(`${NOME_WORD}-numerado.pdf`, "Relat\u00F3rio"),
+);
+{
+  // 48 letras + reticencias de um caractere: 49 antes da troca, 51 depois. Se o
+  // corte viesse antes, o nome passaria de 50 caracteres no SEI.
+  const cortado = montarNomeDoDocumento(`${"a".repeat(48)}\u2026.pdf`, "Anexo");
+  checar(
+    "a troca vem antes do corte de 50 (reticencias mudam o tamanho)",
+    cortado.length <= 50 && !cortado.includes("\u2026"),
+    `${cortado.length}: ${cortado}`,
+  );
+}
+{
+  const corpoWord = montarCorpoDoPost(
+    { hdnIdProcedimento: "99", txtNumero: NOME_WORD, selSerie: "63" },
+    cod,
+  );
+  const partes = corpoWord.split("&");
+  checar("o & do nome nao cria campo novo no corpo", partes.length === 3, corpoWord);
+  const valor = partes.find((x) => x.startsWith("txtNumero="))?.slice("txtNumero=".length) ?? "";
+  checar(
+    "o txtNumero chega ao SEI com o nome inteiro",
+    lerComoLatin1(valor) === 'Teste - "aspas" & 50% + 1',
+    valor,
+  );
+  checar("o corpo inteiro e ASCII", /^[\x20-\x7E]*$/.test(corpoWord), corpoWord);
+}
+
+// A mesma tabela do Processos em Lote (`procLote_paraLatin1`), que o upload pela
+// arvore e o controle de prazo usam: o mesmo arquivo arrastado para a arvore e
+// devolvido pela ferramenta tem de entrar com o mesmo nome. Esta conferencia
+// avalia a funcao do dist e compara as duas, para as copias nao divergirem.
+{
+  const { readFileSync } = await import("node:fs");
+  const { runInNewContext } = await import("node:vm");
+  const js = readFileSync(new URL("../../dist/js/sei-pro-proc-lote.js", import.meta.url), "utf8");
+  const tabela = /var PROCLOTE_TROCAS = \{[\s\S]*?\n\};/.exec(js)?.[0];
+  const funcao = /var procLote_paraLatin1 = \(texto\) => \{[\s\S]*?\n\};/.exec(js)?.[0];
+  checar("a funcao do Processos em Lote foi encontrada no dist", Boolean(tabela && funcao));
+  if (tabela && funcao) {
+    const ctx: { PROCLOTE_TROCAS?: Record<string, string>; procLote_paraLatin1?: (t: string) => string } = {};
+    runInNewContext(`${tabela}\n${funcao}\nthis.PROCLOTE_TROCAS = PROCLOTE_TROCAS; this.procLote_paraLatin1 = procLote_paraLatin1;`, ctx);
+    const chaves = Object.keys(ctx.PROCLOTE_TROCAS ?? {});
+    const amostra = `${chaves.join("|")}|${NOME_WORD}|Of\u00EDcio\u00A0n\u00BA|\u015Cao|\u{1F600}|\u0107|abc`;
+    checar(
+      "e as duas copias dao o mesmo resultado",
+      ctx.procLote_paraLatin1?.(amostra) === paraLatin1(amostra),
+      `${JSON.stringify(ctx.procLote_paraLatin1?.(amostra))} != ${JSON.stringify(paraLatin1(amostra))}`,
+    );
+  }
+}
 
 /* ------------------------------------------------------------------ *
  * Leitura do desfecho
@@ -601,6 +723,209 @@ function pedido(extra: Record<string, unknown> = {}) {
     "o tipo pedido pela ferramenta prevalece",
     chamadas[4].corpo?.includes("selSerie=33") === true,
     chamadas[4].corpo?.split("&").find((x) => x.startsWith("selSerie=")),
+  );
+}
+
+/* --- sem tipo deduzivel: para ANTES do upload e devolve a lista --- */
+{
+  // A tela do SEI SP: nenhum tipo e "Anexo" nem contem a palavra.
+  const TELA_SEM_ANEXO = TELA_EXTERNO.replace(
+    /<select id="selSerie"[\s\S]*?<\/select>/,
+    `<select id="selSerie" name="selSerie">
+    <option value=""></option>
+    <option value="1">Abaixo-Assinado</option>
+    <option value="2">Alvar&aacute;</option>
+    <option value="63">Relat&oacute;rio</option>
+  </select>`,
+  );
+  const rotas = (c: Chamada) => {
+    if (c.url.includes("infra_hash=ASSINADO123")) return respostaFalsa(ESCOLHA_SEI5);
+    if (c.url.includes("documento_escolher_tipo")) return respostaFalsa(TELA_SEM_ANEXO);
+    return respostaFalsa("", URL_SUCESSO);
+  };
+
+  const { amb, chamadas } = ambienteFalso(rotas);
+  const erro = await enviarDocumentoExterno(pedido({ nome: "Vistoria F2-numerado.pdf" }), amb).then(
+    () => null,
+    (e: unknown) => e as { codigo?: string; tipos?: { nome: string; valor: string }[] },
+  );
+  checar(
+    "sem tipo deduzivel o envio para com TIPO_INDEFINIDO",
+    erro?.codigo === "SEI_TIPO_INDEFINIDO",
+    String(erro?.codigo),
+  );
+  checar(
+    "e leva a lista de tipos da tela, para a pagina perguntar",
+    erro?.tipos?.map((t) => t.valor).join(",") === "1,2,63" &&
+      erro?.tipos?.some((t) => t.nome === "Relatório") === true,
+    JSON.stringify(erro?.tipos),
+  );
+  checar(
+    "e NADA foi enviado: nem o arquivo, nem o formulario",
+    !chamadas.some((c) => c.metodo === "POST-arquivo") &&
+      !chamadas.some((c) => c.url.includes("acao=documento_receber")),
+    chamadas.map((c) => `${c.metodo} ${c.url.slice(0, 40)}`).join(" | "),
+  );
+
+  // Depois da escolha, o mesmo pedido com o tipo vai ate o fim.
+  const segunda = ambienteFalso(rotas);
+  const r = await enviarDocumentoExterno(
+    pedido({ nome: "Vistoria F2-numerado.pdf", tipoDocumentoId: "63" }),
+    segunda.amb,
+  );
+  checar("com o tipo escolhido, o envio conclui", r.id === "3009576", r.id);
+  checar(
+    "e o tipo escolhido e o que vai no formulario",
+    segunda.chamadas[4]?.corpo?.includes("selSerie=63") === true &&
+      segunda.chamadas[4]?.corpo?.includes("hdnIdSerie=63") === true,
+    segunda.chamadas[4]?.corpo?.split("&").filter((x) => x.includes("Serie")).join(" "),
+  );
+  checar(
+    "e o nome do arquivo vai inteiro, sem corte de tipo",
+    segunda.chamadas[4]?.corpo?.includes("txtNumero=Vistoria+F2-numerado") === true,
+    segunda.chamadas[4]?.corpo?.split("&").find((x) => x.startsWith("txtNumero=")),
+  );
+}
+
+/* --- a pagina pergunta o tipo e reenvia --- */
+{
+  const { enviarAoProcesso } = await import("@/ui/enviarAoProcesso");
+  const { ErroPonte } = await import("@/plataforma/ponteSei");
+  const TIPOS = [
+    { nome: "Abaixo-Assinado", valor: "1" },
+    { nome: "Relatório", valor: "63" },
+  ];
+
+  /** Ponte falsa: recusa sem tipo, aceita com tipo. Registra os pedidos. */
+  function ponteFalsa() {
+    const pedidos: { nome: string; tipoDocumentoId?: string }[] = [];
+    const p = {
+      enviarAoProcesso: async (s: { nome: string; tipoDocumentoId?: string }) => {
+        pedidos.push({ nome: s.nome, tipoDocumentoId: s.tipoDocumentoId });
+        if (!s.tipoDocumentoId) throw new ErroPonte("SEI_TIPO_INDEFINIDO", "x", TIPOS);
+        return { id: "999" };
+      },
+    };
+    return { pedidos, ponte: () => p as never };
+  }
+  const saida = { nome: "Vistoria.pdf", bytes: new Uint8Array(3) };
+
+  {
+    const f = ponteFalsa();
+    const perguntas: { nome: string; tipos: number; pre?: string }[] = [];
+    const r = await enviarAoProcesso(saida, undefined, {
+      ponte: f.ponte,
+      perguntar: async (nome, tipos, pre) => {
+        perguntas.push({ nome, tipos: tipos.length, pre });
+        return "63";
+      },
+    });
+    checar("a recusa por tipo vira UMA pergunta", perguntas.length === 1, JSON.stringify(perguntas));
+    checar(
+      "a pergunta mostra o nome do arquivo e a lista inteira",
+      perguntas[0]?.nome === "Vistoria.pdf" && perguntas[0]?.tipos === 2,
+    );
+    checar(
+      "e o reenvio leva o tipo escolhido",
+      r.id === "999" && f.pedidos.length === 2 && f.pedidos[1].tipoDocumentoId === "63",
+      JSON.stringify(f.pedidos),
+    );
+
+    // A proxima pergunta ja vem com a escolha anterior marcada.
+    const g = ponteFalsa();
+    let pre: string | undefined;
+    await enviarAoProcesso(saida, undefined, {
+      ponte: g.ponte,
+      perguntar: async (_n, _t, p) => {
+        pre = p;
+        return "1";
+      },
+    });
+    checar("a escolha anterior vem pre-selecionada", pre === "63", String(pre));
+  }
+
+  {
+    const f = ponteFalsa();
+    let codigo = "";
+    try {
+      await enviarAoProcesso(saida, undefined, { ponte: f.ponte, perguntar: async () => null });
+    } catch (e) {
+      codigo = (e as { codigo?: string }).codigo ?? "";
+    }
+    checar("desistir da pergunta vira ENVIO_CANCELADO", codigo === "SEI_ENVIO_CANCELADO", codigo);
+    checar("e nao ha segundo pedido", f.pedidos.length === 1, JSON.stringify(f.pedidos));
+  }
+
+  {
+    // Outro erro qualquer passa direto, sem pergunta.
+    let perguntou = false;
+    let codigo = "";
+    try {
+      await enviarAoProcesso(saida, undefined, {
+        ponte: () =>
+          ({
+            enviarAoProcesso: async () => {
+              throw new ErroPonte("SEI_SESSAO_EXPIRADA");
+            },
+          }) as never,
+        perguntar: async () => {
+          perguntou = true;
+          return "63";
+        },
+      });
+    } catch (e) {
+      codigo = (e as { codigo?: string }).codigo ?? "";
+    }
+    checar("erro que nao e de tipo sobe sem pergunta", codigo === "SEI_SESSAO_EXPIRADA" && !perguntou, codigo);
+  }
+
+  {
+    // O SEI recusou de novo mesmo com o tipo: o erro sobe, sem pergunta em volta.
+    let perguntas = 0;
+    let codigo = "";
+    try {
+      await enviarAoProcesso(saida, undefined, {
+        ponte: () =>
+          ({
+            enviarAoProcesso: async () => {
+              throw new ErroPonte("SEI_TIPO_INDEFINIDO", "x", TIPOS);
+            },
+          }) as never,
+        perguntar: async () => {
+          perguntas += 1;
+          return "63";
+        },
+      });
+    } catch (e) {
+      codigo = (e as { codigo?: string }).codigo ?? "";
+    }
+    checar("recusa repetida nao vira laco de perguntas", perguntas === 1 && codigo === "SEI_TIPO_INDEFINIDO", `${perguntas} ${codigo}`);
+  }
+}
+
+/* --- guarda: toda ferramenta envia pelo caminho que pergunta --- */
+{
+  const { readdirSync, readFileSync, statSync } = await import("node:fs");
+  const { join, relative, dirname, resolve } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const RAIZ_UI = resolve(dirname(fileURLToPath(import.meta.url)), "..", "src", "ui");
+  const lista = (dir: string): string[] =>
+    readdirSync(dir).flatMap((n) => {
+      const c = join(dir, n);
+      return statSync(c).isDirectory() ? lista(c) : n.endsWith(".ts") ? [c] : [];
+    });
+  const diretos = lista(RAIZ_UI)
+    .filter((c) => !c.endsWith(join("ui", "enviarAoProcesso.ts")))
+    .filter((c) =>
+      /ponte\(\)\s*\.\s*enviarAoProcesso\s*\(/.test(
+        readFileSync(c, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, ""),
+      ),
+    )
+    .map((c) => relative(RAIZ_UI, c));
+  checar(
+    "nenhuma ferramenta chama ponte().enviarAoProcesso direto (pularia a pergunta do tipo)",
+    diretos.length === 0,
+    diretos.join(", "),
   );
 }
 

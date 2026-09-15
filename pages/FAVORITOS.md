@@ -9,7 +9,8 @@ Guarde num painel só seu os processos que você acompanha de perto — mesmo os
 ### Adicionar um favorito
 
 * **Pela árvore do processo:** clique na **estrela** ao lado do número do processo, no alto da árvore;
-* **Pela tela Controle de Processos:** clique na **estrela** ao lado do processo, na tabela.
+* **Pela tela Controle de Processos:** clique na **estrela** ao lado do processo, na tabela;
+* **Ao enviar o processo:** na tela **Enviar Processo**, marque **Manter processo em Favoritos**. Ali mesmo dá para escolher a categoria, o prazo e as etiquetas.
 
 A estrela fica amarela e o processo passa a aparecer no painel **Favoritos**. Para retirar, clique de novo na estrela ou use **Remover favorito** no painel.
 
@@ -85,6 +86,7 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 
 * **Os favoritos ficam guardados neste navegador, neste computador.** Eles não aparecem para outras pessoas nem em outra máquina. Se os dados de navegação forem apagados, a lista se perde — **baixe uma cópia de segurança de vez em quando**.
 * Para proteger melhor a lista, o SEI Pro também pede permissão para usar o armazenamento de arquivos do navegador. Se o painel mostrar o aviso de que o navegador *não autorizou o uso*, clique em **Re-autorize**.
+* **Processo sigiloso não entra nos favoritos.** Os dados dele só ficam disponíveis depois da senha de acesso, que o SEI Pro não pede. Ao clicar na estrela de um processo sigiloso, aparece um aviso e nada é adicionado.
 * As versões mais novas do SEI têm um recurso de favoritos próprio (menu **Favoritos** do SEI). Os dois são independentes: o favorito do SEI Pro não aparece no do SEI, e vice-versa.
 
 ## Próximo item

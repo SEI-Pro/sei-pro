@@ -3599,11 +3599,18 @@ div#divInfraBarraAcesso a {
 .seiSlim div#divRedimensionar.dragme:hover {
     background: #f9efad;
 }
+/* Paragrafos numerados: o contador so pode ser incrementado num lugar. Incrementar no p E
+   no :after contava de 2 em 2. O incremento fica no :after porque os estilos numerados do
+   proprio SEI (p.Paragrafo_Numerado_Nivel1, p.Item_Nivel1, p.Item_Alinea_Letra...) ja
+   declaram counter-increment no p e, por especificidade, anulariam o nosso ali. Sem o
+   counter-reset num ancestral, cada :after criaria um contador proprio e mostraria sempre 1. */
+html {
+    counter-reset: seipro_counter;
+}
 .linhaNumerada {
     position: relative;
     top: 0;
     margin-left: 40px !important;
-    counter-increment: seipro_counter;
     line-height: initial !important;
 }
 .linhaNumerada:after {

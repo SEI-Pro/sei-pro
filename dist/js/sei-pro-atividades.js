@@ -124,6 +124,31 @@ function getNameGenre(ref_nomenclatura, string_male, string_female) {
         masc = (masc !== null) ? masc : false;
     return (masc ? string_male : string_female);
 }
+// Marcador com o prazo de entrega da demanda no processo. No SEI 4.1 e no 5, com marcador no processo, "Gerenciar Marcador"
+// abre a listagem, sem campo nem botao de salvar: nada era gravado. setMarcadorProcessoPro inclui pelo formulario do
+// "Adicionar" e so confirma com o resultado do SEI; no SEI 3 segue pelo formulario de antes.
+function setMarcadorPrazoAtividadePro(param) {
+    var dateSubmit = 'Ate '+moment(param.prazo_entrega, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
+    var valuesIframe = [
+        {element: 'txaTexto', value: dateSubmit},
+        {element: 'hdnIdMarcador', value: param.lista_marcador.id_marcador}
+    ];
+    setMarcadorProcessoPro(param.id_procedimento, valuesIframe, false, function(){ 
+        var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+        var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(param.id_procedimento)));
+        if (objIndexDoc !== -1) {
+            listMarcadores[objIndexDoc] = {
+                id_procedimento: listMarcadores[objIndexDoc].id_procedimento,
+                icon: param.lista_marcador.icon,
+                tag: param.lista_marcador.tag,
+                name: dateSubmit
+            }
+            sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
+        }
+    }, function(){
+        alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel gravar o marcador do prazo no SEI. Tente pela op\u00E7\u00E3o Gerenciar Marcador do processo.');
+    });
+}
 function getServerAtividades(param, mode) {
     // if (    urlServerAtiv && (getTokenGoogle() || userHashAtiv != '') &&
     if (    urlServerAtiv && userHashAtiv != '' &&
@@ -744,24 +769,7 @@ function getServerAtividades(param, mode) {
                                     updateAnotacaoProcesso(ativData['anotacoes_processo']);
                                 }
                                 if ((mode == 'save_atividade' || mode == 'edit_atividade') && param.lista_marcador && param.marcador == 'on') {
-                                    var dateSubmit = 'Ate '+moment(param.prazo_entrega, 'YYYY-MM-DD HH:mm').format('DD/MM/YYYY HH:mm');
-                                    var valuesIframe = [
-                                        {element: 'txaTexto', value: dateSubmit},
-                                        {element: 'hdnIdMarcador', value: param.lista_marcador.id_marcador}
-                                    ];
-                                    updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, param.id_procedimento, function(){ 
-                                        var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
-                                        var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(param.id_procedimento)));
-                                        if (objIndexDoc !== -1) {
-                                            listMarcadores[objIndexDoc] = {
-                                                id_procedimento: listMarcadores[objIndexDoc].id_procedimento,
-                                                icon: param.lista_marcador.icon,
-                                                tag: param.lista_marcador.tag,
-                                                name: dateSubmit
-                                            }
-                                            sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
-                                        }
-                                    });
+                                    setMarcadorPrazoAtividadePro(param);
                                 }
                                 if (mode == 'save_afastamento' || mode == 'edit_afastamento' || mode == 'delete_afastamento') {
                                     setTimeout(function(){ 
@@ -21148,8 +21156,11 @@ function signCancelDocumento(paramData) {
 }
 function checkPageAtividadesVisualizacao() {
     if (perfilLoginAtiv) {
-        waitLoadPro($($ifrVisualizacao).contents(), '#frmDocumentoCadastro', infraBarraComandos, startAtividadeNewDoc);
-        waitLoadPro($($ifrVisualizacao).contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', infraBarraComandos, sendAtividadesEnviarProcesso);
+        // Mesmo criterio do checkPageVisualizacao: frame do formulario resolvido pela presenca do iframe
+        // interno (SEI 4.1+), e '.infraBarraComandos', que e a barra dos formularios em todas as versoes.
+        var ifrV = getContentsVisualizacaoPro();
+        waitLoadPro(ifrV, '#frmDocumentoCadastro', '.infraBarraComandos, '+infraBarraComandos, startAtividadeNewDoc);
+        waitLoadPro(ifrV, '#frmAtividadeListar[action*="acao=procedimento_enviar"]', '.infraBarraComandos, '+infraBarraComandos, sendAtividadesEnviarProcesso);
     }
 }
 function startAtividadeNewDoc() {
@@ -23227,7 +23238,10 @@ function changeAtivMarcadorSwitch(this_) {
         var textTag = dataMarcador.name;
         var tagName = dataMarcador.tag;
         
-        if (listaMarcadores && listaMarcadores_unidade == idUnidade) {
+        // Mesmo caso do painel do processo (editDadosArvorePro_): so usa a lista guardada no navegador depois de
+        // relida do SEI nesta pagina, e busca pelo formulario do "Adicionar" quando "Gerenciar Marcador" abre a
+        // listagem (SEI 4.1 e 5, processo que ja tem marcador) - senao a caixa vinha vazia ou sem os marcadores novos.
+        if (listaMarcadores && listaMarcadores_unidade == idUnidade && typeof listaMarcadoresAtualizadaPro !== 'undefined' && listaMarcadoresAtualizadaPro) {
             var htmlOptions = $.map(listaMarcadores, function(v){
                                 var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                 return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
@@ -23237,12 +23251,9 @@ function changeAtivMarcadorSwitch(this_) {
             var ifrArvore = $('#ifrArvore');
             var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
                 arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
-            var href = jmespath.search(arrayLinksArvore, "[?name=='Gerenciar Marcador'].url");
+            var href = jmespath.search(arrayLinksArvore, "[?name=='Gerenciar Marcador'].url | [0]");
             if (href !== null) {
-                $.ajax({ 
-                    url: href
-                }).done(function (html) {
-                    var $html = $(html);
+                getHtmlFormAdicionarPro(href, '#selMarcador', function ($html) {
                         listaMarcadores = getListaMarcadores($html).array;
                     var htmlOptions = $.map(listaMarcadores, function(v){
                                         var selected = (tagName && tagName == v.name) ? 'selected' : '';
@@ -27051,7 +27062,7 @@ function checkUnidadeFuncBeta() {
     return checkUnidades;
 }
 function checkHostPermission(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
     if (typeof getConfigHost === 'function') {
         if (sessionStorage.getItem('configHost_Pro') !== null) {
             setConfigHost(JSON.parse(sessionStorage.getItem('configHost_Pro')), initPerfilLoginAtiv, false);

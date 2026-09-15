@@ -18,8 +18,7 @@ A função vem **desligada** de fábrica. Para ligar, abra as [Configurações d
 
 ### Bom saber
 
-> **Problema conhecido no SEI 4 e 5.** Nessas versões a tela de pesquisa rola dentro de uma área própria, e a função ainda não percebe que você chegou ao fim da lista — os resultados seguintes não são carregados. Enquanto a correção não sai, use os links de página do SEI. Acompanhe em [#159](https://github.com/pedrohsoaresadv/sei-pro/issues/159).
-
+* A página seguinte só é carregada quando você chega perto do fim da lista. Rolar pelo meio ou pelo começo da lista não carrega nada.
 * Com muitos resultados, a página fica longa e mais pesada. Para listas grandes, prefira refinar a pesquisa.
 * Os botões **Baixar Lista**, **Copiar** e **Baixar Documentos** consideram os resultados carregados na tela — veja [Ferramentas na tela de Pesquisa](../pages/PESQUISA.md).
 

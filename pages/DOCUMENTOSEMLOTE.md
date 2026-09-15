@@ -53,8 +53,10 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 
 * **Os nomes dos campos precisam ser escritos exatamente da mesma forma** no modelo e na planilha. Evite acentos e espaços nos nomes (`municipio`, `data_oficio`). Um campo sem correspondência fica sem preenchimento.
 * A codificação do CSV (UTF-8 ou a do Excel antigo) é detectada automaticamente, para os acentos saírem corretos.
-* Se o nome dos documentos na árvore tiver acentos ou símbolos, a ferramenta avisa antes de continuar, porque nem todos os caracteres são aceitos pelo SEI nesse campo.
+* Os acentos são retirados do **nome do documento na árvore** (*José* vira *Jose*), porque nem todos os caracteres são aceitos pelo SEI nesse campo. Símbolos como º, ª e ° continuam no nome (*Ofício nº 1ª* vira *Oficio nº 1ª*). O mesmo vale para o **Número**, nos tipos de documento em que ele é informado. O texto do documento mantém os acentos. No SEI 3, a ferramenta avisa antes de continuar.
+* Na **especificação dos novos processos**, os caracteres que o SEI não aceita, típicos de texto colado do Word ou do Excel, são trocados pelo equivalente simples: o travessão (—) vira hífen (-) e as aspas curvas (“ ”) viram aspas retas ("). Os acentos são mantidos.
 * Os documentos são criados **sem assinatura**. Para assinar todos de uma vez, use [Ações em Lote](../pages/ACOESEMLOTE.md).
+* Se uma linha falhar, a ferramenta para ali e mostra o motivo e o número da linha. As linhas anteriores já foram criadas. No modo **Criar cada documento em um novo processo**, se o processo da linha chegou a ser aberto sem o documento (por uma falha ou porque você clicou em **Cancelar**), a ferramenta mostra o link dele: confira-o antes de executar de novo.
 * Faça um teste com uma planilha de duas ou três linhas antes de gerar um lote grande.
 
 ## Próximo item

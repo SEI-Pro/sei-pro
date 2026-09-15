@@ -37,7 +37,14 @@ export interface Intervalo {
 
 export interface OpcoesDivisao {
   modo: ModoDivisao;
-  intervalos?: Intervalo[];
+  /**
+   * Os intervalos, ou o texto como o usuário o digitou ("1-3, 8, 12-20").
+   *
+   * O texto é aceito porque só aqui se sabe quantas páginas o documento tem, e
+   * é contra esse total que `interpretarIntervalos` confere cada número. A
+   * interface não abre o PDF para descobrir isso.
+   */
+  intervalos?: Intervalo[] | string;
   paginasPorParte?: number;
   tamanhoMaximoBytes?: number;
   aoProgredir?: ProgressoCallback;
@@ -161,12 +168,15 @@ export async function dividirPdf(
         grupos.push(Array.from({ length: Math.min(n, total - i) }, (_, k) => i + k));
       }
     } else if (modo === "porIntervalos") {
-      const intervalos = opcoes.intervalos ?? [];
+      const intervalos =
+        typeof opcoes.intervalos === "string"
+          ? interpretarIntervalos(opcoes.intervalos, total)
+          : opcoes.intervalos ?? [];
       if (intervalos.length === 0) throw new ErroFerramenta("NENHUM_ARQUIVO");
       grupos = intervalos.map((iv) =>
         Array.from({ length: iv.fim - iv.inicio + 1 }, (_, k) => iv.inicio - 1 + k),
       );
-    } else {
+    } else if (modo === "porTamanho") {
       const teto = opcoes.tamanhoMaximoBytes ?? 0;
       if (teto <= 0) throw new ErroFerramenta("FALHA_INESPERADA");
       const partes = await dividirPorTamanho(origem, teto, aoProgredir, cancelado);
@@ -174,6 +184,11 @@ export async function dividirPdf(
         bytes: p.bytes,
         nomeArquivo: `${raiz}-parte-${String(i + 1).padStart(2, "0")}.pdf`,
       }));
+    } else {
+      // Modo desconhecido NÃO cai no corte por tamanho. Caía, e foi assim que os
+      // modos "intervalos" e "porPaginas" que a tela mandava viravam teto zero e
+      // "Não foi possível concluir a operação" -- sem nada apontar para o nome.
+      throw new Error(`modo de divisão desconhecido: ${String(modo)}`);
     }
 
     aoProgredir?.(0, grupos.length);

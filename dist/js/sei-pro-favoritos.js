@@ -620,10 +620,11 @@ function actFavoritePro(this_, mode) {
     } else {
         var _this = false;
         var ifrArvore = $('#ifrArvore').contents(); 
-        var ifrVisualizacao = $($ifrVisualizacao).contents(); 
+        var ifrVisualizacao = getContentsVisualizacaoPro(); // frame do formulario (aninhado no SEI 4.1+)
         var iconProc = ifrArvore.find('#topmenu a[target="ifrVisualizacao"]').eq(0);
         var id_procedimento = String(getParamsUrlPro(iconProc.attr('href')).id_procedimento);
     }
+    if (mode == 'add' && avisoFavoritoSigilosoPro(id_procedimento)) { return; }
     checkDataFavoritePro(this_, mode, id_procedimento);
 
     if (mode == 'add' && ifrVisualizacao && ifrVisualizacao.find('#frmAtividadeListar').length == 0 && ifrArvore && ifrArvore.length > 0) {
@@ -651,8 +652,18 @@ function actFavoritePro(this_, mode) {
         });
     }
 }
+// Processo sigiloso nao entra nos favoritos: os dados dele so saem depois da senha de acesso, que o SEI Pro nao pede.
+// Avisa em vez de deixar a estrela piscando ate desistir.
+function avisoFavoritoSigilosoPro(id_procedimento) {
+    if (typeof checkProcessoSigilosoId === 'undefined' || !checkProcessoSigilosoId(id_procedimento)) { return false; }
+    if (typeof alertaBoxPro !== 'undefined') {
+        alertaBoxPro('Error', 'exclamation-triangle', 'Processo sigiloso n\u00E3o pode ser adicionado aos favoritos: o SEI exige a senha de acesso para ler os dados dele.');
+    }
+    return true;
+}
 function checkDataFavoritePro(this_, mode, id_procedimento, TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
+    if (mode == 'add' && TimeOut < 9000 && avisoFavoritoSigilosoPro(id_procedimento)) { return; }
     if (mode == 'remove' || (typeof dadosProcessoPro !== 'undefined' && dadosProcessoPro.hasOwnProperty('listAndamento') && dadosProcessoPro.hasOwnProperty('propProcesso') && dadosProcessoPro.hasOwnProperty('tiposDocumentos'))) { 
         storeFavoritePro(mode, id_procedimento);
     } else {
@@ -1117,9 +1128,14 @@ function restoreFavServer(data) {
         console.log('backup setPanelFavorites');
     }
 }
+// event.path (so do Chrome) foi removido do navegador: o Enter lancava TypeError e nao salvava o prazo.
+// O campo de prazo tambem fica dentro do formulario do Enviar Processo (#favoritePrazoSend): o Enter disparava a
+// submissao implicita do formulario, isto e, o envio do processo. Cancela antes de gravar o prazo (se a gravacao
+// lancar erro, o envio continua cancelado).
 function keyDatesFav(e) {
     if(e.which == 13) {
-        showDatesFav(e.path[0], 'hide');
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        showDatesFav(e.target || e.srcElement, 'hide');
     }
 }
 function initFunctionsPanelFav(TimeOut = 9000) {
@@ -1343,6 +1359,8 @@ function updateDatesFav(this_) {
     var index = parseInt($(this_).closest('tr').data('index'));
     var id_procedimento = parseInt($(this_).closest('tr').data('id_procedimento'));
     var favoriteIndex = storeFavorites.favorites.findIndex((obj => obj.id_procedimento == id_procedimento));
+    // No Enviar Processo (#favoritePrazoSend) nao ha linha de favorito: o prazo e lido do campo no envio.
+    if (favoriteIndex === -1) return;
     var config = getOptionsConfigDate(favoriteIndex);
     if ($(this_).val().trim() != '') {
             if ($(this_).val().trim() != config.date && config.date != '' && $(this_).val().trim() != '' ) {
@@ -1384,17 +1402,28 @@ function showDatesFav(this_, mode) {
     }
 }
 function getFavoritesEnviarProcesso() {
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var ifrVisualizacao = getContentsVisualizacaoPro();
     var storeFavorites = getStoreFavoritePro();
-    var id_procedimento = String(getParamsUrlPro(window.location.href).id_procedimento);
+    var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
+        // Com a "URL amigavel" o endereco do topo vira /sei/#protocolo, sem o id, e o bloco saia com
+        // data-id_procedimento="undefined" (etiquetas e categoria nao salvavam): usa o id da arvore, como actFavoritePro.
+        id_procedimento = String(typeof id_procedimento !== 'undefined' ? id_procedimento : getParamsUrlPro($('#ifrArvore').contents().find('#topmenu a[target="ifrVisualizacao"]').eq(0).attr('href')).id_procedimento);
     var value = jmespath.search(storeFavorites.favorites, "[?id_procedimento=='"+id_procedimento+"'] | [0]");
-    var htmlAddFav =    '<div id="divSinAdicionarFavoritos" class="infraDivCheckbox" style="position: absolute;top: 100%;left: 0;">'+
-                        '   <input type="checkbox" id="chkSindicionarFavoritos" onchange="parent.actionFavoriteCheckbox(this)" name="chkSindicionarFavoritos" class="infraCheckbox" tabindex="510" '+(value ? 'checked' : '')+'>'+
+    // No SEI novo o formulario e um fluxo de .infraAreaDados e o checkbox nativo fica invisivel
+    // (opacity 0): usa a marcacao de checkbox do SEI novo, como getActionsOnSendProcess, e o bloco
+    // entra no fluxo em vez de ficar absoluto por cima do "Retorno Programado".
+    var htmlAddFav =    '<div id="divSinAdicionarFavoritos" class="infraDivCheckbox" style="'+(isNewSEI ? 'position: relative;clear: both;margin: 10px 0;' : 'position: absolute;top: 100%;left: 0;')+'">'+
+                        (isNewSEI ?
+                        '   <div class="infraCheckboxDiv "><input type="checkbox" id="chkSindicionarFavoritos" onchange="parent.actionFavoriteCheckbox(this)" name="chkSindicionarFavoritos" class="infraCheckboxInput" tabindex="510" '+(value ? 'checked' : '')+'><label class="infraCheckboxLabel " for="chkSindicionarFavoritos"></label></div>' :
+                        '   <input type="checkbox" id="chkSindicionarFavoritos" onchange="parent.actionFavoriteCheckbox(this)" name="chkSindicionarFavoritos" class="infraCheckbox" tabindex="510" '+(value ? 'checked' : '')+'>'
+                        )+
                         '   <label id="lblSinAdicionarFavoritos" for="chkSindicionarFavoritos" accesskey="" class="infraLabelCheckbox">Manter processo em Favoritos</label>'+
                         '   <div class="favoritosLabelOptions seiProForm" style="display:'+(value ? 'block' : 'none')+';font-size: 9pt;clear: both;">'+
                         favoritosLabelOptions(id_procedimento)+
                         '   </div>'+
                         '</div>';
+        // No SEI 4.1+ o parent do formulario e o #ifrConteudoVisualizacao, sem as funcoes do SEI Pro
+        htmlAddFav = getHtmlJanelaProcessoPro(htmlAddFav);
     if (ifrVisualizacao.find('#divSinAdicionarFavoritos').length == 0) ifrVisualizacao.find('#frmAtividadeListar').append(htmlAddFav);
     loadStylePro(URL_SPRO+"css/sei-pro.css", ifrVisualizacao.find('head'), ifrVisualizacao);
     loadStylePro((localStorage.getItem('seiSlim') ? URL_SPRO+"css/fontawesome.pro.min.css" : URL_SPRO+"css/fontawesome.min.css"), ifrVisualizacao.find('head'), ifrVisualizacao);
@@ -1476,10 +1505,13 @@ function loadScriptFavoriteTag(iFrame) {
                         '   }\n'+
                         '   initFavoriteTagIframe();\n'+
                         '</script>';
+        scriptText = getHtmlJanelaProcessoPro(scriptText);
     $(scriptText).appendTo(iFrame.find('head'));
 }
 function checkPageFavoritosVisualizacao() {
-    waitLoadPro($($ifrVisualizacao).contents(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', infraBarraComandos, getFavoritesEnviarProcesso);
+    // Mesmo criterio do checkPageVisualizacao: frame do formulario resolvido pela presenca do iframe
+    // interno, e '.infraBarraComandos' (a '.barraBotoesSEI' do SEI novo so existe na barra da arvore).
+    waitLoadPro(getContentsVisualizacaoPro(), '#frmAtividadeListar[action*="acao=procedimento_enviar"]', '.infraBarraComandos, '+infraBarraComandos, getFavoritesEnviarProcesso);
 }
 function removeFav(this_) { 
     var storeFavorites = getStoreFavoritePro();

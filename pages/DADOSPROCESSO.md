@@ -90,7 +90,7 @@ O botão aparece sempre no editor do SEI quando o SEI Pro está instalado, em do
 * Os campos personalizados são gravados nas **observações da sua unidade** para aquele processo. Outras unidades conseguem usá-los na substituição, mas não podem editá-los.
 * Os dados vêm do processo no momento da inserção. Se o processo mudar depois (um novo interessado, por exemplo), substitua ou insira de novo.
 * A mesma lista aparece ao digitar `#` no texto, com a [escrita interativa](../pages/ESCRITAINTERATIVA.md).
-* Para criar muitos documentos a partir de um modelo e de uma planilha, veja [Documentos em Lote](../pages/DOCUMENTOSEMLOTE.md).
+* Para criar muitos documentos a partir de um modelo e de uma planilha, veja [Documentos em Lote](../pages/DOCUMENTOSEMLOTE.md). Os campos de lá levam dois `#` de cada lado (`##nome##`) e não são contados nem trocados por esta ferramenta.
 
 ## Próximo item
 

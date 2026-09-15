@@ -351,7 +351,7 @@ var checkTipoProcessoSelect = () => {
         $("#btnConfirm").prop('disabled', true).addClass('ui-button-disabled ui-state-disabled');
     }
 }
-var docsLote_getLinkNewDoc = async (param, dataCSV) => {
+var docsLote_getLinkNewDoc = async (param, dataCSV, linha = {}) => {
     let urlNewDoc = false;
     if (param.createNewProcs) {
 
@@ -360,12 +360,14 @@ var docsLote_getLinkNewDoc = async (param, dataCSV) => {
         });
 
         const urlProcesso = await docsLote_setNewProc(param.idTipoProcedimento, txtEspecificacaoProcesso);
-        if (urlProcesso) {
-            urlNewDoc = await docsLote_getUrlNewDoc(urlProcesso);
-        }
+        if (!urlProcesso) throw new Error('N\u00E3o foi poss\u00EDvel criar o processo');
+        linha.urlProcesso = urlProcesso; //daqui em diante o processo existe: se a linha falhar antes de gerar o documento, o modal de erro avisa
+        urlNewDoc = await docsLote_getUrlNewDoc(urlProcesso);
     } else {
         urlNewDoc = getUrlNewDocArvore();
     }
+    //Sem URL a cadeia seguia com $.get(null)/POST(undefined), que vao para a pagina atual, e terminava em 'Link de edicao nao encontrado'
+    if (!urlNewDoc) throw new Error('Erro ao localizar o link de inserir documento. Verifique se o processo encontra-se aberto em sua unidade!');
     return urlNewDoc;
 }
 var docsLote_execute = async (param) => {
@@ -397,12 +399,14 @@ var docsLote_execute = async (param) => {
         }
 
         for (let i = 0; i < CSVData.length; i++) {
+            const linha = {}; //estado da linha para o modal de erro: processo criado (modo novo processo) e documento gerado
             try {
-                const urlNewDoc = await docsLote_getLinkNewDoc(param, CSVData[i]);
+                const urlNewDoc = await docsLote_getLinkNewDoc(param, CSVData[i], linha);
                 const response1 = await docsLote_clickNewDoc(urlNewDoc);
                 const response2 = await docsLote_selectDocType(response1.urlExpandDocList);
                 const response3 = await docsLote_formNewDoc(response2.urlFormNewDoc, CSVData[i], param);
                 const response4 = await docsLote_confirmDocData(response3.urlConfirmDocData, response3.params);
+                linha.documentoGerado = true;
                 const response5 = await docsLote_editDocContent(response4.urlEditor, CSVData[i]);
                 const response6 = await docsLote_saveDoc(response5);
 
@@ -412,6 +416,10 @@ var docsLote_execute = async (param) => {
 
             } catch (e) {
                 if (e.message && e.message === "cancel") {
+                    //Cancelado depois de criar o processo da linha e antes de gerar o documento: o processo fica vazio (mesmo aviso do modal de erro)
+                    const avisoOrfao = (linha.urlProcesso && !linha.documentoGerado)
+                        ? `<p style="text-align:center;margin: 0 0 10px 0;"><i class="fas fa-exclamation-circle vermelhoColor"></i> O <a href="${linha.urlProcesso}" target="_blank" class="bLink">processo criado para a linha ${i + 1}</a> ficou sem documento. Confira-o na sua unidade antes de executar de novo.</p>`
+                        : '';
                     $('#ifrArvore').contents()[0].location.reload();
                     setTimeout(() => {
                         var htmlFilterDoclote = `<div class="btn-group filterTablePro" role="group" style="margin: 10px 0;">
@@ -456,7 +464,7 @@ var docsLote_execute = async (param) => {
                                 `;
                         $('#preparingProgressCircular').remove();
                         $('#cancelExecute').hide();
-                        $('#progress').html(`<h4 style="text-align:center;margin: 30px 0 10px 0; font-size: 1.5rem;"><i class="fas fa-check-circle verdeColor" style="font-size: 1em;"></i> Progresso finalizado! \uD83D\uDC4F</h4>${tableResult}`);
+                        $('#progress').html(`<h4 style="text-align:center;margin: 30px 0 10px 0; font-size: 1.5rem;"><i class="fas fa-check-circle verdeColor" style="font-size: 1em;"></i> Progresso finalizado! \uD83D\uDC4F</h4>${avisoOrfao}${tableResult}`);
                         // setTimeout(() => { resetDialogBoxPro('dialogBoxPro') }, 2000);
                         dialogBoxPro.dialog('option', 'width', 870);
                         dialogBoxPro.dialog('option', 'height', 500);
@@ -466,7 +474,11 @@ var docsLote_execute = async (param) => {
                 } else {
                     flagError = true;
                     console.log("Erro \uD83D\uDE22 -> ", e);
-                    docLoteModalErro();
+                    let textoErro = `Linha ${i + 1} de ${CSVData.length}: ${docsLote_textoErro(e)}`;
+                    if (linha.urlProcesso && !linha.documentoGerado) {
+                        textoErro += `<br><br><i class="fas fa-exclamation-circle vermelhoColor"></i> O <a href="${linha.urlProcesso}" target="_blank" class="bLink">processo criado para esta linha</a> ficou sem documento. Confira-o na sua unidade antes de executar de novo.`;
+                    }
+                    docLoteModalErro(textoErro);
                 }
                 aborted = false;
                 break;
@@ -480,6 +492,7 @@ var docsLote_clickNewDoc = async (urlNewDoc) => {
     const urlExpandDocList = $(htmlChooseDocType).find('#frmDocumentoEscolherTipo').attr('action');
 
     if (aborted) throw new Error("cancel");
+    if (typeof urlExpandDocList === 'undefined') throw new Error('N\u00E3o foi poss\u00EDvel abrir a escolha do tipo de documento');
     if (typeof urlExpandDocList !== 'undefined') $('#progress span').text('\u2588\u2592\u2592\u2592\u2592\u2592');
     return {
         urlExpandDocList,
@@ -520,12 +533,19 @@ var docsLote_selectDocType = async (urlExpandDocList) => {
         });
     }
     if (aborted) throw new Error("cancel");
+    if (!urlFormNewDoc) throw new Error(`O tipo do documento modelo (${selectedModel.nome}) n\u00E3o foi encontrado entre os tipos de documento dispon\u00EDveis`);
     if (urlFormNewDoc) $('#progress span').text('\u2588\u2588\u2592\u2592\u2592\u2592');
     return {
         urlFormNewDoc,
         success: true
     };
 }
+// Deixa o texto representavel em ISO-8859-1 (o que vai com escapeComponent para o SEI), com a tabela do Processos em Lote
+// (procLote_paraLatin1, sei-pro-proc-lote.js, carregado junto pelo init.js); sem ela, descarta o que nao cabe. Nunca lanca.
+var docsLote_paraLatin1 = (texto) => {
+    if (typeof procLote_paraLatin1 === 'function') return procLote_paraLatin1(texto);
+    return String((texto === null || typeof texto === 'undefined') ? '' : texto).replace(/[\s\S]/g, (c) => (c.charCodeAt(0) < 256 ? c : ''));
+};
 var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
     const htmlFormNewDoc = await $.get(urlFormNewDoc);
     const form = $(htmlFormNewDoc).find('#frmDocumentoCadastro')
@@ -555,6 +575,10 @@ var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
             params[$(this).attr('name')] = $(this).val();
         }
     });
+    // O formulario chega por AJAX e as lupas do SEI nao rodam: sem isto o hdnInteressados ia vazio e cada documento
+    // do lote nascia sem os interessados do processo (e com @nome_interessado@ cru nas secoes que vem do modelo).
+    // Mesma regra do setNewDoc (preencherHiddenLupasFormPro, sei-functions-pro.js); o valor sai escapado no POST.
+    if (typeof preencherHiddenLupasFormPro === 'function') preencherHiddenLupasFormPro(form, params);
     params.rdoNivelAcesso = '0';
     params.hdnFlagDocumentoCadastro = '2';
     params.txaObservacoes = '';
@@ -573,14 +597,22 @@ var docsLote_formNewDoc = async (urlFormNewDoc, data, dataDialog) => {
     // let nomeArvore = forceNames ? data[dataDialog.docsNames].replace(regex, (match) => docsLote_normalChars[match]).substring(0, 50) : data[dataDialog.docsNames].substring(0, 50);
     let nomeArvore = removeAcentos(data[dataDialog.docsNames].substring(0, 50)).trim();
 
+    // O nome vai no txtNumero (tipo com Numero informado, ou forceNames do SEI 3) e no txtNomeArvore, os dois com
+    // escapeComponent (= escape()) no docsLote_confirmDocData, que so gera os bytes ISO-8859-1 certos para caracteres < 256.
+    // O antigo decodeURIComponent(escape(nomeArvore)) era identidade para texto ASCII e lancava URIError com qualquer outro
+    // caractere que o removeAcentos deixa passar (ordinais, grau, travessao, espaco nao separavel): a linha parava no 'Eita!'.
+    // O txtNumero ia cru: o XHR codifica a string em UTF-8 e o SEI le ISO-8859-1 ('n\u00BA' virava 'n\u00C2\u00BA'; '&' cortava o valor).
+    const nomeLatin1 = docsLote_paraLatin1(nomeArvore).substring(0, 50).trim();
+
     if (!numeroOpcional || forceNames) {
-        params.txtNumero = nomeArvore;
+        params.txtNumero = nomeLatin1;
     } else {
         params.txtNumero = '';
     }
-    params.txtNomeArvore = (nomeOpcional && isNewSEI) ? decodeURIComponent(escape(nomeArvore)) : '';
+    params.txtNomeArvore = (nomeOpcional && isNewSEI) ? nomeLatin1 : '';
     
     if (aborted) throw new Error("cancel");
+    if (typeof urlConfirmDocData === 'undefined') throw new Error('N\u00E3o foi poss\u00EDvel abrir o formul\u00E1rio do novo documento');
     if (typeof urlConfirmDocData !== 'undefined') $('#progress span').text('\u2588\u2588\u2588\u2592\u2592\u2592');
 
     return {
@@ -594,7 +626,10 @@ var docsLote_confirmDocData = async (urlConfirmDocData, params) => {
     var postData = '';
     for (var k in params) {
         if (postData !== '') postData = `${postData}&`;
-        var valor = (k=='txtNomeArvore') ? escapeComponent(params[k]) : params[k];
+        // Hidden das lupas levam "id(+-)texto" com separadores ISO-8859-1 (0xB1/0xA5): vao escapados como no setNewDoc,
+        // senao sairiam em UTF-8 sob charset ISO-8859-1 e o SEI nao separaria os ids. txtNumero e txtNomeArvore ja chegam
+        // convertidos para latin-1 e tambem vao escapados ('&', '+' e '%' cortavam o valor).
+        var valor = (k=='txtNomeArvore' || k=='txtNumero' || /^hdn(Interessados|Destinatarios|Assuntos|UnidadesReabertura)$/.test(k)) ? escapeComponent(params[k]) : params[k];
             postData = `${postData}${k}=${valor}`;
     }
 
@@ -609,7 +644,7 @@ var docsLote_confirmDocData = async (urlConfirmDocData, params) => {
     let urlEditor = false;
     var searchLinkEditor = htmlDocCreated.match(/controlador\.php\?acao=editor_montar&id_procedimento=[^'"]*/);
     if (searchLinkEditor) urlEditor = searchLinkEditor[0];
-    else throw new Error('Link de edi\u00E7\u00E3o n\u00E3o encontrado');
+    else throw new Error(docsLote_comMsgSEI('Link de edi\u00E7\u00E3o n\u00E3o encontrado', htmlDocCreated)); //ex.: 'Documento Base nao encontrado.'
 
     if (aborted) throw new Error("cancel");
     if (urlEditor) $('#progress span').text('\u2588\u2588\u2588\u2588\u2592\u2592');
@@ -652,8 +687,9 @@ var docsLote_editDocContent = async (urlEditor, data) => {
     const htmlEditor = await $.get(urlEditor);  //TODO: Lançar exceção, identificar e excluir o doc gerado erroneamente
     const urlParams = getParamsUrlPro(urlEditor);
     const docTitle = trycatch(() => htmlEditor.match(/<title[^>]*>([^<]+)<\/title>/)[1], false);
-    const nrSEI = docTitle ? docTitle.split('-')[1].trim() : false;
-    const nomeDocumento = docTitle ? docTitle.split('-')[2].trim() : false;
+    const partesTitulo = getPartesTituloEditorPro(docTitle); //"SEI/ORGAO - NUMERO - TIPO": a sigla do orgao pode ter hifen (ex.: GESP-TREINAMENTO)
+    const nrSEI = partesTitulo ? partesTitulo.nr_sei : false;
+    const nomeDocumento = partesTitulo ? partesTitulo.nome_documento : false;
     const regex1 = new RegExp(dataCrossing.map((data) => `##${data}##`).join('|'), 'g');
     const regex2 = new RegExp(Object.keys(docsLote_specialChars).join('|'), 'g');
 
@@ -679,6 +715,7 @@ var docsLote_editDocContent = async (urlEditor, data) => {
         };
     } else {
         urlSubmitForm = $(htmlEditor).filter((_, el) => $(el).attr('id') === 'frmEditor').attr('action');
+        if (!urlSubmitForm) throw new Error('Link para salvar o documento n\u00E3o encontrado'); //sem a action, o docsLote_saveDoc postaria na pagina atual
 
         const textAreas = $(htmlEditor).find('div#divEditores textarea');
         const allText = $.map(textAreas, function(v){ return $(v).text() }).join('');
@@ -961,12 +998,42 @@ var docLoteModalLoader = (paramData) => {
     });
 }
 
+// Texto legivel e seguro (HTML escapado) para o modal de erro: Error, jqXHR rejeitado pelo $.ajax, ou a resposta crua
+// do SEI que o docsLote_saveDoc lanca (pode ser uma pagina inteira).
+var docsLote_textoErro = (e) => {
+    let texto = (e && e.message) ? String(e.message)
+        : (e && typeof e.status !== 'undefined') ? `Falha na comunica\u00E7\u00E3o com o SEI (HTTP ${e.status}${e.statusText ? ' ' + e.statusText : ''})`
+        : String(e || 'Erro desconhecido');
+    if (/<[a-z!\/]/i.test(texto)) {
+        const doc = new DOMParser().parseFromString(texto, 'text/html');
+        doc.querySelectorAll('script, style').forEach((el) => el.remove());
+        texto = doc.body ? doc.body.textContent : '';
+    }
+    texto = texto.replace(/\s+/g, ' ').trim();
+    if (texto.length > 400) texto = `${texto.substring(0, 400)}...`;
+    return escapeHtml(texto);
+};
+// Mensagem que o SEI devolve na propria pagina quando recusa a operacao: #divInfraMensagens .alert (SEI 4.1/5, com o
+// botao 'X' de fechar) ou #txaInfraValidacao/#divInfraAreaValidacao (SEI 3.x).
+var docsLote_msgSEI = (html) => {
+    if (typeof html !== 'string' || !html) return '';
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return [...doc.querySelectorAll('#divInfraMensagens .alert, #txaInfraValidacao, #divInfraAreaValidacao')].map((el) => {
+        el.querySelectorAll('button').forEach((b) => b.remove());
+        return el.textContent.replace(/\s+/g, ' ').trim();
+    }).filter(Boolean).join(' ');
+};
+var docsLote_comMsgSEI = (texto, html) => {
+    const msgSEI = docsLote_msgSEI(html);
+    return msgSEI ? `${texto}. Mensagem do SEI: ${msgSEI}` : texto;
+};
+
 var docLoteModalErro = (textError = false) => {
     var htmlBox =   `<div>
                         <p><i class="fas fa-exclamation-triangle vermelhoColor"></i> Eita! Algo deu errado na replica\u00E7\u00E3o de documentos \uD83D\uDE14</p>
                         <br>
                         <p>Verifique as configura\u00E7\u00F5es selecionadas e tente novamente.</p>
-                        <p>${textError}</p>
+                        <p>${textError || ''}</p>
                     </div>`;
 
     resetDialogBoxPro('dialogBoxPro');
@@ -1111,7 +1178,7 @@ var docLoteModalAnaliseCSV = (nrDoc, csvFile, nrTxtPadrao) => {
 const getInitialProcUrl = async () => {
     const urlInitProc = $(`${mainMenu} a[href*="acao=procedimento_escolher_tipo"]`).attr('href');
     if (!urlInitProc) {
-        throw new Error('Erro ao iniciar a criação do processo');
+        throw new Error('Erro ao iniciar a cria\u00E7\u00E3o do processo');
     }
     return urlInitProc;
 };
@@ -1124,8 +1191,15 @@ const getInitialProcHtml = async (urlInitProc) => {
 
 // Função assíncrona para obter a lista completa de tipos de procedimento
 const getFullProcList = async (htmlInitProc) => {
-    const form = isSEI_5 ? htmlInitProc.find('#frmProcedimentoEscolherTipo') : htmlInitProc.find('#frmIniciarProcessoEscolhaTipo');
+    // Escolhe pelo formulario que a pagina REALMENTE tem, e nao pela versao: o SEI 4.1.5 ja serve
+    // #frmProcedimentoEscolherTipo (como o SEI 5), e o SEI 3 serve #frmIniciarProcessoEscolhaTipo.
+    // Pela versao, no 4.1.5 a action saia undefined e o POST ia para a pagina atual, em silencio.
+    let form = htmlInitProc.find('#frmProcedimentoEscolherTipo');
+    if (!form.length) form = htmlInitProc.find('#frmIniciarProcessoEscolhaTipo');
     const hrefForm = form.attr('action');
+    if (!hrefForm) {
+        throw new Error('N\u00E3o foi poss\u00EDvel abrir a lista de tipos de processo');
+    }
     
     const param = {};
     form.find("input[type=hidden]").each(function () {
@@ -1247,7 +1321,12 @@ const prepareFormData = (param, htmlFormProc, txtEspecificacaoProcesso) => {
     param.hdnFlagProcedimentoCadastro = '2';
     param.rdoProtocolo = 'M';
     param.txaObservacoes = '';
-    param.txtDescricao = txtEspecificacaoProcesso ? txtEspecificacaoProcesso.substring(0, 100).trim() : '';
+    // O txtDescricao sai com escapeComponent (= escape()), que transforma o que nao cabe em ISO-8859-1
+    // (travessao e aspas curvas vindos do Word/Excel) em %u2014/%u201C: o PHP nao decodifica e o SEI grava
+    // o texto literal. Converte ANTES do corte de 100 caracteres, com a mesma tabela do Processos em Lote
+    // (procLote_paraLatin1, sei-pro-proc-lote.js, carregado junto pelo init.js).
+    const especificacaoLatin1 = txtEspecificacaoProcesso ? docsLote_paraLatin1(txtEspecificacaoProcesso) : txtEspecificacaoProcesso;
+    param.txtDescricao = especificacaoLatin1 ? especificacaoLatin1.substring(0, 100).trim() : '';
     // Assuntos
     param.hdnAssuntos = (htmlFormProc.find('#selAssuntos option').length === 0) 
         ? [] 
@@ -1328,6 +1407,8 @@ const docsLote_setNewProc = async (id_tipo_procedimento, txtEspecificacaoProcess
         // 5. Extrair parâmetros do formulário
         const form = htmlFormProc.find('#frmProcedimentoCadastro');
         const hrefForm = form.attr('action');
+        // Sem a action, o createProc postaria na pagina atual (e, se ela for um procedimento_gerar, o status daria sucesso)
+        if (!hrefForm) throw new Error(docsLote_comMsgSEI('N\u00E3o foi poss\u00EDvel abrir o formul\u00E1rio do novo processo', htmlFormProc.toArray().map((el) => el.outerHTML || '').join('')));
         const param = extractFormParams(form);
         
         // 6. Preparar dados do formulário
@@ -1347,16 +1428,16 @@ const docsLote_setNewProc = async (id_tipo_procedimento, txtEspecificacaoProcess
                            `controlador.php?acao=procedimento_trabalhar&id_procedimento=${String(id_procedimento)}`;
                 return href;
             } else {
-                alertaBoxPro('Error', 'exclamation-triangle', 
-                    'N\u00E3o foi poss\u00EDvel abrir o processo gerado. Verifique na caixa de entrada de sua unidade');
-                return null;
+                throw new Error('N\u00E3o foi poss\u00EDvel abrir o processo gerado. Verifique na caixa de entrada de sua unidade');
             }
         }
+        // O SEI so redireciona para procedimento_trabalhar quando gera o processo; senao devolve o formulario com a mensagem
+        throw new Error(docsLote_comMsgSEI('N\u00E3o foi poss\u00EDvel criar o processo', htmlResult));
         
     } catch (error) {
+        //Quem chama (docsLote_getLinkNewDoc, dentro do docsLote_execute) mostra a mensagem no modal de erro e interrompe o lote
         console.error('Erro na cria\u00E7\u00E3o do procedimento:', error);
-        alertaBoxPro('Error', 'exclamation-triangle', error.message);
-        return null;
+        throw error;
     }
 
 };
@@ -1371,7 +1452,7 @@ const getProcessHtml = async (urlProcesso) => {
 const getTreeUrl = (html) => {
     const urlArvore = html.find("#ifrArvore").attr('src');
     if (!urlArvore) {
-        throw new Error('Erro ao obter a URL da u00E1rvore do processo');
+        throw new Error('Erro ao obter a URL da \u00E1rvore do processo');
     }
     return urlArvore;
 };
@@ -1413,7 +1494,6 @@ const docsLote_getUrlNewDoc = async (urlProcesso) => {
         
     } catch (error) {
         console.error('Erro ao obter URL de novo documento:', error);
-        alertaBoxPro('Error', 'exclamation-triangle', error.message);
-        return null;
+        throw error;
     }
 };

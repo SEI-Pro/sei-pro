@@ -32,6 +32,7 @@ import { criarPaginaTarjar, type PaginaTarjar } from "@/ui/tarjar/paginaTarjar";
 import { instalarMedidorDeTexto, desinstalarMedidorDeTexto } from "@/ui/tarjar/medidor";
 import { confirmarTarja } from "@/ui/tarjar/confirmar";
 import { ponte } from "@/ui/contexto";
+import { enviarAoProcesso } from "@/ui/enviarAoProcesso";
 import { mensagemDaPonte } from "@/ui/mensagens";
 import type { FerramentaMontada } from "@/ui/moldura";
 
@@ -511,7 +512,7 @@ export function montar(): FerramentaMontada {
     enviando = true;
     sincronizar();
     try {
-      await ponte().enviarAoProcesso({
+      await enviarAoProcesso({
         nome: estado.resultado.nome,
         bytes: estado.resultado.bytes,
       });

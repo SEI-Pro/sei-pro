@@ -31,6 +31,13 @@ var fileSystemContentPro = false;
 var delayCrash = false;
 var isProcUrgente = false;
 var isNewSEI = getIsNewSEI();
+// As globais abaixo (isSEI_5, divComandos, ifrVisualizacao_, targetIframeVisualizacao_...) dependem da
+// versao do SEI guardada no sessionStorage, que so era gravada pelo initSeiPro do Controle de Processos.
+// Numa aba que abre o processo sem passar por ele (link colado, favorito, pesquisa em aba nova), a versao
+// ainda nao existia e as globais congelavam no valor do SEI 3: no SEI 4.1 a arvore ficava sem "Dividir em
+// duas linhas" e sem os paineis de dados do processo. O logo da barra do sistema traz a versao no title
+// (SEI 3, 4 e 5): quando ele esta na pagina, grava a versao antes de calcular as globais.
+if (!getSeiVersionPro() && $('img[title*="Sistema Eletr\u00F4nico de Informa\u00E7\u00F5es - Vers\u00E3o"]').length) setSeiVersionPro();
 var isSEI_5 = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'5') >= 0 ? true : false;
 const lnkInfraUnidade = $('#lnkInfraUnidade').attr('onclick');
 const infra_unidade_atual = lnkInfraUnidade ? getParamsUrlPro(lnkInfraUnidade.split("'")[1]).infra_unidade_atual : null;
@@ -76,13 +83,119 @@ var targetIframeVisualizacao_ = isSEI_5 ? 'ifrConteudoVisualizacao' : 'ifrVisual
 var $ifrVisualizacao = '#'+ifrVisualizacao_;
 var ifrArvoreHtml_ = isNewSEI && getSeiVersionPro() && compareVersionNumbers(getSeiVersionPro(),'4.1.0') >= 0 ? 'ifrVisualizacao' : 'ifrArvoreHtml';
 var $ifrArvoreHtml = '#'+ifrArvoreHtml_;
+// A partir do SEI 4.1 o documento e os formularios abrem num iframe ANINHADO:
+// #ifrConteudoVisualizacao (barra #divArvoreAcoes) > #ifrVisualizacao. Vale para o 4.1.x e
+// para o 5.x; antes do 4.1 o proprio $ifrVisualizacao ja e o frame do conteudo. A deteccao e
+// pela PRESENCA do iframe interno, e nao por isSEI_5: tratar so o SEI 5 deixava o 4.1 procurando
+// formularios, anexos e a capa no frame da barra, onde eles nao existem.
+function getIframeVisualizacaoPro() {
+    var ifrConteudo = $($ifrVisualizacao);
+    if (ifrVisualizacao_ !== 'ifrVisualizacao' && ifrConteudo.length) {
+        var ifrInterno = ifrConteudo.contents().find('#ifrVisualizacao');
+        if (ifrInterno.length) { return ifrInterno; }
+    }
+    return ifrConteudo;
+}
+function getContentsVisualizacaoPro() {
+    return getIframeVisualizacaoPro().contents();
+}
+// Janela da tela do processo (a que tem o #ifrArvore). O HTML que o SEI Pro injeta no
+// visualizador chama parent.xxx(): no SEI 3.x esse parent ja e a tela do processo, mas a partir
+// do SEI 4.1 o documento fica aninhado e o parent vira o #ifrConteudoVisualizacao, que nao tem
+// a arvore nem os dados do processo. Sobe na hierarquia ate achar o #ifrArvore.
+function getJanelaProcessoPro() {
+    var janela = window;
+    while (janela) {
+        try {
+            if (janela.document.getElementById('ifrArvore')) { return janela; }
+        } catch (e) { break; }
+        if (janela === janela.parent) { break; }
+        janela = janela.parent;
+    }
+    return window;
+}
+// Reescreve os parent.xxx() de um HTML que vai ser injetado no frame do conteudo quando esse frame
+// esta aninhado (SEI 4.1+). Com `elemento`, so reescreve se ele estiver no documento desse frame.
+// No SEI 3.x (e fora da tela do processo) o HTML sai inalterado.
+function getHtmlJanelaProcessoPro(html, elemento) {
+    var ifrInterno = getIframeVisualizacaoPro()[0];
+    if (ifrInterno === $($ifrVisualizacao)[0]) { return html; }
+    if (typeof elemento !== 'undefined') {
+        try {
+            if (!elemento || elemento.ownerDocument !== ifrInterno.contentDocument) { return html; }
+        } catch (e) { return html; }
+    }
+    return String(html).replace(/\bparent\.(?!getJanelaProcessoPro\()/g, 'parent.getJanelaProcessoPro().');
+}
+// Na tela do processo este arquivo roda em DUAS copias: a do manifest (content script, mundo
+// isolado) e a do $.getScript de init_all.js (mundo da pagina). Cada uma liga os proprios handlers
+// da visualizacao. So a copia da pagina enxerga os dados da arvore (arrayLinksArvore,
+// parent.linksArvore) e as funcoes do SEI: na isolada a lista de links e vazia e
+// updateDadosArvoreIframe faz attr('src', null) no mesmo #frmCheckerProcessoPro que a outra copia
+// esta usando. Por isso os handlers que gravam dados ou acumulam linhas ficam com uma copia so.
+function isCopiaIsoladaPro() {
+    try {
+        return (typeof chrome !== 'undefined' && !!chrome && !!chrome.runtime && typeof chrome.runtime.getURL === 'function')
+            || (typeof browser !== 'undefined' && !!browser && !!browser.runtime && typeof browser.runtime.getURL === 'function');
+    } catch (e) { return false; }
+}
+// A copia da pagina marca o <html> (visivel aos dois mundos) quando registra a visualizacao; se ela
+// nao chegou a registrar, a copia isolada continua responsavel, como antes.
+function isCopiaResponsavelVisualizacaoPro() {
+    return !isCopiaIsoladaPro() || document.documentElement.getAttribute('data-spro-visualizacao') !== 'pagina';
+}
+// Janela auxiliar: pop-up nomeado que o SEI ou o SEI Pro abrem por infraAbrirJanela/window.open (janelaEditor_*,
+// janelaAssinatura e as de selecao do SEI 3.x, 'Pesquisa de Processos' do SEI Pro...). Nela as funcoes de tela
+// cheia (rolagem infinita, substituir selecao, URL amigavel, painel da arvore...) ficam desligadas. O teste era so
+// window.name != '', mas a partir do SEI 4 o jquery.modalLink (o do SEI e o nosso) faz window.name = idModal, um
+// (new Date()).getTime(), na janela que abre QUALQUER modal - Assinar Documento, por exemplo - e o nome dura
+// enquanto a aba existir. Dali em diante a janela principal passava por pop-up e perdia essas funcoes em toda
+// tela da aba. Nome so com digitos e o do modalLink: ele so indica janela auxiliar quando a propria janela e um
+// pop-up (tem opener e nao mostra a barra de endereco), que e o caso de uma modal aberta dentro de um pop-up. Uma
+// aba comum - inclusive as que o SEI Pro abre com '_blank' - mostra a barra de endereco. No SEI 3.x o modalLink
+// nao grava window.name e nenhum pop-up tem nome so com digitos: o resultado e o mesmo do teste antigo.
+function isJanelaAuxiliarPro(janela) {
+    try {
+        janela = janela || window;
+        var nome = String(janela.name || '');
+        if (nome == '') { return false; }
+        if (!/^\d+$/.test(nome)) { return true; }
+        return !!janela.opener && !!janela.locationbar && janela.locationbar.visible === false;
+    } catch (e) { return false; }
+}
 var dialogIsDraggable = false;
 var tableHomeTimeout = 3000;
-var URL_SPRO = (typeof parent._P !== 'undefined' && parent._P() !== null && typeof parent._P().URL_SPRO !== 'undefined' && parent._P().URL_SPRO !== null) ? parent._P().URL_SPRO : undefined;
-var NAMESPACE_SPRO = (typeof parent._P !== 'undefined' && typeof parent._P().NAMESPACE_SPRO !== 'undefined') ? parent._P().NAMESPACE_SPRO : undefined;
-var URLPAGES_SPRO = (typeof parent._P !== 'undefined' && typeof parent._P().URLPAGES_SPRO !== 'undefined') ? parent._P().URLPAGES_SPRO : undefined;
-var VERSION_SPRO = (typeof parent._P !== 'undefined' && typeof parent._P().VERSION_SPRO !== 'undefined') ? parent._P().VERSION_SPRO : undefined;
-var ICON_SPRO = (typeof parent._P !== 'undefined' && typeof parent._P().ICON_SPRO !== 'undefined') ? parent._P().ICON_SPRO : undefined;
+// Namespace da extensao gravado no sessionStorage ('new_extension') por init_all.js/init.js. No content
+// script este arquivo roda ANTES deles (ordem do manifest); na primeira pagina de uma aba nova o
+// sessionStorage ainda esta vazio, _P() devolve null e parent._P().NAMESPACE_SPRO lancava
+// "Cannot read properties of null (reading 'NAMESPACE_SPRO')": a copia isolada parava aqui e nada do
+// resto do arquivo rodava (loadScriptPro, consts em TDZ). Sem a sessao, a copia do content script le do
+// manifest os mesmos valores que getPathExtensionPro() grava logo depois; fora dele (mundo da pagina,
+// sem runtime.getURL) os valores ficam undefined, como ja acontecia com URL_SPRO. Com a sessao gravada
+// (todas as outras paginas) o resultado e o mesmo de antes.
+function getNameSpaceSessionPro() {
+    if (typeof parent._P === 'undefined') { return {}; }
+    var ns = parent._P();
+    if (ns !== null) { return ns; }
+    try {
+        var runtimePro = (typeof browser !== 'undefined' && browser && browser.runtime && typeof browser.runtime.getURL === 'function') ? browser.runtime
+                       : (typeof chrome !== 'undefined' && chrome && chrome.runtime && typeof chrome.runtime.getURL === 'function') ? chrome.runtime : null;
+        if (runtimePro) {
+            var manifestPro = runtimePro.getManifest();
+            // A extensao antiga (SPro) grava em 'old_extension', que o _P() nao le.
+            if (manifestPro.short_name != 'SPro') {
+                return JSON.parse(JSON.stringify({URL_SPRO: runtimePro.getURL('js/sei-pro.js').toString().replace('js/sei-pro.js', ''), NAMESPACE_SPRO: manifestPro.short_name, URLPAGES_SPRO: manifestPro.homepage_url, VERSION_SPRO: manifestPro.version, ICON_SPRO: manifestPro.icons}));
+            }
+        }
+    } catch (e) {}
+    return {};
+}
+var nameSpaceSessionPro = getNameSpaceSessionPro();
+var URL_SPRO = (typeof nameSpaceSessionPro.URL_SPRO !== 'undefined' && nameSpaceSessionPro.URL_SPRO !== null) ? nameSpaceSessionPro.URL_SPRO : undefined;
+var NAMESPACE_SPRO = (typeof nameSpaceSessionPro.NAMESPACE_SPRO !== 'undefined') ? nameSpaceSessionPro.NAMESPACE_SPRO : undefined;
+var URLPAGES_SPRO = (typeof nameSpaceSessionPro.URLPAGES_SPRO !== 'undefined') ? nameSpaceSessionPro.URLPAGES_SPRO : undefined;
+var VERSION_SPRO = (typeof nameSpaceSessionPro.VERSION_SPRO !== 'undefined') ? nameSpaceSessionPro.VERSION_SPRO : undefined;
+var ICON_SPRO = (typeof nameSpaceSessionPro.ICON_SPRO !== 'undefined') ? nameSpaceSessionPro.ICON_SPRO : undefined;
 var urlTxtPadrao = $(mainMenu+' a[href*="acao=texto_padrao_interno_listar"]').attr('href');
 
 var iconsFlashMenu = [
@@ -421,11 +534,40 @@ function calcFilterResume(table) {
 }
 function checkProcessoSigiloso(content = $('html')) {
     var id_protocolo = getParamsUrlPro(window.location.href).id_procedimento;
-    var check = content.find('script').map(function(v){ if(typeof $(this).attr('src') == 'undefined' && $(this).html().indexOf('usuario_validar_acesso') !== -1) { return true; } }).get();
+    // O botao "Processos com Credencial de Acesso nesta Unidade" (listarCredenciais, no Controle de Processos do SEI 3 e 4)
+    // tambem passa por usuario_validar_acesso, mas nao indica sigilo de processo nenhum: sem descarta-lo, a home inteira
+    // contava como processo sigiloso para quem tem credencial e bloqueava favoritos, historico etc.
+    var check = content.find('script').map(function(v){ if(typeof $(this).attr('src') == 'undefined' && $(this).html().replace(/usuario_validar_acesso[^'"]*?acao_destino=procedimento_credencial_listar/g, '').indexOf('usuario_validar_acesso') !== -1) { return true; } }).get();
         check = check.length ? check[0] : false;
     var checkSession = (typeof id_protocolo !== 'undefined' && sessionStorageRestorePro('processo_sigiloso_'+id_protocolo) !== null) ? true : false;
     var _return = (checkSession || check) ? true : false;
     return _return;
+}
+// Sigilo de UM processo, sem carregar o processo. Abrir procedimento_trabalhar de um sigiloso (sem acesso=1) faz o SEI
+// rodar a validacao de senha no onload -- no SEI 3 e uma janela pop-up de verdade, com fundo modal na pagina de cima --,
+// entao quem carrega processo num iframe fora da pagina do processo precisa saber ANTES de carregar.
+// Fontes: a lista de sigilosos que o proprio Controle de Processos publica (hdnIdSigilosos, SEI 3, 4 e 5, com o mesmo
+// criterio de sigilo do procedimento_trabalhar) e os sigilosos ja descobertos nesta pagina (marcarProcessoSigilosoPro).
+function checkProcessoSigilosoId(idProcedimento) {
+    if (typeof idProcedimento === 'undefined' || idProcedimento === null) return false;
+    var id = String(idProcedimento).trim();
+    if (id == '' || id == '0') return false;
+    if (typeof window.processosSigilososPro !== 'undefined' && $.inArray(id, window.processosSigilososPro) !== -1) return true;
+    var sigilosos = $('#hdnIdSigilosos').val();
+    return (typeof sigilosos === 'string' && sigilosos != '' && $.inArray(id, sigilosos.split(',')) !== -1);
+}
+// Guarda, so enquanto esta pagina viver, o processo cuja validacao de senha o SEI escreveu no conteudo carregado.
+// Nao usa a marca de sessao da arvore (processo_sigiloso_<id>) de proposito: ela tambem bloqueia as funcoes na propria
+// pagina do processo depois que o usuario digita a senha.
+function marcarProcessoSigilosoPro(content) {
+    content.find('script').each(function(){
+        if (typeof $(this).attr('src') !== 'undefined') return;
+        var link = $(this).html().match(/usuario_validar_acesso[^'"]*?acao_destino=procedimento_trabalhar[^'"]*?id_procedimento=(\d+)/);
+        if (link) {
+            window.processosSigilososPro = window.processosSigilososPro || [];
+            if ($.inArray(link[1], window.processosSigilososPro) === -1) window.processosSigilososPro.push(link[1]);
+        }
+    });
 }
 function getStylesOnEditor() {
     var styles = false;
@@ -1108,6 +1250,12 @@ function escapeComponent(str) {
 function escapeRegExp(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
+// Texto vindo do SEI (especificacao, interessados, assuntos, observacoes, nomes de tipo e de documento), lido com
+// .val()/.text(), para dentro de HTML montado por concatenacao: sem o escape, uma especificacao como
+// <img src=x onerror=...> virava elemento no documento do editor (no CK4, no DOM vivo do iframe, com a sessao do SEI).
+function textoParaHtmlPro(valor) {
+    return String((valor === null || typeof valor === 'undefined') ? '' : valor).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 function escapeHtml(string) {
     var entityMap = {
         '&': '&amp;',
@@ -1287,6 +1435,14 @@ function extractTooltipToArray(elem) {
     // var array = (elem != '') ? [] : [];
     var array = (elem != '' && isJson('['+elem+']')) ? JSON.parse('['+elem+']') : [];
     return (array.length > 0) ? array : false;
+}
+// Especificacao do processo lida do tooltip do link na tela de Controle de Processos, sem o "(Nao Visualizado) " que
+// initNaoVisualizadoPro (sei-pro.js) poe no comeco desse tooltip. O prefixo fica no tooltip (o filtro "Processos nao
+// visualizados" depende dele), mas nao faz parte da especificacao: nao pode ir para a celula editavel do agrupamento
+// (que editFieldProc grava no SEI), a planilha, o quadro nem a especificacao exibida junto do numero do processo.
+// Aceita o texto com ou sem acento (extractTooltipToArray tira os acentos).
+function removePrefixoNaoVisualizadoPro(texto) {
+    return (typeof texto === 'string') ? texto.replace(/^\(N(?:\u00E3|a)o Visualizado\) /, '') : texto;
 }
 function ganttAutoProgressPercent(dtStar, dtEnd) {
     var dtNow = moment();
@@ -1664,6 +1820,9 @@ function getInteressadosProcessoAjax(link, txtInteressado, callback) {
     });
 }
 function setInteressadosSend() {
+    // Zera a cada clique no Enviar: sem isso, os interessados de um despacho aberto antes continuavam pre-preenchendo
+    // #selUnidades nos envios seguintes (outro documento, a raiz do processo).
+    interessadosSendPro = false;
     var ifrArvoreHtml = $($ifrVisualizacao).contents().find($ifrArvoreHtml);
     if (ifrArvoreHtml.length) {
         var interessados = ifrArvoreHtml.contents().find('.interessadoSeiPro').map(function(){
@@ -1879,6 +2038,69 @@ function getNewDocCompareDocs(contentDocument) {
             }]
         });
 }
+// Envio de arquivos arrastados para a arvore (submitUploadArvore, em sei-pro-arvore.js): o nome do
+// arquivo nao comeca com um tipo de documento e o orgao nao tem tipo padrao configurado nem o tipo
+// "Anexo". Em vez de usar o primeiro tipo da lista, pergunta ao usuario. Fechar ou cancelar a caixa
+// tira o arquivo do envio.
+// A caixa e modal: com ela aberta, reordenar ou remover arquivos da lista mudaria a fila do Dropzone
+// e o arquivo enviado nao seria o do nome mostrado.
+function escolherTipoUploadArvorePro(nomeArquivo, tiposDoc, valorSugerido, callbackEnviar, callbackCancelar) {
+    var decidido = false;
+    var cancelar = function() {
+        if (decidido) return;
+        decidido = true;
+        if (typeof callbackCancelar === 'function') callbackCancelar();
+    };
+    var select = $('<select id="tipoUploadArvorePro"><option value="">&nbsp;</option></select>');
+    $.each(tiposDoc, function(i, v){
+        select.append($('<option>').val(v.value).text(v.text || v.name).prop('selected', !!valorSugerido && v.value == valorSugerido));
+    });
+    var htmlBox = $('<table style="font-size: 10pt;width: 100%;" class="seiProForm"></table>')
+        .append($('<tr>').append($('<td style="vertical-align: top;text-align: left;height: 40px;" class="label"></td>')
+            .append($('<label for="tipoUploadArvorePro"></label>')
+                .append('<i class="iconPopup iconSwitch fas fa-file-upload cinzaColor"></i> ')
+                .append($('<span>').text('N\u00E3o foi poss\u00EDvel identificar o tipo do documento pelo nome do arquivo. Selecione o tipo para envi\u00E1-lo ao processo:')))
+            .append($('<div style="margin-top: 8px; font-weight: bold; word-break: break-all;"></div>').text(nomeArquivo))))
+        .append($('<tr>').append($('<td class="required"></td>').append(select)));
+
+    // Outra caixa do SEI Pro pode destruir esta com resetDialogBoxPro, e o dialog('destroy') nao passa
+    // pelo close: sem isto nenhum dos dois callbacks rodava e o envio ficava parado sem aviso. A remocao
+    // do conteudo (feita por resetDialogBoxPro e pelo .empty() da proxima caixa) conta como cancelamento.
+    var conteudoBox = $('<div class="dialogBoxDiv"></div>').append(htmlBox).on('remove', cancelar);
+
+    resetDialogBoxPro('dialogBoxPro');
+    dialogBoxPro = $('#dialogBoxPro')
+        .empty()
+        .append(conteudoBox)
+        .dialog({
+            width: 500,
+            modal: true,
+            title: 'Tipo do documento',
+            open: function() {
+                var _this = this;
+                updateButtonConfirm(_this, !!select.val());
+                select.on('change', function(){ updateButtonConfirm(_this, !!select.val()) });
+                initChosenReplace('box_init', _this, true);
+            },
+            close: cancelar,
+            buttons: [{
+                text: 'Cancelar envio',
+                click: function() {
+                    $(this).dialog('close');
+                }
+            },{
+                text: 'Enviar',
+                class: 'confirm',
+                click: function() {
+                    var valor = select.val();
+                    if (!valor) return;
+                    decidido = true;
+                    resetDialogBoxPro('dialogBoxPro');
+                    callbackEnviar(valor);
+                }
+            }]
+        });
+}
 function getCompareDocs(this_) {
     var _this = $(this_);
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
@@ -2029,6 +2251,8 @@ function editDadosArvorePro_(this_ = false, parse = false) {
     } else if (data.mode == 'acompanhamento_especial') {
         var textTitle = 'Editar acompanhamento especial';
         var storeAcompEsp = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+            // A lista e uma so para todas as unidades (fica com a ultima unidade lida): so os acompanhamentos desta unidade.
+            storeAcompEsp = (storeAcompEsp && typeof getListaAcompanhamentoEspUnidadePro === 'function') ? getListaAcompanhamentoEspUnidadePro(storeAcompEsp) : storeAcompEsp;
         var dataAcompEsp = (storeAcompEsp !== null) ? jmespath.search(storeAcompEsp, "[?id_protocolo=='"+id_procedimento+"'] | [0]") : null;
             dataAcompEsp = dataAcompEsp ? dataAcompEsp : false;
         var force = (typeof data.force !== 'undefined' && data.force) ? true : false;
@@ -2084,6 +2308,9 @@ function editDadosArvorePro_(this_ = false, parse = false) {
 
     } else if (data.mode == 'marcador') {
         var textTitle = 'Editar marcador';
+        // URL do formulario "Adicionar" quando "Gerenciar Marcador" abriu a listagem (SEI 4.1 e 5, processo que ja
+        // tem marcador); preenchida ao montar a lista de marcadores no open() do dialogo.
+        var urlFormMarcadorPro = false;
         var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
         var dataMarcador = (id_procedimento && listMarcadores) ? jmespath.search(listMarcadores, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : null;
             dataMarcador = (dataMarcador !== null) ? dataMarcador : false;
@@ -2243,7 +2470,9 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                         
                                         updateDadosArvoreMult('Acompanhamento Especial', valuesIframe, id_procedimento, function(){ 
                                             var listAcompEsp = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
-                                            var objIndexDoc = (!listAcompEsp) ? -1 : listAcompEsp.findIndex((obj => obj.id_protocolo == String(id_procedimento)));
+                                            // Atualiza o acompanhamento do processo nesta unidade, e nao o de outra que esteja na lista.
+                                            var listAcompEspUnidade = (listAcompEsp && typeof getListaAcompanhamentoEspUnidadePro === 'function') ? getListaAcompanhamentoEspUnidadePro(listAcompEsp) : listAcompEsp;
+                                            var objIndexDoc = (!listAcompEsp) ? -1 : listAcompEsp.findIndex((obj => obj.id_protocolo == String(id_procedimento) && (!$.isArray(listAcompEspUnidade) || $.inArray(obj, listAcompEspUnidade) !== -1)));
                                             if (objIndexDoc !== -1) {
                                                 listAcompEsp[objIndexDoc]['grupo'] = $('#configDatesBox_acompesp').find('option:selected').text();
                                                 listAcompEsp[objIndexDoc]['observacoes'] = textObservacao;
@@ -2271,7 +2500,7 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                                 {element: 'txaTexto', value: dateSubmit},
                                                 {element: 'hdnIdMarcador', value: _tagSelected}
                                             ];
-                                            updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
+                                            var sucessoMarcadorPro = function(){
                                                 var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
                                                 var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
                                                 if (objIndexDoc !== -1) {
@@ -2286,7 +2515,19 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                                                 // console.log(listMarcadores[objIndexDoc]);
                                                 resetDialogBoxPro('dialogBoxPro');
                                                 alertaBoxPro('Sucess', 'check-circle', 'Marcador alterado com sucesso!');
-                                            });
+                                            };
+                                            if (urlFormMarcadorPro) {
+                                                // SEI 4.1 e 5 com marcador no processo: "Gerenciar Marcador" e a listagem, sem campo
+                                                // nem botao de salvar (nada era gravado, mas o aviso de sucesso aparecia). Grava pelo
+                                                // formulario do "Adicionar", que no SEI inclui o marcador ou, se o processo ja o tem,
+                                                // atualiza o texto (AndamentoMarcadorRN::cadastrar).
+                                                updateDadosFormAdicionarPro(urlFormMarcadorPro, valuesIframe, sucessoMarcadorPro, function(){
+                                                    loadingButtonConfirm(false);
+                                                    alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel gravar o marcador no SEI. Tente pela op\u00E7\u00E3o Gerenciar Marcador do processo.');
+                                                });
+                                            } else {
+                                                updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, sucessoMarcadorPro);
+                                            }
                                         }
                                     }
                                 }
@@ -2391,7 +2632,9 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                 } else if (data.mode == 'marcador') {
                     var listaMarcadores = getOptionsPro('listaMarcadores');
                     var listaMarcadores_unidade = getOptionsPro('listaMarcadores_unidade');
-                    if (listaMarcadores && listaMarcadores_unidade == idUnidade) {
+                    // So usa a lista guardada no navegador se ela ja foi relida do SEI nesta pagina
+                    // (listaMarcadoresAtualizadaPro, em sei-pro.js); senao marcadores novos nao apareciam.
+                    if (listaMarcadores && listaMarcadores_unidade == idUnidade && typeof listaMarcadoresAtualizadaPro !== 'undefined' && listaMarcadoresAtualizadaPro) {
                         var htmlOptions = $.map(listaMarcadores, function(v){
                                             var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                             return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
@@ -2403,10 +2646,11 @@ function editDadosArvorePro_(this_ = false, parse = false) {
                             arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
                         var href = jmespath.search(arrayLinksArvore, "[?name=='Gerenciar Marcador'].url | [0]");
                         if (href !== null) {
-                            $.ajax({ 
-                                url: href
-                            }).done(function (html) {
-                                var $html = $(html);
+                            // No SEI 4.1 e no 5, "Gerenciar Marcador" de processo que ja tem marcador abre a
+                            // listagem, sem o #selMarcador (o formulario fica atras do botao "Adicionar"): a
+                            // caixa do painel ficava sem marcador nenhum para escolher.
+                            getHtmlFormAdicionarPro(href, '#selMarcador', function ($html, urlForm) {
+                                    urlFormMarcadorPro = urlForm || false;
                                     listaMarcadores = getListaMarcadores($html).array;
                                 var htmlOptions = $.map(listaMarcadores, function(v){
                                                     var selected = (tagName && tagName == v.name) ? 'selected' : '';
@@ -2421,7 +2665,15 @@ function editDadosArvorePro_(this_ = false, parse = false) {
             buttons: btnDialogBoxPro
     });
 }
-function getRemoverMarcador(alert = true) {
+// callback (opcional): chamado uma vez quando a remocao termina, com sucesso ou nao - usado pela cadeia de acoes
+// automaticas do Enviar Processo (automaticActions), que segue para a proxima acao.
+function getRemoverMarcador(alert = true, callback = false) {
+    var concluirRemoverMarcadorPro = function(){
+        if (typeof callback !== 'function') return;
+        var cb = callback;
+            callback = false;
+        cb();
+    };
     loadingButtonConfirm(true);
     var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
         id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
@@ -2430,15 +2682,280 @@ function getRemoverMarcador(alert = true) {
         {element: 'txaTexto', value: ''},
         {element: 'hdnIdMarcador', value: ''}
     ];
-    updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
-        var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
-        var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
-        if (objIndexDoc !== -1) {
-            listMarcadores.splice(objIndexDoc,1);
-            sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
-            resetDialogBoxPro('dialogBoxPro');
-            if (alert) alertaBoxPro('Sucess', 'check-circle', 'Marcador removido com sucesso!');
+    var removerMarcadorFormPro = function(){
+        var enviado = updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_procedimento, function(){ 
+            var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+            var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
+            if (objIndexDoc !== -1) {
+                listMarcadores.splice(objIndexDoc,1);
+                sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
+                resetDialogBoxPro('dialogBoxPro');
+                if (alert) alertaBoxPro('Sucess', 'check-circle', 'Marcador removido com sucesso!');
+            }
+            concluirRemoverMarcadorPro();
+        });
+        if (enviado === false) concluirRemoverMarcadorPro();
+    };
+    // SEI 3 (e SEI 4.1/5 em processo sem marcador): "Gerenciar Marcador" e o proprio formulario (#selMarcador), e
+    // gravar o marcador vazio remove. No SEI 4.1 e no 5, com marcador no processo, o link abre a LISTAGEM
+    // "Marcadores do Processo": o formulario vazio carregado no iframe oculto nao gravava nada e o aviso de sucesso
+    // aparecia do mesmo jeito. Ai a remocao segue o botao Remover da listagem (andamento_marcador_remover) e so e
+    // confirmada quando o marcador de fato sai da listagem - o SEI redireciona com resultado=1 mesmo quando falha.
+    var ifrArvore = $('#ifrArvore');
+    var arrayLinksArvore = (ifrArvore.length) ? ifrArvore[0].contentWindow.arrayLinksArvore : undefined;
+        arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
+    var href = (ifrArvore.length && typeof arrayLinksArvore !== 'undefined' && typeof id_procedimento !== 'undefined' && id_procedimento != '' && !checkProcessoSigiloso()) ? jmespath.search(arrayLinksArvore, "[?name=='Gerenciar Marcador'].url | [0]") : null;
+    if (!href) { removerMarcadorFormPro(); return; }
+    var erroRemoverMarcadorPro = function(msg){
+        loadingButtonConfirm(false);
+        if (alert) alertaBoxPro('Error', 'exclamation-triangle', msg || 'N\u00E3o foi poss\u00EDvel remover o marcador no SEI. Tente pela op\u00E7\u00E3o Gerenciar Marcador do processo.');
+        concluirRemoverMarcadorPro();
+    };
+    $.ajax({ url: href }).done(function (html) {
+        var $html = $(html);
+        var urlRemover = (String(html).match(/'([^']*acao=andamento_marcador_remover[^']*)'/) || [])[1];
+        // Formulario de cadastro do SEI 4.1/5 (frmAndamentoMarcadorCadastro): o SEI so abre ele direto quando o
+        // processo nao tem marcador na unidade. Gravar o marcador vazio ali so da "Marcador nao informado".
+        if ($html.find('#frmAndamentoMarcadorCadastro').length) {
+            var listSemMarcador = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+            var idxSemMarcador = (!listSemMarcador) ? -1 : listSemMarcador.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
+            if (idxSemMarcador !== -1) {
+                listSemMarcador.splice(idxSemMarcador,1);
+                sessionStorageStorePro('dadosMarcadoresProcessoPro',listSemMarcador);
+            }
+            erroRemoverMarcadorPro('O processo n\u00E3o tem marcador nesta unidade.');
+            return;
         }
+        // Formulario "Gerenciar Marcador" do SEI 3 (#selMarcador): gravar o marcador vazio remove, como antes.
+        if ($html.find('#selMarcador').length) { removerMarcadorFormPro(); return; }
+        // Nem formulario nem listagem com o Remover (sem permissao de remover, sessao expirada, pagina de erro): nao
+        // cai mais no caminho antigo, que no SEI 4.1/5 dava o aviso de sucesso sem remover nada.
+        if (!urlRemover || $html.find('#frmGerenciarMarcador').length == 0) { erroRemoverMarcadorPro(); return; }
+        var marcadores = getMarcadoresListagemPro($html);
+        var remover = marcadores;
+        if (alert) {
+            // Painel: remove o marcador exibido nele. Sem essa informacao, so quando o processo tem um marcador so; se o
+            // marcador exibido nao esta mais no processo, nao remove outro no lugar dele.
+            var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+            var dataMarcador = (listMarcadores) ? jmespath.search(listMarcadores, "[?id_procedimento=='"+String(id_procedimento)+"'] | [0]") : null;
+            var tagMarcador = (dataMarcador && dataMarcador.tag) ? normalizarNomeMarcadorPro(dataMarcador.tag) : '';
+                remover = (tagMarcador != '')
+                        ? $.grep(marcadores, function(v){ return normalizarNomeMarcadorPro(v.name) == tagMarcador; }).slice(0,1)
+                        : (marcadores.length == 1 ? marcadores : []);
+            if (remover.length == 0) {
+                erroRemoverMarcadorPro(marcadores.length ? 'N\u00E3o foi poss\u00EDvel identificar o marcador a remover. Use a op\u00E7\u00E3o Gerenciar Marcador do processo.' : 'O processo n\u00E3o tem marcador nesta unidade.');
+                return;
+            }
+        }
+        // Envio do processo com "Remover marcadores": todos os marcadores da unidade.
+        if (remover.length == 0) { erroRemoverMarcadorPro(); return; }
+        var ids = $.map(remover, function(v){ return v.id; });
+        postRemoverMarcadoresListagemPro(href, $html, html, ids, function(marcadoresRestantes, urlArvoreRemover){
+            // O painel passa a exibir o marcador que sobrou (como a tela inicial, o primeiro do processo).
+            var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
+            var objIndexDoc = (!listMarcadores) ? -1 : listMarcadores.findIndex((obj => obj.id_procedimento == String(id_procedimento)));
+            if (objIndexDoc !== -1) {
+                if (marcadoresRestantes.length) {
+                    listMarcadores[objIndexDoc] = getMarcadorCacheListagemPro(id_procedimento, marcadoresRestantes[0]);
+                } else {
+                    listMarcadores.splice(objIndexDoc,1);
+                }
+                sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
+            }
+            resetDialogBoxPro('dialogBoxPro');
+            if (alert) {
+                // Como o Remover da listagem do SEI: remonta a arvore, que ainda mostrava o marcador removido, pelo
+                // link do proprio SEI. So sem ele recarrega a arvore, o que volta a visualizacao ao processo.
+                if (ifrArvore.length) {
+                    if (urlArvoreRemover) {
+                        ifrArvore.attr('src', urlArvoreRemover.replace(/&amp;/g, '&'));
+                    } else {
+                        ifrArvore[0].contentWindow.location.reload();
+                    }
+                }
+                alertaBoxPro('Sucess', 'check-circle', 'Marcador removido com sucesso!');
+            }
+            concluirRemoverMarcadorPro();
+        }, function(){ erroRemoverMarcadorPro(); });
+    }).fail(function(){ erroRemoverMarcadorPro(); });
+}
+// Marcadores da listagem "Marcadores do Processo" (SEI 4.1 e 5, "Gerenciar Marcador" de processo com marcador): id do
+// marcador (valor do checkbox), nome (title do checkbox), icone e texto, na ordem da tela.
+function getMarcadoresListagemPro($html) {
+    return $html.find('#frmGerenciarMarcador table.infraTable tr').map(function(){
+        var chk = $(this).find('input[type="checkbox"]');
+        var td = $(this).find('td');
+        return (chk.length && chk.val()) ? {id: chk.val(), name: (chk.attr('title') || td.eq(1).text()).trim(), icon: td.eq(1).find('img').attr('src'), text: td.eq(2).text().trim()} : null;
+    }).get();
+}
+// Nome do marcador para comparar o do painel com o da listagem: o da tela inicial vem do tooltip do SEI, escapado
+// para HTML e JavaScript (\' e &quot;) e com " - DESATIVADO" quando o marcador foi desativado; o da listagem e o
+// salvo pelo painel vem sem escape. Os dois lados passam pela mesma normalizacao.
+function normalizarNomeMarcadorPro(nome) {
+    var t = document.createElement('textarea');
+        t.innerHTML = String(nome || '');
+    return t.value.replace(/\\(['"\\])/g, '$1').replace(/\s+-\s+DESATIVADO\s*$/, '').trim();
+}
+// Entrada do cache dadosMarcadoresProcessoPro a partir de um item de getMarcadoresListagemPro. O painel da arvore
+// (getHtmlMarcador) poe marcador e texto direto no HTML: o cache da tela inicial vem do tooltip do SEI, ainda escapado
+// para HTML, mas a listagem chega decodificada, e um texto de marcador com HTML entraria como HTML no painel. Nome e texto
+// ficam no formato do tooltip: escapados para HTML e com a quebra de linha como \r\n literal.
+function getMarcadorCacheListagemPro(idProcedimento, marcador) {
+    var escapar = function(texto){
+        return String(texto || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/\r?\n/g, '\\r\\n');
+    };
+    return {id_procedimento: String(idProcedimento), icon: marcador.icon, tag: escapar(marcador.name), name: (marcador.text != '' ? escapar(marcador.text) : false)};
+}
+// Remove marcadores (ids) de um processo pelo botao Remover da listagem "Marcadores do Processo" ($html/html: a listagem
+// lida de href, o "Gerenciar Marcador" do processo). O SEI redireciona com resultado=1 mesmo quando falha: a remocao so e
+// confirmada relendo a listagem, que precisa ser valida e nao ter mais os ids. callback(marcadoresRestantes,
+// urlArvoreRemover), com o link que o SEI usa para remontar a arvore; qualquer falha vai para callbackErro.
+function postRemoverMarcadoresListagemPro(href, $html, html, ids, callback, callbackErro) {
+    var urlRemover = (String(html).match(/'([^']*acao=andamento_marcador_remover[^']*)'/) || [])[1];
+    if (!urlRemover || $html.find('#frmGerenciarMarcador').length == 0 || !ids.length) { callbackErro(); return; }
+    var param = {};
+        $html.find('#frmGerenciarMarcador input[type="hidden"]').each(function(){
+            if ($(this).attr('name')) param[$(this).attr('name')] = $(this).val();
+        });
+        param.hdnInfraItemId = (ids.length == 1) ? ids[0] : '';
+        param.hdnInfraItensSelecionados = ids.join(',');
+    $.ajax({ method: 'POST', data: param, url: urlRemover.replace(/&amp;/g, '&') }).done(function(htmlRemover){
+        // Link com que a propria listagem do SEI remonta a arvore depois de remover (montar_visualizacao=0, que nao
+        // mexe no documento aberto na visualizacao).
+        var urlArvoreRemover = (String(htmlRemover).match(/getElementById\(\s*['"]ifrArvore['"]\s*\)\.src\s*=\s*'([^']+)'/) || [])[1];
+        $.ajax({ url: href }).done(function (htmlDepois) {
+            var $htmlDepois = $(htmlDepois);
+            // Sem marcador, o SEI troca a listagem pelo formulario de cadastro (#hdnIdMarcador).
+            var paginaValida = $htmlDepois.find('#frmGerenciarMarcador, #hdnIdMarcador').length > 0;
+            var marcadoresRestantes = getMarcadoresListagemPro($htmlDepois);
+            var restantes = $.map(marcadoresRestantes, function(v){ return v.id; });
+            var naoRemovidos = $.grep(ids, function(id){ return $.inArray(id, restantes) !== -1; });
+            if (!paginaValida || naoRemovidos.length) { callbackErro(); return; }
+            callback(marcadoresRestantes, urlArvoreRemover);
+        }).fail(function(){ callbackErro(); });
+    }).fail(function(){ callbackErro(); });
+}
+// Link de uma acao da arvore de um processo (ex.: "Gerenciar Marcador") pelo id, tambem fora da pagina dele (quadro da
+// tela inicial, Atividades). Na pagina do processo le das acoes da arvore aberta; senao abre o processo e a arvore por
+// ajax e le as acoes do no do processo (Nos[0].acoes), sem ocupar o iframe oculto. callback(url ou false).
+function getLinkArvoreProcessoPro(idProcedimento, nameLink, callback) {
+    var ifrArvore = $('#ifrArvore');
+    var srcArvore = ifrArvore.attr('src');
+    if (ifrArvore.length && typeof srcArvore !== 'undefined' && String(getParamsUrlPro(srcArvore).id_procedimento) == String(idProcedimento)) {
+        var linksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
+            linksArvore = (typeof linksArvore === 'undefined') ? parent.linksArvore : linksArvore;
+        var hrefArvore = (typeof linksArvore !== 'undefined') ? jmespath.search(linksArvore, "[?name=='"+nameLink+"'].url | [0]") : null;
+        if (hrefArvore) { callback(hrefArvore); return; }
+    }
+    $.ajax({ url: 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento }).done(function (html) {
+        var urlArvore = $(html).find('#ifrArvore').attr('src');
+        if (!urlArvore) { callback(false); return; }
+        $.ajax({ url: urlArvore }).done(function (htmlArvore) {
+            var hrefAjax = jmespath.search(getLinksArvoreAjax(String(htmlArvore)), "[?name=='"+nameLink+"'].url | [0]");
+            callback(hrefAjax ? hrefAjax.replace(/&amp;/g, '&') : false);
+        }).fail(function(){ callback(false); });
+    }).fail(function(){ callback(false); });
+}
+// Grava pelo formulario de cadastro de marcador do SEI 4.1/5 (#frmAndamentoMarcadorCadastro, o do botao "Adicionar"),
+// por ajax: o texto vai em ISO-8859-1, como na caixa de prazo da tela inicial. So confirma quando o SEI redireciona com
+// resultado=1 (andamento_marcador_cadastro.php); erro de validacao volta ao proprio formulario e vai para callbackErro.
+function postFormCadastroMarcadorPro($htmlForm, idMarcador, texto, callback, callbackErro) {
+    var formTag = $htmlForm.find('#frmAndamentoMarcadorCadastro');
+    var hrefTag = formTag.attr('action');
+    var btnSalvar = formTag.find('button[type="submit"]').first();
+    if (!formTag.length || !hrefTag || !btnSalvar.length) { callbackErro(); return; }
+    var paramTag = {};
+        formTag.find('input[type="hidden"]').each(function(){
+            if ($(this).attr('name')) paramTag[$(this).attr('name')] = $(this).val();
+        });
+        if (btnSalvar.attr('name')) paramTag[btnSalvar.attr('name')] = btnSalvar.val();
+        paramTag['hdnIdMarcador'] = idMarcador;
+        // O que nao cabe em ISO-8859-1 (travessao e aspas curvas do Word) viraria %u2014/%u201C literal no marcador.
+        paramTag['txaTexto'] = (typeof procLote_paraLatin1 === 'function')
+            ? procLote_paraLatin1(String(texto))
+            : String(texto).replace(/[\s\S]/g, function(c) { return (c.charCodeAt(0) < 256) ? c : ''; });
+    var postDataTag = $.map(Object.keys(paramTag), function(k){
+            return k+'='+((k == 'txaTexto') ? escapeComponent(paramTag[k]) : encodeURIComponent(paramTag[k]));
+        }).join('&');
+    var xhr = new XMLHttpRequest();
+    $.ajax({
+        method: 'POST',
+        data: postDataTag,
+        contentType: 'application/x-www-form-urlencoded; charset=ISO-8859-1',
+        xhr: function() {
+            return xhr;
+        },
+        url: hrefTag.replace(/&amp;/g, '&')
+    }).done(function () {
+        if (/[?&]resultado=1(&|#|$)/.test(xhr.responseURL || '')) { callback(); } else { callbackErro(); }
+    }).fail(function(){ callbackErro(); });
+}
+// Marcador de um processo pelo id, fora do painel da arvore (quadro por marcadores da tela inicial, Atividades).
+// valuesIframe: txaTexto e hdnIdMarcador, os mesmos que iam para updateDadosArvoreMult('Gerenciar Marcador'); com
+// hdnIdMarcador vazio nenhum marcador e incluido. removerMarcador (opcional): function(marcador) que diz quais marcadores
+// do processo remover no SEI 4.1/5 (o "mover de coluna" do quadro); recebe os itens de getMarcadoresListagemPro.
+// SEI 3: "Gerenciar Marcador" e o proprio formulario (#selMarcador), com um marcador por processo na unidade, e segue por
+// ele como antes. SEI 4.1 e 5 com marcador no processo: o link abre a LISTAGEM, sem campo nem botao de salvar - nada era
+// gravado e quem chamava confirmava do mesmo jeito. Ai inclui pelo formulario do "Adicionar" (o SEI inclui o marcador ou,
+// se o processo ja o tem, atualiza o texto) e remove pelo Remover da listagem; callback so depois de o SEI confirmar, e
+// qualquer falha vai para callbackErro.
+function setMarcadorProcessoPro(idProcedimento, valuesIframe, removerMarcador, callback, callbackErro) {
+    var concluirMarcador = function(){ if (typeof callback === 'function') callback(); };
+    var erroMarcador = function(){ if (typeof callbackErro === 'function') callbackErro(); };
+    var valorCampo = function(nome){
+        var campo = $.grep(valuesIframe, function(v){ return v.element == nome; })[0];
+        return (campo && typeof campo.value !== 'undefined' && campo.value !== null && campo.value !== false) ? String(campo.value) : '';
+    };
+    var idMarcador = valorCampo('hdnIdMarcador');
+    var texto = valorCampo('txaTexto');
+    // Processo invalido ou sigiloso: as mesmas condicoes em que updateDadosArvoreMult nao faz nada (nem chama o callback).
+    // Nada e gravado, e quem chamou fica sabendo: o quadro tirava o spinner so no callback, que nunca vinha.
+    if (typeof idProcedimento === 'undefined' || idProcedimento === null || idProcedimento == '' || idProcedimento == 0 || checkProcessoSigiloso() || ($('#ifrArvore').length == 0 && checkProcessoSigilosoId(idProcedimento))) {
+        erroMarcador();
+        return;
+    }
+    getLinkArvoreProcessoPro(idProcedimento, 'Gerenciar Marcador', function(href){
+        if (!href) { erroMarcador(); return; }
+        $.ajax({ url: href }).done(function (html) {
+            var $html = $(html);
+            // SEI 4.1/5 sem marcador no processo: o link abre direto o formulario de cadastro.
+            if ($html.find('#frmAndamentoMarcadorCadastro').length) {
+                if (idMarcador == '') { concluirMarcador(); return; }
+                postFormCadastroMarcadorPro($html, idMarcador, texto, concluirMarcador, erroMarcador);
+                return;
+            }
+            // SEI 3: o proprio formulario "Gerenciar Marcador".
+            if ($html.find('#selMarcador').length) {
+                updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, idProcedimento, callback);
+                return;
+            }
+            if ($html.find('#frmGerenciarMarcador').length == 0) { erroMarcador(); return; }
+            // Mover de coluna: o marcador a remover e achado na listagem ANTES de gravar. Se nenhum casa (marcador ja
+            // retirado, nome diferente do da tela), nada e gravado - antes incluia o destino e confirmava sem tirar a
+            // origem. O texto levado ao destino e o do marcador de origem na listagem, intacto: o do tooltip da tela
+            // inicial chega sem acentos e com as aspas trocadas (extractTooltipToArray).
+            var origens = (typeof removerMarcador === 'function')
+                    ? $.grep(getMarcadoresListagemPro($html), function(v){ return v.id != idMarcador && removerMarcador(v); })
+                    : [];
+            if (typeof removerMarcador === 'function' && !origens.length) { erroMarcador(); return; }
+            if (origens.length) texto = origens[0].text.replace(/\r?\n/g, '\r\n');
+            var idsOrigem = $.map(origens, function(v){ return v.id; });
+            var removerDaListagem = function($listagem, htmlListagem){
+                if (!idsOrigem.length) { concluirMarcador(); return; }
+                postRemoverMarcadoresListagemPro(href, $listagem, htmlListagem, idsOrigem, function(){ concluirMarcador(); }, erroMarcador);
+            };
+            if (idMarcador == '') { removerDaListagem($html, html); return; }
+            var urlForm = getUrlBotaoAdicionarPro($html);
+            if (!urlForm) { erroMarcador(); return; }
+            $.ajax({ url: urlForm }).done(function (htmlForm) {
+                postFormCadastroMarcadorPro($(htmlForm), idMarcador, texto, function(){
+                    if (typeof removerMarcador !== 'function') { concluirMarcador(); return; }
+                    $.ajax({ url: href }).done(function (htmlListagem) {
+                        removerDaListagem($(htmlListagem), htmlListagem);
+                    }).fail(function(){ erroMarcador(); });
+                }, erroMarcador);
+            }).fail(function(){ erroMarcador(); });
+        }).fail(function(){ erroMarcador(); });
     });
 }
 function getAjaxListaAtribuicao() {
@@ -2451,7 +2968,8 @@ function getAjaxListaAtribuicao() {
         });
     }
 }
-function getAjaxListaMarcador() {
+// callback (opcional): chamado quando a lista de marcadores chegou do SEI e foi gravada.
+function getAjaxListaMarcador(callback = false) {
     var href = isNewSEI
             ? $(divComandos+' a[onclick*="andamento_marcador_cadastrar"]').attr('onclick') 
             : $(divComandos+' a[onclick*="andamento_marcador_gerenciar"]').attr('onclick');
@@ -2464,14 +2982,24 @@ function getAjaxListaMarcador() {
                     param[$(this).attr('name')] = $(this).val(); 
                 }
             });
-            param.hdnRecebidosItensSelecionados = $('input[name*="chkRecebidosItem"]').eq(0).val();
-            param[$('input[name*="chkRecebidosItem"]').eq(0).attr('name')] = $('input[name*="chkRecebidosItem"]').eq(0).val();
+        // O SEI so aceita como selecionado um processo que conste na lista assinada da pagina carregada
+        // (hdnRecebidosItens). Com "Remover paginacao de processos" a tabela recebe as linhas das outras
+        // paginas e o agrupamento reordena tudo: o primeiro checkbox da tela podia ser de outra pagina, a
+        // resposta vinha com "Item selecionado nao consta na tabela", sem o #selMarcador, e o quadro por
+        // marcadores ficava carregando para sempre em quem ainda nao tinha a lista em cache.
+        var itensRecebidos = ($('#hdnRecebidosItens').val() || '').split(',');
+        var chkRecebidos = $('input[name*="chkRecebidosItem"]');
+        var chkRecebidosValidos = chkRecebidos.filter(function(){ return $.inArray($(this).val(), itensRecebidos) !== -1; });
+            chkRecebidos = chkRecebidosValidos.length ? chkRecebidosValidos.eq(0) : chkRecebidos.eq(0);
+            param.hdnRecebidosItensSelecionados = chkRecebidos.val();
+            param[chkRecebidos.attr('name')] = chkRecebidos.val();
         $.ajax({ 
             method: 'POST',
             data: param,
             url: href
         }).done(function (html) {
-            getListaMarcadores($(html));
+            var listaMarcadoresSEI = getListaMarcadores($(html));
+            if (typeof callback === 'function' && listaMarcadoresSEI.array.length > 0) callback();
         });
     }
 }
@@ -2629,6 +3157,8 @@ function getSelectHipoteseLegal(elementHipotese = $('#dialogBoxProcesso_hipotese
 function updateDadosArvore(nameLink, idElement, value, idProcedimento, callback = false) {
     if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && idProcedimento !== null && idProcedimento != 0 && !checkProcessoSigiloso()) {
         if ($('#ifrArvore').length == 0) {
+            // fora da pagina do processo, sigiloso nao e carregado: so abriria a validacao de senha do SEI
+            if (checkProcessoSigilosoId(idProcedimento)) { return false; }
             if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
             var url = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento;
             $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
@@ -2691,7 +3221,7 @@ function viewEspecifacaoProcesso() {
             if (typeof storeGroupTablePro() === 'undefined' || !storeGroupTablePro()) {
                 tableProc.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').each(function(){
                     var especifProc = extractTooltipToArray($(this).attr('onmouseover'));
-                        especifProc = (especifProc) ? especifProc[0] : false;
+                        especifProc = (especifProc) ? removePrefixoNaoVisualizadoPro(especifProc[0]) : false;
                         if (especifProc) $(this).before('<div class="especifProc">'+especifProc+'</div>');
                 });
             }
@@ -2879,7 +3409,7 @@ function getProcessoNaoLido() {
                                             var status = (xhr.responseURL.indexOf('controlador.php?acao=arvore_visualizar&acao_origem=procedimento_enviar') !== -1) ? true : false;
                                             if (status) {
                                                 tr.find('a[href*="controlador.php?acao=procedimento_trabalhar"]').attr('class', 'processoNaoVisualizado');
-                                                tr.find(elemCheckbox+':checked').trigger('click');
+                                                tr.find((typeof getElemCheckboxPro === 'function' ? getElemCheckboxPro() : elemCheckbox)+':checked').trigger('click');
                                                 initNaoVisualizadoPro();
                                                 initFaviconNrProcesso();
                                                 setTimeout(() => {
@@ -2911,6 +3441,8 @@ function getProcessoNaoLido() {
 function updateDadosArvoreMult(nameLink, values, idProcedimento, callback = false) {
     if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && idProcedimento !== null && idProcedimento != 0 && !checkProcessoSigiloso()) {
         if ($('#ifrArvore').length == 0) {
+            // fora da pagina do processo, sigiloso nao e carregado: so abriria a validacao de senha do SEI
+            if (checkProcessoSigilosoId(idProcedimento)) { return false; }
             if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
             var url = 'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento;
             $('#frmCheckerProcessoPro').attr('src', url).unbind().on('load', function(){
@@ -2985,12 +3517,20 @@ function automaticActions(type, mode, value = false, callback = false) {
         console.log(type, mode, value);
         updateDadosArvore('Atualizar Andamento', 'txaDescricao', (mode == 'remove' ? 'Removida' : 'Adicionada')+' marca de urg\u00EAncia no documento '+value, id_procedimento, callback);
     } else if (type == 'marcador' && mode == 'remove') {
-        getRemoverMarcador(false);
+        // Sem o callback a cadeia do Enviar Processo parava aqui e a "Remover atribuicao" nao rodava.
+        getRemoverMarcador(false, callback);
     }
 }
 function getActionsOnSendProcess() {
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
-    ifrVisualizacao.find('#frmAtividadeListar').on('submit', function() {
+    // O submit dispara remocao de marcador/atribuicao e a verificacao de nao assinados consulta o
+    // historico: com as duas copias ligadas, a isolada anulava o #frmCheckerProcessoPro da outra.
+    if (!isCopiaResponsavelVisualizacaoPro()) return;
+    var ifrVisualizacao = getContentsVisualizacaoPro();
+    ifrVisualizacao.find('#frmAtividadeListar').on('submit', function(e) {
+        // O onsubmit do SEI ("return OnSubmitForm();") roda antes deste listener e so cancela o envio, sem parar os
+        // outros listeners: sem unidade de destino, ou cancelando o confirm da assinatura cancelada, o processo nao
+        // era enviado, mas marcadores e atribuicao eram removidos do mesmo jeito.
+        if (e && typeof e.isDefaultPrevented === 'function' && e.isDefaultPrevented()) return;
         var _this = $(this);
         var _parent = _this.closest('body');
         var checkMarcador = _parent.find('#chkSinRemoverMarcadores').is(':checked');
@@ -3020,8 +3560,8 @@ function getActionsOnSendProcess() {
                         (verifyConfigValue('reaberturaprogramada') ? 
                         '   <span style="margin: 0 10px;display: inline-block;">'+
                         (isNewSEI ? 
-                        '      <div class="infraCheckboxDiv "><input onchange="if ($(this).is(\':checked\')) { parent.editDadosArvorePro_AcompEsp() }" type="checkbox" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinReabrirProcesso"></label></div>' : 
-                        '      <input type="checkbox" onclick="parent.editDadosArvorePro_AcompEsp();" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'
+                        '      <div class="infraCheckboxDiv "><input onchange="if ($(this).is(\':checked\')) { parent.getJanelaProcessoPro().editDadosArvorePro_AcompEsp() }" type="checkbox" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckboxInput" tabindex="509"><label class="infraCheckboxLabel " for="chkSinReabrirProcesso"></label></div>' : 
+                        '      <input type="checkbox" onclick="parent.getJanelaProcessoPro().editDadosArvorePro_AcompEsp();" id="chkSinReabrirProcesso" name="chkSinReabrirProcesso" class="infraCheckbox" tabindex="0">'
                         )+
                         '     <label id="lblSinReabrirProcesso" for="chkSinReabrirProcesso" accesskey="" class="infraLabelCheckbox">Reabrir processo em data certa</label>'+
                         '   </span>'+
@@ -3049,6 +3589,9 @@ function getActionsOnSendProcess() {
         });
         ifrVisualizacao.find('#selUnidades option').prop('selected',true);
     }
+    // Vale para este formulario so: o Enviar aberto depois por outro caminho (sem o clique no icone, que chama
+    // setInteressadosSend) nao herda as unidades.
+    interessadosSendPro = false;
 }
 function getFaviconNrProcesso() {
     setTimeout(() => {
@@ -3060,10 +3603,21 @@ function getFaviconNrProcesso() {
             favicon.badge(nrProcNVisualizados);
             
             if (isNewSEI) {
-                setTimeout(() => {
-                    var icon = $('link[rel="shortcut icon"]').attr('href');
-                    $('link[rel="icon"]').attr('href',icon);
-                }, 500);
+                // O Favico desenha o contador no ULTIMO link de icone do head. A copia antiga levava o
+                // "shortcut icon" para o rel="icon", o que so servia quando o shortcut vinha por ultimo:
+                // no SEI 5 (SeiINT::montarHeaderFavicon) a ordem e shortcut icon (.ico) e depois icon (.svg),
+                // o contador ia para o .svg e a copia o apagava com o .ico. Copia o icone desenhado
+                // (data:image), qualquer que seja o link, para todos os links de icone.
+                var copiarIconeContador = function(tentativas) {
+                    var links = $('link[rel~="icon"]');
+                    var desenhado = links.filter(function(){ return /^data:image\//.test($(this).attr('href') || ''); }).last().attr('href');
+                    if (desenhado) {
+                        links.attr('href', desenhado);
+                    } else if (tentativas > 0) {
+                        setTimeout(() => { copiarIconeContador(tentativas - 1); }, 250);
+                    }
+                };
+                setTimeout(() => { copiarIconeContador(8); }, 500);
             }
         }
     }, 1000);
@@ -3076,38 +3630,60 @@ function getAutomaticActions() {
             if (nextRun) {
                 if (nextRun.send) {
                     automaticActions(nextRun.name, nextRun.method, nextRun.value, function(){
-                        parent.window.sendAutomaticActions[nextRun.index].run = true;
+                        // Cada acao chama a proxima uma vez so
+                        if (arrayAutomatic[nextRun.index].run) return;
+                        arrayAutomatic[nextRun.index].run = true;
                         setTimeout(function(){ 
                             // console.log(nextRun);
                             getAutomaticActions();
                         }, 1000);
                     });
+                } else {
+                    // Acao nao marcada: segue para a proxima. Antes a cadeia parava nela, e so "Remover atribuicao"
+                    // marcada (sem "Remover marcadores") nao fazia nada.
+                    arrayAutomatic[nextRun.index].run = true;
+                    getAutomaticActions();
                 }
             } else {
                 parent.window.sendAutomaticActions === undefined;
             }
     }
 }
-function getListAcompanhamentoEspecial(force = false) {
+// callback (opcional): chamado quando a ultima pagina da lista foi gravada, no lugar da verificacao de
+// reabertura programada - usado pelo agrupamento por acompanhamento especial e pelo icone de acompanhamento (sei-pro.js).
+// Uma leitura por vez nesta pagina: duas cadeias paginadas ao mesmo tempo (ex.: icone ou agrupamento da tela inicial e
+// reabertura programada na mesma carga) gravavam na mesma lista, e a primeira pagina relida por uma substituia a lista
+// no meio da outra, que terminava com paginas faltando. O pedido feito durante uma leitura espera por ela e e atendido
+// com a lista que ela gravou. Se a leitura nao terminar em 60 s (falha de rede), a trava deixa de valer. (Mantem a
+// leitura em curso se este arquivo for carregado de novo na mesma pagina.)
+var leituraListAcompanhamentoEspPro = (typeof leituraListAcompanhamentoEspPro !== 'undefined') ? leituraListAcompanhamentoEspPro : false;
+function getListAcompanhamentoEspecial(force = false, callback = false) {
     var href = $(mainMenu).find('li a').map(function () { if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=acompanhamento_listar') !== -1) { return $(this).attr('href') } }).get().join();
     if (href !== null) {
-        ajaxListAcompanhamentoEspecial(href, force);
+        if (leituraListAcompanhamentoEspPro && Date.now() - leituraListAcompanhamentoEspPro.inicio < 60000) {
+            leituraListAcompanhamentoEspPro.pendentes.push({force: force, callback: callback});
+            return;
+        }
+        leituraListAcompanhamentoEspPro = {inicio: Date.now(), pendentes: []};
+        ajaxListAcompanhamentoEspecial(href, force, callback);
     }
 }
-function ajaxListAcompanhamentoEspecial(href, force) {
+function ajaxListAcompanhamentoEspecial(href, force, callback = false) {
     $.ajax({ url: href }).done(function (html) {
         let $html = $(html);
-        if ($html.find('#lnkInfraProximaPaginaSuperior').length) {
+        // O SEI guarda na sessao a ultima pagina vista da lista (InfraPagina::prepararPaginacao): se o GET ja volta
+        // numa pagina adiantada (ultima ou do meio), recomeca da primeira antes de seguir para as proximas.
+        if ($html.find('#lnkInfraPaginaAnteriorSuperior').length) {
+            postListAcompanhamentoEspecial($html, href, force, true, callback);
+        } else if ($html.find('#lnkInfraProximaPaginaSuperior').length) {
             saveListAcompanhamentoEspecial($html, force, false, false);
-            postListAcompanhamentoEspecial($html, href, force);
-        } else if ($html.find('#lnkInfraPaginaAnteriorSuperior').length) {
-            postListAcompanhamentoEspecial($html, href, force, true);
+            postListAcompanhamentoEspecial($html, href, force, false, callback);
         } else {
-            saveListAcompanhamentoEspecial($html, force, true, false);
+            saveListAcompanhamentoEspecial($html, force, true, false, callback);
         }
     });
 }
-function postListAcompanhamentoEspecial($html, href, force, reset = false) {
+function postListAcompanhamentoEspecial($html, href, force, reset = false, callback = false) {
     var param = {};
     $html.find('#frmAcompanhamentoLista').find("input[type=hidden]").map(function () {
         if ( $(this).attr('name') && $(this).attr('id').indexOf('hdn') !== -1) {
@@ -3121,15 +3697,24 @@ function postListAcompanhamentoEspecial($html, href, force, reset = false) {
         url: href
     }).done(function (html) {
         let $htmlPost = $(html);
+        // A primeira pagina relida depois do recomeco (reset) SUBSTITUI a lista guardada; antes ela se juntava a
+        // lista antiga e, como a juncao mantem a primeira ocorrencia de cada processo, grupo trocado ou
+        // acompanhamento removido nunca saiam da lista.
         if ($htmlPost.find('#lnkInfraProximaPaginaSuperior').length) {
-            postListAcompanhamentoEspecial($htmlPost, href, force);
-            saveListAcompanhamentoEspecial($htmlPost, force, false, true);
+            postListAcompanhamentoEspecial($htmlPost, href, force, false, callback);
+            saveListAcompanhamentoEspecial($htmlPost, force, false, !reset);
         } else {
-            saveListAcompanhamentoEspecial($htmlPost, force, true, true);
+            // Terminou numa pagina adiantada: devolve a paginacao da sessao do SEI para a primeira (como
+            // getTablePaginacao), senao a tela Acompanhamento Especial passava a abrir na ultima pagina.
+            if (!reset) {
+                param.hdnInfraPaginaAtual = 0;
+                $.ajax({ method: 'POST', data: param, url: href });
+            }
+            saveListAcompanhamentoEspecial($htmlPost, force, true, !reset, callback);
         }
     });
 }
-function saveListAcompanhamentoEspecial($html, force, end = true, append = false) {
+function saveListAcompanhamentoEspecial($html, force, end = true, append = false, callback = false) {
     var arrayAcompanhamento = $html.find('#frmAcompanhamentoLista #divInfraAreaTabela table tbody tr').map(function(){ 
         var _this = $(this);
         var _td = _this.find('td');
@@ -3172,6 +3757,23 @@ function saveListAcompanhamentoEspecial($html, force, end = true, append = false
     }
     if (force) initNewBtnHome();
     if (end) {
+        var pendentesLeitura = (leituraListAcompanhamentoEspPro) ? leituraListAcompanhamentoEspPro.pendentes : [];
+        leituraListAcompanhamentoEspPro = false;
+        // Unidade da ultima leitura completa: a lista e as datas de leitura sao as mesmas para todas as unidades.
+        if (typeof idUnidade !== 'undefined' && idUnidade) setOptionsPro('lastread_AcompEspLista_unidade', String(idUnidade));
+        finalizarListAcompanhamentoEspecial(callback);
+        $.each(pendentesLeitura, function(i, pendente){
+            try {
+                if (pendente.force && !force) initNewBtnHome();
+                finalizarListAcompanhamentoEspecial(pendente.callback);
+            } catch(e) { console.error(e); }
+        });
+    }
+}
+function finalizarListAcompanhamentoEspecial(callback = false) {
+    if (typeof callback === 'function') {
+        callback();
+    } else {
         setOptionsPro('lastcheck_AcompEsp',moment().format('YYYY-MM-DD HH:mm:ss'));
         var listReabertura = checkReaberturaProcesso();
         if (listReabertura && listReabertura.length) {
@@ -3182,9 +3784,15 @@ function saveListAcompanhamentoEspecial($html, force, end = true, append = false
 function checkDadosAcompEspecial(force = false) {
     if (verifyConfigValue('reaberturaprogramada')) {
         var lastCheck = getOptionsPro('lastcheck_AcompEsp');
+        // A periodicidade e um numero de horas (campo numerico das configuracoes, gravado como 24, por exemplo):
+        // verifyConfigValue so aceita valor == true, entao so o periodo de 1 hora ligava a verificacao automatica.
+        var periodoReabertura = parseInt(getConfigValue('reaberturaprogramada_periodo'));
+        // Sem o item Acompanhamento Especial no menu (sem permissao), a leitura pediria a propria pagina e gravaria a lista vazia.
+        var menuAcompanhamentoEsp = $(mainMenu).find('li a[href*="acao=acompanhamento_listar"]').length > 0;
         if ( force ||
                 (
-                    verifyConfigValue('reaberturaprogramada_periodo') && 
+                    menuAcompanhamentoEsp &&
+                    (verifyConfigValue('reaberturaprogramada_periodo') || periodoReabertura > 0) && 
                     (
                         (lastCheck && moment().add(-Math.abs(parseInt(getConfigValue('reaberturaprogramada_periodo'))), 'h') > moment(lastCheck, 'YYYY-MM-DD HH:mm:ss')) || 
                         !lastCheck
@@ -3369,15 +3977,54 @@ function configDatesSwitchChangeReabertura(this_) {
 // onclick em vez do href — por isso a lista de grupos existentes chegava vazia e so restava
 // criar um grupo novo. Entrega o HTML que realmente contem o select, nas duas versoes.
 function getHtmlFormAcompEspPro(href, callback) {
+    getHtmlFormAdicionarPro(href, '#selGrupoAcompanhamento', callback);
+}
+// Mesmo caso do "Gerenciar Marcador" (#selMarcador): entrega a primeira resposta quando ela ja traz o
+// seletor e, senao, segue a URL do botao "Adicionar" da listagem. O segundo argumento do callback e essa URL
+// (false quando a primeira resposta ja era o formulario), para quem precisa gravar pelo mesmo formulario.
+function getHtmlFormAdicionarPro(href, seletor, callback) {
     $.ajax({ url: href }).done(function (html) {
         var $html = $(html);
-        if ($html.find('#selGrupoAcompanhamento').length) { callback($html); return; }
-        var onclick = $html.find('button, a, input').filter(function () {
-            return /adicionar/i.test($(this).text() + ($(this).val() || ''));
-        }).first().attr('onclick') || '';
-        var url = (onclick.match(/location\.href\s*=\s*'([^']+)'/) || [])[1];
-        if (!url) { callback($html); return; }
-        $.ajax({ url: url }).done(function (html2) { callback($(html2)); });
+        if ($html.find(seletor).length) { callback($html, false); return; }
+        var url = getUrlBotaoAdicionarPro($html);
+        if (!url) { callback($html, false); return; }
+        $.ajax({ url: url }).done(function (html2) { callback($(html2), url); });
+    });
+}
+// URL do botao "Adicionar" de uma listagem do SEI (onclick location.href='...'), ou false.
+function getUrlBotaoAdicionarPro($html) {
+    var onclick = $html.find('button, a, input').filter(function () {
+        return /adicionar/i.test($(this).text() + ($(this).val() || ''));
+    }).first().attr('onclick') || '';
+    return (onclick.match(/location\.href\s*=\s*'([^']+)'/) || [])[1] || false;
+}
+// Grava num formulario do SEI aberto pelo botao "Adicionar" (url), no iframe oculto, e so confirma depois que o
+// SEI responder: o redirecionamento de sucesso traz "resultado=1" (andamento_marcador_cadastro.php); qualquer
+// outra volta, ou nenhuma em 30 s (validacao do proprio formulario), vai para callbackErro.
+function updateDadosFormAdicionarPro(url, values, callback, callbackErro) {
+    if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
+    var concluido = false;
+    var concluir = function (ok) {
+        if (concluido) return;
+        concluido = true;
+        $('#frmCheckerProcessoPro').unbind('load');
+        if (ok) { if (typeof callback === 'function') callback(); }
+        else if (typeof callbackErro === 'function') callbackErro();
+    };
+    $('#frmCheckerProcessoPro').attr('src', url).unbind('load').on('load', function(){
+        var iframe = $(this).contents();
+        $.each(values, function(i, v){
+            iframe.find('#'+v.element).val(v.value);
+        });
+        var btnSubmit = iframe.find('button[type="submit"]').first();
+        if (btnSubmit.length == 0) { concluir(false); return; }
+        $(this).unbind('load').on('load', function(){
+            var urlRetorno = '';
+            try { urlRetorno = this.contentWindow.location.href; } catch(e) {}
+            concluir(/[?&]resultado=1(&|#|$)/.test(urlRetorno));
+        });
+        setTimeout(function(){ concluir(false); }, 30000);
+        btnSubmit.trigger('click');
     });
 }
 function getListaGruposAcompEsp(html) {
@@ -3408,33 +4055,52 @@ function initDocImagemPro() {
         }
     }
 }
-function initCheckNaoAssinados() {
+function initCheckNaoAssinados(tentativas = 10) {
     var _ifrArvore = $('#ifrArvore');
     var ifrArvore = _ifrArvore.contents();
     var urlAllPasta = ifrArvore.find('#topmenu a[id*="anchorAP"]').attr('href');
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var ifrVisualizacao = getContentsVisualizacaoPro();
         ifrVisualizacao.find('#checkNaoAssinados').remove();
     var htmlLoading =   '<div id="checkNaoAssinados">'+
                         '   <i class="fas fa-sync fa-spin" style="color:#444;margin-right: 5px;"></i> Verificando documentos n\u00E3o assinados na unidade <strong style="text-decoration: underline;">'+siglaUnidadeAtual+'</strong>'+
                         '   </div>';
     var htmlSucess =    '<div id="checkNaoAssinados" style="background: #fff1f0">'+
                         '   <i class="fas fa-times-circle vermelhoColor" style="margin-right: 5px;"></i> Existem documentos n\u00E3o assinados na unidade <strong style="text-decoration: underline;">'+siglaUnidadeAtual+'</strong>'+
-                        '   <a class="newLink" onclick="parent.openCheckNaoAssinados()" style="margin: 0 10px;font-size: 1em;">Detalhes</a>'+
+                        '   <a class="newLink" onclick="parent.getJanelaProcessoPro().openCheckNaoAssinados()" style="margin: 0 10px;font-size: 1em;">Detalhes</a>'+
                         '</div>';
     var htmlEmpty =     '<div id="checkNaoAssinados">'+
                         '   <i class="fas fa-check-circle verdeColor" style="margin-right: 5px;"></i> Todos os documentos foram assinados na unidade <strong style="text-decoration: underline;">'+siglaUnidadeAtual+'</strong>'+
                         '</div>';
     var htmlNull =      '<div id="checkNaoAssinados">'+
                         '   <i class="fas fa-exclamation-triangle laranjaColor" style="margin-right: 5px;"></i> N\u00E3o foi poss\u00EDvel verificar a exist\u00EAncia de documentos n\u00E3o assinados na unidade <strong style="text-decoration: underline;">'+siglaUnidadeAtual+'</strong>'+
-                        '   <a class="newLink" onclick="parent.initCheckNaoAssinados()" style="margin: 0 10px;font-size: 1em;">Tentar novamente</a>'+
+                        '   <a class="newLink" onclick="parent.getJanelaProcessoPro().initCheckNaoAssinados()" style="margin: 0 10px;font-size: 1em;">Tentar novamente</a>'+
                         '</div>';    
 
     var htmlCheckNaoAssinados = htmlLoading;
 
         ifrVisualizacao.find('#divInfraBarraLocalizacao').append(htmlCheckNaoAssinados);
         mergeAllAndamentosProcesso(function(){
+            // A consulta do historico completo leva segundos num processo longo: se nesse meio tempo o usuario saiu
+            // do Enviar Processo (ex.: abriu o Consultar Andamento), nao ha aviso a atualizar, e o dialogo de
+            // pendentes levava o iframe de volta ao Enviar Processo por cima da tela que o usuario abriu.
+            if (getContentsVisualizacaoPro()[0] !== ifrVisualizacao[0]) { return; }
             var dadosProcesso = pullDadosProcessoSession();
             var listDocumentos = (dadosProcesso) ? dadosProcesso.listDocumentos : dadosProcessoPro.listDocumentos;
+            if (typeof listDocumentos === 'undefined') {
+                // A lista de documentos da arvore pode chegar depois do historico (processo aberto numa aba
+                // nova, sem nada na sessao): o aviso ficava para sempre em "Verificando...". Tenta de novo
+                // enquanto o mesmo formulario estiver aberto e, esgotadas as tentativas, oferece "Tentar novamente".
+                if (getContentsVisualizacaoPro()[0] !== ifrVisualizacao[0]) { return; }
+                if (tentativas > 0) {
+                    setTimeout(function(){
+                        if (getContentsVisualizacaoPro()[0] === ifrVisualizacao[0]) initCheckNaoAssinados(tentativas - 1);
+                    }, 1000);
+                } else {
+                    ifrVisualizacao.find('#checkNaoAssinados').remove();
+                    ifrVisualizacao.find('#divInfraBarraLocalizacao').append(htmlNull);
+                }
+                return;
+            }
             if (typeof listDocumentos !== 'undefined' && listDocumentos.length > 0 && checkObjHasProperty(listDocumentos, 'unidade')) {
                 var listNaoAssinado = jmespath.search(listDocumentos, "[?assinado==`false`] | [?unidade=='"+siglaUnidadeAtual+"'] | [?nativo]");
                 if (listNaoAssinado.length == 0) {
@@ -3459,7 +4125,16 @@ function initCheckNaoAssinados() {
                     initCheckNaoAssinados();
                 }); */
                 getListDocumentosArvore(ifrArvore);
-                initCheckNaoAssinados();
+                // A chamada recursiva nao tinha condicao de parada: com a lista vazia (ou ainda sem 'unidade'
+                // depois de relida da arvore) cada volta refazia a consulta do historico, sem fim, e o aviso
+                // ficava em "Verificando...". Divide o mesmo limite de tentativas do ramo acima.
+                if (getContentsVisualizacaoPro()[0] !== ifrVisualizacao[0]) { return; }
+                if (tentativas > 0) {
+                    initCheckNaoAssinados(tentativas - 1);
+                } else {
+                    ifrVisualizacao.find('#checkNaoAssinados').remove();
+                    ifrVisualizacao.find('#divInfraBarraLocalizacao').append(htmlNull);
+                }
             }
             console.log('listNaoAssinado',listNaoAssinado, listDocumentos);
         });
@@ -3515,9 +4190,20 @@ function boxCheckNaoAssinados() {
                 var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
                     arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
                 var href = jmespath.search(arrayLinksArvore, "[?name=='Enviar Processo'].url");
+                // Tela aberta quando o dialogo abriu: se o usuario trocar de tela nos 500 ms abaixo, nao navega.
+                var docAoAbrir = getContentsVisualizacaoPro()[0];
                 if (href !== null) {
                     setTimeout(function(){ 
-                        document.getElementById(ifrVisualizacao_).setAttribute("src",href[0]);
+                        if (getContentsVisualizacaoPro()[0] !== docAoAbrir) return;
+                        // No SEI 4.1+ o formulario abre no iframe interno; carregar no ifrVisualizacao_
+                        // (o da barra) trocava a barra de acoes inteira pelo Enviar Processo.
+                        var ifrEnvio = getIframeVisualizacaoPro()[0];
+                        // Se o Enviar Processo ja esta aberto (e sempre dele que o dialogo e chamado), recarregar
+                        // so apagava o aviso de nao assinados e o que o usuario ja tinha preenchido.
+                        var acaoAtual = '';
+                        try { acaoAtual = String(ifrEnvio.contentWindow.location.href); } catch (e) {}
+                        if (acaoAtual.indexOf('acao=procedimento_enviar') !== -1) return;
+                        ifrEnvio.setAttribute("src",href[0]);
                     }, 500);
                 }
             },
@@ -3569,8 +4255,11 @@ function zoomImagemPro(this_) {
         _this.addClass('zoomInPro').css({'width': '100%', 'cursor': 'zoom-in'}); // adicionar o estilo redimensionado e altera o cursor do mouse para Lupa(+)
     }
 }
+function getProtocoloSelecionadoArvorePro() {
+    return getParamsUrlPro($('#ifrArvore').contents().find('.infraArvoreNoSelecionado').closest('a').attr('href')).id_documento;
+}
 function initDocZipPro() {
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var ifrVisualizacao = getContentsVisualizacaoPro();
     var ifrArvore = $('#ifrArvore').contents();
 
     var docSelected = ifrArvore.find('.infraArvoreNoSelecionado');
@@ -3579,18 +4268,23 @@ function initDocZipPro() {
         var iconSelected = ifrArvore.find('#anchorImg'+protocoloSelected).find('img').attr('src');
         var linkFile = ifrVisualizacao.find(divInformacao+' '+ancoraArvoreDownload).attr('href');
         if (iconSelected.indexOf('zip') !== -1) {
-            checkDocZipPro(ifrVisualizacao);
+            checkDocZipPro(false, 9000, protocoloSelected);
         }
     }
 }
-function checkDocZipPro(ifrVisualizacao, TimeOut = 9000) {
-    var linkFile = ifrVisualizacao.find(divInformacao+' '+ancoraArvoreDownload).attr('href');
+// Sem um alvo fixo (false), o conteudo e resolvido de novo a cada tentativa: a partir do SEI 4.1
+// o anexo abre no iframe interno, que ainda pode estar carregando quando a barra fica pronta.
+// A espera para se outro documento for selecionado na arvore, para nao injetar no documento errado.
+function checkDocZipPro(ifrVisualizacao, TimeOut = 9000, protocolo = false) {
+    if (!ifrVisualizacao && protocolo && getProtocoloSelecionadoArvorePro() !== protocolo) { return; }
+    var ifrAlvo = ifrVisualizacao || getContentsVisualizacaoPro();
+    var linkFile = ifrAlvo.find(divInformacao+' '+ancoraArvoreDownload).attr('href');
     if (TimeOut <= 0) { return; }
     if (typeof linkFile !== 'undefined') { 
-            loadDocZipPro(linkFile, ifrVisualizacao);
+            loadDocZipPro(linkFile, ifrAlvo);
     } else {
         setTimeout(function(){ 
-            checkDocZipPro(ifrVisualizacao, TimeOut - 100); 
+            checkDocZipPro(ifrVisualizacao, TimeOut - 100, protocolo); 
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload checkDocZipPro'); 
         }, 500);
     }
@@ -3637,7 +4331,7 @@ function openDocZipPro(ifrVisualizacao) {
                     var date = moment(zipEntry.date).format('DD/MM/YYYY HH:mm:ss');
                     var size = infraFormatarTamanhoBytes(zipEntry._data.uncompressedSize);
                         size = !zipEntry.dir ? size : '';
-                    var click = zipEntry.dir ? '' : `onclick="parent.openFileZip(${i})"`;
+                    var click = zipEntry.dir ? '' : `onclick="parent.getJanelaProcessoPro().openFileZip(${i})"`;
                     ifrVisualizacao.find('#divZip .files #listing').append(`<li ${click}><a>${name}</a><span class="date">${date}</span><span class="size">${size}</span></li>`);
                     // console.log(relativePath, name, zipEntry);
                     window.zip[i] = zipEntry;
@@ -3670,7 +4364,7 @@ function getScriptIframe(iframe, src, callback = false) {
         iframe.contentWindow.document.head.appendChild(script);
 }
 function initDocVideoPro() {
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var ifrVisualizacao = getContentsVisualizacaoPro();
     var ifrArvore = $('#ifrArvore').contents();
 
     var docSelected = ifrArvore.find('.infraArvoreNoSelecionado');
@@ -3679,7 +4373,7 @@ function initDocVideoPro() {
         var iconSelected = ifrArvore.find('#anchorImg'+protocoloSelected).find('img').attr('src');
         var linkFile = ifrVisualizacao.find(divInformacao+' '+ancoraArvoreDownload).attr('href');
         if (iconSelected.indexOf('video') !== -1) {
-            checkDocVideoPro(ifrVisualizacao);
+            checkDocVideoPro(false, 9000, protocoloSelected);
         }
     }
 }
@@ -3894,7 +4588,7 @@ async function downloadDocxVisualizacao(this_) {
     })();
 }
 function setHtmlProtocoloAlterar() {
-    var ifrVisualizacao = $($ifrVisualizacao).contents();
+    var ifrVisualizacao = getContentsVisualizacaoPro();
     var ifrArvore = $('#ifrArvore').contents();
     var form = ifrVisualizacao.find('#frmProcedimentoCadastro');
     var formVisualizacao = form.attr('action');
@@ -3904,10 +4598,15 @@ function setHtmlProtocoloAlterar() {
         form.length == 1 &&
         divProtocolo.length == 0
         ) {
+        // O numero do processo fica em #hdnProtocoloFormatado no procedimento_cadastro do SEI 3.1.7, 4.1.5 e 5.0
+        // (medido); #hdnProtocoloProcedimentoFormatado nao existe nessas versoes e o campo mostrava "undefined".
+        var protocoloFormatado = ifrVisualizacao.find('#hdnProtocoloProcedimentoFormatado').val();
+            protocoloFormatado = (typeof protocoloFormatado === 'undefined') ? ifrVisualizacao.find('#hdnProtocoloFormatado').val() : protocoloFormatado;
+            protocoloFormatado = (typeof protocoloFormatado === 'undefined') ? '' : protocoloFormatado;
         var html =      '<div id="divProtocoloExibir" class="infraAreaDados" style="height:4.5em;position:relative;width: 90%;">'+
                         '    <div style="float:left">'+
                         '    <label id="lblProtocoloExibir" for="_txtProtocoloExibir" accesskey="" class="infraLabelObrigatorio">Protocolo:</label>'+
-                        '    <input type="text" id="txtProtocoloExibir" name="_txtProtocoloExibir" class="infraText infraReadOnly" readonly="readonly" value="'+ifrVisualizacao.find('#hdnProtocoloProcedimentoFormatado').val()+'">'+
+                        '    <input type="text" id="txtProtocoloExibir" name="_txtProtocoloExibir" class="infraText infraReadOnly" readonly="readonly" value="'+protocoloFormatado+'">'+
                         '    </div>'+
                         '    <div style="float:right">'+
                         '       <label id="lblDtaGeracaoExibir" for="_txtDtaGeracaoExibir" accesskey="" class="infraLabelObrigatorio">Data de Autua\u00E7\u00E3o:</label>'+
@@ -3941,7 +4640,8 @@ function formControlerAlterarProcesso(ifrVisualizacao) {
         var methodSend = checkAddUrgencia ? 'add' : false;
             methodSend = checkRemoveUrgencia ? 'remove' : methodSend;
         var checkSend = (checkAddUrgencia || checkRemoveUrgencia) ? true : false;
-        if (typeof $($ifrVisualizacao)[0].contentWindow.OnSubmitForm !== 'undefined' && $($ifrVisualizacao)[0].contentWindow.OnSubmitForm()) {
+        var janelaForm = getIframeVisualizacaoPro()[0].contentWindow;
+        if (typeof janelaForm.OnSubmitForm !== 'undefined' && janelaForm.OnSubmitForm()) {
             if (typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso === 'undefined' && typeof pullDadosProcessoSession() !== 'undefined' && pullDadosProcessoSession().propProcesso !== 'undefined' ) {
                 dadosProcessoPro.propProcesso = pullDadosProcessoSession().propProcesso;
             }
@@ -3962,15 +4662,19 @@ function formControlerAlterarProcesso(ifrVisualizacao) {
         }
     });
 }
-function checkDocVideoPro(ifrVisualizacao, TimeOut = 9000) {
-    var linkFile = ifrVisualizacao.find(divInformacao+' '+ancoraArvoreDownload).attr('href');
+// Mesmo criterio do checkDocZipPro: sem alvo fixo, resolve o iframe do anexo a cada tentativa e
+// desiste se outro documento for selecionado na arvore.
+function checkDocVideoPro(ifrVisualizacao, TimeOut = 9000, protocolo = false) {
+    if (!ifrVisualizacao && protocolo && getProtocoloSelecionadoArvorePro() !== protocolo) { return; }
+    var ifrAlvo = ifrVisualizacao || getContentsVisualizacaoPro();
+    var linkFile = ifrAlvo.find(divInformacao+' '+ancoraArvoreDownload).attr('href');
     if (TimeOut <= 0) { return; }
     if (typeof linkFile !== 'undefined') { 
-            loadDocVideoPro(linkFile, ifrVisualizacao);
+            loadDocVideoPro(linkFile, ifrAlvo);
             console.log('loadDocVideoPro');
     } else {
         setTimeout(function(){ 
-            checkDocVideoPro(ifrVisualizacao, TimeOut - 100); 
+            checkDocVideoPro(ifrVisualizacao, TimeOut - 100, protocolo); 
             if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload checkDocVideoPro'); 
         }, 500);
     }
@@ -4348,11 +5052,40 @@ function getLinksAcompanhamento(htmlArvore) {
     }
     return _return;
 }
-function getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory = false, callback = false, acompanhamentoEsp = '') {
-    $.ajax({ url: urlHistorico }).done(function (htmlHistorico) {
-        if($(htmlHistorico).find('.infraAreaPaginacao').html().trim() != '') {
+function getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory = false, callback = false, acompanhamentoEsp = '', esperasColeta = 120) {
+    if (fullHistory) {
+        // Uma coleta do historico completo por vez na sessao do SEI (todas as abas e os dois mundos da extensao):
+        // a segunda guardaria como "estado original" o tipo/pagina deixados pela primeira no meio do caminho.
+        if (!listProc.tokenColetaHistorico) listProc.tokenColetaHistorico = 'c' + Date.now() + Math.random().toString(36).slice(2, 8);
+        if (esperasColeta > 0 && outraColetaHistoricoEmCursoPro(listProc.tokenColetaHistorico)) {
+            ultimaPaginaHistoricoPro = Date.now();
+            setTimeout(function(){ getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory, callback, acompanhamentoEsp, esperasColeta - 1); }, 500);
+            return;
+        }
+        // Coleta anterior interrompida no meio (aba fechada, F5, navegacao no topo) deixou a sessao do SEI no tipo
+        // completo, numa pagina do meio: sem restaurar antes, esta coleta guardaria esse estado como o original.
+        if (!listProc.restauroInterrompidasPro && lerColetasHistoricoPro().some(coletaHistoricoInterrompidaPro)) {
+            listProc.restauroInterrompidasPro = true;
+            restaurarColetasInterrompidasPro(function(){ getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory, callback, acompanhamentoEsp, esperasColeta); });
+            return;
+        }
+        registrarColetaHistoricoPro(listProc.tokenColetaHistorico);
+        instalarRestauroAoSairPro(listProc.tokenColetaHistorico);
+    }
+    $.ajax({ url: urlHistorico }).fail(function () {
+        if (fullHistory) registrarColetaHistoricoPro(listProc.tokenColetaHistorico, true);
+    }).done(function (htmlHistorico) {
+        if (fullHistory && $(htmlHistorico).find('#frmProcedimentoHistorico').length == 0) {
+            // Resposta que nao e o historico (sessao expirada, erro): nada foi alterado na sessao do SEI.
+            registrarColetaHistoricoPro(listProc.tokenColetaHistorico, true);
+            return;
+        }
+        if(($(htmlHistorico).find('.infraAreaPaginacao').html() || '').trim() != '') {
             var pg = ($(htmlHistorico).find('#selInfraPaginacaoSuperior').length > 0) ? $(htmlHistorico).find('#selInfraPaginacaoSuperior option').length-1 : 1;
             if (fullHistory) {
+                // Como no ramo resumido abaixo, o acumulador comeca vazio: sem isso cada consulta
+                // completa somava as anteriores e o historico saia duplicado (26 -> 52 andamentos).
+                andamentoPaginacaoTemp = [];
                 getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, pg, fullHistory, callback, acompanhamentoEsp);
             } else {
                 andamentoPaginacaoTemp = getArrayHistorico($(htmlHistorico));
@@ -4360,6 +5093,7 @@ function getDadosHistoricoUrlPro(urlHistorico, listProc, fullHistory = false, ca
             }
         } else {
             if (fullHistory) {
+                andamentoPaginacaoTemp = [];
                 getDadosHistoricoPaginacao($(htmlHistorico), listProc, 0, 1, fullHistory, callback, acompanhamentoEsp);
             } else {
                 var andamento = getArrayHistorico($(htmlHistorico));
@@ -4393,14 +5127,29 @@ function getArrayHistorico(htmlHistorico) {
     });
     return andamento;
 }
-function getDadosHistoricoPaginacao(html, listProc, index, max, fullHistory = false, callback = false, acompanhamentoEsp = '') {
+function getDadosHistoricoPaginacao(html, listProc, index, max, fullHistory = false, callback = false, acompanhamentoEsp = '', formOriginal = false) {
+    // Formulario da primeira consulta: guarda a pagina e o tipo de historico que o SEI tinha na sessao.
+    formOriginal = formOriginal || html.find('#frmProcedimentoHistorico');
     if (index > max) {
         var listAndamento = {historico_completo: false, processo: listProc.processo, id_procedimento: listProc.id_procedimento, andamento: andamentoPaginacaoTemp};
-        if (!callback) {
-            loopIDProcedimentos();
-            getDataRecebimentoPro(listAndamento, false, acompanhamentoEsp);
-        } else if (typeof callback === 'function') {
-            callback(listAndamento);
+        var entregarHistorico = function () {
+            if (!callback) {
+                loopIDProcedimentos();
+                getDataRecebimentoPro(listAndamento, false, acompanhamentoEsp);
+            } else if (typeof callback === 'function') {
+                callback(listAndamento);
+            }
+        };
+        if (fullHistory) {
+            guardarCacheHistoricoPro(listProc, listAndamento);
+            // So entrega (e libera a proxima coleta e a tela do historico em espera) depois que a sessao do SEI
+            // voltou ao tipo/pagina de antes: antes o POST de restauracao corria solto.
+            restaurarPaginacaoHistoricoPro(formOriginal, function () {
+                registrarColetaHistoricoPro(listProc.tokenColetaHistorico, true);
+                entregarHistorico();
+            });
+        } else {
+            entregarHistorico();
         }
         //console.log('getDadosHistoricoPaginacao',listAndamento);
     } else {
@@ -4414,26 +5163,287 @@ function getDadosHistoricoPaginacao(html, listProc, index, max, fullHistory = fa
             });
             param['hdnInfraPaginaAtual'] = index;
             param['hdnTipoHistorico'] = (fullHistory) ? 'P' : 'R';
+        // Antes do 1o POST (que muda o tipo/pagina da sessao): quem achar esta coleta interrompida restaura com isto.
+        if (fullHistory && index == 0) registrarColetaHistoricoPro(listProc.tokenColetaHistorico, false, parametrosFormHistoricoPro(formOriginal));
 
         $.ajax({
             method: 'POST',
             data: param,
             url: href
+        }).fail(function () {
+            if (fullHistory) {
+                restaurarPaginacaoHistoricoPro(formOriginal, function () { registrarColetaHistoricoPro(listProc.tokenColetaHistorico, true); });
+            }
         }).done(function (htmlHistorico) {
-            var andamento = getArrayHistorico($(htmlHistorico));
+            var $htmlHistorico = $(htmlHistorico);
+            var andamento = getArrayHistorico($htmlHistorico);
+            // O total de paginas veio da primeira consulta, a do historico RESUMIDO (o GET do "Consultar
+            // Andamento"), mas aqui o tipo pedido e o completo, que tem muito mais paginas (SEI 5.0.4 da
+            // ANTAQ: 7 paginas no resumido, 34 no completo). So as primeiras paginas entravam: o historico
+            // parava anos depois da geracao do processo, os documentos antigos ficavam sem unidade e data
+            // de assinatura e o Gantt da capa dava TypeError. Vale a paginacao da resposta do tipo pedido.
+            if (fullHistory) {
+                var paginasTipoPedido = totalPaginasHistoricoPro($htmlHistorico, index);
+                max = paginasTipoPedido - 1;
+                ultimaPaginaHistoricoPro = Date.now();
+                registrarColetaHistoricoPro(listProc.tokenColetaHistorico);
+                if (index == 0) {
+                    // Historico completo ja coletado nesta aba e so acrescido de andamentos novos: junta os novos
+                    // da 1a pagina a copia, sem percorrer de novo as dezenas de paginas (Enviar Processo refazia a
+                    // consulta inteira a cada abertura: ~35 POSTs e ~11 s num processo longo).
+                    listProc.hashHistoricoPro = $htmlHistorico.find('#hdnInfraHashCriterios').val();
+                    listProc.totalRegistrosHistoricoPro = totalRegistrosHistoricoPro($htmlHistorico);
+                    var historicoAtualizado = (paginasTipoPedido > 1) ? atualizarCacheHistoricoPro(listProc, andamento) : false;
+                    if (historicoAtualizado) {
+                        andamentoPaginacaoTemp = historicoAtualizado;
+                        getDadosHistoricoPaginacao($htmlHistorico, listProc, 1, 0, fullHistory, callback, acompanhamentoEsp, formOriginal);
+                        return;
+                    }
+                }
+            }
                 $.merge(andamentoPaginacaoTemp, andamento);
-                getDadosHistoricoPaginacao($(htmlHistorico), listProc, index+1, max, fullHistory, callback, acompanhamentoEsp);
+                getDadosHistoricoPaginacao($htmlHistorico, listProc, index+1, max, fullHistory, callback, acompanhamentoEsp, formOriginal);
         });
     }
 }
+// O SEI guarda na sessao a pagina e o tipo (resumido/total) do ultimo POST do historico. A consulta do
+// historico completo (mergeAllAndamentosProcesso) terminava numa pagina alem da ultima e no tipo total,
+// e o "Consultar Andamento" aberto em seguida pelo usuario aparecia vazio (medido no SEI 4.1.5).
+// Reenvia o estado original do formulario e avisa quando a sessao ja voltou (aoTerminar).
+function restaurarPaginacaoHistoricoPro(form, aoTerminar) {
+    var terminar = function () { if (typeof aoTerminar === 'function') aoTerminar(); };
+    var restauro = parametrosFormHistoricoPro(form);
+    if (!restauro) { terminar(); return; }
+    $.ajax({ method: 'POST', data: restauro.dados, url: restauro.url }).always(terminar);
+}
+// Parametros (action + hidden hdn*) do formulario do historico, para reenviar o estado da sessao.
+function parametrosFormHistoricoPro(form) {
+    if (!form || !form.length || typeof form.attr('action') === 'undefined') return null;
+    var param = {};
+        form.find("input[type=hidden]").each(function () {
+            if ( $(this).attr('name') && $(this).attr('id') && $(this).attr('id').indexOf('hdn') !== -1) {
+                param[$(this).attr('name')] = $(this).val();
+            }
+        });
+    return {url: form.attr('action'), dados: param};
+}
+// Coletas do historico completo em curso (mergeAllAndamentosProcesso). Enquanto a coleta percorre as paginas, a
+// sessao do SEI (compartilhada por todas as abas do usuario) fica no tipo completo, numa pagina do meio: o
+// "Consultar Andamento" aberto nesse intervalo saia no historico completo a partir dessa pagina (SEI 5.0.4:
+// "3388 registros - 1501 a 1600"), a remocao da paginacao juntava as paginas fora de ordem e "restaurava" a sessao
+// para o tipo completo, que ficava preso. O registro fica no localStorage, visivel as outras abas e aos dois mundos
+// da extensao: {token, inicio, ultima (pulso a cada pagina), fim (sessao ja restaurada)}.
+var CHAVE_COLETA_HISTORICO_PRO = 'seiProColetaHistorico';
+function lerColetasHistoricoPro() {
+    try {
+        var lista = JSON.parse(localStorage.getItem(CHAVE_COLETA_HISTORICO_PRO) || '[]');
+        return Array.isArray(lista) ? lista : [];
+    } catch (e) { return []; }
+}
+function coletaHistoricoAtivaPro(coleta) {
+    // Sem pulso ha 20 s a coleta parou (aba fechada, falha de rede) e deixa de segurar as outras.
+    return !!coleta && !coleta.fim && Date.now() - (coleta.ultima || 0) < 20000;
+}
+// Parou sem restaurar a sessao do SEI (sem fim nem pulso) e ainda nao foi restaurada por outra aba depois do ultimo pulso.
+function coletaHistoricoInterrompidaPro(coleta) {
+    return !!coleta && !coleta.fim && !!coleta.restauro && !coletaHistoricoAtivaPro(coleta) && !((coleta.restaurada || 0) >= (coleta.ultima || 0));
+}
+// Reenvia o estado de antes de cada coleta interrompida, da mais recente para a mais antiga (o ultimo POST e o estado
+// mais antigo, o de antes de todas elas). Enquanto restaura, o pulso no registro faz as outras abas esperarem.
+function restaurarColetasInterrompidasPro(aoTerminar, limite = 5) {
+    var terminar = function () { if (typeof aoTerminar === 'function') aoTerminar(); };
+    var pendentes = lerColetasHistoricoPro().filter(coletaHistoricoInterrompidaPro).sort(function (a, b) { return (b.inicio || 0) - (a.inicio || 0); });
+    if (!pendentes.length || limite <= 0) { terminar(); return; }
+    var coleta = pendentes[0];
+    registrarColetaHistoricoPro(coleta.token);
+    $.ajax({ method: 'POST', data: coleta.restauro.dados, url: coleta.restauro.url }).always(function () {
+        registrarColetaHistoricoPro(coleta.token, true, null, true);
+        restaurarColetasInterrompidasPro(aoTerminar, limite - 1);
+    });
+}
+// Aba fechada, F5 ou navegacao no topo no meio da coleta: os XHRs sao abortados sem restaurar a sessao. Na saida da
+// pagina, o estado de antes vai por sendBeacon (so as coletas desta janela).
+var coletasHistoricoDestaJanelaPro = [];
+function instalarRestauroAoSairPro(token) {
+    if (token && coletasHistoricoDestaJanelaPro.indexOf(token) === -1) coletasHistoricoDestaJanelaPro.push(token);
+    if (instalarRestauroAoSairPro.instalado || typeof window.addEventListener !== 'function') return;
+    instalarRestauroAoSairPro.instalado = true;
+    window.addEventListener('pagehide', function () {
+        lerColetasHistoricoPro().forEach(function (c) {
+            if (!c || c.fim || !c.restauro || coletasHistoricoDestaJanelaPro.indexOf(c.token) === -1) return;
+            try {
+                if (!navigator.sendBeacon) return;
+                var dados = new URLSearchParams();
+                Object.keys(c.restauro.dados || {}).forEach(function (k) { dados.append(k, c.restauro.dados[k]); });
+                if (navigator.sendBeacon(c.restauro.url, dados)) registrarColetaHistoricoPro(c.token, true);
+            } catch (e) {}
+        });
+    });
+}
+function outraColetaHistoricoEmCursoPro(token) {
+    return lerColetasHistoricoPro().some(function (c) { return c.token !== token && coletaHistoricoAtivaPro(c); });
+}
+function registrarColetaHistoricoPro(token, encerrada, restauro, restaurada) {
+    if (!token) return;
+    var agora = Date.now();
+    var lista = lerColetasHistoricoPro().filter(function (c) {
+        if (!c) return false;
+        // A interrompida fica ate alguem restaurar a sessao (limite de 12 h); as demais, 2 min depois do ultimo registro.
+        if (coletaHistoricoInterrompidaPro(c)) return agora - (c.ultima || 0) < 43200000;
+        return agora - Math.max(c.fim || 0, c.ultima || 0, c.restaurada || 0) < 120000;
+    });
+    var coleta = lista.filter(function (c) { return c.token === token; })[0];
+    if (!coleta) { coleta = {token: token, inicio: agora}; lista.push(coleta); }
+    if (restaurada) {
+        coleta.restaurada = agora;
+    } else {
+        // Pulso da propria coleta depois de outra aba te-la dado por interrompida (pagina que demorou mais de 20 s):
+        // ela continua, e volta a segurar as outras.
+        if (!encerrada && coleta.fim && coleta.fim === coleta.restaurada) delete coleta.fim;
+        coleta.ultima = agora;
+    }
+    if (restauro) coleta.restauro = restauro;
+    if (encerrada) coleta.fim = agora;
+    try { localStorage.setItem(CHAVE_COLETA_HISTORICO_PRO, JSON.stringify(lista)); } catch (e) {}
+}
+// A tela do historico (win) comecou a carregar durante uma coleta, ainda em curso ou encerrada depois disso?
+function historicoCarregadoDuranteColetaPro(win) {
+    var inicioNavegacao = 0;
+    // Relogio de parede, como o Date.now() gravado pelas outras abas: o performance.timeOrigin do Chromium vem do
+    // relogio monotonico, que nao anda com o computador suspenso e se descola do Date.now() numa aba aberta ha horas.
+    try { inicioNavegacao = Math.round(win.Date.now() - win.performance.now()); } catch (e) { return false; }
+    if (!inicioNavegacao) return false;
+    return lerColetasHistoricoPro().some(function (c) {
+        return inicioNavegacao >= (c.inicio || 0) - 1000 && (c.fim ? inicioNavegacao < c.fim : coletaHistoricoAtivaPro(c));
+    });
+}
+// Espera a coleta terminar com a tabela escondida e recarrega a tela pelo proprio link assinado (GET): o SEI
+// renderiza entao o tipo/pagina que a sessao tinha antes da coleta.
+function aguardarColetaHistoricoPro(ifrView, esperas = 180, restaurou = false) {
+    var win = ifrView[0] && ifrView[0].defaultView;
+    if (!win) return;
+    if (ifrView.find('#avisoColetaHistoricoPro').length == 0) {
+        ifrView.find('#tblHistorico, .infraAreaPaginacao, #ancTipoHistorico, #ancTipoHistoricoTotal').css('visibility', 'hidden');
+        ifrView.find('.infraAreaTabela').first().before('<div id="avisoColetaHistoricoPro" style="margin: 10px 0;font-size: 1em;"><i class="fas fa-sync fa-spin" style="margin-right: 5px;"></i> Aguarde... o '+NAMESPACE_SPRO+' est&aacute; consultando o hist&oacute;rico do processo.</div>');
+    }
+    if (esperas > 0 && lerColetasHistoricoPro().some(coletaHistoricoAtivaPro)) {
+        setTimeout(function () {
+            if (getContentsVisualizacaoPro()[0] === ifrView[0]) aguardarColetaHistoricoPro(ifrView, esperas - 1);
+        }, 500);
+        return;
+    }
+    if (!restaurou && lerColetasHistoricoPro().some(coletaHistoricoInterrompidaPro)) {
+        restaurarColetasInterrompidasPro(function () {
+            if (getContentsVisualizacaoPro()[0] === ifrView[0]) aguardarColetaHistoricoPro(ifrView, 0, true);
+        });
+        return;
+    }
+    var href = String(win.location.href || '');
+    // No maximo 2 recargas seguidas da mesma tela em 1 min: se ainda assim ela cair numa coleta, fica como veio.
+    var CHAVE_RECARGA = 'seiProRecargaHistorico', recarga = null;
+    try { recarga = JSON.parse(sessionStorage.getItem(CHAVE_RECARGA) || 'null'); } catch (e) {}
+    recarga = (recarga && recarga.href === href && Date.now() - (recarga.t || 0) < 60000) ? recarga : {href: href, t: Date.now(), n: 0};
+    if (/[?&]infra_hash=/.test(href) && recarga.n < 2) {
+        recarga.n++;
+        try { sessionStorage.setItem(CHAVE_RECARGA, JSON.stringify(recarga)); } catch (e) {}
+        win.location.replace(href);
+    } else {
+        ifrView.find('#avisoColetaHistoricoPro').remove();
+        ifrView.find('#tblHistorico, .infraAreaPaginacao, #ancTipoHistorico, #ancTipoHistoricoTotal').css('visibility', '');
+    }
+}
+// Copia do ultimo historico completo coletado nesta aba (sessionStorage, um processo so): a 1a pagina da coleta
+// seguinte (total de registros e andamentos mais recentes) diz se ele so cresceu desde entao. A chave e o
+// hdnInfraHashCriterios da consulta, que o SEI calcula com o processo, o tipo de historico e a unidade atual.
+var CHAVE_CACHE_HISTORICO_PRO = 'seiProHistoricoCompleto';
+function totalRegistrosHistoricoPro($html) {
+    var m = ($html.find('#tblHistorico caption').text() || '').match(/\((\d+)\s+registro/);
+    return m ? parseInt(m[1], 10) : 0;
+}
+// Total de paginas da resposta do historico (pagina `index`). O infra do SEI so gera o select de paginas com MAIS de
+// 2 paginas (IPAreaPaginacaoInfra no 5.0 e InfraPagina no 3.1.7: "if ($numPaginas > 2)"): com exatamente 2 (101 a 200
+// andamentos) so ha o link de proxima pagina, e a coleta parava na pagina 0. Sem select: ha proxima pagina pelo link
+// (#lnkInfraProximaPagina*) ou pela legenda ("3391 registros - 701 a 800").
+function totalPaginasHistoricoPro($html, index) {
+    var opcoes = $html.find('#selInfraPaginacaoSuperior option').length;
+    if (opcoes > 0) return opcoes;
+    var temProxima = $html.find('#lnkInfraProximaPaginaSuperior, #lnkInfraProximaPaginaInferior').not('.disabled, [aria-disabled="true"]').length > 0;
+    if (!temProxima) {
+        var faixa = ($html.find('#tblHistorico caption').text() || '').match(/\((\d+)\s+registros?\s*-\s*\d+\s+a\s+(\d+)\)/);
+        temProxima = !!(faixa && parseInt(faixa[2], 10) < parseInt(faixa[1], 10));
+    }
+    return (parseInt(index, 10) || 0) + (temProxima ? 2 : 1);
+}
+function chaveAndamentoHistoricoPro(a) {
+    return a ? [a.datahora, a.unidade, a.usuario, a.descricao].join('|') : '';
+}
+// A copia e o proprio listAndamento que mergeAllAndamentosProcesso grava na entrada do processo em
+// dadosSessionProcessoPro (historico_completo): aqui so se marcam nele o hash e o total de registros da consulta.
+// Uma segunda copia do historico inteiro no sessionStorage dobrava o espaco usado e, gravada antes, fazia a gravacao
+// dos dados do processo estourar a cota num processo muito longo.
+function guardarCacheHistoricoPro(listProc, listAndamento) {
+    try { sessionStorage.removeItem(CHAVE_CACHE_HISTORICO_PRO); } catch (e) {} // copia separada das versoes anteriores
+    if (!listAndamento) return;
+    listAndamento.hash_historico = listProc.hashHistoricoPro || '';
+    listAndamento.total_registros = listProc.totalRegistrosHistoricoPro || 0;
+}
+function lerCacheHistoricoPro(id_procedimento) {
+    var lista = null;
+    try { lista = JSON.parse(sessionStorage.getItem('dadosSessionProcessoPro') || 'null'); } catch (e) { return null; }
+    if (!Array.isArray(lista)) return null;
+    for (var i = lista.length - 1; i >= 0; i--) {
+        var la = lista[i] && lista[i].listAndamento;
+        if (la && la.historico_completo === true && String(la.id_procedimento) === String(id_procedimento)) {
+            return {hash: la.hash_historico, id_procedimento: la.id_procedimento, total_registros: la.total_registros, andamento: la.andamento};
+        }
+    }
+    return null;
+}
+function atualizarCacheHistoricoPro(listProc, primeiraPagina) {
+    var cache = lerCacheHistoricoPro(listProc.id_procedimento);
+    var total = listProc.totalRegistrosHistoricoPro;
+    if (!cache || !total || !listProc.hashHistoricoPro || cache.hash !== listProc.hashHistoricoPro || String(cache.id_procedimento) !== String(listProc.id_procedimento)) return false;
+    // O total gravado tem de ser o do historico gravado (um listAndamento de outra consulta nao serve).
+    if (!Array.isArray(cache.andamento) || cache.andamento.length !== cache.total_registros) return false;
+    if (!Array.isArray(cache.andamento) || !cache.andamento.length || !cache.total_registros || !primeiraPagina || !primeiraPagina.length) return false;
+    var novos = total - cache.total_registros;
+    if (novos < 0) return false;
+    // Os andamentos mais recentes da copia tem de aparecer em sequencia na 1a pagina, logo depois dos novos.
+    var conferir = Math.min(10, cache.andamento.length);
+    for (var inicio = 0; inicio <= novos && inicio + conferir <= primeiraPagina.length; inicio++) {
+        var igual = true;
+        for (var k = 0; k < conferir; k++) {
+            if (chaveAndamentoHistoricoPro(primeiraPagina[inicio + k]) !== chaveAndamentoHistoricoPro(cache.andamento[k])) { igual = false; break; }
+        }
+        if (igual) return primeiraPagina.slice(0, inicio).concat(cache.andamento);
+    }
+    return false;
+}
 function initTablePaginacaoHistorico() {
+    // Cada copia anexaria as mesmas paginas na tabela (historico duplicado): so uma remove a paginacao.
+    if (!isCopiaResponsavelVisualizacaoPro()) return;
+    var ifrView = getContentsVisualizacaoPro();
+    if (ifrView[0] && (historicoCarregadoDuranteColetaPro(ifrView[0].defaultView) || lerColetasHistoricoPro().some(coletaHistoricoInterrompidaPro))) {
+        aguardarColetaHistoricoPro(ifrView);
+        return;
+    }
     if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('removepaginacao')) {
-        getTablePaginacao($($ifrVisualizacao).contents(), '#frmProcedimentoHistorico', '#tblHistorico', 1);
+        getTablePaginacao(ifrView, '#frmProcedimentoHistorico', '#tblHistorico', 1);
     }
 }
 function getTablePaginacao(ifrView, formID, tableID, index) {
     if (ifrView.find('.infraAreaPaginacao a').length > 0 && typeof window.tablepaginacao_cancel == 'undefined') {
         var form = ifrView.find(formID);
+        // A lista pode abrir numa pagina do meio (o SEI guarda na sessao a pagina do ultimo POST): as paginas
+        // seguintes eram anexadas a partir dela, fora de ordem e repetindo as anteriores. Recomeca da pagina 0.
+        var paginaExibida = parseInt(form.find('#hdnInfraPaginaAtual').val(), 10);
+        if (index == 1 && paginaExibida > 0) {
+            ifrView.find(tableID+' tbody').find('tr').not('.infraTrOrdenacao').filter(function(){
+                return $(this).find('th').length == 0 && $(this).find('td').length > 0 && !$(this).find('td').hasClass('infraTdSetaOrdenacao');
+            }).remove();
+            form.find('#hdnInfraPaginaAtual').val('0');
+            index = 0;
+        }
         var href = form.attr('action');
         var param = {};
             form.find("input[type=hidden]").map(function () { 
@@ -4474,7 +5484,7 @@ function getTablePaginacao(ifrView, formID, tableID, index) {
                 }
         });
         if (ifrView.find('.loadRemovePag').length == 0) {
-            ifrView.find('.infraAreaPaginacao').prepend('<label class="loadRemovePag" style="float: right;margin-right: 30px;"><i class="fas fa-sync fa-spin"></i> Removendo pagina\u00E7\u00E3o... <a href="javascript:void(0);" style="font-size: 1em;" onclick="parent.cancelTablePaginacao(this)"><i class="fas fa-times" style="text-decoration: underline;"></i> Cancelar</a></label>');
+            ifrView.find('.infraAreaPaginacao').prepend('<label class="loadRemovePag" style="float: right;margin-right: 30px;"><i class="fas fa-sync fa-spin"></i> Removendo pagina\u00E7\u00E3o... <a href="javascript:void(0);" style="font-size: 1em;" onclick="parent.getJanelaProcessoPro().cancelTablePaginacao(this)"><i class="fas fa-times" style="text-decoration: underline;"></i> Cancelar</a></label>');
         }
     }
 }
@@ -4522,8 +5532,20 @@ function getBlocoProcessoHistorico() {
     }
     return blocoProcesso;
 }
-function initGanttHistoryProc() {
-    alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Pesquisando hist\u00F3rico do processo');
+function initGanttHistoryProc(TimeOut = 9000) {
+    if (TimeOut <= 0) {
+        // Sem o Gantt nao ha o que abrir: troca o "Aguarde..." por um aviso em vez de deixa-lo na tela.
+        alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel carregar o hist\u00F3rico de tramita\u00E7\u00E3o do processo. Recarregue a p\u00E1gina e tente novamente.');
+        return;
+    }
+    if (TimeOut == 9000) alertaBoxPro('Sucess', 'sync fa-spin', 'Aguarde... Pesquisando hist\u00F3rico do processo');
+    // O frappe-gantt do manifest existe so no mundo isolado. Pelo link da capa esta funcao roda no
+    // mundo da pagina, onde o Gantt nao existia e o dialogo abria vazio ("Gantt is not defined").
+    if (typeof Gantt === 'undefined') {
+        if (typeof URL_SPRO !== 'undefined' && TimeOut == 9000) $.getScript(URL_SPRO+"js/lib/frappe-gantt.js");
+        setTimeout(function(){ initGanttHistoryProc(TimeOut - 100); }, 500);
+        return;
+    }
     var listHistoryProc = pullDadosProcessoSession();
         listHistoryProc = listHistoryProc ? listHistoryProc.listAndamento : dadosProcessoPro.listAndamento;
 
@@ -4580,7 +5602,9 @@ function getGanttHistoryProc(listHistoryProc = false) {
             duration: init_duration,
             custom_class: init_customClass
         };
-        taskProcesso.push(taskInit);
+        // Sem o andamento "Processo ... gerado" no historico a tarefa inicial ficava com start undefined
+        // e o sort_by abaixo lancava TypeError, deixando o "Aguarde..." na tela.
+        if (init_recebido) taskProcesso.push(taskInit);
 
         $.each(recebido, function(index, value){
             var recebido_i = value;
@@ -4614,7 +5638,11 @@ function getGanttHistoryProc(listHistoryProc = false) {
         });
 
         console.log(taskProcesso);
-        taskProcesso = taskProcesso.length ? jmespath.search(taskProcesso, "sort_by([*],&start)") : [];
+        if (!taskProcesso.length) {
+            alertaBoxPro('Error', 'exclamation-triangle', 'N\u00E3o foi poss\u00EDvel carregar o hist\u00F3rico de tramita\u00E7\u00E3o do processo. Recarregue a p\u00E1gina e tente novamente.');
+            return;
+        }
+        taskProcesso = jmespath.search(taskProcesso, "sort_by([*],&start)");
 
         resetDialogBoxPro('alertBoxPro');
         resetDialogBoxPro('dialogBoxPro');
@@ -4916,9 +5944,10 @@ function editFollowDesc(this_, mode) {
         parent.saveFollowDesc(this_, mode);
     }
 }
+// event.path (so do Chrome) foi removido do navegador: o Enter lancava TypeError e nao salvava a especificacao.
 function keyFollowDesc(e, mode) {
     if(e.which == 13) {
-        parent.saveFollowDesc(e.path[0], mode);
+        parent.saveFollowDesc(e.target || e.srcElement, mode);
         if (mode == 'fav') {
             saveConfigFav();
         }
@@ -4947,6 +5976,7 @@ function showFollowEtiqueta(this_, status, mode) {
         var btnClose =  '<a class="newLink btnCloseEtiqueta" onclick="parent.showFollowEtiqueta(this, \'close\', \''+mode+'\')" onmouseover="return infraTooltipMostrar(\'Fechar\');" onmouseout="return infraTooltipOcultar();">'+
                         '   <i class="fas fa-check-square cinzaColor" style="font-size: 100%;"></i>'+
                         '</a>';
+            btnClose = getHtmlJanelaProcessoPro(btnClose, this_);
         td.find('.followLinkTags').hide();
         td_info_tags_follow.not('.info_tags_user').hide();
         td.find('.info_tags_follow_txt').show().find('input.tag-input').focus().trigger('click').after(btnClose);
@@ -4958,7 +5988,9 @@ function showFollowEtiqueta(this_, status, mode) {
         }
     }, 500);
     if ($($ifrVisualizacao).length > 0) {
-        $($ifrVisualizacao)[0].contentWindow.infraTooltipOcultar();
+        // o tooltip foi aberto no frame do formulario (aninhado no SEI 4.1+)
+        var janelaTooltip = getIframeVisualizacaoPro()[0].contentWindow;
+        if (typeof janelaTooltip.infraTooltipOcultar === 'function') janelaTooltip.infraTooltipOcultar();
     }
 }
 function checkEtiquetaPriority(this_) {
@@ -5003,6 +6035,7 @@ function addOptionsEtiqueta(this_, mode) {
         var htmlOptions =   '<input type="color" class="tagFavAddColorInput" value="'+backgroundColor+'" onchange="parent.changeColorEtiqueta(this, \''+mode+'\')">'+
                             '<i class="tagFavEditIcon fas fa-'+iconValue+'" data-icontag="'+iconValue+'" onclick="parent.openBoxIconsFA(\'selectIconEtiqueta\', \''+tagName+'\', \''+mode+'\')" onmouseover="return infraTooltipMostrar(\'Alterar \u00EDcone\');" onmouseout="return infraTooltipOcultar();"></i>'+
                             '<i class="tagFavAddColor fas fa-fill-drip" onclick="parent.openColorEtiqueta(this)" onmouseover="return infraTooltipMostrar(\'Alterar cor\');" onmouseout="return infraTooltipOcultar();"></i>';
+            htmlOptions = getHtmlJanelaProcessoPro(htmlOptions, this); // etiquetas do "Manter em Favoritos" do Enviar Processo
         if (colorValue != '') {
             $(this).css({'background-color': colorValue, 'color': textColour}).find('.tag-text').css('color',textColour);
         }
@@ -5019,7 +6052,7 @@ function selectIconEtiqueta(this_, tagName, mode) {
                 ? $('.tableAtividades tbody, .atividadeInfo') 
                 : $('.kanbanAtividade, .atividadeInfo')
             : $('.tableFavoritos tbody');
-        table = ($($ifrVisualizacao).contents().find('.favoritosLabelOptions').length > 0) ? $($ifrVisualizacao).contents().find('.favoritosLabelOptions table') : table;
+        table = (getContentsVisualizacaoPro().find('.favoritosLabelOptions').length > 0) ? getContentsVisualizacaoPro().find('.favoritosLabelOptions table') : table;
         table = (mode == 'options') ? $('#dialogBoxPro') : table;
     var icon = $(this_).find('.iconListTxt').text();
     var value = table.find('.tag_text.tagTableText_'+tagName).data('colortag');
@@ -5977,18 +7010,36 @@ function copyToClipboardHTML(str) {
 };
 function targetIfrVisualizacaoPro(url) { 
     if ( typeof url !== 'undefined' && url != '' && url !== null ) {
-        $($ifrVisualizacao).attr("src", url);
+        getIframeAcaoVisualizacaoPro(url).attr("src", url);
     }
+}
+// Frame em que o SEI abre a acao de `url`. A partir do SEI 4.1 os botoes da barra (#divArvoreAcoes)
+// abrem os formularios no #ifrVisualizacao interno (target="ifrVisualizacao"): carregar a mesma url no
+// frame da barra, como o menu rapido da arvore fazia, trocava a barra de acoes inteira pelo formulario.
+// Segue o target do botao nativo com a mesma acao. Sem aninhamento (SEI 3.x) ou sem botao correspondente
+// (acoes que renderizam a propria barra, como procedimento_reabrir) continua no frame de sempre.
+function getIframeAcaoVisualizacaoPro(url) {
+    var ifrConteudo = $($ifrVisualizacao);
+    var ifrInterno = getIframeVisualizacaoPro();
+    if (ifrInterno[0] === ifrConteudo[0]) { return ifrConteudo; }
+    var acao = String(url).match(/[?&]acao=([^&#]+)/);
+    if (!acao) { return ifrConteudo; }
+    var nomeInterno = ifrInterno.attr('name') || ifrInterno.attr('id');
+    var botao = ifrConteudo.contents().find('#divArvoreAcoes a[href*="acao='+acao[1]+'&"]').filter(function(){ return $(this).attr('target') === nomeInterno; });
+    return botao.length ? ifrInterno : ifrConteudo;
 }
 function execIncluirEmBlocoPro() { 
     $($ifrVisualizacao)[0].contentWindow.incluirEmBloco();
 }
 function execConcluirReabrirProcessoPro(url) { 
     var ifrVisualizacao = $($ifrVisualizacao).contents();
-    if ( ifrVisualizacao.find('img[title="Reabrir Processo"]').length > 0 ) {
-        $($ifrVisualizacao)[0].contentWindow.reabrirProcesso();    
-    } else if ( ifrVisualizacao.find('img[title="Concluir Processo"]').length > 0 ) {
-        $($ifrVisualizacao)[0].contentWindow.concluirProcesso();    
+    var janelaBarra = $($ifrVisualizacao).length ? $($ifrVisualizacao)[0].contentWindow : {};
+    // A partir do SEI 4.1 nao existe concluirProcesso(): o botao "Concluir Processo" e um link para o
+    // formulario de conclusao. Com o title presente (sem os tooltips do SEI Pro) a chamada dava TypeError.
+    if ( ifrVisualizacao.find('img[title="Reabrir Processo"]').length > 0 && typeof janelaBarra.reabrirProcesso === 'function' ) {
+        janelaBarra.reabrirProcesso();    
+    } else if ( ifrVisualizacao.find('img[title="Concluir Processo"]').length > 0 && typeof janelaBarra.concluirProcesso === 'function' ) {
+        janelaBarra.concluirProcesso();    
     } else {
         targetIfrVisualizacaoPro(url);
     }
@@ -6361,6 +7412,10 @@ function toggleTablePro(idTable, mode) {
         setOptionsPro(elemTable, 'hide');
 	} else {
 		$(idTable).removeClass('displayNone').css('display', 'inline-table');
+        // '.collapseTabelaProcesso' so existe no SEI novo e inclui o #divFiltro, que precisa do display: flex
+        // do proprio SEI para manter os links "Ver por..." na mesma linha, e o #collapseControle, cujo recolhimento
+        // nativo abaixo de 768 px o 'inline-table' anulava (ver insertDivPanelControleProc).
+        if (idTable == '.collapseTabelaProcesso') $('#divFiltro, #collapseControle').css('display', '');
 		$('#'+elemTable+'_hideIcon').show();
 		$('#'+elemTable+'_showIcon').hide();
         setOptionsPro(elemTable, 'show');
@@ -6842,7 +7897,7 @@ function getProcessoUnidadePro(selected = false, obj = false) {
                 var id_procedimento = getParamsUrlPro(a.attr('href')).id_procedimento;
                     id_procedimento = (typeof id_procedimento !== 'undefined') ? id_procedimento : false;
                 var especificacao = extractTooltipToArray(a.attr('onmouseover'));
-                    especificacao = (especificacao) ? especificacao[0] : false;
+                    especificacao = (especificacao) ? removePrefixoNaoVisualizadoPro(especificacao[0]) : false;
                 if (processo_sei && id_procedimento) { 
                     var _return = (obj) 
                                     ? {processo_sei: processo_sei, id_procedimento: id_procedimento, especificacao: especificacao}
@@ -6911,7 +7966,7 @@ function getCheckerProcessoPro() {
     }).appendTo('body');
 }
 function getDadosIframeProcessoPro(idProcedimento, mode) {
-    if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && !checkProcessoSigiloso() ) {
+    if (typeof idProcedimento !== 'undefined' && idProcedimento != '' && !checkProcessoSigiloso() && !checkProcessoSigilosoId(idProcedimento) ) {
         if ( $('#frmCheckerProcessoPro').length == 0 ) { getCheckerProcessoPro(); }
         var url = url_host.replace('controlador.php','')+'controlador.php?acao=procedimento_trabalhar&id_procedimento='+idProcedimento;
         if (!checkProcessoSigiloso()) {
@@ -6941,6 +7996,7 @@ function checkDadosIframeProcessoPro(mode) {
             }
         }, 500);
     } else {
+        marcarProcessoSigilosoPro(iframe);
         $('#frmCheckerProcessoPro, .sparkling-modal-container, #divInfraModalFundo').remove();
     }
 }
@@ -7228,6 +8284,14 @@ function ajaxDadosProcessoPro(href, mode, arrayAcompEsp) {
                 processo[$(this).attr('id')] = $(this).val();
             }
         });
+        // SEI 4.1.5 e 5.0: o #hdnNomeTipoProcedimento do procedimento_alterar sai vazio (no 5.0 o value e o id da
+        // prioridade). O nome do tipo e o da opcao de #selTipoProcedimento com o id do tipo (#hdnIdTipoProcedimento);
+        // sem ela, o titulo #lblTipoProcedimentoTitulo. So preenche quando o hidden nao traz um nome.
+        if (typeof processo.hdnNomeTipoProcedimento === 'undefined' || /^\d*$/.test(String(processo.hdnNomeTipoProcedimento).trim())) {
+            var nomeTipoProcesso = $html.find('#selTipoProcedimento option').filter(function () { return $(this).val() == processo.hdnIdTipoProcedimento; }).first().text().trim();
+                nomeTipoProcesso = nomeTipoProcesso || $html.find('#lblTipoProcedimentoTitulo').text().trim();
+            if (nomeTipoProcesso) processo.hdnNomeTipoProcedimento = nomeTipoProcesso;
+        }
         $html.find('form input[type=text]').each(function () { 
             if ( $(this).attr('id') && $(this).attr('id').indexOf('txt') !== -1) {
                 processo[$(this).attr('id')] = $(this).val();
@@ -7462,7 +8526,7 @@ function getHistoryProcessosPro() {
     dialogBoxPro = $('#dialogBoxPro')
         .html('<div class="dialogBoxDiv">'+htmlBox+'</div>')
         .dialog({
-            title: 'Hist\u00F3rio de Processos Visitados',
+            title: 'Hist\u00F3rico de Processos Visitados',
             width: 980,
             height: 450,
             resize: function(event, ui) {
@@ -7566,7 +8630,7 @@ function getAllLinksFolder() {
         _ifrArvore[0].contentWindow.getLinksArvore();
 }
 function initMergeAllAndamentosProcesso(callback, TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
     if (typeof dadosProcessoPro !== 'undefined') {
         mergeAllAndamentosProcesso(callback);
     } else {
@@ -7576,6 +8640,10 @@ function initMergeAllAndamentosProcesso(callback, TimeOut = 9000) {
         }, 500);
     }
 }
+var mergeAndamentosEmCursoPro = false;
+// Hora da ultima pagina recebida do historico completo: com todas as paginas (dezenas num processo longo) a
+// consulta pode passar dos 30 s da guarda abaixo sem estar parada.
+var ultimaPaginaHistoricoPro = 0;
 function mergeAllAndamentosProcesso(callback = false) {
     // if (typeof dadosProcessoPro.listAndamento !== 'undefined' && typeof dadosProcessoPro.listAndamento.historico_completo !== 'undefined' && dadosProcessoPro.listAndamento.historico_completo) {
         // if (typeof callback === 'function') callback();
@@ -7585,42 +8653,72 @@ function mergeAllAndamentosProcesso(callback = false) {
         var arrayLinksArvoreAll = _ifrArvore[0].contentWindow.arrayLinksArvoreAll;
         var id_procedimento = getParamsUrlPro(_ifrArvore.attr('src')).id_procedimento;
         var processo = ifrArvore.find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).text().trim();
-        var linkHistorico = isSEI_5 
-        ? ifrArvore.find('#divConsultarAndamento a').attr('onclick').match(/consultarAndamento\('([^']+)'\)/)?.[1]
+        // A partir do SEI 4.1 a URL do historico vem no onclick do "Consultar Andamento" da arvore,
+        // consultarAndamento('url'), e nao aparece no arrayLinksArvoreAll. No SEI 3.x o onclick nao
+        // tem argumento e a URL so existe nos scripts da arvore. O criterio e o formato do onclick, e
+        // nao isSEI_5: no 4.1.x a lista vinha vazia e o historico nunca era consultado.
+        var onclickAndamento = ifrArvore.find('#divConsultarAndamento a').attr('onclick');
+        var linkAndamento = (typeof onclickAndamento === 'string') ? onclickAndamento.match(/consultarAndamento\('([^']+)'\)/) : null;
+        var linkHistorico = linkAndamento
+        ? [linkAndamento[1]]
         : typeof arrayLinksArvoreAll !== 'undefined' ? arrayLinksArvoreAll.filter(function(v){ return (v.indexOf('procedimento_consultar_historico') !== -1) }) : [];
         if (linkHistorico.length > 0) {
-            var linkHistorico_ = isSEI_5 ? linkHistorico : linkHistorico[0];
+            // Uma consulta completa por vez para o mesmo processo: quem chega durante uma consulta em
+            // curso recebe o mesmo resultado. Duas consultas simultaneas dividiam o acumulador
+            // andamentoPaginacaoTemp e a segunda podia "restaurar" a paginacao deixada pela primeira.
+            // Uma consulta que nao terminou em 30 s (falha de rede, sessao) deixa de segurar as seguintes.
+            if (mergeAndamentosEmCursoPro && mergeAndamentosEmCursoPro.id_procedimento == id_procedimento && Date.now() - Math.max(mergeAndamentosEmCursoPro.inicio, ultimaPaginaHistoricoPro) < 30000) {
+                if (typeof callback === 'function') mergeAndamentosEmCursoPro.callbacks.push(callback);
+                return;
+            }
+            var mergeAtual = {id_procedimento: id_procedimento, inicio: Date.now(), callbacks: (typeof callback === 'function' ? [callback] : [])};
+            mergeAndamentosEmCursoPro = mergeAtual;
+            var linkHistorico_ = linkHistorico[0];
             var listProc = {processo: processo, id_procedimento: id_procedimento};
             getDadosHistoricoUrlPro(linkHistorico_, listProc, true, function(andamento){
-                var dadosProcessoPro = (typeof pullDadosProcessoSession().listAndamento !== 'undefined') ? pullDadosProcessoSession() : dadosProcessoPro;
-                    dadosProcessoPro = (typeof dadosProcessoPro !== 'undefined') ? dadosProcessoPro : {};
-                    dadosProcessoPro.listAndamento = andamento;
+                if (mergeAndamentosEmCursoPro === mergeAtual) mergeAndamentosEmCursoPro = false;
+                // Antes era um "var dadosProcessoPro" local que, por hoisting, escondia o global: quando a entrada
+                // da sessao ainda nao tinha listAndamento (processo aberto numa aba nova), o objeto virava {} e a
+                // sessao ficava so com o historico, sem propProcesso nem listDocumentos. O aviso de nao assinados
+                // parava em "Verificando..." (medido no SEI 4.1.5). Usa os dados do processo (sessao ou global)
+                // tenham ou nao listAndamento, que e substituido logo abaixo.
+                var dadosMerge = pullDadosProcessoSession();
+                    dadosMerge = (dadosMerge && typeof dadosMerge === 'object') ? dadosMerge : {};
+                    if (typeof dadosMerge.listDocumentos === 'undefined' && dadosProcessoPro && typeof dadosProcessoPro.listDocumentos !== 'undefined') {
+                        dadosMerge.listDocumentos = dadosProcessoPro.listDocumentos;
+                    }
+                    dadosMerge.listAndamento = andamento;
                     
-                    $.each(dadosProcessoPro.listDocumentos, function(index, value){
-                        var data_documento = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].datahora");
+                    $.each(dadosMerge.listDocumentos, function(index, value){
+                        var data_documento = jmespath.search(dadosMerge.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].datahora");
                             data_documento = (data_documento !== null) ? data_documento : false;
-                        var assinatura = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Assinado')||contains(descricao, 'assinatura')]");
+                        var assinatura = jmespath.search(dadosMerge.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Assinado')||contains(descricao, 'assinatura')]");
                         var data_assinatura = (assinatura !== null) ? assinatura : false;
                             data_assinatura = (data_assinatura && data_assinatura.length > 0 && typeof data_assinatura[0].descricao !== 'undefined' && data_assinatura[0].descricao.indexOf('Assinado Documento') !== -1) 
                                 ? data_assinatura[0].datahora 
-                                : dadosProcessoPro.listDocumentos[index]['data_assinatura'];
+                                : dadosMerge.listDocumentos[index]['data_assinatura'];
                             data_assinatura = (data_assinatura && data_assinatura.length > 0 && typeof data_assinatura[0].descricao !== 'undefined' && data_assinatura[0].descricao.indexOf('Cancelamento de assinatura') !== -1) 
                                 ? false 
                                 : data_assinatura;
                         var assinado = (assinatura && assinatura !== null && assinatura.length > 0 && typeof assinatura[0].descricao !== 'undefined' && assinatura[0].descricao.indexOf('Assinado Documento') !== -1) ? true : false;
-                        var unidade = jmespath.search(dadosProcessoPro.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].unidade");
+                        var unidade = jmespath.search(dadosMerge.listAndamento.andamento, "[?id_documento=='"+value.id_protocolo+"'] | [?contains(descricao, 'Gerado documento')] | [0].unidade");
                             unidade = (unidade !== null) ? unidade : false;
                             
-                        dadosProcessoPro.listDocumentos[index]['unidade'] = unidade;
-                        dadosProcessoPro.listDocumentos[index]['data_assinatura'] = data_assinatura;
-                        dadosProcessoPro.listDocumentos[index]['data_documento'] = data_documento;
-                        dadosProcessoPro.listDocumentos[index]['assinado'] = assinado;
-                        // console.log(index, value.id_protocolo, unidade, dadosProcessoPro.listDocumentos);
+                        dadosMerge.listDocumentos[index]['unidade'] = unidade;
+                        dadosMerge.listDocumentos[index]['data_assinatura'] = data_assinatura;
+                        dadosMerge.listDocumentos[index]['data_documento'] = data_documento;
+                        dadosMerge.listDocumentos[index]['assinado'] = assinado;
+                        // console.log(index, value.id_protocolo, unidade, dadosMerge.listDocumentos);
                     });
-                    dadosProcessoPro.listAndamento.historico_completo = true;
-                    // console.log('->seetSessionProcessosPro', dadosProcessoPro.listAndamento);
-                    setSessionProcessosPro(dadosProcessoPro);
-                    if (typeof callback === 'function') callback();
+                    dadosMerge.listAndamento.historico_completo = true;
+                    // console.log('->seetSessionProcessosPro', dadosMerge.listAndamento);
+                    setSessionProcessosPro(dadosMerge);
+                    // Entrega o historico completo ao callback. O getGanttHistoryProc chamado sem
+                    // argumento lia o dadosProcessoPro global, que o objeto acima nem sempre e:
+                    // com o historico resumido vazio (caso do SEI 4.1.5) dava TypeError no jmespath.
+                    $.each(mergeAtual.callbacks, function(i, callbackMerge) {
+                        try { callbackMerge(andamento); } catch (e) { setTimeout(function(){ throw e; }, 0); }
+                    });
             });
         }
     // }
@@ -8586,11 +9684,16 @@ function setDataDocs(htmlArvore, id_procedimento) {
             const nrNo = line.substring(1, line.indexOf(']')).match(/\d{1,}/)[0];
             const props = line.slice(line.indexOf('(') + 1, line.lastIndexOf(')')).replaceAll(`"`, ``).replaceAll(`\\\\`).split(',');
             const split_doc = line.split('"');
+            // O numero SEI e o ULTIMO parametro entre aspas do no. Indice fixo (25 no SEI 4/5) so valia para documento
+            // ja visitado na sessao: o SEI 4.1/5 escreve "noVisitado" (com aspas) ou null (sem aspas) conforme
+            // PROTOCOLOS_VISITADOS, e em documento nao visitado o numero cai no indice 23. Numa sessao nova o modelo do
+            // Documentos em Lote ia com numero undefined ("Documento Base nao encontrado"). No SEI 3 o ultimo tambem e o 21.
+            const numero_doc = split_doc[split_doc.length - 2];
             if (props[17]) { //documentos com vírgula têm quebra de linha por conta do split. Esta condição concatena as linhas quebradas
                 listDocs.push({
                     nrNo,
                     nome: `${props[5]},${props[6]}`,
-                    numero: isNewSEI ? split_doc[25] : split_doc[21],
+                    numero: numero_doc,
                     id_documento: split_doc[3],
                     cancelado: props[7].startsWith('Documento Cancelado') ? true : false,
                     externo: props[9].includes('documento_interno') || /email/i.test(split_doc[15]) ? false : true,
@@ -8601,7 +9704,7 @@ function setDataDocs(htmlArvore, id_procedimento) {
                 listDocs.push({
                     nrNo,
                     nome: props[5],
-                    numero: isNewSEI ? split_doc[25] : split_doc[21],
+                    numero: numero_doc,
                     id_documento: split_doc[3],
                     cancelado: props[6].startsWith('Documento Cancelado') ? true : false,
                     externo: props[9].includes('documento_interno') || /email/i.test(split_doc[15]) ? false : true,
@@ -8658,7 +9761,7 @@ function setCapaProcesso(loop = true) {
                 '      </div>'+
                 '      <div class="field">'+
                 '         <div class="data" style="margin: 10px 0;">'+
-                '               <a class="newLink" style="margin: 0;cursor:pointer;" onclick="parent.initGanttHistoryProc()"><i class="fas fa-history azulColor iconDadosProcesso"></i> Hist\u00F3rico de tramita\u00E7\u00E3o do processo</a> '+
+                '               <a class="newLink" style="margin: 0;cursor:pointer;" onclick="parent.getJanelaProcessoPro().initGanttHistoryProc()"><i class="fas fa-history azulColor iconDadosProcesso"></i> Hist\u00F3rico de tramita\u00E7\u00E3o do processo</a> '+
                 '         </div>'+
                 '      </div>'+
                 '      <div class="field">'+
@@ -8666,7 +9769,7 @@ function setCapaProcesso(loop = true) {
                 '         <div class="data">'+
                 (typeof prop !== 'undefined' && typeof prop.hdnProtocoloFormatado !== 'undefined' ? 
                 '               <a class="newLink" style="cursor:pointer;" onclick="parent.copyTextThis(this)" onmouseover="return infraTooltipMostrar(\'Clique para copiar\');" onmouseout="return infraTooltipOcultar();">'+prop.hdnProtocoloFormatado+'</a> '+
-                '               <a onclick="copyLinkProcesso(this)" data-id_procedimento="'+id_procedimento+'" onmouseover="return infraTooltipMostrar(\'Clique para copiar o link do processo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-link iconDadosProcesso" style="color:#777"></i></a>' : 
+                '               <a onclick="parent.getJanelaProcessoPro().copyLinkProcesso(this)" data-id_procedimento="'+id_procedimento+'" onmouseover="return infraTooltipMostrar(\'Clique para copiar o link do processo\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-link iconDadosProcesso" style="color:#777"></i></a>' : 
                 '')+
                 '         </div>'+
                 '      </div>'+
@@ -8750,7 +9853,9 @@ function setCapaProcesso(loop = true) {
     if (typeof prop !== 'undefined' && typeof id_procedimento !== 'undefined' && ifrArvore.find('#span'+id_procedimento).hasClass('infraArvoreNoSelecionado')) {
         ifrVisualizacao.find('#divArvoreHtml').prepend(html);
         ifrVisualizacao.find(divInformacao).hide();
-        if (isSEI_5) ifrVisualizacao.find('#divArvoreHtml').removeClass('d-flex');
+        // O #divArvoreHtml vem com d-flex desde o SEI 4.1 (nao so no 5) e espreme a capa numa coluna
+        // estreita. Onde a classe nao existe (SEI 3.x) o removeClass nao faz nada.
+        ifrVisualizacao.find('#divArvoreHtml').removeClass('d-flex');
         replaceColorsIcons(ifrVisualizacao.find('#tagUserColorPro'));
         if (typeof $().qrcode === 'function') {
             ifrVisualizacao.find('.qrcapa').html('').qrcode({
@@ -8792,6 +9897,21 @@ function getHtmlMarcador(id_procedimento, processoAberto) {
     }
     return {icon: iconMarcador, prazo: linkPrazo, data: dataMarcador};
 }
+// O formulario de cadastro do documento chega por AJAX, sem rodar o JS da pagina. No navegador, cada
+// infraLupaSelect do formulario (Interessados, Destinatarios, Assuntos, Unidades para reabertura)
+// preenche o seu hidden a partir das opcoes do select ao carregar (InfraLupas.js: inicializar ->
+// atualizar, "valor\u00B1texto" separados por "\u00A5"). Sem isso o hdnInteressados ia vazio, o
+// documento nascia sem os interessados do processo e a secao "Processo e Interessado" ficava com
+// "@nome_interessado@". Mesma regra do SEI: so preenche hidden vazio de select com opcoes.
+function preencherHiddenLupasFormPro(form, param) {
+    form.find('select[multiple][id^="sel"]').each(function () {
+        var hidden = form.find('input[type=hidden][id="hdn'+this.id.substr(3)+'"]');
+        var nome = hidden.attr('name');
+        if (!nome || !this.options.length || (typeof param[nome] === 'string' && param[nome] !== '')) return;
+        param[nome] = $.map(this.options, function (opt) { return opt.value+'\u00B1'+opt.text; }).join('\u00A5');
+    });
+    return param;
+}
 //Resolve o formulario de cadastro do documento a partir da tela de escolha do tipo.
 //SEI 3.x/4.x: a ancora do tipo e um link GET real. SEI 5: a ancora vem com href="#" e a
 //escolha e feita por POST de hdnIdSerie no proprio frmDocumentoEscolherTipo.
@@ -8826,7 +9946,10 @@ function getDocCertidao(this_) {
     var ifrArvore = $('#ifrArvore');
     var arrayLinksArvore = ifrArvore[0].contentWindow.arrayLinksArvore;
         arrayLinksArvore = (typeof arrayLinksArvore === 'undefined') ? parent.linksArvore : arrayLinksArvore;
-    var href = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'].url");
+    // "| [0]": a partir do SEI 4.1 os links da barra entram duas vezes em arrayLinksArvore (arvore + listLinks).
+    // Sem ele o jmespath devolvia um array e o $.ajax pedia "url1,url2": o infra_hash corrompido gerava
+    // "Link sem assinatura" e o SEI encerrava a sessao do usuario.
+    var href = jmespath.search(arrayLinksArvore, "[?name=='Incluir Documento'] | [0].url");
     var nameDoc = (checkConfigValue('certidaosigilo_nomedoc')) ? getConfigValue('certidaosigilo_nomedoc') : 'Certid\u00E3o';
 
     if (href !== null) {
@@ -8884,6 +10007,7 @@ function getDocCertidao(this_) {
                                                     param[$(this).attr('name')] = $(this).val();
                                                 }
                                             });
+                                            preencherHiddenLupasFormPro(form, param);
                                             param.rdoNivelAcesso = '0';
                                             param.hdnFlagDocumentoCadastro = '2';
                                             param.txaObservacoes = '';
@@ -8892,9 +10016,9 @@ function getDocCertidao(this_) {
                                             var postData = '';
                                             for (var k in param) {
                                                 if (postData !== '') postData = postData + '&';
+                                                // hdnInteressados vai escapado como os demais (ISO-8859-1): agora leva "id\u00B1nome".
                                                 var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
                                                     valor = (k=='txtDataElaboracao') ? param[k] : escapeComponent(param[k]);
-                                                    valor = (k=='hdnInteressados') ? param[k] : valor;
                                                     valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
                                                     valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
                                                     postData = postData + k + '=' + valor;
@@ -9249,6 +10373,19 @@ function setSessionProcessosPro(dadosProcessoPro) {
     }
     sessionStorageStorePro('dadosSessionProcessoPro', dadosSessionProcessoPro);
 }
+// Titulo da pagina do editor no SEI (igual do 3.1 ao 5.0, DocumentoINT::montarTitulo):
+// "SIGLA_SISTEMA/SIGLA_ORGAO - NUMERO_SEI - TIPO_DO_DOCUMENTO". Separar por '-' deslocava tudo
+// quando a sigla do orgao tem hifen (ex.: "SEI/GESP-TREINAMENTO - 0103948 - Despacho" dava
+// numero "TREINAMENTO") ou o tipo tem hifen. O numero SEI do documento e sempre so digitos.
+function getPartesTituloEditorPro(title) {
+    var partes = (typeof title === 'string') ? $.map(title.split(' - '), function(v){ return v.trim() }) : [];
+    for (var i = 1; i < partes.length - 1; i++) {
+        if (/^\d+$/.test(partes[i])) {
+            return {nr_sei: partes[i], nome_documento: partes.slice(i + 1).join(' - ')};
+        }
+    }
+    return false;
+}
 function updateTitlePage(mode, dadosProcesso = false) {
     var processo = (dadosProcesso) ? dadosProcesso.propProcesso : dadosProcessoPro.propProcesso;
     if ( typeof processo.txtDescricao !== 'undefined'  ) {
@@ -9260,7 +10397,8 @@ function updateTitlePage(mode, dadosProcesso = false) {
             }
         } else if (mode == 'editor') {
             var title = $('head title').text();
-                title = (title.indexOf('-') !== -1) ? title.split('-')[2]+' '+title.split('-')[1] : title; 
+            var partesTitulo = getPartesTituloEditorPro(title);
+                title = (partesTitulo) ? partesTitulo.nome_documento+' '+partesTitulo.nr_sei : title;
             $('head title').text('Editor: '+title+' - '+processo.txtDescricao+' | SEI - Processo '+protocolo);
         }
     }
@@ -9422,19 +10560,42 @@ function loadCSSResize(iframe) {
 	
 	}
 }
+// Uma vez por instancia: loadResizeImg roda a cada focus (setCKEDITOR_SEIPRO), e cada chamada empilhava um
+// Resizer e os listeners de selectionChange/getData/blur. O que depende do documento do iframe (mousedown nas
+// alcas, CSS, resize da janela) e religado no contentDom, porque setData e o modo Codigo-Fonte recriam o documento.
 function initResizeImg(editor) {
-	var window = editor.window.$, document = editor.document.$;
+	if (!editor || editor.seiProResizeImg) return;
+	editor.seiProResizeImg = true;
 	var snapToSize = (typeof IMAGE_SNAP_TO_SIZE === 'undefined') ? null : IMAGE_SNAP_TO_SIZE;
 
-	var resizer = new Resizer(editor, {snapToSize: snapToSize});
+	var resizer = null, resizeTimeout;
 
-	document.addEventListener('mousedown', function(e) {
-	  if (resizer.isHandle(e.target)) {
+	function onMouseDownResize(e) {
+	  if (resizer && resizer.isHandle(e.target)) {
 		resizer.initDrag(e);
 	  }
-	}, false);
+	}
+
+	// Update the selection when the browser window is resized
+	function onWindowResize() {
+	  // Cancel any resize waiting to happen
+	  clearTimeout(resizeTimeout);
+	  // Delay resize to "debounce"
+	  resizeTimeout = setTimeout(selectionChange, 50);
+	}
+
+	function ligarDocumento() {
+	  if (!editor.document || !editor.window) return;
+	  resizer = new Resizer(editor, {snapToSize: snapToSize});
+	  editor.document.$.addEventListener('mousedown', onMouseDownResize, false);
+	  editor.window.$.addEventListener('resize', onWindowResize, false);
+	  loadCSSResize($(editor.document.$));
+	}
 
 	function selectionChange() {
+	  // Na troca para o Codigo-Fonte o undo fotografa (afterUndoImage) com o editor.window ja removido
+	  if (!resizer || !editor.window) return;
+	  var window = editor.window.$;
 	  var selection = editor.getSelection();
 	  if (!selection) return;
 	  // If an element is selected and that element is an IMG
@@ -9448,6 +10609,9 @@ function initResizeImg(editor) {
 	  }
 	}
 
+	editor.on('contentDom', ligarDocumento);
+	ligarDocumento();
+
 	editor.on('selectionChange', selectionChange);
 
 	editor.on('getData', function(e) {
@@ -9459,7 +10623,7 @@ function initResizeImg(editor) {
 
 	editor.on('beforeUndoImage', function() {
 	  // Remove the handles before undo images are saved
-	  resizer.hide();
+	  if (resizer) resizer.hide();
 	});
 
 	editor.on('afterUndoImage', function() {
@@ -9469,21 +10633,13 @@ function initResizeImg(editor) {
 
 	editor.on('blur', function() {
 	  // Remove the handles when editor loses focus
-	  resizer.hide();
+	  if (resizer) resizer.hide();
 	});
 
-	editor.on('beforeModeUnload', function self() {
-	  editor.removeListener('beforeModeUnload', self);
-	  resizer.hide();
-	});
-
-	// Update the selection when the browser window is resized
-	var resizeTimeout;
-	editor.window.on('resize', function() {
-	  // Cancel any resize waiting to happen
-	  clearTimeout(resizeTimeout);
-	  // Delay resize to "debounce"
-	  resizeTimeout = setTimeout(selectionChange, 50);
+	// Registrado uma vez so: vale para toda troca de modo (antes se removia no primeiro disparo, porque cada
+	// focus registrava de novo).
+	editor.on('beforeModeUnload', function() {
+	  if (resizer) resizer.hide();
 	});
 }
 
@@ -11035,7 +12191,7 @@ function sendChecksumPro(url) {
   xhr.send();
 }
 function getChecksumPro() {
-    var linkAnexo = $($ifrVisualizacao).contents().find(divInformacao+' a');
+    var linkAnexo = getContentsVisualizacaoPro().find(divInformacao+' a');
     var url = (linkAnexo.length > 0 && linkAnexo.attr('href').indexOf('acao=documento_download_anexo') !== -1) ? linkAnexo.attr('href') : false;
     if (url) { 
         openChecksumPro();
@@ -11125,21 +12281,36 @@ function noNotifyPro(this_) {
     }
 }
 function checkPageVisualizacao() {
-    const ifrV = isSEI_5 
-    ? $($ifrVisualizacao).contents().find('#ifrVisualizacao').contents()
-    : $($ifrVisualizacao).contents();
+    const ifrV = getContentsVisualizacaoPro();
 
     waitLoadPro(ifrV, '#frmDocumentoCadastro', "label#lblPublico", setNewDocDefault);
     waitLoadPro(ifrV, '#frmProcedimentoCadastro', "#divInfraBarraComandosSuperior", setHtmlProtocoloAlterar);
-    waitLoadPro(ifrV, '#frmAtividadeListar[action*="acao=procedimento_enviar"]', infraBarraComandos, getActionsOnSendProcess);
+    // infraBarraComandos vale '.barraBotoesSEI' no SEI novo, mas essa classe e so da barra da arvore:
+    // o formulario do Enviar Processo usa '.infraBarraComandos' em todas as versoes.
+    waitLoadPro(ifrV, '#frmAtividadeListar[action*="acao=procedimento_enviar"]', '.infraBarraComandos, '+infraBarraComandos, getActionsOnSendProcess);
     waitLoadPro(ifrV, '#frmProcedimentoHistorico[action*="acao=procedimento_consultar_historico"]', ".infraAreaTabela", initTablePaginacaoHistorico);
     waitLoadPro(ifrV, 'form', "select", replaceSelectAllVisualizacao);
     waitLoadPro(ifrV, 'form', "#optRestrito", insertActionHipoteseLegal);
-    waitLoadPro(ifrV, 'form', ".infraImg, .InfraImg", function() { setInfraImg($($ifrVisualizacao).contents()) });
+    waitLoadPro(ifrV, 'form', ".infraImg, .InfraImg", function() { setInfraImg(ifrV) });
+}
+// O icone e inserido logo depois do campo que marca (#txtNumero nos formularios de documento, #txtDescricao no
+// Consultar/Alterar Processo). No SEI 4.1/5 a area do #txtNumero (#divNumeroNomeArvore) tem tambem #txtNomeArvore e
+// #txtDinValor, e o ultimo campo da area era o #txtDinValor: a marca ia para o valor monetario.
+// Nunca marca campo oculto: no SEI 4.1/5 o #txtNumero so aparece quando a numeracao do tipo e "Informada"; nos
+// demais tipos (sem numeracao, sequencial) ele fica oculto por CSS e o icone continua visivel ao lado do "Nome na
+// Arvore". Gravar "(URGENTE)" no numero oculto fazia o tipo sem numeracao recusar o salvamento e o de numeracao
+// sequencial ser criado com esse texto no lugar do numero oficial. Ai a marca vai para o #txtNomeArvore.
+function getCampoMarcaPro(_this) {
+    var visivelPro = function(campo){ return campo.length > 0 && campo.is(':visible'); };
+    var text = _this.prevAll('input[type="text"]').first();
+        text = (text.length) ? text : _this.closest('.infraAreaDados').find('input[type="text"]').not('#txtDinValor').last();
+    if (visivelPro(text)) return text;
+    var nomeArvore = _this.siblings('#txtNomeArvore');
+    return (visivelPro(nomeArvore)) ? nomeArvore : $();
 }
 function addUrgentPro(this_) {
     var _this = $(this_);
-    var text = _this.closest('.infraAreaDados').find('input[type="text"]').last();
+    var text = getCampoMarcaPro(_this);
     if (text.length && text.val().toLowerCase().indexOf('(urgente)') !== -1) {
         text.val(text.val().replace(/\(urgente\)/ig,'').trim() );
     } else if (text.length && typeof text.val() !== 'undefined') {
@@ -11148,7 +12319,7 @@ function addUrgentPro(this_) {
 }
 function addTrancadPro(this_) {
     var _this = $(this_);
-    var text = _this.closest('.infraAreaDados').find('input[type="text"]').last();
+    var text = getCampoMarcaPro(_this);
     if (text.length && text.val().toLowerCase().indexOf('(trancado)') !== -1) {
         text.val(text.val().replace(/\(trancado\)/ig,'').trim() );
     } else if (text.length && typeof text.val() !== 'undefined') {
@@ -11156,9 +12327,7 @@ function addTrancadPro(this_) {
     }
 }
 function setNewDocDefault() {
-    var ifrVisualizacao = isSEI_5 
-        ? $($ifrVisualizacao).contents().find('#ifrVisualizacao').contents()
-        : $($ifrVisualizacao).contents();
+    var ifrVisualizacao = getContentsVisualizacaoPro();
         ifrVisualizacao.find('#txtProtocoloDocumentoTextoBase').removeAttr('maxlength'); // remove atributo de largura do campo de modelo de documento
 
     var form = ifrVisualizacao.find('#frmDocumentoCadastro');
@@ -11523,11 +12692,27 @@ function appendTooltipOnButtons() {
         var title = _this.attr('title');
         var link = _this.closest('a');
         if (typeof title !== 'undefined' && typeof link !== 'undefined') {
-            _this.removeAttr('title');
+            _this.removeAttr('title').attr('data-title-pro', title);
             link.attr('onmouseover','return infraTooltipMostrar(\''+title+'\')').attr('onmouseout', 'return infraTooltipOcultar()');
             
         }
     });
+    // SEI 5: seiAssociarRegistroExibicaoBotoes (sei.js) registra o clique em cada botao da barra pela CRC32 do title
+    // da <img> (seiCrc32(img.attr('title'))). Sem o title (tirado acima para nao somar a dica nativa a do SEI Pro)
+    // cada clique lancava TypeError e o SEI deixava de registrar os botoes mais usados. O title volta a <img> na
+    // fase de captura, antes do handler do SEI nos filhos da barra, e sai logo depois do clique. No SEI 4.1 o
+    // handler nao existe e o listener nao muda nada visivel.
+    var barra = ifrVisualizacao.find('#divArvoreAcoes')[0];
+    if (barra && !barra.hasAttribute('data-spro-title-clique')) {
+        barra.setAttribute('data-spro-title-clique', '1');
+        barra.addEventListener('click', function (e) {
+            var link = (e.target && e.target.closest) ? e.target.closest('a') : null;
+            var img = (link && link.parentNode === barra) ? link.querySelector('img') : null;
+            if (!img || img.hasAttribute('title') || !img.hasAttribute('data-title-pro')) return;
+            img.setAttribute('title', img.getAttribute('data-title-pro'));
+            setTimeout(function () { img.removeAttribute('title'); }, 0);
+        }, true);
+    }
 }
 function insertIconNewDoc() {
     if (!isNewSEI) waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', "a.botaoSEI", appendIconNewDoc);
@@ -11586,8 +12771,17 @@ function appendIconFormSheet(loop = true) {
     }
     if (loop) { reagendarIconeBarraPro('appendIconFormSheet', appendIconFormSheet); }
 }
-function insertIconIntegrity() {
-    waitLoadPro($($ifrVisualizacao).contents(), divInformacao, ancoraArvoreDownload, appendIconIntegrity);
+// O link de download fica no iframe interno a partir do SEI 4.1, que ainda pode estar carregando
+// quando a barra chama esta funcao: o conteudo e resolvido de novo a cada tentativa.
+function insertIconIntegrity(TimeOut = 6000) {
+    if (TimeOut <= 0) { return; }
+    setTimeout(function () {
+        if (getContentsVisualizacaoPro().find(divInformacao).find(ancoraArvoreDownload).length == 0) {
+            insertIconIntegrity(TimeOut - 100);
+        } else {
+            appendIconIntegrity();
+        }
+    }, 100);
 }
 function appendIconIntegrity(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
@@ -11660,7 +12854,8 @@ function initChosenVisualizacaoPro(TimeOut = 9000) {
     }
 }
 function insertActionHipoteseLegal() {
-    var target = $($ifrVisualizacao).contents();
+    var target = getContentsVisualizacaoPro();
+    var ifrAlvo = getIframeVisualizacaoPro()[0];
         target.find('input[name="rdoFormato"]').on('change',function(){
             parent.replaceSelectAllVisualizacao();
             if ($(this).attr('id') == 'optNato') {
@@ -11670,7 +12865,7 @@ function insertActionHipoteseLegal() {
                 });
             } else {
                 setTimeout(function(){ 
-                    if (typeof $($ifrVisualizacao)[0].contentWindow.setReplaceSelectOnVisualizacao === 'function') $($ifrVisualizacao)[0].contentWindow.setReplaceSelectOnVisualizacao(true);
+                    if (typeof ifrAlvo.contentWindow.setReplaceSelectOnVisualizacao === 'function') ifrAlvo.contentWindow.setReplaceSelectOnVisualizacao(true);
                 }, 500);
             }
         });
@@ -11681,12 +12876,12 @@ function insertActionHipoteseLegal() {
                 target.find('#selHipoteseLegal_chosen').remove();
             } else {
                 setTimeout(function(){ 
-                    if (typeof $($ifrVisualizacao)[0].contentWindow.setReplaceSelectOnVisualizacao === 'function') $($ifrVisualizacao)[0].contentWindow.setReplaceSelectOnVisualizacao(true);
+                    if (typeof ifrAlvo.contentWindow.setReplaceSelectOnVisualizacao === 'function') ifrAlvo.contentWindow.setReplaceSelectOnVisualizacao(true);
                 }, 500);
             }
         });
         target.find('#newdocsigilo').remove();
-        target.find('#lblHipoteseLegal').append('<span id="newdocsigilo" style="float: right;font-size: 0.8em;"><a onclick="parent.setNewDocSigilo(this)">Definir como padr\u00E3o para novos documentos</a></span>');
+        target.find('#lblHipoteseLegal').append('<span id="newdocsigilo" style="float: right;font-size: 0.8em;"><a onclick="parent.getJanelaProcessoPro().setNewDocSigilo(this)">Definir como padr\u00E3o para novos documentos</a></span>');
         target.find('#fldNivelAcesso').css('height','110%');
         target.find('#divInfraBarraComandosInferior').css('margin-top','20px');
 }
@@ -11912,6 +13107,18 @@ function initToolbarOnTop() {
                 setTimeout(function(){ delayCrash = false }, 300);
                 if ($(divComandos+'.fixed').length == 0) {
                     $(divComandos).before($(divComandos).clone()).addClass('fixed');
+                    // No SEI 4.1 o .fixed fica em top: 0 (sei-slim.css) e cobre o cabecalho (logo, Menu, Pesquisar).
+                    // Aqui quem rola e o #divInfraAreaTelaD, que comeca logo abaixo do cabecalho: a barra passa a
+                    // ficar no topo dele. O SEI 5 (.isSEI_5, top: 59px) e o estilo avancado (.seiSlim, top: 116px)
+                    // ja tem o top no CSS e nao entram aqui; o SEI 3 rola a window e tambem nao.
+                    if (isNewSEI) {
+                        var fixaPro = $(divComandos+'.fixed');
+                        var versaoSeiPro = getSeiVersionPro();
+                        var seiCincoPro = isSEI_5 || (versaoSeiPro && compareVersionNumbers(versaoSeiPro, '5') >= 0);
+                        if (!seiCincoPro && parseFloat(fixaPro.css('top')) === 0) {
+                            fixaPro.css('top', Math.max(0, Math.round(this.getBoundingClientRect().top)));
+                        }
+                    }
                 }
             } else {
                 if (!delayCrash || $(this).scrollTop() <= topWindow) {
@@ -12290,6 +13497,7 @@ function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openP
                                                 param[$(this).attr('name')] = $(this).val();
                                             }
                                         });
+                                        preencherHiddenLupasFormPro(form, param);
                                         param.rdoNivelAcesso = '0';
                                         param.hdnFlagDocumentoCadastro = '2';
                                         param.txaObservacoes = '';
@@ -12298,9 +13506,9 @@ function setNewDoc(id_procedimento, id_tipo_documento, insertHtml = false, openP
                                         var postData = '';
                                         for (var k in param) {
                                             if (postData !== '') postData = postData + '&';
+                                            // hdnInteressados vai escapado como os demais (ISO-8859-1): agora leva "id\u00B1nome".
                                             var valor = (k=='hdnAssuntos') ? param[k] : escapeComponent(param[k]);
                                                 valor = (k=='txtDataElaboracao') ? param[k] : escapeComponent(param[k]);
-                                                valor = (k=='hdnInteressados') ? param[k] : valor;
                                                 valor = (k=='txtDescricao') ? parent.encodeURI_toHex(param[k].normalize('NFC')) : valor;
                                                 valor = (k=='txtNumero') ? escapeComponent(param[k]) : valor;
                                                 postData = postData + k + '=' + valor;
@@ -12596,13 +13804,13 @@ function sumTagValue(value) {
         return_ = '<span class="ancoraSei dynamicField">'+moment().format('Y')+'</span>';
     } else if (value.indexOf('assunto') !== -1) {
         var index = ((i+1) > prop.selAssuntos_select.length) ? (prop.selAssuntos_select.length-1) : i;
-        return_ = '<span class="ancoraSei dynamicField">'+prop.selAssuntos_select[index]+'</span>';
+        return_ = '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(prop.selAssuntos_select[index])+'</span>';
     } else if (value.indexOf('interessado') !== -1) {
         var index = ((i+1) > prop.selInteressadosProcedimento.length) ? (prop.selInteressadosProcedimento.length-1) : i;
-        return_ = '<span class="ancoraSei dynamicField">'+prop.selInteressadosProcedimento[index]+'</span>';
+        return_ = '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(prop.selInteressadosProcedimento[index])+'</span>';
     } else if (value.indexOf('observacao') !== -1) {
         var index = ((i+1) > prop.txaObservacoes.length) ? (prop.txaObservacoes.length-1) : i;
-        return_ = '<span class="ancoraSei dynamicField">'+prop.txaObservacoes[index].unidade+': '+prop.txaObservacoes[index].observacao+'</span>';
+        return_ = '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(prop.txaObservacoes[index].unidade)+': '+textoParaHtmlPro(prop.txaObservacoes[index].observacao)+'</span>';
     } else if (value.indexOf('documento') !== -1) {
         var docValue = '';
         if (value.indexOf('+') !== -1 || value.indexOf('-') !== -1) {
@@ -12630,8 +13838,8 @@ function getHtmlListDocumentos(value) {
     if (typeof value !== 'undefined') { 
         var nrSei = ( value.nr_sei != '' ) ? value.nr_sei : value.documento;
         var citacaoDoc = getCitacaoDoc();
-        var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+value.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
-        return ( value.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? value.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
+        var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+textoParaHtmlPro(value.id_protocolo)+'" style="text-indent:0;">'+textoParaHtmlPro(nrSei)+'</a></span>';
+        return ( value.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? textoParaHtmlPro(value.documento.trim())+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
     } else { return '' }
 }
 function getQRProcesso() {
@@ -12665,37 +13873,39 @@ function camposDinamicosProcesso(arrayTags) {
     var prop = dadosProcessoPro.propProcesso;
     var docs = dadosProcessoPro.listDocumentos;
     var processo = (typeof prop.txtProtocoloExibir === 'undefined') ? prop.hdnProtocoloFormatado : prop.txtProtocoloExibir;
-        processo = (typeof processo !== 'undefined') ? '<span contenteditable="false" data-cke-linksei="1" style="text-indent:0px;"><a id="lnkSei'+prop.hdnIdProcedimento+'" class="ancoraSei" style="text-indent:0px;">'+processo+'</a></span>' : null;
-        processo = (processo !== null && $.inArray('processo_texto', arrayTags) !== -1) ? '<span class="ancoraSei dynamicField">'+(prop.hdnProtocoloFormatado || prop.txtProtocoloExibir)+'</span>' : processo;
+        processo = (typeof processo !== 'undefined') ? '<span contenteditable="false" data-cke-linksei="1" style="text-indent:0px;"><a id="lnkSei'+textoParaHtmlPro(prop.hdnIdProcedimento)+'" class="ancoraSei" style="text-indent:0px;">'+textoParaHtmlPro(processo)+'</a></span>' : null;
+        processo = (processo !== null && $.inArray('processo_texto', arrayTags) !== -1) ? '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(prop.hdnProtocoloFormatado || prop.txtProtocoloExibir)+'</span>' : processo;
     var autuacao = (typeof prop.txtDtaGeracaoExibir === 'undefined') ? prop.hdnDtaGeracao : prop.txtDtaGeracaoExibir;
-        autuacao = (typeof autuacao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+autuacao+'</span>' : null;
-    var tipo = (typeof prop.hdnNomeTipoProcedimento !== 'undefined') ? '<span class="ancoraSei dynamicField">'+prop.hdnNomeTipoProcedimento+'</span>' : null;
-    var especificacao = (typeof prop.txtDescricao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+prop.txtDescricao+'</span>' : null;
+        autuacao = (typeof autuacao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(autuacao)+'</span>' : null;
+    // Tipo vazio (dados gravados na sessao antes do preenchimento em ajaxDadosProcessoPro) nao e substituido: o #tipo
+    // sumia do texto e contava como campo substituido com sucesso.
+    var tipo = (typeof prop.hdnNomeTipoProcedimento !== 'undefined' && String(prop.hdnNomeTipoProcedimento).trim() !== '') ? '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(prop.hdnNomeTipoProcedimento)+'</span>' : null;
+    var especificacao = (typeof prop.txtDescricao !== 'undefined') ? '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(prop.txtDescricao)+'</span>' : null;
     var hoje = '<span class="ancoraSei dynamicField">'+moment().format('LL')+'</span>';
     var ano = '<span class="ancoraSei dynamicField">'+moment().format('Y')+'</span>';
     var qrcode = '<span class="ancoraSei dynamicField">'+getQRProcesso()+'</span>';
     var interessados = (typeof prop.selInteressadosProcedimento !== 'undefined') 
                             ? ($.inArray('interessados_lista', arrayTags) !== -1) 
-                                    ? $.map(prop.selInteressadosProcedimento, function(substr, i){ return '<span class="ancoraSei dynamicField">'+substr+'</span><br>' }).join('')
-                                    : '<span class="ancoraSei dynamicField">'+joinAnd(prop.selInteressadosProcedimento)+'</span>' 
+                                    ? $.map(prop.selInteressadosProcedimento, function(substr, i){ return '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(substr)+'</span><br>' }).join('')
+                                    : '<span class="ancoraSei dynamicField">'+joinAnd($.map(prop.selInteressadosProcedimento, function(substr){ return textoParaHtmlPro(substr) }))+'</span>' 
                             : null;
     var assuntos = (typeof prop.selAssuntos_select !== 'undefined') 
                             ? ($.inArray('assuntos_lista', arrayTags) !== -1) 
-                                    ? $.map(prop.selAssuntos_select, function(substr, i){ return '<span class="ancoraSei dynamicField">'+substr+'</span><br>' }).join('')
-                                    : '<span class="ancoraSei dynamicField">'+joinAnd(prop.selAssuntos_select)+'</span>' 
+                                    ? $.map(prop.selAssuntos_select, function(substr, i){ return '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(substr)+'</span><br>' }).join('')
+                                    : '<span class="ancoraSei dynamicField">'+joinAnd($.map(prop.selAssuntos_select, function(substr){ return textoParaHtmlPro(substr) }))+'</span>' 
                             : null;
     
     var unidadeObs = jmespath.search(dadosProcessoPro.propProcesso.txaObservacoes, "[?unidade=='"+siglaUnidadeAtual+"'] | [0]");
     var observacao = (typeof prop.txaObservacoes !== 'undefined' && prop.txaObservacoes.length > 0 && unidadeObs !== null && unidadeObs.observacao != '')
-                        ? '<span class="ancoraSei dynamicField">'+unidadeObs.unidade+': '+unidadeObs.observacao+'</span>' : null;
+                        ? '<span class="ancoraSei dynamicField">'+textoParaHtmlPro(unidadeObs.unidade)+': '+textoParaHtmlPro(unidadeObs.observacao)+'</span>' : null;
 
     var observacoes = (typeof prop.txaObservacoes !== 'undefined' && prop.txaObservacoes.length > 0) 
                         ? ($.inArray('observacoes_lista', arrayTags) !== -1) 
                             ? $.map(prop.txaObservacoes, function(value, i){
-                                  return value.unidade+': '+value.observacao+'<br>';
+                                  return textoParaHtmlPro(value.unidade)+': '+textoParaHtmlPro(value.observacao)+'<br>';
                               }).join('')
                             : joinAnd($.map(prop.txaObservacoes, function(value, i){
-                                  return value.unidade+': '+value.observacao;
+                                  return textoParaHtmlPro(value.unidade)+': '+textoParaHtmlPro(value.observacao);
                               }))
                         : null;
         observacoes = (observacoes !== null) ? '<span class="ancoraSei dynamicField">'+observacoes+'</span>' : observacoes;
@@ -12849,17 +14059,29 @@ function loadStyleDesign(body = $('body'), secondClass = false) {
 }
 function loadScriptVisualizacaoPro() {
     if ( $($ifrVisualizacao).length ) {
+        if (!isCopiaIsoladaPro()) document.documentElement.setAttribute('data-spro-visualizacao', 'pagina');
         $($ifrVisualizacao).on("load", function() {
             initChosenVisualizacaoPro();
-            if (isSEI_5) {
-                $($ifrVisualizacao).contents().find('#ifrVisualizacao').on("load", function() {
-                    scriptVisualizacaoPro($($ifrVisualizacao).contents().find('#ifrVisualizacao').contents());
-                });
+            // SEI 4.1+ (inclusive o 5): os formularios abrem no iframe interno, que navega sem
+            // recarregar a barra; e o load dele que precisa ser observado.
+            var ifrInterno = getIframeVisualizacaoPro();
+            if (ifrInterno[0] !== this) {
+                loadScriptIframeInternoPro(ifrInterno);
             } else {
                 scriptVisualizacaoPro($($ifrVisualizacao).contents());
             }
         });
+        // A copia do mundo da pagina chega por $.getScript e pode registrar depois do primeiro load
+        // da barra: nesse caso o iframe interno ja existe e ninguem observava a navegacao dele.
+        var ifrInternoAtual = getIframeVisualizacaoPro();
+        if (ifrInternoAtual[0] !== $($ifrVisualizacao)[0]) loadScriptIframeInternoPro(ifrInternoAtual);
     }
+}
+function loadScriptIframeInternoPro(ifrInterno) {
+    if (ifrInterno.data('sproLoadVisualizacao')) return; // uma ligacao por elemento (e por copia)
+    ifrInterno.data('sproLoadVisualizacao', true).on("load", function() {
+        scriptVisualizacaoPro(getContentsVisualizacaoPro());
+    });
 }
 function scriptVisualizacaoPro(ifrV) {
     if (typeof loadStyleDesign === 'function') loadStyleDesign(ifrV.find('body'), 'view');

@@ -28,6 +28,10 @@ export function mensagemDaPonte(e: unknown): string {
       return "Este é um documento criado dentro do SEI, não um arquivo anexado — não há PDF para trazer. Para trabalhar o conteúdo dele, gere o PDF pelo próprio SEI e depois traga o arquivo.";
     case "SEI_SEM_LINK":
       return "O SEI não ofereceu link de download para este documento. Isso costuma acontecer com documento cancelado ou com acesso restrito ao seu perfil.";
+    case "SEI_TIPO_INDEFINIDO":
+      return "Nada foi enviado: o tipo do documento não foi identificado pelo nome do arquivo, e não há tipo padrão nem Anexo para usar. Comece o nome do arquivo pelo tipo (por exemplo, \"Relatório vistoria.pdf\") ou configure o Nome padrão do documento externo no SEI Pro.";
+    case "SEI_ENVIO_CANCELADO":
+      return "Envio cancelado na escolha do tipo: o arquivo não foi incluído no processo.";
     case "SEI_TEMPO_ESGOTADO":
       return "O SEI demorou demais para responder. Use Baixar para não perder o trabalho e tente de novo.";
     default:

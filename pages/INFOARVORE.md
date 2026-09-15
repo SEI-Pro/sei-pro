@@ -38,6 +38,7 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 ### Bom saber
 
 * As alterações feitas pelo painel são as mesmas do formulário do SEI e ficam registradas no andamento quando o SEI registra.
+* No SEI 4.1 e no SEI 5, em que um processo pode ter vários marcadores, o painel mostra um deles, e escolher um marcador pelo painel **adiciona** esse marcador, como o botão **Adicionar** do SEI: os que já estavam no processo continuam lá. Se o marcador escolhido já estiver no processo, só o texto dele é atualizado. **Remover** tira do processo o marcador que o painel mostra, e o SEI Pro só avisa que removeu depois de conferir no SEI. Se o painel não souber qual é o marcador e o processo tiver mais de um, use **Gerenciar Marcador** do SEI.
 * O painel é montado com os dados que o SEI Pro lê do processo. Se a opção [Desativar consultas adicionais](../pages/DESATIVACONSULTAS.md) estiver ligada, ele não aparece.
 * Em processos sigilosos, algumas informações podem não ser carregadas.
 

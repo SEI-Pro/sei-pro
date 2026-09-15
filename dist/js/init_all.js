@@ -3,9 +3,16 @@ var isNewSEI = $('#divInfraSidebarMenu ul#infraMenu').length ? true : false;
 var isSEI_5 = isNewSEI && sessionStorage.getItem('versaoSei') && compareVersionNumbers_initall(sessionStorage.getItem('versaoSei'),'5') >= 0 ? true : false;
 var frmEditor = isSEI_5 ? $('.infra-editor__editor-completo') : $('#frmEditor');
 
+// O init_all.js e o init.js pedem o sei-functions-pro.js para o mundo da pagina, e a ordem entre os dois nao e
+// garantida: no SEI 4.1.5 o init.js chegou a executar ANTES deste arquivo no topo (Controle de Processos e
+// processo). Uma segunda copia no mesmo documento nunca executa nada - morre em "Identifier 'loadFunctionsPro'
+// has already been declared" -, entao quem pede primeiro marca sfpPedidoPaginaPro (global do mundo isolado da
+// extensao, que os dois arquivos compartilham no mesmo documento) e o outro nao pede de novo. O <script> ainda
+// no DOM cobre um pedido feito por outro caminho que ainda nao terminou de carregar.
 if (!frmEditor.length 
     // && (!isNewSEI || (isNewSEI && typeof loadFunctionsPro === 'undefined'))
-) $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+    && !window.sfpPedidoPaginaPro && !document.querySelector('script[src*="/js/sei-functions-pro.js"]')
+) { window.sfpPedidoPaginaPro = true; $.getScript(getUrlExtension("js/sei-functions-pro.js")); }
 
 function getUrlExtension(url) {
     if (typeof browser === "undefined") {

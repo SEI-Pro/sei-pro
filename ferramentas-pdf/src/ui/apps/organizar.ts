@@ -17,6 +17,7 @@ import { criarProgresso } from "@/ui/componentes/progresso";
 import { criarRegiaoAnuncio, criarZonaDeArquivos } from "@/ui/componentes/zonaDeArquivos";
 import { criarPainelResultado } from "@/ui/componentes/painelResultado";
 import { ponte } from "@/ui/contexto";
+import { enviarAoProcesso } from "@/ui/enviarAoProcesso";
 import type { FerramentaMontada } from "@/ui/moldura";
 
 interface Pagina {
@@ -173,7 +174,7 @@ export function montar(): FerramentaMontada {
     enviando = true;
     sincronizar();
     try {
-      for (const s of saidas) await ponte().enviarAoProcesso({ nome: s.nome, bytes: s.bytes });
+      for (const s of saidas) await enviarAoProcesso({ nome: s.nome, bytes: s.bytes });
       mensagemEnvio = "Documento enviado ao processo.";
     } catch (e) {
       // O erro carrega o codigo do que aconteceu, e a mensagem certa vem

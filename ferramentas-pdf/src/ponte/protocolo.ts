@@ -39,7 +39,11 @@ export interface Resposta {
   canal: typeof CANAL;
   id: string;
   carga?: unknown;
-  erro?: { codigo: string; detalhe?: string } | null;
+  /**
+   * `tipos` acompanha só o `SEI_TIPO_INDEFINIDO`: é a lista da própria tela do
+   * SEI que o envio já tinha aberto, e poupa uma ida à rede só para perguntar.
+   */
+  erro?: { codigo: string; detalhe?: string; tipos?: { nome: string; valor: string }[] } | null;
   /** Progresso parcial: a resposta final vem depois. */
   progresso?: { feito: number; total: number };
 }

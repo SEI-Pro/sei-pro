@@ -11,8 +11,7 @@ import { limiteComMargem } from "@/lib/ferramentas/protocolo/tipos";
 import { el, repor } from "@/ui/dom";
 import { montarMoldura, type FerramentaMontada } from "@/ui/moldura";
 import { aoMudarPerfil } from "@/ui/contexto";
-
-type Modo = "intervalos" | "porPaginas" | "porTamanho";
+import { MODOS_DIVISAO, opcoesDaDivisao, type ModoDaTela } from "@/ui/apps/dividirOpcoes";
 
 export function montar(): FerramentaMontada {
   let cancelarPerfil: (() => void) | null = null;
@@ -36,9 +35,7 @@ export function montar(): FerramentaMontada {
       const seletor = el(
         "select",
         { class: "fpdf-campo", id: "dividir-modo", onchange: () => trocarModo() },
-        el("option", { value: "intervalos" }, "Por intervalos de páginas"),
-        el("option", { value: "porPaginas" }, "A cada N páginas"),
-        el("option", { value: "porTamanho" }, "Em partes que caibam num tamanho"),
+        ...MODOS_DIVISAO.map((m) => el("option", { value: m.valor }, m.rotulo)),
       ) as HTMLSelectElement;
 
       const intervalos = el("input", {
@@ -79,9 +76,9 @@ export function montar(): FerramentaMontada {
       );
 
       function trocarModo() {
-        const modo = seletor.value as Modo;
-        linhaIntervalos.hidden = modo !== "intervalos";
-        linhaPaginas.hidden = modo !== "porPaginas";
+        const modo = seletor.value as ModoDaTela;
+        linhaIntervalos.hidden = modo !== "porIntervalos";
+        linhaPaginas.hidden = modo !== "porQuantidade";
         linhaTamanho.hidden = modo !== "porTamanho";
         sincronizar();
       }
@@ -109,17 +106,12 @@ export function montar(): FerramentaMontada {
 
       return {
         raiz,
-        valores: () => {
-          const modo = seletor.value as Modo;
-          if (modo === "intervalos") return { modo, intervalos: intervalos.value };
-          if (modo === "porPaginas") {
-            return { modo, paginasPorParte: Number(porPaginas.value) || 1 };
-          }
-          return {
-            modo,
-            tamanhoMaximoBytes: (Number(porTamanho.value) || 1) * 1024 * 1024,
-          };
-        },
+        valores: () =>
+          opcoesDaDivisao(seletor.value as ModoDaTela, {
+            intervalos: intervalos.value,
+            paginasPorParte: porPaginas.value,
+            tamanhoMb: porTamanho.value,
+          }),
         sincronizar: (desabilitado) => {
           for (const campo of [seletor, intervalos, porPaginas, porTamanho]) {
             (campo as HTMLInputElement).disabled = desabilitado;

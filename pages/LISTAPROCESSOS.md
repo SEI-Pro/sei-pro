@@ -40,6 +40,8 @@ O ícone de exportação faz parte do [agrupamento de processos](../pages/AGRUPA
 * São exportados os processos **recebidos** e, se a tabela estiver visível, os **gerados**.
 * Com a paginação do SEI ligada, só a página atual entra na planilha. Para exportar a unidade inteira, ligue [Remover paginação de processos](../pages/REMOVEPAGINACAO.md).
 * As datas de recebimento, envio e autuação são as mesmas usadas pelo agrupamento. Se ainda não tiverem sido consultadas, algumas colunas podem sair em branco; escolha um agrupamento por data antes de exportar.
+* No SEI 4.1 e no SEI 5, o grupo da coluna **Acompanhamento_Especial** vem da lista **Acompanhamento Especial** da sua unidade. O SEI Pro relê essa lista ao abrir a tela quando a última leitura tem mais de 24 horas ou foi feita em outra unidade, e também sempre que você agrupa por acompanhamento especial. Enquanto a lista não chega, grupos lidos em outra unidade não aparecem. Processo acompanhado sem grupo sai sem valor nessa coluna.
+* O arquivo separa as colunas com ponto e vírgula (`;`). Por isso esse caractere é retirado dos textos exportados (marcadores, anotações, especificação, observações, grupo de acompanhamento etc.), para nenhuma linha ficar com as colunas deslocadas.
 * Se os acentos aparecerem trocados no Excel, abra o arquivo pela opção **Dados › De Texto/CSV** e escolha a codificação **UTF-8**.
 
 ## Próximo item

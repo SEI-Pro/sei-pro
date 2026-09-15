@@ -62,17 +62,17 @@ Clique em **Quadro** para trocar a tabela por colunas lado a lado — uma coluna
 
 | Agrupamento | O que acontece ao arrastar |
 | ----------- | -------------------------- |
-| Marcadores | O processo recebe o marcador da coluna de destino |
+| Marcadores | O processo recebe o marcador da coluna de destino e perde o da coluna de origem; arrastar para **Sem Grupo** só tira o marcador da coluna de origem |
 | Responsável | O processo é atribuído à pessoa da coluna de destino |
 | Tipo | O tipo do processo é trocado pelo da coluna de destino |
 
-Um ícone de confirmação aparece no cartão quando o SEI termina de gravar a alteração.
+Um ícone de confirmação aparece no cartão quando o SEI termina de gravar a alteração. No quadro por marcadores, quando a alteração não pode ser feita, aparece um **X** vermelho e o processo volta para a coluna de onde saiu. Isso acontece com processo sigiloso, quando o SEI Pro não consegue abrir o processo e, no SEI 4.1 e no SEI 5, quando o SEI não confirma a gravação ou o marcador da coluna de origem já não está no processo (nesse último caso, nada é gravado).
 
 Outros recursos do quadro:
 
 * **Reordenar colunas** — arraste o título da coluna; a ordem fica gravada;
 * **Fixar no topo** — o alfinete no cartão mantém o processo no alto da coluna;
-* **Atualizar o quadro** — dê um **duplo clique** no botão **Quadro** para recarregar a lista de marcadores e de usuários (útil depois de criar um marcador novo).
+* **Atualizar o quadro** — a lista de marcadores é relida do SEI toda vez que você abre a tela, então um marcador novo ganha a sua coluna na próxima visita. Para recarregar na hora, sem sair da tela, dê um **duplo clique** no botão **Quadro** (vale também para a lista de usuários).
 
 Para voltar à lista, clique em **Tabela**.
 
@@ -83,7 +83,9 @@ A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro]
 ### Bom saber
 
 * Com a paginação do SEI ligada, o agrupamento considera apenas os processos da página atual. Para agrupar todos, ligue [Remover paginação de processos](../pages/REMOVEPAGINACAO.md).
+* No agrupamento por **acompanhamento especial**, o grupo de cada processo vem da lista **Acompanhamento Especial** da sua unidade, consultada no SEI toda vez que você abre a tela. Processo acompanhado sem grupo fica em **Sem Grupo**.
 * Mover um processo no quadro faz a mesma alteração que você faria pelo SEI — ela aparece para todos da unidade e fica registrada no andamento, quando o SEI registra.
+* No SEI 4.1 e no SEI 5, em que um processo pode ter vários marcadores, mover o cartão no quadro por marcadores só mexe no marcador da coluna de origem e no da coluna de destino: os outros continuam no processo. O texto do marcador de origem passa para o marcador de destino; se o processo já tinha o marcador de destino, o texto dele é substituído. Como o quadro põe cada processo numa coluna só, ao recarregar a tela ele aparece na coluna de um dos marcadores que tiver.
 * A especificação abaixo do número do processo ([Mostrar especificação do processo](../pages/ESPECIFICACAOPROCESSO.md)) só aparece quando não há agrupamento escolhido.
 
 ## Próximo item

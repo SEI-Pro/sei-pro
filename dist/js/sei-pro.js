@@ -10,6 +10,14 @@ var arvoreDropzone = false;
 var contentW = false;
 var pathArvore = typeof isNewSEI !== 'undefined' && isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
 var elemCheckbox = typeof isNewSEI !== 'undefined' && isNewSEI ? '.infraCheckboxInput' : '.infraCheckbox';
+// isNewSEI vem do sei-functions-pro.js, que na tela de Controle de Processos costuma chegar DEPOIS deste arquivo:
+// avaliado so no carregamento, o seletor ficava '.infraCheckbox' no SEI 4/5, onde os processos marcaveis
+// usam '.infraCheckboxInput', e "Enviar documentos em processos", "Abrir em nova aba" e a troca de tipo
+// em lote nao achavam nenhum processo marcado. Por isso e resolvido na hora do uso.
+function getElemCheckboxPro() {
+    elemCheckbox = typeof isNewSEI !== 'undefined' && isNewSEI ? '.infraCheckboxInput' : '.infraCheckbox';
+    return elemCheckbox;
+}
 const objProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro(false, true) : false;
 const arrayProcessosUnidadePro = typeof getProcessoUnidadePro !== 'undefined' ? getProcessoUnidadePro() : false;
 
@@ -56,6 +64,8 @@ function getListTypes(acaoType) {
 		var acaoType_ = 'acao=procedimento_trabalhar';
 	}
     $('#divRecebidos').find('table tr').attr('data-tagname', 'SemGrupo');
+    // Lista de acompanhamentos da unidade lida uma vez, e nao a cada link da tabela.
+    var listaAcompEspTypes = (acaoType == 'acompanhamentoesp') ? getListaAcompanhamentoEspUnidadePro() : undefined;
     $('#divRecebidos').find('table a').each(function(index){
         var link = $(this).attr('href');
         if ( typeof link !== 'undefined' && link.indexOf(acaoType_) !== -1 ) {
@@ -63,9 +73,7 @@ function getListTypes(acaoType) {
                 tag = ( acaoType == 'users' ) ? $(this).text() : tag;
                 tag = ( acaoType == 'checkpoints' ) ? $(this).attr('onmouseover').split("'")[1] : tag;
                 tag = ( acaoType == 'senddepart' ) ? getArrayProcessoRecebido($(this).attr('href')).unidadesendfull : tag;
-                tag = ( acaoType == 'acompanhamentoesp' ) 
-                        ? typeof getArrayProcessoRecebido($(this).attr('href')).acompanhamentoesp !== 'undefined' ? getArrayProcessoRecebido($(this).attr('href')).acompanhamentoesp : ''
-                        : tag;
+                tag = ( acaoType == 'acompanhamentoesp' ) ? getGrupoAcompanhamentoEspPro($(this).attr('href'), listaAcompEspTypes) : tag;
                 tag = ( acaoType == 'deadline' ) ? $(this).closest('tr').find('td.prazoBoxDisplay .dateboxDisplay').data('time-sorter') : tag;
                 tag = ( (acaoType == 'deadline' || acaoType == 'senddepart') && typeof tag === 'undefined') ? '' : tag;
                 tag = ( acaoType == 'deadline' && tag != '') ? moment(tag, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm') : tag;
@@ -229,10 +237,10 @@ function removeDuplicateValue(element) {
 function setSelectAllTr(this_, tagname = false) {
     var limit = 100;
     var index = (typeof $(this_).data('index') !== 'undefined') ? $(this_).data('index') : 0;
-    var tagname_select = (tagname) ? 'tr[data-tagname="'+tagname+'"]:visible' : 'tr:visible';
+    var trSelect = (tagname) ? getTrGroupTablePro($(this_).closest('table'), 'data-tagname', tagname).filter(':visible') : $(this_).closest('table').find('tr:visible');
     var listCheckbox = [];
     if (index < 1) {
-        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(input.infraLinkOrgao)');
+        var checkbox = trSelect.find('input[type=checkbox]:not(input.infraLinkOrgao)');
         var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : true;
         
         if (t) {
@@ -246,7 +254,7 @@ function setSelectAllTr(this_, tagname = false) {
         }
         $(this_).data('index',index+1);
     } else {
-        var checkbox = $(this_).closest('table').find(tagname_select).find('input[type=checkbox]:not(input.infraLinkOrgao):checked');
+        var checkbox = trSelect.find('input[type=checkbox]:not(input.infraLinkOrgao):checked');
         var t = (checkbox.length > limit) ? Math.round(checkbox.length/limit) : false;
         
         if (t) {
@@ -271,6 +279,8 @@ function setSelectAllTr(this_, tagname = false) {
     }
 }
 function getSelectAllTr(this_, tagname) {
+    // Sem tagname (cabecalho de grupo do getUniqueTableTag): o grupo e o data-htagname do proprio cabecalho.
+    if (typeof tagname === 'undefined') tagname = $(this_).closest('tr').attr('data-htagname');
     if ($(this_).closest('table').find('tr[data-tagname="SemGrupo"]:visible input[type=checkbox]:checked').length > 0) {
         setSelectAllTr(this_, 'SemGrupo');
     } else {
@@ -364,40 +374,52 @@ function getUniqueTableTag(i, tagName, type) {
     var txtTagName = ( (type == 'arrivaldate' || type == 'acessdate' || type == 'senddate' || type == 'createdate' || type == 'deadline') && tagName.indexOf('.') !== -1 ) ? tagName.split('.')[1] : tagName;
 	var tbRecebidos = $('#divRecebidos table');
 	var countTd = tbRecebidos.find('tr:not(.tablesorter-headerRow)').eq(1).find('td').length;
-	var iconSelect = '<label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this, \''+tagName_+'\');" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg"></a></th>';
-	var tagCount = $('#divRecebidos table tbody').find('tr[data-tagname="'+tagName_+'"]:visible').length;
+	var iconSelect = '<label class="lblInfraCheck" for="lnkInfraCheck" accesskey=";"></label><a id="lnkInfraCheck" onclick="getSelectAllTr(this);" onmouseover="updateTipSelectAll(this)" onmouseenter="return infraTooltipMostrar(\'Selecionar Tudo\')" onmouseout="return infraTooltipOcultar();"><img src="/infra_css/'+(isNewSEI ? 'svg/check.svg': 'imagens/check.gif')+'" id="imgRecebidosCheck" class="infraImg"></a></th>';
+	var tagCount = getTrGroupTablePro($('#divRecebidos table tbody'), 'data-tagname', tagName_).filter(':visible').length;
     var collapseBtn =   '<span class="tagintable">'+
-                        '   <a class="controleTableTag newLink" data-htagname="'+tagName_+'" onclick="toggleGroupTablePro(this)" data-action="show" onmouseover="return infraTooltipMostrar(\'Mostrar Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? '' : 'display:none;' )+'">'+
+                        '   <a class="controleTableTag newLink" onclick="toggleGroupTablePro(this)" data-action="show" onmouseover="return infraTooltipMostrar(\'Mostrar Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? '' : 'display:none;' )+'">'+
                         '       <i class="fas fa-plus-square cinzaColor"></i>'+
                         '   </a>'+
-                        '   <a class="controleTableTag newLink" data-htagname="'+tagName_+'" onclick="toggleGroupTablePro(this)" data-action="hide" onmouseover="return infraTooltipMostrar(\'Recolher Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? 'display:none;' : '' )+'">'+
+                        '   <a class="controleTableTag newLink" onclick="toggleGroupTablePro(this)" data-action="hide" onmouseover="return infraTooltipMostrar(\'Recolher Agrupamento\');" onmouseout="return infraTooltipOcultar();" style="font-size: 11pt;'+(getOptionsPro('panelGroup_'+tagName_) ? 'display:none;' : '' )+'">'+
                         '       <i class="fas fa-minus-square cinzaColor"></i>'+
                         '   </a>';
                         '</span>';
 	var htmlBody = '<tr class="infraCaption tagintable"><td colspan="'+(countTd+3)+'"><span '+actionTest+'>'+tagCount+' registros:</span></td></tr>'
-					+'<tr data-htagname="'+tagName_+'" class="tagintable tableHeader">'
+					+'<tr class="tagintable tableHeader">'
 					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" width="5%" align="center">'+iconSelect+'</th>'
 					+'<th class="tituloControle '+(isNewSEI ? 'infraTh' : '')+'" colspan="'+(countTd+2)+'">'+txtTagName+collapseBtn+'</th>'
 					+'</tr>';
-		$(htmlBody).appendTo('#divRecebidos table tbody');
+		// O nome do grupo entra por .attr(), como o data-tagname das linhas (getListTypes): escrito dentro do HTML, o
+		// navegador decodificava as entidades que o SEI deixa no nome (&amp;, \&quot;, \&#039;) e o cabecalho nao achava
+		// mais as suas linhas (que sumiam da tabela em getTableOnTag).
+		$(htmlBody).appendTo('#divRecebidos table tbody')
+            .filter('tr.tableHeader').attr('data-htagname', tagName_)
+            .find('a.controleTableTag').attr('data-htagname', tagName_);
 		if ( i == 0 ) { 
             // tbRecebidos.find('tr').eq(0).hide(); 
             tbRecebidos.find('caption').hide(); 
         }
 }
+// Linhas (tr) de um grupo do agrupamento, pelo atributo attr (data-tagname nas linhas, data-htagname nos cabecalhos).
+// O nome do grupo pode trazer entidades e aspas vindas do SEI: e comparado como texto, e nao montado num seletor
+// [data-tagname="..."], que nao achava as linhas ou dava erro de sintaxe do jQuery.
+function getTrGroupTablePro(elem, attr, tagname) {
+    return $(elem).find('tr['+attr+']').filter(function(){ return $(this).attr(attr) === String(tagname); });
+}
 function toggleGroupTablePro(this_) {
     var _this = $(this_);
     var data = _this.data();
+    var htagname = _this.attr('data-htagname');
     if (data.action == 'hide') {
-        _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').hide();
+        getTrGroupTablePro(_this.closest('table'), 'data-tagname', htagname).hide();
         _this.closest('span').find('a[data-action="show"]').show();
         _this.closest('span').find('a[data-action="hide"]').hide();
-        setOptionsPro('panelGroup_'+data.htagname, true);
+        setOptionsPro('panelGroup_'+htagname, true);
     } else {
-        _this.closest('table').find('tr[data-tagname="'+data.htagname+'"]').show();
+        getTrGroupTablePro(_this.closest('table'), 'data-tagname', htagname).show();
         _this.closest('span').find('a[data-action="show"]').hide();
         _this.closest('span').find('a[data-action="hide"]').show();
-        removeOptionsPro('panelGroup_'+data.htagname);
+        removeOptionsPro('panelGroup_'+htagname);
     }
 }
 function getTableOnTag(type) {
@@ -406,7 +428,7 @@ function getTableOnTag(type) {
     		dataTag = ( dataTag == '' ) ? 'SemGrupo' : dataTag;
     	if ( typeof dataTag !== 'undefined' && $(this).find('td').eq(2).find('a').length > 0 ) {
     		var desc = $(this).find('td').eq(2).find('a').attr('onmouseover').split("','");    
-            var txt_desc = (typeof desc[0] !== 'undefined') ? desc[0].replace("return infraTooltipMostrar('", "") : '';
+            var txt_desc = (typeof desc[0] !== 'undefined') ? removePrefixoNaoVisualizadoPro(desc[0].replace("return infraTooltipMostrar('", "")) : '';
             var txt_tipo_proc = (typeof desc[1] !== 'undefined') ? desc[0].replace("return infraTooltipMostrar('", "") : '';
             var editDesc = '<a class="newLink newLink_active followLink followLinkDesc content_btnsave" onclick="editFieldProc(this)" style="right: 0;top: 0;" onmouseover="return infraTooltipMostrar(\'Editar descri\u00E7\u00E3o\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-edit" style="font-size: 100%;"></i></a>';        
     		var htmlDesc = (type == 'all')
@@ -426,7 +448,7 @@ function getTableOnTag(type) {
                 htmlDataRecebido = (type == 'all') ? '' : htmlDataRecebido;
     			$(this).find('td').eq(3).after(htmlDesc+htmlDataRecebido);
     		var cloneTr = $(this).clone();
-    		$('#divRecebidos table tbody').find('tr[data-htagname="'+dataTag+'"]').after(cloneTr);
+    		getTrGroupTablePro($('#divRecebidos table tbody'), 'data-htagname', dataTag).after(cloneTr);
     		$(this).remove(); 
     	}
     });
@@ -477,6 +499,93 @@ function getArrayProcessoRecebido(href) {
     var id_procedimento = (typeof getParamsUrlPro !== 'undefined') ? String(getParamsUrlPro(href).id_procedimento) : false;
     var dadosRecebido = (typeof jmespath !== 'undefined' && jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | length(@)") > 0) ? jmespath.search(storeRecebimento, "[?id_procedimento=='"+id_procedimento+"'] | [0]") : '';
     return dadosRecebido;
+}
+// Grupo do Acompanhamento Especial no agrupamento da tela de Controle de Processos.
+// A coleta do historico (getLinksAcompanhamento) tira o grupo do titulo da acao ACOMPANHAMENTO da arvore,
+// que no SEI 3 era "Acompanhamento Especial" + quebra de linha + grupo. No SEI 4.1 e no 5 esse titulo e so
+// "1 Acompanhamento Especial": o valor coletado ficava vazio e todos os processos caiam em "Sem Grupo".
+// Quando a coleta nao traz o grupo, ele e lido da lista de acompanhamentos da unidade
+// (dadosAcompanhamentoEspProcessoPro), a mesma que o painel da arvore ja usa. Tambem alimenta o icone de
+// acompanhamento na linha e a coluna do CSV. listaAcompEsp (opcional): a lista ja lida e filtrada pela unidade
+// (getListaAcompanhamentoEspUnidadePro), para nao reler a cada linha.
+// O grupo lido da lista vem sem escape; ele e devolvido no mesmo formato do valor coletado da arvore do SEI 3
+// (formatarParametrosJavaScript do SEI: escapado para JavaScript e depois para HTML), que e o que o tooltip do icone
+// e o cabecalho do agrupamento esperam. Cru, um nome de grupo com HTML entrava como HTML na tela.
+function getGrupoAcompanhamentoEspPro(href, listaAcompEsp) {
+    var acompanhamentoesp = getArrayProcessoRecebido(href).acompanhamentoesp;
+        acompanhamentoesp = (typeof acompanhamentoesp !== 'undefined' && acompanhamentoesp !== null) ? acompanhamentoesp : '';
+    if (acompanhamentoesp != '') return acompanhamentoesp;
+    var grupo = getGrupoListaAcompanhamentoEspPro(href, listaAcompEsp);
+    if (grupo == '') return acompanhamentoesp;
+    return grupo.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+// Grupo do processo na lista de acompanhamentos da unidade, sem escape ('' quando nao ha).
+function getGrupoListaAcompanhamentoEspPro(href, listaAcompEsp) {
+    if (typeof localStorageRestorePro === 'undefined' || typeof getParamsUrlPro === 'undefined' || typeof jmespath === 'undefined') return '';
+        listaAcompEsp = (typeof listaAcompEsp !== 'undefined') ? listaAcompEsp : getListaAcompanhamentoEspUnidadePro();
+    var id_procedimento = String(getParamsUrlPro(href).id_procedimento);
+    // O processo pode ter mais de um acompanhamento na unidade (um por usuario): vale o primeiro que tem grupo.
+    var grupo = $.isArray(listaAcompEsp) ? jmespath.search(listaAcompEsp, "[?id_protocolo=='"+id_procedimento+"' && grupo!=''] | [0].grupo") : null;
+    return (typeof grupo === 'string') ? grupo : '';
+}
+// A lista de acompanhamentos e uma so no navegador e fica com a ultima unidade lida. Cada item traz o link do processo,
+// que o SEI assina com a unidade (infra_unidade_atual): so valem os itens da unidade atual. Item sem unidade no link
+// continua valendo, como antes. listaAcompEsp (opcional): a lista crua ja lida do localStorage.
+function getListaAcompanhamentoEspUnidadePro(listaAcompEsp) {
+    if (typeof listaAcompEsp === 'undefined') listaAcompEsp = (typeof localStorageRestorePro !== 'undefined') ? localStorageRestorePro('dadosAcompanhamentoEspProcessoPro') : null;
+    var unidade = (typeof idUnidade !== 'undefined' && idUnidade) ? String(idUnidade) : '';
+    if (!$.isArray(listaAcompEsp) || unidade == '' || typeof getParamsUrlPro === 'undefined') return listaAcompEsp;
+    return $.grep(listaAcompEsp, function(v){
+        var params = (v && typeof v.url === 'string') ? getParamsUrlPro(v.url) : false;
+        var unidadeItem = (params && typeof params.infra_unidade_atual !== 'undefined') ? String(params.infra_unidade_atual) : '';
+        return (unidadeItem == '' || unidadeItem == unidade);
+    });
+}
+// Rele do SEI, uma vez por carregamento da tela, a lista de acompanhamentos especiais da unidade (que so era
+// atualizada pela reabertura programada) e refaz o agrupamento quando ela chega.
+var listaAcompanhamentoEspAtualizadaPro = false;
+function updateListaAcompanhamentoEspGroupTable() {
+    if (listaAcompanhamentoEspAtualizadaPro || typeof getListAcompanhamentoEspecial === 'undefined') return;
+    if ($(mainMenu).find('li a[href*="acao=acompanhamento_listar"]').length == 0) return;
+    listaAcompanhamentoEspAtualizadaPro = true;
+    getListAcompanhamentoEspecial(false, function(){
+        if (typeof moment === 'function') setOptionsPro('lastread_AcompEspLista', moment().format('YYYY-MM-DD HH:mm:ss'));
+        addAcompanhamentoEspIcon();
+        var valueSelect = $('#selectGroupTablePro').val();
+        if (valueSelect != 'acompanhamentoesp') return;
+        initTableTag(valueSelect);
+        if (getOptionsPro('panelProcessosView') == 'Quadro') initAddKanbanProc(valueSelect);
+    });
+}
+// Icone de acompanhamento na linha e coluna do CSV: no SEI 4.1 e no 5 o grupo so vem da lista da unidade, que so era
+// relida ao agrupar, na reabertura programada e no painel da arvore. Aqui ela e relida (uma vez por carregamento)
+// quando ainda nao existe, foi lida ha mais de 24 h ou a ultima leitura foi de outra unidade (a lista e as datas de
+// leitura sao as mesmas para todas as unidades do usuario); ao chegar, os icones sao refeitos. Se as bibliotecas
+// ainda nao chegaram (a primeira chamada vem do initSeiPro), tenta de novo por ate 9 s.
+var checkListaAcompanhamentoEspIconAgendadoPro = false;
+function checkListaAcompanhamentoEspIconPro(TimeOut = 9000) {
+    if (listaAcompanhamentoEspAtualizadaPro || TimeOut <= 0) return;
+    if (typeof isNewSEI === 'undefined' || typeof moment !== 'function' || typeof getOptionsPro === 'undefined' || typeof localStorageRestorePro === 'undefined' || typeof getParamsUrlPro === 'undefined' || typeof getListAcompanhamentoEspecial === 'undefined') {
+        if (!checkListaAcompanhamentoEspIconAgendadoPro) {
+            checkListaAcompanhamentoEspIconAgendadoPro = setTimeout(function(){
+                checkListaAcompanhamentoEspIconAgendadoPro = false;
+                checkListaAcompanhamentoEspIconPro(TimeOut - 500);
+            }, 500);
+        }
+        return;
+    }
+    if (!isNewSEI) return;
+    var listaCrua = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+    var listaUnidade = getListaAcompanhamentoEspUnidadePro(listaCrua);
+    var unidade = (typeof idUnidade !== 'undefined' && idUnidade) ? String(idUnidade) : '';
+    var lidaNaUnidade = (unidade == '' || String(getOptionsPro('lastread_AcompEspLista_unidade')) == unidade);
+    var itensDeOutraUnidade = $.isArray(listaCrua) && $.isArray(listaUnidade) && listaUnidade.length < listaCrua.length;
+    var lidaRecente = $.grep([getOptionsPro('lastread_AcompEspLista'), getOptionsPro('lastcheck_AcompEsp')], function(v){
+        return v && moment(v, 'YYYY-MM-DD HH:mm:ss') > moment().add(-24, 'h');
+    }).length > 0;
+    if (lidaRecente && lidaNaUnidade && !itensDeOutraUnidade && $.isArray(listaCrua)) return;
+    updateListaAcompanhamentoEspGroupTable();
 }
 function updateGroupTablePro(valueSelect, mode) {
     //var unidade = $('#selInfraUnidades').find('option:selected').text().trim();
@@ -630,6 +739,7 @@ function initUpdateGroupTable(this_) {
     if (typeof checkConfigValue !== 'undefined' && checkConfigValue('agruparlista')) {
         var valueSelect = $(this_).val();
         initTableTag(valueSelect);
+        if (valueSelect == 'acompanhamentoesp') updateListaAcompanhamentoEspGroupTable();
 
         if (!valueSelect || valueSelect == 'all' || valueSelect == '') {
             setOptionsPro('panelProcessosView', 'Tabela');
@@ -812,9 +922,13 @@ function selectFilterTableHome() {
     return html;
 }
 function initDadosProcesso(TimeOut = 9000) {
-    const targetUrl = isSEI_5 ? $("#ifrArvore").contents().find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).attr('href') : $("#ifrArvore").contents().find('#topmenu').find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).attr('href');
+    // isSEI_5, targetIframeVisualizacao_ e checkHostLimit vem do sei-functions-pro.js, que entra por
+    // $.getScript em paralelo com este arquivo e as vezes chega depois dele: so le quando ja existem.
+    const dependenciasPro = typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro !== 'undefined' && typeof checkHostLimit !== 'undefined' && typeof targetIframeVisualizacao_ !== 'undefined';
+    const targetUrl = !dependenciasPro ? undefined : isSEI_5 ? $("#ifrArvore").contents().find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).attr('href') : $("#ifrArvore").contents().find('#topmenu').find(`a[target="${targetIframeVisualizacao_}"]`).eq(0).attr('href');
     if (TimeOut <= 0) { return; }
-    if (typeof getParamsUrlPro !== 'undefined' && typeof getDadosIframeProcessoPro !== 'undefined'  && typeof targetUrl !== 'undefined' ) { 
+    if (dependenciasPro && typeof targetUrl !== 'undefined' ) {
+        if (checkHostLimit()) { return; }
         var id_procedimento = getParamsUrlPro(window.location.href).id_procedimento;
             id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro($('#ifrArvore').attr('src')).id_procedimento : id_procedimento;
             id_procedimento = (typeof id_procedimento === 'undefined') ? getParamsUrlPro(window.location.href).id_protocolo : id_procedimento;
@@ -869,6 +983,7 @@ function getProcessosPaginacao(this_, index, tipo) {
                 initControlePrazo(true);
                 initViewEspecifacaoProcesso();
                 addAcompanhamentoEspIcon();
+                initNaoVisualizadoPro();
             } else {
                 param['hdn'+tipo+'PaginaAtual'] = 0;
                 $.ajax({  method: 'POST', data: param, url: href });
@@ -1088,7 +1203,7 @@ function getNewTabProcesso() {
     }, 500);
 }
 function openListNewTab(this_) {
-    var listNewTag = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find(elemCheckbox+':checked').map(function(){ return $(this).val() }).get();
+    var listNewTag = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find(getElemCheckboxPro()+':checked').map(function(){ return $(this).val() }).get();
     if (listNewTag.length > 0) {
         $.each(listNewTag, function(index, value){
             var url = url_host+'?acao=procedimento_trabalhar&id_procedimento='+value;
@@ -1148,7 +1263,7 @@ function changeTypeProc(this_) {
 }
 function getChangeTypeProc(idTypeProc, txtTypeProc) {
     var tableProc = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado');
-    var listProcs = tableProc.find(elemCheckbox+':checked').map(function(){ return $(this).val() }).get();
+    var listProcs = tableProc.find(getElemCheckboxPro()+':checked').map(function(){ return $(this).val() }).get();
     if (listProcs.length > 0) {
         var id_protocolo = listProcs[0];
         var tr = tableProc.find('tr#P'+id_protocolo+'');
@@ -1160,7 +1275,7 @@ function getChangeTypeProc(idTypeProc, txtTypeProc) {
                 td.append('<i class="fas fa-check-double azulColor sucessEdit" style="margin-left:10px;"></i>');
                 setTimeout(function(){ td.find('.sucessEdit').remove(); }, 2000);
                 setTimeout(function(){ 
-                        tr.find(elemCheckbox+':checked').trigger('click');
+                        tr.find(getElemCheckboxPro()+':checked').trigger('click');
                     var alink = tr.find('a[href*="controlador.php?acao=procedimento_trabalhar"]');
                     var txttooltip = alink.attr('onmouseover');
                     var tooltip = extractTooltipToArray(txttooltip);
@@ -1243,6 +1358,12 @@ function insertDivPanelControleProc() {
     if ($('.controleProcPro').length == 0) {
         $('#divInfraBarraLocalizacao').css('width', '100%').addClass('titlePanelHome').append(htmlToggleTable).prepend(htmlIconTable);
         $(idControleProc).css({'width': '100%', 'display': statusView});
+        // No SEI novo o #divFiltro e um .row do Bootstrap (display: flex). O display 'initial' acima o
+        // transforma em bloco e os links "Visualizacao detalhada / Ver por..." ficam um embaixo do outro.
+        // Visivel, ele volta ao display do proprio SEI; escondido, segue com 'none' e .displayNone.
+        // O mesmo vale para o #collapseControle (barra de botoes, "collapse d-md-block"): o display inline anulava o
+        // recolhimento nativo abaixo de 768 px (botao "Exibir/Ocultar Botoes"); acima disso o d-md-block ja prevalece.
+        if (isNewSEI && statusView != 'none') $('#divFiltro, #collapseControle').css('display', '');
         $('#panelHomePro').prepend(htmlDivPanel);
         $('#frmProcedimentoControlar').moveTo('#processosSEIPro');
         $('#divInfraBarraLocalizacao').moveTo('#processosSEIPro');
@@ -1304,6 +1425,7 @@ function getTableProcessosCSV() {
                     '   <tbody>';
     var table = ($('#tblProcessosGerados').is(':visible')) ? $('#tblProcessosRecebidos, #tblProcessosGerados') : $('#tblProcessosRecebidos');
     var tableSelect = (table.find('tbody tr.infraTrMarcada').length > 0) ? table.find('tbody tr.infraTrMarcada') : table.find('tbody tr.infraTrClara');
+    var listaAcompEsp = getListaAcompanhamentoEspUnidadePro();
         tableSelect.each(function(){
             var td = $(this).find('td');
             var id_protocolo = $(this).attr('id').replace('P', '');
@@ -1317,6 +1439,7 @@ function getTableProcessosCSV() {
             var processo = td.eq(2).find('a[href*="procedimento_trabalhar"]');
             var descricao = processo.attr('onmouseover');
             var descricao_array = (typeof descricao !== 'undefined' && descricao != '') ? extractAllTextBetweenQuotes(descricao) : false;
+                if (descricao_array) descricao_array[0] = removePrefixoNaoVisualizadoPro(descricao_array[0]);
             var nr_processo = processo.text().trim();
             var url_processo = processo.attr('href');
             var atribuicao = td.eq(3).find('a[href*="procedimento_atribuicao_listar"]').text().trim();
@@ -1328,9 +1451,18 @@ function getTableProcessosCSV() {
             var desc_recebimento = (typeof info_array.descricao !== 'undefined') ? info_array.descricao.replaceAll(';','') : '-';
             var data_envio = (typeof info_array.datesend !== 'undefined' && info_array.datesend != '') ? moment(info_array.datesend, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm:ss') : '-';
             var desc_envio = (typeof info_array.descricaosend !== 'undefined') ? info_array.descricaosend.replaceAll(';','') : '-';
-            var unidade_envio = (typeof info_array.unidadesend !== 'undefined') ? info_array.unidadesend : '-';
-            var observacoes = (typeof info_array.observacoes !== 'undefined' && info_array.observacoes != '') ? $.map(info_array.observacoes, function(v){ if(v.unidade != '') return v.unidade+': '+v.observacao }) : '-';
-            var acompanhamento_especial = (typeof info_array.acompanhamentoesp !== 'undefined') ? info_array.acompanhamentoesp : '-';
+            // Como nas demais colunas, ';' (o separador do CSV) sai do valor: senao desloca as colunas da linha.
+            var unidade_envio = (typeof info_array.unidadesend !== 'undefined' && info_array.unidadesend !== null) ? String(info_array.unidadesend).replaceAll(';','') : '-';
+            var observacoes = (typeof info_array.observacoes !== 'undefined' && info_array.observacoes != '') ? $.map(info_array.observacoes, function(v){ if(v.unidade != '') return v.unidade+': '+v.observacao }).join(',').replaceAll(';','') : '-';
+            // Valor coletado da arvore (SEI 3) como antes; sem ele, o grupo da lista da unidade, escapado so para HTML (a
+            // planilha e montada como tabela HTML e lida pelo texto das celulas).
+            var acompanhamento_coletado = (typeof info_array.acompanhamentoesp !== 'undefined' && info_array.acompanhamentoesp !== null) ? info_array.acompanhamentoesp : '';
+            var acompanhamento_lista = (acompanhamento_coletado == '') ? getGrupoListaAcompanhamentoEspPro(url_processo, listaAcompEsp) : '';
+            // Aqui o valor ja esta escapado para HTML: sai o ';' do texto, mas nao o que fecha uma entidade (&amp; &#039;).
+            var acompanhamento_especial = String((acompanhamento_coletado != '') ? acompanhamento_coletado
+                                        : (acompanhamento_lista != '') ? acompanhamento_lista.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                                        : ((typeof info_array.acompanhamentoesp === 'string') ? info_array.acompanhamentoesp : '-'))
+                                        .replace(/(&#?\w+;)|;/g, function(m, entidade){ return entidade || ''; });
 
                 htmlTable +=    '       <tr>'+
                                 '           <td>'+id_protocolo+'</td>'+
@@ -1722,7 +1854,7 @@ function initReloadModalLink(TimeOut = 9000) {
 }
 function initReplaceNewIcons(TimeOut = 9000) {
     if (typeof isNewSEI !== 'undefined' && isNewSEI) $(divComandos+' a').addClass('botaoSEI');
-    if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || parent.window.name != '')) { return; }
+    if (localStorage.getItem('seiSlim') === null || (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != ''))) { return; }
     if (typeof replaceNewIcons === 'function') {
         replaceNewIcons($(`${infraBarraComandos} a.botaoSEI`));
     } else {
@@ -1733,7 +1865,7 @@ function initReplaceNewIcons(TimeOut = 9000) {
     }
 }
 function initObserveUrlChange(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
     if (typeof parent.verifyConfigValue === 'function') {
         setObserveUrlChange();
     } else {
@@ -1866,15 +1998,29 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
                 $('#processosProActions [data-value="Quadro"] i').attr('class','fas fa-spinner fa-spin');
             }
         } else if (type == 'tags') {
-            if (getOptionsPro('listaMarcadores') && getOptionsPro('listaMarcadores').length > 0) {
+            // Com a lista em cache, rele do SEI antes de montar (listaMarcadoresAtualizadaPro); se a busca
+            // nao responder nas tentativas, monta com o cache (loop esgotado).
+            if (getOptionsPro('listaMarcadores') && getOptionsPro('listaMarcadores').length > 0 && (listaMarcadoresAtualizadaPro || loop <= 0)) {
                 $('#processosProActions [data-value="Quadro"] i').attr('class','fas fa-project-diagram');
                 var itensKanban = $.map(getOptionsPro('listaMarcadores'),function(v){
                     return v.name;
                 });
                 itensKanban.unshift('');
             } else if (loop > 0) {
-                getAjaxListaMarcador();
-                setTimeout(function(){ initAddKanbanProc(type, loop-1); }, 2000);
+                // Monta assim que a lista chega do SEI; o setTimeout so vale como nova tentativa se ela nao chegar.
+                // Nenhum dos dois monta se o usuario ja voltou para a Tabela nesse meio tempo.
+                var tentativaKanbanTags = {feita: false};
+                var proximaTentativaKanbanTags = function(){
+                    if (tentativaKanbanTags.feita) return;
+                    tentativaKanbanTags.feita = true;
+                    if (getOptionsPro('panelProcessosView') == 'Quadro') {
+                        initAddKanbanProc(type, loop-1);
+                    } else {
+                        $('#processosProActions [data-value="Quadro"] i').attr('class','fas fa-project-diagram');
+                    }
+                };
+                getAjaxListaMarcador(proximaTentativaKanbanTags);
+                setTimeout(proximaTentativaKanbanTags, 2000);
                 $('#processosProActions [data-value="Quadro"] i').attr('class','fas fa-spinner fa-spin');
             }
         } else {
@@ -1899,7 +2045,7 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
                             title: nameLabel,
                             id_protocolo: String(id_protocolo),
                             processo: linkProc.text(),
-                            especificacao: tip ? tip[0] : false,
+                            especificacao: tip ? removePrefixoNaoVisualizadoPro(tip[0]) : false,
                             tipo: tip ? tip[1] : false,
                             html_icons: $(this).find('td').eq(1).html(),
                             html_proc: $(this).find('td').eq(2).html(),
@@ -2037,8 +2183,16 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
 
                         var arrayMarcador = listMarcadores ? jmespath.search(listMarcadores, "[?name=='"+targetEl+"'] | [0]") : false;  
                         var valueMarcador = arrayMarcador !== null && arrayMarcador ? arrayMarcador.value : false;  
+                        // No SEI 4.1 e no 5 o processo pode ter varios marcadores, um icone cada: o que vale e o do marcador da
+                        // coluna de origem (o mesmo criterio de getListTypes). Sem ele (SEI 3, um marcador so), todos, como antes.
+                        var filtroIconeTagOrigem = function(){
+                            var tipIcone = $(this).attr('onmouseover');
+                            return (typeof tipIcone !== 'undefined' && tipIcone.indexOf("','") !== -1 && getTagName(tipIcone.split("','")[1].replace("');",""), type) == sourceEl);
+                        };
                         var elemIconTag = elemIcons.find('a[href*="acao=andamento_marcador_gerenciar"]');
+                            elemIconTag = elemIconTag.filter(filtroIconeTagOrigem).length ? elemIconTag.filter(filtroIconeTagOrigem).first() : elemIconTag;
                         var elemIconTagTable = tableProc.find('tr[id="P'+id_protocolo+'"]').find('td').eq(1).find('a[href*="acao=andamento_marcador_gerenciar"]');
+                            elemIconTagTable = elemIconTagTable.filter(filtroIconeTagOrigem).length ? elemIconTagTable.filter(filtroIconeTagOrigem).first() : elemIconTagTable;
                         var valueText = elemIconTag.attr('onmouseover');
                             valueText = (typeof valueText !== 'undefined') ? extractTooltipToArray(valueText) : false;
                             valueText = valueText ? valueText[0] : false;
@@ -2049,8 +2203,17 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
                                     {element: 'txaTexto', value: valueText},
                                     {element: 'hdnIdMarcador', value: (targetEl == 'SemGrupo') ? '' : valueMarcador}
                                 ];
-
-                                updateDadosArvoreMult('Gerenciar Marcador', valuesIframe, id_protocolo, function(){ 
+                                var movimentoKanbanTags = kanbanProcessosMoving;
+                                elemProc.find('i.fa-check-double, i.fa-times').remove();
+                                elemProc.prepend('<i class="fas fa-sync fa-spin cinzaColor" style="margin-right: 5px;"></i>');
+                                // SEI 4.1 e 5: mover de coluna inclui o marcador da coluna de destino e tira o da coluna de origem
+                                // (os outros marcadores do processo ficam); a confirmacao so aparece depois que o SEI grava.
+                                // O nome da listagem vem sem escape e sem " - DESATIVADO"; o da coluna, do tooltip da tela inicial
+                                // (escapado para HTML e JavaScript, com o sufixo): os dois passam por normalizarNomeMarcadorPro.
+                                var tipIconeOrigem = elemIconTag.filter(filtroIconeTagOrigem).first().attr('onmouseover');
+                                var tagOrigem = (typeof tipIconeOrigem !== 'undefined') ? getTagName(normalizarNomeMarcadorPro(tipIconeOrigem.split("','")[1].replace("');","")), type) : sourceEl;
+                                var removerMarcadorOrigem = (sourceEl != 'SemGrupo') ? function(marcador){ return getTagName(normalizarNomeMarcadorPro(marcador.name), type) == tagOrigem; } : false;
+                                setMarcadorProcessoPro(id_protocolo, valuesIframe, removerMarcadorOrigem, function(){ 
                                     var arrayListMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
                                     var styleMarcador = arrayListMarcadores && valueMarcador ? jmespath.search(arrayListMarcadores, "[?icon=='"+arrayMarcador.img+"'] | [0].style") : null;
                                         styleMarcador = styleMarcador !== null ? styleMarcador : '';
@@ -2069,6 +2232,28 @@ function addKanbanProc(type = storeGroupTablePro(), loop = 3) {
                                     elemProc.prepend('<i class="fas fa-check-double verdeColor" style="margin-right: 5px;"></i>');
                                     setTimeout(function(){ elemProc.find('i.fa-check-double').remove(); }, 2000);
                                     getAllMarcadoresHome();
+                                }, function(){
+                                    // Nada confirmado no SEI: devolve o processo para a coluna de origem e avisa no cartao.
+                                    elemProc.find('i.fa-sync').remove();
+                                    if (movimentoKanbanTags) {
+                                        // Move o proprio cartao de volta. cancelMoveKanbanItensProc recria o cartao a partir de
+                                        // options.boards, que o jKanban nao atualiza ao arrastar: depois de um movimento anterior
+                                        // o cartao nao esta mais la na coluna de origem e removeElement(undefined) dava TypeError.
+                                        try {
+                                            var cartaoMovido = $('#processosKanban .kanban-item[data-eid="'+id_protocolo+'"]');
+                                            var colunaOrigem = $('#processosKanban .kanban-board').filter(function(){ return $(this).attr('data-id') == movimentoKanbanTags.source; }).find('.kanban-drag').first();
+                                            if (cartaoMovido.length && colunaOrigem.length && cartaoMovido.parent()[0] !== colunaOrigem[0]) {
+                                                var cartaoSeguinte = colunaOrigem.children().eq(movimentoKanbanTags.order);
+                                                if (cartaoSeguinte.length) { cartaoMovido.insertBefore(cartaoSeguinte); } else { colunaOrigem.append(cartaoMovido); }
+                                            }
+                                            updateOrderKanbanBoardProc();
+                                            updateCountKanbanBoardProc();
+                                        } catch(e) { console.error(e); }
+                                    }
+                                    var elemProcErro = $('#processosKanban .kanban-item[data-eid="'+id_protocolo+'"]').find('.kanban-content span[data-type="proc"]');
+                                        elemProcErro = elemProcErro.length ? elemProcErro : elemProc;
+                                        elemProcErro.prepend('<i class="fas fa-times vermelhoColor" style="margin-right: 5px;"></i>');
+                                    setTimeout(function(){ elemProcErro.find('i.fa-times').remove(); }, 2000);
                                 });
                             }
 
@@ -2185,14 +2370,20 @@ function updateCountKanbanBoardProc() {
 function addAcompanhamentoEspIcon() {
     var storeRecebimento = (typeof localStorageRestorePro !== 'undefined' &&  typeof localStorageRestorePro('configDataRecebimentoPro') !== 'undefined' && !$.isEmptyObject(localStorageRestorePro('configDataRecebimentoPro')) ) ? localStorageRestorePro('configDataRecebimentoPro') : [];
     var array_procedimentos = [];
+    var listaAcompEsp = getListaAcompanhamentoEspUnidadePro();
     $('.acompanhamentoesp_icon').remove();
     $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('a.processoVisualizado').each(function(i) {
-      var acompanhamentoesp = getArrayProcessoRecebido($(this).attr('href')).acompanhamentoesp;
+      // No SEI 4.1 e no 5 a arvore nao traz mais o grupo: vem da lista de acompanhamentos da unidade.
+      var acompanhamentoesp = getGrupoAcompanhamentoEspPro($(this).attr('href'), listaAcompEsp);
             acompanhamentoesp = (typeof acompanhamentoesp !== 'undefined' && acompanhamentoesp !== null && acompanhamentoesp != '') ? acompanhamentoesp : false;
         if (acompanhamentoesp) {
-            $(this).closest('tr').find('td').eq(1).append('<a class="acompanhamentoesp_icon" onmouseover="return infraTooltipMostrar(\'Acompanhamento Especial\',\''+acompanhamentoesp+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-eye azulColor"><i></a>');
+            // O grupo vem escapado para JavaScript e HTML (formatarParametrosJavaScript do SEI, tambem o lido da lista);
+            // aqui ele e escapado mais uma vez para o atributo onmouseover, que o navegador decodifica antes de rodar.
+            var tooltipGrupo = String(acompanhamentoesp).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/\\?'/g, "\\'");
+            $(this).closest('tr').find('td').eq(1).append('<a class="acompanhamentoesp_icon" onmouseover="return infraTooltipMostrar(\'Acompanhamento Especial\',\''+tooltipGrupo+'\');" onmouseout="return infraTooltipOcultar();"><i class="fas fa-eye azulColor"><i></a>');
         }
     });
+    checkListaAcompanhamentoEspIconPro();
 }
 function addControlePrazo(this_ = false) {
     var dateRef = moment().format('YYYY-MM-DD');
@@ -2307,7 +2498,7 @@ function addControlePrazo(this_ = false) {
             open: function() {
                 var listaMarcadores = getOptionsPro('listaMarcadores');
                 var listaMarcadores_unidade = getOptionsPro('listaMarcadores_unidade');
-                if (listaMarcadores && listaMarcadores_unidade == $('#selInfraUnidades').val()) {
+                if (listaMarcadores && listaMarcadores_unidade == $('#selInfraUnidades').val() && listaMarcadoresAtualizadaPro) {
                     var htmlOptions = $.map(listaMarcadores, function(v){
                                         var selected = (tagName && tagName == v.name) ? 'selected' : '';
                                         return '<option data-img-src="'+v.img+'" value="'+v.value+'" '+selected+'>'+v.name+'</option>';
@@ -2387,6 +2578,12 @@ function setPrazoMarcador(mode, this_, form, href, param = false, callback = fal
                         }
                     });
                     paramTag['txaTexto'] = (mode == 'remove') ? '' : dateSubmit;
+                    // O txaTexto vai com escapeComponent (= escape()), que transforma o que nao cabe em ISO-8859-1
+                    // (travessao e aspas curvas colados do Word) em %u2014/%u201C: o PHP nao decodifica e o SEI gravava
+                    // o texto literal no marcador. Mesma tabela do Processos em Lote (procLote_paraLatin1, init.js).
+                    paramTag['txaTexto'] = (typeof procLote_paraLatin1 === 'function')
+                        ? procLote_paraLatin1(paramTag['txaTexto'])
+                        : paramTag['txaTexto'].replace(/[\s\S]/g, function(c) { return (c.charCodeAt(0) < 256) ? c : ''; });
                     paramTag['hdnIdMarcador'] = _tagSelected;
 
                     var postDataTag = '';
@@ -2474,6 +2671,12 @@ function setPrazoMarcador(mode, this_, form, href, param = false, callback = fal
         resetDialogBoxPro('dialogBoxPro');
     }
 }
+// A lista de marcadores da unidade fica guardada no navegador (optionsPro.listaMarcadores) e so era refeita
+// quando alguma tela nao a encontrava: marcadores criados depois nao apareciam no quadro por marcadores
+// (nem nas caixas do painel e do controle de prazo no SEI 3), e cada computador mostrava a lista da ultima
+// vez que a buscou. Esta marca diz se a lista ja foi relida do SEI neste carregamento da pagina; enquanto
+// nao foi, quem a usa busca de novo e so recorre ao que esta guardado se a busca falhar.
+var listaMarcadoresAtualizadaPro = false;
 function getListaMarcadores(html) {
     var indexSelected = 0;
     var selectTags = html.find('#selMarcador').find('option').map(function(i, v){ 
@@ -2485,6 +2688,7 @@ function getListaMarcadores(html) {
         if (selectTags.length > 0) {
             setOptionsPro('listaMarcadores',selectTags);
             setOptionsPro('listaMarcadores_unidade',$('#selInfraUnidades').val());
+            listaMarcadoresAtualizadaPro = true;
         }
     return {array: selectTags, indexSelected: indexSelected};
 }
@@ -2817,7 +3021,18 @@ function setControlePrazo(force = false) {
             tblProcessos.find('tbody tr').not('.tableHeader').append('<td class="prazoBoxDisplay" style="text-align: center;"></td>');
 
         if ( tblProcessos.find('thead').length > 0 ) {
-            tblProcessos.find('thead tr').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(isNewSEI ? 'infraTh' : '')+'" style="width: 140px;min-width: 140px;"> Prazos</th>');
+            var thPrazosPro = '<th class="tituloControle tablesorter-header prazoBoxDisplay '+(isNewSEI ? 'infraTh' : '')+'" style="width: 140px;min-width: 140px;"> Prazos</th>';
+            tblProcessos.find('thead tr').not('.tablesorter-filter-row').append(thPrazosPro);
+            // A linha de filtro do tablesorter so recebe a celula se ainda tiver menos colunas que o cabecalho.
+            // Quando o tablesorter e montado DEPOIS da coluna Prazos (a biblioteca chega por $.getScript e as
+            // vezes depois do initSeiPro), a linha de filtro ja nasce com a celula dessa coluna; somar mais
+            // uma deixava 6 colunas contra 5 e a proxima montagem da tabela acusava "Invalid or incorrect
+            // number of columns in the THEAD" (agrupamento por acompanhamento especial, troca Quadro/Tabela).
+            tblProcessos.find('thead tr.tablesorter-filter-row').each(function(){
+                var colunasPro = function(tr){ var n = 0; $(tr).children().each(function(){ n += this.colSpan || 1; }); return n; };
+                var cabecalho = $(this).closest('thead').children('tr').not('.tablesorter-filter-row').first();
+                if (cabecalho.length == 0 || colunasPro(this) < colunasPro(cabecalho)) $(this).append(thPrazosPro);
+            });
         } else {
             $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').find('.prazoBoxDisplay').remove();
             $('#tblProcessosRecebidos tbody tr:first, #tblProcessosGerados tbody tr:first, #tblProcessosDetalhado tbody tr:first').not('.tableHeader').append('<th class="tituloControle tablesorter-header prazoBoxDisplay '+(isNewSEI ? 'infraTh' : '')+'" style="width: 140px;min-width: 140px;"> Prazos</th>');
@@ -2917,10 +3132,13 @@ function initAllMarcadoresHome(TimeOut = 9000) {
         }, 500);
     }
 }
+// Chamada de novo a cada pagina anexada pela remocao de paginacao (getProcessosPaginacao) e depois do envio pela
+// home: o prefixo so entra nos links que ainda nao o tem, para nao se repetir nos que ja foram tratados. Quem le a
+// especificacao desse tooltip tira o prefixo com removePrefixoNaoVisualizadoPro (sei-functions-pro.js).
 function initNaoVisualizadoPro() {
     $('.processoNaoVisualizado').each(function(){
         var tooltip = $(this).attr('onmouseover');
-            tooltip = typeof tooltip !== 'undefined' ? tooltip.replace("return infraTooltipMostrar('","return infraTooltipMostrar('(N\u00E3o Visualizado) ") : false;
+            tooltip = typeof tooltip !== 'undefined' && tooltip.indexOf("return infraTooltipMostrar('(N\u00E3o Visualizado) ") === -1 ? tooltip.replace("return infraTooltipMostrar('","return infraTooltipMostrar('(N\u00E3o Visualizado) ") : false;
         if (tooltip) $(this).attr('onmouseover',tooltip);
     });
 }
@@ -2947,7 +3165,7 @@ function initUploadFilesInProcess() {
     }
 }
 function getListIdProtocoloSelected() {
-    var listId = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find(elemCheckbox+':checked').map(function(){ return $(this).val() }).get();
+    var listId = $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find(getElemCheckboxPro()+':checked').map(function(){ return $(this).val() }).get();
     return (listId.length > 0) ? listId : false;
 }
 function setUploadFilesInProcess(load_upload = true) {
@@ -2976,7 +3194,7 @@ function loadIframeProcessUpload(idProcedimento, load_upload = true) {
 }
 function completeIdProtocoloSelected() {
     var listId = getListIdProtocoloSelected();
-        $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('tr#P'+listId[0]).find(elemCheckbox+':checked').trigger('click');
+        $('#tblProcessosRecebidos, #tblProcessosGerados, #tblProcessosDetalhado').find('tr#P'+listId[0]).find(getElemCheckboxPro()+':checked').trigger('click');
 }
 function nextUploadFilesInProcess() {
     completeIdProtocoloSelected();
@@ -3200,7 +3418,10 @@ function initSeiPro() {
         if (typeof checkDadosAcompEspecial !== 'undefined') checkDadosAcompEspecial();
         if (sessionStorage.getItem('configHost_Pro') === null && typeof getConfigHost !== 'undefined') getConfigHost();
 	} else if ( $("#ifrArvore").length > 0 ) {
-        if (typeof checkHostLimit !== 'undefined' && !checkHostLimit()) initDadosProcesso();
+        // O teste de checkHostLimit fica dentro de initDadosProcesso, que espera o sei-functions-pro.js.
+        // Aqui ele dava falso quando este arquivo chegava primeiro, e os dados do processo (iframe
+        // oculto frmCheckerProcessoPro) nao eram carregados naquela abertura.
+        initDadosProcesso();
         initObserveUrlChange();
         checkLoadConfigSheets();
         //observeHistoryBrowserPro();
@@ -3221,4 +3442,23 @@ function initSeiPro() {
         });
     }
 }
-$(document).ready(function () { initSeiPro() });
+// O initSeiPro depende do sei-functions-pro.js (NAMESPACE_SPRO, checkHostLimit, isNewSEI...), mas os
+// dois chegam ao mundo da pagina por $.getScript, que insere <script> assincrono: cada arquivo executa
+// quando termina de carregar, e NAO na ordem em que foi pedido. Medido no SEI 4.1.5: o
+// sei-functions-pro.js (766 KB) costuma executar so 20 a 90 ms antes deste arquivo, as vezes depois, e o
+// sei-pro-all.js, pedido depois dele, ja chegou a passar na frente. Se o sei-functions-pro.js ainda nao
+// chegou quando o documento fica pronto, o initSeiPro morre no meio (ReferenceError: NAMESPACE_SPRO is
+// not defined) e a tela fica sem parte das funcoes ate um novo carregamento (#142, #126). Por isso espera
+// o sei-functions-pro.js por ate ~10 s. Se ele ja chegou, o initSeiPro roda na hora, como antes.
+function initSeiProAposFunctions(TimeOut = 10000) {
+    if (typeof checkHostLimit === 'undefined' && TimeOut > 0) {
+        setTimeout(function(){ initSeiProAposFunctions(TimeOut - 100) }, 100);
+        return;
+    }
+    // O elemCheckbox e calculado no topo deste arquivo; se ele executou antes do sei-functions-pro.js, o
+    // isNewSEI nao existia e o seletor ficou o do SEI 3. Recalcula com a mesma expressao (sem corrida, o
+    // valor e o mesmo).
+    if (typeof isNewSEI !== 'undefined') elemCheckbox = isNewSEI ? '.infraCheckboxInput' : '.infraCheckbox';
+    initSeiPro();
+}
+$(document).ready(function () { initSeiProAposFunctions() });

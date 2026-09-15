@@ -114,8 +114,12 @@
         if ( typeof dataValue !== 'undefined' && dataValue !== null && dataValue.documento ) {
             var nrSei = ( dataValue.nr_sei != '' ) ? dataValue.nr_sei : dataValue.documento;
             var citacaoDoc = getCitacaoDoc();
-            var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+dataValue.id_protocolo+'" style="text-indent:0;">'+nrSei+'</a></span>';
-            var citacaoDocumento = ( dataValue.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? dataValue.documento.trim()+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
+            var esc = (typeof textoParaHtmlPro === 'function') ? textoParaHtmlPro : function (v) { return String(v); };
+            var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+esc(dataValue.id_protocolo)+'" style="text-indent:0;">'+esc(nrSei)+'</a></span>';
+            var citacaoDocumento = ( dataValue.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? esc(dataValue.documento.trim())+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
+            // CK5: o link vai no formato do plugin LinkProtocoloSei (a.ancora_sei); no formato do CK4 ficava so o numero,
+            // sem id="lnkSei", e o SEI nao gerava o link do documento citado. No CK4 nada muda.
+            if (typeof htmlLinksProtocoloEditorPro === 'function') citacaoDocumento = htmlLinksProtocoloEditorPro(citacaoDocumento, editor);
             SeiProEditorAdapter.withEdit(editor, function () {
                 SeiProEditorAdapter.insertHtml(editor, citacaoDocumento);
             });

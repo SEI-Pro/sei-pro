@@ -20,6 +20,7 @@ import { criarPainelResultado } from "@/ui/componentes/painelResultado";
 import { criarProgresso } from "@/ui/componentes/progresso";
 import { criarRegiaoAnuncio, criarZonaDeArquivos } from "@/ui/componentes/zonaDeArquivos";
 import { ponte } from "@/ui/contexto";
+import { enviarAoProcesso } from "@/ui/enviarAoProcesso";
 import { mensagemDaPonte } from "@/ui/mensagens";
 
 export interface OpcoesMoldura {
@@ -203,9 +204,11 @@ export function montarMoldura(opcoes: OpcoesMoldura): FerramentaMontada {
     enviando = true;
     mensagemEnvio = null;
     sincronizar();
+    let enviados = 0;
     try {
       for (const saida of saidas) {
-        await ponte().enviarAoProcesso({ nome: saida.nome, bytes: saida.bytes });
+        await enviarAoProcesso({ nome: saida.nome, bytes: saida.bytes });
+        enviados += 1;
       }
       mensagemEnvio =
         saidas.length === 1
@@ -213,7 +216,14 @@ export function montarMoldura(opcoes: OpcoesMoldura): FerramentaMontada {
           : `${saidas.length} documentos enviados ao processo.`;
       anuncio.anunciar(mensagemEnvio);
     } catch (e) {
-      mensagemEnvio = mensagemDaPonte(e);
+      // Com saída múltipla, a interrupção no meio -- inclusive o usuário
+      // cancelando a escolha do tipo -- deixa parte dos arquivos já no
+      // processo. Sem dizer quantos, ele não tem como saber, e reenviar manda
+      // todas as partes de novo, duplicando as que já tinham entrado.
+      mensagemEnvio =
+        enviados > 0
+          ? `Só ${enviados} de ${saidas.length} documentos foram enviados ao processo. ${mensagemDaPonte(e)}`
+          : mensagemDaPonte(e);
     } finally {
       enviando = false;
       sincronizar();

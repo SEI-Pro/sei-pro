@@ -3974,6 +3974,16 @@ div[id*="_addTag"]:has(.tag-input) {
 .newSEI .infraCheckboxDiv label {
     display: none !important;
 }
+/* A tela Pesquisa do SEI 4.1 ainda traz #chkSinDocumentosGerados { margin-left: 2em } e
+   #chkSinDocumentosRecebidos { margin-left: 1.5em }, sobras do SEI 3 que nao aparecem no SEI
+   porque la o input e absoluto e invisivel. Com a regra acima o input volta ao fluxo, a margem o
+   empurra para fora da caixa de 20px e o quadrado cobre a primeira letra de "Gerados" e
+   "Externos". O id no seletor vence a regra da pagina. No SEI 5 essas regras nao existem mais
+   (a margem ja e 0) e no SEI 3 nao ha .newSEI. */
+.newSEI .infraCheckboxDiv input#chkSinDocumentosGerados,
+.newSEI .infraCheckboxDiv input#chkSinDocumentosRecebidos {
+    margin-left: 0;
+}
 div#dialogBoxDocLote p {
     margin: 10px 0;
     display: inline-block;

@@ -323,7 +323,12 @@
         /**
          * Dado o botao clicado (ou qualquer elemento dentro de um wrapper
          * .cke), retorna a instancia correspondente. Sem argumento, devolve
-         * a primeira instancia disponivel.
+         * a instancia em edicao: a que tem o foco (CKEDITOR.currentInstance),
+         * senao a do ultimo botao do SEI Pro clicado (oEditor, que o
+         * setParamEditor fixa), senao a primeira editavel. A primeira instancia
+         * da pagina e o Cabecalho, somente leitura nos documentos com secoes
+         * (SEI 3.x/4.x): inserir nela dava TypeError (checkReadOnly) e nada
+         * entrava no Corpo do Texto (Dados do Processo > Inserir, revisao).
          */
         getInstance: function (ref) {
             if (ref) {
@@ -337,9 +342,17 @@
                 }
             }
             if (window.CKEDITOR && window.CKEDITOR.instances) {
-                for (var k in window.CKEDITOR.instances) {
-                    return window.CKEDITOR.instances[k];
+                var instancias = window.CKEDITOR.instances;
+                var registrada = function (ed) { return !!(ed && ed.name && instancias[ed.name] === ed); };
+                var editavel = function (ed) { return registrada(ed) && !ed.readOnly; };
+                if (editavel(window.CKEDITOR.currentInstance)) return window.CKEDITOR.currentInstance;
+                if (editavel(window.oEditor)) return window.oEditor;
+                var primeira = null;
+                for (var k in instancias) {
+                    if (!primeira) primeira = instancias[k];
+                    if (editavel(instancias[k])) return instancias[k];
                 }
+                return primeira;
             }
             return null;
         },
@@ -756,6 +769,10 @@
          * Transforma o HTML do corpo do documento via funcao recebe(html)->html.
          * Em CK5 multi-root usa editor.data.get/set na rootName do "Corpo do Texto".
          * Nao deve ser chamado dentro de model.change(); se for, adie com setTimeout.
+         * O data.get leva a opcao seiProInterno: e um vai-e-volta dentro do editor,
+         * entao filtros que existem so para o HTML gravado (ex.: o data-text da
+         * tarja de sigilo, em sigilo.js) nao se aplicam aqui -- como no CK4, onde
+         * transformBodyHtml le o DOM vivo e nao o getData.
          */
         transformBodyHtml: function (editor, transformFn) {
             if (!editor || typeof transformFn !== 'function') return;
@@ -775,7 +792,7 @@
                 } catch (e) { /* continua */ }
             }
             if (!targetRootName) return;
-            var html = editor.data.get({ rootName: targetRootName });
+            var html = editor.data.get({ rootName: targetRootName, seiProInterno: true });
             var newHtml = transformFn(html);
             if (typeof newHtml === 'string' && newHtml !== html) {
                 var payload = {};

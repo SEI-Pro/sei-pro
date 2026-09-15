@@ -22,7 +22,7 @@ Há dois caminhos:
 2. Ao lado do campo **Especificação**, clique no ícone de urgência;
 3. Clique em **Salvar**.
 
-Ao incluir ou alterar um **documento**, o mesmo ícone aparece ao lado do campo **Número / Nome na Árvore**, e a marca vai para o nome do documento.
+Ao incluir ou alterar um **documento**, o mesmo ícone aparece ao lado do campo **Número / Nome na Árvore**, e a marca vai para o nome do documento: no campo **Número**, quando ele aparece no formulário (documentos externos e tipos em que o número é informado à mão), ou no **Nome na Árvore**, nos tipos em que o SEI esconde o número (sem numeração ou com numeração automática).
 
 Para retirar a marca, clique de novo no ícone: o texto **(URGENTE)** é removido.
 

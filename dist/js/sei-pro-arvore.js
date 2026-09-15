@@ -8,8 +8,19 @@ var containerUpload = 'body';
 var delayAjax = false;
 var selectedItensPanelArvore = false;
 var stickNoteDivSelected = 0;
-const pathArvore = parent.isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
-const anchorDoc = parent.isSEI_5 ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]';
+var initSeiProArvoreAplicado = false;
+// O caminho das imagens da arvore e o seletor dos documentos dependem de parent.isNewSEI e
+// parent.isSEI_5, que so existem depois que o sei-functions-pro.js do topo termina de carregar. Ele
+// entra por $.getScript, sem ordem garantida em relacao a este arquivo. Guardados em const no
+// carregamento, ficavam congelados com o valor errado quando a arvore chegava antes: no SEI 4.1 o
+// caminho virava /infra_js/arvore/ (404) e "Dividir em duas linhas" mostrava imagem quebrada no
+// ultimo documento. Por isso sao lidos na hora do uso.
+function getPathArvorePro() {
+    return parent.isNewSEI ? '/infra_js/arvore/24/' : '/infra_js/arvore/';
+}
+function getAnchorDocPro() {
+    return parent.isSEI_5 ? 'a[id*="anchorImg"][data-serialtip]' : 'a.clipboard[id*="anchorImg"]';
+}
 
 function initCSSArvore() {
     if ( $('head').find('style[data-style="seipro"]').length == 0 ) {
@@ -290,14 +301,25 @@ function getToolbarPro(click) {
             ? $('a[id*="anchor"][target="ifrVisualizacao"].infraArvoreNo')
             : $(`a[target="${parent.ifrVisualizacao_}"]`).eq(0);
             
-        elemProc.toolbar({
-            content: '#toolbar-options-proc',
-            position: 'bottom',
-            //event: 'click', hideOnClick: true,
-            adjustment: 5,
-            style: 'menu'
-        }).on('toolbarItemClick', function( event, triggerButton ) {
-            actionToolbarPro($(this), triggerButton);
+        // initSeiProArvore roda mais de uma vez na mesma arvore (a ultima traz os links do processo,
+        // via getLinksProcessoPro). Um segundo .toolbar() criava outro menu e outro handler, e cada
+        // clique no menu do processo executava a acao duas vezes: nas chamadas seguintes so atualiza
+        // os itens.
+        elemProc.each(function(){
+            var _elemProc = $(this);
+            if (_elemProc.data('toolbarObj')) {
+                _elemProc.toolbar('populateContent');
+            } else {
+                _elemProc.toolbar({
+                    content: '#toolbar-options-proc',
+                    position: 'bottom',
+                    //event: 'click', hideOnClick: true,
+                    adjustment: 5,
+                    style: 'menu'
+                }).on('toolbarItemClick', function( event, triggerButton ) {
+                    actionToolbarPro($(this), triggerButton);
+                });
+            }
         });
         if (getOptionsPro('optionsFlashMenu_menudoc') != 'disabled') {
             if ($('a.clipboard').length == 0 || (parent.isNewSEI && $('a[data-toggle="popover"]').length)|| (parent.isSEI_5 && $('a[data-serialtip*="popover"]').length)) {
@@ -308,9 +330,11 @@ function getToolbarPro(click) {
                 : $('.clipboard').not(':first').not('[id*="PASTA"]').not('[onclick="copiarParaClipboard(this)"]').not('[data-toolbarpro]').get();
 
                 listToolbar.forEach(function (v, i) {
+                    // Marca ja no agendamento: se outra chamada chegar antes do setTimeout, nao cria
+                    // um segundo menu para o mesmo documento.
+                    $(v).attr('data-toolbarpro',true);
                     setTimeout(function(){
                         actionToolbarDocs($(v), click);
-                        $(v).attr('data-toolbarpro',true);
                     }, 50*i);
                 });
         }
@@ -1022,8 +1046,8 @@ function loadUploadArvore() {
                             '       <span class="dz-progress">'+
                             '           <span class="dz-upload" data-dz-uploadprogress></span>'+
                             '       </span>'+
-                            ($(containerUpload).find('a[id*="anchorImgPASTA"]').length > 0 ? '<img style="margin-left: -3px;" src="'+pathArvore+'empty.gif" align="absbottom">' : '')+
-                            '       <span class="anchorJoinPro" data-img="'+pathArvore+'joinbottom.gif"><img src="'+pathArvore+'join.gif" align="absbottom"></span>'+
+                            ($(containerUpload).find('a[id*="anchorImgPASTA"]').length > 0 ? '<img style="margin-left: -3px;" src="'+getPathArvorePro()+'empty.gif" align="absbottom">' : '')+
+                            '       <span class="anchorJoinPro" data-img="'+getPathArvorePro()+'joinbottom.gif"><img src="'+getPathArvorePro()+'join.gif" align="absbottom"></span>'+
                             '       <a id="anchorImgID" data-img="'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : 'imagens/pdf.gif')+'" style="margin-left: -4px;" class="clipboard" title="Clique para copiar o n\u00FAmero do protocolo para a \u00E1rea de transfer\u00EAncia">'+
                             '           <img class="dz-link-icon" src="'+(parent.isNewSEI ? 'svg/documento_pdf.svg' : '/infra_css/imagens/pdf.gif')+'" align="absbottom" id="iconID">'+
                             '       </a>'+
@@ -1188,7 +1212,7 @@ function ajaxGetUploadArvore(urlDocExterno, queuedFiles, mode, result, arrayDrop
         submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload);
     });
 }
-function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload) {
+function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload, valueSerieEscolhido = false) {
         var $htmlAnexo = $(htmlAnexo);
         var form = $htmlAnexo.find('#frmDocumentoCadastro');
         var hrefForm = form.attr('action');
@@ -1260,19 +1284,51 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
                     var nameOption = $(this).text().trim().toLowerCase().replace(/_|:/g, ' ');
                     var nameOptionReg = escapeRegExp(parent.parent.removeAcentos(nameOption));
                     var reg = new RegExp('^\\b'+nameOptionReg, "igm");
-                    tipoDoc.push({name: nameOption, value: $(this).val()}) 
-                    if (reg.test(nameFile_reg)) { 
+                    tipoDoc.push({name: nameOption, value: $(this).val(), text: $(this).text().trim()}) 
+                    if (!valueSerie && reg.test(nameFile_reg)) { 
                         valueSerie = $(this).val();
-                        return false;
                     }
                 }
             });
+        // Tipo escolhido pelo usuario para este arquivo: na caixa abaixo, ou num processo anterior de
+        // "Enviar documentos em processos", que reenvia os mesmos arquivos a cada processo.
+        var valueSerieUsuario = valueSerieEscolhido || nexFileQueued.tipoUploadArvorePro;
+        if (!valueSerie && valueSerieUsuario && $.map(tipoDoc, function(value){ if (value.value == valueSerieUsuario) { return value } }).length) valueSerie = valueSerieUsuario;
         var selSerieDefault = (getConfigValue('newdocname')) 
                 ? $.map(tipoDoc, function(value){ if (value.name == getConfigValue('newdocname').trim().toLowerCase().replace(/_|:/g, ' ')) { return value } })[0]
                 : $.map(tipoDoc, function(value){ if (value.name == 'anexo') { return value } })[0];
             selSerieDefault = (typeof selSerieDefault !== 'undefined') 
                 ? selSerieDefault 
                 : $.map(tipoDoc, function(value){ if (value.name.indexOf('anexo') !== -1) { return value } })[0];
+        // Sem tipo no nome do arquivo, sem tipo padrao e sem "Anexo" no orgao: o arquivo entrava com o
+        // primeiro tipo da lista (no SEI SP, "Abaixo-Assinado"), sem aviso. Pergunta ao usuario.
+        if (!valueSerie && typeof selSerieDefault === 'undefined') {
+            if (typeof parent.parent.escolherTipoUploadArvorePro === 'function' && tipoDoc.length) {
+                parent.parent.escolherTipoUploadArvorePro(nameFile, tipoDoc, arrayDropzone.options.tipoUploadArvorePro, function(valorEscolhido) {
+                    nexFileQueued.tipoUploadArvorePro = valorEscolhido;
+                    arrayDropzone.options.tipoUploadArvorePro = valorEscolhido;
+                    // Os parametros sao montados para nexFileQueued, mas processQueue sobe o primeiro arquivo da
+                    // fila no momento do clique. Se a fila mudou enquanto a caixa estava aberta (arquivo
+                    // reordenado ou removido), recomeca pelo arquivo que esta de fato na vez: a escolha ja ficou
+                    // guardada no proprio arquivo e nao e perguntada de novo.
+                    if (arrayDropzone.getQueuedFiles()[0] === nexFileQueued) {
+                        submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone, _containerUpload, valorEscolhido);
+                    } else {
+                        nextUploadFileArvore(arrayDropzone, _containerUpload);
+                    }
+                }, function() {
+                    cancelUploadFileArvore(nexFileQueued, arrayDropzone, _containerUpload);
+                });
+            } else {
+                // Sem como perguntar (formulario sem tipos): avisa no proprio arquivo, como os demais erros
+                // do envio, em vez de tira-lo da lista em silencio.
+                var indexSemTipo = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
+                var elemSemTipo = _containerUpload.find('.dz-preview').eq(indexSemTipo);
+                    elemSemTipo = (elemSemTipo.length == 0) ? $('.dz-preview', parent.parent.document).eq(indexSemTipo) : elemSemTipo;
+                elemSemTipo.addClass("dz-error").find('.dz-error-message span').text('Tipo do documento n\u00E3o identificado pelo nome do arquivo');
+            }
+            return;
+        }
             selSerieDefault = (typeof selSerieDefault === 'undefined') ? tipoDoc[0] : selSerieDefault;
 
         var selSerie = (valueSerie) ? valueSerie : selSerieDefault.value;
@@ -1280,9 +1336,18 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
             selSerieSelected = (typeof selSerieSelected !== 'undefined') ? selSerieSelected : selSerieDefault;
             
         var nameDoc = nameFile.normalize('NFC');
-        var reg = new RegExp('^\\b'+selSerieSelected.name, "igm");
+        // Escapado: o tipo pode vir da caixa de escolha, e um nome de tipo com caractere especial de
+        // expressao regular (parentese, asterisco...) lancava SyntaxError e parava o envio.
+        var reg = new RegExp('^\\b'+escapeRegExp(selSerieSelected.name), "igm");
         if (reg.test(nameDoc)) { nameDoc = nameDoc.replace(reg, '').trim() }
             nameDoc = nameDoc.substring(0, nameDoc.lastIndexOf("."));
+            // O nome vai com escapeComponent (= escape()), que transforma o que nao cabe em ISO-8859-1 (travessao e
+            // aspas curvas, comuns em arquivo salvo do Word) em %u2014/%u201C: o PHP nao decodifica e o SEI gravava o
+            // texto literal no nome do documento. Converte ANTES do limite de 50 caracteres, com a mesma tabela do
+            // Processos em Lote (procLote_paraLatin1, que o init.js carrega na janela principal).
+            nameDoc = (typeof parent.parent.procLote_paraLatin1 === 'function')
+                ? parent.parent.procLote_paraLatin1(nameDoc)
+                : nameDoc.replace(/[\s\S]/g, function(c) { return (c.charCodeAt(0) < 256) ? c : ''; });
             nameDoc = (nameDoc.length > 50) ? nameDoc.replace(/^(.{50}[^\s]*).*/, "$1") : nameDoc;
             nameDoc = (nameDoc.length > 50) ? nameDoc.substring(0,49) : nameDoc;
 
@@ -1317,6 +1382,34 @@ function submitUploadArvore(htmlAnexo, queuedFiles, mode, result, arrayDropzone,
                                             };
             arrayDropzone.processQueue();
         // console.log('param###', arrayDropzone.options, param, nameDoc, nameFile, selSerieSelected, selSerie, tipoDoc);
+}
+// Usuario cancelou o envio de um arquivo sem tipo identificado: tira o arquivo da fila (nada e enviado)
+// e segue com os demais.
+function cancelUploadFileArvore(file, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+    arrayDropzone.removeFile(file);
+    nextUploadFileArvore(arrayDropzone, _containerUpload);
+}
+// Segue o envio depois que um arquivo saiu da vez sem ser enviado: sobe o proximo da fila ou, se nao
+// sobrou nenhum, encerra como getInfoArvoreLastDoc (houve envio) ou limpa a tela (nada foi enviado).
+function nextUploadFileArvore(arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
+    if (arrayDropzone.getQueuedFiles().length > 0) {
+        sendUploadArvore('upload', false, arrayDropzone, _containerUpload);
+    } else if (arrayDropzone.getFilesWithStatus('success').length > 0) {
+        dropzoneAlertBoxInfo();
+        setTimeout(function(){ window.location.reload(); }, 500);
+        if (typeof parent.parent.nextUploadFilesInProcess === 'function' && parent.parent.arvoreDropzone) parent.parent.nextUploadFilesInProcess();
+    } else if (typeof parent.parent.removeUploadFilesInProcess === 'function' && parent.parent.arvoreDropzone === arrayDropzone) {
+        // "Enviar documentos em processos" (Controle de Processos): fecha a ferramenta se a lista esvaziou.
+        if (arrayDropzone.files.length == 0) {
+            $('#divUploadDoc', parent.parent.document).remove();
+            parent.parent.removeUploadFilesInProcess();
+        }
+    } else {
+        // Arvore: com "Ordenar antes de enviar", o botao "Enviar documentos" ja estava girando e sem acao
+        // (statusUploadArvore), e a lista seguia arrastavel.
+        $('#divUploadDoc').remove();
+        if ($('#divArvore').hasClass('ui-sortable')) $('#divArvore').sortable('destroy');
+    }
 }
 function getInfoArvoreLastDoc(dataResult, urlParent, arrayDropzone = arvoreDropzone, _containerUpload = $(containerUpload)) {
     var indexUpload = (typeof _containerUpload.data('index') !== 'undefined') ? parseInt(_containerUpload.data('index')) : 0;
@@ -1414,8 +1507,8 @@ function dropzoneNormalizeImg(file) {
         urlIcon = (file.type.indexOf('sheet') !== -1) ? (parent.isNewSEI ? 'svg/documento_excel.svg' : '/infra_css/imagens/xls.gif') : urlIcon;
 
     $('#divArvore').find('.dz-preview').last().find('.dz-link-icon').attr('src', urlIcon).closest('a').attr('data-img',urlIcon);
-    $('#divArvore').find('img[src*="joinbottom.gif"]').last().attr('src', pathArvore+'join.gif');
-    $('#divArvore').find('img[src*="join.gif"]').last().attr('src', pathArvore+'joinbottom.gif');
+    $('#divArvore').find('img[src*="joinbottom.gif"]').last().attr('src', getPathArvorePro()+'join.gif');
+    $('#divArvore').find('img[src*="join.gif"]').last().attr('src', getPathArvorePro()+'joinbottom.gif');
 }
 function openModalDropzone() {
     $(containerUpload).addClass('dz-drag-hover');
@@ -1441,7 +1534,7 @@ function initDadosProcessoArvoreSession() {
     }
 }
 function initDadosProcessoArvore(TimeOut = 1000) {
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { 
+    if (TimeOut <= 0 || (!parent.isSEI_5 && (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { 
         if ($('#ifrArvore').length > 0) {
             getLisDocsProcessoPro();
         }
@@ -2043,6 +2136,9 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
 
         var storeAcompEsp = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
             storeAcompEsp = storeAcompEsp === null ? parent.getListAcompanhamentoEspecial() : storeAcompEsp;               
+            // A lista e uma so para todas as unidades (fica com a ultima unidade lida): depois de trocar de unidade o painel
+            // mostrava o grupo e a observacao do acompanhamento de outra unidade. So valem os desta unidade.
+            storeAcompEsp = (storeAcompEsp && typeof parent.getListaAcompanhamentoEspUnidadePro === 'function') ? parent.getListaAcompanhamentoEspUnidadePro(storeAcompEsp) : storeAcompEsp;
         var dataAcompEsp = (storeAcompEsp !== null) ? jmespath.search(storeAcompEsp, "[?id_protocolo=='"+id_procedimento+"'] | [0]") : null;
             dataAcompEsp = dataAcompEsp ? dataAcompEsp : false;                     
         var txtAcompEsp = (dataAcompEsp) ? dataAcompEsp.observacoes+(dataAcompEsp.grupo != '' ? ' ('+dataAcompEsp.grupo+')' : '') : '';
@@ -2062,6 +2158,7 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
                                     '   </div>'+
                                     '</div>';
             htmlAcompEsp = ($.inArray("Acompanhamento Especial",jmespath.search(selectedItensPanelArvore,"[]")) !== -1) ? htmlAcompEsp : '';
+            if (htmlAcompEsp != '') checkReleituraAcompEspUnidadeArvorePro();
 
         var htmlTipoProcedimento =  '<div class="panelDadosArvorePro panelDadosArvore" data-type="tipo_procedimento">'+
                                     '   <label class="newLink" style="margin-bottom: 10px; display: block;">'+
@@ -2188,6 +2285,25 @@ function setDadosProcessoArvore(dadosProcessoPro = false) {
         if (typeof parent.getDadosCorporativo === 'function' ) parent.getDadosCorporativo();
     }
 }
+// Painel "Acompanhamento Especial": so valem os itens da unidade atual (getListaAcompanhamentoEspUnidadePro), mas a lista
+// guardada pode ser de outra unidade (lida por ultimo em outra, ou com itens de outra) - a releitura por unidade da tela
+// inicial so roda no SEI 4.1/5 e so la. Sem ela, processo acompanhado nesta unidade aparecia sem acompanhamento e a caixa
+// de edicao vinha sem a observacao real. Rele a lista desta unidade uma vez por carga da arvore e refaz o painel.
+var releituraAcompEspUnidadeArvorePro = false;
+function checkReleituraAcompEspUnidadeArvorePro() {
+    if (releituraAcompEspUnidadeArvorePro) return;
+    if (typeof parent.getListAcompanhamentoEspecial !== 'function' || typeof parent.getListaAcompanhamentoEspUnidadePro !== 'function' || typeof parent.idUnidade === 'undefined' || !parent.idUnidade) return;
+    if (parent.$(parent.mainMenu).find('li a[href*="acao=acompanhamento_listar"]').length == 0) return;
+    var listaCrua = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
+    if (!$.isArray(listaCrua)) return;
+    var listaUnidade = parent.getListaAcompanhamentoEspUnidadePro(listaCrua);
+    var lidaNaUnidade = String(getOptionsPro('lastread_AcompEspLista_unidade')) == String(parent.idUnidade);
+    if (lidaNaUnidade && $.isArray(listaUnidade) && listaUnidade.length == listaCrua.length) return;
+    releituraAcompEspUnidadeArvorePro = true;
+    parent.getListAcompanhamentoEspecial(false, function(){
+        try { setDadosProcessoArvore(); } catch(e) {}
+    });
+}
 function getDataMarcadorProcesso() {
     var href = jmespath.search(arrayLinksArvore, "[?name=='Gerenciar Marcador'].url | [0]");
     if (href !== null) {
@@ -2201,9 +2317,19 @@ function getDataMarcadorProcesso() {
                 tag: $html.find('#selMarcador').find('option:selected').text(),
                 name: $html.find('#txaTexto').val()
             }
+            // No SEI 4.1 e no 5, com marcador no processo, "Gerenciar Marcador" abre a LISTAGEM, sem #selMarcador nem
+            // #txaTexto: o painel mostrava "Nenhum marcador" e o cache da sessao ganhava uma entrada vazia a cada leitura.
+            // Ai vale o primeiro marcador da listagem (o mesmo que o painel mostra depois de remover um marcador), com nome e
+            // texto escapados para HTML como os do cache da tela inicial: o painel os insere direto no HTML.
+            var marcadoresListagem = ($html.find('#selMarcador').length == 0 && typeof getMarcadoresListagemPro === 'function' && typeof getMarcadorCacheListagemPro === 'function') ? getMarcadoresListagemPro($html) : [];
+            if (marcadoresListagem.length) {
+                marcador = getMarcadorCacheListagemPro(marcador.id_procedimento, marcadoresListagem[0]);
+            }
             
             var listMarcadores = sessionStorageRestorePro('dadosMarcadoresProcessoPro');
                 listMarcadores = (listMarcadores) ? listMarcadores : [];
+                // Uma entrada por processo: leituras que se cruzam na mesma carga da arvore repetiam o processo.
+                listMarcadores = $.grep(listMarcadores, function(v){ return !v || v.id_procedimento != marcador.id_procedimento; });
                 listMarcadores.push(marcador);
             sessionStorageStorePro('dadosMarcadoresProcessoPro',listMarcadores);
             setDadosProcessoArvore();
@@ -2214,7 +2340,7 @@ function getDataMarcadorProcesso() {
     }
 }
 function initAtividadesProcesso(TimeOut = 9000) {
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!parent.isSEI_5 && (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
     if (
         typeof parent.arrayConfigAtividades !== 'undefined' && 
         typeof parent.arrayConfigAtividades.perfil !== 'undefined'
@@ -2407,7 +2533,7 @@ function stylePanelArvore() {
 }
 function initStylePanelArvore(TimeOut = 9000) {
 
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!parent.isSEI_5 && (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
     if (
         typeof getOptionsPro !== 'undefined' && selectedItensPanelArvore && 
         selectedItensPanelArvore.length && 
@@ -2437,15 +2563,15 @@ function breakDocTwoLines() {
         var nrSEI = $(this).text().trim();
             nrSEI = (nrSEI.indexOf(' ') !== -1) ? nrSEI.split(' ') : '';
             nrSEI = (nrSEI != '') ? '<span style="font-size:9pt">'+nrSEI[nrSEI.length-1]+'</span>' : '';
-        var imgDivPasta = (checkFolder && !checkLast && !checkLastFolder ) ? '<img src="'+pathArvore+'line.gif" align="absbottom">' : '';
+        var imgDivPasta = (checkFolder && !checkLast && !checkLastFolder ) ? '<img src="'+getPathArvorePro()+'line.gif" align="absbottom">' : '';
         var paddingLastFolder = (checkFolder && checkLastFolder) ? '<span style="margin-left: 18px;"></span>' : '';
-        var imgDiv = (checkLast || checkLastItemFolder) ? '<img src="'+pathArvore+'joinbottom.gif" align="absbottom" style="margin-left: 18px;">' : '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAASCAYAAAAzI3woAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MkIxNDk0NTBFQzFCMTFFQkFERjBGQzQ1Qjk0MkFCNUEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MkIxNDk0NTFFQzFCMTFFQkFERjBGQzQ1Qjk0MkFCNUEiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDoxRkIyMEY3NUVDMUExMUVCQURGMEZDNDVCOTQyQUI1QSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDoxRkIyMEY3NkVDMUExMUVCQURGMEZDNDVCOTQyQUI1QSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PpIKuNMAAABISURBVHjaYvj//z8DLtzQ0PAfnzwxmFQzGEHEYAJM+CQbGxspdi2pZoyG0GgIjYbQaAiNhtBAhRCx9MgLIVLBaAgNuRACCDAA4Zq1PU3G1rcAAAAASUVORK5CYII=" />';
+        var imgDiv = (checkLast || checkLastItemFolder) ? '<img src="'+getPathArvorePro()+'joinbottom.gif" align="absbottom" style="margin-left: 18px;">' : '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAASCAYAAAAzI3woAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyVpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ4IDc5LjE2NDAzNiwgMjAxOS8wOC8xMy0wMTowNjo1NyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIxLjAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MkIxNDk0NTBFQzFCMTFFQkFERjBGQzQ1Qjk0MkFCNUEiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MkIxNDk0NTFFQzFCMTFFQkFERjBGQzQ1Qjk0MkFCNUEiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDoxRkIyMEY3NUVDMUExMUVCQURGMEZDNDVCOTQyQUI1QSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDoxRkIyMEY3NkVDMUExMUVCQURGMEZDNDVCOTQyQUI1QSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PpIKuNMAAABISURBVHjaYvj//z8DLtzQ0PAfnzwxmFQzGEHEYAJM+CQbGxspdi2pZoyG0GgIjYbQaAiNhtBAhRCx9MgLIVLBaAgNuRACCDAA4Zq1PU3G1rcAAAAASUVORK5CYII=" />';
             
         $(this).after('<span class="breackline_doc"><br>'+paddingLastFolder+imgDivPasta+imgDiv+nrSEI+'</span>');
     });
 }
 function initBreakDocTwoLines(TimeOut = 9000) {
-    if (TimeOut <= 0 || (!parent.isSEI_5 && parent.window.name != '') || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
+    if (TimeOut <= 0 || (!parent.isSEI_5 && (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) || (parent.isSEI_5 && parent.window.name == 'autopreenchersenha')) { return; }
     if (typeof resizeArvoreMaxWidth !== 'undefined') {
         breakDocTwoLines();
     } else {
@@ -2484,13 +2610,13 @@ function initNumericDocsPro(loop = true) {
                 folder = (typeof folder !== 'undefined') ? folder.replace('divPASTA', '') : false;
                 folder = (folder) ? parseInt(folder) : false;
             var initCount = (folder * sumP) - sumP;
-            _this.find(anchorDoc).each(function(i){
+            _this.find(getAnchorDocPro()).each(function(i){
                 var count = initCount+i+1;
                 $(this).before('<span class="numericDocsPro" data-count="'+count+'"></span>');
             });
         });
     } else {
-        $(`#container ${anchorDoc}`).each(function(i){
+        $(`#container ${getAnchorDocPro()}`).each(function(i){
             $(this).before('<span class="numericDocsPro" data-count="'+(i+1)+'"></span>');
         });
     }
@@ -2501,7 +2627,7 @@ function getSumDocsPasta(loop) {
     } else {
         var defaultSumPasta = 20;
         var sumDocsPasta = ($('#anchorImgPASTA2').length) 
-            ? $('.infraArvore[id*="divPASTA"]:not(:last-child)').map(function(){ if( $(this).find(anchorDoc).length) { return $(this).find(anchorDoc).length } }).get()
+            ? $('.infraArvore[id*="divPASTA"]:not(:last-child)').map(function(){ if( $(this).find(getAnchorDocPro()).length) { return $(this).find(getAnchorDocPro()).length } }).get()
             : defaultSumPasta;
         var sumDocsPasta = $.isArray(sumDocsPasta) && !$.isEmptyObject(sumDocsPasta) ? arrayMax(sumDocsPasta) : sumDocsPasta;
         if (sumDocsPasta > defaultSumPasta && loop) {
@@ -2602,7 +2728,62 @@ function initAnchorImg() {
         console.log('initOnClickPasta');
     });
 } */
+// A arvore do SEI e montada no onload da pagina (inicializar()), e o $(document).ready deste arquivo
+// roda antes disso: medido no SEI 4.1.5, a chamada do ready encontrava 0 documentos. As dependencias
+// tambem chegam sem ordem garantida - o sei-functions-pro.js desta pagina e o do topo entram por
+// $.getScript -, entao os testes typeof de initSeiProArvore podiam dar falso. Cada recurso era pulado
+// sem nova tentativa, e a arvore so recebia numeracao, duas linhas e menu rapido se outra chamada
+// viesse depois: a de getLinksProcessoPro depende do iframe oculto frmCheckerProcessoPro, e a de
+// initLoadSeiProArvore nunca casa no 4.1 (execArvorePro espera a[target="ifrVisualizacao"] dentro de
+// #divArvore, onde os documentos usam ifrConteudoVisualizacao).
+function checkArvoreProntaPro() {
+    return typeof localStorageRestorePro === 'function' &&
+        typeof parent.verifyConfigValue !== 'undefined' &&
+        typeof parent.checkConfigValue !== 'undefined' &&
+        $('#topmenu, #divArvore').find('a[id^="anchor"]').length > 0;
+}
+// Espera a arvore e as dependencias e aplica uma vez. Se outra chamada ja aplicou com tudo pronto
+// (o proprio ready, execArvorePro no SEI 3.x e 5, ou getLinksProcessoPro), nao repete.
+function waitInitSeiProArvore(TimeOut = 9000) {
+    if (TimeOut <= 0 || initSeiProArvoreAplicado) { return; }
+    if (checkArvoreProntaPro()) {
+        // Folga para a chamada de execArvorePro, que dispara no load do iframe da arvore.
+        setTimeout(function(){
+            if (!initSeiProArvoreAplicado) initSeiProArvore();
+        }, 1000);
+    } else {
+        setTimeout(function(){
+            waitInitSeiProArvore(TimeOut - 100);
+        }, 500);
+    }
+}
+// Processo com mais documentos que o tamanho da pasta: o SEI so carrega os documentos de uma pasta
+// fechada quando ela e aberta. Ele submete frmArvore para o iframe #ifrPasta e o onload desse iframe
+// (processarPasta, igual no SEI 3.1.7, 4.1.5 e 5.0.0) insere os nos em #divPASTAn. A reaplicacao que
+// existia (execArvorePro) so escuta o clique no sinal de + da pasta e, no 4.1, nem chega a ser ligada
+// (espera a[target="ifrVisualizacao"], e os documentos usam ifrConteudoVisualizacao): os documentos
+// da pasta ficavam sem numeracao, duas linhas e menu rapido. Aqui escuta o fim do carregamento, por
+// qualquer caminho (nome da pasta, sinal de +, navegacao), e so reaplica se nenhuma outra chamada ja
+// marcou os documentos novos com arvore-pro (a de execArvorePro verifica a cada 100 ms).
+function initLoadPastaArvorePro() {
+    var ifrPasta = $('#ifrPasta');
+    if (!ifrPasta.length || ifrPasta.data('sproLoadPasta')) return;
+    ifrPasta.data('sproLoadPasta', true).on('load', function(){
+        setTimeout(function(){
+            var idPasta = $('#hdnPastaAtual').val();
+            if (!idPasta || typeof parent.ifrVisualizacao_ === 'undefined') return;
+            var docsNovos = $('#div'+idPasta).find('a[id*="anchor"][target="'+parent.ifrVisualizacao_+'"]').filter(function(){
+                return typeof $(this).data('arvore-pro') === 'undefined';
+            });
+            if (docsNovos.length) {
+                initSeiProArvore();
+                getLinksArvorePasta(idPasta);
+            }
+        }, 500);
+    });
+}
 function initSeiProArvore(loop = true) {
+    if (checkArvoreProntaPro()) initSeiProArvoreAplicado = true;
     initAnchorImg();
     loadStyleDesign();
     checkProcessoSigiloso();
@@ -2686,4 +2867,8 @@ function initSeiProArvore(loop = true) {
     }, 500);
 }
 
-$(document).ready(function () { initSeiProArvore() });
+$(document).ready(function () {
+    initSeiProArvore();
+    waitInitSeiProArvore();
+    initLoadPastaArvorePro();
+});

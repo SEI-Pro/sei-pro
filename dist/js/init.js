@@ -49,7 +49,18 @@ $.getScript(getUrlExtension("js/lib/crypto-js.min.js"));
 $.getScript(getUrlExtension("js/lib/diff2html.min.js"));
 $.getScript(getUrlExtension("js/sei-pro-docs-lote.js"));
 $.getScript(getUrlExtension("js/sei-pro-proc-lote.js"));
-if (typeof loadFunctionsPro === 'undefined' || window.name != '') $.getScript(getUrlExtension("js/sei-functions-pro.js"));
+// O teste de window.name serve as janelas e iframes nomeados (editor, iframes internos), onde o init_all.js
+// nao injeta o arquivo no mundo da pagina. Mas o jquery.modalLink (do SEI e o nosso) faz window.name = idModal
+// na janela principal ao abrir qualquer modal - Assinar Documento, por exemplo - e o nome dura enquanto a aba
+// existir. Dali em diante, nas telas comuns do topo, o arquivo era pedido duas vezes (init_all.js e aqui) e a
+// segunda copia morria em "Identifier 'loadFunctionsPro' has already been declared". Por isso nao pede de novo
+// quando o init_all.js ja pediu o arquivo (sfpPedidoPaginaPro, global do mundo isolado que os dois compartilham)
+// ou quando o <script> dele ainda esta no DOM (o jQuery so o remove ao terminar de carregar). E a ordem entre os
+// dois nao e fixa: no SEI 4.1.5 este arquivo chegou a executar ANTES do init_all.js no topo, por isso a marca vale
+// nos dois sentidos - quem pede primeiro marca, e o init_all.js tambem a respeita. Sem nenhum dos dois pedidos,
+// tudo segue como antes.
+var sfpEmCursoPro = !!window.sfpPedidoPaginaPro || !!document.querySelector('script[src*="/js/sei-functions-pro.js"]');
+if ((typeof loadFunctionsPro === 'undefined' || window.name != '') && !sfpEmCursoPro) { window.sfpPedidoPaginaPro = true; $.getScript(getUrlExtension("js/sei-functions-pro.js")); }
 
 function divIconsLoginPro() {
     var html_initLogin = '<div class="infraAcaoBarraSistema sheetsLoginPro" style="display: inline-block;">'

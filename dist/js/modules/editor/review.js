@@ -269,8 +269,8 @@
             ) +
             '        <span style="color: #777;font-size: 90%;margin-left:5px;"><i class="fas fa-user" style="padding-right: 5px;font-size: 90%;color: #4285f4;"></i><span class="info"></span><strong class="title-reviewtip" title="' + data.user + '">' + data.user + '</strong></span>' +
             '        <span style="color: #777;font-size: 80%;margin-left:10px;font-style: italic;"><i class="far fa-clock" style="color: #777;"></i> ' + data.date + '</span>' +
-            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="accept" data-type="' + data.type + '" title="Aceitar revis\u00E7\u00E3o"><i class="fas fa-check-circle" style="color: #9CB639;"></i> Aceitar</span>' +
-            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="reject" data-type="' + data.type + '" title="Rejeitar revis\u00E7\u00E3o"><i class="fas fa-times-circle" style="color: #E46E64;"></i> Rejeitar</span>' +
+            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="accept" data-type="' + data.type + '" title="Aceitar revis\u00E3o"><i class="fas fa-check-circle" style="color: #9CB639;"></i> Aceitar</span>' +
+            '        <span class="action" style="float: right;font-size: 80%;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-readonly="' + readonly + '" data-id-review="' + data.id_review + '" data-mode="reject" data-type="' + data.type + '" title="Rejeitar revis\u00E3o"><i class="fas fa-times-circle" style="color: #E46E64;"></i> Rejeitar</span>' +
             (currentUser() == data.user && !readonly
                 ? '        <span onclick="parent.addCommentReviewPro(this)" data-info="' + (data.comment == '' ? 'new' : 'update') + '" style="color: #777;font-size: 90%;display:block;font-style: italic;margin: 10px 0 5px 0;padding: 5px;border-radius:5px;"><i class="fas fa-comment" style="margin-right: 5px;font-size: 90%;color: #e9af68;transform: scale(-1, 1);"></i><span class="commentReview info" style="padding: 3px;">' + textCommentReview + '<span></span>'
                 : (data.comment == '' && !readonly ? '' : '<span style="color: #777;font-size: 90%;display:block;font-style: italic;margin: 10px 0 5px 0;padding: 5px;border-radius:5px;"><i class="fas fa-comment" style="margin-right: 5px;font-size: 90%;color: #e9af68;transform: scale(-1, 1);"></i><span class="commentReview info">' + textCommentReview + '<span></span>')
@@ -483,8 +483,8 @@
         }
 
         var btnControlReject = '<div style="margin: 10px 0 !important;display: inline-block;width: 95%;">' +
-            '   <span class="action" style="font-size: 11pt;float: right;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-mode="acceptAll" title="Aceitar revis\u00E7\u00E3o"><i class="fas fa-check-circle" style="font-size: 11pt;color: #9CB639;"></i> Aceitar Todas</span>' +
-            '   <span class="action" style="font-size: 11pt;float: left;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-mode="rejectAll" title="Rejeitar revis\u00E7\u00E3o"><i class="fas fa-times-circle" style="font-size: 11pt;color: #E46E64;"></i> Rejeitar todas</span>' +
+            '   <span class="action" style="font-size: 11pt;float: right;margin-left:10px;cursor:pointer;color: #9CB639;" onclick="parent.removeReviewPro(this)" data-mode="acceptAll" title="Aceitar todas as revis\u00F5es"><i class="fas fa-check-circle" style="font-size: 11pt;color: #9CB639;"></i> Aceitar Todas</span>' +
+            '   <span class="action" style="font-size: 11pt;float: left;margin-left:10px;cursor:pointer;color: #E46E64;" onclick="parent.removeReviewPro(this)" data-mode="rejectAll" title="Rejeitar todas as revis\u00F5es"><i class="fas fa-times-circle" style="font-size: 11pt;color: #E46E64;"></i> Rejeitar todas</span>' +
             '</div>';
 
         $('#boxReviews').html(listReviews === '' ? alertText : btnControlReject + listReviews);
@@ -496,9 +496,11 @@
     // ----------------------------------------------------------------
     window.getBoxReview = function (this_) {
         var btn = $('.getReviewButton');
-        if (btn.hasClass('cke_button_off')) {
+        // O botao do CK4 nasce com cke_button_off; o do CK5 (SEI 5) nasce sem cke_button_off/on, e o 1o clique
+        // caia no ramo "desligar": o modo revisao so ligava no 2o clique. Desligado = sem cke_button_on.
+        if (!btn.hasClass('cke_button_on')) {
             btn.addClass('cke_button_on').removeClass('cke_button_off');
-            initStyleReview();
+            initStyleReview(this_);
         } else {
             btn.addClass('cke_button_off').removeClass('cke_button_on');
         }
@@ -509,8 +511,10 @@
     // version===4 (passa direto ao editor.on). CK5: nao ha evento 'key' com
     // keyCode/range cru; registramos um keydown DOM no editable como melhor
     // esforco (apenas as operacoes cobertas pelo adapter -- ver getStyleReview).
-    window.initStyleReview = function () {
-        var editor = SeiProEditorAdapter.getInstance();
+    window.initStyleReview = function (this_) {
+        // Instancia do botao clicado (CK4 com secoes: sem referencia o listener ia para o Cabecalho, e digitar no
+        // Corpo do Texto nao marcava nada).
+        var editor = SeiProEditorAdapter.getInstance(this_);
         if (!editor) return false;
 
         // Chave de idempotencia por instancia (CK4 usa editor.name; CK5 e uma

@@ -8,7 +8,7 @@ Mostra, **no ícone da aba do navegador**, um número com a quantidade de proces
 
 ### Como ativar
 
-A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Controle de Processos**, opção **Contador de processos não recebidos no ícone do SEI**.
+A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Controle de Processos**, opção **Contador de processos não visualizados no ícone do SEI**.
 
 ### Bom saber
 

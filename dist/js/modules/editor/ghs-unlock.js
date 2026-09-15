@@ -53,6 +53,30 @@
     // "permitir tudo" nos elementos casados por name.
     var REGRA = { name: TAGS, attributes: true, classes: true, styles: true };
 
+    // O allowAttributes do DataFilter usa o padrao como um Matcher UNICO, e no
+    // Matcher do CK5 "classes: true" exige que o elemento TENHA classe (idem
+    // attributes e styles). Com a regra combinada, so o elemento que tivesse
+    // atributo, classe e estilo ao mesmo tempo era liberado: <span
+    // class="sigiloSEI"> virava <span> (a marca de sigilo nao pegava) e so a caixa
+    // de selecao, que tem os tres, sobrevivia. A config htmlSupport.allow do CK5
+    // divide a regra do mesmo jeito antes de chamar allowAttributes (splitRules).
+    var REGRAS_ATRIBUTOS = [
+        { name: TAGS, attributes: true },
+        { name: TAGS, classes: true },
+        { name: TAGS, styles: true }
+    ];
+
+    // Nunca liberados, apesar do "attributes: true" acima (o GHS do SEI 5 so libera todos os atributos em div e
+    // label): atributos de evento (on*) e URL com esquema executavel. A vista de edicao do CK5 ja nao renderiza
+    // on*, mas o data.get (renderingMode 'data'), que o SEI grava, devolvia <span onmouseover=...> e <img onerror=...>
+    // colados de outra pagina: o Salvar era recusado ("conteudo nao permitido") sem o usuario ver o atributo, ou,
+    // com a validacao de XSS do SEI em nivel basico, o atributo ia para o documento. O DataFilter consome os
+    // atributos proibidos antes dos liberados (processViewAttributes), entao o descarte vale sobre as regras acima.
+    var REGRAS_ATRIBUTOS_PROIBIDOS = [
+        { name: /[\s\S]+/, attributes: [{ key: /^on/i, value: true }] },
+        { name: /[\s\S]+/, attributes: [{ key: /^(href|src|srcset|action|formaction|background|poster|lowsrc|dynsrc|data|xlink:href)$/i, value: /^[\s\u0000-\u0020]*(javascript|vbscript|livescript|data\s*:\s*text\/html)/i }] }
+    ];
+
     function log(msg, extra) {
         if (typeof console === 'undefined' || !console.log) return;
         console.log('%c[SEIPro/GHS]', 'color:#3f51b5;font-weight:bold;', msg, extra === undefined ? '' : extra);
@@ -157,7 +181,10 @@
 
         try {
             df.allowElement(REGRA);
-            df.allowAttributes(REGRA);
+            REGRAS_ATRIBUTOS.forEach(function (regra) { df.allowAttributes(regra); });
+            if (typeof df.disallowAttributes === 'function') {
+                REGRAS_ATRIBUTOS_PROIBIDOS.forEach(function (regra) { df.disallowAttributes(regra); });
+            }
         } catch (e) {
             log('falha ao liberar o GHS', e);
             return false;
@@ -201,6 +228,38 @@
         }
     }
 
+    // O upcast da abertura roda ANTES destas regras: o que o GHS do SEI nao
+    // conhece ja saiu do model (a caixa de selecao <span class="ancoraSei
+    // checkboxSEI" style data-id> vinha como <span>). Reprocessar o getFullData
+    // gravava essa perda no documento no primeiro Salvar. Enquanto ninguem
+    // editou (nenhuma operacao desfazivel no historico do model; a carga e o
+    // data.set das correcoes automaticas nao sao desfaziveis), o conteudo e o
+    // mesmo do INFRA_EDITOR_CONFIG.initialData, que entao e reprocessado com
+    // as regras ja ativas. Com edicao, fica o conteudo atual, como antes.
+    function houveEdicao(editor) {
+        try {
+            var ops = editor.model.document.history.getOperations();
+            for (var i = 0; i < ops.length; i++) {
+                if (ops[i].batch && ops[i].batch.isUndoable) return true;
+            }
+            return false;
+        } catch (e) { return true; }
+    }
+
+    function conteudoParaReprocessar(editor) {
+        // seiProInterno: vai-e-volta dentro do editor, sem os filtros do HTML
+        // gravado (ver sigilo.js e auto-cleanup.js).
+        var atual = editor.getFullData({ seiProInterno: true });
+        var cfg = window.INFRA_EDITOR_CONFIG;
+        var inicial = cfg && cfg.initialData;
+        if (!inicial || typeof inicial !== 'object' || houveEdicao(editor)) return atual;
+        var payload = {};
+        Object.keys(atual).forEach(function (rootName) {
+            payload[rootName] = (typeof inicial[rootName] === 'string') ? inicial[rootName] : atual[rootName];
+        });
+        return payload;
+    }
+
     function aplicarRegras(editor) {
         editor = editor || SeiProEditorAdapter.getInstance();
         if (!liberar(editor)) return false;
@@ -209,7 +268,7 @@
         var ok = true;
         semSujar(function () {
             try {
-                editor.data.set(editor.getFullData());
+                editor.data.set(conteudoParaReprocessar(editor));
             } catch (e) {
                 log('falha ao reprocessar o conteudo', e);
                 ok = false;

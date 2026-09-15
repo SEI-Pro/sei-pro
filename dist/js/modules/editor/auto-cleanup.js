@@ -21,14 +21,19 @@
  *          editable que dispara ANTES da insercao; nao da para reescrever o
  *          HTML colado in-place dali, entao agendamos uma limpeza pos-colagem
  *          via transformBodyHtml (corpo do texto) no proximo tick.
- *      (b) SALVAR: como 'getData' nao existe no CK5, a passada final no
- *          conteudo e feita com transformBodyHtml -- que no CK4 reescreve o
- *          body do iframe e no CK5 usa data.get/set na root do "Corpo do
- *          Texto". Disparamos essa limpeza (1) num hook no botao Salvar do SEI
- *          quando presente e (2) defensivamente em cada 'change' (model
- *          change:data) com guarda de reentrancia, de modo que o conteudo ja
- *          esteja limpo quando o SEI ler para salvar. limparEditorPro() faz a
- *          mesma limpeza sob demanda usando getData/setData do adapter.
+ *      (b) SALVAR, CK5: filtro na SAIDA de dados (evento 'get' do
+ *          editor.data, que o getFullData do SEI usa ao salvar). O model e a
+ *          vista nao sao tocados (ver registrarFiltroSaidaCK5Pro). A limpeza
+ *          por data.set no 'change'/colagem/Salvar (abaixo) fica so para um
+ *          editor sem esse evento.
+ *      (b) SALVAR, CK4: filtro na SAIDA do editor (htmlFilter do CKEditor 4),
+ *          que e o HTML que o SEI grava. O DOM vivo do editor nao e tocado:
+ *          reescrever o body do iframe jogava o cursor para o inicio do
+ *          documento, tirava o contenteditable dos links do SEI e as classes
+ *          de contraste do modo escuro. contenteditable e conteudo legitimo no
+ *          CK4 (ver ATRIBUTOS_PRESERVADOS_CK4_PRO).
+ *      limparEditorPro() faz a limpeza sob demanda usando getData/setData do
+ *      adapter.
  *
  * Funcoes/vars deste modulo (movidas do monolito):
  *  ATRIBUTOS_LIXO_PRO, PREFIXOS_ATRIBUTO_LIXO_PRO, PREFIXOS_CLASSE_LIXO_PRO,
@@ -57,6 +62,21 @@
     window.PREFIXOS_ATRIBUTO_LIXO_PRO = ['data-cke-saved-', 'data-sfc-', 'data-copy-service'];
     // Classes a remover (residuos do CKEditor e do realce de contraste do dark mode)
     window.PREFIXOS_CLASSE_LIXO_PRO = ['cke_', 'dark-mode-'];
+    // Atributos da lista acima que sao conteudo LEGITIMO e nao podem ser limpos.
+    // contenteditable: o proprio SEI (3.x, 4.x e o CK4 do SEI 5) grava o link para protocolo como
+    // <span contenteditable="false"><a class="ancora_sei">, e o SEI Pro usa o atributo no Bloquear
+    // Edicao, na Legistica, no sigilo e na citacao. Vale tambem no CK5: o GHS do proprio SEI 5 libera
+    // contenteditable="false" em p/table/li (htmlSupport.allow), e a limpeza tirava o bloqueio do
+    // paragrafo 2 s depois de qualquer edicao. (O nome ..._CK4_PRO fica por compatibilidade.)
+    window.ATRIBUTOS_PRESERVADOS_CK4_PRO = ['contenteditable'];
+
+    // Atributos que a limpeza deve preservar nesta instancia (CK4 e CK5).
+    function atributosPreservadosPro(editor) {
+        return window.ATRIBUTOS_PRESERVADOS_CK4_PRO;
+    }
+    function preservaAtributoPro(preservar, nome) {
+        return !!(preservar && preservar.indexOf(nome) !== -1);
+    }
 
     // ----------------------------------------------------------------
     // Helper compartilhado em outro arquivo (sei-functions-pro.js). Em tempo de
@@ -74,19 +94,38 @@
     // ----------------------------------------------------------------
 
     // Heuristica barata: so vale a pena parsear/limpar se houver indicio de lixo.
-    window.precisaLimparEditorPro = function (html) {
-        return /rgba?\(|cke_protected|data-cke-saved|data-sfc|data-copy-service|data-hveid|dark-mode-|\scontenteditable|\sspellcheck|\bcke_/i.test(html);
+    // preservar (opcional): atributos que nao contam como lixo (ver atributosPreservadosPro).
+    // Atributo de evento (on*) ou URL com esquema executavel dentro de uma tag: nunca vai para o HTML gravado.
+    var ATRIBUTO_PERIGOSO_PRO = /<[^>]*\s(on[a-z]+\s*=|(href|src|srcset|action|formaction|background|poster|lowsrc|dynsrc|data|xlink:href)\s*=\s*["']?[\s\u0000-\u0020]*(javascript|vbscript|livescript|data\s*:\s*text\/html))/i;
+    var URL_PERIGOSA_PRO = /^[\s\u0000-\u0020]*(javascript|vbscript|livescript|data\s*:\s*text\/html)/i;
+    var ATRIBUTOS_URL_PRO = /^(href|src|srcset|action|formaction|background|poster|lowsrc|dynsrc|data|xlink:href)$/i;
+    window.precisaLimparEditorPro = function (html, preservar) {
+        if (/rgba?\(|cke_protected|data-cke-saved|data-sfc|data-copy-service|data-hveid|dark-mode-|\sspellcheck|\bcke_/i.test(html)) return true;
+        if (ATRIBUTO_PERIGOSO_PRO.test(html)) return true;
+        return !preservaAtributoPro(preservar, 'contenteditable') && /\scontenteditable/i.test(html);
     };
 
     // Converte todo rgb()/rgba() de uma string para #rrggbb (reusa rgbToHex global).
+    // Aceita a sintaxe com virgulas, rgb(206, 206, 206), e a com espacos do CSS Color 4,
+    // rgb(206 206 206) e rgb(206 206 206 / 50%) -- esta usada no modelo da certidao.
+    // O rgb() nao pode ficar (o validador do SEI 5 so aceita cor em hexadecimal), mas o alfa nao pode sumir:
+    // alfa 0 vira "transparent" (antes virava preto opaco) e alfa entre 0 e 1 vira a cor ja composta sobre o
+    // branco do documento (rgba(0,0,0,.05) -> #f2f2f2, e nao #000000). Sem alfa, ou alfa >= 1: #rrggbb direto.
     window.rgbParaHexPro = function (texto) {
         if (!texto) return texto;
-        return texto.replace(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*[\d.]+\s*)?\)/gi,
-            function (m, r, g, b) { return rgbToHexSafe(parseInt(r, 10), parseInt(g, 10), parseInt(b, 10)); });
+        return texto.replace(/rgba?\(\s*(\d+)(?:\s*,\s*|\s+)(\d+)(?:\s*,\s*|\s+)(\d+)\s*(?:[,\/]\s*([\d.]+)(%?)\s*)?\)/gi,
+            function (m, r, g, b, alfa, pct) {
+                r = parseInt(r, 10); g = parseInt(g, 10); b = parseInt(b, 10);
+                var a = alfa ? parseFloat(alfa) / (pct ? 100 : 1) : 1;
+                if (isNaN(a) || a >= 1) return rgbToHexSafe(r, g, b);
+                if (a <= 0) return 'transparent';
+                var sobreBranco = function (c) { return Math.round(a * c + (1 - a) * 255); };
+                return rgbToHexSafe(sobreBranco(r), sobreBranco(g), sobreBranco(b));
+            });
     };
 
     // Limpa, in-place, um no raiz (Element ou Document) e todos os descendentes.
-    window.limparRaizEditorPro = function (raiz) {
+    window.limparRaizEditorPro = function (raiz, preservar) {
         var docRef = raiz.ownerDocument || raiz;
 
         // 1) Comentarios residuais (marcadores {cke_protected} do CKEditor)
@@ -104,12 +143,15 @@
 
             // 2a) atributos-lixo por nome exato
             for (var a = 0; a < window.ATRIBUTOS_LIXO_PRO.length; a++) {
+                if (preservaAtributoPro(preservar, window.ATRIBUTOS_LIXO_PRO[a])) continue;
                 if (el.hasAttribute(window.ATRIBUTOS_LIXO_PRO[a])) el.removeAttribute(window.ATRIBUTOS_LIXO_PRO[a]);
             }
             // 2b) atributos-lixo por prefixo (itera copia: removeAttribute muda a colecao)
             var attrs = Array.prototype.slice.call(el.attributes);
             for (var t = 0; t < attrs.length; t++) {
                 var nome = attrs[t].name;
+                // Atributo de evento e URL com esquema executavel (defesa em profundidade: o GHS do CK5 ja os descarta)
+                if (/^on/i.test(nome) || (ATRIBUTOS_URL_PRO.test(nome) && URL_PERIGOSA_PRO.test(attrs[t].value || ''))) { el.removeAttribute(nome); continue; }
                 for (var p = 0; p < window.PREFIXOS_ATRIBUTO_LIXO_PRO.length; p++) {
                     if (nome.indexOf(window.PREFIXOS_ATRIBUTO_LIXO_PRO[p]) === 0) { el.removeAttribute(nome); break; }
                 }
@@ -132,10 +174,10 @@
     };
 
     // Versao string: recebe HTML, devolve HTML limpo (desembrulhando o <body>).
-    window.limparHtmlEditorPro = function (html) {
-        if (typeof html !== 'string' || html === '' || !window.precisaLimparEditorPro(html)) return html;
+    window.limparHtmlEditorPro = function (html, preservar) {
+        if (typeof html !== 'string' || html === '' || !window.precisaLimparEditorPro(html, preservar)) return html;
         var doc = new DOMParser().parseFromString(html, 'text/html');
-        window.limparRaizEditorPro(doc.body);
+        window.limparRaizEditorPro(doc.body, preservar);
         return doc.body.innerHTML;
     };
 
@@ -149,7 +191,7 @@
         editor = editor || SeiProEditorAdapter.getInstance();
         if (!editor) return false;
         var original = SeiProEditorAdapter.getData(editor);
-        var limpo = window.limparHtmlEditorPro(original);
+        var limpo = window.limparHtmlEditorPro(original, atributosPreservadosPro(editor));
         if (limpo === original) return false;
         SeiProEditorAdapter.setData(editor, limpo);
         if (typeof window.enableButtonSavePro === 'function') enableButtonSavePro();
@@ -163,12 +205,67 @@
         editor._limpezaProEmAndamento = true;
         try {
             SeiProEditorAdapter.transformBodyHtml(editor, function (html) {
-                return window.limparHtmlEditorPro(html);
+                return window.limparHtmlEditorPro(html, atributosPreservadosPro(editor));
             });
         } catch (e) { /* silencioso: limpeza e best-effort */ }
         // Libera o guard no proximo tick para nao reentrar no mesmo lote de
         // mutacoes que o transformBodyHtml acabou de gerar.
         setTimeout(function () { editor._limpezaProEmAndamento = false; }, 0);
+    }
+
+    // CK4: limpa so a SAIDA do editor (getData, o que o SEI grava), com o htmlFilter do proprio
+    // CKEditor 4 -- a serializacao continua a do CK4 (entidades, quebras de linha). O DOM vivo fica
+    // intacto. O CK4 ja tira sozinho as classes cke_* e converte os data-cke-saved-* da saida, entao
+    // esses ficam por conta dele. Retorna false se a instancia nao tiver htmlFilter.
+    function registrarFiltroSaidaCK4Pro(editor) {
+        var dp = editor.dataProcessor;
+        if (!dp || !dp.htmlFilter || typeof dp.htmlFilter.addRules !== 'function') return false;
+        var preservar = atributosPreservadosPro(editor);
+        dp.htmlFilter.addRules({
+            elements: {
+                $: function (el) {
+                    var attrs = el.attributes, nome, p;
+                    if (!attrs) return;
+                    for (nome in attrs) {
+                        if (!Object.prototype.hasOwnProperty.call(attrs, nome) || preservaAtributoPro(preservar, nome)) continue;
+                        if (window.ATRIBUTOS_LIXO_PRO.indexOf(nome) !== -1) { delete attrs[nome]; continue; }
+                        for (p = 0; p < window.PREFIXOS_ATRIBUTO_LIXO_PRO.length; p++) {
+                            var prefixo = window.PREFIXOS_ATRIBUTO_LIXO_PRO[p];
+                            if (prefixo !== 'data-cke-saved-' && nome.indexOf(prefixo) === 0) { delete attrs[nome]; break; }
+                        }
+                    }
+                    if (typeof attrs['class'] === 'string') {
+                        var classes = attrs['class'].split(/\s+/).filter(function (c) {
+                            if (!c) return false;
+                            for (var k = 0; k < window.PREFIXOS_CLASSE_LIXO_PRO.length; k++) {
+                                if (c.indexOf(window.PREFIXOS_CLASSE_LIXO_PRO[k]) === 0) return false;
+                            }
+                            return true;
+                        });
+                        if (classes.length) attrs['class'] = classes.join(' '); else delete attrs['class'];
+                    }
+                    if (typeof attrs.style === 'string' && /rgba?\(/i.test(attrs.style)) attrs.style = window.rgbParaHexPro(attrs.style);
+                }
+            }
+        }, { applyToAll: true });
+        return true;
+    }
+
+    // CK5: mesmo principio do CK4 -- limpa so a SAIDA de dados (editor.data.get, que o getFullData do SEI
+    // chama por secao ao salvar), sem tocar no model. A versao anterior reescrevia o Corpo do Texto com
+    // data.set 400 ms depois de cada rajada de digitacao em que houvesse "lixo": o cursor ia para o inicio
+    // do documento e o resto do que o usuario digitava se perdia. O data.get e decorado no CK5 (evento
+    // 'get'); prioridade baixa = depois de o HTML ser montado. Os vai-e-voltas internos do SEI Pro
+    // (transformBodyHtml, opcao seiProInterno) ficam de fora, como no filtro do sigilo.
+    function registrarFiltroSaidaCK5Pro(editor) {
+        if (!editor.data || typeof editor.data.on !== 'function') return false;
+        var preservar = atributosPreservadosPro(editor);
+        editor.data.on('get', function (evt, args) {
+            var opcoes = args && args[0];
+            if (opcoes && opcoes.seiProInterno) return;
+            if (typeof evt.return === 'string') evt.return = window.limparHtmlEditorPro(evt.return, preservar);
+        }, { priority: 'low' });
+        return true;
     }
 
     // Tenta enganchar no botao Salvar do SEI para limpar antes de serializar.
@@ -202,12 +299,25 @@
         if (!editor || editor._limpezaProRegistrada) return;
         editor._limpezaProRegistrada = true;
 
+        // CK5: filtro na saida de dados, sem reescrever o model (ver registrarFiltroSaidaCK5Pro).
+        if (editor.model && registrarFiltroSaidaCK5Pro(editor)) return;
+
+        // CK4 (instancia sem editor.model): colagem + filtro de saida, sem reescrever o body.
+        if (!editor.model && registrarFiltroSaidaCK4Pro(editor)) {
+            SeiProEditorAdapter.on(editor, 'paste', function (evt) {
+                if (evt && evt.data && typeof evt.data.dataValue === 'string') {
+                    evt.data.dataValue = window.limparHtmlEditorPro(evt.data.dataValue, atributosPreservadosPro(editor));
+                }
+            });
+            return;
+        }
+
         // (a) Colagem: limpa o HTML que entra.
         SeiProEditorAdapter.on(editor, 'paste', function (evt) {
-            // CK4: o adapter entrega o evento nativo do CKEditor com
+            // CK4 sem htmlFilter: o adapter entrega o evento nativo do CKEditor com
             // evt.data.dataValue -- limpa in-place antes de cair no editor.
             if (evt && evt.data && typeof evt.data.dataValue === 'string') {
-                evt.data.dataValue = window.limparHtmlEditorPro(evt.data.dataValue);
+                evt.data.dataValue = window.limparHtmlEditorPro(evt.data.dataValue, atributosPreservadosPro(editor));
                 return;
             }
             // CK5: evento DOM (pre-insercao); limpa o corpo apos a colagem
@@ -228,7 +338,7 @@
             setTimeout(function () {
                 limpezaAgendada = false;
                 var corpo = SeiProEditorAdapter.getData(editor);
-                if (typeof corpo === 'string' && window.precisaLimparEditorPro(corpo)) {
+                if (typeof corpo === 'string' && window.precisaLimparEditorPro(corpo, atributosPreservadosPro(editor))) {
                     limparCorpoPro(editor);
                 }
             }, 400);
@@ -250,11 +360,13 @@
     // ----------------------------------------------------------------
     function bootstrapCK5Cleanup() {
         if (!window.SeiProEditorAdapter) return;
-        // So auto-wire no CK5; no CK4 o monolito cuida disso.
-        if (SeiProEditorAdapter.version !== 5) return;
         try {
-            SeiProEditorAdapter.waitReady().then(function () {
-                var ed = SeiProEditorAdapter.getInstance();
+            // A versao so e conhecida depois que o editor aparece: checada ANTES do waitReady, dava 0 quando
+            // o modulo carregava antes do editable (primeira abertura do documento) e a limpeza nao era
+            // registrada. So auto-wire no CK5; no CK4 o monolito cuida disso.
+            SeiProEditorAdapter.waitReady(20000).then(function (ed) {
+                if (SeiProEditorAdapter.version !== 5) return;
+                ed = ed || SeiProEditorAdapter.getInstance();
                 if (ed) window.registrarLimpezaAutomaticaPro(ed);
             }, function () { /* editor nao detectado: nada a fazer */ });
         } catch (e) {}

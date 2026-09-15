@@ -3,10 +3,12 @@ var logBackup = console.log;
 var logMessages = [];
 var pagesInfiniteSearch = [];
 var frmPesquisaProtocolo = ($('#seiSearch').length) ? '#seiSearch' : '#frmPesquisaProtocolo';
-var divPaginas = typeof isNewSEI !== 'undefined' && isNewSEI ? 'div.pesquisaPaginas' : 'div.paginas';
 
 function getTableInfiniteSearch(ifrView, formID, tableID, index) {
     // console.log(pagesInfiniteSearch, index, pagesInfiniteSearch);
+    // isNewSEI vem do sei-functions-pro.js, que costuma chegar DEPOIS deste arquivo: resolvido no carregamento, o seletor
+    // ficava 'div.paginas' no SEI 4/5, a paginacao nunca era trocada e a rolagem parava na 2a pagina
+    var divPaginas = typeof isNewSEI !== 'undefined' && isNewSEI ? 'div.pesquisaPaginas' : 'div.paginas';
     if (pagesInfiniteSearch.length == 0 || $.inArray(index, pagesInfiniteSearch) === -1) {
         var form = ifrView.find(formID);
         var href = form.attr('action');
@@ -55,8 +57,13 @@ function getInfiniteSearch() {
     }  
 }
 function startPagesInfiniteSearch(index = false) {
-    $(isNewSEI ? '#divInfraAreaTelaD' :  window).scroll(function () { 
-       if ($(window).scrollTop() >= $(document).height() - $(window).height() - 120) {
+    $(isNewSEI ? '#divInfraAreaTelaD' :  window).scroll(function () {
+        // No SEI 4/5 quem rola e o #divInfraAreaTelaD e a janela fica parada; medir a janela ali dava verdadeiro
+        // em qualquer rolagem (ate para cima). Mede o proprio elemento que rolou.
+        var fimDaLista = (this === window)
+            ? $(window).scrollTop() >= $(document).height() - $(window).height() - 120
+            : this.scrollTop + this.clientHeight >= this.scrollHeight - 120;
+        if (fimDaLista) {
             getInfiniteSearch();
         }
     });
@@ -110,7 +117,10 @@ function initSetMomentPtBr(TimeOut = 9000) {
 }
 function initTableSorter(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof corrigeTableSEI !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined' && typeof $().tablesorter !== 'undefined') { 
+    // typeof moment: a extracao de texto das colunas de data (filterTextExtractDate) usa o moment, que entra por $.getScript
+    // em paralelo com o tablesorter. Se ele chegasse depois, 'moment is not defined' abortava o setTableSorter (tabela sem
+    // os botoes Baixar/Copiar/Pesquisar) e, na primeira chamada, o initSeiProAll inteiro.
+    if (typeof corrigeTableSEI !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined' && typeof moment !== 'undefined' && typeof $().tablesorter !== 'undefined') { 
         if (checkConfigValue('ordernartabela') && $(frmPesquisaProtocolo).length == 0) {
             setTableSorter();
         }
@@ -432,7 +442,7 @@ function initTablePesquisaDownload(TimeOut = 9000) {
     }
 }
 function initScrollToElement(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
     if (typeof scrollToElement !== 'undefined') {
         scrollToElement($('html'), $(frmPesquisaProtocolo).find('#conteudo table.resultado'), 50);
     } else {
@@ -444,8 +454,9 @@ function initScrollToElement(TimeOut = 9000) {
 }
 function initAppendIconFavorites(TimeOut = 9000) {
     var table = $('#frmRelBlocoProtocoloLista .infraTable, #frmAcompanhamentoLista .infraTable, #frmProcedimentoSobrestar .infraTable');
-    if (TimeOut <= 0 || parent.window.name != '' ||  table.length == 0) { return; }
-    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof htmlIconFavorites !== 'undefined' && typeof getStoreFavoritePro !== 'undefined') {
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '') ||  table.length == 0) { return; }
+    // typeof jmespath: ver initPagesInfiniteSearch
+    if (typeof getParamsUrlPro !== 'undefined' && typeof checkConfigValue !== 'undefined' && typeof jmespath !== 'undefined' && typeof htmlIconFavorites !== 'undefined' && typeof getStoreFavoritePro !== 'undefined') {
         if (checkConfigValue('gerenciarfavoritos')) {
             setAppendIconFavorites();
         }
@@ -501,7 +512,7 @@ function appendIconEntidade() {
     }
 }
 function initGetConfigHost(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
     if (typeof getConfigHost === 'function' && typeof urlServerAtiv !== 'undefined') {
         if (sessionStorage.getItem('configHost_Pro') !== null) {
             setConfigHost(JSON.parse(sessionStorage.getItem('configHost_Pro')), loadScriptEntidade);
@@ -516,8 +527,9 @@ function initGetConfigHost(TimeOut = 9000) {
     }
 }
 function initReplaceSelectAll(TimeOut = 12000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
-    if (typeof $().chosen !== 'undefined' && typeof verifyConfigValue === 'function') {
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
+    // typeof jmespath: ver initPagesInfiniteSearch
+    if (typeof $().chosen !== 'undefined' && typeof verifyConfigValue === 'function' && typeof jmespath !== 'undefined') {
         if (parent.verifyConfigValue('substituiselecao') && $('#frmDocumentoGeracaoMultiplo').length == 0 ) { 
             $('select')
                 .not('[multiple]')
@@ -567,8 +579,9 @@ function filterIfraTable(this_) {
     }
 }
 function initRemovePaginacaoAll(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
-    if (typeof verifyConfigValue !== 'undefined') {
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
+    // typeof jmespath: ver initPagesInfiniteSearch
+    if (typeof verifyConfigValue !== 'undefined' && typeof jmespath !== 'undefined') {
         if (verifyConfigValue('removepaginacao')) {
             if ($('#frmAcompanhamentoLista').length > 0) {
                 getTablePaginacao($('#divInfraAreaTela'), '#frmAcompanhamentoLista', '#divInfraAreaTabela table', 1);
@@ -610,8 +623,13 @@ function initRemovePaginacaoAll(TimeOut = 9000) {
     }
 }
 function initPagesInfiniteSearch(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
-    if (typeof verifyConfigValue !== 'undefined') {
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
+    // verifyConfigValue le as opcoes com o jmespath do mundo da PAGINA e, sem ele, devolve sempre false. Na Pesquisa (e
+    // nas demais telas que so tem o init_all.js) quem injeta o jmespath na pagina e o initSeiProAll, no mesmo instante
+    // em que agenda esta funcao: o typeof jmespath do init_all.js roda no mundo isolado, onde o manifest ja o carregou,
+    // e nunca injeta. Se o jmespath chegasse depois, a opcao era lida como desligada uma unica vez e a rolagem infinita
+    // nao era ligada ate recarregar. Espera o jmespath como ja fazem initHideMenuSistemaView e initTableSorter.
+    if (typeof verifyConfigValue !== 'undefined' && typeof jmespath !== 'undefined') {
         if (verifyConfigValue('rolageminfinita') && $(frmPesquisaProtocolo).length > 0) {
             startPagesInfiniteSearch();
         }
@@ -623,7 +641,7 @@ function initPagesInfiniteSearch(TimeOut = 9000) {
     }
 }
 function initQuickViewSearch(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
     if (typeof verifyConfigValue !== 'undefined') {
         if ($(frmPesquisaProtocolo).length > 0) {
             startQuickViewSearch();
@@ -703,7 +721,7 @@ function downloadAllDocsSearch(this_) {
     });
 }
 function initObserveUrlPage(TimeOut = 9000) {
-    if (TimeOut <= 0 || parent.window.name != '') { return; }
+    if (TimeOut <= 0 || (typeof isJanelaAuxiliarPro === 'function' ? isJanelaAuxiliarPro(parent) : parent.window.name != '')) { return; }
     if (typeof getParamsUrlPro !== 'undefined') {
         observeUrlPage();
     } else {
@@ -777,15 +795,15 @@ function initStyleBoxSlimPro(TimeOut = 9000) {
 }
 function initMarcadorUserColor(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof extractHexColor !== 'undefined' ) { 
+    // typeof jmespath: ver initPagesInfiniteSearch
+    if (typeof extractHexColor !== 'undefined' && typeof jmespath !== 'undefined') { 
         if (checkConfigValue('coresmarcadores')) {
             setMarcadorUserColor();
         }
     } else {
         setTimeout(function(){ 
             initMarcadorUserColor(TimeOut - 100); 
-            //if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) 
-            console.log('Reload initMarcadorUserColor'); 
+            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) console.log('Reload initMarcadorUserColor'); 
         }, 500);
     }
 }
@@ -872,7 +890,8 @@ function initQRCodeLib() {
 }
 function initNewProcDefault(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if ($('form#frmProcedimentoCadastro').length && typeof moment == 'function') {
+    // typeof jmespath: ver initPagesInfiniteSearch (setNewProcDefault le as opcoes uma unica vez)
+    if ($('form#frmProcedimentoCadastro').length && typeof moment == 'function' && typeof jmespath !== 'undefined') {
         setNewProcDefault();
     } else if (!$('#frmProcedimentoControlar').length) {
         setTimeout(function(){ 
@@ -897,8 +916,11 @@ function initConfigSEIPro() {
 }
 function initCaixaSelecaoUnidadesSEI(TimeOut = 9000) {
     if (TimeOut <= 0) { return; }
-    if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('trocaunidade') && typeof getUnidadesPermissaoSEI === 'function') {
-        if (!$('#ifrArvore').length) { getUnidadesPermissaoSEI() }
+    // typeof jmespath: ver initPagesInfiniteSearch. O checkHostLimit tambem le 'disablequery' pelo jmespath e, sem ele,
+    // devolve sempre false: avaliado no initSeiProAll, no mesmo instante em que o jmespath e pedido, montava a caixa (e
+    // fazia a consulta a troca de unidade) mesmo com as consultas adicionais desativadas. Por isso fica aqui dentro.
+    if (typeof verifyConfigValue !== 'undefined' && typeof checkHostLimit !== 'undefined' && typeof jmespath !== 'undefined' && verifyConfigValue('trocaunidade') && typeof getUnidadesPermissaoSEI === 'function') {
+        if (!checkHostLimit() && !$('#ifrArvore').length) { getUnidadesPermissaoSEI() }
     } else {
         setTimeout(function(){ 
             initCaixaSelecaoUnidadesSEI(TimeOut - 100); 
@@ -913,7 +935,7 @@ function initSeiProAll() {
     if (typeof $.tablesorter === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/jquery.tablesorter.combined.min.js");
     if (typeof $().chosen === 'undefined' && typeof URL_SPRO !== 'undefined') $.getScript(URL_SPRO+"js/lib/chosen.jquery.min.js"); 
 
-    if (typeof checkHostLimit !== 'undefined' && !checkHostLimit()) initCaixaSelecaoUnidadesSEI();
+    if (typeof checkHostLimit !== 'undefined') initCaixaSelecaoUnidadesSEI();
     if (!!localStorage.getItem('seiSlim')) initInfraImg();
     checkPageParent();
     setTimeout(() => { initMarcadorUserColor() }, 500);
@@ -964,4 +986,16 @@ function initSeiProAll() {
         };
     }
 }
-$(document).ready(function () { initSeiProAll() });
+// Mesma corrida do initSeiPro (ver initSeiProAposFunctions, no sei-pro.js): este arquivo e o
+// sei-functions-pro.js entram por $.getScript e executam na ordem em que terminam de carregar. Medido no
+// SEI 4.1.5: este arquivo, pedido DEPOIS do sei-functions-pro.js, executou antes dele. Nesse caso as
+// guardas typeof abaixo pulam em silencio a caixa de troca de unidade (checkHostLimit), o modalLink do
+// SEI 5 (isSEI_5) e a versao no logo (NAMESPACE_SPRO). Se o sei-functions-pro.js ja chegou, nada muda.
+function initSeiProAllAposFunctions(TimeOut = 10000) {
+    if (typeof checkHostLimit === 'undefined' && TimeOut > 0) {
+        setTimeout(function(){ initSeiProAllAposFunctions(TimeOut - 100) }, 100);
+        return;
+    }
+    initSeiProAll();
+}
+$(document).ready(function () { initSeiProAllAposFunctions() });

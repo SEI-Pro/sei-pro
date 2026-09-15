@@ -14,6 +14,7 @@ import { lerRota, montarHash } from "@/ui/rota";
 import { readFileSync } from "node:fs";
 import { deBase64, paraBase64 } from "@/ponte/protocolo";
 import { mensagemDaPonte } from "@/ui/mensagens";
+import { localizarProcesso } from "@/ponte/processoAberto";
 
 let passou = 0;
 let falhou = 0;
@@ -149,6 +150,97 @@ checar(
   !/\bchrome\./.test(glue),
 );
 
+console.log("\n== qual processo esta aberto na aba ==");
+// Defeito real (SEI 4.1.5): com a opcao "URL amigavel" ligada, o SEI Pro troca o
+// endereco da aba por "/sei/#protocolo@nrSEI", e a ponte -- que lia o processo de
+// `location.search` -- respondia "Abra um processo no SEI" com o processo aberto.
+// Aberto pela pesquisa rapida, o topo traz `id_protocolo`, e dava o mesmo.
+{
+  const SRC_ARVORE =
+    "controlador.php?acao=procedimento_visualizar&acao_origem=procedimento_trabalhar&acao_retorno=principal&id_procedimento=148265&id_documento=&infra_sistema=100000100&infra_hash=abc";
+  const HREF_ARVORE = `https://sei.exemplo.gov.br/sei/${SRC_ARVORE}`;
+
+  const normal = localizarProcesso({
+    urlDoTopo: "https://sei.exemplo.gov.br/sei/controlador.php?acao=procedimento_trabalhar&id_procedimento=77&infra_hash=x",
+    srcDaArvore: SRC_ARVORE,
+    urlDaArvore: HREF_ARVORE,
+  });
+  checar(
+    "com o processo na URL do topo, vale o de sempre",
+    normal?.idProcedimento === "77" && normal.controlador === "https://sei.exemplo.gov.br/sei/controlador.php",
+    JSON.stringify(normal),
+  );
+
+  const amigavel = localizarProcesso({
+    urlDoTopo: "https://sei.exemplo.gov.br/sei/#99906.713-630.000032/2025-82@0103980",
+    srcDaArvore: SRC_ARVORE,
+    urlDaArvore: HREF_ARVORE,
+  });
+  checar("URL amigavel: o processo sai do quadro da arvore", amigavel?.idProcedimento === "148265", JSON.stringify(amigavel));
+  checar(
+    "URL amigavel: o controlador continua sendo o controlador.php, e nao /sei/",
+    amigavel?.controlador === "https://sei.exemplo.gov.br/sei/controlador.php",
+    amigavel?.controlador,
+  );
+
+  const pesquisa = localizarProcesso({
+    urlDoTopo: "https://sei.exemplo.gov.br/sei/controlador.php?acao=procedimento_trabalhar&acao_origem=protocolo_pesquisa_rapida&id_protocolo=148265&infra_hash=y",
+    srcDaArvore: SRC_ARVORE,
+    urlDaArvore: HREF_ARVORE,
+  });
+  checar("pesquisa rapida (id_protocolo no topo): o processo sai da arvore", pesquisa?.idProcedimento === "148265", JSON.stringify(pesquisa));
+
+  const recarregando = localizarProcesso({
+    urlDoTopo: "https://sei.exemplo.gov.br/sei/#99906.713-630.000032/2025-82",
+    srcDaArvore: SRC_ARVORE,
+    urlDaArvore: "about:blank",
+  });
+  checar(
+    "com o quadro recarregando, o src e resolvido pelo topo",
+    recarregando?.idProcedimento === "148265" && recarregando.controlador === "https://sei.exemplo.gov.br/sei/controlador.php",
+    JSON.stringify(recarregando),
+  );
+
+  // Instalacao na raiz do dominio: o endereco REAL do quadro vence o "/sei/" que
+  // a URL amigavel poe no topo.
+  const naRaiz = localizarProcesso({
+    urlDoTopo: "https://sei.orgao.gov.br/sei/#12345",
+    srcDaArvore: SRC_ARVORE,
+    urlDaArvore: `https://sei.orgao.gov.br/${SRC_ARVORE}`,
+  });
+  checar("o controlador vem do endereco real do quadro", naRaiz?.controlador === "https://sei.orgao.gov.br/controlador.php", naRaiz?.controlador);
+
+  checar(
+    "sem arvore (tela de listagem), nao ha processo",
+    localizarProcesso({ urlDoTopo: "https://sei.exemplo.gov.br/sei/controlador.php?acao=procedimento_controlar" }) === null,
+  );
+  checar(
+    "arvore sem id_procedimento nao vira processo",
+    localizarProcesso({
+      urlDoTopo: "https://sei.exemplo.gov.br/sei/#x",
+      srcDaArvore: "controlador.php?acao=procedimento_visualizar&id_procedimento=",
+    }) === null,
+  );
+
+  const glueSemComentarios = semComentarios(glueBruto);
+  checar(
+    "o glue nao le mais o processo de location.search nem location.pathname",
+    !/location\.(search|pathname)/.test(glueSemComentarios),
+  );
+  // Um fetch relativo se resolve contra a URL do topo -- a mesma que a URL
+  // amigavel troca. Todo endereco do SEI passa pelo controlador localizado.
+  const fetches = [...glueSemComentarios.matchAll(/\bfetch\(\s*([^,)]+)/g)].map((m) => m[1].trim());
+  const fetchesSoltos = fetches.filter(
+    (arg) => !/^noControlador\(/.test(arg) && !/^`\$\{controlador\}\?/.test(arg),
+  );
+  checar("a varredura achou os fetch do glue", fetches.length >= 6, String(fetches.length));
+  checar("nenhum fetch do glue usa endereco relativo ao topo", fetchesSoltos.length === 0, fetchesSoltos.join(" | "));
+  checar(
+    "e o upload do arquivo tambem passa pelo controlador",
+    /postarArquivo\(noControlador\(/.test(glueSemComentarios),
+  );
+}
+
 console.log("\n== bytes pela porta ==");
 // A porta serializa em JSON: um ArrayBuffer posto nela chega como {} do outro
 // lado, vazio e sem erro. Por isso os bytes viajam em base64.
@@ -188,6 +280,37 @@ for (const codigo of codigosDeDownload) {
     texto.slice(0, 60),
   );
 }
+
+// A escolha do tipo: quem desiste precisa saber que NADA entrou no processo, e
+// a recusa por tipo nao pode cair na mensagem generica de "nao foi possivel
+// falar com o SEI", que manda conferir a conexao.
+for (const codigo of ["SEI_TIPO_INDEFINIDO", "SEI_ENVIO_CANCELADO"]) {
+  checar(
+    `${codigo} tem mensagem própria`,
+    mensagemDaPonte({ codigo }) !== mensagemDaPonte({ codigo: "__desconhecido__" }),
+  );
+}
+checar(
+  "o cancelamento diz que o arquivo não foi incluído",
+  /não foi incluído no processo/.test(mensagemDaPonte({ codigo: "SEI_ENVIO_CANCELADO" })),
+);
+checar(
+  "a recusa por tipo diz que nada foi enviado e como contornar",
+  /Nada foi enviado/.test(mensagemDaPonte({ codigo: "SEI_TIPO_INDEFINIDO" })) &&
+    /Nome padrão do documento externo/.test(mensagemDaPonte({ codigo: "SEI_TIPO_INDEFINIDO" })),
+);
+checar(
+  "o glue repassa a lista de tipos junto com o erro",
+  /tipos:\s*\(e as/.test(
+    readFileSync(new URL("../src/ponte/sei-pro-ferramentaspdf.ts", import.meta.url), "utf8"),
+  ),
+);
+checar(
+  "e a página a recebe da porta",
+  /new ErroPonte\([^)]*r\.erro\.tipos\)/.test(
+    readFileSync(new URL("../src/ponte/cliente.ts", import.meta.url), "utf8"),
+  ),
+);
 
 const glueParaErros = readFileSync(
   new URL("../src/ponte/sei-pro-ferramentaspdf.ts", import.meta.url),

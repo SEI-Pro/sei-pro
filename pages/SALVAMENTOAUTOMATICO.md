@@ -2,7 +2,7 @@
 
 ## ![SEI Pro Salvamento Automático](../img/icon-salvamentoautomatico.png) Salvar documentos automaticamente
 
-> **Função temporariamente indisponível.** O salvamento automático foi retirado do editor na versão 1.0 do SEI Pro e ainda não voltou. A opção **Intervalo em minutos para o salvamento automático** continua visível nas configurações, mas, no momento, não tem efeito.
+> **Função temporariamente indisponível.** O salvamento automático foi retirado do editor na versão 1.0 do SEI Pro e ainda não voltou. Por isso a opção **Intervalo em minutos para o salvamento automático** fica oculta nas configurações do SEI Pro.
 
 A proposta da função é salvar o documento em edição a cada intervalo de tempo definido, evitando perder o texto se o navegador fechar ou a sessão do SEI expirar.
 
