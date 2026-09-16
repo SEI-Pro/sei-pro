@@ -2,6 +2,14 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.2
+16/09/2026
+
+Versão de correção.
+
+- Corrigida a queda da sessão do SEI logo depois do login, que começou na versão 1.7.1 em órgãos com mais de um item de Acompanhamento Especial no menu (como o do SEI do Maranhão, que tem também o da Ouvidoria). Ao abrir o Controle de Processos, a extensão lia a lista de acompanhamentos por um endereço formado pelos dois itens juntos, e o SEI encerrava a sessão ao receber esse endereço inválido
+- [Documentos em Lote](../pages/DOCUMENTOSEMLOTE.md) e [Processos em Lote](../pages/PROCESSOSEMLOTE.md): a leitura dos tipos de documento e de processo passa a usar só o item *Pesquisa* do menu, evitando o mesmo problema em menus com outro item de pesquisa
+
 ### Versão 1.7.1
 15/09/2026
 
