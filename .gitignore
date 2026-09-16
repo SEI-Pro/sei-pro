@@ -17,6 +17,7 @@
 /tools/
 /updates/
 /whitelabels/
+/tests/
 
 # -----------------------------------------------------------------------------
 # Manifests de whitelabel (o publico e apenas dist/manifest.json)

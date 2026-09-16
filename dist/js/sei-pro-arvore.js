@@ -2293,7 +2293,7 @@ var releituraAcompEspUnidadeArvorePro = false;
 function checkReleituraAcompEspUnidadeArvorePro() {
     if (releituraAcompEspUnidadeArvorePro) return;
     if (typeof parent.getListAcompanhamentoEspecial !== 'function' || typeof parent.getListaAcompanhamentoEspUnidadePro !== 'function' || typeof parent.idUnidade === 'undefined' || !parent.idUnidade) return;
-    if (parent.$(parent.mainMenu).find('li a[href*="acao=acompanhamento_listar"]').length == 0) return;
+    if (typeof parent.getLinkMenuAcaoPro !== 'function' || parent.getLinkMenuAcaoPro('acompanhamento_listar') == '') return;
     var listaCrua = localStorageRestorePro('dadosAcompanhamentoEspProcessoPro');
     if (!$.isArray(listaCrua)) return;
     var listaUnidade = parent.getListaAcompanhamentoEspUnidadePro(listaCrua);

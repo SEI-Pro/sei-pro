@@ -3649,6 +3649,19 @@ function getAutomaticActions() {
             }
     }
 }
+// Link do menu principal para a acao EXATA (primeiro que casar), ou '' sem o item no menu. O menu pode ter acoes com
+// o mesmo prefixo (no SEI MA: acompanhamento_listar e acompanhamento_listar_ouvidoria): juntar os links que CONTEM a
+// acao gerava uma URL com dois infra_hash, e o SEI encerra a sessao ao receber hash invalido
+// (InfraSessao::validarLink > sair 'Tamanho de hash invalido').
+function getLinkMenuAcaoPro(acao, menu = false) {
+    var href = '';
+    var regAcao = new RegExp('[?&]acao=' + acao + '(&|$)');
+    $(menu || mainMenu).find('li a').each(function () {
+        var link = $(this).attr('href');
+        if (typeof link === 'string' && regAcao.test(link)) { href = link; return false; }
+    });
+    return href;
+}
 // callback (opcional): chamado quando a ultima pagina da lista foi gravada, no lugar da verificacao de
 // reabertura programada - usado pelo agrupamento por acompanhamento especial e pelo icone de acompanhamento (sei-pro.js).
 // Uma leitura por vez nesta pagina: duas cadeias paginadas ao mesmo tempo (ex.: icone ou agrupamento da tela inicial e
@@ -3658,8 +3671,8 @@ function getAutomaticActions() {
 // leitura em curso se este arquivo for carregado de novo na mesma pagina.)
 var leituraListAcompanhamentoEspPro = (typeof leituraListAcompanhamentoEspPro !== 'undefined') ? leituraListAcompanhamentoEspPro : false;
 function getListAcompanhamentoEspecial(force = false, callback = false) {
-    var href = $(mainMenu).find('li a').map(function () { if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=acompanhamento_listar') !== -1) { return $(this).attr('href') } }).get().join();
-    if (href !== null) {
+    var href = getLinkMenuAcaoPro('acompanhamento_listar');
+    if (href) {
         if (leituraListAcompanhamentoEspPro && Date.now() - leituraListAcompanhamentoEspPro.inicio < 60000) {
             leituraListAcompanhamentoEspPro.pendentes.push({force: force, callback: callback});
             return;
@@ -3788,7 +3801,7 @@ function checkDadosAcompEspecial(force = false) {
         // verifyConfigValue so aceita valor == true, entao so o periodo de 1 hora ligava a verificacao automatica.
         var periodoReabertura = parseInt(getConfigValue('reaberturaprogramada_periodo'));
         // Sem o item Acompanhamento Especial no menu (sem permissao), a leitura pediria a propria pagina e gravaria a lista vazia.
-        var menuAcompanhamentoEsp = $(mainMenu).find('li a[href*="acao=acompanhamento_listar"]').length > 0;
+        var menuAcompanhamentoEsp = getLinkMenuAcaoPro('acompanhamento_listar') != '';
         if ( force ||
                 (
                     menuAcompanhamentoEsp &&
@@ -8001,7 +8014,7 @@ function checkDadosIframeProcessoPro(mode) {
     }
 }
 function getDadosPesquisaPro(iframe, mode) {
-    var href = iframe.find(mainMenu).find('li a').map(function () { if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=protocolo_pesquisar') !== -1) { return $(this).attr('href') } }).get().join();
+    var href = getLinkMenuAcaoPro('protocolo_pesquisar', iframe.find(mainMenu));
     if (href != '') {
         var tiposDocumentos = [];
         $.ajax({ url: href }).done(function (html) {
@@ -8021,12 +8034,8 @@ const getTypeSEI = async (type = 'documentos') => {
         if (type == 'documentos' && typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.tiposDocumentos !== 'undefined' && dadosProcessoPro.tiposDocumentos.length) return dadosProcessoPro.tiposDocumentos;
         if (type == 'processos' && typeof dadosProcessoPro !== 'undefined' && typeof dadosProcessoPro.propProcesso !== 'undefined' && typeof dadosProcessoPro.propProcesso.selTipoProcedimento_select !== 'undefined' && dadosProcessoPro.propProcesso.selTipoProcedimento_select.length) return dadosProcessoPro.propProcesso.selTipoProcedimento_select
         
-        const href = $(mainMenu).find('li a').map(function () { 
-            if (typeof $(this).attr('href') !== 'undefined' && $(this).attr('href').indexOf('acao=protocolo_pesquisar') !== -1) { 
-                return $(this).attr('href'); 
-            } 
-        }).get().join();
-        
+        const href = getLinkMenuAcaoPro('protocolo_pesquisar');
+
         if (href === '') {
             throw new Error('Erro ao obter a URL de pesquisa de protocolos');
         }

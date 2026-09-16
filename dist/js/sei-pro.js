@@ -547,7 +547,7 @@ function getListaAcompanhamentoEspUnidadePro(listaAcompEsp) {
 var listaAcompanhamentoEspAtualizadaPro = false;
 function updateListaAcompanhamentoEspGroupTable() {
     if (listaAcompanhamentoEspAtualizadaPro || typeof getListAcompanhamentoEspecial === 'undefined') return;
-    if ($(mainMenu).find('li a[href*="acao=acompanhamento_listar"]').length == 0) return;
+    if (typeof getLinkMenuAcaoPro === 'undefined' || getLinkMenuAcaoPro('acompanhamento_listar') == '') return;
     listaAcompanhamentoEspAtualizadaPro = true;
     getListAcompanhamentoEspecial(false, function(){
         if (typeof moment === 'function') setOptionsPro('lastread_AcompEspLista', moment().format('YYYY-MM-DD HH:mm:ss'));
