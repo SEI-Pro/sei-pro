@@ -14,9 +14,6 @@ var
     autoSaveEditor,
     langs,
     wsDialogHtml,
-    indexDisplayPro = 0,
-    lastTextTip = false,
-    resultTextTip = false,
     CKWebSpeechHandler;
 
     txaEditor = isNewEditor ? '.infra-editor__editor-completo' : txaEditor;
@@ -2784,10 +2781,10 @@ function setOnKeyEditor(destroy = false) {
 function onKeyEditorPro(evt) {
     var self = this;
     var event = evt;
-    keyActionEditor(event, self);
+    var tratada = keyActionEditor(event, self);
     setTimeout(function() {
         evtInlineOpenAI(event);
-        keyupActionEditor(event, self);
+        if (!tratada) keyupActionEditor(event, self);
     }, 10);
 }
 function evtInlineOpenAI(evt) {
@@ -2803,177 +2800,20 @@ function evtInlineOpenAI(evt) {
         }
     }
 }
+// Escrita interativa (# campos do processo, @ unidades): js/modules/editor/escrita-interativa.js.
+// No CK5 o modulo se liga sozinho ao plugin Mention do SEI 5; no CK4 recebe as teclas daqui.
 function keyupActionEditor(evt, self) {
-    var pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
-    if (verifyConfigValue('escrivainterativa') && (!pElement.find('.imgBgAncora').length || !pElement.find('.minutaAncora').length) && (evt.data.keyCode == 2228275 || (pElement.find('.linkDisplayPro').length && pElement.text().indexOf('#') !== -1) || pElement.text().indexOf('#') !== -1)) {
-        showTagsTips(pElement[0], $(oEditor.container.$).find('iframe').contents());
-    } else if (verifyConfigValue('escrivainterativa') && (!pElement.find('.imgBgAncora').length || !pElement.find('.minutaAncora').length) && (evt.data.keyCode == 2228274 || (pElement.find('.linkDisplayPro').length && pElement.text().indexOf('@') !== -1) || pElement.text().indexOf('@') !== -1)) {
-        showInteressadosTips(pElement[0], $(oEditor.container.$).find('iframe').contents());
-        // console.log('@',pElement[0], $(oEditor.container.$).find('iframe').contents());
-    }
-    // console.log(evt.data.keyCode, verifyConfigValue('escrivainterativa'), !pElement.find('.imgBgAncora').length, !pElement.find('.minutaAncora').length, evt.data.keyCode == 2228274, pElement.find('.linkDisplayPro').length, pElement.text().indexOf('@'));
+    if (typeof SeiProEscritaInterativa !== 'undefined') SeiProEscritaInterativa.ck4AoDigitar(oEditor);
 }
+// Retorna true quando a lista da escrita interativa consumiu a tecla (setas, Enter, Tab, Esc).
 function keyActionEditor(evt, self) {
-    var pElement = $(oEditor.getSelection().getStartElement().$).closest('p');
-    if (verifyConfigValue('escrivainterativa')) {
-        if ((evt.data.keyCode == 40 || evt.data.keyCode == 38) && pElement.find('.linkDisplayPro').length) {
-            evt.cancel();
-            evt.stop();
-            indexDisplayPro = evt.data.keyCode == 40 ? indexDisplayPro+1 : indexDisplayPro;
-            indexDisplayPro = evt.data.keyCode == 38 ? indexDisplayPro-1 : indexDisplayPro;
-            indexDisplayPro = indexDisplayPro < 0 ? 0 : indexDisplayPro;
-        } else if ((evt.data.keyCode == 13 || evt.data.keyCode == 9) && pElement.find('.linkDisplayPro').length) {
-            evt.cancel();
-            evt.stop();
-            pElement.find('.linkDisplayPro li.highlighted').trigger('click');
-            return false;
-        }
+    if (typeof SeiProEscritaInterativa !== 'undefined' && SeiProEscritaInterativa.ck4Tecla(oEditor, evt.data.keyCode)) {
+        evt.cancel();
+        evt.stop();
+        return true;
     }
-    // console.log(evt.data.keyCode);
+    return false;
 }
-function getTextTagTip(keyCode = '#') {
-
-      
-    /* var range = oEditor.getSelection().getRanges()[0],
-        startNode = range.startContainer;
-    var textP = startNode.getText().substring(0,range.startOffset); */
-
-    var e = oEditor;
-    var r = oEditor.getSelection().getRanges()[ 0 ];
-        r.collapse( 1 );
-        r.setStartAt( ( r.startPath().block || r.startPath().blockLimit ).getFirst(), CKEDITOR.POSITION_AFTER_START );
-    var docFr = r.cloneContents();
-    var textP = docFr.$.textContent;
-        textP = (textP.indexOf(keyCode) !== -1) ? textP.split(keyCode)[1].trim() : false;
-        textP = textP ? textP.replace(invisibleCharacters, "") : textP;
-        // console.log(textP); 
-    return textP;
-}
-function showInteressadosTips(this_, iframeDoc) {
-    var textTip = getTextTagTip('@');
-    var index = 0;
-    // if (textTip && textTip !== '' && lastTextTip != textTip) {
-    if (textTip && textTip != '') {
-        lastTextTip = textTip;
-        getInteressadosProcesso(textTip, function(result){
-            resultTextTip = result;
-            renderTagsTips(this_, iframeDoc, textTip, result);
-        });
-    } else {
-        // if (lastTextTip && resultTextTip) renderTagsTips(this_, iframeDoc, lastTextTip, resultTextTip);
-    }
-}
-function renderTagsTips(this_, iframeDoc, textTip, result) {
-    var htmlTips = $.map(result, function(v, i){
-                        return "<li contenteditable='false' data-text='<span contenteditable=\"false\" style=\"text-indent:0px;\" class=\"ancoraSei interessadoSeiPro\" data-id=\""+v.id+"\">"+v.descricao+"</span>&nbsp;' data-id='"+v.id+"' data-keycode='@' data-index='"+i+"' data-texttip='"+textTip+"' class='"+(indexDisplayPro == i ? 'highlighted' : '')+"' onmouseover='parent.hoverTapTip(this)' onclick='parent.setTagTip(this)'>"+v.descricao+"</li>";
-                    }).join('');
-        htmlTips = htmlTips == "" ? "<li contenteditable='false' style='padding: 5px; cursor:pointer'>Nenhum resultado encontrado</li>" : htmlTips;
-
-    var html =  '<div class="linkDisplayPro" unselectable="on" contenteditable="false">'+
-                '  <ul>'+
-                '    '+htmlTips+
-                '  </ul>'+
-                '</div>'; 
-
-    iframeDoc.find('.linkDisplayPro').remove();
-    $(this_).append(html);
-    replaceTextOnEditor('@','<a name="tagtip"></a></span>@');
-    centralizeTapTip(this_);
-}
-function showTagsTips(this_, iframeDoc) {
-    var textTip = getTextTagTip();
-    var index = 0;
-    var listDocumentos = $.map(dadosProcessoPro.listDocumentos, function (v) {
-                            var select_text = textoParaHtmlPro(( v.nr_sei != '' ) ? v.documento+' ('+v.nr_sei+')' : v.documento);
-                            var citacaoDoc = getCitacaoDoc();
-                            var nrSei = ( v.nr_sei != '' ) ? v.nr_sei : v.documento;
-                            var nrSeiHtml = '<span contenteditable="false" style="text-indent:0;"><a class="ancoraSei" id="lnkSei'+textoParaHtmlPro(v.id_protocolo)+'" style="text-indent:0;">'+textoParaHtmlPro(nrSei)+'</a></span>';
-                            var citacaoDocumento = ( v.nr_sei != '' || getConfigValue('citacaodoc') == 'citacaodoc_4') ? textoParaHtmlPro(v.documento.trim())+'&nbsp;('+citacaoDoc+nrSeiHtml+')' : nrSeiHtml;
-                        
-                            if ( v.documento != '' ) { return [[select_text, citacaoDocumento]] }
-                        });
-    var listDadosProcesso = arrayDadosEditor();
-    var listTagTip = listDadosProcesso.concat(listDocumentos);
-    var htmlTips = $.map(listTagTip, function(v){ 
-                        var txtTag = !!v[0] ? removeAcentos(v[0]).replace(/[^\x00-\x7F]/g, '').toLowerCase() : false;
-                        var txtTip = !!v[0] ? removeAcentos(textTip).replace(/[^\x00-\x7F]/g, '').toLowerCase() : false;
-                        var checkTag = txtTag && txtTip ? txtTag.includes(txtTip) : false;
-                        if (!!v[1] && (!textTip || textTip == '' || checkTag) ) { 
-                            index++; 
-                            return "<li contenteditable='false' data-text='"+String(v[1]).replace(/&/g, '&amp;').replace(/'/g, '&#39;')+"' data-keycode='#' data-index='"+index+"' data-texttip='"+textTip+"' class='"+(indexDisplayPro == index-1 ? 'highlighted' : '')+"' onmouseover='parent.hoverTapTip(this)' onclick='parent.setTagTip(this)'>"+v[0]+"</li>" 
-                        } 
-                    }).join('');
-        htmlTips = htmlTips == "" ? "<li contenteditable='false' style='padding: 5px; cursor:pointer'>Nenhum resultado encontrado</li>" : htmlTips;
-    var html =  '<div class="linkDisplayPro" unselectable="on" contenteditable="false">'+
-                '  <ul>'+
-                '    '+htmlTips+
-                '  </ul>'+
-                '</div>'; 
-
-            iframeDoc.find('.linkDisplayPro').remove();
-            $(this_).append(html);
-            replaceTextOnEditor('#','<a name="tagtip"></a></span>#');
-            centralizeTapTip(this_);
-}
-function centralizeTapTip(this_) {
-    var boxDisplayLink = $(this_).find('.linkDisplayPro');
-    var boxDisplayLink_offset = $(this_).find('a[name="tagtip"]').offset();
-    if (typeof boxDisplayLink_offset !== 'undefined') {
-        var elemBody = getIframeEditorPro(oEditor.name).contents().find('body');
-        var ckeContent = getIframeEditorPro(oEditor.name).closest('.cke_contents');
-        var heightBody = elemBody.height();
-        var boxDisplayLink_left = boxDisplayLink_offset.left;
-        var boxDisplayLink_top = boxDisplayLink_offset.top;
-        var boxDisplayLink_width = boxDisplayLink.width();
-        var windowWidth = $(window).width();
-        // var marginLeft = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-(boxDisplayLink_left+boxDisplayLink_width+45) : 0;
-            // marginLeft = marginLeft < 0 ? 0 : marginLeft;
-        var marginTop = (boxDisplayLink_top + 223) > heightBody ? '-240px' : '15px';
-
-        var leftBox = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? undefined : boxDisplayLink_left;
-        var rightBox = ( boxDisplayLink_left+boxDisplayLink_width > windowWidth ) ? windowWidth-boxDisplayLink_left - 40 : undefined;
-            rightBox = (windowWidth/3)*2 > boxDisplayLink_left && boxDisplayLink_left > (windowWidth/3) ? (windowWidth-boxDisplayLink_width)/2 : rightBox;
-
-        // console.log({boxDisplayLink_offset: boxDisplayLink_offset, boxDisplayLink_width: boxDisplayLink_width, windowWidth: windowWidth, mid: (windowWidth/3)*2 > boxDisplayLink_left && boxDisplayLink_left > (windowWidth/3)});
-        // console.log(windowWidth/3, (windowWidth/3)*2, boxDisplayLink_left, (windowWidth/3)*2 > boxDisplayLink_left, boxDisplayLink_left > (windowWidth/3) );
-
-        if (heightBody < 250) {
-            elemBody.css({'margin-bottom': '250px'});
-            ckeContent.addClass('resizeDisplayLink');
-            marginTop = boxDisplayLink_top > 250 ? marginTop : '15px';
-        }
-
-            // boxDisplayLink.css({'margin-left': marginLeft, 'margin-top': marginTop, 'left': boxDisplayLink_left, top: boxDisplayLink_offset.top});
-            boxDisplayLink.css({'margin-top': marginTop, 'left': leftBox, 'right': rightBox, top: boxDisplayLink_offset.top});
-            $(this_).find('a[name="tagtip"]').remove();
-        if (!$(this_).find('.linkDisplayPro ul li.highlighted').length) {
-            $(this_).find('.linkDisplayPro ul li').eq(0).addClass('highlighted');
-            indexDisplayPro = 0;
-        }
-        if (indexDisplayPro > 6) $(this_).find('.linkDisplayPro ul').scrollTop(29.5*(indexDisplayPro-6));
-    }
-}
-function hoverTapTip(this_) {
-    var _this = $(this_);
-    _this.closest('ul').find('li.highlighted').removeClass('highlighted');
-    _this.addClass('highlighted');
-    indexDisplayPro = _this.data('index');
-}
-function setTagTip(this_) {
-    var _this = $(this_);
-    var textTip = getTextTagTip();
-    var textTip = _this.data('texttip');
-    var textReplace = _this.data('text');
-    var keyCode = _this.data('keycode');
-    var select = oEditor.getSelection().getStartElement();
-    var pElement = $(select.$).closest('p');
-        $(oEditor.getSelection().getStartElement().$).closest('p').find('.linkDisplayPro').remove();
-        replaceTextOnEditor(keyCode+textTip, textReplace);
-        indexDisplayPro = 0;
-        lastTextTip = false;
-        resultTextTip = false;
-        restoreIframeDisplayLink();
-} 
 function restoreIframeDisplayLink() {
     if (typeof oEditor !== 'undefined' && typeof oEditor.name !== 'undefined') {
         var elemBody = getIframeEditorPro(oEditor.name).contents().find('body');
@@ -2982,47 +2822,6 @@ function restoreIframeDisplayLink() {
             elemBody.css({'margin-bottom': '0'});
             ckeContent.removeClass('resizeDisplayLink');
         }
-    }
-}
-var storeCursorLocation = function( oEditor ) {
-    bookmark = oEditor.getSelection().createBookmarks( true );
-};
-var restoreCursorLocation = function( oEditor ) {
-    oEditor.getSelection().selectBookmarks( bookmark );
-};
-function replaceTextOnEditor(findString, replaceString) {
-    oEditor.focus(); 
-    storeCursorLocation(oEditor);
-    var sel = oEditor.getSelection();
-    var element = sel.getStartElement();
-    var data = element.getHtml();
-    var replaced_text = data.replace(invisibleCharacters, "").replace(findString, replaceString);
-        element.setHtml(replaced_text);
-        restoreCursorLocation(oEditor);
-}
-function selectTextOnEditor(findString) {
-    try {
-        var sel = oEditor.getSelection();
-        var element = sel.getStartElement();
-        var pElement = $(element.$).closest('p');
-            pElement.html(pElement.html().replace(/^\n|\n$/g, ''));
-            sel.selectElement(element);
-
-        var ranges = oEditor.getSelection().getRanges();
-        var startIndex = element.getHtml().indexOf(findString);
-        if (startIndex != -1) {
-            ranges[0].setStart(element.getFirst(), startIndex);
-            ranges[0].setEnd(element.getFirst(), startIndex + findString.length);
-            console.log([ranges[0]]);
-            sel.selectRanges([ranges[0]]);
-
-            var range = sel.getRanges()[0];
-                range.deleteContents();
-                range.select();
-        }
-    } catch (e) {
-        console.log(e);
-        return false;
     }
 }
 // INSERE REFERENCIA INTERNA

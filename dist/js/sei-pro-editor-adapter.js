@@ -249,6 +249,7 @@
         'sumario.js',
         'sigilo.js',
         'dados-processo.js',
+        'escrita-interativa.js',
         'latex.js',
         'legis.js',
         'table-styles.js',

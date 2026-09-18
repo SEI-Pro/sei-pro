@@ -37,7 +37,7 @@
  * SHARED (permanecem no monolito / sei-functions-pro.js -- usados aqui apenas em
  * tempo de clique/boot, quando ja existem, e tambem por OUTRAS features, por
  * isso NAO sao movidos):
- *   - arrayDadosEditor (tambem usado por showTagsTips)
+ *   - arrayDadosEditor (tambem usado pela escrita interativa, escrita-interativa.js)
  *   - replaceDadosEditor (tambem usado pelo importador de arquivo; ainda
  *     acoplado ao iframe/oEditor do CK4; referenciado pelo onclick da aba 2)
  *   - checkProcessoSigiloso, alertaBoxPro, sanitizeHTML, verifyConfigValue,

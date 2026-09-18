@@ -27,7 +27,14 @@ Ao digitar `@` seguido da **sigla de uma unidade**, o menu sugere a **descriçã
 
 * `↑` e `↓` percorrem as sugestões;
 * `Enter` ou `Tab` inserem a sugestão destacada;
+* `Esc` fecha o menu;
 * Continue digitando para refinar, ou apague o `#`/`@` para fechar.
+
+O menu só abre quando o `#` ou o `@` **começa uma palavra**, logo depois de um espaço, de um parêntese ou no início do parágrafo. Por isso um e-mail (`fulano@orgao.gov.br`) ou um `#` colado no meio de uma palavra não abrem o menu.
+
+### No SEI 5
+
+No SEI 5 o editor já tem um menu próprio para o `@`, com as variáveis do SEI (`@ano@`, `@destinatarios_virgula_espaco@` e outras). O SEI Pro usa esse mesmo menu: as variáveis do SEI aparecem primeiro, seguidas das unidades encontradas. O `#` abre o mesmo menu com os documentos e dados do processo.
 
 ### Como ativar
 
@@ -36,6 +43,7 @@ A função vem **desligada** de fábrica. Para ligar, abra as [Configurações d
 ### Bom saber
 
 * O menu usa os dados que o SEI Pro lê do processo. Com a opção [Desativar consultas adicionais](../pages/DESATIVACONSULTAS.md) ligada, as sugestões de `#` não aparecem.
+* A sua própria unidade não aparece no `@`: a lista é a mesma que o SEI oferece como destino no **Enviar Processo**.
 * Se você usa a [Legística](../pages/LEGISTICA.md), lembre que ela também usa `#` e `@` para referências cruzadas e externas.
 
 ## Próximo item
