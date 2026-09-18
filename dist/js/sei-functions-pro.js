@@ -144,6 +144,154 @@ function isCopiaIsoladaPro() {
 function isCopiaResponsavelVisualizacaoPro() {
     return !isCopiaIsoladaPro() || document.documentElement.getAttribute('data-spro-visualizacao') !== 'pagina';
 }
+// O SEI 4 e o 5 carregam o Bootstrap 4 depois do jQuery UI, e o plugin de botao do Bootstrap toma o nome $.fn.button.
+// O dialogo do jQuery UI monta os botoes (e o de fechar do titulo) com .button(): caia no Bootstrap, que nao aplica as
+// classes ui-button nem o icone, e os botoes saiam com a borda padrao do navegador e o fechar como um quadrado vazio
+// (no SEI 3, sem Bootstrap, o problema nao existia). O SEI nao chama $.fn.button (so o jQuery UI chama, e o data-api do
+// Bootstrap usa o plugin por dentro), entao o nome volta para o widget do jQuery UI; o do Bootstrap fica em
+// $.fn.bootstrapButtonPro. Nao faz nada sem o Bootstrap (SEI 3) nem na copia isolada, que usa o jQuery da extensao.
+function restaurarBotaoJqueryUIPro(jq) {
+    try {
+        if (jq && jq.fn && jq.fn.button && jq.fn.button.Constructor && jq.ui && jq.ui.button && jq.widget && typeof jq.widget.bridge === 'function') {
+            jq.fn.bootstrapButtonPro = jq.fn.button;
+            jq.widget.bridge('button', jq.ui.button);
+        }
+    } catch (e) {}
+}
+restaurarBotaoJqueryUIPro(window.jQuery);
+// Mais de uma instalacao do SEI Pro ativa no navegador (ex.: o SEI Pro Lab da Chrome Web Store e uma copia carregada
+// sem compactacao, ou uma versao institucional). As copias disputam os mesmos nomes no mundo da pagina e o mesmo
+// sessionStorage ('new_extension'), o que gera falhas dificeis de diagnosticar: icones que nao carregam, "Identifier
+// '...' has already been declared", scripts bloqueados pelo CSP do mundo isolado. A copia isolada do topo registra
+// no <html> (que todas as extensoes enxergam) o host da propria URL, nome, versao e origem. As versoes anteriores nao
+// registram e sao reconhecidas pelas fontes que carregam com a URL da propria extensao (css/fontawesome.pro.min.css
+// e @font-face em /webfonts/, desde 2021). Com mais de uma copia aparece uma barra amarela fixa no topo da pagina; fechada,
+// nao volta na mesma aba para o mesmo conjunto de copias. Os dados lidos do <html> entram so como texto.
+var IDS_LOJA_SEIPRO = {'ajchjgnbfdchmhldfbmajofhgnkojhab': 'SEI Pro Lab', 'pdbbapplhjopafpgidbgceccbbmehcjj': 'SEI Pro'};
+function isFirefoxSeiPro() {
+    return typeof browser !== 'undefined' && !!browser && !!browser.runtime && typeof browser.runtime.getBrowserInfo === 'function';
+}
+function getCopiasRegistradasSeiPro() {
+    try {
+        var lista = JSON.parse(document.documentElement.getAttribute('data-spro-copias') || '[]');
+        return Array.isArray(lista) ? lista.filter(function (c) { return c && typeof c.host === 'string' && c.host != ''; }) : [];
+    } catch (e) { return []; }
+}
+function initAlertaCopiasSeiPro() {
+    if (window.alertaCopiasSeiProIniciado || window.top !== window || !isCopiaIsoladaPro()) { return; }
+    window.alertaCopiasSeiProIniciado = true;
+    try {
+        var runtimePro = (typeof chrome !== 'undefined' && chrome && chrome.runtime && typeof chrome.runtime.getURL === 'function') ? chrome.runtime : browser.runtime;
+        var manifestPro = runtimePro.getManifest();
+        // A extensao antiga (SPro) convive de proposito com a nova durante a migracao e se desliga sozinha (init_all.js).
+        if (manifestPro.short_name == 'SPro') { return; }
+        var host = String(runtimePro.getURL('')).split('/')[2];
+        var copias = getCopiasRegistradasSeiPro();
+        if (!copias.some(function (c) { return c.host == host; })) {
+            // update_url so existe no manifest de quem veio de uma loja (o Chrome acrescenta ao instalar).
+            copias.push({host: host, id: runtimePro.id, nome: manifestPro.name, versao: manifestPro.version,
+                         origem: manifestPro.update_url || (isFirefoxSeiPro() ? '' : 'descompactada')});
+            document.documentElement.setAttribute('data-spro-copias', JSON.stringify(copias));
+        }
+        // As outras copias podem terminar de carregar depois desta.
+        [0, 3000, 10000].forEach(function (espera) { setTimeout(function () { verificarCopiasSeiPro(espera > 0); }, espera); });
+    } catch (e) {}
+}
+// Versoes anteriores so deixam rastro certo (fontes) quando carregam primeiro: o loadFontIcons pula se as fontes ja
+// estao na pagina, e ai sobra o css/jquery-ui.css do loadFilesUI, um nome generico. Esse CSS e o host que outra copia
+// grava no sessionStorage ('new_extension', lido so a partir de 3 s, quando todas ja gravaram) viram candidatos,
+// confirmados pelo arquivo proprio do SEI Pro (js/sei-functions-pro.js, acessivel pela web): outra extensao que use o
+// mesmo nome de CSS, ou uma copia ja desinstalada que ficou no sessionStorage, nao contam. Um pedido por host e pagina.
+var verificacaoHostsSeiPro = {};
+function confirmarCopiaSeiPro(base, incluirSessao) {
+    var host = base.split('/')[2];
+    if (verificacaoHostsSeiPro[host] !== undefined) { return verificacaoHostsSeiPro[host] === true; }
+    verificacaoHostsSeiPro[host] = 'pendente';
+    fetch(base + 'js/sei-functions-pro.js', {method: 'HEAD', cache: 'no-store'}).then(function (r) {
+        verificacaoHostsSeiPro[host] = r.ok;
+        if (r.ok) { verificarCopiasSeiPro(incluirSessao); }
+    }, function () { verificacaoHostsSeiPro[host] = false; });
+    return false;
+}
+function verificarCopiasSeiPro(incluirSessao) {
+    try {
+        var copias = getCopiasRegistradasSeiPro();
+        var hosts = copias.map(function (c) { return c.host; });
+        var candidatos = [];
+        document.querySelectorAll('link[href*="-extension://"][href$="/css/jquery-ui.css"]').forEach(function (l) { candidatos.push(l.getAttribute('href')); });
+        if (incluirSessao) {
+            try { var ns = JSON.parse(sessionStorage.getItem('new_extension')); if (ns && ns.URL_SPRO) { candidatos.push(String(ns.URL_SPRO)); } } catch (e) {}
+        }
+        candidatos.forEach(function (url) {
+            var m = String(url).match(/^((?:chrome|moz)-extension:\/\/[^\/"'\s)]+\/)/);
+            if (!m) { return; }
+            var host = m[1].split('/')[2];
+            if (hosts.indexOf(host) === -1 && confirmarCopiaSeiPro(m[1], incluirSessao)) { hosts.push(host); copias.push({host: host}); }
+        });
+        var rastros = [];
+        document.querySelectorAll('link[href*="fontawesome.pro.min.css"]').forEach(function (l) { rastros.push(l.getAttribute('href')); });
+        document.querySelectorAll('style').forEach(function (s) { if (s.textContent.indexOf('/webfonts/') !== -1) rastros.push(s.textContent); });
+        var reExtensao = /(?:chrome|moz)-extension:\/\/([^\/"'\s)]+)\/(?:webfonts\/|css\/fontawesome\.pro\.min\.css)/g, m;
+        var texto = rastros.join(' ');
+        while ((m = reExtensao.exec(texto)) !== null) {
+            if (hosts.indexOf(m[1]) === -1) { hosts.push(m[1]); copias.push({host: m[1]}); }
+        }
+        if (copias.length > 1) { mostrarAlertaCopiasSeiPro(copias); }
+    } catch (e) {}
+}
+function descricaoCopiaSeiPro(c) {
+    if (!c.nome) {
+        return IDS_LOJA_SEIPRO[c.host] ? IDS_LOJA_SEIPRO[c.host] + ' da Chrome Web Store (vers\u00E3o antiga)' : 'outra c\u00F3pia (ID ' + c.host.slice(0, 8) + '\u2026)';
+    }
+    var origem = (c.origem == 'descompactada') ? 'sem compacta\u00E7\u00E3o'
+               : /google\.com/.test(c.origem || '') ? 'Chrome Web Store'
+               : /microsoft\.com/.test(c.origem || '') ? 'Microsoft Edge Add-ons' : '';
+    return String(c.nome) + ' ' + String(c.versao || '') + (origem ? ' (' + origem + ')' : '');
+}
+// A barra e fixa: o layout do SEI ocupa a janela inteira, e uma barra no fluxo criava rolagem na pagina, que o SEI
+// chegava a rolar sozinho, escondendo a barra. A instrucao vem antes da lista de copias, que e cortada em telas estreitas
+// (o texto completo fica no title).
+function mostrarAlertaCopiasSeiPro(copias) {
+    var chave = copias.map(function (c) { return c.host; }).sort().join(',');
+    try { if (sessionStorage.getItem('sproAlertaCopiasFechado') === chave) { return; } } catch (e) {}
+    if (!document.body) { return; }
+    var barra = document.getElementById('sproAlertaCopias');
+    if (!barra) {
+        barra = document.createElement('div');
+        barra.id = 'sproAlertaCopias';
+        barra.setAttribute('role', 'alert');
+        barra.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483000;box-sizing:border-box;margin:0;padding:3px 36px 3px 12px;'+
+                              'background:#FFD700;color:#1f1f1f;border-bottom:1px solid #c9a400;box-shadow:0 1px 4px rgba(0,0,0,.25);'+
+                              'font:12px/1.4 Arial,Helvetica,sans-serif;text-align:center;text-shadow:none;letter-spacing:normal;'+
+                              'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        document.body.insertBefore(barra, document.body.firstChild);
+    }
+    var nomes = copias.map(descricaoCopiaSeiPro);
+    var lista = nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
+    var titulo = '\u26A0 ' + copias.length + ' c\u00F3pias do SEI Pro ativas neste navegador';
+    var texto = ': elas conflitam e causam falhas, como \u00EDcones que n\u00E3o carregam. Deixe s\u00F3 uma ativa em ' +
+                (isFirefoxSeiPro() ? 'about:addons' : 'chrome://extensions') + '. C\u00F3pias: ' + lista + '.';
+    barra.textContent = '';
+    barra.title = titulo + texto;
+    var forte = document.createElement('strong');
+    forte.style.cssText = 'font-weight:bold;';
+    forte.textContent = titulo;
+    barra.appendChild(forte);
+    barra.appendChild(document.createTextNode(texto));
+    var fechar = document.createElement('button');
+    fechar.type = 'button';
+    fechar.title = 'Fechar aviso';
+    fechar.setAttribute('aria-label', 'Fechar aviso');
+    fechar.textContent = '\u00D7';
+    fechar.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);margin:0;padding:0 6px;border:0;background:transparent;'+
+                           'color:#1f1f1f;font:bold 16px/1 Arial,Helvetica,sans-serif;cursor:pointer;min-width:0;width:auto;height:auto;box-shadow:none;';
+    fechar.addEventListener('click', function () {
+        try { sessionStorage.setItem('sproAlertaCopiasFechado', chave); } catch (e) {}
+        barra.remove();
+    });
+    barra.appendChild(fechar);
+}
+initAlertaCopiasSeiPro();
 // Janela auxiliar: pop-up nomeado que o SEI ou o SEI Pro abrem por infraAbrirJanela/window.open (janelaEditor_*,
 // janelaAssinatura e as de selecao do SEI 3.x, 'Pesquisa de Processos' do SEI Pro...). Nela as funcoes de tela
 // cheia (rolagem infinita, substituir selecao, URL amigavel, painel da arvore...) ficam desligadas. O teste era so
@@ -171,12 +319,14 @@ var tableHomeTimeout = 3000;
 // "Cannot read properties of null (reading 'NAMESPACE_SPRO')": a copia isolada parava aqui e nada do
 // resto do arquivo rodava (loadScriptPro, consts em TDZ). Sem a sessao, a copia do content script le do
 // manifest os mesmos valores que getPathExtensionPro() grava logo depois; fora dele (mundo da pagina,
-// sem runtime.getURL) os valores ficam undefined, como ja acontecia com URL_SPRO. Com a sessao gravada
-// (todas as outras paginas) o resultado e o mesmo de antes.
+// sem runtime.getURL) os valores ficam undefined, como ja acontecia com URL_SPRO.
+// No content script o manifest vale ANTES da sessao: 'new_extension' e uma chave unica da origem do SEI,
+// gravada por qualquer copia do SEI Pro aberta na aba. Com duas instalacoes (ex.: SEI Pro Lab da loja e uma
+// copia descompactada) ou com a extensao reinstalada com outro ID, a copia isolada pegava a URL da outra
+// extensao, e o Chrome bloqueava os scripts que ela injeta nos iframes (o CSP do mundo isolado so aceita
+// a propria extensao: "Loading the script 'chrome-extension://.../chosen.jquery.min.js' violates...").
+// A copia da pagina (sem runtime) continua lendo a sessao.
 function getNameSpaceSessionPro() {
-    if (typeof parent._P === 'undefined') { return {}; }
-    var ns = parent._P();
-    if (ns !== null) { return ns; }
     try {
         var runtimePro = (typeof browser !== 'undefined' && browser && browser.runtime && typeof browser.runtime.getURL === 'function') ? browser.runtime
                        : (typeof chrome !== 'undefined' && chrome && chrome.runtime && typeof chrome.runtime.getURL === 'function') ? chrome.runtime : null;
@@ -188,7 +338,9 @@ function getNameSpaceSessionPro() {
             }
         }
     } catch (e) {}
-    return {};
+    if (typeof parent._P === 'undefined') { return {}; }
+    var ns = parent._P();
+    return (ns !== null) ? ns : {};
 }
 var nameSpaceSessionPro = getNameSpaceSessionPro();
 var URL_SPRO = (typeof nameSpaceSessionPro.URL_SPRO !== 'undefined' && nameSpaceSessionPro.URL_SPRO !== null) ? nameSpaceSessionPro.URL_SPRO : undefined;
