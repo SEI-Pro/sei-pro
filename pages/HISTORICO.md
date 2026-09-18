@@ -2,6 +2,13 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.4
+18/09/2026
+
+- [Escrita interativa](../pages/ESCRITAINTERATIVA.md) volta a funcionar **no SEI 5**. No novo editor, o SEI Pro usa o menu que o próprio SEI já abre ao digitar `@`: as variáveis do SEI (`@ano@` e outras) aparecem primeiro, seguidas das unidades. O `#` abre o mesmo menu com os documentos e os dados do processo
+- Escrita interativa: o menu deixa de abrir sem motivo. Agora ele só aparece quando o `#` ou o `@` começa uma palavra, logo antes do cursor. Um e-mail (`fulano@orgao.gov.br`) ou um `#` em outro ponto do parágrafo não abrem mais a lista
+- Escrita interativa no SEI 3 e no SEI 4: a lista de sugestões passa a ficar fora do texto do documento (antes era inserida dentro do parágrafo) e fecha com `Esc`. No `@`, a unidade cuja sigla é exatamente a digitada aparece primeiro
+
 ### Versão 1.7.3
 18/09/2026
 
