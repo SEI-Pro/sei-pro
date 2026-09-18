@@ -2,6 +2,14 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.3
+18/09/2026
+
+- Aviso quando há **mais de uma cópia do SEI Pro ativa** no navegador (por exemplo, a da Chrome Web Store e outra carregada sem compactação). As cópias conflitam entre si e causam falhas difíceis de identificar, como ícones que não carregam. Uma barra amarela no topo da página lista as cópias encontradas e orienta a deixar só uma ativa em `chrome://extensions`. A barra pode ser fechada no ×
+- Botões das janelas do SEI Pro no SEI 4 e no SEI 5: o *OK* e os demais botões voltam ao visual correto, e o botão de fechar volta a mostrar o ×. O SEI 4 e o 5 carregam o Bootstrap, que tomava o lugar do componente de botão usado por essas janelas
+- Corrigida a busca nas listas de seleção dos formulários, que podia ser bloqueada pelo Chrome quando havia duas cópias do SEI Pro instaladas ou depois de reinstalar a extensão de outra pasta
+- O console do navegador deixa de mostrar centenas de avisos "Permissions policy violation: unload"
+
 ### Versão 1.7.2
 16/09/2026
 
