@@ -1208,6 +1208,12 @@ function stylesEditorKeystroke() {
     }
 }
 function editImgPro( editor ) {
+    // SEI 5 (CK5): nao ha editor.contextMenu. Formatar/Editar Imagem entram no botao direito (menu do
+    // adapter) e na barra da imagem, ambos em js/modules/editor/image-editor.js.
+    if ( editor && !editor.contextMenu && editor.model ) {
+        if (typeof menuImagemCK5Pro === 'function' && !editor.__seiProMenuImagem) { editor.__seiProMenuImagem = true; menuImagemCK5Pro(editor); }
+        return;
+    }
     if ( editor.contextMenu && !delayCrash && typeof editor.getMenuItem('ImageEditorPro') === 'undefined') {
 
         delayCrash = true;

@@ -16,7 +16,7 @@ Para aplicar em **vários trechos seguidos**, mantenha a tecla `Alt` (no Mac, `O
 
 > ![Copiar formatação em vários trechos](../img/tela-copiarformatacao2.gif)
 
-A opção **Copiar formatação** também está no **menu do botão direito** do editor.
+No SEI 3 e no SEI 4, a opção **Copiar formatação** também está no **menu do botão direito** do editor. No SEI 5 use o botão do pincel na barra: o botão direito sobre o texto continua com o menu do navegador (copiar, corretor ortográfico).
 
 ### Como ativar
 

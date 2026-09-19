@@ -213,6 +213,9 @@
     window.menuCopyStyle = function (editor) {
         if (!editor) return;
         SeiProEditorAdapter.addContextMenu(editor, function (targetEl) {
+            // SEI 5: o menu do SEI Pro substitui o do navegador, e texto selecionado e justamente quando
+            // o usuario quer o Copiar/corretor do navegador. La fica o botao do pincel na barra.
+            if (SeiProEditorAdapter.version === 5) return [];
             var inParagraph = targetEl && targetEl.closest && targetEl.closest('p');
             if (inParagraph && hasSelectionSafe(editor)) {
                 return [{

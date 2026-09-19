@@ -213,6 +213,8 @@
     window.menuBlockEdition = function (editor) {
         if (!editor) return;
         SeiProEditorAdapter.addContextMenu(editor, function (targetEl) {
+            // SEI 5: ainda nao portado (ver bloquearEdicao) -- nao oferece um item que so avisa.
+            if (SeiProEditorAdapter.version === 5) return [];
             if (closestEl(targetEl, 'p') && hasSelectionSafe(editor)) {
                 return [{
                     label: 'Bloquear Edi\u00E7\u00E3o',
@@ -258,9 +260,20 @@
     // Observacao: menuCopyStyle vive em copy-style.js; menuPlataformAI e
     // editImgPro permanecem no monolito (IA / edicao de imagem). Chamamos cada
     // um por nome QUANDO existir, preservando o gating de config do original.
+    // CK4 com secoes (SEI 4.1): uma instancia por secao; getInstance() sem referencia devolve a
+    // primeira editavel, que pode nao ser o Corpo do Texto. Registra em todas as editaveis.
     window.initContextMenuPro = function () {
-        var editor = SeiProEditorAdapter.getInstance();
-        if (!editor) return;
+        var editores = (SeiProEditorAdapter.getAllInstances() || []).filter(function (ed) { return ed && !ed.readOnly; });
+        if (!editores.length) {
+            var unico = SeiProEditorAdapter.getInstance();
+            if (unico) editores = [unico];
+        }
+        editores.forEach(initContextMenuEditorPro);
+    };
+
+    function initContextMenuEditorPro(editor) {
+        if (!editor || editor.__seiProCtxIniciado) return;
+        editor.__seiProCtxIniciado = true;
 
         tableSorterPro(editor);
         if (typeof window.menuCopyStyle === 'function') menuCopyStyle(editor);
@@ -277,7 +290,7 @@
         if (editarImagens && typeof window.editImgPro === 'function') {
             editImgPro(editor);
         }
-    };
+    }
 
     if (window.SeiProEditorAdapter && SeiProEditorAdapter.registerFeature) {
         SeiProEditorAdapter.registerFeature({ id: 'context-menu' });

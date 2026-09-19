@@ -410,6 +410,11 @@
             // contextMenu/addMenuGroup/addMenuItem; aqui via menu DOM uniforme.
             try {
                 SeiProEditorAdapter.addContextMenu(editor, function (targetEl) {
+                    // SEI 5: o menu do SEI Pro substitui o do navegador; um item que responde a qualquer
+                    // clique esconderia o corretor ortografico em todo botao direito. La o ditado segue
+                    // pelo botao da barra e pelo atalho. SEI 3/4: menu nativo, so com a opcao ligada.
+                    if (SeiProEditorAdapter.version === 5) return [];
+                    if (typeof checkConfigValue === 'function' && !checkConfigValue('ditado')) return [];
                     return [{
                         label: 'Ditado',
                         action: function () {

@@ -51,7 +51,7 @@
     // onde editor era ora a instancia, ora um elemento DOM (this_). Resolvemos
     // a instancia pelo adapter se nao vier uma instancia valida.
     // ----------------------------------------------------------------
-    window.openDialogUploadImgBase64 = function (editorOrRef) {
+    window.openDialogUploadImgBase64 = function (editorOrRef, imgInformada) {
         var editor = (editorOrRef && (editorOrRef.model || editorOrRef.insertElement || editorOrRef.getSelection))
             ? editorOrRef
             : SeiProEditorAdapter.getInstance(editorOrRef);
@@ -63,7 +63,7 @@
 
         // Imagem atualmente selecionada (se houver). No CK4/CK5 usamos o
         // elemento DOM apontado pela selecao via adapter.
-        var selectedImg = resolveSelectedImg(editor);
+        var selectedImg = imgInformada || resolveSelectedImg(editor);
 
         // Estado por instancia do dialogo (substitui as closures do CK4).
         var state = { imgScal: 1, lock: true };
@@ -190,11 +190,12 @@
                 // Pre-preenche a partir da imagem selecionada (se houver).
                 if (selectedImg) {
                     prefillFromImage($box, selectedImg, state);
+                    if (SeiProEditorAdapter.version === 5) prefillEstilosCK5($box, selectedImg);
                     $tabs.tabs && $tabs.tabs('option', 'active', 1);
                 }
             },
             buttons: [{
-                text: 'Inserir',
+                text: selectedImg ? 'Aplicar' : 'Inserir',
                 primary: true,
                 click: function ($box) {
                     insertImagesFromPreview($box, editor, selectedImg);
@@ -382,6 +383,25 @@
         }
     }
 
+    // SEI 5: a formatacao fica no <span style> em volta do widget da imagem (ver specToImgHtmlCK5).
+    function prefillEstilosCK5($box, img) {
+        var w = img.closest ? img.closest('.ck-widget') : null;
+        var sp = (w && w.parentElement && w.parentElement.tagName === 'SPAN' && w.parentElement.getAttribute('style')) ? w.parentElement : null;
+        if (!sp) return;
+        var st = sp.style;
+        var px = function (v) { var n = parseInt(v, 10); return isNaN(n) ? '' : String(n); };
+        if (st.borderTopStyle && st.borderTopStyle !== 'none') setIf($box, '#b64_border', px(st.borderTopWidth));
+        setIf($box, '#b64_hmargin', px(st.marginLeft));
+        setIf($box, '#b64_vmargin', px(st.marginTop));
+        setIf($box, '#b64_maxwidth', px(st.maxWidth));
+        setIf($box, '#b64_maxheight', px(st.maxHeight));
+        var f = st.filter || '';
+        var filtro = /invert/.test(f) ? 'invert' : /grayscale/.test(f) ? 'grayscale' : /blur/.test(f) ? 'blur' : /drop-shadow/.test(f) ? 'shadow' : /sepia/.test(f) ? 'sepia' : '';
+        setIf($box, '#b64_filter', filtro);
+        var alinha = (st.cssFloat === 'left' || st.cssFloat === 'right') ? st.cssFloat : ((st.verticalAlign === 'top' || st.verticalAlign === 'bottom') ? st.verticalAlign : '');
+        setIf($box, '#b64_align', alinha);
+    }
+
     function setIf($box, sel, value) {
         if (typeof value === 'string' && value !== '') $box.find(sel).val(value);
     }
@@ -522,7 +542,119 @@
     }
 
     // Aplica a insercao/atualizacao no editor via adapter (CK4/CK5).
+    // CK5: o DOM da imagem e so a vista -- setAttribute nela nao entra no model e se perde ao salvar.
+    // Converte o HTML montado pelo dialogo num elemento do mesmo tipo (imageInline/imageBlock) e copia
+    // os atributos dele (src, alt, tamanho e os estilos/atributos guardados pelo GHS) para a imagem.
+    function atualizarImagemCK5(editor, selectedImg, html) {
+        try {
+            var wrapper = selectedImg.closest ? selectedImg.closest('.ck-widget') : null;
+            var viewEl = wrapper ? editor.editing.view.domConverter.mapDomToView(wrapper) : null;
+            var modelEl = viewEl ? editor.editing.mapper.toModelElement(viewEl) : null;
+            if (!modelEl || !/^image/.test(modelEl.name)) return false;
+            var ctx = (modelEl.name === 'imageBlock') ? '$root' : '$block';
+            var frag = editor.data.toModel(editor.data.processor.toView(html), ctx);
+            var novo = null;
+            var procurar = function (n) {
+                if (novo || !n.is || !n.is('element')) return;
+                if (/^image/.test(n.name)) { novo = n; return; }
+                for (var c of n.getChildren()) procurar(c);
+            };
+            for (var c of frag.getChildren()) procurar(c);
+            if (!novo) return false;
+            editor.model.change(function (writer) {
+                if (novo.name !== modelEl.name) {
+                    editor.model.insertContent(frag, editor.model.createRangeOn(modelEl));
+                    return;
+                }
+                var manter = {};
+                for (var par of novo.getAttributes()) manter[par[0]] = true;
+                for (var antigo of Array.from(modelEl.getAttributeKeys())) {
+                    if (!manter[antigo]) writer.removeAttribute(antigo, modelEl);
+                }
+                for (var par2 of novo.getAttributes()) writer.setAttribute(par2[0], par2[1], modelEl);
+            });
+            return true;
+        } catch (e) {
+            console.warn('[SEIPro] Formatar imagem (SEI 5):', e && e.message);
+            return false;
+        }
+    }
+
+    // HTML da imagem no formato que o CK5 do SEI 5 preserva (medido no SEI 5.0.4): na <img> ficam so
+    // src, alt e a largura por estilo (vira resizedWidth); margens, borda, filtro e alinhamento vao num
+    // <span> em volta (o GHS guarda como htmlSpan da imagem em linha). Estilo e atributos como
+    // vspace/border/filter na propria <img> sao descartados. comSpan=false: imagem em bloco.
+    function specToImgHtmlCK5(spec, comSpan) {
+        var img = document.createElement('img');
+        img.setAttribute('src', spec.src);
+        img.setAttribute('alt', spec.attrs.alt || '');
+        var w = spec.attrs.width;
+        if (w != null && w !== '') img.setAttribute('style', 'width:' + (/%$/.test(String(w)) ? w : parseInt(w, 10) + 'px') + ';');
+        // Borda/margem zero nao entram: sem elas o span some quando o usuario remove a formatacao.
+        var estilos = spec.css.filter(function (c) { return !/^(width|height):/.test(c) && !/^(border|margin)[^:]*:0(px|%)?[ ;]/.test(c); })
+            .map(function (c) { return c.replace(/object-fit:\s*contain;?/g, ''); })
+            .filter(function (c) { return c; });
+        if (!comSpan || !estilos.length) return { html: img.outerHTML, estilos: estilos };
+        if (estilos.some(function (c) { return /^(margin|border)/.test(c); })) estilos.unshift('display:inline-block;');
+        var span = document.createElement('span');
+        span.setAttribute('style', estilos.join(''));
+        span.appendChild(img);
+        return { html: span.outerHTML, estilos: estilos };
+    }
+
+    // Recompressao em JPEG pelo canvas (equivale a qualityImages, que no CK4 troca o src direto no DOM).
+    function comprimirImagemCK5(src, q) {
+        return new Promise(function (resolve) {
+            if (!/^data:image\/(png|jpe?g|webp|bmp)/i.test(src) || !(q > 0 && q < 1)) return resolve(src);
+            var tmp = new Image();
+            tmp.onload = function () {
+                try {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = tmp.naturalWidth; canvas.height = tmp.naturalHeight;
+                    var ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(tmp, 0, 0);
+                    var out = canvas.toDataURL('image/jpeg', q);
+                    resolve(out.length < src.length ? out : src);
+                } catch (e) { resolve(src); }
+            };
+            tmp.onerror = function () { resolve(src); };
+            tmp.src = src;
+        });
+    }
+
+    function applyImgInsertionCK5(editor, spec, selectedImg) {
+        var modelEl = null;
+        if (selectedImg) {
+            try {
+                var wrapper = selectedImg.closest ? selectedImg.closest('.ck-widget') : null;
+                var viewEl = wrapper ? editor.editing.view.domConverter.mapDomToView(wrapper) : null;
+                modelEl = viewEl ? editor.editing.mapper.toModelElement(viewEl) : null;
+            } catch (e) {}
+        }
+        var emBloco = !!(modelEl && modelEl.name === 'imageBlock');
+        // Recomprime so imagem nova ou trocada: reformatar a mesma imagem nao a degrada de novo.
+        var trocada = !selectedImg || selectedImg.getAttribute('src') !== spec.src;
+        var q = trocada ? parseFloat(spec.attrs.quality) : NaN;
+        comprimirImagemCK5(spec.src, q).then(function (src) {
+            spec.src = src;
+            var r = specToImgHtmlCK5(spec, !emBloco);
+            if (selectedImg && atualizarImagemCK5(editor, selectedImg, r.html)) {
+                if (emBloco && r.estilos.length && typeof alertaBoxPro === 'function') {
+                    alertaBoxPro('Info', 'info-circle', 'Na imagem centralizada (em bloco) o SEI 5 guarda s\u00F3 o tamanho e o texto alternativo. '
+                        + 'Para margens, borda, filtro e alinhamento, escolha antes \u201CTexto ao redor\u201D na barra da imagem.');
+                }
+                return;
+            }
+            SeiProEditorAdapter.withEdit(editor, function () { SeiProEditorAdapter.insertHtml(editor, r.html); });
+        });
+    }
+
     function applyImgInsertion(editor, spec, selectedImg) {
+        if (SeiProEditorAdapter.version === 5 && editor && editor.model) {
+            applyImgInsertionCK5(editor, spec, selectedImg);
+            return;
+        }
         SeiProEditorAdapter.withEdit(editor, function () {
             if (selectedImg && selectedImg.setAttribute) {
                 // Atualiza a imagem selecionada in-place (sem innerHTML). Em CK5

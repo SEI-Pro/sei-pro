@@ -45,6 +45,18 @@ Clique em **Aplicar** para substituir a imagem do documento pela editada, ou **C
 
 > ![Tela Editar Imagem](../img/tela-editarimagens4.gif)
 
+### No SEI 5
+
+No editor do SEI 5, **clique na imagem**: na barra que aparece embaixo dela, os dois últimos botões são **Formatar imagem** e **Editar imagem**. Os dois também ficam no **botão direito** sobre a imagem. O duplo clique não abre a formatação no SEI 5.
+
+O SEI 5 guarda a formatação de um jeito próprio:
+
+* Na imagem **em linha com o texto** (o padrão ao colar ou inserir), valem todas as opções da tabela acima.
+* Na imagem **centralizada em bloco** (opção *Quebrar texto* da barra da imagem), o SEI 5 guarda só o tamanho e o texto alternativo. Para usar margens, borda, filtro ou alinhamento, escolha antes *Texto ao redor* na barra da imagem.
+* A qualidade é aplicada ao inserir uma imagem nova ou ao trocar a imagem, e não a cada nova formatação, para a imagem não perder qualidade a cada ajuste.
+
+Para abrir o menu do navegador sobre uma imagem ou tabela (por exemplo, para copiar), use **Shift + botão direito**.
+
 ### Como ativar
 
 A função vem **ligada** de fábrica. Ela fica nas [Configurações do SEI Pro](../pages/DESATIVARFUNCOES.md), aba **Geral**, seção **Editor de Texto**, opção **Envio, formatação e edição avançada de imagens no editor de documentos**.

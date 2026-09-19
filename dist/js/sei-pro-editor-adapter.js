@@ -108,16 +108,64 @@
      * Menu de contexto via DOM (uniforme CK4/CK5). builder(targetEl) retorna
      * um array de itens { label, action } ou vazio para deixar o menu nativo.
      */
+    // Cada feature registra o seu builder; um unico listener junta os itens de todos. Antes o
+    // primeiro builder registrado (tabela) marcava o corpo e os demais (Copiar formatacao,
+    // Bloquear Edicao, imagem) eram descartados em silencio.
     function attachDomContextMenu(bodyEl, editor, builder) {
         if (!bodyEl || typeof builder !== 'function') return;
-        if (bodyEl.__seiProCtxMenu) return; // idempotente
-        bodyEl.__seiProCtxMenu = true;
-        bodyEl.addEventListener('contextmenu', function (ev) {
-            var items = builder(ev.target);
-            if (!items || !items.length) return;
-            ev.preventDefault();
-            renderDomContextMenu(items, ev.clientX, ev.clientY);
-        });
+        var builders = bodyEl.__seiProCtxBuilders;
+        if (!builders) {
+            builders = bodyEl.__seiProCtxBuilders = [];
+            bodyEl.addEventListener('contextmenu', function (ev) {
+                if (ev.shiftKey) return; // Shift + botao direito: sempre o menu do navegador
+                var items = [];
+                builders.forEach(function (b) {
+                    try { items = items.concat(b(ev.target) || []); } catch (e) {}
+                });
+                if (!items.length) return;
+                ev.preventDefault();
+                renderDomContextMenu(items, ev.clientX, ev.clientY);
+            });
+        }
+        if (builders.indexOf(builder) === -1) builders.push(builder);
+    }
+
+    /**
+     * CK4: os itens entram no menu de contexto NATIVO do CKEditor 4 (como antes do port), junto
+     * de recortar/colar e dos demais itens. O menu DOM substituia o menu inteiro do CK4 (e o
+     * corretor ortografico do navegador) sempre que um builder respondia.
+     */
+    function attachCk4ContextMenu(editor, builder) {
+        if (!editor || typeof builder !== 'function') return;
+        var st = editor.__seiProCtx;
+        if (!st) {
+            st = editor.__seiProCtx = { acoes: {}, builders: [] };
+            try { editor.addMenuGroup('seiProGroup', 5); } catch (e) {}
+            editor.contextMenu.addListener(function (element) {
+                var alvo = element && element.$ ? element.$ : null;
+                var estado = null;
+                st.builders.forEach(function (b) {
+                    var items;
+                    try { items = b(alvo) || []; } catch (e) { items = []; }
+                    items.forEach(function (it) {
+                        var nome = 'seiPro_' + String(it.label).replace(/[^A-Za-z0-9]/g, '_');
+                        st.acoes[nome] = it.action;
+                        if (!editor.getCommand(nome)) {
+                            editor.addCommand(nome, {
+                                exec: function () { var a = st.acoes[nome]; if (typeof a === 'function') a(); return true; }
+                            });
+                        }
+                        if (!editor.getMenuItem(nome)) {
+                            editor.addMenuItem(nome, { label: it.label, command: nome, group: 'seiProGroup' });
+                        }
+                        estado = estado || {};
+                        estado[nome] = CKEDITOR.TRISTATE_OFF;
+                    });
+                });
+                return estado;
+            });
+        }
+        if (st.builders.indexOf(builder) === -1) st.builders.push(builder);
     }
     function renderDomContextMenu(items, x, y) {
         var prev = document.getElementById('seiProCtxMenu');
@@ -568,6 +616,10 @@
         fire: function (editor, evt, data) { if (editor && editor.fire) editor.fire(evt, data); },
 
         addContextMenu: function (editor, builder) {
+            if (editor && editor.contextMenu && typeof editor.addMenuItem === 'function' && typeof CKEDITOR !== 'undefined') {
+                attachCk4ContextMenu(editor, builder);
+                return;
+            }
             attachDomContextMenu(this.getBodyContainer(editor), editor, builder);
         }
     };
