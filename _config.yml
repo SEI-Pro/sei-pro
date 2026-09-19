@@ -1,1 +1,12 @@
-theme: jekyll-theme-cayman
+title: SEI Pro
+description: Extensão gratuita e de código aberto com funções avançadas para o Sistema Eletrônico de Informações (SEI)
+lang: pt-BR
+
+# Layout próprio (_layouts/default.html) para README, política de privacidade e pages/*.md.
+# A home (index.html) lê a lista de funções do README.md e as novidades do pages/HISTORICO.md
+# no momento do build: basta editar esses arquivos para o site acompanhar.
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

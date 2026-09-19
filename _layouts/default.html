@@ -1,0 +1,75 @@
+{%- assign partes = content | split: "</h1>" -%}
+{%- if partes.size > 1 and partes[0] contains "home.png" -%}
+{%- capture remover %}{{ partes[0] }}</h1>{% endcapture -%}
+{%- assign corpo = content | remove_first: remover -%}
+{%- else -%}
+{%- assign corpo = content -%}
+{%- endif -%}
+{%- assign abertura = corpo | strip | slice: 0, 3 -%}
+{%- if abertura == "<h1" -%}
+{%- assign titulo = corpo | split: "</h1>" | first | strip_html | strip -%}
+{%- else -%}
+{%- assign titulo = corpo | split: "</h2>" | first | strip_html | strip -%}
+{%- endif -%}
+{%- if titulo == "" %}{% assign titulo = page.title %}{% endif -%}
+{%- assign resumo = corpo | split: "<p>" | slice: 1 | first | split: "</p>" | first | strip_html | strip | truncate: 180 -%}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ titulo }}{% unless titulo contains "SEI Pro" %} · SEI Pro{% endunless %}</title>
+<meta name="description" content="{{ resumo | escape }}">
+<meta property="og:title" content="{{ titulo | escape }} · SEI Pro">
+<meta property="og:description" content="{{ resumo | escape }}">
+<meta property="og:image" content="{{ site.github.url }}/dist/icons/icon-256.png">
+<link rel="icon" href="{{ site.baseurl }}/dist/icons/icon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/seipro.css">
+</head>
+<body class="doc" data-base="{{ site.baseurl }}">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+{% include cabecalho.html %}
+
+<div class="doc-grade">
+<aside class="doc-lado" aria-label="Funcionalidades">
+<label class="busca">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<span class="sr">Buscar função</span>
+<input type="search" id="busca-lado" placeholder="Buscar função" autocomplete="off">
+<kbd aria-hidden="true">/</kbd>
+</label>
+<nav id="nav-funcoes" class="nav-funcoes">
+<a href="{{ site.baseurl }}/#funcoes">Todas as funções</a>
+</nav>
+</aside>
+
+<main class="doc-main" id="conteudo">
+<nav class="migalha" aria-label="Você está em" id="migalha">
+<a href="{{ site.baseurl }}/#funcoes">Funcionalidades</a>
+</nav>
+<article class="prosa" id="prosa">
+{{ corpo }}
+</article>
+<nav class="anterior-proxima" id="anterior-proxima" aria-label="Navegação entre funções"></nav>
+</main>
+
+<aside class="doc-trilho">
+<nav class="toc" id="toc" aria-label="Nesta página" hidden>
+<span class="rotulo-peq">Nesta página</span>
+</nav>
+<div class="caixa">
+<strong>Não funcionou como aqui?</strong>
+<p>Conte o que aconteceu, a versão do SEI e o navegador.</p>
+<a class="seta" href="https://github.com/SEI-Pro/sei-pro/issues">Reportar erro</a>
+</div>
+<a class="editar" href="https://github.com/SEI-Pro/sei-pro/edit/master/{{ page.path }}">Sugerir correção nesta página</a>
+</aside>
+</div>
+
+{% include rodape.html %}
+<script src="{{ site.baseurl }}/assets/js/seipro.js" defer></script>
+</body>
+</html>

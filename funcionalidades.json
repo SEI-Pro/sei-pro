@@ -1,0 +1,28 @@
+---
+layout: null
+---
+{%- capture nl %}
+{% endcapture -%}
+{%- capture readme %}{% include_relative README.md %}{% endcapture -%}
+{%- assign secao = readme | split: "## Funcionalidades disponíveis" | last | split: "## Encontrou um erro" | first -%}
+{%- assign blocos = secao | split: "### " -%}
+[
+{%- for bloco in blocos offset: 1 -%}
+{%- assign linhas = bloco | split: nl -%}
+{%- assign cat = linhas[0] | strip | replace: "Tela ", "" | replace: "Editor de documentos:", "Editor:" | replace: ", menu e navegação", " e navegação" | replace: "revisão, sigilo e produtividade", "revisão e produtividade" -%}
+{%- unless forloop.first %},{% endunless %}
+{"cat":{{ cat | jsonify }},"itens":[
+{%- assign primeiro = true -%}
+{%- for linha in linhas offset: 1 -%}
+{%- if linha contains "](./pages/" -%}
+{%- assign partes = linha | split: "](" -%}
+{%- assign nome = partes[1] | split: ") [" | last -%}
+{%- assign icone = partes[1] | split: ") [" | first -%}
+{%- assign url = partes[2] | split: ")" | first | remove_first: "./" | replace: ".md", ".html" -%}
+{%- unless primeiro %},{% endunless -%}{%- assign primeiro = false -%}
+{"nome":{{ nome | jsonify }},"url":{{ url | prepend: "/" | prepend: site.baseurl | jsonify }},"icone":{{ icone | prepend: site.baseurl | jsonify }}}
+{%- endif -%}
+{%- endfor -%}
+]}
+{%- endfor %}
+]

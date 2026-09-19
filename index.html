@@ -1,0 +1,253 @@
+---
+layout: null
+---
+{%- capture nl %}
+{% endcapture -%}
+{%- capture readme %}{% include_relative README.md %}{% endcapture -%}
+{%- capture historico %}{% include_relative pages/HISTORICO.md %}{% endcapture -%}
+{%- assign secao = readme | split: "## Funcionalidades disponíveis" | last | split: "## Encontrou um erro" | first -%}
+{%- assign blocos = secao | split: "### " -%}
+{%- assign versoes = historico | split: "### Versão " -%}
+{%- assign ultima = versoes[1] | split: nl -%}
+{%- assign total = 0 -%}{%- assign n1 = 0 -%}{%- assign n2 = 0 -%}{%- assign n3 = 0 -%}{%- assign n4 = 0 -%}
+{%- capture catalogo -%}
+{%- for bloco in blocos offset: 1 -%}
+{%- assign linhas = bloco | split: nl -%}
+{%- assign cat = linhas[0] | strip -%}
+{%- assign rotulo = cat | replace: "Tela ", "" | replace: "Editor de documentos:", "Editor:" | replace: ", menu e navegação", " e navegação" | replace: "revisão, sigilo e produtividade", "revisão e produtividade" -%}
+{%- assign qtd = 0 -%}
+<div class="grupo" data-cat="{{ rotulo | escape }}">
+<h3>{{ rotulo }}</h3>
+<ul>
+{%- for linha in linhas offset: 1 -%}
+{%- if linha contains "](./pages/" -%}
+{%- assign partes = linha | split: "](" -%}
+{%- assign nome = partes[1] | split: ") [" | last -%}
+{%- assign url = partes[2] | split: ")" | first | remove_first: "./" | replace: ".md", ".html" -%}
+{%- assign tag = "" -%}
+{%- if nome contains "(descontinuada)" -%}{%- assign tag = "Descontinuada" -%}{%- assign nome = nome | remove: " (descontinuada)" -%}{%- endif -%}
+{%- if nome contains "(temporariamente indisponível)" -%}{%- assign tag = "Indisponível" -%}{%- assign nome = nome | remove: " (temporariamente indisponível)" -%}{%- endif -%}
+{%- if nome contains "(institucional)" -%}{%- assign tag = "Institucional" -%}{%- assign nome = nome | remove: " (institucional)" -%}{%- endif -%}
+{%- if nome contains "(SEI 3)" -%}{%- assign tag = "Só SEI 3" -%}{%- assign nome = nome | remove: " (SEI 3)" -%}{%- endif -%}
+{%- assign qtd = qtd | plus: 1 %}
+<li><a href="{{ site.baseurl }}/{{ url }}"><span>{{ nome | escape }}</span>{% if tag != "" %}<span class="tag">{{ tag }}</span>{% endif %}</a></li>
+{%- endif -%}
+{%- endfor %}
+</ul>
+</div>
+{%- assign total = total | plus: qtd -%}
+{%- if cat contains "Controle de Processos" or cat == "Pesquisa" -%}{%- assign n1 = n1 | plus: qtd -%}
+{%- elsif cat contains "Árvore" or cat contains "Ferramentas do processo" -%}{%- assign n2 = n2 | plus: qtd -%}
+{%- elsif cat contains "Editor" -%}{%- assign n3 = n3 | plus: qtd -%}
+{%- else -%}{%- assign n4 = n4 | plus: qtd -%}{%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEI Pro · Extensão gratuita com funções avançadas para o SEI</title>
+<meta name="description" content="Extensão gratuita e de código aberto que acrescenta {{ total }} funções ao Controle de Processos, à árvore do processo e ao editor de documentos do SEI. Compatível com o SEI 4 e o SEI 5.">
+<meta property="og:title" content="SEI Pro">
+<meta property="og:description" content="Extensão gratuita com {{ total }} funções para o SEI: prazos, ações em lote, ferramentas de PDF, revisão de texto e mais.">
+<meta property="og:image" content="{{ site.github.url }}/dist/icons/icon-256.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="{{ site.baseurl }}/dist/icons/icon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ site.baseurl }}/assets/css/seipro.css">
+</head>
+<body class="home">
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+{% include cabecalho.html %}
+
+<main id="conteudo">
+<section class="hero wrap" id="topo">
+<div class="hero-texto">
+<a class="pill" href="#novidades"><span class="pill-v">{{ ultima[0] | strip }}</span> Novidades de {{ ultima[1] | strip }}
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+<h1>O SEI com as ferramentas que faltavam<span class="ponto">.</span></h1>
+<p class="lead">Extensão gratuita e de código aberto que acrescenta {{ total }} funções ao Controle de Processos, à árvore do processo e ao editor de documentos.</p>
+<div class="instalar" id="instalar">
+<a class="btn btn-primario" id="btn-instalar" href="https://chrome.google.com/webstore/detail/sei-pro/pdbbapplhjopafpgidbgceccbbmehcjj">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+<span>Adicionar ao Chrome</span></a>
+<p class="outros-nav" id="outros-nav">Também para
+<a href="https://microsoftedge.microsoft.com/addons/detail/sei-pro/gkhfbbbminanojfklpfmloaglckmlfne">Microsoft Edge</a> e
+<a href="https://addons.mozilla.org/pt-BR/firefox/addon/sei-pro/">Mozilla Firefox</a></p>
+<div class="aviso-celular" id="aviso-celular" hidden>
+<p><strong>É uma extensão para computador.</strong> Instale no Chrome, Edge ou Firefox do computador em que você usa o SEI.</p>
+<button type="button" class="btn btn-primario" id="btn-compartilhar">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+<span>Enviar o link para o computador</span></button>
+</div>
+</div>
+<dl class="numeros">
+<div><dt>220 mil</dt><dd>usuários</dd></div>
+<div><dt>{{ total }}</dt><dd>funções documentadas</dd></div>
+<div><dt>SEI 4 e 5</dt><dd>compatível</dd></div>
+</dl>
+</div>
+<div class="hero-tela">
+<div class="hero-fundo" aria-hidden="true"></div>
+<figure class="janela">
+<div class="janela-barra" aria-hidden="true"><i></i><i></i><i></i><span>sei.orgao.gov.br · Controle de Processos</span></div>
+<img src="{{ site.baseurl }}/img/tela-controleprazo.gif" width="960" height="570" alt="Tela Controle de Processos com a coluna Prazos acrescentada pelo SEI Pro">
+</figure>
+<a class="hero-nota" href="{{ site.baseurl }}/pages/PRAZOS.html">
+<img src="{{ site.baseurl }}/img/icon-controleprazo.png" width="16" height="16" alt="">
+<span><strong>Controle de Prazos</strong>Quanto falta para vencer, em cada processo. Gravado no marcador, visível para a unidade.</span>
+</a>
+</div>
+</section>
+
+<section class="wrap" aria-label="Compatibilidade e privacidade">
+<div class="confianca confianca-borda">
+<div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg><p><strong>SEI 4 e SEI 5</strong>compatível com as duas versões</p></div>
+<div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg><p><strong>Chrome, Edge e Firefox</strong>no computador</p></div>
+<div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><p><strong>Código aberto</strong>licença AGPL-3.0</p></div>
+<div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><p><strong>Não coleta seus dados</strong><a href="{{ site.baseurl }}/PRIVACY_POLICY.html">política de privacidade (LGPD)</a></p></div>
+</div>
+</section>
+
+<section class="wrap secao areas-secao">
+<div class="secao-topo">
+<h2>Está onde você já trabalha no SEI</h2>
+<p>Nada de sistema novo para aprender. As funções aparecem nas telas do próprio SEI e cada uma pode ser <a href="{{ site.baseurl }}/pages/DESATIVARFUNCOES.html">ligada ou desligada</a>.</p>
+</div>
+<div class="areas">
+<a class="area" href="#funcoes" data-filtro="Controle de Processos|Pesquisa">
+<div class="area-topo"><span class="mono">01</span><span class="area-qtd">{{ n1 }} funções</span></div>
+<h3>Controle de Processos</h3>
+<p>A caixa da unidade com prazos, grupos, favoritos e ações em vários processos.</p>
+<ul>
+<li><img src="{{ site.baseurl }}/img/icon-controleprazo.png" width="16" height="16" alt="">Controle de Prazos</li>
+<li><img src="{{ site.baseurl }}/img/icon-agruparlista.png" width="16" height="16" alt="">Quadro Kanban</li>
+<li><img src="{{ site.baseurl }}/img/icon-favoritos.png" width="16" height="16" alt="">Processos favoritos</li>
+</ul>
+</a>
+<a class="area" href="#funcoes" data-filtro="Árvore do processo|Ferramentas do processo">
+<div class="area-topo"><span class="mono">02</span><span class="area-qtd">{{ n2 }} funções</span></div>
+<h3>Árvore do processo</h3>
+<p>Capa, anotações, numeração e ferramentas para o processo inteiro.</p>
+<ul>
+<li><img src="{{ site.baseurl }}/img/icon-acoeslote.png" width="16" height="16" alt="">Ações e Documentos em Lote</li>
+<li><img src="{{ site.baseurl }}/img/icon-ferramentaspdf.png" width="16" height="16" alt="">Ferramentas de PDF</li>
+<li><img src="{{ site.baseurl }}/img/icon-capaprocesso.png" width="16" height="16" alt="">Capa do processo</li>
+</ul>
+</a>
+<a class="area" href="#funcoes" data-filtro="Editor: inserir conteúdo|Editor: formatação e impressão|Editor: imagens e links|Editor: revisão e produtividade">
+<div class="area-topo"><span class="mono">03</span><span class="area-qtd">{{ n3 }} funções</span></div>
+<h3>Editor de documentos</h3>
+<p>Inserir, formatar, revisar e proteger o texto sem sair do SEI.</p>
+<ul>
+<li><img src="{{ site.baseurl }}/img/icon-revisardoc.png" width="16" height="16" alt="">Revisão de texto</li>
+<li><img src="{{ site.baseurl }}/img/icon-escritainterativa.png" width="16" height="16" alt="">Escrita interativa # e @</li>
+<li><img src="{{ site.baseurl }}/img/icon-sigilodoc.png" width="16" height="16" alt="">Tarjas de sigilo (LGPD)</li>
+</ul>
+</a>
+<a class="area" href="#funcoes" data-filtro="Aparência e navegação|Visualização de documentos|Configurações e diagnóstico">
+<div class="area-topo"><span class="mono">04</span><span class="area-qtd">{{ n4 }} funções</span></div>
+<h3>Aparência e visualização</h3>
+<p>Modo noturno, menu, pesquisa e leitura de documentos.</p>
+<ul>
+<li><img src="{{ site.baseurl }}/img/icon-estiloavancado.png" width="16" height="16" alt="">Estilo Avançado e Noturno</li>
+<li><img src="{{ site.baseurl }}/img/icon-hashcode.png" width="16" height="16" alt="">Verificar Hashcode</li>
+<li><img src="{{ site.baseurl }}/img/icon-baixardocumento.png" width="16" height="16" alt="">Baixar em Word ou HTML</li>
+</ul>
+</a>
+</div>
+</section>
+
+<section class="wrap secao destaques">
+<div class="destaque">
+<div class="destaque-texto">
+<span class="rotulo">Ferramentas de PDF</span>
+<h3>Tarjar, juntar e comprimir PDF sem mandar o arquivo para lugar nenhum</h3>
+<p>Tarja, junta, divide, comprime, organiza páginas, faz OCR e confere PDF/A. Tudo roda no seu computador, então documentos com sigilo não passam por sites de terceiros.</p>
+<a class="seta" href="{{ site.baseurl }}/pages/FERRAMENTASPDF.html">Como usar as Ferramentas de PDF</a>
+</div>
+<figure class="quadro"><img src="{{ site.baseurl }}/img/tela-ferramentaspdf.gif" loading="lazy" alt="Ferramentas de PDF do SEI Pro"></figure>
+</div>
+<div class="destaque invertido">
+<div class="destaque-texto">
+<span class="rotulo">Controle de Processos</span>
+<h3>Agrupe, filtre e veja a caixa da unidade em quadro</h3>
+<p>Agrupe por marcador, tipo, atribuição ou prazo e veja os processos em colunas no modo Kanban. A mesma tela, organizada do jeito da sua equipe.</p>
+<a class="seta" href="{{ site.baseurl }}/pages/AGRUPAR.html">Como agrupar e filtrar processos</a>
+</div>
+<figure class="quadro"><img src="{{ site.baseurl }}/img/tela-agrupamento.gif" loading="lazy" alt="Processos agrupados e vistos em quadro Kanban"></figure>
+</div>
+</section>
+
+<section class="catalogo" id="funcoes">
+<div class="wrap">
+<div class="secao-topo">
+<div>
+<h2>Todas as funções</h2>
+<p>Cada uma tem uma página com passo a passo e animação da tela.</p>
+</div>
+<label class="busca busca-grande">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<span class="sr">Buscar função</span>
+<input type="search" id="busca-funcoes" placeholder="Buscar: prazo, assinar, PDF, tabela…" autocomplete="off">
+<kbd aria-hidden="true">/</kbd>
+</label>
+</div>
+<div class="chips" role="group" aria-label="Filtrar por área" id="chips">
+<button type="button" aria-pressed="true" data-cat="">Todas</button>
+</div>
+<div class="grupos" id="grupos">
+{{ catalogo }}
+</div>
+<p class="vazio" id="vazio" hidden>Nenhuma função com esse termo. Tem uma ideia? <a href="https://sugestoes.seipro.app">Sugira no quadro de sugestões</a>.</p>
+</div>
+</section>
+
+<section class="wrap secao novidades" id="novidades">
+<div class="novidades-lado">
+<h2>Novidades</h2>
+<p>A extensão se atualiza sozinha. Aqui está o que mudou nas últimas versões.</p>
+<a class="seta" href="{{ site.baseurl }}/pages/HISTORICO.html">Histórico completo de versões</a>
+<div class="caixa-escura">
+<strong>Novidades por e-mail</strong>
+<p>Um aviso a cada versão, com dicas de uso das funções novas.</p>
+<a class="btn btn-claro" href="http://eepurl.com/hjHh45">Inscrever-se</a>
+</div>
+</div>
+<ol class="versoes">
+{%- for v in versoes offset: 1 limit: 3 -%}
+{%- assign vl = v | split: nl -%}
+{%- assign itens = 0 -%}{%- assign primeiro = "" -%}
+{%- for l in vl offset: 2 -%}
+{%- assign l0 = l | slice: 0, 2 -%}
+{%- if l0 == "- " -%}{%- assign itens = itens | plus: 1 -%}{%- if primeiro == "" -%}{%- assign primeiro = l | remove_first: "- " -%}{%- endif -%}{%- endif -%}
+{%- endfor %}
+<li>
+<div class="versao-num"><strong>{{ vl[0] | strip }}</strong><span class="mono">{{ vl[1] | strip }}</span></div>
+<div class="versao-texto">
+<p>{{ primeiro | markdownify | strip_html | strip | truncate: 240 }}</p>
+{%- if itens > 1 %}<a href="{{ site.baseurl }}/pages/HISTORICO.html">e mais {{ itens | minus: 1 }} {% if itens == 2 %}mudança{% else %}mudanças{% endif %}</a>{% endif %}
+</div>
+</li>
+{%- endfor %}
+</ol>
+</section>
+
+<section class="wrap secao comunidade" id="comunidade">
+<h2>Feito com quem usa</h2>
+<div class="cartoes">
+<a class="cartao" href="https://sugestoes.seipro.app"><strong>Sugestões</strong><span>Proponha funções e vote nas ideias que quer ver. Votar não exige cadastro.</span><em>Abrir o quadro</em></a>
+<a class="cartao" href="https://github.com/SEI-Pro/sei-pro/issues"><strong>Reportar erro</strong><span>Encontrou um problema? Descreva o que aconteceu, a versão do SEI e o navegador.</span><em>Abrir uma issue</em></a>
+<a class="cartao" href="https://seilab.seipro.app"><strong>SEI Lab</strong><span>Laboratório de ideias sobre inovação no SEI, automações e boas práticas.</span><em>Entrar na comunidade</em></a>
+<a class="cartao" href="https://participen.processoeletronico.gov.br/c/modulos-comunidade/sei-pro/39"><strong>ParticiPEN</strong><span>Espaço do SEI Pro na Comunidade do Processo Eletrônico Nacional.</span><em>Participar</em></a>
+</div>
+</section>
+</main>
+
+{% include rodape.html %}
+<script src="{{ site.baseurl }}/assets/js/seipro.js" defer></script>
+</body>
+</html>
