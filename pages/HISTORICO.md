@@ -2,6 +2,15 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.5
+19/09/2026
+
+- [Editar e formatar imagens](../pages/EDITARIMAGENS.md) voltam **no SEI 5**. Ao clicar na imagem, a barra que aparece embaixo dela ganha os botões **Formatar imagem** e **Editar imagem**, que também ficam no botão direito sobre a imagem. No SEI 5 eles não tinham nenhum acesso desde que o editor mudou
+- Formatar imagem no SEI 5: tamanho, margens, borda, filtro e alinhamento passam a ser gravados no documento. Na imagem centralizada em bloco, o SEI 5 guarda só o tamanho e o texto alternativo, e um aviso explica como usar as demais opções
+- Editar imagem: a imagem editada passa a ser gravada corretamente no SEI 5, e a janela do editor de imagens deixa de passar da altura da tela, que escondia os botões *Aplicar* e *Cancelar*
+- Botão direito no SEI 3 e no SEI 4: *Copiar formatação*, *Bloquear Edição* e *Ditado* voltam ao menu do editor, ao lado de recortar, copiar e colar. Nos documentos com várias seções, os itens do SEI Pro passam a aparecer em todas as seções editáveis
+- Botão direito no SEI 5: o menu do SEI Pro aparece sobre tabelas e imagens. Sobre o texto fica o menu do navegador, com copiar e o corretor ortográfico. **Shift + botão direito** sempre abre o menu do navegador
+
 ### Versão 1.7.4
 18/09/2026
 
