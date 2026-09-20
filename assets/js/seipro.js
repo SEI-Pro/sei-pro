@@ -7,6 +7,16 @@
   function norm(s) {
     return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
+  function icone(nome) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'ico');
+    svg.setAttribute('aria-hidden', 'true');
+    var use = document.createElementNS(ns, 'use');
+    use.setAttribute('href', '#i-' + (nome || 'file-text'));
+    svg.appendChild(use);
+    return svg;
+  }
   function el(tag, attrs, text) {
     var e = document.createElement(tag);
     if (attrs) Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
@@ -214,7 +224,9 @@
         }
       }
       function linkFuncao(f) {
-        var a = el('a', { href: f.url }, f.nome);
+        var a = el('a', { href: f.url });
+        a.appendChild(icone(f.icone));
+        a.appendChild(el('span', null, f.nome));
         if (f.url.split('/').pop().toLowerCase() === atual) a.setAttribute('aria-current', 'page');
         return a;
       }

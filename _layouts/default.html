@@ -7,11 +7,16 @@
 {%- endif -%}
 {%- assign abertura = corpo | strip | slice: 0, 3 -%}
 {%- if abertura == "<h1" -%}
-{%- assign titulo = corpo | split: "</h1>" | first | strip_html | strip -%}
+{%- capture cabecalho %}{{ corpo | split: "</h1>" | first }}</h1>{% endcapture -%}
 {%- else -%}
-{%- assign titulo = corpo | split: "</h2>" | first | strip_html | strip -%}
+{%- capture cabecalho %}{{ corpo | split: "</h2>" | first }}</h2>{% endcapture -%}
 {%- endif -%}
+{%- assign titulo = cabecalho | strip_html | strip -%}
+{%- comment -%} O titulo da pagina vira <h1> com icone proprio; o cabecalho original (com o PNG antigo) sai. {%- endcomment -%}
+{%- assign corpo = corpo | remove_first: cabecalho -%}
 {%- if titulo == "" %}{% assign titulo = page.title %}{% endif -%}
+{%- assign slug = page.path | split: "/" | last | remove: ".md" -%}
+{%- assign ic = site.data.icones[slug] | default: "file-text" -%}
 {%- assign resumo = corpo | split: "<p>" | slice: 1 | first | split: "</p>" | first | strip_html | strip | truncate: 180 -%}
 <!doctype html>
 <html lang="pt-BR">
@@ -30,6 +35,7 @@
 <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/seipro.css">
 </head>
 <body class="doc" data-base="{{ site.baseurl }}">
+{% include icones.svg %}
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 {% include cabecalho.html %}
 
@@ -51,6 +57,7 @@
 <a href="{{ site.baseurl }}/#funcoes">Funcionalidades</a>
 </nav>
 <article class="prosa" id="prosa">
+<h1 class="titulo-pagina"><svg class="ico ico-titulo" aria-hidden="true"><use href="#i-{{ ic }}"></use></svg>{{ titulo }}</h1>
 {{ corpo }}
 </article>
 <nav class="anterior-proxima" id="anterior-proxima" aria-label="Navegação entre funções"></nav>

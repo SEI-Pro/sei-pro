@@ -14,13 +14,15 @@ layout: null
 {"cat":{{ cat | jsonify }},"itens":[
 {%- assign primeiro = true -%}
 {%- for linha in linhas offset: 1 -%}
-{%- if linha contains "](./pages/" -%}
+{%- assign inicio = linha | slice: 0, 4 -%}
+{%- if inicio == "- ![" and linha contains "](./pages/" -%}
 {%- assign partes = linha | split: "](" -%}
 {%- assign nome = partes[1] | split: ") [" | last -%}
-{%- assign icone = partes[1] | split: ") [" | first -%}
 {%- assign url = partes[2] | split: ")" | first | remove_first: "./" | replace: ".md", ".html" -%}
+{%- assign slug = url | split: "/" | last | remove: ".html" -%}
+{%- assign icone = site.data.icones[slug] | default: "file-text" -%}
 {%- unless primeiro %},{% endunless -%}{%- assign primeiro = false -%}
-{"nome":{{ nome | jsonify }},"url":{{ url | prepend: "/" | prepend: site.baseurl | jsonify }},"icone":{{ icone | prepend: site.baseurl | jsonify }}}
+{"nome":{{ nome | jsonify }},"url":{{ url | prepend: "/" | prepend: site.baseurl | jsonify }},"icone":{{ icone | jsonify }}}
 {%- endif -%}
 {%- endfor -%}
 ]}

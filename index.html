@@ -20,17 +20,20 @@ layout: null
 <h3>{{ rotulo }}</h3>
 <ul>
 {%- for linha in linhas offset: 1 -%}
-{%- if linha contains "](./pages/" -%}
+{%- assign inicio = linha | slice: 0, 4 -%}
+{%- if inicio == "- ![" and linha contains "](./pages/" -%}
 {%- assign partes = linha | split: "](" -%}
 {%- assign nome = partes[1] | split: ") [" | last -%}
 {%- assign url = partes[2] | split: ")" | first | remove_first: "./" | replace: ".md", ".html" -%}
+{%- assign slug = url | split: "/" | last | remove: ".html" -%}
+{%- assign ic = site.data.icones[slug] | default: "file-text" -%}
 {%- assign tag = "" -%}
 {%- if nome contains "(descontinuada)" -%}{%- assign tag = "Descontinuada" -%}{%- assign nome = nome | remove: " (descontinuada)" -%}{%- endif -%}
 {%- if nome contains "(temporariamente indisponível)" -%}{%- assign tag = "Indisponível" -%}{%- assign nome = nome | remove: " (temporariamente indisponível)" -%}{%- endif -%}
 {%- if nome contains "(institucional)" -%}{%- assign tag = "Institucional" -%}{%- assign nome = nome | remove: " (institucional)" -%}{%- endif -%}
 {%- if nome contains "(SEI 3)" -%}{%- assign tag = "Só SEI 3" -%}{%- assign nome = nome | remove: " (SEI 3)" -%}{%- endif -%}
 {%- assign qtd = qtd | plus: 1 %}
-<li><a href="{{ site.baseurl }}/{{ url }}"><span>{{ nome | escape }}</span>{% if tag != "" %}<span class="tag">{{ tag }}</span>{% endif %}</a></li>
+<li><a href="{{ site.baseurl }}/{{ url }}"><svg class="ico" aria-hidden="true"><use href="#i-{{ ic }}"></use></svg><span>{{ nome | escape }}</span>{% if tag != "" %}<span class="tag">{{ tag }}</span>{% endif %}</a></li>
 {%- endif -%}
 {%- endfor %}
 </ul>
@@ -60,6 +63,7 @@ layout: null
 <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/seipro.css">
 </head>
 <body class="home">
+{% include icones.svg %}
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 {% include cabecalho.html %}
 
@@ -97,7 +101,7 @@ layout: null
 <img src="{{ site.baseurl }}/img/tela-controleprazo.gif" width="960" height="570" alt="Tela Controle de Processos com a coluna Prazos acrescentada pelo SEI Pro">
 </figure>
 <a class="hero-nota" href="{{ site.baseurl }}/pages/PRAZOS.html">
-<img src="{{ site.baseurl }}/img/icon-controleprazo.png" width="16" height="16" alt="">
+<svg class="ico" aria-hidden="true"><use href="#i-alarm-clock"></use></svg>
 <span><strong>Controle de Prazos</strong>Quanto falta para vencer, em cada processo. Gravado no marcador, visível para a unidade.</span>
 </a>
 </div>
@@ -119,43 +123,47 @@ layout: null
 </div>
 <div class="areas">
 <a class="area" href="#funcoes" data-filtro="Controle de Processos|Pesquisa">
+<svg class="marca" aria-hidden="true"><use href="#i-inbox"></use></svg>
 <div class="area-topo"><span class="mono">01</span><span class="area-qtd">{{ n1 }} funções</span></div>
 <h3>Controle de Processos</h3>
 <p>A caixa da unidade com prazos, grupos, favoritos e ações em vários processos.</p>
 <ul>
-<li><img src="{{ site.baseurl }}/img/icon-controleprazo.png" width="16" height="16" alt="">Controle de Prazos</li>
-<li><img src="{{ site.baseurl }}/img/icon-agruparlista.png" width="16" height="16" alt="">Quadro Kanban</li>
-<li><img src="{{ site.baseurl }}/img/icon-favoritos.png" width="16" height="16" alt="">Processos favoritos</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-alarm-clock"></use></svg>Controle de Prazos</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-kanban"></use></svg>Quadro Kanban</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-star"></use></svg>Processos favoritos</li>
 </ul>
 </a>
 <a class="area" href="#funcoes" data-filtro="Árvore do processo|Ferramentas do processo">
+<svg class="marca" aria-hidden="true"><use href="#i-folder-tree"></use></svg>
 <div class="area-topo"><span class="mono">02</span><span class="area-qtd">{{ n2 }} funções</span></div>
 <h3>Árvore do processo</h3>
 <p>Capa, anotações, numeração e ferramentas para o processo inteiro.</p>
 <ul>
-<li><img src="{{ site.baseurl }}/img/icon-acoeslote.png" width="16" height="16" alt="">Ações e Documentos em Lote</li>
-<li><img src="{{ site.baseurl }}/img/icon-ferramentaspdf.png" width="16" height="16" alt="">Ferramentas de PDF</li>
-<li><img src="{{ site.baseurl }}/img/icon-capaprocesso.png" width="16" height="16" alt="">Capa do processo</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-list-checks"></use></svg>Ações e Documentos em Lote</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-file-cog"></use></svg>Ferramentas de PDF</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-file-badge"></use></svg>Capa do processo</li>
 </ul>
 </a>
 <a class="area" href="#funcoes" data-filtro="Editor: inserir conteúdo|Editor: formatação e impressão|Editor: imagens e links|Editor: revisão e produtividade">
+<svg class="marca" aria-hidden="true"><use href="#i-pen-line"></use></svg>
 <div class="area-topo"><span class="mono">03</span><span class="area-qtd">{{ n3 }} funções</span></div>
 <h3>Editor de documentos</h3>
 <p>Inserir, formatar, revisar e proteger o texto sem sair do SEI.</p>
 <ul>
-<li><img src="{{ site.baseurl }}/img/icon-revisardoc.png" width="16" height="16" alt="">Revisão de texto</li>
-<li><img src="{{ site.baseurl }}/img/icon-escritainterativa.png" width="16" height="16" alt="">Escrita interativa # e @</li>
-<li><img src="{{ site.baseurl }}/img/icon-sigilodoc.png" width="16" height="16" alt="">Tarjas de sigilo (LGPD)</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-file-pen-line"></use></svg>Revisão de texto</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-at-sign"></use></svg>Escrita interativa # e @</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-spro-tarja"></use></svg>Tarjas de sigilo (LGPD)</li>
 </ul>
 </a>
 <a class="area" href="#funcoes" data-filtro="Aparência e navegação|Visualização de documentos|Configurações e diagnóstico">
+<svg class="marca" aria-hidden="true"><use href="#i-eye"></use></svg>
 <div class="area-topo"><span class="mono">04</span><span class="area-qtd">{{ n4 }} funções</span></div>
 <h3>Aparência e visualização</h3>
 <p>Modo noturno, menu, pesquisa e leitura de documentos.</p>
 <ul>
-<li><img src="{{ site.baseurl }}/img/icon-estiloavancado.png" width="16" height="16" alt="">Estilo Avançado e Noturno</li>
-<li><img src="{{ site.baseurl }}/img/icon-hashcode.png" width="16" height="16" alt="">Verificar Hashcode</li>
-<li><img src="{{ site.baseurl }}/img/icon-baixardocumento.png" width="16" height="16" alt="">Baixar em Word ou HTML</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-sun-moon"></use></svg>Estilo Avançado e Noturno</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-fingerprint"></use></svg>Verificar Hashcode</li>
+<li><svg class="ico" aria-hidden="true"><use href="#i-download"></use></svg>Baixar em Word ou HTML</li>
 </ul>
 </a>
 </div>
@@ -239,10 +247,10 @@ layout: null
 <section class="wrap secao comunidade" id="comunidade">
 <h2>Feito com quem usa</h2>
 <div class="cartoes">
-<a class="cartao" href="https://sugestoes.seipro.app"><strong>Sugestões</strong><span>Proponha funções e vote nas ideias que quer ver. Votar não exige cadastro.</span><em>Abrir o quadro</em></a>
-<a class="cartao" href="https://github.com/SEI-Pro/sei-pro/issues"><strong>Reportar erro</strong><span>Encontrou um problema? Descreva o que aconteceu, a versão do SEI e o navegador.</span><em>Abrir uma issue</em></a>
-<a class="cartao" href="https://seilab.seipro.app"><strong>SEI Lab</strong><span>Laboratório de ideias sobre inovação no SEI, automações e boas práticas.</span><em>Entrar na comunidade</em></a>
-<a class="cartao" href="https://participen.processoeletronico.gov.br/c/modulos-comunidade/sei-pro/39"><strong>ParticiPEN</strong><span>Espaço do SEI Pro na Comunidade do Processo Eletrônico Nacional.</span><em>Participar</em></a>
+<a class="cartao" href="https://sugestoes.seipro.app"><svg class="marca" aria-hidden="true"><use href="#i-lightbulb"></use></svg><strong>Sugestões</strong><span>Proponha funções e vote nas ideias que quer ver. Votar não exige cadastro.</span><em>Abrir o quadro</em></a>
+<a class="cartao" href="https://github.com/SEI-Pro/sei-pro/issues"><svg class="marca" aria-hidden="true"><use href="#i-bug"></use></svg><strong>Reportar erro</strong><span>Encontrou um problema? Descreva o que aconteceu, a versão do SEI e o navegador.</span><em>Abrir uma issue</em></a>
+<a class="cartao" href="https://seilab.seipro.app"><svg class="marca" aria-hidden="true"><use href="#i-flask-conical"></use></svg><strong>SEI Lab</strong><span>Laboratório de ideias sobre inovação no SEI, automações e boas práticas.</span><em>Entrar na comunidade</em></a>
+<a class="cartao" href="https://participen.processoeletronico.gov.br/c/modulos-comunidade/sei-pro/39"><svg class="marca" aria-hidden="true"><use href="#i-messages-square"></use></svg><strong>ParticiPEN</strong><span>Espaço do SEI Pro na Comunidade do Processo Eletrônico Nacional.</span><em>Participar</em></a>
 </div>
 </section>
 </main>
