@@ -15,6 +15,12 @@
 {%- comment -%} O titulo da pagina vira <h1> com icone proprio; o cabecalho original (com o PNG antigo) sai. {%- endcomment -%}
 {%- assign corpo = corpo | remove_first: cabecalho -%}
 {%- if titulo == "" %}{% assign titulo = page.title %}{% endif -%}
+{%- comment -%} O rodape "## Proximo item" dos .md sai daqui: o card branco de anterior/proxima ja faz esse papel. {%- endcomment -%}
+{%- if corpo contains ">Próximo item</h2>" -%}
+{%- assign antes = corpo | split: ">Próximo item</h2>" | first | split: "<h2" -%}
+{%- assign quantos = antes.size | minus: 1 -%}
+{%- assign corpo = antes | slice: 0, quantos | join: "<h2" -%}
+{%- endif -%}
 {%- assign slug = page.path | split: "/" | last | remove: ".md" -%}
 {%- assign ic = site.data.icones[slug] | default: "file-text" -%}
 {%- assign resumo = corpo | split: "<p>" | slice: 1 | first | split: "</p>" | first | strip_html | strip | truncate: 180 -%}
