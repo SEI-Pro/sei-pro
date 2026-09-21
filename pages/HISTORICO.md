@@ -2,6 +2,14 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.6
+21/09/2026
+
+Versão de correção.
+
+- Gestor de Atividades: corrigido o aviso "A chave de acesso é diferente do login do SEI", que passou a aparecer para quase todos os usuários depois da atualização para o **SEI 4.1.5** e fechava o painel de atividades. A partir dessa versão, o SEI grava o login com `_` no lugar do `.` (`fulano_silva` em vez de `fulano.silva`), e a extensão lia só a última parte (`silva`). Agora o login é lido do nome do usuário no topo do SEI, que mantém o formato original, e a comparação trata `.`, `_` e `-` como equivalentes. O mesmo vale para o SEI 5
+- Gestor de Atividades: o pedido de nova chave de acesso e o envio de relatório de erro passam a informar o login completo do usuário. As anotações da árvore do processo também mostram o login completo em "por …"
+
 ### Versão 1.7.5
 19/09/2026
 
