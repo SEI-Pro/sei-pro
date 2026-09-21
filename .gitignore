@@ -99,3 +99,7 @@ desktop.ini
 *.bak
 *.backup
 *.md.bak
+
+# Cache do Python (ex.: _og/gerar_capas.py)
+__pycache__/
+*.pyc
