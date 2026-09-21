@@ -31,9 +31,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ titulo }}{% unless titulo contains "SEI Pro" %} · SEI Pro{% endunless %}</title>
 <meta name="description" content="{{ resumo | escape }}">
+{%- comment -%} Capa própria em img/og/<SLUG>.png (gerada por _og/gerar_capas.py); sem ela, a da home. {%- endcomment -%}
+{%- capture capa_caminho %}/img/og/{{ slug }}.png{% endcapture -%}
+{%- assign capa_existe = site.static_files | where: "path", capa_caminho | first -%}
+{%- if capa_existe %}{% assign capa = capa_caminho %}{% else %}{% assign capa = "/img/og/home.png" %}{% endif %}
+<link rel="canonical" href="{{ site.github.url }}{{ page.url }}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SEI Pro">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:url" content="{{ site.github.url }}{{ page.url }}">
 <meta property="og:title" content="{{ titulo | escape }} · SEI Pro">
 <meta property="og:description" content="{{ resumo | escape }}">
-<meta property="og:image" content="{{ site.github.url }}/dist/icons/icon-256.png">
+<meta property="og:image" content="{{ site.github.url }}{{ capa }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ titulo | escape }} · SEI Pro">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ site.github.url }}{{ capa }}">
 <link rel="icon" href="{{ site.baseurl }}/dist/icons/icon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

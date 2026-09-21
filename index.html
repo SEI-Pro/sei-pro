@@ -52,10 +52,20 @@ layout: null
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SEI Pro · Extensão gratuita com funções avançadas para o SEI</title>
 <meta name="description" content="Extensão gratuita e de código aberto que acrescenta {{ total }} funções ao Controle de Processos, à árvore do processo e ao editor de documentos do SEI. Compatível com o SEI 4 e o SEI 5.">
-<meta property="og:title" content="SEI Pro">
-<meta property="og:description" content="Extensão gratuita com {{ total }} funções para o SEI: prazos, ações em lote, ferramentas de PDF, revisão de texto e mais.">
-<meta property="og:image" content="{{ site.github.url }}/dist/icons/icon-256.png">
+<link rel="canonical" href="{{ site.github.url }}/">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="SEI Pro">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:url" content="{{ site.github.url }}/">
+<meta property="og:title" content="SEI Pro · O SEI com as ferramentas que faltavam">
+<meta property="og:description" content="Extensão gratuita com {{ total }} funções para o SEI: prazos, ações em lote, ferramentas de PDF, revisão de texto e mais.">
+<meta property="og:image" content="{{ site.github.url }}/img/og/home.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SEI Pro: O SEI com as ferramentas que faltavam">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ site.github.url }}/img/og/home.png">
 <link rel="icon" href="{{ site.baseurl }}/dist/icons/icon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -123,7 +133,7 @@ layout: null
 </div>
 <div class="areas">
 <a class="area" href="#funcoes" data-filtro="Controle de Processos|Pesquisa">
-<svg class="marca" aria-hidden="true"><use href="#i-inbox"></use></svg>
+<svg class="marca-dagua" aria-hidden="true"><use href="#i-inbox"></use></svg>
 <div class="area-topo"><span class="mono">01</span><span class="area-qtd">{{ n1 }} funções</span></div>
 <h3>Controle de Processos</h3>
 <p>A caixa da unidade com prazos, grupos, favoritos e ações em vários processos.</p>
@@ -134,7 +144,7 @@ layout: null
 </ul>
 </a>
 <a class="area" href="#funcoes" data-filtro="Árvore do processo|Ferramentas do processo">
-<svg class="marca" aria-hidden="true"><use href="#i-folder-tree"></use></svg>
+<svg class="marca-dagua" aria-hidden="true"><use href="#i-folder-tree"></use></svg>
 <div class="area-topo"><span class="mono">02</span><span class="area-qtd">{{ n2 }} funções</span></div>
 <h3>Árvore do processo</h3>
 <p>Capa, anotações, numeração e ferramentas para o processo inteiro.</p>
@@ -145,7 +155,7 @@ layout: null
 </ul>
 </a>
 <a class="area" href="#funcoes" data-filtro="Editor: inserir conteúdo|Editor: formatação e impressão|Editor: imagens e links|Editor: revisão e produtividade">
-<svg class="marca" aria-hidden="true"><use href="#i-pen-line"></use></svg>
+<svg class="marca-dagua" aria-hidden="true"><use href="#i-pen-line"></use></svg>
 <div class="area-topo"><span class="mono">03</span><span class="area-qtd">{{ n3 }} funções</span></div>
 <h3>Editor de documentos</h3>
 <p>Inserir, formatar, revisar e proteger o texto sem sair do SEI.</p>
@@ -156,7 +166,7 @@ layout: null
 </ul>
 </a>
 <a class="area" href="#funcoes" data-filtro="Aparência e navegação|Visualização de documentos|Configurações e diagnóstico">
-<svg class="marca" aria-hidden="true"><use href="#i-eye"></use></svg>
+<svg class="marca-dagua" aria-hidden="true"><use href="#i-eye"></use></svg>
 <div class="area-topo"><span class="mono">04</span><span class="area-qtd">{{ n4 }} funções</span></div>
 <h3>Aparência e visualização</h3>
 <p>Modo noturno, menu, pesquisa e leitura de documentos.</p>
@@ -247,10 +257,10 @@ layout: null
 <section class="wrap secao comunidade" id="comunidade">
 <h2>Feito com quem usa</h2>
 <div class="cartoes">
-<a class="cartao" href="https://sugestoes.seipro.app"><svg class="marca" aria-hidden="true"><use href="#i-lightbulb"></use></svg><strong>Sugestões</strong><span>Proponha funções e vote nas ideias que quer ver. Votar não exige cadastro.</span><em>Abrir o quadro</em></a>
-<a class="cartao" href="https://github.com/SEI-Pro/sei-pro/issues"><svg class="marca" aria-hidden="true"><use href="#i-bug"></use></svg><strong>Reportar erro</strong><span>Encontrou um problema? Descreva o que aconteceu, a versão do SEI e o navegador.</span><em>Abrir uma issue</em></a>
-<a class="cartao" href="https://seilab.seipro.app"><svg class="marca" aria-hidden="true"><use href="#i-flask-conical"></use></svg><strong>SEI Lab</strong><span>Laboratório de ideias sobre inovação no SEI, automações e boas práticas.</span><em>Entrar na comunidade</em></a>
-<a class="cartao" href="https://participen.processoeletronico.gov.br/c/modulos-comunidade/sei-pro/39"><svg class="marca" aria-hidden="true"><use href="#i-messages-square"></use></svg><strong>ParticiPEN</strong><span>Espaço do SEI Pro na Comunidade do Processo Eletrônico Nacional.</span><em>Participar</em></a>
+<a class="cartao" href="https://sugestoes.seipro.app"><svg class="marca-dagua" aria-hidden="true"><use href="#i-lightbulb"></use></svg><strong>Sugestões</strong><span>Proponha funções e vote nas ideias que quer ver. Votar não exige cadastro.</span><em>Abrir o quadro</em></a>
+<a class="cartao" href="https://github.com/SEI-Pro/sei-pro/issues"><svg class="marca-dagua" aria-hidden="true"><use href="#i-bug"></use></svg><strong>Reportar erro</strong><span>Encontrou um problema? Descreva o que aconteceu, a versão do SEI e o navegador.</span><em>Abrir uma issue</em></a>
+<a class="cartao" href="https://seilab.seipro.app"><svg class="marca-dagua" aria-hidden="true"><use href="#i-flask-conical"></use></svg><strong>SEI Lab</strong><span>Laboratório de ideias sobre inovação no SEI, automações e boas práticas.</span><em>Entrar na comunidade</em></a>
+<a class="cartao" href="https://participen.processoeletronico.gov.br/c/modulos-comunidade/sei-pro/39"><svg class="marca-dagua" aria-hidden="true"><use href="#i-messages-square"></use></svg><strong>ParticiPEN</strong><span>Espaço do SEI Pro na Comunidade do Processo Eletrônico Nacional.</span><em>Participar</em></a>
 </div>
 </section>
 </main>
