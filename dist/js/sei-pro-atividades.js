@@ -227,7 +227,7 @@ function getServerAtividades(param, mode) {
 
                     if (typeof ativData.planos_recalc !== 'undefined' && ativData.planos_recalc) { applyPlanosRecalc(ativData.planos_recalc); }
 
-                    if (typeof ativData.padrao !== 'undefined' && typeof ativData.padrao.perfil !== 'undefined' && ativData.padrao.perfil.login.toLowerCase() != userSEI.toLowerCase()) {
+                    if (typeof ativData.padrao !== 'undefined' && typeof ativData.padrao.perfil !== 'undefined' && userSEI && !loginsEquivalentesPro(ativData.padrao.perfil.login, userSEI)) {
                         confirmaBoxPro('A chave de acesso ao sistema de '+__.atividades+' ('+ativData.padrao.perfil.login+') \u00E9 diferente do login do SEI ('+userSEI+'). <br><br>Deseja solicitar o envio de nova chave de acesso?', function() { configResendKey(userSEI) }, 'Solicitar chave de acesso...');
                         if (typeof perfilLoginAtiv.CLIENT_ID !== 'undefined' && perfilLoginAtiv.CLIENT_ID != '') {
                             signOutProfile();

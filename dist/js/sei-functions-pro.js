@@ -434,10 +434,38 @@ var rangeEtapasPro = "Etapas";
 var rangeFeriadosNacionaisPro = "FeriadosNacionais";
 var rangeConfigGeral = "ConfigGeral";
 
-var userSEI = $('#hdnInfraPrefixoCookie').val();
-    userSEI = (typeof userSEI !== 'undefined' && userSEI != '' && userSEI.indexOf('_') !== -1) ? userSEI.split('_') : false;
-    userSEI = (userSEI) ? userSEI[userSEI.length-1] : false;
-    userSEI = (userSEI) ? userSEI.toLowerCase() : false;
+/* Login do usuario logado no SEI.
+ * 1) title do link do usuario no topo: "NOME (login/ORGAO)" (SEI 3.1 a 5.0). Preserva o login original.
+ *    Procura no documento atual e, se for um quadro, no documento de topo.
+ * 2) Reserva: #hdnInfraPrefixoCookie = "ORGAO_SISTEMA_login". A partir do SEI 4.1.5 o SEI troca
+ *    "." e " " por "_" no prefixo, entao devolve TUDO depois de "ORGAO_SISTEMA_" (nao so o ultimo pedaco)
+ *    e a comparacao tem que ser feita com loginsEquivalentesPro(). */
+function getLoginSEIPro() {
+    var docs = [document];
+    try { if (window.top !== window && window.top.document) docs.push(window.top.document); } catch (e) {}
+    for (var i = 0; i < docs.length; i++) {
+        var els = docs[i].querySelectorAll('[id="lnkUsuarioSistema"][title]');
+        for (var j = 0; j < els.length; j++) {
+            var m = String(els[j].getAttribute('title')).match(/\(([^\/()]+)(?:\/[^()]*)?\)\s*$/);
+            if (m && m[1].trim()) return { login: m[1].trim().toLowerCase(), fonte: 'lnkUsuarioSistema' };
+        }
+    }
+    for (var k = 0; k < docs.length; k++) {
+        var h = docs[k].getElementById('hdnInfraPrefixoCookie');
+        var partes = (h && h.value) ? String(h.value).split('_') : [];
+        if (partes.length > 2) return { login: partes.slice(2).join('_').toLowerCase(), fonte: 'hdnInfraPrefixoCookie' };
+    }
+    return false;
+}
+function normalizaLoginSEIPro(login) {
+    return String(login || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+}
+function loginsEquivalentesPro(a, b) {
+    var na = normalizaLoginSEIPro(a), nb = normalizaLoginSEIPro(b);
+    return na !== '' && na === nb;
+}
+var userSEI = getLoginSEIPro();
+    userSEI = (userSEI) ? userSEI.login : false;
 
 // var CLIENT_ID_PRO = _G() ? _G().CLIENT_ID_PRO : false;
 // var API_KEY_PRO = _G() ? _G().API_KEY_PRO : false;
