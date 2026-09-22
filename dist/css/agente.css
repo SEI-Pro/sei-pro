@@ -242,6 +242,9 @@ input.switch:checked::after { transform: translateX(15px); background: #fff; }
 .msg.agente table { border-collapse: collapse; margin: var(--e1) 0 var(--e2); font-size: 12.5px; display: block; overflow-x: auto; }
 .msg.agente th, .msg.agente td { border: 1px solid var(--linha); padding: 4px 8px; text-align: left; }
 .msg.agente th { background: var(--superficie-2); font-weight: 600; }
+/* Tempo da rodada, no rodapé da resposta: informação de apoio, não conteúdo. */
+.msg.agente .tempo-resposta { display: block; text-align: right; font-size: 10.5px; color: var(--ink-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
 .msg.aviso, .msg.erro {
   font-size: 12.5px;
   padding: 8px 11px;

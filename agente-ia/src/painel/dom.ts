@@ -107,6 +107,14 @@ export function formatarUso(u: { entrada: number; saida: number; custo: number }
   return tokens >= 1000 ? `${(tokens / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k tokens` : `${tokens} tokens`;
 }
 
+/** Duração curta para humanos: "8,4 s", "1 min 12 s". */
+export function duracao(ms: number): string {
+  const s = ms / 1000;
+  if (s < 60) return `${s.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} s`;
+  const min = Math.floor(s / 60);
+  return `${min} min ${Math.round(s - min * 60)} s`;
+}
+
 export function moeda(dolares: number): string {
   return `US$ ${dolares.toLocaleString("pt-BR", { minimumFractionDigits: dolares < 0.1 ? 4 : 2, maximumFractionDigits: dolares < 0.1 ? 4 : 2 })}`;
 }

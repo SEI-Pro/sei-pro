@@ -19,7 +19,7 @@ import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso
 import { PontePainel } from "../ponte/cliente";
 import { TOOLS_MOTOR } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
-import { formatarUso, h, icone, markdown } from "./dom";
+import { duracao, formatarUso, h, icone, markdown } from "./dom";
 import * as historico from "./historico";
 import { extrairTextoPdf } from "./pdf";
 
@@ -39,8 +39,11 @@ interface Config {
 }
 
 type Item =
-  | { tipo: "usuario" | "agente" | "aviso" | "erro" | "decisao"; texto: string }
+  /** `ms` (só na resposta do agente): quanto a rodada inteira demorou, do envio à resposta pronta. */
+  | { tipo: "usuario" | "agente" | "aviso" | "erro" | "decisao"; texto: string; ms?: number }
   | { tipo: "tool"; rotulo: string; estado: "rodando" | "ok" | "falha"; detalhe?: string };
+
+type ItemAgente = { tipo: "agente"; texto: string; ms?: number };
 
 const CHAVE_CONFIG = "agenteIA_config";
 const CHAVE_SESSAO = "agenteIA_conversa";
@@ -94,6 +97,11 @@ const ATALHOS: Array<{ rotulo: string; descricao: string; prompt: string }> = [
 const marca = (tamanho: number) =>
   h("img", { class: "logo", src: chrome.runtime.getURL("icons/menu/botpro_icon.svg"), alt: "", width: String(tamanho), height: String(tamanho) });
 
+/** Tempo da rodada, no rodapé da resposta. */
+function carimboDeTempo(ms: number): HTMLElement {
+  return h("span", { class: "tempo-resposta", title: "Tempo entre o seu pedido e a resposta pronta" }, duracao(ms));
+}
+
 class App {
   private readonly raiz = document.getElementById("app")!;
   private readonly ponte = new PontePainel();
@@ -120,6 +128,8 @@ class App {
   private elPensando!: HTMLElement;
   private tickPensando: ReturnType<typeof setInterval> | null = null;
   private bolhaAtual: { el: HTMLElement; texto: string; pendente: boolean } | null = null;
+  /** Última resposta fechada da rodada: recebe o carimbo de tempo no fim. */
+  private ultimaResposta: { el: HTMLElement; item: ItemAgente } | null = null;
   private aoFimDoPlano: (() => void) | null = null;
   private toolsEl = new Map<string, { el: HTMLElement; item: Extract<Item, { tipo: "tool" }> }>();
 
@@ -664,6 +674,8 @@ class App {
     }
     this.elEntrada.value = "";
     this.elEntrada.style.height = "auto";
+    const comecou = Date.now();
+    this.ultimaResposta = null;
     const comAnexo = this.anexo ? `${t}\n\n[Anexo: ${this.anexo.nome}]\n${this.anexo.texto}` : t;
     this.adicionar({ tipo: "usuario", texto: this.anexo ? `${t}\n\u{1F4CE} ${this.anexo.nome}` : t });
     this.anexo = null;
@@ -677,9 +689,23 @@ class App {
       this.adicionar({ tipo: "erro", texto: (e as Error).message });
     } finally {
       this.pensar(false);
+      this.carimbarRodada(Date.now() - comecou);
       this.estadoEnvio();
       await this.salvarSessao();
     }
+  }
+
+  /**
+   * Carimba a última resposta com o tempo da rodada inteira: o que o usuário
+   * esperou entre mandar o pedido e poder ler, com ferramentas e tudo.
+   */
+  private carimbarRodada(ms: number): void {
+    const resposta = this.ultimaResposta;
+    this.ultimaResposta = null;
+    if (!resposta || resposta.item.ms) return;
+    resposta.item.ms = ms;
+    resposta.el.append(carimboDeTempo(ms));
+    this.rolar();
   }
 
   private async novaConversa(): Promise<void> {
@@ -715,6 +741,7 @@ class App {
     if (item.tipo === "agente") {
       const el = h("div", { class: "msg agente" });
       el.append(markdown(item.texto));
+      if (item.ms) el.append(carimboDeTempo(item.ms));
       return el;
     }
     if (item.tipo === "aviso" || item.tipo === "decisao") return h("div", { class: "msg aviso" }, icone("alerta", 14), h("span", {}, item.texto));
@@ -846,8 +873,10 @@ class App {
     const b = this.bolhaAtual;
     this.bolhaAtual = null;
     if (b.texto.trim()) {
-      this.transcricao.push({ tipo: "agente", texto: b.texto });
+      const item: ItemAgente = { tipo: "agente", texto: b.texto };
+      this.transcricao.push(item);
       b.el.replaceChildren(markdown(b.texto));
+      this.ultimaResposta = { el: b.el, item };
     } else b.el.remove();
   }
 
