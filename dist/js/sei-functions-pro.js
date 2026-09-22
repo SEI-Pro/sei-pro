@@ -12198,56 +12198,6 @@ const getImageBase64FromImgElement = async (imgElement) => {
         img.src = imgElement.src;
     });
 };
-const getDataBodyResolveCaptcha = (prompt_text, imageBase64 = null) => {
-    const parts = imageBase64 ? [
-        { text: prompt_text },
-        {
-            inlineData: {
-                mimeType: "image/png", // ou "image/jpeg"
-                data: imageBase64.replace(/^data:image\/(png|jpeg);base64,/, '')
-            }
-        }
-    ] : [
-        { text: prompt_text }
-    ];
-
-    return JSON.stringify({
-        contents: [{ role: "user", parts: parts }]
-    });
-};
-const resolveCaptchaAI = async (prompt_text, imageBase64 = null) => {
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${perfilGemini.KEY_USER}`;
-    const data = getDataBodyResolveCaptcha(prompt_text, imageBase64); // <-- INCLUINDO A IMAGEM
-
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', url);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    try {
-                        let responseText = JSON.parse(xhr.responseText);
-                        responseText = responseText.candidates[0].content.parts[0].text;
-                        resolve(responseText);
-                    } catch (e) {
-                        reject('Erro ao processar a resposta da IA');
-                    }
-                } else {
-                    try {
-                        const error = JSON.parse(xhr.responseText);
-                        const errorMsg = error?.error?.message ?? 'Erro inesperado';
-                        console.error(errorMsg);
-                        reject(errorMsg);
-                    } catch (e) {
-                        reject('Erro inesperado');
-                    }
-                }
-            }
-        };
-        xhr.send(data);
-    });
-};
 function checkInternalWidthDialogBox() {
     var dialogBoxW = $('#dialogBoxPro').width();
     var dialogBoxTableW = $('#dialogBoxPro table').width();

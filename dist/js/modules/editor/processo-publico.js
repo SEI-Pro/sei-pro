@@ -16,10 +16,9 @@
  *  - Carregado ANTES do monolito (adapter -> modulos -> editor), portanto NAO
  *    chama helpers do monolito em tempo de avaliacao. Os helpers usados
  *    (setParamEditor, resetDialogBoxPro, initChosenReplace, waitLoadPro,
- *    alertaBoxPro, sanitizeHTML, removeAcentos, getCitacaoDoc,
- *    getImageBase64FromImgElement, resolveCaptchaAI) e o estado compartilhado
- *    (dadosProcessoPro, delayCrash, perfilGemini, loadSEIProAI) vem de outros
- *    scripts da extensao e estao disponiveis no clique/boot.
+ *    alertaBoxPro, sanitizeHTML, removeAcentos, getCitacaoDoc) e o estado
+ *    compartilhado (dadosProcessoPro, delayCrash) vem de outros scripts da
+ *    extensao e estao disponiveis no clique/boot.
  *  - A instancia do editor e a insercao do link sao roteadas pelo
  *    SeiProEditorAdapter (CK4 e CK5).
  *
@@ -149,19 +148,6 @@
             });
     };
 
-    // Resolve o captcha automaticamente via IA quando o perfil Gemini tem chave.
-    window.resolveCapchaProcessoPublico = async function () {
-        if (typeof perfilGemini !== 'undefined' && perfilGemini.KEY_USER && !$('.trListDocPublico').is(':visible')) {
-            var imgCaptcha = $('#searchPub_captcha img');
-            const base64ImgCaptcha = imgCaptcha.attr('src').startsWith('data:image/') ? imgCaptcha.attr('src') : await getImageBase64FromImgElement(imgCaptcha[0]);
-            const captchaResolve = await resolveCaptchaAI("Quais os caracteres da imagem? Responsa apenas com os caracteres, sem espa\u00E7o entre eles", base64ImgCaptcha);
-            $('#captchaPub').val(captchaResolve);
-            setTimeout(() => {
-                if ($('#captchaPub').val() != '' && $('#processoPub').val() != '' && captchaResolve) loadListaProcessoPublicoPro();
-            }, 1000);
-        }
-    };
-
     // Carrega a pagina de pesquisa publica do SEI dentro do iframe oculto.
     window.getDadosIframeProcessoPublicoPro = function () {
         if ( $('#frmCheckerProcessoPublicoPro').length == 0 ) { getCheckerProcessoPublicoPro(); }
@@ -171,10 +157,9 @@
         });
     };
 
-    // Aguarda o formulario de pesquisa, extrai o captcha e dispara a resolucao.
+    // Aguarda o formulario de pesquisa e mostra o captcha para o usuario digitar.
     window.checkDadosIframeProcessoPublicoPro = function (TimeOut = 9000) {
         if (TimeOut <= 0) { return; }
-        if (TimeOut === 9000) $.getScript(URL_SPRO + 'js/sei-pro-ai.js');
         var ifrPublico = $('#frmCheckerProcessoPublicoPro').contents();
         if ( ifrPublico.find('#seiSearch').length ) {
             var captcha = ifrPublico.find('#lblCaptcha').find('img').attr('src');
@@ -182,11 +167,8 @@
             var htmlCaptcha =   '<img src="'+captcha+'"> <i onclick="getDadosIframeProcessoPublicoPro()" class="fas fa-redo" style="color: #969696; cursor: pointer; padding: 3px 8px;"></i>';
             $('#searchPub_captcha').html(htmlCaptcha);
             $('#searchPub_load').hide();
+            // O captcha e' digitado pelo usuario: nao ha IA lendo a imagem.
             $('#captchaPub').val('').focus();
-            if (typeof loadSEIProAI !== 'undefined') resolveCapchaProcessoPublico();
-            else setTimeout(function () {
-                resolveCapchaProcessoPublico();
-            }, 1500);
         } else {
             setTimeout(function () {
                 checkDadosIframeProcessoPublicoPro(TimeOut - 100);

@@ -2182,17 +2182,6 @@ function qualityImages( src, dst, quality, type) {
 // INSERE LINK DE DOCUMENTO PUBLICO
 // getCheckerProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
 // openDialogProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
-async function resolveCapchaProcessoPublico() {
-    if (typeof perfilGemini !== 'undefined' && perfilGemini.KEY_USER && !$('.trListDocPublico').is(':visible')) {
-        var imgCaptcha = $('#searchPub_captcha img');
-        const base64ImgCaptcha = imgCaptcha.attr('src').startsWith('data:image/') ? imgCaptcha.attr('src') : await getImageBase64FromImgElement(imgCaptcha[0]);
-        const captchaResolve = await resolveCaptchaAI("Quais os caracteres da imagem? Responsa apenas com os caracteres, sem espa\u00E7o entre eles", base64ImgCaptcha);
-        $('#captchaPub').val(captchaResolve);
-        setTimeout(() => {
-            if ($('#captchaPub').val() != '' && $('#processoPub').val() != '' && captchaResolve) loadListaProcessoPublicoPro();
-        }, 1000);
-    }
-}
 // getDadosIframeProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
 // checkDadosIframeProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
 // loadListaProcessoPublicoPro() -> js/modules/editor/ (extraido para modulo)
@@ -2224,36 +2213,11 @@ function repairSaveButtonBug(loop = true) {
     }
 }
 
-// ### FERRAMENTA DE INTELIG\u00CANCIA ARTIFICIAL NO EDITOR DE TEXTOS ###
-// Aprimorado em 2025-04-17
-    // CARREGAMENTO DIN\u00C2MICO DO SCRIPT DE IA, COM RECURSIVIDADE E TIMEOUT
-    const loadPlataformAI = (this_, TimeOut = 9000) => {
-        if (TimeOut <= 0) return;
-        if (typeof loadSEIProAI !== 'undefined') {
-            // getPlataformAI(this_);
-            loadBoxAIActions();
-        } else {
-            if (TimeOut === 9000) $.getScript(URL_SPRO + 'js/sei-pro-ai.js');
-            setTimeout(() => {
-                loadPlataformAI(this_, TimeOut - 100);
-                if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) {
-                    console.log('Reload initBoxAIActions');
-                }
-            }, 500);
-        }
-    };
+// A ferramenta de IA antiga (ChatGPT/Gemini com chave do usuario, dialogo
+// proprio e modo "+gpt" no texto) foi REMOVIDA: quem faz esse trabalho agora e'
+// o Agente de IA, no painel lateral (agente-ia/). Ficaram aqui so os dois
+// trechos ainda usados por outras telas.
 
-    // FUN\u00C7\u00C3O PARA EXIBI\u00C7\u00C3O DE DI\u00C1LOGOS DE IA
-    const getPlataformAI = this_ => {
-        setParamEditor(this_);
-        if (!getOptionsPro('consentimentoIA')) {
-            oEditor.openDialog('plataformAI_disclaimer');
-        } else {
-            oEditor.openDialog('plataformAI');
-        }
-    };
-
-    // DI\u00C1LOGO DE RESTRI\u00C7\u00C3O PARA PROCESSOS SIGILOSOS
     const getDialogNaoDisponivel = title => ({
         title,
         minWidth: 500,
@@ -2274,472 +2238,7 @@ function repairSaveButtonBug(loop = true) {
     });
 
     // DI\u00C1LOGOS PRINCIPAIS DE CONSENTIMENTO E ENVIO DE PROMPT PARA A IA
-    const getDialogPlataformAI = () => {
-        if (checkProcessoSigiloso()) {
-            CKEDITOR.dialog.add('plataformAI', editor =>
-                getDialogNaoDisponivel(`Inserir texto de intelig\u00EAncia artificial (${currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini'})`)
-            );
-        } else {
-            CKEDITOR.dialog.add('plataformAI_disclaimer', editor => ({
-                title: `Intelig\u00EAncia artificial (${currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini'}): Consentimento`,
-                minWidth: 500,
-                minHeight: 200,
-                buttons: [CKEDITOR.dialog.cancelButton, CKEDITOR.dialog.okButton],
-                onOk: event => {
-                    if ($('#ciente_disclaimer').is(':checked')) {
-                        event.data.hide = true;
-                        setOptionsPro('consentimentoIA', true);
-                        setTimeout(() => oEditor.openDialog('plataformAI'), 1000);
-                    } else {
-                        alertaBoxPro('Error', 'exclamation-triangle', '\u00C9 necess\u00E1rio consentimento antes de prosseguir!');
-                        event.data.hide = false;
-                    }
-                },
-                contents: [{
-                    id: 'tab1',
-                    label: 'Consentimento',
-                    elements: [{
-                        type: 'html',
-                        html: sanitizeHTML(consentAI)
-                    }]
-                }]
-            }));
 
-            CKEDITOR.dialog.add('plataformAI', editor => ({
-                title: `Inserir texto de intelig\u00EAncia artificial (${currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini'})`,
-                minWidth: 800,
-                minHeight: 80,
-                buttons: [],
-                onShow() {
-                    updateModelsAI();
-                    $('#plataformAI_load').hide();
-
-                    if ($('#plataformAI_result').is(':visible')) {
-                        this.move(this.getPosition().x, this.getPosition().y + 125);
-                        $('#plataformAI_result').html('').hide();
-                    }
-
-                    const selectedText = oEditor.getSelection().getSelectedText();
-                    if (selectedText !== '') {
-                        this.setValueOf('tab_ia', 'textPrompt', selectedText);
-                    }
-
-                    $('textarea.cke_dialog_ui_input_textarea').css('white-space', 'break-spaces');
-
-                    if (verifyConfigValue('substituiselecao')) {
-                        $('textarea.cke_dialog_ui_input_textarea')
-                            .closest('div.cke_dialog_ui_textarea')
-                            .css('margin-top', '30px');
-                        setChosenInCke(false, '900px');
-                    }
-
-                    if (perfilPlataform) {
-                        const idKeyword = this.getContentElement('tab_ia_options', 'keyword')._.inputId;
-                        const idModel = this.getContentElement('tab_ia_options', 'model')._.inputId;
-                        const idModeInline = this.getContentElement('tab_ia_options', 'mode_inline').domId;
-
-                        const elemKeyword = $(`#${idKeyword}`);
-                        const elemModel = $(`#${idModel}`);
-                        const elemInline = $(`#${idModeInline} input`);
-
-                        elemKeyword.on('change', function () {
-                            setOptionsPro('setKeywordInlineAI', $(this).val());
-                            $('.wordGpt').text($(this).val());
-                        });
-
-                        elemModel.on('change', function () {
-                            setOptionsPro('setModelOpenAI', $(this).val());
-                        });
-
-                        elemInline.prop('checked', getOptionsPro('setInlineAI')).on('change', function () {
-                            getInlineAI(this);
-                        });
-                    }
-
-                    // DELEGA\u00C7\u00C3O DE EVENTOS PARA FUNCIONALIDADES DE ENVIO E EXEMPLO
-                    $(document).on('click', '.sendPrompt', e => {
-                        e.preventDefault();
-                        getParamAI(e.currentTarget);
-                    });
-                    $(document).on('click', '.exampleTextAI', e => {
-                        e.preventDefault();
-                        exampleTextAI(e.currentTarget);
-                    });
-                },
-                contents: [
-                    !perfilPlataform ? {
-                        id: 'tab_ia',
-                        label: 'Cadastro de Token',
-                        elements: [{
-                            type: 'html',
-                            html: sanitizeHTML(disclaimerAI)
-                        }]
-                    } : {
-                        id: 'tab_ia',
-                        label: currentPlataform === 'openai' ? 'ChatGPT' : 'Gemini',
-                        elements: [
-                            {
-                                type: 'select',
-                                id: 'selectPrompt',
-                                label: 'Tipo de Integra\u00E7\u00E3o',
-                                width: '100%',
-                                items: [
-                                    ['Discorra sobre '],
-                                    ['Resuma em linguagem simples o seguinte trecho: '],
-                                    ['Reescreva o seguinte trecho: '],
-                                    ['Descubra a base legal para o seguinte tema: '],
-                                    ['Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: '],
-                                    ['Traduza para portugu\u00EAs a frase: '],
-                                    ['Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: '],
-                                    ['Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: '],
-                                    ['Conclua o seguinte texto: '],
-                                    ['Extraia as palavras-chave deste texto: '],
-                                    ['Converta minha nota curta em uma ata de reuni\u00E3o: '],
-                                    ['Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: '],
-                                    ['Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: '],
-                                    ['Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: '],
-                                    ['Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: '],
-                                    ['-']
-                                ],
-                                default: 'Discorra sobre '
-                            },
-                            {
-                                type: 'textarea',
-                                label: 'Texto de Entrada',
-                                id: 'textPrompt',
-                                default: ''
-                            },
-                            {
-                                type: 'html',
-                                html: sanitizeHTML(`
-                                    <table role="presentation" class="cke_dialog_ui_hbox">
-                                        <tbody>
-                                            <tr class="cke_dialog_ui_hbox">
-                                                <td class="cke_dialog_ui_hbox_last" role="presentation" style="padding:0px;text-align: right;">
-                                                    <a class="linkDialog exampleTextAI" style="float:left;" target="_blank">Adicionar texto de exemplo</a>
-                                                    <a title="Enviar" class="cke_dialog_ui_button cke_dialog_ui_button_cancel sendPrompt" role="button" aria-labelledby="plataformAI_label">
-                                                        <span id="plataformAI_label" class="cke_dialog_ui_button">\u0045nviar</span>
-                                                    </a>
-                                                    <i id="plataformAI_load" class="fas fa-sync-alt fa-spin" style="margin-left: 10px; display:none"></i>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <div id="plataformAI_result" style="display:none; white-space: break-spaces;"></div>
-                                    <div id="plataformAI_alert" style="white-space: break-spaces;margin-top: 10px;font-style: italic; color: #616161;">
-                                        <span class="alertaAttencionPro dialogBoxDiv">
-                                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                                            Os dados s\u00E3o processados pelo servi\u00E7o 
-                                            <a href="${currentPlataform === 'openai' ? 'https://openai.com/' : 'https://gemini.google.com/app'}" class="linkDialog" style="font-style: italic;" target="_blank">${currentPlataform === 'openai' ? 'OpenAI' : 'Google'}</a>.
-                                            N\u00E3o envie informa\u00E7\u00F5es restritas ou sigilosas.
-                                        </span>
-                                    </div>
-                                `)
-                            }
-                        ]
-                    },
-                    {
-                        id: 'tab_ia_options',
-                        label: 'Op\u00E7\u00F5es',
-                        elements: [
-                            {
-                                type: 'select',
-                                id: 'model',
-                                label: 'Modelo de IA',
-                                items: currentPlataform === 'openai' ? modelsOpenAI : modelsGemini,
-                                default: currentPlataform === 'openai' ? 'gpt-4' : 'gemini-1.5-pro'
-                            },
-                            {
-                                type: 'checkbox',
-                                id: 'mode_inline',
-                                style: 'margin-top:5px',
-                                label: 'Ativar o modo de escrita interativa'
-                            },
-                            {
-                                type: 'select',
-                                id: 'keyword',
-                                label: 'Palavra de gatilho',
-                                items: [['+gpt'], [':gpt'], ['/gpt'], ['.gpt'], ['-gpt']],
-                                default: '+gpt'
-                            },
-                            {
-                                type: 'html',
-                                html: `<span style="display: block;margin: 5px;font-style: italic;color: #666;">
-                                        Digite <span class="wordGpt">${getOptionsPro('setKeywordInlineAI') || '+gpt'}</span> em qualquer parte do documento, seguido do seu prompt. 
-                                        Pressione ENTER e veja a magia acontecer \uD83E\uDDD9\u200D\u2642\uFE0F
-                                    </span>`
-                            }
-                        ]
-                    }
-                ]
-            }));
-        }
-    };
-
-    // FUN\u00C7\u00C3O PRINCIPAL PARA OBTER PAR\u00C2METROS E ENVIAR REQUISI\u00C7\u00C3O \u00C0 IA
-    const getParamAI = (this_) => {
-        // OBT\u00C9M O DI\u00C1LOGO ATUAL DO CKEDITOR
-        const dialog = CKEDITOR.dialog.getCurrent();
-
-        // OBT\u00C9M E TRATA O TEXTO DO PROMPT
-        let prompt_text = dialog.getContentElement('tab_ia', 'textPrompt').getValue();
-        prompt_text = prompt_text
-            .replace(/['"]+/g, '') // REMOVE ASPAS SIMPLES E DUPLAS
-            .replace(/\n/g, '\\n') // SUBSTITUI QUEBRAS DE LINHA
-            .trim();
-
-        // OBT\u00C9M O VALOR SELECIONADO E TRATA
-        let prompt_select = dialog.getContentElement('tab_ia', 'selectPrompt').getValue();
-        prompt_select = (prompt_select === '-') ? '' : prompt_select;
-
-        // MOSTRA A \u00C1REA DE LOADING
-        $('#plataformAI_load').show();
-
-        // SE O RESULTADO ESTIVER VIS\u00CDVEL, LIMPA E ESCONDE, AJUSTANDO POSI\u00C7\u00C3O DO DI\u00C1LOGO
-        if ($('#plataformAI_result').is(':visible')) {
-            const position = dialog.getPosition();
-            dialog.move(position.x, (position.y + 125));
-            $('#plataformAI_result').html('').hide();
-        }
-
-        // ENVIA A REQUISI\u00C7\u00C3O PARA A IA
-        sendRequestAI(prompt_select, prompt_text);
-    };
-
-    const sendRequestAI = (prompt_select, prompt_text, inline = false) => {
-        let ai_response_editor;
-
-        openai_test();
-
-        // FUN\u00C7\u00C3O PRINCIPAL RESPONS\u00C1VEL POR ENVIAR A SOLICITA\u00C7\u00C3O PARA A API
-        async function openai_test() {
-            const model = currentPlataform === 'openai'
-                ? getOptionsPro('setModelOpenAI') || 'gpt-4'
-                : getOptionsPro('setModelGemini') || 'gemini-1.5-pro';
-
-            const url = currentPlataform === 'openai'
-                ? `${perfilPlataform.URL_API}v1/chat/completions`
-                : `${perfilPlataform.URL_API}v1/models/${model}:generateContent?key=${perfilPlataform.KEY_USER}`;
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', url);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            if (currentPlataform === 'openai') {
-                xhr.setRequestHeader('Authorization', `Bearer ${perfilPlataform.KEY_USER}`);
-            }
-
-            if (inline) {
-                setTimeout(() => {
-                    $(oEditor.getSelection().getStartElement().$).closest('p').html(
-                        '<span class="dot-flashing" contenteditable="false" style="margin: 0 20px;display: inline-block;">\u00A0</span>'
-                    );
-                });
-            }
-
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    console.log(xhr.status);
-                    console.log(xhr.responseText);
-
-                    ai_response_editor = JSON.parse(xhr.responseText);
-
-                    console.log(ai_response_editor);
-
-                    const responseText = currentPlataform === 'openai'
-                        ? ai_response_editor.choices[0].message.content.replace(/(?:\r\n|\r|\n)/g, '<br>')
-                        : ai_response_editor.candidates[0].content.parts[0].text.replace(/(?:\r\n|\r|\n)/g, '<br>');
-
-                    const btnInsertText = `
-                        <span class="btn-insert-text" style="float: right; background: #e7effd; padding: 3px 5px; color: #4285f4; border-radius: 5px; margin-left: 10px; cursor: pointer;">
-                            <i class="fas fa-pen azulColor" style="font-size: 90%; cursor: pointer;"></i>
-                            Adicionar
-                        </span>`;
-
-                    const htmlResult = `
-                        <div class="result" style="padding-top: 15px;">
-                            ${btnInsertText}
-                            <span class="text" style="white-space: break-spaces;font-size: 10pt;font-family: system-ui;text-align: justify;line-height: 14pt;overflow-y: scroll;height: 300px !important;display: block;">
-                                <span class="blinker">\u0020</span>
-                            </span>
-                        </div>`;
-
-                    const dialog = CKEDITOR.dialog.getCurrent();
-
-                    if (!inline) {
-                        $('#plataformAI_load').hide();
-                        // SANITIZA O HTML ANTES DE INSERIR
-                        $('#plataformAI_result').html(sanitizeHTML(htmlResult)).show();
-                        $('#plataformAI_result .result .text').data('text', responseText);
-                        dialog.move(dialog.getPosition().x, (dialog.getPosition().y - 125));
-                    }
-
-                    // EFEITO DE "DIGITA\u00C7\u00C3O" DO TEXTO DE RESPOSTA
-                    let i = 0;
-                    let isTag;
-                    let text;
-
-                    (function type() {
-                        const container = inline
-                            ? $(oEditor.getSelection().getStartElement().$).closest('p')
-                            : $('#plataformAI_result .result .text');
-
-                        text = responseText.slice(0, ++i);
-                        if (text === responseText) return;
-
-                        container.html(text + (!inline ? '<span class="blinker">\u0020</span>' : ''));
-                        if (!inline) container[0].scrollTop = container[0].scrollHeight;
-
-                        const char = text.slice(-1);
-                        if (char === '<') isTag = true;
-                        if (char === '>') isTag = false;
-                        if (isTag) return type();
-
-                        setTimeout(type, 10);
-                    })();
-
-                    // DELEGA\u00C7\u00C3O DE EVENTOS AP\u00D3S CARGA DIN\u00C2MICA
-                    $(document).on('click', '.result .text', (e) => {
-                        insertTextEditorSEI(e.currentTarget);
-                    });
-
-                } else if (xhr.status >= 400) {
-                    console.log(xhr.status);
-                    console.log(xhr.responseText);
-
-                    ai_response_editor = JSON.parse(xhr.responseText);
-
-                    $('#plataformAI_load').hide();
-                    $('#plataformAI_result').html(
-                        `<strong class="alertaErrorPro dialogBoxDiv" style="white-space: break-spaces;background-color: #fff1f0;padding: 10px;margin: 10px 0;border-radius: 8px;">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            ${ai_response_editor.error.message}
-                        </strong>`
-                    ).show();
-                }
-            };
-
-            // DADOS DO CORPO DA REQUISI\u00C7\u00C3O
-            const temperature = getOptionsPro('setTemperatureAI') || '0.4';
-            const maxTokens = getOptionsPro('setMaxTokensAI') || '6400';
-            const topP = getOptionsPro('setTopPAI') || '1';
-            const frequencyPenalty = getOptionsPro('setFrequencyPenaltyAI') || '0';
-            const presencePenalty = getOptionsPro('setPresencePenaltyAI') || '0';
-
-            const data = currentPlataform === 'openai'
-                ? JSON.stringify({
-                    model,
-                    messages: [{ role: 'user', content: prompt_select + prompt_text }],
-                    temperature: parseFloat(temperature),
-                    max_tokens: parseInt(maxTokens),
-                    top_p: parseFloat(topP),
-                    frequency_penalty: parseFloat(frequencyPenalty),
-                    presence_penalty: parseFloat(presencePenalty)
-                })
-                : JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt_select + prompt_text }]
-                    }]
-                });
-
-            xhr.send(data);
-        }
-
-        // DELEGA\u00C7\u00C3O DE EVENTO PARA O BOT\u00C3O "ADICIONAR"
-        $(document).on('click', '.btn-insert-text', function () {
-            insertTextEditorSEI(this);
-        });
-    }
-
-    // INSERE TEXTO NO EDITOR SEI
-    const insertTextEditorSEI = (this_) => {
-        const _this = $(this_);
-        const textData = _this.closest('.result').find('.text').data('text');
-        const text = (textData !== 'undefined')
-            ? textData
-            : $('<div>').append(_this.closest('.result').find('.text').clone()).text();
-
-        const select = oEditor.getSelection().getStartElement();
-        const pElement = $(select.$).closest('p');
-
-        if (pElement.length) {
-            oEditor.focus();
-            oEditor.fire('saveSnapshot');
-
-            if (frmEditor.length) {
-                const classP = iframeEditor.find(pElement).attr('class');
-                const pText = text.includes('\n')
-                    ? text.split('\n').map(v =>
-                        (v === '')
-                            ? '<p class="Citacao"><br></p>'
-                            : `<p class="${classP}">${sanitizeHTML(v)}</p>`)
-                    : [`<p class="${classP}">${sanitizeHTML(text)}</p>`];
-
-                iframeEditor.find(pElement).after(pText);
-                CKEDITOR.dialog.getCurrent().hide();
-            } else {
-                pElement.before(sanitizeHTML(text));
-            }
-
-            oEditor.fire('saveSnapshot');
-        }
-    };
-
-    // SELECIONA TEXTO DE EXEMPLO COM BASE NA OP\u00C7\u00C3O ESCOLHIDA
-    const exampleTextAI = () => {
-        const dialog = CKEDITOR.dialog.getCurrent();
-        const promptSelect = dialog.getContentElement('tab_ia', 'selectPrompt').getValue();
-
-        let exampleText = false;
-
-        exampleText = (promptSelect === 'Discorra sobre ') ? 'o poder de pol\u00EDcia administrativo' : exampleText;
-        exampleText = (promptSelect === 'Resuma em linguagem simples o seguinte trecho: ') ? 'N\u00E3o sendo ela, de modo nenhum, pass\u00EDvel de compara\u00E7\u00E3o com qualquer ep\u00EDteto quinquagen\u00E1rio, ou mito gerado por qualquer estrat\u00E9gia mercadol\u00F3gica ou interesse de m\u00EDdia "hollywoodiana", distor\u00E7\u00E3o que resta, evidentemente, imperdo\u00E1vel. Tal afirma\u00E7\u00E3o queima exposta a luz da imperativa e facilmente constat\u00E1vel modernidade de que se reveste a mesma, a quem fica, intrinsecamente, atribu\u00EDdo ox\u00EDmoro j\u00E1 mil vezes reverberado, de ef\u00EAmera personalidade.' : exampleText;
-        exampleText = (promptSelect === 'Reescreva o seguinte trecho: ') ? 'Muitos s\u00E3o os princ\u00EDpios que regem a seara trabalhista, al\u00E9m do princ\u00EDpio da prote\u00E7\u00E3o que se divide em outros subprinc\u00EDpios, temos o princ\u00EDpio da continuidade da rela\u00E7\u00E3o de emprego, da primazia da realidade, da irrenunciabilidade dos direitos trabalhistas, da irredutibilidade salarial, dentre outros de suma import\u00E2ncia para a estrutura do Direito do Trabalho. ' : exampleText;
-        exampleText = (promptSelect === 'Descubra a base legal para o seguinte tema: ') ? 'restri\u00E7\u00E3o \u00E0 fragmenta\u00E7\u00E3o de despesas p\u00FAblicas' : exampleText;
-        exampleText = (promptSelect === 'Traga o texto legal, sem explica\u00E7\u00F5es, do seguintes dispositivo legal: ') ? 'art. 5\u00BA, inc. X da CF' : exampleText;
-        exampleText = (promptSelect === 'Traduza para portugu\u00EAs a frase: ') ? 'A Perspective on the Sources of the Brazilian Law' : exampleText;
-        exampleText = (promptSelect === 'Fa\u00E7a uma an\u00E1lise cr\u00EDtica sobre o seguinte t\u00F3pico: ') ? 'porte de armas' : exampleText;
-        exampleText = (promptSelect === 'Liste at\u00E9 10 sin\u00F4nimos em portugu\u00EAs para a palavra: ') ? 'retumbante' : exampleText;
-        exampleText = (promptSelect === 'Conclua o seguinte texto: ') ? 'O direito ao sil\u00EAncio ou direito a n\u00E3o autoincrimina\u00E7\u00E3o \u00E9 dos direitos fundamentais elencados pela nossa constitui\u00E7\u00E3o.' : exampleText;
-        exampleText = (promptSelect === 'Extraia as palavras-chave deste texto: ') ? 'Pontes Miranda adota a teoria bipartida, segundo a qual s\u00F3 existem impostos e taxas. Jos\u00E9 Afonso da Silva arrola impostos, taxas e contribui\u00E7\u00F5es como esp\u00E9cies tribut\u00E1rias, ou seja, uma classifica\u00E7\u00E3o tripartida. Luciano Amaro, por sua vez, lista quatro esp\u00E9cies tribut\u00E1rias: Impostos, taxas, contribui\u00E7\u00E3o de melhoria e empr\u00E9stimo compuls\u00F3rio, caracterizando ent\u00E3o, a ado\u00E7\u00E3o de uma teoria quadripartida. Ademais, Ives Gandra Martins vai al\u00E9m e nomeia cinco esp\u00E9cies tribut\u00E1rias, ou seja, uma classifica\u00E7\u00E3o quinquipartida, s\u00E3o elas: impostos, taxas, contribui\u00E7\u00E3o de melhoria, empr\u00E9stimos compuls\u00F3rios e contribui\u00E7\u00F5es especiais.' : exampleText;
-        exampleText = (promptSelect === 'Converta minha nota curta em uma ata de reuni\u00E3o: ') ? 'Pedro: Lucros de at\u00E9 50% Tiago: Novos servidores est\u00E3o online Helio: Precisa de mais tempo para consertar o software Renata: Feliz em ajudar Paulo: Teste beta quase pronto' : exampleText;
-        exampleText = (promptSelect === 'Fa\u00E7a um resumo em t\u00F3picos do seguinte texto: ') ? 'O cidad\u00E3o que exerce uma cidadania ativa, se compromete e se envolve em todos os assuntos da comunidade em que vive, exemplo da luta cotidiana por direitos individuais e coletivos. A mesma necessita de uma participa\u00E7\u00E3o p\u00FAblica e deve ter como base o respeito em rela\u00E7\u00E3o \u00E0s diferen\u00E7as e a supera\u00E7\u00E3o das desigualdades sociais que assolam a nossa sociedade, buscando sempre um consenso em que privilegie a maioria dos envolvidos.' : exampleText;
-        exampleText = (promptSelect === 'Escreva um texto longo e detalhado, cite fontes e dispositivos legais que embase a argumenta\u00E7\u00E3o sobre o seguinte tema: ') ? 'servi\u00E7o p\u00FAblico adequado e modicidade tarif\u00E1ria no transporte p\u00FAblico' : exampleText;
-        exampleText = (promptSelect === 'Amplie e reescreva o texto a seguir, em voz ativa, com corre\u00E7\u00F5es gramaticais, citando as fontes e adicinando coes\u00E3o \u00E0s ora\u00E7\u00F5es: ') ? 'A Corte de Contas cuida do progresso da governan\u00E7a na administra\u00E7\u00E3o p\u00FAblica, cabendo ao \u00F3rg\u00E3os e gestore executar as devidas etapas e corre\u00E7\u00F5es, devendo entender o prop\u00F3sito da governan\u00E7a, buscando o aprimoramento constante.' : exampleText;
-        exampleText = (promptSelect === 'Crie um Parecer t\u00E9cnico detalhado, cite fontes e legisla\u00E7\u00E3o, traga argumentos a favor e contr\u00E1rios sobre o tema: ') ? 'O aborto e a microcefalia' : exampleText;
-
-        if (exampleText) {
-            dialog.setValueOf('tab_ia', 'textPrompt', exampleText);
-        }
-    };
-
-    // INICIALIZA\u00C7\u00C3O AUTOM\u00C1TICA DA PLATAFORMA COM RETENTATIVAS
-    const initPlataformAI = (TimeOut = 9000) => {
-        if (TimeOut <= 0) return;
-
-        if (typeof checkConfigValue !== 'undefined' && typeof localStorageRestorePro !== 'undefined') {
-            if (restrictConfigValue('ferramentasia')) {
-                setTimeout(() => {
-                    try {
-                        let perfilPlataform = localStorageRestorePro('configBasePro_openai');
-                        perfilPlataform = (typeof perfilPlataform !== 'undefined' && perfilPlataform !== null) ? perfilPlataform : false;
-                        getDialogPlataformAI();
-                    } catch (e) {
-                        // getDialogPlataformAI depende de CKEDITOR.dialog (API CK4).
-                        // No CK5 silenciamos; fica pendente de porta jQuery UI.
-                    }
-                }, 500);
-            }
-        } else {
-            setTimeout(() => {
-                initPlataformAI(TimeOut - 100);
-                if (typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage')) {
-                    console.log('Reload initPlataformAI', typeof localStorageRestorePro, typeof localStorageRestorePro('configBasePro_openai'));
-                }
-            }, 500);
-        }
-    };
-
-    // FUN\u00C7\u00C3O PARA ADICIONAR MENU DE INTELIG\u00CANCIA ARTIFICIAL NO CKEDITOR
     const menuPlataformAI = (editor) => {
         if (editor.contextMenu && typeof editor.getMenuItem('plataform_ai') === 'undefined') {
             editor.addMenuGroup('openaiGroup', -10 * 3);
@@ -2768,18 +2267,11 @@ function repairSaveButtonBug(loop = true) {
     };
 
     // FUN\u00C7\u00C3O PARA ALTERAR OP\u00C7\u00D5ES DE IA INLINE
-    const getInlineAI = (this_) => {
-        const check = $(this_).is(':checked');
-        setOptionsPro('setInlineAI', check);
-        setOnKeyEditor(!check);
-    };
 
-function setOnKeyEditor(destroy = false) {
+function setOnKeyEditor() {
     if ((!loadOnKeyEditor || loadOnKeyEditor != oEditor.name) && !destroy) {
             oEditor.on('key', onKeyEditorPro);
             loadOnKeyEditor = oEditor.name;
-    } else if (destroy) {
-        removeOptionsPro('setInlineAI');
     }
 }
 // Funcao nomeada, e nao anonima: o loadOnKeyEditor guarda so a ultima instancia, entao voltar a uma secao
@@ -2790,22 +2282,8 @@ function onKeyEditorPro(evt) {
     var event = evt;
     var tratada = keyActionEditor(event, self);
     setTimeout(function() {
-        evtInlineOpenAI(event);
         if (!tratada) keyupActionEditor(event, self);
     }, 10);
-}
-function evtInlineOpenAI(evt) {
-    if (evt.data.keyCode == 13 && getOptionsPro('setInlineAI')) {
-        var keyword = getOptionsPro('setKeywordInlineAI');
-            keyword = (keyword) ? keyword : '+gpt';
-        var select = oEditor.getSelection().getStartElement();
-        var pElement = $(select.$).closest('p');
-        var textP = pElement.text();
-        if (textP.indexOf(keyword) !== -1) {
-            var prompt_text = textP.split(keyword)[1].trim();
-            sendRequestAI('', prompt_text, true);
-        }
-    }
 }
 // Escrita interativa (# campos do processo, @ unidades): js/modules/editor/escrita-interativa.js.
 // No CK5 o modulo se liga sozinho ao plugin Mention do SEI 5; no CK4 recebe as teclas daqui.
@@ -2905,7 +2383,6 @@ function initFunctions() {
     tryRun(initContextMenuPro, 'initContextMenuPro');
     tryRun(getDialogLegisSEI, 'getDialogLegisSEI');
     tryRun(getDialogNotaRodape, 'getDialogNotaRodape');
-    tryRun(initPlataformAI, 'initPlataformAI');
     tryRun(getDialogSyleTable, 'getDialogSyleTable');
     tryRun(getDialogQrCode, 'getDialogQrCode');
     tryRun(getDialogLinkPro, 'getDialogLinkPro');
@@ -2935,9 +2412,6 @@ function initFunctions() {
         var idProcedimento = getParamsUrlPro(window.location.href).id_procedimento;
         if (!checkHostLimit()) getDadosIframeProcessoPro(idProcedimento, 'editor');
     }, 'getDadosIframeProcessoPro');
-    tryRun(function () {
-        if (getOptionsPro('setKeywordInlineAI')) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
-    }, 'sei-pro-ai');
 }
 $('body').addClass('seiEditor');
 

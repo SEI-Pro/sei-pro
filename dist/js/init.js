@@ -393,8 +393,7 @@ function loadScriptPro() {
             // Ferramentas de PDF: so o lado que atende os pedidos da pagina.
             // A ferramenta em si (pdf.js, Tesseract, os motores) vive na pagina
             // da extensao e NAO entra na pagina do SEI -- se entrasse, um
-            // segundo pdf.js sobrescreveria o window.pdfjsLib de que o
-            // sei-pro-ai.js depende.
+            // segundo pdf.js sobrescreveria o window.pdfjsLib da pagina.
             //
             // O par deste arquivo e js/init_ferramentaspdf.js, que roda no mundo
             // ISOLADO (declarado no manifest) porque e o unico lado com acesso a

@@ -325,7 +325,7 @@
      * modulos executam no mundo da pagina (o $.getScript do init.js injeta
      * script tags), portanto NAO da para usar getUrlExtension (que vive no
      * mundo isolado do content script). Usamos URL_SPRO -- a mesma base que o
-     * editor usa para icones/sei-pro-ai.js -- e, em fallback, derivamos de
+     * editor usa para os icones -- e, em fallback, derivamos de
      * qualquer recurso chrome-extension/moz-extension presente no DOM.
      */
     function resolveExtBase() {
@@ -343,8 +343,8 @@
 
     /**
      * Auto-carrega os modulos de js/modules/editor/ no mundo da pagina, usando
-     * a jQuery da pagina (window.$/jQuery) -- mesmo mecanismo que o editor.js
-     * usa para carregar sei-pro-ai.js (comprovadamente funciona aqui). Cada
+     * a jQuery da pagina (window.$/jQuery) -- o mesmo mecanismo com que o
+     * editor.js carrega os demais scripts da pagina. Cada
      * modulo define seus handlers globais e chama registerFeature no adapter.
      * Idempotente. Retorna true se disparou o carregamento, false se ainda
      * faltam dependencias (base/jQuery) -- nesse caso o auto-start faz poll.
