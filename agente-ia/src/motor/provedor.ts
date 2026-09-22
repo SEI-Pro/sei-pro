@@ -114,6 +114,11 @@ export function mensagemDeErro(status: number, corpo: string): string {
   if (status === 401) return "A chave do OpenRouter foi recusada. Confira a chave nas configura\u00E7\u00F5es do agente.";
   if (status === 402) return "Sem cr\u00E9dito no OpenRouter para este modelo. Adicione cr\u00E9ditos ou escolha um modelo mais barato.";
   if (status === 429) return "Muitas requisi\u00E7\u00F5es ao modelo agora. Aguarde alguns segundos e tente de novo.";
+  // O pedido leva `data_collection: "deny"`: se todo provedor daquele modelo
+  // guarda ou treina com os dados, o OpenRouter fica sem para onde rotear.
+  if (/no allowed providers/i.test(msg)) {
+    return "Nenhum provedor deste modelo passa pela pol\u00EDtica de dados: o agente s\u00F3 aceita quem n\u00E3o guarda o conte\u00FAdo, e a sua conta do OpenRouter pode bloquear outros (openrouter.ai/settings/privacy). Escolha outro modelo nas configura\u00E7\u00F5es.";
+  }
   return `O provedor de IA respondeu ${status}: ${msg.slice(0, 300)}`;
 }
 
