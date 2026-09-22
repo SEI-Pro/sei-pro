@@ -228,7 +228,7 @@ function htmlButton(status) {
             htmlButtonPro(
                 'getPlataformAIButtom',
                 'openai',
-                'Inserir texto de intelig\u00EAncia artificial',
+                'Agente de intelig\u00EAncia artificial',
                 isNewEditor ? 'fab fa-robot roxoColor' : icon16baseOpenAI
             ) : '') +
         htmlButtonPro(
@@ -514,7 +514,7 @@ const setClickButtons = () => {
     $('.getCitacaoDocumentoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getCitacaoDocumento(this) } });
     $('.getNotaRodapeButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getNotaRodape(this) } });
     $('.getRefInternaButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getRefInterna(this) } });
-    if (restrictConfigValue('ferramentasia')) $('.getPlataformAIButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { loadPlataformAI(this) } });
+    if (restrictConfigValue('ferramentasia')) $('.getPlataformAIButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { window.top.postMessage({ __seiProAgente: 'abrir' }, '*'); } });
     $('.getSumarioButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getSumarioDocumento(this) } });
     $('.getDadosProcessoButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getDadosEditor(this) } });
     $('.getTinyUrlButtom').on('click',function() { if (!$(this).closest('.cke_iconPro').hasClass('cke_button_disabled')) { getTinyUrl(this) } });
@@ -2760,7 +2760,8 @@ function repairSaveButtonBug(loop = true) {
             // COMANDO PARA ABRIR O DI\u00C1LOGO DE IA
             editor.addCommand('plataform_ai', {
                 exec: (editor) => {
-                    editor.openDialog('plataformAI');
+                    // Agente de IA: abre o painel (o agente le a selecao pelo editor_ler).
+                    window.top.postMessage({ __seiProAgente: 'abrir' }, '*');
                 }
             });
         }

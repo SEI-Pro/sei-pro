@@ -124,16 +124,35 @@ function abrirCanal(papel: "sei" | "editor", documento: string | undefined, exec
   window.addEventListener("hashchange", apresentar);
 }
 
+/**
+ * Abre o painel. Chrome: o service worker chama sidePanel.open (o clique do
+ * usuário é o gesto exigido). Firefox (sem service worker): abre a página do
+ * painel numa aba.
+ */
+function abrirPainel(): void {
+  chrome.runtime.sendMessage({ tipo: "abrirAgente" }).catch(() => window.open(chrome.runtime.getURL("html/agente.html"), "seiProAgente"));
+}
+
+/** O legado (ícone da barra do processo, botão do editor) pede o painel por postMessage. */
+function escutarPedidoDeAbertura(): void {
+  window.addEventListener("message", (ev: MessageEvent) => {
+    const m = ev.data as { __seiProAgente?: string } | null;
+    if (m?.__seiProAgente === "abrir" && ev.origin === location.origin) abrirPainel();
+  });
+}
+
 function iniciar(): void {
   if (window.top !== window || window.__seiProAgente) return;
   if (/[?&]acao=editor_montar\b/.test(location.search)) {
     window.__seiProAgente = true;
+    escutarPedidoDeAbertura();
     iniciarEditor();
     return;
   }
   // Só telas do SEI com sessão (tem o cabeçalho com a unidade).
   if (!document.querySelector("#lnkInfraUnidade, #frmProtocoloPesquisaRapida")) return;
   window.__seiProAgente = true;
+  escutarPedidoDeAbertura();
 
   // A tela viva, com cache curto: `outerHTML` da caixa tem centenas de KB.
   let cache: { quando: number; pagina: Pagina } | null = null;
@@ -214,7 +233,7 @@ function instalarEntradaNoMenu(): void {
   } else {
     a.addEventListener("click", (ev) => {
       ev.preventDefault();
-      chrome.runtime.sendMessage({ tipo: "abrirAgente" }).catch(() => undefined);
+      abrirPainel();
     });
   }
   li.append(a);

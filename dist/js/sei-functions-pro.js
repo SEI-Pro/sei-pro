@@ -12709,25 +12709,22 @@ function insertIconAIActions() {
 }
 function appendIconAIActions(loop = true) {
     var ifrVisualizacao = $($ifrVisualizacao).contents();
-    var htmlIconAIActions =  '<a href="#" id="iconAIActions" onclick="parent.initBoxAIActions();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Ferramentas de IA\')"  tabindex="452" class="botaoSEI">'+
-                                '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/botpro_icon.svg" alt="Ferramentas de IA" title="Ferramentas de IA">'+
+    var htmlIconAIActions =  '<a href="#" id="iconAIActions" onclick="parent.initBoxAIActions();" onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Agente de IA\')"  tabindex="452" class="botaoSEI">'+
+                                '<img class="infraCorBarraSistema" tabindex="452" src="'+URL_SPRO+'icons/menu/botpro_icon.svg" alt="Agente de IA" title="Agente de IA">'+
                                 '</a>';
     if (!ifrVisualizacao.find('#iconAIActions').length) {
         ifrVisualizacao.find('#divArvoreAcoes').append(htmlIconAIActions);
     }
     if (loop) { reagendarIconeBarraPro('appendIconAIActions', appendIconAIActions); }
 }
-function initBoxAIActions(TimeOut = 9000) {
-    if (TimeOut <= 0) { return; }
-    if (typeof loadSEIProAI !== 'undefined') { 
-        loadBoxAIActions();
-    } else {
-        if (TimeOut == 9000) $.getScript(URL_SPRO+"js/sei-pro-ai.js");
-        setTimeout(function(){ 
-            initBoxAIActions(TimeOut - 100); 
-            if(typeof verifyConfigValue !== 'undefined' && verifyConfigValue('debugpage'))console.log('Reload initBoxAIActions'); 
-        }, 500);
-    }
+// Agente de IA (substitui as "Ferramentas de IA"): o icone e o botao do editor pedem ao
+// content script do agente (js/init_agente.js, mundo isolado) que abra o painel.
+function abrirAgenteIAPro() {
+    // window.top: no SEI 4.1 o icone esta em iframe aninhado; o agente escuta na janela de topo.
+    window.top.postMessage({ __seiProAgente: 'abrir' }, '*');
+}
+function initBoxAIActions() {
+    abrirAgenteIAPro();
 }
 function insertIconFerramentasPdf() {
     waitLoadPro($($ifrVisualizacao).contents(), '#divArvoreAcoes', 'a[href*="controlador.php?acao="]', appendIconFerramentasPdf);
