@@ -1,0 +1,2 @@
+/* GERADO por ferramentas-pdf/build.mjs. NAO EDITE ESTE ARQUIVO. Rode: npm run build */
+import{a,b,c,d,e,f,g,h,i,j}from"./chunk-AOIXHMJU.js";import"./chunk-X7SSZIBH.js";import"./chunk-F4PIVUVI.js";export{a as TIPOS,b as TIPOS_ORDENADOS,c as TIPOS_PADRAO,d as baseDeTexto,h as detectarIntervalos,f as detectarNaPagina,g as detectarNoTexto,e as mascarar,i as normalizarParaBusca,j as ocorrenciasDoTermo};

@@ -108,7 +108,16 @@ type WorkerTesseract = {
 async function criarWorker(
   aoProgredir?: (fracao: number) => void,
 ): Promise<WorkerTesseract> {
-  const { createWorker } = await import("tesseract.js");
+  // O tesseract.js é CommonJS. Com code splitting, o esbuild gera o chunk dele
+  // só com `export default` — desestruturar `{ createWorker }` do import()
+  // dava `undefined` e o OCR morria com "t is not a function" (embrulhado em
+  // FALHA_INESPERADA, sem pista na tela). Aceitar os dois formatos resolve.
+  const modulo = (await import("tesseract.js")) as unknown as {
+    createWorker?: typeof import("tesseract.js").createWorker;
+    default?: { createWorker: typeof import("tesseract.js").createWorker };
+  };
+  const createWorker = modulo.createWorker ?? modulo.default?.createWorker;
+  if (!createWorker) throw new Error("tesseract.js sem createWorker");
 
   // A CHAVE `logger` SÓ PODE EXISTIR SE HOUVER FUNÇÃO. O tesseract.js verifica
   // a presença da chave, não o valor, e chama o que estiver lá: passar
