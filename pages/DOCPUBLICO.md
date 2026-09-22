@@ -28,7 +28,6 @@ O botão aparece sempre no editor do SEI quando o SEI Pro está instalado.
 * A função depende da **Pesquisa Pública do SEI** estar ativa no seu órgão.
 * **Documentos restritos** aparecem na lista, mas **sem link público** — é possível inserir apenas o nome.
 * **Processos sigilosos** não aparecem na Pesquisa Pública e, portanto, não são encontrados.
-* Se as [Ferramentas de Inteligência Artificial](../pages/FERRAMENTASIA.md) estiverem configuradas com o Gemini, o SEI Pro pode tentar ler o código de verificação automaticamente.
 
 ## Próximo item
 

@@ -77,7 +77,7 @@ Instale a extensão para seu navegador preferido:
 - ![Documentos em Lote: criar vários documentos a partir de um modelo e uma planilha](/img/icon-acoeslote.png) [Documentos em Lote: criar vários documentos a partir de um modelo e uma planilha](./pages/DOCUMENTOSEMLOTE.md)
 - ![Comparador de Documentos](/img/icon-comparardocumentos.png) [Comparador de Documentos](./pages/COMPARARDOCUMENTOS.md)
 - ![Ferramentas de PDF: tarjar, juntar, dividir, comprimir, organizar, OCR e conferir PDF/A — tudo no seu computador](/img/icon-ferramentaspdf.png) [Ferramentas de PDF: tarjar, juntar, dividir, comprimir, organizar, OCR e conferir PDF/A — tudo no seu computador](./pages/FERRAMENTASPDF.md)
-- ![Ferramentas de Inteligência Artificial (ChatGPT e Gemini)](/img/icon-ferramentasia.png) [Ferramentas de Inteligência Artificial (ChatGPT e Gemini)](./pages/FERRAMENTASIA.md)
+- ![Agente de IA: pergunte em português e ele consulta, escreve e altera o processo — sempre com a sua aprovação](/img/icon-agenteia.png) [Agente de IA: pergunte em português e ele consulta, escreve e altera o processo — sempre com a sua aprovação](./pages/AGENTEIA.md)
 - ![Gerar Certidão de Documento Oficial com Sigilo (LAI e LGPD)](/img/icon-certidaosigilo.png) [Gerar Certidão de Documento Oficial com Sigilo (LAI e LGPD)](./pages/CERTIDAOSIGILO.md)
 
 ### Visualização de documentos

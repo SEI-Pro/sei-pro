@@ -145,4 +145,4 @@ O teto é a memória do seu computador, e ele existe. Documentos muito grandes p
 
 ## Próximo item
 
-> [Ferramentas de Inteligência Artificial (ChatGPT e Gemini)](../pages/FERRAMENTASIA.md)
+> [Agente de IA](../pages/AGENTEIA.md)

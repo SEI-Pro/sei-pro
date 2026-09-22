@@ -30,7 +30,7 @@ Algumas funções têm opções extras, que aparecem logo abaixo delas quando s�
 | Aba | Conteúdo |
 | --- | -------- |
 | **Geral** | As funções do dia a dia, organizadas em três seções |
-| **Base de Dados** | Conexões com serviços externos: chaves de [inteligência artificial](../pages/FERRAMENTASIA.md) e servidores institucionais (módulo Atividades) |
+| **Base de Dados** | Conexões com servidores institucionais (módulo Atividades). A chave do [Agente de IA](../pages/AGENTEIA.md) não fica aqui: ela é cadastrada no próprio painel do agente |
 | **Complementos** | Funções institucionais e de diagnóstico: [Atividades](https://bit.ly/Guia-SEI-Pro-Atividades), [Projetos](../pages/PROJETOS.md), [Prescrições](../pages/PRESCRICOES.md), [Ativar debug](../pages/DEBUGPAGE.md) e [Desativar consultas adicionais](../pages/DESATIVACONSULTAS.md) |
 
 ### Guardar e levar suas configurações

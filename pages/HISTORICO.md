@@ -106,7 +106,7 @@ Versão de correções, testada ao vivo no SEI 4.1.5 e no SEI 5.0.4.
   - Permite escolher o **nível de acesso** (Público ou Restrito, com hipótese legal) e o **intervalo entre um processo e outro**, para reduzir o impacto no servidor
   - Ao final, apresenta a **tabela com o número de cada processo aberto**, pronta para copiar ou baixar em CSV, incluindo as linhas que falharam e o motivo — uma linha com erro não interrompe as demais
   - A ferramenta avisa, antes de começar, que a abertura em lote pode deixar o SEI lento para todos os usuários do órgão, e recomenda o uso fora do horário comercial
-- O OCR das [Ferramentas de IA](../pages/FERRAMENTASIA.md) parou de baixar o motor de reconhecimento e o modelo de português de uma CDN externa a cada uso: os arquivos passam a vir dentro da extensão. Além de mais rápido, é o que permite afirmar que a extensão não busca nada de terceiros
+- O OCR das Ferramentas de IA parou de baixar o motor de reconhecimento e o modelo de português de uma CDN externa a cada uso: os arquivos passam a vir dentro da extensão. Além de mais rápido, é o que permite afirmar que a extensão não busca nada de terceiros
 - Corrigida uma vulnerabilidade da biblioteca de leitura de PDF (CVE-2026-16633), que permitia a execução de código ao abrir um PDF criado para isso. A execução de JavaScript embutido em PDF fica desligada, e o interpretador nem sequer é distribuído com a extensão
 
 ### Versão 1.6.24
@@ -122,7 +122,7 @@ Versão de correções, testada ao vivo no SEI 4.1.5 e no SEI 5.0.4.
 
 - Corrigida a substituição do jQuery da página, que derrubava a jQuery UI, o plugin do [Menu Suspenso](../pages/MENUSUSPENSO.md) e a janela modal do SEI. A extensão passa a usar o jQuery da própria página quando ele é igual ou mais novo que o dela. Eram 4 erros por carregamento; passaram a zero, no SEI 4.1.5 e no 5.0.4 (diagnóstico original de Rafael Farias, [#163](https://github.com/SEI-Pro/sei-pro/issues/163))
 - Corrigido o acúmulo de temporizadores dos ícones da barra de ações: cada documento aberto deixava mais nove ciclos ativos, indefinidamente
-- Corrigido o envio de conteúdo vazio às [Ferramentas de IA](../pages/FERRAMENTASIA.md) — quando não era possível ler o documento, o texto seguia para a plataforma como a palavra "false" e a resposta vinha sobre um conteúdo inexistente
+- Corrigido o envio de conteúdo vazio às Ferramentas de IA — quando não era possível ler o documento, o texto seguia para a plataforma como a palavra "false" e a resposta vinha sobre um conteúdo inexistente
 - Mensagem mais clara ao tentar duplicar um documento cujo tipo não está disponível na unidade
 
 ### Versão 1.6.22
