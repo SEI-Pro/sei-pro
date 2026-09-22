@@ -13,16 +13,20 @@
 import { Pseudonimos } from "@nucleo/privacidade/anonimizar";
 import { Motor, type TelaAtual } from "../motor/motor";
 import { promptSistema } from "../motor/prompt";
-import { conferirChave, criarProvedorOpenRouter, listarModelos, MODELO_PADRAO } from "../motor/provedor";
+import { COMPATIVEIS, conferirChave, criarProvedor, listarModelos, MODELO_PADRAO, normalizarUrl, type Servico } from "../motor/provedor";
 import { RegistroTools } from "../motor/tools";
 import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso } from "../motor/tipos";
 import { PontePainel } from "../ponte/cliente";
 import { TOOLS_MOTOR } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
-import { h, icone, markdown, moeda } from "./dom";
+import { formatarUso, h, icone, markdown } from "./dom";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
+  /** `openrouter` (padrão) ou um serviço que fale o protocolo da OpenAI. */
+  servico: Servico;
+  /** Endereço do serviço compatível (vazio no OpenRouter). */
+  url: string;
   chave: string;
   modelo: string;
   nomes: boolean;
@@ -88,7 +92,7 @@ const marca = (tamanho: number) =>
 class App {
   private readonly raiz = document.getElementById("app")!;
   private readonly ponte = new PontePainel();
-  private config: Config = { chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false };
+  private config: Config = { servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false };
   private privacidade = new Pseudonimos();
   private motor: Motor | null = null;
   private transcricao: Item[] = [];
@@ -125,7 +129,7 @@ class App {
   private async telaConversa(): Promise<void> {
     this.motor ??= this.criarMotor();
     this.elAba = h("span", { class: "aba" });
-    this.elCusto = h("span", { class: "custo", title: "Custo desta conversa informado pelo OpenRouter" });
+    this.elCusto = h("span", { class: "custo", title: "Gasto desta conversa (o servi\u00E7o de IA informa o custo; sem isso, os tokens)" });
     this.elTarefas = h("div", { class: "tarefas", hidden: true });
     this.elConversa = h("div", { class: "conversa", role: "log", "aria-live": "polite" });
     this.elEntrada = h("textarea", { rows: "2", placeholder: "Pe\u00E7a algo sobre o SEI...", "aria-label": "Mensagem" });
@@ -274,7 +278,15 @@ class App {
 
   /** Configuração em modal. `obrigatorio`: primeira vez, sem chave — não fecha sem salvar. */
   private abrirConfig(obrigatorio = false): void {
-    const chave = h("input", { type: "password", placeholder: "sk-or-v1-...", value: this.config.chave, autocomplete: "off", autofocus: true, "aria-label": "Chave do OpenRouter" });
+    const servico = h(
+      "select",
+      { "aria-label": "Servi\u00E7o de IA" },
+      h("option", { value: "openrouter", ...(this.config.servico === "openrouter" ? { selected: true } : {}) }, "OpenRouter (recomendado)"),
+      h("option", { value: "compativel", ...(this.config.servico === "compativel" ? { selected: true } : {}) }, "Compat\u00EDvel com OpenAI (avan\u00E7ado)"),
+    );
+    const url = h("input", { type: "url", placeholder: "https://.../v1", value: this.config.url, list: "urlsCompativeis", spellcheck: "false", "aria-label": "Endere\u00E7o do servi\u00E7o" });
+    const ajudaUrl = h("div", { class: "ajuda" });
+    const chave = h("input", { type: "password", placeholder: "sk-or-v1-...", value: this.config.chave, autocomplete: "off", autofocus: true, "aria-label": "Chave do servi\u00E7o" });
     const verChave = h("button", { class: "icone", title: "Mostrar a chave", "aria-label": "Mostrar a chave" }, icone("olho"));
     verChave.addEventListener("click", () => {
       const escondida = chave.type === "password";
@@ -283,10 +295,15 @@ class App {
       verChave.setAttribute("title", escondida ? "Ocultar a chave" : "Mostrar a chave");
     });
     const modelo = h("select", { "aria-label": "Modelo" }, h("option", { value: this.config.modelo }, this.config.modelo));
+    const modeloLivre = h("input", { type: "text", placeholder: "nome do modelo no servi\u00E7o", value: this.config.modelo, list: "modelosCompativeis", spellcheck: "false", "aria-label": "Modelo" });
+    const listaModelos = h("datalist", { id: "modelosCompativeis" });
+    const buscar = h("button", {}, "Buscar modelos");
+    const ajudaModelo = h("div", { class: "ajuda" }, "S\u00F3 modelos que usam ferramentas; pre\u00E7os em d\u00F3lares por milh\u00E3o de tokens (entrada / sa\u00EDda).");
     const status = h("div", { class: "status" });
     const nomes = h("input", { type: "checkbox", class: "switch", ...(this.config.nomes ? { checked: true } : {}) });
     const cnpj = h("input", { type: "checkbox", class: "switch", ...(this.config.cnpj ? { checked: true } : {}) });
-    void listarModelos()
+    if (this.config.servico === "openrouter")
+      void listarModelos()
       .then((lista) => {
         modelo.replaceChildren(
           ...lista.map((m) =>
@@ -298,6 +315,69 @@ class App {
         status.className = "status";
         status.textContent = "N\u00E3o foi poss\u00EDvel listar os modelos agora; o modelo atual ser\u00E1 mantido.";
       });
+
+    /** Permissão de host: só o OpenRouter responde com CORS liberado; os demais exigem autorização do navegador. */
+    const autorizarEndereco = async (endereco: string): Promise<boolean> => {
+      try {
+        const origens = [`${new URL(endereco).origin}/*`];
+        return (await chrome.permissions.contains({ origins: origens })) || (await chrome.permissions.request({ origins: origens }));
+      } catch {
+        return false;
+      }
+    };
+
+    const campoUrl = h(
+      "div",
+      { class: "campo" },
+      h("label", {}, "Endere\u00E7o do servi\u00E7o"),
+      url,
+      h("datalist", { id: "urlsCompativeis" }, ...COMPATIVEIS.map((c) => h("option", { value: c.url }, c.nome))),
+      ajudaUrl,
+    );
+    const notaCompativel = h(
+      "div",
+      { class: "nota atencao" },
+      icone("alerta", 15),
+      h(
+        "span",
+        {},
+        "Fora do OpenRouter o agente n\u00E3o tem como exigir que o servi\u00E7o n\u00E3o guarde o que recebe: quem escolhe o endere\u00E7o responde por ele. E nem todo modelo sabe usar ferramentas \u2014 se o agente n\u00E3o conseguir agir no SEI, troque de modelo.",
+      ),
+    );
+    const linhaBuscar = h("div", { class: "com-botao" }, modeloLivre, buscar);
+
+    const ajustarServico = () => {
+      const comp = servico.value === "compativel";
+      campoUrl.hidden = !comp;
+      notaCompativel.hidden = !comp;
+      modelo.hidden = comp;
+      linhaBuscar.hidden = !comp;
+      ajudaModelo.hidden = comp;
+      chave.placeholder = comp ? "chave do servi\u00E7o" : "sk-or-v1-...";
+      const preset = COMPATIVEIS.find((c) => c.url === normalizarUrl(url.value));
+      ajudaUrl.textContent = preset ? preset.ajuda : "Endere\u00E7o que fala o protocolo da OpenAI, terminando em /v1. O navegador vai pedir sua autoriza\u00E7\u00E3o para falar com ele.";
+    };
+    servico.addEventListener("change", ajustarServico);
+    url.addEventListener("input", ajustarServico);
+    buscar.addEventListener("click", async () => {
+      const endereco = normalizarUrl(url.value);
+      status.className = "status";
+      status.textContent = "Buscando modelos...";
+      if (!(await autorizarEndereco(endereco))) {
+        status.className = "status erro";
+        status.textContent = "O navegador n\u00E3o autorizou o agente a falar com esse endere\u00E7o.";
+        return;
+      }
+      try {
+        const lista = await listarModelos({ servico: "compativel", url: endereco, chave: chave.value.trim() });
+        listaModelos.replaceChildren(...lista.map((m) => h("option", { value: m.id })));
+        status.className = "status ok";
+        status.textContent = `${lista.length} modelo(s) dispon\u00EDvel(is).`;
+      } catch (e) {
+        status.className = "status erro";
+        status.textContent = (e as Error).message;
+      }
+    });
 
     const salvar = h("button", { class: "primario" }, obrigatorio ? "Salvar e come\u00E7ar" : "Salvar");
     const fechar = h("button", { class: "icone", title: "Fechar", "aria-label": "Fechar" }, icone("fechar"));
@@ -311,16 +391,27 @@ class App {
         h(
           "div",
           { class: "campo" },
-          h("label", {}, "Chave do OpenRouter"),
+          h("label", {}, "Servi\u00E7o de IA"),
+          servico,
+          h("div", { class: "ajuda" }, "O OpenRouter traz cat\u00E1logo com pre\u00E7os e deixa exigir provedor que n\u00E3o guarde os dados. A op\u00E7\u00E3o compat\u00EDvel serve para NVIDIA, Groq ou um servidor do pr\u00F3prio \u00F3rg\u00E3o."),
+        ),
+        campoUrl,
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Chave"),
           h("div", { class: "com-botao" }, chave, verChave),
-          h("div", { class: "ajuda" }, "Crie em openrouter.ai/keys. Fica guardada s\u00F3 neste navegador; o SEI Pro n\u00E3o tem servidor e n\u00E3o v\u00EA a sua chave."),
+          h("div", { class: "ajuda" }, "Fica guardada s\u00F3 neste navegador; o SEI Pro n\u00E3o tem servidor e n\u00E3o v\u00EA a sua chave. No OpenRouter, crie em openrouter.ai/keys."),
         ),
         h(
           "div",
           { class: "campo" },
           h("label", {}, "Modelo"),
           modelo,
-          h("div", { class: "ajuda" }, "Somente modelos que usam ferramentas. Pre\u00E7os em d\u00F3lares por milh\u00E3o de tokens (entrada / sa\u00EDda)."),
+          linhaBuscar,
+          listaModelos,
+          ajudaModelo,
+          notaCompativel,
         ),
         h(
           "div",
@@ -342,27 +433,31 @@ class App {
     const dlgFechar = () => dlg.close();
 
     salvar.addEventListener("click", async () => {
-      const k = chave.value.trim();
-      if (!k) {
+      const erro = (texto: string) => {
         status.className = "status erro";
-        status.textContent = "Informe a chave.";
-        return;
-      }
+        status.textContent = texto;
+        salvar.disabled = false;
+      };
+      const comp = servico.value === "compativel";
+      const k = chave.value.trim();
+      const endereco = comp ? normalizarUrl(url.value) : "";
+      const m = comp ? modeloLivre.value.trim() : modelo.value || MODELO_PADRAO;
+      if (!k) return erro("Informe a chave.");
+      if (comp && !/^https?:\/\//.test(endereco)) return erro("Informe o endere\u00E7o do servi\u00E7o (come\u00E7ando com https://).");
+      if (comp && !m) return erro("Informe o nome do modelo no servi\u00E7o.");
       salvar.disabled = true;
       status.className = "status";
-      status.textContent = "Conferindo a chave...";
-      if (k !== this.config.chave) {
-        const r = await conferirChave(k).catch(() => ({ ok: false }));
-        if (!r.ok) {
-          status.className = "status erro";
-          status.textContent = "A chave n\u00E3o foi aceita pelo OpenRouter.";
-          salvar.disabled = false;
-          return;
-        }
+      status.textContent = "Conferindo...";
+      if (comp && !(await autorizarEndereco(endereco))) return erro("O navegador n\u00E3o autorizou o agente a falar com esse endere\u00E7o.");
+      const mudou = k !== this.config.chave || comp !== (this.config.servico === "compativel") || endereco !== this.config.url;
+      if (mudou) {
+        const r = await conferirChave({ chave: k, servico: comp ? "compativel" : "openrouter", url: endereco }).catch(() => ({ ok: false }));
+        if (!r.ok) return erro(comp ? "O servi\u00E7o n\u00E3o aceitou a chave (ou o endere\u00E7o est\u00E1 errado)." : "A chave n\u00E3o foi aceita pelo OpenRouter.");
       }
-      await this.aplicarConfig({ chave: k, modelo: modelo.value || MODELO_PADRAO, nomes: nomes.checked, cnpj: cnpj.checked });
+      await this.aplicarConfig({ servico: comp ? "compativel" : "openrouter", url: endereco, chave: k, modelo: m, nomes: nomes.checked, cnpj: cnpj.checked });
       dlg.close();
     });
+    ajustarServico();
     fechar.addEventListener("click", dlgFechar);
     // Esc e clique fora: `closedby` resolve no Chrome 134+/Firefox 141+; abaixo disso, à mão.
     if (!("closedBy" in HTMLDialogElement.prototype)) {
@@ -398,7 +493,7 @@ class App {
   private criarMotor(mapa?: Pseudonimos): Motor {
     this.privacidade = mapa ?? new Pseudonimos({ nomes: this.config.nomes, cnpj: this.config.cnpj });
     return new Motor({
-      provedor: criarProvedorOpenRouter({ chave: this.config.chave, modelo: this.config.modelo }),
+      provedor: criarProvedor({ servico: this.config.servico, url: this.config.url, chave: this.config.chave, modelo: this.config.modelo }),
       tools: new RegistroTools([...TOOLS_SEI, ...TOOLS_MOTOR]),
       ui: this.interfaceMotor(),
       privacidade: this.privacidade,
@@ -476,7 +571,7 @@ class App {
   private redesenhar(): void {
     this.elConversa.replaceChildren(...this.transcricao.map((i) => this.desenharItem(i)));
     if (!this.transcricao.length) this.elConversa.append(this.boasVindas());
-    this.elCusto.textContent = this.uso.custo ? moeda(this.uso.custo) : "";
+    this.elCusto.textContent = formatarUso(this.uso);
     this.desenharTarefas();
     this.estadoEnvio();
     this.rolar();
@@ -569,7 +664,7 @@ class App {
       },
       uso: (u) => {
         this.uso = u;
-        this.elCusto.textContent = moeda(u.custo);
+        this.elCusto.textContent = formatarUso(u);
       },
       aviso: (t) => (this.fecharBolha(), void this.adicionar({ tipo: "aviso", texto: t })),
     };

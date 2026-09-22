@@ -1,15 +1,23 @@
 /**
- * Provedor OpenRouter: `POST /api/v1/chat/completions` com streaming (SSE).
+ * Provedor do modelo: `POST /chat/completions` com streaming (SSE).
  *
- * Chamado direto do painel lateral (página da extensão). O OpenRouter responde
- * com `Access-Control-Allow-Origin: *`, então não há backend no meio: a chave
- * do usuário vai do navegador dele para o OpenRouter e para mais ninguém.
+ * Dois serviços, o mesmo formato (o da API da OpenAI):
  *
- * `provider.data_collection: "deny"` pede ao OpenRouter que só roteie para
- * provedores que não guardam nem treinam com os dados da requisição.
+ * - **OpenRouter** (padrão): catálogo com preço e custo por requisição, e
+ *   `provider.data_collection: "deny"`, que só deixa rotear para provedores
+ *   que não guardam nem treinam com o que recebem.
+ * - **Compatível com OpenAI**: qualquer endereço que fale o mesmo protocolo —
+ *   NVIDIA, Groq, um vLLM ou Ollama do próprio órgão. Sem catálogo de preços
+ *   (o painel passa a mostrar tokens) e sem garantia de política de dados:
+ *   quem escolhe o endereço responde por ele.
+ *
+ * Tudo sai direto do painel (página da extensão), sem backend no meio: a chave
+ * do usuário vai do navegador dele para o serviço e para mais ninguém. O
+ * OpenRouter responde com `Access-Control-Allow-Origin: *`; os outros, não —
+ * por isso o painel pede permissão de host antes de usar um endereço novo.
  *
  * O streaming traz as chamadas de tool em fragmentos (`delta.tool_calls[i]`
- * com pedaços de `arguments`); `acumular` junta pelo índice.
+ * com pedaços de `arguments`); `Acumulador` junta pelo índice.
  */
 
 import type { ChamadaTool, PedidoLLM, Provedor, RespostaLLM, Uso } from "./tipos";
@@ -88,13 +96,32 @@ export class Acumulador {
   }
 }
 
-export interface OpcoesOpenRouter {
+export type Servico = "openrouter" | "compativel";
+
+/** Atalhos de serviços compatíveis, para o usuário não precisar decorar endereço. */
+export const COMPATIVEIS: Array<{ nome: string; url: string; ajuda: string }> = [
+  { nome: "NVIDIA", url: "https://integrate.api.nvidia.com/v1", ajuda: "Chave nvapi-... de build.nvidia.com. O plano gratuito \u00E9 de avalia\u00E7\u00E3o: os termos da NVIDIA n\u00E3o cobrem uso em produ\u00E7\u00E3o." },
+  { nome: "Groq", url: "https://api.groq.com/openai/v1", ajuda: "Chave gsk_... de console.groq.com." },
+  { nome: "Ollama nesta m\u00E1quina", url: "http://localhost:11434/v1", ajuda: "Modelo rodando no pr\u00F3prio computador: nada sai da m\u00E1quina. A chave pode ser qualquer texto." },
+];
+
+export interface OpcoesProvedor {
+  servico?: Servico;
+  /** Endereço da API compatível (ignorado no OpenRouter). */
+  url?: string;
   chave: string;
   modelo?: string;
   temperatura?: number;
   /** Para testes. */
   fetch?: typeof fetch;
 }
+
+/** `https://x/v1/` → `https://x/v1`; aceita o endereço com ou sem barra no fim. */
+export function normalizarUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "");
+}
+
+const base = (o: OpcoesProvedor) => ((o.servico ?? "openrouter") === "openrouter" ? URL_OPENROUTER : normalizarUrl(o.url ?? ""));
 
 function esperar(ms: number, sinal: AbortSignal): Promise<void> {
   return new Promise((ok, erro) => {
@@ -104,15 +131,17 @@ function esperar(ms: number, sinal: AbortSignal): Promise<void> {
 }
 
 /** Mensagem de erro do provedor em linguagem de usuário. */
-export function mensagemDeErro(status: number, corpo: string): string {
+export function mensagemDeErro(status: number, corpo: string, servico: Servico = "openrouter"): string {
   let msg = corpo;
   try {
     msg = (JSON.parse(corpo) as { error?: { message?: string } }).error?.message ?? corpo;
   } catch {
     /* não é JSON */
   }
-  if (status === 401) return "A chave do OpenRouter foi recusada. Confira a chave nas configura\u00E7\u00F5es do agente.";
-  if (status === 402) return "Sem cr\u00E9dito no OpenRouter para este modelo. Adicione cr\u00E9ditos ou escolha um modelo mais barato.";
+  const onde = servico === "openrouter" ? "OpenRouter" : "servi\u00E7o de IA";
+  if (status === 401 || status === 403) return `A chave do ${onde} foi recusada. Confira a chave nas configura\u00E7\u00F5es do agente.`;
+  if (status === 402) return `Sem cr\u00E9dito no ${onde} para este modelo. Adicione cr\u00E9ditos ou escolha um modelo mais barato.`;
+  if (status === 404 && servico === "compativel") return "O endere\u00E7o do servi\u00E7o respondeu 404. Confira a URL (costuma terminar em /v1) e o nome do modelo.";
   if (status === 429) return "Muitas requisi\u00E7\u00F5es ao modelo agora. Aguarde alguns segundos e tente de novo.";
   // O pedido leva `data_collection: "deny"`: se todo provedor daquele modelo
   // guarda ou treina com os dados, o OpenRouter fica sem para onde rotear.
@@ -122,9 +151,11 @@ export function mensagemDeErro(status: number, corpo: string): string {
   return `O provedor de IA respondeu ${status}: ${msg.slice(0, 300)}`;
 }
 
-export function criarProvedorOpenRouter(o: OpcoesOpenRouter): Provedor {
+export function criarProvedor(o: OpcoesProvedor): Provedor {
   const fazer = o.fetch ?? ((...a: Parameters<typeof fetch>) => fetch(...a));
-  const modelo = o.modelo || MODELO_PADRAO;
+  const servico = o.servico ?? "openrouter";
+  const openrouter = servico === "openrouter";
+  const modelo = o.modelo || (openrouter ? MODELO_PADRAO : "");
   return {
     modelo,
     async conversar(pedido: PedidoLLM, sinal: AbortSignal, aoTexto: (t: string) => void): Promise<RespostaLLM> {
@@ -134,18 +165,16 @@ export function criarProvedorOpenRouter(o: OpcoesOpenRouter): Provedor {
         tools: pedido.tools.length ? pedido.tools : undefined,
         stream: true,
         temperature: o.temperatura ?? 0.2,
-        parallel_tool_calls: true,
-        usage: { include: true },
-        provider: { data_collection: "deny" },
+        // Campos só do OpenRouter: um servidor compatível pode recusar o que não conhece.
+        ...(openrouter ? { parallel_tool_calls: true, usage: { include: true }, provider: { data_collection: "deny" } } : {}),
       });
       for (let tentativa = 0; ; tentativa += 1) {
-        const r = await fazer(`${URL_OPENROUTER}/chat/completions`, {
+        const r = await fazer(`${base(o)}/chat/completions`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${o.chave}`,
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://sei-pro.github.io/sei-pro/",
-            "X-Title": "SEI Pro - Agente de IA",
+            ...(openrouter ? { "HTTP-Referer": "https://sei-pro.github.io/sei-pro/", "X-Title": "SEI Pro - Agente de IA" } : {}),
           },
           body: corpo,
           signal: sinal,
@@ -154,7 +183,7 @@ export function criarProvedorOpenRouter(o: OpcoesOpenRouter): Provedor {
           await esperar(1000 * 2 ** tentativa, sinal);
           continue;
         }
-        if (!r.ok || !r.body) throw new Error(mensagemDeErro(r.status, await r.text()));
+        if (!r.ok || !r.body) throw new Error(mensagemDeErro(r.status, await r.text(), servico));
         const acc = new Acumulador();
         for await (const pedaco of lerSSE(r.body)) acc.somar(pedaco, aoTexto);
         return acc.resposta();
@@ -163,9 +192,35 @@ export function criarProvedorOpenRouter(o: OpcoesOpenRouter): Provedor {
   };
 }
 
-/** Modelos do OpenRouter que aceitam tools, para o seletor do painel. */
-export async function listarModelos(f: typeof fetch = fetch): Promise<Array<{ id: string; nome: string; contexto: number; precoEntrada: number; precoSaida: number }>> {
-  const r = await f(`${URL_OPENROUTER}/models`);
+export interface ModeloDisponivel {
+  id: string;
+  nome: string;
+  contexto: number;
+  /** Dólares por milhão de tokens; 0 quando o serviço não informa preço. */
+  precoEntrada: number;
+  precoSaida: number;
+}
+
+/**
+ * Modelos para o seletor do painel.
+ *
+ * No OpenRouter dá para filtrar os que aceitam tools (`supported_parameters`) e
+ * mostrar preço. Num serviço compatível, `/models` costuma devolver só os ids:
+ * o painel lista todos e avisa que nem todo modelo sabe usar ferramentas.
+ */
+export async function listarModelos(o: { servico?: Servico; url?: string; chave?: string; fetch?: typeof fetch } = {}): Promise<ModeloDisponivel[]> {
+  const f = o.fetch ?? fetch;
+  const servico = o.servico ?? "openrouter";
+  const endereco = `${base({ servico, url: o.url, chave: "" })}/models`;
+  if (servico !== "openrouter") {
+    const r = await f(endereco, { headers: o.chave ? { Authorization: `Bearer ${o.chave}` } : {} });
+    if (!r.ok) throw new Error(mensagemDeErro(r.status, await r.text(), servico));
+    const j = (await r.json()) as { data?: Array<{ id: string }> };
+    return (j.data ?? [])
+      .map((m) => ({ id: m.id, nome: m.id, contexto: 0, precoEntrada: 0, precoSaida: 0 }))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }
+  const r = await f(endereco);
   const j = (await r.json()) as { data: Array<{ id: string; name: string; context_length: number; supported_parameters?: string[]; pricing: { prompt: string; completion: string } }> };
   return j.data
     .filter((m) => m.supported_parameters?.includes("tools") && !m.id.endsWith(":batch"))
@@ -179,9 +234,15 @@ export async function listarModelos(f: typeof fetch = fetch): Promise<Array<{ id
     .sort((a, b) => a.nome.localeCompare(b.nome));
 }
 
-/** Confere a chave (`GET /key`). */
-export async function conferirChave(chave: string, f: typeof fetch = fetch): Promise<{ ok: boolean; limite?: number | null; usado?: number }> {
-  const r = await f(`${URL_OPENROUTER}/key`, { headers: { Authorization: `Bearer ${chave}` } });
+/** Confere a chave: `GET /key` no OpenRouter, `GET /models` autenticado nos demais. */
+export async function conferirChave(o: { chave: string; servico?: Servico; url?: string; fetch?: typeof fetch }): Promise<{ ok: boolean; limite?: number | null; usado?: number }> {
+  const f = o.fetch ?? fetch;
+  const servico = o.servico ?? "openrouter";
+  if (servico !== "openrouter") {
+    const r = await f(`${base({ servico, url: o.url, chave: "" })}/models`, { headers: { Authorization: `Bearer ${o.chave}` } });
+    return { ok: r.ok };
+  }
+  const r = await f(`${URL_OPENROUTER}/key`, { headers: { Authorization: `Bearer ${o.chave}` } });
   if (!r.ok) return { ok: false };
   const j = (await r.json()) as { data?: { limit?: number | null; usage?: number } };
   return { ok: true, limite: j.data?.limit ?? null, usado: j.data?.usage };

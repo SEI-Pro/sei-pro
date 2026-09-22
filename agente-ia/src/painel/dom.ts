@@ -96,6 +96,17 @@ export function markdown(texto: string): DocumentFragment {
   return frag;
 }
 
+/**
+ * O que mostrar no medidor do cabeçalho: dólares quando o serviço informa o
+ * custo (OpenRouter), tokens quando não informa (serviços compatíveis).
+ */
+export function formatarUso(u: { entrada: number; saida: number; custo: number }): string {
+  if (u.custo) return moeda(u.custo);
+  const tokens = u.entrada + u.saida;
+  if (!tokens) return "";
+  return tokens >= 1000 ? `${(tokens / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k tokens` : `${tokens} tokens`;
+}
+
 export function moeda(dolares: number): string {
   return `US$ ${dolares.toLocaleString("pt-BR", { minimumFractionDigits: dolares < 0.1 ? 4 : 2, maximumFractionDigits: dolares < 0.1 ? 4 : 2 })}`;
 }

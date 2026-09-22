@@ -62,6 +62,25 @@ Para acrescentar uma ferramenta: operação no núcleo (`sei-nucleo/src/dominio`
 entrada em `ponte/operacoes.ts` e definição em `tools/sei.ts` (escrita usa
 `escritaEmLote`, que já faz prévia e resultado por item).
 
+## Serviço de IA
+
+Dois caminhos, o mesmo protocolo (o da API da OpenAI):
+
+- **OpenRouter** (padrão): catálogo filtrado pelos modelos que usam ferramentas,
+  preço por modelo, custo real por requisição e `provider.data_collection: "deny"`
+  — o agente só aceita provedor que não guarde nem treine com o que recebe.
+- **Compatível com OpenAI**: o usuário informa endereço, chave e modelo. Serve
+  para NVIDIA (`https://integrate.api.nvidia.com/v1`), Groq, um Ollama na
+  própria máquina ou um servidor do órgão. Sem catálogo de preços (o medidor
+  passa a mostrar tokens) e sem como exigir política de dados: quem escolhe o
+  endereço responde por ele. Nem todo modelo aceita ferramentas.
+
+Só o OpenRouter responde com `Access-Control-Allow-Origin: *`. Para os demais o
+navegador bloqueia por CORS, então o painel pede permissão de host no momento
+em que o usuário salva o endereço (`optional_host_permissions` no manifest, e o
+pedido cai sobre a origem informada — nunca sobre todos os sites). O manifest v2
+do Firefox precisa do mesmo em `optional_permissions`.
+
 ## Painel (UI)
 
 Uma tela só — a conversa. A configuração é um `<dialog>` modal por cima dela (na primeira vez,
