@@ -6,19 +6,19 @@
  * (sem scripting e sem `eval` do documento). O pdf.js entra em chunk separado,
  * carregado só quando o agente lê o primeiro PDF.
  *
- * OCR de PDF digitalizado fica para a fase 2 (o Tesseract das Ferramentas de
- * PDF pode ser reaproveitado do mesmo jeito).
+ * PDF digitalizado passa pelo OCR das Ferramentas de PDF (ver `extrairTextoPdf`).
  */
 
 const LIMITE_PAGINAS = 200;
+const SEM_TEXTO = "[PDF sem camada de texto (digitalizado).]";
 
-export async function extrairTextoPdf(base64: string): Promise<string> {
+/** Texto das páginas pela camada de texto do PDF (sem OCR). */
+async function textoDoPdf(bytes: Uint8Array): Promise<string> {
   const { carregarPdfJs, opcoesDocumento } = await import("@/lib/ferramentas/pdfjs");
   const pdfjs = await carregarPdfJs();
-  const bruto = atob(base64);
-  const bytes = new Uint8Array(bruto.length);
-  for (let i = 0; i < bruto.length; i += 1) bytes[i] = bruto.charCodeAt(i);
-  const tarefa = pdfjs.getDocument(opcoesDocumento(bytes));
+  // Cópia: o pdf.js TRANSFERE o buffer para o worker, e o original ficaria
+  // "destacado" (inutilizável) para o OCR que pode vir depois.
+  const tarefa = pdfjs.getDocument(opcoesDocumento(bytes.slice()));
   const doc = await tarefa.promise;
   try {
     const partes: string[] = [];
@@ -40,8 +40,27 @@ export async function extrairTextoPdf(base64: string): Promise<string> {
     }
     if (doc.numPages > total) partes.push(`[... ${doc.numPages - total} p\u00E1ginas n\u00E3o lidas]`);
     const texto = partes.join("\n\n");
-    return texto.replace(/\[p\u00E1gina \d+\]\n?/g, "").trim() ? texto : "[PDF sem camada de texto (digitalizado). OCR ainda n\u00E3o dispon\u00EDvel no agente.]";
+    return texto.replace(/\[p\u00E1gina \d+\]\n?/g, "").trim() ? texto : SEM_TEXTO;
   } finally {
     await tarefa.destroy();
   }
+}
+
+/**
+ * Texto de um PDF. Sem camada de texto (digitalizado), roda o OCR das
+ * Ferramentas de PDF — que devolve um PDF pesquisável — e lê o texto dele.
+ * Reaproveita o Tesseract já empacotado (`vendor/ferramentas-pdf/tesseract/`),
+ * com o modelo de português, sem nada novo no pacote.
+ */
+export async function extrairTextoPdf(base64: string, o: { ocr?: boolean } = {}): Promise<string> {
+  const bruto = atob(base64);
+  const bytes = new Uint8Array(bruto.length);
+  for (let i = 0; i < bruto.length; i += 1) bytes[i] = bruto.charCodeAt(i);
+  const texto = await textoDoPdf(bytes);
+  if (texto !== SEM_TEXTO || o.ocr === false) return texto;
+  const { ocrPdf, ocrDisponivel } = await import("@/lib/ferramentas/ocr");
+  if (!ocrDisponivel()) return `${SEM_TEXTO} Este navegador n\u00E3o suporta o OCR local.`;
+  const r = await ocrPdf({ id: "agente", nome: "documento.pdf", tamanho: bytes.length, bytes });
+  if (r.semTexto) return `${SEM_TEXTO} O OCR n\u00E3o reconheceu texto.`;
+  return `[texto obtido por OCR de ${r.paginasProcessadas} p\u00E1gina(s); pode conter erros de reconhecimento]\n\n${await textoDoPdf(r.bytes)}`;
 }

@@ -11,6 +11,7 @@ export function promptSistema(tela: TelaAtual | null, agora = new Date()): strin
   if (tela?.unidade) linhasTela.push(`Unidade atual: ${tela.unidade}${tela.versao ? ` (SEI ${tela.versao})` : ""}`);
   if (tela?.processo) linhasTela.push(`Processo aberto na tela: ${tela.processo.protocolo} (${tela.processo.tipo ?? ""}, ${tela.processo.nivel ?? ""})`);
   if (tela?.documento) linhasTela.push(`Documento em visualiza\u00E7\u00E3o: ${tela.documento.numero} (${tela.documento.titulo ?? ""})`);
+  if (tela?.editores?.length) linhasTela.push(`Abertos no editor (editor_ler/editor_escrever): ${tela.editores.join(", ")}`);
   if (tela?.selecionados?.length) linhasTela.push(`Processos marcados na caixa: ${tela.selecionados.join(", ")}`);
 
   return `Voc\u00EA \u00E9 o Agente de IA do SEI Pro: trabalha DENTRO do SEI (Sistema Eletr\u00F4nico de Informa\u00E7\u00F5es) do usu\u00E1rio, com as permiss\u00F5es dele, por meio das ferramentas dispon\u00EDveis. Hoje \u00E9 ${data}.

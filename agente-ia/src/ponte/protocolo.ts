@@ -46,6 +46,10 @@ export interface Apresentacao {
   /** `Date.now()` do último foco: o painel usa a aba mais recente. */
   foco: number;
   titulo: string;
+  /** `sei`: tela comum do SEI (opera pelo núcleo). `editor`: janela do editor de um documento. */
+  papel: "sei" | "editor";
+  /** Na janela do editor: nº SEI do documento aberto. */
+  documento?: string;
 }
 
 export type MensagemAba = Resposta | Apresentacao;
@@ -57,6 +61,7 @@ export function ehDoCanal(m: unknown): m is { canal: typeof CANAL; tipo: string 
 
 /** Prazo por operação (ms). Escrita e leitura de muitos itens demoram em rede de órgão público. */
 export function prazoDe(op: string): number {
+  if (op.startsWith("editor.")) return 20_000;
   if (/^caixa\.|historico|documento\.ler/.test(op)) return 180_000;
   if (/criar|editar|alterar|marcador|anotacao|andamento|atribuir|acompanhamento/.test(op)) return 120_000;
   return 60_000;

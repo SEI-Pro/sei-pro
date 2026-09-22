@@ -544,7 +544,8 @@
         "icons/menu/import.png",
         "icons/menu/table.png",
         "icons/menu/legis.png",
-        "icons/menu/openai.png"
+        "icons/menu/openai.png",
+        "js/sei-pro-agente-editor.js"
       ],
       "matches": [
         "*://*.br/*",

@@ -17,6 +17,7 @@ import { PontePainel } from "../ponte/cliente";
 import { TOOLS_MOTOR } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
 import { h, markdown, moeda } from "./dom";
+import { extrairTextoPdf } from "./pdf";
 
 interface Config {
   chave: string;
@@ -138,9 +139,9 @@ class App {
       tools: new RegistroTools([...TOOLS_SEI, ...TOOLS_MOTOR]),
       ui: this.interfaceMotor(),
       privacidade: this.privacidade,
-      sei: (op, args, sinal) => this.ponte.executar(op, args, sinal),
+      sei: (op, args, sinal) => (op === "editores" ? Promise.resolve(this.ponte.editores()) : this.ponte.executar(op, args, sinal)),
       sistema: (tela) => promptSistema(tela),
-      tela: (sinal) => this.ponte.executar("tela", {}, sinal) as Promise<TelaAtual>,
+      tela: async (sinal) => ({ ...((await this.ponte.executar("tela", {}, sinal)) as TelaAtual), editores: this.ponte.editores() }),
     });
   }
 
@@ -539,4 +540,5 @@ class App {
 const app = new App();
 // Diagnóstico: acessível só no console desta página da extensão (o SEI não a enxerga).
 Object.defineProperty(window, "agenteIA", { value: app });
+Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf } });
 void app.iniciar();

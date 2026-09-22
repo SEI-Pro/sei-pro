@@ -15,6 +15,8 @@ export interface AbaSei {
   titulo: string;
   visivel: boolean;
   foco: number;
+  papel: "sei" | "editor";
+  documento?: string;
   porta: chrome.runtime.Port;
 }
 
@@ -44,7 +46,7 @@ export class PontePainel {
     chrome.runtime.onConnect.addListener((porta) => {
       if (porta.name !== CANAL || !porta.sender?.tab?.id) return;
       const tab = porta.sender.tab;
-      const aba: AbaSei = { id: tab.id!, janela: tab.windowId ?? -1, host: "", titulo: tab.title ?? "", visivel: true, foco: 0, porta };
+      const aba: AbaSei = { id: tab.id!, janela: tab.windowId ?? -1, host: "", titulo: tab.title ?? "", visivel: true, foco: 0, papel: "sei", porta };
       this.abas.set(aba.id, aba);
       porta.onMessage.addListener((m: unknown) => this.receber(aba, m));
       porta.onDisconnect.addListener(() => {
@@ -84,7 +86,7 @@ export class PontePainel {
     const msg = m as MensagemAba;
     if (msg.tipo === "ola") {
       const o = msg as Apresentacao;
-      Object.assign(aba, { host: o.host, visivel: o.visivel, foco: o.foco, titulo: o.titulo });
+      Object.assign(aba, { host: o.host, visivel: o.visivel, foco: o.foco, titulo: o.titulo, papel: o.papel ?? "sei", documento: o.documento });
       this.avisar();
       return;
     }
@@ -104,16 +106,31 @@ export class PontePainel {
     this.avisar();
   }
 
-  atual(): AbaSei | null {
-    const lista = this.lista();
-    if (this.fixada !== null) return lista.find((a) => a.id === this.fixada) ?? null;
+  /** Aba que atende as operações: tela do SEI (padrão) ou janela do editor. */
+  atual(papel: "sei" | "editor" = "sei"): AbaSei | null {
+    const lista = this.lista().filter((a) => a.papel === papel);
+    if (papel === "sei" && this.fixada !== null) return lista.find((a) => a.id === this.fixada) ?? null;
     return lista.sort((a, b) => Number(b.visivel) - Number(a.visivel) || b.foco - a.foco)[0] ?? null;
   }
 
+  /** Janelas de editor abertas (nº SEI do documento de cada uma). */
+  editores(): string[] {
+    return this.lista()
+      .filter((a) => a.papel === "editor" && a.documento)
+      .map((a) => a.documento!);
+  }
+
   executar(op: string, args: Record<string, unknown>, sinal?: AbortSignal): Promise<unknown> {
-    const aba = this.atual();
+    const doEditor = op.startsWith("editor.");
+    const aba = doEditor
+      ? (this.lista().filter((a) => a.papel === "editor" && (!args.numero || a.documento === args.numero)).sort((a, b) => b.foco - a.foco)[0] ?? null)
+      : this.atual();
     if (!aba) {
-      return Promise.reject(new ErroPonte("SEI_SEM_ABA", "Nenhuma aba do SEI conectada. Abra o SEI nesta janela (ou recarregue a p\u00E1gina do SEI)."));
+      return Promise.reject(
+        doEditor
+          ? new ErroPonte("SEI_SEM_EDITOR", `Nenhuma janela de editor ${args.numero ? `do documento ${args.numero} ` : ""}aberta. Pe\u00E7a ao usu\u00E1rio para abrir o documento no editor (ou use documento_editar, que grava sem abrir).`)
+          : new ErroPonte("SEI_SEM_ABA", "Nenhuma aba do SEI conectada. Abra o SEI nesta janela (ou recarregue a p\u00E1gina do SEI)."),
+      );
     }
     const id = crypto.randomUUID();
     return new Promise((ok, erro) => {

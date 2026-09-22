@@ -53,6 +53,8 @@ export interface TelaAtual {
   processo?: { protocolo: string; tipo?: string; nivel?: string };
   documento?: { numero: string; titulo?: string };
   selecionados?: string[];
+  /** Documentos abertos em janelas do editor. */
+  editores?: string[];
   sigiloso?: boolean;
 }
 

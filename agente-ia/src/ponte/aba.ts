@@ -23,21 +23,8 @@ declare global {
   }
 }
 
-function iniciar(): void {
-  if (window.top !== window || window.__seiProAgente) return;
-  // Só telas do SEI com sessão (tem o cabeçalho com a unidade).
-  if (!document.querySelector("#lnkInfraUnidade, #frmProtocoloPesquisaRapida")) return;
-  window.__seiProAgente = true;
-
-  // A tela viva, com cache curto: `outerHTML` da caixa tem centenas de KB.
-  let cache: { quando: number; pagina: Pagina } | null = null;
-  const paginaViva = (): Pagina => {
-    if (!cache || Date.now() - cache.quando > 3000) {
-      cache = { quando: Date.now(), pagina: { url: location.href, status: 200, html: document.documentElement.outerHTML, doc: document } };
-    }
-    return cache.pagina;
-  };
-  const sei = new Sei(location.href, paginaViva);
+/** Canal com o painel: porta, apresentação, reconexão e foco. Comum às telas do SEI e à janela do editor. */
+function abrirCanal(papel: "sei" | "editor", documento: string | undefined, executar: (op: string, args: Record<string, unknown>, sinal: AbortSignal) => Promise<unknown>): void {
   const emCurso = new Map<string, AbortController>();
   let porta: chrome.runtime.Port | null = null;
   let ultimoFoco = document.hasFocus() ? Date.now() : 0;
@@ -51,6 +38,8 @@ function iniciar(): void {
       visivel: document.visibilityState === "visible",
       foco: ultimoFoco,
       titulo: document.title,
+      papel,
+      documento,
     };
     try {
       porta.postMessage(ola);
@@ -75,8 +64,7 @@ function iniciar(): void {
     const ctl = new AbortController();
     emCurso.set(m.id, ctl);
     try {
-      const dados = m.op === "tela" ? lerTela(document, location.href) : await executarOperacao(sei, m.op, m.args ?? {}, ctl.signal);
-      responder({ id: m.id, ok: true, dados });
+      responder({ id: m.id, ok: true, dados: await executar(m.op, m.args ?? {}, ctl.signal) });
     } catch (e) {
       const erro = ctl.signal.aborted ? new ErroSei("CANCELADO", "Opera\u00E7\u00E3o cancelada.") : comoErroSei(e);
       responder({ id: m.id, ok: false, erro: { codigo: erro.codigo, mensagem: erro.message, detalhe: erro.detalhe } });
@@ -134,8 +122,66 @@ function iniciar(): void {
   window.addEventListener("focus", marcarFoco);
   document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && marcarFoco());
   window.addEventListener("hashchange", apresentar);
+}
 
+function iniciar(): void {
+  if (window.top !== window || window.__seiProAgente) return;
+  if (/[?&]acao=editor_montar\b/.test(location.search)) {
+    window.__seiProAgente = true;
+    iniciarEditor();
+    return;
+  }
+  // Só telas do SEI com sessão (tem o cabeçalho com a unidade).
+  if (!document.querySelector("#lnkInfraUnidade, #frmProtocoloPesquisaRapida")) return;
+  window.__seiProAgente = true;
+
+  // A tela viva, com cache curto: `outerHTML` da caixa tem centenas de KB.
+  let cache: { quando: number; pagina: Pagina } | null = null;
+  const paginaViva = (): Pagina => {
+    if (!cache || Date.now() - cache.quando > 3000) {
+      cache = { quando: Date.now(), pagina: { url: location.href, status: 200, html: document.documentElement.outerHTML, doc: document } };
+    }
+    return cache.pagina;
+  };
+  const sei = new Sei(location.href, paginaViva);
+  abrirCanal("sei", undefined, (op, args, sinal) => (op === "tela" ? Promise.resolve(lerTela(document, location.href)) : executarOperacao(sei, op, args, sinal)));
   instalarEntradaNoMenu();
+}
+
+/**
+ * Janela do editor: injeta o script do mundo da página (o CKEditor só existe
+ * lá) e repassa `editor.ler` / `editor.escrever` a ele, com um token que só
+ * este content script e aquele script conhecem.
+ */
+function iniciarEditor(): void {
+  const MARCA = "seipro-agente-editor";
+  const token = crypto.randomUUID();
+  const s = document.createElement("script");
+  s.src = chrome.runtime.getURL("js/sei-pro-agente-editor.js");
+  s.dataset.token = token;
+  (document.head ?? document.documentElement).append(s);
+
+  const pendentes = new Map<string, (r: { ok: boolean; dados?: unknown; erro?: string }) => void>();
+  window.addEventListener("message", (ev: MessageEvent) => {
+    const m = ev.data as { __marca?: string; token?: string; id?: string; resposta?: { ok: boolean; dados?: unknown; erro?: string } };
+    if (ev.source !== window || m?.__marca !== MARCA || m.token !== token || !m.resposta || !m.id) return;
+    pendentes.get(m.id)?.(m.resposta);
+    pendentes.delete(m.id);
+  });
+  const naPagina = (op: string, args: Record<string, unknown>) =>
+    new Promise<unknown>((ok, erro) => {
+      const id = crypto.randomUUID();
+      pendentes.set(id, (r) => (r.ok ? ok(r.dados) : erro(new ErroSei("SEI_VALIDACAO", r.erro ?? "Falha no editor."))));
+      window.postMessage({ __marca: MARCA, token, id, op, args }, "*");
+    });
+
+  // Título do editor: "SEI/ORGAO - 0104018 - Despacho".
+  const documento = /\s-\s(\d{6,})\s-\s/.exec(document.title)?.[1];
+  abrirCanal("editor", documento, (op, args) => {
+    if (op === "editor.ler") return naPagina("ler", args);
+    if (op === "editor.escrever") return naPagina("escrever", args);
+    return Promise.reject(new ErroSei("ARGUMENTO_INVALIDO", "A janela do editor s\u00F3 atende opera\u00E7\u00F5es do editor."));
+  });
 }
 
 /** Item "Agente de IA" no menu do SEI; o clique pede ao service worker que abra o painel. */

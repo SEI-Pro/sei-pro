@@ -81,6 +81,18 @@ const qtd = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : va
 
 let cacheCaixa: { quando: number; dados: { total: number; processos: Array<Record<string, unknown>> } } | null = null;
 
+/** Editor alvo: o informado, ou o único aberto. Confere sigilo pelo núcleo (tela do SEI). */
+async function editorAlvo(a: Args, ctx: ContextoTool): Promise<{ numero: string; nivel: string; titulo: string }> {
+  const abertos = await ctx.sei<string[]>("editores");
+  const numero = a.numero ? String(a.numero) : abertos.length === 1 ? abertos[0] : "";
+  if (!numero) {
+    throw Object.assign(new Error(abertos.length ? `H\u00E1 ${abertos.length} editores abertos (${abertos.join(", ")}): informe o n\u00FAmero.` : "Nenhum documento aberto no editor do SEI."), { codigo: "SEI_SEM_EDITOR" });
+  }
+  const meta = await ctx.sei<{ nivel: string; titulo: string }>("documento.ler", { numero, somenteMetadados: true });
+  if (meta.nivel === "sigiloso") throw Object.assign(new Error("Documento sigiloso: o agente n\u00E3o atua nele."), { codigo: "SEI_SIGILOSO" });
+  return { numero, nivel: meta.nivel, titulo: meta.titulo };
+}
+
 export const TOOLS_SEI: DefTool[] = [
   definirTool({
     nome: "contexto_tela",
@@ -269,6 +281,52 @@ export const TOOLS_SEI: DefTool[] = [
         }
       }
       return saida;
+    },
+  }),
+
+  definirTool({
+    nome: "editor_ler",
+    descricao:
+      "L\u00EA o documento que o usu\u00E1rio est\u00E1 editando AGORA na janela do editor do SEI (inclusive o que ainda n\u00E3o foi salvo) e o texto selecionado. Use quando ele disser 'este texto', 'o que estou escrevendo', 'o trecho selecionado'.",
+    parametros: s.objeto({ "numero?": s.texto({ descricao: "N\u00BA SEI do documento aberto; opcional se houver um editor s\u00F3." }), "secao?": s.texto() }),
+    efeito: "leitura",
+    rotulo: () => "Ler o editor aberto",
+    executar: async (a, ctx) => {
+      const alvo = await editorAlvo(a, ctx);
+      if (alvo.nivel === "restrito" && !(await ctx.consentirRestrito(`Documento ${alvo.numero} aberto no editor`))) {
+        return { erro: "Conte\u00FAdo restrito: o usu\u00E1rio n\u00E3o autorizou o envio ao modelo nesta conversa.", codigo: "CONTEUDO_RESTRITO_NAO_AUTORIZADO" };
+      }
+      const r = await ctx.sei<{ editor: string; secao: string; html: string; selecao: string }>("editor.ler", { numero: alvo.numero, secao: a.secao });
+      const texto = r.html.replace(/<\/(p|div|li|tr|h\d)>/gi, "\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+      return { numero: alvo.numero, secao: r.secao, texto, html: r.html.slice(0, 20000), selecionado: r.selecao };
+    },
+  }),
+
+  definirTool({
+    nome: "editor_escrever",
+    descricao:
+      "Escreve no documento aberto na janela do editor do SEI, SEM salvar: o usu\u00E1rio v\u00EA, pode desfazer (Ctrl+Z) e salva quando quiser. modo: 'cursor' (onde est\u00E1 o cursor), 'fim' (fim da se\u00E7\u00E3o) ou 'substituir' (troca a se\u00E7\u00E3o inteira). HTML com as classes de estilo do SEI (skill redacao-oficial).",
+    parametros: s.objeto({
+      html: s.texto({ min: 1 }),
+      "modo?": s.texto({ enum: ["cursor", "fim", "substituir"] }),
+      "numero?": s.texto(),
+      "secao?": s.texto(),
+    }),
+    efeito: "escrita",
+    rotulo: (a) => `Escrever no editor (${a.modo ?? "cursor"})`,
+    previsualizar: async (a, ctx) => {
+      try {
+        const alvo = await editorAlvo(a, ctx);
+        const texto = String(a.html).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        return [{ alvo: alvo.numero, mudancas: [{ campo: `Editor aberto (${a.modo ?? "cursor"}, sem salvar)`, antes: "", depois: texto.slice(0, 500) }], resumo: "" }];
+      } catch (e) {
+        return [{ alvo: String(a.numero ?? "editor"), mudancas: [], resumo: "", erro: (e as Error).message }];
+      }
+    },
+    executar: async (a, ctx) => {
+      const alvo = await editorAlvo(a, ctx);
+      const r = await ctx.sei<{ resultado: string }>("editor.escrever", { numero: alvo.numero, html: a.html, modo: a.modo ?? "cursor", secao: a.secao });
+      return { numero: alvo.numero, ok: true, resultado: r.resultado, aviso: "O texto est\u00E1 no editor, ainda N\u00C3O salvo. O usu\u00E1rio salva quando quiser." };
     },
   }),
 

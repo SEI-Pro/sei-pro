@@ -51,6 +51,14 @@ await build({
   format: "iife",
 });
 
+// Mundo da página, só na janela do editor (o CKEditor aberto não é visível do mundo isolado).
+await build({
+  ...comum,
+  entryPoints: [resolve(AQUI, "src/ponte/editorPagina.ts")],
+  outfile: join(DIST, "js", "sei-pro-agente-editor.js"),
+  format: "iife",
+});
+
 await copyFile(resolve(AQUI, "estatico/agente.html"), join(DIST, "html", "agente.html"));
 await copyFile(resolve(AQUI, "estatico/agente.css"), join(DIST, "css", "agente.css"));
 
