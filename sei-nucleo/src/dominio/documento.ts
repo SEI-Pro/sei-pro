@@ -8,10 +8,10 @@
  */
 
 import { acaoNaArvore, type Arvore, type DocumentoArvore } from "./arvore";
-import { mudanca, NIVEIS, NOME_NIVEL, type OpcoesEscrita, type ResultadoEscrita } from "./escrita";
-import { Formulario, normalizar } from "../formulario/formulario";
+import { hipotesesDoFormulario, mudanca, NIVEIS, NOME_NIVEL, type OpcoesEscrita, type ResultadoEscrita } from "./escrita";
+import { escolherItem, Formulario } from "../formulario/formulario";
 import { linkDaAcao, parametros } from "../links/links";
-import { decodificarEntidades, textoDe } from "../sessao/dom";
+import { textoDe } from "../sessao/dom";
 import { ErroSei } from "../sessao/erros";
 import type { Arquivo, OpcoesHttp, Pagina } from "../sessao/http";
 import type { Sei } from "../sei";
@@ -63,27 +63,6 @@ export interface AlteracaoDocumento {
   hipotese?: string;
 }
 
-async function hipotesesDaTela(sei: Sei, form: Formulario, nivel: string, sinal?: AbortSignal) {
-  const ajax = /controlador_ajax\.php\?acao_ajax=hipotese_legal_select[^'"]*/.exec(form.pagina.html)?.[0];
-  if (!ajax) return form.opcoes("selHipoteseLegal").filter((o) => o.valor !== "null").map((o) => ({ id: o.valor, texto: o.texto }));
-  return sei.ajax(decodificarEntidades(ajax), [
-    ["primeiroItemValor", "null"],
-    ["primeiroItemDescricao", " "],
-    ["valorItemSelecionado", ""],
-    ["staNivelAcesso", nivel],
-  ], { sinal });
-}
-
-function escolherItem<T extends { id: string; texto: string }>(itens: T[], ref: string, oque: string): T {
-  const alvo = normalizar(ref);
-  const achado =
-    itens.find((i) => i.id === ref) ??
-    itens.find((i) => normalizar(i.texto) === alvo) ??
-    (itens.filter((i) => normalizar(i.texto).includes(alvo)).length === 1 ? itens.find((i) => normalizar(i.texto).includes(alvo)) : undefined);
-  if (!achado) throw new ErroSei("ARGUMENTO_INVALIDO", `${oque} "${ref}" n\u00E3o encontrado(a) ou amb\u00EDguo(a).`, itens.slice(0, 40).map((i) => i.texto).join(" | "));
-  return achado;
-}
-
 /** Aplica nível e hipótese no formulário de cadastro/alteração de documento. */
 async function aplicarNivel(sei: Sei, form: Formulario, alt: AlteracaoDocumento, sinal?: AbortSignal): Promise<ResultadoEscrita["mudancas"]> {
   const m: ResultadoEscrita["mudancas"] = [];
@@ -97,7 +76,7 @@ async function aplicarNivel(sei: Sei, form: Formulario, alt: AlteracaoDocumento,
     form.definir({ selHipoteseLegal: "null", hdnIdHipoteseLegal: "" });
   } else if (alt.hipotese !== undefined || (alt.nivel === "restrito" && nivel !== nivelAtual)) {
     if (!alt.hipotese) throw new ErroSei("ARGUMENTO_INVALIDO", "Documento restrito exige hip\u00F3tese legal. Informe a hip\u00F3tese.");
-    const lista = await hipotesesDaTela(sei, form, nivel, sinal);
+    const lista = await hipotesesDoFormulario(sei, form, nivel, sinal);
     const h = escolherItem(lista, alt.hipotese, "Hip\u00F3tese legal");
     m.push({ campo: "Hip\u00F3tese legal", antes: "", depois: h.texto });
     form.definir({ selHipoteseLegal: h.id, hdnIdHipoteseLegal: h.id });

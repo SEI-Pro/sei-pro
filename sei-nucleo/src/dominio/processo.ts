@@ -12,8 +12,8 @@
  */
 
 import { acaoNaArvore, type Arvore, type NivelAcesso } from "./arvore";
-import { mudanca, NIVEIS, NOME_NIVEL, type OpcoesEscrita, type ResultadoEscrita } from "./escrita";
-import { Formulario, type ItemLupa } from "../formulario/formulario";
+import { hipotesesDoFormulario, mudanca, NIVEIS, NOME_NIVEL, type OpcoesEscrita, type ResultadoEscrita } from "./escrita";
+import { escolherItem, Formulario, type ItemLupa } from "../formulario/formulario";
 import { linkDaAcao, parametros } from "../links/links";
 import { ErroSei } from "../sessao/erros";
 import type { OpcoesHttp } from "../sessao/http";
@@ -114,7 +114,9 @@ export async function alterarProcesso(
   }
   if (alt.hipotese !== undefined) {
     const antes = textoOpcaoSelecionada(form, "selHipoteseLegal");
-    const h = form.escolher("selHipoteseLegal", alt.hipotese);
+    const nivel = form.valor("rdoNivelAcesso") || NIVEIS.restrito;
+    const h = escolherItem(await hipotesesDoFormulario(sei, form, nivel, op.sinal), alt.hipotese, "Hip\u00F3tese legal");
+    form.definir({ selHipoteseLegal: h.id });
     mudancas.push(...mudanca("Hip\u00F3tese legal", antes, h.texto));
   }
   if ((form.valor("rdoNivelAcesso") === "1") && (form.valor("selHipoteseLegal") ?? "null") === "null") {

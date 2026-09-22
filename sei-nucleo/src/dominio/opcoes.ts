@@ -12,6 +12,7 @@
  */
 
 import { acaoNaArvore } from "./arvore";
+import { hipotesesDoFormulario } from "./escrita";
 import { tiposDocumento } from "./documento";
 import { Formulario, normalizar } from "../formulario/formulario";
 import { linkDaAcao } from "../links/links";
@@ -51,6 +52,7 @@ export async function listarOpcoes(
     itens = (await tiposDocumento(sei, refProcesso, o.sinal)).map((t) => ({ id: t.id, nome: t.nome }));
   } else {
     const tela = TELAS[lista];
+    if (!tela) throw new ErroSei("ARGUMENTO_INVALIDO", `Lista desconhecida: ${lista}.`, Object.keys(TELAS).concat("tipos_documento").join(" | "));
     const arv = await sei.arvore(refProcesso, { sinal: o.sinal });
     let link = acaoNaArvore(arv, tela.acao);
     if (!link) throw new ErroSei("SEI_ACAO_INDISPONIVEL", `Para listar ${lista} use um processo aberto na sua unidade.`);
@@ -60,10 +62,13 @@ export async function listarOpcoes(
       if (!link) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "Tela de marcadores n\u00E3o reconhecida.");
     }
     const form = await Formulario.abrir(sei.http, link, tela.form, { sinal: o.sinal, aceitarValidacao: true });
-    itens = form
-      .opcoes(tela.campo)
-      .filter((op) => op.valor && op.valor !== "null" && op.texto)
-      .map((op) => ({ id: op.valor, nome: op.texto }));
+    itens =
+      lista === "hipoteses_legais"
+        ? (await hipotesesDoFormulario(sei, form, "1", o.sinal)).map((h) => ({ id: h.id, nome: h.texto }))
+        : form
+            .opcoes(tela.campo)
+            .filter((op) => op.valor && op.valor !== "null" && op.texto)
+            .map((op) => ({ id: op.valor, nome: op.texto }));
   }
   const f = o.filtro ? normalizar(o.filtro) : "";
   return f ? itens.filter((i) => normalizar(i.nome).includes(f)) : itens;

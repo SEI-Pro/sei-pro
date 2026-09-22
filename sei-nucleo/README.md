@@ -60,13 +60,34 @@ const doc = await lerConteudo(sei, await localizarDocumento(sei, "0103947"));
 
 ## Versões do SEI
 
-| Tela | 4.1.5 (validado ao vivo) | 5.0.x |
+Validado ao vivo no 4.1.5 (SEI SP Treinamento) e no 5.0.4 (SEI MJ homologação).
+
+| Tela | 4.1.5 | 5.0.4 |
 |---|---|---|
 | Árvore (`infraArvoreNo`, `NosAcoes`, `abrir_pastas=1`) | sim | mesmo gerador (`ProtocoloINT.php`), `UNIDADE_GERADORA` a mais |
 | Pesquisa rápida (protocolo ou nº SEI → processo) | sim | sim |
 | Escolher tipo de documento (POST `hdnIdSerie`) | sim | sim |
-| Editor | CK4: `#frmEditor` + `editor_processar.php` | CK5: `INFRA_EDITOR_CONFIG` + `controlador_rest.php` (lido das fontes; falta validar ao vivo) |
+| Editor | CK4: `#frmEditor` + `editor_processar.php` | CK5: `INFRA_EDITOR_CONFIG` + `controlador_rest.php` |
 | Marcadores (vários por processo, `andamento_marcador_*`) | sim | sim |
+
+Quatro diferenças do 5.0.x custaram caro e viraram regra de código:
+
+1. **Hipótese legal não está no HTML.** O `<select>` nasce vazio e a tela o
+   preenche por AJAX quando o usuário marca "Restrito". Quem precisa da lista
+   usa `hipotesesDoFormulario` (em `dominio/escrita.ts`), que chama o mesmo
+   AJAX pelo link que a página assinou.
+2. **Tela de ação vira lista depois do primeiro item.** "Gerenciar Marcador" e
+   "Acompanhamento Especial" abrem direto o formulário enquanto não há nenhum
+   registro, e viram lista depois. Duas consequências: a tela que já É o
+   formulário tem de ser usada como veio (um novo GET devolve `hdnIdProtocolo`
+   vazio e o registro é gravado solto, em silêncio), e "saiu da tela" deixa de
+   valer como prova de sucesso.
+3. **O nome do botão muda com a operação** (`sbmCadastrarAcompanhamento` para
+   incluir, `sbmAlterarAcompanhamento` para alterar). `Formulario.enviar` aceita
+   o nome pedido e, se ele não existir naquela tela, manda o único `sbm*` do
+   formulário — sem botão o SEI só redesenha a tela e nada é gravado.
+4. **Campo sem sentido derruba a gravação sem mensagem**: anotação com texto
+   vazio e prioridade marcada volta a tela intacta.
 
 SEI 3.x: leitura deve funcionar (mesma árvore); marcador usa outra tela e
 responde `SEI_VERSAO_NAO_SUPORTADA`.

@@ -27,6 +27,15 @@ interface Roteiro {
   nomeAcao: string;
   form: string;
   botao?: string;
+  /**
+   * Ações que levam da tela da barra ao formulário, quando ela é uma LISTA.
+   * No SEI 5 várias telas ("Acompanhamento Especial", "Gerenciar Marcador")
+   * abrem direto o formulário enquanto não há nenhum item e viram lista
+   * depois do primeiro — as duas formas precisam funcionar.
+   */
+  formularios?: string[];
+  /** Prova de sucesso, quando "saiu da tela" não serve (o SEI 5 volta para a mesma ação, agora como lista). */
+  sucesso?: (p: Pagina) => boolean;
   /** Aplica as mudanças no formulário e devolve o que muda. */
   preparar: (f: Formulario) => ResultadoEscrita["mudancas"];
   resumo: (protocolo: string) => string;
@@ -47,14 +56,25 @@ function linkObrigatorio(arv: Arvore, acao: string, nome: string): string {
 /** Sucesso = saiu da tela do formulário sem mensagem de validação. */
 const saiuDa = (acao: string) => (p: Pagina) => parametros(p.url).get("acao") !== acao;
 
+async function formularioDaBarra(sei: Sei, arv: Arvore, r: Roteiro, sinal?: AbortSignal): Promise<Formulario> {
+  const tela = await sei.http.obter(linkObrigatorio(arv, r.acao, r.nomeAcao), { sinal, aceitarValidacao: true });
+  // A própria tela já é o formulário: usá-la como veio preserva os campos de
+  // contexto que um novo GET perderia (no SEI 5, `hdnIdProtocolo` volta vazio
+  // e o registro seria gravado solto).
+  if (tela.doc.querySelector(r.form)) return Formulario.de(tela, r.form, sei.http);
+  const link = (r.formularios ?? []).map((a) => linkDaAcao(tela.html, a)).find(Boolean);
+  if (!link) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", `A tela "${r.nomeAcao}" n\u00E3o tem o formul\u00E1rio esperado.`);
+  return Formulario.abrir(sei.http, link, r.form, { sinal, aceitarValidacao: true });
+}
+
 async function executarNaBarra(sei: Sei, referencia: string, r: Roteiro, op: OpcoesEscrita): Promise<ResultadoEscrita> {
   const arv = await arvoreOperavel(sei, referencia, op.sinal);
-  const form = await Formulario.abrir(sei.http, linkObrigatorio(arv, r.acao, r.nomeAcao), r.form, { sinal: op.sinal });
+  const form = await formularioDaBarra(sei, arv, r, op.sinal);
   const mudancas = r.preparar(form);
   const base: ResultadoEscrita = { alvo: arv.protocolo, mudancas, aplicado: false, resumo: "" };
   if (!mudancas.length) return { ...base, resumo: "Nada a alterar: j\u00E1 est\u00E1 assim." };
   if (!op.aplicar) return { ...base, resumo: r.resumo(arv.protocolo) };
-  await form.enviar({ sinal: op.sinal, botao: r.botao, operacao: `${r.nomeAcao} em ${arv.protocolo}`, sucesso: saiuDa(r.acao) });
+  await form.enviar({ sinal: op.sinal, botao: r.botao, operacao: `${r.nomeAcao} em ${arv.protocolo}`, sucesso: r.sucesso ?? saiuDa(r.acao) });
   sei.invalidar(arv.idProcedimento);
   return { ...base, aplicado: true, resumo: r.resumo(arv.protocolo).replace(/^Vai /, "") };
 }
@@ -70,7 +90,8 @@ export function definirAnotacao(sei: Sei, referencia: string, a: { texto: string
       const texto = a.texto.slice(0, 500);
       const m = mudanca("Anota\u00E7\u00E3o", f.valor("txaDescricao"), texto);
       const prioAntes = f.valor("chkSinPrioridade") ? "sim" : "n\u00E3o";
-      const prio = a.prioridade === undefined ? prioAntes : a.prioridade && texto ? "sim" : "n\u00E3o";
+      // Sem texto não há anotação: a prioridade tem de cair junto, senão o SEI 5 devolve a tela sem gravar.
+      const prio = !texto ? "n\u00E3o" : a.prioridade === undefined ? prioAntes : a.prioridade ? "sim" : "n\u00E3o";
       f.definir({ txaDescricao: texto, chkSinPrioridade: prio === "sim" ? "on" : null });
       return [...m, ...mudanca("Prioridade", prioAntes, prio)];
     },
@@ -131,7 +152,9 @@ export function definirAcompanhamento(sei: Sei, referencia: string, a: { grupo?:
     acao: "acompanhamento_gerenciar",
     nomeAcao: "Acompanhamento Especial",
     form: "#frmAcompanhamentoCadastro",
+    formularios: ["acompanhamento_alterar", "acompanhamento_cadastrar"],
     botao: "sbmCadastrarAcompanhamento",
+    sucesso: (p) => !p.doc.querySelector("#frmAcompanhamentoCadastro"),
     preparar: (f) => {
       const m: ResultadoEscrita["mudancas"] = [];
       const novo = !f.valor("hdnIdAcompanhamento");
@@ -218,9 +241,17 @@ export async function definirMarcador(
     return { ...base, aplicado: true, resumo: `Marcador "${existente.marcador}" removido de ${arv.protocolo}.` };
   }
 
-  const cadastrar = linkDaAcao(tela.html, "andamento_marcador_cadastrar");
-  if (!cadastrar) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "Esta vers\u00E3o do SEI n\u00E3o tem a tela de marcadores esperada (4.1 ou superior).");
-  const f = await Formulario.abrir(sei.http, cadastrar, "#frmAndamentoMarcadorCadastro", { sinal: op.sinal });
+  // Sem nenhum marcador, o SEI 5 abre direto o formulário: é ele que carrega o
+  // `hdnIdProtocolo`. Reabrir pelo link de cadastro devolveria o campo vazio e
+  // o marcador seria gravado sem processo — em silêncio.
+  let f: Formulario;
+  if (tela.doc.querySelector("#frmAndamentoMarcadorCadastro")) {
+    f = Formulario.de(tela, "#frmAndamentoMarcadorCadastro", sei.http);
+  } else {
+    const cadastrar = linkDaAcao(tela.html, "andamento_marcador_cadastrar");
+    if (!cadastrar) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", "Esta vers\u00E3o do SEI n\u00E3o tem a tela de marcadores esperada (4.1 ou superior).");
+    f = await Formulario.abrir(sei.http, cadastrar, "#frmAndamentoMarcadorCadastro", { sinal: op.sinal });
+  }
   const escolhido = f.escolher("selMarcador", m.marcador);
   f.definir({ hdnIdMarcador: escolhido.valor, txaTexto: (m.texto ?? existente?.texto ?? "").slice(0, 250) });
   base.mudancas = existente

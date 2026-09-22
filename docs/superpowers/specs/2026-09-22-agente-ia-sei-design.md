@@ -376,3 +376,23 @@ Entregue e validado ao vivo no SEI SP Treinamento (4.1.5), com a extensão carre
   senha nunca vai ao modelo — coberto por teste). Plano sem nenhuma mudança real não pede aprovação.
 - Robustez observada: a aba recarregou no meio de uma assinatura; a operação tinha sido concluída
   no SEI, e a prévia idempotente ("você já assinou") evitou assinatura duplicada na nova tentativa.
+
+### Atualização (22/09/2026, noite) — SEI 5.0.4
+
+Validado ao vivo no SEI do Ministério da Justiça (homologação, 5.0.4, login pela Microsoft),
+com a extensão carregada: leitura (caixa, processo, árvore, histórico, documento HTML e PDF,
+pesquisa, listas de apoio), escrita (nível de acesso com hipótese legal, anotação, marcador,
+atribuição, acompanhamento, andamento, criar documento, gravar e acrescentar conteúdo, excluir)
+e **o editor aberto em CK5** (`editor_ler`/`editor_escrever` na janela do editor, sem salvar).
+Cada escrita conferida por releitura e desfeita ao fim. Conversa com o modelo real:
+10 s e US$ 0,05 para uma leitura com duas tools.
+
+Cinco defeitos aparecerem só no 5.0.4 e foram corrigidos (detalhe em `sei-nucleo/README.md`):
+hipótese legal por AJAX (afetava `processo_alterar` e a lista de opções), tela de ação que vira
+lista (marcador gravado sem processo; acompanhamento dado como falho), nome do botão de envio
+que muda entre incluir e alterar, anotação vazia com prioridade, e — na ponte — o anúncio
+periódico do painel, que reconectava a aba a cada 60 s e matava a operação em curso
+("a aba do SEI foi recarregada").
+
+Não testado no 5.0.4: assinar (só a prévia, que lista os cargos: o ambiente entra por SSO e a
+assinatura pede a senha do SEI) e enviar processo (irreversível, sem autorização do autor).

@@ -109,8 +109,11 @@ function abrirCanal(papel: "sei" | "editor", documento: string | undefined, exec
     }
   };
 
+  // O painel reescreve a chave de tempos em tempos para alcançar abas que
+  // carregaram depois dele. Quem já tem porta viva NÃO reconecta: trocar a
+  // porta no meio de uma operação a mataria com "a aba foi recarregada".
   chrome.storage.onChanged.addListener((mud, area) => {
-    if (area === "local" && mud[CHAVE_ABERTURA]?.newValue) conectar(true);
+    if (area === "local" && mud[CHAVE_ABERTURA]?.newValue && !porta) conectar();
   });
   void painelAberto().then((sim) => sim && conectar());
   setInterval(() => (porta ? apresentar() : void painelAberto().then((sim) => sim && conectar())), 5000);

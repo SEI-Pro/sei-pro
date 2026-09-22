@@ -202,10 +202,7 @@ export class Formulario {
     if (!this.http) throw new ErroSei("SEI_RESPOSTA_INESPERADA", "Formul\u00E1rio sem transporte HTTP.");
     if (!this.action) throw new ErroSei("SEI_VERSAO_NAO_SUPORTADA", `O formul\u00E1rio ${this.id} n\u00E3o tem action.`);
     const pares = this.pares();
-    if (op.botao) {
-      const b = this.elemento.querySelector(`[name="${op.botao}"]`);
-      pares.push([op.botao, b?.getAttribute("value") ?? textoDe(b) ?? op.botao]);
-    }
+    if (op.botao) pares.push(this.botaoDeEnvio(op.botao));
     const resposta = await this.http.enviar(this.action, pares, op);
     if (op.sucesso && !op.sucesso(resposta)) {
       throw new ErroSei(
@@ -215,6 +212,19 @@ export class Formulario {
       );
     }
     return resposta;
+  }
+
+  /**
+   * O botão pedido. Se esta tela do SEI usa outro nome (a mesma tela "grava"
+   * com `sbmCadastrar...` e "altera" com `sbmAlterar...`, e os nomes mudam
+   * entre versões), vale o único `sbm*` do formulário — sem ele o SEI apenas
+   * redesenha a tela e nada é gravado.
+   */
+  private botaoDeEnvio(nome: string): [string, string] {
+    const b =
+      this.elemento.querySelector(`[name="${nome}"]`) ??
+      unica([...this.elemento.querySelectorAll('button[type="submit"][name^="sbm"], input[type="submit"][name^="sbm"]')]);
+    return b ? [b.getAttribute("name") ?? nome, b.getAttribute("value") ?? textoDe(b) ?? nome] : [nome, nome];
   }
 
   private hiddenDaLupa(select: string): string | null {
@@ -270,6 +280,22 @@ export function normalizar(s: string): string {
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Escolhe um item de uma lista (id exato, nome exato ou um único nome que
+ * contém o texto) — o mesmo que `escolher()` faz num `<select>`, para as
+ * listas que não vêm num select (hipóteses legais por AJAX, tipos, textos
+ * padrão). Erra dizendo quais eram as opções.
+ */
+export function escolherItem<T extends { id: string; texto: string }>(itens: T[], ref: string, oque: string): T {
+  const alvo = normalizar(ref);
+  const achado =
+    itens.find((i) => i.id === ref) ??
+    itens.find((i) => normalizar(i.texto) === alvo) ??
+    unica(itens.filter((i) => normalizar(i.texto).includes(alvo)));
+  if (!achado) throw new ErroSei("ARGUMENTO_INVALIDO", `${oque} "${ref}" n\u00E3o encontrado(a) ou amb\u00EDguo(a).`, itens.slice(0, 40).map((i) => i.texto).join(" | "));
+  return achado;
 }
 
 function unica<T>(lista: T[]): T | undefined {
