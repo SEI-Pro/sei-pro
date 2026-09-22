@@ -127,7 +127,7 @@ class App {
   private elMenu!: HTMLElement;
   private elPensando!: HTMLElement;
   private tickPensando: ReturnType<typeof setInterval> | null = null;
-  private bolhaAtual: { el: HTMLElement; texto: string; pendente: boolean } | null = null;
+  private bolhaAtual: { el: HTMLElement; texto: string; pendente: boolean; fechada?: boolean } | null = null;
   /** Última resposta fechada da rodada: recebe o carimbo de tempo no fim. */
   private ultimaResposta: { el: HTMLElement; item: ItemAgente } | null = null;
   private aoFimDoPlano: (() => void) | null = null;
@@ -772,7 +772,10 @@ class App {
     this.elCusto.textContent = formatarUso(this.uso);
     this.desenharTarefas();
     this.estadoEnvio();
-    this.rolar();
+    // Conversa começando: o começo é o que interessa (rolar cortaria o título
+    // em tela curta). Com conversa, o fim.
+    if (this.transcricao.length) this.rolar();
+    else requestAnimationFrame(() => (this.elConversa.scrollTop = 0));
   }
 
   /** Tela de início: o que o agente faz, sugestões de pedido e o aviso de privacidade. */
@@ -829,6 +832,9 @@ class App {
           b.pendente = true;
           requestAnimationFrame(() => {
             b.pendente = false;
+            // A bolha pode ter fechado entre o agendamento e agora; redesenhar
+            // aqui apagaria o que veio depois (o carimbo de tempo, por exemplo).
+            if (b.fechada) return;
             b.el.replaceChildren(markdown(b.texto));
             this.rolar();
           });
@@ -872,6 +878,7 @@ class App {
     if (!this.bolhaAtual) return;
     const b = this.bolhaAtual;
     this.bolhaAtual = null;
+    b.fechada = true;
     if (b.texto.trim()) {
       const item: ItemAgente = { tipo: "agente", texto: b.texto };
       this.transcricao.push(item);
