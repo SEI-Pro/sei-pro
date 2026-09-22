@@ -43,6 +43,7 @@ service-account*.json
 # Pacotes e artefatos de build (zips da raiz nao sao versionados)
 # -----------------------------------------------------------------------------
 /*.zip
+/release/
 /*.crx
 /*.tar
 /*.tar.gz
