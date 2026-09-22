@@ -26,9 +26,12 @@ SAIDA = os.path.join(RAIZ, 'img', 'og')
 CHROME = os.environ.get('CHROME', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
 LOGO = 'file://' + os.path.join(RAIZ, 'dist', 'icons', 'icon-256.png')
 # Paginas cujo primeiro paragrafo nao serve de resumo
-LEADS_FIXOS = {'HISTORICO': 'Tudo o que mudou em cada versão da extensão, da mais recente à mais antiga.'}
+LEADS_FIXOS = {
+    'HISTORICO': 'Tudo o que mudou em cada versão da extensão, da mais recente à mais antiga.',
+    'AGENTEIA': 'Pergunte em português: ele consulta processos e documentos, escreve e altera o SEI — e só age depois que você aprova.',
+}
 LEAD_PADRAO = 'Passo a passo no guia do SEI Pro, a extensão gratuita com funções avançadas para o SEI.'
-ICONES_HOME = ['alarm-clock', 'kanban', 'list-checks', 'file-cog', 'file-pen-line', 'at-sign', 'spro-tarja', 'fingerprint', 'sun-moon']
+ICONES_HOME = ['bot', 'alarm-clock', 'kanban', 'list-checks', 'file-cog', 'file-pen-line', 'at-sign', 'spro-tarja', 'fingerprint']
 
 
 def ler(caminho):
