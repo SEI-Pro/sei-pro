@@ -5,6 +5,9 @@
  * nunca sincronizada, nunca no mundo da página do SEI) e a conversa em
  * `chrome.storage.session` (some ao fechar o navegador; acessível só a
  * páginas da extensão — content scripts não leem a área de sessão).
+ *
+ * Telas: só uma. A conversa é a tela; a configuração é um <dialog> modal por
+ * cima dela (na primeira vez, sem como fechar antes de salvar a chave).
  */
 
 import { Pseudonimos } from "@nucleo/privacidade/anonimizar";
@@ -16,7 +19,7 @@ import type { DecisaoPlano, InterfaceMotor, Mensagem, PlanoPrevisto, Tarefa, Uso
 import { PontePainel } from "../ponte/cliente";
 import { TOOLS_MOTOR } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
-import { h, markdown, moeda } from "./dom";
+import { h, icone, markdown, moeda } from "./dom";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
@@ -33,11 +36,33 @@ type Item =
 const CHAVE_CONFIG = "agenteIA_config";
 const CHAVE_SESSAO = "agenteIA_conversa";
 
-const ATALHOS: Array<[string, string]> = [
-  ["Resumir este processo", "Leia os documentos deste processo e fa\u00E7a um resumo: objeto, partes, principais atos em ordem e situa\u00E7\u00E3o atual."],
-  ["Pend\u00EAncias da unidade", "Liste os processos da minha unidade agrupados por marcador e aponte os que parecem parados ou com prazo vencido."],
-  ["Documentos sem assinatura", "Neste processo, quais documentos ainda n\u00E3o foram assinados?"],
-  ["Linguagem simples", "Explique em linguagem simples o documento que estou vendo (ou o \u00FAltimo documento deste processo)."],
+const PRIVACIDADE_CURTA =
+  "Dados pessoais s\u00E3o mascarados antes de sair do navegador. Documentos restritos s\u00F3 com a sua autoriza\u00E7\u00E3o, sigilosos nunca, e toda altera\u00E7\u00E3o no SEI passa pela sua aprova\u00E7\u00E3o.";
+
+const PRIVACIDADE =
+  "Antes de qualquer texto sair do navegador, CPF, e-mail, telefone, endere\u00E7o, conta banc\u00E1ria, CID e outros dados pessoais s\u00E3o trocados por r\u00F3tulos como [CPF_1]. Documentos restritos s\u00F3 s\u00E3o lidos com a sua autoriza\u00E7\u00E3o; processos sigilosos nunca. Toda altera\u00E7\u00E3o no SEI precisa da sua aprova\u00E7\u00E3o.";
+
+const ATALHOS: Array<{ rotulo: string; descricao: string; prompt: string }> = [
+  {
+    rotulo: "Resumir este processo",
+    descricao: "objeto, partes, atos e situa\u00E7\u00E3o",
+    prompt: "Leia os documentos deste processo e fa\u00E7a um resumo: objeto, partes, principais atos em ordem e situa\u00E7\u00E3o atual.",
+  },
+  {
+    rotulo: "Pend\u00EAncias da unidade",
+    descricao: "por marcador, com o que est\u00E1 parado",
+    prompt: "Liste os processos da minha unidade agrupados por marcador e aponte os que parecem parados ou com prazo vencido.",
+  },
+  {
+    rotulo: "Documentos sem assinatura",
+    descricao: "no processo aberto",
+    prompt: "Neste processo, quais documentos ainda n\u00E3o foram assinados?",
+  },
+  {
+    rotulo: "Linguagem simples",
+    descricao: "explicar o documento na tela",
+    prompt: "Explique em linguagem simples o documento que estou vendo (ou o \u00FAltimo documento deste processo).",
+  },
 ];
 
 class App {
@@ -51,7 +76,7 @@ class App {
   private tarefas: Tarefa[] = [];
   private anexo: { nome: string; texto: string } | null = null;
 
-  // elementos da tela de conversa
+  // elementos da tela
   private elConversa!: HTMLElement;
   private elAba!: HTMLElement;
   private elCusto!: HTMLElement;
@@ -59,6 +84,7 @@ class App {
   private elEntrada!: HTMLTextAreaElement;
   private elEnviar!: HTMLButtonElement;
   private elAnexo!: HTMLElement;
+  private elMenu!: HTMLElement;
   private bolhaAtual: { el: HTMLElement; texto: string; pendente: boolean } | null = null;
   private aoFimDoPlano: (() => void) | null = null;
   private toolsEl = new Map<string, { el: HTMLElement; item: Extract<Item, { tipo: "tool" }> }>();
@@ -68,65 +94,243 @@ class App {
     const salvo = (await chrome.storage.local.get(CHAVE_CONFIG))[CHAVE_CONFIG] as Partial<Config> | undefined;
     this.config = { ...this.config, ...salvo };
     this.ponte.aoMudar(() => this.atualizarAba());
-    if (!this.config.chave) this.telaConfig();
-    else await this.telaConversa();
+    await this.telaConversa();
+    if (!this.config.chave) this.abrirConfig(true);
+  }
+
+  // ------------------------------------------------------------- tela
+
+  private async telaConversa(): Promise<void> {
+    this.motor ??= this.criarMotor();
+    this.elAba = h("span", { class: "aba" });
+    this.elCusto = h("span", { class: "custo", title: "Custo desta conversa informado pelo OpenRouter" });
+    this.elTarefas = h("div", { class: "tarefas", hidden: true });
+    this.elConversa = h("div", { class: "conversa", role: "log", "aria-live": "polite" });
+    this.elEntrada = h("textarea", { rows: "2", placeholder: "Pe\u00E7a algo sobre o SEI...", "aria-label": "Mensagem" });
+    this.elEnviar = h("button", { class: "enviar" });
+    this.elAnexo = h("div", { class: "anexo", hidden: true });
+    this.elMenu = h("div", { class: "menu", role: "menu", hidden: true });
+
+    const arquivo = h("input", { type: "file", accept: ".csv,.txt,.md,.json,.tsv", class: "sr-only" });
+    const anexar = h("button", { class: "icone", title: "Anexar planilha CSV ou texto", "aria-label": "Anexar arquivo" }, icone("clipe"));
+    const sugerir = h("button", { class: "icone", title: "Sugest\u00F5es de pedido", "aria-label": "Sugest\u00F5es de pedido" }, icone("lampada"));
+
+    anexar.addEventListener("click", () => arquivo.click());
+    arquivo.addEventListener("change", async () => {
+      const f = arquivo.files?.[0];
+      if (!f) return;
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      let texto: string;
+      try {
+        texto = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+      } catch {
+        texto = new TextDecoder("windows-1252").decode(bytes); // CSV do Excel
+      }
+      this.anexo = { nome: f.name, texto: texto.slice(0, 60_000) };
+      this.elAnexo.hidden = false;
+      this.elAnexo.replaceChildren(
+        icone("clipe", 13),
+        h("span", {}, `${f.name} \u2014 ${texto.length.toLocaleString("pt-BR")} caracteres`),
+        h("button", { class: "icone pequeno", title: "Remover anexo", "aria-label": "Remover anexo", onclick: () => ((this.anexo = null), (this.elAnexo.hidden = true)) }, icone("fechar", 14)),
+      );
+      arquivo.value = "";
+    });
+
+    this.elMenu.replaceChildren(...ATALHOS.map((a) => h("button", { role: "menuitem", onclick: () => ((this.elMenu.hidden = true), void this.enviar(a.prompt)) }, a.rotulo)));
+    sugerir.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      this.elMenu.hidden = !this.elMenu.hidden;
+    });
+    document.addEventListener("click", () => (this.elMenu.hidden = true));
+    document.addEventListener("keydown", (ev) => ev.key === "Escape" && (this.elMenu.hidden = true));
+
+    this.elEntrada.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        this.elEnviar.click();
+      }
+    });
+    this.elEntrada.addEventListener("input", () => {
+      this.elEntrada.style.height = "auto";
+      this.elEntrada.style.height = `${Math.min(this.elEntrada.scrollHeight, 180)}px`;
+      this.estadoEnvio();
+    });
+    this.elEnviar.addEventListener("click", () => {
+      if (this.motor?.ocupado) this.motor.parar();
+      else void this.enviar(this.elEntrada.value);
+    });
+
+    this.raiz.replaceChildren(
+      h(
+        "header",
+        { class: "topo" },
+        h("span", { class: "logo" }, icone("faisca", 17)),
+        h("span", { class: "marca" }, h("strong", {}, "Agente de IA"), h("span", {}, "SEI Pro")),
+        this.elCusto,
+        h("button", { class: "icone", title: "Nova conversa", "aria-label": "Nova conversa", onclick: () => void this.novaConversa() }, icone("mais")),
+        h("button", { class: "icone", title: "Configura\u00E7\u00E3o", "aria-label": "Configura\u00E7\u00E3o", onclick: () => this.abrirConfig() }, icone("ajustes")),
+      ),
+      h(
+        "div",
+        { class: "barra" },
+        this.elAba,
+        h("span", { class: "selo-privacidade", title: PRIVACIDADE }, icone("escudo", 13), "protegido"),
+      ),
+      this.elTarefas,
+      this.elConversa,
+      h(
+        "div",
+        { class: "rodape" },
+        this.elMenu,
+        this.elAnexo,
+        h(
+          "div",
+          { class: "caixa" },
+          this.elEntrada,
+          h("div", { class: "caixa-acoes" }, anexar, arquivo, sugerir, h("span", { class: "espaco" }, "Enter envia"), this.elEnviar),
+        ),
+      ),
+    );
+    await this.restaurarSessao();
+    this.atualizarAba();
+    this.redesenhar();
+    this.elEntrada.focus();
+  }
+
+  private atualizarAba(): void {
+    if (!this.elAba) return;
+    const aba = this.ponte.atual();
+    this.elAba.replaceChildren(
+      h("span", { class: `ponto${aba ? " on" : ""}` }),
+      aba ? `${aba.host} \u2014 ${aba.titulo.replace(/^SEI\s*-\s*/, "")}` : "Nenhuma aba do SEI conectada",
+    );
+    this.elAba.title = aba ? (this.elAba.textContent ?? "") : "Abra ou recarregue uma aba do SEI para o agente trabalhar nela.";
+  }
+
+  /** Ícone, rótulo e disponibilidade do botão de envio. */
+  private estadoEnvio(): void {
+    const ocupado = Boolean(this.motor?.ocupado);
+    this.elEnviar.classList.toggle("parando", ocupado);
+    this.elEnviar.replaceChildren(icone(ocupado ? "parar" : "setaCima", ocupado ? 16 : 18));
+    this.elEnviar.setAttribute("title", ocupado ? "Parar" : "Enviar");
+    this.elEnviar.setAttribute("aria-label", ocupado ? "Parar" : "Enviar");
+    this.elEnviar.disabled = !ocupado && (!this.elEntrada.value.trim() || !this.config.chave);
   }
 
   // ------------------------------------------------------------- configuração
 
-  private telaConfig(): void {
-    const chave = h("input", { type: "password", placeholder: "sk-or-v1-...", value: this.config.chave, autocomplete: "off" });
-    const modelo = h("select", {}, h("option", { value: this.config.modelo }, this.config.modelo));
+  /** Configuração em modal. `obrigatorio`: primeira vez, sem chave — não fecha sem salvar. */
+  private abrirConfig(obrigatorio = false): void {
+    const chave = h("input", { type: "password", placeholder: "sk-or-v1-...", value: this.config.chave, autocomplete: "off", autofocus: true, "aria-label": "Chave do OpenRouter" });
+    const verChave = h("button", { class: "icone", title: "Mostrar a chave", "aria-label": "Mostrar a chave" }, icone("olho"));
+    verChave.addEventListener("click", () => {
+      const escondida = chave.type === "password";
+      chave.type = escondida ? "text" : "password";
+      verChave.replaceChildren(icone(escondida ? "olhoCorte" : "olho"));
+      verChave.setAttribute("title", escondida ? "Ocultar a chave" : "Mostrar a chave");
+    });
+    const modelo = h("select", { "aria-label": "Modelo" }, h("option", { value: this.config.modelo }, this.config.modelo));
     const status = h("div", { class: "status" });
-    const nomes = h("input", { type: "checkbox", ...(this.config.nomes ? { checked: true } : {}) });
-    const cnpj = h("input", { type: "checkbox", ...(this.config.cnpj ? { checked: true } : {}) });
+    const nomes = h("input", { type: "checkbox", class: "switch", ...(this.config.nomes ? { checked: true } : {}) });
+    const cnpj = h("input", { type: "checkbox", class: "switch", ...(this.config.cnpj ? { checked: true } : {}) });
     void listarModelos()
       .then((lista) => {
         modelo.replaceChildren(
           ...lista.map((m) =>
-            h("option", { value: m.id, ...(m.id === this.config.modelo ? { selected: true } : {}) }, `${m.nome} \u2014 US$ ${m.precoEntrada.toFixed(2)} / ${m.precoSaida.toFixed(2)} por milh\u00E3o`),
+            h("option", { value: m.id, ...(m.id === this.config.modelo ? { selected: true } : {}) }, `${m.nome} \u2014 US$ ${m.precoEntrada.toFixed(2)} / ${m.precoSaida.toFixed(2)}`),
           ),
         );
       })
-      .catch(() => (status.textContent = "N\u00E3o foi poss\u00EDvel listar os modelos agora; o modelo atual ser\u00E1 mantido."));
+      .catch(() => {
+        status.className = "status";
+        status.textContent = "N\u00E3o foi poss\u00EDvel listar os modelos agora; o modelo atual ser\u00E1 mantido.";
+      });
 
-    const salvar = h("button", { class: "primario" }, "Salvar e come\u00E7ar");
+    const salvar = h("button", { class: "primario" }, obrigatorio ? "Salvar e come\u00E7ar" : "Salvar");
+    const fechar = h("button", { class: "icone", title: "Fechar", "aria-label": "Fechar" }, icone("fechar"));
+    const dlg = h(
+      "dialog",
+      { class: "modal", "aria-labelledby": "tituloConfig", closedby: obrigatorio ? "none" : "any" },
+      h("div", { class: "modal-topo" }, h("h2", { id: "tituloConfig" }, "Configura\u00E7\u00E3o"), obrigatorio ? null : fechar),
+      h(
+        "div",
+        { class: "modal-corpo" },
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Chave do OpenRouter"),
+          h("div", { class: "com-botao" }, chave, verChave),
+          h("div", { class: "ajuda" }, "Crie em openrouter.ai/keys. Fica guardada s\u00F3 neste navegador; o SEI Pro n\u00E3o tem servidor e n\u00E3o v\u00EA a sua chave."),
+        ),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Modelo"),
+          modelo,
+          h("div", { class: "ajuda" }, "Somente modelos que usam ferramentas. Pre\u00E7os em d\u00F3lares por milh\u00E3o de tokens (entrada / sa\u00EDda)."),
+        ),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Privacidade"),
+          h("label", { class: "linha-switch" }, nomes, h("span", {}, "Mascarar nomes de pessoas", h("small", {}, "Interessados e nomes ap\u00F3s \u201CSr.\u201D, \u201Crequerente\u201D, \u201Cfilho de\u201D..."))),
+          h("label", { class: "linha-switch" }, cnpj, h("span", {}, "Mascarar tamb\u00E9m CNPJ", h("small", {}, "Empresas; CPF, e-mail e telefone s\u00E3o sempre mascarados."))),
+          h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, PRIVACIDADE)),
+        ),
+      ),
+      h("div", { class: "modal-acoes" }, status, obrigatorio ? null : h("button", { onclick: () => dlgFechar() }, "Cancelar"), salvar),
+    );
+    const dlgFechar = () => dlg.close();
+
     salvar.addEventListener("click", async () => {
+      const k = chave.value.trim();
+      if (!k) {
+        status.className = "status erro";
+        status.textContent = "Informe a chave.";
+        return;
+      }
       salvar.disabled = true;
       status.className = "status";
       status.textContent = "Conferindo a chave...";
-      const k = chave.value.trim();
-      const r = await conferirChave(k).catch(() => ({ ok: false }));
-      if (!r.ok) {
-        status.className = "status erro";
-        status.textContent = "A chave n\u00E3o foi aceita pelo OpenRouter.";
-        salvar.disabled = false;
-        return;
+      if (k !== this.config.chave) {
+        const r = await conferirChave(k).catch(() => ({ ok: false }));
+        if (!r.ok) {
+          status.className = "status erro";
+          status.textContent = "A chave n\u00E3o foi aceita pelo OpenRouter.";
+          salvar.disabled = false;
+          return;
+        }
       }
-      this.config = { chave: k, modelo: modelo.value || MODELO_PADRAO, nomes: nomes.checked, cnpj: cnpj.checked };
-      await chrome.storage.local.set({ [CHAVE_CONFIG]: this.config });
-      this.motor = null;
-      await this.telaConversa();
+      await this.aplicarConfig({ chave: k, modelo: modelo.value || MODELO_PADRAO, nomes: nomes.checked, cnpj: cnpj.checked });
+      dlg.close();
     });
+    fechar.addEventListener("click", dlgFechar);
+    // Esc e clique fora: `closedby` resolve no Chrome 134+/Firefox 141+; abaixo disso, à mão.
+    if (!("closedBy" in HTMLDialogElement.prototype)) {
+      if (obrigatorio) dlg.addEventListener("cancel", (ev) => ev.preventDefault());
+      else
+        dlg.addEventListener("click", (ev) => {
+          if (ev.target !== dlg) return;
+          const r = dlg.getBoundingClientRect();
+          const dentro = ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+          if (!dentro) dlg.close();
+        });
+    }
+    dlg.addEventListener("close", () => dlg.remove());
+    document.body.append(dlg);
+    dlg.showModal();
+  }
 
-    this.raiz.replaceChildren(
-      h("div", { class: "topo" }, h("span", { class: "marca" }, "Agente de IA \u2014 configura\u00E7\u00E3o")),
-      h(
-        "div",
-        { class: "config" },
-        h("div", {}, h("label", { for: "k" }, "Chave do OpenRouter"), chave, h("div", { class: "ajuda" }, "Crie em openrouter.ai/keys. Fica guardada s\u00F3 neste navegador; o SEI Pro n\u00E3o tem servidor e n\u00E3o v\u00EA a sua chave.")),
-        h("div", {}, h("label", {}, "Modelo"), modelo, h("div", { class: "ajuda" }, "Somente modelos que usam ferramentas. Pre\u00E7os em d\u00F3lares por milh\u00E3o de tokens (entrada / sa\u00EDda).")),
-        h("div", {}, h("label", { class: "check" }, nomes, h("span", {}, "Mascarar nomes de pessoas (interessados e nomes ap\u00F3s \"Sr.\", \"requerente\", \"filho de\"...)"))),
-        h("div", {}, h("label", { class: "check" }, cnpj, h("span", {}, "Mascarar tamb\u00E9m CNPJ (empresas)"))),
-        h(
-          "div",
-          { class: "ajuda" },
-          "Antes de qualquer texto sair do navegador, CPF, e-mail, telefone, endere\u00E7o, conta banc\u00E1ria, CID e outros dados pessoais s\u00E3o trocados por r\u00F3tulos como [CPF_1]. Documentos restritos s\u00F3 s\u00E3o lidos com a sua autoriza\u00E7\u00E3o; processos sigilosos nunca. Toda altera\u00E7\u00E3o no SEI precisa da sua aprova\u00E7\u00E3o.",
-        ),
-        salvar,
-        status,
-      ),
-    );
+  /** Salva a configuração e refaz o motor mantendo a conversa e os pseudônimos. */
+  private async aplicarConfig(nova: Config): Promise<void> {
+    this.config = nova;
+    await chrome.storage.local.set({ [CHAVE_CONFIG]: this.config });
+    this.motor?.parar();
+    const historico = this.motor?.mensagens() ?? [];
+    this.motor = this.criarMotor(Pseudonimos.importar(this.privacidade.exportar(), { nomes: nova.nomes, cnpj: nova.cnpj }));
+    if (historico.length) this.motor.restaurar([...historico], this.uso);
+    this.redesenhar();
+    this.elEntrada.focus();
   }
 
   // ------------------------------------------------------------- conversa
@@ -145,103 +349,27 @@ class App {
     });
   }
 
-  private async telaConversa(): Promise<void> {
-    this.motor ??= this.criarMotor();
-    this.elAba = h("span", { class: "aba" });
-    this.elCusto = h("span", { class: "custo", title: "Custo desta conversa informado pelo OpenRouter" });
-    this.elTarefas = h("div", { class: "tarefas", hidden: true });
-    this.elConversa = h("div", { class: "conversa", role: "log", "aria-live": "polite" });
-    this.elEntrada = h("textarea", { rows: "2", placeholder: "Pe\u00E7a algo sobre o SEI...  (Enter envia, Shift+Enter quebra linha)", "aria-label": "Mensagem" });
-    this.elEnviar = h("button", { class: "primario", title: "Enviar" }, "Enviar");
-    this.elAnexo = h("div", { class: "anexo", hidden: true });
-    const arquivo = h("input", { type: "file", accept: ".csv,.txt,.md,.json,.tsv", class: "sr-only" });
-    const anexar = h("button", { class: "icone", title: "Anexar planilha CSV ou texto" }, "\u{1F4CE}");
-
-    anexar.addEventListener("click", () => arquivo.click());
-    arquivo.addEventListener("change", async () => {
-      const f = arquivo.files?.[0];
-      if (!f) return;
-      const bytes = new Uint8Array(await f.arrayBuffer());
-      let texto: string;
-      try {
-        texto = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-      } catch {
-        texto = new TextDecoder("windows-1252").decode(bytes); // CSV do Excel
-      }
-      this.anexo = { nome: f.name, texto: texto.slice(0, 60_000) };
-      this.elAnexo.hidden = false;
-      this.elAnexo.replaceChildren(`Anexo: ${f.name} (${texto.length.toLocaleString("pt-BR")} caracteres) `, h("button", { class: "icone", onclick: () => ((this.anexo = null), (this.elAnexo.hidden = true)) }, "remover"));
-      arquivo.value = "";
-    });
-
-    this.elEntrada.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" && !ev.shiftKey) {
-        ev.preventDefault();
-        this.elEnviar.click();
-      }
-    });
-    this.elEntrada.addEventListener("input", () => {
-      this.elEntrada.style.height = "auto";
-      this.elEntrada.style.height = `${Math.min(this.elEntrada.scrollHeight, 180)}px`;
-    });
-    this.elEnviar.addEventListener("click", () => {
-      if (this.motor?.ocupado) this.motor.parar();
-      else void this.enviar(this.elEntrada.value);
-    });
-
-    this.raiz.replaceChildren(
-      h(
-        "div",
-        { class: "topo" },
-        h("span", { class: "marca" }, "Agente de IA"),
-        this.elAba,
-        this.elCusto,
-        h("button", { class: "icone", title: "Nova conversa", onclick: () => void this.novaConversa() }, "\u2795"),
-        h("button", { class: "icone", title: "Configura\u00E7\u00E3o", onclick: () => this.telaConfig() }, "\u2699"),
-      ),
-      h("div", { class: "privacidade" }, "Dados pessoais s\u00E3o mascarados antes de sair do navegador. Escritas no SEI s\u00F3 com a sua aprova\u00E7\u00E3o."),
-      this.elTarefas,
-      this.elConversa,
-      h(
-        "div",
-        { class: "rodape" },
-        h("div", { class: "atalhos" }, ...ATALHOS.map(([rotulo, texto]) => h("button", { onclick: () => void this.enviar(texto) }, rotulo))),
-        this.elAnexo,
-        h("div", { class: "caixa" }, anexar, arquivo, this.elEntrada, this.elEnviar),
-      ),
-    );
-    await this.restaurarSessao();
-    this.atualizarAba();
-    this.redesenhar();
-    this.elEntrada.focus();
-  }
-
-  private atualizarAba(): void {
-    if (!this.elAba) return;
-    const aba = this.ponte.atual();
-    this.elAba.replaceChildren(
-      h("span", { class: `ponto${aba ? " on" : ""}` }),
-      aba ? `${aba.host} \u2014 ${aba.titulo.replace(/^SEI\s*-\s*/, "")}` : "Nenhuma aba do SEI conectada (abra ou recarregue o SEI)",
-    );
-    this.elAba.title = this.elAba.textContent ?? "";
-  }
-
   private async enviar(texto: string): Promise<void> {
     const t = texto.trim();
     if (!t || !this.motor || this.motor.ocupado) return;
+    if (!this.config.chave) {
+      this.abrirConfig(true);
+      return;
+    }
     this.elEntrada.value = "";
     this.elEntrada.style.height = "auto";
     const comAnexo = this.anexo ? `${t}\n\n[Anexo: ${this.anexo.nome}]\n${this.anexo.texto}` : t;
     this.adicionar({ tipo: "usuario", texto: this.anexo ? `${t}\n\u{1F4CE} ${this.anexo.nome}` : t });
     this.anexo = null;
     this.elAnexo.hidden = true;
-    this.elEnviar.textContent = "Parar";
     try {
-      await this.motor.enviar(comAnexo);
+      const promessa = this.motor.enviar(comAnexo);
+      this.estadoEnvio();
+      await promessa;
     } catch (e) {
       this.adicionar({ tipo: "erro", texto: (e as Error).message });
     } finally {
-      this.elEnviar.textContent = "Enviar";
+      this.estadoEnvio();
       await this.salvarSessao();
     }
   }
@@ -254,6 +382,7 @@ class App {
     this.tarefas = [];
     await chrome.storage.session?.remove(CHAVE_SESSAO).catch(() => undefined);
     this.redesenhar();
+    this.elEntrada.focus();
   }
 
   // ------------------------------------------------------------- transcrição
@@ -276,24 +405,44 @@ class App {
       el.append(markdown(item.texto));
       return el;
     }
-    return h("div", { class: `msg ${item.tipo === "decisao" ? "aviso" : item.tipo}` }, item.texto);
+    if (item.tipo === "aviso" || item.tipo === "decisao") return h("div", { class: "msg aviso" }, icone("alerta", 14), h("span", {}, item.texto));
+    if (item.tipo === "erro") return h("div", { class: "msg erro" }, icone("alerta", 14), h("span", {}, item.texto));
+    return h("div", { class: "msg usuario" }, item.texto);
   }
 
   private redesenhar(): void {
     this.elConversa.replaceChildren(...this.transcricao.map((i) => this.desenharItem(i)));
-    if (!this.transcricao.length) {
-      this.elConversa.append(
-        h(
-          "div",
-          { class: "vazio" },
-          h("h2", {}, "O que fa\u00E7o no SEI por voc\u00EA?"),
-          h("p", {}, "Consulto processos e documentos, altero sigilo em lote, crio e escrevo documentos, marco, anoto e atribuo processos. Voc\u00EA aprova toda altera\u00E7\u00E3o antes de ela acontecer."),
-        ),
-      );
-    }
+    if (!this.transcricao.length) this.elConversa.append(this.boasVindas());
     this.elCusto.textContent = this.uso.custo ? moeda(this.uso.custo) : "";
     this.desenharTarefas();
+    this.estadoEnvio();
     this.rolar();
+  }
+
+  /** Tela de início: o que o agente faz, sugestões de pedido e o aviso de privacidade. */
+  private boasVindas(): HTMLElement {
+    return h(
+      "div",
+      { class: "vazio" },
+      h("span", { class: "logo" }, icone("faisca", 26)),
+      h("h2", {}, "O que fa\u00E7o no SEI por voc\u00EA?"),
+      h("p", {}, "Consulto processos e documentos, altero sigilo em lote, crio e escrevo documentos, marco, anoto e atribuo processos."),
+      this.config.chave
+        ? h(
+            "div",
+            { class: "sugestoes" },
+            ...ATALHOS.map((a) =>
+              h(
+                "button",
+                { class: "sugestao", onclick: () => void this.enviar(a.prompt) },
+                h("span", { class: "badge" }, icone("faisca", 14)),
+                h("span", {}, h("b", {}, a.rotulo), h("small", {}, a.descricao)),
+              ),
+            ),
+          )
+        : h("button", { class: "primario", onclick: () => this.abrirConfig(true) }, "Configurar a chave do OpenRouter"),
+      h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, PRIVACIDADE_CURTA)),
+    );
   }
 
   private rolar(): void {
@@ -370,6 +519,14 @@ class App {
     } else b.el.remove();
   }
 
+  /** Fecha as ações de um cartão decidido, deixando no lugar o que foi decidido. */
+  private encerrarCartao(cartao: HTMLElement, seletor: string, texto: string, sim: boolean): HTMLElement {
+    const aviso = h("div", { class: "decidido" }, icone(sim ? "check" : "fechar", 14), h("span", {}, texto));
+    cartao.querySelector(seletor)?.replaceWith(aviso);
+    this.transcricao.push({ tipo: "decisao", texto });
+    return aviso;
+  }
+
   private cartaoPlano(p: PlanoPrevisto): Promise<DecisaoPlano> {
     this.fecharBolha();
     return new Promise((resolver) => {
@@ -402,7 +559,7 @@ class App {
       const cartao = h(
         "div",
         { class: "cartao plano" },
-        h("h4", {}, "Aprovar altera\u00E7\u00F5es no SEI"),
+        h("div", { class: "cartao-topo" }, h("span", { class: "badge" }, icone("lapis", 15)), h("h4", {}, "Aprovar altera\u00E7\u00F5es no SEI")),
         p.passos.length > 1 || p.objetivo !== p.passos[0]?.rotulo ? h("div", { class: "sub" }, p.objetivo) : null,
         ...p.passos.map((passo, i) => {
           const linhas = passo.previa.slice(0, 15).map((item) =>
@@ -447,11 +604,9 @@ class App {
         h("div", { class: "acoes" }, aprovar, recusar),
       );
       const decidir = (d: DecisaoPlano, texto: string) => {
-        const aviso = h("div", { class: "decidido" }, texto);
-        cartao.querySelector(".acoes")?.replaceWith(aviso);
-        this.aoFimDoPlano = () => d.aprovado && (aviso.textContent = "Aprovado e executado.");
+        const aviso = this.encerrarCartao(cartao, ".acoes", texto, Boolean(d.aprovado));
+        this.aoFimDoPlano = () => d.aprovado && aviso.replaceChildren(icone("check", 14), h("span", {}, "Aprovado e executado."));
         motivo.hidden = true;
-        this.transcricao.push({ tipo: "decisao", texto });
         resolver(d);
       };
       aprovar.addEventListener("click", () => {
@@ -480,13 +635,12 @@ class App {
       const cartao = h(
         "div",
         { class: "cartao consentimento" },
-        h("h4", {}, "Documento restrito"),
+        h("div", { class: "cartao-topo" }, h("span", { class: "badge" }, icone("alerta", 15)), h("h4", {}, "Documento restrito")),
         h("div", { class: "sub" }, detalhe),
         h("div", {}, "O agente precisa enviar o conte\u00FAdo de documentos RESTRITOS ao modelo de IA (com dados pessoais mascarados). Permitir nesta conversa?"),
       );
       const decidir = (sim: boolean) => {
-        cartao.querySelector(".acoes")?.replaceWith(h("div", { class: "decidido" }, sim ? "Permitido nesta conversa." : "N\u00E3o permitido."));
-        this.transcricao.push({ tipo: "decisao", texto: sim ? "Leitura de restritos permitida nesta conversa." : "Leitura de restritos n\u00E3o permitida." });
+        this.encerrarCartao(cartao, ".acoes", sim ? "Leitura de restritos permitida nesta conversa." : "Leitura de restritos n\u00E3o permitida.", sim);
         resolver(sim);
       };
       cartao.append(h("div", { class: "acoes" }, h("button", { class: "primario", onclick: () => decidir(true) }, "Permitir"), h("button", { onclick: () => decidir(false) }, "N\u00E3o permitir")));
@@ -499,11 +653,10 @@ class App {
     this.fecharBolha();
     return new Promise((resolver) => {
       const livre = h("input", { type: "text", placeholder: "Outra resposta..." });
-      const cartao = h("div", { class: "cartao" }, h("h4", {}, pergunta));
+      const cartao = h("div", { class: "cartao" }, h("div", { class: "cartao-topo" }, h("span", { class: "badge" }, icone("balao", 15)), h("h4", {}, pergunta)));
       const decidir = (r: string) => {
         if (!r.trim()) return;
-        cartao.querySelector(".opcoes-pergunta")?.replaceWith(h("div", { class: "decidido" }, `Resposta: ${r}`));
-        this.transcricao.push({ tipo: "decisao", texto: `${pergunta} \u2192 ${r}` });
+        this.encerrarCartao(cartao, ".opcoes-pergunta", `${pergunta} \u2192 ${r}`, true);
         resolver(r);
       };
       livre.addEventListener("keydown", (ev) => ev.key === "Enter" && decidir(livre.value));

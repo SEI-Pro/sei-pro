@@ -62,6 +62,17 @@ Para acrescentar uma ferramenta: operação no núcleo (`sei-nucleo/src/dominio`
 entrada em `ponte/operacoes.ts` e definição em `tools/sei.ts` (escrita usa
 `escritaEmLote`, que já faz prévia e resultado por item).
 
+## Painel (UI)
+
+Uma tela só — a conversa. A configuração é um `<dialog>` modal por cima dela (na primeira vez,
+sem chave, ele não fecha sem salvar); os cartões de plano, consentimento e pergunta nascem na
+própria conversa. `estatico/agente.css` guarda todo o design em tokens no `:root`, redefinidos
+no modo escuro: nenhuma cor literal fora dali. Os ícones são SVG desenhados no DOM (`icone()`
+em `src/painel/dom.ts`), nunca emoji nem `innerHTML`.
+
+O alvo do build é Chrome 116 e Firefox 115, então o CSS não usa aninhamento nem `:has()`, e o
+que é recente (`closedby`, `@starting-style`) tem recuo ou degrada sozinho.
+
 ## Desenvolvimento
 
 ```

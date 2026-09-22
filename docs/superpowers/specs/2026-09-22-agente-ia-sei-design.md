@@ -258,11 +258,19 @@ se aprofunda com `contexto_tela`/`processo_consultar`.
   tarefas fixada quando o modelo usa `tarefas`.
 - Composer: texto, anexar arquivo (CSV/XLSX/PDF/DOCX → disponível às tools; CSV entra no modo
   `modelo + dados[]`), atalhos, botão parar.
-- Configuração (primeira abertura): chave OpenRouter (validada com `GET /api/v1/key`), modelo,
-  aviso de privacidade, opção "anonimizar também nomes de interessados" (ligada por padrão).
+- Configuração em **modal** (`<dialog class="modal">`, aberto com `showModal()`): chave
+  OpenRouter (validada com `GET /api/v1/key`), modelo, e os interruptores de privacidade.
+  Na primeira abertura, sem chave, o modal vem `closedby="none"` (não fecha sem salvar); depois,
+  `closedby="any"` — Esc e clique fora fecham, com recuo em JavaScript para navegador anterior
+  ao Chrome 134/Firefox 141. Salvar refaz o motor **mantendo** a conversa e os pseudônimos.
 - Estado da conversa em `chrome.storage.session` (sobrevive a recarregar a aba; some ao fechar
   o navegador). Nada vai para `storage.sync`.
-- Visual alinhado às Ferramentas de PDF (mesma paleta, tema claro/escuro).
+- Uma tela só: a conversa. Configuração e cartões entram por cima dela, nunca a substituem.
+- Design: tokens de cor, espaço, raio e sombra no `:root` de `estatico/agente.css` (redefinidos
+  em `prefers-color-scheme: dark`); nenhuma cor literal fora dali. Ícones em SVG desenhados no
+  DOM (`icone()` em `painel/dom.ts`) — nada de emoji, que muda de forma a cada sistema, e nada
+  de `innerHTML`. Botão de ícone com alvo de 34px. Movimento só com `prefers-reduced-motion`
+  respeitado. Sem aninhamento de CSS nem `:has()`: o build mira Chrome 116 e Firefox 115.
 
 ## 9. Privacidade e segurança
 
