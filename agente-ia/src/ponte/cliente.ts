@@ -51,7 +51,12 @@ export class PontePainel {
         if (this.abas.get(aba.id)?.porta === porta) this.abas.delete(aba.id);
         for (const [id, p] of this.pendentes) {
           if (p.aba.porta === porta) {
-            p.erro(new ErroPonte("SEI_ABA_FECHADA", "A aba do SEI foi fechada ou recarregada durante a opera\u00E7\u00E3o."));
+            p.erro(
+              new ErroPonte(
+                "SEI_ABA_FECHADA",
+                "A aba do SEI foi fechada ou recarregada durante a opera\u00E7\u00E3o. Se era uma escrita, ela pode ter sido conclu\u00EDda no SEI: confira o estado (leitura ou pr\u00E9via) antes de repetir.",
+              ),
+            );
             this.pendentes.delete(id);
           }
         }

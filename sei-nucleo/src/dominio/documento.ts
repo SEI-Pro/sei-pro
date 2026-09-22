@@ -22,7 +22,7 @@ export interface DocumentoLocalizado {
 }
 
 /** Nº SEI do documento → documento na árvore do processo dele. */
-export async function localizarDocumento(sei: Sei, numero: string, op?: OpcoesHttp): Promise<DocumentoLocalizado> {
+export async function localizarDocumento(sei: Sei, numero: string, op?: OpcoesHttp & { forcar?: boolean }): Promise<DocumentoLocalizado> {
   const loc = await sei.localizar(numero, op);
   const arvore = await sei.arvore(numero, op);
   const alvo = numero.replace(/\D/g, "");

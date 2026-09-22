@@ -31,6 +31,7 @@ import {
   marcadoresDoProcesso,
   registrarAndamento,
 } from "@nucleo/dominio/acoesProcesso";
+import { assinarDocumento, enviarProcesso } from "@nucleo/dominio/tramitacao";
 import { ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { lerContexto, type Sei } from "@nucleo/sei";
@@ -145,6 +146,15 @@ export const OPERACOES: Record<string, Op> = {
   "processo.alterar": (sei, a, sinal) => alterarProcesso(sei, String(a.processo), a.alteracao as AlteracaoProcesso, { aplicar: aplicar(a), sinal }),
   "processo.concluir": (sei, a, sinal) => concluirProcesso(sei, String(a.processo), { reabrirEm: txt(a.reabrir_em) }, { aplicar: aplicar(a), sinal }),
   "processo.reabrir": (sei, a, sinal) => reabrirProcesso(sei, String(a.processo), { aplicar: aplicar(a), sinal }),
+  "processo.enviar": (sei, a, sinal) =>
+    enviarProcesso(
+      sei,
+      String(a.processo),
+      { unidades: (a.unidades as string[]) ?? [], manterAberto: a.manter_aberto === true, removerAnotacao: a.remover_anotacao === true, enviarEmail: a.enviar_email === true, retornoEm: txt(a.retorno_em) },
+      { aplicar: aplicar(a), sinal },
+    ),
+  // A senha chega do painel (digitada pelo usuário no cartão de aprovação) e só vai para o POST.
+  "documento.assinar": (sei, a, sinal) => assinarDocumento(sei, String(a.numero), { cargo: txt(a.cargo), senha: txt(a.senha) }, { aplicar: aplicar(a), sinal }),
   "processo.marcador": (sei, a, sinal) =>
     definirMarcador(sei, String(a.processo), { marcador: String(a.marcador), texto: txt(a.texto), remover: a.remover === true }, { aplicar: aplicar(a), sinal }),
   "processo.anotacao": (sei, a, sinal) =>

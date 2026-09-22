@@ -58,6 +58,7 @@ function seiFalso(log: Array<{ op: string; args: Record<string, unknown> }>) {
     if (op === "processo.consultar") return { protocolo: args.processo, tipo: "Contrato", interessados: ["Maria Aparecida Souza"], especificacao: "Contrato de Maria Aparecida Souza, CPF 529.982.247-25" };
     if (op === "processo.anotacao") return { alvo: args.processo, mudancas: [{ campo: "Anotação", antes: "", depois: args.texto }], resumo: "ok", aplicado: args.aplicar };
     if (op === "documento.criar") return { alvo: args.processo, mudancas: [], resumo: "criado", aplicado: args.aplicar, dados: { numero: "0200001" } };
+    if (op === "documento.assinar") return { alvo: args.numero, mudancas: [{ campo: "Assinatura", antes: "", depois: "assinado" }], resumo: "assinado", aplicado: args.aplicar, dados: { cargos: "Analista|Chefe" } };
     if (op === "documento.editar") return { alvo: args.numero, mudancas: [], resumo: "editado", aplicado: true };
     return {};
   };
@@ -189,6 +190,41 @@ export async function verificarMotor(): Promise<void> {
     });
     await m2.enviar("resuma");
     checar("processo sigiloso na tela: nada vai ao modelo", !chamouModelo && u.avisos.some((a) => a.includes("sigiloso")));
+  }
+
+  secao("motor: assinatura sem senha no modelo");
+  {
+    const vistos: Mensagem[][] = [];
+    const log: Array<{ op: string; args: Record<string, unknown> }> = [];
+    const u = ui({ aprovado: true, assinatura: { cargo: "Chefe", senha: "s3nh4-secreta" } });
+    const m = new Motor({
+      provedor: provedor([() => ({ texto: "", chamadas: [chamada("documento_assinar", { documentos: ["0104044"] })], fim: "tool_calls" })], vistos),
+      tools,
+      ui: u,
+      privacidade: new Pseudonimos(),
+      sei: seiFalso(log),
+      sistema: () => "s",
+    });
+    await m.enviar("assine");
+    checar("cargos do SEI chegam ao cartao", JSON.stringify(u.planos[0].passos[0].previa[0].cargos) === '["Analista","Chefe"]');
+    const exec = log.find((l) => l.op === "documento.assinar" && l.args.aplicar === true);
+    checar("senha chega a operacao na aba", exec?.args.senha === "s3nh4-secreta" && exec?.args.cargo === "Chefe");
+    checar("senha nunca vai ao modelo", !JSON.stringify(vistos).includes("s3nh4-secreta"));
+  }
+
+  secao("motor: plano sem mudanca nao pede aprovacao");
+  {
+    const u = ui({ aprovado: true });
+    const m = new Motor({
+      provedor: provedor([() => ({ texto: "", chamadas: [chamada("processo_anotacao", { processos: ["1"], texto: "" })], fim: "tool_calls" })], []),
+      tools,
+      ui: u,
+      privacidade: new Pseudonimos(),
+      sei: async (op, args) => (op === "processo.anotacao" ? { alvo: "1", mudancas: [], resumo: "Nada a alterar", aplicado: false } : seiFalso([])(op, args)),
+      sistema: () => "s",
+    });
+    await m.enviar("tire a anotacao");
+    checar("sem cartao quando nada muda", u.planos.length === 0);
   }
 
   secao("tools: contrato");

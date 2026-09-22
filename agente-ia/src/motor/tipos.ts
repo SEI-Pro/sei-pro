@@ -60,6 +60,8 @@ export interface PreviaItem {
   resumo: string;
   /** Erro ao calcular a prévia deste item (ex.: processo fechado). */
   erro?: string;
+  /** Assinatura: cargos/funções que o SEI oferece ao usuário para este documento. */
+  cargos?: string[];
 }
 
 export interface PassoPlano {

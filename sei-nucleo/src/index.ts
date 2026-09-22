@@ -39,3 +39,4 @@ export type { OpcoesEscrita, ResultadoEscrita } from "./dominio/escrita";
 export { abrirEditor, editarConteudo, lerEditor, textoDoHtml, type EdicaoConteudo, type EditorDocumento, type SecaoEditor } from "./dominio/editor";
 export { Pseudonimos, type Categoria, type OpcoesAnonimizacao } from "./privacidade/anonimizar";
 export { listarOpcoes, type ListaOpcoes, type OpcaoSei } from "./dominio/opcoes";
+export { enviarProcesso, assinarDocumento, type Envio, type Assinatura } from "./dominio/tramitacao";

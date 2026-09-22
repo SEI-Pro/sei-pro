@@ -47,6 +47,9 @@ Leitura: `contexto_tela`, `sei_opcoes`, `processos_listar`, `processo_consultar`
 Escrita (em lote, com prévia): `processo_alterar`, `processo_marcador`,
 `processo_anotacao`, `processo_andamento`, `processo_atribuir`,
 `processo_acompanhamento`, `processo_concluir`, `processo_reabrir`,
+`processo_enviar` (irreversível: o cartão exige confirmação), `documento_assinar`
+(o cartão pede cargo e senha; a senha vai do painel direto para a aba e nunca entra
+nos argumentos que o modelo vê),
 `documento_alterar` (sigilo em lote), `documento_criar` (documentos em lote, com
 conteúdo), `documento_editar`.
 
@@ -61,7 +64,7 @@ entrada em `ponte/operacoes.ts` e definição em `tools/sei.ts` (escrita usa
 
 ```
 npm install            # também em ../sei-nucleo e ../ferramentas-pdf (pdf.js)
-npm run verificar      # motor com provedor roteirizado (20 verificações)
+npm run verificar      # motor com provedor roteirizado (24 verificações)
 npm run tipos
 npm run build          # gera os arquivos em ../dist
 ```
@@ -76,6 +79,6 @@ plano, Task 13.
   pelo servidor; com o editor aberto, o SEI avisa de nova versão ao salvar).
 - OCR de PDF digitalizado (reaproveitar o Tesseract das Ferramentas de PDF).
 - Firefox (`sidebar_action` nos manifests v2).
-- Enviar, assinar, excluir, cancelar assinatura, ciência, pesquisa avançada;
+- Excluir, cancelar assinatura, ciência, pesquisa avançada;
   blocos e sobrestamento (fase 3).
 - Remover a ferramenta de IA antiga (`sei-pro-ai.js` e IA do editor).

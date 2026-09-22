@@ -22,7 +22,7 @@ export interface ContextoSei {
   versao: string;
   maior: number;
   unidade: { sigla: string; nome: string };
-  usuario: { nome: string; login: string };
+  usuario: { nome: string; login: string; orgao?: string };
 }
 
 /** Lê a versão do SEI do título do logo ou da query string dos assets. */
@@ -37,14 +37,14 @@ export function lerContexto(pagina: Pagina): ContextoSei {
   const d = pagina.doc;
   const unidade = d.querySelector("#lnkInfraUnidade");
   const usuario = d.querySelector("#lnkUsuarioSistema")?.getAttribute("title") ?? "";
-  const [, nome = "", login = ""] = /^(.*?)\s*\(([^/)]+)/.exec(usuario) ?? [];
+  const [, nome = "", login = "", orgao = ""] = /^(.*?)\s*\(([^/)]+)(?:\/([^)]+))?/.exec(usuario) ?? [];
   const versao = lerVersao(pagina.html);
   return {
     host: new URL(pagina.url).host,
     versao,
     maior: Number(versao.split(".")[0]) || 0,
     unidade: { sigla: textoDe(unidade), nome: unidade?.getAttribute("title") ?? "" },
-    usuario: { nome: nome.trim(), login: login.trim() },
+    usuario: { nome: nome.trim(), login: login.trim(), orgao: orgao.trim() },
   };
 }
 

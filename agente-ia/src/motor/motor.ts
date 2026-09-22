@@ -254,6 +254,10 @@ export class Motor {
         }
       }),
     );
+    // Nada muda em nenhum item (ex.: documento já assinado, marcador já aplicado): não pede aprovação.
+    if (passos.every((p) => !p.dependente && p.previa.length && p.previa.every((i) => !i.erro && !i.mudancas.length))) {
+      return passos.map((p) => ({ executado: false, nada_a_fazer: true, itens: p.previa.map((i) => ({ alvo: i.alvo, resumo: i.resumo })) }));
+    }
     const plano: PlanoPrevisto = { objetivo: objetivo || passos.map((p) => p.rotulo).join("; "), passos };
     const decisao: DecisaoPlano = await this.o.ui.aprovarPlano(plano);
     if (!decisao.aprovado) {

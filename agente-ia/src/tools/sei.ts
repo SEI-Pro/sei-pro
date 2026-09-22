@@ -38,15 +38,16 @@ function escritaEmLote(d: {
   parametros: Esquema;
   op: string;
   alvos: (a: Args) => string[];
-  argsOp: (a: Args, alvo: string) => Args;
+  argsOp: (a: Args, alvo: string, ctx: ContextoTool) => Args;
   rotulo: (a: Args) => string;
+  efeito?: "escrita" | "irreversivel" | "assinatura";
 }): DefTool {
   const rodar = async (a: Args, ctx: ContextoTool, aplicar: boolean) => {
     const saida: Array<ResultadoEscrita | { alvo: string; erro: string; codigo?: string }> = [];
     for (const alvo of d.alvos(a)) {
       if (ctx.sinal.aborted) break;
       try {
-        saida.push(await ctx.sei<ResultadoEscrita>(d.op, { ...d.argsOp(a, alvo), aplicar }));
+        saida.push(await ctx.sei<ResultadoEscrita>(d.op, { ...d.argsOp(a, alvo, ctx), aplicar }));
       } catch (e) {
         const x = e as { message?: string; codigo?: string };
         saida.push({ alvo, erro: x.message ?? String(e), codigo: x.codigo });
@@ -58,11 +59,13 @@ function escritaEmLote(d: {
     nome: d.nome,
     descricao: d.descricao,
     parametros: d.parametros,
-    efeito: "escrita",
+    efeito: d.efeito ?? "escrita",
     rotulo: d.rotulo,
     previsualizar: async (a, ctx) =>
       (await rodar(a, ctx, false)).map((r) =>
-        "erro" in r ? { alvo: r.alvo, mudancas: [], resumo: "", erro: r.erro } : { alvo: r.alvo, mudancas: r.mudancas, resumo: r.resumo },
+        "erro" in r
+          ? { alvo: r.alvo, mudancas: [], resumo: "", erro: r.erro }
+          : { alvo: r.alvo, mudancas: r.mudancas, resumo: r.resumo, ...(r.dados?.cargos ? { cargos: r.dados.cargos.split("|").filter(Boolean) } : {}) },
       ),
     executar: async (a, ctx) => {
       const r = await rodar(a, ctx, true);
@@ -337,6 +340,37 @@ export const TOOLS_SEI: DefTool[] = [
     alvos: (a) => a.processos as string[],
     argsOp: (_a, alvo) => ({ processo: alvo }),
     rotulo: (a) => `Reabrir ${qtd((a.processos as string[]).length, "processo", "processos")}`,
+  }),
+
+  escritaEmLote({
+    nome: "processo_enviar",
+    descricao:
+      "Envia (tramita) processos para uma ou mais unidades, pela sigla exata (ex.: 'SEGES/DIAP'). Sigla amb\u00EDgua ou inexistente volta como erro com as candidatas: pergunte ao usu\u00E1rio, nunca escolha por conta pr\u00F3pria. Op\u00E7\u00F5es: manter aberto na unidade, remover anota\u00E7\u00E3o, e-mail de notifica\u00E7\u00E3o, retorno programado (data dd/mm/aaaa ou dias). Irrevers\u00EDvel para a unidade: o usu\u00E1rio confirma no cart\u00E3o.",
+    parametros: s.objeto({
+      processos: PROCESSOS,
+      unidades: s.lista(s.texto({ descricao: "Sigla da unidade de destino." }), { min: 1, max: 20 }),
+      "manter_aberto?": s.booleano(),
+      "remover_anotacao?": s.booleano(),
+      "enviar_email?": s.booleano(),
+      "retorno_em?": s.texto({ descricao: "dd/mm/aaaa ou n\u00FAmero de dias." }),
+    }),
+    op: "processo.enviar",
+    efeito: "irreversivel",
+    alvos: (a) => a.processos as string[],
+    argsOp: (a, alvo) => ({ processo: alvo, unidades: a.unidades, manter_aberto: a.manter_aberto, remover_anotacao: a.remover_anotacao, enviar_email: a.enviar_email, retorno_em: a.retorno_em }),
+    rotulo: (a) => `Enviar ${qtd((a.processos as string[]).length, "processo", "processos")} para ${(a.unidades as string[]).join(", ")}`,
+  }),
+
+  escritaEmLote({
+    nome: "documento_assinar",
+    descricao:
+      "Assina documentos como o usu\u00E1rio. Cargo e SENHA s\u00E3o pedidos pelo pr\u00F3prio cart\u00E3o de aprova\u00E7\u00E3o, fora da conversa: NUNCA pe\u00E7a a senha ao usu\u00E1rio nem a coloque em argumentos. Documento j\u00E1 assinado pelo usu\u00E1rio \u00E9 ignorado.",
+    parametros: s.objeto({ documentos: DOCUMENTOS }),
+    op: "documento.assinar",
+    efeito: "assinatura",
+    alvos: (a) => a.documentos as string[],
+    argsOp: (_a, alvo, ctx) => ({ numero: alvo, cargo: ctx.assinatura?.cargo, senha: ctx.assinatura?.senha }),
+    rotulo: (a) => `Assinar ${qtd((a.documentos as string[]).length, "documento", "documentos")}`,
   }),
 
   escritaEmLote({

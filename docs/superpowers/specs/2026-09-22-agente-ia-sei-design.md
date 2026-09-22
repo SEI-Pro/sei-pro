@@ -358,3 +358,13 @@ Entregue e validado ao vivo no SEI SP Treinamento (4.1.5), com a extensão carre
   `processo_concluir`/`processo_reabrir` (F2) foram antecipados.
 - Não validado: chamada real ao OpenRouter (sem chave nesta máquina), editor CK5 do SEI 5 ao
   vivo, Firefox.
+
+### Atualização (22/09/2026, tarde)
+
+- Validado com modelo real (`anthropic/claude-sonnet-5` via OpenRouter): leitura com tools em
+  paralelo (14 s, US$ 0,04); marcador + anotação num plano (US$ 0,12); criar despacho, assinar e
+  enviar para outra unidade mantendo aberto (67 s, US$ 0,17).
+- F2 antecipada: `processo_enviar` (irreversível) e `documento_assinar` (cartão pede cargo e senha;
+  senha nunca vai ao modelo — coberto por teste). Plano sem nenhuma mudança real não pede aprovação.
+- Robustez observada: a aba recarregou no meio de uma assinatura; a operação tinha sido concluída
+  no SEI, e a prévia idempotente ("você já assinou") evitou assinatura duplicada na nova tentativa.

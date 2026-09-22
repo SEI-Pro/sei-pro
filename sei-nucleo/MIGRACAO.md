@@ -50,9 +50,10 @@ validar ao vivo · ⏳ ainda não existe (ver fase no plano).
 | `getFormDocPro`, `setNewDoc`, `docsLote_clickNewDoc/selectDocType/formNewDoc/confirmDocData` | `criarDocumento` | ✅ |
 | `docsLote_editDocContent`, `docsLote_saveDoc`, `setDocAutomatico` | `editarConteudo` (CK4 ✅, CK5 🟡) | ✅/🟡 |
 | `createProc`, `procLote_criarUm` | ⏳ fase 2 (`criarProcesso`) | ⏳ |
-| `getProcessoNaoLido` (envio à própria unidade) | ⏳ fase 2 (`enviarProcesso`) | ⏳ |
-| `reopenProcessAjax`, `execConcluirReabrirProcessoPro` | ⏳ fase 2 | ⏳ |
-| ações Assinar/Excluir/Cancelar assinatura/Ciência/Duplicar das Ações em Lote | ⏳ fase 2 | ⏳ |
+| `getProcessoNaoLido`, `getInteressadosProcessoAjax` (envio e autocompletar de unidade) | `enviarProcesso` (unidade ambígua é erro, nunca o primeiro resultado) | ✅ |
+| `reopenProcessAjax`, `execConcluirReabrirProcessoPro` | `concluirProcesso`, `reabrirProcesso` | ✅ |
+| ação Assinar das Ações em Lote (senha no DOM de iframe oculto) | `assinarDocumento` (senha só no POST; prova = assinatura na árvore) | ✅ |
+| ações Excluir/Cancelar assinatura/Ciência/Duplicar das Ações em Lote | ⏳ fase 2 | ⏳ |
 | blocos (interno e de assinatura), sobrestamento, ciências | ⏳ fase 3 (sem script legado) | ⏳ |
 
 ## Como migrar uma funcionalidade

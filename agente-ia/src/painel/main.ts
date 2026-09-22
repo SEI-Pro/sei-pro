@@ -377,10 +377,26 @@ class App {
       const motivo = h("textarea", { rows: "2", placeholder: "O que ajustar? (opcional)", hidden: true });
       const aprovar = h("button", { class: "primario" }, "Aprovar e executar");
       const recusar = h("button", {}, "Recusar");
-      if (irreversivel) {
-        aprovar.disabled = true;
-        confirma.addEventListener("change", () => (aprovar.disabled = !confirma.checked));
+      // Assinatura: cargo e senha digitados aqui; a senha vai direto para a aba e é descartada.
+      const assinatura = p.passos.some((x) => x.efeito === "assinatura");
+      const cargos = [...new Set(p.passos.flatMap((x) => x.previa.flatMap((i) => i.cargos ?? [])))];
+      // Sem lista (documento criado no mesmo plano): cargo digitado; o núcleo casa com a lista do SEI.
+      const selCargo: HTMLSelectElement | HTMLInputElement = cargos.length
+        ? h("select", { "aria-label": "Cargo ou fun\u00E7\u00E3o" }, ...cargos.map((c) => h("option", { value: c }, c)))
+        : h("input", { type: "text", placeholder: "Cargo ou fun\u00E7\u00E3o (como aparece no SEI)", "aria-label": "Cargo ou fun\u00E7\u00E3o" });
+      const senha = h("input", { type: "password", placeholder: "Senha do SEI", autocomplete: "off", "aria-label": "Senha do SEI" });
+      if (assinatura) {
+        void chrome.storage.local.get("agenteIA_cargo").then((v) => {
+          if (v?.agenteIA_cargo && (!cargos.length || cargos.includes(v.agenteIA_cargo))) selCargo.value = v.agenteIA_cargo;
+          podeAprovar();
+        });
       }
+      const podeAprovar = () => (aprovar.disabled = (irreversivel && !confirma.checked) || (assinatura && (!senha.value || !selCargo.value.trim())));
+      selCargo.addEventListener("input", podeAprovar);
+      confirma.addEventListener("change", podeAprovar);
+      senha.addEventListener("input", podeAprovar);
+      senha.addEventListener("keydown", (ev) => ev.key === "Enter" && !aprovar.disabled && aprovar.click());
+      podeAprovar();
       const total = p.passos.reduce((n, x) => n + x.previa.length, 0);
       const cartao = h(
         "div",
@@ -417,6 +433,15 @@ class App {
         }),
         total > 1 ? h("div", { class: "mais" }, `${total} itens no total.`) : null,
         irreversivel ? h("label", { class: "check" }, confirma, " Entendo que esta a\u00E7\u00E3o n\u00E3o pode ser desfeita.") : null,
+        assinatura
+          ? h(
+              "div",
+              { class: "assinatura" },
+              h("div", { class: "sub" }, "Assinar como o usu\u00E1rio logado. A senha n\u00E3o \u00E9 enviada ao modelo de IA nem guardada."),
+              selCargo,
+              senha,
+            )
+          : null,
         motivo,
         h("div", { class: "acoes" }, aprovar, recusar),
       );
@@ -428,7 +453,12 @@ class App {
         this.transcricao.push({ tipo: "decisao", texto });
         resolver(d);
       };
-      aprovar.addEventListener("click", () => decidir({ aprovado: true }, "Aprovado. Executando..."));
+      aprovar.addEventListener("click", () => {
+        const credencial = assinatura ? { cargo: selCargo.value, senha: senha.value } : undefined;
+        senha.value = "";
+        if (credencial) void chrome.storage.local.set({ agenteIA_cargo: credencial.cargo });
+        decidir({ aprovado: true, assinatura: credencial }, "Aprovado. Executando...");
+      });
       recusar.addEventListener("click", () => {
         if (motivo.hidden) {
           motivo.hidden = false;
