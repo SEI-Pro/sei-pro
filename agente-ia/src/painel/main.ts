@@ -65,6 +65,10 @@ const ATALHOS: Array<{ rotulo: string; descricao: string; prompt: string }> = [
   },
 ];
 
+/** Marca do agente: o robô do SEI Pro, o mesmo ícone que abre o painel no SEI. */
+const marca = (tamanho: number) =>
+  h("img", { class: "logo", src: chrome.runtime.getURL("icons/menu/botpro_icon.svg"), alt: "", width: String(tamanho), height: String(tamanho) });
+
 class App {
   private readonly raiz = document.getElementById("app")!;
   private readonly ponte = new PontePainel();
@@ -164,7 +168,7 @@ class App {
       h(
         "header",
         { class: "topo" },
-        h("span", { class: "logo" }, icone("faisca", 17)),
+        marca(28),
         h("span", { class: "marca" }, h("strong", {}, "Agente de IA"), h("span", {}, "SEI Pro")),
         this.elCusto,
         h("button", { class: "icone", title: "Nova conversa", "aria-label": "Nova conversa", onclick: () => void this.novaConversa() }, icone("mais")),
@@ -424,7 +428,7 @@ class App {
     return h(
       "div",
       { class: "vazio" },
-      h("span", { class: "logo" }, icone("faisca", 26)),
+      marca(52),
       h("h2", {}, "O que fa\u00E7o no SEI por voc\u00EA?"),
       h("p", {}, "Consulto processos e documentos, altero sigilo em lote, crio e escrevo documentos, marco, anoto e atribuo processos."),
       this.config.chave

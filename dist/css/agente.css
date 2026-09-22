@@ -185,17 +185,8 @@ input.switch:checked::after { transform: translateX(15px); background: #fff; }
   backdrop-filter: blur(10px) saturate(1.4);
   border-bottom: 1px solid var(--linha);
 }
-.logo {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  background: var(--grad);
-  color: #fff;
-  box-shadow: var(--sombra-1), inset 0 1px 0 rgba(255, 255, 255, .35);
-}
+/* O ícone traz o próprio desenho e as próprias cores (é o robô do SEI Pro). */
+.logo { flex: none; width: 28px; height: 28px; }
 .marca { display: flex; flex-direction: column; margin-right: auto; min-width: 0; }
 .marca strong { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; }
 .marca span { font-size: 10.5px; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; }
@@ -327,7 +318,7 @@ input.switch:checked::after { transform: translateX(15px); background: #fff; }
 
 /* ----------------------------------------------------------- vazio/início */
 .vazio { margin: auto 0; padding: var(--e3) var(--e1) var(--e5); text-align: center; }
-.vazio .logo { width: 44px; height: 44px; border-radius: 14px; margin: 0 auto var(--e3); }
+.vazio .logo { width: 52px; height: 52px; margin: 0 auto var(--e3); display: block; }
 .vazio h2 { font-size: 18px; font-weight: 650; letter-spacing: -.02em; margin: 0 0 6px; }
 .vazio p { color: var(--ink-2); font-size: 12.5px; margin: 0 auto var(--e4); max-width: 34ch; }
 .sugestoes { display: flex; flex-direction: column; gap: 6px; text-align: left; }
