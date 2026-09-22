@@ -111,6 +111,7 @@ const ICONES: Record<string, Forma[]> = {
     ["path", { d: "M12 2.6l1.7 5 5 1.7-5 1.7-1.7 5-1.7-5-5-1.7 5-1.7z", fill: "currentColor", stroke: "none" }],
     ["path", { d: "M18.6 14.4l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z", fill: "currentColor", stroke: "none" }],
   ],
+  estrela: [["path", { d: "M12 2.2c.7 5 2.6 6.9 7.6 7.6-5 .7-6.9 2.6-7.6 7.6-.7-5-2.6-6.9-7.6-7.6 5-.7 6.9-2.6 7.6-7.6z", fill: "currentColor", stroke: "none" }]],
   mais: [["path", { d: "M12 5v14" }], ["path", { d: "M5 12h14" }]],
   ajustes: [
     ["path", { d: "M4 7h5" }], ["path", { d: "M13 7h7" }], ["circle", { cx: "11", cy: "7", r: "2.1" }],

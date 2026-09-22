@@ -10,6 +10,12 @@
  */
 
 const LIMITE_PAGINAS = 200;
+/**
+ * Páginas que o agente manda ao OCR. Cada uma custa segundos de CPU no painel,
+ * que trava enquanto reconhece; o usuário não pediu o OCR, ele só pediu para
+ * ler o documento. Precisando do resto, existem as Ferramentas de PDF.
+ */
+const PAGINAS_OCR = 5;
 const SEM_TEXTO = "[PDF sem camada de texto (digitalizado).]";
 
 /** Texto das páginas pela camada de texto do PDF (sem OCR). */
@@ -60,7 +66,8 @@ export async function extrairTextoPdf(base64: string, o: { ocr?: boolean } = {})
   if (texto !== SEM_TEXTO || o.ocr === false) return texto;
   const { ocrPdf, ocrDisponivel } = await import("@/lib/ferramentas/ocr");
   if (!ocrDisponivel()) return `${SEM_TEXTO} Este navegador n\u00E3o suporta o OCR local.`;
-  const r = await ocrPdf({ id: "agente", nome: "documento.pdf", tamanho: bytes.length, bytes });
+  const r = await ocrPdf({ id: "agente", nome: "documento.pdf", tamanho: bytes.length, bytes }, { paginas: PAGINAS_OCR });
   if (r.semTexto) return `${SEM_TEXTO} O OCR n\u00E3o reconheceu texto.`;
-  return `[texto obtido por OCR de ${r.paginasProcessadas} p\u00E1gina(s); pode conter erros de reconhecimento]\n\n${await textoDoPdf(r.bytes)}`;
+  const resto = r.totalPaginas > r.paginasProcessadas ? ` de ${r.totalPaginas}; as demais n\u00E3o foram lidas` : "";
+  return `[texto obtido por OCR de ${r.paginasProcessadas} p\u00E1gina(s)${resto}; pode conter erros de reconhecimento]\n\n${await textoDoPdf(r.bytes)}`;
 }

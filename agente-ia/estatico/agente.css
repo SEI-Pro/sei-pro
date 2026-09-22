@@ -287,6 +287,37 @@ input.switch:checked::after { transform: translateX(15px); background: #fff; }
   button:active:not(:disabled) { transform: none; }
 }
 
+/* Indicador de trabalho em curso: a estrela gira e respira, e a palavra tem um
+   brilho passando por cima. Nenhum dos dois é essencial — com movimento
+   reduzido, sobra um pulso discreto e o texto normal. */
+.pensando { align-self: flex-start; display: flex; align-items: center; gap: var(--e2); font-size: 12.5px; color: var(--ink-2); padding: 2px 0; }
+.pensando .svg { color: var(--acento); animation: pensa 2.4s ease-in-out infinite; }
+.pensando .tempo { color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.pensando .tempo:empty { display: none; }
+@keyframes pensa {
+  0%, 100% { transform: rotate(0deg) scale(.8); opacity: .7; }
+  50% { transform: rotate(180deg) scale(1.1); opacity: 1; }
+}
+@supports (-webkit-background-clip: text) {
+  .pensando .palavra {
+    background: linear-gradient(100deg, var(--ink-3) 25%, var(--ink) 45%, var(--ink) 55%, var(--ink-3) 75%);
+    background-size: 240% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: brilho 2.4s linear infinite;
+  }
+}
+@keyframes brilho {
+  from { background-position: 140% 0; }
+  to { background-position: -40% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pensando .svg { animation: pulso 2s ease-in-out infinite; }
+  .pensando .palavra { animation: none; -webkit-text-fill-color: currentColor; color: var(--ink-2); }
+  @keyframes pulso { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+}
+
 /* ---------------------------------------------------------------- cartões */
 .cartao { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); box-shadow: var(--sombra-2); padding: var(--e3); }
 .cartao-topo { display: flex; align-items: center; gap: var(--e2); margin-bottom: var(--e2); }

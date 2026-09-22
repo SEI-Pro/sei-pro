@@ -60,6 +60,15 @@ export interface OpcoesOcr {
    * leitor encontrar a mesma palavra duas vezes.
    */
   pularPaginasComTexto?: boolean;
+
+  /**
+   * Teto de páginas a reconhecer (o padrão é `MAX_PAGINAS_OCR`).
+   *
+   * Existe para quem chama o OCR sem o usuário ter pedido por ele — o Agente de
+   * IA, ao ler um documento digitalizado. Cada página custa segundos de CPU na
+   * aba, e um processo com um digitalizado longo deixaria o painel sem resposta.
+   */
+  paginas?: number;
 }
 
 export interface ResultadoOcr {
@@ -68,6 +77,8 @@ export interface ResultadoOcr {
   paginasProcessadas: number;
   /** Páginas ignoradas por já terem texto. */
   paginasPuladas: number;
+  /** Páginas do arquivo — maior que as processadas quando houve teto. */
+  totalPaginas: number;
   palavrasReconhecidas: number;
   /** Nenhuma palavra foi encontrada em página nenhuma. */
   semTexto: boolean;
@@ -218,6 +229,7 @@ export async function ocrPdf(
     cancelado,
     dpi = DPI_PADRAO,
     pularPaginasComTexto = true,
+    paginas = MAX_PAGINAS_OCR,
   } = opcoes;
 
   if (!ocrDisponivel()) {
@@ -232,7 +244,7 @@ export async function ocrPdf(
       opcoesDocumento(new Uint8Array(arquivo.bytes), arquivo.senha),
     ).promise;
 
-    const total = Math.min(doc.numPages, MAX_PAGINAS_OCR);
+    const total = Math.min(doc.numPages, Math.max(1, paginas), MAX_PAGINAS_OCR);
     // `ignoreEncryption` porque um digitalizado costuma trazer restrição de
     // edição do próprio scanner. Sem isso, o pdf-lib recusa o arquivo que o
     // pdf.js abriu sem reclamar, e o usuário não entende a diferença.
@@ -355,6 +367,7 @@ export async function ocrPdf(
       nomeArquivo: `${raiz}-pesquisavel.pdf`,
       paginasProcessadas,
       paginasPuladas,
+      totalPaginas: doc.numPages,
       palavrasReconhecidas,
       semTexto: palavrasReconhecidas === 0 && paginasProcessadas > 0,
     };

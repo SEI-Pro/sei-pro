@@ -45,6 +45,19 @@ const PRIVACIDADE =
 const RESPONSABILIDADE =
   "As respostas da IA podem conter erros, inclusive com apar\u00EAncia de certeza: confira antes de usar. O conte\u00FAdo de um documento assinado \u00E9 de responsabilidade do agente p\u00FAblico que o assina.";
 
+/**
+ * Verbos do indicador de "pensando". Todos falam de LER e RACIOCINAR: nenhum
+ * pode parecer uma ação de escrita no SEI ("assinando", "tramitando"), que
+ * faria o usuário achar que o agente está mexendo no processo sem ter pedido.
+ */
+const PENSANDO = [
+  "Pensando", "Cogitando", "Ponderando", "Refletindo", "Raciocinando", "Matutando",
+  "Ruminando", "Compulsando", "Folheando", "Cotejando", "Conferindo", "Catalogando",
+  "Alinhavando", "Arrazoando", "Esmiu\u00E7ando", "Destrinchando", "Decifrando", "Interpretando",
+  "Sistematizando", "Fundamentando", "Considerando", "Analisando", "Rascunhando", "Minutando",
+  "Burilando", "Lapidando", "Deduzindo", "Concatenando", "Elucubrando", "Garimpando",
+];
+
 const ATALHOS: Array<{ rotulo: string; descricao: string; prompt: string }> = [
   {
     rotulo: "Resumir este processo",
@@ -92,6 +105,8 @@ class App {
   private elEnviar!: HTMLButtonElement;
   private elAnexo!: HTMLElement;
   private elMenu!: HTMLElement;
+  private elPensando!: HTMLElement;
+  private tickPensando: ReturnType<typeof setInterval> | null = null;
   private bolhaAtual: { el: HTMLElement; texto: string; pendente: boolean } | null = null;
   private aoFimDoPlano: (() => void) | null = null;
   private toolsEl = new Map<string, { el: HTMLElement; item: Extract<Item, { tipo: "tool" }> }>();
@@ -117,6 +132,7 @@ class App {
     this.elEnviar = h("button", { class: "enviar" });
     this.elAnexo = h("div", { class: "anexo", hidden: true });
     this.elMenu = h("div", { class: "menu", role: "menu", hidden: true });
+    this.elPensando = h("div", { class: "pensando", role: "status" }, icone("estrela", 16), h("span", { class: "palavra" }), h("span", { class: "tempo" }));
 
     const arquivo = h("input", { type: "file", accept: ".csv,.txt,.md,.json,.tsv", class: "sr-only" });
     const anexar = h("button", { class: "icone", title: "Anexar planilha CSV ou texto", "aria-label": "Anexar arquivo" }, icone("clipe"));
@@ -203,6 +219,35 @@ class App {
     this.atualizarAba();
     this.redesenhar();
     this.elEntrada.focus();
+  }
+
+  /**
+   * Indicador de trabalho em curso: fica no fim da conversa enquanto o modelo
+   * pensa ou usa ferramentas, e sai quando a resposta começa a sair (ou quando
+   * a vez é do usuário, num cartão de aprovação).
+   */
+  private pensar(ligado: boolean): void {
+    if (!this.elPensando) return;
+    if (!ligado) {
+      if (this.tickPensando) clearInterval(this.tickPensando);
+      this.tickPensando = null;
+      this.elPensando.remove();
+      return;
+    }
+    this.elConversa.append(this.elPensando); // sempre o último da conversa
+    this.rolar();
+    if (this.tickPensando) return;
+    const palavra = this.elPensando.querySelector(".palavra")!;
+    const tempo = this.elPensando.querySelector(".tempo")!;
+    const sortear = () => (palavra.textContent = `${PENSANDO[Math.floor(Math.random() * PENSANDO.length)]}\u2026`);
+    const desde = Date.now();
+    sortear();
+    tempo.textContent = "";
+    this.tickPensando = setInterval(() => {
+      const s = Math.round((Date.now() - desde) / 1000);
+      tempo.textContent = `${s}s`;
+      if (s % 4 === 0) sortear();
+    }, 1000);
   }
 
   private atualizarAba(): void {
@@ -379,10 +424,12 @@ class App {
     try {
       const promessa = this.motor.enviar(comAnexo);
       this.estadoEnvio();
+      this.pensar(true);
       await promessa;
     } catch (e) {
       this.adicionar({ tipo: "erro", texto: (e as Error).message });
     } finally {
+      this.pensar(false);
       this.estadoEnvio();
       await this.salvarSessao();
     }
@@ -390,6 +437,7 @@ class App {
 
   private async novaConversa(): Promise<void> {
     this.motor?.parar();
+    this.pensar(false);
     this.motor = this.criarMotor();
     this.transcricao = [];
     this.uso = { entrada: 0, saida: 0, custo: 0 };
@@ -406,6 +454,7 @@ class App {
     const el = this.desenharItem(item);
     this.elConversa.querySelector(".vazio")?.remove();
     this.elConversa.append(el);
+    if (this.tickPensando) this.elConversa.append(this.elPensando);
     this.rolar();
     return el;
   }
@@ -475,6 +524,7 @@ class App {
     return {
       texto: (delta) => {
         if (!this.bolhaAtual) {
+          this.pensar(false);
           const el = h("div", { class: "msg agente" });
           this.elConversa.querySelector(".vazio")?.remove();
           this.elConversa.append(el);
@@ -493,6 +543,7 @@ class App {
       },
       fimDaResposta: () => {
         this.fecharBolha();
+        if (this.motor?.ocupado) this.pensar(true);
         this.aoFimDoPlano?.();
         this.aoFimDoPlano = null;
       },
@@ -536,6 +587,7 @@ class App {
 
   /** Fecha as ações de um cartão decidido, deixando no lugar o que foi decidido. */
   private encerrarCartao(cartao: HTMLElement, seletor: string, texto: string, sim: boolean): HTMLElement {
+    this.pensar(Boolean(this.motor?.ocupado));
     const aviso = h("div", { class: "decidido" }, icone(sim ? "check" : "fechar", 14), h("span", {}, texto));
     cartao.querySelector(seletor)?.replaceWith(aviso);
     this.transcricao.push({ tipo: "decisao", texto });
@@ -544,6 +596,7 @@ class App {
 
   private cartaoPlano(p: PlanoPrevisto): Promise<DecisaoPlano> {
     this.fecharBolha();
+    this.pensar(false);
     return new Promise((resolver) => {
       const irreversivel = p.passos.some((x) => x.efeito === "irreversivel");
       const confirma = h("input", { type: "checkbox" });
@@ -646,6 +699,7 @@ class App {
 
   private cartaoConsentimento(detalhe: string): Promise<boolean> {
     this.fecharBolha();
+    this.pensar(false);
     return new Promise((resolver) => {
       const cartao = h(
         "div",
@@ -666,6 +720,7 @@ class App {
 
   private cartaoPergunta(pergunta: string, opcoes: string[]): Promise<string> {
     this.fecharBolha();
+    this.pensar(false);
     return new Promise((resolver) => {
       const livre = h("input", { type: "text", placeholder: "Outra resposta..." });
       const cartao = h("div", { class: "cartao" }, h("div", { class: "cartao-topo" }, h("span", { class: "badge" }, icone("balao", 15)), h("h4", {}, pergunta)));
