@@ -329,6 +329,7 @@ input.switch:checked::after { transform: translateX(15px); background: #fff; }
 .sugestao small { color: var(--ink-3); font-size: 11.5px; font-weight: 400; }
 .nota { display: flex; gap: 7px; align-items: flex-start; text-align: left; font-size: 11.5px; color: var(--ink-2); background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--r2); padding: 10px; margin-top: var(--e4); }
 .nota .svg { color: var(--ok); margin-top: 1px; }
+.nota.atencao .svg { color: var(--atencao); }
 
 /* ------------------------------------------------------------- composição */
 .rodape { position: relative; border-top: 1px solid var(--linha); background: var(--superficie); padding: var(--e2) var(--e3) var(--e3); }
@@ -357,6 +358,8 @@ input.switch:checked::after { transform: translateX(15px); background: #fff; }
 }
 .caixa textarea:focus { box-shadow: none; }
 .caixa-acoes { display: flex; align-items: center; gap: var(--e1); }
+/* Aviso permanente sob a caixa: o usuário decide, e responde, pelo que usar. */
+.aviso-ia { margin-top: 6px; text-align: center; font-size: 11px; color: var(--ink-3); }
 .caixa-acoes .espaco { margin-left: auto; font-size: 11px; color: var(--ink-3); padding-right: 2px; }
 button.enviar { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: var(--acento); border-color: transparent; color: var(--acento-txt); }
 button.enviar:hover:not(:disabled) { background: var(--acento-forte); border-color: transparent; }

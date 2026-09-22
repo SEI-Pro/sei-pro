@@ -42,6 +42,9 @@ const PRIVACIDADE_CURTA =
 const PRIVACIDADE =
   "Antes de qualquer texto sair do navegador, CPF, e-mail, telefone, endere\u00E7o, conta banc\u00E1ria, CID e outros dados pessoais s\u00E3o trocados por r\u00F3tulos como [CPF_1]. Documentos restritos s\u00F3 s\u00E3o lidos com a sua autoriza\u00E7\u00E3o; processos sigilosos nunca. Toda altera\u00E7\u00E3o no SEI precisa da sua aprova\u00E7\u00E3o.";
 
+const RESPONSABILIDADE =
+  "As respostas da IA podem conter erros, inclusive com apar\u00EAncia de certeza: confira antes de usar. O conte\u00FAdo de um documento assinado \u00E9 de responsabilidade do agente p\u00FAblico que o assina.";
+
 const ATALHOS: Array<{ rotulo: string; descricao: string; prompt: string }> = [
   {
     rotulo: "Resumir este processo",
@@ -193,6 +196,7 @@ class App {
           this.elEntrada,
           h("div", { class: "caixa-acoes" }, anexar, arquivo, sugerir, h("span", { class: "espaco" }, "Enter envia"), this.elEnviar),
         ),
+        h("div", { class: "aviso-ia", title: RESPONSABILIDADE }, "A IA pode errar: confira as respostas antes de usar."),
       ),
     );
     await this.restaurarSessao();
@@ -280,6 +284,12 @@ class App {
           h("label", { class: "linha-switch" }, nomes, h("span", {}, "Mascarar nomes de pessoas", h("small", {}, "Interessados e nomes ap\u00F3s \u201CSr.\u201D, \u201Crequerente\u201D, \u201Cfilho de\u201D..."))),
           h("label", { class: "linha-switch" }, cnpj, h("span", {}, "Mascarar tamb\u00E9m CNPJ", h("small", {}, "Empresas; CPF, e-mail e telefone s\u00E3o sempre mascarados."))),
           h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, PRIVACIDADE)),
+        ),
+        h(
+          "div",
+          { class: "campo" },
+          h("label", {}, "Responsabilidade"),
+          h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, RESPONSABILIDADE)),
         ),
       ),
       h("div", { class: "modal-acoes" }, status, obrigatorio ? null : h("button", { onclick: () => dlgFechar() }, "Cancelar"), salvar),
@@ -446,6 +456,7 @@ class App {
           )
         : h("button", { class: "primario", onclick: () => this.abrirConfig(true) }, "Configurar a chave do OpenRouter"),
       h("div", { class: "nota" }, icone("escudo", 15), h("span", {}, PRIVACIDADE_CURTA)),
+      h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, RESPONSABILIDADE)),
     );
   }
 
