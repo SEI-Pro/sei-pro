@@ -62,6 +62,20 @@ Para acrescentar uma ferramenta: operação no núcleo (`sei-nucleo/src/dominio`
 entrada em `ponte/operacoes.ts` e definição em `tools/sei.ts` (escrita usa
 `escritaEmLote`, que já faz prévia e resultado por item).
 
+## Conversas guardadas
+
+A conversa viva fica em `chrome.storage.session` (morre com o navegador). Além
+dela, o painel guarda no IndexedDB **só a transcrição** — o que apareceu na
+tela (`painel/historico.ts`). Ficam de fora, de propósito, o histórico que vai
+ao modelo e o mapa de pseudônimos, que liga `[PESSOA_1]` ao nome real: em
+disco, seria a parte mais sensível da conversa, legível por quem usar o mesmo
+perfil do navegador. Por isso uma conversa guardada abre para **ler e
+exportar** (Markdown), nunca para continuar.
+
+O relógio no topo do painel lista, abre, exporta e apaga. Na configuração há o
+interruptor ("Guardar as conversas neste navegador", ligado) e o prazo de
+guarda (7, 30, 90 dias ou sem limite), aplicado a cada abertura do painel.
+
 ## Serviço de IA
 
 Dois caminhos, o mesmo protocolo (o da API da OpenAI):

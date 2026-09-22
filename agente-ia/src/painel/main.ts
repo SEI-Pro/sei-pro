@@ -20,9 +20,14 @@ import { PontePainel } from "../ponte/cliente";
 import { TOOLS_MOTOR } from "../tools/motor";
 import { TOOLS_SEI } from "../tools/sei";
 import { formatarUso, h, icone, markdown } from "./dom";
+import * as historico from "./historico";
 import { extrairTextoPdf } from "./pdf";
 
 interface Config {
+  /** Guardar a transcrição das conversas neste navegador. */
+  guardar: boolean;
+  /** Dias de guarda (0 = para sempre). */
+  dias: number;
   /** `openrouter` (padrão) ou um serviço que fale o protocolo da OpenAI. */
   servico: Servico;
   /** Endereço do serviço compatível (vazio no OpenRouter). */
@@ -92,13 +97,16 @@ const marca = (tamanho: number) =>
 class App {
   private readonly raiz = document.getElementById("app")!;
   private readonly ponte = new PontePainel();
-  private config: Config = { servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false };
+  private config: Config = { guardar: true, dias: 30, servico: "openrouter", url: "", chave: "", modelo: MODELO_PADRAO, nomes: true, cnpj: false };
   private privacidade = new Pseudonimos();
   private motor: Motor | null = null;
   private transcricao: Item[] = [];
   private uso: Uso = { entrada: 0, saida: 0, custo: 0 };
   private tarefas: Tarefa[] = [];
   private anexo: { nome: string; texto: string } | null = null;
+  private idConversa = crypto.randomUUID();
+  /** Conversa antiga aberta para leitura (sem como continuar: ver `historico.ts`). */
+  private arquivada: historico.ConversaSalva | null = null;
 
   // elementos da tela
   private elConversa!: HTMLElement;
@@ -121,6 +129,7 @@ class App {
     this.config = { ...this.config, ...salvo };
     this.ponte.aoMudar(() => this.atualizarAba());
     await this.telaConversa();
+    void historico.podar(this.config.dias).catch(() => undefined);
     if (!this.config.chave) this.abrirConfig(true);
   }
 
@@ -194,6 +203,7 @@ class App {
         marca(28),
         h("span", { class: "marca" }, h("strong", {}, "Agente de IA"), h("span", {}, "SEI Pro")),
         this.elCusto,
+        h("button", { class: "icone", title: "Conversas guardadas", "aria-label": "Conversas guardadas", onclick: () => void this.abrirHistorico() }, icone("relogio")),
         h("button", { class: "icone", title: "Nova conversa", "aria-label": "Nova conversa", onclick: () => void this.novaConversa() }, icone("mais")),
         h("button", { class: "icone", title: "Configura\u00E7\u00E3o", "aria-label": "Configura\u00E7\u00E3o", onclick: () => this.abrirConfig() }, icone("ajustes")),
       ),
@@ -271,10 +281,138 @@ class App {
     this.elEnviar.replaceChildren(icone(ocupado ? "parar" : "setaCima", ocupado ? 16 : 18));
     this.elEnviar.setAttribute("title", ocupado ? "Parar" : "Enviar");
     this.elEnviar.setAttribute("aria-label", ocupado ? "Parar" : "Enviar");
-    this.elEnviar.disabled = !ocupado && (!this.elEntrada.value.trim() || !this.config.chave);
+    this.elEnviar.disabled = !ocupado && (!this.elEntrada.value.trim() || !this.config.chave || Boolean(this.arquivada));
+    this.elEntrada.disabled = Boolean(this.arquivada);
+    this.elEntrada.placeholder = this.arquivada ? "Conversa guardada: abra uma nova para escrever." : "Pe\u00E7a algo sobre o SEI...";
   }
 
   // ------------------------------------------------------------- configuração
+
+  /**
+   * Modal por cima da conversa. `obrigatorio` tira o "fechar": é a primeira
+   * configuração, sem chave, que não faz sentido dispensar.
+   */
+  private abrirModal(o: { titulo: string; corpo: Array<Node | string | null | false>; acoes: Array<Node | string | null | false>; obrigatorio?: boolean }): HTMLDialogElement {
+    const fechar = h("button", { class: "icone", title: "Fechar", "aria-label": "Fechar" }, icone("fechar"));
+    const dlg = h(
+      "dialog",
+      { class: "modal", "aria-label": o.titulo, closedby: o.obrigatorio ? "none" : "any" },
+      h("div", { class: "modal-topo" }, h("h2", {}, o.titulo), o.obrigatorio ? null : fechar),
+      h("div", { class: "modal-corpo" }, ...o.corpo),
+      h("div", { class: "modal-acoes" }, ...o.acoes),
+    );
+    fechar.addEventListener("click", () => dlg.close());
+    // Esc e clique fora: `closedby` resolve no Chrome 134+/Firefox 141+; abaixo disso, à mão.
+    if (!("closedBy" in HTMLDialogElement.prototype)) {
+      if (o.obrigatorio) dlg.addEventListener("cancel", (ev) => ev.preventDefault());
+      else
+        dlg.addEventListener("click", (ev) => {
+          if (ev.target !== dlg) return;
+          const r = dlg.getBoundingClientRect();
+          const dentro = ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+          if (!dentro) dlg.close();
+        });
+    }
+    dlg.addEventListener("close", () => dlg.remove());
+    document.body.append(dlg);
+    dlg.showModal();
+    return dlg;
+  }
+
+  // ------------------------------------------------------------- histórico
+
+  /** Conversas guardadas: abrir para ler, exportar em Markdown ou apagar. */
+  private async abrirHistorico(): Promise<void> {
+    const lista = await historico.listar().catch(() => []);
+    const corpo = h("div", { class: "conversas" });
+    const apagarTudo = h("button", { class: "perigo" }, icone("lixeira", 15), "Apagar todas");
+    const dlg = this.abrirModal({ titulo: "Conversas guardadas", corpo: [corpo], acoes: [apagarTudo] });
+
+    const desenhar = (itens: historico.ResumoConversa[]) => {
+      if (!itens.length) {
+        corpo.replaceChildren(
+          h(
+            "div",
+            { class: "nota" },
+            icone("relogio", 15),
+            h("span", {}, this.config.guardar ? "Nenhuma conversa guardada ainda." : "As conversas n\u00E3o est\u00E3o sendo guardadas (veja a configura\u00E7\u00E3o)."),
+          ),
+        );
+        return;
+      }
+      corpo.replaceChildren(
+        ...itens.map((c) => {
+          const linha = h(
+            "div",
+            { class: "linha" },
+            h(
+              "button",
+              { class: "abrir", onclick: () => void this.verArquivada(c.id, dlg) },
+              h("b", {}, c.titulo),
+              h("small", {}, `${new Date(c.quando).toLocaleString("pt-BR")} \u00B7 ${c.mensagens} mensagem(ns)${c.uso.custo || c.uso.entrada ? ` \u00B7 ${formatarUso(c.uso)}` : ""}${c.host ? ` \u00B7 ${c.host}` : ""}`),
+            ),
+            h("button", { class: "icone pequeno", title: "Exportar em Markdown", "aria-label": "Exportar", onclick: () => void this.exportar(c.id) }, icone("baixar", 15)),
+            h(
+              "button",
+              {
+                class: "icone pequeno",
+                title: "Excluir",
+                "aria-label": "Excluir",
+                onclick: async () => {
+                  await historico.remover(c.id).catch(() => undefined);
+                  linha.remove();
+                  if (!corpo.querySelector(".linha")) desenhar([]);
+                },
+              },
+              icone("lixeira", 15),
+            ),
+          );
+          return linha;
+        }),
+      );
+    };
+    desenhar(lista);
+
+    apagarTudo.addEventListener("click", async () => {
+      if (apagarTudo.textContent !== "Confirmar") {
+        apagarTudo.replaceChildren("Confirmar");
+        return;
+      }
+      await historico.limpar().catch(() => undefined);
+      apagarTudo.replaceChildren(icone("lixeira", 15), "Apagar todas");
+      desenhar([]);
+    });
+  }
+
+  /** Abre uma conversa guardada para leitura. */
+  private async verArquivada(id: string, dlg?: HTMLDialogElement): Promise<void> {
+    const c = await historico.obter(id).catch(() => null);
+    if (!c) return;
+    this.motor?.parar();
+    this.pensar(false);
+    this.arquivada = c;
+    this.tarefas = [];
+    dlg?.close();
+    this.redesenhar();
+  }
+
+  /** Baixa a conversa em Markdown — o que dá para juntar num processo ou guardar fora. */
+  private async exportar(id: string): Promise<void> {
+    const c = await historico.obter(id).catch(() => null);
+    if (!c) return;
+    const linhas = [`# ${c.titulo}`, "", `_${new Date(c.quando).toLocaleString("pt-BR")}${c.host ? ` \u00B7 ${c.host}` : ""} \u00B7 ${formatarUso(c.uso)}_`, ""];
+    for (const i of c.itens as Item[]) {
+      if (i.tipo === "tool") linhas.push(`- \u2699\uFE0F ${i.rotulo}${i.detalhe ? ` (${i.detalhe})` : ""}`, "");
+      else if (i.tipo === "usuario") linhas.push(`**Voc\u00EA:** ${i.texto}`, "");
+      else if (i.tipo === "agente") linhas.push(i.texto, "");
+      else linhas.push(`> ${i.texto}`, "");
+    }
+    linhas.push("", "---", "_Gerado pelo Agente de IA do SEI Pro. Respostas de IA podem conter erros._");
+    const url = URL.createObjectURL(new Blob([linhas.join("\n")], { type: "text/markdown;charset=utf-8" }));
+    const a = h("a", { href: url, download: `conversa-${new Date(c.quando).toISOString().slice(0, 10)}.md` });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
 
   /** Configuração em modal. `obrigatorio`: primeira vez, sem chave — não fecha sem salvar. */
   private abrirConfig(obrigatorio = false): void {
@@ -302,6 +440,14 @@ class App {
     const status = h("div", { class: "status" });
     const nomes = h("input", { type: "checkbox", class: "switch", ...(this.config.nomes ? { checked: true } : {}) });
     const cnpj = h("input", { type: "checkbox", class: "switch", ...(this.config.cnpj ? { checked: true } : {}) });
+    const guardar = h("input", { type: "checkbox", class: "switch", ...(this.config.guardar ? { checked: true } : {}) });
+    const dias = h(
+      "select",
+      { "aria-label": "Tempo de guarda" },
+      ...([[7, "7 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Sem limite"]] as Array<[number, string]>).map(([v, t]) =>
+        h("option", { value: String(v), ...(this.config.dias === v ? { selected: true } : {}) }, t),
+      ),
+    );
     if (this.config.servico === "openrouter")
       void listarModelos()
       .then((lista) => {
@@ -380,14 +526,10 @@ class App {
     });
 
     const salvar = h("button", { class: "primario" }, obrigatorio ? "Salvar e come\u00E7ar" : "Salvar");
-    const fechar = h("button", { class: "icone", title: "Fechar", "aria-label": "Fechar" }, icone("fechar"));
-    const dlg = h(
-      "dialog",
-      { class: "modal", "aria-labelledby": "tituloConfig", closedby: obrigatorio ? "none" : "any" },
-      h("div", { class: "modal-topo" }, h("h2", { id: "tituloConfig" }, "Configura\u00E7\u00E3o"), obrigatorio ? null : fechar),
-      h(
-        "div",
-        { class: "modal-corpo" },
+    const dlg = this.abrirModal({
+      titulo: "Configura\u00E7\u00E3o",
+      obrigatorio,
+      corpo: [
         h(
           "div",
           { class: "campo" },
@@ -424,13 +566,29 @@ class App {
         h(
           "div",
           { class: "campo" },
+          h("label", {}, "Conversas"),
+          h("label", { class: "linha-switch" }, guardar, h("span", {}, "Guardar as conversas neste navegador", h("small", {}, "Para reler e exportar depois, pelo rel\u00F3gio no topo do painel."))),
+          h("div", { class: "com-botao" }, h("span", { class: "ajuda" }, "Apagar depois de"), dias),
+          h(
+            "div",
+            { class: "nota" },
+            icone("escudo", 15),
+            h(
+              "span",
+              {},
+              "Fica guardada s\u00F3 a transcri\u00E7\u00E3o \u2014 o que apareceu na tela. O hist\u00F3rico que vai ao modelo e a tabela que liga [PESSOA_1] ao nome real morrem quando o navegador fecha, e por isso uma conversa guardada abre para ler e exportar, n\u00E3o para continuar.",
+            ),
+          ),
+        ),
+        h(
+          "div",
+          { class: "campo" },
           h("label", {}, "Responsabilidade"),
           h("div", { class: "nota atencao" }, icone("alerta", 15), h("span", {}, RESPONSABILIDADE)),
         ),
-      ),
-      h("div", { class: "modal-acoes" }, status, obrigatorio ? null : h("button", { onclick: () => dlgFechar() }, "Cancelar"), salvar),
-    );
-    const dlgFechar = () => dlg.close();
+      ],
+      acoes: [status, obrigatorio ? null : h("button", { onclick: () => dlg.close() }, "Cancelar"), salvar],
+    });
 
     salvar.addEventListener("click", async () => {
       const erro = (texto: string) => {
@@ -454,25 +612,19 @@ class App {
         const r = await conferirChave({ chave: k, servico: comp ? "compativel" : "openrouter", url: endereco }).catch(() => ({ ok: false }));
         if (!r.ok) return erro(comp ? "O servi\u00E7o n\u00E3o aceitou a chave (ou o endere\u00E7o est\u00E1 errado)." : "A chave n\u00E3o foi aceita pelo OpenRouter.");
       }
-      await this.aplicarConfig({ servico: comp ? "compativel" : "openrouter", url: endereco, chave: k, modelo: m, nomes: nomes.checked, cnpj: cnpj.checked });
+      await this.aplicarConfig({
+        guardar: guardar.checked,
+        dias: Number(dias.value),
+        servico: comp ? "compativel" : "openrouter",
+        url: endereco,
+        chave: k,
+        modelo: m,
+        nomes: nomes.checked,
+        cnpj: cnpj.checked,
+      });
       dlg.close();
     });
     ajustarServico();
-    fechar.addEventListener("click", dlgFechar);
-    // Esc e clique fora: `closedby` resolve no Chrome 134+/Firefox 141+; abaixo disso, à mão.
-    if (!("closedBy" in HTMLDialogElement.prototype)) {
-      if (obrigatorio) dlg.addEventListener("cancel", (ev) => ev.preventDefault());
-      else
-        dlg.addEventListener("click", (ev) => {
-          if (ev.target !== dlg) return;
-          const r = dlg.getBoundingClientRect();
-          const dentro = ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
-          if (!dentro) dlg.close();
-        });
-    }
-    dlg.addEventListener("close", () => dlg.remove());
-    document.body.append(dlg);
-    dlg.showModal();
   }
 
   /** Salva a configuração e refaz o motor mantendo a conversa e os pseudônimos. */
@@ -534,6 +686,8 @@ class App {
     this.motor?.parar();
     this.pensar(false);
     this.motor = this.criarMotor();
+    this.idConversa = crypto.randomUUID();
+    this.arquivada = null;
     this.transcricao = [];
     this.uso = { entrada: 0, saida: 0, custo: 0 };
     this.tarefas = [];
@@ -569,6 +723,23 @@ class App {
   }
 
   private redesenhar(): void {
+    if (this.arquivada) {
+      const a = this.arquivada;
+      this.elConversa.replaceChildren(
+        h(
+          "div",
+          { class: "arquivada" },
+          icone("relogio", 14),
+          h("span", {}, `${a.titulo} \u2014 ${new Date(a.quando).toLocaleString("pt-BR")}. S\u00F3 leitura.`),
+          h("button", { class: "plana", onclick: () => void this.novaConversa() }, "Nova conversa"),
+        ),
+        ...(a.itens as Item[]).map((i) => this.desenharItem(i)),
+      );
+      this.elCusto.textContent = formatarUso(a.uso);
+      this.desenharTarefas();
+      this.estadoEnvio();
+      return;
+    }
     this.elConversa.replaceChildren(...this.transcricao.map((i) => this.desenharItem(i)));
     if (!this.transcricao.length) this.elConversa.append(this.boasVindas());
     this.elCusto.textContent = formatarUso(this.uso);
@@ -834,7 +1005,29 @@ class App {
 
   // ------------------------------------------------------------- sessão
 
+  /**
+   * Grava a transcrição no histórico do navegador. Só ela: o histórico do
+   * modelo e o mapa de pseudônimos ficam na sessão, que morre com o navegador.
+   */
+  private async guardarConversa(): Promise<void> {
+    if (!this.config.guardar || this.arquivada || !this.transcricao.length) return;
+    const primeira = this.transcricao.find((i) => i.tipo === "usuario");
+    const titulo = primeira && "texto" in primeira ? primeira.texto.replace(/\s+/g, " ").slice(0, 70) : "Conversa";
+    await historico
+      .salvar({
+        id: this.idConversa,
+        titulo,
+        quando: Date.now(),
+        host: this.ponte.atual()?.host,
+        uso: this.uso,
+        mensagens: this.transcricao.filter((i) => i.tipo === "usuario" || i.tipo === "agente").length,
+        itens: this.transcricao,
+      })
+      .catch(() => undefined);
+  }
+
   private async salvarSessao(): Promise<void> {
+    await this.guardarConversa();
     if (!this.motor) return;
     const dados = { historico: this.motor.mensagens(), transcricao: this.transcricao, uso: this.uso, pseudonimos: this.privacidade.exportar(), tarefas: this.tarefas };
     // storage.session não existe em navegadores antigos (Firefox < 115): a conversa só não sobrevive à recarga.
@@ -859,5 +1052,5 @@ class App {
 const app = new App();
 // Diagnóstico: acessível só no console desta página da extensão (o SEI não a enxerga).
 Object.defineProperty(window, "agenteIA", { value: app });
-Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf } });
+Object.defineProperty(window, "agenteIADiag", { value: { extrairTextoPdf, historico } });
 void app.iniciar();

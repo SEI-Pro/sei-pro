@@ -417,6 +417,19 @@ button.enviar.parando { background: var(--erro); }
 .menu button { justify-content: flex-start; text-align: left; border-color: transparent; background: none; font-size: 12.5px; font-weight: 500; padding: 8px 10px; }
 .menu button:hover { background: var(--superficie-2); border-color: transparent; }
 
+/* Conversa guardada, aberta só para leitura. */
+.arquivada { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-2); background: var(--superficie-2); border-radius: var(--r1); padding: 6px 10px; }
+.arquivada span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arquivada button { font-size: 11.5px; padding: 3px 8px; }
+
+/* Lista de conversas guardadas, no modal. */
+.conversas { display: flex; flex-direction: column; gap: 6px; }
+.conversas .linha { display: flex; align-items: center; gap: var(--e1); }
+.conversas .abrir { flex: 1; min-width: 0; display: block; text-align: left; padding: 8px 10px; background: var(--superficie); border-color: var(--linha); }
+.conversas .abrir:hover { border-color: color-mix(in srgb, var(--acento) 50%, var(--linha)); }
+.conversas b { display: block; font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conversas small { display: block; color: var(--ink-3); font-size: 11px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ------------------------------------------------------------------ modal */
 dialog.modal {
   width: min(460px, calc(100vw - var(--e5)));
