@@ -75,11 +75,17 @@ O teste ponta a ponta usado na validação (Chrome com a extensão + SEI SP
 Treinamento + OpenRouter simulado por interceptação de rede) está descrito no
 plano, Task 13.
 
-## Pendências conhecidas (fase 2)
+## Firefox
 
-- `editor_ler` / `editor_escrever` no editor ABERTO (hoje o conteúdo é gravado
-  pelo servidor; com o editor aberto, o SEI avisa de nova versão ao salvar).
-- OCR de PDF digitalizado (reaproveitar o Tesseract das Ferramentas de PDF).
-- Firefox (`sidebar_action` nos manifests v2).
+Validado no Firefox 156 (manifest v2): o item "Agente de IA" do menu do SEI é
+um link para `html/agente.html` (o Firefox recusa `window.open` de endereço da
+extensão feito por content script), e o painel também fica em
+`sidebar_action`. O manifest v2 do Firefox (`dist/manifest_v2.json`) não é
+versionado: ele precisa de `sidebar_action`, do content script
+`js/init_agente.js` e de `js/sei-pro-agente-editor.js` e `html/agente.html` em
+`web_accessible_resources` — ver o script de empacotamento do Firefox.
+
+## Pendências conhecidas
+
 - Blocos e sobrestamento (fase 3).
 - Remover a ferramenta de IA antiga (`sei-pro-ai.js` e IA do editor).

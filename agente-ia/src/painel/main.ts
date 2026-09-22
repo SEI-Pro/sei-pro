@@ -252,7 +252,7 @@ class App {
     this.transcricao = [];
     this.uso = { entrada: 0, saida: 0, custo: 0 };
     this.tarefas = [];
-    await chrome.storage.session.remove(CHAVE_SESSAO).catch(() => undefined);
+    await chrome.storage.session?.remove(CHAVE_SESSAO).catch(() => undefined);
     this.redesenhar();
   }
 
@@ -519,11 +519,12 @@ class App {
   private async salvarSessao(): Promise<void> {
     if (!this.motor) return;
     const dados = { historico: this.motor.mensagens(), transcricao: this.transcricao, uso: this.uso, pseudonimos: this.privacidade.exportar(), tarefas: this.tarefas };
-    await chrome.storage.session.set({ [CHAVE_SESSAO]: dados }).catch(() => undefined);
+    // storage.session não existe em navegadores antigos (Firefox < 115): a conversa só não sobrevive à recarga.
+    await chrome.storage.session?.set({ [CHAVE_SESSAO]: dados }).catch(() => undefined);
   }
 
   private async restaurarSessao(): Promise<void> {
-    const bruto: Record<string, unknown> = await chrome.storage.session.get(CHAVE_SESSAO).catch(() => ({}));
+    const bruto: Record<string, unknown> = (await chrome.storage.session?.get(CHAVE_SESSAO).catch(() => ({}))) ?? {};
     const d = bruto[CHAVE_SESSAO] as
       | { historico: Mensagem[]; transcricao: Item[]; uso: Uso; pseudonimos: ReturnType<Pseudonimos["exportar"]>; tarefas: Tarefa[] }
       | undefined;

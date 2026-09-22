@@ -202,10 +202,21 @@ function instalarEntradaNoMenu(): void {
   a.title = "Abrir o Agente de IA do SEI Pro no painel lateral";
   rotulo.textContent = "Agente de IA";
   a.append(rotulo);
-  a.addEventListener("click", (ev) => {
-    ev.preventDefault();
-    chrome.runtime.sendMessage({ tipo: "abrirAgente" }).catch(() => undefined);
-  });
+  // Firefox (manifest v2, sem service worker): o item é um link comum para a
+  // página do painel (web_accessible_resource) — o Firefox recusa window.open
+  // de endereço da extensão feito pelo content script. Chrome: o service
+  // worker abre o painel lateral, e o clique precisa ser o gesto do usuário.
+  const painel = chrome.runtime.getURL("html/agente.html");
+  if (painel.startsWith("moz-extension://")) {
+    a.href = painel;
+    a.target = "seiProAgente";
+    a.rel = "noopener";
+  } else {
+    a.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      chrome.runtime.sendMessage({ tipo: "abrirAgente" }).catch(() => undefined);
+    });
+  }
   li.append(a);
   lista.append(li);
 }
