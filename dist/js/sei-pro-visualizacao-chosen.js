@@ -22,12 +22,15 @@ function setReplaceSelectOnVisualizacao(force = false) {
             target.find('select').chosen('destroy');
             target.find('select').not('[multiple]').not('[size]').filter(function() { 
                     return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none' || (!force && typeof $(this).data('chosen') !== 'undefined') )
-                }).chosen({
-                    placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado',
-                    normalize_search_text: function(text) {
-                        return parent.removeAcentos(text.toLowerCase());
-                    }
+                }).each(function() {
+                    $(this).chosen({
+                        placeholder_text_single: ' ',
+                        no_results_text: 'Nenhum resultado encontrado',
+                        width: larguraChosenPro(this),
+                        normalize_search_text: function(text) {
+                            return parent.removeAcentos(text.toLowerCase());
+                        }
+                    });
                 });
 
             // console.log('@ setReplaceSelectOnVisualizacao',force);
@@ -39,6 +42,16 @@ function setReplaceSelectOnVisualizacao(force = false) {
         }
     }
 }
+// O Chosen mede a largura do select (offsetWidth) na hora em que e aplicado. Se o select esta
+// dentro de um bloco oculto (ex.: #conteudoHide da Intimacao Eletronica, que so aparece depois
+// de escolher o destinatario), a medida da 0 e a caixa fica travada numa faixa sem largura.
+// Nesse caso usa a largura declarada no estilo do proprio select.
+function larguraChosenPro(sel) {
+    if (sel.offsetWidth > 0) { return sel.offsetWidth + 'px'; }
+    var larguraCss = (sel.ownerDocument.defaultView || window).getComputedStyle(sel).width;
+    if (sel.style.width) { return sel.style.width; }
+    return (larguraCss && larguraCss != 'auto' && parseFloat(larguraCss) > 0) ? larguraCss : '100%';
+}
 function repareChosenIntimacaoEletronica() {
     if ($('#selTipoIntimacao').length) {
         $('#selTipoIntimacao_chosen').remove();
@@ -47,6 +60,7 @@ function repareChosenIntimacaoEletronica() {
             .chosen({
                 placeholder_text_single: ' ',
                 no_results_text: 'Nenhum resultado encontrado',
+                width: larguraChosenPro($('#selTipoIntimacao')[0]),
                 normalize_search_text: function(text) {
                     return parent.removeAcentos(text.toLowerCase());
                 }

@@ -2,6 +2,15 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 1.7.7
+21/09/2026
+
+Versão de correção.
+
+- Processos sigilosos no SEI 4.1 e no SEI 5: volta a ser possível digitar a senha na tela *Identificação de Acesso*. A extensão abria uma segunda janela de senha por trás da do SEI, e as duas disputavam o cursor: o campo perdia o foco a cada tecla. Vale para abrir o processo sigiloso e para o *Acervo de Sigilosos*
+- Ícones da barra do documento (*Iniciar ações em lote*, *Documentos em Lote*, *Comparador de Documentos*, *Ferramentas de PDF* e *Ferramentas de IA*) voltam a aparecer para quem tem outra extensão que interfere no navegador. O endereço das imagens saía como `[object Promise]`
+- Gerar Intimação Eletrônica (módulo de Peticionamento): a lista *Tipo de Intimação* deixa de ficar travada, sem largura e sem mostrar as opções. O mesmo vale para outras listas que ficam escondidas até o formulário ser preenchido
+
 ### Versão 1.7.6
 21/09/2026
 

@@ -133,11 +133,24 @@ function getHtmlJanelaProcessoPro(html, elemento) {
 // parent.linksArvore) e as funcoes do SEI: na isolada a lista de links e vazia e
 // updateDadosArvoreIframe faz attr('src', null) no mesmo #frmCheckerProcessoPro que a outra copia
 // esta usando. Por isso os handlers que gravam dados ou acumulam linhas ficam com uma copia so.
+// Runtime da extensao, ou null no mundo da pagina. Nao basta existir browser.runtime.getURL: outra extensao ou
+// script da pagina pode definir um 'browser' falso no mundo da pagina (ex.: um Proxy em que todo metodo devolve
+// Promise). A copia da pagina tomava esse objeto pelo runtime e montava URL_SPRO como "[object Promise]": os icones
+// da barra saiam com src="[object Promise]icons/menu/...". So vale o runtime cuja getURL devolve uma URL de extensao.
+function getRuntimeExtensaoPro() {
+    var candidatos = [];
+    try { if (typeof chrome !== 'undefined' && chrome && chrome.runtime) { candidatos.push(chrome.runtime); } } catch (e) {}
+    try { if (typeof browser !== 'undefined' && browser && browser.runtime) { candidatos.push(browser.runtime); } } catch (e) {}
+    for (var i = 0; i < candidatos.length; i++) {
+        try {
+            var url = (typeof candidatos[i].getURL === 'function') ? candidatos[i].getURL('') : null;
+            if (typeof url === 'string' && /^[a-z-]+-extension:\/\/[^\/]+\//.test(url)) { return candidatos[i]; }
+        } catch (e) {}
+    }
+    return null;
+}
 function isCopiaIsoladaPro() {
-    try {
-        return (typeof chrome !== 'undefined' && !!chrome && !!chrome.runtime && typeof chrome.runtime.getURL === 'function')
-            || (typeof browser !== 'undefined' && !!browser && !!browser.runtime && typeof browser.runtime.getURL === 'function');
-    } catch (e) { return false; }
+    return getRuntimeExtensaoPro() !== null;
 }
 // A copia da pagina marca o <html> (visivel aos dois mundos) quando registra a visualizacao; se ela
 // nao chegou a registrar, a copia isolada continua responsavel, como antes.
@@ -169,7 +182,8 @@ restaurarBotaoJqueryUIPro(window.jQuery);
 // nao volta na mesma aba para o mesmo conjunto de copias. Os dados lidos do <html> entram so como texto.
 var IDS_LOJA_SEIPRO = {'ajchjgnbfdchmhldfbmajofhgnkojhab': 'SEI Pro Lab', 'pdbbapplhjopafpgidbgceccbbmehcjj': 'SEI Pro'};
 function isFirefoxSeiPro() {
-    return typeof browser !== 'undefined' && !!browser && !!browser.runtime && typeof browser.runtime.getBrowserInfo === 'function';
+    var runtimePro = getRuntimeExtensaoPro();
+    return !!runtimePro && typeof runtimePro.getBrowserInfo === 'function' && /^moz-extension:/.test(runtimePro.getURL(''));
 }
 function getCopiasRegistradasSeiPro() {
     try {
@@ -181,7 +195,7 @@ function initAlertaCopiasSeiPro() {
     if (window.alertaCopiasSeiProIniciado || window.top !== window || !isCopiaIsoladaPro()) { return; }
     window.alertaCopiasSeiProIniciado = true;
     try {
-        var runtimePro = (typeof chrome !== 'undefined' && chrome && chrome.runtime && typeof chrome.runtime.getURL === 'function') ? chrome.runtime : browser.runtime;
+        var runtimePro = getRuntimeExtensaoPro();
         var manifestPro = runtimePro.getManifest();
         // A extensao antiga (SPro) convive de proposito com a nova durante a migracao e se desliga sozinha (init_all.js).
         if (manifestPro.short_name == 'SPro') { return; }
@@ -328,12 +342,11 @@ var tableHomeTimeout = 3000;
 // A copia da pagina (sem runtime) continua lendo a sessao.
 function getNameSpaceSessionPro() {
     try {
-        var runtimePro = (typeof browser !== 'undefined' && browser && browser.runtime && typeof browser.runtime.getURL === 'function') ? browser.runtime
-                       : (typeof chrome !== 'undefined' && chrome && chrome.runtime && typeof chrome.runtime.getURL === 'function') ? chrome.runtime : null;
+        var runtimePro = getRuntimeExtensaoPro();
         if (runtimePro) {
             var manifestPro = runtimePro.getManifest();
             // A extensao antiga (SPro) grava em 'old_extension', que o _P() nao le.
-            if (manifestPro.short_name != 'SPro') {
+            if (manifestPro && typeof manifestPro.short_name === 'string' && manifestPro.short_name != 'SPro') {
                 return JSON.parse(JSON.stringify({URL_SPRO: runtimePro.getURL('js/sei-pro.js').toString().replace('js/sei-pro.js', ''), NAMESPACE_SPRO: manifestPro.short_name, URLPAGES_SPRO: manifestPro.homepage_url, VERSION_SPRO: manifestPro.version, ICON_SPRO: manifestPro.icons}));
             }
         }
@@ -12983,6 +12996,14 @@ function appendIconIntegrity(loop = true) {
     }
     if (loop) { reagendarIconeBarraPro('appendIconIntegrity', appendIconIntegrity); }
 }
+// Largura para o Chosen: select dentro de bloco oculto mede 0 e a caixa fica travada
+// (ex.: Tipo de Intimacao, no #conteudoHide da Intimacao Eletronica). Ver sei-pro-visualizacao-chosen.js.
+function larguraChosenPro(sel) {
+    if (sel.offsetWidth > 0) { return sel.offsetWidth + 'px'; }
+    var larguraCss = (sel.ownerDocument.defaultView || window).getComputedStyle(sel).width;
+    if (sel.style.width) { return sel.style.width; }
+    return (larguraCss && larguraCss != 'auto' && parseFloat(larguraCss) > 0) ? larguraCss : '100%';
+}
 function setReplaceSelectAllVisualizacao() {
     if (verifyConfigValue('substituiselecao')) {
         var target = $($ifrVisualizacao).contents();
@@ -12990,13 +13011,16 @@ function setReplaceSelectAllVisualizacao() {
             target.find('select').chosen('destroy');
             target.find('select').not('[multiple]').not('#selSerie').not('[size]').filter(function() { 
                     return !($(this).css('visibility') == 'hidden' || $(this).css('display') == 'none') 
-                }).chosen({
-                    placeholder_text_single: ' ',
-                    no_results_text: 'Nenhum resultado encontrado',
-                    normalize_search_text: function(text) {
-                        return removeAcentos(text.toLowerCase());
-                    }
-                })
+                }).each(function() {
+                    $(this).chosen({
+                        placeholder_text_single: ' ',
+                        no_results_text: 'Nenhum resultado encontrado',
+                        width: larguraChosenPro(this),
+                        normalize_search_text: function(text) {
+                            return removeAcentos(text.toLowerCase());
+                        }
+                    });
+                });
             chosenReparePosition(target);
             target.find('.infraAreaDados').css('overflow','initial');
             target.find('select').not('[multiple]').eq(0).trigger('chosen:activate');
@@ -14126,8 +14150,23 @@ function setInfraImg(target = $('html')) {
         }
     });
 }
+// Socorro para o modal de senha do processo sigiloso ("Identificacao de Acesso") quando ele nao abre. Quem abre o
+// modal e o inicializar() da propria pagina, no onload; este arquivo roda antes, no document.ready. Chamar o
+// inicializar() ja no ready abria um modal e o onload abria outro: no SEI 4.1+ (modalLink, um iframe por modal) os
+// dois ficavam empilhados e o foco nao parava no campo de senha. O modalLink devolve o foco ao ultimo modal registrado
+// a cada blur, e o campo do outro modal perdia o foco a cada tecla: nao dava para digitar a senha. A trava antiga so
+// enxergava o modal do SEI 4.0 (#divInfraSparklingModalContent). Agora so age depois do onload e se nenhum modal abriu.
+function isModalAcessoAbertoPro() {
+    if ($('#divInfraSparklingModalContent').is(':visible')) { return true; }
+    if (typeof window.arrModal !== 'undefined' && window.arrModal && window.arrModal.length) { return true; }
+    return $('iframe[name="modal-frame"], iframe.modal-frame').filter(function () { return /usuario_validar_acesso/.test(this.src || ''); }).length > 0;
+}
 function initModalNewSEISigiloso(TimeOut = 1000) {
-    if (TimeOut <= 0 || !isNewSEI ||  !checkProcessoSigiloso() || $('#divInfraSparklingModalContent').is(':visible')) { return; }
+    if (TimeOut <= 0 || !isNewSEI || typeof inicializar !== 'function' || !checkProcessoSigiloso() || isModalAcessoAbertoPro()) { return; }
+    if (document.readyState !== 'complete') {
+        $(window).one('load', function () { setTimeout(function () { initModalNewSEISigiloso(TimeOut); }, 1500); });
+        return;
+    }
     if (typeof $.modalLink !== 'undefined' && typeof $().resizable !== 'undefined') { 
         if (checkProcessoSigiloso()) { 
             inicializar();
