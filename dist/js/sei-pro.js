@@ -1156,6 +1156,19 @@ function getNewTabProcesso() {
                             '</a>'
                             : '';
 
+        // Mesma logica do botao das Ferramentas de PDF (SVG com cor propria,
+        // sem .iconPro_Observe). Nao abre link: o painel lateral so pode ser
+        // aberto pelo service worker, e quem fala com ele e' o content script do
+        // agente -- `abrirAgenteIAPro()` avisa a janela de topo por postMessage.
+        var htmlBtnAgenteIA = (restrictConfigValue('ferramentasia')) ?
+                            '<a class="botaoSEI '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_agenteia" onclick="abrirAgenteIAPro()" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Agente de IA\')"')+' style="position: relative; margin-left: -3px; cursor: pointer;">'+
+                            '    <img class="infraCorBarraSistema" src="'+URL_SPRO+'icons/menu/botpro_icon.svg" alt="Agente de IA" title="Agente de IA">'+
+                            (iconLabel ?
+                            '    <span class="newIconTitle">Agente de IA</span>'+
+                            '' : '')+
+                            '</a>'
+                            : '';
+
         var htmlBtnPrazo =  (checkConfigValue('gerenciarprazos')) ? 
                             '<a class="botaoSEI botaoSEI_hide '+(iconLabel ? 'iconLabel' : '')+' '+(iconBoxSlim ? 'iconBoxSlim' : '')+' iconPro_Observe iconPrazo_new" '+(iconLabel ? '' : 'onmouseout="return infraTooltipOcultar();" onmouseover="return infraTooltipMostrar(\'Adicionar prazo\')"')+' onclick="addControlePrazo()" style="position: relative; margin-left: -3px;">'+
                             '    <img class="infraCorBarraSistema" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" title="Adicionar prazo">'+
@@ -1189,7 +1202,7 @@ function getNewTabProcesso() {
                     '    <span class="newIconTitle">Abrir Processos em Nova Aba</span>'+
                     '' : '')+
 
-                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnFerramentasPdf+htmlBtnNaoLido;
+                    '</a>'+htmlBtnAtiv+htmlBtnPrazo+htmlBtnTypes+htmlBtnUpload+htmlBtnFerramentasPdf+htmlBtnAgenteIA+htmlBtnNaoLido;
                     
         $(`${divComandos}${infraBarraComandos}`).each(function(){
             var _this = $(this);
@@ -1198,6 +1211,7 @@ function getNewTabProcesso() {
                 // aparece mesmo sem processo marcado), entao precisa do proprio
                 // remove -- senao duplica a cada reexecucao desta funcao.
                 _this.find('.iconPro_ferramentaspdf').remove();
+                _this.find('.iconPro_agenteia').remove();
                 _this.append(htmlBtn);            
         });
     }, 500);
