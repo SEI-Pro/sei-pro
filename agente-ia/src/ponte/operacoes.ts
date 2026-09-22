@@ -32,6 +32,8 @@ import {
   registrarAndamento,
 } from "@nucleo/dominio/acoesProcesso";
 import { assinarDocumento, enviarProcesso } from "@nucleo/dominio/tramitacao";
+import { pesquisar } from "@nucleo/dominio/pesquisa";
+import { cancelarAssinatura, cancelarDocumento, darCiencia, excluirDocumento } from "@nucleo/dominio/acoesDocumento";
 import { ErroSei } from "@nucleo/sessao/erros";
 import type { Pagina } from "@nucleo/sessao/http";
 import { lerContexto, type Sei } from "@nucleo/sei";
@@ -155,6 +157,10 @@ export const OPERACOES: Record<string, Op> = {
     ),
   // A senha chega do painel (digitada pelo usuário no cartão de aprovação) e só vai para o POST.
   "documento.assinar": (sei, a, sinal) => assinarDocumento(sei, String(a.numero), { cargo: txt(a.cargo), senha: txt(a.senha) }, { aplicar: aplicar(a), sinal }),
+  "documento.excluir": (sei, a, sinal) => excluirDocumento(sei, String(a.numero), { aplicar: aplicar(a), sinal }),
+  "documento.cancelar": (sei, a, sinal) => cancelarDocumento(sei, String(a.numero), String(a.motivo ?? ""), { aplicar: aplicar(a), sinal }),
+  "documento.cancelarAssinatura": (sei, a, sinal) => cancelarAssinatura(sei, String(a.numero), { aplicar: aplicar(a), sinal }),
+  ciencia: (sei, a, sinal) => darCiencia(sei, String(a.alvo), { processo: a.processo === true }, { aplicar: aplicar(a), sinal }),
   "processo.marcador": (sei, a, sinal) =>
     definirMarcador(sei, String(a.processo), { marcador: String(a.marcador), texto: txt(a.texto), remover: a.remover === true }, { aplicar: aplicar(a), sinal }),
   "processo.anotacao": (sei, a, sinal) =>
@@ -185,6 +191,22 @@ export const OPERACOES: Record<string, Op> = {
   "documento.editar": (sei, a, sinal) =>
     editarConteudo(sei, String(a.numero), { html: String(a.html), modo: a.modo as "substituir" | "acrescentar" | undefined, secao: txt(a.secao) }, { aplicar: aplicar(a), sinal }),
 
+  pesquisar: (sei, a, sinal) =>
+    pesquisar(
+      sei,
+      {
+        texto: txt(a.texto),
+        em: a.em === "documentos" ? "documentos" : "processos",
+        especificacao: txt(a.especificacao),
+        tipoProcesso: txt(a.tipo_processo),
+        tipoDocumento: txt(a.tipo_documento),
+        numeroDocumento: txt(a.numero_documento),
+        dataInicio: txt(a.data_inicio),
+        dataFim: txt(a.data_fim),
+        limite: a.limite === undefined ? undefined : Number(a.limite),
+      },
+      sinal,
+    ),
   opcoes: (sei, a, sinal) => listarOpcoes(sei, a.lista as ListaOpcoes, String(a.processo), { filtro: txt(a.filtro), sinal }),
 };
 

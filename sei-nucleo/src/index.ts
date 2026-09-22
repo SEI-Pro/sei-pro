@@ -40,3 +40,5 @@ export { abrirEditor, editarConteudo, lerEditor, textoDoHtml, type EdicaoConteud
 export { Pseudonimos, type Categoria, type OpcoesAnonimizacao } from "./privacidade/anonimizar";
 export { listarOpcoes, type ListaOpcoes, type OpcaoSei } from "./dominio/opcoes";
 export { enviarProcesso, assinarDocumento, type Envio, type Assinatura } from "./dominio/tramitacao";
+export { excluirDocumento, cancelarDocumento, cancelarAssinatura, darCiencia } from "./dominio/acoesDocumento";
+export { pesquisar, type CriteriosPesquisa, type ResultadoPesquisa } from "./dominio/pesquisa";

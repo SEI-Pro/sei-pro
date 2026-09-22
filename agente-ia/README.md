@@ -42,7 +42,8 @@ o núcleo recusa conteúdo sigiloso; restrito pede consentimento uma vez por con
 ## Ferramentas (fase 1)
 
 Leitura: `contexto_tela`, `sei_opcoes`, `processos_listar`, `processo_consultar`,
-`processo_historico`, `documentos_listar`, `documento_ler` (HTML e PDF com texto).
+`processo_historico`, `processos_pesquisar` (pesquisa do órgão; trecho só com
+consentimento), `documentos_listar`, `documento_ler` (HTML e PDF com texto).
 
 Escrita (em lote, com prévia): `processo_alterar`, `processo_marcador`,
 `processo_anotacao`, `processo_andamento`, `processo_atribuir`,
@@ -50,7 +51,8 @@ Escrita (em lote, com prévia): `processo_alterar`, `processo_marcador`,
 `processo_enviar` (irreversível: o cartão exige confirmação), `documento_assinar`
 (o cartão pede cargo e senha; a senha vai do painel direto para a aba e nunca entra
 nos argumentos que o modelo vê),
-`documento_alterar` (sigilo em lote), `documento_criar` (documentos em lote, com
+`documento_excluir`, `documento_cancelar` (motivo), `documento_cancelar_assinatura`
+(os três irreversíveis), `documento_ciencia`, `documento_alterar` (sigilo em lote), `documento_criar` (documentos em lote, com
 conteúdo), `documento_editar`.
 
 Motor: `plano_propor` (escritas dependentes, referências `$1.caminho`),
@@ -79,6 +81,5 @@ plano, Task 13.
   pelo servidor; com o editor aberto, o SEI avisa de nova versão ao salvar).
 - OCR de PDF digitalizado (reaproveitar o Tesseract das Ferramentas de PDF).
 - Firefox (`sidebar_action` nos manifests v2).
-- Excluir, cancelar assinatura, ciência, pesquisa avançada;
-  blocos e sobrestamento (fase 3).
+- Blocos e sobrestamento (fase 3).
 - Remover a ferramenta de IA antiga (`sei-pro-ai.js` e IA do editor).

@@ -7,6 +7,7 @@
 import { lerEditor, textoDoHtml } from "../src/dominio/editor";
 import { lerContexto, lerVersao } from "../src/sei";
 import { Formulario } from "../src/formulario/formulario";
+import { lerResultados } from "../src/dominio/pesquisa";
 import { checar, fixture, secao } from "./util";
 
 export async function verificarDominio(): Promise<void> {
@@ -37,6 +38,14 @@ export async function verificarDominio(): Promise<void> {
 
   secao("texto de html");
   checar("paragrafos viram linhas", textoDoHtml("<p>a&nbsp;b</p><p>c</p>") === "a b\nc", textoDoHtml("<p>a&nbsp;b</p><p>c</p>"));
+
+  secao("pesquisa");
+  const pesq = lerResultados(fixture("sei41/pesquisa_resultado.html"));
+  checar("total da barra com milhar", pesq.total === 5394, pesq.total);
+  checar("dez resultados na pagina", pesq.itens.length === 10, pesq.itens.length);
+  const r0 = pesq.itens[0];
+  checar("resultado de documento", r0.protocolo === "99906.713-630.000032/2025-82" && r0.documento?.numero === "0104019" && r0.documento.tipo === "Despacho", r0);
+  checar("trecho e metadados", r0.trecho.includes("Teste") && r0.unidade === "TESTE" && /\d{2}\/\d{2}\/\d{4}/.test(r0.data), r0);
 
   secao("formularios de acao");
   const anot = Formulario.de(fixture("sei41/p_anotacao_registrar.html"), "#frmAnotacaoCadastro");

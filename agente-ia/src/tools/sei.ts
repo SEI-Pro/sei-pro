@@ -153,6 +153,31 @@ export const TOOLS_SEI: DefTool[] = [
   }),
 
   definirTool({
+    nome: "processos_pesquisar",
+    descricao:
+      "Pesquisa do SEI em todo o \u00F3rg\u00E3o (n\u00E3o s\u00F3 a caixa da unidade), com as permiss\u00F5es do usu\u00E1rio: palavras-chave no conte\u00FAdo, especifica\u00E7\u00E3o, tipo de processo, tipo de documento, n\u00FAmero, per\u00EDodo (dd/mm/aaaa). Devolve protocolo, tipo, n\u00BA SEI do documento (se em=documentos), unidade, usu\u00E1rio e data. O trecho do conte\u00FAdo s\u00F3 vem com com_trecho=true (pede autoriza\u00E7\u00E3o para conte\u00FAdo restrito).",
+    parametros: s.objeto({
+      "texto?": s.texto({ descricao: "Palavras-chave (aceita e, ou, n\u00E3o, aspas)." }),
+      "em?": s.texto({ enum: ["processos", "documentos"] }),
+      "especificacao?": s.texto(),
+      "tipo_processo?": s.texto(),
+      "tipo_documento?": s.texto(),
+      "numero_documento?": s.texto(),
+      "data_inicio?": s.texto(),
+      "data_fim?": s.texto(),
+      "limite?": s.inteiro({ min: 1, max: 200, descricao: "Padr\u00E3o 50." }),
+      "com_trecho?": s.booleano(),
+    }),
+    efeito: "leitura",
+    rotulo: (a) => `Pesquisar no SEI${a.texto ? `: ${a.texto}` : ""}`,
+    executar: async (a, ctx) => {
+      const r = await ctx.sei<{ total: number; resultados: Array<Record<string, unknown>> }>("pesquisar", a);
+      const comTrecho = a.com_trecho === true && (await ctx.consentirRestrito("Trechos de documentos nos resultados da pesquisa"));
+      return { total: r.total, resultados: r.resultados.map(({ trecho, ...x }) => (comTrecho ? { ...x, trecho } : x)) };
+    },
+  }),
+
+  definirTool({
     nome: "processo_consultar",
     descricao:
       "Metadados de um processo: tipo, especifica\u00E7\u00E3o, assuntos, interessados, observa\u00E7\u00F5es da unidade, n\u00EDvel de acesso, marcadores, se est\u00E1 aberto na unidade (editavel) e quantos documentos tem.",
@@ -371,6 +396,52 @@ export const TOOLS_SEI: DefTool[] = [
     alvos: (a) => a.documentos as string[],
     argsOp: (_a, alvo, ctx) => ({ numero: alvo, cargo: ctx.assinatura?.cargo, senha: ctx.assinatura?.senha }),
     rotulo: (a) => `Assinar ${qtd((a.documentos as string[]).length, "documento", "documentos")}`,
+  }),
+
+  escritaEmLote({
+    nome: "documento_excluir",
+    descricao:
+      "Exclui documentos que o SEI ainda deixa excluir (em geral: gerados na unidade e processo ainda n\u00E3o tramitado depois deles). Se o SEI s\u00F3 oferecer 'Cancelar Documento', use documento_cancelar. Irrevers\u00EDvel.",
+    parametros: s.objeto({ documentos: DOCUMENTOS }),
+    op: "documento.excluir",
+    efeito: "irreversivel",
+    alvos: (a) => a.documentos as string[],
+    argsOp: (_a, alvo) => ({ numero: alvo }),
+    rotulo: (a) => `Excluir ${qtd((a.documentos as string[]).length, "documento", "documentos")}`,
+  }),
+
+  escritaEmLote({
+    nome: "documento_cancelar",
+    descricao:
+      "Cancela documentos com motivo (o documento fica na \u00E1rvore marcado como cancelado). \u00C9 o que o SEI oferece no lugar de excluir depois que o processo tramitou. Irrevers\u00EDvel.",
+    parametros: s.objeto({ documentos: DOCUMENTOS, motivo: s.texto({ min: 3, max: 500 }) }),
+    op: "documento.cancelar",
+    efeito: "irreversivel",
+    alvos: (a) => a.documentos as string[],
+    argsOp: (a, alvo) => ({ numero: alvo, motivo: a.motivo }),
+    rotulo: (a) => `Cancelar ${qtd((a.documentos as string[]).length, "documento", "documentos")}`,
+  }),
+
+  escritaEmLote({
+    nome: "documento_cancelar_assinatura",
+    descricao:
+      "Cancela as assinaturas de documentos internos que o usu\u00E1rio ainda pode editar (o documento volta a precisar de assinatura). Use antes de documento_editar em documento assinado. Irrevers\u00EDvel.",
+    parametros: s.objeto({ documentos: DOCUMENTOS }),
+    op: "documento.cancelarAssinatura",
+    efeito: "irreversivel",
+    alvos: (a) => a.documentos as string[],
+    argsOp: (_a, alvo) => ({ numero: alvo }),
+    rotulo: (a) => `Cancelar assinaturas de ${qtd((a.documentos as string[]).length, "documento", "documentos")}`,
+  }),
+
+  escritaEmLote({
+    nome: "documento_ciencia",
+    descricao: "D\u00E1 ci\u00EAncia em documentos (fica no hist\u00F3rico). Para ci\u00EAncia no processo inteiro, informe o protocolo em 'processos'.",
+    parametros: s.objeto({ "documentos?": s.lista(s.texto(), { max: 500 }), "processos?": s.lista(PROCESSO, { max: 500 }) }),
+    op: "ciencia",
+    alvos: (a) => [...((a.documentos as string[]) ?? []), ...((a.processos as string[]) ?? []).map((p) => `P:${p}`)],
+    argsOp: (_a, alvo) => (alvo.startsWith("P:") ? { alvo: alvo.slice(2), processo: true } : { alvo }),
+    rotulo: (a) => `Dar ci\u00EAncia em ${qtd(((a.documentos as string[]) ?? []).length + ((a.processos as string[]) ?? []).length, "item", "itens")}`,
   }),
 
   escritaEmLote({

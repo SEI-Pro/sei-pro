@@ -35,6 +35,7 @@ validar ao vivo · ⏳ ainda não existe (ver fase no plano).
 | `getContentDocSEI`, `getDownloadAnexoFromArvore` | `localizarDocumento` + `lerConteudo` | ✅ |
 | `getTypeSEI`, `getListTypesSEI`, `getHipoteseLegal`, `getListaAtribuicaoProcesso`, `getAjaxListaMarcador`, `getListaGruposAcompEsp` | `listarOpcoes`, `tiposDocumento` | ✅ |
 | `getMarcadoresListagemPro`, `getDataMarcadorProcesso` | `marcadoresDoProcesso` | ✅ |
+| `getTableInfiniteSearch`, `getTablePesquisaDownload` | `pesquisar` (critérios da tela, paginação, resultado único) | ✅ |
 | `getAllTextProcesso` (PDF do processo + OCR) | ⏳ fase 2 (hoje: documento a documento) | ⏳ |
 
 ## Escrita
@@ -53,7 +54,8 @@ validar ao vivo · ⏳ ainda não existe (ver fase no plano).
 | `getProcessoNaoLido`, `getInteressadosProcessoAjax` (envio e autocompletar de unidade) | `enviarProcesso` (unidade ambígua é erro, nunca o primeiro resultado) | ✅ |
 | `reopenProcessAjax`, `execConcluirReabrirProcessoPro` | `concluirProcesso`, `reabrirProcesso` | ✅ |
 | ação Assinar das Ações em Lote (senha no DOM de iframe oculto) | `assinarDocumento` (senha só no POST; prova = assinatura na árvore) | ✅ |
-| ações Excluir/Cancelar assinatura/Ciência/Duplicar das Ações em Lote | ⏳ fase 2 | ⏳ |
+| ações Excluir, Cancelar assinatura e Ciência das Ações em Lote | `excluirDocumento`, `cancelarDocumento` (motivo), `cancelarAssinatura`, `darCiencia` (documento ou processo); disponibilidade pelos botões da barra, prova por releitura | ✅ |
+| ação Duplicar das Ações em Lote, `dialogCopyNewDoc` | ⏳ | ⏳ |
 | blocos (interno e de assinatura), sobrestamento, ciências | ⏳ fase 3 (sem script legado) | ⏳ |
 
 ## Como migrar uma funcionalidade

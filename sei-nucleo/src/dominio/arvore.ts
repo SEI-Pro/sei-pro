@@ -61,6 +61,8 @@ export interface DocumentoArvore {
   src: string;
   /** Links assinados das ações do documento. */
   acoes: string[];
+  /** Títulos dos botões da barra do documento ("Excluir", "Ciência", "Assinar Documento"...): o que o SEI oferece ao usuário. */
+  botoes: string[];
 }
 
 export interface Arvore {
@@ -74,6 +76,8 @@ export interface Arvore {
   documentos: DocumentoArvore[];
   /** Links assinados das ações do processo (barra do nó raiz). */
   acoesProcesso: string[];
+  /** Títulos dos botões da barra do processo. */
+  botoesProcesso: string[];
   /** Link assinado da tela do processo (`arvore_visualizar` do nó raiz). */
   linkProcesso: string;
   /** Ações sinalizadas no processo (NosAcoes com idPai = processo). */
@@ -128,6 +132,11 @@ function nivelDe(sinais: AcaoArvore[], id: string): { nivel: NivelAcesso; hipote
   return { nivel, hipotese: resto.join(" ").trim() || undefined };
 }
 
+/** Títulos dos botões de uma barra de ações (`<img title="...">`). */
+function botoesDe(html: string): string[] {
+  return [...new Set([...html.matchAll(/<img[^>]*\btitle="([^"]+)"/g)].map((m) => texto(m[1])))];
+}
+
 const SEM_NUMERO = /\s*\(\d{5,}\)\s*$/;
 
 /** Analisa o HTML da árvore. Não faz requisição. */
@@ -166,6 +175,7 @@ export function lerArvore(pagina: Pagina): Arvore {
         link: texto(n.args[3]).replace(/&amp;/g, "&"),
         src,
         acoes: linksAssinados(n.props.acoes ?? ""),
+        botoes: botoesDe(n.props.acoes ?? ""),
       };
     });
 
@@ -180,6 +190,7 @@ export function lerArvore(pagina: Pagina): Arvore {
       .map((s) => s.titulo.replace(/^Marcador\n/, "").replace(/\n/g, " \u2014 ")),
     documentos,
     acoesProcesso: linksAssinados(raiz.props.acoes ?? ""),
+    botoesProcesso: botoesDe(raiz.props.acoes ?? ""),
     linkProcesso: texto(raiz.args[3]).replace(/&amp;/g, "&"),
     sinais: sinais.filter((s) => s.idPai === idProcedimento),
     links: linksAssinados(html),
