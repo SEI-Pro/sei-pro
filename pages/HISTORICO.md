@@ -2,6 +2,20 @@
 
 ## ![SEI Pro Histórico de Versões](../img/icon-historico.png) Histórico de versões
 
+### Versão 2.0
+22/09/2026
+
+Versão com uma função nova grande: o **Agente de IA**.
+
+- [Agente de IA](../pages/AGENTEIA.md): um agente que trabalha **dentro do SEI**, pela sua própria sessão e com as suas permissões, num painel ao lado do processo. Pergunte em português e ele consulta a caixa da unidade, o processo, a árvore, o histórico e o conteúdo dos documentos — inclusive PDF, com OCR quando é digitalizado —, pesquisa no órgão e resume. Ele também **altera**: tipo, especificação, interessados, nível de acesso, anotação, marcador, atribuição, acompanhamento, andamento, conclusão e reabertura, criação de documento com conteúdo, assinatura, envio para outra unidade, exclusão, cancelamento e ciência
+- Nada é alterado sem a sua aprovação: antes de executar, o agente monta um cartão com o que pretende fazer, item a item, mostrando o valor de antes e o de depois. O que é irreversível (enviar processo, excluir ou cancelar documento, cancelar assinatura) ainda pede uma confirmação à parte, e assinar pede o cargo e a senha do SEI no próprio cartão — senha que **não** é enviada ao modelo de IA nem guardada
+- Privacidade: processo **sigiloso** o agente não abre, de jeito nenhum; documento **restrito** só é lido depois que você autoriza, uma vez por conversa. Antes de qualquer texto sair do navegador, CPF, CNPJ, e-mail, telefone, endereço, conta bancária, CID e outros dados pessoais são trocados por rótulos como `[CPF_1]`. O dado real volta ao lugar dentro do seu navegador, quando o agente precisa escrever no SEI
+- O serviço de IA é escolhido por você: **OpenRouter** (com a exigência de que o provedor não guarde nem treine com o que recebe) ou qualquer **API compatível com a OpenAI** — NVIDIA, Groq, um modelo na sua máquina ou um servidor do próprio órgão, caso em que o conteúdo não sai da rede interna. A chave é sua e fica só neste navegador: o SEI Pro não tem servidor e não vê as suas mensagens
+- Conversas guardadas: o painel guarda a transcrição das conversas anteriores para reler e exportar em Markdown, com prazo de guarda configurável. Fica gravada só a transcrição — por isso a conversa antiga abre para leitura, não para continuar
+- As **Ferramentas de Inteligência Artificial** antigas (ChatGPT e Gemini, com diálogo próprio no editor e o modo `+gpt`) saíram. O ícone da barra do processo e o botão de IA do editor passam a abrir o agente
+- [Inserir link de documento público](../pages/DOCPUBLICO.md): o código de verificação (captcha) deixa de ser lido por inteligência artificial. A imagem aparece e quem digita é você
+- [Ferramentas de PDF](../pages/FERRAMENTASPDF.md): o **OCR** voltou a funcionar. Desde a versão 1.7.0 ele falhava com "Recarregue a página e tente novamente", por causa de como o motor de reconhecimento era carregado
+
 ### Versão 1.7.7
 21/09/2026
 
